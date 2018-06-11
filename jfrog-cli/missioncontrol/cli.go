@@ -1,7 +1,7 @@
 package missioncontrol
 
 import (
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/docs/common"
 	configdocs "github.com/jfrog/jfrog-cli-go/jfrog-cli/docs/missioncontrol/config"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/docs/missioncontrol/services/add"

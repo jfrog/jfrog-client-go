@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/artifactory/commands"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/artifactory/commands/buildinfo"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/artifactory/commands/docker"

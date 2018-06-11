@@ -1,7 +1,7 @@
 package xray
 
 import (
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/docs/common"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/docs/xray/offlineupdate"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/utils/cliutils"

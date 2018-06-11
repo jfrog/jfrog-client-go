@@ -1,7 +1,7 @@
 package bintray
 
 import (
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/bintray/commands"
 	accesskeysdoc "github.com/jfrog/jfrog-cli-go/jfrog-cli/docs/bintray/accesskeys"
 	configdocs "github.com/jfrog/jfrog-cli-go/jfrog-cli/docs/bintray/config"
