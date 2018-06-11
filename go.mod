@@ -3,7 +3,6 @@ module github.com/jfrog/jfrog-cli-go
 require (
 	github.com/buger/jsonparser v0.0.0-20180318095312-2cac668e8456
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
-	github.com/dsnet/compress v0.0.0-20171208185109-cc9eb1d7ad76
 	github.com/emirpasic/gods v1.9.0
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce
@@ -13,10 +12,9 @@ require (
 	github.com/kevinburke/ssh_config v0.0.0-20180422193403-4fcc689beeab
 	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-shellwords v1.0.3
-	github.com/mholt/archiver v2.0.1
+	github.com/mholt/archiver v1.1.3
 	github.com/mitchellh/go-homedir v0.0.0-20180523094522-3864e76763d9
 	github.com/mitchellh/mapstructure v0.0.0-20180511142126-bb74f1db0675
-	github.com/nwaples/rardecode v0.0.0-20171029023500-e06696f847ae
 	github.com/pelletier/go-buffruneio v0.2.0
 	github.com/pelletier/go-toml v1.2.0
 	github.com/sabhiram/go-gitignore v0.0.0-20180611051255-d3107576ba94
@@ -36,5 +34,5 @@ require (
 	gopkg.in/src-d/go-billy.v4 v4.1.1
 	gopkg.in/src-d/go-git.v4 v4.4.1
 	gopkg.in/warnings.v0 v0.1.2
-	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v2 v2.2.2
 )
