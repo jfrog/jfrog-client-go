@@ -26,20 +26,23 @@ brew install jfrog-cli-go
 
 JFrog CLI is written in the [Go programming language](https://golang.org/), so to build the CLI yourself, you first need to have Go installed and configured on your machine.
 
-## Install Go
+## Install vgo
 
-To download and install `Go`, please refer to the [Go documentation](https://golang.org/doc/install).
-Please download `Go 1.9` or above.
+To download and install `vgo`, please refer to the [vgo documentation](https://github.com/golang/go/wiki/vgo).
+Please use vgo version `2018-02-20.1` or above using `go get -u golang.org/x/vgo`.
 
-Navigate to the directory where you want to create the jfrog-cli-go project, and set the value of the GOPATH environment variable to the full path of this directory.
+With vgo the GOPATH environment variable can point to any folder where the vgo packages will be cached and used. Packages will appear in `$GOPATH/src/v`.
+For vgo resolution set your GOPROXY to [repo.jfrog.org](https;//repo.jfrog.org) using `GOPROXY=https://repo.jfrog.org/artifctory/api/go/go`.
 
 ## Download and Build the CLI
 
-To download the jfrog-cli-go project, execute the following command:
+To download and install the jfrog-cli-go project, execute the following commands:
 ````
-go get github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog
+git clone git@github.com:jfrog/jfrog-cli-go.git
+cd jfrog-cli-go
+vgo build -o jfrog
 ````
-Go will download and build the project on your machine. Once complete, you will find the JFrog CLI executable under your `$GOPATH/bin` directory.
+Once complete, you will find the JFrog CLI executable `jfrog` under the current directory.
 
 # Tests
 
@@ -47,7 +50,7 @@ Go will download and build the project on your machine. Once complete, you will 
 #### General tests
 To run Artifactory tests execute the following command: 
 ````
-go test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog
+vgo test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog
 ````
 Optional flags:
 
@@ -71,7 +74,7 @@ Optional flags:
 
 To run build tools tests execute the following command:
 ````
-go test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog -test.artifactory=false -test.buildTools=true
+vgo test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog -test.artifactory=false -test.buildTools=true
 ````
 ##### Limitation
 * Currently, build integration support only http(s) connections to Artifactory using username and password.
@@ -81,7 +84,7 @@ go test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog -test.artifactory=false
 To run docker push tests execute the following command (fill out the missing parameters as described below):
 ````
 docker login
-go test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog -test.artifactory=false -test.docker=true -rt.dockerRepoDomain=DOCKER_DOMAIN -rt.dockerTargetRepo=DOCKER_TARGET_REPO -rt.url=ARTIFACTORY_URL -rt.user=USERNAME -rt.password=PASSWORD
+vgo test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog -test.artifactory=false -test.docker=true -rt.dockerRepoDomain=DOCKER_DOMAIN -rt.dockerTargetRepo=DOCKER_TARGET_REPO -rt.url=ARTIFACTORY_URL -rt.user=USERNAME -rt.password=PASSWORD
 ````
 
 ##### Mandatory Parameters
@@ -100,7 +103,7 @@ To run vgo tests:
 * Run the following command:
 
 ````
-go test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog -test.artifactory=false -test.vgo=true 
+vgo test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog -test.artifactory=false -test.vgo=true 
 ````
 
 ### Bintray tests
@@ -108,7 +111,7 @@ Bintray tests credentials are taken from the CLI configuration. If non configure
 
 To run Bintray tests execute the following command: 
 ````
-go test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog -test.artifactory=false -test.bintray=true
+vgo test -v github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog -test.artifactory=false -test.bintray=true
 ````
 Flags:
 

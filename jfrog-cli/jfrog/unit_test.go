@@ -1,4 +1,4 @@
-package main
+package jfrog
 
 import (
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/utils/config"
@@ -11,7 +11,7 @@ import (
 
 const (
 	JfrogTestsHome      = ".jfrogTest"
-	CliIntegrationTests = "github.com/jfrog/jfrog-cli-go/jfrog-cli/jfrog"
+	CliIntegrationTests = "../../jfrog-cli/jfrog"
 )
 
 func TestUnitTests(t *testing.T) {

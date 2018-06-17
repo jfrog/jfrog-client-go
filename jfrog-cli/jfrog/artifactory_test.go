@@ -1,4 +1,4 @@
-package main
+package jfrog
 
 import (
 	"bytes"
@@ -58,8 +58,8 @@ func InitArtifactoryTests() {
 	}
 	os.Setenv("JFROG_CLI_OFFER_CONFIG", "false")
 	cred := authenticate()
-	artifactoryCli = tests.NewJfrogCli(main, "jfrog rt", cred)
-	artifactoryAnonymousCli = tests.NewJfrogCli(main, "jfrog rt", "")
+	artifactoryCli = tests.NewJfrogCli(jfrog.Run, "jfrog rt", cred)
+	artifactoryAnonymousCli = tests.NewJfrogCli(Run, "jfrog rt", "")
 	createReposIfNeeded()
 	cleanArtifactoryTest()
 }
