@@ -30,7 +30,7 @@ import (
 func InitBuildToolsTests() {
 	os.Setenv("JFROG_CLI_OFFER_CONFIG", "false")
 	cred := authenticate()
-	artifactoryCli = tests.NewJfrogCli(main, "jfrog rt", cred)
+	artifactoryCli = tests.NewJfrogCli(Run, "jfrog rt", cred)
 	createReposIfNeeded()
 	cleanBuildToolsTest()
 }
@@ -41,7 +41,7 @@ func InitDockerTests() {
 	}
 	os.Setenv("JFROG_CLI_OFFER_CONFIG", "false")
 	cred := authenticate()
-	artifactoryCli = tests.NewJfrogCli(main, "jfrog rt", cred)
+	artifactoryCli = tests.NewJfrogCli(Run, "jfrog rt", cred)
 }
 
 func CleanBuildToolsTests() {

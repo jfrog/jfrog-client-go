@@ -33,7 +33,7 @@ func InitBintrayTests() {
 	initBintrayOrg()
 	deleteBintrayRepo()
 	createBintrayRepo()
-	bintrayCli = tests.NewJfrogCli(main, "jfrog bt", "--user="+bintrayConfig.User+" --key="+bintrayConfig.Key)
+	bintrayCli = tests.NewJfrogCli(Run, "jfrog bt", "--user="+bintrayConfig.User+" --key="+bintrayConfig.Key)
 }
 
 func initBintrayOrg() {

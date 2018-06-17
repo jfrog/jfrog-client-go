@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/utils/cliutils"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/xray"
 	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"os"
 )
 
 const commandHelpTemplate string = `{{.HelpName}}{{if .UsageText}}
@@ -64,7 +65,7 @@ Environment Variables:
 
 `
 
-func Run(args []string) {
+func Run() {
 	// Set JFrog CLI's user-agent on the jfrog-client-go.
 	utils.SetUserAgent(fmt.Sprintf("%s/%s", cliutils.ClientAgent, cliutils.GetVersion()))
 
@@ -76,6 +77,7 @@ func Run(args []string) {
 	cli.CommandHelpTemplate = commandHelpTemplate
 	cli.AppHelpTemplate = appHelpTemplate
 	cli.SubcommandHelpTemplate = subcommandHelpTemplate
+	args := os.Args
 	err := app.Run(args)
 	cliutils.ExitOnErr(err)
 }

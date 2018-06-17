@@ -55,7 +55,7 @@ func TestBuildAddDependenciesDryRun(t *testing.T) {
 		t.Error(err)
 	}
 
-	noCredsCli := tests.NewJfrogCli(main, "jfrog rt", "")
+	noCredsCli := tests.NewJfrogCli(Run, "jfrog rt", "")
 	// Execute tha bad command
 	noCredsCli.Exec("bad", tests.BuildAddDepsBuildName, "1", ioutils.PrepareFilePathForWindows("a/*"), "--dry-run=true")
 	buildDir, err := utils.GetBuildDir(tests.BuildAddDepsBuildName, "1")
@@ -187,7 +187,7 @@ func TestArtifactoryCleanBuildInfo(t *testing.T) {
 
 func TestCollectGitBuildInfo(t *testing.T) {
 	initArtifactoryTest(t)
-	gitCollectCliRunner := tests.NewJfrogCli(main, "jfrog rt", "")
+	gitCollectCliRunner := tests.NewJfrogCli(Run, "jfrog rt", "")
 	buildName, buildNumber := "cli-test-build", "13"
 	dotGitPath := ioutils.FixWinPath(getCliDotGitPath(t))
 	gitCollectCliRunner.Exec("build-add-git", buildName, buildNumber, dotGitPath)
@@ -295,7 +295,7 @@ func uploadFilesAndGetBuildInfo(t *testing.T, buildName, buildNumber, buildUrl s
 }
 
 func collectDepsAndPublishBuild(badTest buildAddDepsBuildInfoTestParams, t *testing.T) {
-	noCredsCli := tests.NewJfrogCli(main, "jfrog rt", "")
+	noCredsCli := tests.NewJfrogCli(Run, "jfrog rt", "")
 	// Remove old tests data from fs if exists
 	err := utils.RemoveBuildDir(tests.BuildAddDepsBuildName, badTest.buildNumber)
 	if err != nil {
