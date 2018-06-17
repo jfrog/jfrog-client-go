@@ -34,7 +34,7 @@ const (
 	RtTargetRepo              = "jfrog-cli-tests-repo1/"
 	SpecsTestRepositoryConfig = "specs_test_repository_config.json"
 	RepoDetailsUrl            = "api/repositories/"
-	ClientIntegrationTests    = "github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services"
+	ClientIntegrationTests    = "./jfrog-client/artifactory/services"
 )
 
 func init() {
@@ -48,7 +48,7 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	packages := tests.ExcludeTestsPackage(tests.GetTestPackages("../../..."), ClientIntegrationTests)
+	packages := tests.ExcludeTestsPackage(tests.GetTestPackages("./jfrog-client/..."), ClientIntegrationTests)
 	tests.RunTests(packages)
 	flag.Parse()
 	log.Logger.SetLogLevel(log.GetCliLogLevel(*LogLevel))

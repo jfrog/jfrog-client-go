@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"fmt"
 )
 
 type HttpServerHandlers map[string]func(w http.ResponseWriter, r *http.Request)
@@ -34,7 +35,9 @@ func StartHttpServer(handlers HttpServerHandlers) (int, error) {
 
 func GetTestPackages(searchPattern string) []string {
 	// Get all packages with test files.
-	cmd := exec.Command("go", "list", "-f", "{{.ImportPath}} {{.TestGoFiles}}", searchPattern)
+	rootDir := FindRoot()
+	cmd := exec.Command("go", "list", "-f", "{{.Dir}} {{.TestGoFiles}}", searchPattern)
+	cmd.Dir = rootDir
 	packages, _ := cmd.Output()
 
 	scanner := bufio.NewScanner(strings.NewReader(string(packages)))
@@ -43,10 +46,30 @@ func GetTestPackages(searchPattern string) []string {
 		fields := strings.Split(scanner.Text(), " ")
 		// Skip if package does not contain test files.
 		if len(fields) > 1 && len(fields[1]) > 2 {
-			unitTests = append(unitTests, fields[0])
+			unitTests = append(unitTests, "." + strings.TrimPrefix(fields[0], rootDir))
 		}
 	}
+	fmt.Println(unitTests)
 	return unitTests
+}
+
+func FindRoot() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Error("Cannot retrieve current dir path")
+		exitOnErr(err)
+	}
+	origDir := dir
+	for len(dir) > 2 {
+		if _, err := os.Stat(dir + "/go.mod"); err == nil {
+			fmt.Println("Found root Dir at:", dir)
+			return dir
+		}
+		dir = filepath.Dir(dir)
+	}
+	log.Error("Did not find root dir with go.mod file under", origDir)
+	os.Exit(1)
+	return origDir
 }
 
 func ExcludeTestsPackage(packages []string, packageToExclude string) []string {
@@ -56,6 +79,7 @@ func ExcludeTestsPackage(packages []string, packageToExclude string) []string {
 			res = append(res, packageName)
 		}
 	}
+	fmt.Println(res)
 	return res
 }
 
@@ -64,7 +88,8 @@ func RunTests(testsPackages []string) error {
 		return nil
 	}
 	testsPackages = append([]string{"test", "-v"}, testsPackages...)
-	cmd := exec.Command("go", testsPackages...)
+	cmd := exec.Command("vgo", testsPackages...)
+	cmd.Dir = FindRoot()
 
 	tempDirPath, err := tests.GetTestsLogsDir()
 	exitOnErr(err)
