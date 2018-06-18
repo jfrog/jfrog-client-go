@@ -1,6 +1,0 @@
-{
-  "key": "jfrog-cli-tests-vgo-local-repo",
-  "packageType": "go",
-  "repoLayoutRef": "simple-default",
-  "rclass": "local"
-}
