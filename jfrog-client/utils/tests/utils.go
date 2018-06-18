@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"fmt"
 )
 
 type HttpServerHandlers map[string]func(w http.ResponseWriter, r *http.Request)
@@ -49,7 +48,6 @@ func GetTestPackages(searchPattern string) []string {
 			unitTests = append(unitTests, "." + strings.TrimPrefix(fields[0], rootDir))
 		}
 	}
-	fmt.Println(unitTests)
 	return unitTests
 }
 
@@ -62,7 +60,7 @@ func FindRoot() string {
 	origDir := dir
 	for len(dir) > 2 {
 		if _, err := os.Stat(dir + "/go.mod"); err == nil {
-			fmt.Println("Found root Dir at:", dir)
+			log.Info("Found root Dir at:", dir)
 			return dir
 		}
 		dir = filepath.Dir(dir)
@@ -79,7 +77,7 @@ func ExcludeTestsPackage(packages []string, packageToExclude string) []string {
 			res = append(res, packageName)
 		}
 	}
-	fmt.Println(res)
+	log.Info("Executing unit tests in packages:", res)
 	return res
 }
 

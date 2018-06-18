@@ -16,6 +16,7 @@ import (
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/utils/config"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/utils/ioutils"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/utils/tests"
+	clientTests "github.com/jfrog/jfrog-cli-go/jfrog-client/utils/tests"
 	cliproxy "github.com/jfrog/jfrog-cli-go/jfrog-cli/utils/tests/proxy/server"
 	"github.com/jfrog/jfrog-cli-go/jfrog-cli/utils/tests/proxy/server/certificate"
 	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
@@ -547,10 +548,10 @@ func TestArtifactoryProxy(t *testing.T) {
 	testArgs := []string{"-test.artifactoryProxy=true", "-rt.url=" + *tests.RtUrl, "-rt.user=" + *tests.RtUser, "-rt.password=" + *tests.RtPassword, "-rt.apikey=" + *tests.RtApiKey, "-rt.sshKeyPath=" + *tests.RtSshKeyPath, "-rt.sshPassphrase=" + *tests.RtSshPassphrase}
 	if rtUrl.Scheme == "https" {
 		os.Setenv(tests.HttpsProxyEnvVar, "1025")
-		proxyTestArgs = append([]string{"test", "-run=TestArtifactoryHttpsProxyEnvironmentVariableDelegator"}, testArgs...)
+		proxyTestArgs = append([]string{"test", "-v", "./jfrog-cli/jfrog", "-run=TestArtifactoryHttpsProxyEnvironmentVariableDelegator"}, testArgs...)
 		httpProxyEnv = "HTTPS_PROXY=localhost:" + cliproxy.GetProxyHttpsPort()
 	} else {
-		proxyTestArgs = append([]string{"test", "-run=TestArtifactoryHttpProxyEnvironmentVariableDelegator"}, testArgs...)
+		proxyTestArgs = append([]string{"test", "-v", "./jfrog-cli/jfrog", "-run=TestArtifactoryHttpProxyEnvironmentVariableDelegator"}, testArgs...)
 		httpProxyEnv = "HTTP_PROXY=localhost:" + cliproxy.GetProxyHttpPort()
 	}
 	runProxyTest(t, proxyTestArgs, httpProxyEnv)
@@ -558,8 +559,9 @@ func TestArtifactoryProxy(t *testing.T) {
 }
 
 func runProxyTest(t *testing.T, proxyTestArgs []string, httpProxyEnv string) {
-	cmd := exec.Command("go", proxyTestArgs...)
+	cmd := exec.Command("vgo", proxyTestArgs...)
 	cmd.Env = append(os.Environ(), httpProxyEnv)
+	cmd.Dir = clientTests.FindRoot()
 
 	tempDirPath, err := tests.GetTestsLogsDir()
 	if err != nil {
