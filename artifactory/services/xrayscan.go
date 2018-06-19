@@ -6,11 +6,11 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"net/http"
 	"time"
+	"github.com/jfrog/jfrog-client-go"
 )
 
 const SCAN_BUILD_API_URL = "api/xray/scanBuild"
@@ -46,7 +46,7 @@ func (ps *XrayScanService) ScanBuild(scanParams XrayScanParams) ([]byte, error) 
 	data := XrayScanBody{
 		BuildName:   scanParams.GetBuildName(),
 		BuildNumber: scanParams.GetBuildNumber(),
-		Context:     clientutils.GetUserAgent(),
+		Context:     jfrogclient.GetUserAgent(),
 	}
 
 	requestContent, err := json.Marshal(data)

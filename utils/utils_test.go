@@ -1,7 +1,10 @@
-package utils
+package utils_test
 
 import "testing"
-import "reflect"
+import (
+	"reflect"
+	"github.com/jfrog/jfrog-client-go/utils"
+)
 
 func TestReformatRegexp(t *testing.T) {
 	assertReformatRegexp("1(.*)234", "1hello234", "{1}", "hello", t)
@@ -14,7 +17,7 @@ func TestReformatRegexp(t *testing.T) {
 }
 
 func assertReformatRegexp(regexp, source, dest, expected string, t *testing.T) {
-	result, err := ReformatRegexp(regexp, source, dest)
+	result, err := utils.ReformatRegexp(regexp, source, dest)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -37,7 +40,7 @@ func TestSplitWithEscape(t *testing.T) {
 }
 
 func assertSplitWithEscape(str string, expected []string, t *testing.T) {
-	result := SplitWithEscape(str, '/')
+	result := utils.SplitWithEscape(str, '/')
 	if !reflect.DeepEqual(result, expected) {
 		t.Error("Unexpected string array built. Expected: `", expected, "` Got `", result, "`")
 	}

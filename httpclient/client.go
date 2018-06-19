@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/errors/httperrors"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	multifilereader "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -21,6 +20,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"hash"
+	"github.com/jfrog/jfrog-client-go"
 )
 
 type HttpClient struct {
@@ -472,7 +472,7 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 }
 
 func addUserAgentHeader(req *http.Request) {
-	req.Header.Set("User-Agent", utils.GetUserAgent())
+	req.Header.Set("User-Agent", jfrogclient.GetUserAgent())
 }
 
 type DownloadFileDetails struct {

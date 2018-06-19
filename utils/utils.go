@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"os"
 	"regexp"
@@ -11,24 +10,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-var userAgent = getDefaultUserAgent()
-
-func GetVersion() string {
-	return "0.1.0"
-}
-
-func GetUserAgent() string {
-	return userAgent
-}
-
-func SetUserAgent(newUserAgent string) {
-	userAgent = newUserAgent
-}
-
-func getDefaultUserAgent() string {
-	return fmt.Sprintf("jfrog-client-go/%s", GetVersion())
-}
 
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
