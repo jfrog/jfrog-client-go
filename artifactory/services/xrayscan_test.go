@@ -1,8 +1,8 @@
 package services
 
 import (
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils/tests/xray"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
+	"github.com/jfrog/jfrog-client-go/httpclient"
 	"strconv"
 	"strings"
 	"testing"

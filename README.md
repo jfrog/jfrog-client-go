@@ -410,7 +410,7 @@
 #### Tests
 To run tests execute the following command: 
 ````
-go test -v github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services
+go test -v github.com/jfrog/jfrog-client-go/artifactory/services
 ````
 Optional flags:
 

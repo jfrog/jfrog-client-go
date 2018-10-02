@@ -2,7 +2,7 @@ package versions
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"strings"
 )
 

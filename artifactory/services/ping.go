@@ -2,12 +2,12 @@ package services
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
-	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/httpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 )
 

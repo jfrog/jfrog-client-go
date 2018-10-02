@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
 func NewArtifactoryDetails() ArtifactoryDetails {

@@ -2,9 +2,9 @@ package repositories
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/bintray/auth"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/bintray/auth"
+	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/http"
 	"path"
 )

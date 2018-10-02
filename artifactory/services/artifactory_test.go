@@ -3,19 +3,19 @@ package services
 import (
 	"errors"
 	"flag"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
-	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/tests"
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/httpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
 var RtUrl *string
@@ -34,7 +34,7 @@ const (
 	RtTargetRepo              = "jfrog-cli-tests-repo1/"
 	SpecsTestRepositoryConfig = "specs_test_repository_config.json"
 	RepoDetailsUrl            = "api/repositories/"
-	ClientIntegrationTests    = "github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services"
+	ClientIntegrationTests    = "github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
 func init() {
