@@ -3,12 +3,12 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
 	"net/http"
 	"path"
 	"strings"
@@ -24,15 +24,11 @@ func NewDistributionService(client *httpclient.HttpClient) *DistributeService {
 	return &DistributeService{client: client}
 }
 
-func (ds *DistributeService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (ds *DistributeService) getArtifactoryDetails() auth.ArtifactoryDetails {
 	return ds.ArtDetails
 }
 
-func (ds *DistributeService) SetArtifactoryDetails(artDetails auth.ArtifactoryDetails) {
-	ds.ArtDetails = artDetails
-}
-
-func (ds *DistributeService) IsDryRun() bool {
+func (ds *DistributeService) isDryRun() bool {
 	return ds.DryRun
 }
 
@@ -63,13 +59,13 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 		OverrideExistingFiles: params.IsOverrideExistingFiles(),
 		GpgPassphrase:         params.GetGpgPassphrase(),
 		Async:                 params.IsAsync(),
-		DryRun:                ds.IsDryRun()}
+		DryRun:                ds.isDryRun()}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
 
-	httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
+	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, httpClientsDetails)
@@ -81,7 +77,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
-	if params.IsAsync() && !ds.IsDryRun() {
+	if params.IsAsync() && !ds.isDryRun() {
 		log.Info("Asynchronously distributed build", params.GetBuildName()+"/"+params.GetBuildNumber(), "to:", params.GetTargetRepo(), "repository, logs are avalable in Artifactory.")
 		return nil
 	}

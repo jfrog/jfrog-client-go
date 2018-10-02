@@ -3,13 +3,13 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/fileutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/httputils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
 	"net/http"
 	"net/url"
 	"os"
@@ -20,8 +20,8 @@ import (
 const ARTIFACTORY_SYMLINK = "symlink.dest"
 const SYMLINK_SHA1 = "symlink.destsha1"
 
-func UploadFile(f *os.File, url string, artifactoryDetails auth.ArtifactoryDetails, details *fileutils.FileDetails,
-	httpClientsDetails httputils.HttpClientDetails, client *httpclient.HttpClient) (*http.Response, []byte, error) {
+func UploadFile(f *os.File, localPath, url string, artifactoryDetails auth.ArtifactoryDetails, details *fileutils.FileDetails,
+	httpClientsDetails httputils.HttpClientDetails, client *httpclient.HttpClient, retries int) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
 		details, err = fileutils.GetFileDetails(f.Name())
@@ -35,7 +35,7 @@ func UploadFile(f *os.File, url string, artifactoryDetails auth.ArtifactoryDetai
 	requestClientDetails := httpClientsDetails.Clone()
 	utils.MergeMaps(headers, requestClientDetails.Headers)
 
-	return client.UploadFile(f, url, *requestClientDetails)
+	return client.UploadFile(localPath, url, *requestClientDetails, retries)
 }
 
 func AddChecksumHeaders(headers map[string]string, fileDetails *fileutils.FileDetails) {
@@ -184,7 +184,8 @@ func getBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonCo
 	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
 	SetContentType("application/json", &httpClientsDetails.Headers)
 	log.Debug("Sending post request to: " + restUrl + ", with the following body: " + string(body))
-	resp, body, err := httputils.SendPost(restUrl, body, httpClientsDetails)
+	client := httpclient.NewDefaultHttpClient()
+	resp, body, err := client.SendPost(restUrl, body, httpClientsDetails)
 	if err != nil {
 		return "", "", err
 	}

@@ -3,19 +3,19 @@ package services
 import (
 	"errors"
 	"flag"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/utils/tests"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/tests"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/fileutils"
 )
 
 var RtUrl *string
@@ -34,7 +34,7 @@ const (
 	RtTargetRepo              = "jfrog-cli-tests-repo1/"
 	SpecsTestRepositoryConfig = "specs_test_repository_config.json"
 	RepoDetailsUrl            = "api/repositories/"
-	ClientIntegrationTests    = "./jfrog-client/artifactory/services"
+	ClientIntegrationTests    = "github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services"
 )
 
 func init() {
@@ -48,8 +48,8 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	packages := tests.ExcludeTestsPackage(tests.GetTestPackages("./jfrog-client/..."), ClientIntegrationTests)
-	tests.RunTests(packages)
+	packages := tests.ExcludeTestsPackage(tests.GetTestPackages("../../..."), ClientIntegrationTests)
+	tests.RunTests(packages, false)
 	flag.Parse()
 	log.Logger.SetLogLevel(log.GetCliLogLevel(*LogLevel))
 	if *RtUrl != "" && !strings.HasSuffix(*RtUrl, "/") {
@@ -93,7 +93,7 @@ func createArtifactoryDownloadManager() {
 func getArtDetails() auth.ArtifactoryDetails {
 	rtDetails := auth.NewArtifactoryDetails()
 	rtDetails.SetUrl(*RtUrl)
-	if !httputils.IsSsh(rtDetails.GetUrl()) {
+	if !fileutils.IsSshUrl(rtDetails.GetUrl()) {
 		if *RtApiKey != "" {
 			rtDetails.SetApiKey(*RtApiKey)
 		} else {
@@ -159,7 +159,8 @@ func createReposIfNeeded() error {
 func isRepoExist(repoName string) bool {
 	artDetails := getArtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
-	resp, _, _, err := httputils.SendGet(artDetails.GetUrl()+RepoDetailsUrl+repoName, true, artHttpDetails)
+	client := httpclient.NewDefaultHttpClient()
+	resp, _, _, err := client.SendGet(artDetails.GetUrl()+RepoDetailsUrl+repoName, true, artHttpDetails)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
@@ -179,14 +180,15 @@ func execCreateRepoRest(repoConfig, repoName string) error {
 	artHttpDetails := getArtDetails().CreateHttpClientDetails()
 
 	artHttpDetails.Headers = map[string]string{"Content-Type": "application/json"}
-	resp, _, err := httputils.SendPut(*RtUrl+"api/repositories/"+repoName, content, artHttpDetails)
+	client := httpclient.NewDefaultHttpClient()
+	resp, _, err := client.SendPut(*RtUrl+"api/repositories/"+repoName, content, artHttpDetails)
 	if err != nil {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		return errors.New("Fail to create repository. Reason local repository with key: " + repoName + " already exist\n")
 	}
-	log.Info("Repository", repoName, "was created.")
+	log.Info("Repository", repoName, "created.")
 	return nil
 }
 

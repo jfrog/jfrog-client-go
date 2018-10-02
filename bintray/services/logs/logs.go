@@ -2,13 +2,12 @@ package logs
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/bintray/auth"
-	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/bintray/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/bintray/services/versions"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
 	"net/http"
 	"path"
 )
@@ -30,7 +29,8 @@ func (ls *LogsService) List(versionPath *versions.Path) error {
 	listUrl := ls.BintrayDetails.GetApiUrl() + path.Join("packages", versionPath.Subject, versionPath.Repo, versionPath.Package, "logs")
 	httpClientsDetails := ls.BintrayDetails.CreateHttpClientDetails()
 	log.Info("Getting logs...")
-	resp, body, _, _ := httputils.SendGet(listUrl, true, httpClientsDetails)
+	client := httpclient.NewDefaultHttpClient()
+	resp, body, _, _ := client.SendGet(listUrl, true, httpClientsDetails)
 
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
@@ -45,10 +45,17 @@ func (ls *LogsService) Download(versionPath *versions.Path, logName string) erro
 	if ls.BintrayDetails.GetUser() == "" {
 		ls.BintrayDetails.SetUser(versionPath.Subject)
 	}
-	downloadUrl := ls.BintrayDetails.GetApiUrl() + path.Join("packages", versionPath.Subject, versionPath.Repo, versionPath.Package, "logs", logName)
+	downloadUrl := ls.BintrayDetails.GetApiUrl() + path.Join("packages", versionPath.Subject, versionPath.Repo, versionPath.Package, "logs")
+
 	httpClientsDetails := ls.BintrayDetails.CreateHttpClientDetails()
 	log.Info("Downloading logs...")
-	resp, err := httputils.DownloadFile(downloadUrl, "", logName, httpClientsDetails)
+	client := httpclient.NewDefaultHttpClient()
+	details := &httpclient.DownloadFileDetails{
+		FileName:      logName,
+		DownloadPath:  downloadUrl,
+		LocalPath:     "",
+		LocalFileName: logName}
+	resp, err := client.DownloadFile(details, "", httpClientsDetails, 3, false)
 	if err != nil {
 		return err
 	}

@@ -3,16 +3,15 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/bintray/auth"
-	"github.com/jfrog/jfrog-client-go/bintray/services/utils"
-	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	logutil "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/bintray/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/bintray/services/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/bintray/services/versions"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	logutil "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/fileutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
 	"net/http"
 	"path"
 	"strconv"
@@ -86,7 +85,8 @@ func (ds *DownloadService) DownloadVersion(downloadParams *DownloadVersionParams
 	if httpClientsDetails.User == "" {
 		httpClientsDetails.User = downloadParams.Subject
 	}
-	resp, body, _, _ := httputils.SendGet(versionPathUrl, true, httpClientsDetails)
+	client := httpclient.NewDefaultHttpClient()
+	resp, body, _, _ := client.SendGet(versionPathUrl, true, httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
 		err = errorutils.CheckError(errors.New(resp.Status + ". " + utils.ReadBintrayMessage(body)))
 		return
@@ -171,20 +171,23 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 		url += "?include_unpublished=1"
 	}
 	log.Info(logMsgPrefix+"Downloading", downloadPath)
+	client := httpclient.NewDefaultHttpClient()
 
 	httpClientsDetails := ds.BintrayDetails.CreateHttpClientDetails()
-	details, err := httputils.GetRemoteFileDetails(url, httpClientsDetails)
+	details, err := client.GetRemoteFileDetails(url, httpClientsDetails)
 	if err != nil {
 		return errorutils.CheckError(errors.New("Bintray " + err.Error()))
 	}
 
 	regexpPattern := clientutils.PathToRegExp(downloadParams.Path)
 	placeHolderTarget, err := clientutils.ReformatRegexp(regexpPattern, cleanPath, downloadParams.TargetPath)
+
 	if err != nil {
 		return err
 	}
 
 	localPath, localFileName := fileutils.GetLocalPathAndFile(fileName, filePath, placeHolderTarget, downloadParams.Flat)
+
 	var shouldDownload bool
 	shouldDownload, err = shouldDownloadFile(filepath.Join(localPath, localFileName), details)
 	if err != nil {
@@ -198,7 +201,13 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 	// Check if the file should be downloaded concurrently.
 	if ds.SplitCount == 0 || ds.MinSplitSize < 0 || ds.MinSplitSize*1000 > details.Size {
 		// File should not be downloaded concurrently. Download it as one block.
-		resp, err := httputils.DownloadFile(url, localPath, localFileName, httpClientsDetails)
+		downloadDetails := &httpclient.DownloadFileDetails{
+			FileName:      fileName,
+			DownloadPath:  url,
+			LocalPath:     localPath,
+			LocalFileName: localFileName}
+
+		resp, err := client.DownloadFile(downloadDetails, logMsgPrefix, httpClientsDetails, 0, false)
 		if err != nil {
 			return err
 		}
@@ -211,21 +220,22 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 		var resp *http.Response
 		var redirectUrl string
 		resp, redirectUrl, err =
-			httputils.DownloadFileNoRedirect(url, localPath, localFileName, httpClientsDetails)
+			client.DownloadFileNoRedirect(url, localPath, localFileName, httpClientsDetails)
 		// There are two options now. Either the file has just been downloaded as one block, or
 		// we got a redirect to DSN download URL. In case of the later, we should download the file
 		// concurrently from the DSN URL.
 		// 'err' is not nil in case 'redirectUrl' was returned.
 		if redirectUrl != "" {
 			err = nil
-			concurrentDownloadFlags := httputils.ConcurrentDownloadFlags{
+			concurrentDownloadFlags := httpclient.ConcurrentDownloadFlags{
 				DownloadPath: redirectUrl,
-				FileName:     localFileName,
-				LocalPath:    localPath,
-				FileSize:     details.Size,
-				SplitCount:   ds.SplitCount,
-				Flat:         downloadParams.Flat}
-			err = httputils.DownloadFileConcurrently(concurrentDownloadFlags, "", httpClientsDetails)
+				FileName:     	   localFileName,
+				LocalFileName:     localFileName,
+				LocalPath:    	   localPath,
+				FileSize:          details.Size,
+				SplitCount:        ds.SplitCount}
+
+			err = client.DownloadFileConcurrently(concurrentDownloadFlags, "", httpClientsDetails)
 			if err != nil {
 				return err
 			}

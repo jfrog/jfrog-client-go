@@ -4,15 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/fileutils/checksum"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
-	"runtime"
 	"strings"
+	"net/url"
 )
 
 const SYMLINK_FILE_CONTENT = ""
@@ -20,7 +21,7 @@ const SYMLINK_FILE_CONTENT = ""
 var tempDirPath string
 
 func GetFileSeparator() string {
-	if runtime.GOOS == "windows" {
+	if utils.IsWindows() {
 		return "\\"
 	}
 	return "/"
@@ -280,6 +281,14 @@ func GetHomeDir() string {
 		return user.HomeDir
 	}
 	return ""
+}
+
+func IsSshUrl(urlPath string) bool {
+	u, err := url.Parse(urlPath)
+	if err != nil {
+		return false
+	}
+	return strings.ToLower(u.Scheme) == "ssh"
 }
 
 func ReadFile(filePath string) ([]byte, error) {

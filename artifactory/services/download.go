@@ -3,15 +3,15 @@ package services
 import (
 	"errors"
 	"github.com/jfrog/gofrog/parallel"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/errors/httperrors"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/errors/httperrors"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/fileutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/fileutils/checksum"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
 	"net/http"
 	"os"
 	"path"
@@ -91,7 +91,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, fileContextHan
 		case utils.WILDCARD, utils.SIMPLE:
 			resultItems, err = ds.collectFilesUsingWildcardPattern(downloadParams)
 		case utils.AQL:
-			resultItems, err = utils.AqlSearchBySpec(downloadParams.GetFile(), ds)
+			resultItems, err = utils.AqlSearchBySpec(downloadParams.GetFile(), ds, utils.SYMLINK)
 		}
 
 		if err != nil {
@@ -108,7 +108,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, fileContextHan
 }
 
 func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) ([]utils.ResultItem, error) {
-	return utils.AqlSearchDefaultReturnFields(downloadParams.GetFile(), ds)
+	return utils.AqlSearchDefaultReturnFields(downloadParams.GetFile(), ds, utils.SYMLINK)
 }
 
 func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *utils.ErrorsQueue) (int, error) {
@@ -200,12 +200,12 @@ func createDependencyFileInfo(resultItem utils.ResultItem, localPath, localFileN
 
 func createDownloadFileDetails(downloadPath, localPath, localFileName string, downloadData DownloadData) (details *httpclient.DownloadFileDetails) {
 	details = &httpclient.DownloadFileDetails{
-		FileName:       downloadData.Dependency.Name,
-		DownloadPath:   downloadPath,
-		LocalPath:      localPath,
-		LocalFileName:  localFileName,
-		Size:           downloadData.Dependency.Size,
-		ExpectedSha1:   downloadData.Dependency.Actual_Sha1}
+		FileName:      downloadData.Dependency.Name,
+		DownloadPath:  downloadPath,
+		LocalPath:     localPath,
+		LocalFileName: localFileName,
+		Size:          downloadData.Dependency.Size,
+		ExpectedSha1:  downloadData.Dependency.Actual_Sha1}
 	return
 }
 

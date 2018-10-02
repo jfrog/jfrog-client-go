@@ -2,12 +2,12 @@ package services
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
 	"net/http"
 )
 
@@ -41,7 +41,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 	log.Info("Searching artifacts...")
 	// Search paths using AQL.
 	if deleteParams.GetSpecType() == utils.AQL {
-		if resultItemsTemp, e := utils.AqlSearchBySpec(deleteParams.GetFile(), ds); e == nil {
+		if resultItemsTemp, e := utils.AqlSearchBySpec(deleteParams.GetFile(), ds, utils.NONE); e == nil {
 			resultItems = append(resultItems, resultItemsTemp...)
 		} else {
 			err = e
@@ -50,7 +50,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 	} else {
 
 		deleteParams.SetIncludeDirs(true)
-		tempResultItems, e := utils.AqlSearchDefaultReturnFields(deleteParams.GetFile(), ds)
+		tempResultItems, e := utils.AqlSearchDefaultReturnFields(deleteParams.GetFile(), ds, utils.NONE)
 		if e != nil {
 			err = e
 			return

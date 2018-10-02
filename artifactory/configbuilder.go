@@ -1,8 +1,8 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
 )
 
 func NewConfigBuilder() *artifactoryServicesConfigBuilder {

@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils/tests"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/fileutils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -60,7 +60,7 @@ func flatUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(&utils.SearchParamsImpl{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}})
+	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}})
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,7 +97,7 @@ func recursiveUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(&utils.SearchParamsImpl{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}})
+	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}})
 	if err != nil {
 		t.Error(err)
 	}
@@ -137,7 +137,7 @@ func placeholderUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(&utils.SearchParamsImpl{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}})
+	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}})
 	if err != nil {
 		t.Error(err)
 	}
@@ -177,7 +177,7 @@ func includeDirsUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(&utils.SearchParamsImpl{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo, IncludeDirs: true}})
+	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo, IncludeDirs: true}})
 	if err != nil {
 		t.Error(err)
 	}
@@ -231,7 +231,7 @@ func explodeUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(&utils.SearchParamsImpl{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo, IncludeDirs: true}})
+	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo, IncludeDirs: true}})
 	if err != nil {
 		t.Error(err)
 	}

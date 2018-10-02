@@ -3,12 +3,12 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/artifactory/services/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
 	"net/http"
 	"path"
 )
@@ -23,15 +23,7 @@ func NewPromotionService(client *httpclient.HttpClient) *PromoteService {
 	return &PromoteService{client: client}
 }
 
-func (ps *PromoteService) GetArtifactoryDetails() auth.ArtifactoryDetails {
-	return ps.ArtDetails
-}
-
-func (ps *PromoteService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
-	ps.ArtDetails = rt
-}
-
-func (ps *PromoteService) IsDryRun() bool {
+func (ps *PromoteService) isDryRun() bool {
 	return ps.DryRun
 }
 
@@ -56,7 +48,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 		IncludeDependencies: promotionParams.IsIncludeDependencies(),
 		SourceRepo:          promotionParams.GetSourceRepo(),
 		TargetRepo:          promotionParams.GetTargetRepo(),
-		DryRun:              ps.IsDryRun()}
+		DryRun:              ps.isDryRun()}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
 		return errorutils.CheckError(err)

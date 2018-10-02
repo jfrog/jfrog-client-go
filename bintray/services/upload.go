@@ -2,16 +2,14 @@ package services
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/bintray/auth"
-	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/bintray/auth"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/bintray/services/versions"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/httpclient"
+	clientutils "github.com/jfrog/jfrog-cli-go/jfrog-client/utils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/errorutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/io/fileutils"
+	"github.com/jfrog/jfrog-cli-go/jfrog-client/utils/log"
 	"net/http"
-	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -152,14 +150,9 @@ func getDebianDefaultPath(debianPropsStr, packageName string) string {
 func uploadFile(artifact clientutils.Artifact, url, logMsgPrefix string, bintrayDetails auth.BintrayDetails) (bool, error) {
 	log.Info(logMsgPrefix+"Uploading artifact:", artifact.LocalPath)
 
-	f, err := os.Open(artifact.LocalPath)
-	err = errorutils.CheckError(err)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
 	httpClientsDetails := bintrayDetails.CreateHttpClientDetails()
-	resp, body, err := httputils.UploadFile(f, url, httpClientsDetails)
+	client := httpclient.NewDefaultHttpClient()
+	resp, body, err := client.UploadFile(artifact.LocalPath, url, httpClientsDetails, 0)
 	if err != nil {
 		return false, err
 	}
