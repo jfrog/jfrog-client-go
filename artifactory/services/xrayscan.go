@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"net/http"
 	"time"
 )
@@ -46,7 +45,7 @@ func (ps *XrayScanService) ScanBuild(scanParams XrayScanParams) ([]byte, error) 
 		return []byte{}, errorutils.CheckError(err)
 	}
 
-	connection := httputils.RetryableConnection{
+	connection := httpclient.RetryableConnection{
 		ReadTimeout:            XRAY_SCAN_CONNECTION_TIMEOUT,
 		RetriesNum:             XRAY_SCAN_RETRY_CONSECUTIVE_RETRIES,
 		StableConnectionWindow: XRAY_SCAN_STABLE_CONNECTION_WINDOW,

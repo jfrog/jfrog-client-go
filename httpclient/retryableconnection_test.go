@@ -1,9 +1,10 @@
-package httputils
+package httpclient
 
 import (
 	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"io"
@@ -191,8 +192,9 @@ func TestErrorHandler(t *testing.T) {
 
 // Send post request with context value in the request body.
 func execGet(port int, path string, c *testContext) (*http.Response, error) {
-	resp, _, _, err := Send("POST", "http://localhost:"+strconv.Itoa(port)+path,
-		[]byte(strconv.Itoa(c.tryNum)), true, false, HttpClientDetails{})
+	client := NewDefaultHttpClient()
+	resp, _, _, err := client.Send("POST", "http://localhost:"+strconv.Itoa(port)+path,
+		[]byte(strconv.Itoa(c.tryNum)), true, false, httputils.HttpClientDetails{})
 	if err != nil {
 		return resp, err
 	}
