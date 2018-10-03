@@ -47,6 +47,7 @@ func init() {
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
 	LogLevel = flag.String("log-level", "INFO", "Sets the log level")
 	InitArtifactoryServiceManager()
+	CreateReposIfNeeded()
 }
 
 func InitArtifactoryServiceManager() {

@@ -2,7 +2,6 @@ package jfrogclient
 
 import (
 	"flag"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"os"
@@ -24,7 +23,6 @@ func TestMain(m *testing.M) {
 
 func InitArtifactoryServiceManager() {
 	flag.Parse()
-	services.CreateReposIfNeeded()
 }
 
 
