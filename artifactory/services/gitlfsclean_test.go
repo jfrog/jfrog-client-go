@@ -1,12 +1,12 @@
 package services
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
-	"github.com/jfrog/jfrog-client-go/utils/tests"
 )
 
 func TestExtractRepo(t *testing.T) {
@@ -33,7 +33,7 @@ func TestGetLfsFilesFromGit(t *testing.T) {
 	fileId := "4bf4c8c0fef3f5c8cf6f255d1c784377138588c0a9abe57e440bce3ccb350c2e"
 	gitPath := getCliDotGitPath(t)
 	refs := strings.Join([]string{"refs", "heads", "*"}, "/")
-	if runtime.GOOS == "windows" {
+	if utils.IsWindows() {
 		refs = strings.Join([]string{"refs", "heads", "*"}, "\\\\")
 	}
 	results, err := getLfsFilesFromGit(gitPath, refs)
@@ -47,9 +47,17 @@ func TestGetLfsFilesFromGit(t *testing.T) {
 }
 
 func getCliDotGitPath(t *testing.T) string {
-	dotGitPath, err := tests.FindGitRoot()
+	workingDir, err := os.Getwd()
 	if err != nil {
 		t.Error("Failed to get current dir.")
+	}
+	dotGitPath := filepath.Join(workingDir, "..", "..")
+	dotGitExists, err := fileutils.IsDirExists(filepath.Join(dotGitPath, ".git"))
+	if err != nil {
+		t.Error(err)
+	}
+	if !dotGitExists {
+		t.Error("Can't find .git")
 	}
 	return dotGitPath
 }

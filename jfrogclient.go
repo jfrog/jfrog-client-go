@@ -1,4 +1,4 @@
-package jfrogclient // import "github.com/jfrog/jfrog-client-go"
+package jfrogclient
 import "fmt"
 
 var agentName = "jfrog-client-go"
