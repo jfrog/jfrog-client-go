@@ -126,12 +126,12 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
 		localPath = localPath[3:]
 	}
 	if !useRegExp {
-		localPath = PathToRegExp(localPath)
+		localPath = pathToRegExp(localPath)
 	}
 	return localPath
 }
 
-func PathToRegExp(localPath string) string {
+func pathToRegExp(localPath string) string {
 	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
 	for _, char := range SPECIAL_CHARS {
 		localPath = strings.Replace(localPath, char, "\\"+char, -1)
@@ -145,18 +145,19 @@ func PathToRegExp(localPath string) string {
 	return localPath
 }
 
-// Replaces matched regular expression from sourceString to corresponding {i} at destString.
+// Replaces matched regular expression from givenPath to corresponding {i} at destString.
 // For example:
-//      regexpString = "1(.*)234" ; sourceString = "1hello234" ; destString = "{1}"
+//      regexpString = "repo/1(*)234" ; sourceString = "repo/1hello234" ; destString = "{1}"
 //      returns "hello"
-func ReformatRegexp(regexpString, sourceString, destString string) (string, error) {
-	r, err := regexp.Compile(regexpString)
+func ReformatTargetByPaths(givenPath, actualPath, destString string) (string, error) {
+	givenPath = pathToRegExp(givenPath)
+	r, err := regexp.Compile(givenPath)
 	err = errorutils.CheckError(err)
 	if err != nil {
 		return "", err
 	}
 
-	groups := r.FindStringSubmatch(sourceString)
+	groups := r.FindStringSubmatch(actualPath)
 	size := len(groups)
 	target := destString
 	if size > 0 {
@@ -221,6 +222,13 @@ func GetMapFromStringSlice(slice []string, sep string) map[string]string {
 		}
 	}
 	return mapFromSlice
+}
+
+func CleanRepoFromPath(path string) string {
+	if idx := strings.Index(path, "/"); idx != -1 {
+		return path[idx:]
+	}
+	return path
 }
 
 // Split str by the provided separator, escaping the separator if it is prefixed by a back-slash.

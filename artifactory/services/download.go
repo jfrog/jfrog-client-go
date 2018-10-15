@@ -347,8 +347,9 @@ func (ds *DownloadService) createFileHandlerFunc(buildDependencies [][]utils.Fil
 				return nil
 			}
 
-			regexpPattern := clientutils.PathToRegExp(downloadData.DownloadPath)
-			placeHolderTarget, e := clientutils.ReformatRegexp(regexpPattern, downloadData.Dependency.GetItemRelativePath(), downloadData.Target)
+			givenPath := clientutils.CleanRepoFromPath(downloadData.DownloadPath)
+			actualPath := clientutils.CleanRepoFromPath(downloadData.Dependency.GetItemRelativePath())
+			placeHolderTarget, e := clientutils.ReformatTargetByPaths(givenPath, actualPath, downloadData.Target)
 			if e != nil {
 				return e
 			}
