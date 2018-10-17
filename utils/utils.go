@@ -145,21 +145,27 @@ func pathToRegExp(localPath string) string {
 	return localPath
 }
 
-// Replaces matched regular expression from givenPath to corresponding {i} at destString.
-// For example:
-//      regexpString = "repo/1(*)234" ; sourceString = "repo/1hello234" ; destString = "{1}"
+// Replaces matched regular expression from path to corresponding {i} at target.
+// Example 1:
+//      pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
 //      returns "hello"
-func ReformatTargetByPaths(givenPath, actualPath, destString string) (string, error) {
-	givenPath = pathToRegExp(givenPath)
-	r, err := regexp.Compile(givenPath)
+// Example 2:
+//      pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
+//      returns "hello"
+func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, error) {
+	if ignoreRepo {
+		pattern = removeRepoFromPath(pattern)
+		path = removeRepoFromPath(path)
+	}
+	pattern = pathToRegExp(pattern)
+	r, err := regexp.Compile(pattern)
 	err = errorutils.CheckError(err)
 	if err != nil {
 		return "", err
 	}
 
-	groups := r.FindStringSubmatch(actualPath)
+	groups := r.FindStringSubmatch(path)
 	size := len(groups)
-	target := destString
 	if size > 0 {
 		for i := 1; i < size; i++ {
 			group := strings.Replace(groups[i], "\\", "/", -1)
@@ -224,7 +230,7 @@ func GetMapFromStringSlice(slice []string, sep string) map[string]string {
 	return mapFromSlice
 }
 
-func CleanRepoFromPath(path string) string {
+func removeRepoFromPath(path string) string {
 	if idx := strings.Index(path, "/"); idx != -1 {
 		return path[idx:]
 	}

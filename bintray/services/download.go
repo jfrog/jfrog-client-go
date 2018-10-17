@@ -179,8 +179,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 		return errorutils.CheckError(errors.New("Bintray " + err.Error()))
 	}
 
-	placeHolderTarget, err := clientutils.ReformatTargetByPaths(downloadParams.Path, cleanPath, downloadParams.TargetPath)
-
+	placeHolderTarget, err := clientutils.BuildTargetPath(downloadParams.Path, cleanPath, downloadParams.TargetPath, false)
 	if err != nil {
 		return err
 	}

@@ -108,9 +108,7 @@ func (mc *MoveCopyService) moveFiles(resultItems []utils.ResultItem, params Move
 				destPathLocal = clientutils.TrimPath(destPathLocal + "/" + v.Path + "/")
 			}
 		}
-		givenPath := clientutils.CleanRepoFromPath(params.GetFile().Pattern)
-		actualPath := clientutils.CleanRepoFromPath(v.GetItemRelativePath())
-		destFile, err := clientutils.ReformatTargetByPaths(givenPath, actualPath, destPathLocal)
+		destFile, err := clientutils.BuildTargetPath(params.GetFile().Pattern, v.GetItemRelativePath(), destPathLocal, true)
 		if err != nil {
 			log.Error(err)
 			continue
