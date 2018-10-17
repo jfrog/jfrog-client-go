@@ -69,10 +69,10 @@ func flatDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !fileutils.IsPathExists(filepath.Join(workingDir, "a.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir, "a.in")) {
 		t.Error("Missing file a.in")
 	}
-	if !fileutils.IsPathExists(filepath.Join(workingDir, "b.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir, "b.in")) {
 		t.Error("Missing file b.in")
 	}
 
@@ -86,10 +86,10 @@ func flatDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !fileutils.IsPathExists(filepath.Join(workingDir2, "test", "a.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir2, "test", "a.in")) {
 		t.Error("Missing file a.in")
 	}
-	if !fileutils.IsPathExists(filepath.Join(workingDir2, "b.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir2, "b.in")) {
 		t.Error("Missing file b.in")
 	}
 }
@@ -108,11 +108,11 @@ func recursiveDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !fileutils.IsPathExists(filepath.Join(workingDir, "a.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir, "a.in")) {
 		t.Error("Missing file a.in")
 	}
 
-	if !fileutils.IsPathExists(filepath.Join(workingDir, "b.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir, "b.in")) {
 		t.Error("Missing file b.in")
 	}
 
@@ -126,11 +126,11 @@ func recursiveDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if fileutils.IsPathExists(filepath.Join(workingDir2, "a.in")) {
+	if fileutils.IsPathExists(false, filepath.Join(workingDir2, "a.in")) {
 		t.Error("Should not download a.in")
 	}
 
-	if !fileutils.IsPathExists(filepath.Join(workingDir2, "b.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir2, "b.in")) {
 		t.Error("Missing file b.in")
 	}
 }
@@ -149,11 +149,11 @@ func placeholderDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !fileutils.IsPathExists(filepath.Join(workingDir, "test", "a", "a.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir, "test", "a", "a.in")) {
 		t.Error("Missing file a.in")
 	}
 
-	if !fileutils.IsPathExists(filepath.Join(workingDir, "b", "b.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir, "b", "b.in")) {
 		t.Error("Missing file b.in")
 	}
 }
@@ -171,11 +171,11 @@ func includeDirsDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !fileutils.IsPathExists(filepath.Join(workingDir, "test")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir, "test")) {
 		t.Error("Missing test folder")
 	}
 
-	if !fileutils.IsPathExists(filepath.Join(workingDir, "b.in")) {
+	if !fileutils.IsPathExists(false, filepath.Join(workingDir, "b.in")) {
 		t.Error("Missing file b.in")
 	}
 }

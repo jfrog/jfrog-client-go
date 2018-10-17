@@ -188,7 +188,7 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 	}
 
 	rootPath := clientutils.GetRootPath(uploadDetails.Pattern, uploadDetails.UseRegExp)
-	if !fileutils.IsPathExists(rootPath) {
+	if !fileutils.IsPathExists(false, rootPath) {
 		err := errorutils.CheckError(errors.New("Path does not exist: " + rootPath))
 		if err != nil {
 			return nil, err
@@ -199,7 +199,7 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 
 	artifacts := []clientutils.Artifact{}
 	// If the path is a single file then return it
-	dir, err := fileutils.IsDir(rootPath)
+	dir, err := fileutils.IsDir(false, rootPath)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 	}
 
 	for _, filePath := range paths {
-		dir, err := fileutils.IsDir(filePath)
+		dir, err := fileutils.IsDir(false, filePath)
 		if err != nil {
 			return nil, err
 		}

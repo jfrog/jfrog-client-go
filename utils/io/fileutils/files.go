@@ -4,16 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
-	"net/url"
 )
 
 const SYMLINK_FILE_CONTENT = ""
@@ -27,20 +27,49 @@ func GetFileSeparator() string {
 	return "/"
 }
 
-func IsPathExists(path string) bool {
-	_, err := os.Stat(path)
+func IsPathExists(considerSymLink bool, path string) bool {
+	var err error
+	if considerSymLink {
+		_, err = os.Lstat(path)
+	} else {
+		_, err = os.Stat(path)
+	}
 	return !os.IsNotExist(err)
 }
 
-func IsFileExists(path string) (bool, error) {
-	if !IsPathExists(path) {
+func IsFileExists(considerSymLink bool, path string) (bool, error) {
+	if !IsPathExists(considerSymLink, path) {
 		return false, nil
 	}
-	f, err := os.Stat(path)
+	var err error
+	var f os.FileInfo
+	if considerSymLink {
+		f, err = os.Lstat(path)
+	} else {
+		f, err = os.Stat(path)
+	}
 	if err != nil {
 		return false, errorutils.CheckError(err)
 	}
 	return !f.IsDir(), nil
+}
+
+func IsDirExists(considerSymLink bool, path string) (bool, error) {
+	if !IsPathExists(considerSymLink, path) {
+		return false, nil
+	}
+	var err error
+	var f os.FileInfo
+	if considerSymLink {
+		f, err = os.Lstat(path)
+	} else {
+		f, err = os.Stat(path)
+	}
+	err = errorutils.CheckError(err)
+	if err != nil {
+		return false, err
+	}
+	return f.IsDir(), nil
 }
 
 func IsPathSymlink(path string) bool {
@@ -52,11 +81,17 @@ func IsFileSymlink(file os.FileInfo) bool {
 	return file.Mode()&os.ModeSymlink != 0
 }
 
-func IsDir(path string) (bool, error) {
-	if !IsPathExists(path) {
+func IsDir(considerSymLink bool, path string) (bool, error) {
+	if !IsPathExists(considerSymLink, path) {
 		return false, nil
 	}
-	f, err := os.Stat(path)
+	var err error
+	var f os.FileInfo
+	if considerSymLink {
+		f, err = os.Lstat(path)
+	} else {
+		f, err = os.Stat(path)
+	}
 	err = errorutils.CheckError(err)
 	if err != nil {
 		return false, err
@@ -121,14 +156,14 @@ func ListFiles(path string, includeDirs bool) ([]string, error) {
 
 	for _, f := range files {
 		filePath := path + f.Name()
-		exists, err := IsFileExists(filePath)
+		exists, err := IsFileExists(false, filePath)
 		if err != nil {
 			return nil, err
 		}
 		if exists || IsPathSymlink(filePath) {
 			fileList = append(fileList, filePath)
 		} else if includeDirs {
-			isDir, err := IsDir(filePath)
+			isDir, err := IsDir(false, filePath)
 			if err != nil {
 				return nil, err
 			}
@@ -171,7 +206,7 @@ func CreateFilePath(localPath, fileName string) (string, error) {
 }
 
 func CreateDirIfNotExist(path string) error {
-	exist, err := IsDir(path)
+	exist, err := IsDir(false, path)
 	if exist || err != nil {
 		return err
 	}
@@ -210,7 +245,7 @@ func RemoveTempDir() error {
 		tempDirPath = ""
 	}()
 
-	exists, err := IsDirExists(tempDirPath)
+	exists, err := IsDirExists(false, tempDirPath)
 	if err != nil {
 		return err
 	}
@@ -218,18 +253,6 @@ func RemoveTempDir() error {
 		return os.RemoveAll(tempDirPath)
 	}
 	return nil
-}
-
-func IsDirExists(path string) (bool, error) {
-	if !IsPathExists(path) {
-		return false, nil
-	}
-	f, err := os.Stat(path)
-	err = errorutils.CheckError(err)
-	if err != nil {
-		return false, err
-	}
-	return f.IsDir(), nil
 }
 
 // Reads the content of the file in the source path and appends it to
@@ -373,7 +396,7 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 	}
 
 	for _, v := range files {
-		dir, err := IsDir(v)
+		dir, err := IsDir(false, v)
 		if err != nil {
 			return err
 		}

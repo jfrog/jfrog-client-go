@@ -334,7 +334,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 		flags.LocalFileName = filepath.Join(flags.LocalPath, flags.LocalFileName)
 	}
 
-	if fileutils.IsPathExists(flags.LocalFileName) {
+	if fileutils.IsPathExists(false, flags.LocalFileName) {
 		err := os.Remove(flags.LocalFileName)
 		if errorutils.CheckError(err) != nil {
 			return err

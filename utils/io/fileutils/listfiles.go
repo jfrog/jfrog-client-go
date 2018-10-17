@@ -20,7 +20,7 @@ func walk(path string, info os.FileInfo, walkFn WalkFunc, visited map[string]boo
 	if err != nil {
 		realPath = path
 	}
-	isRealPathDir, err := IsDir(realPath)
+	isRealPathDir, err := IsDir(false, realPath)
 	if err != nil {
 		return err
 	}
