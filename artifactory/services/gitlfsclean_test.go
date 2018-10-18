@@ -52,7 +52,7 @@ func getCliDotGitPath(t *testing.T) string {
 		t.Error("Failed to get current dir.")
 	}
 	dotGitPath := filepath.Join(workingDir, "..", "..")
-	dotGitExists, err := fileutils.IsDirExists(false, filepath.Join(dotGitPath, ".git"))
+	dotGitExists, err := fileutils.IsDirExists(filepath.Join(dotGitPath, ".git"), false)
 	if err != nil {
 		t.Error(err)
 	}

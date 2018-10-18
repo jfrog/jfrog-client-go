@@ -53,7 +53,7 @@ func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
 // Return only subpaths of the provided by the user path that matched to the provided regexp.
 // Subpaths that matched to an exclude pattern won't returned
 func PrepareAndFilterPaths(path, excludePathPattern string, preserveSymlinks, includeDirs bool, regexp *regexp.Regexp) (matches []string, isDir, isSymlinkFlow bool, err error) {
-	isDir, err = fileutils.IsDir(false, path)
+	isDir, err = fileutils.IsDirExists(path, false)
 	if err != nil {
 		return
 	}
@@ -75,32 +75,31 @@ func PrepareAndFilterPaths(path, excludePathPattern string, preserveSymlinks, in
 	return
 }
 
-func GetSingleFileToUpload(rootPath, targetPath string, flat, considerSymLink bool) utils.Artifact {
-	symlinkPath, e := GetFileSymlinkPath(rootPath)
-	if e != nil {
-		return utils.Artifact{}
+func GetSingleFileToUpload(rootPath, targetPath string, flat, preserveSymLink bool) (utils.Artifact, error) {
+	symlinkPath, err := GetFileSymlinkPath(rootPath)
+	if err != nil {
+		return utils.Artifact{}, err
 	}
 
 	var uploadPath string
-	var fileRootPath string
 	if !strings.HasSuffix(targetPath, "/") {
 		uploadPath = targetPath
 	} else {
-		if considerSymLink || (symlinkPath == "") { // If preserving symlinks, or no symlink target (regular file / broken symlink)
-			fileRootPath = rootPath // Use root file name for upload
-		} else { // Valid symlink and not preserving
-			fileRootPath = symlinkPath // Use symlink target name for upload
+
+		// If not preserving symlinks and symlink target is valid, use symlink target for upload
+		if !preserveSymLink && (symlinkPath != "") {
+			rootPath = symlinkPath
 		}
 		if flat {
-			uploadPath, _ = fileutils.GetFileAndDirFromPath(fileRootPath)
+			uploadPath, _ = fileutils.GetFileAndDirFromPath(rootPath)
 			uploadPath = targetPath + uploadPath
 		} else {
-			uploadPath = targetPath + fileRootPath
+			uploadPath = targetPath + rootPath
 			uploadPath = utils.TrimPath(uploadPath)
 		}
 	}
 
-	return utils.Artifact{LocalPath: fileRootPath, TargetPath: uploadPath, Symlink: symlinkPath}
+	return utils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, Symlink: symlinkPath}, nil
 }
 
 func IsPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {
@@ -128,12 +127,10 @@ func GetFileSymlinkPath(filePath string) (string, error) {
 
 // Get the local root path, from which to start collecting artifacts to be uploaded to Artifactory.
 // If path dose not exist error will be returned.
-func GetRootPath(pattern string, isRegexp, considerSymLink bool) (string, error) {
+func GetRootPath(pattern string, isRegexp, preserveSymLink bool) (string, error) {
 	rootPath := utils.GetRootPath(pattern, isRegexp)
-	var exists bool
-	exists = fileutils.IsPathExists(considerSymLink, rootPath)
 
-	if !exists {
+	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
 		return "", errorutils.CheckError(errors.New("Path does not exist: " + rootPath))
 	}
 

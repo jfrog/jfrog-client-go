@@ -250,7 +250,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 }
 
 func shouldDownloadFile(localFilePath string, remoteFileDetails *fileutils.FileDetails) (bool, error) {
-	exists, err := fileutils.IsFileExists(false, localFilePath)
+	exists, err := fileutils.IsFileExists(localFilePath, false)
 	if err != nil {
 		return false, err
 	}

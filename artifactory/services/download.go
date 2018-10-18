@@ -248,7 +248,7 @@ func (ds *DownloadService) isFileAcceptRange(downloadFileDetails *httpclient.Dow
 }
 
 func shouldDownloadFile(localFilePath, md5, sha1 string) (bool, error) {
-	exists, err := fileutils.IsFileExists(false, localFilePath)
+	exists, err := fileutils.IsFileExists(localFilePath, false)
 	if err != nil {
 		return false, err
 	}
@@ -273,7 +273,7 @@ func removeIfSymlink(localSymlinkPath string) error {
 
 func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) error {
 	if symlinkChecksum && symlinkContentChecksum != "" {
-		if !fileutils.IsPathExists(false, symlinkArtifact) {
+		if !fileutils.IsPathExists(symlinkArtifact, false) {
 			return errorutils.CheckError(errors.New("Symlink validation failed, target doesn't exist: " + symlinkArtifact))
 		}
 		file, err := os.Open(symlinkArtifact)
@@ -292,7 +292,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		}
 	}
 	localSymlinkPath := filepath.Join(localPath, localFileName)
-	isFileExists, err := fileutils.IsFileExists(false, localSymlinkPath)
+	isFileExists, err := fileutils.IsFileExists(localSymlinkPath, false)
 	if err != nil {
 		return err
 	}

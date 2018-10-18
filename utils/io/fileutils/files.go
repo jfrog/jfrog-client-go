@@ -27,49 +27,51 @@ func GetFileSeparator() string {
 	return "/"
 }
 
-func IsPathExists(considerSymLink bool, path string) bool {
-	var err error
-	if considerSymLink {
-		_, err = os.Lstat(path)
-	} else {
-		_, err = os.Stat(path)
-	}
+// Check if path exists.
+// If path points at a symlink and `preserveSymLink == true`,
+// function will return `true` regardless of the symlink target
+func IsPathExists(path string, preserveSymLink bool) bool {
+	_, err := GetFileInfoByPreserveSymLink(path, preserveSymLink)
 	return !os.IsNotExist(err)
 }
 
-func IsFileExists(considerSymLink bool, path string) (bool, error) {
-	if !IsPathExists(considerSymLink, path) {
-		return false, nil
-	}
-	var err error
-	var f os.FileInfo
-	if considerSymLink {
-		f, err = os.Lstat(path)
-	} else {
-		f, err = os.Stat(path)
-	}
+// Check if path points at a file.
+// If path points at a symlink and `preserveSymLink == true`,
+// function will return `true` regardless of the symlink target
+func IsFileExists(path string, preserveSymLink bool) (bool, error) {
+	fileInfo, err := GetFileInfoByPreserveSymLink(path, preserveSymLink)
 	if err != nil {
+		if os.IsNotExist(err) { // If doesn't exist, don't omit an error
+			return false, nil
+		}
 		return false, errorutils.CheckError(err)
 	}
-	return !f.IsDir(), nil
+	return !fileInfo.IsDir(), nil
 }
 
-func IsDirExists(considerSymLink bool, path string) (bool, error) {
-	if !IsPathExists(considerSymLink, path) {
-		return false, nil
-	}
-	var err error
-	var f os.FileInfo
-	if considerSymLink {
-		f, err = os.Lstat(path)
-	} else {
-		f, err = os.Stat(path)
-	}
-	err = errorutils.CheckError(err)
+// Check if path points at a directory.
+// If path points at a symlink and `preserveSymLink == true`,
+// function will return `false` regardless of the symlink target
+func IsDirExists(path string, preserveSymLink bool) (bool, error) {
+	fileInfo, err := GetFileInfoByPreserveSymLink(path, preserveSymLink)
 	if err != nil {
-		return false, err
+		if os.IsNotExist(err) { // If doesn't exist, don't omit an error
+			return false, nil
+		}
+		return false, errorutils.CheckError(err)
 	}
-	return f.IsDir(), nil
+	return fileInfo.IsDir(), nil
+}
+
+// Get the file info of the file in path.
+// If path points at a symlink and `preserveSymLink == true`, return the file info of the symlink instead
+func GetFileInfoByPreserveSymLink(path string, preserveSymLink bool) (fileInfo os.FileInfo, err error) {
+	if preserveSymLink {
+		fileInfo, err = os.Lstat(path)
+	} else {
+		fileInfo, err = os.Stat(path)
+	}
+	return fileInfo, err
 }
 
 func IsPathSymlink(path string) bool {
@@ -79,24 +81,6 @@ func IsPathSymlink(path string) bool {
 
 func IsFileSymlink(file os.FileInfo) bool {
 	return file.Mode()&os.ModeSymlink != 0
-}
-
-func IsDir(considerSymLink bool, path string) (bool, error) {
-	if !IsPathExists(considerSymLink, path) {
-		return false, nil
-	}
-	var err error
-	var f os.FileInfo
-	if considerSymLink {
-		f, err = os.Lstat(path)
-	} else {
-		f, err = os.Stat(path)
-	}
-	err = errorutils.CheckError(err)
-	if err != nil {
-		return false, err
-	}
-	return f.IsDir(), nil
 }
 
 func GetFileAndDirFromPath(path string) (fileName, dir string) {
@@ -156,14 +140,14 @@ func ListFiles(path string, includeDirs bool) ([]string, error) {
 
 	for _, f := range files {
 		filePath := path + f.Name()
-		exists, err := IsFileExists(false, filePath)
+		exists, err := IsFileExists(filePath, false)
 		if err != nil {
 			return nil, err
 		}
 		if exists || IsPathSymlink(filePath) {
 			fileList = append(fileList, filePath)
 		} else if includeDirs {
-			isDir, err := IsDir(false, filePath)
+			isDir, err := IsDirExists(filePath, false)
 			if err != nil {
 				return nil, err
 			}
@@ -206,7 +190,7 @@ func CreateFilePath(localPath, fileName string) (string, error) {
 }
 
 func CreateDirIfNotExist(path string) error {
-	exist, err := IsDir(false, path)
+	exist, err := IsDirExists(path, false)
 	if exist || err != nil {
 		return err
 	}
@@ -245,7 +229,7 @@ func RemoveTempDir() error {
 		tempDirPath = ""
 	}()
 
-	exists, err := IsDirExists(false, tempDirPath)
+	exists, err := IsDirExists(tempDirPath, false)
 	if err != nil {
 		return err
 	}
@@ -396,7 +380,7 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 	}
 
 	for _, v := range files {
-		dir, err := IsDir(false, v)
+		dir, err := IsDirExists(v, false)
 		if err != nil {
 			return err
 		}

@@ -11,7 +11,7 @@ import (
 )
 
 func loadCertificates(caCertPool *x509.CertPool, certificatesDirPath string) error {
-	if !fileutils.IsPathExists(false, certificatesDirPath) {
+	if !fileutils.IsPathExists(certificatesDirPath, false) {
 		return nil
 	}
 	files, err := ioutil.ReadDir(certificatesDirPath)
