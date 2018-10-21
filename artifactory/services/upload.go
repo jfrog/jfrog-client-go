@@ -244,23 +244,17 @@ func createUploadTask(taskData *uploadTaskData) error {
 	}
 	var task parallel.TaskFunc
 
+	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
 	if err != nil {
 		return err
 	}
 
-	// If preserving symlinks, use root path name for upload (symlink itself)
-	if taskData.uploadParams.IsSymlink() {
+	// If preserving symlinks or symlink target is empty, use root path name for upload (symlink itself / regular file)
+	if taskData.uploadParams.IsSymlink() || symlinkPath == "" {
 		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat())
-
 	} else {
-		// If symlink target is empty, use root path name for upload
-		if symlinkPath == "" {
-			taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat())
-		} else {
-			// Use symlink target for upload
-			taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat())
-		}
+		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat())
 	}
 
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
