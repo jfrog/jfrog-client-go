@@ -37,6 +37,10 @@ func TestCompare(t *testing.T) {
 		{"", "1", -1},
 		{"1", "", 1},
 		{"6.x-SNAPSHOT", "5.5.2", 1},
+		{"6.x-SNAPSHOT", "6.5.0", 1},
+		{"6.5.x-SNAPSHOT", "6.5.2", 1},
+		{"7.x-SNAPSHOT", "6.x-SNAPSHOT", 1},
+		{"6.1.x-SNAPSHOT", "6.2.x-SNAPSHOT", -1},
 	}
 	for _, test := range tests {
 		t.Run(test.ver1+":"+test.ver2, func(t *testing.T) {
