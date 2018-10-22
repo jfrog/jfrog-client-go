@@ -81,18 +81,7 @@ type BuildPromotionBody struct {
 	DryRun              bool   `json:"dryRun,omitempty"`
 }
 
-type PromotionParams interface {
-	GetBuildName() string
-	GetBuildNumber() string
-	GetTargetRepo() string
-	GetStatus() string
-	GetComment() string
-	IsCopy() bool
-	IsIncludeDependencies() bool
-	GetSourceRepo() string
-}
-
-type PromotionParamsImpl struct {
+type PromotionParams struct {
 	BuildName           string
 	BuildNumber         string
 	TargetRepo          string
@@ -103,34 +92,38 @@ type PromotionParamsImpl struct {
 	SourceRepo          string
 }
 
-func (bp *PromotionParamsImpl) GetBuildName() string {
+func (bp *PromotionParams) GetBuildName() string {
 	return bp.BuildName
 }
 
-func (bp *PromotionParamsImpl) GetBuildNumber() string {
+func (bp *PromotionParams) GetBuildNumber() string {
 	return bp.BuildNumber
 }
 
-func (bp *PromotionParamsImpl) GetTargetRepo() string {
+func (bp *PromotionParams) GetTargetRepo() string {
 	return bp.TargetRepo
 }
 
-func (bp *PromotionParamsImpl) GetStatus() string {
+func (bp *PromotionParams) GetStatus() string {
 	return bp.Status
 }
 
-func (bp *PromotionParamsImpl) GetComment() string {
+func (bp *PromotionParams) GetComment() string {
 	return bp.Comment
 }
 
-func (bp *PromotionParamsImpl) IsCopy() bool {
+func (bp *PromotionParams) IsCopy() bool {
 	return bp.Copy
 }
 
-func (bp *PromotionParamsImpl) IsIncludeDependencies() bool {
+func (bp *PromotionParams) IsIncludeDependencies() bool {
 	return bp.IncludeDependencies
 }
 
-func (bp *PromotionParamsImpl) GetSourceRepo() string {
+func (bp *PromotionParams) GetSourceRepo() string {
 	return bp.SourceRepo
+}
+
+func NewPromotionParams() PromotionParams {
+	return PromotionParams{}
 }

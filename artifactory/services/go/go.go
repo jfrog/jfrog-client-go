@@ -88,16 +88,7 @@ func shouldUseHeaders(artifactoryVersion string) bool {
 	return false
 }
 
-type GoParams interface {
-	GetZipPath() string
-	GetModContent() []byte
-	GetProps() string
-	GetVersion() string
-	GetTargetRepo() string
-	GetModuleId() string
-}
-
-type GoParamsImpl struct {
+type GoParams struct {
 	ZipPath    string
 	ModContent []byte
 	Version    string
@@ -106,26 +97,30 @@ type GoParamsImpl struct {
 	ModuleId   string
 }
 
-func (gpi *GoParamsImpl) GetZipPath() string {
+func (gpi *GoParams) GetZipPath() string {
 	return gpi.ZipPath
 }
 
-func (gpi *GoParamsImpl) GetModContent() []byte {
+func (gpi *GoParams) GetModContent() []byte {
 	return gpi.ModContent
 }
 
-func (gpi *GoParamsImpl) GetVersion() string {
+func (gpi *GoParams) GetVersion() string {
 	return gpi.Version
 }
 
-func (gpi *GoParamsImpl) GetProps() string {
+func (gpi *GoParams) GetProps() string {
 	return gpi.Props
 }
 
-func (gpi *GoParamsImpl) GetTargetRepo() string {
+func (gpi *GoParams) GetTargetRepo() string {
 	return gpi.TargetRepo
 }
 
-func (gpi *GoParamsImpl) GetModuleId() string {
+func (gpi *GoParams) GetModuleId() string {
 	return gpi.ModuleId
+}
+
+func NewGoParams() GoParams {
+	return GoParams{}
 }

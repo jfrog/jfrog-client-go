@@ -24,37 +24,6 @@ const (
 	NONE
 )
 
-type SearchParams struct {
-	*ArtifactoryCommonParams
-}
-
-func (s *SearchParams) GetFile() *ArtifactoryCommonParams {
-	return s.ArtifactoryCommonParams
-}
-
-func SearchBySpecFiles(searchParams SearchParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
-	var resultItems []ResultItem
-	var itemsFound []ResultItem
-	var err error
-
-	switch searchParams.GetSpecType() {
-	case WILDCARD, SIMPLE:
-		itemsFound, e := AqlSearchDefaultReturnFields(searchParams.GetFile(), flags, requiredArtifactProps)
-		if e != nil {
-			err = e
-			return resultItems, err
-		}
-		resultItems = append(resultItems, itemsFound...)
-	case AQL:
-		itemsFound, err = AqlSearchBySpec(searchParams.GetFile(), flags, requiredArtifactProps)
-		if err != nil {
-			return resultItems, err
-		}
-		resultItems = append(resultItems, itemsFound...)
-	}
-	return resultItems, err
-}
-
 func AqlSearchDefaultReturnFields(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
 	query, err := createAqlBodyForSpec(specFile)
 	if err != nil {

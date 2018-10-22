@@ -108,7 +108,7 @@ func getArtDetails() auth.ArtifactoryDetails {
 
 func artifactoryCleanUp(t *testing.T) {
 	params := &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}
-	toDelete, err := testsDeleteService.GetPathsToDelete(&DeleteParamsImpl{ArtifactoryCommonParams: params})
+	toDelete, err := testsDeleteService.GetPathsToDelete(DeleteParams{ArtifactoryCommonParams: params})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

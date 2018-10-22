@@ -36,74 +36,140 @@
 
 #### Upload
 ```
-    commonParams := &utils.ArtifactoryCommonParams{}
-    commonParams.Pattern = "*/*.zip"
-    commonParams.Target = "repo/path/"
-    
-    params := &services.UploadParamsImpl{ArtifactoryCommonParams: commonParams}
+    params := services.NewUploadParams()
+    params.Pattern = "repo/*/*.zip"
+    params.Target = "repo/path/"
+    params.Recursive = true
+    params.Regexp = false
+    params.IncludeDirs = false
+    params.Flat = true
+    params.Explode = false
+    params.Deb = ""
+    params.Symlink = false
+    params.Retries = 3
+
     rtManager.UploadFiles(params)
 ```
 
 #### Download
 ```
-    commonParams := &utils.ArtifactoryCommonParams{}
-    commonParams.Pattern = "repo/*/*.zip"
-    commonParams.Target = "target/path/"
-    
-    params := &services.DownloadParamsImpl{ArtifactoryCommonParams: commonParams}
-    rtManager.DownloadFiles(params)
-```
+    params := services.NewDownloadParams()
+    params.Pattern = "repo/*/*.zip"
+    params.Target = "target/path/"
+	params.Recursive = true
+	params.IncludeDirs = false
+	params.Flat = false
+	params.Explode = false
+	params.Symlink = true
+	params.ValidateSymlink = false
+	params.Retries = 3
 
-#### Search
-```
-    commonParams := &utils.ArtifactoryCommonParams{}
-    commonParams.Pattern = "repo/*/*.zip"
-    
-    params := services.SearchParams{ArtifactoryCommonParams: commonParams}
     rtManager.DownloadFiles(params)
-```
 
-#### Delete
-```
-    commonParams := &utils.ArtifactoryCommonParams{}
-    commonParams.Pattern = "repo/*/*.zip"
-    
-    params := &services.DeleteParamsImpl{ArtifactoryCommonParams: commonParams}
-    rtManager.DownloadFiles(params)
-```
-
-#### Get Unreferenced Git Lfs Files
-```
-    param := &services.GitLfsCleanParamsImpl{}
-    param.Refs = "refs/remotes/origin/master"
-    params.Repo = "my-project-lfs"
-    
-    rtManager.DownloadFiles(params)
-```
-
-#### Move
-```
-    commonParams := &utils.ArtifactoryCommonParams{}
-    commonParams.Pattern = "repo/*/*.zip"
-    commonParams.Target = "repo2/path/"
-    
-    params := &services.MoveCopyParamsImpl{ArtifactoryCommonParams: commonParams}
-    rtManager.Move(params)
 ```
 
 #### Copy
 ```
-    commonParams := &utils.ArtifactoryCommonParams{}
-    commonParams.Pattern = "repo/*/*.zip"
-    commonParams.Target = "repo2/path/"
-    
-    params := &services.MoveCopyParamsImpl{ArtifactoryCommonParams: commonParams}
+    params := services.NewMoveCopyParams()
+    params.Pattern = "repo/*/*.zip"
+    params.Target = "target/path/"
+	params.Recursive = true
+	params.Flat = false
+
     rtManager.Copy(params)
+```
+
+#### Move
+```
+    params := services.NewMoveCopyParams()
+    params.Pattern = "repo/*/*.zip"
+    params.Target = "target/path/"
+	params.Recursive = true
+	params.Flat = false
+
+    rtManager.Move(params)
+```
+
+#### Delete
+```
+    params := services.NewDeleteParams()
+    params.Pattern = "repo/*/*.zip"
+    params.Recursive = true
+
+    pathsToDelete := rtManager.GetPathsToDelete(params)
+    rtManager.DeleteFiles(pathsToDelete)
+```
+
+#### Search
+```
+    params := services.NewSearchParams()
+    params.Pattern = "repo/*/*.zip"
+    params.Recursive = true
+
+    rtManager.SearchFiles(params)
+```
+
+#### Set Properties
+```
+    searchParams = services.NewSearchParams()
+    searchParams.Recursive = true
+    searchParams.IncludeDirs = false
+
+    resultItems = rtManager.SearchFiles(searchParams)
+
+    propsParams = services.NewPropsParams()
+    propsParams.Pattern = "repo/*/*.zip"
+    propsParams.Items = resultItems
+    propsParams.Props = "key=value"
+
+    rtManager.SetProps(propsParams)
+```
+
+#### Delete Properties
+```
+    searchParams = services.NewSearchParams()
+    searchParams.Recursive = true
+    searchParams.IncludeDirs = false
+
+    resultItems = rtManager.SearchFiles(searchParams)
+
+    propsParams = services.NewPropsParams()
+    propsParams.Pattern = "repo/*/*.zip"
+    propsParams.Items = resultItems
+    propsParams.Props = "key=value"
+
+    rtManager.DeleteProps(propsParams)
+```
+
+
+#### Build Integration:
+
+#### Publish Build Info
+```
+    buildInfo := &buildinfo.BuildInfo{}
+    // Fill build information
+
+    rtManager.PublishBuildInfo(buildInfo)
+```
+
+#### Promote
+```
+    params := services.NewPromotionParams()
+    params.BuildName = "buildName"
+    params.BuildNumber = "10"
+    params.TargetRepo = "target-repo"
+    params.Status = "status"
+    params.Comment = "comment"
+    params.Copy = true
+    params.IncludeDependencies = false
+    params.SourceRepo = "source-repo"
+
+    rtManager.DownloadFiles(params)
 ```
 
 #### Distribute
 ```
-    params := &services.BuildDistributionParamsImpl{}
+    params := services.NewBuildDistributionParams()
     params.SourceRepos = "source-repo"
     params.TargetRepo = "target-repo"
     params.GpgPassphrase = "GpgPassphrase"
@@ -113,74 +179,53 @@
     params.BuildName = "buildName"
     params.BuildNumber = "10"
     params.Pattern = "repo/*/*.zip"
-    
+
     rtManager.DistributeBuild(params)
+```
+
+#### Xray Scan
+```
+    params := services.NewXrayScanParams()
+    params.BuildName = buildName
+    params.BuildNumber = buildNumber
+
+    rtManager.XrayScanBuild(params)
 ```
 
 #### Discard Builds
 ```
-    params := &services.DiscardBuildsParamsImpl{}
+    params := services.NewDiscardBuildsParams()
     params.BuildName = "buildName"
     params.MaxDays = "max-days"
     params.MaxBuilds = "max-builds"
     params.ExcludeBuilds = "1,2"
     params.DeleteArtifacts = false
     params.Async = false
-    
+
     rtManager.DiscardBuilds(params)
 ```
 
-#### Promote
+#### Clean Unreferenced Git LFS Files
 ```
-    params := &services.PromotionParamsImpl{}
-    params.BuildName = "buildName"
-    params.BuildNumber = "10"
-    params.TargetRepo = "target-repo"
-    params.Status = "status"
-    params.Comment = "comment"
-    params.Copy = true
-    params.IncludeDependencies = false
-    params.SourceRepo = "source-repo"
-    
-    rtManager.DownloadFiles(params)
-```
+    params := services.NewGitLfsCleanParams()
+	params.Refs = "refs/remotes/*"
+	params.Repo = "my-project-lfs"
+	params.GitPath = "path/to/git"
 
-#### Set Properties
+    filesToDelete := rtManager.GetUnreferencedGitLfsFiles(params)
+    rtManager.DeleteFiles(filesToDelete)
 ```
-    commonParams := &utils.ArtifactoryCommonParams{}
-    commonParams.Pattern = "repo/*/*.zip"
-    item, err := rtManager.Search(&clientutils.SearchParams{ArtifactoryCommonParams: commonParams})
-    // Check for errors
-    var items []clientutils.ResultItem
-    items = append(items, item)
-    prop := "key=value"
-    
-    params := &services.SetPropsParamsImpl{Items:items, Props:prop}
-    rtManager.SetProps(params)
-```
-
-#### Publish build info
-```
-    buildInfo := &buildinfo.BuildInfo{}
-    // Fill build information
-    
-    rtManager.PublishBuildInfo(buildInfo)
-```
-
 
 #### Execute AQL
 ```
     rtManager.Aql(aql string)
 ```
 
-#### Xray Scan
+#### Read Remote File
 ```
-    xrayScanParams := &services.XrayScanParamsImpl{}
-    xrayScanParams.BuildName = buildName
-    xrayScanParams.BuildNumber = buildNumber
-    
-    rtManager.XrayScanBuild(params)
+    rtManager.ReadRemoteFile(FilePath string)
 ```
+
 
 ## Bintray Client
 

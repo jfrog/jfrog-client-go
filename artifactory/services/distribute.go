@@ -86,18 +86,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	return nil
 }
 
-type BuildDistributionParams interface {
-	GetSourceRepos() string
-	GetTargetRepo() string
-	GetGpgPassphrase() string
-	IsAsync() bool
-	IsPublish() bool
-	IsOverrideExistingFiles() bool
-	GetBuildName() string
-	GetBuildNumber() string
-}
-
-type BuildDistributionParamsImpl struct {
+type BuildDistributionParams struct {
 	SourceRepos           string
 	TargetRepo            string
 	GpgPassphrase         string
@@ -108,35 +97,35 @@ type BuildDistributionParamsImpl struct {
 	BuildNumber           string
 }
 
-func (bd *BuildDistributionParamsImpl) GetSourceRepos() string {
+func (bd *BuildDistributionParams) GetSourceRepos() string {
 	return bd.SourceRepos
 }
 
-func (bd *BuildDistributionParamsImpl) GetTargetRepo() string {
+func (bd *BuildDistributionParams) GetTargetRepo() string {
 	return bd.TargetRepo
 }
 
-func (bd *BuildDistributionParamsImpl) GetGpgPassphrase() string {
+func (bd *BuildDistributionParams) GetGpgPassphrase() string {
 	return bd.GpgPassphrase
 }
 
-func (bd *BuildDistributionParamsImpl) IsAsync() bool {
+func (bd *BuildDistributionParams) IsAsync() bool {
 	return bd.Async
 }
 
-func (bd *BuildDistributionParamsImpl) IsPublish() bool {
+func (bd *BuildDistributionParams) IsPublish() bool {
 	return bd.Publish
 }
 
-func (bd *BuildDistributionParamsImpl) IsOverrideExistingFiles() bool {
+func (bd *BuildDistributionParams) IsOverrideExistingFiles() bool {
 	return bd.OverrideExistingFiles
 }
 
-func (bd *BuildDistributionParamsImpl) GetBuildName() string {
+func (bd *BuildDistributionParams) GetBuildName() string {
 	return bd.BuildName
 }
 
-func (bd *BuildDistributionParamsImpl) GetBuildNumber() string {
+func (bd *BuildDistributionParams) GetBuildNumber() string {
 	return bd.BuildNumber
 }
 
@@ -148,4 +137,8 @@ type BuildDistributionBody struct {
 	OverrideExistingFiles bool     `json:"overrideExistingFiles,omitempty"`
 	Async                 bool     `json:"async,omitempty"`
 	DryRun                bool     `json:"dryRun,omitempty"`
+}
+
+func NewBuildDistributionParams() BuildDistributionParams {
+	return BuildDistributionParams{}
 }

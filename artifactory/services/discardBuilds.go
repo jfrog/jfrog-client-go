@@ -102,16 +102,7 @@ type DiscardBuildsBody struct {
 	DeleteArtifacts  bool     `json:"deleteBuildArtifacts"`
 }
 
-type DiscardBuildsParams interface {
-	GetBuildName() string
-	GetMaxDays() string
-	GetMaxBuilds() string
-	GetExcludeBuilds() string
-	IsDeleteArtifacts() bool
-	IsAsync() bool
-}
-
-type DiscardBuildsParamsImpl struct {
+type DiscardBuildsParams struct {
 	DeleteArtifacts bool
 	BuildName       string
 	MaxDays         string
@@ -120,26 +111,30 @@ type DiscardBuildsParamsImpl struct {
 	Async           bool
 }
 
-func (bd *DiscardBuildsParamsImpl) GetBuildName() string {
+func (bd *DiscardBuildsParams) GetBuildName() string {
 	return bd.BuildName
 }
 
-func (bd *DiscardBuildsParamsImpl) GetMaxDays() string {
+func (bd *DiscardBuildsParams) GetMaxDays() string {
 	return bd.MaxDays
 }
 
-func (bd *DiscardBuildsParamsImpl) GetMaxBuilds() string {
+func (bd *DiscardBuildsParams) GetMaxBuilds() string {
 	return bd.MaxBuilds
 }
 
-func (bd *DiscardBuildsParamsImpl) GetExcludeBuilds() string {
+func (bd *DiscardBuildsParams) GetExcludeBuilds() string {
 	return bd.ExcludeBuilds
 }
 
-func (bd *DiscardBuildsParamsImpl) IsDeleteArtifacts() bool {
+func (bd *DiscardBuildsParams) IsDeleteArtifacts() bool {
 	return bd.DeleteArtifacts
 }
 
-func (bd *DiscardBuildsParamsImpl) IsAsync() bool {
+func (bd *DiscardBuildsParams) IsAsync() bool {
 	return bd.Async
+}
+
+func NewDiscardBuildsParams() DiscardBuildsParams {
+	return DiscardBuildsParams{}
 }

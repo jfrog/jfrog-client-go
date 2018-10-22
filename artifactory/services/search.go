@@ -31,6 +31,41 @@ func (s *SearchService) GetJfrogHttpClient() *httpclient.HttpClient {
 	return s.client
 }
 
-func (s *SearchService) Search(searchParams utils.SearchParams) ([]utils.ResultItem, error) {
-	return utils.SearchBySpecFiles(searchParams, s, utils.ALL)
+func (s *SearchService) Search(searchParams SearchParams) ([]utils.ResultItem, error) {
+	return SearchBySpecFiles(searchParams, s, utils.ALL)
+}
+
+type SearchParams struct {
+	*utils.ArtifactoryCommonParams
+}
+
+func (s *SearchParams) GetFile() *utils.ArtifactoryCommonParams {
+	return s.ArtifactoryCommonParams
+}
+
+func NewSearchParams() SearchParams {
+	return SearchParams{}
+}
+
+func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requiredArtifactProps utils.RequiredArtifactProps) ([]utils.ResultItem, error) {
+	var resultItems []utils.ResultItem
+	var itemsFound []utils.ResultItem
+	var err error
+
+	switch searchParams.GetSpecType() {
+	case utils.WILDCARD, utils.SIMPLE:
+		itemsFound, e := utils.AqlSearchDefaultReturnFields(searchParams.GetFile(), flags, requiredArtifactProps)
+		if e != nil {
+			err = e
+			return resultItems, err
+		}
+		resultItems = append(resultItems, itemsFound...)
+	case utils.AQL:
+		itemsFound, err = utils.AqlSearchBySpec(searchParams.GetFile(), flags, requiredArtifactProps)
+		if err != nil {
+			return resultItems, err
+		}
+		resultItems = append(resultItems, itemsFound...)
+	}
+	return resultItems, err
 }

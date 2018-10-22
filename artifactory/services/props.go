@@ -60,21 +60,16 @@ func (ps *PropsService) DeleteProps(propsParams PropsParams) (int, error) {
 	return totalSuccess, nil
 }
 
-type PropsParams interface {
-	GetItems() []utils.ResultItem
-	GetProps() string
-}
-
-type PropsParamsImpl struct {
+type PropsParams struct {
 	Items []utils.ResultItem
 	Props string
 }
 
-func (sp *PropsParamsImpl) GetItems() []utils.ResultItem {
+func (sp *PropsParams) GetItems() []utils.ResultItem {
 	return sp.Items
 }
 
-func (sp *PropsParamsImpl) GetProps() string {
+func (sp *PropsParams) GetProps() string {
 	return sp.Props
 }
 
@@ -159,4 +154,8 @@ func (ps *PropsService) sendPutRequest(logMsgPrefix, relativePath, setProperties
 	log.Debug(logMsgPrefix+"Sending set properties request:", setPropertiesUrl)
 	resp, body, err = ps.client.SendPut(setPropertiesUrl, nil, httpClientsDetails)
 	return
+}
+
+func NewPropsParams() PropsParams {
+	return PropsParams{}
 }

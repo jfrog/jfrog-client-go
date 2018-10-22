@@ -422,16 +422,7 @@ type DownloadData struct {
 	Flat         bool
 }
 
-type DownloadParams interface {
-	utils.FileGetter
-	IsSymlink() bool
-	ValidateSymlinks() bool
-	GetFile() *utils.ArtifactoryCommonParams
-	IsFlat() bool
-	GetRetries() int
-}
-
-type DownloadParamsImpl struct {
+type DownloadParams struct {
 	*utils.ArtifactoryCommonParams
 	Symlink         bool
 	ValidateSymlink bool
@@ -440,26 +431,30 @@ type DownloadParamsImpl struct {
 	Retries         int
 }
 
-func (ds *DownloadParamsImpl) IsFlat() bool {
+func (ds *DownloadParams) IsFlat() bool {
 	return ds.Flat
 }
 
-func (ds *DownloadParamsImpl) IsExplode() bool {
+func (ds *DownloadParams) IsExplode() bool {
 	return ds.Explode
 }
 
-func (ds *DownloadParamsImpl) GetFile() *utils.ArtifactoryCommonParams {
+func (ds *DownloadParams) GetFile() *utils.ArtifactoryCommonParams {
 	return ds.ArtifactoryCommonParams
 }
 
-func (ds *DownloadParamsImpl) IsSymlink() bool {
+func (ds *DownloadParams) IsSymlink() bool {
 	return ds.Symlink
 }
 
-func (ds *DownloadParamsImpl) ValidateSymlinks() bool {
+func (ds *DownloadParams) ValidateSymlinks() bool {
 	return ds.ValidateSymlink
 }
 
-func (ds *DownloadParamsImpl) GetRetries() int {
+func (ds *DownloadParams) GetRetries() int {
 	return ds.Retries
+}
+
+func NewDownloadParams() DownloadParams {
+	return DownloadParams{}
 }

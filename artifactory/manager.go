@@ -106,7 +106,7 @@ func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services
 	return gitLfsCleanService.GetUnreferencedGitLfsFiles(params)
 }
 
-func (sm *ArtifactoryServicesManager) Search(params utils.SearchParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManager) SearchFiles(params services.SearchParams) ([]utils.ResultItem, error) {
 	searchService := services.NewSearchService(sm.client)
 	searchService.ArtDetails = sm.config.GetArtDetails()
 	return searchService.Search(params)
