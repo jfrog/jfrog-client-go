@@ -56,13 +56,13 @@
     params := services.NewDownloadParams()
     params.Pattern = "repo/*/*.zip"
     params.Target = "target/path/"
-	params.Recursive = true
-	params.IncludeDirs = false
-	params.Flat = false
-	params.Explode = false
-	params.Symlink = true
-	params.ValidateSymlink = false
-	params.Retries = 3
+    params.Recursive = true
+    params.IncludeDirs = false
+    params.Flat = false
+    params.Explode = false
+    params.Symlink = true
+    params.ValidateSymlink = false
+    params.Retries = 3
 
     rtManager.DownloadFiles(params)
 
@@ -73,8 +73,8 @@
     params := services.NewMoveCopyParams()
     params.Pattern = "repo/*/*.zip"
     params.Target = "target/path/"
-	params.Recursive = true
-	params.Flat = false
+    params.Recursive = true
+    params.Flat = false
 
     rtManager.Copy(params)
 ```
@@ -84,8 +84,8 @@
     params := services.NewMoveCopyParams()
     params.Pattern = "repo/*/*.zip"
     params.Target = "target/path/"
-	params.Recursive = true
-	params.Flat = false
+    params.Recursive = true
+    params.Flat = false
 
     rtManager.Move(params)
 ```
@@ -208,9 +208,9 @@
 #### Clean Unreferenced Git LFS Files
 ```
     params := services.NewGitLfsCleanParams()
-	params.Refs = "refs/remotes/*"
-	params.Repo = "my-project-lfs"
-	params.GitPath = "path/to/git"
+    params.Refs = "refs/remotes/*"
+    params.Repo = "my-project-lfs"
+    params.GitPath = "path/to/git"
 
     filesToDelete := rtManager.GetUnreferencedGitLfsFiles(params)
     rtManager.DeleteFiles(filesToDelete)
