@@ -522,7 +522,7 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 	defer resp.Body.Close()
 
 	log.Info(logMsgPrefix+"["+strconv.Itoa(currentSplit)+"]:", resp.Status+"...")
-	if err = httperrors.CheckResponseStatus(resp, nil, http.StatusOK); err != nil {
+	if err = httperrors.CheckResponseStatus(resp, nil, http.StatusPartialContent); err != nil {
 		return "", err
 	}
 
