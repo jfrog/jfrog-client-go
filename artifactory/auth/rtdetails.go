@@ -28,7 +28,7 @@ type ArtifactoryDetails interface {
 	SetApiKey(apiKey string)
 	SetSshAuthHeaders(sshAuthHeaders map[string]string)
 
-	AuthenticateSsh(sshKey, sshPassphrase []byte) error
+	AuthenticateSsh(sshKey, sshPassphrase string) error
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
 }
@@ -82,8 +82,8 @@ func (rt *artifactoryDetails) SetSshAuthHeaders(sshAuthHeaders map[string]string
 	rt.SshAuthHeaders = sshAuthHeaders
 }
 
-func (rt *artifactoryDetails) AuthenticateSsh(sshKey, sshPassphrase []byte) error {
-	sshHeaders, baseUrl, err := sshAuthentication(rt.Url, sshKey, sshPassphrase)
+func (rt *artifactoryDetails) AuthenticateSsh(sshKeyPath, sshPassphrase string) error {
+	sshHeaders, baseUrl, err := sshAuthentication(rt.Url, sshKeyPath, sshPassphrase)
 	if err != nil {
 		return err
 	}

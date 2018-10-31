@@ -3,33 +3,72 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/utils/prompt"
 	"github.com/xanzy/ssh-agent"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"io/ioutil"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
-func sshAuthentication(url string, sshKey, sshPassphrase []byte) (map[string]string, string, error) {
+func sshAuthentication(url, sshKeyPath, sshPassphrase string) (sshAuthHeaders map[string]string, newUrl string, err error) {
 	_, host, port, err := parseUrl(url)
 	if err != nil {
 		return nil, "", err
 	}
 
-	log.Info("Performing SSH authentication...")
 	var sshAuth ssh.AuthMethod
-	if len(sshKey) == 0 {
-		sshAuth, err = sshAuthAgent()
-	} else {
-		sshAuth, err = sshAuthPublicKey(sshKey, sshPassphrase)
+	log.Info("Performing SSH authentication...")
+	log.Info("Trying to authenticate via SSH-Agent...")
+
+	// Try authenticating via agent. If failed, try authenticating via key.
+	sshAuth, err = sshAuthAgent()
+	if err == nil {
+		sshAuthHeaders, newUrl, err = getSshHeaders(sshAuth, host, port)
 	}
 	if err != nil {
-		return nil, "", err
+		log.Info("Authentication via SSH-Agent failed. Error:\n", err)
+		log.Info("Trying to authenticate via SSH Key...")
+
+		// Check if key specified
+		if len(sshKeyPath) <= 0 {
+			log.Info("Authentication via SSH key failed.")
+			return nil, "", fmt.Errorf("SSH key not specified.")
+		}
+
+		// Read key and passphrase
+		var sshKey, sshPassphraseBytes []byte
+		sshKey, sshPassphraseBytes, err = readSshKeyAndPassphrase(sshKeyPath, sshPassphrase)
+		if err != nil {
+			log.Info("Authentication via SSH key failed.")
+			return nil, "", err
+		}
+
+		// Verify key and get ssh headers
+		sshAuth, err = sshAuthPublicKey(sshKey, sshPassphraseBytes)
+		if err == nil {
+			sshAuthHeaders, newUrl, err = getSshHeaders(sshAuth, host, port)
+		}
+		if err != nil {
+			log.Info("Authentication via SSH Key failed.")
+			return nil, "", err
+		}
 	}
+
+	// If successful, return headers
+	log.Info("SSH authentication successful.")
+	return sshAuthHeaders, newUrl, nil
+}
+
+func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]string, string, error) {
 	sshConfig := &ssh.ClientConfig{
 		User: "admin",
 		Auth: []ssh.AuthMethod{
@@ -65,10 +104,54 @@ func sshAuthentication(url string, sshKey, sshPassphrase []byte) (map[string]str
 	if err = json.Unmarshal(buf.Bytes(), &result); errorutils.CheckError(err) != nil {
 		return nil, "", err
 	}
-	url = utils.AddTrailingSlashIfNeeded(result.Href)
+	url := utils.AddTrailingSlashIfNeeded(result.Href)
 	sshAuthHeaders := result.Headers
-	log.Info("SSH authentication successful.")
 	return sshAuthHeaders, url, nil
+}
+
+func readSshKeyAndPassphrase(sshKeyPath, sshPassphrase string) ([]byte, []byte, error) {
+	sshKey, err := ioutil.ReadFile(utils.ReplaceTildeWithUserHome(sshKeyPath))
+	if errorutils.CheckError(err) != nil {
+		return nil, nil, err
+	}
+	if len(sshPassphrase) == 0 {
+		encryptedKey, err := isEncrypted(sshKey)
+		if errorutils.CheckError(err) != nil {
+			return nil, nil, err
+		}
+		if encryptedKey {
+			sshPassphrase, err = readSshPassphrase(sshKeyPath)
+			if errorutils.CheckError(err) != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	return sshKey, []byte(sshPassphrase), err
+}
+
+func readSshPassphrase(sshKeyPath string) (string, error) {
+	offerConfig, err := utils.GetBoolEnvValue("JFROG_CLI_OFFER_CONFIG", true)
+	if err != nil || !offerConfig {
+		return "", err
+	}
+	simplePrompt := &prompt.Simple{
+		Msg:   "Enter passphrase for key '" + sshKeyPath + "': ",
+		Mask:  true,
+		Label: "sshPassphrase",
+	}
+	if err = simplePrompt.Read(); err != nil {
+		return "", err
+	}
+	return simplePrompt.GetResults().GetString("sshPassphrase"), nil
+}
+
+func isEncrypted(buffer []byte) (bool, error) {
+	block, _ := pem.Decode(buffer)
+	if block == nil {
+		return false, errors.New("SSH: no key found")
+	}
+	return strings.Contains(block.Headers["Proc-Type"], "ENCRYPTED"), nil
 }
 
 func parseUrl(url string) (protocol, host string, port int, err error) {
@@ -114,7 +197,6 @@ func sshAuthPublicKey(sshKey, sshPassphrase []byte) (ssh.AuthMethod, error) {
 }
 
 func sshAuthAgent() (ssh.AuthMethod, error) {
-	log.Info("Authenticating Using SSH agent")
 	sshAgent, _, err := sshagent.New()
 	if errorutils.CheckError(err) != nil {
 		return nil, err
