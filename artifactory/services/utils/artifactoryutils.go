@@ -12,7 +12,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 )
@@ -20,11 +19,11 @@ import (
 const ARTIFACTORY_SYMLINK = "symlink.dest"
 const SYMLINK_SHA1 = "symlink.destsha1"
 
-func UploadFile(f *os.File, localPath, url string, artifactoryDetails auth.ArtifactoryDetails, details *fileutils.FileDetails,
+func UploadFile(localPath, url string, artifactoryDetails auth.ArtifactoryDetails, details *fileutils.FileDetails,
 	httpClientsDetails httputils.HttpClientDetails, client *httpclient.HttpClient, retries int) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
-		details, err = fileutils.GetFileDetails(f.Name())
+		details, err = fileutils.GetFileDetails(localPath)
 	}
 	if err != nil {
 		return nil, nil, err

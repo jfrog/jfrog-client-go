@@ -112,9 +112,10 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 		sha1Property := ""
 		fileInfo, err := os.Stat(artifact.LocalPath)
 		if err != nil {
-			return "", err
-		}
-		if !fileInfo.IsDir() {
+			if !os.IsNotExist(err) { // If error occurred, but not due to nonexistence of Symlink target -> return empty
+				return "", err
+			}
+		} else if !fileInfo.IsDir() { // If Symlink target exists -> get SHA1 if isn't a directory
 			file, err := os.Open(artifact.LocalPath)
 			errorutils.CheckError(err)
 			if err != nil {
@@ -140,21 +141,25 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
-	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.IsRegexp())
+	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.IsRegexp(), uploadParams.IsSymlink())
 	if err != nil {
 		errorsQueue.AddError(err)
 		return
 	}
 
-	isDir, err := fileutils.IsDir(rootPath)
+	isDir, err := fileutils.IsDirExists(rootPath, uploadParams.IsSymlink())
 	if err != nil {
 		errorsQueue.AddError(err)
 		return
 	}
 
-	// If the path is a single file then return it or it is a link and preserve symbolic links is set to true
-	if !isDir || (uploadParams.IsSymlink() && fileutils.IsPathSymlink(uploadParams.GetPattern())) {
-		artifact := fspatterns.GetSingleFileToUpload(rootPath, uploadParams.GetTarget(), uploadParams.IsFlat())
+	// If the path is a single file (or a symlink while preserving symlinks) upload it and return
+	if !isDir || (fileutils.IsPathSymlink(rootPath) && uploadParams.IsSymlink()) {
+		artifact, err := fspatterns.GetSingleFileToUpload(rootPath, uploadParams.GetTarget(), uploadParams.IsFlat(), uploadParams.IsSymlink())
+		if err != nil {
+			errorsQueue.AddError(err)
+			return
+		}
 		props, err := addSymlinkProps(artifact, uploadParams)
 		if err != nil {
 			errorsQueue.AddError(err)
@@ -238,12 +243,20 @@ func createUploadTask(taskData *uploadTaskData) error {
 		taskData.target = strings.Replace(taskData.target, "{"+strconv.Itoa(i)+"}", group, -1)
 	}
 	var task parallel.TaskFunc
-	taskData.target = getUploadTarget(taskData.uploadParams.IsFlat(), taskData.path, taskData.target)
-	// If case taskData.path is a symlink we get the symlink link path.
-	symlinkPath, e := fspatterns.GetFileSymlinkPath(taskData.path)
-	if e != nil {
-		return e
+
+	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
+	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
+	if err != nil {
+		return err
 	}
+
+	// If preserving symlinks or symlink target is empty, use root path name for upload (symlink itself / regular file)
+	if taskData.uploadParams.IsSymlink() || symlinkPath == "" {
+		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat())
+	} else {
+		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat())
+	}
+
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
 	props, e := addSymlinkProps(artifact, taskData.uploadParams)
 	if e != nil {
@@ -262,13 +275,14 @@ func createUploadTask(taskData *uploadTaskData) error {
 	return nil
 }
 
-func getUploadTarget(isFlat bool, path, target string) string {
+// Construct the target path while taking `flat` flag into account.
+func getUploadTarget(rootPath, target string, isFlat bool) string {
 	if strings.HasSuffix(target, "/") {
 		if isFlat {
-			fileName, _ := fileutils.GetFileAndDirFromPath(path)
+			fileName, _ := fileutils.GetFileAndDirFromPath(rootPath)
 			target += fileName
 		} else {
-			target += clientutils.TrimPath(path)
+			target += clientutils.TrimPath(rootPath)
 		}
 	}
 	return target
@@ -284,18 +298,14 @@ func addPropsToTargetPath(targetPath, props, debConfig string) (string, error) {
 }
 
 func prepareUploadData(baseTargetPath, localPath, props string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, fileName string, err error) {
-	fileName, _ = fileutils.GetFileAndDirFromPath(baseTargetPath)
+	fileName, _ = fileutils.GetFileAndDirFromPath(localPath)
 	targetPath, err = addPropsToTargetPath(baseTargetPath, props, uploadParams.GetDebian())
 	if errorutils.CheckError(err) != nil {
 		return
 	}
 	log.Info(logMsgPrefix+"Uploading artifact:", localPath)
-	file, err := os.Open(localPath)
-	defer file.Close()
-	if errorutils.CheckError(err) != nil {
-		return
-	}
-	fileInfo, err = file.Stat()
+
+	fileInfo, err = os.Lstat(localPath)
 	errorutils.CheckError(err)
 	return
 }
@@ -307,27 +317,19 @@ func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadP
 	if err != nil {
 		return utils.FileInfo{}, false, err
 	}
-	file, err := os.Open(localPath)
-	defer file.Close()
-	if errorutils.CheckError(err) != nil {
-		return utils.FileInfo{}, false, err
-	}
+
 	var checksumDeployed bool = false
 	var resp *http.Response
 	var details *fileutils.FileDetails
 	var body []byte
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
-	fileStat, err := os.Lstat(localPath)
 	if errorutils.CheckError(err) != nil {
 		return utils.FileInfo{}, false, err
 	}
-	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileStat) {
+	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileInfo) {
 		resp, details, body, err = us.uploadSymlink(targetPath, httpClientsDetails, uploadParams)
-		if err != nil {
-			return utils.FileInfo{}, false, err
-		}
 	} else {
-		resp, details, body, checksumDeployed, err = us.doUpload(file, localPath, targetPath, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
+		resp, details, body, checksumDeployed, err = us.doUpload(localPath, targetPath, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
 	}
 	if err != nil {
 		return utils.FileInfo{}, false, err
@@ -342,11 +344,11 @@ func (us *UploadService) uploadSymlink(targetPath string, httpClientsDetails htt
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile(nil, "", targetPath, us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
+	resp, body, err = utils.UploadFile("", targetPath, us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
 	return
 }
 
-func (us *UploadService) doUpload(file *os.File, localPath, targetPath, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, fileInfo os.FileInfo, uploadParams UploadParams) (*http.Response, *fileutils.FileDetails, []byte, bool, error) {
+func (us *UploadService) doUpload(localPath, targetPath, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, fileInfo os.FileInfo, uploadParams UploadParams) (*http.Response, *fileutils.FileDetails, []byte, bool, error) {
 	var details *fileutils.FileDetails
 	var checksumDeployed bool
 	var resp *http.Response
@@ -362,7 +364,7 @@ func (us *UploadService) doUpload(file *os.File, localPath, targetPath, logMsgPr
 	}
 	if !us.DryRun && !checksumDeployed {
 		var body []byte
-		resp, body, err = utils.UploadFile(file, localPath, targetPath, us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
+		resp, body, err = utils.UploadFile(localPath, targetPath, us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
 		}
