@@ -112,14 +112,15 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 		sha1Property := ""
 		fileInfo, err := os.Stat(artifact.LocalPath)
 		if err != nil {
-			if !os.IsNotExist(err) { // If error occurred, but not due to nonexistence of Symlink target -> return empty
+			// If error occurred, but not due to nonexistence of Symlink target -> return empty
+			if !os.IsNotExist(err) {
 				return "", err
 			}
-		} else if !fileInfo.IsDir() { // If Symlink target exists -> get SHA1 if isn't a directory
+			// If Symlink target exists -> get SHA1 if isn't a directory
+		} else if !fileInfo.IsDir() {
 			file, err := os.Open(artifact.LocalPath)
-			errorutils.CheckError(err)
 			if err != nil {
-				return "", err
+				return "", errorutils.CheckError(err)
 			}
 			defer file.Close()
 			checksumInfo, err := checksum.Calc(file, checksum.SHA1)
@@ -297,8 +298,8 @@ func addPropsToTargetPath(targetPath, props, debConfig string) (string, error) {
 	return strings.Join([]string{targetPath, properties.ToEncodedString()}, ";"), nil
 }
 
-func prepareUploadData(baseTargetPath, localPath, props string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, fileName string, err error) {
-	fileName, _ = fileutils.GetFileAndDirFromPath(localPath)
+func prepareUploadData(localPath, baseTargetPath, props string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, fileName string, err error) {
+	fileName, _ = fileutils.GetFileAndDirFromPath(baseTargetPath)
 	targetPath, err = addPropsToTargetPath(baseTargetPath, props, uploadParams.GetDebian())
 	if errorutils.CheckError(err) != nil {
 		return
@@ -313,7 +314,7 @@ func prepareUploadData(baseTargetPath, localPath, props string, uploadParams Upl
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
 func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadParams UploadParams, logMsgPrefix string) (utils.FileInfo, bool, error) {
-	fileInfo, targetPath, fileName, err := prepareUploadData(targetPath, localPath, props, uploadParams, logMsgPrefix)
+	fileInfo, targetPath, fileName, err := prepareUploadData(localPath, targetPath, props, uploadParams, logMsgPrefix)
 	if err != nil {
 		return utils.FileInfo{}, false, err
 	}
