@@ -3,23 +3,42 @@ package utils
 import "testing"
 import "reflect"
 
-func TestReformatRegexp(t *testing.T) {
-	assertReformatRegexp("1(.*)234", "1hello234", "{1}", "hello", t)
-	assertReformatRegexp("1234", "1hello234", "{1}", "{1}", t)
-	assertReformatRegexp("1(2.*5)6", "123456", "{1}", "2345", t)
-	assertReformatRegexp("(.*) somthing", "doing somthing", "{1} somthing else", "doing somthing else", t)
-	assertReformatRegexp("(switch) (this)", "switch this", "{2} {1}", "this switch", t)
-	assertReformatRegexp("before(.*)middle(.*)after", "before123middle456after", "{2}{1}{2}", "456123456", t)
-	assertReformatRegexp("", "nothing should change", "nothing should change", "nothing should change", t)
+func TestRemoveRepoFromPath(t *testing.T) {
+	assertRemoveRepoFromPath("repo/abc/def", "/abc/def", t)
+	assertRemoveRepoFromPath("repo/(*)", "/(*)", t)
+	assertRemoveRepoFromPath("repo/", "/", t)
+	assertRemoveRepoFromPath("/abc/def", "/abc/def", t)
+	assertRemoveRepoFromPath("aaa", "aaa", t)
+	assertRemoveRepoFromPath("", "", t)
 }
 
-func assertReformatRegexp(regexp, source, dest, expected string, t *testing.T) {
-	result, err := ReformatRegexp(regexp, source, dest)
+func assertRemoveRepoFromPath(path, expected string, t *testing.T) {
+	result := removeRepoFromPath(path)
+	if expected != result {
+		t.Error("Unexpected string built by removeRepoFromPath. Expected: `" + expected + "` Got `" + result + "`")
+	}
+}
+
+func TestBuildTargetPath(t *testing.T) {
+	assertBuildTargetPath("1(*)234", "1hello234", "{1}", "hello", true, t)
+	assertBuildTargetPath("1234", "1hello234", "{1}", "{1}", true, t)
+	assertBuildTargetPath("1(2*5)6", "123456", "{1}", "2345", true, t)
+	assertBuildTargetPath("(*) somthing", "doing somthing", "{1} somthing else", "doing somthing else", true, t)
+	assertBuildTargetPath("(switch) (this)", "switch this", "{2} {1}", "this switch", true, t)
+	assertBuildTargetPath("before(*)middle(*)after", "before123middle456after", "{2}{1}{2}", "456123456", true, t)
+	assertBuildTargetPath("foo/before(*)middle(*)after", "foo/before123middle456after", "{2}{1}{2}", "456123456", true, t)
+	assertBuildTargetPath("foo/before(*)middle(*)after", "bar/before123middle456after", "{2}{1}{2}", "456123456", true, t)
+	assertBuildTargetPath("foo/before(*)middle(*)after", "bar/before123middle456after", "{2}{1}{2}", "{2}{1}{2}", false, t)
+	assertBuildTargetPath("", "nothing should change", "nothing should change", "nothing should change", true, t)
+}
+
+func assertBuildTargetPath(regexp, source, dest, expected string, ignoreRepo bool, t *testing.T) {
+	result, err := BuildTargetPath(regexp, source, dest, ignoreRepo)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	if expected != result {
-		t.Error("Unexpected string built. Expected: `" + expected + "` Got `" + result + "`")
+		t.Error("Unexpected target string built. Expected: `" + expected + "` Got `" + result + "`")
 	}
 }
 

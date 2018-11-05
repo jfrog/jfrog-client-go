@@ -179,9 +179,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 		return errorutils.CheckError(errors.New("Bintray " + err.Error()))
 	}
 
-	regexpPattern := clientutils.PathToRegExp(downloadParams.Path)
-	placeHolderTarget, err := clientutils.ReformatRegexp(regexpPattern, cleanPath, downloadParams.TargetPath)
-
+	placeHolderTarget, err := clientutils.BuildTargetPath(downloadParams.Path, cleanPath, downloadParams.TargetPath, false)
 	if err != nil {
 		return err
 	}

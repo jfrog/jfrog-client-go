@@ -346,13 +346,11 @@ func (ds *DownloadService) createFileHandlerFunc(buildDependencies [][]utils.Fil
 			if ds.DryRun {
 				return nil
 			}
-
-			regexpPattern := clientutils.PathToRegExp(downloadData.DownloadPath)
-			placeHolderTarget, e := clientutils.ReformatRegexp(regexpPattern, downloadData.Dependency.GetItemRelativePath(), downloadData.Target)
+			target, e := clientutils.BuildTargetPath(downloadData.DownloadPath, downloadData.Dependency.GetItemRelativePath(), downloadData.Target, true)
 			if e != nil {
 				return e
 			}
-			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, placeHolderTarget, downloadData.Flat)
+			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat)
 			if downloadData.Dependency.Type == "folder" {
 				return createDir(localPath, localFileName, logMsgPrefix)
 			}
