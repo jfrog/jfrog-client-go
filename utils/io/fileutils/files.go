@@ -31,7 +31,7 @@ func GetFileSeparator() string {
 // If path points at a symlink and `preserveSymLink == true`,
 // function will return `true` regardless of the symlink target
 func IsPathExists(path string, preserveSymLink bool) bool {
-	_, err := GetFileInfoByPreserveSymLink(path, preserveSymLink)
+	_, err := GetFileInfo(path, preserveSymLink)
 	return !os.IsNotExist(err)
 }
 
@@ -39,7 +39,7 @@ func IsPathExists(path string, preserveSymLink bool) bool {
 // If path points at a symlink and `preserveSymLink == true`,
 // function will return `true` regardless of the symlink target
 func IsFileExists(path string, preserveSymLink bool) (bool, error) {
-	fileInfo, err := GetFileInfoByPreserveSymLink(path, preserveSymLink)
+	fileInfo, err := GetFileInfo(path, preserveSymLink)
 	if err != nil {
 		if os.IsNotExist(err) { // If doesn't exist, don't omit an error
 			return false, nil
@@ -53,7 +53,7 @@ func IsFileExists(path string, preserveSymLink bool) (bool, error) {
 // If path points at a symlink and `preserveSymLink == true`,
 // function will return `false` regardless of the symlink target
 func IsDirExists(path string, preserveSymLink bool) (bool, error) {
-	fileInfo, err := GetFileInfoByPreserveSymLink(path, preserveSymLink)
+	fileInfo, err := GetFileInfo(path, preserveSymLink)
 	if err != nil {
 		if os.IsNotExist(err) { // If doesn't exist, don't omit an error
 			return false, nil
@@ -65,7 +65,7 @@ func IsDirExists(path string, preserveSymLink bool) (bool, error) {
 
 // Get the file info of the file in path.
 // If path points at a symlink and `preserveSymLink == true`, return the file info of the symlink instead
-func GetFileInfoByPreserveSymLink(path string, preserveSymLink bool) (fileInfo os.FileInfo, err error) {
+func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err error) {
 	if preserveSymLink {
 		fileInfo, err = os.Lstat(path)
 	} else {
