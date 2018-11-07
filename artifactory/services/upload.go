@@ -14,7 +14,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -298,8 +297,7 @@ func addPropsToTargetPath(targetPath, props, debConfig string) (string, error) {
 	return strings.Join([]string{targetPath, properties.ToEncodedString()}, ";"), nil
 }
 
-func prepareUploadData(localPath, baseTargetPath, props string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, fileName string, err error) {
-	fileName, _ = fileutils.GetFileAndDirFromPath(baseTargetPath)
+func prepareUploadData(localPath, baseTargetPath, props string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, err error) {
 	targetPath, err = addPropsToTargetPath(baseTargetPath, props, uploadParams.GetDebian())
 	if errorutils.CheckError(err) != nil {
 		return
@@ -314,7 +312,7 @@ func prepareUploadData(localPath, baseTargetPath, props string, uploadParams Upl
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
 func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadParams UploadParams, logMsgPrefix string) (utils.FileInfo, bool, error) {
-	fileInfo, targetPath, fileName, err := prepareUploadData(localPath, targetPath, props, uploadParams, logMsgPrefix)
+	fileInfo, targetPathWithProps, err := prepareUploadData(localPath, targetPath, props, uploadParams, logMsgPrefix)
 	if err != nil {
 		return utils.FileInfo{}, false, err
 	}
@@ -328,15 +326,15 @@ func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadP
 		return utils.FileInfo{}, false, err
 	}
 	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileInfo) {
-		resp, details, body, err = us.uploadSymlink(targetPath, httpClientsDetails, uploadParams)
+		resp, details, body, err = us.uploadSymlink(targetPathWithProps, httpClientsDetails, uploadParams)
 	} else {
-		resp, details, body, checksumDeployed, err = us.doUpload(localPath, targetPath, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
+		resp, details, body, checksumDeployed, err = us.doUpload(localPath, targetPathWithProps, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
 	}
 	if err != nil {
 		return utils.FileInfo{}, false, err
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
-	artifact := createBuildArtifactItem(details, fileName, localPath, targetPath)
+	artifact := createBuildArtifactItem(details, localPath, targetPath)
 	return artifact, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
 
@@ -392,9 +390,9 @@ func logUploadResponse(logMsgPrefix string, resp *http.Response, body []byte, ch
 	}
 }
 
-func createBuildArtifactItem(details *fileutils.FileDetails, fileName, localPath, targetPath string) utils.FileInfo {
+func createBuildArtifactItem(details *fileutils.FileDetails, localPath, targetPath string) utils.FileInfo {
 	return utils.FileInfo{
-		LocalPath:       filepath.Join(localPath, fileName),
+		LocalPath:       localPath,
 		ArtifactoryPath: targetPath,
 		FileHashes: &utils.FileHashes{
 			Sha256: details.Checksum.Sha256,
