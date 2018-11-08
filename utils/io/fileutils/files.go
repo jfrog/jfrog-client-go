@@ -224,6 +224,13 @@ func CreateTempDirPath() error {
 	return nil
 }
 
+func IsTempDirInit() bool {
+	if tempDirPath == "" {
+		return false
+	}
+	return true
+}
+
 func RemoveTempDir() error {
 	defer func() {
 		tempDirPath = ""

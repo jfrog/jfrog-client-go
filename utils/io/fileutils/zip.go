@@ -35,10 +35,10 @@ func Unzip(at io.ReaderAt, size int64, dest string) error {
 		path := filepath.Join(dest, f.Name)
 
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(path, f.Mode())
+			os.MkdirAll(path, 0700)
 		} else {
-			os.MkdirAll(filepath.Dir(path), f.Mode())
-			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			os.MkdirAll(filepath.Dir(path), 0700)
+			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0700)
 			if err != nil {
 				return err
 			}
