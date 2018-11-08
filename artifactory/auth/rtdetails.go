@@ -123,7 +123,7 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	if resp.StatusCode != http.StatusOK {
 		return "", errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
-	var version ArtifactoryVersion
+	var version artifactoryVersion
 	err = json.Unmarshal(body, &version)
 	if err != nil {
 		return "", errorutils.CheckError(err)
@@ -131,6 +131,6 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	return strings.TrimSpace(version.Version), nil
 }
 
-type ArtifactoryVersion struct {
+type artifactoryVersion struct {
 	Version string `json:"version,omitempty"`
 }
