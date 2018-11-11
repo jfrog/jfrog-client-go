@@ -78,7 +78,7 @@ func (ds *DownloadService) DownloadFiles(downloadParams DownloadParams) ([]utils
 	expectedChan := make(chan int, 1)
 	ds.prepareTasks(producerConsumer, fileHandlerFunc, expectedChan, errorsQueue, downloadParams)
 	err := performTasks(producerConsumer, errorsQueue)
-	return utils.StripThreadId(buildDependencies), <-expectedChan, err
+	return utils.FlattenFileInfoArray(buildDependencies), <-expectedChan, err
 }
 
 func (ds *DownloadService) prepareTasks(producer parallel.Runner, fileContextHandler fileHandlerFunc, expectedChan chan int, errorsQueue *utils.ErrorsQueue, downloadParams DownloadParams) {

@@ -26,3 +26,11 @@ func (fileInfo *FileInfo) ToBuildArtifacts() buildinfo.Artifact {
 	artifact.Name = filename
 	return artifact
 }
+
+func FlattenFileInfoArray(dependenciesBuildInfo [][]FileInfo) []FileInfo {
+	var buildInfo []FileInfo
+	for _, v := range dependenciesBuildInfo {
+		buildInfo = append(buildInfo, v...)
+	}
+	return buildInfo
+}

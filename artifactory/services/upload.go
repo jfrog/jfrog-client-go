@@ -85,7 +85,7 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 	if totalFailed > 0 {
 		log.Error("Failed uploading", strconv.Itoa(totalFailed), "artifacts.")
 	}
-	artifactsFileInfo = utils.StripThreadId(uploadSummery.FileInfo)
+	artifactsFileInfo = utils.FlattenFileInfoArray(uploadSummery.FileInfo)
 	return
 }
 
