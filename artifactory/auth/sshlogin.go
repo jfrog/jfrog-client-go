@@ -111,18 +111,18 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 
 func readSshKeyAndPassphrase(sshKeyPath, sshPassphrase string) ([]byte, []byte, error) {
 	sshKey, err := ioutil.ReadFile(utils.ReplaceTildeWithUserHome(sshKeyPath))
-	if errorutils.CheckError(err) != nil {
-		return nil, nil, err
+	if err != nil {
+		return nil, nil, errorutils.CheckError(err)
 	}
 	if len(sshPassphrase) == 0 {
-		encryptedKey, err := isEncrypted(sshKey)
-		if errorutils.CheckError(err) != nil {
-			return nil, nil, err
+		encryptedKey, err := IsEncrypted(sshKey)
+		if err != nil {
+			return nil, nil, errorutils.CheckError(err)
 		}
 		if encryptedKey {
 			sshPassphrase, err = readSshPassphrase(sshKeyPath)
-			if errorutils.CheckError(err) != nil {
-				return nil, nil, err
+			if err != nil {
+				return nil, nil, errorutils.CheckError(err)
 			}
 		}
 	}
@@ -135,18 +135,23 @@ func readSshPassphrase(sshKeyPath string) (string, error) {
 	if err != nil || !offerConfig {
 		return "", err
 	}
+
+	return sshPassphrasePrompt(sshKeyPath)
+}
+
+func sshPassphrasePrompt(sshKeyPath string) (string, error) {
 	simplePrompt := &prompt.Simple{
 		Msg:   "Enter passphrase for key '" + sshKeyPath + "': ",
 		Mask:  true,
 		Label: "sshPassphrase",
 	}
-	if err = simplePrompt.Read(); err != nil {
+	if err := simplePrompt.Read(); err != nil {
 		return "", err
 	}
 	return simplePrompt.GetResults().GetString("sshPassphrase"), nil
 }
 
-func isEncrypted(buffer []byte) (bool, error) {
+func IsEncrypted(buffer []byte) (bool, error) {
 	block, _ := pem.Decode(buffer)
 	if block == nil {
 		return false, errors.New("SSH: no key found")
