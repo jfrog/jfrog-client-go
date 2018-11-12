@@ -9,7 +9,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/utils/prompt"
 	"github.com/xanzy/ssh-agent"
 	"golang.org/x/crypto/ssh"
 	"io"
@@ -119,36 +118,13 @@ func readSshKeyAndPassphrase(sshKeyPath, sshPassphrase string) ([]byte, []byte, 
 		if err != nil {
 			return nil, nil, errorutils.CheckError(err)
 		}
+		// If key is encrypted but no passphrase specified
 		if encryptedKey {
-			sshPassphrase, err = readSshPassphrase(sshKeyPath)
-			if err != nil {
-				return nil, nil, errorutils.CheckError(err)
-			}
+			return nil, nil, errorutils.CheckError(errors.New("SSH Key is encrypted but no passphrase was specified. Please pass a passphrase with the --ssh-passphrase flag"))
 		}
 	}
 
 	return sshKey, []byte(sshPassphrase), err
-}
-
-func readSshPassphrase(sshKeyPath string) (string, error) {
-	offerConfig, err := utils.GetBoolEnvValue("JFROG_CLI_OFFER_CONFIG", true)
-	if err != nil || !offerConfig {
-		return "", err
-	}
-
-	return sshPassphrasePrompt(sshKeyPath)
-}
-
-func sshPassphrasePrompt(sshKeyPath string) (string, error) {
-	simplePrompt := &prompt.Simple{
-		Msg:   "Enter passphrase for key '" + sshKeyPath + "': ",
-		Mask:  true,
-		Label: "sshPassphrase",
-	}
-	if err := simplePrompt.Read(); err != nil {
-		return "", err
-	}
-	return simplePrompt.GetResults().GetString("sshPassphrase"), nil
 }
 
 func IsEncrypted(buffer []byte) (bool, error) {
