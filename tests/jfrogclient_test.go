@@ -1,4 +1,4 @@
-package jfrogclient
+package tests
 
 import (
 	"flag"
@@ -11,8 +11,8 @@ import (
 
 const (
 	JfrogTestsHome      = ".jfrogTest"
-	JfrogHomeEnv      = "JFROG_CLI_HOME"
-	CliIntegrationTests = "github.com/jfrog/jfrog-client-go"
+	JfrogHomeEnv        = "JFROG_CLI_HOME"
+	CliIntegrationTests = "github.com/jfrog/jfrog-client-go/tests"
 )
 
 func TestMain(m *testing.M) {
@@ -23,8 +23,12 @@ func TestMain(m *testing.M) {
 
 func InitArtifactoryServiceManager() {
 	flag.Parse()
+	createArtifactoryUploadManager()
+	createArtifactorySearchManager()
+	createArtifactoryDeleteManager()
+	createArtifactoryDownloadManager()
+	createReposIfNeeded()
 }
-
 
 func TestUnitTests(t *testing.T) {
 	homePath, err := filepath.Abs(JfrogTestsHome)
@@ -34,7 +38,7 @@ func TestUnitTests(t *testing.T) {
 	}
 
 	setJfrogHome(homePath)
-	packages := tests.GetTestPackages("./...")
+	packages := tests.GetTestPackages("./../...")
 	packages = tests.ExcludeTestsPackage(packages, CliIntegrationTests)
 	tests.RunTests(packages, false)
 	cleanUnitTestsJfrogHome(homePath)
