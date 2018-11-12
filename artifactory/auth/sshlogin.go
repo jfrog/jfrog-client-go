@@ -120,7 +120,7 @@ func readSshKeyAndPassphrase(sshKeyPath, sshPassphrase string) ([]byte, []byte, 
 		}
 		// If key is encrypted but no passphrase specified
 		if encryptedKey {
-			return nil, nil, errorutils.CheckError(errors.New("SSH Key is encrypted but no passphrase was specified. Please pass a passphrase with the --ssh-passphrase flag"))
+			return nil, nil, errorutils.CheckError(errors.New("SSH Key is encrypted but no passphrase was specified."))
 		}
 	}
 
