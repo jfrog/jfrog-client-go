@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
 type FileHashes struct {
@@ -21,7 +21,16 @@ func (fileInfo *FileInfo) ToBuildArtifacts() buildinfo.Artifact {
 	artifact := buildinfo.Artifact{Checksum: &buildinfo.Checksum{}}
 	artifact.Sha1 = fileInfo.Sha1
 	artifact.Md5 = fileInfo.Md5
-	filename, _ := fileutils.GetFileAndDirFromPath(fileInfo.LocalPath)
+	// Artifact name in build info as the name in artifactory
+	filename, _ := fileutils.GetFileAndDirFromPath(fileInfo.ArtifactoryPath)
 	artifact.Name = filename
 	return artifact
+}
+
+func FlattenFileInfoArray(dependenciesBuildInfo [][]FileInfo) []FileInfo {
+	var buildInfo []FileInfo
+	for _, v := range dependenciesBuildInfo {
+		buildInfo = append(buildInfo, v...)
+	}
+	return buildInfo
 }

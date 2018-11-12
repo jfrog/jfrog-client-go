@@ -78,7 +78,7 @@ func (ds *DownloadService) DownloadFiles(downloadParams DownloadParams) ([]utils
 	expectedChan := make(chan int, 1)
 	ds.prepareTasks(producerConsumer, fileHandlerFunc, expectedChan, errorsQueue, downloadParams)
 	err := performTasks(producerConsumer, errorsQueue)
-	return utils.StripThreadId(buildDependencies), <-expectedChan, err
+	return utils.FlattenFileInfoArray(buildDependencies), <-expectedChan, err
 }
 
 func (ds *DownloadService) prepareTasks(producer parallel.Runner, fileContextHandler fileHandlerFunc, expectedChan chan int, errorsQueue *utils.ErrorsQueue, downloadParams DownloadParams) {
@@ -248,7 +248,7 @@ func (ds *DownloadService) isFileAcceptRange(downloadFileDetails *httpclient.Dow
 }
 
 func shouldDownloadFile(localFilePath, md5, sha1 string) (bool, error) {
-	exists, err := fileutils.IsFileExists(localFilePath)
+	exists, err := fileutils.IsFileExists(localFilePath, false)
 	if err != nil {
 		return false, err
 	}
@@ -273,7 +273,7 @@ func removeIfSymlink(localSymlinkPath string) error {
 
 func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) error {
 	if symlinkChecksum && symlinkContentChecksum != "" {
-		if !fileutils.IsPathExists(symlinkArtifact) {
+		if !fileutils.IsPathExists(symlinkArtifact, false) {
 			return errorutils.CheckError(errors.New("Symlink validation failed, target doesn't exist: " + symlinkArtifact))
 		}
 		file, err := os.Open(symlinkArtifact)
@@ -292,7 +292,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		}
 	}
 	localSymlinkPath := filepath.Join(localPath, localFileName)
-	isFileExists, err := fileutils.IsFileExists(localSymlinkPath)
+	isFileExists, err := fileutils.IsFileExists(localSymlinkPath, false)
 	if err != nil {
 		return err
 	}
@@ -346,13 +346,11 @@ func (ds *DownloadService) createFileHandlerFunc(buildDependencies [][]utils.Fil
 			if ds.DryRun {
 				return nil
 			}
-
-			regexpPattern := clientutils.PathToRegExp(downloadData.DownloadPath)
-			placeHolderTarget, e := clientutils.ReformatRegexp(regexpPattern, downloadData.Dependency.GetItemRelativePath(), downloadData.Target)
+			target, e := clientutils.BuildTargetPath(downloadData.DownloadPath, downloadData.Dependency.GetItemRelativePath(), downloadData.Target, true)
 			if e != nil {
 				return e
 			}
-			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, placeHolderTarget, downloadData.Flat)
+			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat)
 			if downloadData.Dependency.Type == "folder" {
 				return createDir(localPath, localFileName, logMsgPrefix)
 			}
