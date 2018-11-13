@@ -235,8 +235,8 @@ func CheckErrorWithMessage(err error, message string) error {
 	return err
 }
 
-func GetMapFromStringSlice(slice []string, sep string) map[string]string {
-	mapFromSlice := make(map[string]string)
+func ConvertSliceToMap(slice []string) map[string]bool {
+	mapFromSlice := make(map[string]bool)
 	for _, value := range slice {
 		mapFromSlice[value] = true
 	}
