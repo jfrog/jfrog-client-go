@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"regexp"
 	"runtime"
@@ -216,8 +217,26 @@ func GetUserHomeDir() string {
 	return os.Getenv("HOME")
 }
 
-func ConvertSliceToMap(slice []string) map[string]bool {
-	mapFromSlice := make(map[string]bool)
+func GetBoolEnvValue(flagName string, defValue bool) (bool, error) {
+	envVarValue := os.Getenv(flagName)
+	if envVarValue == "" {
+		return defValue, nil
+	}
+	val, err := strconv.ParseBool(envVarValue)
+	err = CheckErrorWithMessage(err, "can't parse environment variable "+flagName)
+	return val, err
+}
+
+func CheckErrorWithMessage(err error, message string) error {
+	if err != nil {
+		log.Error(message)
+		err = errorutils.CheckError(err)
+	}
+	return err
+}
+
+func GetMapFromStringSlice(slice []string, sep string) map[string]string {
+	mapFromSlice := make(map[string]string)
 	for _, value := range slice {
 		mapFromSlice[value] = true
 	}
