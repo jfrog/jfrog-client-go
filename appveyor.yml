@@ -20,7 +20,7 @@ environment:
   - VET:
     TEST_SUIT:
       go vet github.com\jfrog\jfrog-client-go\tests
-  - Client Tests:
+  - CLIENT_TESTS:
     TEST_SUIT:
       go test -v github.com\jfrog\jfrog-client-go\tests --timeout 0 --rt.url="%JFROG_CLI_RT_URL%" --rt.user="%JFROG_CLI_RT_USER%" --rt.password="%JFROG_CLI_RT_PASSWORD%"
 
