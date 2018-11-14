@@ -81,13 +81,7 @@ func getArtDetails() auth.ArtifactoryDetails {
 		return rtDetails
 	}
 
-	sshKey, err := ioutil.ReadFile(clientutils.ReplaceTildeWithUserHome(*RtSshKeyPath))
-	if err != nil {
-		log.Error("Failed while attempting to read SSH key: " + err.Error())
-		os.Exit(1)
-	}
-
-	err = rtDetails.AuthenticateSsh(sshKey, []byte(*RtSshPassphrase))
+	err := rtDetails.AuthenticateSsh(*RtSshKeyPath, *RtSshPassphrase)
 	if err != nil {
 		log.Error("Failed while attempting to authenticate with Artifactory: " + err.Error())
 		os.Exit(1)
