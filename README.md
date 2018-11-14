@@ -1,4 +1,4 @@
-# Jfrog Client
+# JFrog Client
 
 |Branch|Status|
 |:---:|:---:|
