@@ -2,8 +2,8 @@
 
 |Branch|Status|
 |:---:|:---:|
-|master|[![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/master?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/master)(https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/master)
-|dev|[![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/master?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/dev)(https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/dev)|
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/master?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/master)
+|dev|[![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/master?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/dev)
 
 ## General
     This section includes a few usage examples of the Jfrog client APIs from your application code.
