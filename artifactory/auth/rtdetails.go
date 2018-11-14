@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -122,10 +123,14 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	if resp.StatusCode != http.StatusOK {
 		return "", errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
-
-	serverValues := strings.Split(resp.Header.Get("Server"), "/")
-	if len(serverValues) != 2 {
-		err = errors.New("Cannot parse Artifactory version from the server header.")
+	var version artifactoryVersion
+	err = json.Unmarshal(body, &version)
+	if err != nil {
+		return "", errorutils.CheckError(err)
 	}
-	return strings.TrimSpace(serverValues[1]), errorutils.CheckError(err)
+	return strings.TrimSpace(version.Version), nil
+}
+
+type artifactoryVersion struct {
+	Version string `json:"version,omitempty"`
 }

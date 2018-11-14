@@ -1,6 +1,7 @@
-package services
+package tests
 
 import (
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"strconv"
@@ -8,11 +9,11 @@ import (
 	"testing"
 )
 
-var testsXrayScanService *XrayScanService
+var testsXrayScanService *services.XrayScanService
 
 func TestNewXrayScanService(t *testing.T) {
 	xrayServerPort := xray.StartXrayMockServer()
-	testsXrayScanService = NewXrayScanService(httpclient.NewDefaultHttpClient())
+	testsXrayScanService = services.NewXrayScanService(httpclient.NewDefaultHttpClient())
 	testsXrayScanService.ArtDetails = getArtDetails()
 	testsXrayScanService.ArtDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/")
 
@@ -35,7 +36,7 @@ func TestNewXrayScanService(t *testing.T) {
 }
 
 func scanBuild(t *testing.T, buildName, buildNumber, expected string) {
-	params := new(XrayScanParamsImpl)
+	params := new(services.XrayScanParamsImpl)
 	params.BuildName = buildName
 	params.BuildNumber = buildNumber
 	result, err := testsXrayScanService.ScanBuild(params)
