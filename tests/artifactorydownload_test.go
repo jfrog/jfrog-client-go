@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -28,8 +27,7 @@ func uploadDummyFile(t *testing.T) {
 		t.FailNow()
 	}
 	defer os.RemoveAll(workingDir)
-	pattern := filepath.Join(workingDir, "*")
-	pattern = strings.Replace(pattern, "\\", "\\\\", -1)
+	pattern := FixWinPath(filepath.Join(workingDir, "*"))
 	up := &services.UploadParamsImp{}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "test/"}
 	up.Flat = true
