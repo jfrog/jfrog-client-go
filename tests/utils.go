@@ -169,3 +169,8 @@ func getTestDataPath() string {
 	dir, _ := os.Getwd()
 	return filepath.Join(dir, "testsdata")
 }
+
+func FixWinPath(filePath string) string {
+	fixedPath := strings.Replace(filePath, "\\", "\\\\", -1)
+	return fixedPath
+}

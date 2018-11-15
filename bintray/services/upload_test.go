@@ -4,6 +4,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/bintray/services/utils/tests"
 	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
 	"github.com/jfrog/jfrog-client-go/httpclient"
+	testsutils "github.com/jfrog/jfrog-client-go/tests"
 	"path/filepath"
 	"strconv"
 	"testing"
@@ -64,20 +65,19 @@ func TestPatternNonRecursiveUpload(t *testing.T) {
 func testPatternUpload(t *testing.T, params *UploadParams) {
 	uploadService := newDryRunUploadService()
 
-	sep := string(filepath.Separator)
-	params.Pattern = "testdata" + sep + "*"
+	params.Pattern = testsutils.FixWinPath(filepath.Join("testdata", "*"))
 	uploaded1, _, err := uploadService.Upload(params)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	params.Pattern = "testdata" + sep + "a*"
+	params.Pattern = testsutils.FixWinPath(filepath.Join("testdata", "a*"))
 	uploaded2, _, err := uploadService.Upload(params)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	params.Pattern = "testdata" + sep + "b*"
+	params.Pattern = testsutils.FixWinPath(filepath.Join("testdata", "b*"))
 	uploaded3, _, err := uploadService.Upload(params)
 	if err != nil {
 		t.Error(err.Error())
