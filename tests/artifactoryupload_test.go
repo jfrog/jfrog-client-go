@@ -7,7 +7,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -26,8 +25,7 @@ func flatUpload(t *testing.T) {
 		t.FailNow()
 	}
 	defer os.RemoveAll(workingDir)
-	pattern := filepath.Join(workingDir, "out", "*")
-	pattern = strings.Replace(pattern, "\\", "\\\\", -1)
+	pattern := FixWinPath(filepath.Join(workingDir, "out", "*"))
 	up := &services.UploadParamsImp{}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
@@ -63,8 +61,7 @@ func recursiveUpload(t *testing.T) {
 		t.FailNow()
 	}
 	defer os.RemoveAll(workingDir)
-	pattern := filepath.Join(workingDir, "*")
-	pattern = strings.Replace(pattern, "\\", "\\\\", -1)
+	pattern := FixWinPath(filepath.Join(workingDir, "*"))
 	up := &services.UploadParamsImp{}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
@@ -103,8 +100,7 @@ func placeholderUpload(t *testing.T) {
 		t.FailNow()
 	}
 	defer os.RemoveAll(workingDir)
-	pattern := filepath.Join(workingDir, "(*).in")
-	pattern = strings.Replace(pattern, "\\", "\\\\", -1)
+	pattern := FixWinPath(filepath.Join(workingDir, "(*).in"))
 	up := &services.UploadParamsImp{}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
 	up.Flat = true
@@ -143,8 +139,7 @@ func includeDirsUpload(t *testing.T) {
 		t.FailNow()
 	}
 	defer os.RemoveAll(workingDir)
-	pattern := filepath.Join(workingDir, "*")
-	pattern = strings.Replace(pattern, "\\", "\\\\", -1)
+	pattern := FixWinPath(filepath.Join(workingDir, "*"))
 	up := &services.UploadParamsImp{}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
@@ -196,8 +191,7 @@ func explodeUpload(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	pattern := filepath.Join(workingDir, "*.zip")
-	pattern = strings.Replace(pattern, "\\", "\\\\", -1)
+	pattern := FixWinPath(filepath.Join(workingDir, "*.zip"))
 	up := &services.UploadParamsImp{}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
