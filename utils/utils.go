@@ -235,16 +235,10 @@ func CheckErrorWithMessage(err error, message string) error {
 	return err
 }
 
-func GetMapFromStringSlice(slice []string, sep string) map[string]string {
-	mapFromSlice := make(map[string]string)
+func ConvertSliceToMap(slice []string) map[string]bool {
+	mapFromSlice := make(map[string]bool)
 	for _, value := range slice {
-		splitted := strings.Split(value, sep)
-		if len(splitted) == 2 {
-			mapFromSlice[splitted[0]] = splitted[1]
-		}
-		if len(splitted) == 1 {
-			mapFromSlice[splitted[0]] = ""
-		}
+		mapFromSlice[value] = true
 	}
 	return mapFromSlice
 }
