@@ -330,11 +330,14 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 	}
 
 	if flags.LocalPath != "" {
-		os.MkdirAll(flags.LocalPath, 0777)
+		err = os.MkdirAll(flags.LocalPath, 0777)
+		if errorutils.CheckError(err) != nil {
+			return err
+		}
 		flags.LocalFileName = filepath.Join(flags.LocalPath, flags.LocalFileName)
 	}
 
-	if fileutils.IsPathExists(flags.LocalFileName) {
+	if fileutils.IsPathExists(flags.LocalFileName, false) {
 		err := os.Remove(flags.LocalFileName)
 		if errorutils.CheckError(err) != nil {
 			return err
@@ -513,13 +516,20 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 	}
 	httpClientsDetails.Headers["Range"] = "bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end-1, 10)
 	resp, _, err := jc.sendGetForFileDownload(flags.DownloadPath, true, httpClientsDetails, currentSplit, retries)
-	if errorutils.CheckError(err) != nil {
+	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	log.Info(logMsgPrefix+"["+strconv.Itoa(currentSplit)+"]:", resp.Status+"...")
-	os.MkdirAll(tempLocalPath, 0777)
+	if err = httperrors.CheckResponseStatus(resp, nil, http.StatusPartialContent); err != nil {
+		return "", err
+	}
+
+	err = os.MkdirAll(tempLocalPath, 0777)
+	if errorutils.CheckError(err) != nil {
+		return "", err
+	}
 
 	_, err = io.Copy(tempFile, resp.Body)
 	return tempFile.Name(), errorutils.CheckError(err)

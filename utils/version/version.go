@@ -59,12 +59,9 @@ func getFirstNumeral(token string) string {
 	for i := 0; i < len(token); i++ {
 		n := token[i:i+1]
 		if _, err := strconv.Atoi(n); err != nil {
-			break
+			return "999999"
 		}
 		numeric += n
-	}
-	if len(numeric) == 0 {
-		return "0"
 	}
 	return numeric
 }

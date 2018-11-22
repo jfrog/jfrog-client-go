@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"regexp"
 	"runtime"
@@ -126,12 +127,12 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
 		localPath = localPath[3:]
 	}
 	if !useRegExp {
-		localPath = PathToRegExp(localPath)
+		localPath = pathToRegExp(localPath)
 	}
 	return localPath
 }
 
-func PathToRegExp(localPath string) string {
+func pathToRegExp(localPath string) string {
 	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
 	for _, char := range SPECIAL_CHARS {
 		localPath = strings.Replace(localPath, char, "\\"+char, -1)
@@ -145,20 +146,27 @@ func PathToRegExp(localPath string) string {
 	return localPath
 }
 
-// Replaces matched regular expression from sourceString to corresponding {i} at destString.
-// For example:
-//      regexpString = "1(.*)234" ; sourceString = "1hello234" ; destString = "{1}"
+// Replaces matched regular expression from path to corresponding {i} at target.
+// Example 1:
+//      pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
 //      returns "hello"
-func ReformatRegexp(regexpString, sourceString, destString string) (string, error) {
-	r, err := regexp.Compile(regexpString)
+// Example 2:
+//      pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
+//      returns "hello"
+func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, error) {
+	if ignoreRepo {
+		pattern = removeRepoFromPath(pattern)
+		path = removeRepoFromPath(path)
+	}
+	pattern = pathToRegExp(pattern)
+	r, err := regexp.Compile(pattern)
 	err = errorutils.CheckError(err)
 	if err != nil {
 		return "", err
 	}
 
-	groups := r.FindStringSubmatch(sourceString)
+	groups := r.FindStringSubmatch(path)
 	size := len(groups)
-	target := destString
 	if size > 0 {
 		for i := 1; i < size; i++ {
 			group := strings.Replace(groups[i], "\\", "/", -1)
@@ -209,18 +217,37 @@ func GetUserHomeDir() string {
 	return os.Getenv("HOME")
 }
 
-func GetMapFromStringSlice(slice []string, sep string) map[string]string {
-	mapFromSlice := make(map[string]string)
+func GetBoolEnvValue(flagName string, defValue bool) (bool, error) {
+	envVarValue := os.Getenv(flagName)
+	if envVarValue == "" {
+		return defValue, nil
+	}
+	val, err := strconv.ParseBool(envVarValue)
+	err = CheckErrorWithMessage(err, "can't parse environment variable "+flagName)
+	return val, err
+}
+
+func CheckErrorWithMessage(err error, message string) error {
+	if err != nil {
+		log.Error(message)
+		err = errorutils.CheckError(err)
+	}
+	return err
+}
+
+func ConvertSliceToMap(slice []string) map[string]bool {
+	mapFromSlice := make(map[string]bool)
 	for _, value := range slice {
-		splitted := strings.Split(value, sep)
-		if len(splitted) == 2 {
-			mapFromSlice[splitted[0]] = splitted[1]
-		}
-		if len(splitted) == 1 {
-			mapFromSlice[splitted[0]] = ""
-		}
+		mapFromSlice[value] = true
 	}
 	return mapFromSlice
+}
+
+func removeRepoFromPath(path string) string {
+	if idx := strings.Index(path, "/"); idx != -1 {
+		return path[idx:]
+	}
+	return path
 }
 
 // Split str by the provided separator, escaping the separator if it is prefixed by a back-slash.

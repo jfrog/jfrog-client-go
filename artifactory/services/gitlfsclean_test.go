@@ -1,8 +1,8 @@
 package services
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,7 +36,7 @@ func TestGetLfsFilesFromGit(t *testing.T) {
 	if utils.IsWindows() {
 		refs = strings.Join([]string{"refs", "heads", "*"}, "\\\\")
 	}
-	results, err := getLfsFilesFromGit(gitPath, refs)
+	results, err := getLfsFilesFromGit(gitPath, "HEAD|" + refs)
 	if err != nil {
 		t.Error("Got err: ", err)
 	}
@@ -52,7 +52,7 @@ func getCliDotGitPath(t *testing.T) string {
 		t.Error("Failed to get current dir.")
 	}
 	dotGitPath := filepath.Join(workingDir, "..", "..")
-	dotGitExists, err := fileutils.IsDirExists(filepath.Join(dotGitPath, ".git"))
+	dotGitExists, err := fileutils.IsDirExists(filepath.Join(dotGitPath, ".git"), false)
 	if err != nil {
 		t.Error(err)
 	}

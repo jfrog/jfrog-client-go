@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -28,7 +29,7 @@ type ArtifactoryDetails interface {
 	SetApiKey(apiKey string)
 	SetSshAuthHeaders(sshAuthHeaders map[string]string)
 
-	AuthenticateSsh(sshKey, sshPassphrase []byte) error
+	AuthenticateSsh(sshKey, sshPassphrase string) error
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
 }
@@ -82,8 +83,8 @@ func (rt *artifactoryDetails) SetSshAuthHeaders(sshAuthHeaders map[string]string
 	rt.SshAuthHeaders = sshAuthHeaders
 }
 
-func (rt *artifactoryDetails) AuthenticateSsh(sshKey, sshPassphrase []byte) error {
-	sshHeaders, baseUrl, err := sshAuthentication(rt.Url, sshKey, sshPassphrase)
+func (rt *artifactoryDetails) AuthenticateSsh(sshKeyPath, sshPassphrase string) error {
+	sshHeaders, baseUrl, err := sshAuthentication(rt.Url, sshKeyPath, sshPassphrase)
 	if err != nil {
 		return err
 	}
@@ -122,10 +123,14 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	if resp.StatusCode != http.StatusOK {
 		return "", errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
-
-	serverValues := strings.Split(resp.Header.Get("Server"), "/")
-	if len(serverValues) != 2 {
-		err = errors.New("Cannot parse Artifactory version from the server header.")
+	var version artifactoryVersion
+	err = json.Unmarshal(body, &version)
+	if err != nil {
+		return "", errorutils.CheckError(err)
 	}
-	return strings.TrimSpace(serverValues[1]), errorutils.CheckError(err)
+	return strings.TrimSpace(version.Version), nil
+}
+
+type artifactoryVersion struct {
+	Version string `json:"version,omitempty"`
 }
