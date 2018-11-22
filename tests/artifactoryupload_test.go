@@ -26,7 +26,7 @@ func flatUpload(t *testing.T) {
 	}
 	defer os.RemoveAll(workingDir)
 	pattern := FixWinPath(filepath.Join(workingDir, "out", "*"))
-	up := &services.UploadParamsImp{}
+	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
 	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
@@ -39,7 +39,9 @@ func flatUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}})
+	searchParams := services.NewSearchParams()
+	searchParams.Pattern = RtTargetRepo
+	items, err := testsSearchService.Search(searchParams)
 	if err != nil {
 		t.Error(err)
 	}
@@ -62,7 +64,7 @@ func recursiveUpload(t *testing.T) {
 	}
 	defer os.RemoveAll(workingDir)
 	pattern := FixWinPath(filepath.Join(workingDir, "*"))
-	up := &services.UploadParamsImp{}
+	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
 	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
@@ -75,7 +77,9 @@ func recursiveUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}})
+	searchParams := services.NewSearchParams()
+	searchParams.Pattern = RtTargetRepo
+	items, err := testsSearchService.Search(searchParams)
 	if err != nil {
 		t.Error(err)
 	}
@@ -101,7 +105,7 @@ func placeholderUpload(t *testing.T) {
 	}
 	defer os.RemoveAll(workingDir)
 	pattern := FixWinPath(filepath.Join(workingDir, "(*).in"))
-	up := &services.UploadParamsImp{}
+	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
 	up.Flat = true
 	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
@@ -114,7 +118,9 @@ func placeholderUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo}})
+	searchParams := services.NewSearchParams()
+	searchParams.Pattern = RtTargetRepo
+	items, err := testsSearchService.Search(searchParams)
 	if err != nil {
 		t.Error(err)
 	}
@@ -140,7 +146,7 @@ func includeDirsUpload(t *testing.T) {
 	}
 	defer os.RemoveAll(workingDir)
 	pattern := FixWinPath(filepath.Join(workingDir, "*"))
-	up := &services.UploadParamsImp{}
+	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
 	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
@@ -153,7 +159,10 @@ func includeDirsUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo, IncludeDirs: true}})
+	searchParams := services.NewSearchParams()
+	searchParams.Pattern = RtTargetRepo
+	searchParams.IncludeDirs = true
+	items, err := testsSearchService.Search(searchParams)
 	if err != nil {
 		t.Error(err)
 	}
@@ -192,7 +201,7 @@ func explodeUpload(t *testing.T) {
 		t.FailNow()
 	}
 	pattern := FixWinPath(filepath.Join(workingDir, "*.zip"))
-	up := &services.UploadParamsImp{}
+	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
 	up.ExplodeArchive = true
@@ -206,7 +215,10 @@ func explodeUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	items, err := testsSearchService.Search(utils.SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: RtTargetRepo, IncludeDirs: true}})
+	searchParams := services.NewSearchParams()
+	searchParams.Pattern = RtTargetRepo
+	searchParams.IncludeDirs = true
+	items, err := testsSearchService.Search(searchParams)
 	if err != nil {
 		t.Error(err)
 	}
