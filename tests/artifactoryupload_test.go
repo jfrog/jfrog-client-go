@@ -40,6 +40,7 @@ func flatUpload(t *testing.T) {
 		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
+	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	items, err := testsSearchService.Search(searchParams)
 	if err != nil {
@@ -78,6 +79,7 @@ func recursiveUpload(t *testing.T) {
 		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
+	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	items, err := testsSearchService.Search(searchParams)
 	if err != nil {
@@ -119,6 +121,7 @@ func placeholderUpload(t *testing.T) {
 		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
+	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	items, err := testsSearchService.Search(searchParams)
 	if err != nil {
@@ -160,6 +163,7 @@ func includeDirsUpload(t *testing.T) {
 		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
+	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	searchParams.IncludeDirs = true
 	items, err := testsSearchService.Search(searchParams)
@@ -216,6 +220,7 @@ func explodeUpload(t *testing.T) {
 		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
+	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	searchParams.IncludeDirs = true
 	items, err := testsSearchService.Search(searchParams)
