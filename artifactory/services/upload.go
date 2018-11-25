@@ -442,7 +442,7 @@ func getDebianProps(debianPropsStr string) string {
 	return result
 }
 
-type UploadParamsImp struct {
+type UploadParams struct {
 	*utils.ArtifactoryCommonParams
 	Deb            string
 	Symlink        bool
@@ -451,33 +451,24 @@ type UploadParamsImp struct {
 	Retries        int
 }
 
-func (up *UploadParamsImp) IsFlat() bool {
+func (up *UploadParams) IsFlat() bool {
 	return up.Flat
 }
 
-func (up *UploadParamsImp) IsSymlink() bool {
+func (up *UploadParams) IsSymlink() bool {
 	return up.Symlink
 }
 
-func (up *UploadParamsImp) IsExplodeArchive() bool {
+func (up *UploadParams) IsExplodeArchive() bool {
 	return up.ExplodeArchive
 }
 
-func (up *UploadParamsImp) GetDebian() string {
+func (up *UploadParams) GetDebian() string {
 	return up.Deb
 }
 
-func (up *UploadParamsImp) GetRetries() int {
+func (up *UploadParams) GetRetries() int {
 	return up.Retries
-}
-
-type UploadParams interface {
-	utils.FileGetter
-	IsSymlink() bool
-	IsExplodeArchive() bool
-	GetDebian() string
-	IsFlat() bool
-	GetRetries() int
 }
 
 type UploadData struct {
@@ -538,4 +529,8 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 	}
 	logUploadResponse("Uploaded directory:", resp, body, false, us.DryRun)
 	return err
+}
+
+func NewUploadParams() UploadParams {
+	return UploadParams{}
 }

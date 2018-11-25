@@ -204,26 +204,23 @@ type MoveOptions struct {
 
 type MoveType string
 
-type MoveCopyParams interface {
-	utils.FileGetter
-	GetFile() *utils.ArtifactoryCommonParams
-	SetIncludeDir(bool)
-	IsFlat() bool
-}
-
-type MoveCopyParamsImpl struct {
+type MoveCopyParams struct {
 	*utils.ArtifactoryCommonParams
 	Flat bool
 }
 
-func (mc *MoveCopyParamsImpl) GetFile() *utils.ArtifactoryCommonParams {
+func (mc *MoveCopyParams) GetFile() *utils.ArtifactoryCommonParams {
 	return mc.ArtifactoryCommonParams
 }
 
-func (mc *MoveCopyParamsImpl) SetIncludeDir(isIncludeDir bool) {
+func (mc *MoveCopyParams) SetIncludeDir(isIncludeDir bool) {
 	mc.GetFile().IncludeDirs = isIncludeDir
 }
 
-func (mc *MoveCopyParamsImpl) IsFlat() bool {
+func (mc *MoveCopyParams) IsFlat() bool {
 	return mc.Flat
+}
+
+func NewMoveCopyParams() MoveCopyParams {
+	return MoveCopyParams{}
 }

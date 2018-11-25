@@ -36,7 +36,7 @@ func TestNewXrayScanService(t *testing.T) {
 }
 
 func scanBuild(t *testing.T, buildName, buildNumber, expected string) {
-	params := new(services.XrayScanParamsImpl)
+	params := services.NewXrayScanParams()
 	params.BuildName = buildName
 	params.BuildNumber = buildNumber
 	result, err := testsXrayScanService.ScanBuild(params)

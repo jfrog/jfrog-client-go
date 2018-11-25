@@ -227,26 +227,24 @@ func collectLfsFileFromGit(results map[string]struct{}, file *object.File) error
 	return nil
 }
 
-type GitLfsCleanParams interface {
-	GetRef() string
-	GetRepo() string
-	GetGitPath() string
-}
-
-type GitLfsCleanParamsImpl struct {
+type GitLfsCleanParams struct {
 	Refs    string
 	Repo    string
 	GitPath string
 }
 
-func (glc *GitLfsCleanParamsImpl) GetRef() string {
+func (glc *GitLfsCleanParams) GetRef() string {
 	return glc.Refs
 }
 
-func (glc *GitLfsCleanParamsImpl) GetRepo() string {
+func (glc *GitLfsCleanParams) GetRepo() string {
 	return glc.Repo
 }
 
-func (glc *GitLfsCleanParamsImpl) GetGitPath() string {
+func (glc *GitLfsCleanParams) GetGitPath() string {
 	return glc.GitPath
+}
+
+func NewGitLfsCleanParams() GitLfsCleanParams {
+	return GitLfsCleanParams{}
 }

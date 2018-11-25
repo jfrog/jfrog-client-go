@@ -108,24 +108,22 @@ func (conf *DeleteConfiguration) IsDryRun() bool {
 	return conf.DryRun
 }
 
-type DeleteParams interface {
-	utils.FileGetter
-	GetFile() *utils.ArtifactoryCommonParams
-	SetIncludeDirs(includeDirs bool)
-}
-
-type DeleteParamsImpl struct {
+type DeleteParams struct {
 	*utils.ArtifactoryCommonParams
 }
 
-func (ds *DeleteParamsImpl) GetFile() *utils.ArtifactoryCommonParams {
+func (ds *DeleteParams) GetFile() *utils.ArtifactoryCommonParams {
 	return ds.ArtifactoryCommonParams
 }
 
-func (ds *DeleteParamsImpl) SetIncludeDirs(includeDirs bool) {
+func (ds *DeleteParams) SetIncludeDirs(includeDirs bool) {
 	ds.IncludeDirs = includeDirs
 }
 
 type DeleteItem interface {
 	GetItemRelativePath() string
+}
+
+func NewDeleteParams() DeleteParams {
+	return DeleteParams{}
 }

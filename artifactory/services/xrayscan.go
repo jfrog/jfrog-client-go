@@ -124,20 +124,19 @@ type XrayScanBody struct {
 	Context     string `json:"context,omitempty"`
 }
 
-type XrayScanParams interface {
-	GetBuildName() string
-	GetBuildNumber() string
-}
-
-type XrayScanParamsImpl struct {
+type XrayScanParams struct {
 	BuildName   string
 	BuildNumber string
 }
 
-func (bp *XrayScanParamsImpl) GetBuildName() string {
+func (bp *XrayScanParams) GetBuildName() string {
 	return bp.BuildName
 }
 
-func (bp *XrayScanParamsImpl) GetBuildNumber() string {
+func (bp *XrayScanParams) GetBuildNumber() string {
 	return bp.BuildNumber
+}
+
+func NewXrayScanParams() XrayScanParams {
+	return XrayScanParams{}
 }
