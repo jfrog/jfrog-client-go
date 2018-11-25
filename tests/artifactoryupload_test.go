@@ -53,7 +53,7 @@ func flatUpload(t *testing.T) {
 			t.Error("Expected path to be root due to using the flat flag.", "Got:", item.Path)
 		}
 	}
-	artifactoryCleanUp(t)
+	artifactoryCleanup(t)
 }
 
 func recursiveUpload(t *testing.T) {
@@ -94,7 +94,7 @@ func recursiveUpload(t *testing.T) {
 			t.Error("Missing File a.in")
 		}
 	}
-	artifactoryCleanUp(t)
+	artifactoryCleanup(t)
 }
 
 func placeholderUpload(t *testing.T) {
@@ -135,7 +135,7 @@ func placeholderUpload(t *testing.T) {
 			t.Error("Missing File a")
 		}
 	}
-	artifactoryCleanUp(t)
+	artifactoryCleanup(t)
 }
 
 func includeDirsUpload(t *testing.T) {
@@ -180,7 +180,7 @@ func includeDirsUpload(t *testing.T) {
 			t.Error("Missing directory out.")
 		}
 	}
-	artifactoryCleanUp(t)
+	artifactoryCleanup(t)
 }
 
 func explodeUpload(t *testing.T) {
@@ -233,5 +233,5 @@ func explodeUpload(t *testing.T) {
 			t.Error("Missing file a.in")
 		}
 	}
-	artifactoryCleanUp(t)
+	artifactoryCleanup(t)
 }

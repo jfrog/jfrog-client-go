@@ -17,7 +17,7 @@ func TestArtifactoryDownload(t *testing.T) {
 	t.Run("recursive", recursiveDownload)
 	t.Run("placeholder", placeholderDownload)
 	t.Run("includeDirs", includeDirsDownload)
-	artifactoryCleanUp(t)
+	artifactoryCleanup(t)
 }
 
 func uploadDummyFile(t *testing.T) {
