@@ -38,7 +38,7 @@ func (pwa *publishWithoutApi) PublishPackage(params GoParams, client *httpclient
 		return err
 	}
 	clientDetails := ArtDetails.CreateHttpClientDetails()
-	addHeaders(params, &clientDetails)
+
 	addGoVersion(params, &zipUrl)
 	resp, body, err := client.UploadFile(params.GetZipPath(), zipUrl, clientDetails, 0)
 	if err != nil {
