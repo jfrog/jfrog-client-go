@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth/cert"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/go"
@@ -9,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
-	"net/http"
 )
 
 type ArtifactoryServicesManager struct {
@@ -20,14 +18,9 @@ type ArtifactoryServicesManager struct {
 func New(config Config) (*ArtifactoryServicesManager, error) {
 	var err error
 	manager := &ArtifactoryServicesManager{config: config}
-	if config.GetCertifactesPath() == "" {
-		manager.client = httpclient.NewDefaultHttpClient()
-	} else {
-		transport, err := cert.GetTransportWithLoadedCert(config.GetCertifactesPath())
-		if err != nil {
-			return nil, err
-		}
-		manager.client = httpclient.NewHttpClient(&http.Client{Transport: transport})
+	manager.client, err = CreateArtifactoryHttpClient(config)
+	if err != nil {
+		return nil, err
 	}
 	if config.GetLogger() != nil {
 		log.SetLogger(config.GetLogger())
