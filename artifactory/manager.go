@@ -3,6 +3,7 @@ package artifactory
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/bundle"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/httpclient"
@@ -163,6 +164,12 @@ func (sm *ArtifactoryServicesManager) Ping() ([]byte, error) {
 	pingService := services.NewPingService(sm.client)
 	pingService.ArtDetails = sm.config.GetArtDetails()
 	return pingService.Ping()
+}
+
+func (sm *ArtifactoryServicesManager) GetBundleVersions(bundleName string) ([]bundle.Version, error) {
+	bundleService := bundle.NewBundleService(sm.client)
+	bundleService.ArtDetails = sm.config.GetArtDetails()
+	return bundleService.GetBundleVersions(bundleName)
 }
 
 func (sm *ArtifactoryServicesManager) GetConfig() Config {
