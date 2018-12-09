@@ -1,7 +1,7 @@
 package bundle
 
 const (
-	Completed      = "COMPLETED"
+	Complete       = "COMPLETE"
 	InProgress     = "IN PROGRESS"
 	NotDistributed = "NOT DISTRIBUTED"
 	Failed         = "FAILED"
