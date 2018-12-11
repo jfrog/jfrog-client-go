@@ -213,42 +213,34 @@ func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte
 	return
 }
 
-func filterSearchByBuild(specFile *ArtifactoryCommonParams, itemsToFilter []ResultItem, flags CommonConf) ([]ResultItem, error) {
+func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, itemsToFilter []ResultItem, flags CommonConf, itemsAlreadyContainProperties bool) ([]ResultItem, error) {
+	var addPropsErr error
+	var aqlSearchErr error
+	var buildArtifactsSha1 map[string]bool
+	var wg sync.WaitGroup
 	buildName, buildNumber, err := getBuildNameAndNumber(specFile.Build, flags)
 	if err != nil {
 		return nil, err
 	}
 
-	buildAqlResponse, err := fetchBuildArtifactsSha1(specFile.Aql.ItemsFind, buildName, buildNumber, itemsToFilter, flags)
-	if err != nil {
-		return nil, err
+	wg.Add(2)
+	// Get Sha1 for artifacts by build name and number
+	go func() {
+		buildArtifactsSha1, aqlSearchErr = fetchBuildArtifactsSha1(buildName, buildNumber, flags)
+		wg.Done()
+	}()
+
+	if !itemsAlreadyContainProperties {
+		// Add properties to the previously found artifacts (in case properties weren't already fetched from Artifactory)
+		go func() {
+			addPropsErr = searchAndAddPropsToAqlResult(itemsToFilter, specFile.Aql.ItemsFind, "build.name", buildName, flags)
+			wg.Done()
+		}()
+	} else {
+		wg.Done()
 	}
 
-	return filterBuildAqlSearchResults(&itemsToFilter, &buildAqlResponse, buildName, buildNumber), err
-}
-
-// This function adds to @itemsToFilter the "build.name" property and returns all the artifacts that associated with
-// the provided @buildName and @buildNumber.
-func fetchBuildArtifactsSha1(aqlBody, buildName, buildNumber string, itemsToFilter []ResultItem, flags CommonConf) (map[string]bool, error) {
-	var wg sync.WaitGroup
-	var addPropsErr error
-	var aqlSearchErr error
-	var buildAqlResponse []byte
-
-	wg.Add(2)
-	go func() {
-		addPropsErr = searchAndAddPropsToAqlResult(itemsToFilter, aqlBody, "build.name", buildName, flags)
-		wg.Done()
-	}()
-
-	go func() {
-		buildQuery := createAqlQueryForBuild(buildName, buildNumber)
-		buildAqlResponse, aqlSearchErr = ExecAql(buildQuery, flags)
-		wg.Done()
-	}()
-
 	wg.Wait()
-
 	if aqlSearchErr != nil {
 		return nil, aqlSearchErr
 	}
@@ -256,7 +248,26 @@ func fetchBuildArtifactsSha1(aqlBody, buildName, buildNumber string, itemsToFilt
 		return nil, addPropsErr
 	}
 
-	buildArtifactsSha, err := extractSha1FromAqlResponse(buildAqlResponse)
+	return filterBuildAqlSearchResults(&itemsToFilter, &buildArtifactsSha1, buildName, buildNumber), err
+}
+
+// Run AQL to retrieve all artifacts associated to a specific build.
+// Return a map of the artifacts SHA1.
+func fetchBuildArtifactsSha1(buildName, buildNumber string, flags CommonConf) (map[string]bool, error) {
+	var aqlSearchErr error
+	var buildAqlResponse []byte
+
+	buildQuery := createAqlQueryForBuild(buildName, buildNumber, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}))
+
+	buildAqlResponse, aqlSearchErr = ExecAql(buildQuery, flags)
+	if aqlSearchErr != nil {
+		return nil, aqlSearchErr
+	}
+	parsedBuildAqlResponse, err := parseAqlSearchResponse(buildAqlResponse)
+	if err != nil {
+		return nil, err
+	}
+	buildArtifactsSha, err := extractSha1FromAqlResponse(parsedBuildAqlResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -264,6 +275,16 @@ func fetchBuildArtifactsSha1(aqlBody, buildName, buildNumber string, itemsToFilt
 	return buildArtifactsSha, nil
 }
 
+/*
+ * Perform AQL query together with property filtering.
+ * Update the provided artifacts with its retrieved properties.
+ *
+ * itemsToFilter - Artifacts we would like to update with their properties.
+ * aqlBody - AQL to execute together with property filter.
+ * filterByPropName - Property name to filter.
+ * filterByPropValue - Property value to filter.
+ * flags - Command flags for AQL execution.
+ */
 func searchAndAddPropsToAqlResult(itemsToFilter []ResultItem, aqlBody, filterByPropName, filterByPropValue string, flags CommonConf) error {
 	propsAqlResponseJson, err := ExecAql(createPropsQuery(aqlBody, filterByPropName, filterByPropValue), flags)
 	if err != nil {
@@ -299,11 +320,7 @@ func getResultItemKey(item ResultItem) string {
 	return item.Repo + item.Path + item.Name + item.Actual_Sha1
 }
 
-func extractSha1FromAqlResponse(resp []byte) (map[string]bool, error) {
-	elements, err := parseAqlSearchResponse(resp)
-	if err != nil {
-		return nil, err
-	}
+func extractSha1FromAqlResponse(elements []ResultItem) (map[string]bool, error) {
 	elementsMap := make(map[string]bool)
 	for _, element := range elements {
 		elementsMap[element.Actual_Sha1] = true

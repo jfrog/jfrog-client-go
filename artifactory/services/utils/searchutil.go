@@ -24,28 +24,68 @@ const (
 	NONE
 )
 
-func AqlSearchDefaultReturnFields(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
-	query, err := createAqlBodyForSpec(specFile)
+// Use this method when searching by build without pattern or aql
+func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) ([]ResultItem, error) {
+	buildName, buildNumber, err := getBuildNameAndNumber(specFile.Build, flags)
+	if err != nil {
+		return nil, err
+	}
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuild(buildName, buildNumber)}
+
+	// Request ALL RequiredArtifactProps, since this is search by build.
+	executionQuery := buildQueryFromSpecFile(specFile, ALL)
+	var results []ResultItem
+	results, err = aqlSearch(executionQuery, flags)
+	if err != nil {
+		return nil, err
+	}
+
+	// If artifacts' properties weren't fetched in previous aql, fetch now and add to results.
+	if !includePropertiesInAqlForSpec(specFile) {
+		err = searchAndAddPropsToAqlResult(results, specFile.Aql.ItemsFind, "build.name", buildName, flags)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Extract artifacts sha1 for filtering.
+	buildArtifactsSha1, err := extractSha1FromAqlResponse(results)
+	// Filter artifacts by priorities.
+	return filterBuildAqlSearchResults(&results, &buildArtifactsSha1, buildName, buildNumber), err
+}
+
+// Perform search by pattern.
+func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
+	// Create AQL according to spec fields.
+	query, err := createAqlBodyForSpecWithPattern(specFile)
 	if err != nil {
 		return nil, err
 	}
 	specFile.Aql = Aql{ItemsFind: query}
-	return AqlSearchBySpec(specFile, flags, requiredArtifactProps)
+	return SearchBySpecWithAql(specFile, flags, requiredArtifactProps)
 }
 
-func AqlSearchBySpec(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
+// Use this method when running Aql with pattern
+func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
+	// Execute the search according to provided aql in specFile.
 	query := buildQueryFromSpecFile(specFile, requiredArtifactProps)
 	results, err := aqlSearch(query, flags)
 	if err != nil {
 		return nil, err
 	}
+
+	// Filter results by build.
 	if specFile.Build != "" && len(results) > 0 {
-		results, err = filterSearchByBuild(specFile, results, flags)
+		// If requiredArtifactProps is set to All and 'includePropertiesInAqlForSpec' for specFile returned true, results contains properties for artifacts.
+		resultsArtifactsIncludeProperties := requiredArtifactProps == ALL && includePropertiesInAqlForSpec(specFile)
+		results, err = filterAqlSearchResultsByBuild(specFile, results, flags, resultsArtifactsIncludeProperties)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if specIncludesSortOrLimit(specFile) {
+
+	// If properties weren't included in 'results', and didn't fetch properties during 'build' filtering, we should fetch them now.
+	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" {
 		switch requiredArtifactProps {
 		case ALL:
 			err = searchAndAddPropsToAqlResult(results, specFile.Aql.ItemsFind, "*", "*", flags)

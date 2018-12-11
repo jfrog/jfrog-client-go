@@ -54,14 +54,20 @@ func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requir
 
 	switch searchParams.GetSpecType() {
 	case utils.WILDCARD, utils.SIMPLE:
-		itemsFound, e := utils.AqlSearchDefaultReturnFields(searchParams.GetFile(), flags, requiredArtifactProps)
+		itemsFound, e := utils.SearchBySpecWithPattern(searchParams.GetFile(), flags, requiredArtifactProps)
 		if e != nil {
 			err = e
 			return resultItems, err
 		}
 		resultItems = append(resultItems, itemsFound...)
+	case utils.BUILD:
+		itemsFound, err = utils.SearchBySpecWithBuild(searchParams.GetFile(), flags)
+		if err != nil {
+			return resultItems, err
+		}
+		resultItems = append(resultItems, itemsFound...)
 	case utils.AQL:
-		itemsFound, err = utils.AqlSearchBySpec(searchParams.GetFile(), flags, requiredArtifactProps)
+		itemsFound, err = utils.SearchBySpecWithAql(searchParams.GetFile(), flags, requiredArtifactProps)
 		if err != nil {
 			return resultItems, err
 		}

@@ -49,8 +49,8 @@ func (mc *MoveCopyService) GetJfrogHttpClient() *httpclient.HttpClient {
 
 func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyParams) (successCount, failedCount int, err error) {
 	switch moveSpec.GetSpecType() {
-	case utils.WILDCARD, utils.SIMPLE:
-		successCount, failedCount, err = mc.moveWildcard(moveSpec)
+	case utils.WILDCARD, utils.SIMPLE, utils.BUILD:
+		successCount, failedCount, err = mc.moveNoAql(moveSpec)
 	case utils.AQL:
 		successCount, failedCount, err = mc.moveAql(moveSpec)
 	}
@@ -67,7 +67,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyPara
 
 func (mc *MoveCopyService) moveAql(params MoveCopyParams) (successCount, failedCount int, err error) {
 	log.Info("Searching artifacts...")
-	resultItems, err := utils.AqlSearchBySpec(params.GetFile(), mc, utils.NONE)
+	resultItems, err := utils.SearchBySpecWithAql(params.GetFile(), mc, utils.NONE)
 	if err != nil {
 		return
 	}
@@ -75,10 +75,15 @@ func (mc *MoveCopyService) moveAql(params MoveCopyParams) (successCount, failedC
 	return
 }
 
-func (mc *MoveCopyService) moveWildcard(params MoveCopyParams) (successCount, failedCount int, err error) {
+func (mc *MoveCopyService) moveNoAql(params MoveCopyParams) (successCount, failedCount int, err error) {
 	log.Info("Searching artifacts...")
-	params.SetIncludeDir(true)
-	resultItems, err := utils.AqlSearchDefaultReturnFields(params.GetFile(), mc, utils.NONE)
+	var resultItems []utils.ResultItem
+	if params.GetSpecType() == utils.BUILD {
+		resultItems, err = utils.SearchBySpecWithBuild(params.GetFile(), mc)
+	} else {
+		params.SetIncludeDir(true)
+		resultItems, err = utils.SearchBySpecWithPattern(params.GetFile(), mc, utils.NONE)
+	}
 	if err != nil {
 		return
 	}
