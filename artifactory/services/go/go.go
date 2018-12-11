@@ -2,11 +2,11 @@ package _go
 
 import (
 	"encoding/base64"
+	"github.com/Masterminds/semver"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/errors/httperrors"
 	"github.com/jfrog/jfrog-client-go/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 	"strings"
 )
 
@@ -82,10 +82,7 @@ func createUrlPath(params GoParams, url *string) error {
 // or false if need to use matrix params (Artifactory version 6.5.0 and above).
 func shouldUseHeaders(artifactoryVersion string) bool {
 	propertiesApi := "6.5.0"
-	if version.Compare(artifactoryVersion, propertiesApi) < 0 && artifactoryVersion != "development" {
-		return true
-	}
-	return false
+	return artifactoryVersion != "development" && semver.MustParse(artifactoryVersion).Compare(semver.MustParse(propertiesApi)) < 0
 }
 
 type GoParams struct {
