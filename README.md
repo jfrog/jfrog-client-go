@@ -434,10 +434,10 @@ The library can be used as a go-module, which should be added to your project's 
 ```
 
 ## Tests
-To run tests on the source code, you';; need a running JFrog Artifactory Pro instance.
+To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
 Use the following command with the below options to run the tests.
 ````
-go test -v github.com/jfrog/jfrog-client-go/artifactory/services
+go test -v github.com/jfrog/jfrog-client-go/tests
 ````
 Optional flags:
 
