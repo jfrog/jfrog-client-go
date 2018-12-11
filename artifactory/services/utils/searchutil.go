@@ -24,7 +24,7 @@ const (
 	NONE
 )
 
-// Use this method when searching by build without pattern or aql
+// Use this function when searching by build without pattern or aql
 func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) ([]ResultItem, error) {
 	buildName, buildNumber, err := getBuildNameAndNumber(specFile.Build, flags)
 	if err != nil {
@@ -32,10 +32,8 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	}
 	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuild(buildName, buildNumber)}
 
-	// Request ALL RequiredArtifactProps, since this is search by build.
 	executionQuery := buildQueryFromSpecFile(specFile, ALL)
-	var results []ResultItem
-	results, err = aqlSearch(executionQuery, flags)
+	results, err := aqlSearch(executionQuery, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +63,7 @@ func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf
 	return SearchBySpecWithAql(specFile, flags, requiredArtifactProps)
 }
 
-// Use this method when running Aql with pattern
+// Use this function when running Aql with pattern
 func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
 	// Execute the search according to provided aql in specFile.
 	query := buildQueryFromSpecFile(specFile, requiredArtifactProps)
@@ -84,7 +82,11 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 		}
 	}
 
-	// If properties weren't included in 'results', and didn't fetch properties during 'build' filtering, we should fetch them now.
+	// If:
+	// 1. Properties weren't included in 'results'.
+	// AND
+	// 2. Properties weren't fetched during 'build' filtering
+	// Then: we should fetch them now.
 	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" {
 		switch requiredArtifactProps {
 		case ALL:

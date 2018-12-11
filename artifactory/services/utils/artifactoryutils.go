@@ -251,7 +251,7 @@ func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, itemsToFil
 	return filterBuildAqlSearchResults(&itemsToFilter, &buildArtifactsSha1, buildName, buildNumber), err
 }
 
-// Run AQL to retrieve all artifacts associated to a specific build.
+// Run AQL to retrieve all artifacts associated with a specific build.
 // Return a map of the artifacts SHA1.
 func fetchBuildArtifactsSha1(buildName, buildNumber string, flags CommonConf) (map[string]bool, error) {
 	var aqlSearchErr error
@@ -276,16 +276,15 @@ func fetchBuildArtifactsSha1(buildName, buildNumber string, flags CommonConf) (m
 }
 
 /*
- * Perform AQL query together with property filtering.
- * Update the provided artifacts with its retrieved properties.
+ * Find artifact properties by the AQL, add them to the result items.
  *
- * itemsToFilter - Artifacts we would like to update with their properties.
+ * resultItems - Artifacts to add properties to.
  * aqlBody - AQL to execute together with property filter.
  * filterByPropName - Property name to filter.
  * filterByPropValue - Property value to filter.
  * flags - Command flags for AQL execution.
  */
-func searchAndAddPropsToAqlResult(itemsToFilter []ResultItem, aqlBody, filterByPropName, filterByPropValue string, flags CommonConf) error {
+func searchAndAddPropsToAqlResult(resultItems []ResultItem, aqlBody, filterByPropName, filterByPropValue string, flags CommonConf) error {
 	propsAqlResponseJson, err := ExecAql(createPropsQuery(aqlBody, filterByPropName, filterByPropValue), flags)
 	if err != nil {
 		return err
@@ -294,7 +293,7 @@ func searchAndAddPropsToAqlResult(itemsToFilter []ResultItem, aqlBody, filterByP
 	if err != nil {
 		return err
 	}
-	addPropsToAqlResult(itemsToFilter, propsAqlResponse)
+	addPropsToAqlResult(resultItems, propsAqlResponse)
 	return nil
 }
 

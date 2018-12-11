@@ -48,12 +48,23 @@ func (mc *MoveCopyService) GetJfrogHttpClient() *httpclient.HttpClient {
 }
 
 func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyParams) (successCount, failedCount int, err error) {
+	var resultItems []utils.ResultItem
+	log.Info("Searching items...")
+
 	switch moveSpec.GetSpecType() {
-	case utils.WILDCARD, utils.SIMPLE, utils.BUILD:
-		successCount, failedCount, err = mc.moveNoAql(moveSpec)
+	case utils.BUILD:
+		resultItems, err = utils.SearchBySpecWithBuild(moveSpec.GetFile(), mc)
 	case utils.AQL:
-		successCount, failedCount, err = mc.moveAql(moveSpec)
+		resultItems, err = utils.SearchBySpecWithAql(moveSpec.GetFile(), mc, utils.NONE)
+	case utils.WILDCARD, utils.SIMPLE:
+		moveSpec.SetIncludeDir(true)
+		resultItems, err = utils.SearchBySpecWithPattern(moveSpec.GetFile(), mc, utils.NONE)
 	}
+	if err != nil {
+		return 0, 0, err
+	}
+
+	successCount, failedCount, err = mc.moveFiles(resultItems, moveSpec)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -62,32 +73,6 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyPara
 	if failedCount > 0 {
 		err = errorutils.CheckError(errors.New("Failed " + moveMsgs[mc.moveType].MovingMsg + " " + strconv.Itoa(failedCount) + " artifacts."))
 	}
-	return
-}
-
-func (mc *MoveCopyService) moveAql(params MoveCopyParams) (successCount, failedCount int, err error) {
-	log.Info("Searching artifacts...")
-	resultItems, err := utils.SearchBySpecWithAql(params.GetFile(), mc, utils.NONE)
-	if err != nil {
-		return
-	}
-	successCount, failedCount, err = mc.moveFiles(resultItems, params)
-	return
-}
-
-func (mc *MoveCopyService) moveNoAql(params MoveCopyParams) (successCount, failedCount int, err error) {
-	log.Info("Searching artifacts...")
-	var resultItems []utils.ResultItem
-	if params.GetSpecType() == utils.BUILD {
-		resultItems, err = utils.SearchBySpecWithBuild(params.GetFile(), mc)
-	} else {
-		params.SetIncludeDir(true)
-		resultItems, err = utils.SearchBySpecWithPattern(params.GetFile(), mc, utils.NONE)
-	}
-	if err != nil {
-		return
-	}
-	successCount, failedCount, err = mc.moveFiles(resultItems, params)
 	return
 }
 
