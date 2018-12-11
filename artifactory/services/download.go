@@ -90,8 +90,10 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, fileContextHan
 		switch downloadParams.GetSpecType() {
 		case utils.WILDCARD, utils.SIMPLE:
 			resultItems, err = ds.collectFilesUsingWildcardPattern(downloadParams)
+		case utils.BUILD:
+			resultItems, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
 		case utils.AQL:
-			resultItems, err = utils.AqlSearchBySpec(downloadParams.GetFile(), ds, utils.SYMLINK)
+			resultItems, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
 		}
 
 		if err != nil {
@@ -108,7 +110,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, fileContextHan
 }
 
 func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) ([]utils.ResultItem, error) {
-	return utils.AqlSearchDefaultReturnFields(downloadParams.GetFile(), ds, utils.SYMLINK)
+	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
 }
 
 func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *utils.ErrorsQueue) (int, error) {

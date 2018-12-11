@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-// Returns an AQL body string to search file in Artifactory according the the specified arguments requirements.
-func createAqlBodyForSpec(params *ArtifactoryCommonParams) (string, error) {
+// Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
+func createAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, error) {
 	var itemType string
 	if params.IncludeDirs {
 		itemType = "any"
@@ -104,13 +104,22 @@ func handleArchiveSearch(path, name string, archivePathFilePairs []PathFilePair)
 	return query
 }
 
-func createAqlQueryForBuild(buildName, buildNumber string) string {
+func createAqlBodyForBuild(buildName, buildNumber string) string {
 	itemsPart :=
-		`items.find({` +
+		`{` +
 			`"artifact.module.build.name": "%s",` +
 			`"artifact.module.build.number": "%s"` +
-			`})%s`
-	return fmt.Sprintf(itemsPart, buildName, buildNumber, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}))
+			`}`
+	return fmt.Sprintf(itemsPart, buildName, buildNumber)
+}
+
+func createAqlQueryForBuild(buildName, buildNumber, includeQueryPart string) string {
+	queryBody := createAqlBodyForBuild(buildName, buildNumber)
+	itemsPart :=
+		`items.find(` +
+			`%s` +
+			`)%s`
+	return fmt.Sprintf(itemsPart, queryBody, includeQueryPart)
 }
 
 func CreateAqlQueryForNpm(npmName, npmVersion string) string {
@@ -331,10 +340,11 @@ type PathFilePair struct {
 }
 
 // Creates a list of basic required return fields. The list will include the sortBy field if needed.
-// If requiredArtifactProps is NONE or sortBy is configured, "property" field won't be included due to a limitation in the AQL implementation in Artifactory.
+// If requiredArtifactProps is NONE or 'includePropertiesInAqlForSpec' return false,
+// "property" field won't be included due to a limitation in the AQL implementation in Artifactory.
 func getQueryReturnFields(specFile *ArtifactoryCommonParams, requiredArtifactProps RequiredArtifactProps) []string {
 	returnFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "size", "type"}
-	if specIncludesSortOrLimit(specFile) {
+	if !includePropertiesInAqlForSpec(specFile) {
 		// Sort dose not work when property is in the include section. in this case we will append properties in later stage.
 		return appendMissingFields(specFile.SortBy, returnFields)
 	}
@@ -345,8 +355,11 @@ func getQueryReturnFields(specFile *ArtifactoryCommonParams, requiredArtifactPro
 	return returnFields
 }
 
-func specIncludesSortOrLimit(specFile *ArtifactoryCommonParams) bool {
-	return len(specFile.SortBy) > 0 || specFile.Limit > 0
+// If specFile includes sortBy or limit, the produced AQL won't include property in the include section.
+// This due to an Artifactory limitation related to using these flags with props in an AQL statement.
+// Meaning - the result won't contain properties.
+func includePropertiesInAqlForSpec(specFile *ArtifactoryCommonParams) bool {
+	return !(len(specFile.SortBy) > 0 || specFile.Limit > 0)
 }
 
 func appendMissingFields(fields []string, defaultFields []string) []string {
@@ -375,9 +388,6 @@ func prepareFieldsForQuery(fields []string) []string {
 }
 
 // Creates an aql query from a spec file.
-// If the spec includes sortBy, the produced AQL won't includes property in the include section,
-// due to an Artifactory limitation to limitation related to using sort with props in an AQL statement - this mean the result wont contain properties.
-// Same will happen if requiredArtifactProps is 'NONE'.
 func buildQueryFromSpecFile(specFile *ArtifactoryCommonParams, requiredArtifactProps RequiredArtifactProps) string {
 	aqlBody := specFile.Aql.ItemsFind
 	query := fmt.Sprintf(`items.find(%s)%s`, aqlBody, buildIncludeQueryPart(getQueryReturnFields(specFile, requiredArtifactProps)))

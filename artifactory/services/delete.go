@@ -39,24 +39,30 @@ func (ds *DeleteService) GetJfrogHttpClient() *httpclient.HttpClient {
 
 func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItems []utils.ResultItem, err error) {
 	log.Info("Searching artifacts...")
-	// Search paths using AQL.
-	if deleteParams.GetSpecType() == utils.AQL {
-		if resultItemsTemp, e := utils.AqlSearchBySpec(deleteParams.GetFile(), ds, utils.NONE); e == nil {
+	switch deleteParams.GetSpecType() {
+	case utils.AQL:
+		if resultItemsTemp, e := utils.SearchBySpecWithAql(deleteParams.GetFile(), ds, utils.NONE); e == nil {
 			resultItems = append(resultItems, resultItemsTemp...)
 		} else {
 			err = e
 			return
 		}
-	} else {
-
+	case utils.WILDCARD, utils.SIMPLE:
 		deleteParams.SetIncludeDirs(true)
-		tempResultItems, e := utils.AqlSearchDefaultReturnFields(deleteParams.GetFile(), ds, utils.NONE)
+		tempResultItems, e := utils.SearchBySpecWithPattern(deleteParams.GetFile(), ds, utils.NONE)
 		if e != nil {
 			err = e
 			return
 		}
 		paths := utils.ReduceDirResult(tempResultItems, utils.FilterTopChainResults)
 		resultItems = append(resultItems, paths...)
+	case utils.BUILD:
+		if resultItemsTemp, e := utils.SearchBySpecWithBuild(deleteParams.GetFile(), ds); e == nil {
+			resultItems = append(resultItems, resultItemsTemp...)
+		} else {
+			err = e
+			return
+		}
 	}
 	utils.LogSearchResults(len(resultItems))
 	return
