@@ -62,7 +62,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 	return
 }
 
-func (ds *DeleteService) DeleteFiles(deleteItems []DeleteItem, conf utils.CommonConf) (int, error) {
+func (ds *DeleteService) DeleteFiles(deleteItems []utils.ResultItem, conf utils.CommonConf) (int, error) {
 	deletedCount := 0
 	for _, v := range deleteItems {
 		fileUrl, err := utils.BuildArtifactoryUrl(conf.GetArtifactoryDetails().GetUrl(), v.GetItemRelativePath(), make(map[string]string))
@@ -118,10 +118,6 @@ func (ds *DeleteParams) GetFile() *utils.ArtifactoryCommonParams {
 
 func (ds *DeleteParams) SetIncludeDirs(includeDirs bool) {
 	ds.IncludeDirs = includeDirs
-}
-
-type DeleteItem interface {
-	GetItemRelativePath() string
 }
 
 func NewDeleteParams() DeleteParams {
