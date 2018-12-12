@@ -96,7 +96,7 @@ func artifactoryCleanup(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	deleteItems := make([]services.DeleteItem, len(toDelete))
+	deleteItems := make([]utils.ResultItem, len(toDelete))
 	for i, item := range toDelete {
 		deleteItems[i] = item
 	}
