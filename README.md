@@ -8,8 +8,8 @@
 ## General
 
 *jfrog-client-go* is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
-The project is still relatively new, and its APIs may therefore chsngr frequently between releases.
-The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you look at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
+The project is still relatively new, and its APIs may therefore change frequently between releases.
+The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you may look at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
 
 ## Artifactory APIs
 ### Creating Artifactory Details
