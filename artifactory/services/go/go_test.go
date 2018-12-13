@@ -1,6 +1,7 @@
 package _go
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -9,16 +10,20 @@ func TestCreateUrlPath(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		params      GoParams
+		extension   string
+		moduleId    string
+		version     string
+		props       string
 		url         string
 		expectedUrl string
 	}{
-		{"withBuildProperties", GoParams{ZipPath: "path/to/zip/file", Version: "v1.1.1", TargetRepo: "ArtiRepo", ModuleId: "github.com/jfrog/test", Props: "build.name=a;build.number=1"}, "http://test.url/", "http://test.url//github.com/jfrog/test/@v/v1.1.1.zip;build.name=a;build.number=1"},
-		{"withoutBuildProperties", GoParams{ZipPath: "path/to/zip/file", Version: "v1.1.1", TargetRepo: "ArtiRepo", ModuleId: "github.com/jfrog/test"}, "http://test.url/", "http://test.url//github.com/jfrog/test/@v/v1.1.1.zip"},
+		{"withBuildProperties", ".zip", "github.com/jfrog/test", "v1.1.1", "build.name=a;build.number=1", "http://test.url/", "http://test.url//github.com/jfrog/test/@v/v1.1.1.zip;build.name=a;build.number=1"},
+		{"withoutBuildProperties", ".zip", "github.com/jfrog/test", "v1.1.1", "", "http://test.url/", "http://test.url//github.com/jfrog/test/@v/v1.1.1.zip"},
+		{"withoutBuildPropertiesModExtension", ".mod", "github.com/jfrog/test", "v1.1.1", "", "http://test.url/", "http://test.url//github.com/jfrog/test/@v/v1.1.1.mod"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			createUrlPath(test.params, &test.url)
+			createUrlPath(test.moduleId, test.version, test.props, test.extension, &test.url)
 			if !strings.EqualFold(test.url, test.expectedUrl) {
 				t.Error("Expected:", test.expectedUrl, "Got:", test.url)
 			}
@@ -29,25 +34,21 @@ func TestCreateUrlPath(t *testing.T) {
 func TestShouldUseHeaders(t *testing.T) {
 	tests := []struct {
 		artifactoryVersion string
-		expectedResult     bool
+		expectedResult     string
 	}{
-		{"6.5.0", false},
-		{"6.2.0", true},
-		{"5.9.0", true},
-		{"6.0.0", true},
-		{"6.6.0", false},
-		{"development", false},
-		{"6.10.2", false},
+		{"6.5.0", "*_go.publishWithMatrixParams"},
+		{"6.2.0", "*_go.publishWithHeader"},
+		{"5.9.0", "*_go.publishWithHeader"},
+		{"6.0.0", "*_go.publishWithHeader"},
+		{"6.6.0", "*_go.publishWithoutApi"},
+		{"development", "*_go.publishWithoutApi"},
+		{"6.10.2", "*_go.publishWithoutApi"},
 	}
 	for _, test := range tests {
 		t.Run(test.artifactoryVersion, func(t *testing.T) {
-			result := shouldUseHeaders(test.artifactoryVersion)
-			if result && !test.expectedResult {
-				t.Error("Expected:", test.expectedResult, "Got:", result)
-			}
-
-			if !result && test.expectedResult {
-				t.Error("Expected:", test.expectedResult, "Got:", result)
+			result := GetCompatiblePublisher(test.artifactoryVersion)
+			if reflect.TypeOf(result).String() != test.expectedResult {
+				t.Error("Expected:", test.expectedResult, "Got:", reflect.TypeOf(result).String())
 			}
 		})
 	}
