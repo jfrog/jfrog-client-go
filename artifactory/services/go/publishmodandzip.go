@@ -18,12 +18,11 @@ func init() {
 type publishWithoutApi struct {
 }
 
-func (pwa *publishWithoutApi) isCompatible(artifactoryVersion string) bool {
-	propertiesApi := "6.6.0"
-	if version.Compare(artifactoryVersion, propertiesApi) < 0 && artifactoryVersion != "development" {
-		return false
+func (pwa *publishWithoutApi) isCompatible(artifactoryVersion string) (bool, error) {
+	if artifactoryVersion == "development" {
+		return true, nil
 	}
-	return true
+	return version.NewVersion(artifactoryVersion).IsAtLeast(withoutApi)
 }
 
 func (pwa *publishWithoutApi) PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error {

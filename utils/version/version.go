@@ -1,67 +1,36 @@
 package version
 
-import (
-	"strconv"
-	"strings"
-)
+import "github.com/Masterminds/semver"
+
+type Version struct {
+	Version string
+}
+
+func NewVersion(version string) Version {
+	return Version{Version: version}
+}
+
+func (that Version) IsAtLeast(other string) (bool, error) {
+	res, err := compare(that.Version, other)
+	return res >= 0, err
+}
+
+func (that Version) IsLessThan(other string) (bool, error) {
+	res, err := compare(that.Version, other)
+	return res < 0, err
+}
 
 // If ver1 == ver2 returns 0
 // If ver1 > ver2 returns 1
 // If ver1 < ver2 returns -1
-func Compare(ver1, ver2 string) int {
-	if ver1 == ver2 {
-		return 0
+func compare(ver1, ver2 string) (int, error) {
+	semver1, err := semver.NewVersion(ver1)
+	if err != nil {
+		return 0, err
 	}
-
-	ver1Tokens := strings.Split(ver1, ".")
-	ver2Tokens := strings.Split(ver2, ".")
-
-	maxIndex := len(ver1Tokens)
-	if len(ver2Tokens) > maxIndex {
-		maxIndex = len(ver2Tokens)
+	semver2, err := semver.NewVersion(ver2)
+	if err != nil {
+		return 0, err
 	}
-
-	for tokenIndex := 0; tokenIndex < maxIndex; tokenIndex++ {
-		ver1Token := "0"
-		if len(ver1Tokens) >= tokenIndex+1 {
-			ver1Token = strings.TrimSpace(ver1Tokens[tokenIndex])
-		}
-		ver2Token := "0"
-		if len(ver2Tokens) >= tokenIndex+1 {
-			ver2Token = strings.TrimSpace(ver2Tokens[tokenIndex])
-		}
-		compare := compareTokens(ver1Token, ver2Token)
-		if compare != 0 {
-			return compare
-		}
-	}
-
-	return 0
-}
-
-func compareTokens(ver1Token, ver2Token string) int {
-	// Ignoring error because we strip all the non numeric values in advance.
-	ver1TokenInt, _ := strconv.Atoi(getFirstNumeral(ver1Token))
-	ver2TokenInt, _ := strconv.Atoi(getFirstNumeral(ver2Token))
-
-	switch {
-	case ver1TokenInt > ver2TokenInt:
-		return 1
-	case ver1TokenInt < ver2TokenInt:
-		return -1
-	default:
-		return strings.Compare(ver1Token, ver2Token)
-	}
-}
-
-func getFirstNumeral(token string) string {
-	numeric := ""
-	for i := 0; i < len(token); i++ {
-		n := token[i:i+1]
-		if _, err := strconv.Atoi(n); err != nil {
-			return "999999"
-		}
-		numeric += n
-	}
-	return numeric
+	return semver1.Compare(semver2), nil
 }

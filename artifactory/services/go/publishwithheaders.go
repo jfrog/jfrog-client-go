@@ -16,12 +16,8 @@ func init() {
 type publishWithHeader struct {
 }
 
-func (pwh *publishWithHeader) isCompatible(artifactoryVersion string) bool {
-	propertiesApi := "6.5.0"
-	if version.Compare(artifactoryVersion, propertiesApi) < 0 {
-		return true
-	}
-	return false
+func (pwh *publishWithHeader) isCompatible(artifactoryVersion string) (bool, error) {
+	return version.NewVersion(artifactoryVersion).IsLessThan(propertiesApi)
 }
 
 func (pwh *publishWithHeader) PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error {

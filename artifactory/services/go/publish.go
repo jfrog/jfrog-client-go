@@ -8,7 +8,7 @@ import (
 var publishers []PublishGoPackage
 
 type PublishGoPackage interface {
-	isCompatible(artifactoryVersion string) bool
+	isCompatible(artifactoryVersion string) (bool, error)
 	PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error
 }
 
@@ -19,7 +19,7 @@ func register(publishApi PublishGoPackage) {
 // Returns the compatible publisher to Artifactory
 func GetCompatiblePublisher(artifactoryVersion string) PublishGoPackage {
 	for _, publisher := range publishers {
-		if publisher.isCompatible(artifactoryVersion) {
+		if compatible, _ := publisher.isCompatible(artifactoryVersion); compatible {
 			return publisher
 		}
 	}

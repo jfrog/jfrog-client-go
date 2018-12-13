@@ -2,6 +2,7 @@ module github.com/jfrog/jfrog-client-go
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/Masterminds/semver v1.4.2
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/buger/jsonparser v0.0.0-20180910192245-6acdf747ae99
