@@ -20,6 +20,7 @@ The library can be used as a go-module, which should be added to your project's 
     rtDetails.SetApiKey("apikey")
     rtDetails.SetUser("user")
     rtDetails.SetPassword("password")
+    rtDetails.SetAccessToken("accesstoken")
  ```
 
 ### Creating a Service Manager
@@ -449,6 +450,7 @@ Optional flags:
 | `-rt.apikey` | [Optional] Artifactory API key. |
 | `-rt.sshKeyPath` | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase. |
+| `-rt.accessToken` | [Optional] Artifactory access token. |
 | `-log-level` | [Default: INFO] Sets the log level. |
 
 
