@@ -21,12 +21,14 @@ type ArtifactoryDetails interface {
 	GetUser() string
 	GetPassword() string
 	GetApiKey() string
+	GetAccessToken() string
 	GetSshAuthHeaders() map[string]string
 	GetVersion() (string, error)
 	SetUrl(url string)
 	SetUser(user string)
 	SetPassword(password string)
 	SetApiKey(apiKey string)
+	SetAccessToken(accessToken string)
 	SetSshAuthHeaders(sshAuthHeaders map[string]string)
 
 	AuthenticateSsh(sshKey, sshPassphrase string) error
@@ -39,6 +41,7 @@ type artifactoryDetails struct {
 	User           string            `json:"-"`
 	Password       string            `json:"-"`
 	ApiKey         string            `json:"-"`
+	AccessToken    string            `json:"-"`
 	version        string            `json:"-"`
 	SshAuthHeaders map[string]string `json:"-"`
 }
@@ -57,6 +60,10 @@ func (rt *artifactoryDetails) GetPassword() string {
 
 func (rt *artifactoryDetails) GetApiKey() string {
 	return rt.ApiKey
+}
+
+func (rt *artifactoryDetails) GetAccessToken() string {
+	return rt.AccessToken
 }
 
 func (rt *artifactoryDetails) GetSshAuthHeaders() map[string]string {
@@ -79,6 +86,10 @@ func (rt *artifactoryDetails) SetApiKey(apiKey string) {
 	rt.ApiKey = apiKey
 }
 
+func (rt *artifactoryDetails) SetAccessToken(accessToken string) {
+	rt.AccessToken = accessToken
+}
+
 func (rt *artifactoryDetails) SetSshAuthHeaders(sshAuthHeaders map[string]string) {
 	rt.SshAuthHeaders = sshAuthHeaders
 }
@@ -95,10 +106,11 @@ func (rt *artifactoryDetails) AuthenticateSsh(sshKeyPath, sshPassphrase string) 
 
 func (rt *artifactoryDetails) CreateHttpClientDetails() httputils.HttpClientDetails {
 	return httputils.HttpClientDetails{
-		User:     rt.User,
-		Password: rt.Password,
-		ApiKey:   rt.ApiKey,
-		Headers:  utils.CopyMap(rt.SshAuthHeaders)}
+		User:        rt.User,
+		Password:    rt.Password,
+		ApiKey:      rt.ApiKey,
+		AccessToken: rt.AccessToken,
+		Headers:     utils.CopyMap(rt.SshAuthHeaders)}
 }
 
 func (rt *artifactoryDetails) GetVersion() (string, error) {
