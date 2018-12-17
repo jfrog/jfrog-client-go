@@ -133,17 +133,23 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
 }
 
 func pathToRegExp(localPath string) string {
-	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
-	for _, char := range SPECIAL_CHARS {
-		localPath = strings.Replace(localPath, char, "\\"+char, -1)
-	}
-	var wildcard = ".*"
-	localPath = strings.Replace(localPath, "*", wildcard, -1)
+	localPath = WildcardToRegex(localPath)
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
-		localPath += wildcard
+		localPath += ".*"
 	}
 	localPath = "^" + localPath + "$"
 	return localPath
+}
+
+func WildcardToRegex(pattern string) string {
+	// Escape special characters
+	for _, char := range []string{".", "^", "$", "+"} {
+		pattern = strings.Replace(pattern, char, "\\"+char, -1)
+	}
+	// ? --> .?
+	pattern = strings.Replace(pattern, "?", ".?", -1)
+	// * --> .*
+	return strings.Replace(pattern, "*", ".*", -1)
 }
 
 // Replaces matched regular expression from path to corresponding {i} at target.

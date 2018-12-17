@@ -1,6 +1,9 @@
 package version
 
-import "testing"
+import (
+	"github.com/magiconair/properties/assert"
+	"testing"
+)
 
 func TestCompare(t *testing.T) {
 	tests := []struct {
@@ -44,10 +47,52 @@ func TestCompare(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.ver1+":"+test.ver2, func(t *testing.T) {
-			result := Compare(test.ver1, test.ver2)
-			if result != test.expected {
-				t.Error("ver1:", test.ver1, "ver2:", test.ver2, "Expecting:", test.expected, "got:", result)
-			}
+			assert.Equal(t, Compare(test.ver1, test.ver2), test.expected)
+		})
+	}
+}
+
+func TestIsMatch(t *testing.T) {
+	tests := []struct {
+		version    string
+		constraint string
+		expected   bool
+	}{
+		{"1.0.0", "1.0.0", true},
+		{"2.0.0", "1.0.0", false},
+		{"1.0.0", "*.0.0", true},
+		{"1.0.0", "1.*.0", true},
+		{"1.0.0", "1.0.*", true},
+		{"1.2.0", "*.0.0", false},
+		{"2.0.0", "1.*.0", false},
+		{"2.0.0", "1.0.*", false},
+		{"1.0.0-SNAPSHOT", "1.0.0-SNAPSHOT", true},
+		{"1.0.0-SNAPSHOT", "1.0.0-*", true},
+		{"1.0.0-SNAPSHOT", "1.*.0-SNAPSHOT", true},
+		{"1.0.0-SNAPSHOT", "1.0.*-SNAPSHOT", true},
+		{"2.0.0-SNAPSHOT", "1.0.0-SNAPSHOT", false},
+		{"1.2.0-SNAPSHOT", "1.0.0-*", false},
+		{"1.0.2-SNAPSHOT", "1.*.0-SNAPSHOT", false},
+		{"1.0.0", "1.0.*-SNAPSHOT", false},
+		{"1", "2", false},
+		{"1", "*", true},
+		{"1", "1.*", true},
+		{"1.0.1", "1.*", true},
+		{"1.0.1", "*", true},
+		{"1.0", "2.0", false},
+		{"1.0", "*", true},
+		{"1.0", "1.*", true},
+		{"1.0", "*.0", true},
+		{"2.a", "2.b", false},
+		{"2.a", "2.*", true},
+		{"b", "*", true},
+		{"", "1", false},
+		{"1", "", true},
+		{"", "*", true},
+	}
+	for _, test := range tests {
+		t.Run(test.version+":"+test.constraint, func(t *testing.T) {
+			assert.Equal(t, IsMatch(test.version, test.constraint), test.expected)
 		})
 	}
 }

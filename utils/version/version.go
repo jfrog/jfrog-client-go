@@ -1,6 +1,8 @@
 package version
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -54,10 +56,49 @@ func compareTokens(ver1Token, ver2Token string) int {
 	}
 }
 
+// Return true if version matches the constraint
+func IsMatch(version, constraint string) bool {
+	versionTokens := strings.Split(version, ".")
+	constraintTokens := strings.Split(constraint, ".")
+
+	maxIndex := len(versionTokens)
+	if len(constraintTokens) > maxIndex {
+		maxIndex = len(constraintTokens)
+	}
+
+	// If the last token in constraint was "*", we want that the following tokens be also "*"
+	isAsterisk := false
+	for tokenIndex := 0; tokenIndex < maxIndex; tokenIndex++ {
+		versionToken := "0"
+		if len(versionTokens) >= tokenIndex+1 {
+			versionToken = strings.TrimSpace(versionTokens[tokenIndex])
+		}
+		constraintToken := "0"
+		if isAsterisk {
+			constraintToken = "*"
+		}
+		if len(constraintTokens) >= tokenIndex+1 {
+			constraintToken = strings.TrimSpace(constraintTokens[tokenIndex])
+		}
+		isAsterisk = constraintToken == "*"
+		if !isVersionMatch(versionToken, constraintToken) {
+			return false
+		}
+	}
+	return true
+}
+
+// Return true if version token matches constraint token
+func isVersionMatch(version string, constraint string) bool {
+	regexConstraint := utils.WildcardToRegex(constraint)
+	isMatched, _ := regexp.MatchString(regexConstraint, version)
+	return isMatched
+}
+
 func getFirstNumeral(token string) string {
 	numeric := ""
 	for i := 0; i < len(token); i++ {
-		n := token[i:i+1]
+		n := token[i : i+1]
 		if _, err := strconv.Atoi(n); err != nil {
 			return "999999"
 		}
