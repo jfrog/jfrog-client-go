@@ -69,7 +69,7 @@ func (sm *ArtifactoryServicesManager) GetPathsToDelete(params services.DeletePar
 	return deleteService.GetPathsToDelete(params)
 }
 
-func (sm *ArtifactoryServicesManager) DeleteFiles(resultItems []services.DeleteItem) (int, error) {
+func (sm *ArtifactoryServicesManager) DeleteFiles(resultItems []utils.ResultItem) (int, error) {
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetArtDetails()

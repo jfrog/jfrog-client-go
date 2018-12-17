@@ -24,6 +24,7 @@ var RtPassword *string
 var RtApiKey *string
 var RtSshKeyPath *string
 var RtSshPassphrase *string
+var RtAccessToken *string
 var LogLevel *string
 var testsUploadService *services.UploadService
 var testsSearchService *services.SearchService
@@ -43,6 +44,7 @@ func init() {
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
+	RtAccessToken = flag.String("rt.accessToken", "", "Artifactory access token")
 	LogLevel = flag.String("log-level", "INFO", "Sets the log level")
 }
 
@@ -74,6 +76,8 @@ func getArtDetails() auth.ArtifactoryDetails {
 	if !fileutils.IsSshUrl(rtDetails.GetUrl()) {
 		if *RtApiKey != "" {
 			rtDetails.SetApiKey(*RtApiKey)
+		} else if *RtAccessToken != "" {
+			rtDetails.SetAccessToken(*RtAccessToken)
 		} else {
 			rtDetails.SetUser(*RtUser)
 			rtDetails.SetPassword(*RtPassword)
@@ -96,7 +100,7 @@ func artifactoryCleanup(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	deleteItems := make([]services.DeleteItem, len(toDelete))
+	deleteItems := make([]utils.ResultItem, len(toDelete))
 	for i, item := range toDelete {
 		deleteItems[i] = item
 	}

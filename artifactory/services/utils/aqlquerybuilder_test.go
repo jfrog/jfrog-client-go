@@ -9,7 +9,7 @@ import (
 
 func TestBuildAqlSearchQueryRecursiveSimple(t *testing.T) {
 	params := ArtifactoryCommonParams{Pattern: "repo-local", Target: "", Props: "", Build: "", Recursive: true, Regexp: false, IncludeDirs: false}
-	aqlResult, _ := createAqlBodyForSpec(&params)
+	aqlResult, _ := createAqlBodyForSpecWithPattern(&params)
 	expected := `{"repo": "repo-local","$or": [{"$and":[{"path": {"$match": "*"},"name": {"$match": "*"}}]}]}`
 
 	if aqlResult != expected {
@@ -19,7 +19,7 @@ func TestBuildAqlSearchQueryRecursiveSimple(t *testing.T) {
 
 func TestBuildAqlSearchQueryRecursiveWildcard(t *testing.T) {
 	params := ArtifactoryCommonParams{Pattern: "repo-local2/a*b*c/dd/", Target: "", Props: "", Build: "", Recursive: true, Regexp: false, IncludeDirs: false}
-	aqlResult, _ := createAqlBodyForSpec(&params)
+	aqlResult, _ := createAqlBodyForSpecWithPattern(&params)
 	expected := `{"repo": "repo-local2","path": {"$ne": "."},"$or": [{"$and":[{"path": {"$match": "a*b*c/dd"},"name": {"$match": "*"}}]},{"$and":[{"path": {"$match": "a*b*c/dd/*"},"name": {"$match": "*"}}]}]}`
 	if aqlResult != expected {
 		t.Error("Unexpected download AQL query built. \nExpected: " + expected + " \nGot:      " + aqlResult)
@@ -28,7 +28,7 @@ func TestBuildAqlSearchQueryRecursiveWildcard(t *testing.T) {
 
 func TestBuildAqlSearchQueryNonRecursiveSimple(t *testing.T) {
 	params := ArtifactoryCommonParams{Pattern: "repo-local", Target: "", Props: "", Build: "", Recursive: false, Regexp: false, IncludeDirs: false}
-	aqlResult, _ := createAqlBodyForSpec(&params)
+	aqlResult, _ := createAqlBodyForSpecWithPattern(&params)
 	expected := `{"repo": "repo-local","$or": [{"$and":[{"path": {"$match": "."},"name": {"$match": "*"}}]}]}`
 
 	if aqlResult != expected {
@@ -38,7 +38,7 @@ func TestBuildAqlSearchQueryNonRecursiveSimple(t *testing.T) {
 
 func TestBuildAqlSearchQueryNonRecursiveWildcard(t *testing.T) {
 	specFile := ArtifactoryCommonParams{Pattern: "repo-local2/a*b*c/dd/", Target: "", Props: "", Build: "", Recursive: false, Regexp: false, IncludeDirs: false}
-	aqlResult, _ := createAqlBodyForSpec(&specFile)
+	aqlResult, _ := createAqlBodyForSpecWithPattern(&specFile)
 	expected := `{"repo": "repo-local2","path": {"$ne": "."},"$or": [{"$and":[{"path": {"$match": "a*b*c/dd"},"name": {"$match": "*"}}]}]}`
 
 	if aqlResult != expected {
@@ -99,28 +99,28 @@ func validatePathPairs(actual, expected []PathFilePair, pattern string, t *testi
 
 func TestArtifactoryCommonParams(t *testing.T) {
 	artifactoryParams := ArtifactoryCommonParams{}
-	assertIsSortLimitSpecBool(specIncludesSortOrLimit(&artifactoryParams), false, t)
+	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), false, t)
 
 	artifactoryParams.SortBy = []string{"Vava", "Bubu"}
-	assertIsSortLimitSpecBool(specIncludesSortOrLimit(&artifactoryParams), true, t)
+	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), true, t)
 
 	artifactoryParams.SortBy = nil
 	artifactoryParams.Limit = 0
-	assertIsSortLimitSpecBool(specIncludesSortOrLimit(&artifactoryParams), false, t)
+	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), false, t)
 
 	artifactoryParams.Limit = -3
-	assertIsSortLimitSpecBool(specIncludesSortOrLimit(&artifactoryParams), false, t)
+	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), false, t)
 
 	artifactoryParams.Limit = 3
-	assertIsSortLimitSpecBool(specIncludesSortOrLimit(&artifactoryParams), true, t)
+	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), true, t)
 
 	artifactoryParams.SortBy = []string{"Vava", "Bubu"}
-	assertIsSortLimitSpecBool(specIncludesSortOrLimit(&artifactoryParams), true, t)
+	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), true, t)
 }
 
 func assertIsSortLimitSpecBool(actual, expected bool, t *testing.T) {
 	if actual != expected {
-		t.Error("The function specIncludesSortOrLimit() expected to return " + strconv.FormatBool(expected) + " but returned " + strconv.FormatBool(actual) + ".")
+		t.Error("The function includePropertiesInAqlForSpec() expected to return " + strconv.FormatBool(expected) + " but returned " + strconv.FormatBool(actual) + ".")
 	}
 }
 

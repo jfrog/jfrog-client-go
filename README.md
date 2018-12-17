@@ -1,4 +1,4 @@
-# JFrog Client
+# jfrog-client-go
 
 |Branch|Status|
 |:---:|:---:|
@@ -6,10 +6,13 @@
 |dev|[![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/dev?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/dev)
 
 ## General
-    This section includes a few usage examples of the Jfrog client APIs from your application code.
-## Artifactory Client
 
-### Setting up Artifactory details
+*jfrog-client-go* is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
+The project is still relatively new, and its APIs may therefore change frequently between releases.
+The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you may look at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
+
+## Artifactory APIs
+### Creating Artifactory Details
  ```
     rtDetails := auth.NewArtifactoryDetails()
     rtDetails.SetUrl("http://localhost:8081/artifactory")
@@ -17,9 +20,10 @@
     rtDetails.SetApiKey("apikey")
     rtDetails.SetUser("user")
     rtDetails.SetPassword("password")
+    rtDetails.SetAccessToken("accesstoken")
  ```
 
-### Setting up Artifactory service manager
+### Creating a Service Manager
 ```
     serviceConfig, err := artifactory.NewConfigBuilder().
         SetArtDetails(rtDetails).
@@ -31,15 +35,12 @@
         SetDryRun(false).
         SetLogger(logger).
         Build()
-    // Check for errors
 
     rtManager, err := artifactory.New(serviceConfig)
-    // Check for errors
 ```
 
-### Services Execution:
-
-#### Upload
+### Using Services
+#### Uploading Files to Artifactory
 ```
     params := services.NewUploadParams()
     params.Pattern = "repo/*/*.zip"
@@ -56,7 +57,7 @@
     rtManager.UploadFiles(params)
 ```
 
-#### Download
+#### Downloading Files from Artifactory
 ```
     params := services.NewDownloadParams()
     params.Pattern = "repo/*/*.zip"
@@ -70,10 +71,9 @@
     params.Retries = 3
 
     rtManager.DownloadFiles(params)
-
 ```
 
-#### Copy
+#### Copying Files in Artifactory
 ```
     params := services.NewMoveCopyParams()
     params.Pattern = "repo/*/*.zip"
@@ -84,7 +84,7 @@
     rtManager.Copy(params)
 ```
 
-#### Move
+#### Moving Files in Artifactory
 ```
     params := services.NewMoveCopyParams()
     params.Pattern = "repo/*/*.zip"
@@ -95,7 +95,7 @@
     rtManager.Move(params)
 ```
 
-#### Delete
+#### Deleting Files from Artifactory
 ```
     params := services.NewDeleteParams()
     params.Pattern = "repo/*/*.zip"
@@ -105,7 +105,7 @@
     rtManager.DeleteFiles(pathsToDelete)
 ```
 
-#### Search
+#### Searching Files in Artifactory
 ```
     params := services.NewSearchParams()
     params.Pattern = "repo/*/*.zip"
@@ -114,7 +114,7 @@
     rtManager.SearchFiles(params)
 ```
 
-#### Set Properties
+#### Setting Properties on Files in Artifactory
 ```
     searchParams = services.NewSearchParams()
     searchParams.Recursive = true
@@ -130,7 +130,7 @@
     rtManager.SetProps(propsParams)
 ```
 
-#### Delete Properties
+#### Deleting Properties from Files in Artifactory
 ```
     searchParams = services.NewSearchParams()
     searchParams.Recursive = true
@@ -146,18 +146,14 @@
     rtManager.DeleteProps(propsParams)
 ```
 
-
-#### Build Integration:
-
-#### Publish Build Info
+#### Publishing Build Info to Artifactory
 ```
     buildInfo := &buildinfo.BuildInfo{}
-    // Fill build information
-
+    ...
     rtManager.PublishBuildInfo(buildInfo)
 ```
 
-#### Promote
+#### Promoting Published Builds in Artifactory
 ```
     params := services.NewPromotionParams()
     params.BuildName = "buildName"
@@ -172,7 +168,7 @@
     rtManager.DownloadFiles(params)
 ```
 
-#### Distribute
+#### Distributing Published Builds to JFrog Bintray 
 ```
     params := services.NewBuildDistributionParams()
     params.SourceRepos = "source-repo"
@@ -188,7 +184,7 @@
     rtManager.DistributeBuild(params)
 ```
 
-#### Xray Scan
+#### Triggering Build Scanning with JFrog Xray
 ```
     params := services.NewXrayScanParams()
     params.BuildName = buildName
@@ -197,7 +193,7 @@
     rtManager.XrayScanBuild(params)
 ```
 
-#### Discard Builds
+#### Discarding Old Builds
 ```
     params := services.NewDiscardBuildsParams()
     params.BuildName = "buildName"
@@ -210,7 +206,7 @@
     rtManager.DiscardBuilds(params)
 ```
 
-#### Clean Unreferenced Git LFS Files
+#### Cleaning Unreferenced Git LFS Files from Artifactory
 ```
     params := services.NewGitLfsCleanParams()
     params.Refs = "refs/remotes/*"
@@ -221,20 +217,19 @@
     rtManager.DeleteFiles(filesToDelete)
 ```
 
-#### Execute AQL
+#### Executing AQLs
 ```
     rtManager.Aql(aql string)
 ```
 
-#### Read Remote File
+#### Reading Files in Artifactory
 ```
     rtManager.ReadRemoteFile(FilePath string)
 ```
 
 
-## Bintray Client
-
-### Setting up Bintray details
+## Bintray APIs
+### Creating Bintray Details
  ```
     btDetails := auth.NewBintrayDetails()
     btDetails.SetUser("user")
@@ -242,7 +237,7 @@
     btDetails.SetDefPackageLicense("Apache 2.0")
  ```
 
-### Setting up Bintray service manager
+### Creating a Service Manager
 ```
     serviceConfig := bintray.NewConfigBuilder().
         SetBintrayDetails(btDetails).
@@ -254,11 +249,9 @@
         Build()
 
     btManager, err := bintray.New(serviceConfig)
-    // Check for errors
 ```
-### Services Execution:
-
-#### Upload
+### Using Services
+#### Uploading a Single File to Bintray
 ```
     params := services.NewUploadParams()
     params.Pattern = "*/*.zip"
@@ -275,7 +268,7 @@
     btManager.UploadFiles(params)
 ```
 
-#### Download File
+#### Downloading a Single File from Bintray
 ```
     params := services.NewDownloadFileParams()
     params.Flat = false
@@ -286,31 +279,30 @@
     btManager.DownloadFile(params)
 ```
 
-#### Download Version
+#### Downloading Version Files from Bintray
 ```
     params := services.NewDownloadVersionParams()
     params.Path, err = versions.CreatePath("subject/repo/pkg/version")
-    // Check for errors
+
     params.IncludeUnpublished = false
     params.TargetPath = "target/path/"
 
     btManager.DownloadVersion(params)
 ```
 
-#### Show/Delete Package
+#### Shwong / Deleting a Bintray Package
 ```
     pkgPath, err := packages.CreatePath("subject/repo/pkg")
-    // Check for errors
 
     btManager.ShowPackage(pkgPath)
     btManager.DeletePackage(pkgPath)
 ```
 
-#### Create/Update Package
+#### Creating / Updating a Bintray Package
 ```
     params := packages.NewPackageParams()
     params.Path, err = packages.CreatePath("subject/repo/pkg")
-    // Check for errors
+
     params.Desc = "description"
     params.Labels = "labels"
     params.Licenses = "licences"
@@ -327,20 +319,19 @@
     btManager.UpdatePackage(params)
 ```
 
-#### Show/Delete Version
+#### Showing / Deleting a Bintray Version
 ```
     versionPath, err := versions.CreatePath("subject/repo/pkg/version")
-    // Check for errors
 
     btManager.ShowVersion(versionPath)
     btManager.DeleteVersion(versionPath)
 ```
 
-#### Create/Update Version
+#### Creating / Updating a Bintray Version
 ```
     params := versions.NewVersionParams()
     params.Path, err = versions.CreatePath("subject/repo/pkg/version")
-    // Check for errors
+
     params.Desc = "description"
     params.VcsTag = "1.1.5"
     params.Released = "true"
@@ -351,20 +342,11 @@
     btManager.UpdateVersion(params)
 ```
 
-#### Show/Delete Version
-```
-    path, err := versions.CreatePath("subject/repo/pkg/version")
-    // Check for errors
-
-    btManager.ShowVersion(path)
-    btManager.DeleteVersion(path)
-```
-
-#### Create/Update Entitlements
+#### Creating / Updating Entitlements
 ```
     params := entitlements.NewEntitlementsParams()
     params.VersionPath, err = versions.CreatePath("subject/repo/pkg/version")
-    // Check for errors
+
     params.Path = "a/b/c"
     params.Access = "rw"
     params.Keys = "keys"
@@ -375,17 +357,16 @@
     btManager.UpdateEntitlement(params)
 ```
 
-#### Show/Delete Entitlements
+#### Showing / Deleting Entitlements
 ```
     versionPath, err := versions.CreatePath("subject/repo/pkg/version")
-    // Check for errors
 
     btManager.ShowAllEntitlements(versionPath)
     btManager.ShowEntitlement("entitelmentID", versionPath)
     btManager.DeleteEntitlement("entitelmentID", versionPath)
 ```
 
-#### Create/Update Access Keys
+#### Creating / Updating Access Keys
 ```
     params := accesskeys.NewAccessKeysParams()
     params.Password = "password"
@@ -403,14 +384,14 @@
     btManager.UpdateAccessKey(params)
 ```
 
-#### Show/Delete Access Keys
+#### Showing / Deleting Access Keys
 ```
     btManager.ShowAllAccessKeys("org")
     btManager.ShowAccessKey("org", "KeyID")
     btManager.DeleteAccessKey("org", "KeyID")
 ```
 
-#### Sign URL
+#### Signing a URL
 ```
     params := url.NewURLParams()
     params.PathDetails, err = utils.CreatePathDetails("subject/repository/file-path")
@@ -425,42 +406,39 @@
     btManager.SignUrl(params)
 ```
 
-#### GPG Sign File
+#### GPG Signing a File
 ```
     path, err := utils.CreatePathDetails("subject/repository/file-path")
-    // Check for errors
 
     btManager.GpgSignFile(path, "passphrase") 
 ```
 	
-#### GPG Sign Version
+#### GPG Signing Version Files
 ```
     path, err := versions.CreatePath("subject/repo/pkg/version")
-    // Check for errors
 
     btManager.GpgSignVersion(path, "passphrase")
 ```
 
-#### List Logs
+#### Listing Logs
 ```
     path, err := versions.CreatePath("subject/repo/pkg/version")
-    // Check for errors
 
     btManager.LogsList(versionPath)
 ```
 
-#### Download Logs
+#### Downloading Logs
 ```
     path, err := versions.CreatePath("subject/repo/pkg/version")
-    // Check for errors
 
     btManager.DownloadLog(path, "logName")
 ```
 
-#### Tests
-To run tests execute the following command: 
+## Tests
+To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
+Use the following command with the below options to run the tests.
 ````
-go test -v github.com/jfrog/jfrog-client-go/artifactory/services
+go test -v github.com/jfrog/jfrog-client-go/tests
 ````
 Optional flags:
 
@@ -472,8 +450,9 @@ Optional flags:
 | `-rt.apikey` | [Optional] Artifactory API key. |
 | `-rt.sshKeyPath` | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase. |
+| `-rt.accessToken` | [Optional] Artifactory access token. |
 | `-log-level` | [Default: INFO] Sets the log level. |
 
 
-* Running the tests will create the repository: `jfrog-cli-tests-repo1`.<br/>
-  Once the tests are completed, the content of this repository will be deleted.
+* The tests create an Artifactory repository named *jfrog-cli-tests-repo1*.<br/>
+  Once the tests are completed, the content of this repository is deleted.

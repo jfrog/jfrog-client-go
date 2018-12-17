@@ -555,7 +555,17 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 		} else {
 			req.Header.Set("X-JFrog-Art-Api", httpClientsDetails.ApiKey)
 		}
-	} else if httpClientsDetails.Password != "" {
+		return
+	}
+	if httpClientsDetails.AccessToken != "" {
+		if httpClientsDetails.User != "" {
+			req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.AccessToken)
+		} else {
+			req.Header.Set("Authorization", "Bearer "+httpClientsDetails.AccessToken)
+		}
+		return
+	}
+	if httpClientsDetails.Password != "" {
 		req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.Password)
 	}
 }
