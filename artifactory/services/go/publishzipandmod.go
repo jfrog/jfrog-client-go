@@ -11,23 +11,23 @@ import (
 )
 
 func init() {
-	register(&publishWithoutApi{})
+	register(&publishZipAndModApi{})
 }
 
-// Support for Artifactory 6.6.0 and above API
-type publishWithoutApi struct {
+// Support for Artifactory 6.6.1 and above API
+type publishZipAndModApi struct {
 }
 
-func (pwa *publishWithoutApi) isCompatible(artifactoryVersion string) bool {
-	propertiesApi := "6.6.0"
+func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
+	propertiesApi := "6.6.1"
 	if version.Compare(artifactoryVersion, propertiesApi) < 0 && artifactoryVersion != "development" {
 		return false
 	}
 	return true
 }
 
-func (pwa *publishWithoutApi) PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error {
-	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), params.GetTargetRepo(), make(map[string]string))
+func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error {
+	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	if err != nil {
 		return err
 	}
