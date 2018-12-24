@@ -12,13 +12,13 @@ func init() {
 	register(&publishWithMatrixParams{})
 }
 
-// Support for Artifactory version between 6.5.0 and 6.6.0 API
+// Support for Artifactory version between 6.5.0 and 6.6.1 API
 type publishWithMatrixParams struct {
 }
 
 func (pwmp *publishWithMatrixParams) isCompatible(artifactoryVersion string) bool {
 	propertiesApi := "6.5.0"
-	withoutApi := "6.6.0"
+	withoutApi := "6.6.1"
 	if version.Compare(artifactoryVersion, propertiesApi) < 0 {
 		return false
 	}
