@@ -41,9 +41,9 @@ func TestShouldUseHeaders(t *testing.T) {
 		{"5.9.0", "*_go.publishWithHeader"},
 		{"6.0.0", "*_go.publishWithHeader"},
 		{"6.6.0", "*_go.publishWithMatrixParams"},
-		{"6.6.1", "*_go.publishModAndZipWithApi"},
-		{"development", "*_go.publishModAndZipWithApi"},
-		{"6.10.2", "*_go.publishModAndZipWithApi"},
+		{"6.6.1", "*_go.publishZipAndModApi"},
+		{"development", "*_go.publishZipAndModApi"},
+		{"6.10.2", "*_go.publishZipAndModApi"},
 	}
 	for _, test := range tests {
 		t.Run(test.artifactoryVersion, func(t *testing.T) {

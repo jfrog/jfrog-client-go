@@ -11,14 +11,14 @@ import (
 )
 
 func init() {
-	register(&publishModAndZipWithApi{})
+	register(&publishZipAndModApi{})
 }
 
-// Support for Artifactory 6.6.0 and above API
-type publishModAndZipWithApi struct {
+// Support for Artifactory 6.6.1 and above API
+type publishZipAndModApi struct {
 }
 
-func (pwa *publishModAndZipWithApi) isCompatible(artifactoryVersion string) bool {
+func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
 	propertiesApi := "6.6.1"
 	if version.Compare(artifactoryVersion, propertiesApi) < 0 && artifactoryVersion != "development" {
 		return false
@@ -26,7 +26,7 @@ func (pwa *publishModAndZipWithApi) isCompatible(artifactoryVersion string) bool
 	return true
 }
 
-func (pwa *publishModAndZipWithApi) PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error {
+func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	if err != nil {
 		return err
