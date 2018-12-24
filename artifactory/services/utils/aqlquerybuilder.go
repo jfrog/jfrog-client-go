@@ -349,7 +349,7 @@ func getQueryReturnFields(specFile *ArtifactoryCommonParams, requiredArtifactPro
 		return appendMissingFields(specFile.SortBy, returnFields)
 	}
 	if requiredArtifactProps != NONE {
-		// If any prop is needed we just adding all the properties to the result, in order to prevent the second props query.
+		// If any prop is needed we just add all the properties to the result.
 		return append(returnFields, "property")
 	}
 	return returnFields
