@@ -209,7 +209,7 @@ func getBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonCo
 func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte, err error) {
 	buildJsonArray := []build{{buildName, buildNumber}}
 	body, err = json.Marshal(buildJsonArray)
-	errorutils.CheckError(err)
+	err = errorutils.CheckError(err)
 	return
 }
 
@@ -254,16 +254,9 @@ func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, itemsToFil
 // Run AQL to retrieve all artifacts associated with a specific build.
 // Return a map of the artifacts SHA1.
 func fetchBuildArtifactsSha1(buildName, buildNumber string, flags CommonConf) (map[string]bool, error) {
-	var aqlSearchErr error
-	var buildAqlResponse []byte
-
 	buildQuery := createAqlQueryForBuild(buildName, buildNumber, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}))
 
-	buildAqlResponse, aqlSearchErr = ExecAql(buildQuery, flags)
-	if aqlSearchErr != nil {
-		return nil, aqlSearchErr
-	}
-	parsedBuildAqlResponse, err := parseAqlSearchResponse(buildAqlResponse)
+	parsedBuildAqlResponse, err := aqlSearch(buildQuery, flags)
 	if err != nil {
 		return nil, err
 	}
