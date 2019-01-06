@@ -3,6 +3,7 @@ package cert
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"io/ioutil"
@@ -46,6 +47,9 @@ func GetTransportWithLoadedCert(certificatesDirPath string) (*http.Transport, er
 		RootCAs:            caCertPool,
 		ClientSessionCache: tls.NewLRUClientSessionCache(1)}
 	tlsConfig.BuildNameToCertificate()
-	return &http.Transport{TLSClientConfig: tlsConfig, Proxy: http.ProxyFromEnvironment}, nil
+	// Create the http transport with tlsConfig
+	transport := httpclient.CreateDeafaultHttpTransport()
+	transport.TLSClientConfig = tlsConfig
 
+	return transport, nil
 }

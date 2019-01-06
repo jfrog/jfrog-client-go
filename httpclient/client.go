@@ -16,11 +16,13 @@ import (
 	"hash"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
+	"time"
 )
 
 func (jc *HttpClient) sendGetLeaveBodyOpen(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
@@ -32,11 +34,26 @@ type HttpClient struct {
 }
 
 func NewDefaultHttpClient() *HttpClient {
-	return &HttpClient{Client: &http.Client{}}
+	return &HttpClient{Client: &http.Client{Transport: CreateDeafaultHttpTransport()}}
 }
 
 func NewHttpClient(client *http.Client) *HttpClient {
 	return &HttpClient{Client: client}
+}
+
+func CreateDeafaultHttpTransport() *http.Transport {
+	return &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
 }
 
 func (jc *HttpClient) sendGetForFileDownload(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails, currentSplit, retries int) (resp *http.Response, redirectUrl string, err error) {
@@ -286,7 +303,12 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, body io.ReadCloser) er
 	if len(downloadFileDetails.ExpectedSha1) > 0 {
 		actualSha1 := sha1.New()
 		writer := io.MultiWriter(actualSha1, out)
+
 		_, err = io.Copy(writer, body)
+		if errorutils.CheckError(err) != nil {
+			return err
+		}
+
 		if hex.EncodeToString(actualSha1.Sum(nil)) != downloadFileDetails.ExpectedSha1 {
 			err = errors.New("Checksum mismatch for " + fileName + ", expected: " + downloadFileDetails.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
 		}
