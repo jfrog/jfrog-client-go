@@ -45,8 +45,8 @@ func (ds *DownloadService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *DownloadService) GetJfrogHttpClient() *httpclient.HttpClient {
-	return ds.client
+func (ds *DownloadService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+	return ds.client, nil
 }
 
 func (ds *DownloadService) GetThreads() int {

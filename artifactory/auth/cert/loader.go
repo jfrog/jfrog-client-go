@@ -3,7 +3,6 @@ package cert
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"io/ioutil"
@@ -31,7 +30,7 @@ func loadCertificates(caCertPool *x509.CertPool, certificatesDirPath string) err
 	return nil
 }
 
-func GetTransportWithLoadedCert(certificatesDirPath string) (*http.Transport, error) {
+func GetTransportWithLoadedCert(certificatesDirPath string, transport *http.Transport) (*http.Transport, error) {
 	// Remove once SystemCertPool supports windows
 	caCertPool, err := loadSystemRoots()
 	err = errorutils.CheckError(err)
@@ -47,8 +46,6 @@ func GetTransportWithLoadedCert(certificatesDirPath string) (*http.Transport, er
 		RootCAs:            caCertPool,
 		ClientSessionCache: tls.NewLRUClientSessionCache(1)}
 	tlsConfig.BuildNameToCertificate()
-	// Create the http transport with tlsConfig
-	transport := httpclient.CreateDeafaultHttpTransport()
 	transport.TLSClientConfig = tlsConfig
 
 	return transport, nil

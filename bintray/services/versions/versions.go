@@ -70,7 +70,10 @@ func (vs *VersionService) Update(params *Params) error {
 
 	log.Info("Updating version...")
 	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendPatch(url, content, httpClientsDetails)
 	if err != nil {
 		return err
@@ -93,7 +96,10 @@ func (vs *VersionService) Publish(versionPath *Path) error {
 
 	log.Info("Publishing version...")
 	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendPost(url, nil, httpClientsDetails)
 	if err != nil {
 		return err
@@ -115,7 +121,10 @@ func (vs *VersionService) Delete(versionPath *Path) error {
 
 	log.Info("Deleting version...")
 	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendDelete(url, nil, httpClientsDetails)
 	if err != nil {
 		return err
@@ -141,7 +150,10 @@ func (vs *VersionService) Show(versionPath *Path) error {
 
 	log.Info("Getting version details...")
 	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails)
 
 	if resp.StatusCode != http.StatusOK {
@@ -157,7 +169,10 @@ func (vs *VersionService) IsVersionExists(versionPath *Path) (bool, error) {
 	url := vs.BintrayDetails.GetApiUrl() + path.Join("packages", versionPath.Subject, versionPath.Repo, versionPath.Package, "versions", versionPath.Version)
 	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
 
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
 	resp, _, err := client.SendHead(url, httpClientsDetails)
 	if err != nil {
 		return false, err
@@ -183,7 +198,10 @@ func (vs *VersionService) doCreateVersion(params *Params) (*http.Response, []byt
 	}
 	url := vs.BintrayDetails.GetApiUrl() + path.Join("packages", params.Subject, params.Repo, params.Package, "versions")
 	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return nil, []byte{}, err
+	}
 	return client.SendPost(url, content, httpClientsDetails)
 }
 
@@ -209,5 +227,5 @@ type contentConfig struct {
 	VcsTag                   string `json:"vcs_tag,omitempty"`
 	Released                 string `json:"released,omitempty"`
 	GithubReleaseNotesFile   string `json:"github_release_notes_file,omitempty"`
-	GithubUseTagReleaseNotes bool `json:"github_use_tag_release_notes,omitempty"`
+	GithubUseTagReleaseNotes bool   `json:"github_use_tag_release_notes,omitempty"`
 }

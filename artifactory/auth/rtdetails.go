@@ -126,7 +126,10 @@ func (rt *artifactoryDetails) GetVersion() (string, error) {
 }
 
 func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return "", err
+	}
 	resp, body, _, err := client.SendGet(rt.GetUrl()+"api/system/version", true, rt.CreateHttpClientDetails())
 	if err != nil {
 		return "", err

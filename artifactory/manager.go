@@ -18,7 +18,7 @@ type ArtifactoryServicesManager struct {
 func New(config Config) (*ArtifactoryServicesManager, error) {
 	var err error
 	manager := &ArtifactoryServicesManager{config: config}
-	manager.client, err = CreateArtifactoryHttpClient(config)
+	manager.client, err = httpclient.ClientBuilder().SetCertificatesPath(config.GetCertifactesPath()).Build()
 	if err != nil {
 		return nil, err
 	}

@@ -16,13 +16,11 @@ import (
 	"hash"
 	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
-	"time"
 )
 
 func (jc *HttpClient) sendGetLeaveBodyOpen(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
@@ -31,29 +29,6 @@ func (jc *HttpClient) sendGetLeaveBodyOpen(url string, followRedirect bool, http
 
 type HttpClient struct {
 	Client *http.Client
-}
-
-func NewDefaultHttpClient() *HttpClient {
-	return &HttpClient{Client: &http.Client{Transport: CreateDeafaultHttpTransport()}}
-}
-
-func NewHttpClient(client *http.Client) *HttpClient {
-	return &HttpClient{Client: client}
-}
-
-func CreateDeafaultHttpTransport() *http.Transport {
-	return &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
 }
 
 func (jc *HttpClient) sendGetForFileDownload(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails, currentSplit, retries int) (resp *http.Response, redirectUrl string, err error) {

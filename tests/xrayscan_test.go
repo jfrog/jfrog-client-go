@@ -13,7 +13,11 @@ var testsXrayScanService *services.XrayScanService
 
 func TestNewXrayScanService(t *testing.T) {
 	xrayServerPort := xray.StartXrayMockServer()
-	testsXrayScanService = services.NewXrayScanService(httpclient.NewDefaultHttpClient())
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		t.Error(err)
+	}
+	testsXrayScanService = services.NewXrayScanService(client)
 	testsXrayScanService.ArtDetails = getArtDetails()
 	testsXrayScanService.ArtDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/")
 

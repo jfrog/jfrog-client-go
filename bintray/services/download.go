@@ -85,7 +85,10 @@ func (ds *DownloadService) DownloadVersion(downloadParams *DownloadVersionParams
 	if httpClientsDetails.User == "" {
 		httpClientsDetails.User = downloadParams.Subject
 	}
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return
+	}
 	resp, body, _, _ := client.SendGet(versionPathUrl, true, httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
 		err = errorutils.CheckError(errors.New(resp.Status + ". " + utils.ReadBintrayMessage(body)))
@@ -171,7 +174,10 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 		url += "?include_unpublished=1"
 	}
 	log.Info(logMsgPrefix+"Downloading", downloadPath)
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 
 	httpClientsDetails := ds.BintrayDetails.CreateHttpClientDetails()
 	details, err := client.GetRemoteFileDetails(url, httpClientsDetails)

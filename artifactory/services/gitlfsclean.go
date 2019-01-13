@@ -40,8 +40,8 @@ func (glc *GitLfsCleanService) IsDryRun() bool {
 	return glc.DryRun
 }
 
-func (glc *GitLfsCleanService) GetJfrogHttpClient() *httpclient.HttpClient {
-	return glc.client
+func (glc *GitLfsCleanService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+	return glc.client, nil
 }
 
 func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitLfsCleanParams) ([]utils.ResultItem, error) {

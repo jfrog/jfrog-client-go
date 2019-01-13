@@ -27,8 +27,8 @@ func (ps *PingService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
 	ps.ArtDetails = rt
 }
 
-func (ps *PingService) GetJfrogHttpClient() *httpclient.HttpClient {
-	return ps.httpClient
+func (ps *PingService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+	return ps.httpClient, nil
 }
 
 func (ps *PingService) IsDryRun() bool {

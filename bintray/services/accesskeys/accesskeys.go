@@ -43,7 +43,10 @@ func (aks *AccessKeysService) ShowAll(org string) error {
 	path := getAccessKeysPath(aks.BintrayDetails, org)
 	httpClientsDetails := aks.BintrayDetails.CreateHttpClientDetails()
 	log.Info("Getting access keys...")
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, _, _ := client.SendGet(path, true, httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
@@ -58,7 +61,10 @@ func (aks *AccessKeysService) Show(org, id string) error {
 	url := getAccessKeyPath(aks.BintrayDetails, id, org)
 	httpClientsDetails := aks.BintrayDetails.CreateHttpClientDetails()
 	log.Info("Getting access key...")
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
@@ -77,7 +83,10 @@ func (aks *AccessKeysService) Create(params *Params) error {
 	url := getAccessKeysPath(aks.BintrayDetails, params.Org)
 	httpClientsDetails := aks.BintrayDetails.CreateHttpClientDetails()
 	log.Info("Creating access key...")
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendPost(url, []byte(data), httpClientsDetails)
 	if err != nil {
 		return err
@@ -99,7 +108,10 @@ func (aks *AccessKeysService) Update(params *Params) error {
 	url := getAccessKeyPath(aks.BintrayDetails, params.Id, params.Org)
 	httpClientsDetails := aks.BintrayDetails.CreateHttpClientDetails()
 	log.Info("Updating access key...")
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendPatch(url, []byte(data), httpClientsDetails)
 	if err != nil {
 		return err
@@ -117,7 +129,10 @@ func (aks *AccessKeysService) Delete(org, id string) error {
 	url := getAccessKeyPath(aks.BintrayDetails, id, org)
 	httpClientsDetails := aks.BintrayDetails.CreateHttpClientDetails()
 	log.Info("Deleting access key...")
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendDelete(url, nil, httpClientsDetails)
 	if err != nil {
 		return err

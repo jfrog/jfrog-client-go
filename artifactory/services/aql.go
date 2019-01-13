@@ -27,8 +27,8 @@ func (s *AqlService) IsDryRun() bool {
 	return false
 }
 
-func (s *AqlService) GetJfrogHttpClient() *httpclient.HttpClient {
-	return s.client
+func (s *AqlService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+	return s.client, nil
 }
 
 func (s *AqlService) ExecAql(aql string) ([]byte, error) {

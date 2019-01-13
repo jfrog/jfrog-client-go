@@ -23,7 +23,11 @@ type ServicesManager struct {
 func New(config Config) (*ServicesManager, error) {
 	var err error
 	manager := &ServicesManager{config: config}
-	manager.client = httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return nil, err
+	}
+	manager.client = client
 	if config.GetLogger() != nil {
 		log.SetLogger(config.GetLogger())
 	}
