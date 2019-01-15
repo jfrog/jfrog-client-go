@@ -19,18 +19,13 @@ const (
 
 func init() {
 	if Logger == nil {
-		Logger = NewLogger()
+		Logger = NewLogger("")
 	}
 }
 
-func NewLogger() Log {
+func NewLogger(logLevel string) Log {
 	logger := new(jfrogLogger)
-	logLevel := os.Getenv("JFROG_CLI_LOG_LEVEL")
-	if logLevel != "" {
-		logger.SetLogLevel(GetCliLogLevel(logLevel))
-	} else {
-		logger.SetLogLevel(INFO)
-	}
+	logger.SetLogLevel(GetCliLogLevel(logLevel))
 	logger.SetOutputWriter(os.Stdout)
 	logger.SetStderrWriter(os.Stderr)
 	return logger
