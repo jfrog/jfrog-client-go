@@ -3,6 +3,7 @@ package tests
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -32,9 +33,10 @@ var testsDeleteService *services.DeleteService
 var testsDownloadService *services.DownloadService
 
 const (
-	RtTargetRepo              = "jfrog-cli-tests-repo1/"
-	SpecsTestRepositoryConfig = "specs_test_repository_config.json"
-	RepoDetailsUrl            = "api/repositories/"
+	RtTargetRepo                     = "jfrog-cli-tests-repo1/"
+	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
+	RepoDetailsUrl                   = "api/repositories/"
+	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
 )
 
 func init() {
@@ -49,25 +51,40 @@ func init() {
 }
 
 func createArtifactorySearchManager() {
-	testsSearchService = services.NewSearchService(httpclient.NewDefaultHttpClient())
+	client, err := httpclient.ClientBuilder().Build()
+	failOnHttpClientCreation(err)
+	testsSearchService = services.NewSearchService(client)
 	testsSearchService.ArtDetails = getArtDetails()
 }
 
 func createArtifactoryDeleteManager() {
-	testsDeleteService = services.NewDeleteService(httpclient.NewDefaultHttpClient())
+	client, err := httpclient.ClientBuilder().Build()
+	failOnHttpClientCreation(err)
+	testsDeleteService = services.NewDeleteService(client)
 	testsDeleteService.ArtDetails = getArtDetails()
 }
 
 func createArtifactoryUploadManager() {
-	testsUploadService = services.NewUploadService(httpclient.NewDefaultHttpClient())
+	client, err := httpclient.ClientBuilder().Build()
+	failOnHttpClientCreation(err)
+	testsUploadService = services.NewUploadService(client)
 	testsUploadService.ArtDetails = getArtDetails()
 	testsUploadService.Threads = 3
 }
 
 func createArtifactoryDownloadManager() {
-	testsDownloadService = services.NewDownloadService(httpclient.NewDefaultHttpClient())
+	client, err := httpclient.ClientBuilder().Build()
+	failOnHttpClientCreation(err)
+	testsDownloadService = services.NewDownloadService(client)
 	testsDownloadService.ArtDetails = getArtDetails()
 	testsDownloadService.SetThreads(3)
+}
+
+func failOnHttpClientCreation(err error) {
+	if err != nil {
+		log.Error(fmt.Sprintf(HttpClientCreationFailureMessage, err.Error()))
+		os.Exit(1)
+	}
 }
 
 func getArtDetails() auth.ArtifactoryDetails {
@@ -135,7 +152,11 @@ func createReposIfNeeded() error {
 func isRepoExist(repoName string) bool {
 	artDetails := getArtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
 	resp, _, _, err := client.SendGet(artDetails.GetUrl()+RepoDetailsUrl+repoName, true, artHttpDetails)
 	if err != nil {
 		log.Error(err)
@@ -157,7 +178,10 @@ func execCreateRepoRest(repoConfig, repoName string) error {
 	artHttpDetails := artDetails.CreateHttpClientDetails()
 
 	artHttpDetails.Headers = map[string]string{"Content-Type": "application/json"}
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, _, err := client.SendPut(artDetails.GetUrl()+"api/repositories/"+repoName, content, artHttpDetails)
 	if err != nil {
 		return err

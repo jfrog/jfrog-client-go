@@ -31,14 +31,6 @@ type HttpClient struct {
 	Client *http.Client
 }
 
-func NewDefaultHttpClient() *HttpClient {
-	return &HttpClient{Client: &http.Client{}}
-}
-
-func NewHttpClient(client *http.Client) *HttpClient {
-	return &HttpClient{Client: client}
-}
-
 func (jc *HttpClient) sendGetForFileDownload(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails, currentSplit, retries int) (resp *http.Response, redirectUrl string, err error) {
 	for i := 0; i < retries+1; i++ {
 		resp, _, redirectUrl, err = jc.sendGetLeaveBodyOpen(url, followRedirect, httpClientsDetails)
@@ -286,7 +278,12 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, body io.ReadCloser) er
 	if len(downloadFileDetails.ExpectedSha1) > 0 {
 		actualSha1 := sha1.New()
 		writer := io.MultiWriter(actualSha1, out)
+
 		_, err = io.Copy(writer, body)
+		if errorutils.CheckError(err) != nil {
+			return err
+		}
+
 		if hex.EncodeToString(actualSha1.Sum(nil)) != downloadFileDetails.ExpectedSha1 {
 			err = errors.New("Checksum mismatch for " + fileName + ", expected: " + downloadFileDetails.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
 		}

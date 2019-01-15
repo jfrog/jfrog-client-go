@@ -49,7 +49,10 @@ func (us *UrlService) SignVersion(params *Params) error {
 
 	log.Info("Signing URL...")
 	httpClientsDetails := us.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendPost(signVersionUrl, content, httpClientsDetails)
 	if err != nil {
 		return err

@@ -32,8 +32,8 @@ func (ds *ReadFileService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *ReadFileService) GetJfrogHttpClient() *httpclient.HttpClient {
-	return ds.client
+func (ds *ReadFileService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+	return ds.client, nil
 }
 
 func (ds *ReadFileService) SetArtDetails(artDetails auth.ArtifactoryDetails) {

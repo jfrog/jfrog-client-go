@@ -43,8 +43,8 @@ func (mc *MoveCopyService) IsDryRun() bool {
 	return mc.DryRun
 }
 
-func (mc *MoveCopyService) GetJfrogHttpClient() *httpclient.HttpClient {
-	return mc.client
+func (mc *MoveCopyService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+	return mc.client, nil
 }
 
 func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyParams) (successCount, failedCount int, err error) {

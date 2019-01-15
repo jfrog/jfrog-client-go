@@ -151,7 +151,10 @@ func uploadFile(artifact clientutils.Artifact, url, logMsgPrefix string, bintray
 	log.Info(logMsgPrefix+"Uploading artifact:", artifact.LocalPath)
 
 	httpClientsDetails := bintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
 	resp, body, err := client.UploadFile(artifact.LocalPath, url, httpClientsDetails, 0)
 	if err != nil {
 		return false, err

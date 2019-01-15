@@ -27,8 +27,8 @@ func (s *SearchService) IsDryRun() bool {
 	return false
 }
 
-func (s *SearchService) GetJfrogHttpClient() *httpclient.HttpClient {
-	return s.client
+func (s *SearchService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+	return s.client, nil
 }
 
 func (s *SearchService) Search(searchParams SearchParams) ([]utils.ResultItem, error) {

@@ -43,7 +43,10 @@ func (gs *GpgService) SignFile(pathDetails *utils.PathDetails, passphrase string
 
 	log.Info("GPG signing file...")
 	httpClientsDetails := gs.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendPost(url, []byte(data), httpClientsDetails)
 	if err != nil {
 		return err
@@ -70,7 +73,10 @@ func (gs *GpgService) SignVersion(versionPath *versions.Path, passphrase string)
 
 	log.Info("GPG signing version...")
 	httpClientsDetails := gs.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendPost(url, []byte(data), httpClientsDetails)
 	if err != nil {
 		return err

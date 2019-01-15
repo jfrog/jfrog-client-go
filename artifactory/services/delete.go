@@ -33,8 +33,8 @@ func (ds *DeleteService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *DeleteService) GetJfrogHttpClient() *httpclient.HttpClient {
-	return ds.client
+func (ds *DeleteService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+	return ds.client, nil
 }
 
 func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItems []utils.ResultItem, err error) {

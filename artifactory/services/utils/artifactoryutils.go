@@ -183,7 +183,10 @@ func getBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonCo
 	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
 	SetContentType("application/json", &httpClientsDetails.Headers)
 	log.Debug("Sending post request to: " + restUrl + ", with the following body: " + string(body))
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return "", "", err
+	}
 	resp, body, err := client.SendPost(restUrl, body, httpClientsDetails)
 	if err != nil {
 		return "", "", err
@@ -367,7 +370,7 @@ func filterBuildAqlSearchResults(itemsToFilter *[]ResultItem, buildArtifactsSha 
 type CommonConf interface {
 	GetArtifactoryDetails() auth.ArtifactoryDetails
 	SetArtifactoryDetails(rt auth.ArtifactoryDetails)
-	GetJfrogHttpClient() *httpclient.HttpClient
+	GetJfrogHttpClient() (*httpclient.HttpClient, error)
 	IsDryRun() bool
 }
 
@@ -388,6 +391,10 @@ func (flags *CommonConfImpl) IsDryRun() bool {
 	return flags.DryRun
 }
 
-func (flags *CommonConfImpl) GetJfrogHttpClient() *httpclient.HttpClient {
-	return httpclient.NewDefaultHttpClient()
+func (flags *CommonConfImpl) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }

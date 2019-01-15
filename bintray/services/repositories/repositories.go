@@ -28,7 +28,10 @@ func (rs *RepositoryService) IsRepoExists(repositoryPath *Path) (bool, error) {
 	url := rs.BintrayDetails.GetApiUrl() + path.Join("repos", repositoryPath.Subject, repositoryPath.Repo)
 	httpClientsDetails := rs.BintrayDetails.CreateHttpClientDetails()
 
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
 	resp, _, err := client.SendHead(url, httpClientsDetails)
 	if err != nil {
 		return false, err

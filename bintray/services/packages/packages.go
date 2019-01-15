@@ -76,7 +76,10 @@ func (ps *PackageService) Update(params *Params) error {
 
 	log.Info("Updating package...")
 	httpClientsDetails := ps.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendPatch(url, []byte(content), httpClientsDetails)
 	if err != nil {
 		return err
@@ -99,7 +102,10 @@ func (ps *PackageService) Delete(packagePath *Path) error {
 
 	log.Info("Deleting package...")
 	httpClientsDetails := ps.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, err := client.SendDelete(url, nil, httpClientsDetails)
 	if err != nil {
 		return err
@@ -121,7 +127,10 @@ func (ps *PackageService) Show(packagePath *Path) error {
 
 	log.Info("Getting package details...")
 	httpClientsDetails := ps.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
 	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
@@ -136,7 +145,10 @@ func (ps *PackageService) IsPackageExists(packagePath *Path) (bool, error) {
 	url := ps.BintrayDetails.GetApiUrl() + path.Join("packages", packagePath.Subject, packagePath.Repo, packagePath.Package)
 	httpClientsDetails := ps.BintrayDetails.CreateHttpClientDetails()
 
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
 	resp, _, err := client.SendHead(url, httpClientsDetails)
 	if err != nil {
 		return false, err
@@ -162,7 +174,10 @@ func (ps *PackageService) doCreatePackage(params *Params) (*http.Response, []byt
 
 	url := ps.BintrayDetails.GetApiUrl() + path.Join("packages", params.Subject, params.Repo)
 	httpClientsDetails := ps.BintrayDetails.CreateHttpClientDetails()
-	client := httpclient.NewDefaultHttpClient()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return nil, []byte{}, err
+	}
 	return client.SendPost(url, content, httpClientsDetails)
 }
 
@@ -212,6 +227,6 @@ type contentConfig struct {
 	IssueTrackerUrl        string   `json:"issue_tracker_url,omitempty"`
 	GithubRepo             string   `json:"github_repo,omitempty"`
 	GithubReleaseNotesFile string   `json:"github_release_notes_file,omitempty"`
-	PublicDownloadNumbers  bool   `json:"public_download_numbers,omitempty"`
-	PublicStats            bool   `json:"public_stats,omitempty"`
+	PublicDownloadNumbers  bool     `json:"public_download_numbers,omitempty"`
+	PublicStats            bool     `json:"public_stats,omitempty"`
 }
