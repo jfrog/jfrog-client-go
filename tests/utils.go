@@ -52,30 +52,21 @@ func init() {
 
 func createArtifactorySearchManager() {
 	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		log.Error(fmt.Sprintf(HttpClientCreationFailureMessage, err.Error()))
-		os.Exit(1)
-	}
+	failOnHttpClientCreation(err)
 	testsSearchService = services.NewSearchService(client)
 	testsSearchService.ArtDetails = getArtDetails()
 }
 
 func createArtifactoryDeleteManager() {
 	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		log.Error(fmt.Sprintf(HttpClientCreationFailureMessage, err.Error()))
-		os.Exit(1)
-	}
+	failOnHttpClientCreation(err)
 	testsDeleteService = services.NewDeleteService(client)
 	testsDeleteService.ArtDetails = getArtDetails()
 }
 
 func createArtifactoryUploadManager() {
 	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		log.Error(fmt.Sprintf(HttpClientCreationFailureMessage, err.Error()))
-		os.Exit(1)
-	}
+	failOnHttpClientCreation(err)
 	testsUploadService = services.NewUploadService(client)
 	testsUploadService.ArtDetails = getArtDetails()
 	testsUploadService.Threads = 3
@@ -83,13 +74,17 @@ func createArtifactoryUploadManager() {
 
 func createArtifactoryDownloadManager() {
 	client, err := httpclient.ClientBuilder().Build()
+	failOnHttpClientCreation(err)
+	testsDownloadService = services.NewDownloadService(client)
+	testsDownloadService.ArtDetails = getArtDetails()
+	testsDownloadService.SetThreads(3)
+}
+
+func failOnHttpClientCreation(err error) {
 	if err != nil {
 		log.Error(fmt.Sprintf(HttpClientCreationFailureMessage, err.Error()))
 		os.Exit(1)
 	}
-	testsDownloadService = services.NewDownloadService(client)
-	testsDownloadService.ArtDetails = getArtDetails()
-	testsDownloadService.SetThreads(3)
 }
 
 func getArtDetails() auth.ArtifactoryDetails {
