@@ -19,18 +19,13 @@ const (
 
 func init() {
 	if Logger == nil {
-		Logger = NewLogger()
+		Logger = NewLogger(INFO)
 	}
 }
 
-func NewLogger() Log {
+func NewLogger(logLevel LevelType) Log {
 	logger := new(jfrogLogger)
-	logLevel := os.Getenv("JFROG_CLI_LOG_LEVEL")
-	if logLevel != "" {
-		logger.SetLogLevel(GetCliLogLevel(logLevel))
-	} else {
-		logger.SetLogLevel(INFO)
-	}
+	logger.SetLogLevel(logLevel)
 	logger.SetOutputWriter(os.Stdout)
 	logger.SetStderrWriter(os.Stderr)
 	return logger
@@ -131,17 +126,4 @@ type Log interface {
 	Warn(a ...interface{})
 	Error(a ...interface{})
 	Output(a ...interface{})
-}
-
-func GetCliLogLevel(logLevel string) LevelType {
-	switch logLevel {
-	case "ERROR":
-		return ERROR
-	case "WARN":
-		return WARN
-	case "DEBUG":
-		return DEBUG
-	default:
-		return INFO
-	}
 }
