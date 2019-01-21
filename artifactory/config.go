@@ -1,6 +1,8 @@
 package artifactory
 
 import (
+	"time"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -13,6 +15,7 @@ type artifactoryServicesConfig struct {
 	minSplitSize      int64
 	splitCount        int
 	minChecksumDeploy int64
+	timeout           time.Duration
 	logger            log.Log
 }
 
@@ -53,6 +56,10 @@ func (config *artifactoryServicesConfig) GetMinChecksumDeploy() int64 {
 
 func (config *artifactoryServicesConfig) GetArtDetails() auth.ArtifactoryDetails {
 	return config.ArtifactoryDetails
+}
+
+func (config *artifactoryServicesConfig) GetTimeout() time.Duration {
+	return config.timeout
 }
 
 func (config *artifactoryServicesConfig) GetLogger() log.Log {

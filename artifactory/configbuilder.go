@@ -1,6 +1,8 @@
 package artifactory
 
 import (
+	"time"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -22,6 +24,7 @@ type artifactoryServicesConfigBuilder struct {
 	splitCount        int
 	minChecksumDeploy int64
 	isDryRun          bool
+	timeout           time.Duration
 	logger            log.Log
 }
 
@@ -60,6 +63,11 @@ func (builder *artifactoryServicesConfigBuilder) SetDryRun(dryRun bool) *artifac
 	return builder
 }
 
+func (builder *artifactoryServicesConfigBuilder) SetTimeout(timeout time.Duration) *artifactoryServicesConfigBuilder {
+	builder.timeout = timeout
+	return builder
+}
+
 func (builder *artifactoryServicesConfigBuilder) Build() (Config, error) {
 	c := &artifactoryServicesConfig{}
 	c.ArtifactoryDetails = builder.ArtifactoryDetails
@@ -70,6 +78,7 @@ func (builder *artifactoryServicesConfigBuilder) Build() (Config, error) {
 	c.logger = builder.logger
 	c.certifactesPath = builder.certifactesPath
 	c.dryRun = builder.isDryRun
+	c.timeout = builder.timeout
 	return c, nil
 }
 

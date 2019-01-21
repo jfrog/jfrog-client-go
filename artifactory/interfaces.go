@@ -1,6 +1,8 @@
 package artifactory
 
 import (
+	"time"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -15,6 +17,7 @@ type Config interface {
 	GetSplitCount() int
 	GetMinChecksumDeploy() int64
 	IsDryRun() bool
+	GetTimeout() time.Duration
 	GetArtDetails() auth.ArtifactoryDetails
 	GetLogger() log.Log
 }
