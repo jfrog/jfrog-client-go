@@ -15,7 +15,6 @@ type ReadFileService struct {
 	DryRun       bool
 	MinSplitSize int64
 	SplitCount   int
-	Retries      int
 }
 
 func NewReadFileService(client *rthttpclient.ArtifactoryHttpClient) *ReadFileService {
@@ -56,7 +55,7 @@ func (ds *ReadFileService) ReadRemoteFile(downloadPath string) (io.ReadCloser, e
 		return nil, err
 	}
 	httpClientsDetails := ds.ArtDetails.CreateHttpClientDetails()
-	ioReadCloser, resp, err := ds.client.ReadRemoteFile(readPath, &httpClientsDetails, ds.Retries)
+	ioReadCloser, resp, err := ds.client.ReadRemoteFile(readPath, &httpClientsDetails)
 	if err != nil {
 		return nil, err
 	}

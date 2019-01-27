@@ -326,7 +326,7 @@ func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadP
 		return utils.FileInfo{}, false, err
 	}
 	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileInfo) {
-		resp, details, body, err = us.uploadSymlink(targetPathWithProps, httpClientsDetails, uploadParams)
+		resp, details, body, err = us.uploadSymlink(targetPathWithProps, logMsgPrefix, httpClientsDetails, uploadParams)
 	} else {
 		resp, details, body, checksumDeployed, err = us.doUpload(localPath, targetPathWithProps, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
 	}
@@ -338,12 +338,12 @@ func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadP
 	return artifact, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
 
-func (us *UploadService) uploadSymlink(targetPath string, httpClientsDetails httputils.HttpClientDetails, uploadParams UploadParams) (resp *http.Response, details *fileutils.FileDetails, body []byte, err error) {
+func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, uploadParams UploadParams) (resp *http.Response, details *fileutils.FileDetails, body []byte, err error) {
 	details, err = fspatterns.CreateSymlinkFileDetails()
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, &us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
 	return
 }
 
@@ -363,7 +363,7 @@ func (us *UploadService) doUpload(localPath, targetPath, logMsgPrefix string, ht
 	}
 	if !us.DryRun && !checksumDeployed {
 		var body []byte
-		resp, body, err = utils.UploadFile(localPath, targetPath, &us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
+		resp, body, err = utils.UploadFile(localPath, targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
 		}

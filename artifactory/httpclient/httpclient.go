@@ -141,11 +141,11 @@ func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte
 	return
 }
 
-func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url string,
+func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string,
 	httpClientsDetails *httputils.HttpClientDetails, retries int) (resp *http.Response, body []byte, err error) {
 	isNewToken := false
 	for i := 0; i < 2; i++ {
-		resp, body, err = rtc.httpClient.UploadFile(localPath, url, *httpClientsDetails, retries)
+		resp, body, err = rtc.httpClient.UploadFile(localPath, url, logMsgPrefix, *httpClientsDetails, retries)
 		if err != nil {
 			return
 		}
@@ -160,10 +160,10 @@ func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url string,
 	return
 }
 
-func (rtc *ArtifactoryHttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails *httputils.HttpClientDetails, retries int) (ioReaderCloser io.ReadCloser, resp *http.Response, err error) {
+func (rtc *ArtifactoryHttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails *httputils.HttpClientDetails) (ioReaderCloser io.ReadCloser, resp *http.Response, err error) {
 	isNewToken := false
 	for i := 0; i < 2; i++ {
-		ioReaderCloser, resp, err = rtc.httpClient.ReadRemoteFile(downloadPath, *httpClientsDetails, retries)
+		ioReaderCloser, resp, err = rtc.httpClient.ReadRemoteFile(downloadPath, *httpClientsDetails)
 		if err != nil {
 			return
 		}

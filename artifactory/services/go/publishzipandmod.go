@@ -41,7 +41,7 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpcl
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 
 	addGoVersion(params, &zipUrl)
-	resp, _, err := client.UploadFile(params.GetZipPath(), zipUrl, &clientDetails, 0)
+	resp, _, err := client.UploadFile(params.GetZipPath(), zipUrl, "", &clientDetails, 0)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpcl
 		return err
 	}
 	addGoVersion(params, &url)
-	resp, _, err = client.UploadFile(params.GetModPath(), url, &clientDetails, 0)
+	resp, _, err = client.UploadFile(params.GetModPath(), url, "", &clientDetails, 0)
 	if err != nil {
 		return err
 	}

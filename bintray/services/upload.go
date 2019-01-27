@@ -155,7 +155,7 @@ func uploadFile(artifact clientutils.Artifact, url, logMsgPrefix string, bintray
 	if err != nil {
 		return false, err
 	}
-	resp, body, err := client.UploadFile(artifact.LocalPath, url, httpClientsDetails, 0)
+	resp, body, err := client.UploadFile(artifact.LocalPath, url, logMsgPrefix, httpClientsDetails, 0)
 	if err != nil {
 		return false, err
 	}

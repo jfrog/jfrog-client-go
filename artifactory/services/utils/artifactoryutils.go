@@ -20,7 +20,7 @@ import (
 const ARTIFACTORY_SYMLINK = "symlink.dest"
 const SYMLINK_SHA1 = "symlink.destsha1"
 
-func UploadFile(localPath, url string, artifactoryDetails *auth.ArtifactoryDetails, details *fileutils.FileDetails,
+func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ArtifactoryDetails, details *fileutils.FileDetails,
 	httpClientsDetails httputils.HttpClientDetails, client *rthttpclient.ArtifactoryHttpClient, retries int) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
@@ -34,7 +34,7 @@ func UploadFile(localPath, url string, artifactoryDetails *auth.ArtifactoryDetai
 	AddChecksumHeaders(requestClientDetails.Headers, details)
 	AddAuthHeaders(requestClientDetails.Headers, *artifactoryDetails)
 
-	return client.UploadFile(localPath, url, requestClientDetails, retries)
+	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, retries)
 }
 
 func AddChecksumHeaders(headers map[string]string, fileDetails *fileutils.FileDetails) {
