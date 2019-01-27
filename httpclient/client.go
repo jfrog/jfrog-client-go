@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/errors/httperrors"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	multifilereader "github.com/jfrog/jfrog-client-go/utils/io"
@@ -206,16 +205,16 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 }
 
 // Read remote file,
-// The caller is responsible to close the io.ReaderCloser
-func (jc *HttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails httputils.HttpClientDetails, retries int) (io.ReadCloser, error) {
+// The caller is responsible to check if resp.StatusCode is StatusOK before reading, and to close io.ReadCloser after done reading.
+func (jc *HttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails httputils.HttpClientDetails, retries int) (io.ReadCloser, *http.Response, error) {
 	resp, _, err := jc.sendGetForFileDownload(downloadPath, true, httpClientsDetails, 0, retries)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	if err = httperrors.CheckResponseStatus(resp, nil, http.StatusOK); err != nil {
-		return nil, err
+	if resp.StatusCode != http.StatusOK {
+		return nil, resp, nil
 	}
-	return resp.Body, nil
+	return resp.Body, resp, nil
 }
 
 func (jc *HttpClient) DownloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool) (*http.Response, error) {
@@ -236,8 +235,8 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 	}
 
 	defer resp.Body.Close()
-	if err = httperrors.CheckResponseStatus(resp, nil, http.StatusOK); err != nil {
-		return
+	if resp.StatusCode != http.StatusOK {
+		return resp, redirectUrl, nil
 	}
 
 	isZip := fileutils.IsZip(downloadFileDetails.FileName)
@@ -318,18 +317,26 @@ func extractZip(downloadFileDetails *DownloadFileDetails, logMsgPrefix string) e
 	return errorutils.CheckError(err)
 }
 
-func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails) error {
+// Downloads a file by chunks, concurrently.
+// If successful, returns the resp of the last chunk, which will have resp.StatusCode = http.StatusPartialContent
+// Otherwise: if an error occurred - returns the error with resp=nil, else - err=nil and the resp of the first chunk that received statusCode!=http.StatusPartialContent
+// The caller is responsible to check the resp.StatusCode.
+func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, error) {
 	chunksPaths := make([]string, flags.SplitCount)
 
-	err := jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, httpClientsDetails)
+	resp, err := jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, httpClientsDetails)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	// If not all chunks were downloaded successfully, return
+	if resp.StatusCode != http.StatusPartialContent {
+		return resp, nil
 	}
 
 	if flags.LocalPath != "" {
 		err = os.MkdirAll(flags.LocalPath, 0777)
 		if errorutils.CheckError(err) != nil {
-			return err
+			return nil, err
 		}
 		flags.LocalFileName = filepath.Join(flags.LocalPath, flags.LocalFileName)
 	}
@@ -337,34 +344,38 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 	if fileutils.IsPathExists(flags.LocalFileName, false) {
 		err := os.Remove(flags.LocalFileName)
 		if errorutils.CheckError(err) != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	// Explode and merge archive if necessary
 	if flags.Explode {
 		extracted, err := extractAndMergeChunks(chunksPaths, flags, logMsgPrefix)
-		if extracted || err != nil {
-			return err
+		if err != nil {
+			return nil, err
+		}
+		if extracted {
+			return resp, nil
 		}
 	}
 
 	err = mergeChunks(chunksPaths, flags)
 	if errorutils.CheckError(err) != nil {
-		return err
+		return nil, err
 	}
 	log.Info(logMsgPrefix + "Done downloading.")
-	return nil
+	return resp, nil
 }
 
-func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetails httputils.HttpClientDetails) (*fileutils.FileDetails, error) {
-	resp, body, err := jc.SendHead(downloadUrl, httpClientsDetails)
+// The caller is responsible to check that resp.StatusCode is http.StatusOK
+func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetails httputils.HttpClientDetails) (*fileutils.FileDetails, *http.Response, error) {
+	resp, _, err := jc.SendHead(downloadUrl, httpClientsDetails)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	if err = httperrors.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
-		return nil, err
+	if resp.StatusCode != http.StatusOK {
+		return nil, resp, nil
 	}
 
 	fileSize := int64(0)
@@ -372,7 +383,7 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 	if len(contentLength) > 0 {
 		fileSize, err = strconv.ParseInt(contentLength, 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
@@ -380,20 +391,31 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 	fileDetails.Checksum.Md5 = resp.Header.Get("X-Checksum-Md5")
 	fileDetails.Checksum.Sha1 = resp.Header.Get("X-Checksum-Sha1")
 	fileDetails.Size = fileSize
-	return fileDetails, nil
+	return fileDetails, resp, nil
 }
 
-func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags ConcurrentDownloadFlags, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails) error {
+// Downloads chunks, concurrently.
+// If successful, returns the resp of the last chunk, which will have resp.StatusCode = http.StatusPartialContent
+// Otherwise: if an error occurred - returns the error with resp=nil, else - err=nil and the resp of the first chunk that received statusCode!=http.StatusPartialContent
+// The caller is responsible to check the resp.StatusCode.
+func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags ConcurrentDownloadFlags, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, error) {
 	var wg sync.WaitGroup
 	chunkSize := flags.FileSize / int64(flags.SplitCount)
 	mod := flags.FileSize % int64(flags.SplitCount)
 	// Create a list of errors, to allow each go routine to save there its own returned error.
 	errorsList := make([]error, flags.SplitCount)
+	// Store the responses, to return a response with unexpected statusCode or the last response if all successful
+	respList := make([]*http.Response, flags.SplitCount)
+	// Global vars on top of the go routines, to break the loop earlier if needed
 	var err error
+	var resp *http.Response
 	for i := 0; i < flags.SplitCount; i++ {
-		// Checking this global error may help break out of the loop earlier, if an error
+		// Checking this global error may help break out of the loop earlier, if an error or the wrong status code was received
 		// has already been returned by one of the go routines.
 		if err != nil {
+			break
+		}
+		if resp != nil && resp.StatusCode != http.StatusPartialContent {
 			break
 		}
 		wg.Add(1)
@@ -404,9 +426,13 @@ func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags Con
 		}
 		requestClientDetails := httpClientsDetails.Clone()
 		go func(start, end int64, i int) {
-			chunksPaths[i], errorsList[i] = jc.downloadFileRange(flags, start, end, i, logMsgPrefix, *requestClientDetails, flags.Retries)
+			chunksPaths[i], respList[i], errorsList[i] = jc.downloadFileRange(flags, start, end, i, logMsgPrefix, *requestClientDetails, flags.Retries)
+			// Write to the global vars if the chunk wasn't downloaded successfully
 			if errorsList[i] != nil {
 				err = errorsList[i]
+			}
+			if respList[i].StatusCode != http.StatusPartialContent {
+				resp = respList[i]
 			}
 			wg.Done()
 		}(start, end, i)
@@ -416,11 +442,17 @@ func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags Con
 	// Verify that all chunks have been downloaded successfully.
 	for _, e := range errorsList {
 		if e != nil {
-			return errorutils.CheckError(e)
+			return nil, errorutils.CheckError(e)
+		}
+	}
+	for _, r := range respList {
+		if r.StatusCode != http.StatusPartialContent {
+			return r, nil
 		}
 	}
 
-	return nil
+	// If all chunks were downloaded successfully, return the response of the last chunk.
+	return respList[len(respList)-1], nil
 }
 
 func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
@@ -496,15 +528,15 @@ func extractAndMergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags, 
 	return true, nil
 }
 
-func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, retries int) (string, error) {
+func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, retries int) (string, *http.Response, error) {
 	tempLocalPath, err := fileutils.GetTempDirPath()
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	tempFile, err := ioutil.TempFile(tempLocalPath, strconv.Itoa(currentSplit)+"_")
 	if errorutils.CheckError(err) != nil {
-		return "", err
+		return "", nil, err
 	}
 	defer tempFile.Close()
 
@@ -514,34 +546,38 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 	httpClientsDetails.Headers["Range"] = "bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end-1, 10)
 	resp, _, err := jc.sendGetForFileDownload(flags.DownloadPath, true, httpClientsDetails, currentSplit, retries)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	defer resp.Body.Close()
 
 	log.Info(logMsgPrefix+"["+strconv.Itoa(currentSplit)+"]:", resp.Status+"...")
-	if err = httperrors.CheckResponseStatus(resp, nil, http.StatusPartialContent); err != nil {
-		return "", err
+	// Unexpected http response
+	if resp.StatusCode != http.StatusPartialContent {
+		return "", resp, nil
 	}
 
 	err = os.MkdirAll(tempLocalPath, 0777)
 	if errorutils.CheckError(err) != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	_, err = io.Copy(tempFile, resp.Body)
-	return tempFile.Name(), errorutils.CheckError(err)
+	if errorutils.CheckError(err) != nil {
+		return "", nil, err
+	}
+	return tempFile.Name(), resp, errorutils.CheckError(err)
 }
 
-func (jc *HttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetails httputils.HttpClientDetails) (bool, error) {
-	resp, body, err := jc.SendHead(downloadUrl, httpClientsDetails)
+// The caller is responsible to check if resp.StatusCode is StatusOK before relying on the bool value
+func (jc *HttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetails httputils.HttpClientDetails) (bool, *http.Response, error) {
+	resp, _, err := jc.SendHead(downloadUrl, httpClientsDetails)
 	if errorutils.CheckError(err) != nil {
-		return false, err
+		return false, nil, err
 	}
-
-	if err = httperrors.CheckResponseStatus(resp, body, http.StatusOK); errorutils.CheckError(err) != nil {
-		return false, err
+	if resp.StatusCode != http.StatusOK {
+		return false, resp, nil
 	}
-	return resp.Header.Get("Accept-Ranges") == "bytes", nil
+	return resp.Header.Get("Accept-Ranges") == "bytes", resp, nil
 }
 
 func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClientDetails) {

@@ -1,24 +1,25 @@
 package artifactory
 
 import (
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 )
 
 type ArtifactoryServicesManager struct {
-	client *httpclient.HttpClient
+	client *rthttpclient.ArtifactoryHttpClient
 	config Config
 }
 
-func New(config Config) (*ArtifactoryServicesManager, error) {
+func New(artDetails *auth.ArtifactoryDetails, config Config) (*ArtifactoryServicesManager, error) {
 	var err error
 	manager := &ArtifactoryServicesManager{config: config}
-	manager.client, err = httpclient.ClientBuilder().SetCertificatesPath(config.GetCertifactesPath()).Build()
+	manager.client, err = rthttpclient.ArtifactoryClientBuilder().SetCertificatesPath(config.GetCertifactesPath()).SetArtDetails(artDetails).Build()
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +73,7 @@ func (sm *ArtifactoryServicesManager) DeleteFiles(resultItems []utils.ResultItem
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetArtDetails()
-	return deleteService.DeleteFiles(resultItems, deleteService)
+	return deleteService.DeleteFiles(resultItems)
 }
 
 func (sm *ArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCloser, error) {

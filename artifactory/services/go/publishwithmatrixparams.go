@@ -2,10 +2,11 @@ package _go
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/errors/httperrors"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/version"
+	"net/http"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func (pwmp *publishWithMatrixParams) isCompatible(artifactoryVersion string) boo
 	return true
 }
 
-func (pwmp *publishWithMatrixParams) PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error {
+func (pwmp *publishWithMatrixParams) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.ArtifactoryDetails) error {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 	addHeaders(params, &clientDetails)
@@ -39,9 +40,9 @@ func (pwmp *publishWithMatrixParams) PublishPackage(params GoParams, client *htt
 		return err
 	}
 
-	resp, body, err := client.UploadFile(params.GetZipPath(), url, clientDetails, 0)
+	resp, _, err := client.UploadFile(params.GetZipPath(), url, &clientDetails, 0)
 	if err != nil {
 		return err
 	}
-	return httperrors.CheckResponseStatus(resp, body, 201)
+	return errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }

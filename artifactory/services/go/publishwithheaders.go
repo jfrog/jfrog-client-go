@@ -2,10 +2,11 @@ package _go
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/errors/httperrors"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/version"
+	"net/http"
 )
 
 func init() {
@@ -24,16 +25,19 @@ func (pwh *publishWithHeader) isCompatible(artifactoryVersion string) bool {
 	return false
 }
 
-func (pwh *publishWithHeader) PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error {
+func (pwh *publishWithHeader) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.ArtifactoryDetails) error {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 	addHeaders(params, &clientDetails)
-	addPropertiesHeaders(params.GetProps(), &clientDetails.Headers)
-	resp, body, err := client.UploadFile(params.GetZipPath(), url, clientDetails, 0)
+	err = addPropertiesHeaders(params.GetProps(), &clientDetails.Headers)
 	if err != nil {
 		return err
 	}
-	return httperrors.CheckResponseStatus(resp, body, 201)
+	resp, _, err := client.UploadFile(params.GetZipPath(), url, &clientDetails, 0)
+	if err != nil {
+		return err
+	}
+	return errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }
 
 func addPropertiesHeaders(props string, headers *map[string]string) error {

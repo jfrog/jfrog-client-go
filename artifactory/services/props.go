@@ -3,11 +3,10 @@ package services
 import (
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/errors/httperrors"
-	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
@@ -15,12 +14,12 @@ import (
 )
 
 type PropsService struct {
-	client     *httpclient.HttpClient
+	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 	Threads    int
 }
 
-func NewPropsService(client *httpclient.HttpClient) *PropsService {
+func NewPropsService(client *rthttpclient.ArtifactoryHttpClient) *PropsService {
 	return &PropsService{client: client}
 }
 
@@ -103,22 +102,20 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 			relativePath := item.GetItemRelativePath()
 			setPropsTask := func(threadId int) error {
 				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
-				httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 				setPropertiesUrl := updatePropertiesBaseUrl + "/" + relativePath + "?properties=" + encodedParam
 				var resp *http.Response
-				var body []byte
 				var err error
 				if isDelete {
-					resp, body, err = ps.sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl, httpClientsDetails)
+					resp, _, err = ps.sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl)
 				} else {
-					resp, body, err = ps.sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl, httpClientsDetails)
+					resp, _, err = ps.sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl)
 				}
 
 				if err != nil {
 					return err
 				}
-				if err = httperrors.CheckResponseStatus(resp, body, http.StatusNoContent); err != nil {
-					return err
+				if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
+					return errorutils.CheckError(err)
 				}
 				successCounters[threadId]++
 				return nil
@@ -142,17 +139,19 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	return totalSuccess, nil
 }
 
-func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
+func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
 	log.Info(logMsgPrefix+"Deleting properties on:", relativePath)
 	log.Debug(logMsgPrefix+"Sending delete properties request:", setPropertiesUrl)
-	resp, body, err = ps.client.SendDelete(setPropertiesUrl, nil, httpClientsDetails)
+	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
+	resp, body, err = ps.client.SendDelete(setPropertiesUrl, nil, &httpClientsDetails)
 	return
 }
 
-func (ps *PropsService) sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl string, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
+func (ps *PropsService) sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
 	log.Info(logMsgPrefix+"Setting properties on:", relativePath)
 	log.Debug(logMsgPrefix+"Sending set properties request:", setPropertiesUrl)
-	resp, body, err = ps.client.SendPut(setPropertiesUrl, nil, httpClientsDetails)
+	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
+	resp, body, err = ps.client.SendPut(setPropertiesUrl, nil, &httpClientsDetails)
 	return
 }
 

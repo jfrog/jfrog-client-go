@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -17,11 +17,11 @@ import (
 )
 
 type DiscardBuildsService struct {
-	client     *httpclient.HttpClient
+	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 }
 
-func NewDiscardBuildsService(client *httpclient.HttpClient) *DiscardBuildsService {
+func NewDiscardBuildsService(client *rthttpclient.ArtifactoryHttpClient) *DiscardBuildsService {
 	return &DiscardBuildsService{client: client}
 }
 
@@ -62,7 +62,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, httpClientsDetails)
+	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
 	}

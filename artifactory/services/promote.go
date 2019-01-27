@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -14,12 +14,12 @@ import (
 )
 
 type PromoteService struct {
-	client     *httpclient.HttpClient
+	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 	DryRun     bool
 }
 
-func NewPromotionService(client *httpclient.HttpClient) *PromoteService {
+func NewPromotionService(client *rthttpclient.ArtifactoryHttpClient) *PromoteService {
 	return &PromoteService{client: client}
 }
 
@@ -57,7 +57,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	httpClientsDetails := ps.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.build.PromotionRequest+json", &httpClientsDetails.Headers)
 
-	resp, body, err := ps.client.SendPost(requestFullUrl, requestContent, httpClientsDetails)
+	resp, body, err := ps.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
 	}

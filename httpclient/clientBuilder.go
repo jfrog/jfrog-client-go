@@ -24,17 +24,17 @@ func (builder *httpClientBuilder) SetCertificatesPath(certificatesPath string) *
 
 func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	if builder.certificatesDirPath == "" {
-		return &HttpClient{Client: &http.Client{Transport: createDeafaultHttpTransport()}}, nil
+		return &HttpClient{Client: &http.Client{Transport: createDefaultHttpTransport()}}, nil
 	}
 
-	transport, err := cert.GetTransportWithLoadedCert(builder.certificatesDirPath, createDeafaultHttpTransport())
+	transport, err := cert.GetTransportWithLoadedCert(builder.certificatesDirPath, createDefaultHttpTransport())
 	if err != nil {
 		return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
 	}
 	return &HttpClient{Client: &http.Client{Transport: transport}}, nil
 }
 
-func createDeafaultHttpTransport() *http.Transport {
+func createDefaultHttpTransport() *http.Transport {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{

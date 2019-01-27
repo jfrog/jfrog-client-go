@@ -108,9 +108,7 @@ func MergeMaps(src map[string]string, dst map[string]string) {
 }
 
 func CopyMap(src map[string]string) (dst map[string]string) {
-	if dst == nil {
-		dst = make(map[string]string)
-	}
+	dst = make(map[string]string)
 	for k, v := range src {
 		dst[k] = v
 	}

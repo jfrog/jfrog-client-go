@@ -3,8 +3,8 @@ package services
 import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -22,12 +22,12 @@ const (
 
 type MoveCopyService struct {
 	moveType   MoveType
-	client     *httpclient.HttpClient
+	client     *rthttpclient.ArtifactoryHttpClient
 	DryRun     bool
 	ArtDetails auth.ArtifactoryDetails
 }
 
-func NewMoveCopyService(client *httpclient.HttpClient, moveType MoveType) *MoveCopyService {
+func NewMoveCopyService(client *rthttpclient.ArtifactoryHttpClient, moveType MoveType) *MoveCopyService {
 	return &MoveCopyService{moveType: moveType, client: client}
 }
 
@@ -43,7 +43,7 @@ func (mc *MoveCopyService) IsDryRun() bool {
 	return mc.DryRun
 }
 
-func (mc *MoveCopyService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+func (mc *MoveCopyService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
 	return mc.client, nil
 }
 
@@ -139,7 +139,7 @@ func (mc *MoveCopyService) moveFile(sourcePath, destPath string) (bool, error) {
 	}
 	httpClientsDetails := mc.GetArtifactoryDetails().CreateHttpClientDetails()
 
-	resp, body, err := mc.client.SendPost(requestFullUrl, nil, httpClientsDetails)
+	resp, body, err := mc.client.SendPost(requestFullUrl, nil, &httpClientsDetails)
 	if err != nil {
 		return false, err
 	}
@@ -169,7 +169,7 @@ func (mc *MoveCopyService) createPathInArtifactory(destPath string, conf utils.C
 		return false, err
 	}
 	httpClientsDetails := conf.GetArtifactoryDetails().CreateHttpClientDetails()
-	resp, body, err := mc.client.SendPut(requestFullUrl, nil, httpClientsDetails)
+	resp, body, err := mc.client.SendPut(requestFullUrl, nil, &httpClientsDetails)
 	if err != nil {
 		return false, err
 	}

@@ -180,9 +180,13 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 	}
 
 	httpClientsDetails := ds.BintrayDetails.CreateHttpClientDetails()
-	details, err := client.GetRemoteFileDetails(url, httpClientsDetails)
+	details, resp, err := client.GetRemoteFileDetails(url, httpClientsDetails)
 	if err != nil {
 		return errorutils.CheckError(errors.New("Bintray " + err.Error()))
+	}
+	err = errorutils.CheckResponseStatus(resp, http.StatusOK)
+	if errorutils.CheckError(err) != nil {
+		return err
 	}
 
 	placeHolderTarget, err := clientutils.BuildTargetPath(downloadParams.Path, cleanPath, downloadParams.TargetPath, false)
@@ -216,6 +220,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 			return err
 		}
 		log.Debug(logMsgPrefix, "Bintray response:", resp.Status)
+		return errorutils.CheckResponseStatus(resp, http.StatusOK)
 	} else {
 		// We should attempt to download the file concurrently, but only if it is provided through the DSN.
 		// To check if the file is provided through the DSN, we first attempt to download the file
@@ -239,12 +244,20 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 				FileSize:      details.Size,
 				SplitCount:    ds.SplitCount}
 
-			err = client.DownloadFileConcurrently(concurrentDownloadFlags, "", httpClientsDetails)
+			resp, err = client.DownloadFileConcurrently(concurrentDownloadFlags, "", httpClientsDetails)
+			if errorutils.CheckError(err) != nil {
+				return err
+			}
+			err = errorutils.CheckResponseStatus(resp, http.StatusPartialContent)
 			if err != nil {
 				return err
 			}
 		} else {
 			if errorutils.CheckError(err) != nil {
+				return err
+			}
+			err = errorutils.CheckResponseStatus(resp, http.StatusOK)
+			if err != nil {
 				return err
 			}
 			log.Debug(logMsgPrefix, "Bintray response:", resp.Status)

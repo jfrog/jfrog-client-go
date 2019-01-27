@@ -2,10 +2,11 @@ package _go
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/errors/httperrors"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/version"
+	"net/http"
 	"net/url"
 	"strings"
 )
@@ -26,7 +27,7 @@ func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
 	return true
 }
 
-func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *httpclient.HttpClient, ArtDetails auth.ArtifactoryDetails) error {
+func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.ArtifactoryDetails) error {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	if err != nil {
 		return err
@@ -40,11 +41,11 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *httpclie
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 
 	addGoVersion(params, &zipUrl)
-	resp, body, err := client.UploadFile(params.GetZipPath(), zipUrl, clientDetails, 0)
+	resp, _, err := client.UploadFile(params.GetZipPath(), zipUrl, &clientDetails, 0)
 	if err != nil {
 		return err
 	}
-	err = httperrors.CheckResponseStatus(resp, body, 201)
+	err = errorutils.CheckResponseStatus(resp, http.StatusCreated)
 	if err != nil {
 		return err
 	}
@@ -53,11 +54,11 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *httpclie
 		return err
 	}
 	addGoVersion(params, &url)
-	resp, body, err = client.UploadFile(params.GetModPath(), url, clientDetails, 0)
+	resp, _, err = client.UploadFile(params.GetModPath(), url, &clientDetails, 0)
 	if err != nil {
 		return err
 	}
-	return httperrors.CheckResponseStatus(resp, body, 201)
+	return errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }
 
 func addGoVersion(params GoParams, urlPath *string) {

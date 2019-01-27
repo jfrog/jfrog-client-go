@@ -122,7 +122,7 @@ func ExecAql(aqlQuery string, flags CommonConf) ([]byte, error) {
 	log.Debug("Searching Artifactory using AQL query:\n", aqlQuery)
 
 	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
-	resp, body, err := client.SendPost(aqlUrl, []byte(aqlQuery), httpClientsDetails)
+	resp, body, err := client.SendPost(aqlUrl, []byte(aqlQuery), &httpClientsDetails)
 	if err != nil {
 		return nil, err
 	}
