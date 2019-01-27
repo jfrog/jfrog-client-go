@@ -3,8 +3,8 @@ package services
 import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"gopkg.in/src-d/go-git.v4"

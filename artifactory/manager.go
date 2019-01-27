@@ -3,21 +3,20 @@ package artifactory
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/utils"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 )
 
 type ArtifactoryServicesManager struct {
 	client *rthttpclient.ArtifactoryHttpClient
-	config artifactoryutils.Config
+	config Config
 }
 
-func New(artDetails *auth.ArtifactoryDetails, config artifactoryutils.Config) (*ArtifactoryServicesManager, error) {
+func New(artDetails *auth.ArtifactoryDetails, config Config) (*ArtifactoryServicesManager, error) {
 	var err error
 	manager := &ArtifactoryServicesManager{config: config}
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().SetCertificatesPath(config.GetCertifactesPath()).SetArtDetails(artDetails).Build()
@@ -155,7 +154,7 @@ func (sm *ArtifactoryServicesManager) PublishGoProject(params _go.GoParams) erro
 	return goService.PublishPackage(params)
 }
 
-func (sm *ArtifactoryServicesManager) setCommonServiceConfig(commonConfig artifactoryutils.ArtifactoryServicesSetter) {
+func (sm *ArtifactoryServicesManager) setCommonServiceConfig(commonConfig ArtifactoryServicesSetter) {
 	commonConfig.SetThread(sm.config.GetThreads())
 	commonConfig.SetArtDetails(sm.config.GetArtDetails())
 	commonConfig.SetDryRun(sm.config.IsDryRun())
@@ -167,6 +166,6 @@ func (sm *ArtifactoryServicesManager) Ping() ([]byte, error) {
 	return pingService.Ping()
 }
 
-func (sm *ArtifactoryServicesManager) GetConfig() artifactoryutils.Config {
+func (sm *ArtifactoryServicesManager) GetConfig() Config {
 	return sm.config
 }

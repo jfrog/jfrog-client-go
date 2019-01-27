@@ -1,9 +1,9 @@
 package tests
 
 import (
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"strconv"
 	"strings"
 	"testing"

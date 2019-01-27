@@ -2,8 +2,8 @@ package services
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 )
 
 type SearchService struct {
