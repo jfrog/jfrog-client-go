@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -51,32 +52,36 @@ func init() {
 }
 
 func createArtifactorySearchManager() {
-	client, err := httpclient.ClientBuilder().Build()
+	artDetails := getArtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsSearchService = services.NewSearchService(client)
-	testsSearchService.ArtDetails = getArtDetails()
+	testsSearchService.ArtDetails = artDetails
 }
 
 func createArtifactoryDeleteManager() {
-	client, err := httpclient.ClientBuilder().Build()
+	artDetails := getArtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsDeleteService = services.NewDeleteService(client)
-	testsDeleteService.ArtDetails = getArtDetails()
+	testsDeleteService.ArtDetails = artDetails
 }
 
 func createArtifactoryUploadManager() {
-	client, err := httpclient.ClientBuilder().Build()
+	artDetails := getArtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsUploadService = services.NewUploadService(client)
-	testsUploadService.ArtDetails = getArtDetails()
+	testsUploadService.ArtDetails = artDetails
 	testsUploadService.Threads = 3
 }
 
 func createArtifactoryDownloadManager() {
-	client, err := httpclient.ClientBuilder().Build()
+	artDetails := getArtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsDownloadService = services.NewDownloadService(client)
-	testsDownloadService.ArtDetails = getArtDetails()
+	testsDownloadService.ArtDetails = artDetails
 	testsDownloadService.SetThreads(3)
 }
 
@@ -121,7 +126,7 @@ func artifactoryCleanup(t *testing.T) {
 	for i, item := range toDelete {
 		deleteItems[i] = item
 	}
-	deletedCount, err := testsDeleteService.DeleteFiles(deleteItems, testsDeleteService)
+	deletedCount, err := testsDeleteService.DeleteFiles(deleteItems)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

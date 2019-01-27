@@ -5,7 +5,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -21,7 +21,7 @@ import (
 )
 
 type UploadService struct {
-	client            *httpclient.HttpClient
+	client            *rthttpclient.ArtifactoryHttpClient
 	ArtDetails        auth.ArtifactoryDetails
 	DryRun            bool
 	Threads           int
@@ -29,7 +29,7 @@ type UploadService struct {
 	Retries           int
 }
 
-func NewUploadService(client *httpclient.HttpClient) *UploadService {
+func NewUploadService(client *rthttpclient.ArtifactoryHttpClient) *UploadService {
 	return &UploadService{client: client}
 }
 
@@ -37,7 +37,7 @@ func (us *UploadService) SetThread(threads int) {
 	us.Threads = threads
 }
 
-func (us *UploadService) GetJfrogHttpClient() *httpclient.HttpClient {
+func (us *UploadService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
 	return us.client
 }
 
@@ -317,7 +317,7 @@ func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadP
 		return utils.FileInfo{}, false, err
 	}
 
-	var checksumDeployed bool = false
+	var checksumDeployed = false
 	var resp *http.Response
 	var details *fileutils.FileDetails
 	var body []byte
@@ -343,7 +343,7 @@ func (us *UploadService) uploadSymlink(targetPath string, httpClientsDetails htt
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
+	resp, body, err = utils.UploadFile("", targetPath, &us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
 	return
 }
 
@@ -363,7 +363,7 @@ func (us *UploadService) doUpload(localPath, targetPath, logMsgPrefix string, ht
 	}
 	if !us.DryRun && !checksumDeployed {
 		var body []byte
-		resp, body, err = utils.UploadFile(localPath, targetPath, us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
+		resp, body, err = utils.UploadFile(localPath, targetPath, &us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
 		}
@@ -409,23 +409,21 @@ func addExplodeHeader(httpClientsDetails *httputils.HttpClientDetails, isExplode
 }
 
 func (us *UploadService) tryChecksumDeploy(filePath, targetPath string, httpClientsDetails httputils.HttpClientDetails,
-	client *httpclient.HttpClient) (resp *http.Response, details *fileutils.FileDetails, body []byte, err error) {
-
+	client *rthttpclient.ArtifactoryHttpClient) (resp *http.Response, details *fileutils.FileDetails, body []byte, err error) {
+	if us.DryRun {
+		return
+	}
 	details, err = fileutils.GetFileDetails(filePath)
 	if err != nil {
 		return
 	}
-	headers := make(map[string]string)
-	utils.AddHeader("X-Checksum-Deploy", "true", &headers)
-	utils.AddChecksumHeaders(headers, details)
+
 	requestClientDetails := httpClientsDetails.Clone()
-	clientutils.MergeMaps(headers, requestClientDetails.Headers)
-	if us.DryRun {
-		return
-	}
-	utils.AddAuthHeaders(headers, us.ArtDetails)
-	clientutils.MergeMaps(headers, requestClientDetails.Headers)
-	resp, body, err = client.SendPut(targetPath, nil, *requestClientDetails)
+	utils.AddHeader("X-Checksum-Deploy", "true", &requestClientDetails.Headers)
+	utils.AddChecksumHeaders(requestClientDetails.Headers, details)
+	utils.AddAuthHeaders(requestClientDetails.Headers, us.ArtDetails)
+
+	resp, body, err = client.SendPut(targetPath, nil, requestClientDetails)
 	return
 }
 
@@ -522,7 +520,7 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 	}
 	content := make([]byte, 0)
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
-	resp, body, err := us.client.SendPut(url, content, httpClientsDetails)
+	resp, body, err := us.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
 		log.Debug(resp)
 		return err

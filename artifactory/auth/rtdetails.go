@@ -6,15 +6,19 @@ import (
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 func NewArtifactoryDetails() ArtifactoryDetails {
 	return &artifactoryDetails{}
 }
+
+var expiryHandleMutex sync.Mutex
 
 type ArtifactoryDetails interface {
 	GetUrl() string
@@ -22,16 +26,26 @@ type ArtifactoryDetails interface {
 	GetPassword() string
 	GetApiKey() string
 	GetAccessToken() string
+	GetSshUrl() string
+	GetSshKeyPath() string
+	GetSshPassphrase() string
 	GetSshAuthHeaders() map[string]string
 	GetVersion() (string, error)
+
 	SetUrl(url string)
 	SetUser(user string)
 	SetPassword(password string)
 	SetApiKey(apiKey string)
 	SetAccessToken(accessToken string)
+	SetSshUrl(url string)
+	SetSshKeyPath(sshKeyPath string)
+	SetSshPassphrase(sshPassphrase string)
 	SetSshAuthHeaders(sshAuthHeaders map[string]string)
 
+	IsSshAuthHeaderSet() bool
+	IsSshAuthentication() bool
 	AuthenticateSsh(sshKey, sshPassphrase string) error
+	HandleTokenExpiry(statusCode int, httpClientDetails *httputils.HttpClientDetails) (bool, error)
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
 }
@@ -43,7 +57,11 @@ type artifactoryDetails struct {
 	ApiKey         string            `json:"-"`
 	AccessToken    string            `json:"-"`
 	version        string            `json:"-"`
+	SshUrl         string            `json:"-"`
+	SshKeyPath     string            `json:"-"`
+	SshPassphrase  string            `json:"-"`
 	SshAuthHeaders map[string]string `json:"-"`
+	TokenMutex     sync.Mutex
 }
 
 func (rt *artifactoryDetails) GetUrl() string {
@@ -64,6 +82,18 @@ func (rt *artifactoryDetails) GetApiKey() string {
 
 func (rt *artifactoryDetails) GetAccessToken() string {
 	return rt.AccessToken
+}
+
+func (rt *artifactoryDetails) GetSshUrl() string {
+	return rt.SshUrl
+}
+
+func (rt *artifactoryDetails) GetSshKeyPath() string {
+	return rt.SshKeyPath
+}
+
+func (rt *artifactoryDetails) GetSshPassphrase() string {
+	return rt.SshPassphrase
 }
 
 func (rt *artifactoryDetails) GetSshAuthHeaders() map[string]string {
@@ -90,18 +120,80 @@ func (rt *artifactoryDetails) SetAccessToken(accessToken string) {
 	rt.AccessToken = accessToken
 }
 
+func (rt *artifactoryDetails) SetSshUrl(sshUrl string) {
+	rt.SshUrl = sshUrl
+}
+
+func (rt *artifactoryDetails) SetSshKeyPath(sshKeyPath string) {
+	rt.SshKeyPath = sshKeyPath
+}
+
+func (rt *artifactoryDetails) SetSshPassphrase(sshPassphrase string) {
+	rt.SshPassphrase = sshPassphrase
+}
+
 func (rt *artifactoryDetails) SetSshAuthHeaders(sshAuthHeaders map[string]string) {
 	rt.SshAuthHeaders = sshAuthHeaders
 }
 
+func (rt *artifactoryDetails) IsSshAuthHeaderSet() bool {
+	return len(rt.SshAuthHeaders) > 0
+}
+
+func (rt *artifactoryDetails) IsSshAuthentication() bool {
+	return fileutils.IsSshUrl(rt.Url) || rt.SshUrl != ""
+}
+
 func (rt *artifactoryDetails) AuthenticateSsh(sshKeyPath, sshPassphrase string) error {
-	sshHeaders, baseUrl, err := sshAuthentication(rt.Url, sshKeyPath, sshPassphrase)
+	// If SshUrl is unset, set it and use it to authenticate.
+	// The SshUrl variable could be used again later if there's a need to reauthenticate (Url is being overwritten with baseUrl).
+	if rt.SshUrl == "" {
+		rt.SshUrl = rt.Url
+	}
+
+	sshHeaders, baseUrl, err := sshAuthentication(rt.SshUrl, sshKeyPath, sshPassphrase)
 	if err != nil {
 		return err
 	}
-	rt.SshAuthHeaders = sshHeaders
+
+	// Set base url as the connection url
 	rt.Url = baseUrl
+	rt.SetSshAuthHeaders(sshHeaders)
 	return nil
+}
+
+// Checks if a token has expired.
+// If so, acquires a new token from server (if one wasn't acquired yet) and returns true.
+// Otherwise, or in case of an error, returns false.
+func (rt *artifactoryDetails) HandleTokenExpiry(statusCode int, httpClientDetails *httputils.HttpClientDetails) (bool, error) {
+	// If an unauthorized ssh connection -> ssh token has expired.
+	if statusCode == http.StatusUnauthorized && rt.IsSshAuthentication() {
+		return rt.handleSshTokenExpiry(httpClientDetails)
+	}
+	return false, nil
+}
+
+// Handles the process of acquiring a new ssh token from server (if one wasn't acquired yet) and returns true.
+// Returns false if an error has occurred.
+func (rt *artifactoryDetails) handleSshTokenExpiry(httpClientDetails *httputils.HttpClientDetails) (bool, error) {
+	// Lock expiryHandleMutex to make sure only one authentication is made
+	expiryHandleMutex.Lock()
+	// Reauthenticate if a new token wasn't acquired (by another thread) while waiting at mutex.
+	// Otherwise, token has already changed -> get new token and return true without authenticating.
+	if rt.GetSshAuthHeaders()["Authorization"] == httpClientDetails.Headers["Authorization"] {
+		// Obtain a new token and return true (false for error).
+		err := rt.AuthenticateSsh(rt.GetSshKeyPath(), rt.GetSshPassphrase())
+		if err != nil {
+			expiryHandleMutex.Unlock()
+			return false, err
+		}
+	}
+	expiryHandleMutex.Unlock()
+
+	// Copy new token from the mutual headers map in artifactoryDetails to the private headers map in httpClientDetails
+	utils.MergeMaps(rt.GetSshAuthHeaders(), httpClientDetails.Headers)
+
+	return true, nil
 }
 
 func (rt *artifactoryDetails) CreateHttpClientDetails() httputils.HttpClientDetails {
@@ -110,7 +202,7 @@ func (rt *artifactoryDetails) CreateHttpClientDetails() httputils.HttpClientDeta
 		Password:    rt.Password,
 		ApiKey:      rt.ApiKey,
 		AccessToken: rt.AccessToken,
-		Headers:     utils.CopyMap(rt.SshAuthHeaders)}
+		Headers:     utils.CopyMap(rt.GetSshAuthHeaders())}
 }
 
 func (rt *artifactoryDetails) GetVersion() (string, error) {

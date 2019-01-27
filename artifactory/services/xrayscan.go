@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -20,11 +21,11 @@ const XRAY_SCAN_STABLE_CONNECTION_WINDOW = 100 * time.Second
 const XRAY_FATAL_FAIL_STATUS = -1
 
 type XrayScanService struct {
-	client     *httpclient.HttpClient
+	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 }
 
-func NewXrayScanService(client *httpclient.HttpClient) *XrayScanService {
+func NewXrayScanService(client *rthttpclient.ArtifactoryHttpClient) *XrayScanService {
 	return &XrayScanService{client: client}
 }
 
@@ -99,7 +100,7 @@ func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Re
 	httpClientsDetails := ps.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	resp, _, _, err := ps.client.Send("POST", url, content, true, false, httpClientsDetails)
+	resp, _, _, err := ps.client.Send("POST", url, content, true, false, &httpClientsDetails)
 	if err != nil {
 		return resp, err
 	}

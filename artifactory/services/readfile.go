@@ -3,12 +3,14 @@ package services
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"io"
+	"net/http"
 )
 
 type ReadFileService struct {
-	client       *httpclient.HttpClient
+	client       *rthttpclient.ArtifactoryHttpClient
 	ArtDetails   auth.ArtifactoryDetails
 	DryRun       bool
 	MinSplitSize int64
@@ -16,7 +18,7 @@ type ReadFileService struct {
 	Retries      int
 }
 
-func NewReadFileService(client *httpclient.HttpClient) *ReadFileService {
+func NewReadFileService(client *rthttpclient.ArtifactoryHttpClient) *ReadFileService {
 	return &ReadFileService{client: client}
 }
 
@@ -32,7 +34,7 @@ func (ds *ReadFileService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *ReadFileService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+func (ds *ReadFileService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
 	return ds.client, nil
 }
 
@@ -54,5 +56,13 @@ func (ds *ReadFileService) ReadRemoteFile(downloadPath string) (io.ReadCloser, e
 		return nil, err
 	}
 	httpClientsDetails := ds.ArtDetails.CreateHttpClientDetails()
-	return ds.client.ReadRemoteFile(readPath, httpClientsDetails, ds.Retries)
+	ioReadCloser, resp, err := ds.client.ReadRemoteFile(readPath, &httpClientsDetails, ds.Retries)
+	if err != nil {
+		return nil, err
+	}
+	err = errorutils.CheckResponseStatus(resp, http.StatusOK)
+	if err != nil {
+		return nil, err
+	}
+	return ioReadCloser, err
 }

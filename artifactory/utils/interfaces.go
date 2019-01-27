@@ -1,4 +1,4 @@
-package artifactory
+package utils
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"

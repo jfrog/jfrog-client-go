@@ -4,19 +4,19 @@ import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 )
 
 type PingService struct {
-	httpClient *httpclient.HttpClient
+	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 }
 
-func NewPingService(client *httpclient.HttpClient) *PingService {
-	return &PingService{httpClient: client}
+func NewPingService(client *rthttpclient.ArtifactoryHttpClient) *PingService {
+	return &PingService{client: client}
 }
 
 func (ps *PingService) GetArtifactoryDetails() auth.ArtifactoryDetails {
@@ -27,8 +27,8 @@ func (ps *PingService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
 	ps.ArtDetails = rt
 }
 
-func (ps *PingService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
-	return ps.httpClient, nil
+func (ps *PingService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+	return ps.client, nil
 }
 
 func (ps *PingService) IsDryRun() bool {
@@ -40,7 +40,8 @@ func (ps *PingService) Ping() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, respBody, _, err := ps.httpClient.SendGet(url, true, ps.ArtDetails.CreateHttpClientDetails())
+	httpClientDetails := ps.ArtDetails.CreateHttpClientDetails()
+	resp, respBody, _, err := ps.client.SendGet(url, true, &httpClientDetails)
 	if err != nil {
 		return nil, err
 	}

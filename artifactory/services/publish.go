@@ -4,21 +4,22 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
+	"net/http"
 )
 
 type buildInfoPublishService struct {
-	client     *httpclient.HttpClient
+	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 	DryRun     bool
 }
 
-func NewBuildInfoPublishService(client *httpclient.HttpClient) *buildInfoPublishService {
+func NewBuildInfoPublishService(client *rthttpclient.ArtifactoryHttpClient) *buildInfoPublishService {
 	return &buildInfoPublishService{client: client}
 }
 
@@ -42,11 +43,11 @@ func (bip *buildInfoPublishService) PublishBuildInfo(build *buildinfo.BuildInfo)
 	httpClientsDetails := bip.getArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
 	log.Info("Deploying build info...")
-	resp, body, err := bip.client.SendPut(bip.ArtDetails.GetUrl()+"api/build/", content, httpClientsDetails)
+	resp, body, err := bip.client.SendPut(bip.ArtDetails.GetUrl()+"api/build/", content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != 204 {
+	if resp.StatusCode != http.StatusNoContent {
 		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 

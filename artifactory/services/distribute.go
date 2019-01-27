@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -15,12 +15,12 @@ import (
 )
 
 type DistributeService struct {
-	client     *httpclient.HttpClient
+	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 	DryRun     bool
 }
 
-func NewDistributionService(client *httpclient.HttpClient) *DistributeService {
+func NewDistributionService(client *rthttpclient.ArtifactoryHttpClient) *DistributeService {
 	return &DistributeService{client: client}
 }
 
@@ -68,7 +68,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, httpClientsDetails)
+	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
 	}

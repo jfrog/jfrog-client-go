@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/artifactory/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -60,7 +61,7 @@ func (builder *artifactoryServicesConfigBuilder) SetDryRun(dryRun bool) *artifac
 	return builder
 }
 
-func (builder *artifactoryServicesConfigBuilder) Build() (Config, error) {
+func (builder *artifactoryServicesConfigBuilder) Build() (utils.Config, error) {
 	c := &artifactoryServicesConfig{}
 	c.ArtifactoryDetails = builder.ArtifactoryDetails
 	c.threads = builder.threads

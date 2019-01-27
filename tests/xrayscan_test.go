@@ -3,7 +3,7 @@ package tests
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"strconv"
 	"strings"
 	"testing"
@@ -13,12 +13,13 @@ var testsXrayScanService *services.XrayScanService
 
 func TestNewXrayScanService(t *testing.T) {
 	xrayServerPort := xray.StartXrayMockServer()
-	client, err := httpclient.ClientBuilder().Build()
+	artDetails := getArtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&artDetails).Build()
 	if err != nil {
 		t.Error(err)
 	}
 	testsXrayScanService = services.NewXrayScanService(client)
-	testsXrayScanService.ArtDetails = getArtDetails()
+	testsXrayScanService.ArtDetails = artDetails
 	testsXrayScanService.ArtDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/")
 
 	// Run tests

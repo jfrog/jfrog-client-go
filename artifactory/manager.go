@@ -1,24 +1,26 @@
 package artifactory
 
 import (
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/utils"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 )
 
 type ArtifactoryServicesManager struct {
-	client *httpclient.HttpClient
-	config Config
+	client *rthttpclient.ArtifactoryHttpClient
+	config artifactoryutils.Config
 }
 
-func New(config Config) (*ArtifactoryServicesManager, error) {
+func New(artDetails *auth.ArtifactoryDetails, config artifactoryutils.Config) (*ArtifactoryServicesManager, error) {
 	var err error
 	manager := &ArtifactoryServicesManager{config: config}
-	manager.client, err = httpclient.ClientBuilder().SetCertificatesPath(config.GetCertifactesPath()).Build()
+	manager.client, err = rthttpclient.ArtifactoryClientBuilder().SetCertificatesPath(config.GetCertifactesPath()).SetArtDetails(artDetails).Build()
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +74,7 @@ func (sm *ArtifactoryServicesManager) DeleteFiles(resultItems []utils.ResultItem
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetArtDetails()
-	return deleteService.DeleteFiles(resultItems, deleteService)
+	return deleteService.DeleteFiles(resultItems)
 }
 
 func (sm *ArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCloser, error) {
@@ -153,7 +155,7 @@ func (sm *ArtifactoryServicesManager) PublishGoProject(params _go.GoParams) erro
 	return goService.PublishPackage(params)
 }
 
-func (sm *ArtifactoryServicesManager) setCommonServiceConfig(commonConfig ArtifactoryServicesSetter) {
+func (sm *ArtifactoryServicesManager) setCommonServiceConfig(commonConfig artifactoryutils.ArtifactoryServicesSetter) {
 	commonConfig.SetThread(sm.config.GetThreads())
 	commonConfig.SetArtDetails(sm.config.GetArtDetails())
 	commonConfig.SetDryRun(sm.config.IsDryRun())
@@ -165,6 +167,6 @@ func (sm *ArtifactoryServicesManager) Ping() ([]byte, error) {
 	return pingService.Ping()
 }
 
-func (sm *ArtifactoryServicesManager) GetConfig() Config {
+func (sm *ArtifactoryServicesManager) GetConfig() artifactoryutils.Config {
 	return sm.config
 }

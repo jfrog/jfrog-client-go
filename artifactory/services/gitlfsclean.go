@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"gopkg.in/src-d/go-git.v4"
@@ -19,12 +19,12 @@ import (
 )
 
 type GitLfsCleanService struct {
-	client     *httpclient.HttpClient
+	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 	DryRun     bool
 }
 
-func NewGitLfsCleanService(client *httpclient.HttpClient) *GitLfsCleanService {
+func NewGitLfsCleanService(client *rthttpclient.ArtifactoryHttpClient) *GitLfsCleanService {
 	return &GitLfsCleanService{client: client}
 }
 
@@ -40,7 +40,7 @@ func (glc *GitLfsCleanService) IsDryRun() bool {
 	return glc.DryRun
 }
 
-func (glc *GitLfsCleanService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+func (glc *GitLfsCleanService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
 	return glc.client, nil
 }
 

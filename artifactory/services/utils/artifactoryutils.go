@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -19,8 +20,8 @@ import (
 const ARTIFACTORY_SYMLINK = "symlink.dest"
 const SYMLINK_SHA1 = "symlink.destsha1"
 
-func UploadFile(localPath, url string, artifactoryDetails auth.ArtifactoryDetails, details *fileutils.FileDetails,
-	httpClientsDetails httputils.HttpClientDetails, client *httpclient.HttpClient, retries int) (*http.Response, []byte, error) {
+func UploadFile(localPath, url string, artifactoryDetails *auth.ArtifactoryDetails, details *fileutils.FileDetails,
+	httpClientsDetails httputils.HttpClientDetails, client *rthttpclient.ArtifactoryHttpClient, retries int) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
 		details, err = fileutils.GetFileDetails(localPath)
@@ -28,13 +29,12 @@ func UploadFile(localPath, url string, artifactoryDetails auth.ArtifactoryDetail
 	if err != nil {
 		return nil, nil, err
 	}
-	headers := make(map[string]string)
-	AddChecksumHeaders(headers, details)
-	AddAuthHeaders(headers, artifactoryDetails)
-	requestClientDetails := httpClientsDetails.Clone()
-	utils.MergeMaps(headers, requestClientDetails.Headers)
 
-	return client.UploadFile(localPath, url, *requestClientDetails, retries)
+	requestClientDetails := httpClientsDetails.Clone()
+	AddChecksumHeaders(requestClientDetails.Headers, details)
+	AddAuthHeaders(requestClientDetails.Headers, *artifactoryDetails)
+
+	return client.UploadFile(localPath, url, requestClientDetails, retries)
 }
 
 func AddChecksumHeaders(headers map[string]string, fileDetails *fileutils.FileDetails) {
@@ -370,7 +370,7 @@ func filterBuildAqlSearchResults(itemsToFilter *[]ResultItem, buildArtifactsSha 
 type CommonConf interface {
 	GetArtifactoryDetails() auth.ArtifactoryDetails
 	SetArtifactoryDetails(rt auth.ArtifactoryDetails)
-	GetJfrogHttpClient() (*httpclient.HttpClient, error)
+	GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error)
 	IsDryRun() bool
 }
 
@@ -391,10 +391,6 @@ func (flags *CommonConfImpl) IsDryRun() bool {
 	return flags.DryRun
 }
 
-func (flags *CommonConfImpl) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
+func (flags *CommonConfImpl) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+	return rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&flags.artDetails).Build()
 }

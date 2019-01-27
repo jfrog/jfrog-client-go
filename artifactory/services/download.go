@@ -5,7 +5,7 @@ import (
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/errors/httperrors"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/utils/httpclient"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -20,7 +20,7 @@ import (
 )
 
 type DownloadService struct {
-	client       *httpclient.HttpClient
+	client       *rthttpclient.ArtifactoryHttpClient
 	ArtDetails   auth.ArtifactoryDetails
 	DryRun       bool
 	Threads      int
@@ -29,7 +29,7 @@ type DownloadService struct {
 	Retries      int
 }
 
-func NewDownloadService(client *httpclient.HttpClient) *DownloadService {
+func NewDownloadService(client *rthttpclient.ArtifactoryHttpClient) *DownloadService {
 	return &DownloadService{client: client}
 }
 
@@ -45,7 +45,7 @@ func (ds *DownloadService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *DownloadService) GetJfrogHttpClient() (*httpclient.HttpClient, error) {
+func (ds *DownloadService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
 	return ds.client, nil
 }
 
@@ -223,11 +223,12 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	}
 	if bulkDownload {
 		var resp *http.Response
-		resp, err := ds.client.DownloadFile(downloadFileDetails, logMsgPrefix, httpClientsDetails, downloadParams.GetRetries(), downloadParams.IsExplode())
-		if resp != nil {
-			log.Debug(logMsgPrefix, "Artifactory response:", resp.Status)
+		resp, err := ds.client.DownloadFile(downloadFileDetails, logMsgPrefix, &httpClientsDetails, downloadParams.GetRetries(), downloadParams.IsExplode())
+		if err != nil {
+			return err
 		}
-		return err
+		log.Debug(logMsgPrefix, "Artifactory response:", resp.Status)
+		return errorutils.CheckResponseStatus(resp, http.StatusOK)
 	}
 
 	concurrentDownloadFlags := httpclient.ConcurrentDownloadFlags{
@@ -241,12 +242,24 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		Explode:       downloadParams.IsExplode(),
 		Retries:       downloadParams.GetRetries()}
 
-	return ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, httpClientsDetails)
+	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails)
+	if err != nil {
+		return err
+	}
+	return errorutils.CheckResponseStatus(resp, http.StatusPartialContent)
 }
 
 func (ds *DownloadService) isFileAcceptRange(downloadFileDetails *httpclient.DownloadFileDetails) (bool, error) {
 	httpClientsDetails := ds.ArtDetails.CreateHttpClientDetails()
-	return ds.client.IsAcceptRanges(downloadFileDetails.DownloadPath, httpClientsDetails)
+	isAcceptRange, resp, err := ds.client.IsAcceptRanges(downloadFileDetails.DownloadPath, &httpClientsDetails)
+	if err != nil {
+		return false, err
+	}
+	err = errorutils.CheckResponseStatus(resp, http.StatusOK)
+	if err != nil {
+		return false, err
+	}
+	return isAcceptRange, err
 }
 
 func shouldDownloadFile(localFilePath, md5, sha1 string) (bool, error) {
@@ -279,8 +292,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 			return errorutils.CheckError(errors.New("Symlink validation failed, target doesn't exist: " + symlinkArtifact))
 		}
 		file, err := os.Open(symlinkArtifact)
-		errorutils.CheckError(err)
-		if err != nil {
+		if err = errorutils.CheckError(err); err != nil {
 			return err
 		}
 		defer file.Close()
@@ -356,7 +368,10 @@ func (ds *DownloadService) createFileHandlerFunc(buildDependencies [][]utils.Fil
 			if downloadData.Dependency.Type == "folder" {
 				return createDir(localPath, localFileName, logMsgPrefix)
 			}
-			removeIfSymlink(filepath.Join(localPath, localFileName))
+			e = removeIfSymlink(filepath.Join(localPath, localFileName))
+			if e != nil {
+				return e
+			}
 			if downloadParams.IsSymlink() {
 				if isSymlink, e := createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix, downloadData, buildDependencies, threadId, downloadParams); isSymlink {
 					return e
@@ -364,14 +379,11 @@ func (ds *DownloadService) createFileHandlerFunc(buildDependencies [][]utils.Fil
 			}
 			dependency := createDependencyFileInfo(downloadData.Dependency, localPath, localFileName)
 			e = ds.downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix, downloadData, downloadParams)
-
-			if e == nil {
-				buildDependencies[threadId] = append(buildDependencies[threadId], dependency)
-			} else if !httperrors.IsResponseStatusError(e) {
-				// Ignore response status errors to continue downloading
+			if e != nil {
 				log.Error(logMsgPrefix, "Received an error: "+e.Error())
 				return e
 			}
+			buildDependencies[threadId] = append(buildDependencies[threadId], dependency)
 			return nil
 		}
 	}
