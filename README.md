@@ -12,8 +12,9 @@ The project is still relatively new, and its APIs may therefore change frequentl
 The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you may look at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
 
 ## Artifactory APIs
-### Creating Artifactory Details
- ```
+### Creating a Service Manager
+#### Creating Artifactory Details
+```
     rtDetails := auth.NewArtifactoryDetails()
     rtDetails.SetUrl("http://localhost:8081/artifactory")
     rtDetails.SetSshKeysPath("path/to/.ssh/")
@@ -21,9 +22,8 @@ The library can be used as a go-module, which should be added to your project's 
     rtDetails.SetUser("user")
     rtDetails.SetPassword("password")
     rtDetails.SetAccessToken("accesstoken")
- ```
-
-### Creating a Service Manager
+```
+#### Creating Service Config
 ```
     serviceConfig, err := artifactory.NewConfigBuilder().
         SetArtDetails(rtDetails).
@@ -35,8 +35,10 @@ The library can be used as a go-module, which should be added to your project's 
         SetDryRun(false).
         SetLogger(logger).
         Build()
-
-    rtManager, err := artifactory.New(serviceConfig)
+```
+#### Creating New Service Manager
+```
+    rtManager, err := artifactory.New(&rtDetails, serviceConfig)
 ```
 
 ### Using Services
