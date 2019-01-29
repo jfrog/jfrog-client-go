@@ -40,7 +40,7 @@ func (pwmp *publishWithMatrixParams) PublishPackage(params GoParams, client *rth
 		return err
 	}
 
-	resp, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, 0)
+	resp, _, err := client.UploadFile(params.GetZipPath(), url, params.GetModuleId(), &clientDetails, GoUploadRetries)
 	if err != nil {
 		return err
 	}

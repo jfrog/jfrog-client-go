@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
+	"github.com/jfrog/jfrog-client-go/bintray/services/utils"
 	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -155,7 +156,7 @@ func uploadFile(artifact clientutils.Artifact, url, logMsgPrefix string, bintray
 	if err != nil {
 		return false, err
 	}
-	resp, body, err := client.UploadFile(artifact.LocalPath, url, logMsgPrefix, httpClientsDetails, 0)
+	resp, body, err := client.UploadFile(artifact.LocalPath, url, logMsgPrefix, httpClientsDetails, utils.BintrayUploadRetries)
 	if err != nil {
 		return false, err
 	}
