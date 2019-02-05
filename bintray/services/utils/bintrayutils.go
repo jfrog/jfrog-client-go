@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+const (
+	BintrayDownloadRetries = 3
+	BintrayUploadRetries   = 3
+)
+
 func ReadBintrayMessage(resp []byte) string {
 	var response bintrayResponse
 	err := json.Unmarshal(resp, &response)

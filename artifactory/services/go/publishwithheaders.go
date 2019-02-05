@@ -33,7 +33,7 @@ func (pwh *publishWithHeader) PublishPackage(params GoParams, client *rthttpclie
 	if err != nil {
 		return err
 	}
-	resp, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, 0)
+	resp, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, GoUploadRetries)
 	if err != nil {
 		return err
 	}

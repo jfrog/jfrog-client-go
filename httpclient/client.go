@@ -36,13 +36,6 @@ func (jc *HttpClient) sendGetForFileDownload(url string, followRedirect bool, ht
 	return
 }
 
-func getFailureReason(resp *http.Response, err error) string {
-	if resp != nil {
-		return resp.Status
-	}
-	return err.Error()
-}
-
 func (jc *HttpClient) Stream(url string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, []byte, string, error) {
 	return jc.sendGetLeaveBodyOpen(url, true, httpClientsDetails)
 }
@@ -151,20 +144,22 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 		MaxRetries:      retries,
 		RetriesInterval: 0,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while uploading to %s", url),
+		LogMsgPrefix:    logMsgPrefix,
 		ExecutionHandler: func() (bool, error) {
-			resp, body, err = jc.doUploadFile(localPath, url, logMsgPrefix, httpClientsDetails)
+			resp, body, err = jc.doUploadFile(localPath, url, httpClientsDetails)
 			if err != nil {
 				return true, err
 			}
-			message := resp.Status
-			if body != nil {
-				message = fmt.Sprintf("%s %s", message, body)
+			// Response must not be nil
+			if resp == nil {
+				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from file upload", logMsgPrefix)))
 			}
 			// If response-code < 500, should not retry
-			if resp != nil && resp.StatusCode < 500 {
+			if resp.StatusCode < 500 {
 				return false, nil
 			}
 			// Perform retry
+			log.Warn(fmt.Sprintf("%sArtifactory response: %s", logMsgPrefix, resp.Status))
 			return true, nil
 		},
 	}
@@ -173,7 +168,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 	return
 }
 
-func (jc *HttpClient) doUploadFile(localPath, url, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, []byte, error) {
+func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, []byte, error) {
 	var file *os.File
 	var err error
 	if localPath != "" {
@@ -206,7 +201,6 @@ func (jc *HttpClient) doUploadFile(localPath, url, logMsgPrefix string, httpClie
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
-	log.Info(logMsgPrefix+":", resp.Status+"...")
 	body, err := ioutil.ReadAll(resp.Body)
 	if errorutils.CheckError(err) != nil {
 		return nil, nil, err
@@ -255,11 +249,16 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 			if err != nil {
 				return true, err
 			}
+			// Response must not be nil
+			if resp == nil {
+				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from file download", logMsgPrefix)))
+			}
 			// If response-code < 500, should not retry
-			if resp != nil && resp.StatusCode < 500 {
+			if resp.StatusCode < 500 {
 				return false, nil
 			}
 			// Perform retry
+			log.Warn(fmt.Sprintf("%sArtifactory response: %s", logMsgPrefix, resp.Status))
 			return true, nil
 		},
 	}
@@ -275,7 +274,6 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 		return
 	}
 
-	log.Info(logMsgPrefix+":", resp.Status+"...")
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return resp, redirectUrl, nil
@@ -582,11 +580,16 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 			if err != nil {
 				return true, err
 			}
+			// Response must not be nil
+			if resp == nil {
+				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%s[%s]: Received empty response from file download", logMsgPrefix, strconv.Itoa(currentSplit))))
+			}
 			// If response-code < 500, should not retry
-			if resp != nil && resp.StatusCode < 500 {
+			if resp.StatusCode < 500 {
 				return false, nil
 			}
 			// Perform retry
+			log.Warn(fmt.Sprintf("%s[%s]: Artifactory response: %s", logMsgPrefix, strconv.Itoa(currentSplit), resp.Status))
 			return true, nil
 		},
 	}
@@ -618,11 +621,11 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	}
 	defer resp.Body.Close()
 
-	log.Info(logMsgPrefix+"["+strconv.Itoa(currentSplit)+"]:", resp.Status+"...")
 	// Unexpected http response
 	if resp.StatusCode != http.StatusPartialContent {
 		return
 	}
+	log.Info(fmt.Sprintf("%s[%s]: %s...", logMsgPrefix, strconv.Itoa(currentSplit), resp.Status))
 
 	err = os.MkdirAll(tempLocalPath, 0777)
 	if errorutils.CheckError(err) != nil {
