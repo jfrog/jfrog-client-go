@@ -1,14 +1,15 @@
 package _go
 
 import (
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/version"
-	"net/http"
-	"net/url"
-	"strings"
 )
 
 func init() {
@@ -41,20 +42,26 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpcl
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 
 	addGoVersion(params, &zipUrl)
-	resp, _, err := client.UploadFile(params.GetZipPath(), zipUrl, "", &clientDetails, 0)
+	resp, _, err := client.UploadFileWithTimeoutRetry(params.GetZipPath(), zipUrl, "", &clientDetails, 2, 10)
 	if err != nil {
 		return err
 	}
-	err = errorutils.CheckResponseStatus(resp, http.StatusCreated)
+
+	// Forbiden error might be received by a reattempt when the previous attempt
+	// times out even though it has been processed by the server, and the user
+	// does not have ovewrite permission. That is why we are expecting that error
+	// status here and proceeding with the mod file upload
+	err = errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusForbidden)
 	if err != nil {
 		return err
 	}
+
 	err = createUrlPath(moduleId[0], params.GetVersion(), params.GetProps(), ".mod", &url)
 	if err != nil {
 		return err
 	}
 	addGoVersion(params, &url)
-	resp, _, err = client.UploadFile(params.GetModPath(), url, "", &clientDetails, 0)
+	resp, _, err = client.UploadFileWithTimeoutRetry(params.GetModPath(), url, "", &clientDetails, 2, 10)
 	if err != nil {
 		return err
 	}

@@ -3,15 +3,18 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net"
+	"net/http"
+	"strings"
+	"sync"
+
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"strings"
-	"sync"
 )
 
 func NewArtifactoryDetails() ArtifactoryDetails {
@@ -222,7 +225,29 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, body, _, err := client.SendGet(rt.GetUrl()+"api/system/version", true, rt.CreateHttpClientDetails())
+
+	var resp *http.Response
+	var body []byte
+
+	retryExecutor := utils.RetryExecutor{
+		MaxRetries:      2,
+		RetriesInterval: 10,
+		ErrorMessage:    fmt.Sprintf("Got timeout when resolving Artifactory version at %s", rt.GetUrl()),
+		ExecutionHandler: func() (bool, error) {
+			resp, body, _, err = client.SendGet(rt.GetUrl()+"api/system/version", true, rt.CreateHttpClientDetails())
+			if err != nil {
+				// Retry on timeout
+				if err, ok := err.(net.Error); ok && err.Timeout() {
+					return true, err
+				} else {
+					return false, err
+				}
+			}
+			return false, nil
+		},
+	}
+
+	err = retryExecutor.Execute()
 	if err != nil {
 		return "", err
 	}

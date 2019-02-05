@@ -2,11 +2,14 @@ package httpclient
 
 import (
 	"errors"
+	"io"
+	"net"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"io"
-	"net/http"
 )
 
 type ArtifactoryHttpClient struct {
@@ -158,6 +161,31 @@ func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string
 	}
 	err = errors.New("failed to obtain a new authentication token after one has expired; " + resp.Status)
 	return
+}
+
+func (rtc *ArtifactoryHttpClient) UploadFileWithTimeoutRetry(localPath, url, logMsgPrefix string,
+	httpClientsDetails *httputils.HttpClientDetails, retries int, interval int) (resp *http.Response, body []byte, err error) {
+
+	retryExecutor := utils.RetryExecutor{
+		MaxRetries:      retries,
+		RetriesInterval: interval,
+		ErrorMessage:    "Upload timed out",
+		ExecutionHandler: func() (bool, error) {
+			resp, body, err = rtc.UploadFile(localPath, url, logMsgPrefix, httpClientsDetails, 0)
+			if err != nil {
+				// Retry on timeout
+				if err, ok := err.(net.Error); ok && err.Timeout() {
+					return true, err
+				} else {
+					return false, err
+				}
+			}
+			return false, nil
+		},
+	}
+
+	err = retryExecutor.Execute()
+	return resp, body, err
 }
 
 func (rtc *ArtifactoryHttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails *httputils.HttpClientDetails) (ioReaderCloser io.ReadCloser, resp *http.Response, err error) {
