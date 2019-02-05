@@ -150,8 +150,12 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 			if err != nil {
 				return true, err
 			}
+			// Response must not be nil
+			if resp == nil {
+				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from file upload", logMsgPrefix)))
+			}
 			// If response-code < 500, should not retry
-			if resp != nil && resp.StatusCode < 500 {
+			if resp.StatusCode < 500 {
 				return false, nil
 			}
 			// Perform retry
@@ -245,8 +249,10 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 			if err != nil {
 				return true, err
 			}
-
-			// Since err is not nil, resp should never be nil here.
+			// Response must not be nil
+			if resp == nil {
+				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from file download", logMsgPrefix)))
+			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {
 				return false, nil
@@ -574,7 +580,10 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 			if err != nil {
 				return true, err
 			}
-			// Since err is not nil, resp should never be nil here.
+			// Response must not be nil
+			if resp == nil {
+				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%s[%s]: Received empty response from file download", logMsgPrefix, strconv.Itoa(currentSplit))))
+			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {
 				return false, nil
@@ -616,7 +625,7 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	if resp.StatusCode != http.StatusPartialContent {
 		return
 	}
-	log.Info(logMsgPrefix+"["+strconv.Itoa(currentSplit)+"]:", resp.Status+"...")
+	log.Info(fmt.Sprintf("%s[%s]: %s...", logMsgPrefix, strconv.Itoa(currentSplit), resp.Status))
 
 	err = os.MkdirAll(tempLocalPath, 0777)
 	if errorutils.CheckError(err) != nil {
