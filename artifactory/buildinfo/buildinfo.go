@@ -91,6 +91,7 @@ type BuildInfo struct {
 	Properties           Env      `json:"properties,omitempty"`
 	ArtifactoryPrincipal string   `json:"artifactoryPrincipal,omitempty"`
 	BuildUrl             string   `json:"url,omitempty"`
+	Issues               *Issues  `json:"issues,omitempty"`
 	*Vcs
 }
 
@@ -117,6 +118,25 @@ type Dependency struct {
 	*Checksum
 }
 
+type Issues struct {
+	Tracker                *Tracker        `json:"tracker,omitempty"`
+	AggregateBuildIssues   bool            `json:"aggregateBuildIssues,omitempty"`
+	AggregationBuildStatus string          `json:"aggregationBuildStatus,omitempty"`
+	AffectedIssues         []AffectedIssue `json:"affectedIssues,omitempty"`
+}
+
+type Tracker struct {
+	Name    string `json:"name,omitempty"`
+	Version string `json:"version,omitempty"`
+}
+
+type AffectedIssue struct {
+	Key        string `json:"key,omitempty"`
+	Url        string `json:"url,omitempty"`
+	Summary    string `json:"summary,omitempty"`
+	Aggregated bool   `json:"aggregated,omitempty"`
+}
+
 type Checksum struct {
 	Sha1 string `json:"sha1,omitempty"`
 	Md5  string `json:"md5,omitempty"`
@@ -136,8 +156,9 @@ type Partial struct {
 	Dependencies []Dependency `json:"Dependencies,omitempty"`
 	Env          Env          `json:"Env,omitempty"`
 	Timestamp    int64        `json:"Timestamp,omitempty"`
-	*Vcs
 	ModuleId     string       `json:"ModuleId,omitempty"`
+	Issues       *Issues      `json:"Issues,omitempty"`
+	*Vcs
 }
 
 func (partials Partials) Len() int {

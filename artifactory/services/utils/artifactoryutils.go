@@ -17,8 +17,12 @@ import (
 	"sync"
 )
 
-const ARTIFACTORY_SYMLINK = "symlink.dest"
-const SYMLINK_SHA1 = "symlink.destsha1"
+const (
+	ARTIFACTORY_SYMLINK = "symlink.dest"
+	SYMLINK_SHA1        = "symlink.destsha1"
+	Latest              = "LATEST"
+	LastRelease         = "LAST_RELEASE"
+)
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ArtifactoryDetails, details *fileutils.FileDetails,
 	httpClientsDetails httputils.HttpClientDetails, client *rthttpclient.ArtifactoryHttpClient, retries int) (*http.Response, []byte, error) {
@@ -105,13 +109,14 @@ func IsSubPath(paths []string, index int, separator string) bool {
 // If no buildNumber provided LATEST wil be downloaded.
 // If buildName or buildNumber contains "/" (slash) it should be escaped by "\" (backslash).
 // Result examples of parsing: "aaa/123" > "aaa"-"123", "aaa" > "aaa"-"LATEST", "aaa\\/aaa" > "aaa/aaa"-"LATEST",  "aaa/12\\/3" > "aaa"-"12/3".
-func getBuildNameAndNumber(buildIdentifier string, flags CommonConf) (string, string, error) {
-	const Latest = "LATEST"
-	const LastRelease = "LAST_RELEASE"
+func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier string, flags CommonConf) (string, string, error) {
 	buildName, buildNumber := parseBuildNameAndNumber(buildIdentifier)
+	return GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, flags)
+}
 
+func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
 	if buildNumber == Latest || buildNumber == LastRelease {
-		return getBuildNumberFromArtifactory(buildName, buildNumber, flags)
+		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, flags)
 	}
 	return buildName, buildNumber, nil
 }
@@ -173,7 +178,7 @@ type build struct {
 	BuildNumber string `json:"buildNumber"`
 }
 
-func getBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
+func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
 	restUrl := flags.GetArtifactoryDetails().GetUrl() + "api/build/patternArtifacts"
 	body, err := createBodyForLatestBuildRequest(buildName, buildNumber)
 	if err != nil {
@@ -221,7 +226,7 @@ func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, itemsToFil
 	var aqlSearchErr error
 	var buildArtifactsSha1 map[string]bool
 	var wg sync.WaitGroup
-	buildName, buildNumber, err := getBuildNameAndNumber(specFile.Build, flags)
+	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
 	if err != nil {
 		return nil, err
 	}

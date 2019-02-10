@@ -1,6 +1,8 @@
 package fileutils
 
 import (
+	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 )
@@ -24,5 +26,114 @@ func TestIsSsh(t *testing.T) {
 				t.Error("Expected '"+strconv.FormatBool(test.expected)+"' Got: '"+strconv.FormatBool(!test.expected)+"' For URL:", test.url)
 			}
 		})
+	}
+}
+
+func TestGetFileOrDirPathFile(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.Chdir(wd)
+
+	// CD into a directory with a go.mod file.
+	projectRoot := filepath.Join("testdata", "project")
+	err = os.Chdir(projectRoot)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Make projectRoot an absolute path.
+	projectRoot, err = os.Getwd()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Get the project root.
+	root, err := GetFileOrDirPath("go.mod", File)
+	if err != nil {
+		t.Error(err)
+	}
+	if root != projectRoot {
+		t.Error("Expecting", projectRoot, "got:", root)
+	}
+
+	// CD back to the original directory.
+	if err := os.Chdir(wd); err != nil {
+		t.Error(err)
+	}
+
+	// CD into a sub directory in the same project, and expect to get the same project root.
+	os.Chdir(wd)
+	projectSubDirectory := filepath.Join("testdata", "project", "dir")
+	err = os.Chdir(projectSubDirectory)
+	if err != nil {
+		t.Error(err)
+	}
+	root, err = GetFileOrDirPath("go.mod", File)
+	if err != nil {
+		t.Error(err)
+	}
+	if root != projectRoot {
+		t.Error("Expecting", projectRoot, "got:", root)
+	}
+
+	// CD back to the original directory.
+	if err := os.Chdir(wd); err != nil {
+		t.Error(err)
+	}
+
+	// Now CD into a directory outside the project, and expect to get a different project root.
+	noProjectRoot := filepath.Join("testdata", "noproject")
+	err = os.Chdir(noProjectRoot)
+	if err != nil {
+		t.Error(err)
+	}
+	root, err = GetFileOrDirPath("go.mod", File)
+	if err != nil {
+		t.Error(err)
+	}
+	if root == projectRoot {
+		t.Error("Expecting a different value than", root)
+	}
+}
+
+func TestGetFileOrDirPathFolder(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.Chdir(wd)
+
+	// Create path to directory to find.
+	dirPath := filepath.Join("testdata")
+	err = os.Chdir(dirPath)
+	if err != nil {
+		t.Error(err)
+	}
+	// Get absolute path.
+	dirPath, err = os.Getwd()
+	if err != nil {
+		t.Error(err)
+	}
+	// CD back to the original directory.
+	if err := os.Chdir(wd); err != nil {
+		t.Error(err)
+	}
+
+	// Go to starting dir to search from.
+	searchFromDir := filepath.Join("testdata", "project", "dir")
+	err = os.Chdir(searchFromDir)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Get the directory path.
+	root, err := GetFileOrDirPath("noproject", Folder)
+	if err != nil {
+		t.Error(err)
+	}
+	if root != dirPath {
+		t.Error("Expecting", dirPath, "got:", root)
 	}
 }
