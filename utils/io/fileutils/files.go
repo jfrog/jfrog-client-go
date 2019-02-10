@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
@@ -16,7 +17,11 @@ import (
 	"strings"
 )
 
-const SYMLINK_FILE_CONTENT = ""
+const (
+	SYMLINK_FILE_CONTENT                  = ""
+	File                 TraverseItemType = "file"
+	Folder               TraverseItemType = "dir"
+)
 
 var tempDirPath string
 
@@ -400,3 +405,62 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 	}
 	return err
 }
+
+// Returns the path to the directory in which itemToFind is located.
+// Traversing through directories from current work-dir to root.
+// traverseType determines whether looking for a file or dir.
+func GetFileOrDirPath(itemToFInd string, traverseItemType TraverseItemType) (string, error) {
+	// Create a map to store all paths visited, to avoid running in circles.
+	visitedPaths := make(map[string]bool)
+	// Get the current directory.
+	wd, err := os.Getwd()
+	if err != nil {
+		return wd, errorutils.CheckError(err)
+	}
+	defer os.Chdir(wd)
+
+	// Get the OS root.
+	osRoot := os.Getenv("SYSTEMDRIVE")
+	if osRoot != "" {
+		// If this is a Windows machine:
+		osRoot += "\\"
+	} else {
+		// Unix:
+		osRoot = "/"
+	}
+
+	// Check if the current directory includes itemToFind. If not, check the parent directory
+	// and so on.
+	exists := false
+	for {
+		// If itemToFind is found in the current directory, return the path.
+		if traverseItemType == File {
+			exists, err = IsFileExists(filepath.Join(wd, itemToFInd), false)
+		} else {
+			exists, err = IsDirExists(filepath.Join(wd, itemToFInd), false)
+		}
+		if err != nil || exists {
+			return wd, err
+		}
+
+		// If this the OS root, we can stop.
+		if wd == osRoot {
+			break
+		}
+
+		// Save this path.
+		visitedPaths[wd] = true
+		// CD to the parent directory.
+		wd = filepath.Dir(wd)
+		os.Chdir(wd)
+
+		// If we already visited this directory, it means that there's a loop and we can stop.
+		if visitedPaths[wd] {
+			return "", errorutils.CheckError(errors.New(fmt.Sprintf("Could not find %s.", itemToFInd)))
+		}
+	}
+
+	return "", errorutils.CheckError(errors.New(fmt.Sprintf("Could not find %s.", itemToFInd)))
+}
+
+type TraverseItemType string

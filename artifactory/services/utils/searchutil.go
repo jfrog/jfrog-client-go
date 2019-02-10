@@ -26,7 +26,7 @@ const (
 
 // Use this function when searching by build without pattern or aql
 func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) ([]ResultItem, error) {
-	buildName, buildNumber, err := getBuildNameAndNumber(specFile.Build, flags)
+	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
 	if err != nil {
 		return nil, err
 	}

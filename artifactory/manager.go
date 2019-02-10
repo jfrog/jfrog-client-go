@@ -169,3 +169,9 @@ func (sm *ArtifactoryServicesManager) Ping() ([]byte, error) {
 func (sm *ArtifactoryServicesManager) GetConfig() Config {
 	return sm.config
 }
+
+func (sm *ArtifactoryServicesManager) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.BuildInfo, error) {
+	buildInfoService := services.NewBuildInfoService(sm.client)
+	buildInfoService.ArtDetails = sm.config.GetArtDetails()
+	return buildInfoService.GetBuildInfo(params)
+}
