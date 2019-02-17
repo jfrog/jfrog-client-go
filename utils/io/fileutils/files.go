@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	SYMLINK_FILE_CONTENT                  = ""
-	File                 TraverseItemType = "file"
-	Folder               TraverseItemType = "dir"
+	SYMLINK_FILE_CONTENT          = ""
+	File                 ItemType = "file"
+	Dir                  ItemType = "dir"
 )
 
 var tempDirPath string
@@ -408,8 +408,8 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 
 // Returns the path to the directory in which itemToFind is located.
 // Traversing through directories from current work-dir to root.
-// traverseType determines whether looking for a file or dir.
-func GetFileOrDirPath(itemToFInd string, traverseItemType TraverseItemType) (string, error) {
+// itemType determines whether looking for a file or dir.
+func FindUpstream(itemToFInd string, itemType ItemType) (string, error) {
 	// Create a map to store all paths visited, to avoid running in circles.
 	visitedPaths := make(map[string]bool)
 	// Get the current directory.
@@ -434,7 +434,7 @@ func GetFileOrDirPath(itemToFInd string, traverseItemType TraverseItemType) (str
 	exists := false
 	for {
 		// If itemToFind is found in the current directory, return the path.
-		if traverseItemType == File {
+		if itemType == File {
 			exists, err = IsFileExists(filepath.Join(wd, itemToFInd), false)
 		} else {
 			exists, err = IsDirExists(filepath.Join(wd, itemToFInd), false)
@@ -463,4 +463,4 @@ func GetFileOrDirPath(itemToFInd string, traverseItemType TraverseItemType) (str
 	return "", errorutils.CheckError(errors.New(fmt.Sprintf("Could not find %s.", itemToFInd)))
 }
 
-type TraverseItemType string
+type ItemType string
