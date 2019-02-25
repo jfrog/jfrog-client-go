@@ -69,7 +69,7 @@ func (jc *HttpClient) SendPut(url string, content []byte, httpClientsDetails htt
 	return
 }
 
-func (jc *HttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	var req *http.Request
 	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
 	if content != nil {
