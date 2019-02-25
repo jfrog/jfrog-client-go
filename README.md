@@ -155,6 +155,15 @@ The library can be used as a go-module, which should be added to your project's 
     rtManager.PublishBuildInfo(buildInfo)
 ```
 
+#### Fetching Build Info from Artifactory
+```
+    buildInfoParams := services.NewBuildInfoParams{}
+    buildInfoParams.BuildName = "buildName"
+    buildInfoParams.BuildNumber = "LATEST"
+
+    rtManager.GetBuildInfo(buildInfoParams)
+```
+
 #### Promoting Published Builds in Artifactory
 ```
     params := services.NewPromotionParams()

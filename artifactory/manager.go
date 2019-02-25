@@ -30,10 +30,10 @@ func New(artDetails *auth.ArtifactoryDetails, config Config) (*ArtifactoryServic
 }
 
 func (sm *ArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo) error {
-	publishBuildInfoService := services.NewBuildInfoPublishService(sm.client)
-	publishBuildInfoService.DryRun = sm.config.IsDryRun()
-	publishBuildInfoService.ArtDetails = sm.config.GetArtDetails()
-	return publishBuildInfoService.PublishBuildInfo(build)
+	buildInfoService := services.NewBuildInfoService(sm.client)
+	buildInfoService.DryRun = sm.config.IsDryRun()
+	buildInfoService.ArtDetails = sm.config.GetArtDetails()
+	return buildInfoService.PublishBuildInfo(build)
 }
 
 func (sm *ArtifactoryServicesManager) DistributeBuild(params services.BuildDistributionParams) error {

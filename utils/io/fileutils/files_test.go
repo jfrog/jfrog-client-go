@@ -50,7 +50,7 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	}
 
 	// Get the project root.
-	root, err := GetFileOrDirPath("go.mod", File)
+	root, err := FindUpstream("go.mod", File)
 	if err != nil {
 		t.Error(err)
 	}
@@ -70,7 +70,7 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	root, err = GetFileOrDirPath("go.mod", File)
+	root, err = FindUpstream("go.mod", File)
 	if err != nil {
 		t.Error(err)
 	}
@@ -89,7 +89,7 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	root, err = GetFileOrDirPath("go.mod", File)
+	root, err = FindUpstream("go.mod", File)
 	if err != nil {
 		t.Error(err)
 	}
@@ -129,7 +129,7 @@ func TestGetFileOrDirPathFolder(t *testing.T) {
 	}
 
 	// Get the directory path.
-	root, err := GetFileOrDirPath("noproject", Folder)
+	root, err := FindUpstream("noproject", Dir)
 	if err != nil {
 		t.Error(err)
 	}
