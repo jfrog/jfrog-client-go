@@ -71,6 +71,7 @@ func (jc *HttpClient) SendPut(url string, content []byte, httpClientsDetails htt
 
 func (jc *HttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	var req *http.Request
+	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
 	if content != nil {
 		req, err = http.NewRequest(method, url, bytes.NewBuffer(content))
 	} else {
