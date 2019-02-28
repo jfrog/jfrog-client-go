@@ -23,6 +23,7 @@ type artifactoryServicesConfigBuilder struct {
 	minChecksumDeploy int64
 	isDryRun          bool
 	logger            log.Log
+	skipCertsVerify   bool
 }
 
 func (builder *artifactoryServicesConfigBuilder) SetArtDetails(artDetails auth.ArtifactoryDetails) *artifactoryServicesConfigBuilder {
@@ -60,6 +61,11 @@ func (builder *artifactoryServicesConfigBuilder) SetDryRun(dryRun bool) *artifac
 	return builder
 }
 
+func (builder *artifactoryServicesConfigBuilder) SetSkipCertsVerify(skipCertsVerify bool) *artifactoryServicesConfigBuilder {
+	builder.skipCertsVerify = skipCertsVerify
+	return builder
+}
+
 func (builder *artifactoryServicesConfigBuilder) Build() (Config, error) {
 	c := &artifactoryServicesConfig{}
 	c.ArtifactoryDetails = builder.ArtifactoryDetails
@@ -70,6 +76,7 @@ func (builder *artifactoryServicesConfigBuilder) Build() (Config, error) {
 	c.logger = builder.logger
 	c.certifactesPath = builder.certifactesPath
 	c.dryRun = builder.isDryRun
+	c.skipCertsVerify = builder.skipCertsVerify
 	return c, nil
 }
 
