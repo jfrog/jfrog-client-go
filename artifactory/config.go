@@ -17,7 +17,7 @@ type Config interface {
 	IsDryRun() bool
 	GetArtDetails() auth.ArtifactoryDetails
 	GetLogger() log.Log
-	IsSkipCertsVerify() bool
+	IsInsecureTls() bool
 }
 
 type ArtifactoryServicesSetter interface {
@@ -35,7 +35,7 @@ type artifactoryServicesConfig struct {
 	splitCount        int
 	minChecksumDeploy int64
 	logger            log.Log
-	skipCertsVerify   bool
+	insecureTls       bool
 }
 
 func (config *artifactoryServicesConfig) GetUrl() string {
@@ -81,6 +81,6 @@ func (config *artifactoryServicesConfig) GetLogger() log.Log {
 	return config.logger
 }
 
-func (config *artifactoryServicesConfig) IsSkipCertsVerify() bool {
-	return config.skipCertsVerify
+func (config *artifactoryServicesConfig) IsInsecureTls() bool {
+	return config.insecureTls
 }

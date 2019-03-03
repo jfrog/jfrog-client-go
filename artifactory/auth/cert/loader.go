@@ -30,7 +30,7 @@ func loadCertificates(caCertPool *x509.CertPool, certificatesDirPath string) err
 	return nil
 }
 
-func GetTransportWithLoadedCert(certificatesDirPath string, skipCertsVerify bool, transport *http.Transport) (*http.Transport, error) {
+func GetTransportWithLoadedCert(certificatesDirPath string, insecureTls bool, transport *http.Transport) (*http.Transport, error) {
 	// Remove once SystemCertPool supports windows
 	caCertPool, err := loadSystemRoots()
 	err = errorutils.CheckError(err)
@@ -45,7 +45,7 @@ func GetTransportWithLoadedCert(certificatesDirPath string, skipCertsVerify bool
 	tlsConfig := &tls.Config{
 		RootCAs:            caCertPool,
 		ClientSessionCache: tls.NewLRUClientSessionCache(1),
-		InsecureSkipVerify: skipCertsVerify,
+		InsecureSkipVerify: insecureTls,
 	}
 	tlsConfig.BuildNameToCertificate()
 	transport.TLSClientConfig = tlsConfig

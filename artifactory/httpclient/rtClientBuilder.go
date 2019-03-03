@@ -11,7 +11,7 @@ func ArtifactoryClientBuilder() *artifactoryHttpClientBuilder {
 
 type artifactoryHttpClientBuilder struct {
 	certificatesDirPath string
-	skipCertsVerify     bool
+	insecureTls         bool
 	ArtDetails          *auth.ArtifactoryDetails
 }
 
@@ -20,8 +20,8 @@ func (builder *artifactoryHttpClientBuilder) SetCertificatesPath(certificatesPat
 	return builder
 }
 
-func (builder *artifactoryHttpClientBuilder) SetSkipCertsVerify(skipCertsVerify bool) *artifactoryHttpClientBuilder {
-	builder.skipCertsVerify = skipCertsVerify
+func (builder *artifactoryHttpClientBuilder) SetInsecureTls(insecureTls bool) *artifactoryHttpClientBuilder {
+	builder.insecureTls = insecureTls
 	return builder
 }
 
@@ -34,12 +34,12 @@ func (builder *artifactoryHttpClientBuilder) Build() (rtHttpClient *ArtifactoryH
 	rtHttpClient = &ArtifactoryHttpClient{ArtDetails: builder.ArtDetails}
 	if builder.certificatesDirPath == "" {
 		rtHttpClient.httpClient, err = httpclient.ClientBuilder().
-			SetSkipCertsVerify(builder.skipCertsVerify).
+			SetInsecureTls(builder.insecureTls).
 			Build()
 	} else {
 		rtHttpClient.httpClient, err = httpclient.ClientBuilder().
 			SetCertificatesPath(builder.certificatesDirPath).
-			SetSkipCertsVerify(builder.skipCertsVerify).
+			SetInsecureTls(builder.insecureTls).
 			Build()
 	}
 	return

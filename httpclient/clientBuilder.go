@@ -16,7 +16,7 @@ func ClientBuilder() *httpClientBuilder {
 
 type httpClientBuilder struct {
 	certificatesDirPath string
-	skipCertsVerify     bool
+	insecureTls         bool
 }
 
 func (builder *httpClientBuilder) SetCertificatesPath(certificatesPath string) *httpClientBuilder {
@@ -24,19 +24,19 @@ func (builder *httpClientBuilder) SetCertificatesPath(certificatesPath string) *
 	return builder
 }
 
-func (builder *httpClientBuilder) SetSkipCertsVerify(skipCertsVerify bool) *httpClientBuilder {
-	builder.skipCertsVerify = skipCertsVerify
+func (builder *httpClientBuilder) SetInsecureTls(insecureTls bool) *httpClientBuilder {
+	builder.insecureTls = insecureTls
 	return builder
 }
 
 func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	if builder.certificatesDirPath == "" {
 		transport := createDefaultHttpTransport()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: builder.skipCertsVerify}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: builder.insecureTls}
 		return &HttpClient{Client: &http.Client{Transport: transport}}, nil
 	}
 
-	transport, err := cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.skipCertsVerify, createDefaultHttpTransport())
+	transport, err := cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, createDefaultHttpTransport())
 	if err != nil {
 		return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
 	}

@@ -21,7 +21,7 @@ func New(artDetails *auth.ArtifactoryDetails, config Config) (*ArtifactoryServic
 	manager := &ArtifactoryServicesManager{config: config}
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
 		SetCertificatesPath(config.GetCertifactesPath()).
-		SetSkipCertsVerify(config.IsSkipCertsVerify()).
+		SetInsecureTls(config.IsInsecureTls()).
 		SetArtDetails(artDetails).
 		Build()
 	if err != nil {
