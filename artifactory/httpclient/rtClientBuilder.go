@@ -32,15 +32,9 @@ func (builder *artifactoryHttpClientBuilder) SetArtDetails(rtDetails *auth.Artif
 
 func (builder *artifactoryHttpClientBuilder) Build() (rtHttpClient *ArtifactoryHttpClient, err error) {
 	rtHttpClient = &ArtifactoryHttpClient{ArtDetails: builder.ArtDetails}
-	if builder.certificatesDirPath == "" {
-		rtHttpClient.httpClient, err = httpclient.ClientBuilder().
-			SetInsecureTls(builder.insecureTls).
-			Build()
-	} else {
-		rtHttpClient.httpClient, err = httpclient.ClientBuilder().
-			SetCertificatesPath(builder.certificatesDirPath).
-			SetInsecureTls(builder.insecureTls).
-			Build()
-	}
+	rtHttpClient.httpClient, err = httpclient.ClientBuilder().
+		SetCertificatesPath(builder.certificatesDirPath).
+		SetInsecureTls(builder.insecureTls).
+		Build()
 	return
 }
