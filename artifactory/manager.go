@@ -83,14 +83,14 @@ func (sm *ArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCl
 	return readFileService.ReadRemoteFile(readPath)
 }
 
-func (sm *ArtifactoryServicesManager) DownloadFiles(params services.DownloadParams) ([]utils.FileInfo, int, error) {
+func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) ([]utils.FileInfo, int, error) {
 	downloadService := services.NewDownloadService(sm.client)
 	downloadService.DryRun = sm.config.IsDryRun()
 	downloadService.ArtDetails = sm.config.GetArtDetails()
 	downloadService.Threads = sm.config.GetThreads()
 	downloadService.SplitCount = sm.config.GetSplitCount()
 	downloadService.MinSplitSize = sm.config.GetMinSplitSize()
-	return downloadService.DownloadFiles(params)
+	return downloadService.DownloadFiles(params...)
 }
 
 func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) ([]utils.ResultItem, error) {
