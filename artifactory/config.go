@@ -17,6 +17,7 @@ type Config interface {
 	IsDryRun() bool
 	GetArtDetails() auth.ArtifactoryDetails
 	GetLogger() log.Log
+	IsInsecureTls() bool
 }
 
 type ArtifactoryServicesSetter interface {
@@ -34,6 +35,7 @@ type artifactoryServicesConfig struct {
 	splitCount        int
 	minChecksumDeploy int64
 	logger            log.Log
+	insecureTls       bool
 }
 
 func (config *artifactoryServicesConfig) GetUrl() string {
@@ -77,4 +79,8 @@ func (config *artifactoryServicesConfig) GetArtDetails() auth.ArtifactoryDetails
 
 func (config *artifactoryServicesConfig) GetLogger() log.Log {
 	return config.logger
+}
+
+func (config *artifactoryServicesConfig) IsInsecureTls() bool {
+	return config.insecureTls
 }

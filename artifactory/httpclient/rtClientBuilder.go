@@ -11,11 +11,17 @@ func ArtifactoryClientBuilder() *artifactoryHttpClientBuilder {
 
 type artifactoryHttpClientBuilder struct {
 	certificatesDirPath string
+	insecureTls         bool
 	ArtDetails          *auth.ArtifactoryDetails
 }
 
 func (builder *artifactoryHttpClientBuilder) SetCertificatesPath(certificatesPath string) *artifactoryHttpClientBuilder {
 	builder.certificatesDirPath = certificatesPath
+	return builder
+}
+
+func (builder *artifactoryHttpClientBuilder) SetInsecureTls(insecureTls bool) *artifactoryHttpClientBuilder {
+	builder.insecureTls = insecureTls
 	return builder
 }
 
@@ -26,10 +32,9 @@ func (builder *artifactoryHttpClientBuilder) SetArtDetails(rtDetails *auth.Artif
 
 func (builder *artifactoryHttpClientBuilder) Build() (rtHttpClient *ArtifactoryHttpClient, err error) {
 	rtHttpClient = &ArtifactoryHttpClient{ArtDetails: builder.ArtDetails}
-	if builder.certificatesDirPath == "" {
-		rtHttpClient.httpClient, err = httpclient.ClientBuilder().Build()
-	} else {
-		rtHttpClient.httpClient, err = httpclient.ClientBuilder().SetCertificatesPath(builder.certificatesDirPath).Build()
-	}
+	rtHttpClient.httpClient, err = httpclient.ClientBuilder().
+		SetCertificatesPath(builder.certificatesDirPath).
+		SetInsecureTls(builder.insecureTls).
+		Build()
 	return
 }

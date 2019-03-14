@@ -19,7 +19,11 @@ type ArtifactoryServicesManager struct {
 func New(artDetails *auth.ArtifactoryDetails, config Config) (*ArtifactoryServicesManager, error) {
 	var err error
 	manager := &ArtifactoryServicesManager{config: config}
-	manager.client, err = rthttpclient.ArtifactoryClientBuilder().SetCertificatesPath(config.GetCertifactesPath()).SetArtDetails(artDetails).Build()
+	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
+		SetCertificatesPath(config.GetCertifactesPath()).
+		SetInsecureTls(config.IsInsecureTls()).
+		SetArtDetails(artDetails).
+		Build()
 	if err != nil {
 		return nil, err
 	}
