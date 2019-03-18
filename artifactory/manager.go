@@ -130,12 +130,11 @@ func (sm *ArtifactoryServicesManager) DeleteProps(params services.PropsParams) (
 	return setPropsService.DeleteProps(params)
 }
 
-func (sm *ArtifactoryServicesManager) UploadFiles(params services.UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
+func (sm *ArtifactoryServicesManager) UploadFiles(params ...services.UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
 	uploadService := services.NewUploadService(sm.client)
 	sm.setCommonServiceConfig(uploadService)
 	uploadService.MinChecksumDeploy = sm.config.GetMinChecksumDeploy()
-	uploadService.Retries = params.GetRetries()
-	return uploadService.UploadFiles(params)
+	return uploadService.UploadFiles(params...)
 }
 
 func (sm *ArtifactoryServicesManager) Copy(params services.MoveCopyParams) (successCount, failedCount int, err error) {
