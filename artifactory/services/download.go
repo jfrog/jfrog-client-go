@@ -142,11 +142,11 @@ func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, produ
 			Flat:         flat,
 		}
 		if v.Type != "folder" {
-			// Add a task, task is a function of type TaskFunc which later on will be executed by other go routine, the communication is done using channels.
+			// Add a task. A task is a function of type TaskFunc which later on will be executed by other go routine, the communication is done using channels.
 			// The second argument is an error handling func in case the taskFunc return an error.
 			tasksCount++
 			producer.AddTaskWithError(fileHandler(tempData), errorsQueue.AddError)
-			// We don't want to create directories which are created explicitly by download files when the --include-dirs flag is used.
+			// We don't want to create directories which are created explicitly by download files when ArtifactoryCommonParams.IncludeDirs is used.
 			alreadyCreatedDirs[v.Path] = true
 		} else {
 			directoriesData, directoriesDataKeys = collectDirPathsToCreate(v, directoriesData, tempData, directoriesDataKeys)
