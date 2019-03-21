@@ -26,7 +26,6 @@ type UploadService struct {
 	DryRun            bool
 	Threads           int
 	MinChecksumDeploy int64
-	Retries           int
 }
 
 func NewUploadService(client *rthttpclient.ArtifactoryHttpClient) *UploadService {
@@ -53,39 +52,50 @@ func (us *UploadService) setMinChecksumDeploy(minChecksumDeploy int64) {
 	us.MinChecksumDeploy = minChecksumDeploy
 }
 
-func (us *UploadService) UploadFiles(uploadParams UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
-	uploadSummery := uploadResult{
+func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
+	// Uploading threads are using this struct to report upload results.
+	uploadSummary := uploadResult{
 		UploadCount: make([]int, us.Threads),
 		TotalCount:  make([]int, us.Threads),
 		FileInfo:    make([][]utils.FileInfo, us.Threads),
 	}
-	artifactHandlerFunc := us.createArtifactHandlerFunc(&uploadSummery, uploadParams)
+
 	producerConsumer := parallel.NewBounedRunner(us.Threads, false)
 	errorsQueue := utils.NewErrorsQueue(1)
-	us.prepareUploadTasks(producerConsumer, uploadParams, artifactHandlerFunc, errorsQueue)
-	return us.performUploadTasks(producerConsumer, &uploadSummery, errorsQueue)
+	us.prepareUploadTasks(producerConsumer, errorsQueue, uploadSummary, uploadParams...)
+	return us.performUploadTasks(producerConsumer, &uploadSummary, errorsQueue)
 }
 
-func (us *UploadService) prepareUploadTasks(producer parallel.Runner, uploadParams UploadParams, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue) {
+func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *utils.ErrorsQueue, uploadSummary uploadResult, uploadParamsSlice ...UploadParams) {
 	go func() {
-		collectFilesForUpload(uploadParams, producer, artifactHandlerFunc, errorsQueue)
+		defer producer.Done()
+		// Iterate over file-spec groups and produce upload tasks.
+		// When encountering an error, log and move to next group.
+		for _, uploadParams := range uploadParamsSlice {
+			artifactHandlerFunc := us.createArtifactHandlerFunc(&uploadSummary, uploadParams)
+			err := collectFilesForUpload(uploadParams, producer, artifactHandlerFunc, errorsQueue)
+			if err != nil {
+				log.Error(err)
+				errorsQueue.AddError(err)
+			}
+		}
 	}()
 }
 
-func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSummery *uploadResult, errorsQueue *utils.ErrorsQueue) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
-	// Blocking until we finish consuming for some reason
+func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSummary *uploadResult, errorsQueue *utils.ErrorsQueue) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
+	// Blocking until consuming is finished.
 	consumer.Run()
 	err = errorsQueue.GetError()
 
-	totalUploaded = sumIntArray(uploadSummery.UploadCount)
-	totalUploadAttempted := sumIntArray(uploadSummery.TotalCount)
+	totalUploaded = sumIntArray(uploadSummary.UploadCount)
+	totalUploadAttempted := sumIntArray(uploadSummary.TotalCount)
 
 	log.Debug("Uploaded", strconv.Itoa(totalUploaded), "artifacts.")
 	totalFailed = totalUploadAttempted - totalUploaded
 	if totalFailed > 0 {
 		log.Error("Failed uploading", strconv.Itoa(totalFailed), "artifacts.")
 	}
-	artifactsFileInfo = utils.FlattenFileInfoArray(uploadSummery.FileInfo)
+	artifactsFileInfo = utils.FlattenFileInfoArray(uploadSummary.FileInfo)
 	return
 }
 
@@ -135,47 +145,39 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 	return artifactProps, nil
 }
 
-func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue) {
-	defer producer.Done()
+func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue) error {
 	if strings.Index(uploadParams.GetTarget(), "/") < 0 {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.IsRegexp(), uploadParams.IsSymlink())
 	if err != nil {
-		errorsQueue.AddError(err)
-		return
+		return err
 	}
 
 	isDir, err := fileutils.IsDirExists(rootPath, uploadParams.IsSymlink())
 	if err != nil {
-		errorsQueue.AddError(err)
-		return
+		return err
 	}
 
 	// If the path is a single file (or a symlink while preserving symlinks) upload it and return
 	if !isDir || (fileutils.IsPathSymlink(rootPath) && uploadParams.IsSymlink()) {
 		artifact, err := fspatterns.GetSingleFileToUpload(rootPath, uploadParams.GetTarget(), uploadParams.IsFlat(), uploadParams.IsSymlink())
 		if err != nil {
-			errorsQueue.AddError(err)
-			return
+			return err
 		}
 		props, err := addSymlinkProps(artifact, uploadParams)
 		if err != nil {
-			errorsQueue.AddError(err)
-			return
+			return err
 		}
 		uploadData := UploadData{Artifact: artifact, Props: props}
 		task := artifactHandlerFunc(uploadData)
 		producer.AddTaskWithError(task, errorsQueue.AddError)
-		return
+		return err
 	}
 	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.IsRegexp()))
 	err = collectPatternMatchingFiles(uploadParams, rootPath, producer, artifactHandlerFunc, errorsQueue)
-	if err != nil {
-		errorsQueue.AddError(err)
-		return
-	}
+	return err
 }
 
 func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue) error {
@@ -343,7 +345,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.Retries)
 	return
 }
 
@@ -363,7 +365,7 @@ func (us *UploadService) doUpload(localPath, targetPath, logMsgPrefix string, ht
 	}
 	if !us.DryRun && !checksumDeployed {
 		var body []byte
-		resp, body, err = utils.UploadFile(localPath, targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, us.Retries)
+		resp, body, err = utils.UploadFile(localPath, targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.Retries)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
 		}
