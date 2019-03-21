@@ -69,43 +69,53 @@ func (ds *DownloadService) setMinSplitSize(minSplitSize int64) {
 	ds.MinSplitSize = minSplitSize
 }
 
-func (ds *DownloadService) DownloadFiles(downloadParams DownloadParams) ([]utils.FileInfo, int, error) {
+func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) ([]utils.FileInfo, int, error) {
 	buildDependencies := make([][]utils.FileInfo, ds.GetThreads())
 	producerConsumer := parallel.NewBounedRunner(ds.GetThreads(), false)
 	errorsQueue := utils.NewErrorsQueue(1)
-	fileHandlerFunc := ds.createFileHandlerFunc(buildDependencies, downloadParams)
-	log.Info("Searching items to download...")
 	expectedChan := make(chan int, 1)
-	ds.prepareTasks(producerConsumer, fileHandlerFunc, expectedChan, errorsQueue, downloadParams)
+	ds.prepareTasks(producerConsumer, buildDependencies, expectedChan, errorsQueue, downloadParams...)
+
 	err := performTasks(producerConsumer, errorsQueue)
 	return utils.FlattenFileInfoArray(buildDependencies), <-expectedChan, err
 }
 
-func (ds *DownloadService) prepareTasks(producer parallel.Runner, fileContextHandler fileHandlerFunc, expectedChan chan int, errorsQueue *utils.ErrorsQueue, downloadParams DownloadParams) {
+func (ds *DownloadService) prepareTasks(producer parallel.Runner, buildDependencies [][]utils.FileInfo, expectedChan chan int, errorsQueue *utils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
 	go func() {
 		defer producer.Done()
 		defer close(expectedChan)
-		var err error
-		var resultItems []utils.ResultItem
-		switch downloadParams.GetSpecType() {
-		case utils.WILDCARD, utils.SIMPLE:
-			resultItems, err = ds.collectFilesUsingWildcardPattern(downloadParams)
-		case utils.BUILD:
-			resultItems, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
-		case utils.AQL:
-			resultItems, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
-		}
+		totalTasks := 0
 
-		if err != nil {
-			errorsQueue.AddError(err)
-			return
+		// Iterate over file-spec groups and produce download tasks.
+		// When encountering an error, log and move to next group.
+		for _, downloadParams := range downloadParamsSlice {
+			var err error
+			var resultItems []utils.ResultItem
+
+			// Create handler function for the current group.
+			fileHandlerFunc := ds.createFileHandlerFunc(buildDependencies, downloadParams)
+
+			// Search items.
+			log.Info("Searching items to download...")
+			switch downloadParams.GetSpecType() {
+			case utils.WILDCARD, utils.SIMPLE:
+				resultItems, err = ds.collectFilesUsingWildcardPattern(downloadParams)
+			case utils.BUILD:
+				resultItems, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
+			case utils.AQL:
+				resultItems, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
+			}
+			// Check for search errors.
+			if err != nil {
+				log.Error(err)
+				errorsQueue.AddError(err)
+				continue
+			}
+
+			// Produce download tasks for the download consumers.
+			totalTasks += produceTasks(resultItems, downloadParams, producer, fileHandlerFunc, errorsQueue)
 		}
-		tasks, err := produceTasks(resultItems, downloadParams, producer, fileContextHandler, errorsQueue)
-		if err != nil {
-			errorsQueue.AddError(err)
-			return
-		}
-		expectedChan <- tasks
+		expectedChan <- totalTasks
 	}()
 }
 
@@ -113,7 +123,7 @@ func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams Downl
 	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
 }
 
-func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *utils.ErrorsQueue) (int, error) {
+func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *utils.ErrorsQueue) int {
 	flat := downloadParams.IsFlat()
 	// Collect all folders path which might be needed to create.
 	// key = folder path, value = the necessary data for producing create folder task.
@@ -132,11 +142,11 @@ func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, produ
 			Flat:         flat,
 		}
 		if v.Type != "folder" {
-			// Add a task, task is a function of type TaskFunc which later on will be executed by other go routine, the communication is done using channels.
-			// The second argument is a error handling func in case the taskFunc return an error.
+			// Add a task. A task is a function of type TaskFunc which later on will be executed by other go routine, the communication is done using channels.
+			// The second argument is an error handling func in case the taskFunc return an error.
 			tasksCount++
 			producer.AddTaskWithError(fileHandler(tempData), errorsQueue.AddError)
-			// We don't want to create directories which are created explicitly by download files when the --include-dirs flag is used.
+			// We don't want to create directories which are created explicitly by download files when ArtifactoryCommonParams.IncludeDirs is used.
 			alreadyCreatedDirs[v.Path] = true
 		} else {
 			directoriesData, directoriesDataKeys = collectDirPathsToCreate(v, directoriesData, tempData, directoriesDataKeys)
@@ -144,7 +154,7 @@ func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, produ
 	}
 
 	addCreateDirsTasks(directoriesDataKeys, alreadyCreatedDirs, producer, fileHandler, directoriesData, errorsQueue, flat)
-	return tasksCount, nil
+	return tasksCount
 }
 
 // Extract for the aqlResultItem the directory path, store the path the directoriesDataKeys and in the directoriesData map.
