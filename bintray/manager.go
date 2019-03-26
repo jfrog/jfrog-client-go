@@ -87,6 +87,10 @@ func (sm *ServicesManager) ShowVersion(path *versions.Path) error {
 	return sm.newVersionService().Show(path)
 }
 
+func (sm *ServicesManager) GetVersionDetails(path *versions.Path) (versions.PackageVersion, error) {
+	return sm.newVersionService().GetDetails(path)
+}
+
 func (sm *ServicesManager) IsVersionExists(path *versions.Path) (bool, error) {
 	return sm.newVersionService().IsVersionExists(path)
 }

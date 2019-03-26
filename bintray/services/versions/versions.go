@@ -3,13 +3,14 @@ package versions
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+	"path"
+
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"path"
 )
 
 func NewService(client *httpclient.HttpClient) *VersionService {
@@ -24,6 +25,22 @@ func NewVersionParams() *Params {
 type VersionService struct {
 	client         *httpclient.HttpClient
 	BintrayDetails auth.BintrayDetails
+}
+
+type PackageVersion struct {
+	Name           string        `json:"name"`
+	Desc           interface{}   `json:"desc"`
+	Package        string        `json:"package"`
+	Repo           string        `json:"repo"`
+	Owner          string        `json:"owner"`
+	Labels         []interface{} `json:"labels"`
+	Published      bool          `json:"published"`
+	AttributeNames []interface{} `json:"attribute_names"`
+	Created        string        `json:"created"`
+	Updated        string        `json:"updated"`
+	Released       string        `json:"released"`
+	Ordinal        float64       `json:"ordinal"`
+	RatingCount    int64         `json:"rating_count"`
 }
 
 type Path struct {
@@ -139,6 +156,19 @@ func (vs *VersionService) Delete(versionPath *Path) error {
 }
 
 func (vs *VersionService) Show(versionPath *Path) error {
+	details, err := vs.GetDetails(versionPath)
+	if err != nil {
+		return err
+	}
+
+	body, _ := json.Marshal(details)
+	log.Output(clientutils.IndentJson(body))
+	return nil
+}
+
+func (vs *VersionService) GetDetails(versionPath *Path) (PackageVersion, error) {
+	var details PackageVersion
+
 	if vs.BintrayDetails.GetUser() == "" {
 		vs.BintrayDetails.SetUser(versionPath.Subject)
 	}
@@ -152,17 +182,21 @@ func (vs *VersionService) Show(versionPath *Path) error {
 	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return err
+		return details, err
 	}
 	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails)
 
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return details, errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
-	log.Output(clientutils.IndentJson(body))
-	return nil
+
+	if err := json.Unmarshal(body, &details); err != nil {
+		return details, err
+	}
+
+	return details, nil
 }
 
 func (vs *VersionService) IsVersionExists(versionPath *Path) (bool, error) {
