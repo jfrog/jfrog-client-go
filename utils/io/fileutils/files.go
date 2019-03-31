@@ -133,6 +133,32 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 	return
 }
 
+// Return the list of files in the specified path that has the extension
+func ListFilesWithSpecificExtension(path, ext string) ([]string, error) {
+	sep := GetFileSeparator()
+	if !strings.HasSuffix(path, sep) {
+		path += sep
+	}
+	fileList := []string{}
+	files, _ := ioutil.ReadDir(path)
+	path = strings.TrimPrefix(path, "."+sep)
+
+	for _, f := range files {
+		if !strings.HasSuffix(f.Name(), ext) {
+			continue
+		}
+		filePath := path + f.Name()
+		exists, err := IsFileExists(filePath, false)
+		if err != nil {
+			return nil, err
+		}
+		if exists || IsPathSymlink(filePath) {
+			fileList = append(fileList, filePath)
+		}
+	}
+	return fileList, nil
+}
+
 // Return the list of files and directories in the specified path
 func ListFiles(path string, includeDirs bool) ([]string, error) {
 	sep := GetFileSeparator()
