@@ -127,5 +127,5 @@ func (ds *DeleteParams) SetIncludeDirs(includeDirs bool) {
 }
 
 func NewDeleteParams() DeleteParams {
-	return DeleteParams{}
+	return DeleteParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }
