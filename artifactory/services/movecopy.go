@@ -212,5 +212,5 @@ func (mc *MoveCopyParams) IsFlat() bool {
 }
 
 func NewMoveCopyParams() MoveCopyParams {
-	return MoveCopyParams{}
+	return MoveCopyParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }

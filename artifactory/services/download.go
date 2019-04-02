@@ -478,5 +478,5 @@ func (ds *DownloadParams) GetRetries() int {
 }
 
 func NewDownloadParams() DownloadParams {
-	return DownloadParams{}
+	return DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }

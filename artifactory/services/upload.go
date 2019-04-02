@@ -532,5 +532,5 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 }
 
 func NewUploadParams() UploadParams {
-	return UploadParams{}
+	return UploadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }

@@ -44,7 +44,7 @@ func (s *SearchParams) GetFile() *utils.ArtifactoryCommonParams {
 }
 
 func NewSearchParams() SearchParams {
-	return SearchParams{}
+	return SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }
 
 func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requiredArtifactProps utils.RequiredArtifactProps) ([]utils.ResultItem, error) {
