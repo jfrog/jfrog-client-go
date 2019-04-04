@@ -1,4 +1,5 @@
 package jfrogclient
+
 import "fmt"
 
 var agentName = "jfrog-client-go"

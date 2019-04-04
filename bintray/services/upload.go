@@ -2,6 +2,14 @@ package services
 
 import (
 	"errors"
+	"net/http"
+	"path"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
 	"github.com/jfrog/jfrog-client-go/bintray/services/utils"
 	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
@@ -10,12 +18,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"path"
-	"regexp"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 func NewUploadService(client *httpclient.HttpClient) *UploadService {
@@ -44,13 +46,14 @@ type UploadParams struct {
 	// Target local path
 	TargetPath string
 
-	UseRegExp bool
-	Flat      bool
-	Recursive bool
-	Explode   bool
-	Override  bool
-	Publish   bool
-	Deb       string
+	UseRegExp     bool
+	Flat          bool
+	Recursive     bool
+	Explode       bool
+	Override      bool
+	Publish       bool
+	ListDownloads bool
+	Deb           string
 }
 
 func (us *UploadService) Upload(uploadDetails *UploadParams) (totalUploaded, totalFailed int, err error) {
@@ -95,6 +98,15 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 					}
 					if uploaded {
 						uploadCount[threadId]++
+					}
+					if uploadDetails.ListDownloads {
+						// This needs to not sleep, but since the publish is async we need to for now
+						time.Sleep(15 * time.Second)
+						listUrl := us.BintrayDetails.GetApiUrl() + path.Join(
+							"file_metadata",
+							uploadDetails.Subject,
+							uploadDetails.Repo, artifacts[j].TargetPath)
+						listFile(listUrl, logMsgPrefix, us.BintrayDetails)
 					}
 				} else {
 					log.Info("[Dry Run] Uploading artifact:", artifacts[j].LocalPath)
@@ -168,6 +180,21 @@ func uploadFile(artifact clientutils.Artifact, url, logMsgPrefix string, bintray
 	return resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
 
+func listFile(url, logMsgPrefix string, bintrayDetails auth.BintrayDetails) (bool, error) {
+	httpClientsDetails := bintrayDetails.CreateHttpClientDetails()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
+	resp, body, err := client.SendPut(url, []byte(`{"list_in_downloads":true}`), httpClientsDetails)
+	if err != nil {
+		return false, err
+	}
+	log.Info(logMsgPrefix + "Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+
+	return resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
+}
+
 func getSingleFileToUpload(rootPath, targetPath string, flat bool) clientutils.Artifact {
 	var uploadPath string
 	rootPathOrig := rootPath
@@ -175,6 +202,7 @@ func getSingleFileToUpload(rootPath, targetPath string, flat bool) clientutils.A
 		rootPath = targetPath
 		targetPath = ""
 	}
+
 	if flat {
 		uploadPath, _ = fileutils.GetFileAndDirFromPath(rootPath)
 		uploadPath = targetPath + uploadPath
