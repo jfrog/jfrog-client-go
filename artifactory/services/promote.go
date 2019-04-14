@@ -40,6 +40,10 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	if err != nil {
 		return err
 	}
+	props, err := utils.ParseProperties(promotionParams.GetProperties(), utils.JoinCommas)
+	if err != nil {
+		return err
+	}
 
 	data := BuildPromotionBody{
 		Status:              promotionParams.GetStatus(),
@@ -48,7 +52,8 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 		IncludeDependencies: promotionParams.IsIncludeDependencies(),
 		SourceRepo:          promotionParams.GetSourceRepo(),
 		TargetRepo:          promotionParams.GetTargetRepo(),
-		DryRun:              ps.isDryRun()}
+		DryRun:              ps.isDryRun(),
+		Properties:          props.ToBuildPromoteMap()}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -72,13 +77,14 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 }
 
 type BuildPromotionBody struct {
-	Comment             string `json:"comment,omitempty"`
-	SourceRepo          string `json:"sourceRepo,omitempty"`
-	TargetRepo          string `json:"targetRepo,omitempty"`
-	Status              string `json:"status,omitempty"`
-	IncludeDependencies bool   `json:"dependencies,omitempty"`
-	Copy                bool   `json:"copy,omitempty"`
-	DryRun              bool   `json:"dryRun,omitempty"`
+	Comment             string              `json:"comment,omitempty"`
+	SourceRepo          string              `json:"sourceRepo,omitempty"`
+	TargetRepo          string              `json:"targetRepo,omitempty"`
+	Status              string              `json:"status,omitempty"`
+	IncludeDependencies bool                `json:"dependencies,omitempty"`
+	Copy                bool                `json:"copy,omitempty"`
+	DryRun              bool                `json:"dryRun,omitempty"`
+	Properties          map[string][]string `json:"properties, omitempty"`
 }
 
 type PromotionParams struct {
@@ -90,6 +96,7 @@ type PromotionParams struct {
 	Copy                bool
 	IncludeDependencies bool
 	SourceRepo          string
+	Properties          string
 }
 
 func (bp *PromotionParams) GetBuildName() string {
@@ -122,6 +129,10 @@ func (bp *PromotionParams) IsIncludeDependencies() bool {
 
 func (bp *PromotionParams) GetSourceRepo() string {
 	return bp.SourceRepo
+}
+
+func (bp *PromotionParams) GetProperties() string {
+	return bp.Properties
 }
 
 func NewPromotionParams() PromotionParams {

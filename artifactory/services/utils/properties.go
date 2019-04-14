@@ -1,12 +1,12 @@
 package utils
 
 import (
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/url"
 	"strings"
-	"fmt"
-	"encoding/base64"
 )
 
 type PropertyParseOptions int
@@ -71,6 +71,15 @@ func (props *Properties) ToHeadersMap() map[string]string {
 		headers[v.Key] = base64.StdEncoding.EncodeToString([]byte(v.Value))
 	}
 	return headers
+}
+
+// Convert properties from Slice to map that build promotion REST API requires
+func (props *Properties) ToBuildPromoteMap() map[string][]string {
+	buildPromote := map[string][]string{}
+	for _, prop := range props.Properties {
+		buildPromote[prop.Key] = []string{prop.Value}
+	}
+	return buildPromote
 }
 
 // Split properties string of format key=value to key value strings
