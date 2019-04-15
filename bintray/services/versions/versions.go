@@ -155,20 +155,7 @@ func (vs *VersionService) Delete(versionPath *Path) error {
 	return nil
 }
 
-func (vs *VersionService) Show(versionPath *Path) error {
-	details, err := vs.GetDetails(versionPath)
-	if err != nil {
-		return err
-	}
-
-	body, _ := json.Marshal(details)
-	log.Output(clientutils.IndentJson(body))
-	return nil
-}
-
-func (vs *VersionService) GetDetails(versionPath *Path) (PackageVersion, error) {
-	var details PackageVersion
-
+func (vs *VersionService) doGetVersionDetails(versionPath *Path) ([]byte, error) {
 	if vs.BintrayDetails.GetUser() == "" {
 		vs.BintrayDetails.SetUser(versionPath.Subject)
 	}
@@ -182,21 +169,41 @@ func (vs *VersionService) GetDetails(versionPath *Path) (PackageVersion, error) 
 	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return details, err
+		return nil, err
 	}
 	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails)
 
 	if resp.StatusCode != http.StatusOK {
-		return details, errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return nil, errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
 
-	if err := json.Unmarshal(body, &details); err != nil {
-		return details, err
+	return body, nil
+}
+
+func (vs *VersionService) Show(versionPath *Path) error {
+	details, err := vs.doGetVersionDetails(versionPath)
+	if err != nil {
+		return err
+	}
+	log.Output(clientutils.IndentJson(details))
+	return nil
+}
+
+func (vs *VersionService) GetDetails(versionPath *Path) (PackageVersion, error) {
+	var packageVersion PackageVersion
+
+	vsDetails, err := vs.doGetVersionDetails(versionPath)
+	if err != nil {
+		return packageVersion, err
 	}
 
-	return details, nil
+	if err := json.Unmarshal(vsDetails, &packageVersion); err != nil {
+		return packageVersion, err
+	}
+
+	return packageVersion, nil
 }
 
 func (vs *VersionService) IsVersionExists(versionPath *Path) (bool, error) {
