@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"io"
@@ -26,10 +25,7 @@ const (
 var tempDirPath string
 
 func GetFileSeparator() string {
-	if utils.IsWindows() {
-		return "\\"
-	}
-	return "/"
+	return string(os.PathSeparator)
 }
 
 // Check if path exists.
@@ -131,6 +127,46 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 	}, walkIntoDirSymlink)
 	err = errorutils.CheckError(err)
 	return
+}
+
+// Return all files with the specified extension in the specified path. Not recursive.
+func ListFilesWithExtension(path, ext string) ([]string, error) {
+	sep := GetFileSeparator()
+	if !strings.HasSuffix(path, sep) {
+		path += sep
+	}
+	fileList := []string{}
+	files, _ := ioutil.ReadDir(path)
+	path = strings.TrimPrefix(path, "."+sep)
+
+	for _, f := range files {
+		if !strings.HasSuffix(f.Name(), ext) {
+			continue
+		}
+		filePath := path + f.Name()
+		exists, err := IsFileExists(filePath, false)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			fileList = append(fileList, filePath)
+			continue
+		}
+
+		// Checks if the filepath is a symlink.
+		if IsPathSymlink(filePath) {
+			// Gets the file info of the symlink.
+			file, err := GetFileInfo(filePath, false)
+			if err != nil {
+				return nil, err
+			}
+			// Checks if the symlink is a file.
+			if !file.IsDir() {
+				fileList = append(fileList, filePath)
+			}
+		}
+	}
+	return fileList, nil
 }
 
 // Return the list of files and directories in the specified path
