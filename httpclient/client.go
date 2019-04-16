@@ -363,9 +363,16 @@ func extractZip(downloadFileDetails *DownloadFileDetails, logMsgPrefix string) e
 // Otherwise: if an error occurred - returns the error with resp=nil, else - err=nil and the resp of the first chunk that received statusCode!=http.StatusPartialContent
 // The caller is responsible to check the resp.StatusCode.
 func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, error) {
+	// Create temp dir for file chunks.
+	tempDirPath, err := fileutils.CreateTempDir()
+	if err != nil {
+		return nil, err
+	}
+	defer fileutils.RemoveTempDir(tempDirPath)
+
 	chunksPaths := make([]string, flags.SplitCount)
 
-	resp, err := jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, httpClientsDetails)
+	resp, err := jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, tempDirPath, httpClientsDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -439,7 +446,7 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 // If successful, returns the resp of the last chunk, which will have resp.StatusCode = http.StatusPartialContent
 // Otherwise: if an error occurred - returns the error with resp=nil, else - err=nil and the resp of the first chunk that received statusCode!=http.StatusPartialContent
 // The caller is responsible to check the resp.StatusCode.
-func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags ConcurrentDownloadFlags, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, error) {
+func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags ConcurrentDownloadFlags, logMsgPrefix, chunksDownloadPath string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, error) {
 	var wg sync.WaitGroup
 	chunkSize := flags.FileSize / int64(flags.SplitCount)
 	mod := flags.FileSize % int64(flags.SplitCount)
@@ -467,7 +474,7 @@ func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags Con
 		}
 		requestClientDetails := httpClientsDetails.Clone()
 		go func(start, end int64, i int) {
-			chunksPaths[i], respList[i], errorsList[i] = jc.downloadFileRange(flags, start, end, i, logMsgPrefix, *requestClientDetails, flags.Retries)
+			chunksPaths[i], respList[i], errorsList[i] = jc.downloadFileRange(flags, start, end, i, logMsgPrefix, chunksDownloadPath, *requestClientDetails, flags.Retries)
 			// Write to the global vars if the chunk wasn't downloaded successfully
 			if errorsList[i] != nil {
 				err = errorsList[i]
@@ -569,7 +576,7 @@ func extractAndMergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags, 
 	return true, nil
 }
 
-func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix string,
+func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
 	httpClientsDetails httputils.HttpClientDetails, retries int) (fileName string, resp *http.Response, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      retries,
@@ -577,7 +584,7 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 		ErrorMessage:    fmt.Sprintf("Failure occurred while downloading part %d of %s", currentSplit, flags.DownloadPath),
 		LogMsgPrefix:    fmt.Sprintf("%s[%s]: ", logMsgPrefix, strconv.Itoa(currentSplit)),
 		ExecutionHandler: func() (bool, error) {
-			fileName, resp, err = jc.doDownloadFileRange(flags, start, end, currentSplit, logMsgPrefix, httpClientsDetails)
+			fileName, resp, err = jc.doDownloadFileRange(flags, start, end, currentSplit, logMsgPrefix, chunkDownloadPath, httpClientsDetails)
 			if err != nil {
 				return true, err
 			}
@@ -599,14 +606,10 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 	return
 }
 
-func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix string,
+func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
 	httpClientsDetails httputils.HttpClientDetails) (fileName string, resp *http.Response, err error) {
-	tempLocalPath, err := fileutils.GetTempDirPath()
-	if err != nil {
-		return
-	}
 
-	tempFile, err := ioutil.TempFile(tempLocalPath, strconv.Itoa(currentSplit)+"_")
+	tempFile, err := ioutil.TempFile(chunkDownloadPath, strconv.Itoa(currentSplit)+"_")
 	if errorutils.CheckError(err) != nil {
 		return
 	}
@@ -628,7 +631,7 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	}
 	log.Info(fmt.Sprintf("%s[%s]: %s...", logMsgPrefix, strconv.Itoa(currentSplit), resp.Status))
 
-	err = os.MkdirAll(tempLocalPath, 0777)
+	err = os.MkdirAll(chunkDownloadPath, 0777)
 	if errorutils.CheckError(err) != nil {
 		return "", nil, err
 	}
