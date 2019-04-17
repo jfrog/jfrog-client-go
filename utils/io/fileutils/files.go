@@ -22,8 +22,6 @@ const (
 	Dir                  ItemType = "dir"
 )
 
-var tempDirPath string
-
 func GetFileSeparator() string {
 	return string(os.PathSeparator)
 }
@@ -237,47 +235,6 @@ func CreateDirIfNotExist(path string) error {
 	}
 	_, err = CreateFilePath(path, "")
 	return err
-}
-
-func GetTempDirPath() (string, error) {
-	if tempDirPath == "" {
-		err := errorutils.CheckError(errors.New("Function cannot be used before 'tempDirPath' is created."))
-		if err != nil {
-			return "", err
-		}
-	}
-	return tempDirPath, nil
-}
-
-func CreateTempDirPath() error {
-	if tempDirPath != "" {
-		err := errorutils.CheckError(errors.New("'tempDirPath' has already been initialized."))
-		if err != nil {
-			return err
-		}
-	}
-	path, err := ioutil.TempDir("", "jfrog.cli.")
-	err = errorutils.CheckError(err)
-	if err != nil {
-		return err
-	}
-	tempDirPath = path
-	return nil
-}
-
-func RemoveTempDir() error {
-	defer func() {
-		tempDirPath = ""
-	}()
-
-	exists, err := IsDirExists(tempDirPath, false)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return os.RemoveAll(tempDirPath)
-	}
-	return nil
 }
 
 // Reads the content of the file in the source path and appends it to

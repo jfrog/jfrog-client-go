@@ -55,12 +55,6 @@ type DownloadVersionParams struct {
 }
 
 func (ds *DownloadService) DownloadFile(downloadParams *DownloadFileParams) (totalDownloded, totalFailed int, err error) {
-	err = fileutils.CreateTempDirPath()
-	if err != nil {
-		return 0, 1, err
-	}
-	defer fileutils.RemoveTempDir()
-
 	if ds.BintrayDetails.GetUser() == "" {
 		ds.BintrayDetails.SetUser(downloadParams.Subject)
 	}
@@ -74,12 +68,6 @@ func (ds *DownloadService) DownloadFile(downloadParams *DownloadFileParams) (tot
 }
 
 func (ds *DownloadService) DownloadVersion(downloadParams *DownloadVersionParams) (totalDownloded, totalFailed int, err error) {
-	err = fileutils.CreateTempDirPath()
-	if err != nil {
-		return
-	}
-	defer fileutils.RemoveTempDir()
-
 	versionPathUrl := buildDownloadVersionUrl(ds.BintrayDetails.GetApiUrl(), downloadParams)
 	httpClientsDetails := ds.BintrayDetails.CreateHttpClientDetails()
 	if httpClientsDetails.User == "" {
