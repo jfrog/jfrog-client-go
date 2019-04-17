@@ -11,6 +11,15 @@
 The project is still relatively new, and its APIs may therefore change frequently between releases.
 The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you may look at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
 
+## General APIs
+### Setting the temp dir
+Several jfrog-client-go operations are storing data on the file-system. By default, the temporary
+data will be stored inside 'os.TempDir()'. In order to set a different location for these files, 
+simply do the following:
+```
+    fileutils.SetTempDirBase(filepath.Join("my", "temp", "path")
+```
+
 ## Artifactory APIs
 ### Creating a Service Manager
 #### Creating Artifactory Details
