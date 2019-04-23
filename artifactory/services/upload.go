@@ -21,18 +21,17 @@ import (
 )
 
 type UploadService struct {
-	client            *rthttpclient.ArtifactoryHttpClient
-	ArtDetails        auth.ArtifactoryDetails
-	DryRun            bool
-	Threads           int
-	MinChecksumDeploy int64
+	client     *rthttpclient.ArtifactoryHttpClient
+	ArtDetails auth.ArtifactoryDetails
+	DryRun     bool
+	Threads    int
 }
 
 func NewUploadService(client *rthttpclient.ArtifactoryHttpClient) *UploadService {
 	return &UploadService{client: client}
 }
 
-func (us *UploadService) SetThread(threads int) {
+func (us *UploadService) SetThreads(threads int) {
 	us.Threads = threads
 }
 
@@ -46,10 +45,6 @@ func (us *UploadService) SetArtDetails(artDetails auth.ArtifactoryDetails) {
 
 func (us *UploadService) SetDryRun(isDryRun bool) {
 	us.DryRun = isDryRun
-}
-
-func (us *UploadService) setMinChecksumDeploy(minChecksumDeploy int64) {
-	us.MinChecksumDeploy = minChecksumDeploy
 }
 
 func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
@@ -345,7 +340,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.Retries)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries())
 	return
 }
 
@@ -356,7 +351,7 @@ func (us *UploadService) doUpload(localPath, targetPath, logMsgPrefix string, ht
 	var body []byte
 	var err error
 	addExplodeHeader(&httpClientsDetails, uploadParams.IsExplodeArchive())
-	if fileInfo.Size() >= us.MinChecksumDeploy && !uploadParams.IsExplodeArchive() {
+	if fileInfo.Size() >= uploadParams.MinChecksumDeploy && !uploadParams.IsExplodeArchive() {
 		resp, details, body, err = us.tryChecksumDeploy(localPath, targetPath, httpClientsDetails, us.client)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
@@ -444,11 +439,12 @@ func getDebianProps(debianPropsStr string) string {
 
 type UploadParams struct {
 	*utils.ArtifactoryCommonParams
-	Deb            string
-	Symlink        bool
-	ExplodeArchive bool
-	Flat           bool
-	Retries        int
+	Deb               string
+	Symlink           bool
+	ExplodeArchive    bool
+	Flat              bool
+	Retries           int
+	MinChecksumDeploy int64
 }
 
 func (up *UploadParams) IsFlat() bool {
@@ -532,5 +528,5 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 }
 
 func NewUploadParams() UploadParams {
-	return UploadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
+	return UploadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinChecksumDeploy: 10240}
 }

@@ -37,8 +37,6 @@ type DownloadService struct {
 	client         *httpclient.HttpClient
 	BintrayDetails auth.BintrayDetails
 	Threads        int
-	MinSplitSize   int64
-	SplitCount     int
 }
 
 type DownloadFileParams struct {
@@ -46,6 +44,8 @@ type DownloadFileParams struct {
 	TargetPath         string
 	IncludeUnpublished bool
 	Flat               bool
+	MinSplitSize       int64
+	SplitCount         int
 }
 
 type DownloadVersionParams struct {
@@ -195,7 +195,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 	}
 
 	// Check if the file should be downloaded concurrently.
-	if ds.SplitCount == 0 || ds.MinSplitSize < 0 || ds.MinSplitSize*1000 > details.Size {
+	if downloadParams.SplitCount == 0 || downloadParams.MinSplitSize < 0 || downloadParams.MinSplitSize*1000 > details.Size {
 		// File should not be downloaded concurrently. Download it as one block.
 		downloadDetails := &httpclient.DownloadFileDetails{
 			FileName:      fileName,
@@ -230,7 +230,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 				LocalFileName: localFileName,
 				LocalPath:     localPath,
 				FileSize:      details.Size,
-				SplitCount:    ds.SplitCount,
+				SplitCount:    downloadParams.SplitCount,
 				Retries:       utils.BintrayDownloadRetries}
 
 			resp, err = client.DownloadFileConcurrently(concurrentDownloadFlags, "", httpClientsDetails)

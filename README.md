@@ -17,7 +17,7 @@ Several jfrog-client-go operations are storing data on the file-system. By defau
 data will be stored inside 'os.TempDir()'. In order to set a different location for these files, 
 simply do the following:
 ```
-    fileutils.SetTempDirBase(filepath.Join("my", "temp", "path")
+    fileutils.SetTempDirBase(filepath.Join("my", "temp", "path"))
 ```
 
 ## Artifactory APIs
@@ -36,10 +36,7 @@ simply do the following:
 ```
     serviceConfig, err := artifactory.NewConfigBuilder().
         SetArtDetails(rtDetails).
-        SetCertifactesPath(certPath).
-        SetMinChecksumDeploy(minChecksumDeploySize).
-        SetSplitCount(splitCount).
-        SetMinSplitSize(minSplitSize).
+        SetCertificatesPath(certPath).
         SetThreads(threads).
         SetDryRun(false).
         SetLogger(logger).
@@ -63,7 +60,10 @@ simply do the following:
     params.Explode = false
     params.Deb = ""
     params.Symlink = false
-    params.Retries = 3
+    // Retries default value: 3
+    params.Retries = 5
+    // MinChecksumDeploy = 10400
+    params.MinChecksumDeploy = 15360
 
     rtManager.UploadFiles(params)
 ```
@@ -79,7 +79,12 @@ simply do the following:
     params.Explode = false
     params.Symlink = true
     params.ValidateSymlink = false
-    params.Retries = 3
+    // Retries default value: 3
+    params.Retries = 5
+    // SplitCount default value: 3
+    params.SplitCount = 2
+    // MinSplitSize default value: 5120
+    params.MinSplitSize = 7168
 
     rtManager.DownloadFiles(params)
 ```
@@ -263,8 +268,6 @@ simply do the following:
         SetBintrayDetails(btDetails).
         SetDryRun(false).
         SetThreads(threads).
-        SetMinSplitSize(minSplitSize).
-        SetSplitCount(splitCount).
         SetLogger(logger).
         Build()
 
@@ -295,6 +298,10 @@ simply do the following:
     params.IncludeUnpublished = false
     params.PathDetails = "path/to/file"  
     params.TargetPath = "target/path/"
+    // SplitCount default value: 3
+    params.SplitCount = 2
+    // MinSplitSize default value: 5120
+    params.MinSplitSize = 7168
 
     btManager.DownloadFile(params)
 ```
@@ -310,7 +317,7 @@ simply do the following:
     btManager.DownloadVersion(params)
 ```
 
-#### Shwong / Deleting a Bintray Package
+#### Showing / Deleting a Bintray Package
 ```
     pkgPath, err := packages.CreatePath("subject/repo/pkg")
 
