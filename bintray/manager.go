@@ -38,8 +38,6 @@ func (sm *ServicesManager) newDownloadService() *services.DownloadService {
 	downloadService := services.NewDownloadService(sm.client)
 	downloadService.BintrayDetails = sm.config.GetBintrayDetails()
 	downloadService.Threads = sm.config.GetThreads()
-	downloadService.SplitCount = sm.config.GetSplitCount()
-	downloadService.MinSplitSize = sm.config.GetMinSplitSize()
 	return downloadService
 }
 

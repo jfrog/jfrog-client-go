@@ -8,22 +8,16 @@ import (
 func NewConfigBuilder() *artifactoryServicesConfigBuilder {
 	configBuilder := &artifactoryServicesConfigBuilder{}
 	configBuilder.threads = 3
-	configBuilder.minChecksumDeploy = 10240
-	configBuilder.splitCount = 3
-	configBuilder.minSplitSize = 5120
 	return configBuilder
 }
 
 type artifactoryServicesConfigBuilder struct {
 	auth.ArtifactoryDetails
-	certifactesPath   string
-	threads           int
-	minSplitSize      int64
-	splitCount        int
-	minChecksumDeploy int64
-	isDryRun          bool
-	logger            log.Log
-	insecureTls       bool
+	certificatesPath string
+	threads          int
+	isDryRun         bool
+	logger           log.Log
+	insecureTls      bool
 }
 
 func (builder *artifactoryServicesConfigBuilder) SetArtDetails(artDetails auth.ArtifactoryDetails) *artifactoryServicesConfigBuilder {
@@ -32,27 +26,12 @@ func (builder *artifactoryServicesConfigBuilder) SetArtDetails(artDetails auth.A
 }
 
 func (builder *artifactoryServicesConfigBuilder) SetCertificatesPath(certificatesPath string) *artifactoryServicesConfigBuilder {
-	builder.certifactesPath = certificatesPath
+	builder.certificatesPath = certificatesPath
 	return builder
 }
 
 func (builder *artifactoryServicesConfigBuilder) SetThreads(threads int) *artifactoryServicesConfigBuilder {
 	builder.threads = threads
-	return builder
-}
-
-func (builder *artifactoryServicesConfigBuilder) SetMinSplitSize(splitSize int64) *artifactoryServicesConfigBuilder {
-	builder.minSplitSize = splitSize
-	return builder
-}
-
-func (builder *artifactoryServicesConfigBuilder) SetSplitCount(splitCount int) *artifactoryServicesConfigBuilder {
-	builder.splitCount = splitCount
-	return builder
-}
-
-func (builder *artifactoryServicesConfigBuilder) SetMinChecksumDeploy(minChecksumDeploy int64) *artifactoryServicesConfigBuilder {
-	builder.minChecksumDeploy = minChecksumDeploy
 	return builder
 }
 
@@ -70,11 +49,8 @@ func (builder *artifactoryServicesConfigBuilder) Build() (Config, error) {
 	c := &artifactoryServicesConfig{}
 	c.ArtifactoryDetails = builder.ArtifactoryDetails
 	c.threads = builder.threads
-	c.minChecksumDeploy = builder.minChecksumDeploy
-	c.minSplitSize = builder.minSplitSize
-	c.splitCount = builder.splitCount
 	c.logger = builder.logger
-	c.certifactesPath = builder.certifactesPath
+	c.certificatesPath = builder.certificatesPath
 	c.dryRun = builder.isDryRun
 	c.insecureTls = builder.insecureTls
 	return c, nil

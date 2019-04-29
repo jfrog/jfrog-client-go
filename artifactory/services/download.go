@@ -20,13 +20,10 @@ import (
 )
 
 type DownloadService struct {
-	client       *rthttpclient.ArtifactoryHttpClient
-	ArtDetails   auth.ArtifactoryDetails
-	DryRun       bool
-	Threads      int
-	MinSplitSize int64
-	SplitCount   int
-	Retries      int
+	client     *rthttpclient.ArtifactoryHttpClient
+	ArtDetails auth.ArtifactoryDetails
+	DryRun     bool
+	Threads    int
 }
 
 func NewDownloadService(client *rthttpclient.ArtifactoryHttpClient) *DownloadService {
@@ -63,10 +60,6 @@ func (ds *DownloadService) SetArtDetails(artDetails auth.ArtifactoryDetails) {
 
 func (ds *DownloadService) SetDryRun(isDryRun bool) {
 	ds.DryRun = isDryRun
-}
-
-func (ds *DownloadService) setMinSplitSize(minSplitSize int64) {
-	ds.MinSplitSize = minSplitSize
 }
 
 func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) ([]utils.FileInfo, int, error) {
@@ -223,7 +216,7 @@ func createDownloadFileDetails(downloadPath, localPath, localFileName string, do
 
 func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string, downloadParams DownloadParams) error {
 	httpClientsDetails := ds.ArtDetails.CreateHttpClientDetails()
-	bulkDownload := ds.SplitCount == 0 || ds.MinSplitSize < 0 || ds.MinSplitSize*1000 > downloadFileDetails.Size
+	bulkDownload := downloadParams.SplitCount == 0 || downloadParams.MinSplitSize < 0 || downloadParams.MinSplitSize*1000 > downloadFileDetails.Size
 	if !bulkDownload {
 		acceptRange, err := ds.isFileAcceptRange(downloadFileDetails)
 		if err != nil {
@@ -248,7 +241,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		LocalPath:     downloadFileDetails.LocalPath,
 		ExpectedSha1:  downloadFileDetails.ExpectedSha1,
 		FileSize:      downloadFileDetails.Size,
-		SplitCount:    ds.SplitCount,
+		SplitCount:    downloadParams.SplitCount,
 		Explode:       downloadParams.IsExplode(),
 		Retries:       downloadParams.GetRetries()}
 
@@ -450,6 +443,8 @@ type DownloadParams struct {
 	ValidateSymlink bool
 	Flat            bool
 	Explode         bool
+	MinSplitSize    int64
+	SplitCount      int
 	Retries         int
 }
 
@@ -478,5 +473,5 @@ func (ds *DownloadParams) GetRetries() int {
 }
 
 func NewDownloadParams() DownloadParams {
-	return DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
+	return DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinSplitSize: 5120, SplitCount: 3, Retries: 3}
 }

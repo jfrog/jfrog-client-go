@@ -20,7 +20,7 @@ func New(artDetails *auth.ArtifactoryDetails, config Config) (*ArtifactoryServic
 	var err error
 	manager := &ArtifactoryServicesManager{config: config}
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
-		SetCertificatesPath(config.GetCertifactesPath()).
+		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetArtDetails(artDetails).
 		Build()
@@ -92,8 +92,6 @@ func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadP
 	downloadService.DryRun = sm.config.IsDryRun()
 	downloadService.ArtDetails = sm.config.GetArtDetails()
 	downloadService.Threads = sm.config.GetThreads()
-	downloadService.SplitCount = sm.config.GetSplitCount()
-	downloadService.MinSplitSize = sm.config.GetMinSplitSize()
 	return downloadService.DownloadFiles(params...)
 }
 
@@ -132,8 +130,9 @@ func (sm *ArtifactoryServicesManager) DeleteProps(params services.PropsParams) (
 
 func (sm *ArtifactoryServicesManager) UploadFiles(params ...services.UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
 	uploadService := services.NewUploadService(sm.client)
-	sm.setCommonServiceConfig(uploadService)
-	uploadService.MinChecksumDeploy = sm.config.GetMinChecksumDeploy()
+	uploadService.Threads = sm.config.GetThreads()
+	uploadService.ArtDetails = sm.config.GetArtDetails()
+	uploadService.DryRun = sm.config.IsDryRun()
 	return uploadService.UploadFiles(params...)
 }
 
@@ -155,12 +154,6 @@ func (sm *ArtifactoryServicesManager) PublishGoProject(params _go.GoParams) erro
 	goService := _go.NewGoService(sm.client)
 	goService.ArtDetails = sm.config.GetArtDetails()
 	return goService.PublishPackage(params)
-}
-
-func (sm *ArtifactoryServicesManager) setCommonServiceConfig(commonConfig ArtifactoryServicesSetter) {
-	commonConfig.SetThread(sm.config.GetThreads())
-	commonConfig.SetArtDetails(sm.config.GetArtDetails())
-	commonConfig.SetDryRun(sm.config.IsDryRun())
 }
 
 func (sm *ArtifactoryServicesManager) Ping() ([]byte, error) {
