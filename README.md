@@ -13,9 +13,7 @@ The library can be used as a go-module, which should be added to your project's 
 
 ## General APIs
 ### Setting the temp dir
-Several jfrog-client-go operations are storing data on the file-system. By default, the temporary
-data will be stored inside 'os.TempDir()'. In order to set a different location for these files, 
-simply do the following:
+The default temp dir used is  'os.TempDir()'. Use the following API to set a new temp dir:
 ```
     fileutils.SetTempDirBase(filepath.Join("my", "temp", "path"))
 ```
@@ -62,7 +60,7 @@ simply do the following:
     params.Symlink = false
     // Retries default value: 3
     params.Retries = 5
-    // MinChecksumDeploy = 10400
+    // MinChecksumDeploy default value: 10400
     params.MinChecksumDeploy = 15360
 
     rtManager.UploadFiles(params)
