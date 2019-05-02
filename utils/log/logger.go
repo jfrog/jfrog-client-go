@@ -19,15 +19,18 @@ const (
 
 func init() {
 	if Logger == nil {
-		Logger = NewLogger(INFO)
+		Logger = NewLogger(INFO, nil)
 	}
 }
 
-func NewLogger(logLevel LevelType) Log {
+// Creates a new logger with a given LogLevel.
+// All logs are written to Stderr by default (output to Stdout).
+// If logToWriter != nil, logging is done to the provided writer instead.
+func NewLogger(logLevel LevelType, logToWriter io.Writer) Log {
 	logger := new(jfrogLogger)
 	logger.SetLogLevel(logLevel)
 	logger.SetOutputWriter(os.Stdout)
-	logger.SetStderrWriter(os.Stderr)
+	logger.SetLogsWriter(logToWriter)
 	return logger
 }
 
@@ -52,7 +55,11 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 	logger.OutputLog = log.New(writer, "", 0)
 }
 
-func (logger *jfrogLogger) SetStderrWriter(writer io.Writer) {
+// Set the logs writer to Stderr unless an alternative one is provided.
+func (logger *jfrogLogger) SetLogsWriter(writer io.Writer) {
+	if writer == nil {
+		writer = os.Stderr
+	}
 	logger.DebugLog = log.New(writer, "[Debug] ", 0)
 	logger.InfoLog = log.New(writer, "[Info] ", 0)
 	logger.WarnLog = log.New(writer, "[Warn] ", 0)
@@ -119,7 +126,7 @@ type Log interface {
 	GetLogLevel() LevelType
 	SetLogLevel(LevelType)
 	SetOutputWriter(writer io.Writer)
-	SetStderrWriter(writer io.Writer)
+	SetLogsWriter(writer io.Writer)
 
 	Debug(a ...interface{})
 	Info(a ...interface{})

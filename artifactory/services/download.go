@@ -20,10 +20,11 @@ import (
 )
 
 type DownloadService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
-	DryRun     bool
-	Threads    int
+	client      *rthttpclient.ArtifactoryHttpClient
+	ProgressBar log.ProgressBar
+	ArtDetails  auth.ArtifactoryDetails
+	DryRun      bool
+	Threads     int
 }
 
 func NewDownloadService(client *rthttpclient.ArtifactoryHttpClient) *DownloadService {
@@ -207,6 +208,7 @@ func createDownloadFileDetails(downloadPath, localPath, localFileName string, do
 	details = &httpclient.DownloadFileDetails{
 		FileName:      downloadData.Dependency.Name,
 		DownloadPath:  downloadPath,
+		RelativePath:  downloadData.Dependency.GetItemRelativePath(),
 		LocalPath:     localPath,
 		LocalFileName: localFileName,
 		Size:          downloadData.Dependency.Size,
@@ -226,7 +228,8 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	}
 	if bulkDownload {
 		var resp *http.Response
-		resp, err := ds.client.DownloadFile(downloadFileDetails, logMsgPrefix, &httpClientsDetails, downloadParams.GetRetries(), downloadParams.IsExplode())
+		resp, err := ds.client.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, &httpClientsDetails,
+			downloadParams.GetRetries(), downloadParams.IsExplode(), ds.ProgressBar)
 		if err != nil {
 			return err
 		}
@@ -237,6 +240,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	concurrentDownloadFlags := httpclient.ConcurrentDownloadFlags{
 		FileName:      downloadFileDetails.FileName,
 		DownloadPath:  downloadFileDetails.DownloadPath,
+		RelativePath:  downloadFileDetails.RelativePath,
 		LocalFileName: downloadFileDetails.LocalFileName,
 		LocalPath:     downloadFileDetails.LocalPath,
 		ExpectedSha1:  downloadFileDetails.ExpectedSha1,
@@ -245,7 +249,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		Explode:       downloadParams.IsExplode(),
 		Retries:       downloadParams.GetRetries()}
 
-	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails)
+	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails, ds.ProgressBar)
 	if err != nil {
 		return err
 	}

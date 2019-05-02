@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 	"net/http"
 )
@@ -142,10 +143,10 @@ func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte
 }
 
 func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string,
-	httpClientsDetails *httputils.HttpClientDetails, retries int) (resp *http.Response, body []byte, err error) {
+	httpClientsDetails *httputils.HttpClientDetails, retries int, progressBar log.ProgressBar) (resp *http.Response, body []byte, err error) {
 	isNewToken := false
 	for i := 0; i < 2; i++ {
-		resp, body, err = rtc.httpClient.UploadFile(localPath, url, logMsgPrefix, *httpClientsDetails, retries)
+		resp, body, err = rtc.httpClient.UploadFile(localPath, url, logMsgPrefix, *httpClientsDetails, retries, progressBar)
 		if err != nil {
 			return
 		}
@@ -178,11 +179,12 @@ func (rtc *ArtifactoryHttpClient) ReadRemoteFile(downloadPath string, httpClient
 	return
 }
 
-func (rtc *ArtifactoryHttpClient) DownloadFile(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails *httputils.HttpClientDetails, retries int, isExplode bool) (resp *http.Response, err error) {
+func (rtc *ArtifactoryHttpClient) DownloadFileWithProgress(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
+	httpClientsDetails *httputils.HttpClientDetails, retries int, isExplode bool, progressBar log.ProgressBar) (resp *http.Response, err error) {
 	isNewToken := false
 	for i := 0; i < 2; i++ {
-		resp, err = rtc.httpClient.DownloadFile(downloadFileDetails, logMsgPrefix, *httpClientsDetails, retries, isExplode)
+		resp, err = rtc.httpClient.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, *httpClientsDetails,
+			retries, isExplode, progressBar)
 		if err != nil {
 			return
 		}
@@ -197,10 +199,16 @@ func (rtc *ArtifactoryHttpClient) DownloadFile(downloadFileDetails *httpclient.D
 	return
 }
 
-func (rtc *ArtifactoryHttpClient) DownloadFileConcurrently(flags httpclient.ConcurrentDownloadFlags, logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, err error) {
+func (rtc *ArtifactoryHttpClient) DownloadFile(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
+	httpClientsDetails *httputils.HttpClientDetails, retries int, isExplode bool) (resp *http.Response, err error) {
+	return rtc.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, httpClientsDetails, retries, isExplode, nil)
+}
+
+func (rtc *ArtifactoryHttpClient) DownloadFileConcurrently(flags httpclient.ConcurrentDownloadFlags,
+	logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails, progressBar log.ProgressBar) (resp *http.Response, err error) {
 	isNewToken := false
 	for i := 0; i < 2; i++ {
-		resp, err = rtc.httpClient.DownloadFileConcurrently(flags, logMsgPrefix, *httpClientsDetails)
+		resp, err = rtc.httpClient.DownloadFileConcurrently(flags, logMsgPrefix, *httpClientsDetails, progressBar)
 		if err != nil {
 			return
 		}

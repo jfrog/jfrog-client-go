@@ -12,13 +12,18 @@ import (
 )
 
 type ArtifactoryServicesManager struct {
-	client *rthttpclient.ArtifactoryHttpClient
-	config Config
+	client      *rthttpclient.ArtifactoryHttpClient
+	config      Config
+	progressBar log.ProgressBar
 }
 
 func New(artDetails *auth.ArtifactoryDetails, config Config) (*ArtifactoryServicesManager, error) {
+	return NewWithProgress(artDetails, config, nil)
+}
+
+func NewWithProgress(artDetails *auth.ArtifactoryDetails, config Config, progressBar log.ProgressBar) (*ArtifactoryServicesManager, error) {
 	var err error
-	manager := &ArtifactoryServicesManager{config: config}
+	manager := &ArtifactoryServicesManager{config: config, progressBar: progressBar}
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
@@ -92,6 +97,7 @@ func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadP
 	downloadService.DryRun = sm.config.IsDryRun()
 	downloadService.ArtDetails = sm.config.GetArtDetails()
 	downloadService.Threads = sm.config.GetThreads()
+	downloadService.ProgressBar = sm.progressBar
 	return downloadService.DownloadFiles(params...)
 }
 
@@ -133,6 +139,7 @@ func (sm *ArtifactoryServicesManager) UploadFiles(params ...services.UploadParam
 	uploadService.Threads = sm.config.GetThreads()
 	uploadService.ArtDetails = sm.config.GetArtDetails()
 	uploadService.DryRun = sm.config.IsDryRun()
+	uploadService.ProgressBar = sm.progressBar
 	return uploadService.UploadFiles(params...)
 }
 

@@ -21,10 +21,11 @@ import (
 )
 
 type UploadService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
-	DryRun     bool
-	Threads    int
+	client      *rthttpclient.ArtifactoryHttpClient
+	ProgressBar log.ProgressBar
+	ArtDetails  auth.ArtifactoryDetails
+	DryRun      bool
+	Threads     int
 }
 
 func NewUploadService(client *rthttpclient.ArtifactoryHttpClient) *UploadService {
@@ -340,7 +341,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries())
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries(), nil)
 	return
 }
 
@@ -360,7 +361,8 @@ func (us *UploadService) doUpload(localPath, targetPath, logMsgPrefix string, ht
 	}
 	if !us.DryRun && !checksumDeployed {
 		var body []byte
-		resp, body, err = utils.UploadFile(localPath, targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.Retries)
+		resp, body, err = utils.UploadFile(localPath, targetPath, logMsgPrefix, &us.ArtDetails, details,
+			httpClientsDetails, us.client, uploadParams.Retries, us.ProgressBar)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
 		}
