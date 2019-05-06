@@ -17,13 +17,15 @@ func ExtractUsernameFromAccessToken(token string) (string, error) {
 	if len(tokenParts) != 3 {
 		return "", errorutils.CheckError(errors.New("Received invalid access-token."))
 	}
-	payload, _ := base64.RawStdEncoding.DecodeString(tokenParts[1])
+	payload, err := base64.RawStdEncoding.DecodeString(tokenParts[1])
+	if err != nil {
+		return "", errorutils.CheckError(err)
+	}
 
 	// Unmarshal json.
 	var tokenPayload tokenPayload
-	err := json.Unmarshal(payload, &tokenPayload)
+	err = json.Unmarshal(payload, &tokenPayload)
 	if err != nil {
-		fmt.Println(err.Error())
 		return "", errorutils.CheckError(errors.New("Failed extracting payload from the provided access-token." + err.Error()))
 	}
 
@@ -37,7 +39,7 @@ func ExtractUsernameFromAccessToken(token string) (string, error) {
 	if usernameStartIndex < 0 {
 		return "", errorutils.CheckError(errors.New(fmt.Sprintf("Could not extract username from access-token's subject: %s", tokenPayload.Subject)))
 	}
-	username := tokenPayload.Subject[strings.LastIndex(tokenPayload.Subject, "/")+1:]
+	username := tokenPayload.Subject[usernameStartIndex+1:]
 
 	return username, nil
 }
