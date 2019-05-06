@@ -8,6 +8,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -25,7 +26,7 @@ const (
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ArtifactoryDetails, details *fileutils.FileDetails,
-	httpClientsDetails httputils.HttpClientDetails, client *rthttpclient.ArtifactoryHttpClient, retries int, progressBar log.ProgressBar) (*http.Response, []byte, error) {
+	httpClientsDetails httputils.HttpClientDetails, client *rthttpclient.ArtifactoryHttpClient, retries int, progress io.Progress) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
 		details, err = fileutils.GetFileDetails(localPath)
@@ -38,7 +39,7 @@ func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.Ar
 	AddChecksumHeaders(requestClientDetails.Headers, details)
 	AddAuthHeaders(requestClientDetails.Headers, *artifactoryDetails)
 
-	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, retries, progressBar)
+	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, retries, progress)
 }
 
 func AddChecksumHeaders(headers map[string]string, fileDetails *fileutils.FileDetails) {

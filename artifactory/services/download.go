@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -20,11 +21,11 @@ import (
 )
 
 type DownloadService struct {
-	client      *rthttpclient.ArtifactoryHttpClient
-	ProgressBar log.ProgressBar
-	ArtDetails  auth.ArtifactoryDetails
-	DryRun      bool
-	Threads     int
+	client     *rthttpclient.ArtifactoryHttpClient
+	Progress   io.Progress
+	ArtDetails auth.ArtifactoryDetails
+	DryRun     bool
+	Threads    int
 }
 
 func NewDownloadService(client *rthttpclient.ArtifactoryHttpClient) *DownloadService {
@@ -229,7 +230,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	if bulkDownload {
 		var resp *http.Response
 		resp, err := ds.client.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, &httpClientsDetails,
-			downloadParams.GetRetries(), downloadParams.IsExplode(), ds.ProgressBar)
+			downloadParams.GetRetries(), downloadParams.IsExplode(), ds.Progress)
 		if err != nil {
 			return err
 		}
@@ -249,7 +250,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		Explode:       downloadParams.IsExplode(),
 		Retries:       downloadParams.GetRetries()}
 
-	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails, ds.ProgressBar)
+	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails, ds.Progress)
 	if err != nil {
 		return err
 	}

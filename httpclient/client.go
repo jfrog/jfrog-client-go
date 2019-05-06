@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	multifilereader "github.com/jfrog/jfrog-client-go/utils/io"
+	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -140,16 +140,16 @@ func setRequestHeaders(httpClientsDetails httputils.HttpClientDetails, size int6
 	req.Header.Set("Content-Length", length)
 }
 
-// You may implement the log.ProgressBar interface, or pass nil to run without progress bar.
+// You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails,
-	retries int, progressBar log.ProgressBar) (resp *http.Response, body []byte, err error) {
+	retries int, progress ioutils.Progress) (resp *http.Response, body []byte, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      retries,
 		RetriesInterval: 0,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while uploading to %s", url),
 		LogMsgPrefix:    logMsgPrefix,
 		ExecutionHandler: func() (bool, error) {
-			resp, body, err = jc.doUploadFile(localPath, url, httpClientsDetails, progressBar)
+			resp, body, err = jc.doUploadFile(localPath, url, httpClientsDetails, progress)
 			if err != nil {
 				return true, err
 			}
@@ -171,7 +171,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 	return
 }
 
-func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails httputils.HttpClientDetails, progressBar log.ProgressBar) (*http.Response, []byte, error) {
+func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails httputils.HttpClientDetails, progress ioutils.Progress) (*http.Response, []byte, error) {
 	var file *os.File
 	var err error
 	if localPath != "" {
@@ -189,10 +189,10 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 
 	reqContent := fileutils.GetUploadRequestContent(file)
 	var reader io.Reader
-	if file != nil && progressBar != nil {
-		barId := progressBar.NewBar(size, "Uploading", localPath)
-		reader = progressBar.ReadWithProgress(barId, reqContent)
-		defer progressBar.Abort(barId)
+	if file != nil && progress != nil {
+		progressId := progress.New(size, "Uploading", localPath)
+		reader = progress.ReadWithProgress(progressId, reqContent)
+		defer progress.Abort(progressId)
 	} else {
 		reader = reqContent
 	}
@@ -235,10 +235,10 @@ func (jc *HttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails htt
 }
 
 // Bulk downloads a file.
-// You may implement the log.ProgressBar interface, or pass nil to run without progress bar.
+// You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) DownloadFileWithProgress(downloadFileDetails *DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progressBar log.ProgressBar) (*http.Response, error) {
-	resp, _, err := jc.downloadFile(downloadFileDetails, logMsgPrefix, true, httpClientsDetails, retries, isExplode, progressBar)
+	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.Progress) (*http.Response, error) {
+	resp, _, err := jc.downloadFile(downloadFileDetails, logMsgPrefix, true, httpClientsDetails, retries, isExplode, progress)
 	return resp, err
 }
 
@@ -254,14 +254,14 @@ func (jc *HttpClient) DownloadFileNoRedirect(downloadPath, localPath, fileName s
 }
 
 func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string, followRedirect bool,
-	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progressBar log.ProgressBar) (resp *http.Response, redirectUrl string, err error) {
+	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.Progress) (resp *http.Response, redirectUrl string, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      retries,
 		RetriesInterval: 0,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while downloading %s", downloadFileDetails.DownloadPath),
 		LogMsgPrefix:    logMsgPrefix,
 		ExecutionHandler: func() (bool, error) {
-			resp, redirectUrl, err = jc.doDownloadFile(downloadFileDetails, logMsgPrefix, followRedirect, httpClientsDetails, isExplode, progressBar)
+			resp, redirectUrl, err = jc.doDownloadFile(downloadFileDetails, logMsgPrefix, followRedirect, httpClientsDetails, isExplode, progress)
 			// In case followRedirect is 'false' and doDownloadFile did redirect, an error is returned and redirectUrl
 			// receives the redirect address. This case should not retry.
 			if err != nil && !followRedirect && redirectUrl != "" {
@@ -290,7 +290,7 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 }
 
 func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string, followRedirect bool,
-	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progressBar log.ProgressBar) (resp *http.Response, redirectUrl string, err error) {
+	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.Progress) (resp *http.Response, redirectUrl string, err error) {
 	resp, redirectUrl, err = jc.sendGetForFileDownload(downloadFileDetails.DownloadPath, followRedirect, httpClientsDetails, 0)
 	if err != nil {
 		return
@@ -311,7 +311,7 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 	}
 
 	// Save the file to the file system
-	err = saveToFile(downloadFileDetails, resp, progressBar)
+	err = saveToFile(downloadFileDetails, resp, progress)
 	if err != nil {
 		return
 	}
@@ -324,7 +324,7 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 	return
 }
 
-func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, progressBar log.ProgressBar) error {
+func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, progress ioutils.Progress) error {
 	fileName, err := fileutils.CreateFilePath(downloadFileDetails.LocalPath, downloadFileDetails.LocalFileName)
 	if err != nil {
 		return err
@@ -338,10 +338,10 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 	defer out.Close()
 
 	var reader io.Reader
-	if progressBar != nil {
-		barId := progressBar.NewBar(resp.ContentLength, "Downloading", downloadFileDetails.RelativePath)
-		reader = progressBar.ReadWithProgress(barId, resp.Body)
-		defer progressBar.Abort(barId)
+	if progress != nil {
+		progressId := progress.New(resp.ContentLength, "Downloading", downloadFileDetails.RelativePath)
+		reader = progress.ReadWithProgress(progressId, resp.Body)
+		defer progress.Abort(progressId)
 	} else {
 		reader = resp.Body
 	}
@@ -393,9 +393,9 @@ func extractZip(downloadFileDetails *DownloadFileDetails, logMsgPrefix string) e
 // If successful, returns the resp of the last chunk, which will have resp.StatusCode = http.StatusPartialContent
 // Otherwise: if an error occurred - returns the error with resp=nil, else - err=nil and the resp of the first chunk that received statusCode!=http.StatusPartialContent
 // The caller is responsible to check the resp.StatusCode.
-// You may implement the log.ProgressBar interface, or pass nil to run without progress bar.
+// You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, logMsgPrefix string,
-	httpClientsDetails httputils.HttpClientDetails, progressBar log.ProgressBar) (*http.Response, error) {
+	httpClientsDetails httputils.HttpClientDetails, progress ioutils.Progress) (*http.Response, error) {
 	// Create temp dir for file chunks.
 	tempDirPath, err := fileutils.CreateTempDir()
 	if err != nil {
@@ -405,16 +405,16 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 	chunksPaths := make([]string, flags.SplitCount)
 
-	var downloadBarId int
-	if progressBar != nil {
-		downloadBarId = progressBar.NewBar(flags.FileSize, "Downloading", flags.RelativePath)
-		mergingBarId := progressBar.NewBarReplacement(downloadBarId, "  Merging  ", flags.RelativePath)
-		// Aborting order matters. mergingBar depends on the existence of downloadingBar
-		defer progressBar.Abort(downloadBarId)
-		defer progressBar.Abort(mergingBarId)
+	var downloadProgressId int
+	if progress != nil {
+		downloadProgressId = progress.New(flags.FileSize, "Downloading", flags.RelativePath)
+		mergingProgressId := progress.NewReplacement(downloadProgressId, "  Merging  ", flags.RelativePath)
+		// Aborting order matters. mergingProgress depends on the existence of downloadingProgress
+		defer progress.Abort(downloadProgressId)
+		defer progress.Abort(mergingProgressId)
 	}
 
-	resp, err := jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, tempDirPath, httpClientsDetails, progressBar, downloadBarId)
+	resp, err := jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, tempDirPath, httpClientsDetails, progress, downloadProgressId)
 	if err != nil {
 		return nil, err
 	}
@@ -489,7 +489,7 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 // Otherwise: if an error occurred - returns the error with resp=nil, else - err=nil and the resp of the first chunk that received statusCode!=http.StatusPartialContent
 // The caller is responsible to check the resp.StatusCode.
 func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags ConcurrentDownloadFlags, logMsgPrefix,
-	chunksDownloadPath string, httpClientsDetails httputils.HttpClientDetails, progressBar log.ProgressBar, barId int) (*http.Response, error) {
+	chunksDownloadPath string, httpClientsDetails httputils.HttpClientDetails, progress ioutils.Progress, progressId int) (*http.Response, error) {
 	var wg sync.WaitGroup
 	chunkSize := flags.FileSize / int64(flags.SplitCount)
 	mod := flags.FileSize % int64(flags.SplitCount)
@@ -517,7 +517,7 @@ func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags Con
 		}
 		requestClientDetails := httpClientsDetails.Clone()
 		go func(start, end int64, i int) {
-			chunksPaths[i], respList[i], errorsList[i] = jc.downloadFileRange(flags, start, end, i, logMsgPrefix, chunksDownloadPath, *requestClientDetails, flags.Retries, progressBar, barId)
+			chunksPaths[i], respList[i], errorsList[i] = jc.downloadFileRange(flags, start, end, i, logMsgPrefix, chunksDownloadPath, *requestClientDetails, flags.Retries, progress, progressId)
 			// Write to the global vars if the chunk wasn't downloaded successfully
 			if errorsList[i] != nil {
 				err = errorsList[i]
@@ -581,7 +581,7 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
 
 func extractAndMergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags, logMsgPrefix string) (bool, error) {
 	if fileutils.IsZip(flags.FileName) {
-		multiReader, err := multifilereader.NewMultiFileReaderAt(chunksPaths)
+		multiReader, err := ioutils.NewMultiFileReaderAt(chunksPaths)
 		if errorutils.CheckError(err) != nil {
 			return false, err
 		}
@@ -620,14 +620,14 @@ func extractAndMergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags, 
 }
 
 func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
-	httpClientsDetails httputils.HttpClientDetails, retries int, progressBar log.ProgressBar, barId int) (fileName string, resp *http.Response, err error) {
+	httpClientsDetails httputils.HttpClientDetails, retries int, progress ioutils.Progress, progressId int) (fileName string, resp *http.Response, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      retries,
 		RetriesInterval: 0,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while downloading part %d of %s", currentSplit, flags.DownloadPath),
 		LogMsgPrefix:    fmt.Sprintf("%s[%s]: ", logMsgPrefix, strconv.Itoa(currentSplit)),
 		ExecutionHandler: func() (bool, error) {
-			fileName, resp, err = jc.doDownloadFileRange(flags, start, end, currentSplit, logMsgPrefix, chunkDownloadPath, httpClientsDetails, progressBar, barId)
+			fileName, resp, err = jc.doDownloadFileRange(flags, start, end, currentSplit, logMsgPrefix, chunkDownloadPath, httpClientsDetails, progress, progressId)
 			if err != nil {
 				return true, err
 			}
@@ -650,7 +650,7 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 }
 
 func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
-	httpClientsDetails httputils.HttpClientDetails, progressBar log.ProgressBar, barId int) (fileName string, resp *http.Response, err error) {
+	httpClientsDetails httputils.HttpClientDetails, progress ioutils.Progress, progressId int) (fileName string, resp *http.Response, err error) {
 
 	tempFile, err := ioutil.TempFile(chunkDownloadPath, strconv.Itoa(currentSplit)+"_")
 	if errorutils.CheckError(err) != nil {
@@ -680,8 +680,8 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	}
 
 	var reader io.Reader
-	if progressBar != nil {
-		reader = progressBar.ReadWithProgress(barId, resp.Body)
+	if progress != nil {
+		reader = progress.ReadWithProgress(progressId, resp.Body)
 	} else {
 		reader = resp.Body
 	}
