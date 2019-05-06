@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -21,6 +22,7 @@ import (
 
 type DownloadService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
+	Progress   io.Progress
 	ArtDetails auth.ArtifactoryDetails
 	DryRun     bool
 	Threads    int
@@ -207,6 +209,7 @@ func createDownloadFileDetails(downloadPath, localPath, localFileName string, do
 	details = &httpclient.DownloadFileDetails{
 		FileName:      downloadData.Dependency.Name,
 		DownloadPath:  downloadPath,
+		RelativePath:  downloadData.Dependency.GetItemRelativePath(),
 		LocalPath:     localPath,
 		LocalFileName: localFileName,
 		Size:          downloadData.Dependency.Size,
@@ -226,7 +229,8 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	}
 	if bulkDownload {
 		var resp *http.Response
-		resp, err := ds.client.DownloadFile(downloadFileDetails, logMsgPrefix, &httpClientsDetails, downloadParams.GetRetries(), downloadParams.IsExplode())
+		resp, err := ds.client.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, &httpClientsDetails,
+			downloadParams.GetRetries(), downloadParams.IsExplode(), ds.Progress)
 		if err != nil {
 			return err
 		}
@@ -237,6 +241,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	concurrentDownloadFlags := httpclient.ConcurrentDownloadFlags{
 		FileName:      downloadFileDetails.FileName,
 		DownloadPath:  downloadFileDetails.DownloadPath,
+		RelativePath:  downloadFileDetails.RelativePath,
 		LocalFileName: downloadFileDetails.LocalFileName,
 		LocalPath:     downloadFileDetails.LocalPath,
 		ExpectedSha1:  downloadFileDetails.ExpectedSha1,
@@ -245,7 +250,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		Explode:       downloadParams.IsExplode(),
 		Retries:       downloadParams.GetRetries()}
 
-	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails)
+	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails, ds.Progress)
 	if err != nil {
 		return err
 	}

@@ -7,18 +7,24 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 )
 
 type ArtifactoryServicesManager struct {
-	client *rthttpclient.ArtifactoryHttpClient
-	config Config
+	client   *rthttpclient.ArtifactoryHttpClient
+	config   Config
+	progress ioutils.Progress
 }
 
 func New(artDetails *auth.ArtifactoryDetails, config Config) (*ArtifactoryServicesManager, error) {
+	return NewWithProgress(artDetails, config, nil)
+}
+
+func NewWithProgress(artDetails *auth.ArtifactoryDetails, config Config, progress ioutils.Progress) (*ArtifactoryServicesManager, error) {
 	var err error
-	manager := &ArtifactoryServicesManager{config: config}
+	manager := &ArtifactoryServicesManager{config: config, progress: progress}
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
@@ -92,6 +98,7 @@ func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadP
 	downloadService.DryRun = sm.config.IsDryRun()
 	downloadService.ArtDetails = sm.config.GetArtDetails()
 	downloadService.Threads = sm.config.GetThreads()
+	downloadService.Progress = sm.progress
 	return downloadService.DownloadFiles(params...)
 }
 
@@ -133,6 +140,7 @@ func (sm *ArtifactoryServicesManager) UploadFiles(params ...services.UploadParam
 	uploadService.Threads = sm.config.GetThreads()
 	uploadService.ArtDetails = sm.config.GetArtDetails()
 	uploadService.DryRun = sm.config.IsDryRun()
+	uploadService.Progress = sm.progress
 	return uploadService.UploadFiles(params...)
 }
 

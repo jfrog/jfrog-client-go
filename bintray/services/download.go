@@ -233,7 +233,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 				SplitCount:    downloadParams.SplitCount,
 				Retries:       utils.BintrayDownloadRetries}
 
-			resp, err = client.DownloadFileConcurrently(concurrentDownloadFlags, "", httpClientsDetails)
+			resp, err = client.DownloadFileConcurrently(concurrentDownloadFlags, "", httpClientsDetails, nil)
 			if errorutils.CheckError(err) != nil {
 				return err
 			}

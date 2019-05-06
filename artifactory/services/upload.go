@@ -8,6 +8,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
@@ -22,6 +23,7 @@ import (
 
 type UploadService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
+	Progress   ioutils.Progress
 	ArtDetails auth.ArtifactoryDetails
 	DryRun     bool
 	Threads    int
@@ -340,7 +342,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries())
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries(), nil)
 	return
 }
 
@@ -360,7 +362,8 @@ func (us *UploadService) doUpload(localPath, targetPath, logMsgPrefix string, ht
 	}
 	if !us.DryRun && !checksumDeployed {
 		var body []byte
-		resp, body, err = utils.UploadFile(localPath, targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.Retries)
+		resp, body, err = utils.UploadFile(localPath, targetPath, logMsgPrefix, &us.ArtDetails, details,
+			httpClientsDetails, us.client, uploadParams.Retries, us.Progress)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
 		}

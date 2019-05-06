@@ -70,7 +70,7 @@ func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err e
 	} else {
 		fileInfo, err = os.Stat(path)
 	}
-	return fileInfo, err
+	return fileInfo, errorutils.CheckError(err)
 }
 
 func IsPathSymlink(path string) bool {
