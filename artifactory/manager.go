@@ -116,6 +116,30 @@ func (sm *ArtifactoryServicesManager) Aql(aql string) ([]byte, error) {
 	return aqlService.ExecAql(aql)
 }
 
+func (sm *ArtifactoryServicesManager) GetFileInfo(relativePath string) (services.FileInfo, error) {
+	fileService := services.NewFileService(sm.client)
+	fileService.ArtDetails = sm.config.GetArtDetails()
+	return fileService.GetInfo(relativePath)
+}
+
+func (sm *ArtifactoryServicesManager) GetFileLastModified(relativePath string) (string, error) {
+	fileService := services.NewFileService(sm.client)
+	fileService.ArtDetails = sm.config.GetArtDetails()
+	return fileService.GetLastModified(relativePath)
+}
+
+func (sm *ArtifactoryServicesManager) GetFileStats(relativePath string) (string, error) {
+	fileService := services.NewFileService(sm.client)
+	fileService.ArtDetails = sm.config.GetArtDetails()
+	return fileService.GetLastModified(relativePath)
+}
+
+func (sm *ArtifactoryServicesManager) GetFileProps(relativePath string, props string) ([]utils.Property, error) {
+	fileService := services.NewFileService(sm.client)
+	fileService.ArtDetails = sm.config.GetArtDetails()
+	return fileService.GetProps(relativePath, props)
+}
+
 func (sm *ArtifactoryServicesManager) SetProps(params services.PropsParams) (int, error) {
 	setPropsService := services.NewPropsService(sm.client)
 	setPropsService.ArtDetails = sm.config.GetArtDetails()

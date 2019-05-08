@@ -26,7 +26,7 @@ simply do the following:
 ```
     rtDetails := auth.NewArtifactoryDetails()
     rtDetails.SetUrl("http://localhost:8081/artifactory")
-    rtDetails.SetSshKeysPath("path/to/.ssh/")
+    rtDetails.SetSshKeyPath("path/to/.ssh/")
     rtDetails.SetApiKey("apikey")
     rtDetails.SetUser("user")
     rtDetails.SetPassword("password")
@@ -155,6 +155,26 @@ simply do the following:
     propsParams.Props = "key=value"
 
     rtManager.DeleteProps(propsParams)
+```
+
+#### Reading Properties from Files in Artifactory
+```
+	itemProperties, err := rtManager.GetFileProps("repo/folder1/afile.zip", "prop1,prop2")
+```
+
+#### Reading Info from Files in Artifactory
+```
+	fileInfo, err := rtManager.GetFileInfo("repo/pkg/pkg.zip")
+```
+
+#### Reading Last Modified from Files in Artifactory
+```
+	fileLastModified, err := rtManager.GetFileLastModified("repo/pkg/pkg.zip")
+```
+
+#### Reading Stats from Files in Artifactory
+```
+	fileStats, err := rtManager.GetFileStats("repo/pkg/pkg.zip")
 ```
 
 #### Publishing Build Info to Artifactory
