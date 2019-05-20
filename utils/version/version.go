@@ -1,20 +1,33 @@
 package version
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
 	"strconv"
 	"strings"
 )
 
-// If ver1 == ver2 returns 0
-// If ver1 > ver2 returns 1
-// If ver1 < ver2 returns -1
-func Compare(ver1, ver2 string) int {
-	if ver1 == ver2 {
+type Version struct {
+	version string
+}
+
+func NewVersion(version string) *Version {
+	return &Version{version: version}
+}
+
+func (version *Version) SetVersion(artifactoryVersion string) {
+	version.version = artifactoryVersion
+}
+
+// If ver1 == version returns 0
+// If ver1 > version returns 1
+// If ver1 < version returns -1
+func (version *Version) Compare(ver1 string) int {
+	if ver1 == version.version {
 		return 0
 	}
 
 	ver1Tokens := strings.Split(ver1, ".")
-	ver2Tokens := strings.Split(ver2, ".")
+	ver2Tokens := strings.Split(version.version, ".")
 
 	maxIndex := len(ver1Tokens)
 	if len(ver2Tokens) > maxIndex {
@@ -39,6 +52,13 @@ func Compare(ver1, ver2 string) int {
 	return 0
 }
 
+func (version *Version) AtLeast(artifactoryVersion string) bool {
+	if version.Compare(artifactoryVersion) < 0 && artifactoryVersion != utils.Development {
+		return false
+	}
+	return true
+}
+
 func compareTokens(ver1Token, ver2Token string) int {
 	// Ignoring error because we strip all the non numeric values in advance.
 	ver1TokenInt, _ := strconv.Atoi(getFirstNumeral(ver1Token))
@@ -57,7 +77,7 @@ func compareTokens(ver1Token, ver2Token string) int {
 func getFirstNumeral(token string) string {
 	numeric := ""
 	for i := 0; i < len(token); i++ {
-		n := token[i:i+1]
+		n := token[i : i+1]
 		if _, err := strconv.Atoi(n); err != nil {
 			return "999999"
 		}

@@ -13,6 +13,10 @@ import (
 	"strings"
 )
 
+const (
+	Development = "development"
+)
+
 var userAgent = getDefaultUserAgent()
 
 func getVersion() string {

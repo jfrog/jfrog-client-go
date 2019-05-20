@@ -1,11 +1,12 @@
-package reportusage
+package usage
 
 import (
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 )
 
-func TestIsCompatible(t *testing.T) {
+func TestIsVersionCompatible(t *testing.T) {
 	tests := []struct {
 		artifactoryVersion string
 		expectedResult     bool
@@ -16,13 +17,13 @@ func TestIsCompatible(t *testing.T) {
 		{"6.0.0", false},
 		{"6.6.0", false},
 		{"6.9.0", true},
-		{"development", true},
+		{utils.Development, true},
 		{"6.10.2", true},
 		{"6.15.2", true},
 	}
 	for _, test := range tests {
 		t.Run(test.artifactoryVersion, func(t *testing.T) {
-			result := isCompatible(test.artifactoryVersion)
+			result := isVersionCompatible(test.artifactoryVersion)
 			if test.expectedResult != result {
 				t.Error(fmt.Errorf("Expected %t, got %t", test.expectedResult, result))
 			}
