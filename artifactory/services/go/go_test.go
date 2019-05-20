@@ -1,6 +1,7 @@
 package _go
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
 	"reflect"
 	"strings"
 	"testing"
@@ -42,7 +43,7 @@ func TestShouldUseHeaders(t *testing.T) {
 		{"6.0.0", "*_go.publishWithHeader"},
 		{"6.6.0", "*_go.publishWithMatrixParams"},
 		{"6.6.1", "*_go.publishZipAndModApi"},
-		{"development", "*_go.publishZipAndModApi"},
+		{utils.Development, "*_go.publishZipAndModApi"},
 		{"6.10.2", "*_go.publishZipAndModApi"},
 	}
 	for _, test := range tests {

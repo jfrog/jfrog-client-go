@@ -44,7 +44,8 @@ func TestCompare(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.ver1+":"+test.ver2, func(t *testing.T) {
-			result := Compare(test.ver1, test.ver2)
+			version := Version{version: test.ver2}
+			result := version.Compare(test.ver1)
 			if result != test.expected {
 				t.Error("ver1:", test.ver1, "ver2:", test.ver2, "Expecting:", test.expected, "got:", result)
 			}

@@ -21,10 +21,8 @@ type publishZipAndModApi struct {
 
 func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
 	propertiesApi := "6.6.1"
-	if version.Compare(artifactoryVersion, propertiesApi) < 0 && artifactoryVersion != "development" {
-		return false
-	}
-	return true
+	version := version.NewVersion(propertiesApi)
+	return version.AtLeast(artifactoryVersion)
 }
 
 func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.ArtifactoryDetails) error {

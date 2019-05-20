@@ -19,7 +19,8 @@ type publishWithHeader struct {
 
 func (pwh *publishWithHeader) isCompatible(artifactoryVersion string) bool {
 	propertiesApi := "6.5.0"
-	if version.Compare(artifactoryVersion, propertiesApi) < 0 {
+	version := version.NewVersion(propertiesApi)
+	if version.Compare(artifactoryVersion) < 0 {
 		return true
 	}
 	return false

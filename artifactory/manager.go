@@ -179,3 +179,7 @@ func (sm *ArtifactoryServicesManager) GetBuildInfo(params services.BuildInfoPara
 	buildInfoService.ArtDetails = sm.config.GetArtDetails()
 	return buildInfoService.GetBuildInfo(params)
 }
+
+func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
+	return sm.client
+}
