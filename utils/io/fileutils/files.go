@@ -281,6 +281,10 @@ func GetHomeDir() string {
 	if home != "" {
 		return home
 	}
+	home = os.Getenv("USERPROFILE")
+	if home != "" {
+		return home
+	}
 	user, err := user.Current()
 	if err == nil {
 		return user.HomeDir
