@@ -50,10 +50,14 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	}
 
 	// Get the project root.
-	root, err := FindUpstream("go.mod", File)
+	root, exists, err := FindUpstream("go.mod", File)
 	if err != nil {
 		t.Error(err)
 	}
+	if !exists {
+		t.Error("File go.mod is missing.")
+	}
+
 	if root != projectRoot {
 		t.Error("Expecting", projectRoot, "got:", root)
 	}
@@ -70,9 +74,12 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	root, err = FindUpstream("go.mod", File)
+	root, exists, err = FindUpstream("go.mod", File)
 	if err != nil {
 		t.Error(err)
+	}
+	if !exists {
+		t.Error("File go.mod is missing.")
 	}
 	if root != projectRoot {
 		t.Error("Expecting", projectRoot, "got:", root)
@@ -89,9 +96,12 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	root, err = FindUpstream("go.mod", File)
+	root, exists, err = FindUpstream("go.mod", File)
 	if err != nil {
 		t.Error(err)
+	}
+	if !exists {
+		t.Error("File go.mod is missing.")
 	}
 	if root == projectRoot {
 		t.Error("Expecting a different value than", root)
@@ -129,9 +139,12 @@ func TestGetFileOrDirPathFolder(t *testing.T) {
 	}
 
 	// Get the directory path.
-	root, err := FindUpstream("noproject", Dir)
+	root, exists, err := FindUpstream("noproject", Dir)
 	if err != nil {
 		t.Error(err)
+	}
+	if !exists {
+		t.Error("Dir noproject is missing.")
 	}
 	if root != dirPath {
 		t.Error("Expecting", dirPath, "got:", root)
