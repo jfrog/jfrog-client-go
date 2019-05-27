@@ -5,6 +5,7 @@ import (
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/version"
 	"net/http"
 	"net/url"
@@ -15,13 +16,19 @@ func init() {
 	register(&publishZipAndModApi{})
 }
 
+const ArtifactoryMinSupportedVersionForInfoFile = "6.10.0"
+
 // Support for Artifactory 6.6.1 and above API
 type publishZipAndModApi struct {
+	artifactoryVersion string
+	clientDetails      httputils.HttpClientDetails
+	client             *rthttpclient.ArtifactoryHttpClient
 }
 
 func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
 	propertiesApi := "6.6.1"
 	version := version.NewVersion(propertiesApi)
+	pwa.artifactoryVersion = artifactoryVersion
 	return version.AtLeast(artifactoryVersion)
 }
 
@@ -30,35 +37,39 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpcl
 	if err != nil {
 		return err
 	}
-	zipUrl := url
+	pwa.clientDetails = ArtDetails.CreateHttpClientDetails()
+	pwa.client = client
 	moduleId := strings.Split(params.GetModuleId(), ":")
-	err = createUrlPath(moduleId[0], params.GetVersion(), params.GetProps(), ".zip", &zipUrl)
+	// Upload zip file
+	err = pwa.upload(params.GetZipPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".zip", url)
 	if err != nil {
 		return err
 	}
-	clientDetails := ArtDetails.CreateHttpClientDetails()
+	// Upload mod file
+	err = pwa.upload(params.GetModPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".mod", url)
+	if err != nil {
+		return err
+	}
+	if version.NewVersion(ArtifactoryMinSupportedVersionForInfoFile).AtLeast(pwa.artifactoryVersion) && params.GetInfoPath() != "" {
+		// Upload info file. This supported from Artifactory version 6.10.0 and above
+		return pwa.upload(params.GetInfoPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".info", url)
+	}
+	return nil
+}
 
-	addGoVersion(params, &zipUrl)
-	resp, _, err := client.UploadFile(params.GetZipPath(), zipUrl, "", &clientDetails, GoUploadRetries, nil)
+func addGoVersion(version string, urlPath *string) {
+	*urlPath += ";go.version=" + url.QueryEscape(version)
+}
+
+func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext string, urlPath string) error {
+	err := createUrlPath(moduleId, version, props, ext, &urlPath)
 	if err != nil {
 		return err
 	}
-	err = errorutils.CheckResponseStatus(resp, http.StatusCreated)
-	if err != nil {
-		return err
-	}
-	err = createUrlPath(moduleId[0], params.GetVersion(), params.GetProps(), ".mod", &url)
-	if err != nil {
-		return err
-	}
-	addGoVersion(params, &url)
-	resp, _, err = client.UploadFile(params.GetModPath(), url, "", &clientDetails, GoUploadRetries, nil)
+	addGoVersion(version, &urlPath)
+	resp, _, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil)
 	if err != nil {
 		return err
 	}
 	return errorutils.CheckResponseStatus(resp, http.StatusCreated)
-}
-
-func addGoVersion(params GoParams, urlPath *string) {
-	*urlPath += ";go.version=" + url.QueryEscape(params.GetVersion())
 }

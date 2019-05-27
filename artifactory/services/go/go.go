@@ -41,6 +41,7 @@ func (gs *GoService) PublishPackage(params GoParams) error {
 type GoParams struct {
 	ZipPath    string
 	ModPath    string
+	InfoPath   string
 	ModContent []byte
 	Version    string
 	Props      string
@@ -74,6 +75,10 @@ func (gp *GoParams) GetModuleId() string {
 
 func (gp *GoParams) GetModPath() string {
 	return gp.ModPath
+}
+
+func (gp *GoParams) GetInfoPath() string {
+	return gp.InfoPath
 }
 
 func NewGoParams() GoParams {
