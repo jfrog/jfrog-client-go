@@ -85,6 +85,18 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 		t.Error("Expecting", projectRoot, "got:", root)
 	}
 
+	root, exists, err = FindUpstream("go-missing.mod", File)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		t.Error("File go-missing.mod found but shouldn't.")
+	}
+
+	if root != "" {
+		t.Error("File go-missing.mod shouldn't be found, however, got:", root)
+	}
+
 	// CD back to the original directory.
 	if err := os.Chdir(wd); err != nil {
 		t.Error(err)
