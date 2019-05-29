@@ -3,8 +3,6 @@ package fileutils
 import (
 	"bufio"
 	"bytes"
-	"errors"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"io"
@@ -406,13 +404,13 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 // Returns the path to the directory in which itemToFind is located.
 // Traversing through directories from current work-dir to root.
 // itemType determines whether looking for a file or dir.
-func FindUpstream(itemToFInd string, itemType ItemType) (string, error) {
+func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool, err error) {
 	// Create a map to store all paths visited, to avoid running in circles.
 	visitedPaths := make(map[string]bool)
 	// Get the current directory.
-	wd, err := os.Getwd()
+	wd, err = os.Getwd()
 	if err != nil {
-		return wd, errorutils.CheckError(err)
+		return
 	}
 	defer os.Chdir(wd)
 
@@ -428,7 +426,7 @@ func FindUpstream(itemToFInd string, itemType ItemType) (string, error) {
 
 	// Check if the current directory includes itemToFind. If not, check the parent directory
 	// and so on.
-	exists := false
+	exists = false
 	for {
 		// If itemToFind is found in the current directory, return the path.
 		if itemType == File {
@@ -437,7 +435,7 @@ func FindUpstream(itemToFInd string, itemType ItemType) (string, error) {
 			exists, err = IsDirExists(filepath.Join(wd, itemToFInd), false)
 		}
 		if err != nil || exists {
-			return wd, err
+			return
 		}
 
 		// If this the OS root, we can stop.
@@ -453,11 +451,11 @@ func FindUpstream(itemToFInd string, itemType ItemType) (string, error) {
 
 		// If we already visited this directory, it means that there's a loop and we can stop.
 		if visitedPaths[wd] {
-			return "", errorutils.CheckError(errors.New(fmt.Sprintf("Could not find %s.", itemToFInd)))
+			return "", false, nil
 		}
 	}
 
-	return "", errorutils.CheckError(errors.New(fmt.Sprintf("Could not find %s.", itemToFInd)))
+	return "", false, nil
 }
 
 type ItemType string
