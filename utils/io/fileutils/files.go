@@ -68,7 +68,8 @@ func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err e
 	} else {
 		fileInfo, err = os.Stat(path)
 	}
-	return fileInfo, errorutils.CheckError(err)
+	// We should not do CheckError here, because the error is checked by the calling functions.
+	return fileInfo, err
 }
 
 func IsPathSymlink(path string) bool {
@@ -153,7 +154,7 @@ func ListFilesWithExtension(path, ext string) ([]string, error) {
 		if IsPathSymlink(filePath) {
 			// Gets the file info of the symlink.
 			file, err := GetFileInfo(filePath, false)
-			if err != nil {
+			if errorutils.CheckError(err) != nil {
 				return nil, err
 			}
 			// Checks if the symlink is a file.
@@ -276,6 +277,10 @@ func AppendFile(srcPath string, destFile *os.File) error {
 
 func GetHomeDir() string {
 	home := os.Getenv("HOME")
+	if home != "" {
+		return home
+	}
+	home = os.Getenv("USERPROFILE")
 	if home != "" {
 		return home
 	}
