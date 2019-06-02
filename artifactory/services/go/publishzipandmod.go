@@ -27,9 +27,9 @@ type publishZipAndModApi struct {
 
 func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
 	propertiesApi := "6.6.1"
-	version := version.NewVersion(propertiesApi)
+	version := version.NewVersion(artifactoryVersion)
 	pwa.artifactoryVersion = artifactoryVersion
-	return version.AtLeast(artifactoryVersion)
+	return version.AtLeast(propertiesApi)
 }
 
 func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.ArtifactoryDetails) error {
@@ -50,7 +50,7 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpcl
 	if err != nil {
 		return err
 	}
-	if version.NewVersion(ArtifactoryMinSupportedVersionForInfoFile).AtLeast(pwa.artifactoryVersion) && params.GetInfoPath() != "" {
+	if version.NewVersion(pwa.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != "" {
 		// Upload info file. This supported from Artifactory version 6.10.0 and above
 		return pwa.upload(params.GetInfoPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".info", url)
 	}

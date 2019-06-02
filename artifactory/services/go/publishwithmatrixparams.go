@@ -20,12 +20,11 @@ type publishWithMatrixParams struct {
 func (pwmp *publishWithMatrixParams) isCompatible(artifactoryVersion string) bool {
 	propertiesApi := "6.5.0"
 	withoutApi := "6.6.1"
-	version := version.NewVersion(propertiesApi)
-	if version.Compare(artifactoryVersion) < 0 {
+	version := version.NewVersion(artifactoryVersion)
+	if version.Compare(propertiesApi) > 0 {
 		return false
 	}
-	version.SetVersion(withoutApi)
-	if version.Compare(artifactoryVersion) >= 0 {
+	if version.Compare(withoutApi) <= 0 {
 		return false
 	}
 	return true
