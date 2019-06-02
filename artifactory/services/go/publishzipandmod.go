@@ -61,7 +61,13 @@ func addGoVersion(version string, urlPath *string) {
 	*urlPath += ";go.version=" + url.QueryEscape(version)
 }
 
-func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext string, urlPath string) error {
+// localPath - The location of the file on the file system.
+// moduleId - The name of the module for example github.com/jfrog/jfrog-client-go.
+// version - The version of the project that being uploaded.
+// props - The properties to be assigned for each artifact
+// ext - The extension of the file: zip, mod, info. This extension will be joined with the version for the path. For example v1.2.3.info or v1.2.3.zip
+// urlPath - The url including the repository. For example: http://127.0.0.1/artifactory/api/go/go-local
+func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext, urlPath string) error {
 	err := createUrlPath(moduleId, version, props, ext, &urlPath)
 	if err != nil {
 		return err
