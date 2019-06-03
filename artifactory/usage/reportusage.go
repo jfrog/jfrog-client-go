@@ -60,8 +60,8 @@ func SendReportUsage(productId, commandName string, serviceManager *artifactory.
 // Returns an error if the Artifactory version is not compatible
 func isVersionCompatible(artifactoryVersion string) bool {
 	// API exists from Artifactory version 6.9.0 and above:
-	version := versionutil.NewVersion(minArtifactoryVersion)
-	return version.AtLeast(artifactoryVersion)
+	version := versionutil.NewVersion(artifactoryVersion)
+	return version.AtLeast(minArtifactoryVersion)
 }
 
 func reportUsageToJson(productId, commandName string) ([]byte, error) {

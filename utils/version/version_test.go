@@ -52,3 +52,30 @@ func TestCompare(t *testing.T) {
 		})
 	}
 }
+
+func TestAtLeast(t *testing.T) {
+	tests := []struct {
+		ver1     string
+		ver2     string
+		expected bool
+	}{
+		{"1.0.0", "1.0.0", true},
+		{"1.0.1", "1.0.0", true},
+		{"5.10.0", "5.5.2", true},
+		{"1.0.x-SNAPSHOT", "1.0.x-SNAPSHOT", true},
+		{"1.1.x-SNAPSHOT", "1.0.x-SNAPSHOT", true},
+		{"2.0.x-SNAPSHOT", "1.0.x-SNAPSHOT", true},
+		{"development", "5.5", true},
+		{"6.2.0", "6.5.0", false},
+		{"6.6.0", "6.8.0", false},
+	}
+	for _, test := range tests {
+		t.Run(test.ver1+":"+test.ver2, func(t *testing.T) {
+			version := Version{version: test.ver1}
+			result := version.AtLeast(test.ver2)
+			if result != test.expected {
+				t.Error("ver1:", test.ver1, "ver2:", test.ver2, "Expecting:", test.expected, "got:", result)
+			}
+		})
+	}
+}

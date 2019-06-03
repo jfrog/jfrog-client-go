@@ -52,8 +52,9 @@ func (version *Version) Compare(ver1 string) int {
 	return 0
 }
 
-func (version *Version) AtLeast(artifactoryVersion string) bool {
-	if version.Compare(artifactoryVersion) < 0 && artifactoryVersion != utils.Development {
+// Returns true if this version is larger or equals from the version sent as an argument.
+func (version *Version) AtLeast(minVersion string) bool {
+	if version.Compare(minVersion) > 0 && version.version != utils.Development {
 		return false
 	}
 	return true
