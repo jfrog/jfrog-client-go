@@ -52,8 +52,7 @@ func (version *Version) Compare(ver1 string) int {
 	return 0
 }
 
-// Compares the min version with the version of Artifactory in the version struct
-// Returns false if the min version is bigger then Artifactory version used. Otherwise returns true.
+// Returns true if this version is larger or equals from the version sent as an argument.
 func (version *Version) AtLeast(minVersion string) bool {
 	if version.Compare(minVersion) > 0 && version.version != utils.Development {
 		return false
