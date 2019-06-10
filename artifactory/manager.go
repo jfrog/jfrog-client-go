@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 )
 
@@ -32,9 +31,6 @@ func NewWithProgress(artDetails *auth.ArtifactoryDetails, config Config, progres
 		Build()
 	if err != nil {
 		return nil, err
-	}
-	if config.GetLogger() != nil {
-		log.SetLogger(config.GetLogger())
 	}
 	return manager, err
 }

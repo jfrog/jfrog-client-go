@@ -2,7 +2,6 @@ package bintray
 
 import (
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 func NewConfigBuilder() *bintrayServicesConfigBuilder {
@@ -15,7 +14,6 @@ type bintrayServicesConfigBuilder struct {
 	auth.BintrayDetails
 	threads  int
 	isDryRun bool
-	logger   log.Log
 }
 
 func (builder *bintrayServicesConfigBuilder) SetBintrayDetails(artDetails auth.BintrayDetails) *bintrayServicesConfigBuilder {
@@ -37,11 +35,5 @@ func (builder *bintrayServicesConfigBuilder) Build() Config {
 	c := &bintrayServicesConfig{}
 	c.BintrayDetails = builder.BintrayDetails
 	c.threads = builder.threads
-	c.logger = builder.logger
 	return c
-}
-
-func (builder *bintrayServicesConfigBuilder) SetLogger(logger log.Log) *bintrayServicesConfigBuilder {
-	builder.logger = logger
-	return builder
 }

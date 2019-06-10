@@ -12,6 +12,13 @@ The project is still relatively new, and its APIs may therefore change frequentl
 The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you may look at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
 
 ## General APIs
+### Set logger
+```
+var file *os.File
+...
+log.SetLogger(log.NewLogger(log.INFO, file))
+```
+
 ### Setting the temp dir
 The default temp dir used is  'os.TempDir()'. Use the following API to set a new temp dir:
 ```
@@ -37,7 +44,6 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
         SetCertificatesPath(certPath).
         SetThreads(threads).
         SetDryRun(false).
-        SetLogger(logger).
         Build()
 ```
 #### Creating New Service Manager
@@ -266,7 +272,6 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
         SetBintrayDetails(btDetails).
         SetDryRun(false).
         SetThreads(threads).
-        SetLogger(logger).
         Build()
 
     btManager, err := bintray.New(serviceConfig)

@@ -12,7 +12,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/bintray/services/utils"
 	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
 	"github.com/jfrog/jfrog-client-go/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type ServicesManager struct {
@@ -28,9 +27,6 @@ func New(config Config) (*ServicesManager, error) {
 		return nil, err
 	}
 	manager.client = client
-	if config.GetLogger() != nil {
-		log.SetLogger(config.GetLogger())
-	}
 	return manager, err
 }
 

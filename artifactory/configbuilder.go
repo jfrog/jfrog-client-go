@@ -2,7 +2,6 @@ package artifactory
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 func NewConfigBuilder() *artifactoryServicesConfigBuilder {
@@ -16,7 +15,6 @@ type artifactoryServicesConfigBuilder struct {
 	certificatesPath string
 	threads          int
 	isDryRun         bool
-	logger           log.Log
 	insecureTls      bool
 }
 
@@ -49,14 +47,8 @@ func (builder *artifactoryServicesConfigBuilder) Build() (Config, error) {
 	c := &artifactoryServicesConfig{}
 	c.ArtifactoryDetails = builder.ArtifactoryDetails
 	c.threads = builder.threads
-	c.logger = builder.logger
 	c.certificatesPath = builder.certificatesPath
 	c.dryRun = builder.isDryRun
 	c.insecureTls = builder.insecureTls
 	return c, nil
-}
-
-func (builder *artifactoryServicesConfigBuilder) SetLogger(logger log.Log) *artifactoryServicesConfigBuilder {
-	builder.logger = logger
-	return builder
 }

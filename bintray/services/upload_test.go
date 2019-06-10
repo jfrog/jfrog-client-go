@@ -8,9 +8,11 @@ import (
 	"path/filepath"
 	"strconv"
 	"testing"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 func TestSingleFileUpload(t *testing.T) {
+	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	uploadService, err := newDryRunUploadService()
 	if err != nil {
 		t.Error(err.Error())

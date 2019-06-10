@@ -2,9 +2,11 @@ package utils
 
 import (
 	"testing"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 func TestBuildParsingNoBuildNumber(t *testing.T) {
+	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	buildName, buildNumber := parseBuildNameAndNumber("CLI-Build-Name")
 	expectedBuildName, expectedBuildNumber := "CLI-Build-Name", "LATEST"
 	if buildName != expectedBuildName {

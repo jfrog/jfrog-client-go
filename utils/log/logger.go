@@ -17,12 +17,6 @@ const (
 	DEBUG
 )
 
-func init() {
-	if Logger == nil {
-		Logger = NewLogger(INFO, nil)
-	}
-}
-
 // Creates a new logger with a given LogLevel.
 // All logs are written to Stderr by default (output to Stdout).
 // If logToWriter != nil, logging is done to the provided writer instead.
@@ -70,23 +64,34 @@ func GetLogLevel() LevelType {
 	return Logger.GetLogLevel()
 }
 
+func validateLogInit() {
+	if Logger == nil {
+		panic("Logger not initialized. See API documentation.")
+	}
+}
+
 func Debug(a ...interface{}) {
+	validateLogInit()
 	Logger.Debug(a...)
 }
 
 func Info(a ...interface{}) {
+	validateLogInit()
 	Logger.Info(a...)
 }
 
 func Warn(a ...interface{}) {
+	validateLogInit()
 	Logger.Warn(a...)
 }
 
 func Error(a ...interface{}) {
+	validateLogInit()
 	Logger.Error(a...)
 }
 
 func Output(a ...interface{}) {
+	validateLogInit()
 	Logger.Output(a...)
 }
 

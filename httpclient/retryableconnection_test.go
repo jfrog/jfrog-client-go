@@ -60,6 +60,7 @@ func TestSimpleSuccessful(t *testing.T) {
 }
 
 func TestSimpleExceedConnectionRetries(t *testing.T) {
+	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	t.Parallel()
 	port := mockServerPort
 	c := &testContext{}

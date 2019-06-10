@@ -5,9 +5,11 @@ import (
 	gofrogio "github.com/jfrog/gofrog/io"
 	"strings"
 	"testing"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 func TestRemoveCredentialsFromURL(t *testing.T) {
+	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	regExpProtocol, err := GetRegExp(CredentialsInUrlRegexp)
 	if err != nil {
 		t.Error(err)

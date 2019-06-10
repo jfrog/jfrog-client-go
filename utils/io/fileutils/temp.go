@@ -3,7 +3,6 @@ package fileutils
 import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io/ioutil"
 	"os"
 )
@@ -31,7 +30,6 @@ func CreateTempDir() (string, error) {
 
 // Change the containing directory of temp dir.
 func SetTempDirBase(dirPath string) {
-	log.Debug("Setting temp dir base path to: ", dirPath)
 	tempDirBase = dirPath
 }
 

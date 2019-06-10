@@ -23,6 +23,7 @@ func TestMain(m *testing.M) {
 
 func InitArtifactoryServiceManager() {
 	flag.Parse()
+	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	createArtifactoryUploadManager()
 	createArtifactorySearchManager()
 	createArtifactoryDeleteManager()
