@@ -47,7 +47,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 			err = e
 			return
 		}
-	case utils.WILDCARD, utils.SIMPLE:
+	case utils.WILDCARD:
 		deleteParams.SetIncludeDirs(true)
 		tempResultItems, e := utils.SearchBySpecWithPattern(deleteParams.GetFile(), ds, utils.NONE)
 		if e != nil {
@@ -56,13 +56,6 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		}
 		paths := utils.ReduceDirResult(tempResultItems, utils.FilterTopChainResults)
 		resultItems = append(resultItems, paths...)
-	case utils.BUILD:
-		if resultItemsTemp, e := utils.SearchBySpecWithBuild(deleteParams.GetFile(), ds); e == nil {
-			resultItems = append(resultItems, resultItemsTemp...)
-		} else {
-			err = e
-			return
-		}
 	}
 	utils.LogSearchResults(len(resultItems))
 	return
