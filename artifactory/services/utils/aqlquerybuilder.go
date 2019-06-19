@@ -2,70 +2,55 @@ package utils
 
 import (
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
 func createAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, error) {
-	var itemType string
-	if params.IncludeDirs {
-		itemType = "any"
-	}
 	searchPattern := prepareSearchPattern(params.Pattern, true)
-	repoIndex := strings.Index(searchPattern, "/")
-
-	repo := searchPattern[:repoIndex]
-	searchPattern = searchPattern[repoIndex+1:]
-
-	pathFilePairs := createPathFilePairs(searchPattern, params.Recursive)
-	includeRoot := strings.LastIndex(searchPattern, "/") < 0
+	pathFilePairs := createRepoPathFileTriples(searchPattern, params.Recursive)
+	includeRoot := strings.Count(searchPattern, "/") < 2
 	pathPairsSize := len(pathFilePairs)
+
 	propsQueryPart, err := buildPropsQueryPart(params.Props)
 	if err != nil {
 		return "", err
 	}
-	itemTypeQuery := buildItemTypeQueryPart(itemType)
+	itemTypeQuery := buildItemTypeQueryPart(params)
 	nePath := buildNePathPart(pathPairsSize == 0 || includeRoot)
 	excludeQuery := buildExcludeQueryPart(params.ExcludePatterns, pathPairsSize == 0 || params.Recursive, params.Recursive)
 
-	json := fmt.Sprintf(`{"repo": "%s",%s"$or": [`, repo, propsQueryPart+itemTypeQuery+nePath+excludeQuery)
+	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery)
 
 	// Get archive search parameters
 	archivePathFilePairs := createArchiveSearchParams(params)
 
-	if pathPairsSize == 0 {
-		json += handleEmptyPathFilePairs(searchPattern, archivePathFilePairs)
-	} else {
-		json += handlePathFilePairs(pathFilePairs, archivePathFilePairs, pathPairsSize)
-	}
-
-	json += "]}"
+	json += handleRepoPathFileTriples(pathFilePairs, archivePathFilePairs, pathPairsSize) + "]}"
 	return json, nil
 }
 
-func createArchiveSearchParams(params *ArtifactoryCommonParams) []PathFilePair {
-	var archivePathFilePairs []PathFilePair
+func createArchiveSearchParams(params *ArtifactoryCommonParams) []RepoPathFile {
+	var archivePathFilePairs []RepoPathFile
 
 	if params.ArchiveEntries != "" {
 		archiveSearchPattern := prepareSearchPattern(params.ArchiveEntries, false)
-		archivePathFilePairs = createPathFilePairs(archiveSearchPattern, true)
+		archivePathFilePairs = createPathFilePairs("", archiveSearchPattern, true)
 	}
 
 	return archivePathFilePairs
 }
 
 // Handle building aql query when having PathFilePairs
-func handlePathFilePairs(pathFilePairs []PathFilePair, archivePathFilePairs []PathFilePair, pathPairSize int) string {
+func handleRepoPathFileTriples(pathFilePairs []RepoPathFile, archivePathFilePairs []RepoPathFile, pathPairSize int) string {
 	var query string
 	archivePathPairSize := len(archivePathFilePairs)
 
 	for i := 0; i < pathPairSize; i++ {
 		if archivePathPairSize > 0 {
-			query += handleArchiveSearch(pathFilePairs[i].path, pathFilePairs[i].file, archivePathFilePairs)
+			query += handleArchiveSearch(pathFilePairs[i], archivePathFilePairs)
 		} else {
-			query += buildInnerQueryPart(pathFilePairs[i].path, pathFilePairs[i].file)
+			query += buildInnerQueryPart(pathFilePairs[i])
 		}
 
 		if i+1 < pathPairSize {
@@ -76,26 +61,12 @@ func handlePathFilePairs(pathFilePairs []PathFilePair, archivePathFilePairs []Pa
 	return query
 }
 
-// Handle building aql query when not having PathFilePairs
-func handleEmptyPathFilePairs(searchPattern string, archivePathFilePairs []PathFilePair) string {
-	var query string
-	if len(archivePathFilePairs) > 0 {
-		// Archive search
-		query = handleArchiveSearch(".", searchPattern, archivePathFilePairs)
-	} else {
-		// No archive search
-		query = buildInnerQueryPart(".", searchPattern)
-	}
-
-	return query
-}
-
 // Handle building aql query including archive search
-func handleArchiveSearch(path, name string, archivePathFilePairs []PathFilePair) string {
+func handleArchiveSearch(triple RepoPathFile, archivePathFilePairs []RepoPathFile) string {
 	var query string
 	archivePathPairSize := len(archivePathFilePairs)
 	for i := 0; i < archivePathPairSize; i++ {
-		query += buildInnerArchiveQueryPart(path, name, archivePathFilePairs[i].path, archivePathFilePairs[i].file)
+		query += buildInnerArchiveQueryPart(triple, archivePathFilePairs[i].path, archivePathFilePairs[i].file)
 
 		if i+1 < archivePathPairSize {
 			query += ","
@@ -107,26 +78,24 @@ func handleArchiveSearch(path, name string, archivePathFilePairs []PathFilePair)
 func createAqlBodyForBuild(buildName, buildNumber string) string {
 	itemsPart :=
 		`{` +
-			`"artifact.module.build.name": "%s",` +
-			`"artifact.module.build.number": "%s"` +
+			`"artifact.module.build.name":"%s",` +
+			`"artifact.module.build.number":"%s"` +
 			`}`
 	return fmt.Sprintf(itemsPart, buildName, buildNumber)
 }
 
 func createAqlQueryForBuild(buildName, buildNumber, includeQueryPart string) string {
 	queryBody := createAqlBodyForBuild(buildName, buildNumber)
-	itemsPart :=
-		`items.find(` +
-			`%s` +
-			`)%s`
+	itemsPart := `items.find(%s)%s`
 	return fmt.Sprintf(itemsPart, queryBody, includeQueryPart)
 }
 
+//noinspection GoUnusedExportedFunction
 func CreateAqlQueryForNpm(npmName, npmVersion string) string {
 	itemsPart :=
 		`items.find({` +
-			`"@npm.name": "%s",` +
-			`"@npm.version": "%s"` +
+			`"@npm.name":"%s",` +
+			`"@npm.version":"%s"` +
 			`})%s`
 	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
 }
@@ -161,41 +130,43 @@ func buildPropsQueryPart(props string) (string, error) {
 }
 
 func buildKeyValQueryPart(key string, value string) string {
-	return fmt.Sprintf(`"@%s": {"$match" : "%s"}`, key, value)
+	return fmt.Sprintf(`"@%s":%s`, key, getAqlValue(value))
 }
 
-func buildItemTypeQueryPart(itemType string) string {
-	if itemType != "" {
-		return fmt.Sprintf(`"type": {"$eq": "%s"},`, itemType)
+func buildItemTypeQueryPart(params *ArtifactoryCommonParams) string {
+	if params.IncludeDirs {
+		return `"type":"any",`
 	}
 	return ""
 }
 
 func buildNePathPart(includeRoot bool) string {
 	if !includeRoot {
-		return `"path": {"$ne": "."},`
+		return `"path":{"$ne":"."},`
 	}
 	return ""
 }
 
-func buildInnerQueryPart(path, name string) string {
+func buildInnerQueryPart(triple RepoPathFile) string {
 	innerQueryPattern := `{"$and":` +
 		`[{` +
-		`"path": {"$match": "%s"},` +
-		`"name": {"$match": "%s"}` +
+		`"repo":%s,` +
+		`"path":%s,` +
+		`"name":%s` +
 		`}]}`
-	return fmt.Sprintf(innerQueryPattern, path, name)
+	return fmt.Sprintf(innerQueryPattern, getAqlValue(triple.repo), getAqlValue(triple.path), getAqlValue(triple.file))
 }
 
-func buildInnerArchiveQueryPart(path, name, archivePath, archiveName string) string {
+func buildInnerArchiveQueryPart(triple RepoPathFile, archivePath, archiveName string) string {
 	innerQueryPattern := `{"$and":` +
 		`[{` +
-		`"path": {"$match": "%s"},` +
-		`"name": {"$match": "%s"},` +
-		`"archive.entry.path": {"$match": "%s"},` +
-		`"archive.entry.name": {"$match": "%s"}` +
+		`"repo":%s,` +
+		`"path":%s,` +
+		`"name":%s,` +
+		`"archive.entry.path":%s,` +
+		`"archive.entry.name":%s` +
 		`}]}`
-	return fmt.Sprintf(innerQueryPattern, path, name, archivePath, archiveName)
+	return fmt.Sprintf(innerQueryPattern, getAqlValue(triple.repo), getAqlValue(triple.path), getAqlValue(triple.file), getAqlValue(archivePath), getAqlValue(archiveName))
 }
 
 func buildExcludeQueryPart(excludePatterns []string, useLocalPath, recursive bool) string {
@@ -203,9 +174,9 @@ func buildExcludeQueryPart(excludePatterns []string, useLocalPath, recursive boo
 		return ""
 	}
 	excludeQuery := ""
-	var excludePairs []PathFilePair
+	var excludePairs []RepoPathFile
 	for _, excludePattern := range excludePatterns {
-		excludePairs = append(excludePairs, createPathFilePairs(prepareSearchPattern(excludePattern, false), recursive)...)
+		excludePairs = append(excludePairs, createPathFilePairs("", prepareSearchPattern(excludePattern, false), recursive)...)
 	}
 
 	for _, excludePair := range excludePairs {
@@ -213,130 +184,9 @@ func buildExcludeQueryPart(excludePatterns []string, useLocalPath, recursive boo
 		if !useLocalPath && excludePath == "." {
 			excludePath = "*"
 		}
-		excludeQuery += fmt.Sprintf(`"$or": [{"path": {"$nmatch": "%s"}, "name": {"$nmatch": "%s"}}],`, excludePath, excludePair.file)
+		excludeQuery += fmt.Sprintf(`"$or":[{"path":{"$nmatch": "%s"},"name":{"$nmatch":"%s"}}],`, excludePath, excludePair.file)
 	}
 	return excludeQuery
-}
-
-// We need to translate the provided download pattern to an AQL query.
-// In Artifactory, for each artifact the name and path of the artifact are saved separately including folders.
-// We therefore need to build an AQL query that covers all possible folders the provided
-// pattern can include.
-// For example, the pattern a/*b*c*/ can include the two following folders:
-// a/b/c, a/bc/, a/x/y/z/b/c/
-// To achieve that, this function parses the pattern by splitting it by its * characters.
-// The end result is a list of PathFilePair structs.
-// Each struct represent a possible path and folder name pair to be included in AQL query with an "or" relationship.
-func createPathFolderPairs(searchPattern string) []PathFilePair {
-	// Remove parenthesis
-	searchPattern = searchPattern[:len(searchPattern)-1]
-	searchPattern = strings.Replace(searchPattern, "(", "", -1)
-	searchPattern = strings.Replace(searchPattern, ")", "", -1)
-
-	index := strings.Index(searchPattern, "/")
-	searchPattern = searchPattern[index+1:]
-
-	index = strings.LastIndex(searchPattern, "/")
-	lastSlashPath := searchPattern
-	path := "."
-	if index != -1 {
-		lastSlashPath = searchPattern[index+1:]
-		path = searchPattern[:index]
-	}
-
-	pairs := []PathFilePair{{path: path, file: lastSlashPath}}
-	for i := 0; i < len(lastSlashPath); i++ {
-		if string(lastSlashPath[i]) == "*" {
-			pairs = append(pairs, PathFilePair{path: filepath.Join(path, lastSlashPath[:i+1]), file: lastSlashPath[i:]})
-		}
-	}
-	return pairs
-}
-
-// We need to translate the provided download pattern to an AQL query.
-// In Artifactory, for each artifact the name and path of the artifact are saved separately.
-// We therefore need to build an AQL query that covers all possible paths and names the provided
-// pattern can include.
-// For example, the pattern a/* can include the two following file:
-// a/file1.tgz and also a/b/file2.tgz
-// To achieve that, this function parses the pattern by splitting it by its * characters.
-// The end result is a list of PathFilePair structs.
-// Each struct represent a possible path and file name pair to be included in AQL query with an "or" relationship.
-func createPathFilePairs(pattern string, recursive bool) []PathFilePair {
-	var defaultPath string
-	if recursive {
-		defaultPath = "*"
-	} else {
-		defaultPath = "."
-	}
-
-	pairs := []PathFilePair{}
-	if pattern == "*" {
-		pairs = append(pairs, PathFilePair{defaultPath, "*"})
-		return pairs
-	}
-
-	slashIndex := strings.LastIndex(pattern, "/")
-	var path string
-	var name string
-	if slashIndex < 0 {
-		pairs = append(pairs, PathFilePair{".", pattern})
-		path = ""
-		name = pattern
-	} else {
-		path = pattern[:slashIndex]
-		name = pattern[slashIndex+1:]
-		pairs = append(pairs, PathFilePair{path, name})
-	}
-	if !recursive {
-		return pairs
-	}
-	if name == "*" {
-		path += "/*"
-		pairs = append(pairs, PathFilePair{path, "*"})
-		return pairs
-	}
-	pattern = name
-
-	sections := strings.Split(pattern, "*")
-	size := len(sections)
-	for i := 0; i < size; i++ {
-		options := []string{}
-		if i+1 < size {
-			options = append(options, sections[i]+"*/")
-		}
-		for _, option := range options {
-			str := ""
-			for j := 0; j < size; j++ {
-				if j > 0 {
-					str += "*"
-				}
-				if j == i {
-					str += option
-				} else {
-					str += sections[j]
-				}
-			}
-			split := strings.Split(str, "/")
-			filePath := split[0]
-			fileName := split[1]
-			if fileName == "" {
-				fileName = "*"
-			}
-			if path != "" {
-				if !strings.HasSuffix(path, "/") {
-					path += "/"
-				}
-			}
-			pairs = append(pairs, PathFilePair{path + filePath, fileName})
-		}
-	}
-	return pairs
-}
-
-type PathFilePair struct {
-	path string
-	file string
 }
 
 // Creates a list of basic required return fields. The list will include the sortBy field if needed.
@@ -428,7 +278,7 @@ func createPropsQuery(aqlBody, propKey, propVal string) string {
 	propKeyValQueryPart := buildKeyValQueryPart(propKey, propVal)
 	propsQuery :=
 		`items.find({` +
-			`"$and" :[%s,{%s}]` +
+			`"$and":[%s,{%s}]` +
 			`})%s`
 	return fmt.Sprintf(propsQuery, aqlBody, propKeyValQueryPart, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "property"}))
 }
@@ -436,4 +286,15 @@ func createPropsQuery(aqlBody, propKey, propVal string) string {
 func buildIncludeQueryPart(fieldsToInclude []string) string {
 	fieldsToInclude = prepareFieldsForQuery(fieldsToInclude)
 	return fmt.Sprintf(`.include(%s)`, strings.Join(fieldsToInclude, `,`))
+}
+
+// Optimization - If value is a wildcard pattern, return `{"$match":"value"}`. Otherwise, return `"value"`.
+func getAqlValue(val string) string {
+	var aqlValuePattern string
+	if strings.Contains(val, "*") {
+		aqlValuePattern = `{"$match":"%s"}`
+	} else {
+		aqlValuePattern = `"%s"`
+	}
+	return fmt.Sprintf(aqlValuePattern, val)
 }
