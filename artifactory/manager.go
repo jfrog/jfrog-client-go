@@ -1,14 +1,15 @@
 package artifactory
 
 import (
+	"io"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/go"
+	_go "github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	"io"
 )
 
 type ArtifactoryServicesManager struct {
@@ -158,6 +159,14 @@ func (sm *ArtifactoryServicesManager) PublishGoProject(params _go.GoParams) erro
 	goService := _go.NewGoService(sm.client)
 	goService.ArtDetails = sm.config.GetArtDetails()
 	return goService.PublishPackage(params)
+}
+
+func (sm *ArtifactoryServicesManager) Diagnostics() (*services.DiagnosisResult, error) {
+	ds := services.NewDiagnosticsService(sm.client)
+	ds.Threads = sm.config.GetThreads()
+	ds.ArtDetails = sm.config.GetArtDetails()
+	ds.Progress = sm.progress
+	return ds.StartDiagnosis()
 }
 
 func (sm *ArtifactoryServicesManager) Ping() ([]byte, error) {
