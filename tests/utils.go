@@ -34,7 +34,7 @@ var testsDeleteService *services.DeleteService
 var testsDownloadService *services.DownloadService
 
 const (
-	RtTargetRepo                     = "jfrog-cli-tests-repo1/"
+	RtTargetRepo                     = "jfrog-client-tests-repo1/"
 	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
 	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"

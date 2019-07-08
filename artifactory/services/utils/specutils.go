@@ -6,9 +6,7 @@ import (
 
 const (
 	WILDCARD SpecType = "wildcard"
-	SIMPLE   SpecType = "simple"
 	AQL      SpecType = "aql"
-	BUILD    SpecType = "build"
 )
 
 type SpecType string
@@ -143,14 +141,10 @@ func (aql *Aql) UnmarshalJSON(value []byte) error {
 
 func (params ArtifactoryCommonParams) GetSpecType() (specType SpecType) {
 	switch {
-	case params.Build != "" && params.Aql.ItemsFind == "" && (params.Pattern == "*" || params.Pattern == ""):
-		specType = BUILD
-	case params.Pattern != "" && (IsWildcardPattern(params.Pattern) || params.Build != ""):
-		specType = WILDCARD
-	case params.Pattern != "":
-		specType = SIMPLE
 	case params.Aql.ItemsFind != "":
 		specType = AQL
+	default:
+		specType = WILDCARD
 	}
 	return specType
 }

@@ -484,5 +484,5 @@ Optional flags:
 | `-log-level` | [Default: INFO] Sets the log level. |
 
 
-* The tests create an Artifactory repository named *jfrog-cli-tests-repo1*.<br/>
+* The tests create an Artifactory repository named *jfrog-client-tests-repo1*.<br/>
   Once the tests are completed, the content of this repository is deleted.

@@ -24,34 +24,6 @@ const (
 	NONE
 )
 
-// Use this function when searching by build without pattern or aql
-func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) ([]ResultItem, error) {
-	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
-	if err != nil {
-		return nil, err
-	}
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuild(buildName, buildNumber)}
-
-	executionQuery := buildQueryFromSpecFile(specFile, ALL)
-	results, err := aqlSearch(executionQuery, flags)
-	if err != nil {
-		return nil, err
-	}
-
-	// If artifacts' properties weren't fetched in previous aql, fetch now and add to results.
-	if !includePropertiesInAqlForSpec(specFile) {
-		err = searchAndAddPropsToAqlResult(results, specFile.Aql.ItemsFind, "build.name", buildName, flags)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Extract artifacts sha1 for filtering.
-	buildArtifactsSha1, err := extractSha1FromAqlResponse(results)
-	// Filter artifacts by priorities.
-	return filterBuildAqlSearchResults(&results, &buildArtifactsSha1, buildName, buildNumber), err
-}
-
 // Perform search by pattern.
 func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
 	// Create AQL according to spec fields.
