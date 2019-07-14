@@ -6,9 +6,6 @@ import (
 )
 
 type Config interface {
-	GetUrl() string
-	GetPassword() string
-	GetApiKey() string
 	GetCertificatesPath() string
 	GetThreads() int
 	IsDryRun() bool
@@ -26,20 +23,8 @@ type artifactoryServicesConfig struct {
 	insecureTls      bool
 }
 
-func (config *artifactoryServicesConfig) GetUrl() string {
-	return config.GetUrl()
-}
-
 func (config *artifactoryServicesConfig) IsDryRun() bool {
 	return config.dryRun
-}
-
-func (config *artifactoryServicesConfig) GetPassword() string {
-	return config.GetPassword()
-}
-
-func (config *artifactoryServicesConfig) GetApiKey() string {
-	return config.GetApiKey()
 }
 
 func (config *artifactoryServicesConfig) GetCertificatesPath() string {

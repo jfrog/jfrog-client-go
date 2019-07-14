@@ -6,8 +6,6 @@ import (
 )
 
 type Config interface {
-	GetUrl() string
-	GetKey() string
 	GetThreads() int
 	IsDryRun() bool
 	GetBintrayDetails() auth.BintrayDetails
@@ -22,20 +20,9 @@ type bintrayServicesConfig struct {
 	logger   log.Log
 }
 
-func (config *bintrayServicesConfig) GetUrl() string {
-	return config.GetApiUrl()
-}
 
 func (config *bintrayServicesConfig) IsDryRun() bool {
 	return config.isDryRun
-}
-
-func (config *bintrayServicesConfig) GetUser() string {
-	return config.GetUser()
-}
-
-func (config *bintrayServicesConfig) GetKey() string {
-	return config.GetKey()
 }
 
 func (config *bintrayServicesConfig) GetThreads() int {
