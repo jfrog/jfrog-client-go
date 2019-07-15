@@ -378,7 +378,7 @@ func extractFile(downloadFileDetails *DownloadFileDetails, arch archiver.Archive
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	// Add a trailing slash ot the local path, since it has to be a directory.
+	// Add a trailing slash to the local path, since it has to be a directory.
 	absolutePath = absolutePath + string(os.PathSeparator)
 
 	err = arch.Read(reader, absolutePath)
