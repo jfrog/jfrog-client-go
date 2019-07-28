@@ -26,9 +26,9 @@ func (targetBuildInfo *BuildInfo) SetAgentVersion(agentVersion string) {
 	targetBuildInfo.Agent.Version = agentVersion
 }
 
-// Append the modules of the recieved build info to this build info.
+// Append the modules of the received build info to this build info.
 // If the two build info instances contain modules with identical names, these modules are merged.
-// When merging the modules, the artifacts and dependencies remain unique according to their checksums.
+// When merging the modules, the artifacts and dependencies remain unique according to their checksum.
 func (targetBuildInfo *BuildInfo) Append(buildInfo *BuildInfo) {
 	for _, newModule := range buildInfo.Modules {
 		exists := false

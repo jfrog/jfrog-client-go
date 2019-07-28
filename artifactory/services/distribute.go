@@ -78,7 +78,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 
 	log.Debug("Artifactory response:", resp.Status)
 	if params.IsAsync() && !ds.isDryRun() {
-		log.Info("Asynchronously distributed build", params.GetBuildName()+"/"+params.GetBuildNumber(), "to:", params.GetTargetRepo(), "repository, logs are avalable in Artifactory.")
+		log.Info("Asynchronously distributed build", params.GetBuildName()+"/"+params.GetBuildNumber(), "to:", params.GetTargetRepo(), "repository, logs are available in Artifactory.")
 		return nil
 	}
 
