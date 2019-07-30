@@ -54,7 +54,7 @@ type DownloadVersionParams struct {
 	IncludeUnpublished bool
 }
 
-func (ds *DownloadService) DownloadFile(downloadParams *DownloadFileParams) (totalDownloded, totalFailed int, err error) {
+func (ds *DownloadService) DownloadFile(downloadParams *DownloadFileParams) (totalDownloaded, totalFailed int, err error) {
 	if ds.BintrayDetails.GetUser() == "" {
 		ds.BintrayDetails.SetUser(downloadParams.Subject)
 	}
@@ -67,7 +67,7 @@ func (ds *DownloadService) DownloadFile(downloadParams *DownloadFileParams) (tot
 	return 1, 0, nil
 }
 
-func (ds *DownloadService) DownloadVersion(downloadParams *DownloadVersionParams) (totalDownloded, totalFailed int, err error) {
+func (ds *DownloadService) DownloadVersion(downloadParams *DownloadVersionParams) (totalDownloaded, totalFailed int, err error) {
 	versionPathUrl := buildDownloadVersionUrl(ds.BintrayDetails.GetApiUrl(), downloadParams)
 	httpClientsDetails := ds.BintrayDetails.CreateHttpClientDetails()
 	if httpClientsDetails.User == "" {
@@ -88,9 +88,9 @@ func (ds *DownloadService) DownloadVersion(downloadParams *DownloadVersionParams
 		return
 	}
 
-	totalDownloded, err = ds.downloadVersionFiles(files, downloadParams)
-	log.Info("Downloaded", strconv.Itoa(totalDownloded), "artifacts.")
-	totalFailed = len(files) - totalDownloded
+	totalDownloaded, err = ds.downloadVersionFiles(files, downloadParams)
+	log.Info("Downloaded", strconv.Itoa(totalDownloaded), "artifacts.")
+	totalFailed = len(files) - totalDownloaded
 	return
 }
 

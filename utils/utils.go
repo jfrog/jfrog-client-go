@@ -39,12 +39,12 @@ func getDefaultUserAgent() string {
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
 func GetRootPath(path string, useRegExp bool) string {
-	// The first step is to split the local path pattern into sections, by the file seperator.
-	seperator := "/"
-	sections := strings.Split(path, seperator)
+	// The first step is to split the local path pattern into sections, by the file separator.
+	separator := "/"
+	sections := strings.Split(path, separator)
 	if len(sections) == 1 {
-		seperator = "\\"
-		sections = strings.Split(path, seperator)
+		separator = "\\"
+		sections = strings.Split(path, separator)
 	}
 
 	// Now we start building the root path, making sure to leave out the sub-directory that includes the pattern.
@@ -63,7 +63,7 @@ func GetRootPath(path string, useRegExp bool) string {
 			}
 		}
 		if rootPath != "" {
-			rootPath += seperator
+			rootPath += separator
 		}
 		if section == "~" {
 			rootPath += GetUserHomeDir()
@@ -72,7 +72,7 @@ func GetRootPath(path string, useRegExp bool) string {
 		}
 	}
 	if len(sections) > 0 && sections[0] == "" {
-		rootPath = seperator + rootPath
+		rootPath = separator + rootPath
 	}
 	if rootPath == "" {
 		return "."
