@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
+	"strings"
 )
 
 type DeleteService struct {
@@ -50,6 +51,13 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 	case utils.WILDCARD:
 		deleteParams.SetIncludeDirs(true)
 		tempResultItems, e := utils.SearchBySpecWithPattern(deleteParams.GetFile(), ds, utils.NONE)
+		if e != nil {
+			err = e
+			return
+		}
+		if deleteParams.ExcludeProps != "" && deleteParams.Props == "" {
+			tempResultItems, e = removeDirsContainArtifactsWithPropsExcluded(*deleteParams.GetFile(), ds, tempResultItems)
+		}
 		if e != nil {
 			err = e
 			return
@@ -121,4 +129,31 @@ func (ds *DeleteParams) SetIncludeDirs(includeDirs bool) {
 
 func NewDeleteParams() DeleteParams {
 	return DeleteParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
+}
+
+func removeDirsContainArtifactsWithPropsExcluded(specFile utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates []utils.ResultItem) ([]utils.ResultItem, error) {
+	specFile.Props = specFile.ExcludeProps
+	specFile.ExcludeProps = ""
+	remainArtifacts, e := utils.SearchBySpecWithPattern(&specFile, ds, utils.NONE)
+	if e != nil {
+		return nil, e
+	}
+	var result []utils.ResultItem
+	for _, candidate := range deleteCandidates {
+		deleteCandidate := true
+		if candidate.Type == "folder" {
+			candidatePath := candidate.GetItemRelativePath()
+			for _, artifact := range remainArtifacts {
+				artifactPath := artifact.GetItemRelativePath()
+				if strings.HasPrefix(artifactPath, candidatePath) {
+					deleteCandidate = false
+					break
+				}
+			}
+		}
+		if deleteCandidate {
+			result = append(result, candidate)
+		}
+	}
+	return result, nil
 }
