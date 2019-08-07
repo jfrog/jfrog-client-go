@@ -81,6 +81,7 @@ func flatDownload(t *testing.T) {
 	defer os.RemoveAll(workingDir)
 	downloadPattern := RtTargetRepo + "*"
 	downloadTarget := workingDir + string(filepath.Separator)
+	// Download all from TargetRepo with flat = true
 	_, _, err = testsDownloadService.DownloadFiles(services.DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: true})
 	if err != nil {
 		t.Error(err)
@@ -101,6 +102,7 @@ func flatDownload(t *testing.T) {
 		t.Error(err)
 	}
 	defer os.RemoveAll(workingDir2)
+	// Download all from TargetRepo with flat = false
 	_, _, err = testsDownloadService.DownloadFiles(services.DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: false})
 	if err != nil {
 		t.Error(err)
@@ -245,6 +247,7 @@ func explodeArchiveDownload(t *testing.T) {
 	downloadPattern := RtTargetRepo + "*.tar.gz"
 	downloadTarget := workingDir + string(filepath.Separator)
 	downloadParams := services.DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: true, Explode: false}
+	// First we'll download c.tar.gz without extracting it (explode = false by default).
 	_, _, err = testsDownloadService.DownloadFiles(downloadParams)
 	if err != nil {
 		t.Error(err)
@@ -258,10 +261,19 @@ func explodeArchiveDownload(t *testing.T) {
 	if !fileutils.IsPathExists(filepath.Join(workingDir, "c.tar.gz"), false) {
 		t.Error("Missing file c.tar.gz")
 	}
+
+	// Scenario 1:  Download c.tar.gz with explode = true, when it already exists in the target dir.
+	// Artifactory should perform "checksum download" and not actually downloading it, but still need to extract it.
 	downloadParams.Explode = true
-	// scenario 1: explode in case of checksum download (file exists locally)
 	explodeDownloadAndVerify(t, &downloadParams, workingDir)
-	os.RemoveAll(workingDir) // scenario 2: explode in case of "real" download
+
+	// Remove the download target dir.
+	err = os.RemoveAll(workingDir)
+	if err != nil {
+		t.Error(err)
+	}
+	// Scenario 2: Download c.tar.gz with explode = true, when it does not exist in the target dir.
+	// Artifactory should download the file and extract it.
 	explodeDownloadAndVerify(t, &downloadParams, workingDir)
 }
 

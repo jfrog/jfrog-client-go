@@ -398,34 +398,34 @@ func (ds *DownloadService) createFileHandlerFunc(buildDependencies [][]utils.Fil
 
 func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix string, downloadData DownloadData, downloadParams DownloadParams) error {
 	shouldDownload, e := shouldDownloadFile(filepath.Join(localPath, localFileName), downloadData.Dependency.Actual_Md5, downloadData.Dependency.Actual_Sha1)
-	downloadFileDetails := createDownloadFileDetails(downloadPath, localPath, localFileName, downloadData)
 	if e != nil {
 		return e
 	}
 	if !shouldDownload {
 		log.Debug(logMsgPrefix, "File already exists locally.")
 		if downloadParams.IsExplode() {
-			e = explodeExistingFile(localPath, localFileName)
+			e = explodeLocalFile(localPath, localFileName)
 		}
 		return e
 	}
+	downloadFileDetails := createDownloadFileDetails(downloadPath, localPath, localFileName, downloadData)
 	return ds.downloadFile(downloadFileDetails, logMsgPrefix, downloadParams)
 }
 
-func explodeExistingFile(localPath, localFileName string) (err error) {
+func explodeLocalFile(localPath, localFileName string) (err error) {
 	log.Info("Extracting archive:", localFileName, "to", localPath)
 	arch := archiver.MatchingFormat(localFileName)
 	absolutePath := filepath.Join(localPath, localFileName)
 	err = nil
 
-	//the file is indeed an archive
+	// The file is indeed an archive
 	if arch != nil {
 		f, err := os.Open(absolutePath)
 		if err != nil {
-			return err
+			return errorutils.CheckError(err)
 		}
 		err = arch.Read(f, localPath)
-		// if the file was extracted successfully, remove it from the file system
+		// If the file was extracted successfully, remove it from the file system
 		if err == nil {
 			err = os.Remove(absolutePath)
 		}
