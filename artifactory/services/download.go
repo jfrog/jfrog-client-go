@@ -420,15 +420,12 @@ func explodeLocalFile(localPath, localFileName string) (err error) {
 
 	// The file is indeed an archive
 	if arch != nil {
-		f, err := os.Open(absolutePath)
+		err := arch.Open(absolutePath, localPath)
 		if err != nil {
 			return errorutils.CheckError(err)
 		}
-		err = arch.Read(f, localPath)
 		// If the file was extracted successfully, remove it from the file system
-		if err == nil {
-			err = os.Remove(absolutePath)
-		}
+		err = os.Remove(absolutePath)
 	}
 
 	return errorutils.CheckError(err)
