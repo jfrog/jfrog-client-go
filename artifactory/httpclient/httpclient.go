@@ -53,7 +53,7 @@ func (rtc *ArtifactoryHttpClient) SendPost(url string, content []byte, httpClien
 }
 
 func (rtc *ArtifactoryHttpClient) SendPostForm(url string, data url.Values, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	httpClientDetails.Headers["Content-Type"] = "application/x-www-form-urlencoded"
+	httpClientsDetails.Headers["Content-Type"] = "application/x-www-form-urlencoded"
 	return rtc.SendPost(url, []byte(data.Encode()), *httpClientsDetails)
 }
 
