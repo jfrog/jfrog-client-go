@@ -121,19 +121,21 @@ func buildPropsQueryPart(props, excludeProps string) (string, error) {
 		propsQuery += buildKeyValQueryPart(v.Key, v.Value) + `,`
 	}
 
+	excludePropsQuery := ""
 	excludeProperties, err := ParseProperties(excludeProps, JoinCommas)
 	if err != nil {
 		return "", err
 	}
-	excludePropsQuery := ""
-	for _, v := range excludeProperties.Properties {
-		excludePropsQuery += buildExcludedKeyValQueryPart(v.Key, v.Value) + `,`
-	}
-	if len(excludeProperties.Properties) > 1 {
-		excludePropsQuery = `"$or":[` + strings.TrimSuffix(excludePropsQuery, ",") + `],`
-	} else if len(excludeProperties.Properties) == 1 {
-		excludePropsQuery = strings.TrimPrefix(excludePropsQuery, "{")
-		excludePropsQuery = strings.TrimSuffix(excludePropsQuery, "},") + `,`
+	excludePropsLen := len(excludeProperties.Properties)
+	if excludePropsLen == 1 {
+		singleProp := &excludeProperties.Properties[0]
+		excludePropsQuery = buildExcludedKeyValQueryPart(singleProp.Key, singleProp.Value) + `,`
+	} else if excludePropsLen > 1 {
+		excludePropsQuery = `"$or":[`
+		for _, v := range excludeProperties.Properties {
+			excludePropsQuery += `{` + buildExcludedKeyValQueryPart(v.Key, v.Value) + `},`
+		}
+		excludePropsQuery = strings.TrimSuffix(excludePropsQuery, ",") + `],`
 	}
 	return propsQuery + excludePropsQuery, nil
 }
@@ -143,7 +145,7 @@ func buildKeyValQueryPart(key string, value string) string {
 }
 
 func buildExcludedKeyValQueryPart(key string, value string) string {
-	return fmt.Sprintf(`{"@%s":{"$ne":%s}}`, key, getAqlValue(value))
+	return fmt.Sprintf(`"@%s":{"$ne":%s}`, key, getAqlValue(value))
 }
 
 func buildItemTypeQueryPart(params *ArtifactoryCommonParams) string {

@@ -55,9 +55,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 			err = e
 			return
 		}
-		if deleteParams.ExcludeProps != "" && deleteParams.Props == "" {
-			tempResultItems, e = removeDirsContainArtifactsWithPropsExcluded(*deleteParams.GetFile(), ds, tempResultItems)
-		}
+		tempResultItems, e = removeNotToBeDeletedDirs(*deleteParams.GetFile(), ds, tempResultItems)
 		if e != nil {
 			err = e
 			return
@@ -131,12 +129,19 @@ func NewDeleteParams() DeleteParams {
 	return DeleteParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }
 
-func removeDirsContainArtifactsWithPropsExcluded(specFile utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates []utils.ResultItem) ([]utils.ResultItem, error) {
+// This function receives as an argument the list of files and folders to be deleted from Artifactory.
+// In case the search params used to create this list included excludeProps, we might need to remove some directories from this list.
+// These directories must be removed, because they include files, which should not be deleted, because of the excludeProps params.
+// hese directories must not be deleted from Artifactory.
+func removeNotToBeDeletedDirs(specFile utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates []utils.ResultItem) ([]utils.ResultItem, error) {
+	if specFile.ExcludeProps == "" {
+		return deleteCandidates, nil
+	}
 	specFile.Props = specFile.ExcludeProps
 	specFile.ExcludeProps = ""
-	remainArtifacts, e := utils.SearchBySpecWithPattern(&specFile, ds, utils.NONE)
-	if e != nil {
-		return nil, e
+	remainArtifacts, err := utils.SearchBySpecWithPattern(&specFile, ds, utils.NONE)
+	if err != nil {
+		return nil, err
 	}
 	var result []utils.ResultItem
 	for _, candidate := range deleteCandidates {
