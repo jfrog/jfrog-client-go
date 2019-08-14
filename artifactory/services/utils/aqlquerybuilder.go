@@ -13,7 +13,7 @@ func createAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, e
 	includeRoot := strings.Count(searchPattern, "/") < 2
 	pathPairsSize := len(pathFilePairs)
 
-	propsQueryPart, err := buildPropsQueryPart(params.Props)
+	propsQueryPart, err := buildPropsQueryPart(params.Props, params.ExcludeProps)
 	if err != nil {
 		return "", err
 	}
@@ -111,23 +111,41 @@ func prepareSearchPattern(pattern string, repositoryExists bool) string {
 	return pattern
 }
 
-func buildPropsQueryPart(props string) (string, error) {
-	if props == "" {
-		return "", nil
-	}
+func buildPropsQueryPart(props, excludeProps string) (string, error) {
+	propsQuery := ""
 	properties, err := ParseProperties(props, JoinCommas)
 	if err != nil {
 		return "", err
 	}
-	query := ""
 	for _, v := range properties.Properties {
-		query += buildKeyValQueryPart(v.Key, v.Value) + `,`
+		propsQuery += buildKeyValQueryPart(v.Key, v.Value) + `,`
 	}
-	return query, nil
+
+	excludePropsQuery := ""
+	excludeProperties, err := ParseProperties(excludeProps, JoinCommas)
+	if err != nil {
+		return "", err
+	}
+	excludePropsLen := len(excludeProperties.Properties)
+	if excludePropsLen == 1 {
+		singleProp := &excludeProperties.Properties[0]
+		excludePropsQuery = buildExcludedKeyValQueryPart(singleProp.Key, singleProp.Value) + `,`
+	} else if excludePropsLen > 1 {
+		excludePropsQuery = `"$or":[`
+		for _, v := range excludeProperties.Properties {
+			excludePropsQuery += `{` + buildExcludedKeyValQueryPart(v.Key, v.Value) + `},`
+		}
+		excludePropsQuery = strings.TrimSuffix(excludePropsQuery, ",") + `],`
+	}
+	return propsQuery + excludePropsQuery, nil
 }
 
 func buildKeyValQueryPart(key string, value string) string {
 	return fmt.Sprintf(`"@%s":%s`, key, getAqlValue(value))
+}
+
+func buildExcludedKeyValQueryPart(key string, value string) string {
+	return fmt.Sprintf(`"@%s":{"$ne":%s}`, key, getAqlValue(value))
 }
 
 func buildItemTypeQueryPart(params *ArtifactoryCommonParams) string {

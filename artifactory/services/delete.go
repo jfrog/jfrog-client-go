@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
+	"strings"
 )
 
 type DeleteService struct {
@@ -50,6 +51,11 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 	case utils.WILDCARD:
 		deleteParams.SetIncludeDirs(true)
 		tempResultItems, e := utils.SearchBySpecWithPattern(deleteParams.GetFile(), ds, utils.NONE)
+		if e != nil {
+			err = e
+			return
+		}
+		tempResultItems, e = removeNotToBeDeletedDirs(*deleteParams.GetFile(), ds, tempResultItems)
 		if e != nil {
 			err = e
 			return
@@ -121,4 +127,38 @@ func (ds *DeleteParams) SetIncludeDirs(includeDirs bool) {
 
 func NewDeleteParams() DeleteParams {
 	return DeleteParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
+}
+
+// This function receives as an argument the list of files and folders to be deleted from Artifactory.
+// In case the search params used to create this list included excludeProps, we might need to remove some directories from this list.
+// These directories must be removed, because they include files, which should not be deleted, because of the excludeProps params.
+// hese directories must not be deleted from Artifactory.
+func removeNotToBeDeletedDirs(specFile utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates []utils.ResultItem) ([]utils.ResultItem, error) {
+	if specFile.ExcludeProps == "" {
+		return deleteCandidates, nil
+	}
+	specFile.Props = specFile.ExcludeProps
+	specFile.ExcludeProps = ""
+	remainArtifacts, err := utils.SearchBySpecWithPattern(&specFile, ds, utils.NONE)
+	if err != nil {
+		return nil, err
+	}
+	var result []utils.ResultItem
+	for _, candidate := range deleteCandidates {
+		deleteCandidate := true
+		if candidate.Type == "folder" {
+			candidatePath := candidate.GetItemRelativePath()
+			for _, artifact := range remainArtifacts {
+				artifactPath := artifact.GetItemRelativePath()
+				if strings.HasPrefix(artifactPath, candidatePath) {
+					deleteCandidate = false
+					break
+				}
+			}
+		}
+		if deleteCandidate {
+			result = append(result, candidate)
+		}
+	}
+	return result, nil
 }

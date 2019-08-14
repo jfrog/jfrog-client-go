@@ -21,6 +21,7 @@ type ArtifactoryCommonParams struct {
 	ExcludePatterns []string
 	Target          string
 	Props           string
+	ExcludeProps    string
 	SortOrder       string
 	SortBy          []string
 	Offset          int
@@ -82,6 +83,10 @@ func (params *ArtifactoryCommonParams) GetProps() string {
 	return params.Props
 }
 
+func (params *ArtifactoryCommonParams) GetExcludeProps() string {
+	return params.ExcludeProps
+}
+
 func (params *ArtifactoryCommonParams) IsExplode() bool {
 	return params.Recursive
 }
@@ -108,6 +113,10 @@ func (params ArtifactoryCommonParams) IsIncludeDirs() bool {
 
 func (params *ArtifactoryCommonParams) SetProps(props string) {
 	params.Props = props
+}
+
+func (params *ArtifactoryCommonParams) SetExcludeProps(excludeProps string) {
+	params.ExcludeProps = excludeProps
 }
 
 func (params *ArtifactoryCommonParams) GetSortBy() []string {
