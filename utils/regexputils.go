@@ -23,6 +23,6 @@ func GetRegExp(regex string) (*regexp.Regexp, error) {
 // credentialsPart = http://user:password@
 // Returned value: http://***:***@127.0.0.1:8081/artifactory/path/to/repo
 func MaskCredentials(completeUrl, credentialsPart string) string {
-	splittedResult := strings.Split(credentialsPart, "//")
-	return strings.Replace(completeUrl, credentialsPart, splittedResult[0]+"//***.***@", 1)
+	splitResult := strings.Split(credentialsPart, "//")
+	return strings.Replace(completeUrl, credentialsPart, splitResult[0]+"//***.***@", 1)
 }

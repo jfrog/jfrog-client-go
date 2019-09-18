@@ -8,6 +8,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 type ArtifactoryHttpClient struct {
@@ -49,6 +50,11 @@ func (rtc *ArtifactoryHttpClient) SendPost(url string, content []byte, httpClien
 	}
 	err = errors.New("failed to obtain a new authentication token after one has expired; " + resp.Status)
 	return
+}
+
+func (rtc *ArtifactoryHttpClient) SendPostForm(url string, data url.Values, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
+	httpClientsDetails.Headers["Content-Type"] = "application/x-www-form-urlencoded"
+	return rtc.SendPost(url, []byte(data.Encode()), httpClientsDetails)
 }
 
 func (rtc *ArtifactoryHttpClient) SendPatch(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {

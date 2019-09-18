@@ -42,7 +42,7 @@ func (sm *ServicesManager) DownloadFile(params *services.DownloadFileParams) (to
 	return downloadService.DownloadFile(params)
 }
 
-func (sm *ServicesManager) DownloadVersion(params *services.DownloadVersionParams) (totalDownloded, totalFailed int, err error) {
+func (sm *ServicesManager) DownloadVersion(params *services.DownloadVersionParams) (totalDownloaded, totalFailed int, err error) {
 	downloadService := sm.newDownloadService()
 	return downloadService.DownloadVersion(params)
 }
