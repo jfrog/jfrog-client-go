@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const CredentialsInUrlRegexp = `((http|https):\/\/\w.*?:\w.*?@)`
+const CredentialsInUrlRegexp = `((http|https):\/\/[%|\w]+:[%|\w]+@)`
 
 func GetRegExp(regex string) (*regexp.Regexp, error) {
 	regExp, err := regexp.Compile(regex)
