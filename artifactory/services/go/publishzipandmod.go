@@ -5,6 +5,7 @@ import (
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/version"
 	"net/http"
@@ -73,6 +74,11 @@ func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext,
 		return err
 	}
 	addGoVersion(version, &urlPath)
+	details, err := fileutils.GetFileDetails(localPath)
+	if err != nil {
+		return err
+	}
+	utils.AddChecksumHeaders(pwa.clientDetails.Headers, details)
 	resp, _, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil)
 	if err != nil {
 		return err
