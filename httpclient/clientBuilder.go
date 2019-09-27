@@ -15,12 +15,24 @@ func ClientBuilder() *httpClientBuilder {
 }
 
 type httpClientBuilder struct {
-	certificatesDirPath string
-	insecureTls         bool
+	certificatesDirPath      string
+	clientCertificatePath    string
+	clientCertificateKeyPath string
+	insecureTls              bool
 }
 
 func (builder *httpClientBuilder) SetCertificatesPath(certificatesPath string) *httpClientBuilder {
 	builder.certificatesDirPath = certificatesPath
+	return builder
+}
+
+func (builder *httpClientBuilder) SetClientCertificatePath(certificatePath string) *httpClientBuilder {
+	builder.clientCertificatePath = certificatePath
+	return builder
+}
+
+func (builder *httpClientBuilder) SetClientCertificateKeyPath(certificatePath string) *httpClientBuilder {
+	builder.clientCertificateKeyPath = certificatePath
 	return builder
 }
 
@@ -39,6 +51,13 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	transport, err := cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, createDefaultHttpTransport())
 	if err != nil {
 		return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
+	}
+	if builder.clientCertificatePath != "" {
+		cert, err := tls.LoadX509KeyPair(builder.clientCertificatePath, builder.clientCertificateKeyPath)
+		if err != nil {
+			return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
+		}
+		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
 	}
 	return &HttpClient{Client: &http.Client{Transport: transport}}, nil
 }

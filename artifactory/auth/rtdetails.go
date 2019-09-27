@@ -26,6 +26,8 @@ type ArtifactoryDetails interface {
 	GetPassword() string
 	GetApiKey() string
 	GetAccessToken() string
+	GetClientCertificatePath() string
+	GetClientCertificateKeyPath() string
 	GetSshUrl() string
 	GetSshKeyPath() string
 	GetSshPassphrase() string
@@ -37,6 +39,8 @@ type ArtifactoryDetails interface {
 	SetPassword(password string)
 	SetApiKey(apiKey string)
 	SetAccessToken(accessToken string)
+	SetClientCertificatePath(certificatePath string)
+	SetClientCertificateKeyPath(certificatePath string)
 	SetSshUrl(url string)
 	SetSshKeyPath(sshKeyPath string)
 	SetSshPassphrase(sshPassphrase string)
@@ -51,17 +55,19 @@ type ArtifactoryDetails interface {
 }
 
 type artifactoryDetails struct {
-	Url            string            `json:"-"`
-	User           string            `json:"-"`
-	Password       string            `json:"-"`
-	ApiKey         string            `json:"-"`
-	AccessToken    string            `json:"-"`
-	version        string            `json:"-"`
-	SshUrl         string            `json:"-"`
-	SshKeyPath     string            `json:"-"`
-	SshPassphrase  string            `json:"-"`
-	SshAuthHeaders map[string]string `json:"-"`
-	TokenMutex     sync.Mutex
+	Url                      string            `json:"-"`
+	User                     string            `json:"-"`
+	Password                 string            `json:"-"`
+	ApiKey                   string            `json:"-"`
+	AccessToken              string            `json:"-"`
+	ClientCertificatePath    string            `json:"-"`
+	ClientCertificateKeyPath string            `json:"-"`
+	version                  string            `json:"-"`
+	SshUrl                   string            `json:"-"`
+	SshKeyPath               string            `json:"-"`
+	SshPassphrase            string            `json:"-"`
+	SshAuthHeaders           map[string]string `json:"-"`
+	TokenMutex               sync.Mutex
 }
 
 func (rt *artifactoryDetails) GetUrl() string {
@@ -82,6 +88,14 @@ func (rt *artifactoryDetails) GetApiKey() string {
 
 func (rt *artifactoryDetails) GetAccessToken() string {
 	return rt.AccessToken
+}
+
+func (rt *artifactoryDetails) GetClientCertificatePath() string {
+	return rt.ClientCertificatePath
+}
+
+func (rt *artifactoryDetails) GetClientCertificateKeyPath() string {
+	return rt.ClientCertificateKeyPath
 }
 
 func (rt *artifactoryDetails) GetSshUrl() string {
@@ -118,6 +132,14 @@ func (rt *artifactoryDetails) SetApiKey(apiKey string) {
 
 func (rt *artifactoryDetails) SetAccessToken(accessToken string) {
 	rt.AccessToken = accessToken
+}
+
+func (rt *artifactoryDetails) SetClientCertificatePath(certificatePath string) {
+	rt.ClientCertificatePath = certificatePath
+}
+
+func (rt *artifactoryDetails) SetClientCertificateKeyPath(certificatePath string) {
+	rt.ClientCertificateKeyPath = certificatePath
 }
 
 func (rt *artifactoryDetails) SetSshUrl(sshUrl string) {
