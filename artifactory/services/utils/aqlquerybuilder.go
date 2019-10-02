@@ -100,6 +100,20 @@ func CreateAqlQueryForNpm(npmName, npmVersion string) string {
 	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
 }
 
+func CreateAqlQueryForPypi(repo, file string) string {
+	itemsPart :=
+		`items.find({` +
+			`"repo": "%s",` +
+			`"$or": [{` +
+			`"$and":[{` +
+			`"path": {"$match": "*"},` +
+			`"name": {"$match": "%s"}` +
+			`}]` +
+			`}]` +
+			`}).include("actual_md5","actual_sha1")`
+	return fmt.Sprintf(itemsPart, repo, file)
+}
+
 func prepareSearchPattern(pattern string, repositoryExists bool) string {
 	if strings.HasSuffix(pattern, "/") || (pattern == "" && repositoryExists) {
 		pattern += "*"
