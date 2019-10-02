@@ -32,6 +32,7 @@ var testsUploadService *services.UploadService
 var testsSearchService *services.SearchService
 var testsDeleteService *services.DeleteService
 var testsDownloadService *services.DownloadService
+var testsSecurityService *services.SecurityService
 
 const (
 	RtTargetRepo                     = "jfrog-client-tests-repo1/"
@@ -49,6 +50,14 @@ func init() {
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
 	RtAccessToken = flag.String("rt.accessToken", "", "Artifactory access token")
 	LogLevel = flag.String("log-level", "INFO", "Sets the log level")
+}
+
+func createArtifactorySecurityManager() {
+	artDetails := getArtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testsSecurityService = services.NewSecurityService(client)
+	testsSecurityService.ArtDetails = artDetails
 }
 
 func createArtifactorySearchManager() {
