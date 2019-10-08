@@ -45,6 +45,13 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	if builder.certificatesDirPath == "" {
 		transport := createDefaultHttpTransport()
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: builder.insecureTls}
+		if builder.clientCertificatePath != "" {
+			cert, err := tls.LoadX509KeyPair(builder.clientCertificatePath, builder.clientCertificateKeyPath)
+			if err != nil {
+				return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
+			}
+			transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
+		}
 		return &HttpClient{Client: &http.Client{Transport: transport}}, nil
 	}
 
