@@ -194,7 +194,7 @@ func (sm *ArtifactoryServicesManager) RefreshToken(params services.RefreshTokenP
 	return securityService.RefreshToken(params)
 }
 
-func (sm *ArtifactoryServicesManager) RevokeToken(params services.RevokeTokenParams) error {
+func (sm *ArtifactoryServicesManager) RevokeToken(params services.RevokeTokenParams) (string, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetArtDetails()
 	return securityService.RevokeToken(params)

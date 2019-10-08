@@ -9,9 +9,13 @@ import (
 // Teardown should revoke these tokens
 var tokensToRevoke []string
 
+const tokenRevokeSuccessResponse = "Token revoked"
+const tokenNotFoundResponse = "Token not found"
+
 func TestToken(t *testing.T) {
 	t.Run("CreateToken", createTokenTest)
 	t.Run("RevokeToken", revokeTokenTest)
+	t.Run("RevokeToken: token not found", revokeTokenNotFoundTest)
 	t.Run("RefreshToken", refreshTokenTest)
 	t.Run("GetTokens", getTokensTest)
 	teardown()
@@ -33,9 +37,22 @@ func revokeTokenTest(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = revokeToken(token.RefreshToken)
+	responseText, err := revokeToken(token.RefreshToken)
 	if err != nil {
 		t.Error(err)
+	}
+	if responseText != tokenRevokeSuccessResponse {
+		t.Error("Token was not revoked: ", responseText)
+	}
+}
+
+func revokeTokenNotFoundTest(t *testing.T) {
+	responseText, err := revokeToken("faketoken")
+	if err != nil {
+		t.Error(err)
+	}
+	if responseText != tokenNotFoundResponse {
+		t.Error("Expected Response: ", tokenNotFoundResponse, ". Got", responseText)
 	}
 }
 
@@ -72,7 +89,7 @@ func getTokensTest(t *testing.T) {
 }
 
 // Util function to revoke a token
-func revokeToken(token string) error {
+func revokeToken(token string) (string, error) {
 	params := services.NewRevokeTokenParams()
 	params.Token = token
 	return testsSecurityService.RevokeToken(params)
@@ -90,8 +107,12 @@ func createToken() (services.CreateTokenResponseData, error) {
 func revokeAllTokens() {
 	for _, element := range tokensToRevoke {
 		log.Debug("Revoking Token: ", element)
-		if err := revokeToken(element); err != nil {
+		responseText, err := revokeToken(element)
+		if err != nil {
 			log.Error(err)
+		}
+		if responseText != tokenRevokeSuccessResponse {
+			log.Error("Token was not revoked: ", responseText)
 		}
 	}
 }

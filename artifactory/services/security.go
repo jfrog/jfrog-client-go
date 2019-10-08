@@ -77,20 +77,20 @@ func (ss *SecurityService) RefreshToken(params RefreshTokenParams) (CreateTokenR
 	return tokenInfo, err
 }
 
-func (ss *SecurityService) RevokeToken(params RevokeTokenParams) error {
+func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error) {
 	artifactoryUrl := ss.ArtDetails.GetUrl()
 	requestFullUrl := artifactoryUrl + tokenPath + "/revoke"
 	httpClientsDetails := ss.getArtifactoryDetails().CreateHttpClientDetails()
 	data := buildRevokeTokenUrlValues(params)
 	resp, body, err := ss.client.SendPostForm(requestFullUrl, data, &httpClientsDetails)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(
+		return "", errorutils.CheckError(
 			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
-	return err
+	return string(body), err
 }
 
 func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
