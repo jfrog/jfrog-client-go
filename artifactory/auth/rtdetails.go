@@ -3,15 +3,16 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+	"strings"
+	"sync"
+
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"strings"
-	"sync"
 )
 
 func NewArtifactoryDetails() ArtifactoryDetails {
@@ -240,7 +241,10 @@ func (rt *artifactoryDetails) GetVersion() (string, error) {
 }
 
 func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
-	client, err := httpclient.ClientBuilder().Build()
+	client, err := httpclient.ClientBuilder().
+		SetClientCertificatePath((*rt).GetClientCertificatePath()).
+		SetClientCertificateKeyPath((*rt).GetClientCertificateKeyPath()).
+		Build()
 	if err != nil {
 		return "", err
 	}
