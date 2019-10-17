@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/jfrog-client-go/utils"
 )
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
 func createAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, error) {
-	searchPattern := prepareSearchPattern(params.Pattern, true)
+	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
 	pathFilePairs := createRepoPathFileTriples(searchPattern, params.Recursive)
 	includeRoot := strings.Count(searchPattern, "/") < 2
 	pathPairsSize := len(pathFilePairs)
@@ -326,4 +328,11 @@ func getAqlValue(val string) string {
 		aqlValuePattern = `"%s"`
 	}
 	return fmt.Sprintf(aqlValuePattern, val)
+}
+func prepareSourceSearchPattern(pattern, target string, repositoryExists bool) string {
+	if strings.HasSuffix(pattern, "/") || (pattern == "" && repositoryExists) {
+		pattern += "*"
+	}
+	pattern = utils.CleanPatternParenthesesWithAssociatePlaceholder(pattern, target)
+	return pattern
 }

@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -160,6 +162,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
+	pattern = ExludeParenthesesWithNoPlaceholder(pattern, target)
 	pattern = pathToRegExp(pattern)
 	r, err := regexp.Compile(pattern)
 	err = errorutils.CheckError(err)
@@ -283,4 +286,111 @@ type Artifact struct {
 	LocalPath  string
 	TargetPath string
 	Symlink    string
+}
+
+type Parentheses struct {
+	OpenIndex  int
+	CloseIndex int
+}
+
+type ParenthesesSlice struct {
+	Parentheses []Parentheses
+}
+
+func (p *ParenthesesSlice) IsPresent(index int) bool {
+	for _, v := range p.Parentheses {
+		if v.OpenIndex == index || v.CloseIndex == index {
+			return true
+		}
+	}
+	return false
+}
+
+func CleanPatternParenthesesWithAssociatePlaceholder(pattern, target string) string {
+	parentheses := ParenthesesSlice{GetIndexOfParenthesesAssociateWithPlaceholders(pattern, target)}
+
+	//remove parentheses that have an associate placeholder
+	var temp string
+	for i := 0; i < len(pattern); i++ {
+		if (pattern[i] == '(' || pattern[i] == ')') && parentheses.IsPresent(i) {
+			continue
+		} else {
+			temp = temp + string(pattern[i])
+		}
+
+	}
+	return temp
+}
+func ExludeParenthesesWithNoPlaceholder(pattern, target string) string {
+	parentheses := ParenthesesSlice{GetIndexOfParenthesesAssociateWithPlaceholders(pattern, target)}
+	var temp string
+	for i := 0; i < len(pattern); i++ {
+		if (pattern[i] == '(' || pattern[i] == ')') && !parentheses.IsPresent(i) {
+			temp = temp + "\\" + string(pattern[i])
+		} else {
+			temp = temp + string(pattern[i])
+		}
+	}
+	return temp
+}
+
+func GetPlaceHoldersValue(target string) []int {
+	var placeholderFound []int
+
+	r := regexp.MustCompile(`{([^}]*)}`)
+	matches := r.FindAllStringSubmatch(target, -1)
+	for _, v := range matches {
+		if number, err := strconv.Atoi(v[1]); err == nil {
+			placeholderFound = append(placeholderFound, number)
+		}
+	}
+	if placeholderFound != nil {
+		InPlaceRemoveDuplicate(&placeholderFound)
+	}
+	return placeholderFound
+}
+
+func GetIndexOfParenthesesAssociateWithPlaceholders(pattern, target string) []Parentheses {
+	//parentheses array hold the index for each wildcard parentheses
+	var parentheses []Parentheses
+	for i, v := range pattern {
+		if v == '(' {
+			parentheses = append(parentheses, Parentheses{i, 0})
+		}
+		if v == ')' {
+			for j := len(parentheses) - 1; j >= 0; j-- {
+				if parentheses[j].CloseIndex == 0 {
+					parentheses[j].CloseIndex = i
+					break
+				}
+			}
+		}
+	}
+
+	//remove open parentheses without closing bracket
+	for i := 0; i < len(parentheses); i++ {
+		if parentheses[i].CloseIndex == 0 {
+			parentheses = append(parentheses[:i], parentheses[i+1:]...)
+		}
+	}
+
+	var parenthesesWithAccosiatePlaceholder []Parentheses
+	for _, v := range GetPlaceHoldersValue(target) {
+		parenthesesWithAccosiatePlaceholder = append(parenthesesWithAccosiatePlaceholder, parentheses[v-1])
+	}
+
+	return parenthesesWithAccosiatePlaceholder
+}
+
+func InPlaceRemoveDuplicate(arg *[]int) {
+	sort.Ints(*arg)
+	j := 0
+	for i := 1; i < len(*arg); i++ {
+		if (*arg)[j] == (*arg)[i] {
+			continue
+		}
+		j++
+		(*arg)[j] = (*arg)[i]
+	}
+	*arg = (*arg)[:j+1]
 }
