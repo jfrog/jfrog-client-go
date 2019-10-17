@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -160,6 +161,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
+	pattern = AddEscapingParentheses(pattern, target)
 	pattern = pathToRegExp(pattern)
 	r, err := regexp.Compile(pattern)
 	err = errorutils.CheckError(err)
