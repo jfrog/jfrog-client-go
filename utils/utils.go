@@ -376,7 +376,9 @@ func GetIndexOfParenthesesAssociateWithPlaceholders(pattern, target string) []Pa
 
 	var parenthesesWithAccosiatePlaceholder []Parentheses
 	for _, v := range GetPlaceHoldersValue(target) {
-		parenthesesWithAccosiatePlaceholder = append(parenthesesWithAccosiatePlaceholder, parentheses[v-1])
+		if len(parentheses) > v {
+			parenthesesWithAccosiatePlaceholder = append(parenthesesWithAccosiatePlaceholder, parentheses[v-1])
+		}
 	}
 
 	return parenthesesWithAccosiatePlaceholder
