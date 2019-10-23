@@ -367,17 +367,17 @@ func GetIndexOfParenthesesAssociateWithPlaceholders(pattern, target string) []Pa
 		}
 	}
 
+	var temp []Parentheses
 	//remove open parentheses without closing bracket
 	for i := 0; i < len(parentheses); i++ {
-		if parentheses[i].CloseIndex == 0 {
-			parentheses = append(parentheses[:i], parentheses[i+1:]...)
+		if parentheses[i].CloseIndex != 0 {
+			temp = append(temp, parentheses[i])
 		}
 	}
-
 	var parenthesesWithAccosiatePlaceholder []Parentheses
 	for _, v := range GetPlaceHoldersValue(target) {
-		if len(parentheses) > v {
-			parenthesesWithAccosiatePlaceholder = append(parenthesesWithAccosiatePlaceholder, parentheses[v-1])
+		if len(temp) > v-1 {
+			parenthesesWithAccosiatePlaceholder = append(parenthesesWithAccosiatePlaceholder, temp[v-1])
 		}
 	}
 
