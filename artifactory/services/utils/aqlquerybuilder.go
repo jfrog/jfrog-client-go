@@ -110,8 +110,8 @@ func CreateAqlQueryForPypi(repo, file string) string {
 			`"name": {"$match": "%s"}` +
 			`}]` +
 			`}]` +
-			`}).include("actual_md5","actual_sha1")`
-	return fmt.Sprintf(itemsPart, repo, file)
+			`})%s`
+	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1"}))
 }
 
 func prepareSearchPattern(pattern string, repositoryExists bool) string {
