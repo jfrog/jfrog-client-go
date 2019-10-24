@@ -6,6 +6,9 @@ import (
 	"strconv"
 )
 
+var placeholderRegExp = regexp.MustCompile(`{([^}]*)}`)
+
+// This struct represents the parentheses used for defining Placeholders (Placeholders is a feature supported by File Specs).
 type Parentheses struct {
 	OpenIndex  int
 	CloseIndex int
@@ -25,9 +28,9 @@ func (p *ParenthesesSlice) IsPresent(index int) bool {
 }
 
 func RemovePlaceholderParentheses(pattern, target string) string {
-	parentheses := ParenthesesSlice{getParenthesesIndex(pattern, target)}
+	parentheses := ParenthesesSlice{findParentheses(pattern, target)}
 
-	//remove parentheses that have an associate placeholder
+	// Remove parentheses which have a corresponding placeholder.
 	var temp string
 	for i := 0; i < len(pattern); i++ {
 		if (pattern[i] == '(' || pattern[i] == ')') && parentheses.IsPresent(i) {
@@ -40,9 +43,9 @@ func RemovePlaceholderParentheses(pattern, target string) string {
 	return temp
 }
 
-// Escapoing Parentheses with no associate placeholder
+// Escapoing Parentheses with no corresponding placeholder
 func AddEscapingParentheses(pattern, target string) string {
-	parentheses := ParenthesesSlice{getParenthesesIndex(pattern, target)}
+	parentheses := ParenthesesSlice{findParentheses(pattern, target)}
 	var temp string
 	for i := 0; i < len(pattern); i++ {
 		if (pattern[i] == '(' || pattern[i] == ')') && !parentheses.IsPresent(i) {
@@ -54,24 +57,22 @@ func AddEscapingParentheses(pattern, target string) string {
 	return temp
 }
 
-func getPlaceHoldersValue(target string) []int {
+func getPlaceHoldersValues(target string) []int {
 	var placeholderFound []int
-
-	r := regexp.MustCompile(`{([^}]*)}`)
-	matches := r.FindAllStringSubmatch(target, -1)
+	matches := placeholderRegExp.FindAllStringSubmatch(target, -1)
 	for _, v := range matches {
 		if number, err := strconv.Atoi(v[1]); err == nil {
 			placeholderFound = append(placeholderFound, number)
 		}
 	}
 	if placeholderFound != nil {
-		inPlaceRemoveDuplicate(&placeholderFound)
+		sortNoDuplicates(&placeholderFound)
 	}
 	return placeholderFound
 }
 
-// Return the array of each parentheses in pattern with assoiciate place holder in target
-func getParenthesesIndex(pattern, target string) []Parentheses {
+// Find the list of Parentheses in the pattern, which correspond to placeholders defined in the target.
+func findParentheses(pattern, target string) []Parentheses {
 	// Save each parentheses index
 	var parentheses []Parentheses
 	for i, v := range pattern {
@@ -97,7 +98,7 @@ func getParenthesesIndex(pattern, target string) []Parentheses {
 	}
 	// Filter parentheses without placeholders
 	var result []Parentheses
-	for _, v := range getPlaceHoldersValue(target) {
+	for _, v := range getPlaceHoldersValues(target) {
 		if len(temp) > v-1 {
 			result = append(result, temp[v-1])
 		}
@@ -105,8 +106,8 @@ func getParenthesesIndex(pattern, target string) []Parentheses {
 	return result
 }
 
-// Order & remove duplicate from the origin array (override)
-func inPlaceRemoveDuplicate(arg *[]int) {
+// Sort array and remove duplicates.
+func sortNoDuplicates(arg *[]int) {
 	sort.Ints(*arg)
 	j := 0
 	for i := 1; i < len(*arg); i++ {
@@ -114,9 +115,6 @@ func inPlaceRemoveDuplicate(arg *[]int) {
 			continue
 		}
 		j++
-		// Preserve the original data
-		// in[i], in[j] = in[j], in[i]
-		// only set what is required
 		(*arg)[j] = (*arg)[i]
 	}
 	*arg = (*arg)[:j+1]

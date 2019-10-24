@@ -116,8 +116,8 @@ func assertSortBody(actual, expected string, t *testing.T) {
 		t.Error("The function buildSortQueryPart expected to return the string:\n'" + expected + "'.\nbut returned:\n'" + actual + "'.")
 	}
 }
-func TestPrepareSourceSearchPattern(t *testing.T) {
 
+func TestPrepareSourceSearchPattern(t *testing.T) {
 	newPattern := prepareSourceSearchPattern("/testsdata/b/b1/b.in", "/testsdata", true)
 	assert.Equal(t, "/testsdata/b/b1/b.in", newPattern)
 
@@ -159,5 +159,4 @@ func TestPrepareSourceSearchPattern(t *testing.T) {
 
 	newPattern = prepareSourceSearchPattern("/testsdata/b/(/(.in", "/testsdata", true)
 	assert.Equal(t, "/testsdata/b/(/(.in", newPattern)
-
 }

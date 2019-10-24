@@ -117,7 +117,7 @@ func CreateAqlQueryForPypi(repo, file string) string {
 }
 
 func prepareSearchPattern(pattern string, repositoryExists bool) string {
-	addWildcardIfNeeded(&pattern, &repositoryExists)
+	addWildcardIfNeeded(&pattern, repositoryExists)
 	// Remove parenthesis
 	pattern = strings.Replace(pattern, "(", "", -1)
 	pattern = strings.Replace(pattern, ")", "", -1)
@@ -326,14 +326,15 @@ func getAqlValue(val string) string {
 	}
 	return fmt.Sprintf(aqlValuePattern, val)
 }
+
 func prepareSourceSearchPattern(pattern, target string, repositoryExists bool) string {
-	addWildcardIfNeeded(&pattern, &repositoryExists)
+	addWildcardIfNeeded(&pattern, repositoryExists)
 	pattern = utils.RemovePlaceholderParentheses(pattern, target)
 	return pattern
 }
 
-func addWildcardIfNeeded(pattern *string, repositoryExists *bool) {
-	if strings.HasSuffix(*pattern, "/") || (*pattern == "" && *repositoryExists) {
+func addWildcardIfNeeded(pattern *string, repositoryExists bool) {
+	if strings.HasSuffix(*pattern, "/") || (*pattern == "" && repositoryExists) {
 		*pattern += "*"
 	}
 }
