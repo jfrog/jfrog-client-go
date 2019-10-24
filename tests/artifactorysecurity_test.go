@@ -101,6 +101,7 @@ func createToken() (services.CreateTokenResponseData, error) {
 	params.Username = "anonymous"
 	params.Scope = "api:* member-of-groups:readers"
 	params.Refreshable = true // We need to use the refresh token to revoke these tokens on teardown
+	params.Audience = "jfrt@*" // Allow token to be accepted by all instances of Artifactory.
 	return testsSecurityService.CreateToken(params)
 }
 

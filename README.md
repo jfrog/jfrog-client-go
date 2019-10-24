@@ -265,7 +265,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     rtManager.ReadRemoteFile(FilePath string)
 ```
 
-#### Creating an access token 
+#### Creating an access token
 ```
     params := services.NewCreateTokenParams()
     params.Scope = "api:* member-of-groups:readers"
@@ -295,11 +295,11 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 #### Revoking an access token
 ```
     params := services.NewRevokeTokenParams()
-    
+
     // Provide either TokenId or Token
     params.TokenId = "<token id>"
     // params.Token = "access token"
-    
+
     err := rtManager.RevokeToken(params)
 ```
 
