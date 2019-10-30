@@ -1,7 +1,9 @@
 package utils
 
-import "testing"
-import "reflect"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestRemoveRepoFromPath(t *testing.T) {
 	assertRemoveRepoFromPath("repo/abc/def", "/abc/def", t)
@@ -59,5 +61,36 @@ func assertSplitWithEscape(str string, expected []string, t *testing.T) {
 	result := SplitWithEscape(str, '/')
 	if !reflect.DeepEqual(result, expected) {
 		t.Error("Unexpected string array built. Expected: `", expected, "` Got `", result, "`")
+	}
+}
+
+func TestPrepareLocalPathForUpload(t *testing.T) {
+	parameter := "/foo/baz/../bar/*"
+	got := PrepareLocalPathForUpload(parameter, false)
+	want := "^/foo/bar/.*$"
+	if got != want {
+		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+	}
+	parameter = "/foo//bar/*"
+	got = PrepareLocalPathForUpload(parameter, false)
+	if got != want {
+		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+	}
+	parameter = "/foo/bar/"
+	got = PrepareLocalPathForUpload(parameter, false)
+	if got != want {
+		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+	}
+	parameter = "foo/bar"
+	got = PrepareLocalPathForUpload(parameter, false)
+	want = "^foo/bar$"
+	if got != want {
+		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+	}
+	parameter = "./foo/bar/"
+	got = PrepareLocalPathForUpload(parameter, false)
+	want = "^foo/bar/.*$"
+	if got != want {
+		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -121,14 +122,14 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 }
 
 func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
+	temp := ""
 	if localPath == "./" || localPath == ".\\" {
 		return "^.*$"
 	}
-	if strings.HasPrefix(localPath, "./") {
-		localPath = localPath[2:]
-	} else if strings.HasPrefix(localPath, ".\\") {
-		localPath = localPath[3:]
+	if strings.HasSuffix(localPath, "\\") || strings.HasSuffix(localPath, "/") {
+		temp = localPath[len(localPath)-1:]
 	}
+	localPath = filepath.Clean(localPath) + temp
 	if !useRegExp {
 		localPath = pathToRegExp(localPath)
 	}
