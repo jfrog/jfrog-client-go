@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -120,14 +122,14 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 }
 
 func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
+	temp := ""
 	if localPath == "./" || localPath == ".\\" {
 		return "^.*$"
 	}
-	if strings.HasPrefix(localPath, "./") {
-		localPath = localPath[2:]
-	} else if strings.HasPrefix(localPath, ".\\") {
-		localPath = localPath[3:]
+	if strings.HasSuffix(localPath, "\\") || strings.HasSuffix(localPath, "/") {
+		temp = localPath[len(localPath)-1:]
 	}
+	localPath = filepath.Clean(localPath) + temp
 	if !useRegExp {
 		localPath = pathToRegExp(localPath)
 	}
@@ -160,6 +162,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
+	pattern = AddEscapingParentheses(pattern, target)
 	pattern = pathToRegExp(pattern)
 	r, err := regexp.Compile(pattern)
 	err = errorutils.CheckError(err)

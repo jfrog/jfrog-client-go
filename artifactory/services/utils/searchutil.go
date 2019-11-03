@@ -3,15 +3,16 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type RequiredArtifactProps int
@@ -134,6 +135,8 @@ type ResultItem struct {
 	Actual_Md5  string
 	Actual_Sha1 string
 	Size        int64
+	Created     string
+	Modified    string
 	Properties  []Property
 	Type        string
 }

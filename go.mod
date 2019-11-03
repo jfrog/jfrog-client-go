@@ -15,18 +15,19 @@ require (
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
-	github.com/jfrog/gofrog v1.0.4
+	github.com/jfrog/gofrog v1.0.5
 	github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e // indirect
 	github.com/mholt/archiver v2.1.0+incompatible
 	github.com/mitchellh/go-homedir v1.0.0 // indirect
 	github.com/nwaples/rardecode v0.0.0-20171029023500-e06696f847ae // indirect
 	github.com/pelletier/go-buffruneio v0.2.0 // indirect
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
+	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/spf13/viper v1.2.1
 	github.com/src-d/gcfg v1.3.0 // indirect
-	github.com/stretchr/testify v1.2.2 // indirect
+	github.com/stretchr/testify v1.2.2
 	github.com/ulikunitz/xz v0.5.4 // indirect
 	github.com/xanzy/ssh-agent v0.2.0
 	golang.org/x/crypto v0.0.0-20181001203147-e3636079e1a4
@@ -36,3 +37,5 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.7.0
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
+
+go 1.13
