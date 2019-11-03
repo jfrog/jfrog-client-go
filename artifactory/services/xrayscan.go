@@ -100,6 +100,14 @@ func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Re
 	httpClientsDetails := ps.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
+	// The scan build operation can take a long time to finish.
+	// To keep the connection open, when Xray starts scanning the build, it starts sending new-lines
+	// on the open channel. This tells the client that the operation is still in progress and the
+	// connection does not get timed out.
+	// We need make sure the new-lines are not buffered on the nginx and are flushed
+	// as soon as Xray sends them.
+	utils.DisableAccelBuffering(&httpClientsDetails.Headers)
+
 	resp, _, _, err := ps.client.Send("POST", url, content, true, false, &httpClientsDetails)
 	if err != nil {
 		return resp, err
