@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -65,31 +66,31 @@ func assertSplitWithEscape(str string, expected []string, t *testing.T) {
 }
 
 func TestPrepareLocalPathForUpload(t *testing.T) {
-	parameter := "/foo/baz/../bar/*"
+	parameter := filepath.FromSlash("/foo/baz/../bar/*")
 	got := PrepareLocalPathForUpload(parameter, false)
-	want := "^/foo/bar/.*$"
+	want := filepath.FromSlash("^/foo/bar/.*$")
 	if got != want {
 		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
 	}
-	parameter = "/foo//bar/*"
+	parameter = filepath.FromSlash("/foo//bar/*")
 	got = PrepareLocalPathForUpload(parameter, false)
 	if got != want {
 		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
 	}
-	parameter = "/foo/bar/"
+	parameter = filepath.FromSlash("/foo/bar/")
 	got = PrepareLocalPathForUpload(parameter, false)
 	if got != want {
 		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
 	}
-	parameter = "foo/bar"
+	parameter = filepath.FromSlash("foo/bar")
 	got = PrepareLocalPathForUpload(parameter, false)
-	want = "^foo/bar$"
+	want = filepath.FromSlash("^foo/bar$")
 	if got != want {
 		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
 	}
-	parameter = "./foo/bar/"
+	parameter = filepath.FromSlash("./foo/bar/")
 	got = PrepareLocalPathForUpload(parameter, false)
-	want = "^foo/bar/.*$"
+	want = filepath.FromSlash("^foo/bar/.*$")
 	if got != want {
 		t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
 	}
