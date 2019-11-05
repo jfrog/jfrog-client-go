@@ -63,3 +63,84 @@ func assertSplitWithEscape(str string, expected []string, t *testing.T) {
 		t.Error("Unexpected string array built. Expected: `", expected, "` Got `", result, "`")
 	}
 }
+
+func TestCleanPath(t *testing.T) {
+	if IsWindows() {
+		parameter := "\\\\foo\\\\baz\\\\..\\\\bar\\\\*"
+		got := cleanPath(parameter)
+		want := "\\\\foo\\\\bar\\\\*"
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "\\\\foo\\\\\\\\bar\\\\*"
+		got = cleanPath(parameter)
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "\\\\foo\\\\.\\\\bar\\\\*"
+		got = cleanPath(parameter)
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "\\\\foo\\\\.\\\\bar\\\\*\\\\"
+		want = "\\\\foo\\\\bar\\\\*\\\\"
+		got = cleanPath(parameter)
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "foo\\\\bar"
+		got = cleanPath(parameter)
+		want = "foo\\\\bar"
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = ".\\\\foo\\\\bar\\\\"
+		got = cleanPath(parameter)
+		want = "foo\\\\bar\\\\"
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+	} else {
+		parameter := "/foo/bar/"
+		got := cleanPath(parameter)
+		//osSlash := strings.Replace(string(os.PathSeparator), `\`, `\\`)
+		want := "/foo/bar/"
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "/foo/baz/../bar/*"
+		got = cleanPath(parameter)
+		want = "/foo/bar/*"
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "/foo//bar/*"
+		got = cleanPath(parameter)
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "/foo/./bar/*"
+		got = cleanPath(parameter)
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "/foo/./bar/*/"
+		want = "/foo/bar/*/"
+		got = cleanPath(parameter)
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "foo/bar"
+		got = cleanPath(parameter)
+		want = "foo/bar"
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+		parameter = "./foo/bar/"
+		got = cleanPath(parameter)
+		want = "foo/bar/"
+		if got != want {
+			t.Errorf("PrepareLocalPathForUpload(%s) == %s, want %s", parameter, got, want)
+		}
+	}
+}
