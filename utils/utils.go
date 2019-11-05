@@ -136,13 +136,14 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
 	return localPath
 }
 
-// Clean /../ | /./ and return the double backslash in case of windows path
+// Clean /../ | /./ using filepath.Clean.
 func cleanPath(path string) string {
 	temp := path[len(path)-1:]
 	path = filepath.Clean(path)
 	if temp == `\` || temp == "/" {
 		path += temp
 	}
+	// Since filepath.Clean replaces \\ with \, we revert this action.
 	path = strings.Replace(path, `\`, `\\`, -1)
 	return path
 }
