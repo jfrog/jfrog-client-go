@@ -55,6 +55,8 @@ func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requir
 	switch searchParams.GetSpecType() {
 	case utils.WILDCARD:
 		itemsFound, err = utils.SearchBySpecWithPattern(searchParams.GetFile(), flags, requiredArtifactProps)
+	case utils.BUILD:
+		itemsFound, err = utils.SearchBySpecWithBuild(searchParams.GetFile(), flags)
 	case utils.AQL:
 		itemsFound, err = utils.SearchBySpecWithAql(searchParams.GetFile(), flags, requiredArtifactProps)
 	}
