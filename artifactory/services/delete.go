@@ -62,6 +62,13 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		}
 		paths := utils.ReduceDirResult(tempResultItems, utils.FilterTopChainResults)
 		resultItems = append(resultItems, paths...)
+	case utils.BUILD:
+		if resultItemsTemp, e := utils.SearchBySpecWithBuild(deleteParams.GetFile(), ds); e == nil {
+			resultItems = append(resultItems, resultItemsTemp...)
+		} else {
+			err = e
+			return
+		}
 	}
 	utils.LogSearchResults(len(resultItems))
 	return

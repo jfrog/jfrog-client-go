@@ -52,6 +52,8 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyPara
 	log.Info("Searching items...")
 
 	switch moveSpec.GetSpecType() {
+	case utils.BUILD:
+		resultItems, err = utils.SearchBySpecWithBuild(moveSpec.GetFile(), mc)
 	case utils.AQL:
 		resultItems, err = utils.SearchBySpecWithAql(moveSpec.GetFile(), mc, utils.NONE)
 	case utils.WILDCARD:
