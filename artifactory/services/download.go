@@ -96,6 +96,8 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, buildDependenc
 			switch downloadParams.GetSpecType() {
 			case utils.WILDCARD:
 				resultItems, err = ds.collectFilesUsingWildcardPattern(downloadParams)
+			case utils.BUILD:
+				resultItems, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
 			case utils.AQL:
 				resultItems, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
 			}
