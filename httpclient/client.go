@@ -391,7 +391,11 @@ func extractZip(downloadFileDetails *DownloadFileDetails, logMsgPrefix string) e
 		return err
 	}
 	log.Info(logMsgPrefix+"Extracting archive:", fileName, "to", downloadFileDetails.LocalPath)
-	err = archiver.Zip.Open(fileName, downloadFileDetails.LocalPath)
+	absLocalPath, err := filepath.Abs(downloadFileDetails.LocalPath)
+	if errorutils.CheckError(err) != nil {
+		return err
+	}
+	err = archiver.Zip.Open(fileName, absLocalPath)
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
