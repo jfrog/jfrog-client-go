@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"path"
@@ -46,14 +47,14 @@ type UploadParams struct {
 	// Target local path
 	TargetPath string
 
-	UseRegExp     bool
-	Flat          bool
-	Recursive     bool
-	Explode       bool
-	Override      bool
-	Publish       bool
-	ListDownloads bool
-	Deb           string
+	UseRegExp          bool
+	Flat               bool
+	Recursive          bool
+	Explode            bool
+	Override           bool
+	Publish            bool
+	ShowInDownloadList bool
+	Deb                string
 }
 
 func (us *UploadService) Upload(uploadDetails *UploadParams) (totalUploaded, totalFailed int, err error) {
@@ -99,15 +100,6 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 					if uploaded {
 						uploadCount[threadId]++
 					}
-					if uploadDetails.ListDownloads {
-						// This needs to not sleep, but since the publish is async we need to for now
-						time.Sleep(15 * time.Second)
-						listUrl := us.BintrayDetails.GetApiUrl() + path.Join(
-							"file_metadata",
-							uploadDetails.Subject,
-							uploadDetails.Repo, artifacts[j].TargetPath)
-						listFile(listUrl, logMsgPrefix, us.BintrayDetails)
-					}
 				} else {
 					log.Info("[Dry Run] Uploading artifact:", artifacts[j].LocalPath)
 					uploadCount[threadId]++
@@ -117,6 +109,35 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 		}(i)
 	}
 	wg.Wait()
+
+	if uploadDetails.ShowInDownloadList {
+		for _, af := range artifacts {
+			wg.Add(1)
+			listUrl := us.BintrayDetails.GetApiUrl() + path.Join(
+				"file_metadata",
+				uploadDetails.Subject,
+				uploadDetails.Repo, af.TargetPath)
+			go func(artifact clientutils.Artifact, url string) {
+				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				defer cancel()
+				defer wg.Done()
+				for {
+					select {
+					default:
+						if uploaded, _ := SownInDownloadList(url, us.BintrayDetails); uploaded {
+							return
+						}
+						time.Sleep(25*time.Millisecond)
+					case <-ctx.Done():
+						log.Error("Failed listing for download", artifact.TargetPath)
+					}
+				}
+			}(af, listUrl)
+		}
+		wg.Wait()
+		// This needs to not sleep, but since the publish is async we need to for now
+		time.Sleep(15 * time.Second)
+	}
 
 	totalUploaded = 0
 	for _, i := range uploadCount {
@@ -180,7 +201,7 @@ func uploadFile(artifact clientutils.Artifact, url, logMsgPrefix string, bintray
 	return resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
 
-func listFile(url, logMsgPrefix string, bintrayDetails auth.BintrayDetails) (bool, error) {
+func SownInDownloadList(url string, bintrayDetails auth.BintrayDetails) (bool, error) {
 	httpClientsDetails := bintrayDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
@@ -190,7 +211,7 @@ func listFile(url, logMsgPrefix string, bintrayDetails auth.BintrayDetails) (boo
 	if err != nil {
 		return false, err
 	}
-	log.Info(logMsgPrefix + "Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+	log.Info("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 
 	return resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }

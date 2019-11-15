@@ -290,6 +290,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.Override = false
     params.Explode = false
     params.UseRegExp = false
+    params.ShowInDownloadList = false
     
     btManager.UploadFiles(params)
 ```
