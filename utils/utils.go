@@ -17,12 +17,14 @@ import (
 
 const (
 	Development = "development"
+	Agent       = "jfrog-client-go"
+	Version     = "0.5.8"
 )
 
 var userAgent = getDefaultUserAgent()
 
 func getVersion() string {
-	return "0.1.0"
+	return Version
 }
 
 func GetUserAgent() string {
@@ -34,7 +36,7 @@ func SetUserAgent(newUserAgent string) {
 }
 
 func getDefaultUserAgent() string {
-	return fmt.Sprintf("jfrog-client-go/%s", getVersion())
+	return fmt.Sprintf("%s/%s", Agent, getVersion())
 }
 
 // Get the local root path, from which to start collecting artifacts to be used for:

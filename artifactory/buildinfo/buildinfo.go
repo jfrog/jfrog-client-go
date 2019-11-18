@@ -26,6 +26,10 @@ func (targetBuildInfo *BuildInfo) SetAgentVersion(agentVersion string) {
 	targetBuildInfo.Agent.Version = agentVersion
 }
 
+func (targetBuildInfo *BuildInfo) SetArtifactoryPluginVersion(artifactoryPluginVersion string) {
+	targetBuildInfo.ArtifactoryPluginVersion = artifactoryPluginVersion
+}
+
 // Append the modules of the received build info to this build info.
 // If the two build info instances contain modules with identical names, these modules are merged.
 // When merging the modules, the artifacts and dependencies remain unique according to their checksum.
@@ -82,16 +86,17 @@ func mergeDependencies(mergeDependencies *[]Dependency, intoDependencies *[]Depe
 }
 
 type BuildInfo struct {
-	Name                 string   `json:"name,omitempty"`
-	Number               string   `json:"number,omitempty"`
-	Agent                *Agent   `json:"agent,omitempty"`
-	BuildAgent           *Agent   `json:"buildAgent,omitempty"`
-	Modules              []Module `json:"modules,omitempty"`
-	Started              string   `json:"started,omitempty"`
-	Properties           Env      `json:"properties,omitempty"`
-	ArtifactoryPrincipal string   `json:"artifactoryPrincipal,omitempty"`
-	BuildUrl             string   `json:"url,omitempty"`
-	Issues               *Issues  `json:"issues,omitempty"`
+	Name                     string   `json:"name,omitempty"`
+	Number                   string   `json:"number,omitempty"`
+	Agent                    *Agent   `json:"agent,omitempty"`
+	BuildAgent               *Agent   `json:"buildAgent,omitempty"`
+	Modules                  []Module `json:"modules,omitempty"`
+	Started                  string   `json:"started,omitempty"`
+	Properties               Env      `json:"properties,omitempty"`
+	ArtifactoryPrincipal     string   `json:"artifactoryPrincipal,omitempty"`
+	BuildUrl                 string   `json:"url,omitempty"`
+	Issues                   *Issues  `json:"issues,omitempty"`
+	ArtifactoryPluginVersion string   `json:"artifactoryPluginVersion,omitempty"`
 	*Vcs
 }
 
