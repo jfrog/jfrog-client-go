@@ -80,29 +80,25 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 
 	// Create an array of integers, to store the total file that were uploaded successfully.
 	// Each array item is used by a single thread.
-	uploadCount := make([]int, us.Threads, us.Threads)
+	uploadedArtifacts := make(map[int][]clientutils.Artifact, us.Threads)
 	matrixParams := getMatrixParams(uploadDetails)
 	for i := 0; i < us.Threads; i++ {
 		wg.Add(1)
 		go func(threadId int) {
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
 			for j := threadId; j < size; j += us.Threads {
-				if err != nil {
-					break
-				}
-				url := baseUrl + "/" + artifacts[j].TargetPath + matrixParams
 				if !us.DryRun {
+					url := baseUrl + "/" + artifacts[j].TargetPath + matrixParams
 					uploaded, e := uploadFile(artifacts[j], url, logMsgPrefix, us.BintrayDetails)
 					if e != nil {
-						err = e
-						break
+						log.Error(logMsgPrefix, "Failed uploading artifact:", artifacts[j].LocalPath, ":", e)
 					}
 					if uploaded {
-						uploadCount[threadId]++
+						uploadedArtifacts[threadId] = append(uploadedArtifacts[threadId], artifacts[j])
 					}
 				} else {
 					log.Info("[Dry Run] Uploading artifact:", artifacts[j].LocalPath)
-					uploadCount[threadId]++
+					uploadedArtifacts[threadId] = append(uploadedArtifacts[threadId], artifacts[j])
 				}
 			}
 			wg.Done()
@@ -111,37 +107,43 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 	wg.Wait()
 
 	if uploadDetails.ShowInDownloadList {
-		for _, af := range artifacts {
+		for i := 0; i < us.Threads; i++ {
 			wg.Add(1)
-			listUrl := us.BintrayDetails.GetApiUrl() + path.Join(
-				"file_metadata",
-				uploadDetails.Subject,
-				uploadDetails.Repo, af.TargetPath)
-			go func(artifact clientutils.Artifact, url string) {
-				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-				defer cancel()
+			go func(threadId int) {
 				defer wg.Done()
-				for {
-					select {
-					default:
-						if uploaded, _ := SownInDownloadList(url, us.BintrayDetails); uploaded {
-							return
+				for _, artifact := range uploadedArtifacts[threadId] {
+					if !us.DryRun {
+						listUrl := us.BintrayDetails.GetApiUrl() + path.Join(
+							"file_metadata",
+							uploadDetails.Subject,
+							uploadDetails.Repo, artifact.TargetPath)
+						ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+						for {
+							select {
+							default:
+								if listed, _ := SownInDownloadList(listUrl, us.BintrayDetails); listed {
+									cancel()
+									log.Info("Listed for download", artifact.TargetPath)
+									break
+								}
+								time.Sleep(25 * time.Millisecond)
+							case <-ctx.Done():
+								log.Error("Failed listing for download", artifact.TargetPath)
+								break
+							}
 						}
-						time.Sleep(25*time.Millisecond)
-					case <-ctx.Done():
-						log.Error("Failed listing for download", artifact.TargetPath)
+					} else {
+						log.Info("[Dry Run] Listed for download", artifact.TargetPath)
 					}
 				}
-			}(af, listUrl)
+			}(i)
 		}
 		wg.Wait()
-		// This needs to not sleep, but since the publish is async we need to for now
-		time.Sleep(15 * time.Second)
 	}
 
 	totalUploaded = 0
-	for _, i := range uploadCount {
-		totalUploaded += i
+	for _, i := range uploadedArtifacts {
+		totalUploaded += len(i)
 	}
 	log.Debug("Uploaded", strconv.Itoa(totalUploaded), "artifacts.")
 	totalFailed = size - totalUploaded
@@ -211,7 +213,7 @@ func SownInDownloadList(url string, bintrayDetails auth.BintrayDetails) (bool, e
 	if err != nil {
 		return false, err
 	}
-	log.Info("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+	log.Debug("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 
 	return resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
