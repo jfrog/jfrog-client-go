@@ -118,8 +118,8 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 						"file_metadata",
 						uploadDetails.Subject,
 						uploadDetails.Repo, artifact.TargetPath)
-					var listed bool
 
+					var listed bool
 					// retry loop, will retry to list uploaded artifacts
 					for j := 0; j < 30; j++ {
 						if listed, _ = SownInDownloadList(listUrl, us.BintrayDetails); listed {
