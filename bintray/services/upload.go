@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"path"
@@ -84,6 +83,8 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 	matrixParams := getMatrixParams(uploadDetails)
 	for i := 0; i < us.Threads; i++ {
 		wg.Add(1)
+		// The threadId key MUST exist in the map first so that the map itself is not being mutated inside a go routine
+		uploadedArtifacts[i] = make([]clientutils.Artifact, 0)
 		go func(threadId int) {
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
 			for j := threadId; j < size; j += us.Threads {
@@ -107,38 +108,35 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 	wg.Wait()
 
 	if uploadDetails.ShowInDownloadList {
+		// even though we are not running the list for download in go routines we need this outer loop
+		// since we are using a thread specific key in the uploadedArtifacts map to get around needing to use
+		// a Mutex or sync.Map when adding entries to the map
 		for i := 0; i < us.Threads; i++ {
-			wg.Add(1)
-			go func(threadId int) {
-				defer wg.Done()
-				for _, artifact := range uploadedArtifacts[threadId] {
-					if !us.DryRun {
-						listUrl := us.BintrayDetails.GetApiUrl() + path.Join(
-							"file_metadata",
-							uploadDetails.Subject,
-							uploadDetails.Repo, artifact.TargetPath)
-						ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-						for {
-							select {
-							default:
-								if listed, _ := SownInDownloadList(listUrl, us.BintrayDetails); listed {
-									cancel()
-									log.Info("Listed for download", artifact.TargetPath)
-									break
-								}
-								time.Sleep(25 * time.Millisecond)
-							case <-ctx.Done():
-								log.Error("Failed listing for download", artifact.TargetPath)
-								break
-							}
+			for _, artifact := range uploadedArtifacts[i] {
+				if !us.DryRun {
+					listUrl := us.BintrayDetails.GetApiUrl() + path.Join(
+						"file_metadata",
+						uploadDetails.Subject,
+						uploadDetails.Repo, artifact.TargetPath)
+					var listed bool
+
+					// retry loop, will retry to list uploaded artifacts
+					for j := 0; j < 30; j++ {
+						if listed, _ = SownInDownloadList(listUrl, us.BintrayDetails); listed {
+							break
 						}
-					} else {
-						log.Info("[Dry Run] Listed for download", artifact.TargetPath)
+						time.Sleep(1 * time.Second)
 					}
+					if listed {
+						log.Info("Listed for download", artifact.TargetPath)
+					} else {
+						log.Error("Failed Listing for download", artifact.TargetPath)
+					}
+				} else {
+					log.Info("[Dry Run] Listed for download", artifact.TargetPath)
 				}
-			}(i)
+			}
 		}
-		wg.Wait()
 	}
 
 	totalUploaded = 0
