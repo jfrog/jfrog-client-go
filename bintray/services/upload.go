@@ -77,8 +77,8 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 	size := len(artifacts)
 	var wg sync.WaitGroup
 
-	// Create an array of integers, to store the total file that were uploaded successfully.
-	// Each array item is used by a single thread.
+	// Create an map where the key is a threadId so each entry is tied to a specific thread
+	// this avoids us needing to use a Mutex or sync.Map within the go routine.
 	uploadedArtifacts := make(map[int][]clientutils.Artifact, us.Threads)
 	matrixParams := getMatrixParams(uploadDetails)
 	for i := 0; i < us.Threads; i++ {
@@ -108,9 +108,9 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 	wg.Wait()
 
 	if uploadDetails.ShowInDownloadList {
-		// even though we are not running the list for download in go routines we need this outer loop
+		// Even though we are not running the list for download in go routines we need this outer loop
 		// since we are using a thread specific key in the uploadedArtifacts map to get around needing to use
-		// a Mutex or sync.Map when adding entries to the map
+		// a Mutex or sync.Map when adding entries to the map.
 		for i := 0; i < us.Threads; i++ {
 			for _, artifact := range uploadedArtifacts[i] {
 				if !us.DryRun {
@@ -120,9 +120,12 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 						uploadDetails.Repo, artifact.TargetPath)
 
 					var listed bool
-					// retry loop, will retry to list uploaded artifacts
+					// Retry loop, will retry to list uploaded artifacts.
 					for j := 0; j < 30; j++ {
-						if listed, _ = SownInDownloadList(listUrl, us.BintrayDetails); listed {
+						if listed, err = SownInDownloadList(listUrl, us.BintrayDetails); listed || err != nil {
+							if err != nil {
+								log.Error(err)
+							}
 							break
 						}
 						time.Sleep(1 * time.Second)
@@ -130,7 +133,7 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 					if listed {
 						log.Info("Listed for download", artifact.TargetPath)
 					} else {
-						log.Error("Failed Listing for download", artifact.TargetPath)
+						log.Error("Failed listing for download", artifact.TargetPath)
 					}
 				} else {
 					log.Info("[Dry Run] Listed for download", artifact.TargetPath)
