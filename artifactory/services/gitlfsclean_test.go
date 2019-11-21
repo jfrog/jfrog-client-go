@@ -38,7 +38,7 @@ func TestGetLfsFilesFromGit(t *testing.T) {
 	if utils.IsWindows() {
 		refs = strings.Join([]string{"refs", "heads", "*"}, "\\\\")
 	}
-	results, err := getLfsFilesFromGit(gitPath, "HEAD|" + refs)
+	results, err := getLfsFilesFromGit(gitPath, "HEAD|"+refs)
 	if err != nil {
 		t.Error("Got err: ", err)
 	}

@@ -48,11 +48,11 @@ func (sm *ServicesManager) DownloadVersion(params *services.DownloadVersionParam
 }
 
 func (sm *ServicesManager) UploadFiles(params *services.UploadParams) (totalUploaded, totalFailed int, err error) {
-	downloadService := services.NewUploadService(sm.client)
-	downloadService.BintrayDetails = sm.config.GetBintrayDetails()
-	downloadService.DryRun = sm.config.IsDryRun()
-	downloadService.Threads = sm.config.GetThreads()
-	return downloadService.Upload(params)
+	uploadService := services.NewUploadService(sm.client)
+	uploadService.BintrayDetails = sm.config.GetBintrayDetails()
+	uploadService.DryRun = sm.config.IsDryRun()
+	uploadService.Threads = sm.config.GetThreads()
+	return uploadService.Upload(params)
 }
 
 func (sm *ServicesManager) newVersionService() *versions.VersionService {
