@@ -30,7 +30,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 #### Creating Artifactory Details
 ```
     rtDetails := auth.NewArtifactoryDetails()
-    rtDetails.SetUrl("http://localhost:8081/artifactory")
+    rtDetails.SetUrl("http://localhost:8081/artifactory/")
     rtDetails.SetSshKeysPath("path/to/.ssh/")
     rtDetails.SetApiKey("apikey")
     rtDetails.SetUser("user")
