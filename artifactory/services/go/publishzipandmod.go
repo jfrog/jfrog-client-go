@@ -43,12 +43,12 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpcl
 	moduleId := strings.Split(params.GetModuleId(), ":")
 	uploadInfoFile := version.NewVersion(pwa.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != ""
 	// Upload zip file
-	err = pwa.upload(params.IgnoreIntermediateForbiddenErrors, params.GetZipPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".zip", url)
+	err = pwa.upload(params.GetIgnoreIntermediateForbiddenErrors(), params.GetZipPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".zip", url)
 	if err != nil {
 		return err
 	}
 	// Upload mod file
-	err = pwa.upload(uploadInfoFile && params.IgnoreIntermediateForbiddenErrors, params.GetModPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".mod", url)
+	err = pwa.upload(uploadInfoFile && params.GetIgnoreIntermediateForbiddenErrors(), params.GetModPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".mod", url)
 	if err != nil {
 		return err
 	}

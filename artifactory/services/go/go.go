@@ -82,6 +82,10 @@ func (gp *GoParams) GetInfoPath() string {
 	return gp.InfoPath
 }
 
+func (gp *GoParams) GetIgnoreIntermediateForbiddenErrors() bool {
+	return gp.IgnoreIntermediateForbiddenErrors
+}
+
 func NewGoParams() GoParams {
 	return GoParams{}
 }
