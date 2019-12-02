@@ -16,6 +16,7 @@ import (
 	"hash"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -44,6 +45,10 @@ func (jc *HttpClient) SendGet(url string, followRedirect bool, httpClientsDetail
 	return jc.Send("GET", url, nil, followRedirect, true, httpClientsDetails)
 }
 
+func (jc *HttpClient) SendGetWithRetryOnTimeout(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+	return jc.SendWithRetryOnTimeout("GET", url, nil, followRedirect, true, httpClientsDetails)
+}
+
 func (jc *HttpClient) SendPost(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	resp, body, _, err = jc.Send("POST", url, content, true, true, httpClientsDetails)
 	return
@@ -61,6 +66,11 @@ func (jc *HttpClient) SendDelete(url string, content []byte, httpClientsDetails 
 
 func (jc *HttpClient) SendHead(url string, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	resp, body, _, err = jc.Send("HEAD", url, nil, true, true, httpClientsDetails)
+	return
+}
+
+func (jc *HttpClient) SendHeadWithRetryOnTimeout(url string, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
+	resp, body, _, err = jc.SendWithRetryOnTimeout("HEAD", url, nil, true, true, httpClientsDetails)
 	return
 }
 
@@ -82,6 +92,40 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 	}
 
 	return jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
+}
+
+func (jc *HttpClient) SendWithRetryOnTimeout(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+	var req *http.Request
+	retryExecutor := utils.RetryExecutor{
+		MaxRetries:      2,
+		RetriesInterval: 10,
+		ErrorMessage:    fmt.Sprintf("Got timeout when sending HTTP %s request to: %s", method, url),
+		ExecutionHandler: func() (bool, error) {
+			log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
+			if content != nil {
+				req, err = http.NewRequest(method, url, bytes.NewBuffer(content))
+			} else {
+				req, err = http.NewRequest(method, url, nil)
+			}
+			if errorutils.CheckError(err) != nil {
+				return false, err
+			}
+
+			resp, respBody, redirectUrl, err = jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
+			if err != nil {
+				// Retry on timeout
+				if err, ok := err.(net.Error); ok && err.Timeout() {
+					return true, err
+				} else {
+					return false, err
+				}
+			}
+			return false, nil
+		},
+	}
+
+	err = retryExecutor.Execute()
+	return
 }
 
 func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {

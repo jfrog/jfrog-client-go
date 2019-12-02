@@ -222,7 +222,7 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, body, _, err := client.SendGet(rt.GetUrl()+"api/system/version", true, rt.CreateHttpClientDetails())
+	resp, body, _, err := client.SendGetWithRetryOnTimeout(rt.GetUrl()+"api/system/version", true, rt.CreateHttpClientDetails())
 	if err != nil {
 		return "", err
 	}

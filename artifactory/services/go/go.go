@@ -39,14 +39,15 @@ func (gs *GoService) PublishPackage(params GoParams) error {
 }
 
 type GoParams struct {
-	ZipPath    string
-	ModPath    string
-	InfoPath   string
-	ModContent []byte
-	Version    string
-	Props      string
-	TargetRepo string
-	ModuleId   string
+	ZipPath                           string
+	ModPath                           string
+	InfoPath                          string
+	ModContent                        []byte
+	Version                           string
+	Props                             string
+	TargetRepo                        string
+	ModuleId                          string
+	IgnoreIntermediateForbiddenErrors bool
 }
 
 func (gp *GoParams) GetZipPath() string {

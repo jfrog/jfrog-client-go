@@ -41,19 +41,20 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpcl
 	pwa.clientDetails = ArtDetails.CreateHttpClientDetails()
 	pwa.client = client
 	moduleId := strings.Split(params.GetModuleId(), ":")
+	uploadInfoFile := version.NewVersion(pwa.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != ""
 	// Upload zip file
-	err = pwa.upload(params.GetZipPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".zip", url)
+	err = pwa.upload(params.IgnoreIntermediateForbiddenErrors, params.GetZipPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".zip", url)
 	if err != nil {
 		return err
 	}
 	// Upload mod file
-	err = pwa.upload(params.GetModPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".mod", url)
+	err = pwa.upload(uploadInfoFile && params.IgnoreIntermediateForbiddenErrors, params.GetModPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".mod", url)
 	if err != nil {
 		return err
 	}
-	if version.NewVersion(pwa.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != "" {
+	if uploadInfoFile {
 		// Upload info file. This supported from Artifactory version 6.10.0 and above
-		return pwa.upload(params.GetInfoPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".info", url)
+		return pwa.upload(false, params.GetInfoPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".info", url)
 	}
 	return nil
 }
@@ -68,7 +69,7 @@ func addGoVersion(version string, urlPath *string) {
 // props - The properties to be assigned for each artifact
 // ext - The extension of the file: zip, mod, info. This extension will be joined with the version for the path. For example v1.2.3.info or v1.2.3.zip
 // urlPath - The url including the repository. For example: http://127.0.0.1/artifactory/api/go/go-local
-func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext, urlPath string) error {
+func (pwa *publishZipAndModApi) upload(ignoreForbidden bool, localPath, moduleId, version, props, ext, urlPath string) error {
 	err := createUrlPath(moduleId, version, props, ext, &urlPath)
 	if err != nil {
 		return err
@@ -83,5 +84,9 @@ func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext,
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusCreated)
+	if ignoreForbidden {
+		return errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusForbidden)
+	} else {
+		return errorutils.CheckResponseStatus(resp, http.StatusCreated)
+	}
 }
