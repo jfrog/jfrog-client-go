@@ -85,6 +85,10 @@ func (sm *ServicesManager) IsVersionExists(path *versions.Path) (bool, error) {
 	return sm.newVersionService().IsVersionExists(path)
 }
 
+func (sm *ServicesManager) CalcMetadata(path *versions.Path) (bool, error) {
+	return sm.newVersionService().CalcMetadata(path)
+}
+
 func (sm *ServicesManager) newPackageService() *packages.PackageService {
 	packageService := packages.NewService(sm.client)
 	packageService.BintrayDetails = sm.config.GetBintrayDetails()

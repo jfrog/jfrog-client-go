@@ -187,6 +187,26 @@ func (vs *VersionService) IsVersionExists(versionPath *Path) (bool, error) {
 	return false, errorutils.CheckError(errors.New("Bintray response: " + resp.Status))
 }
 
+func (vs *VersionService) CalcMetadata(versionPath *Path) (bool, error) {
+	metaPath := path.Join("calc_metadata", versionPath.Subject, versionPath.Repo, versionPath.Package, versionPath.Version)
+	url := vs.BintrayDetails.GetApiUrl() + metaPath
+	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
+
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
+	resp, _, err := client.SendPost(url, nil, httpClientsDetails)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != http.StatusAccepted {
+		return false, errors.New("Failed to schedule metadata calculation.\n")
+	}
+	log.Info("Metadata calculation scheduled")
+	return true, nil
+}
+
 func (vs *VersionService) doCreateVersion(params *Params) (*http.Response, []byte, error) {
 	if vs.BintrayDetails.GetUser() == "" {
 		vs.BintrayDetails.SetUser(params.Subject)
