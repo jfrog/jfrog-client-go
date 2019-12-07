@@ -3,6 +3,10 @@ package versions
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+	"path"
+
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -27,19 +31,19 @@ type VersionService struct {
 }
 
 type Path struct {
-	Subject string
-	Repo    string
-	Package string
-	Version string
+	Subject string `yaml:"subject,omitempty"`
+	Repo    string `yaml:"repo,omitempty"`
+	Package string `yaml:"package,omitempty"`
+	Version string `yaml:"version"`
 }
 
 type Params struct {
-	*Path
-	Desc                     string
-	VcsTag                   string
-	Released                 string
-	GithubReleaseNotesFile   string
-	GithubUseTagReleaseNotes bool
+	*Path                    `yaml:"path"`
+	Desc                     string `yaml:"desc"`
+	VcsTag                   string `yaml:"vcstag"`
+	Released                 string `yaml:"released"`
+	GithubReleaseNotesFile   string `yaml:"githubreleasenotesfile"`
+	GithubUseTagReleaseNotes bool   `yaml:"githubusetagreleasenotes"`
 }
 
 func (vs *VersionService) Create(params *Params) error {
@@ -187,6 +191,28 @@ func (vs *VersionService) IsVersionExists(versionPath *Path) (bool, error) {
 	return false, errorutils.CheckError(errors.New("Bintray response: " + resp.Status))
 }
 
+// CalcMetadata -> to schedule metadata calculation https://bintray.com/docs/api/#calc_metadata
+func (vs *VersionService) CalcMetadata(versionPath *Path) (bool, error) {
+	metaPath := path.Join("calc_metadata", versionPath.Subject, versionPath.Repo, versionPath.Package, versionPath.Version)
+	url := vs.BintrayDetails.GetApiUrl() + metaPath
+	httpClientsDetails := vs.BintrayDetails.CreateHttpClientDetails()
+
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
+	resp, body, err := client.SendPost(url, nil, httpClientsDetails)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != http.StatusAccepted {
+		return false, errors.New("failed to schedule metadata calculation")
+	}
+	fmt.Println(clientutils.IndentJson(body))
+	log.Info("Metadata calculation scheduled")
+	return true, nil
+}
+
 func (vs *VersionService) doCreateVersion(params *Params) (*http.Response, []byte, error) {
 	if vs.BintrayDetails.GetUser() == "" {
 		vs.BintrayDetails.SetUser(params.Subject)
@@ -216,7 +242,7 @@ func createVersionContent(params *Params) ([]byte, error) {
 	}
 	requestContent, err := json.Marshal(Config)
 	if err != nil {
-		return nil, errorutils.CheckError(errors.New("Failed to execute request."))
+		return nil, errorutils.CheckError(errors.New("failed to execute request"))
 	}
 	return requestContent, nil
 }

@@ -85,6 +85,10 @@ func (sm *ServicesManager) IsVersionExists(path *versions.Path) (bool, error) {
 	return sm.newVersionService().IsVersionExists(path)
 }
 
+func (sm *ServicesManager) CalcMetadata(path *versions.Path) (bool, error) {
+	return sm.newVersionService().CalcMetadata(path)
+}
+
 func (sm *ServicesManager) newPackageService() *packages.PackageService {
 	packageService := packages.NewService(sm.client)
 	packageService.BintrayDetails = sm.config.GetBintrayDetails()
@@ -115,6 +119,24 @@ func (sm *ServicesManager) IsRepoExists(path *repositories.Path) (bool, error) {
 	repositoryService := repositories.NewService(sm.client)
 	repositoryService.BintrayDetails = sm.config.GetBintrayDetails()
 	return repositoryService.IsRepoExists(path)
+}
+
+func (sm *ServicesManager) CreateReposIfNeeded(path *repositories.Path, params *repositories.Config, repoConfig string) (bool, error) {
+	repositoryService := repositories.NewService(sm.client)
+	repositoryService.BintrayDetails = sm.config.GetBintrayDetails()
+	return repositoryService.CreateReposIfNeeded(path, params, repoConfig)
+}
+
+func (sm *ServicesManager) ExecCreateRepoRest(path *repositories.Path, params *repositories.Config, repoConfig string) (bool, error) {
+	repositoryService := repositories.NewService(sm.client)
+	repositoryService.BintrayDetails = sm.config.GetBintrayDetails()
+	return repositoryService.ExecCreateRepoRest(path, params, repoConfig)
+}
+
+func (sm *ServicesManager) ExecDeleteRepoRest(path *repositories.Path) error {
+	repositoryService := repositories.NewService(sm.client)
+	repositoryService.BintrayDetails = sm.config.GetBintrayDetails()
+	return repositoryService.ExecDeleteRepoRest(path)
 }
 
 func (sm *ServicesManager) newAccessKeysService() *accesskeys.AccessKeysService {
