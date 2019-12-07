@@ -28,24 +28,24 @@ type PackageService struct {
 }
 
 type Path struct {
-	Subject string
-	Repo    string
-	Package string
+	Subject string `yaml:"subject"`
+	Repo    string `yaml:"repo"`
+	Package string `yaml:"package"`
 }
 
 type Params struct {
 	*Path
-	Desc                   string
-	Labels                 string
-	Licenses               string
-	CustomLicenses         string
-	VcsUrl                 string
-	WebsiteUrl             string
-	IssueTrackerUrl        string
-	GithubRepo             string
-	GithubReleaseNotesFile string
-	PublicDownloadNumbers  bool
-	PublicStats            bool
+	Desc                   string `yaml:"desc,omitempty"`
+	Labels                 string `yaml:"labels,omitempty"`
+	Licenses               string `yaml:"licenses"`
+	CustomLicenses         string `yaml:"customlicenses,omitempty"`
+	VcsUrl                 string `yaml:"vcsurl"`
+	WebsiteUrl             string `yaml:"websiteurl,omitempty"`
+	IssueTrackerUrl        string `yaml:"issuetrackerurl,omitempty"`
+	GithubRepo             string `yaml:"githubrepo,omitempty"`
+	PublicDownloadNumbers  bool   `yaml:"publicdownloadnumbers,omitempty"`
+	PublicStats            bool   `yaml:"publicstats,omitempty"`
+	GithubReleaseNotesFile string `yaml:"githubreleasenotesfile,omitempty"`
 }
 
 func (ps *PackageService) Create(params *Params) error {

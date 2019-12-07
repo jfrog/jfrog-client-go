@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"path"
 	"regexp"
@@ -38,22 +39,22 @@ type UploadService struct {
 
 type UploadParams struct {
 	// Files pattern to be uploaded
-	Pattern string
+	Pattern string   `yaml:"file_pattern,omitempty"`
+	Files   []string `yaml:"files,omitempty"`
 
 	// Target version details
-	*versions.Params
+	*versions.Params `yaml:"params"`
 
 	// Target local path
-	TargetPath string
+	TargetPath string `yaml:"target"`
 
-	UseRegExp          bool
-	Flat               bool
-	Recursive          bool
-	Explode            bool
-	Override           bool
-	Publish            bool
-	ShowInDownloadList bool
-	Deb                string
+	UseRegExp bool   `yaml:"regex"`
+	Flat      bool   `yaml:"flat,omitempty"`
+	Recursive bool   `yaml:"recursive,omitempty"`
+	Explode   bool   `yaml:"explode,omitempty"`
+	Override  bool   `yaml:"override,omitempty"`
+	Publish   bool   `yaml:"publish,omitempty"`
+	Deb       string `yaml:"pkgdeb"`
 }
 
 func (us *UploadService) Upload(uploadDetails *UploadParams) (totalUploaded, totalFailed int, err error) {
@@ -197,6 +198,7 @@ func uploadFile(artifact clientutils.Artifact, url, logMsgPrefix string, bintray
 		return false, err
 	}
 	log.Debug(logMsgPrefix+"Bintray response:", resp.Status)
+	fmt.Println(resp.Status, artifact)
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		log.Error(logMsgPrefix + "Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}

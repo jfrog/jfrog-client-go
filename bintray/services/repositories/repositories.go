@@ -31,16 +31,18 @@ type Path struct {
 	Repo    string
 }
 
-// Params is the equivalent of repo config json
-type Params struct {
-	*Path
-	Type            string
-	IsPrivate       bool
-	Desc            string
-	Labels          string
-	GpgSignFiles    bool
-	GpgSignMetadata bool
-	GpgUseOwnerKey  bool
+// Config is the equivalent of repo config json
+type Config struct {
+	Type               string   `yaml:"type,omitempty"`
+	IsPrivate          bool     `yaml:"isprivate,omitempty"`
+	Desc               string   `yaml:"desc,omitempty"`
+	Labels             []string `yaml:"labels,omitempty"`
+	GpgSignFiles       bool     `yaml:"gpgsignfiles,omitempty"`
+	GpgSignMetadata    bool     `yaml:"gpgsignmetadata,omitempty"`
+	GpgUseOwnerKey     bool     `yaml:"gpguseownerkey,omitempty"`
+	RepoConfigFilePath string   `yaml:"repoconfigfilepath,omitempty"`
+	YumMetadataDepth   int      `yaml:"yum_metadata_depth,omitempty"`
+	YumGroupsFile      string   `yaml:"yum_groups_file,omitempty"`
 }
 
 // IsRepoExists -> to Check if Repo exists under owner
@@ -67,15 +69,10 @@ func (rs *RepositoryService) IsRepoExists(repositoryPath *Path) (bool, error) {
 }
 
 // CreateReposIfNeeded -> makes a call to IsRepoExists(), then creates one if needed
-func (rs *RepositoryService) CreateReposIfNeeded(repositoryPath *Path, repositoryParams *Params, configPath string) (bool, error) {
+func (rs *RepositoryService) CreateReposIfNeeded(repositoryPath *Path, repositoryParams *Config, configPath string) (bool, error) {
 	var err error
 	var existsOk bool
 
-	// var repoConfig string
-	// repo := RtTargetRepo
-	// if strings.HasSuffix(repo, "/") {
-	// 	repo = repo[0:strings.LastIndex(repo, "/")]
-	// }
 	existsOk, _ = rs.IsRepoExists(repositoryPath)
 	if !existsOk {
 		existsOk, err = rs.ExecCreateRepoRest(repositoryPath, repositoryParams, configPath)
@@ -87,7 +84,7 @@ func (rs *RepositoryService) CreateReposIfNeeded(repositoryPath *Path, repositor
 }
 
 // ExecCreateRepoRest -> creates the repo under owner (subject)
-func (rs *RepositoryService) ExecCreateRepoRest(repositoryPath *Path, repositoryParams *Params, repoConfig string) (bool, error) {
+func (rs *RepositoryService) ExecCreateRepoRest(repositoryPath *Path, repositoryParams *Config, repoConfig string) (bool, error) {
 	repoName := path.Join("repos", repositoryPath.Subject, repositoryPath.Repo)
 	content, err := ioutil.ReadFile(getRepoConfigPath(repoConfig))
 	if err != nil {
