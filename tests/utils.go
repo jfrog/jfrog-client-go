@@ -73,6 +73,7 @@ func createArtifactoryDeleteManager() {
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsDeleteService = services.NewDeleteService(client)
+	testsDeleteService.SetThreads(3)
 	testsDeleteService.ArtDetails = artDetails
 }
 
@@ -135,6 +136,7 @@ func artifactoryCleanup(t *testing.T) {
 	for i, item := range toDelete {
 		deleteItems[i] = item
 	}
+	testsDeleteService.SetThreads(3)
 	deletedCount, err := testsDeleteService.DeleteFiles(deleteItems)
 	if err != nil {
 		t.Error(err)
