@@ -153,10 +153,10 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 			return "", err
 		}
 		if revision != "" {
-			props += ";build.revision=" + revision
+			props += ";vcs.revision=" + revision
 		}
 		if url != "" {
-			props += ";build.url=" + url
+			props += ";vcs.url=" + url
 		}
 	}
 	artifactProps = addProps(props, artifactProps)
