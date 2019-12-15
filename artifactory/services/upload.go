@@ -1,6 +1,14 @@
 package services
 
 import (
+	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -13,12 +21,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"os"
-	"regexp"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 type UploadService struct {
@@ -68,7 +70,9 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		defer producer.Done()
 		// Iterate over file-spec groups and produce upload tasks.
 		// When encountering an error, log and move to next group.
+		vcsDetails := clientutils.NewVcsDetals()
 		for _, uploadParams := range uploadParamsSlice {
+			uploadParams.VcsData = vcsDetails
 			artifactHandlerFunc := us.createArtifactHandlerFunc(&uploadSummary, uploadParams)
 			err := collectFilesForUpload(uploadParams, producer, artifactHandlerFunc, errorsQueue)
 			if err != nil {
@@ -138,7 +142,24 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 		}
 		artifactProps += utils.ARTIFACTORY_SYMLINK + "=" + artifactSymlink + sha1Property
 	}
-	artifactProps = addProps(uploadParams.GetProps(), artifactProps)
+	props := uploadParams.GetProps()
+	if strings.ContainsAny(props, "build.name") && strings.ContainsAny(props, "build.name") {
+		path, err := filepath.Abs(artifact.LocalPath)
+		if err != nil {
+			return "", err
+		}
+		revision, url, err := uploadParams.VcsData.GetVcsData(filepath.Dir(path))
+		if err != nil {
+			return "", err
+		}
+		if revision != "" {
+			props += ";build.revision=" + revision
+		}
+		if url != "" {
+			props += ";build.url=" + url
+		}
+	}
+	artifactProps = addProps(props, artifactProps)
 	return artifactProps, nil
 }
 
@@ -448,6 +469,7 @@ type UploadParams struct {
 	Flat              bool
 	Retries           int
 	MinChecksumDeploy int64
+	VcsData           *clientutils.VcsDetails
 }
 
 func (up *UploadParams) IsFlat() bool {
