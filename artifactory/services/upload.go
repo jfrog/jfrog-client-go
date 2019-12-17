@@ -70,11 +70,10 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		defer producer.Done()
 		// Iterate over file-spec groups and produce upload tasks.
 		// When encountering an error, log and move to next group.
-		vcsDetails := clientutils.NewVcsDetals()
+		VcsCache := clientutils.NewVcsDetals()
 		for _, uploadParams := range uploadParamsSlice {
-			uploadParams.VcsData = vcsDetails
 			artifactHandlerFunc := us.createArtifactHandlerFunc(&uploadSummary, uploadParams)
-			err := collectFilesForUpload(uploadParams, producer, artifactHandlerFunc, errorsQueue)
+			err := collectFilesForUpload(uploadParams, producer, artifactHandlerFunc, errorsQueue, VcsCache)
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
@@ -143,27 +142,11 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 		artifactProps += utils.ARTIFACTORY_SYMLINK + "=" + artifactSymlink + sha1Property
 	}
 	props := uploadParams.GetProps()
-	if strings.ContainsAny(props, "build.name") && strings.ContainsAny(props, "build.name") {
-		path, err := filepath.Abs(artifact.LocalPath)
-		if err != nil {
-			return "", err
-		}
-		revision, url, err := uploadParams.VcsData.GetVcsData(filepath.Dir(path))
-		if err != nil {
-			return "", err
-		}
-		if revision != "" {
-			props += ";vcs.revision=" + revision
-		}
-		if url != "" {
-			props += ";vcs.url=" + url
-		}
-	}
 	artifactProps = addProps(props, artifactProps)
 	return artifactProps, nil
 }
 
-func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue) error {
+func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue, VcsCache *clientutils.VcsCache) error {
 	if strings.Index(uploadParams.GetTarget(), "/") < 0 {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
@@ -194,11 +177,11 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		return err
 	}
 	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.IsRegexp()))
-	err = collectPatternMatchingFiles(uploadParams, rootPath, producer, artifactHandlerFunc, errorsQueue)
+	err = collectPatternMatchingFiles(uploadParams, rootPath, producer, artifactHandlerFunc, errorsQueue, VcsCache)
 	return err
 }
 
-func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue) error {
+func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue, VcsCache *clientutils.VcsCache) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
 	if errorutils.CheckError(err) != nil {
@@ -235,6 +218,14 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 			taskData := &uploadTaskData{target: target, path: path, isDir: isDir, isSymlinkFlow: isSymlinkFlow,
 				paths: tempPaths, groups: matches, index: tempIndex, size: len(matches), uploadParams: uploadParams,
 				producer: producer, artifactHandlerFunc: artifactHandlerFunc, errorsQueue: errorsQueue,
+			}
+			if taskData.uploadParams.IsAddVcsProps() {
+				vcsProps, err := GetVcsProps(taskData.path, VcsCache)
+				if err != nil {
+					return err
+				}
+				oldProps := taskData.uploadParams.GetProps()
+				taskData.uploadParams.SetProps(oldProps + vcsProps)
 			}
 			createUploadTask(taskData)
 		}
@@ -467,9 +458,9 @@ type UploadParams struct {
 	Symlink           bool
 	ExplodeArchive    bool
 	Flat              bool
+	AddVcsProps       bool
 	Retries           int
 	MinChecksumDeploy int64
-	VcsData           *clientutils.VcsDetails
 }
 
 func (up *UploadParams) IsFlat() bool {
@@ -478,6 +469,10 @@ func (up *UploadParams) IsFlat() bool {
 
 func (up *UploadParams) IsSymlink() bool {
 	return up.Symlink
+}
+
+func (up *UploadParams) IsAddVcsProps() bool {
+	return up.AddVcsProps
 }
 
 func (up *UploadParams) IsExplodeArchive() bool {
@@ -554,4 +549,23 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 
 func NewUploadParams() UploadParams {
 	return UploadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinChecksumDeploy: 10240}
+}
+
+func GetVcsProps(path string, VcsCache *clientutils.VcsCache) (string, error) {
+	path, err := filepath.Abs(path)
+	props := ""
+	if err != nil {
+		return "", err
+	}
+	revision, url, err := VcsCache.GetvcsDetails(filepath.Dir(path))
+	if err != nil {
+		return "", err
+	}
+	if revision != "" {
+		props += ";vcs.revision=" + revision
+	}
+	if url != "" {
+		props += ";vcs.url=" + url
+	}
+	return props, nil
 }
