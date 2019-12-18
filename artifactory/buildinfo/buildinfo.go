@@ -119,6 +119,7 @@ type Artifact struct {
 
 type Dependency struct {
 	Id     string   `json:"id,omitempty"`
+	Type   string   `json:"type,omitempty"`
 	Scopes []string `json:"scopes,omitempty"`
 	*Checksum
 }
