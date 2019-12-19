@@ -70,10 +70,10 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		defer producer.Done()
 		// Iterate over file-spec groups and produce upload tasks.
 		// When encountering an error, log and move to next group.
-		VcsCache := clientutils.NewVcsDetals()
+		vcsCache := clientutils.NewVcsDetals()
 		for _, uploadParams := range uploadParamsSlice {
 			artifactHandlerFunc := us.createArtifactHandlerFunc(&uploadSummary, uploadParams)
-			err := collectFilesForUpload(uploadParams, producer, artifactHandlerFunc, errorsQueue, VcsCache)
+			err := collectFilesForUpload(uploadParams, producer, artifactHandlerFunc, errorsQueue, vcsCache)
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
@@ -220,7 +220,7 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 				producer: producer, artifactHandlerFunc: artifactHandlerFunc, errorsQueue: errorsQueue,
 			}
 			if taskData.uploadParams.IsAddVcsProps() {
-				vcsProps, err := GetVcsProps(taskData.path, VcsCache)
+				vcsProps, err := getVcsProps(taskData.path, VcsCache)
 				if err != nil {
 					return err
 				}
@@ -551,15 +551,15 @@ func NewUploadParams() UploadParams {
 	return UploadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinChecksumDeploy: 10240}
 }
 
-func GetVcsProps(path string, VcsCache *clientutils.VcsCache) (string, error) {
+func getVcsProps(path string, VcsCache *clientutils.VcsCache) (string, error) {
 	path, err := filepath.Abs(path)
 	props := ""
 	if err != nil {
-		return "", err
+		return "", errorutils.CheckError(err)
 	}
 	revision, url, err := VcsCache.GetvcsDetails(filepath.Dir(path))
 	if err != nil {
-		return "", err
+		return "", errorutils.CheckError(err)
 	}
 	if revision != "" {
 		props += ";vcs.revision=" + revision
