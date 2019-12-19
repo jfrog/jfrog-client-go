@@ -41,12 +41,12 @@ func (this *VcsCache) getCacheSize() int32 {
 	return atomic.LoadInt32(this.vcsDirSize)
 }
 
-// Search for '.git' directory at 'path', incase there is one, extract the details and add a new entry to the cache(hash-map,key:path,value:pointer to the git details).
+// Search for '.git' directory inside 'path', incase there is one, extract the details and add a new entry to the cache(key:path in the file system ,value: git revision & url).
 // otherwise, search in the parent folder and try:
 // 1. search for .git, and save the details for the current dir and all subpath
 // 2. .git not found, go to parent dir and repeat
 // 3. not found on the root directory, add all subpath to cache with nil as a value
-func (this *VcsCache) GetvcsDetails(path string) (revision, refUrl string, err error) {
+func (this *VcsCache) GetVcsDetails(path string) (revision, refUrl string, err error) {
 	keys := strings.Split(path, string(os.PathSeparator))
 	var subPath string
 	var subPaths []string

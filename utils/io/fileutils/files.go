@@ -407,7 +407,7 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 // Removing the provided path from the filesystem
 func RemovePath(testPath string) error {
 	if _, err := os.Stat(testPath); err == nil {
-		//path exists need to delete.
+		// Delete the path
 		err = os.RemoveAll(testPath)
 		if err != nil {
 			return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())

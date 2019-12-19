@@ -10,7 +10,7 @@ import (
 func TestVcsDetails(t *testing.T) {
 	path := initVcsTestDir(t)
 	vcsDetals := NewVcsDetals()
-	revision, url, err := vcsDetals.GetvcsDetails(filepath.Join(path))
+	revision, url, err := vcsDetals.GetVcsDetails(filepath.Join(path))
 	if err != nil {
 		t.Error(err)
 	}
@@ -29,13 +29,19 @@ func initVcsTestDir(t *testing.T) string {
 	if err != nil {
 		t.Error(err)
 	}
-	if found, _ := fileutils.IsDirExists(filepath.Join(testsdataTarget, "gitdata"), false); found {
+	if found, err := fileutils.IsDirExists(filepath.Join(testsdataTarget, "gitdata"), false); found {
+		if err != nil {
+			t.Error(err)
+		}
 		err := fileutils.RenamePath(filepath.Join(testsdataTarget, "gitdata"), filepath.Join(testsdataTarget, ".git"))
 		if err != nil {
 			t.Error(err)
 		}
 	}
-	if found, _ := fileutils.IsDirExists(filepath.Join(testsdataTarget, "OtherGit", "gitdata"), false); found {
+	if found, err := fileutils.IsDirExists(filepath.Join(testsdataTarget, "OtherGit", "gitdata"), false); found {
+		if err != nil {
+			t.Error(err)
+		}
 		err := fileutils.RenamePath(filepath.Join(testsdataTarget, "OtherGit", "gitdata"), filepath.Join(testsdataTarget, "OtherGit", ".git"))
 		if err != nil {
 			t.Error(err)
