@@ -73,6 +73,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.Explode = false
     params.Deb = ""
     params.Symlink = false
+    params.AddVcsProps = false
     // Retries default value: 3
     params.Retries = 5
     // MinChecksumDeploy default value: 10400

@@ -3,8 +3,7 @@ package fileutils
 import (
 	"bufio"
 	"bytes"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -12,6 +11,9 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 )
 
 const (
@@ -400,6 +402,28 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 		}
 	}
 	return err
+}
+
+// Removing the provided path from the filesystem
+func RemovePath(testPath string) error {
+	if _, err := os.Stat(testPath); err == nil {
+		// Delete the path
+		err = os.RemoveAll(testPath)
+		if err != nil {
+			return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())
+		}
+	}
+	return nil
+}
+
+// Renaming from old path to new path.
+func RenamePath(oldPath, newPath string) error {
+	err := CopyDir(oldPath, newPath, true)
+	if err != nil {
+		return errors.New("Error copying directory: " + oldPath + "to" + newPath + err.Error())
+	}
+	RemovePath(oldPath)
+	return nil
 }
 
 // Returns the path to the directory in which itemToFind is located.
