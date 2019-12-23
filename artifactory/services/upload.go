@@ -219,15 +219,7 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 				paths: tempPaths, groups: matches, index: tempIndex, size: len(matches), uploadParams: uploadParams,
 				producer: producer, artifactHandlerFunc: artifactHandlerFunc, errorsQueue: errorsQueue,
 			}
-			if taskData.uploadParams.IsAddVcsProps() {
-				vcsProps, err := getVcsProps(taskData.path, vcsCache)
-				if err != nil {
-					return err
-				}
-				oldProps := taskData.uploadParams.GetProps()
-				taskData.uploadParams.SetProps(oldProps + vcsProps)
-			}
-			createUploadTask(taskData)
+			createUploadTask(taskData, vcsCache)
 		}
 	}
 	return nil
@@ -248,7 +240,7 @@ type uploadTaskData struct {
 	errorsQueue         *utils.ErrorsQueue
 }
 
-func createUploadTask(taskData *uploadTaskData) error {
+func createUploadTask(taskData *uploadTaskData, vcsCache *clientutils.VcsCache) error {
 	for i := 1; i < taskData.size; i++ {
 		group := strings.Replace(taskData.groups[i], "\\", "/", -1)
 		taskData.target = strings.Replace(taskData.target, "{"+strconv.Itoa(i)+"}", group, -1)
@@ -272,6 +264,13 @@ func createUploadTask(taskData *uploadTaskData) error {
 	props, e := addSymlinkProps(artifact, taskData.uploadParams)
 	if e != nil {
 		return e
+	}
+	if taskData.uploadParams.IsAddVcsProps() {
+		vcsProps, err := getVcsProps(taskData.path, vcsCache)
+		if err != nil {
+			return err
+		}
+		props += vcsProps
 	}
 	uploadData := UploadData{Artifact: artifact, Props: props}
 	if taskData.isDir && taskData.uploadParams.IsIncludeDirs() && !taskData.isSymlinkFlow {
