@@ -1,4 +1,4 @@
-module github.com/jfrog/jfrog-client-go
+module github.com/Or-Gabay/jfrog-client-go
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
