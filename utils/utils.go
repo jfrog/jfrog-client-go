@@ -42,7 +42,7 @@ func getDefaultUserAgent() string {
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
-func GetRootPath(path string, useRegExp bool) string {
+func GetRootPath(path string, useRegExp bool, parentheses ParenthesesSlice) string {
 	// The first step is to split the local path pattern into sections, by the file separator.
 	separator := "/"
 	sections := strings.Split(path, separator)
@@ -65,6 +65,12 @@ func GetRootPath(path string, useRegExp bool) string {
 			if strings.Index(section, "*") != -1 {
 				break
 			}
+			if strings.Index(section, "(") != -1 {
+				temp := rootPath + section
+				if isEnclosedWildcardParentheses(temp, parentheses) {
+					break
+				}
+			}
 		}
 		if rootPath != "" {
 			rootPath += separator
@@ -82,6 +88,23 @@ func GetRootPath(path string, useRegExp bool) string {
 		return "."
 	}
 	return rootPath
+}
+
+func isEnclosedWildcardParentheses(path string, parentheses ParenthesesSlice) bool {
+	toFind := "("
+	currStart := 0
+	for {
+		idx := strings.Index(path, toFind)
+		if idx == -1 {
+			break
+		}
+		if parentheses.IsPresent(idx) {
+			return true
+		}
+		currStart += idx + len(toFind)
+		path = path[idx+len(toFind):]
+	}
+	return false
 }
 
 func StringToBool(boolVal string, defaultValue bool) (bool, error) {
@@ -176,7 +199,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
-	pattern = AddEscapingParentheses(pattern, target)
+	pattern = addEscapingParentheses(pattern, target)
 	pattern = pathToRegExp(pattern)
 	r, err := regexp.Compile(pattern)
 	err = errorutils.CheckError(err)

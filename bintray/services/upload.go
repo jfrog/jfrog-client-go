@@ -243,7 +243,9 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 		debianDefaultPath = getDebianDefaultPath(uploadDetails.Deb, uploadDetails.Package)
 	}
 
-	rootPath := clientutils.GetRootPath(uploadDetails.Pattern, uploadDetails.UseRegExp)
+	// Save parentheses index in pattern, witch have corresponding placeholder.
+	placeholderParentheses := clientutils.NewParenthesesSlice(uploadDetails.Pattern, uploadDetails.TargetPath)
+	rootPath := clientutils.GetRootPath(uploadDetails.Pattern, uploadDetails.UseRegExp, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, false) {
 		err := errorutils.CheckError(errors.New("Path does not exist: " + rootPath))
 		if err != nil {
