@@ -41,16 +41,25 @@ func (builder *httpClientBuilder) SetInsecureTls(insecureTls bool) *httpClientBu
 	return builder
 }
 
+func (builder *httpClientBuilder) AddClientCertificateToTransport(transport *http.Transport) error {
+	if builder.clientCertificatePath != "" {
+		cert, err := tls.LoadX509KeyPair(builder.clientCertificatePath, builder.clientCertificateKeyPath)
+		if err != nil {
+			return errorutils.CheckError(errors.New("Failed loading client certificate: " + err.Error()))
+		}
+		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
+	}
+
+	return nil
+}
+
 func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	if builder.certificatesDirPath == "" {
 		transport := createDefaultHttpTransport()
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: builder.insecureTls}
-		if builder.clientCertificatePath != "" {
-			cert, err := tls.LoadX509KeyPair(builder.clientCertificatePath, builder.clientCertificateKeyPath)
-			if err != nil {
-				return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
-			}
-			transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
+		err := builder.AddClientCertificateToTransport(transport)
+		if err != nil {
+			return nil, err
 		}
 		return &HttpClient{Client: &http.Client{Transport: transport}}, nil
 	}
@@ -59,12 +68,9 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	if err != nil {
 		return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
 	}
-	if builder.clientCertificatePath != "" {
-		cert, err := tls.LoadX509KeyPair(builder.clientCertificatePath, builder.clientCertificateKeyPath)
-		if err != nil {
-			return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
-		}
-		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
+	err = builder.AddClientCertificateToTransport(transport)
+	if err != nil {
+		return nil, err
 	}
 	return &HttpClient{Client: &http.Client{Transport: transport}}, nil
 }
