@@ -36,6 +36,9 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     rtDetails.SetUser("user")
     rtDetails.SetPassword("password")
     rtDetails.SetAccessToken("accesstoken")
+    // if client certificates are required
+    rtDetails.SetClientCertPath("path/to/.cer")
+    rtDetails.SetClientCertKeyPath("path/to/.key")
 ```
 #### Creating Service Config
 ```
