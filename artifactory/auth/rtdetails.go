@@ -242,8 +242,8 @@ func (rt *artifactoryDetails) GetVersion() (string, error) {
 
 func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	client, err := httpclient.ClientBuilder().
-		SetClientCertificatePath((*rt).GetClientCertificatePath()).
-		SetClientCertificateKeyPath((*rt).GetClientCertificateKeyPath()).
+		SetClientCertificatePath(rt.GetClientCertificatePath()).
+		SetClientCertificateKeyPath(rt.GetClientCertificateKeyPath()).
 		Build()
 	if err != nil {
 		return "", err
