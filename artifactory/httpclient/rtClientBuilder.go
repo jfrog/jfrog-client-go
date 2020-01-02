@@ -35,6 +35,8 @@ func (builder *artifactoryHttpClientBuilder) Build() (rtHttpClient *ArtifactoryH
 	rtHttpClient.httpClient, err = httpclient.ClientBuilder().
 		SetCertificatesPath(builder.certificatesDirPath).
 		SetInsecureTls(builder.insecureTls).
+		SetClientCertPath((*rtHttpClient.ArtDetails).GetClientCertPath()).
+		SetClientCertKeyPath((*rtHttpClient.ArtDetails).GetClientCertKeyPath()).
 		Build()
 	return
 }
