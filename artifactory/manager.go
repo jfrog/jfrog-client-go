@@ -176,6 +176,30 @@ func (sm *ArtifactoryServicesManager) GetBuildInfo(params services.BuildInfoPara
 	return buildInfoService.GetBuildInfo(params)
 }
 
+func (sm *ArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetArtDetails()
+	return securityService.CreateToken(params)
+}
+
+func (sm *ArtifactoryServicesManager) GetTokens() (services.GetTokensResponseData, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetArtDetails()
+	return securityService.GetTokens()
+}
+
+func (sm *ArtifactoryServicesManager) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetArtDetails()
+	return securityService.RefreshToken(params)
+}
+
+func (sm *ArtifactoryServicesManager) RevokeToken(params services.RevokeTokenParams) (string, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetArtDetails()
+	return securityService.RevokeToken(params)
+}
+
 func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
 	return sm.client
 }

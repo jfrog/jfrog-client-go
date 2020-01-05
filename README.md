@@ -269,6 +269,43 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     rtManager.ReadRemoteFile(FilePath string)
 ```
 
+#### Creating an access token
+```
+    params := services.NewCreateTokenParams()
+    params.Scope = "api:* member-of-groups:readers"
+    params.Username = "user"
+    params.ExpiresIn = 3600
+    params.GrantType = "client_credentials"
+    params.Refreshable = true
+    params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
+    results, err := rtManager.CreateToken(params)
+```
+
+#### Fetching access tokens
+```
+    results, err := rtManager.GetTokens()
+```
+
+#### Refreshing an access token
+```
+    params := services.NewRefreshTokenParams()
+    params.AccessToken = "<access token>"
+    params.RefreshToken = "<refresh token>"
+    params.Token.Scope = "api:*"
+    params.Token.ExpiresIn = 3600
+    results, err := rtManager.RefreshToken(params)
+```
+
+#### Revoking an access token
+```
+    params := services.NewRevokeTokenParams()
+
+    // Provide either TokenId or Token
+    params.TokenId = "<token id>"
+    // params.Token = "access token"
+
+    err := rtManager.RevokeToken(params)
+```
 
 ## Bintray APIs
 ### Creating Bintray Details
