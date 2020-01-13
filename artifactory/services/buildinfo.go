@@ -91,7 +91,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error 
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		return errorutils.NewError("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
