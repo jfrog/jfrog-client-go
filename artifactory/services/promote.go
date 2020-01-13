@@ -68,7 +68,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.NewError("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Artifactory response:", resp.Status)

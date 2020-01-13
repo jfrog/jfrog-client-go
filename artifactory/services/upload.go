@@ -184,8 +184,8 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 
 	paths, err := fspatterns.GetPaths(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), uploadParams.IsSymlink())
@@ -309,13 +309,14 @@ func addPropsToTargetPath(targetPath, props, debConfig string) (string, error) {
 
 func prepareUploadData(localPath, baseTargetPath, props string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, err error) {
 	targetPath, err = addPropsToTargetPath(baseTargetPath, props, uploadParams.GetDebian())
-	if errorutils.WrapError(err) != nil {
+	if err != nil {
+		err = errorutils.WrapError(err)
 		return
 	}
 	log.Info(logMsgPrefix+"Uploading artifact:", localPath)
 
 	fileInfo, err = os.Lstat(localPath)
-	errorutils.WrapError(err)
+	err = errorutils.WrapError(err)
 	return
 }
 
@@ -332,8 +333,8 @@ func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadP
 	var details *fileutils.FileDetails
 	var body []byte
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
-	if errorutils.WrapError(err) != nil {
-		return utils.FileInfo{}, false, err
+	if err != nil {
+		return utils.FileInfo{}, false, errorutils.WrapError(err)
 	}
 	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileInfo) {
 		resp, details, body, err = us.uploadSymlink(targetPathWithProps, logMsgPrefix, httpClientsDetails, uploadParams)

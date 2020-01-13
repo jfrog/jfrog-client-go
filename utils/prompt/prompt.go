@@ -111,8 +111,8 @@ func (autocomplete *Autocomplete) Read() error {
 	for {
 		line, err := l.Readline()
 		line = strings.TrimSpace(line)
-		if errorutils.WrapError(err) != nil {
-			return err
+		if err != nil {
+			return errorutils.WrapError(err)
 		}
 		if line == "" && autocomplete.Default != "" {
 			line = autocomplete.Default
@@ -156,8 +156,8 @@ func (simple *Simple) Read() error {
 	defer l.Close()
 
 	line, err := l.Readline()
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 
 	line = strings.TrimSpace(line)
@@ -175,8 +175,8 @@ func (simple *Simple) GetResults() *viper.Viper {
 
 func (yesNo *YesNo) Read() error {
 	result, err := readYesNoQuestion(yesNo.Msg, yesNo.Default)
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 
 	yesNo.set(yesNo.Label, result)
@@ -209,8 +209,8 @@ func (yesNo *YesNo) GetResults() *viper.Viper {
 func (array *Array) Read() error {
 	for _, v := range array.Prompts {
 		err := v.Read()
-		if errorutils.WrapError(err) != nil {
-			return err
+		if err != nil {
+			return errorutils.WrapError(err)
 		}
 	}
 	return nil
@@ -244,8 +244,8 @@ func readYesNoQuestion(prompt, defaultVal string) (bool, error) {
 
 	for {
 		line, err := l.Readline()
-		if errorutils.WrapError(err) != nil {
-			return false, err
+		if err != nil {
+			return false, errorutils.WrapError(err)
 		}
 		line = strings.TrimSpace(line)
 		if line == "" {
@@ -274,16 +274,16 @@ func createAutocompletePrompt(msg string, completer readline.AutoCompleter, mask
 
 func parseYesNo(s string) (bool, error) {
 	matchedYes, err := regexp.MatchString("^yes$|^y$", strings.ToLower(s))
-	if errorutils.WrapError(err) != nil {
-		return matchedYes, err
+	if err != nil {
+		return matchedYes, errorutils.WrapError(err)
 	}
 	if matchedYes {
 		return true, nil
 	}
 
 	matchedNo, err := regexp.MatchString("^no$|^n$", strings.ToLower(s))
-	if errorutils.WrapError(err) != nil {
-		return matchedNo, err
+	if err != nil {
+		return matchedNo, errorutils.WrapError(err)
 	}
 	if matchedNo {
 		return false, nil

@@ -78,8 +78,8 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (*buildinfo.Bu
 
 func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error {
 	content, err := json.Marshal(build)
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 	if bis.IsDryRun() {
 		log.Output(clientutils.IndentJson(content))
@@ -93,7 +93,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error 
 		return err
 	}
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent {
-		return errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.NewError("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Artifactory response:", resp.Status)

@@ -15,15 +15,13 @@ func loadCertificates(caCertPool *x509.CertPool, certificatesDirPath string) err
 		return nil
 	}
 	files, err := ioutil.ReadDir(certificatesDirPath)
-	err = errorutils.WrapError(err)
 	if err != nil {
-		return err
+		return errorutils.WrapError(err)
 	}
 	for _, file := range files {
 		caCert, err := ioutil.ReadFile(filepath.Join(certificatesDirPath, file.Name()))
-		err = errorutils.WrapError(err)
 		if err != nil {
-			return err
+			return errorutils.WrapError(err)
 		}
 		caCertPool.AppendCertsFromPEM(caCert)
 	}
@@ -33,9 +31,8 @@ func loadCertificates(caCertPool *x509.CertPool, certificatesDirPath string) err
 func GetTransportWithLoadedCert(certificatesDirPath string, insecureTls bool, transport *http.Transport) (*http.Transport, error) {
 	// Remove once SystemCertPool supports windows
 	caCertPool, err := loadSystemRoots()
-	err = errorutils.WrapError(err)
 	if err != nil {
-		return nil, err
+		return nil, errorutils.WrapError(err)
 	}
 	err = loadCertificates(caCertPool, certificatesDirPath)
 	if err != nil {

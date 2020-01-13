@@ -18,11 +18,11 @@ const minArtifactoryVersion = "6.9.0"
 func SendReportUsage(productId, commandName string, serviceManager *artifactory.ArtifactoryServicesManager) error {
 	config := serviceManager.GetConfig()
 	if config == nil {
-		return errorutils.WrapError(errors.New("Expected full config, but no configuration exists."))
+		return errorutils.NewError("Expected full config, but no configuration exists.")
 	}
 	rtDetails := config.GetArtDetails()
 	if rtDetails == nil {
-		return errorutils.WrapError(errors.New("Artifactory details not configured."))
+		return errorutils.NewError("Artifactory details not configured.")
 	}
 	url, err := utils.BuildArtifactoryUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
 	if err != nil {

@@ -77,9 +77,8 @@ func AddHeader(headerName, headerValue string, headers *map[string]string) {
 func BuildArtifactoryUrl(baseUrl, path string, params map[string]string) (string, error) {
 	u := url.URL{Path: path}
 	escapedUrl, err := url.Parse(baseUrl + u.String())
-	err = errorutils.WrapError(err)
 	if err != nil {
-		return "", err
+		return "", errorutils.WrapError(err)
 	}
 	q := escapedUrl.Query()
 	for k, v := range params {
@@ -202,13 +201,13 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags Co
 		return "", "", err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", "", errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return "", "", errorutils.NewError("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body))
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 	var responseBuild []build
 	err = json.Unmarshal(body, &responseBuild)
-	if errorutils.WrapError(err) != nil {
-		return "", "", err
+	if err != nil {
+		return "", "", errorutils.WrapError(err)
 	}
 	if responseBuild[0].BuildNumber != "" {
 		log.Debug("Found build number: " + responseBuild[0].BuildNumber)

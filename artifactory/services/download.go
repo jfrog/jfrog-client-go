@@ -288,8 +288,8 @@ func shouldDownloadFile(localFilePath, md5, sha1 string) (bool, error) {
 
 func removeIfSymlink(localSymlinkPath string) error {
 	if fileutils.IsPathSymlink(localSymlinkPath) {
-		if err := os.Remove(localSymlinkPath); errorutils.WrapError(err) != nil {
-			return err
+		if err := os.Remove(localSymlinkPath); err != nil {
+			return errorutils.WrapError(err)
 		}
 	}
 	return nil
@@ -298,11 +298,11 @@ func removeIfSymlink(localSymlinkPath string) error {
 func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) error {
 	if symlinkChecksum && symlinkContentChecksum != "" {
 		if !fileutils.IsPathExists(symlinkArtifact, false) {
-			return errorutils.WrapError(errors.New("Symlink validation failed, target doesn't exist: " + symlinkArtifact))
+			return errorutils.NewError("Symlink validation failed, target doesn't exist: " + symlinkArtifact)
 		}
 		file, err := os.Open(symlinkArtifact)
-		if err = errorutils.WrapError(err); err != nil {
-			return err
+		if err != nil {
+			return errorutils.WrapError(err)
 		}
 		defer file.Close()
 		checksumInfo, err := checksum.Calc(file, checksum.SHA1)
@@ -311,7 +311,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		}
 		sha1 := checksumInfo[checksum.SHA1]
 		if sha1 != symlinkContentChecksum {
-			return errorutils.WrapError(errors.New("Symlink validation failed for target: " + symlinkArtifact))
+			return errorutils.NewError("Symlink validation failed for target: " + symlinkArtifact)
 		}
 	}
 	localSymlinkPath := filepath.Join(localPath, localFileName)
@@ -331,8 +331,8 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		return err
 	}
 	err = os.Symlink(symlinkArtifact, localSymlinkPath)
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 	log.Debug(logMsgPrefix, "Creating symlink file.")
 	return nil

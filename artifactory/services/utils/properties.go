@@ -86,8 +86,7 @@ func (props *Properties) ToBuildPromoteMap() map[string][]string {
 func splitProp(prop string) (string, string, error) {
 	splitIndex := strings.Index(prop, "=")
 	if splitIndex < 1 || len(prop[splitIndex+1:]) < 1 {
-		err := errorutils.WrapError(errors.New("Invalid property: " + prop))
-		return "", "", err
+		return "", "", errorutils.NewError("Invalid property: " + prop)
 	}
 	return prop[:splitIndex], prop[splitIndex+1:], nil
 }

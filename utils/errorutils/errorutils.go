@@ -15,14 +15,21 @@ func WrapError(err error) error {
 	if err == nil {
 		return nil
 	}
-	newError := tracerr.Wrap(err)
-	stackTrace := newError.StackTrace()
+	return wrapError(tracerr.Wrap(err))
+}
+
+func NewError(message string) error {
+	return wrapError(tracerr.New(message))
+}
+
+func wrapError(err tracerr.Error) error {
+	stackTrace := err.StackTrace()
 	stackSize := len(stackTrace)
 	if maxStackTraceSize < stackSize {
 		stackSize = maxStackTraceSize // Limit the stacktrace size to 3.
 	}
 	// Remove the first frame in order to not trace this file in the stacktrace.
-	return tracerr.CustomError(newError, stackTrace[1:stackSize])
+	return tracerr.CustomError(err, stackTrace[1:stackSize])
 }
 
 // Check expected status codes and return error if needed

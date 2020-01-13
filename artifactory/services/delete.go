@@ -94,7 +94,7 @@ func (ds *DeleteService) DeleteFiles(deleteItems []utils.ResultItem) (int, error
 			continue
 		}
 		if resp.StatusCode != http.StatusNoContent {
-			log.Error(errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))))
+			log.Error(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 			continue
 		}
 		deletedCount++

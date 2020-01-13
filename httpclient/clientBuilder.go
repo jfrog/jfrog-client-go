@@ -46,7 +46,7 @@ func (builder *httpClientBuilder) AddClientCertToTransport(transport *http.Trans
 	if builder.clientCertPath != "" {
 		cert, err := tls.LoadX509KeyPair(builder.clientCertPath, builder.clientCertKeyPath)
 		if err != nil {
-			return errorutils.WrapError(errors.New("Failed loading client certificate: " + err.Error()))
+			return errorutils.NewError("Failed loading client certificate: " + err.Error())
 		}
 		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
 	}
@@ -67,7 +67,7 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 
 	transport, err := cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, createDefaultHttpTransport())
 	if err != nil {
-		return nil, errorutils.WrapError(errors.New("Failed creating HttpClient: " + err.Error()))
+		return nil, errorutils.NewError("Failed creating HttpClient: " + err.Error())
 	}
 	err = builder.AddClientCertToTransport(transport)
 	if err != nil {

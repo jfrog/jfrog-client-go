@@ -3,7 +3,6 @@ package auth
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"strings"
@@ -15,7 +14,7 @@ func ExtractUsernameFromAccessToken(token string) (string, error) {
 
 	// Decode the payload.
 	if len(tokenParts) != 3 {
-		return "", errorutils.WrapError(errors.New("Received invalid access-token."))
+		return "", errorutils.NewError("Received invalid access-token.")
 	}
 	payload, err := base64.RawStdEncoding.DecodeString(tokenParts[1])
 	if err != nil {
@@ -26,18 +25,18 @@ func ExtractUsernameFromAccessToken(token string) (string, error) {
 	var tokenPayload tokenPayload
 	err = json.Unmarshal(payload, &tokenPayload)
 	if err != nil {
-		return "", errorutils.WrapError(errors.New("Failed extracting payload from the provided access-token." + err.Error()))
+		return "", errorutils.NewError("Failed extracting payload from the provided access-token." + err.Error())
 	}
 
 	// Extract subject.
 	if tokenPayload.Subject == "" {
-		return "", errorutils.WrapError(errors.New("Could not extract subject from the provided access-token."))
+		return "", errorutils.NewError("Could not extract subject from the provided access-token.")
 	}
 
 	// Extract username from subject.
 	usernameStartIndex := strings.LastIndex(tokenPayload.Subject, "/")
 	if usernameStartIndex < 0 {
-		return "", errorutils.WrapError(errors.New(fmt.Sprintf("Could not extract username from access-token's subject: %s", tokenPayload.Subject)))
+		return "", errorutils.NewError(fmt.Sprintf("Could not extract username from access-token's subject: %s", tokenPayload.Subject))
 	}
 	username := tokenPayload.Subject[usernameStartIndex+1:]
 

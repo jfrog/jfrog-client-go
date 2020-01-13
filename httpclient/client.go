@@ -77,8 +77,8 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 	} else {
 		req, err = http.NewRequest(method, url, nil)
 	}
-	if errorutils.WrapError(err) != nil {
-		return nil, nil, "", err
+	if err != nil {
+		return nil, nil, "", errorutils.WrapError(err)
 	}
 
 	return jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
@@ -115,8 +115,8 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 		}
 	}
 
-	err = errorutils.WrapError(err)
 	if err != nil {
+		err = errorutils.WrapError(err)
 		return
 	}
 	if closeBody {
@@ -155,7 +155,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 			}
 			// Response must not be nil
 			if resp == nil {
-				return false, errorutils.WrapError(errors.New(fmt.Sprintf("%sReceived empty response from file upload", logMsgPrefix)))
+				return false, errorutils.NewError(fmt.Sprintf("%sReceived empty response from file upload", logMsgPrefix))
 			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {
@@ -177,8 +177,8 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	if localPath != "" {
 		file, err = os.Open(localPath)
 		defer file.Close()
-		if errorutils.WrapError(err) != nil {
-			return nil, nil, err
+		if err != nil {
+			return nil, nil, errorutils.WrapError(err)
 		}
 	}
 
@@ -198,8 +198,8 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	}
 
 	req, err := http.NewRequest("PUT", url, reader)
-	if errorutils.WrapError(err) != nil {
-		return nil, nil, err
+	if err != nil {
+		return nil, nil, errorutils.WrapError(err)
 	}
 	req.ContentLength = size
 	req.Close = true
@@ -210,13 +210,13 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 
 	client := jc.Client
 	resp, err := client.Do(req)
-	if errorutils.WrapError(err) != nil {
-		return nil, nil, err
+	if err != nil {
+		return nil, nil, errorutils.WrapError(err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	if errorutils.WrapError(err) != nil {
-		return nil, nil, err
+	if err != nil {
+		return nil, nil, errorutils.WrapError(err)
 	}
 	return resp, body, nil
 }
@@ -273,7 +273,7 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 			}
 			// Response must not be nil
 			if resp == nil {
-				return false, errorutils.WrapError(errors.New(fmt.Sprintf("%sReceived empty response from file download", logMsgPrefix)))
+				return false, errorutils.NewError(fmt.Sprintf("%sReceived empty response from file download", logMsgPrefix))
 			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {
@@ -331,8 +331,8 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 	}
 
 	out, err := os.Create(fileName)
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 
 	defer out.Close()
@@ -351,8 +351,8 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 		writer := io.MultiWriter(actualSha1, out)
 
 		_, err = io.Copy(writer, reader)
-		if errorutils.WrapError(err) != nil {
-			return err
+		if err != nil {
+			return errorutils.WrapError(err)
 		}
 
 		if hex.EncodeToString(actualSha1.Sum(nil)) != downloadFileDetails.ExpectedSha1 {
@@ -392,12 +392,12 @@ func extractZip(downloadFileDetails *DownloadFileDetails, logMsgPrefix string) e
 	}
 	log.Info(logMsgPrefix+"Extracting archive:", fileName, "to", downloadFileDetails.LocalPath)
 	absLocalPath, err := filepath.Abs(downloadFileDetails.LocalPath)
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 	err = archiver.Zip.Open(fileName, absLocalPath)
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 	err = os.Remove(fileName)
 	return errorutils.WrapError(err)
@@ -439,16 +439,16 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 	if flags.LocalPath != "" {
 		err = os.MkdirAll(flags.LocalPath, 0777)
-		if errorutils.WrapError(err) != nil {
-			return nil, err
+		if err != nil {
+			return nil, errorutils.WrapError(err)
 		}
 		flags.LocalFileName = filepath.Join(flags.LocalPath, flags.LocalFileName)
 	}
 
 	if fileutils.IsPathExists(flags.LocalFileName, false) {
 		err := os.Remove(flags.LocalFileName)
-		if errorutils.WrapError(err) != nil {
-			return nil, err
+		if err != nil {
+			return nil, errorutils.WrapError(err)
 		}
 	}
 
@@ -464,8 +464,8 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 	}
 
 	err = mergeChunks(chunksPaths, flags)
-	if errorutils.WrapError(err) != nil {
-		return nil, err
+	if err != nil {
+		return nil, errorutils.WrapError(err)
 	}
 	log.Info(logMsgPrefix + "Done downloading.")
 	return resp, nil
@@ -562,8 +562,8 @@ func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags Con
 
 func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
 	destFile, err := os.OpenFile(flags.LocalFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 	defer destFile.Close()
 	var writer io.Writer
@@ -596,13 +596,13 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
 func extractAndMergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags, logMsgPrefix string) (bool, error) {
 	if fileutils.IsZip(flags.FileName) {
 		multiReader, err := ioutils.NewMultiFileReaderAt(chunksPaths)
-		if errorutils.WrapError(err) != nil {
-			return false, err
+		if err != nil {
+			return false, errorutils.WrapError(err)
 		}
 		log.Info(logMsgPrefix+"Extracting archive:", flags.FileName, "to", flags.LocalPath)
 		err = fileutils.Unzip(multiReader, multiReader.Size(), flags.LocalPath)
-		if errorutils.WrapError(err) != nil {
-			return false, err
+		if err != nil {
+			return false, errorutils.WrapError(err)
 		}
 		return true, nil
 	}
@@ -647,7 +647,7 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 			}
 			// Response must not be nil
 			if resp == nil {
-				return false, errorutils.WrapError(errors.New(fmt.Sprintf("%s[%s]: Received empty response from file download", logMsgPrefix, strconv.Itoa(currentSplit))))
+				return false, errorutils.NewError(fmt.Sprintf("%s[%s]: Received empty response from file download", logMsgPrefix, strconv.Itoa(currentSplit)))
 			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {
@@ -667,7 +667,8 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	httpClientsDetails httputils.HttpClientDetails, progress ioutils.Progress, progressId int) (fileName string, resp *http.Response, err error) {
 
 	tempFile, err := ioutil.TempFile(chunkDownloadPath, strconv.Itoa(currentSplit)+"_")
-	if errorutils.WrapError(err) != nil {
+	if err != nil {
+		err = errorutils.WrapError(err)
 		return
 	}
 	defer tempFile.Close()
@@ -689,8 +690,8 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	log.Info(fmt.Sprintf("%s[%s]: %s...", logMsgPrefix, strconv.Itoa(currentSplit), resp.Status))
 
 	err = os.MkdirAll(chunkDownloadPath, 0777)
-	if errorutils.WrapError(err) != nil {
-		return "", nil, err
+	if err != nil {
+		return "", nil, errorutils.WrapError(err)
 	}
 
 	var reader io.Reader
@@ -702,8 +703,8 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 
 	_, err = io.Copy(tempFile, reader)
 
-	if errorutils.WrapError(err) != nil {
-		return "", nil, err
+	if err != nil {
+		return "", nil, errorutils.WrapError(err)
 	}
 	return tempFile.Name(), resp, errorutils.WrapError(err)
 }
@@ -711,8 +712,8 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 // The caller is responsible to check if resp.StatusCode is StatusOK before relying on the bool value
 func (jc *HttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetails httputils.HttpClientDetails) (bool, *http.Response, error) {
 	resp, _, err := jc.SendHead(downloadUrl, httpClientsDetails)
-	if errorutils.WrapError(err) != nil {
-		return false, nil, err
+	if err != nil {
+		return false, nil, errorutils.WrapError(err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return false, resp, nil

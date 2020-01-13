@@ -23,7 +23,7 @@ func NewGitManager(path string) *manager {
 
 func (m *manager) ReadConfig() error {
 	if m.path == "" {
-		return errorutils.WrapError(errors.New(".git path must be defined."))
+		return errorutils.NewError(".git path must be defined.")
 	}
 	m.readRevision()
 	m.readUrl()
@@ -44,8 +44,8 @@ func (m *manager) readUrl() {
 	}
 	dotGitPath := filepath.Join(m.path, "config")
 	file, err := os.Open(dotGitPath)
-	if errorutils.WrapError(err) != nil {
-		m.err = err
+	if err != nil {
+		m.err = errorutils.WrapError(err)
 		return
 	}
 	defer file.Close()
@@ -65,8 +65,7 @@ func (m *manager) readUrl() {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		errorutils.WrapError(err)
-		m.err = err
+		m.err = errorutils.WrapError(err)
 		return
 	}
 	if !strings.HasSuffix(originUrl, ".git") {
@@ -90,8 +89,8 @@ func (m *manager) readUrl() {
 func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
 	file, e := os.Open(dotGitPath)
-	if errorutils.WrapError(e) != nil {
-		err = e
+	if e != nil {
+		err = errorutils.WrapError(e)
 		return
 	}
 	defer file.Close()
@@ -106,7 +105,7 @@ func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error)
 		revision = text
 	}
 	if err = scanner.Err(); err != nil {
-		errorutils.WrapError(err)
+		err = errorutils.WrapError(err)
 	}
 	return
 }
@@ -143,8 +142,7 @@ func (m *manager) readRevision() {
 		break
 	}
 	if err := scanner.Err(); err != nil {
-		errorutils.WrapError(err)
-		m.err = err
+		m.err = errorutils.WrapError(err)
 		return
 	}
 

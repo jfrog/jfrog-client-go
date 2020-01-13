@@ -43,5 +43,5 @@ func (rs *RepositoryService) IsRepoExists(repositoryPath *Path) (bool, error) {
 		return false, nil
 	}
 
-	return false, errorutils.WrapError(errors.New("Bintray response: " + resp.Status))
+	return false, errorutils.NewError("Bintray response: " + resp.Status)
 }

@@ -51,7 +51,7 @@ func (es *EntitlementsService) ShowAll(path *versions.Path) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.NewError("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -75,7 +75,7 @@ func (es *EntitlementsService) Show(id string, path *versions.Path) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.NewError("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -105,7 +105,7 @@ func (es *EntitlementsService) Create(params *Params) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusCreated {
-		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.NewError("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -130,7 +130,7 @@ func (es *EntitlementsService) Delete(id string, path *versions.Path) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.NewError("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -159,7 +159,7 @@ func (es *EntitlementsService) Update(params *Params) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.NewError("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -179,7 +179,7 @@ func createEntitlementContent(params *Params) ([]byte, error) {
 	}
 	requestContent, err := json.Marshal(Config)
 	if err != nil {
-		return nil, errorutils.WrapError(errors.New("Failed to execute request."))
+		return nil, errorutils.NewError("Failed to execute request.")
 	}
 	return requestContent, nil
 }

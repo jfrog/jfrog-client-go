@@ -129,7 +129,7 @@ func ExecAql(aqlQuery string, flags CommonConf) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return nil, errorutils.NewError("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body))
 	}
 
 	log.Debug("Artifactory response: ", resp.Status)
@@ -147,8 +147,8 @@ func LogSearchResults(numOfArtifacts int) {
 func parseAqlSearchResponse(resp []byte) ([]ResultItem, error) {
 	var result AqlSearchResult
 	err := json.Unmarshal(resp, &result)
-	if errorutils.WrapError(err) != nil {
-		return nil, err
+	if err != nil {
+		return nil, errorutils.WrapError(err)
 	}
 	return result.Results, nil
 }

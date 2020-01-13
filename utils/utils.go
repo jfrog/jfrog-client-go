@@ -87,8 +87,7 @@ func GetRootPath(path string, useRegExp bool) string {
 func StringToBool(boolVal string, defaultValue bool) (bool, error) {
 	if len(boolVal) > 0 {
 		result, err := strconv.ParseBool(boolVal)
-		errorutils.WrapError(err)
-		return result, err
+		return result, errorutils.WrapError(err)
 	}
 	return defaultValue, nil
 }
@@ -179,9 +178,8 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 	pattern = AddEscapingParentheses(pattern, target)
 	pattern = pathToRegExp(pattern)
 	r, err := regexp.Compile(pattern)
-	err = errorutils.WrapError(err)
 	if err != nil {
-		return "", err
+		return "", errorutils.WrapError(err)
 	}
 
 	groups := r.FindStringSubmatch(path)

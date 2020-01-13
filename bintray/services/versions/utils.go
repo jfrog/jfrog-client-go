@@ -10,10 +10,7 @@ func CreatePath(versionStr string) (*Path, error) {
 	parts := strings.Split(versionStr, "/")
 	size := len(parts)
 	if size < 1 || size > 4 {
-		err := errorutils.WrapError(errors.New("Unexpected format for argument: " + versionStr))
-		if err != nil {
-			return nil, err
-		}
+		return nil, errorutils.NewError("Unexpected format for argument: " + versionStr)
 	}
 	var subject, repo, pkg, version string
 	if size >= 2 {

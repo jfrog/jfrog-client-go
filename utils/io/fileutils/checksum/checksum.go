@@ -39,8 +39,8 @@ func Calc(reader io.Reader, checksumType ...Algorithm) (map[Algorithm]string, er
 	}
 	multiWriter = utils.AsyncMultiWriter(hashWriter...)
 	_, err := io.Copy(multiWriter, sizedReader)
-	if errorutils.WrapError(err) != nil {
-		return nil, err
+	if err != nil {
+		return nil, errorutils.WrapError(err)
 	}
 	results := sumResults(hashes)
 	return results, nil

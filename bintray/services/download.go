@@ -79,12 +79,13 @@ func (ds *DownloadService) DownloadVersion(downloadParams *DownloadVersionParams
 	}
 	resp, body, _, _ := client.SendGet(versionPathUrl, true, httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
-		err = errorutils.WrapError(errors.New(resp.Status + ". " + utils.ReadBintrayMessage(body)))
+		err = errorutils.NewError(resp.Status + ". " + utils.ReadBintrayMessage(body))
 		return
 	}
 	var files []VersionFilesResult
 	err = json.Unmarshal(body, &files)
-	if errorutils.WrapError(err) != nil {
+	if err != nil {
+		err = errorutils.WrapError(err)
 		return
 	}
 
@@ -138,7 +139,7 @@ func (ds *DownloadService) downloadVersionFiles(files []VersionFilesResult, down
 func CreateVersionDetailsForDownloadVersion(versionStr string) (*versions.Path, error) {
 	parts := strings.Split(versionStr, "/")
 	if len(parts) != 4 {
-		err := errorutils.WrapError(errors.New("Argument format should be subject/repository/package/version. Got " + versionStr))
+		err := errorutils.NewError("Argument format should be subject/repository/package/version. Got " + versionStr)
 		if err != nil {
 			return nil, err
 		}
@@ -170,11 +171,11 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 	httpClientsDetails := ds.BintrayDetails.CreateHttpClientDetails()
 	details, resp, err := client.GetRemoteFileDetails(url, httpClientsDetails)
 	if err != nil {
-		return errorutils.WrapError(errors.New("Bintray " + err.Error()))
+		return errorutils.NewError("Bintray " + err.Error())
 	}
 	err = errorutils.CheckResponseStatus(resp, http.StatusOK)
-	if errorutils.WrapError(err) != nil {
-		return err
+	if err != nil {
+		return errorutils.WrapError(err)
 	}
 
 	placeHolderTarget, err := clientutils.BuildTargetPath(downloadParams.Path, cleanPath, downloadParams.TargetPath, false)
@@ -234,16 +235,16 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 				Retries:       utils.BintrayDownloadRetries}
 
 			resp, err = client.DownloadFileConcurrently(concurrentDownloadFlags, "", httpClientsDetails, nil)
-			if errorutils.WrapError(err) != nil {
-				return err
+			if err != nil {
+				return errorutils.WrapError(err)
 			}
 			err = errorutils.CheckResponseStatus(resp, http.StatusPartialContent)
 			if err != nil {
 				return err
 			}
 		} else {
-			if errorutils.WrapError(err) != nil {
-				return err
+			if err != nil {
+				return errorutils.WrapError(err)
 			}
 			err = errorutils.CheckResponseStatus(resp, http.StatusOK)
 			if err != nil {

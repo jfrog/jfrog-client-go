@@ -67,7 +67,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 		return err
 	}
 	if resp.StatusCode != http.StatusNoContent {
-		return errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.NewError("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	if params.IsAsync() {

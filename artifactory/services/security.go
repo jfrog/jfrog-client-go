@@ -37,8 +37,7 @@ func (ss *SecurityService) CreateToken(params CreateTokenParams) (CreateTokenRes
 		return tokenInfo, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return tokenInfo, errorutils.WrapError(
-			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return tokenInfo, errorutils.NewError("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 	err = json.Unmarshal(body, &tokenInfo)
 	return tokenInfo, err

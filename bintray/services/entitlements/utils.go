@@ -20,10 +20,7 @@ func BuildEntitlementUrl(bintrayDetails auth.BintrayDetails, details *versions.P
 func CreateVersionDetails(versionStr string) (*versions.Path, error) {
 	parts := strings.Split(versionStr, "/")
 	if len(parts) == 1 {
-		err := errorutils.WrapError(errors.New("Argument format should be subject/repository or subject/repository/package or subject/repository/package/version. Got " + versionStr))
-		if err != nil {
-			return nil, err
-		}
+		return nil, errorutils.NewError("Argument format should be subject/repository or subject/repository/package or subject/repository/package/version. Got " + versionStr)
 	}
 	return versions.CreatePath(versionStr)
 }

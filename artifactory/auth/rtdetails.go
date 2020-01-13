@@ -254,7 +254,7 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return "", errorutils.NewError("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body))
 	}
 	var version artifactoryVersion
 	err = json.Unmarshal(body, &version)

@@ -245,7 +245,7 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 
 	rootPath := clientutils.GetRootPath(uploadDetails.Pattern, uploadDetails.UseRegExp)
 	if !fileutils.IsPathExists(rootPath, false) {
-		err := errorutils.WrapError(errors.New("Path does not exist: " + rootPath))
+		err := errorutils.NewError("Path does not exist: " + rootPath)
 		if err != nil {
 			return nil, err
 		}
@@ -266,9 +266,8 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 	}
 
 	r, err := regexp.Compile(localPath)
-	err = errorutils.WrapError(err)
 	if err != nil {
-		return nil, err
+		return nil, errorutils.WrapError(err)
 	}
 
 	log.Info("Collecting files for upload...")
