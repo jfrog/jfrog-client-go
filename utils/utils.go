@@ -67,7 +67,7 @@ func GetRootPath(path string, useRegExp bool, parentheses ParenthesesSlice) stri
 			}
 			if strings.Index(section, "(") != -1 {
 				temp := rootPath + section
-				if isEnclosedWildcardParentheses(temp, parentheses) {
+				if isWildcardParentheses(temp, parentheses) {
 					break
 				}
 			}
@@ -90,11 +90,13 @@ func GetRootPath(path string, useRegExp bool, parentheses ParenthesesSlice) stri
 	return rootPath
 }
 
-func isEnclosedWildcardParentheses(path string, parentheses ParenthesesSlice) bool {
+// Return true if str contain open parentasis that is related to wild card.
+// Parentheses argument contains all the wildcard's parentheses indexes in str.
+func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 	toFind := "("
 	currStart := 0
 	for {
-		idx := strings.Index(path, toFind)
+		idx := strings.Index(str, toFind)
 		if idx == -1 {
 			break
 		}
@@ -102,7 +104,7 @@ func isEnclosedWildcardParentheses(path string, parentheses ParenthesesSlice) bo
 			return true
 		}
 		currStart += idx + len(toFind)
-		path = path[idx+len(toFind):]
+		str = str[idx+len(toFind):]
 	}
 	return false
 }

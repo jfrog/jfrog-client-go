@@ -152,8 +152,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	// Save parentheses index in pattern, witch have corresponding placeholder.
-	placeholderParentheses := clientutils.NewParenthesesSlice(uploadParams.GetPattern(), uploadParams.GetTarget())
-	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.IsRegexp(), uploadParams.IsSymlink(), placeholderParentheses)
+	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.IsRegexp(), uploadParams.IsSymlink())
 	if err != nil {
 		return err
 	}
