@@ -90,8 +90,8 @@ func GetRootPath(path string, useRegExp bool, parentheses ParenthesesSlice) stri
 	return rootPath
 }
 
-// Return true if str contain open parentasis that is related to wild card.
-// Parentheses argument contains all the wildcard's parentheses indexes in str.
+// Return true if the ‘str’ argument contains open parentasis, that is related to a placeholder.
+// The ‘parentheses’ argument contains all the indexes of placeholder parentheses.
 func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 	toFind := "("
 	currStart := 0
