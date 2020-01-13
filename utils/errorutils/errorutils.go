@@ -18,6 +18,7 @@ func WrapError(err error) error {
 	return wrapError(tracerr.Wrap(err))
 }
 
+// Use this function to allow showing the stacktrace after an error.
 func NewError(message string) error {
 	return wrapError(tracerr.New(message))
 }
