@@ -254,12 +254,12 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return "", errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 	var version artifactoryVersion
 	err = json.Unmarshal(body, &version)
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return "", errorutils.WrapError(err)
 	}
 	return strings.TrimSpace(version.Version), nil
 }

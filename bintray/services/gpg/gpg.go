@@ -52,7 +52,7 @@ func (gs *GpgService) SignFile(pathDetails *utils.PathDetails, passphrase string
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -82,7 +82,7 @@ func (gs *GpgService) SignVersion(versionPath *versions.Path, passphrase string)
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)

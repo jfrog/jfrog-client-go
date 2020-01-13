@@ -2,15 +2,27 @@ package errorutils
 
 import (
 	"errors"
+	"github.com/ztrue/tracerr"
 	"io/ioutil"
 	"net/http"
 )
 
-// Error modes (how should the application behave when the CheckError function is invoked):
-type OnErrorHandler func(error) error
+// Max stacktrace including the top frame (This file)
+const maxStackTraceSize int = 4
 
-var CheckError = func(err error) error {
-	return err
+// Use this function to allow showing the stacktrace after an error. 
+func WrapError(err error) error {
+	if err == nil {
+		return nil
+	}
+	newError := tracerr.Wrap(err)
+	stackTrace := newError.StackTrace()
+	stackSize := len(stackTrace)
+	if maxStackTraceSize < stackSize {
+		stackSize = maxStackTraceSize // Limit the stacktrace size to 3.
+	}
+	// Remove the first frame in order to not trace this file in the stacktrace.
+	return tracerr.CustomError(newError, stackTrace[1:stackSize])
 }
 
 // Check expected status codes and return error if needed

@@ -87,7 +87,7 @@ func GetRootPath(path string, useRegExp bool) string {
 func StringToBool(boolVal string, defaultValue bool) (bool, error) {
 	if len(boolVal) > 0 {
 		result, err := strconv.ParseBool(boolVal)
-		errorutils.CheckError(err)
+		errorutils.WrapError(err)
 		return result, err
 	}
 	return defaultValue, nil
@@ -179,7 +179,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 	pattern = AddEscapingParentheses(pattern, target)
 	pattern = pathToRegExp(pattern)
 	r, err := regexp.Compile(pattern)
-	err = errorutils.CheckError(err)
+	err = errorutils.WrapError(err)
 	if err != nil {
 		return "", err
 	}
@@ -242,14 +242,14 @@ func GetBoolEnvValue(flagName string, defValue bool) (bool, error) {
 		return defValue, nil
 	}
 	val, err := strconv.ParseBool(envVarValue)
-	err = CheckErrorWithMessage(err, "can't parse environment variable "+flagName)
+	err = WrapErrorWithMessage(err, "can't parse environment variable "+flagName)
 	return val, err
 }
 
-func CheckErrorWithMessage(err error, message string) error {
+func WrapErrorWithMessage(err error, message string) error {
 	if err != nil {
 		log.Error(message)
-		err = errorutils.CheckError(err)
+		err = errorutils.WrapError(err)
 	}
 	return err
 }

@@ -10,7 +10,7 @@ func CreatePath(packageStr string) (*Path, error) {
 	parts := strings.Split(packageStr, "/")
 	size := len(parts)
 	if size != 3 {
-		err := errorutils.CheckError(errors.New("Expecting an argument in the form of subject/repository/package"))
+		err := errorutils.WrapError(errors.New("Expecting an argument in the form of subject/repository/package"))
 		if err != nil {
 			return nil, err
 		}

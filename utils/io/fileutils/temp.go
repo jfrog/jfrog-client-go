@@ -17,12 +17,12 @@ func init() {
 // Set tempDirPath to the created directory path.
 func CreateTempDir() (string, error) {
 	if tempDirBase == "" {
-		return "", errorutils.CheckError(errors.New("Temp dir cannot be created in an empty base dir."))
+		return "", errorutils.WrapError(errors.New("Temp dir cannot be created in an empty base dir."))
 	}
 
 	path, err := ioutil.TempDir(tempDirBase, "jfrog.cli.")
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return "", errorutils.WrapError(err)
 	}
 
 	return path, nil

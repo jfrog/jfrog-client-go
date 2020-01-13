@@ -40,7 +40,7 @@ func sshAuthentication(url, sshKeyPath, sshPassphrase string) (sshAuthHeaders ma
 		// Check if key specified
 		if len(sshKeyPath) <= 0 {
 			log.Info("Authentication via SSH key failed.")
-			return nil, "", errorutils.CheckError(fmt.Errorf("SSH key not specified."))
+			return nil, "", errorutils.WrapError(fmt.Errorf("SSH key not specified."))
 		}
 
 		// Read key and passphrase
@@ -78,29 +78,29 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 
 	hostAndPort := host + ":" + strconv.Itoa(port)
 	connection, err := ssh.Dial("tcp", hostAndPort, sshConfig)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return nil, "", err
 	}
 	defer connection.Close()
 	session, err := connection.NewSession()
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return nil, "", err
 	}
 	defer session.Close()
 
 	stdout, err := session.StdoutPipe()
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return nil, "", err
 	}
 
 	if err = session.Run("jfrog-authenticate"); err != nil && err != io.EOF {
-		return nil, "", errorutils.CheckError(err)
+		return nil, "", errorutils.WrapError(err)
 	}
 	var buf bytes.Buffer
 	io.Copy(&buf, stdout)
 
 	var result SshAuthResult
-	if err = json.Unmarshal(buf.Bytes(), &result); errorutils.CheckError(err) != nil {
+	if err = json.Unmarshal(buf.Bytes(), &result); errorutils.WrapError(err) != nil {
 		return nil, "", err
 	}
 	url := utils.AddTrailingSlashIfNeeded(result.Href)
@@ -111,16 +111,16 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 func readSshKeyAndPassphrase(sshKeyPath, sshPassphrase string) ([]byte, []byte, error) {
 	sshKey, err := ioutil.ReadFile(utils.ReplaceTildeWithUserHome(sshKeyPath))
 	if err != nil {
-		return nil, nil, errorutils.CheckError(err)
+		return nil, nil, errorutils.WrapError(err)
 	}
 	if len(sshPassphrase) == 0 {
 		encryptedKey, err := IsEncrypted(sshKey)
 		if err != nil {
-			return nil, nil, errorutils.CheckError(err)
+			return nil, nil, errorutils.WrapError(err)
 		}
 		// If key is encrypted but no passphrase specified
 		if encryptedKey {
-			return nil, nil, errorutils.CheckError(errors.New("SSH Key is encrypted but no passphrase was specified."))
+			return nil, nil, errorutils.WrapError(errors.New("SSH Key is encrypted but no passphrase was specified."))
 		}
 	}
 
@@ -141,7 +141,7 @@ func parseUrl(url string) (protocol, host string, port int, err error) {
 
 	var r *regexp.Regexp
 	r, err = regexp.Compile(pattern1)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return
 	}
 	groups := r.FindStringSubmatch(url)
@@ -150,13 +150,13 @@ func parseUrl(url string) (protocol, host string, port int, err error) {
 		host = groups[2]
 		port, err = strconv.Atoi(groups[3])
 		if err != nil {
-			err = errorutils.CheckError(errors.New("URL: " + url + " is invalid. Expecting ssh://<host>:<port> or http(s)://..."))
+			err = errorutils.WrapError(errors.New("URL: " + url + " is invalid. Expecting ssh://<host>:<port> or http(s)://..."))
 		}
 		return
 	}
 
 	r, err = regexp.Compile(pattern2)
-	err = errorutils.CheckError(err)
+	err = errorutils.WrapError(err)
 	if err != nil {
 		return
 	}
@@ -171,7 +171,7 @@ func parseUrl(url string) (protocol, host string, port int, err error) {
 
 func sshAuthPublicKey(sshKey, sshPassphrase []byte) (ssh.AuthMethod, error) {
 	key, err := ssh.ParsePrivateKeyWithPassphrase(sshKey, sshPassphrase)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return nil, err
 	}
 	return ssh.PublicKeys(key), nil
@@ -179,7 +179,7 @@ func sshAuthPublicKey(sshKey, sshPassphrase []byte) (ssh.AuthMethod, error) {
 
 func sshAuthAgent() (ssh.AuthMethod, error) {
 	sshAgent, _, err := sshagent.New()
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return nil, err
 	}
 	cbk := sshAgent.Signers

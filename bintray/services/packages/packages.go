@@ -55,7 +55,7 @@ func (ps *PackageService) Create(params *Params) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -86,7 +86,7 @@ func (ps *PackageService) Update(params *Params) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -111,7 +111,7 @@ func (ps *PackageService) Delete(packagePath *Path) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -133,7 +133,7 @@ func (ps *PackageService) Show(packagePath *Path) error {
 	}
 	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -160,7 +160,7 @@ func (ps *PackageService) IsPackageExists(packagePath *Path) (bool, error) {
 		return false, nil
 	}
 
-	return false, errorutils.CheckError(errors.New("Bintray response: " + resp.Status))
+	return false, errorutils.WrapError(errors.New("Bintray response: " + resp.Status))
 }
 
 func (ps *PackageService) doCreatePackage(params *Params) (*http.Response, []byte, error) {
@@ -211,7 +211,7 @@ func createPackageContent(params *Params) ([]byte, error) {
 	}
 	requestContent, err := json.Marshal(Config)
 	if err != nil {
-		return nil, errorutils.CheckError(errors.New("Failed to execute request."))
+		return nil, errorutils.WrapError(errors.New("Failed to execute request."))
 	}
 	return requestContent, nil
 }

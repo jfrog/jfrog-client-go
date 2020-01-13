@@ -46,7 +46,7 @@ func (ps *PingService) Ping() ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return respBody, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status))
+		return respBody, errorutils.WrapError(errors.New("Artifactory response: " + resp.Status))
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 	return respBody, nil

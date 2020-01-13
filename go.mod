@@ -11,9 +11,9 @@ require (
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
+	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/gliderlabs/ssh v0.1.1 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jfrog/gofrog v1.0.5
 	github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e // indirect
@@ -29,7 +29,7 @@ require (
 	github.com/src-d/gcfg v1.3.0 // indirect
 	github.com/stretchr/testify v1.2.2
 	github.com/xanzy/ssh-agent v0.2.0
-	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
+	github.com/ztrue/tracerr v0.3.0
 	golang.org/x/crypto v0.0.0-20181001203147-e3636079e1a4
 	golang.org/x/net v0.0.0-20180926154720-4dfa2610cdf3 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.0 // indirect

@@ -10,7 +10,7 @@ const CredentialsInUrlRegexp = `((http|https):\/\/[%|\w]+:[%|\w]+@)`
 
 func GetRegExp(regex string) (*regexp.Regexp, error) {
 	regExp, err := regexp.Compile(regex)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return nil, err
 	}
 	return regExp, nil

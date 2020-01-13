@@ -23,7 +23,7 @@ func NewGitManager(path string) *manager {
 
 func (m *manager) ReadConfig() error {
 	if m.path == "" {
-		return errorutils.CheckError(errors.New(".git path must be defined."))
+		return errorutils.WrapError(errors.New(".git path must be defined."))
 	}
 	m.readRevision()
 	m.readUrl()
@@ -44,7 +44,7 @@ func (m *manager) readUrl() {
 	}
 	dotGitPath := filepath.Join(m.path, "config")
 	file, err := os.Open(dotGitPath)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		m.err = err
 		return
 	}
@@ -65,7 +65,7 @@ func (m *manager) readUrl() {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		errorutils.CheckError(err)
+		errorutils.WrapError(err)
 		m.err = err
 		return
 	}
@@ -90,7 +90,7 @@ func (m *manager) readUrl() {
 func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
 	file, e := os.Open(dotGitPath)
-	if errorutils.CheckError(e) != nil {
+	if errorutils.WrapError(e) != nil {
 		err = e
 		return
 	}
@@ -106,7 +106,7 @@ func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error)
 		revision = text
 	}
 	if err = scanner.Err(); err != nil {
-		errorutils.CheckError(err)
+		errorutils.WrapError(err)
 	}
 	return
 }
@@ -143,7 +143,7 @@ func (m *manager) readRevision() {
 		break
 	}
 	if err := scanner.Err(); err != nil {
-		errorutils.CheckError(err)
+		errorutils.WrapError(err)
 		m.err = err
 		return
 	}

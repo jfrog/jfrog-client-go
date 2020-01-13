@@ -288,7 +288,7 @@ func shouldDownloadFile(localFilePath, md5, sha1 string) (bool, error) {
 
 func removeIfSymlink(localSymlinkPath string) error {
 	if fileutils.IsPathSymlink(localSymlinkPath) {
-		if err := os.Remove(localSymlinkPath); errorutils.CheckError(err) != nil {
+		if err := os.Remove(localSymlinkPath); errorutils.WrapError(err) != nil {
 			return err
 		}
 	}
@@ -298,10 +298,10 @@ func removeIfSymlink(localSymlinkPath string) error {
 func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) error {
 	if symlinkChecksum && symlinkContentChecksum != "" {
 		if !fileutils.IsPathExists(symlinkArtifact, false) {
-			return errorutils.CheckError(errors.New("Symlink validation failed, target doesn't exist: " + symlinkArtifact))
+			return errorutils.WrapError(errors.New("Symlink validation failed, target doesn't exist: " + symlinkArtifact))
 		}
 		file, err := os.Open(symlinkArtifact)
-		if err = errorutils.CheckError(err); err != nil {
+		if err = errorutils.WrapError(err); err != nil {
 			return err
 		}
 		defer file.Close()
@@ -311,7 +311,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		}
 		sha1 := checksumInfo[checksum.SHA1]
 		if sha1 != symlinkContentChecksum {
-			return errorutils.CheckError(errors.New("Symlink validation failed for target: " + symlinkArtifact))
+			return errorutils.WrapError(errors.New("Symlink validation failed for target: " + symlinkArtifact))
 		}
 	}
 	localSymlinkPath := filepath.Join(localPath, localFileName)
@@ -331,7 +331,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		return err
 	}
 	err = os.Symlink(symlinkArtifact, localSymlinkPath)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return err
 	}
 	log.Debug(logMsgPrefix, "Creating symlink file.")
@@ -424,13 +424,13 @@ func explodeLocalFile(localPath, localFileName string) (err error) {
 	if arch != nil {
 		err := arch.Open(absolutePath, localPath)
 		if err != nil {
-			return errorutils.CheckError(err)
+			return errorutils.WrapError(err)
 		}
 		// If the file was extracted successfully, remove it from the file system
 		err = os.Remove(absolutePath)
 	}
 
-	return errorutils.CheckError(err)
+	return errorutils.WrapError(err)
 }
 
 func createDir(localPath, localFileName, logMsgPrefix string) error {

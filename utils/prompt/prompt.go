@@ -111,7 +111,7 @@ func (autocomplete *Autocomplete) Read() error {
 	for {
 		line, err := l.Readline()
 		line = strings.TrimSpace(line)
-		if errorutils.CheckError(err) != nil {
+		if errorutils.WrapError(err) != nil {
 			return err
 		}
 		if line == "" && autocomplete.Default != "" {
@@ -156,7 +156,7 @@ func (simple *Simple) Read() error {
 	defer l.Close()
 
 	line, err := l.Readline()
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return err
 	}
 
@@ -175,7 +175,7 @@ func (simple *Simple) GetResults() *viper.Viper {
 
 func (yesNo *YesNo) Read() error {
 	result, err := readYesNoQuestion(yesNo.Msg, yesNo.Default)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return err
 	}
 
@@ -209,7 +209,7 @@ func (yesNo *YesNo) GetResults() *viper.Viper {
 func (array *Array) Read() error {
 	for _, v := range array.Prompts {
 		err := v.Read()
-		if errorutils.CheckError(err) != nil {
+		if errorutils.WrapError(err) != nil {
 			return err
 		}
 	}
@@ -244,7 +244,7 @@ func readYesNoQuestion(prompt, defaultVal string) (bool, error) {
 
 	for {
 		line, err := l.Readline()
-		if errorutils.CheckError(err) != nil {
+		if errorutils.WrapError(err) != nil {
 			return false, err
 		}
 		line = strings.TrimSpace(line)
@@ -269,12 +269,12 @@ func createAutocompletePrompt(msg string, completer readline.AutoCompleter, mask
 
 		FuncFilterInputRune: filterInput,
 	})
-	return l, errorutils.CheckError(err)
+	return l, errorutils.WrapError(err)
 }
 
 func parseYesNo(s string) (bool, error) {
 	matchedYes, err := regexp.MatchString("^yes$|^y$", strings.ToLower(s))
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return matchedYes, err
 	}
 	if matchedYes {
@@ -282,7 +282,7 @@ func parseYesNo(s string) (bool, error) {
 	}
 
 	matchedNo, err := regexp.MatchString("^no$|^n$", strings.ToLower(s))
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return matchedNo, err
 	}
 	if matchedNo {

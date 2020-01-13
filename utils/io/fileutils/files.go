@@ -43,7 +43,7 @@ func IsFileExists(path string, preserveSymLink bool) (bool, error) {
 		if os.IsNotExist(err) { // If doesn't exist, don't omit an error
 			return false, nil
 		}
-		return false, errorutils.CheckError(err)
+		return false, errorutils.WrapError(err)
 	}
 	return !fileInfo.IsDir(), nil
 }
@@ -57,7 +57,7 @@ func IsDirExists(path string, preserveSymLink bool) (bool, error) {
 		if os.IsNotExist(err) { // If doesn't exist, don't omit an error
 			return false, nil
 		}
-		return false, errorutils.CheckError(err)
+		return false, errorutils.WrapError(err)
 	}
 	return fileInfo.IsDir(), nil
 }
@@ -70,7 +70,7 @@ func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err e
 	} else {
 		fileInfo, err = os.Stat(path)
 	}
-	// We should not do CheckError here, because the error is checked by the calling functions.
+	// We should not do WrapError here, because the error is checked by the calling functions.
 	return fileInfo, err
 }
 
@@ -124,7 +124,7 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 		fileList = append(fileList, path)
 		return nil
 	}, walkIntoDirSymlink)
-	err = errorutils.CheckError(err)
+	err = errorutils.WrapError(err)
 	return
 }
 
@@ -156,7 +156,7 @@ func ListFilesWithExtension(path, ext string) ([]string, error) {
 		if IsPathSymlink(filePath) {
 			// Gets the file info of the symlink.
 			file, err := GetFileInfo(filePath, false)
-			if errorutils.CheckError(err) != nil {
+			if errorutils.WrapError(err) != nil {
 				return nil, err
 			}
 			// Checks if the symlink is a file.
@@ -210,7 +210,7 @@ func GetFileSize(file *os.File) (int64, error) {
 	size := int64(0)
 	if file != nil {
 		fileInfo, err := file.Stat()
-		if errorutils.CheckError(err) != nil {
+		if errorutils.WrapError(err) != nil {
 			return size, err
 		}
 		size = fileInfo.Size()
@@ -221,7 +221,7 @@ func GetFileSize(file *os.File) (int64, error) {
 func CreateFilePath(localPath, fileName string) (string, error) {
 	if localPath != "" {
 		err := os.MkdirAll(localPath, 0777)
-		if errorutils.CheckError(err) != nil {
+		if errorutils.WrapError(err) != nil {
 			return "", err
 		}
 		fileName = filepath.Join(localPath, fileName)
@@ -242,14 +242,14 @@ func CreateDirIfNotExist(path string) error {
 // the file in the destination path.
 func AppendFile(srcPath string, destFile *os.File) error {
 	srcFile, err := os.Open(srcPath)
-	err = errorutils.CheckError(err)
+	err = errorutils.WrapError(err)
 	if err != nil {
 		return err
 	}
 
 	defer func() error {
 		err := srcFile.Close()
-		return errorutils.CheckError(err)
+		return errorutils.WrapError(err)
 	}()
 
 	reader := bufio.NewReader(srcFile)
@@ -259,7 +259,7 @@ func AppendFile(srcPath string, destFile *os.File) error {
 	for {
 		n, err := reader.Read(buf)
 		if err != io.EOF {
-			err = errorutils.CheckError(err)
+			err = errorutils.WrapError(err)
 			if err != nil {
 				return err
 			}
@@ -268,13 +268,13 @@ func AppendFile(srcPath string, destFile *os.File) error {
 			break
 		}
 		_, err = writer.Write(buf[:n])
-		err = errorutils.CheckError(err)
+		err = errorutils.WrapError(err)
 		if err != nil {
 			return err
 		}
 	}
 	err = writer.Flush()
-	return errorutils.CheckError(err)
+	return errorutils.WrapError(err)
 }
 
 func GetHomeDir() string {
@@ -303,7 +303,7 @@ func IsSshUrl(urlPath string) bool {
 
 func ReadFile(filePath string) ([]byte, error) {
 	content, err := ioutil.ReadFile(filePath)
-	err = errorutils.CheckError(err)
+	err = errorutils.WrapError(err)
 	return content, err
 }
 
@@ -314,11 +314,11 @@ func GetFileDetails(filePath string) (*FileDetails, error) {
 
 	file, err := os.Open(filePath)
 	defer file.Close()
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return nil, err
 	}
 	fileInfo, err := file.Stat()
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return nil, err
 	}
 	details.Size = fileInfo.Size()
@@ -328,7 +328,7 @@ func GetFileDetails(filePath string) (*FileDetails, error) {
 func calcChecksumDetails(filePath string) (ChecksumDetails, error) {
 	file, err := os.Open(filePath)
 	defer file.Close()
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return ChecksumDetails{}, err
 	}
 	checksumInfo, err := checksum.Calc(file)

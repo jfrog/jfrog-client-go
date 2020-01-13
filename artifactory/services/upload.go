@@ -129,7 +129,7 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 		} else if !fileInfo.IsDir() {
 			file, err := os.Open(artifact.LocalPath)
 			if err != nil {
-				return "", errorutils.CheckError(err)
+				return "", errorutils.WrapError(err)
 			}
 			defer file.Close()
 			checksumInfo, err := checksum.Calc(file, checksum.SHA1)
@@ -184,7 +184,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return err
 	}
 
@@ -309,13 +309,13 @@ func addPropsToTargetPath(targetPath, props, debConfig string) (string, error) {
 
 func prepareUploadData(localPath, baseTargetPath, props string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, err error) {
 	targetPath, err = addPropsToTargetPath(baseTargetPath, props, uploadParams.GetDebian())
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return
 	}
 	log.Info(logMsgPrefix+"Uploading artifact:", localPath)
 
 	fileInfo, err = os.Lstat(localPath)
-	errorutils.CheckError(err)
+	errorutils.WrapError(err)
 	return
 }
 
@@ -332,7 +332,7 @@ func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadP
 	var details *fileutils.FileDetails
 	var body []byte
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return utils.FileInfo{}, false, err
 	}
 	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileInfo) {
@@ -553,12 +553,12 @@ func NewUploadParams() UploadParams {
 func getVcsProps(path string, vcsCache *clientutils.VcsCache) (string, error) {
 	path, err := filepath.Abs(path)
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return "", errorutils.WrapError(err)
 	}
 	props := ""
 	revision, url, err := vcsCache.GetVcsDetails(filepath.Dir(path))
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return "", errorutils.WrapError(err)
 	}
 	if revision != "" {
 		props += ";vcs.revision=" + revision

@@ -49,7 +49,7 @@ func (aks *AccessKeysService) ShowAll(org string) error {
 	}
 	resp, body, _, _ := client.SendGet(path, true, httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -67,7 +67,7 @@ func (aks *AccessKeysService) Show(org, id string) error {
 	}
 	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -92,7 +92,7 @@ func (aks *AccessKeysService) Create(params *Params) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -117,7 +117,7 @@ func (aks *AccessKeysService) Update(params *Params) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -138,7 +138,7 @@ func (aks *AccessKeysService) Delete(org, id string) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -169,7 +169,7 @@ func buildAccessKeyJson(params *Params) ([]byte, error) {
 	}
 	content, err := json.Marshal(data)
 	if err != nil {
-		return []byte{}, errorutils.CheckError(errors.New("Failed to execute request."))
+		return []byte{}, errorutils.WrapError(errors.New("Failed to execute request."))
 	}
 	return content, nil
 }

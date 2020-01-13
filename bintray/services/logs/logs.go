@@ -37,7 +37,7 @@ func (ls *LogsService) List(versionPath *versions.Path) error {
 	resp, body, _, _ := client.SendGet(listUrl, true, httpClientsDetails)
 
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -67,7 +67,7 @@ func (ls *LogsService) Download(versionPath *versions.Path, logName string) erro
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status))
 	}
 	log.Debug("Bintray response:", resp.Status)
 	log.Info("Downloaded log.")

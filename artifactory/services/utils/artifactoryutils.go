@@ -77,7 +77,7 @@ func AddHeader(headerName, headerValue string, headers *map[string]string) {
 func BuildArtifactoryUrl(baseUrl, path string, params map[string]string) (string, error) {
 	u := url.URL{Path: path}
 	escapedUrl, err := url.Parse(baseUrl + u.String())
-	err = errorutils.CheckError(err)
+	err = errorutils.WrapError(err)
 	if err != nil {
 		return "", err
 	}
@@ -202,12 +202,12 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags Co
 		return "", "", err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", "", errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return "", "", errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 	var responseBuild []build
 	err = json.Unmarshal(body, &responseBuild)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return "", "", err
 	}
 	if responseBuild[0].BuildNumber != "" {
@@ -222,7 +222,7 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags Co
 func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte, err error) {
 	buildJsonArray := []build{{buildName, buildNumber}}
 	body, err = json.Marshal(buildJsonArray)
-	err = errorutils.CheckError(err)
+	err = errorutils.WrapError(err)
 	return
 }
 

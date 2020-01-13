@@ -32,7 +32,7 @@ func (gs *GoService) PublishPackage(params GoParams) error {
 	}
 	publisher := GetCompatiblePublisher(artifactoryVersion)
 	if publisher == nil {
-		return errorutils.CheckError(errors.New(fmt.Sprintf("Unsupported version of Artifactory: %s", artifactoryVersion)))
+		return errorutils.WrapError(errors.New(fmt.Sprintf("Unsupported version of Artifactory: %s", artifactoryVersion)))
 	}
 
 	return publisher.PublishPackage(params, gs.client, gs.ArtDetails)

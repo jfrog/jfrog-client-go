@@ -14,7 +14,7 @@ func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 
 	regexpPattern := "^" + strings.Replace(deletePattern, "*", "([^/]*|.*)", -1)
 	r, err := regexp.Compile(regexpPattern)
-	errorutils.CheckError(err)
+	errorutils.WrapError(err)
 	if err != nil {
 		return "", err
 	}

@@ -43,7 +43,7 @@ func (ps *XrayScanService) ScanBuild(scanParams XrayScanParams) ([]byte, error) 
 
 	requestContent, err := json.Marshal(data)
 	if err != nil {
-		return []byte{}, errorutils.CheckError(err)
+		return []byte{}, errorutils.WrapError(err)
 	}
 
 	connection := httpclient.RetryableConnection{
@@ -81,7 +81,7 @@ func isFatalScanError(errResp *errorResponse) bool {
 func checkForXrayResponseError(content []byte, ignoreFatalError bool) error {
 	respErrors := &errorResponse{}
 	err := json.Unmarshal(content, respErrors)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.WrapError(err) != nil {
 		return err
 	}
 
@@ -93,7 +93,7 @@ func checkForXrayResponseError(content []byte, ignoreFatalError bool) error {
 		// fatal error should be interpreted as no errors so no more retries will accrue
 		return nil
 	}
-	return errorutils.CheckError(errors.New("Artifactory response: " + string(content)))
+	return errorutils.WrapError(errors.New("Artifactory response: " + string(content)))
 }
 
 func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Response, error) {
@@ -114,7 +114,7 @@ func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Re
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = errorutils.CheckError(errors.New("Artifactory Response: " + resp.Status))
+		err = errorutils.WrapError(errors.New("Artifactory Response: " + resp.Status))
 	}
 	return resp, err
 }

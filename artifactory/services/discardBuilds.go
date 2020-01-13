@@ -56,7 +56,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 		DeleteArtifacts:  params.IsDeleteArtifacts()}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return errorutils.WrapError(err)
 	}
 
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
@@ -67,7 +67,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 		return err
 	}
 	if resp.StatusCode != http.StatusNoContent {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	if params.IsAsync() {
@@ -82,7 +82,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 func calculateMinimumBuildDate(startingDate time.Time, maxDaysString string) (string, error) {
 	maxDays, err := strconv.Atoi(maxDaysString)
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return "", errorutils.WrapError(err)
 	}
 
 	minimumBuildDate := startingDate.Add(-24 * time.Hour * (time.Duration(maxDays)))

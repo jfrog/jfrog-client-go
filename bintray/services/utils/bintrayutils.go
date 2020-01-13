@@ -25,7 +25,7 @@ func CreatePathDetails(str string) (*PathDetails, error) {
 	parts := strings.Split(str, "/")
 	size := len(parts)
 	if size < 3 {
-		err := errorutils.CheckError(errors.New("Expecting an argument in the form of subject/repository/file-path"))
+		err := errorutils.WrapError(errors.New("Expecting an argument in the form of subject/repository/file-path"))
 		if err != nil {
 			return nil, err
 		}

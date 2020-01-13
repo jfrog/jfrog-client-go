@@ -59,7 +59,7 @@ func (us *UrlService) SignVersion(params *Params) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Bintray response:", resp.Status)
@@ -78,7 +78,7 @@ func createSignVersionContent(params *Params) ([]byte, error) {
 	}
 	requestContent, err := json.Marshal(Config)
 	if err != nil {
-		return nil, errorutils.CheckError(errors.New("Failed to execute request."))
+		return nil, errorutils.WrapError(errors.New("Failed to execute request."))
 	}
 	return requestContent, nil
 }

@@ -62,7 +62,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 		DryRun:                ds.isDryRun()}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return errorutils.WrapError(err)
 	}
 
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
@@ -73,7 +73,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.WrapError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Artifactory response:", resp.Status)

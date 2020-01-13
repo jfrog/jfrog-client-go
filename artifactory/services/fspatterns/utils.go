@@ -111,13 +111,13 @@ func IsPathExcluded(path string, excludePathPattern string) (excludedPath bool, 
 // If filePath is path to a symlink we should return the link content e.g where the link points
 func GetFileSymlinkPath(filePath string) (string, error) {
 	fileInfo, e := os.Lstat(filePath)
-	if errorutils.CheckError(e) != nil {
+	if errorutils.WrapError(e) != nil {
 		return "", e
 	}
 	var symlinkPath = ""
 	if fileutils.IsFileSymlink(fileInfo) {
 		symlinkPath, e = os.Readlink(filePath)
-		if errorutils.CheckError(e) != nil {
+		if errorutils.WrapError(e) != nil {
 			return "", e
 		}
 	}
@@ -130,7 +130,7 @@ func GetRootPath(pattern string, isRegexp, preserveSymLink bool) (string, error)
 	rootPath := utils.GetRootPath(pattern, isRegexp)
 
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
-		return "", errorutils.CheckError(errors.New("Path does not exist: " + rootPath))
+		return "", errorutils.WrapError(errors.New("Path does not exist: " + rootPath))
 	}
 
 	return rootPath, nil

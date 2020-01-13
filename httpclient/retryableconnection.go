@@ -42,7 +42,7 @@ type RetryableConnection struct {
 	ErrorHandler ErrorHandler
 }
 
-func (rt *RetryableConnection) checkErrors(err error, stableConnection bool, retryCounter *int) error {
+func (rt *RetryableConnection) WrapErrors(err error, stableConnection bool, retryCounter *int) error {
 	if err != nil {
 		log.Info("Connection error:", err.Error()+",", "reconnecting...")
 		time.Sleep(rt.SleepBetweenRetries)
@@ -60,7 +60,7 @@ func (rt *RetryableConnection) Do() ([]byte, error) {
 	retry := 0
 	for rt.RetriesNum == -1 || retry <= rt.RetriesNum {
 		resp, err := rt.ConnectHandler()
-		if rt.checkErrors(err, false, &retry) != nil {
+		if rt.WrapErrors(err, false, &retry) != nil {
 			continue
 		}
 
@@ -74,12 +74,12 @@ func (rt *RetryableConnection) Do() ([]byte, error) {
 		}
 
 		result, stableConnection, err := monitor.start()
-		if rt.checkErrors(err, stableConnection, &retry) != nil {
+		if rt.WrapErrors(err, stableConnection, &retry) != nil {
 			continue
 		}
 
 		// Check for content errors (only if there are no other errors)
-		if rt.ErrorHandler != nil && rt.checkErrors(rt.ErrorHandler(result), stableConnection, &retry) != nil {
+		if rt.ErrorHandler != nil && rt.WrapErrors(rt.ErrorHandler(result), stableConnection, &retry) != nil {
 			continue
 		}
 
@@ -100,7 +100,7 @@ type monitor struct {
 
 func (m *monitor) start() ([]byte, bool, error) {
 	if m.resp == nil || m.resp.Body == nil {
-		return []byte{}, false, errorutils.CheckError(missingRespBodyErr)
+		return []byte{}, false, errorutils.WrapError(missingRespBodyErr)
 	}
 	defer m.resp.Body.Close()
 
@@ -147,5 +147,5 @@ func (m *monitor) start() ([]byte, bool, error) {
 		stable = true
 	}
 	// receive the data or fail on timeout or error
-	return result, stable, errorutils.CheckError(err)
+	return result, stable, errorutils.WrapError(err)
 }

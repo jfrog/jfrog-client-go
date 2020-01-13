@@ -115,7 +115,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 					return err
 				}
 				if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
-					return errorutils.CheckError(err)
+					return errorutils.WrapError(err)
 				}
 				successCounters[threadId]++
 				return nil
