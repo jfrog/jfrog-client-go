@@ -1,7 +1,6 @@
 package fileutils
 
 import (
-	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"io/ioutil"
 	"os"

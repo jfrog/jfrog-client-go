@@ -3,9 +3,9 @@ package utils
 import (
 	"fmt"
 	gofrogio "github.com/jfrog/gofrog/io"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"strings"
 	"testing"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 func TestRemoveCredentialsFromURL(t *testing.T) {

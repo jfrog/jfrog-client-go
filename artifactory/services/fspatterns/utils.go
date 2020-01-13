@@ -2,7 +2,6 @@ package fspatterns
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils"

@@ -10,7 +10,7 @@ import (
 // Max stacktrace including the top frame (This file)
 const maxStackTraceSize int = 4
 
-// Use this function to allow showing the stacktrace after an error. 
+// Use this function to allow showing the stacktrace after an error.
 func WrapError(err error) error {
 	if err == nil {
 		return nil

@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"

@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/url"

@@ -30,8 +30,8 @@ require (
 	github.com/stretchr/testify v1.2.2
 	github.com/xanzy/ssh-agent v0.2.0
 	github.com/ztrue/tracerr v0.3.0
-	golang.org/x/crypto v0.0.0-20181001203147-e3636079e1a4
-	golang.org/x/net v0.0.0-20180926154720-4dfa2610cdf3 // indirect
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+	golang.org/x/tools v0.0.0-20200113040837-eac381796e91 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.0 // indirect
 	gopkg.in/src-d/go-git-fixtures.v3 v3.1.1 // indirect
 	gopkg.in/src-d/go-git.v4 v4.7.0

@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"net/http"
 	"path"
 	"regexp"

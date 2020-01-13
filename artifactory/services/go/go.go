@@ -1,7 +1,6 @@
 package _go
 
 import (
-	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"

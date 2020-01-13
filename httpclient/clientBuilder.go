@@ -2,7 +2,6 @@ package httpclient
 
 import (
 	"crypto/tls"
-	"errors"
 	"net"
 	"net/http"
 	"time"

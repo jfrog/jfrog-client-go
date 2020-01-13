@@ -2,7 +2,6 @@ package entitlements
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
 	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
 	"github.com/jfrog/jfrog-client-go/httpclient"

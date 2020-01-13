@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"strings"
 )

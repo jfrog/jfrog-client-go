@@ -2,7 +2,6 @@ package versions
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"

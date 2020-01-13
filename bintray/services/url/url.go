@@ -2,7 +2,6 @@ package url
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
 	"github.com/jfrog/jfrog-client-go/bintray/services/utils"
 	"github.com/jfrog/jfrog-client-go/httpclient"

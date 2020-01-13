@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bufio"
-	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"os"
 	"path/filepath"

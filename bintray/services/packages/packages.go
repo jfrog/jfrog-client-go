@@ -2,15 +2,15 @@ package packages
 
 import (
 	"encoding/json"
-	"errors"
+	"net/http"
+	"path"
+	"strings"
+
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"path"
-	"strings"
 )
 
 func NewService(client *httpclient.HttpClient) *PackageService {

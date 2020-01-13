@@ -1,7 +1,6 @@
 package packages
 
 import (
-	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"strings"
 )
