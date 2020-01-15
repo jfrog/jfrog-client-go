@@ -18,7 +18,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "0.6.3"
+	Version     = "0.7.0"
 )
 
 var userAgent = getDefaultUserAgent()
