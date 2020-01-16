@@ -3,16 +3,20 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 const tokenPath = "api/security/token"
+const apiKeyPath = "api/security/apiKey"
 
 type SecurityService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
@@ -25,6 +29,33 @@ func NewSecurityService(client *rthttpclient.ArtifactoryHttpClient) *SecuritySer
 
 func (ss *SecurityService) getArtifactoryDetails() auth.ArtifactoryDetails {
 	return ss.ArtDetails
+}
+
+// RegenerateAPIKey regenerates the API Key in Artifactory
+func (ss *SecurityService) RegenerateAPIKey() (string, error) {
+	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
+
+	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), apiKeyPath, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, body, err := ss.client.SendPut(reqURL, nil, &httpClientDetails)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New("api key reneration failed with status: " + resp.Status + "\n" + clientutils.IndentJson(body))
+	}
+
+	var data map[string]interface{} = make(map[string]interface{})
+	if err := json.Unmarshal(body, &data); err != nil {
+		return "", fmt.Errorf("unable to decode json from response: %w", err)
+	}
+
+	apiKey := data["apiKey"].(string)
+	return apiKey, nil
 }
 
 func (ss *SecurityService) CreateToken(params CreateTokenParams) (CreateTokenResponseData, error) {
