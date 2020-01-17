@@ -27,6 +27,11 @@ func NewSecurityService(client *rthttpclient.ArtifactoryHttpClient) *SecuritySer
 	return &SecurityService{client: client}
 }
 
+// GetAPIKeyPath return the apiKeyPath
+func GetAPIKeyPath() string {
+	return apiKeyPath
+}
+
 func (ss *SecurityService) getArtifactoryDetails() auth.ArtifactoryDetails {
 	return ss.ArtDetails
 }
