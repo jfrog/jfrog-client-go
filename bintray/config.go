@@ -20,7 +20,6 @@ type bintrayServicesConfig struct {
 	logger   log.Log
 }
 
-
 func (config *bintrayServicesConfig) IsDryRun() bool {
 	return config.isDryRun
 }
