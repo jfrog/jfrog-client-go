@@ -84,7 +84,7 @@ type BuildPromotionBody struct {
 	IncludeDependencies bool                `json:"dependencies,omitempty"`
 	Copy                bool                `json:"copy,omitempty"`
 	DryRun              bool                `json:"dryRun,omitempty"`
-	Properties          map[string][]string `json:"properties, omitempty"`
+	Properties          map[string][]string `json:"properties,omitempty"`
 }
 
 type PromotionParams struct {

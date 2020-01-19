@@ -5,10 +5,10 @@ import (
 	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	testsutils "github.com/jfrog/jfrog-client-go/tests"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"path/filepath"
 	"strconv"
 	"testing"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 func TestSingleFileUpload(t *testing.T) {
