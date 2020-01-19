@@ -32,9 +32,14 @@ func GetPaths(rootPath string, isRecursive, includeDirs, isSymlink bool) ([]stri
 
 // Transform to regexp and prepare Exclude patterns to be used
 func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
+	exclusions := params.GetExclusions()
+	if len(exclusions) == 0 {
+		exclusions = params.GetExcludePatterns() // Support legacy excluded patterns
+	}
+
 	excludePathPattern := ""
-	if len(params.GetExcludePatterns()) > 0 {
-		for _, singleExcludePattern := range params.GetExcludePatterns() {
+	if len(exclusions) > 0 {
+		for _, singleExcludePattern := range exclusions {
 			if len(singleExcludePattern) > 0 {
 				singleExcludePattern = utils.ReplaceTildeWithUserHome(singleExcludePattern)
 				singleExcludePattern = utils.PrepareLocalPathForUpload(singleExcludePattern, params.IsRegexp())

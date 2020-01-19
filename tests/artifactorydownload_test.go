@@ -19,6 +19,7 @@ func TestArtifactoryDownload(t *testing.T) {
 	t.Run("placeholder", placeholderDownload)
 	t.Run("includeDirs", includeDirsDownload)
 	t.Run("excludePatterns", excludePatternsDownload)
+	t.Run("exclusionsDownload", exclusionsDownload)
 	t.Run("explodeArchive", explodeArchiveDownload)
 	artifactoryCleanup(t)
 }
@@ -223,6 +224,31 @@ func excludePatternsDownload(t *testing.T) {
 	downloadTarget := workingDir + string(filepath.Separator)
 	excludePatterns := []string{"b.in", "*.tar.gz"}
 	_, _, err = testsDownloadService.DownloadFiles(services.DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget, ExcludePatterns: excludePatterns}, Flat: true})
+	if err != nil {
+		t.Error(err)
+	}
+	if !fileutils.IsPathExists(filepath.Join(workingDir, "a.in"), false) {
+		t.Error("Missing file a.in")
+	}
+
+	if fileutils.IsPathExists(filepath.Join(workingDir, "b.in"), false) {
+		t.Error("File b.in should have been excluded")
+	}
+	if fileutils.IsPathExists(filepath.Join(workingDir, "c.tar.gz"), false) {
+		t.Error("File c.tar.gz should have been excluded")
+	}
+}
+
+func exclusionsDownload(t *testing.T) {
+	workingDir, err := ioutil.TempDir("", "downloadTests")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(workingDir)
+	downloadPattern := RtTargetRepo + "*"
+	downloadTarget := workingDir + string(filepath.Separator)
+	exclusions := []string{"*b.in", "*.tar.gz"}
+	_, _, err = testsDownloadService.DownloadFiles(services.DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget, Exclusions: exclusions}, Flat: true})
 	if err != nil {
 		t.Error(err)
 	}
