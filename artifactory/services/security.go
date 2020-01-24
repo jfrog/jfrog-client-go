@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -122,6 +123,22 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 	return string(body), err
+}
+
+// LookupTokenID looks up a token by username and return token id
+func (ss *SecurityService) LookupTokenID(username string) (string, error) {
+	tokenResponseData, err := ss.GetTokens()
+	if err != nil {
+		return "", err
+	}
+
+	for _, token := range tokenResponseData.Tokens {
+		if strings.HasSuffix(token.Subject, "/"+username) {
+			return token.TokenId, nil
+		}
+	}
+
+	return "", nil
 }
 
 func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {

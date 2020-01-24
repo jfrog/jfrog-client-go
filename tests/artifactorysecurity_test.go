@@ -24,6 +24,7 @@ func TestToken(t *testing.T) {
 	t.Run("RevokeToken: token not found", revokeTokenNotFoundTest)
 	t.Run("RefreshToken", refreshTokenTest)
 	t.Run("GetTokens", getTokensTest)
+	t.Run("LookupTokens", lookupTokenTest)
 	teardown()
 }
 
@@ -134,6 +135,28 @@ func getTokensTest(t *testing.T) {
 		}
 	}
 	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
+}
+
+func lookupTokenTest(t *testing.T) {
+	_, err := createToken()
+	if err != nil {
+		t.Error(err)
+	}
+	tokens, err := testsSecurityService.GetTokens()
+	if err != nil {
+		t.Error(err)
+	}
+	if len(tokens.Tokens) == 0 {
+		t.Error("Token creation/retrival failed")
+	}
+	expectedTokenId := tokens.Tokens[0].TokenId
+	lookedUpTokenId, err := testsSecurityService.LookupTokenID("anonymous")
+	if err != nil {
+		t.Error(err)
+	}
+	if expectedTokenId != lookedUpTokenId {
+		t.Errorf("expected %s token id,. got %s token id", expectedTokenId, lookedUpTokenId)
+	}
 }
 
 // Util function to revoke a token
