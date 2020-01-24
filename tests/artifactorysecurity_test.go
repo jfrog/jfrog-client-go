@@ -32,7 +32,7 @@ func TestAPIKey(t *testing.T) {
 }
 
 func regenerateAPIKeyTest(t *testing.T) {
-	securityAPIKeyPath := services.GetAPIKeyPath()
+	securityAPIKeyPath := services.APIKeyPath
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
 			t.Fatalf("Expected PUT but got request with method: %s", r.Method)
@@ -68,6 +68,7 @@ func regenerateAPIKeyTest(t *testing.T) {
 		t.Fatalf("Expected new-api-key got %s", key)
 	}
 }
+
 func createTokenTest(t *testing.T) {
 	token, err := createToken()
 	if err != nil {

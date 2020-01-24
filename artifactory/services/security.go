@@ -16,7 +16,7 @@ import (
 )
 
 const tokenPath = "api/security/token"
-const apiKeyPath = "api/security/apiKey"
+const APIKeyPath = "api/security/apiKey"
 
 type SecurityService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
@@ -27,11 +27,6 @@ func NewSecurityService(client *rthttpclient.ArtifactoryHttpClient) *SecuritySer
 	return &SecurityService{client: client}
 }
 
-// GetAPIKeyPath return the apiKeyPath
-func GetAPIKeyPath() string {
-	return apiKeyPath
-}
-
 func (ss *SecurityService) getArtifactoryDetails() auth.ArtifactoryDetails {
 	return ss.ArtDetails
 }
@@ -40,7 +35,7 @@ func (ss *SecurityService) getArtifactoryDetails() auth.ArtifactoryDetails {
 func (ss *SecurityService) RegenerateAPIKey() (string, error) {
 	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
 
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), apiKeyPath, nil)
+	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
 	if err != nil {
 		return "", err
 	}
@@ -51,12 +46,12 @@ func (ss *SecurityService) RegenerateAPIKey() (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New("api key reneration failed with status: " + resp.Status + "\n" + clientutils.IndentJson(body))
+		return "", errors.New("API key reneration failed with status: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	var data map[string]interface{} = make(map[string]interface{})
 	if err := json.Unmarshal(body, &data); err != nil {
-		return "", fmt.Errorf("unable to decode json from response: %w", err)
+		return "", fmt.Errorf("Unable to decode json. Error: %w Upstream response: %s", err, string(body))
 	}
 
 	apiKey := data["apiKey"].(string)
