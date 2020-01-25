@@ -62,7 +62,7 @@ func regenerateAPIKeyTest(t *testing.T) {
 	apiKeyService.ArtDetails = rtDetails
 	key, err := apiKeyService.RegenerateAPIKey()
 	if err != nil {
-		t.Fatalf("Regeneration of  api key failed with error: %v\n", err)
+		t.Fatalf("Regeneration of api key failed with error: %v\n", err)
 	}
 	if key != "new-api-key" {
 		t.Fatalf("Expected new-api-key got %s", key)
