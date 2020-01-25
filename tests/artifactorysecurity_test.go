@@ -1,9 +1,15 @@
 package tests
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"testing"
 )
 
 // Teardown should revoke these tokens
@@ -19,6 +25,48 @@ func TestToken(t *testing.T) {
 	t.Run("RefreshToken", refreshTokenTest)
 	t.Run("GetTokens", getTokensTest)
 	teardown()
+}
+
+func TestAPIKey(t *testing.T) {
+	t.Run("Regenerate API Key", regenerateAPIKeyTest)
+}
+
+func regenerateAPIKeyTest(t *testing.T) {
+	securityAPIKeyPath := services.APIKeyPath
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			t.Fatalf("Expected PUT but got request with method: %s", r.Method)
+		}
+		if r.URL.Path != "/"+securityAPIKeyPath {
+			t.Fatalf("Expected request path to be %s, got %s\n", securityAPIKeyPath, r.URL.Path)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fmt.Sprintf(`{"apiKey": "new-api-key"}`)))
+	})
+	ts := httptest.NewTLSServer(handler)
+	defer ts.Close()
+
+	rtDetails := auth.NewArtifactoryDetails()
+	rtDetails.SetUrl(ts.URL + "/")
+	rtDetails.SetApiKey("fake-api-key")
+
+	client, err := httpclient.ArtifactoryClientBuilder().
+		SetInsecureTls(true).
+		SetArtDetails(&rtDetails).
+		Build()
+	if err != nil {
+		t.Fatalf("Failed to create Artifactory client: %v\n", err)
+	}
+
+	apiKeyService := services.NewSecurityService(client)
+	apiKeyService.ArtDetails = rtDetails
+	key, err := apiKeyService.RegenerateAPIKey()
+	if err != nil {
+		t.Fatalf("Regeneration of  api key failed with error: %v\n", err)
+	}
+	if key != "new-api-key" {
+		t.Fatalf("Expected new-api-key got %s", key)
+	}
 }
 
 func createTokenTest(t *testing.T) {

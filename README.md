@@ -307,6 +307,12 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     err := rtManager.RevokeToken(params)
 ```
 
+#### Regenerate API Key
+
+```
+    apiKey, err := rtManager.RegenerateAPIKey()
+```
+
 ## Bintray APIs
 ### Creating Bintray Details
  ```
