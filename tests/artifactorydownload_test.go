@@ -19,7 +19,7 @@ func TestArtifactoryDownload(t *testing.T) {
 	t.Run("placeholder", placeholderDownload)
 	t.Run("includeDirs", includeDirsDownload)
 	t.Run("excludePatterns", excludePatternsDownload)
-	t.Run("exclusionsDownload", exclusionsDownload)
+	t.Run("exclusions", exclusionsDownload)
 	t.Run("explodeArchive", explodeArchiveDownload)
 	artifactoryCleanup(t)
 }

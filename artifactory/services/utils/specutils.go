@@ -40,7 +40,7 @@ type FileGetter interface {
 	GetPattern() string
 	SetPattern(pattern string)
 	GetExclusions() []string
-	GetExcludePatterns() []string // Deprecated: Use Exclusions
+	GetExcludePatterns() []string // Deprecated, Use Exclusions instead
 	GetTarget() string
 	SetTarget(target string)
 	IsExplode() bool
