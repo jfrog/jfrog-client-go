@@ -34,7 +34,8 @@ func GetPaths(rootPath string, isRecursive, includeDirs, isSymlink bool) ([]stri
 func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
 	exclusions := params.GetExclusions()
 	if len(exclusions) == 0 {
-		exclusions = params.GetExcludePatterns() // Support legacy excluded patterns
+		// Support legacy exclude patterns. 'Exclude patterns' are deprecated and replaced by 'exclusions'.
+		exclusions = params.GetExcludePatterns()
 	}
 
 	excludePathPattern := ""

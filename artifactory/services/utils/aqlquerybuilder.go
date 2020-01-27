@@ -13,22 +13,22 @@ func createAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, e
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
 	repoPathFileTriples := createRepoPathFileTriples(searchPattern, params.Recursive)
 	includeRoot := strings.Count(searchPattern, "/") < 2
-	repoTripleSize := len(repoPathFileTriples)
+	triplesSize := len(repoPathFileTriples)
 
 	propsQueryPart, err := buildPropsQueryPart(params.Props, params.ExcludeProps)
 	if err != nil {
 		return "", err
 	}
 	itemTypeQuery := buildItemTypeQueryPart(params)
-	nePath := buildNePathPart(repoTripleSize == 0 || includeRoot)
-	excludeQuery := buildExcludeQueryPart(params, repoTripleSize == 0 || params.Recursive, params.Recursive)
+	nePath := buildNePathPart(triplesSize == 0 || includeRoot)
+	excludeQuery := buildExcludeQueryPart(params, triplesSize == 0 || params.Recursive, params.Recursive)
 
 	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery)
 
 	// Get archive search parameters
 	archivePathFilePairs := createArchiveSearchParams(params)
 
-	json += handleRepoPathFileTriples(repoPathFileTriples, archivePathFilePairs, repoTripleSize) + "]}"
+	json += handleRepoPathFileTriples(repoPathFileTriples, archivePathFilePairs, triplesSize) + "]}"
 	return json, nil
 }
 
@@ -205,6 +205,7 @@ func buildExcludeQueryPart(params *ArtifactoryCommonParams, useLocalPath, recurs
 			excludeTriples = append(excludeTriples, createRepoPathFileTriples(prepareSearchPattern(excludePattern, true), recursive)...)
 		}
 	} else {
+		// Support legacy exclude patterns. 'Exclude patterns' are deprecated and replaced by 'exclusions'.
 		for _, excludePattern := range params.GetExcludePatterns() {
 			excludeTriples = append(excludeTriples, createPathFilePairs("", prepareSearchPattern(excludePattern, false), recursive)...)
 		}

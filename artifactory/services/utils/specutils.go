@@ -19,7 +19,8 @@ type Aql struct {
 type ArtifactoryCommonParams struct {
 	Aql             Aql
 	Pattern         string
-	ExcludePatterns []string // Deprecated, use Exclusions instead
+	// Deprecated, use Exclusions instead
+	ExcludePatterns []string
 	Exclusions      []string
 	Target          string
 	Props           string
@@ -40,7 +41,8 @@ type FileGetter interface {
 	GetPattern() string
 	SetPattern(pattern string)
 	GetExclusions() []string
-	GetExcludePatterns() []string // Deprecated, Use Exclusions instead
+	// Deprecated, Use Exclusions instead
+	GetExcludePatterns() []string
 	GetTarget() string
 	SetTarget(target string)
 	IsExplode() bool
