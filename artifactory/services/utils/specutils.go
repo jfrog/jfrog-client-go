@@ -19,7 +19,9 @@ type Aql struct {
 type ArtifactoryCommonParams struct {
 	Aql             Aql
 	Pattern         string
+	// Deprecated, use Exclusions instead
 	ExcludePatterns []string
+	Exclusions      []string
 	Target          string
 	Props           string
 	ExcludeProps    string
@@ -38,6 +40,8 @@ type FileGetter interface {
 	GetAql() Aql
 	GetPattern() string
 	SetPattern(pattern string)
+	GetExclusions() []string
+	// Deprecated, Use Exclusions instead
 	GetExcludePatterns() []string
 	GetTarget() string
 	SetTarget(target string)
@@ -138,6 +142,10 @@ func (params *ArtifactoryCommonParams) GetLimit() int {
 
 func (params *ArtifactoryCommonParams) GetExcludePatterns() []string {
 	return params.ExcludePatterns
+}
+
+func (params *ArtifactoryCommonParams) GetExclusions() []string {
+	return params.Exclusions
 }
 
 func (aql *Aql) UnmarshalJSON(value []byte) error {
