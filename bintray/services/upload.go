@@ -77,15 +77,16 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 	size := len(artifacts)
 	var wg sync.WaitGroup
 
-	// Create an map where the key is a threadId so each entry is tied to a specific thread
-	// this avoids us needing to use a Mutex or sync.Map within the go routine.
-	uploadedArtifacts := make(map[int][]clientutils.Artifact, us.Threads)
+	// Create an map where the key is a thread ID,
+	// and tha value is the list of artifacts uploaded by this thread (goroutine).
+	uploadedArtifacts := sync.Map{}
 	matrixParams := getMatrixParams(uploadDetails)
 	for i := 0; i < us.Threads; i++ {
 		wg.Add(1)
 		// The threadId key MUST exist in the map first so that the map itself is not being mutated inside a go routine
 		uploadedArtifacts[i] = make([]clientutils.Artifact, 0)
 		go func(threadId int) {
+			artifactsLst := make([]clientutils.Artifact, 0)
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
 			for j := threadId; j < size; j += us.Threads {
 				if !us.DryRun {
@@ -99,9 +100,10 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 					}
 				} else {
 					log.Info("[Dry Run] Uploading artifact:", artifacts[j].LocalPath)
-					uploadedArtifacts[threadId] = append(uploadedArtifacts[threadId], artifacts[j])
+					artifactsLst = append(artifactsLst, artifacts[j])
 				}
 			}
+			uploadedArtifacts.Store(threadId, artifactsLst)
 			wg.Done()
 		}(i)
 	}
@@ -112,7 +114,8 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 		// since we are using a thread specific key in the uploadedArtifacts map to get around needing to use
 		// a Mutex or sync.Map when adding entries to the map.
 		for i := 0; i < us.Threads; i++ {
-			for _, artifact := range uploadedArtifacts[i] {
+			artifactsLst, _ := uploadedArtifacts.Load(i)
+			for _, artifact := range artifactsLst.([]clientutils.Artifact) {
 				if !us.DryRun {
 					listUrl := us.BintrayDetails.GetApiUrl() + path.Join(
 						"file_metadata",
@@ -143,9 +146,11 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 	}
 
 	totalUploaded = 0
-	for _, i := range uploadedArtifacts {
-		totalUploaded += len(i)
-	}
+	uploadedArtifacts.Range(func(key, value interface{}) bool {
+		totalUploaded += len(value.([]clientutils.Artifact))
+		return true
+	})
+
 	log.Debug("Uploaded", strconv.Itoa(totalUploaded), "artifacts.")
 	totalFailed = size - totalUploaded
 	if totalFailed > 0 {
