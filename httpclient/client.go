@@ -97,8 +97,8 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 func (jc *HttpClient) SendWithRetryOnTimeout(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	var req *http.Request
 	retryExecutor := utils.RetryExecutor{
-		MaxRetries:      2,
-		RetriesInterval: 10,
+		MaxRetries:      3,
+		RetriesInterval: 0,
 		ErrorMessage:    fmt.Sprintf("Got timeout when sending HTTP %s request to: %s", method, url),
 		ExecutionHandler: func() (bool, error) {
 			log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
