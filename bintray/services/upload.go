@@ -83,8 +83,6 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 	matrixParams := getMatrixParams(uploadDetails)
 	for i := 0; i < us.Threads; i++ {
 		wg.Add(1)
-		// The threadId key MUST exist in the map first so that the map itself is not being mutated inside a go routine
-		uploadedArtifacts[i] = make([]clientutils.Artifact, 0)
 		go func(threadId int) {
 			artifactsLst := make([]clientutils.Artifact, 0)
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
@@ -96,7 +94,7 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 						log.Error(logMsgPrefix, "Failed uploading artifact:", artifacts[j].LocalPath, ":", e)
 					}
 					if uploaded {
-						uploadedArtifacts[threadId] = append(uploadedArtifacts[threadId], artifacts[j])
+						artifactsLst = append(artifactsLst, artifacts[j])
 					}
 				} else {
 					log.Info("[Dry Run] Uploading artifact:", artifacts[j].LocalPath)
