@@ -77,7 +77,7 @@ func (us *UploadService) uploadFiles(uploadDetails *UploadParams, artifacts []cl
 	size := len(artifacts)
 	var wg sync.WaitGroup
 
-	// Create an map where the key is a thread ID,
+	// Create a map where the key is a thread ID,
 	// and tha value is the list of artifacts uploaded by this thread (goroutine).
 	uploadedArtifacts := sync.Map{}
 	matrixParams := getMatrixParams(uploadDetails)
