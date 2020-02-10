@@ -178,6 +178,42 @@ func parseBuildNameAndNumber(buildIdentifier string) (buildName string, buildNum
 	return buildName, buildNumber
 }
 
+func getBundleNameAndNumberFromBundleIdentifier(bundleIdentifier string) (string, string, error) {
+	const Delimiter = "/"
+	const EscapeChar = "\\"
+
+	if bundleIdentifier == "" {
+		return "", "", errorutils.CheckError(errors.New("bundle is empty"))
+	}
+	if !strings.Contains(bundleIdentifier, Delimiter) {
+		return "", "", errorutils.CheckError(errors.New("No '" + Delimiter + "' is found in the bundle"))
+	}
+
+	bundleName, bundleVersion := "", ""
+	bundleVersionsArray := []string{}
+	bundle := strings.Split(bundleIdentifier, Delimiter)
+	// The delimiter must not be prefixed with escapeChar (if it is, it should be part of the bundle version)
+	// the code below gets substring from before the last delimiter.
+	// If the new string ends with escape char it means the last delimiter was part of the bundle version and we need
+	// to go back to the previous delimiter.
+	// If no proper delimiter was found the full string will be the bundle name.
+	for i := len(bundle) - 1; i >= 1; i-- {
+		bundleVersionsArray = append([]string{bundle[i]}, bundleVersionsArray...)
+		if !strings.HasSuffix(bundle[i-1], EscapeChar) {
+			bundleName = strings.Join(bundle[:i], Delimiter)
+			bundleVersion = strings.Join(bundleVersionsArray, Delimiter)
+			break
+		}
+	}
+	if bundleName == "" {
+		return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in the bundle"))
+	}
+	// Remove escape chars
+	bundleName = strings.Replace(bundleName, "\\/", "/", -1)
+	bundleVersion = strings.Replace(bundleVersion, "\\/", "/", -1)
+	return bundleName, bundleVersion, nil
+}
+
 type build struct {
 	BuildName   string `json:"buildName"`
 	BuildNumber string `json:"buildNumber"`
@@ -264,12 +300,45 @@ func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, itemsToFil
 	return filterBuildAqlSearchResults(&itemsToFilter, &buildArtifactsSha1, buildName, buildNumber), err
 }
 
+func filterAqlSearchResultsByBundle(specFile *ArtifactoryCommonParams, itemsToFilter []ResultItem, flags CommonConf) ([]ResultItem, error) {
+	var bundleArtifactsSha1 map[string]bool
+	bundleName, bundleVersion, err := getBundleNameAndNumberFromBundleIdentifier(specFile.Bundle)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get Sha1 for artifacts by bundle name and number
+	bundleArtifactsSha1, aqlSearchErr := fetchBundleArtifactsSha1(bundleName, bundleVersion, flags)
+	if aqlSearchErr != nil {
+		return nil, aqlSearchErr
+	}
+
+	return filterBundleAqlSearchResults(&itemsToFilter, &bundleArtifactsSha1, bundleName, bundleVersion), err
+}
+
 // Run AQL to retrieve all artifacts associated with a specific build.
 // Return a map of the artifacts SHA1.
 func fetchBuildArtifactsSha1(buildName, buildNumber string, flags CommonConf) (map[string]bool, error) {
 	buildQuery := createAqlQueryForBuild(buildName, buildNumber, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}))
 
 	parsedBuildAqlResponse, err := aqlSearch(buildQuery, flags)
+	if err != nil {
+		return nil, err
+	}
+	buildArtifactsSha, err := extractSha1FromAqlResponse(parsedBuildAqlResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildArtifactsSha, nil
+}
+
+// Run AQL to retrieve all artifacts associated with a specific bundle.
+// Return a map of the artifacts SHA1.
+func fetchBundleArtifactsSha1(bundleName, bundleVersion string, flags CommonConf) (map[string]bool, error) {
+	bundleQuery := createAqlQueryForBundle(bundleName, bundleVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}))
+
+	parsedBuildAqlResponse, err := aqlSearch(bundleQuery, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -374,6 +443,16 @@ func filterBuildAqlSearchResults(itemsToFilter *[]ResultItem, buildArtifactsSha 
 		}
 	}
 
+	return filteredResults
+}
+
+func filterBundleAqlSearchResults(itemsToFilter *[]ResultItem, bundleArtifactsSha *map[string]bool, bundleName, bundleVersion string) []ResultItem {
+	filteredResults := []ResultItem{}
+	for _, item := range *itemsToFilter {
+		if _, ok := (*bundleArtifactsSha)[item.Actual_Sha1]; ok {
+			filteredResults = append(filteredResults, item)
+		}
+	}
 	return filteredResults
 }
 

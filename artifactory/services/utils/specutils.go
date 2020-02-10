@@ -8,6 +8,7 @@ const (
 	WILDCARD SpecType = "wildcard"
 	AQL      SpecType = "aql"
 	BUILD    SpecType = "build"
+	Bundle   SpecType = "bundle"
 )
 
 type SpecType string
@@ -30,6 +31,7 @@ type ArtifactoryCommonParams struct {
 	Offset          int
 	Limit           int
 	Build           string
+	Bundle          string
 	Recursive       bool
 	IncludeDirs     bool
 	Regexp          bool
@@ -52,6 +54,7 @@ type FileGetter interface {
 	GetOffset() int
 	GetLimit() int
 	GetBuild() string
+	GetBundle() string
 	GetSpecType() (specType SpecType)
 	IsRegexp() bool
 	IsRecursive() bool
@@ -112,6 +115,10 @@ func (params *ArtifactoryCommonParams) GetBuild() string {
 	return params.Build
 }
 
+func (params *ArtifactoryCommonParams) GetBundle() string {
+	return params.Bundle
+}
+
 func (params ArtifactoryCommonParams) IsIncludeDirs() bool {
 	return params.IncludeDirs
 }
@@ -161,6 +168,8 @@ func (params ArtifactoryCommonParams) GetSpecType() (specType SpecType) {
 	switch {
 	case params.Build != "" && params.Aql.ItemsFind == "" && (params.Pattern == "*" || params.Pattern == ""):
 		specType = BUILD
+	case params.Bundle != "" && params.Aql.ItemsFind == "" && (params.Pattern == "*" || params.Pattern == ""):
+		specType = Bundle
 	case params.Aql.ItemsFind != "":
 		specType = AQL
 	default:

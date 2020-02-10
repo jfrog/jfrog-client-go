@@ -54,6 +54,19 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	return filterBuildAqlSearchResults(&results, &buildArtifactsSha1, buildName, buildNumber), err
 }
 
+// Use this function when searching by bundle without pattern or aql.
+// This will prevent unnecessary search upon all Artifactory.
+func SearchBySpecWithBundle(specFile *ArtifactoryCommonParams, flags CommonConf) ([]ResultItem, error) {
+	bundleName, bundleVersion, err := getBundleNameAndNumberFromBundleIdentifier(specFile.Bundle)
+	if err != nil {
+		return nil, err
+	}
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBundle(bundleName, bundleVersion)}
+
+	executionQuery := buildQueryFromSpecFile(specFile, ALL)
+	return aqlSearch(executionQuery, flags)
+}
+
 // Perform search by pattern.
 func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
 	// Create AQL according to spec fields.
@@ -74,13 +87,23 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 		return nil, err
 	}
 
-	// Filter results by build.
-	if specFile.Build != "" && len(results) > 0 {
-		// If requiredArtifactProps is not NONE and 'includePropertiesInAqlForSpec' for specFile returned true, results contains properties for artifacts.
-		resultsArtifactsIncludeProperties := requiredArtifactProps != NONE && includePropertiesInAqlForSpec(specFile)
-		results, err = filterAqlSearchResultsByBuild(specFile, results, flags, resultsArtifactsIncludeProperties)
-		if err != nil {
-			return nil, err
+	if len(results) > 0 {
+		// Filter results by build.
+		if specFile.Build != "" {
+			// If requiredArtifactProps is not NONE and 'includePropertiesInAqlForSpec' for specFile returned true, results contains properties for artifacts.
+			resultsArtifactsIncludeProperties := requiredArtifactProps != NONE && includePropertiesInAqlForSpec(specFile)
+			results, err = filterAqlSearchResultsByBuild(specFile, results, flags, resultsArtifactsIncludeProperties)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Filter results by bundle.
+		if specFile.Bundle != "" {
+			results, err = filterAqlSearchResultsByBundle(specFile, results, flags)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

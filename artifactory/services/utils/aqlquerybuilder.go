@@ -92,6 +92,21 @@ func createAqlQueryForBuild(buildName, buildNumber, includeQueryPart string) str
 	return fmt.Sprintf(itemsPart, queryBody, includeQueryPart)
 }
 
+func createAqlBodyForBundle(buildName, bundleVersion string) string {
+	itemsPart :=
+		`{` +
+			`"release_artifact.release.name":"%s",` +
+			`"release_artifact.release.version":"%s"` +
+			`}`
+	return fmt.Sprintf(itemsPart, buildName, bundleVersion)
+}
+
+func createAqlQueryForBundle(bundleName, bundleVersion, includeQueryPart string) string {
+	queryBody := createAqlBodyForBundle(bundleName, bundleVersion)
+	itemsPart := `items.find(%s)%s`
+	return fmt.Sprintf(itemsPart, queryBody, includeQueryPart)
+}
+
 //noinspection GoUnusedExportedFunction
 func CreateAqlQueryForNpm(npmName, npmVersion string) string {
 	itemsPart :=
