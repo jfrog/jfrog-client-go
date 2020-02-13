@@ -1,21 +1,22 @@
 package services
 
 import (
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/jfrog/gofrog/parallel"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"net/url"
-	"strings"
 )
 
 type PropsService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	Threads    int
 }
 
@@ -23,11 +24,11 @@ func NewPropsService(client *rthttpclient.ArtifactoryHttpClient) *PropsService {
 	return &PropsService{client: client}
 }
 
-func (ps *PropsService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (ps *PropsService) GetArtifactoryDetails() auth.CommonDetails {
 	return ps.ArtDetails
 }
 
-func (ps *PropsService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (ps *PropsService) SetArtifactoryDetails(rt auth.CommonDetails) {
 	ps.ArtDetails = rt
 }
 

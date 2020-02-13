@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -14,7 +14,7 @@ import (
 
 type DeleteService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	DryRun     bool
 }
 
@@ -22,11 +22,11 @@ func NewDeleteService(client *rthttpclient.ArtifactoryHttpClient) *DeleteService
 	return &DeleteService{client: client}
 }
 
-func (ds *DeleteService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (ds *DeleteService) GetArtifactoryDetails() auth.CommonDetails {
 	return ds.ArtDetails
 }
 
-func (ds *DeleteService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (ds *DeleteService) SetArtifactoryDetails(rt auth.CommonDetails) {
 	ds.ArtDetails = rt
 }
 
@@ -104,15 +104,15 @@ func (ds *DeleteService) DeleteFiles(deleteItems []utils.ResultItem) (int, error
 }
 
 type DeleteConfiguration struct {
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	DryRun     bool
 }
 
-func (conf *DeleteConfiguration) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (conf *DeleteConfiguration) GetArtifactoryDetails() auth.CommonDetails {
 	return conf.ArtDetails
 }
 
-func (conf *DeleteConfiguration) SetArtifactoryDetails(art auth.ArtifactoryDetails) {
+func (conf *DeleteConfiguration) SetArtifactoryDetails(art auth.CommonDetails) {
 	conf.ArtDetails = art
 }
 

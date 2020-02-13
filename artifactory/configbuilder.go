@@ -1,7 +1,7 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 )
 
 func NewConfigBuilder() *artifactoryServicesConfigBuilder {
@@ -11,15 +11,15 @@ func NewConfigBuilder() *artifactoryServicesConfigBuilder {
 }
 
 type artifactoryServicesConfigBuilder struct {
-	auth.ArtifactoryDetails
+	auth.CommonDetails
 	certificatesPath string
 	threads          int
 	isDryRun         bool
 	insecureTls      bool
 }
 
-func (builder *artifactoryServicesConfigBuilder) SetArtDetails(artDetails auth.ArtifactoryDetails) *artifactoryServicesConfigBuilder {
-	builder.ArtifactoryDetails = artDetails
+func (builder *artifactoryServicesConfigBuilder) SetArtDetails(artDetails auth.CommonDetails) *artifactoryServicesConfigBuilder {
+	builder.CommonDetails = artDetails
 	return builder
 }
 
@@ -45,7 +45,7 @@ func (builder *artifactoryServicesConfigBuilder) SetInsecureTls(insecureTls bool
 
 func (builder *artifactoryServicesConfigBuilder) Build() (Config, error) {
 	c := &artifactoryServicesConfig{}
-	c.ArtifactoryDetails = builder.ArtifactoryDetails
+	c.CommonDetails = builder.CommonDetails
 	c.threads = builder.threads
 	c.certificatesPath = builder.certificatesPath
 	c.dryRun = builder.isDryRun

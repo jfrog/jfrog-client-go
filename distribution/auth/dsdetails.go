@@ -14,45 +14,45 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-func NewArtifactoryDetails() auth.CommonDetails {
-	return &artifactoryDetails{}
+func NewDistributionDetails() auth.CommonDetails {
+	return &distributionDetails{}
 }
 
 var expiryHandleMutex sync.Mutex
 
-type artifactoryDetails struct {
+type distributionDetails struct {
 	auth.CommonConfigFields
 }
 
-func (rt *artifactoryDetails) GetVersion() (string, error) {
+func (ds *distributionDetails) GetVersion() (string, error) {
 	var err error
-	if rt.Version == "" {
-		rt.Version, err = rt.getArtifactoryVersion()
+	if ds.Version == "" {
+		ds.Version, err = ds.getDistributionVersion()
 		if err != nil {
 			return "", err
 		}
-		log.Debug("The Artifactory version is:", rt.Version)
+		log.Debug("The Distribution version is:", ds.Version)
 	}
-	return rt.Version, nil
+	return ds.Version, nil
 }
 
-func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
+func (ds *distributionDetails) getDistributionVersion() (string, error) {
 	client, err := httpclient.ClientBuilder().
-		SetClientCertPath(rt.GetClientCertPath()).
-		SetClientCertKeyPath(rt.GetClientCertKeyPath()).
+		SetClientCertPath(ds.GetClientCertPath()).
+		SetClientCertKeyPath(ds.GetClientCertKeyPath()).
 		Build()
 	if err != nil {
 		return "", err
 	}
-	resp, body, _, err := client.SendGet(rt.GetUrl()+"api/system/version", true, rt.CreateHttpClientDetails())
+	resp, body, _, err := client.SendGet(ds.GetUrl()+"api/v1/system/info", true, ds.CreateHttpClientDetails())
 	if err != nil {
 		return "", err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return "", errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
-	var version artifactoryVersion
+	var version distributionVersion
 	err = json.Unmarshal(body, &version)
 	if err != nil {
 		return "", errorutils.CheckError(err)
@@ -60,6 +60,6 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	return strings.TrimSpace(version.Version), nil
 }
 
-type artifactoryVersion struct {
+type distributionVersion struct {
 	Version string `json:"version,omitempty"`
 }

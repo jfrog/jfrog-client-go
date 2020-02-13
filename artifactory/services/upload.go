@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/jfrog/gofrog/parallel"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -26,7 +26,7 @@ import (
 type UploadService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
 	Progress   ioutils.Progress
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	DryRun     bool
 	Threads    int
 }
@@ -43,7 +43,7 @@ func (us *UploadService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClien
 	return us.client
 }
 
-func (us *UploadService) SetArtDetails(artDetails auth.ArtifactoryDetails) {
+func (us *UploadService) SetArtDetails(artDetails auth.CommonDetails) {
 	us.ArtDetails = artDetails
 }
 

@@ -1,7 +1,7 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -9,13 +9,13 @@ type Config interface {
 	GetCertificatesPath() string
 	GetThreads() int
 	IsDryRun() bool
-	GetArtDetails() auth.ArtifactoryDetails
+	GetArtDetails() auth.CommonDetails
 	GetLogger() log.Log
 	IsInsecureTls() bool
 }
 
 type artifactoryServicesConfig struct {
-	auth.ArtifactoryDetails
+	auth.CommonDetails
 	certificatesPath string
 	dryRun           bool
 	threads          int
@@ -35,8 +35,8 @@ func (config *artifactoryServicesConfig) GetThreads() int {
 	return config.threads
 }
 
-func (config *artifactoryServicesConfig) GetArtDetails() auth.ArtifactoryDetails {
-	return config.ArtifactoryDetails
+func (config *artifactoryServicesConfig) GetArtDetails() auth.CommonDetails {
+	return config.CommonDetails
 }
 
 func (config *artifactoryServicesConfig) GetLogger() log.Log {

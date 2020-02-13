@@ -4,20 +4,22 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/httpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 var RtUrl *string
@@ -101,8 +103,8 @@ func failOnHttpClientCreation(err error) {
 	}
 }
 
-func getArtDetails() auth.ArtifactoryDetails {
-	rtDetails := auth.NewArtifactoryDetails()
+func getArtDetails() auth.CommonDetails {
+	rtDetails := artifactoryAuth.NewArtifactoryDetails()
 	rtDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*RtUrl))
 	if !fileutils.IsSshUrl(rtDetails.GetUrl()) {
 		if *RtApiKey != "" {

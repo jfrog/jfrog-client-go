@@ -2,7 +2,7 @@ package httpclient
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
@@ -13,7 +13,7 @@ import (
 
 type ArtifactoryHttpClient struct {
 	httpClient *httpclient.HttpClient
-	ArtDetails *auth.ArtifactoryDetails
+	ArtDetails *auth.CommonDetails
 }
 
 func (rtc *ArtifactoryHttpClient) SendGet(url string, followRedirect bool, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {

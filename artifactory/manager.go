@@ -1,7 +1,7 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -17,11 +17,11 @@ type ArtifactoryServicesManager struct {
 	progress ioutils.Progress
 }
 
-func New(artDetails *auth.ArtifactoryDetails, config Config) (*ArtifactoryServicesManager, error) {
+func New(artDetails *auth.CommonDetails, config Config) (*ArtifactoryServicesManager, error) {
 	return NewWithProgress(artDetails, config, nil)
 }
 
-func NewWithProgress(artDetails *auth.ArtifactoryDetails, config Config, progress ioutils.Progress) (*ArtifactoryServicesManager, error) {
+func NewWithProgress(artDetails *auth.CommonDetails, config Config, progress ioutils.Progress) (*ArtifactoryServicesManager, error) {
 	var err error
 	manager := &ArtifactoryServicesManager{config: config, progress: progress}
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
