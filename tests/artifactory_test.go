@@ -5,7 +5,7 @@ import (
 )
 
 func TestGetArtifactoryVersion(t *testing.T) {
-	version, err := getArtDetails().GetVersion()
+	version, err := GetCommonDetails().GetVersion()
 	if err != nil {
 		t.Error(err)
 	}

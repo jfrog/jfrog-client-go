@@ -1,4 +1,4 @@
-package artifactory
+package config
 
 import (
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -9,12 +9,12 @@ type Config interface {
 	GetCertificatesPath() string
 	GetThreads() int
 	IsDryRun() bool
-	GetArtDetails() auth.CommonDetails
+	GetCommonDetails() auth.CommonDetails
 	GetLogger() log.Log
 	IsInsecureTls() bool
 }
 
-type artifactoryServicesConfig struct {
+type servicesConfig struct {
 	auth.CommonDetails
 	certificatesPath string
 	dryRun           bool
@@ -23,26 +23,26 @@ type artifactoryServicesConfig struct {
 	insecureTls      bool
 }
 
-func (config *artifactoryServicesConfig) IsDryRun() bool {
+func (config *servicesConfig) IsDryRun() bool {
 	return config.dryRun
 }
 
-func (config *artifactoryServicesConfig) GetCertificatesPath() string {
+func (config *servicesConfig) GetCertificatesPath() string {
 	return config.certificatesPath
 }
 
-func (config *artifactoryServicesConfig) GetThreads() int {
+func (config *servicesConfig) GetThreads() int {
 	return config.threads
 }
 
-func (config *artifactoryServicesConfig) GetArtDetails() auth.CommonDetails {
+func (config *servicesConfig) GetCommonDetails() auth.CommonDetails {
 	return config.CommonDetails
 }
 
-func (config *artifactoryServicesConfig) GetLogger() log.Log {
+func (config *servicesConfig) GetLogger() log.Log {
 	return config.logger
 }
 
-func (config *artifactoryServicesConfig) IsInsecureTls() bool {
+func (config *servicesConfig) IsInsecureTls() bool {
 	return config.insecureTls
 }

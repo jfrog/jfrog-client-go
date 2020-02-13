@@ -402,5 +402,5 @@ func (flags *CommonConfImpl) IsDryRun() bool {
 }
 
 func (flags *CommonConfImpl) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
-	return rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&flags.artDetails).Build()
+	return rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&flags.artDetails).Build()
 }

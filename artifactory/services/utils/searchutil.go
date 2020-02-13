@@ -34,7 +34,7 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	}
 	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuild(buildName, buildNumber)}
 
-	executionQuery := buildQueryFromSpecFile(specFile, ALL)
+	executionQuery := BuildQueryFromSpecFile(specFile, ALL)
 	results, err := aqlSearch(executionQuery, flags)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 // Perform search by pattern.
 func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
 	// Create AQL according to spec fields.
-	query, err := createAqlBodyForSpecWithPattern(specFile)
+	query, err := CreateAqlBodyForSpecWithPattern(specFile)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf
 // Use this function when running Aql with pattern
 func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
 	// Execute the search according to provided aql in specFile.
-	query := buildQueryFromSpecFile(specFile, requiredArtifactProps)
+	query := BuildQueryFromSpecFile(specFile, requiredArtifactProps)
 	results, err := aqlSearch(query, flags)
 	if err != nil {
 		return nil, err
