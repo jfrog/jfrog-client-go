@@ -92,13 +92,13 @@ func createAqlQueryForBuild(buildName, buildNumber, includeQueryPart string) str
 	return fmt.Sprintf(itemsPart, queryBody, includeQueryPart)
 }
 
-func createAqlBodyForBundle(buildName, bundleVersion string) string {
+func createAqlBodyForBundle(bundleName, bundleVersion string) string {
 	itemsPart :=
 		`{` +
 			`"release_artifact.release.name":"%s",` +
 			`"release_artifact.release.version":"%s"` +
 			`}`
-	return fmt.Sprintf(itemsPart, buildName, bundleVersion)
+	return fmt.Sprintf(itemsPart, bundleName, bundleVersion)
 }
 
 func createAqlQueryForBundle(bundleName, bundleVersion, includeQueryPart string) string {

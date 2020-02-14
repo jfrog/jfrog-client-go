@@ -57,7 +57,7 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 // Use this function when searching by bundle without pattern or aql.
 // This will prevent unnecessary search upon all Artifactory.
 func SearchBySpecWithBundle(specFile *ArtifactoryCommonParams, flags CommonConf) ([]ResultItem, error) {
-	bundleName, bundleVersion, err := getBundleNameAndNumberFromBundleIdentifier(specFile.Bundle)
+	bundleName, bundleVersion, err := parseNameAndVersion(specFile.Bundle, false)
 	if err != nil {
 		return nil, err
 	}
