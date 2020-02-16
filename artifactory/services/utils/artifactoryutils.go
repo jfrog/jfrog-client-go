@@ -392,16 +392,6 @@ func filterBuildAqlSearchResults(itemsToFilter *[]ResultItem, buildArtifactsSha 
 	return filteredResults
 }
 
-func filterBundleAqlSearchResults(itemsToFilter *[]ResultItem, bundleArtifactsSha *map[string]bool, bundleName, bundleVersion string) []ResultItem {
-	filteredResults := []ResultItem{}
-	for _, item := range *itemsToFilter {
-		if _, ok := (*bundleArtifactsSha)[item.Actual_Sha1]; ok {
-			filteredResults = append(filteredResults, item)
-		}
-	}
-	return filteredResults
-}
-
 type CommonConf interface {
 	GetArtifactoryDetails() auth.ArtifactoryDetails
 	SetArtifactoryDetails(rt auth.ArtifactoryDetails)

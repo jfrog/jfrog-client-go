@@ -75,15 +75,13 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 		return nil, err
 	}
 
-	if len(results) > 0 {
-		// Filter results by build.
-		if specFile.Build != "" {
-			// If requiredArtifactProps is not NONE and 'includePropertiesInAqlForSpec' for specFile returned true, results contains properties for artifacts.
-			resultsArtifactsIncludeProperties := requiredArtifactProps != NONE && includePropertiesInAqlForSpec(specFile)
-			results, err = filterAqlSearchResultsByBuild(specFile, results, flags, resultsArtifactsIncludeProperties)
-			if err != nil {
-				return nil, err
-			}
+	// Filter results by build.
+	if specFile.Build != "" && len(results) > 0 {
+		// If requiredArtifactProps is not NONE and 'includePropertiesInAqlForSpec' for specFile returned true, results contains properties for artifacts.
+		resultsArtifactsIncludeProperties := requiredArtifactProps != NONE && includePropertiesInAqlForSpec(specFile)
+		results, err = filterAqlSearchResultsByBuild(specFile, results, flags, resultsArtifactsIncludeProperties)
+		if err != nil {
+			return nil, err
 		}
 	}
 
