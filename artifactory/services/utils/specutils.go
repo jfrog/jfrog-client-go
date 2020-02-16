@@ -8,7 +8,6 @@ const (
 	WILDCARD SpecType = "wildcard"
 	AQL      SpecType = "aql"
 	BUILD    SpecType = "build"
-	Bundle   SpecType = "bundle"
 )
 
 type SpecType string
@@ -168,8 +167,6 @@ func (params ArtifactoryCommonParams) GetSpecType() (specType SpecType) {
 	switch {
 	case params.Build != "" && params.Aql.ItemsFind == "" && (params.Pattern == "*" || params.Pattern == ""):
 		specType = BUILD
-	case params.Bundle != "" && params.Aql.ItemsFind == "" && (params.Pattern == "*" || params.Pattern == ""):
-		specType = Bundle
 	case params.Aql.ItemsFind != "":
 		specType = AQL
 	default:

@@ -279,45 +279,12 @@ func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, itemsToFil
 	return filterBuildAqlSearchResults(&itemsToFilter, &buildArtifactsSha1, buildName, buildNumber), err
 }
 
-func filterAqlSearchResultsByBundle(specFile *ArtifactoryCommonParams, itemsToFilter []ResultItem, flags CommonConf) ([]ResultItem, error) {
-	var bundleArtifactsSha1 map[string]bool
-	bundleName, bundleVersion, err := parseNameAndVersion(specFile.Bundle, false)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get Sha1 for artifacts by bundle name and number
-	bundleArtifactsSha1, aqlSearchErr := fetchBundleArtifactsSha1(bundleName, bundleVersion, flags)
-	if aqlSearchErr != nil {
-		return nil, aqlSearchErr
-	}
-
-	return filterBundleAqlSearchResults(&itemsToFilter, &bundleArtifactsSha1, bundleName, bundleVersion), err
-}
-
 // Run AQL to retrieve all artifacts associated with a specific build.
 // Return a map of the artifacts SHA1.
 func fetchBuildArtifactsSha1(buildName, buildNumber string, flags CommonConf) (map[string]bool, error) {
 	buildQuery := createAqlQueryForBuild(buildName, buildNumber, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}))
 
 	parsedBuildAqlResponse, err := aqlSearch(buildQuery, flags)
-	if err != nil {
-		return nil, err
-	}
-	buildArtifactsSha, err := extractSha1FromAqlResponse(parsedBuildAqlResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return buildArtifactsSha, nil
-}
-
-// Run AQL to retrieve all artifacts associated with a specific bundle.
-// Return a map of the artifacts SHA1.
-func fetchBundleArtifactsSha1(bundleName, bundleVersion string, flags CommonConf) (map[string]bool, error) {
-	bundleQuery := createAqlQueryForBundle(bundleName, bundleVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}))
-
-	parsedBuildAqlResponse, err := aqlSearch(bundleQuery, flags)
 	if err != nil {
 		return nil, err
 	}

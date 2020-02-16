@@ -98,8 +98,6 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, buildDependenc
 				resultItems, err = ds.collectFilesUsingWildcardPattern(downloadParams)
 			case utils.BUILD:
 				resultItems, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
-			case utils.Bundle:
-				resultItems, err = utils.SearchBySpecWithBundle(downloadParams.GetFile(), ds)
 			case utils.AQL:
 				resultItems, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
 			}
