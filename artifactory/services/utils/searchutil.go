@@ -61,7 +61,6 @@ func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf
 	if err != nil {
 		return nil, err
 	}
-	log.Output(query)
 	specFile.Aql = Aql{ItemsFind: query}
 	return SearchBySpecWithAql(specFile, flags, requiredArtifactProps)
 }
