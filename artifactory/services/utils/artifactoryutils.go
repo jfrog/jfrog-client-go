@@ -143,10 +143,8 @@ func getBuildNameAndNumberFromProps(properties []Property) (buildName string, bu
 	return
 }
 
-/*
-*  For builds (useLatestPolicy = true) - Parse build name and number. The build number can be LATEST if absent.
-*  For release bundles - Parse bundle name and version.
- */
+// For builds (useLatestPolicy = true) - Parse build name and number. The build number can be LATEST if absent.
+// For release bundles - Parse bundle name and version.
 func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, string, error) {
 	const Delimiter = "/"
 	const EscapeChar = "\\"
