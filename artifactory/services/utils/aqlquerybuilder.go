@@ -22,8 +22,12 @@ func createAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, e
 	itemTypeQuery := buildItemTypeQueryPart(params)
 	nePath := buildNePathPart(triplesSize == 0 || includeRoot)
 	excludeQuery := buildExcludeQueryPart(params, triplesSize == 0 || params.Recursive, params.Recursive)
+	releaseBundle, err := buildReleaseBundleQuery(params)
+	if err != nil {
+		return "", err
+	}
 
-	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery)
+	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+releaseBundle)
 
 	// Get archive search parameters
 	archivePathFilePairs := createArchiveSearchParams(params)
@@ -223,6 +227,19 @@ func buildExcludeQueryPart(params *ArtifactoryCommonParams, useLocalPath, recurs
 		excludeQuery += fmt.Sprintf(`"$or":[{%s"path":{"$nmatch":"%s"},"name":{"$nmatch":"%s"}}],`, excludeRepoStr, excludePath, excludeTriple.file)
 	}
 	return excludeQuery
+}
+
+func buildReleaseBundleQuery(params *ArtifactoryCommonParams) (string, error) {
+	bundleName, bundleVersion, err := parseNameAndVersion(params.Bundle, false)
+	if bundleName == "" || err != nil {
+		return "", err
+	}
+	itemsPart := `"$and":` +
+		`[{` +
+		`"release_artifact.release.name":%s,` +
+		`"release_artifact.release.version":%s` +
+		`}],`
+	return fmt.Sprintf(itemsPart, getAqlValue(bundleName), getAqlValue(bundleVersion)), nil
 }
 
 // Creates a list of basic required return fields. The list will include the sortBy field if needed.
