@@ -115,7 +115,10 @@ func IsSubPath(paths []string, index int, separator string) bool {
 // If buildName or buildNumber contains "/" (slash) it should be escaped by "\" (backslash).
 // Result examples of parsing: "aaa/123" > "aaa"-"123", "aaa" > "aaa"-"LATEST", "aaa\\/aaa" > "aaa/aaa"-"LATEST",  "aaa/12\\/3" > "aaa"-"12/3".
 func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier string, flags CommonConf) (string, string, error) {
-	buildName, buildNumber := parseBuildNameAndNumber(buildIdentifier)
+	buildName, buildNumber, err := parseNameAndVersion(buildIdentifier, true)
+	if err != nil {
+		return "", "", err
+	}
 	return GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, flags)
 }
 
@@ -140,42 +143,52 @@ func getBuildNameAndNumberFromProps(properties []Property) (buildName string, bu
 	return
 }
 
-func parseBuildNameAndNumber(buildIdentifier string) (buildName string, buildNumber string) {
+// For builds (useLatestPolicy = true) - Parse build name and number. The build number can be LATEST if absent.
+// For release bundles - Parse bundle name and version.
+func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, string, error) {
 	const Delimiter = "/"
 	const EscapeChar = "\\"
-	const Latest = "LATEST"
 
-	if buildIdentifier == "" {
-		return
+	if identifier == "" {
+		return "", "", nil
 	}
-	if !strings.Contains(buildIdentifier, Delimiter) {
-		log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + Latest)
-		return buildIdentifier, Latest
+	if !strings.Contains(identifier, Delimiter) {
+		if useLatestPolicy {
+			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + Latest)
+			return identifier, Latest, nil
+		} else {
+			return "", "", errorutils.CheckError(errors.New("No '" + Delimiter + "' is found in the bundle"))
+		}
 	}
-	buildNumberArray := []string{}
-	buildAsArray := strings.Split(buildIdentifier, Delimiter)
-	// The delimiter must not be prefixed with escapeChar (if it is, it should be part of the build number)
+	name, version := "", ""
+	versionsArray := []string{}
+	identifiers := strings.Split(identifier, Delimiter)
+	// The delimiter must not be prefixed with escapeChar (if it is, it should be part of the version)
 	// the code below gets substring from before the last delimiter.
-	// If the new string ends with escape char it means the last delimiter was part of the build number and we need
+	// If the new string ends with escape char it means the last delimiter was part of the version and we need
 	// to go back to the previous delimiter.
-	// If no proper delimiter was found the full string will be the build name.
-	for i := len(buildAsArray) - 1; i >= 1; i-- {
-		buildNumberArray = append([]string{buildAsArray[i]}, buildNumberArray...)
-		if !strings.HasSuffix(buildAsArray[i-1], EscapeChar) {
-			buildName = strings.Join(buildAsArray[:i], Delimiter)
-			buildNumber = strings.Join(buildNumberArray, Delimiter)
+	// If no proper delimiter was found the full string will be the name.
+	for i := len(identifiers) - 1; i >= 1; i-- {
+		versionsArray = append([]string{identifiers[i]}, versionsArray...)
+		if !strings.HasSuffix(identifiers[i-1], EscapeChar) {
+			name = strings.Join(identifiers[:i], Delimiter)
+			version = strings.Join(versionsArray, Delimiter)
 			break
 		}
 	}
-	if buildName == "" {
-		log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + Latest)
-		buildName = buildIdentifier
-		buildNumber = Latest
+	if name == "" {
+		if useLatestPolicy {
+			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + Latest)
+			name = identifier
+			version = Latest
+		} else {
+			return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in the bundle"))
+		}
 	}
 	// Remove escape chars
-	buildName = strings.Replace(buildName, "\\/", "/", -1)
-	buildNumber = strings.Replace(buildNumber, "\\/", "/", -1)
-	return buildName, buildNumber
+	name = strings.Replace(name, "\\/", "/", -1)
+	version = strings.Replace(version, "\\/", "/", -1)
+	return name, version, nil
 }
 
 type build struct {
