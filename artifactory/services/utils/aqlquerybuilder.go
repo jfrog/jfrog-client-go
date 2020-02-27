@@ -11,24 +11,28 @@ import (
 // Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
 func createAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, error) {
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
-	pathFilePairs := createRepoPathFileTriples(searchPattern, params.Recursive)
+	repoPathFileTriples := createRepoPathFileTriples(searchPattern, params.Recursive)
 	includeRoot := strings.Count(searchPattern, "/") < 2
-	pathPairsSize := len(pathFilePairs)
+	triplesSize := len(repoPathFileTriples)
 
 	propsQueryPart, err := buildPropsQueryPart(params.Props, params.ExcludeProps)
 	if err != nil {
 		return "", err
 	}
 	itemTypeQuery := buildItemTypeQueryPart(params)
-	nePath := buildNePathPart(pathPairsSize == 0 || includeRoot)
-	excludeQuery := buildExcludeQueryPart(params.ExcludePatterns, pathPairsSize == 0 || params.Recursive, params.Recursive)
+	nePath := buildNePathPart(triplesSize == 0 || includeRoot)
+	excludeQuery := buildExcludeQueryPart(params, triplesSize == 0 || params.Recursive, params.Recursive)
+	releaseBundle, err := buildReleaseBundleQuery(params)
+	if err != nil {
+		return "", err
+	}
 
-	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery)
+	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+releaseBundle)
 
 	// Get archive search parameters
 	archivePathFilePairs := createArchiveSearchParams(params)
 
-	json += handleRepoPathFileTriples(pathFilePairs, archivePathFilePairs, pathPairsSize) + "]}"
+	json += handleRepoPathFileTriples(repoPathFileTriples, archivePathFilePairs, triplesSize) + "]}"
 	return json, nil
 }
 
@@ -197,24 +201,45 @@ func buildInnerArchiveQueryPart(triple RepoPathFile, archivePath, archiveName st
 	return fmt.Sprintf(innerQueryPattern, getAqlValue(triple.repo), getAqlValue(triple.path), getAqlValue(triple.file), getAqlValue(archivePath), getAqlValue(archiveName))
 }
 
-func buildExcludeQueryPart(excludePatterns []string, useLocalPath, recursive bool) string {
-	if excludePatterns == nil {
-		return ""
-	}
+func buildExcludeQueryPart(params *ArtifactoryCommonParams, useLocalPath, recursive bool) string {
 	excludeQuery := ""
-	var excludePairs []RepoPathFile
-	for _, excludePattern := range excludePatterns {
-		excludePairs = append(excludePairs, createPathFilePairs("", prepareSearchPattern(excludePattern, false), recursive)...)
+	var excludeTriples []RepoPathFile
+	if len(params.GetExclusions()) > 0 {
+		for _, excludePattern := range params.GetExclusions() {
+			excludeTriples = append(excludeTriples, createRepoPathFileTriples(prepareSearchPattern(excludePattern, true), recursive)...)
+		}
+	} else {
+		// Support legacy exclude patterns. 'Exclude patterns' are deprecated and replaced by 'exclusions'.
+		for _, excludePattern := range params.GetExcludePatterns() {
+			excludeTriples = append(excludeTriples, createPathFilePairs("", prepareSearchPattern(excludePattern, false), recursive)...)
+		}
 	}
 
-	for _, excludePair := range excludePairs {
-		excludePath := excludePair.path
+	for _, excludeTriple := range excludeTriples {
+		excludePath := excludeTriple.path
 		if !useLocalPath && excludePath == "." {
 			excludePath = "*"
 		}
-		excludeQuery += fmt.Sprintf(`"$or":[{"path":{"$nmatch": "%s"},"name":{"$nmatch":"%s"}}],`, excludePath, excludePair.file)
+		excludeRepoStr := ""
+		if excludeTriple.repo != "" {
+			excludeRepoStr = fmt.Sprintf(`"repo":{"$nmatch":"%s"},`, excludeTriple.repo)
+		}
+		excludeQuery += fmt.Sprintf(`"$or":[{%s"path":{"$nmatch":"%s"},"name":{"$nmatch":"%s"}}],`, excludeRepoStr, excludePath, excludeTriple.file)
 	}
 	return excludeQuery
+}
+
+func buildReleaseBundleQuery(params *ArtifactoryCommonParams) (string, error) {
+	bundleName, bundleVersion, err := parseNameAndVersion(params.Bundle, false)
+	if bundleName == "" || err != nil {
+		return "", err
+	}
+	itemsPart := `"$and":` +
+		`[{` +
+		`"release_artifact.release.name":%s,` +
+		`"release_artifact.release.version":%s` +
+		`}],`
+	return fmt.Sprintf(itemsPart, getAqlValue(bundleName), getAqlValue(bundleVersion)), nil
 }
 
 // Creates a list of basic required return fields. The list will include the sortBy field if needed.

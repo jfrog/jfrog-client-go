@@ -19,7 +19,9 @@ type Aql struct {
 type ArtifactoryCommonParams struct {
 	Aql             Aql
 	Pattern         string
+	// Deprecated, use Exclusions instead
 	ExcludePatterns []string
+	Exclusions      []string
 	Target          string
 	Props           string
 	ExcludeProps    string
@@ -28,6 +30,7 @@ type ArtifactoryCommonParams struct {
 	Offset          int
 	Limit           int
 	Build           string
+	Bundle          string
 	Recursive       bool
 	IncludeDirs     bool
 	Regexp          bool
@@ -38,6 +41,8 @@ type FileGetter interface {
 	GetAql() Aql
 	GetPattern() string
 	SetPattern(pattern string)
+	GetExclusions() []string
+	// Deprecated, Use Exclusions instead
 	GetExcludePatterns() []string
 	GetTarget() string
 	SetTarget(target string)
@@ -48,6 +53,7 @@ type FileGetter interface {
 	GetOffset() int
 	GetLimit() int
 	GetBuild() string
+	GetBundle() string
 	GetSpecType() (specType SpecType)
 	IsRegexp() bool
 	IsRecursive() bool
@@ -108,6 +114,10 @@ func (params *ArtifactoryCommonParams) GetBuild() string {
 	return params.Build
 }
 
+func (params *ArtifactoryCommonParams) GetBundle() string {
+	return params.Bundle
+}
+
 func (params ArtifactoryCommonParams) IsIncludeDirs() bool {
 	return params.IncludeDirs
 }
@@ -138,6 +148,10 @@ func (params *ArtifactoryCommonParams) GetLimit() int {
 
 func (params *ArtifactoryCommonParams) GetExcludePatterns() []string {
 	return params.ExcludePatterns
+}
+
+func (params *ArtifactoryCommonParams) GetExclusions() []string {
+	return params.Exclusions
 }
 
 func (aql *Aql) UnmarshalJSON(value []byte) error {
