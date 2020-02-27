@@ -13,31 +13,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-type ReleaseBundle struct {
-	Name              string       `json:"name"`
-	Version           string       `json:"version"`
-	DryRun            bool         `json:"dry_run,omitempty"`
-	SignImmediately   bool         `json:"sign_immediately,omitempty"`
-	StoringRepository string       `json:"storing_repository,omitempty"`
-	Description       string       `json:"description"`
-	ReleaseNotes      ReleaseNotes `json:"release_notes,omitempty"`
-	BundleSpec        BundleSpec   `json:"spec"`
-}
-
-type ReleaseNotes struct {
-	Syntax  ReleaseNotesSyntax `json:"syntax,omitempty"`
-	Content string             `json:"content"`
-}
-
-type BundleSpec struct {
-	Queries []BundleQuery `json:"queries"`
-}
-
-type BundleQuery struct {
-	QueryName string `json:"query_name,omitempty"`
-	Aql       string `json:"aql"`
-}
-
 type ReleaseNotesSyntax string
 
 const (
@@ -47,16 +22,9 @@ const (
 )
 
 type CreateBundleService struct {
-	client             *rthttpclient.ArtifactoryHttpClient
-	DistDetails        auth.CommonDetails
-	DryRun             bool
-	Name               string
-	Version            string
-	SignImmediately    bool
-	StoringRepository  string
-	Description        string
-	ReleaseNotesPath   string
-	ReleaseNotesSyntax ReleaseNotesSyntax
+	client      *rthttpclient.ArtifactoryHttpClient
+	DistDetails auth.CommonDetails
+	DryRun      bool
 }
 
 func NewCreateBundleService(client *rthttpclient.ArtifactoryHttpClient) *CreateBundleService {
@@ -69,6 +37,7 @@ func (ps *CreateBundleService) GetDistDetails() auth.CommonDetails {
 
 func (cbs *CreateBundleService) CreateReleaseBundle(createBundleParams CreateBundleParams) error {
 	var bundleQueries []BundleQuery
+	// Create release bundle queries
 	for _, specFile := range createBundleParams.SpecFiles {
 		if specFile.GetSpecType() != artifactoryUtils.AQL {
 			query, err := artifactoryUtils.CreateAqlBodyForSpecWithPattern(specFile)
@@ -80,32 +49,39 @@ func (cbs *CreateBundleService) CreateReleaseBundle(createBundleParams CreateBun
 			bundleQueries = append(bundleQueries, BundleQuery{Aql: aql})
 		}
 	}
-	releaseBundle := ReleaseBundle{
-		Name:              cbs.Name,
-		Version:           cbs.Version,
+
+	// Create release bundle struct
+	releaseBundle := ReleaseBundleBody{
+		Name:              createBundleParams.Name,
+		Version:           createBundleParams.Version,
 		DryRun:            cbs.DryRun,
-		SignImmediately:   cbs.SignImmediately,
-		StoringRepository: cbs.StoringRepository,
-		Description:       cbs.Description,
-		ReleaseNotes: ReleaseNotes{
-			Syntax: cbs.ReleaseNotesSyntax,
-			// Content: cbs.ReleaseNotesPath, // TODO
-		},
+		SignImmediately:   createBundleParams.SignImmediately,
+		StoringRepository: createBundleParams.StoringRepository,
+		Description:       createBundleParams.Description,
 		BundleSpec: BundleSpec{
 			Queries: bundleQueries,
 		},
 	}
 
+	// Add relese notes if needed
+	if createBundleParams.ReleaseNotes != "" {
+		releaseBundle.ReleaseNotes = &ReleaseNotes{
+			Syntax:  createBundleParams.ReleaseNotesSyntax,
+			Content: createBundleParams.ReleaseNotes,
+		}
+	}
+
 	return cbs.execCreateReleaseBundle(releaseBundle)
 }
 
-func (cbs *CreateBundleService) execCreateReleaseBundle(releaseBundle ReleaseBundle) error {
+func (cbs *CreateBundleService) execCreateReleaseBundle(releaseBundle ReleaseBundleBody) error {
 	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
 	url := cbs.DistDetails.GetUrl() + "api/v1/release_bundle"
+	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := cbs.client.SendPost(url, content, &httpClientsDetails)
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
@@ -115,6 +91,31 @@ func (cbs *CreateBundleService) execCreateReleaseBundle(releaseBundle ReleaseBun
 	return errorutils.CheckError(err)
 }
 
+type ReleaseBundleBody struct {
+	Name              string        `json:"name"`
+	Version           string        `json:"version"`
+	DryRun            bool          `json:"dry_run"`
+	SignImmediately   bool          `json:"sign_immediately,omitempty"`
+	StoringRepository string        `json:"storing_repository,omitempty"`
+	Description       string        `json:"description,omitempty"`
+	ReleaseNotes      *ReleaseNotes `json:"release_notes,omitempty"`
+	BundleSpec        BundleSpec    `json:"spec"`
+}
+
+type ReleaseNotes struct {
+	Syntax  ReleaseNotesSyntax `json:"syntax,omitempty"`
+	Content string             `json:"content,omitempty"`
+}
+
+type BundleSpec struct {
+	Queries []BundleQuery `json:"queries"`
+}
+
+type BundleQuery struct {
+	QueryName string `json:"query_name,omitempty"`
+	Aql       string `json:"aql"`
+}
+
 type CreateBundleParams struct {
 	SpecFiles          []*artifactoryUtils.ArtifactoryCommonParams
 	Name               string
@@ -122,7 +123,7 @@ type CreateBundleParams struct {
 	SignImmediately    bool
 	StoringRepository  string
 	Description        string
-	ReleaseNotesPath   string
+	ReleaseNotes       string
 	ReleaseNotesSyntax ReleaseNotesSyntax
 }
 
