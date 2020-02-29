@@ -30,11 +30,11 @@ func (ds *DistributionService) GetDistDetails() auth.CommonDetails {
 
 func (ds *DistributionService) Distribute(distributeParams DistributionParams) error {
 	var distributionRules []DistributionRules
-	for _, rule := range distributeParams.DistributionRules {
+	for _, spec := range distributeParams.DistributionSpecs {
 		distributionRule := DistributionRules{
-			SiteName:     rule.GetSiteName(),
-			CityName:     rule.GetCityName(),
-			CountryCodes: rule.GetCountryCodes(),
+			SiteName:     spec.GetSiteName(),
+			CityName:     spec.GetCityName(),
+			CountryCodes: spec.GetCountryCodes(),
 		}
 		distributionRules = append(distributionRules, distributionRule)
 	}
@@ -52,14 +52,18 @@ func (cbs *DistributionService) execDistribute(name, version string, distributio
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	url := cbs.DistDetails.GetUrl() + "api/v1/release_bundle"
+	url := cbs.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := cbs.client.SendPost(url, content, &httpClientsDetails)
-	if resp.StatusCode != http.StatusOK {
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusAccepted {
 		return errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 
 	log.Debug("Artifactory response: ", resp.Status)
+	log.Output(utils.IndentJson(body))
 	return errorutils.CheckError(err)
 }
 
@@ -75,9 +79,9 @@ type DistributionRules struct {
 }
 
 type DistributionParams struct {
+	DistributionSpecs []*distributionUtils.DistributionCommonParams
 	Name              string
 	Version           string
-	DistributionRules []*distributionUtils.DistributionRules
 }
 
 func NewDistributeParams(name, version string) DistributionParams {

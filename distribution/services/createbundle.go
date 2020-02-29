@@ -83,11 +83,15 @@ func (cbs *CreateBundleService) execCreateReleaseBundle(releaseBundle ReleaseBun
 	url := cbs.DistDetails.GetUrl() + "api/v1/release_bundle"
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := cbs.client.SendPost(url, content, &httpClientsDetails)
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 
 	log.Debug("Artifactory response: ", resp.Status)
+	log.Output(utils.IndentJson(body))
 	return errorutils.CheckError(err)
 }
 

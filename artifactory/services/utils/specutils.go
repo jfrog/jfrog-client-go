@@ -35,10 +35,6 @@ type ArtifactoryCommonParams struct {
 	IncludeDirs     bool
 	Regexp          bool
 	ArchiveEntries  string
-	// Distribution:
-	SiteName     string
-	CityName     string
-	CountryCodes []string
 }
 
 type FileGetter interface {
@@ -64,12 +60,6 @@ type FileGetter interface {
 	IsIncludeDirs() bool
 	GetArchiveEntries() string
 	SetArchiveEntries(archiveEntries string)
-	GetSiteName() string
-	SetSiteName(siteName string)
-	GetCityName() string
-	SetCityName(cityName string)
-	GetCountryCodes() []string
-	SetCountryCodes(countryCodes []string)
 }
 
 func (params ArtifactoryCommonParams) GetArchiveEntries() string {
@@ -162,30 +152,6 @@ func (params *ArtifactoryCommonParams) GetExcludePatterns() []string {
 
 func (params *ArtifactoryCommonParams) GetExclusions() []string {
 	return params.Exclusions
-}
-
-func (params *ArtifactoryCommonParams) GetSiteName() string {
-	return params.SiteName
-}
-
-func (params *ArtifactoryCommonParams) SetSiteName(siteName string) {
-	params.SiteName = siteName
-}
-
-func (params *ArtifactoryCommonParams) GetCityName() string {
-	return params.CityName
-}
-
-func (params *ArtifactoryCommonParams) SetCityName(cityName string) {
-	params.CityName = cityName
-}
-
-func (params *ArtifactoryCommonParams) GetCountryCodes() []string {
-	return params.CountryCodes
-}
-
-func (params *ArtifactoryCommonParams) SetCountryCodes(countryCodes []string) {
-	params.CountryCodes = countryCodes
 }
 
 func (aql *Aql) UnmarshalJSON(value []byte) error {

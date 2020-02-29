@@ -33,6 +33,13 @@ func (sm *DistributionServicesManager) CreateReleaseBundle(params services.Creat
 	return createBundleService.CreateReleaseBundle(params)
 }
 
+func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.DistributionParams) error {
+	distributeBundleService := services.NewDistributeService(sm.client)
+	distributeBundleService.DistDetails = sm.config.GetCommonDetails()
+	distributeBundleService.DryRun = sm.config.IsDryRun()
+	return distributeBundleService.Distribute(params)
+}
+
 func (sm *DistributionServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
 	return sm.client
 }
