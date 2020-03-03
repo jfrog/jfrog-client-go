@@ -30,6 +30,7 @@ type ArtifactoryCommonParams struct {
 	Offset          int
 	Limit           int
 	Build           string
+	Bundle          string
 	Recursive       bool
 	IncludeDirs     bool
 	Regexp          bool
@@ -52,6 +53,7 @@ type FileGetter interface {
 	GetOffset() int
 	GetLimit() int
 	GetBuild() string
+	GetBundle() string
 	GetSpecType() (specType SpecType)
 	IsRegexp() bool
 	IsRecursive() bool
@@ -110,6 +112,10 @@ func (params *ArtifactoryCommonParams) GetAql() Aql {
 
 func (params *ArtifactoryCommonParams) GetBuild() string {
 	return params.Build
+}
+
+func (params *ArtifactoryCommonParams) GetBundle() string {
+	return params.Bundle
 }
 
 func (params ArtifactoryCommonParams) IsIncludeDirs() bool {

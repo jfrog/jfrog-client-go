@@ -1,3 +1,11 @@
+# IDEs
 .idea
+.vscode
 *.iml
-jfrog
+
+# Vim
+*~
+*.swp
+
+# IOS
+*.DS_Store
