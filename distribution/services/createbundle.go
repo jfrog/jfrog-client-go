@@ -8,6 +8,7 @@ import (
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	distrbutionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -22,9 +23,10 @@ const (
 )
 
 type CreateBundleService struct {
-	client      *rthttpclient.ArtifactoryHttpClient
-	DistDetails auth.CommonDetails
-	DryRun      bool
+	client        *rthttpclient.ArtifactoryHttpClient
+	DistDetails   auth.CommonDetails
+	DryRun        bool
+	GpgPassphrase string
 }
 
 func NewCreateBundleService(client *rthttpclient.ArtifactoryHttpClient) *CreateBundleService {
@@ -51,7 +53,7 @@ func (cbs *CreateBundleService) CreateReleaseBundle(createBundleParams CreateBun
 	}
 
 	// Create release bundle struct
-	releaseBundle := ReleaseBundleBody{
+	releaseBundle := &ReleaseBundleBody{
 		Name:              createBundleParams.Name,
 		Version:           createBundleParams.Version,
 		DryRun:            cbs.DryRun,
@@ -74,13 +76,14 @@ func (cbs *CreateBundleService) CreateReleaseBundle(createBundleParams CreateBun
 	return cbs.execCreateReleaseBundle(releaseBundle)
 }
 
-func (cbs *CreateBundleService) execCreateReleaseBundle(releaseBundle ReleaseBundleBody) error {
+func (cbs *CreateBundleService) execCreateReleaseBundle(releaseBundle *ReleaseBundleBody) error {
 	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
 	url := cbs.DistDetails.GetUrl() + "api/v1/release_bundle"
+	distrbutionServiceUtils.SetGpgPassphrase(cbs.GpgPassphrase, &httpClientsDetails.Headers)
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := cbs.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-func NewDistributionDetails() auth.CommonDetails {
+func NewDistributionDetails() *distributionDetails {
 	return &distributionDetails{}
 }
 
@@ -22,6 +22,15 @@ var expiryHandleMutex sync.Mutex
 
 type distributionDetails struct {
 	auth.CommonConfigFields
+	GpgPassphrase string
+}
+
+func (ds *distributionDetails) SetGpgPassphrase(gpgPassphrase string) {
+	ds.GpgPassphrase = gpgPassphrase
+}
+
+func (ds *distributionDetails) GetGpgPassphrase() string {
+	return ds.GpgPassphrase
 }
 
 func (ds *distributionDetails) GetVersion() (string, error) {

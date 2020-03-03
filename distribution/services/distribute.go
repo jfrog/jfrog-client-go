@@ -38,7 +38,7 @@ func (ds *DistributionService) Distribute(distributeParams DistributionParams) e
 		}
 		distributionRules = append(distributionRules, distributionRule)
 	}
-	distribution := DistributionBody{
+	distribution := &DistributionBody{
 		DryRun:            ds.DryRun,
 		DistributionRules: distributionRules,
 	}
@@ -46,7 +46,7 @@ func (ds *DistributionService) Distribute(distributeParams DistributionParams) e
 	return ds.execDistribute(distributeParams.Name, distributeParams.Version, distribution)
 }
 
-func (cbs *DistributionService) execDistribute(name, version string, distribution DistributionBody) error {
+func (cbs *DistributionService) execDistribute(name, version string, distribution *DistributionBody) error {
 	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(distribution)
 	if err != nil {
