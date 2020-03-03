@@ -40,6 +40,13 @@ func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.D
 	return distributeBundleService.Distribute(params)
 }
 
+func (sm *DistributionServicesManager) DeleteReleaseBundle(params services.DeleteDistributionParams) error {
+	deleteBundleService := services.NewDeleteDistributionService(sm.client)
+	deleteBundleService.DistDetails = sm.config.GetCommonDetails()
+	deleteBundleService.DryRun = sm.config.IsDryRun()
+	return deleteBundleService.DeleteDistribution(params)
+}
+
 func (sm *DistributionServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
 	return sm.client
 }

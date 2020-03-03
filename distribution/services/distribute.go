@@ -29,9 +29,9 @@ func (ds *DistributionService) GetDistDetails() auth.CommonDetails {
 }
 
 func (ds *DistributionService) Distribute(distributeParams DistributionParams) error {
-	var distributionRules []DistributionRules
-	for _, spec := range distributeParams.DistributionSpecs {
-		distributionRule := DistributionRules{
+	var distributionRules []DistributionRulesBody
+	for _, spec := range distributeParams.DistributionRules {
+		distributionRule := DistributionRulesBody{
 			SiteName:     spec.GetSiteName(),
 			CityName:     spec.GetCityName(),
 			CountryCodes: spec.GetCountryCodes(),
@@ -58,28 +58,28 @@ func (cbs *DistributionService) execDistribute(name, version string, distributio
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusAccepted {
+	if resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 
-	log.Debug("Artifactory response: ", resp.Status)
+	log.Debug("Distribution response: ", resp.Status)
 	log.Output(utils.IndentJson(body))
 	return errorutils.CheckError(err)
 }
 
 type DistributionBody struct {
-	DryRun            bool                `json:"dry_run"`
-	DistributionRules []DistributionRules `json:"distribution_rules"`
+	DryRun            bool                    `json:"dry_run"`
+	DistributionRules []DistributionRulesBody `json:"distribution_rules"`
 }
 
-type DistributionRules struct {
+type DistributionRulesBody struct {
 	SiteName     string   `json:"site_name,omitempty"`
 	CityName     string   `json:"city_name,omitempty"`
 	CountryCodes []string `json:"country_codes,omitempty"`
 }
 
 type DistributionParams struct {
-	DistributionSpecs []*distributionUtils.DistributionCommonParams
+	DistributionRules []*distributionUtils.DistributionCommonParams
 	Name              string
 	Version           string
 }
