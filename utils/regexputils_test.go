@@ -23,6 +23,8 @@ func TestRemoveCredentialsFromURL(t *testing.T) {
 	}{
 		{"http", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line http://***.***@127.0.0.1:8081/artifactory/path/to/repo", true},
 		{"https", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://***.***@127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"Special characters 1", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://u-s!<e>_r:!p-a&%%s%sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://***.***@127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"Special characters 2", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://!user:[p]a(s)sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://***.***@127.0.0.1:8081/artifactory/path/to/repo", true},
 		{"No credentials", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", false},
 		{"No http", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line"}, "This is an example line", false},
 	}
