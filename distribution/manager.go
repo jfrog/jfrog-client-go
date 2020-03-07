@@ -53,6 +53,12 @@ func (sm *DistributionServicesManager) DeleteReleaseBundle(params services.Delet
 	return deleteBundleService.DeleteDistribution(params)
 }
 
+func (sm *DistributionServicesManager) DeleteLocalReleaseBundle(params services.DeleteLocalDistributionParams) error {
+	deleteLocalBundleService := services.NewDeleteLocalDistributionService(sm.client)
+	deleteLocalBundleService.DistDetails = sm.config.GetCommonDetails()
+	return deleteLocalBundleService.DeleteDistribution(params)
+}
+
 func (sm *DistributionServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
 	return sm.client
 }

@@ -20,6 +20,7 @@ const (
 	Delete           = "delete"
 )
 
+// Delete received release bundles from the edge nodes. On success, keep or delete the release bundle from the distribution service.
 type DeleteDistributionService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
 	DistDetails auth.CommonDetails
