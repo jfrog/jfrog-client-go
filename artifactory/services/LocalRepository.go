@@ -12,28 +12,28 @@ import (
 	"net/http"
 )
 
-type RepositoryService struct {
+type LocalRepositoryService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 }
 
-func NewRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *RepositoryService {
-	return &RepositoryService{client: client}
+func NewLocalRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *LocalRepositoryService {
+	return &LocalRepositoryService{client: client}
 }
 
-func (rs *RepositoryService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
-	return rs.client
+func (lrs *LocalRepositoryService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+	return lrs.client
 }
 
-func (rs *RepositoryService) performRequest(params interface{}, repoKey string) error {
+func (lrs *LocalRepositoryService) performRequest(params interface{}, repoKey string) error {
 	content, err := json.Marshal(params)
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := lrs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.repositories.LocalRepositoryConfiguration+json", &httpClientsDetails.Headers)
 	log.Info("Creating local repository......")
-	resp, body, err := rs.client.SendPut(rs.ArtDetails.GetUrl()+"api/repositories/"+repoKey(), content, &httpClientsDetails)
+	resp, body, err := lrs.client.SendPut(lrs.ArtDetails.GetUrl()+"api/repositories/"+repoKey, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 	return nil
 }
 
-//func (rs *RepositoryService) UpdateRepository(propsParams PropsParams) (int, error) {
+//func (rs *LocalRepositoryService) UpdateRepository(propsParams PropsParams) (int, error) {
 //	log.Info("Updating repository...")
 //	totalSuccess, err := ps.performRequest(propsParams, false)
 //	if err != nil {
@@ -56,7 +56,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 //	return totalSuccess, nil
 //}
 
-//func (rs *RepositoryService) DeleteRepository(propsParams PropsParams) (int, error) {
+//func (rs *LocalRepositoryService) DeleteRepository(propsParams PropsParams) (int, error) {
 //	log.Info("Deleting repository...")
 //	totalSuccess, err := ps.performRequest(propsParams, true)
 //	if err != nil {
@@ -66,110 +66,110 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 //	return totalSuccess, nil
 //}
 
-func (rs *RepositoryService) Maven(params MavenGradleLocalRepositoryParams) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Maven(params MavenGradleLocalRepositoryParams) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Gradle(params MavenGradleLocalRepositoryParams) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Gradle(params MavenGradleLocalRepositoryParams) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Rpm(params RpmLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Rpm(params RpmLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Nuget(params NugetLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Nuget(params NugetLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Debian(params DebianLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Debian(params DebianLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Docker(params DockerLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Docker(params DockerLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Ivy(params IvyLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Ivy(params IvyLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Sbt(params SbtLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Sbt(params SbtLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Helm(params HelmLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Helm(params HelmLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Cocapods(params CocapodsLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Cocapods(params CocapodsLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Opkg(params OpkgLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Opkg(params OpkgLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Cran(params CranLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Cran(params CranLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Gems(params GemsLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Gems(params GemsLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Npm(params NpmLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Npm(params NpmLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Bower(params BowerLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Bower(params BowerLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Composer(params ComposerLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Composer(params ComposerLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Pypi(params PypiLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Pypi(params PypiLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Vagrant(params VagrantLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Vagrant(params VagrantLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Gitlfs(params GitlfsLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Gitlfs(params GitlfsLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Go(params GoLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Go(params GoLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Yum(params YumLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Yum(params YumLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Conan(params ConanLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Conan(params ConanLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Chef(params ChefLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Chef(params ChefLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Puppet(params PuppetLocalRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Puppet(params PuppetLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
-func (rs *RepositoryService) Generic(params GenericRepositoryParam) error {
-	return rs.performRequest(params, params.Key)
+func (lrs *LocalRepositoryService) Generic(params GenericLocalRepositoryParam) error {
+	return lrs.performRequest(params, params.Key)
 }
 
 type LocalRepositoryBaseParams struct {
 	Key                             string   `json:"key,omitempty"`
 	Rclass                          string   `json:"rclass"`
-	PackageType                     string   `json:"packageTyoe,omitempty"`
+	PackageType                     string   `json:"packageType,omitempty"`
 	Description                     string   `json:"description,omitempty"`
 	Notes                           string   `json:"notes,omitempty"`
 	IncludesPattern                 string   `json:"includesPattern,omitempty"`
@@ -177,7 +177,7 @@ type LocalRepositoryBaseParams struct {
 	RepoLayoutRef                   string   `json:"repoLayoutRef, omitempty"`
 	BlackedOut                      bool     `json:"blackedOut, omitempty"`
 	XrayIndex                       bool     `json:"xrayIndex, omitempty"`
-	PropertySet                     []string `json:"propertySet, omitempty"`
+	PropertySets                    []string `json:"propertySets, omitempty"`
 	ArchiveBrowsingEnabled          bool     `json:"archiveBrowsingEnabled, omitempty"`
 	OptionalIndexCompressionFormats []string `json:"optionalIndexCompressionFormats, omitempty"`
 	DownloadRedirect                bool     `json:"downloadRedirect, omitempty"`
@@ -186,12 +186,12 @@ type LocalRepositoryBaseParams struct {
 
 type MavenGradleLocalRepositoryParams struct {
 	LocalRepositoryBaseParams
-	maxUniqueSnapshots           int    `json:"maxUniqueSnapshots,omitempty"`
-	handleReleases               bool   `json:"handleReleases,omitempty"`
-	handleSnapshot               bool   `json:"handleSnapshot,omitempty"`
-	suppressPomConsistencyChecks bool   `json:"suppressPomConsistencyChecks,omitempty"`
-	snapshotVersionBehavior      string `json:"snapshotVersionBehavior,omitempty"`
-	checksumPolicyType           string `json:"checksumPolicyType,omitempty"`
+	MaxUniqueSnapshots           int    `json:"maxUniqueSnapshots,omitempty"`
+	HandleReleases               bool   `json:"handleReleases,omitempty"`
+	HandleSnapshot               bool   `json:"handleSnapshot,omitempty"`
+	SuppressPomConsistencyChecks bool   `json:"suppressPomConsistencyChecks,omitempty"`
+	SnapshotVersionBehavior      string `json:"snapshotVersionBehavior,omitempty"`
+	ChecksumPolicyType           string `json:"checksumPolicyType,omitempty"`
 }
 
 type RpmLocalRepositoryParam struct {
@@ -290,6 +290,6 @@ type PuppetLocalRepositoryParam struct {
 	LocalRepositoryBaseParams
 }
 
-type GenericRepositoryParam struct {
+type GenericLocalRepositoryParam struct {
 	LocalRepositoryBaseParams
 }

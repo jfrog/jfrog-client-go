@@ -35,8 +35,14 @@ func NewWithProgress(artDetails *auth.ArtifactoryDetails, config Config, progres
 	return manager, err
 }
 
-func (sm *ArtifactoryServicesManager) CreateLocalRepository() *services.RepositoryService {
-	repositoryService := services.NewRepositoryService(sm.client)
+func (sm *ArtifactoryServicesManager) CreateLocalRepository() *services.LocalRepositoryService {
+	repositoryService := services.NewLocalRepositoryService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetArtDetails()
+	return repositoryService
+}
+
+func (sm *ArtifactoryServicesManager) CreateRemoteRepository() *services.RemoteRepositoryService {
+	repositoryService := services.NewRemoteRepositoryService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetArtDetails()
 	return repositoryService
 }
