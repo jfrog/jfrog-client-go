@@ -26,7 +26,7 @@ func New(commonDetails *auth.CommonDetails, config config.Config) (*Distribution
 	return manager, err
 }
 
-func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateReleaseBundleParams) error {
+func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateUpdateReleaseBundleParams) error {
 	createBundleService := services.NewCreateReleseBundleService(sm.client)
 	createBundleService.DistDetails = sm.config.GetCommonDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()

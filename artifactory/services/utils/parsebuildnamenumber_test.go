@@ -86,7 +86,7 @@ func TestBundleParsingBundleVersionProvided(t *testing.T) {
 		t.Error("Unexpected result from 'parseNameAndVersion' method. \nExpected bundle name: 	" + expectedBundleName + " \nGot:     		 		" + bundleName)
 	}
 	if bundleVersion != expectedBundleVersion {
-		t.Error("Unexpected result from 'parseNameAndVersion' method. \nExpected bundle number: 	" + expectedBundleVersion + " \nGot:     			 	" + bundleVersion)
+		t.Error("Unexpected result from 'parseNameAndVersion' method. \nExpected bundle version: 	" + expectedBundleVersion + " \nGot:     			 	" + bundleVersion)
 	}
 }
 
@@ -98,7 +98,7 @@ func TestBundleParsingBundleVersionWithEscapeCharsInTheBundleName(t *testing.T) 
 		t.Error("Unexpected result from 'parseNameAndVersion' method. \nExpected bundle name: 	" + expectedBundleName + " \nGot:     		 		" + bundleName)
 	}
 	if bundleVersion != expectedBundleVersion {
-		t.Error("Unexpected result from 'parseNameAndVersion' method. \nExpected bundle number: 	" + expectedBundleVersion + " \nGot:     			 	" + bundleVersion)
+		t.Error("Unexpected result from 'parseNameAndVersion' method. \nExpected bundle version: 	" + expectedBundleVersion + " \nGot:     			 	" + bundleVersion)
 	}
 }
 
@@ -110,7 +110,7 @@ func TestBundleParsingBundleVersionWithEscapeCharsInTheBundleVersion(t *testing.
 		t.Error("Unexpected result from 'parseNameAndVersion' method. \nExpected bundle name: 	" + expectedBundleName + " \nGot:     		 		" + bundleName)
 	}
 	if bundleVersion != expectedBundleVersion {
-		t.Error("Unexpected result from 'parseNameAndVersion' method. \nExpected bundle number: 	" + expectedBundleVersion + " \nGot:     			 	" + bundleVersion)
+		t.Error("Unexpected result from 'parseNameAndVersion' method. \nExpected bundle version: 	" + expectedBundleVersion + " \nGot:     			 	" + bundleVersion)
 	}
 }
 
