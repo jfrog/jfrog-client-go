@@ -21,21 +21,25 @@ const (
 )
 
 // Delete received release bundles from the edge nodes. On success, keep or delete the release bundle from the distribution service.
-type DeleteDistributionService struct {
+type DeleteReleaseBundleService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
 	DistDetails auth.CommonDetails
 	DryRun      bool
 }
 
-func NewDeleteDistributionService(client *rthttpclient.ArtifactoryHttpClient) *DeleteDistributionService {
-	return &DeleteDistributionService{client: client}
+func NewDeleteReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *DeleteReleaseBundleService {
+	return &DeleteReleaseBundleService{client: client}
 }
 
-func (ds *DeleteDistributionService) GetDistDetails() auth.CommonDetails {
+func (ds *DeleteReleaseBundleService) GetDistDetails() auth.CommonDetails {
 	return ds.DistDetails
 }
 
-func (ds *DeleteDistributionService) DeleteDistribution(deleteDistributionParams DeleteDistributionParams) error {
+func (ds *DeleteReleaseBundleService) IsDryRun() bool {
+	return ds.DryRun
+}
+
+func (ds *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParams DeleteDistributionParams) error {
 	var distributionRules []DistributionRulesBody
 	for _, rule := range deleteDistributionParams.DistributionRules {
 		distributionRule := DistributionRulesBody{
@@ -64,7 +68,13 @@ func (ds *DeleteDistributionService) DeleteDistribution(deleteDistributionParams
 	return ds.execDeleteDistribute(deleteDistributionParams.Name, deleteDistributionParams.Version, deleteDistribution)
 }
 
-func (cbs *DeleteDistributionService) execDeleteDistribute(name, version string, deleteDistribution DeleteDistributionBody) error {
+func (cbs *DeleteReleaseBundleService) execDeleteDistribute(name, version string, deleteDistribution DeleteDistributionBody) error {
+	dryRunStr := ""
+	if cbs.IsDryRun() {
+		dryRunStr = "[Dry run] "
+	}
+	log.Info(dryRunStr + "Deleting: " + name + "/" + version)
+
 	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(deleteDistribution)
 	if err != nil {
@@ -95,7 +105,7 @@ type DeleteDistributionParams struct {
 	DeleteFromDistribution bool
 }
 
-func NewDeleteDistributionParams(name, version string) DeleteDistributionParams {
+func NewDeleteReleaseBundleParams(name, version string) DeleteDistributionParams {
 	return DeleteDistributionParams{
 		DistributionParams: DistributionParams{
 			Name:    name,

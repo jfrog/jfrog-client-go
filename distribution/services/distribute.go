@@ -14,21 +14,21 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-type DistributionService struct {
+type DistributeReleaseBundleService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
 	DistDetails auth.CommonDetails
 	DryRun      bool
 }
 
-func NewDistributeService(client *rthttpclient.ArtifactoryHttpClient) *DistributionService {
-	return &DistributionService{client: client}
+func NewDistributeReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *DistributeReleaseBundleService {
+	return &DistributeReleaseBundleService{client: client}
 }
 
-func (ds *DistributionService) GetDistDetails() auth.CommonDetails {
+func (ds *DistributeReleaseBundleService) GetDistDetails() auth.CommonDetails {
 	return ds.DistDetails
 }
 
-func (ds *DistributionService) Distribute(distributeParams DistributionParams) error {
+func (ds *DistributeReleaseBundleService) Distribute(distributeParams DistributionParams) error {
 	var distributionRules []DistributionRulesBody
 	for _, spec := range distributeParams.DistributionRules {
 		distributionRule := DistributionRulesBody{
@@ -46,7 +46,7 @@ func (ds *DistributionService) Distribute(distributeParams DistributionParams) e
 	return ds.execDistribute(distributeParams.Name, distributeParams.Version, distribution)
 }
 
-func (cbs *DistributionService) execDistribute(name, version string, distribution *DistributionBody) error {
+func (cbs *DistributeReleaseBundleService) execDistribute(name, version string, distribution *DistributionBody) error {
 	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(distribution)
 	if err != nil {
@@ -84,7 +84,7 @@ type DistributionParams struct {
 	Version           string
 }
 
-func NewDistributeParams(name, version string) DistributionParams {
+func NewDistributeReleaseBundleParams(name, version string) DistributionParams {
 	return DistributionParams{
 		Name:    name,
 		Version: version,

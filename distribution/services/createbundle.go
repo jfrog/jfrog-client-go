@@ -22,22 +22,22 @@ const (
 	PlainText                    = "plain_text"
 )
 
-type CreateBundleService struct {
+type CreateReleaseBundleService struct {
 	client        *rthttpclient.ArtifactoryHttpClient
 	DistDetails   auth.CommonDetails
 	DryRun        bool
 	GpgPassphrase string
 }
 
-func NewCreateBundleService(client *rthttpclient.ArtifactoryHttpClient) *CreateBundleService {
-	return &CreateBundleService{client: client}
+func NewCreateReleseBundleService(client *rthttpclient.ArtifactoryHttpClient) *CreateReleaseBundleService {
+	return &CreateReleaseBundleService{client: client}
 }
 
-func (ps *CreateBundleService) GetDistDetails() auth.CommonDetails {
+func (ps *CreateReleaseBundleService) GetDistDetails() auth.CommonDetails {
 	return ps.DistDetails
 }
 
-func (cbs *CreateBundleService) CreateReleaseBundle(createBundleParams CreateBundleParams) error {
+func (cbs *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams CreateReleaseBundleParams) error {
 	var bundleQueries []BundleQuery
 	// Create release bundle queries
 	for _, specFile := range createBundleParams.SpecFiles {
@@ -76,7 +76,7 @@ func (cbs *CreateBundleService) CreateReleaseBundle(createBundleParams CreateBun
 	return cbs.execCreateReleaseBundle(releaseBundle)
 }
 
-func (cbs *CreateBundleService) execCreateReleaseBundle(releaseBundle *ReleaseBundleBody) error {
+func (cbs *CreateReleaseBundleService) execCreateReleaseBundle(releaseBundle *ReleaseBundleBody) error {
 	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
@@ -123,7 +123,7 @@ type BundleQuery struct {
 	Aql       string `json:"aql"`
 }
 
-type CreateBundleParams struct {
+type CreateReleaseBundleParams struct {
 	SpecFiles          []*artifactoryUtils.ArtifactoryCommonParams
 	Name               string
 	Version            string
@@ -134,8 +134,8 @@ type CreateBundleParams struct {
 	ReleaseNotesSyntax ReleaseNotesSyntax
 }
 
-func NewCreateBundleParams(name, version string) CreateBundleParams {
-	return CreateBundleParams{
+func NewCreateBundleParams(name, version string) CreateReleaseBundleParams {
+	return CreateReleaseBundleParams{
 		Name:    name,
 		Version: version,
 	}

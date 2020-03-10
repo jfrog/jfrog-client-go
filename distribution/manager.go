@@ -26,8 +26,8 @@ func New(commonDetails *auth.CommonDetails, config config.Config) (*Distribution
 	return manager, err
 }
 
-func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateBundleParams) error {
-	createBundleService := services.NewCreateBundleService(sm.client)
+func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateReleaseBundleParams) error {
+	createBundleService := services.NewCreateReleseBundleService(sm.client)
 	createBundleService.DistDetails = sm.config.GetCommonDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()
 	return createBundleService.CreateReleaseBundle(params)
@@ -40,23 +40,17 @@ func (sm *DistributionServicesManager) SignReleaseBundle(params services.SignBun
 }
 
 func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.DistributionParams) error {
-	distributeBundleService := services.NewDistributeService(sm.client)
+	distributeBundleService := services.NewDistributeReleaseBundleService(sm.client)
 	distributeBundleService.DistDetails = sm.config.GetCommonDetails()
 	distributeBundleService.DryRun = sm.config.IsDryRun()
 	return distributeBundleService.Distribute(params)
 }
 
 func (sm *DistributionServicesManager) DeleteReleaseBundle(params services.DeleteDistributionParams) error {
-	deleteBundleService := services.NewDeleteDistributionService(sm.client)
+	deleteBundleService := services.NewDeleteReleaseBundleService(sm.client)
 	deleteBundleService.DistDetails = sm.config.GetCommonDetails()
 	deleteBundleService.DryRun = sm.config.IsDryRun()
 	return deleteBundleService.DeleteDistribution(params)
-}
-
-func (sm *DistributionServicesManager) DeleteLocalReleaseBundle(params services.DeleteLocalDistributionParams) error {
-	deleteLocalBundleService := services.NewDeleteLocalDistributionService(sm.client)
-	deleteLocalBundleService.DistDetails = sm.config.GetCommonDetails()
-	return deleteLocalBundleService.DeleteDistribution(params)
 }
 
 func (sm *DistributionServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
