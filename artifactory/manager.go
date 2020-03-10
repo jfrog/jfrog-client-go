@@ -35,6 +35,12 @@ func NewWithProgress(artDetails *auth.ArtifactoryDetails, config Config, progres
 	return manager, err
 }
 
+func (sm *ArtifactoryServicesManager) CreateLocalRepository() *services.RepositoryService {
+	repositoryService := services.NewRepositoryService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetArtDetails()
+	return repositoryService
+}
+
 func (sm *ArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo) error {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
