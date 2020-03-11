@@ -36,15 +36,45 @@ func NewWithProgress(artDetails *auth.ArtifactoryDetails, config Config, progres
 }
 
 func (sm *ArtifactoryServicesManager) CreateLocalRepository() *services.LocalRepositoryService {
-	repositoryService := services.NewLocalRepositoryService(sm.client)
+	repositoryService := services.NewLocalRepositoryService(sm.client, false)
 	repositoryService.ArtDetails = sm.config.GetArtDetails()
 	return repositoryService
 }
 
 func (sm *ArtifactoryServicesManager) CreateRemoteRepository() *services.RemoteRepositoryService {
-	repositoryService := services.NewRemoteRepositoryService(sm.client)
+	repositoryService := services.NewRemoteRepositoryService(sm.client, false)
 	repositoryService.ArtDetails = sm.config.GetArtDetails()
 	return repositoryService
+}
+
+func (sm *ArtifactoryServicesManager) CreateVirtualRepository() *services.VirtualRepositoryService {
+	repositoryService := services.NewVirtualRepositoryService(sm.client, false)
+	repositoryService.ArtDetails = sm.config.GetArtDetails()
+	return repositoryService
+}
+
+func (sm *ArtifactoryServicesManager) UpdateLocalRepository() *services.LocalRepositoryService {
+	repositoryService := services.NewLocalRepositoryService(sm.client, true)
+	repositoryService.ArtDetails = sm.config.GetArtDetails()
+	return repositoryService
+}
+
+func (sm *ArtifactoryServicesManager) UpdateRemoteRepository() *services.RemoteRepositoryService {
+	repositoryService := services.NewRemoteRepositoryService(sm.client, true)
+	repositoryService.ArtDetails = sm.config.GetArtDetails()
+	return repositoryService
+}
+
+func (sm *ArtifactoryServicesManager) UpdateVirtualRepository() *services.VirtualRepositoryService {
+	repositoryService := services.NewVirtualRepositoryService(sm.client, true)
+	repositoryService.ArtDetails = sm.config.GetArtDetails()
+	return repositoryService
+}
+
+func (sm *ArtifactoryServicesManager) DeleteRepository(repoKey string) error {
+	deleteRepositoryService := services.NewDeleteRepositoryService(sm.client)
+	deleteRepositoryService.ArtDetails = sm.config.GetArtDetails()
+	return deleteRepositoryService.Delete(repoKey)
 }
 
 func (sm *ArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo) error {

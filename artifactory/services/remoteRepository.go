@@ -13,12 +13,13 @@ import (
 )
 
 type RemoteRepositoryService struct {
+	isUpdate   bool
 	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 }
 
-func NewRemoteRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *RemoteRepositoryService {
-	return &RemoteRepositoryService{client: client}
+func NewRemoteRepositoryService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *RemoteRepositoryService {
+	return &RemoteRepositoryService{client: client, isUpdate: isUpdate}
 }
 
 func (rrs *RemoteRepositoryService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
@@ -32,8 +33,19 @@ func (rrs *RemoteRepositoryService) performRequest(params interface{}, repoKey s
 	}
 	httpClientsDetails := rrs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.repositories.RemoteRepositoryConfiguration+json", &httpClientsDetails.Headers)
-	log.Info("Creating local repository......")
-	resp, body, err := rrs.client.SendPut(rrs.ArtDetails.GetUrl()+"api/repositories/"+repoKey, content, &httpClientsDetails)
+	var url = rrs.ArtDetails.GetUrl() + "api/repositories/" + repoKey
+	var operationString string
+	var resp *http.Response
+	var body []byte
+	if rrs.isUpdate {
+		log.Info("Updating remote repository......")
+		operationString = "updating"
+		resp, body, err = rrs.client.SendPost(url, content, &httpClientsDetails)
+	} else {
+		log.Info("Creating remote repository......")
+		operationString = "creating"
+		resp, body, err = rrs.client.SendPut(url, content, &httpClientsDetails)
+	}
 	if err != nil {
 		return err
 	}
@@ -42,29 +54,9 @@ func (rrs *RemoteRepositoryService) performRequest(params interface{}, repoKey s
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done creating repository.")
+	log.Info("Done " + operationString + " repository.")
 	return nil
 }
-
-//func (rs *LocalRepositoryService) UpdateRepository(propsParams PropsParams) (int, error) {
-//	log.Info("Updating repository...")
-//	totalSuccess, err := ps.performRequest(propsParams, false)
-//	if err != nil {
-//		return totalSuccess, err
-//	}
-//	log.Info("Done updating repository.")
-//	return totalSuccess, nil
-//}
-
-//func (rs *LocalRepositoryService) DeleteRepository(propsParams PropsParams) (int, error) {
-//	log.Info("Deleting repository...")
-//	totalSuccess, err := ps.performRequest(propsParams, true)
-//	if err != nil {
-//		return totalSuccess, err
-//	}
-//	log.Info("Done deleting repository.")
-//	return totalSuccess, nil
-//}
 
 func (rrs *RemoteRepositoryService) Maven(params MavenGradleRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
@@ -86,7 +78,7 @@ func (rrs *RemoteRepositoryService) Helm(params HelmRemoteRepositoryParam) error
 	return rrs.performRequest(params, params.Key)
 }
 
-func (rrs *RemoteRepositoryService) Cocapods(params CocapodsRemoteRepositoryParam) error {
+func (rrs *RemoteRepositoryService) Cocoapods(params CocoapodsRemoteRepositoryParam) error {
 	return rrs.performRequest(params, params.Key)
 }
 
@@ -175,10 +167,16 @@ func (rrs *RemoteRepositoryService) Generic(params GenericRemoteRepositoryParam)
 }
 
 type ContentSynchronisation struct {
-	Enabled    bool
-	Statistics struct{ Enabled bool }
-	Properties struct{ Enabled bool }
-	Source     struct{ OriginAbsenceDetection bool }
+	Enabled    bool `json:"enables,omitempty"`
+	Statistics struct {
+		Enabled bool `json:"enables,omitempty"`
+	} `json:"statistics,omitempty"`
+	Properties struct {
+		Enabled bool `json:"enables,omitempty"`
+	} `json:"properties,omitempty"`
+	Source struct {
+		OriginAbsenceDetection bool `json:"originAbsenceDetection,omitempty"`
+	} `json:"source,omitempty"`
 }
 
 type RemoteRepositoryBaseParams struct {
@@ -230,7 +228,7 @@ type MavenGradleRemoteRepositoryParams struct {
 	RejectInvalidJars            bool   `json:"rejectInvalidJars, omitempty"`
 }
 
-type CocapodsRemoteRepositoryParam struct {
+type CocoapodsRemoteRepositoryParam struct {
 	RemoteRepositoryBaseParams
 	PodsSpecsRepoUrl string `json:"podsSpecsRepoUrl, omitempty"`
 }

@@ -13,12 +13,13 @@ import (
 )
 
 type LocalRepositoryService struct {
+	isUpdate   bool
 	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ArtifactoryDetails
 }
 
-func NewLocalRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *LocalRepositoryService {
-	return &LocalRepositoryService{client: client}
+func NewLocalRepositoryService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *LocalRepositoryService {
+	return &LocalRepositoryService{client: client, isUpdate: isUpdate}
 }
 
 func (lrs *LocalRepositoryService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
@@ -32,8 +33,19 @@ func (lrs *LocalRepositoryService) performRequest(params interface{}, repoKey st
 	}
 	httpClientsDetails := lrs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.repositories.LocalRepositoryConfiguration+json", &httpClientsDetails.Headers)
-	log.Info("Creating local repository......")
-	resp, body, err := lrs.client.SendPut(lrs.ArtDetails.GetUrl()+"api/repositories/"+repoKey, content, &httpClientsDetails)
+	var url = lrs.ArtDetails.GetUrl() + "api/repositories/" + repoKey
+	var operationString string
+	var resp *http.Response
+	var body []byte
+	if lrs.isUpdate {
+		log.Info("Creating local repository......")
+		operationString = "updating"
+		resp, body, err = lrs.client.SendPost(url, content, &httpClientsDetails)
+	} else {
+		log.Info("Creating local repository......")
+		operationString = "creating"
+		resp, body, err = lrs.client.SendPut(url, content, &httpClientsDetails)
+	}
 	if err != nil {
 		return err
 	}
@@ -42,29 +54,9 @@ func (lrs *LocalRepositoryService) performRequest(params interface{}, repoKey st
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done creating repository.")
+	log.Info("Done " + operationString + " repository.")
 	return nil
 }
-
-//func (rs *LocalRepositoryService) UpdateRepository(propsParams PropsParams) (int, error) {
-//	log.Info("Updating repository...")
-//	totalSuccess, err := ps.performRequest(propsParams, false)
-//	if err != nil {
-//		return totalSuccess, err
-//	}
-//	log.Info("Done updating repository.")
-//	return totalSuccess, nil
-//}
-
-//func (rs *LocalRepositoryService) DeleteRepository(propsParams PropsParams) (int, error) {
-//	log.Info("Deleting repository...")
-//	totalSuccess, err := ps.performRequest(propsParams, true)
-//	if err != nil {
-//		return totalSuccess, err
-//	}
-//	log.Info("Done deleting repository.")
-//	return totalSuccess, nil
-//}
 
 func (lrs *LocalRepositoryService) Maven(params MavenGradleLocalRepositoryParams) error {
 	return lrs.performRequest(params, params.Key)
@@ -102,7 +94,7 @@ func (lrs *LocalRepositoryService) Helm(params HelmLocalRepositoryParam) error {
 	return lrs.performRequest(params, params.Key)
 }
 
-func (lrs *LocalRepositoryService) Cocapods(params CocapodsLocalRepositoryParam) error {
+func (lrs *LocalRepositoryService) Cocoapods(params CocoapodsLocalRepositoryParam) error {
 	return lrs.performRequest(params, params.Key)
 }
 
@@ -230,7 +222,7 @@ type HelmLocalRepositoryParam struct {
 	LocalRepositoryBaseParams
 }
 
-type CocapodsLocalRepositoryParam struct {
+type CocoapodsLocalRepositoryParam struct {
 	LocalRepositoryBaseParams
 }
 
