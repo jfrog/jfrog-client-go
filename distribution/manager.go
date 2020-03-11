@@ -33,6 +33,13 @@ func (sm *DistributionServicesManager) CreateReleaseBundle(params services.Creat
 	return createBundleService.CreateReleaseBundle(params)
 }
 
+func (sm *DistributionServicesManager) UpdateReleaseBundle(params services.CreateUpdateReleaseBundleParams) error {
+	createBundleService := services.NewUpdateReleseBundleService(sm.client)
+	createBundleService.DistDetails = sm.config.GetCommonDetails()
+	createBundleService.DryRun = sm.config.IsDryRun()
+	return createBundleService.UpdateReleaseBundle(params)
+}
+
 func (sm *DistributionServicesManager) SignReleaseBundle(params services.SignBundleParams) error {
 	signBundleService := services.NewSignBundleService(sm.client)
 	signBundleService.DistDetails = sm.config.GetCommonDetails()

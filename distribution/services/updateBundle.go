@@ -37,7 +37,7 @@ func (ubs *UpdateReleaseBundleService) GetDistDetails() auth.CommonDetails {
 	return ubs.DistDetails
 }
 
-func (ubs *UpdateReleaseBundleService) CreateReleaseBundle(createBundleParams CreateUpdateReleaseBundleParams) error {
+func (ubs *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams CreateUpdateReleaseBundleParams) error {
 	releaseBundleBody, err := CreateBundleBody(createBundleParams, ubs.DryRun)
 	if err != nil {
 		return err

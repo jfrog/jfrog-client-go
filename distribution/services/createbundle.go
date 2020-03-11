@@ -53,7 +53,7 @@ func (cbs *CreateReleaseBundleService) execCreateReleaseBundle(releaseBundle *Cr
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		return errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 
