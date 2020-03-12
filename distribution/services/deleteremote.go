@@ -31,15 +31,15 @@ func NewDeleteReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *
 	return &DeleteReleaseBundleService{client: client}
 }
 
-func (ds *DeleteReleaseBundleService) GetDistDetails() auth.CommonDetails {
-	return ds.DistDetails
+func (dr *DeleteReleaseBundleService) GetDistDetails() auth.CommonDetails {
+	return dr.DistDetails
 }
 
-func (ds *DeleteReleaseBundleService) IsDryRun() bool {
-	return ds.DryRun
+func (dr *DeleteReleaseBundleService) IsDryRun() bool {
+	return dr.DryRun
 }
 
-func (ds *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParams DeleteDistributionParams) error {
+func (dr *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParams DeleteDistributionParams) error {
 	var distributionRules []DistributionRulesBody
 	for _, rule := range deleteDistributionParams.DistributionRules {
 		distributionRule := DistributionRulesBody{
@@ -57,32 +57,32 @@ func (ds *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParam
 		onSuccess = Keep
 	}
 
-	deleteDistribution := DeleteDistributionBody{
+	deleteDistribution := DeleteRemoteDistributionBody{
 		DistributionBody: DistributionBody{
-			DryRun:            ds.DryRun,
+			DryRun:            dr.DryRun,
 			DistributionRules: distributionRules,
 		},
 		OnSuccess: onSuccess,
 	}
 
-	return ds.execDeleteDistribute(deleteDistributionParams.Name, deleteDistributionParams.Version, deleteDistribution)
+	return dr.execDeleteDistribute(deleteDistributionParams.Name, deleteDistributionParams.Version, deleteDistribution)
 }
 
-func (cbs *DeleteReleaseBundleService) execDeleteDistribute(name, version string, deleteDistribution DeleteDistributionBody) error {
+func (dr *DeleteReleaseBundleService) execDeleteDistribute(name, version string, deleteDistribution DeleteRemoteDistributionBody) error {
 	dryRunStr := ""
-	if cbs.IsDryRun() {
+	if dr.IsDryRun() {
 		dryRunStr = "[Dry run] "
 	}
 	log.Info(dryRunStr + "Deleting: " + name + "/" + version)
 
-	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
+	httpClientsDetails := dr.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(deleteDistribution)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	url := cbs.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version + "/delete"
+	url := dr.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version + "/delete"
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	resp, body, err := cbs.client.SendPost(url, content, &httpClientsDetails)
+	resp, body, err := dr.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (cbs *DeleteReleaseBundleService) execDeleteDistribute(name, version string
 	return errorutils.CheckError(err)
 }
 
-type DeleteDistributionBody struct {
+type DeleteRemoteDistributionBody struct {
 	DistributionBody
 	OnSuccess OnSuccess `json:"on_success"`
 }

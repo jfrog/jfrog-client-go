@@ -24,27 +24,27 @@ func NewSignBundleService(client *rthttpclient.ArtifactoryHttpClient) *SignBundl
 	return &SignBundleService{client: client}
 }
 
-func (ps *SignBundleService) GetDistDetails() auth.CommonDetails {
-	return ps.DistDetails
+func (sb *SignBundleService) GetDistDetails() auth.CommonDetails {
+	return sb.DistDetails
 }
 
-func (cbs *SignBundleService) SignReleaseBundle(signBundleParams SignBundleParams) error {
+func (sb *SignBundleService) SignReleaseBundle(signBundleParams SignBundleParams) error {
 	signBundleBody := &SignBundleBody{
 		StoringRepository: signBundleParams.StoringRepository,
 	}
-	return cbs.execSignReleaseBundle(signBundleParams.Name, signBundleParams.Version, signBundleBody)
+	return sb.execSignReleaseBundle(signBundleParams.Name, signBundleParams.Version, signBundleBody)
 }
 
-func (cbs *SignBundleService) execSignReleaseBundle(name, version string, signBundleBody *SignBundleBody) error {
-	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
+func (sb *SignBundleService) execSignReleaseBundle(name, version string, signBundleBody *SignBundleBody) error {
+	httpClientsDetails := sb.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(signBundleBody)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	url := cbs.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version + "/sign"
+	url := sb.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version + "/sign"
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	distrbutionServiceUtils.SetGpgPassphrase(cbs.GpgPassphrase, &httpClientsDetails.Headers)
-	resp, body, err := cbs.client.SendPost(url, content, &httpClientsDetails)
+	distrbutionServiceUtils.SetGpgPassphrase(sb.GpgPassphrase, &httpClientsDetails.Headers)
+	resp, body, err := sb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}

@@ -33,28 +33,28 @@ func NewUpdateReleseBundleService(client *rthttpclient.ArtifactoryHttpClient) *U
 	return &UpdateReleaseBundleService{client: client}
 }
 
-func (ubs *UpdateReleaseBundleService) GetDistDetails() auth.CommonDetails {
-	return ubs.DistDetails
+func (ur *UpdateReleaseBundleService) GetDistDetails() auth.CommonDetails {
+	return ur.DistDetails
 }
 
-func (ubs *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams CreateUpdateReleaseBundleParams) error {
-	releaseBundleBody, err := CreateBundleBody(createBundleParams, ubs.DryRun)
+func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams CreateUpdateReleaseBundleParams) error {
+	releaseBundleBody, err := CreateBundleBody(createBundleParams, ur.DryRun)
 	if err != nil {
 		return err
 	}
-	return ubs.execUpdateReleaseBundle(createBundleParams.Name, createBundleParams.Version, releaseBundleBody)
+	return ur.execUpdateReleaseBundle(createBundleParams.Name, createBundleParams.Version, releaseBundleBody)
 }
 
-func (ubs *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version string, releaseBundle *ReleaseBundleBody) error {
-	httpClientsDetails := ubs.DistDetails.CreateHttpClientDetails()
+func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version string, releaseBundle *ReleaseBundleBody) error {
+	httpClientsDetails := ur.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	url := ubs.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version
-	distrbutionServiceUtils.SetGpgPassphrase(ubs.GpgPassphrase, &httpClientsDetails.Headers)
+	url := ur.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version
+	distrbutionServiceUtils.SetGpgPassphrase(ur.GpgPassphrase, &httpClientsDetails.Headers)
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	resp, body, err := ubs.client.SendPut(url, content, &httpClientsDetails)
+	resp, body, err := ur.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}

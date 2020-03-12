@@ -22,12 +22,12 @@ func NewCreateReleseBundleService(client *rthttpclient.ArtifactoryHttpClient) *C
 	return &CreateReleaseBundleService{UpdateReleaseBundleService{client: client}}
 }
 
-func (cbs *CreateReleaseBundleService) GetDistDetails() auth.CommonDetails {
-	return cbs.DistDetails
+func (cb *CreateReleaseBundleService) GetDistDetails() auth.CommonDetails {
+	return cb.DistDetails
 }
 
-func (cbs *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams CreateUpdateReleaseBundleParams) error {
-	CreateUpdateReleaseBundleBody, err := CreateBundleBody(createBundleParams, cbs.DryRun)
+func (cb *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams CreateUpdateReleaseBundleParams) error {
+	CreateUpdateReleaseBundleBody, err := CreateBundleBody(createBundleParams, cb.DryRun)
 	if err != nil {
 		return err
 	}
@@ -37,19 +37,19 @@ func (cbs *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams Cr
 		ReleaseBundleBody: *CreateUpdateReleaseBundleBody,
 	}
 
-	return cbs.execCreateReleaseBundle(createReleaseBundleBody)
+	return cb.execCreateReleaseBundle(createReleaseBundleBody)
 }
 
-func (cbs *CreateReleaseBundleService) execCreateReleaseBundle(releaseBundle *CreateReleaseBundleBody) error {
-	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
+func (cb *CreateReleaseBundleService) execCreateReleaseBundle(releaseBundle *CreateReleaseBundleBody) error {
+	httpClientsDetails := cb.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	url := cbs.DistDetails.GetUrl() + "api/v1/release_bundle"
-	distrbutionServiceUtils.SetGpgPassphrase(cbs.GpgPassphrase, &httpClientsDetails.Headers)
+	url := cb.DistDetails.GetUrl() + "api/v1/release_bundle"
+	distrbutionServiceUtils.SetGpgPassphrase(cb.GpgPassphrase, &httpClientsDetails.Headers)
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	resp, body, err := cbs.client.SendPost(url, content, &httpClientsDetails)
+	resp, body, err := cb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}

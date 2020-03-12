@@ -24,8 +24,8 @@ func NewDistributeReleaseBundleService(client *rthttpclient.ArtifactoryHttpClien
 	return &DistributeReleaseBundleService{client: client}
 }
 
-func (ds *DistributeReleaseBundleService) GetDistDetails() auth.CommonDetails {
-	return ds.DistDetails
+func (dr *DistributeReleaseBundleService) GetDistDetails() auth.CommonDetails {
+	return dr.DistDetails
 }
 
 func (ds *DistributeReleaseBundleService) Distribute(distributeParams DistributionParams) error {
@@ -46,15 +46,15 @@ func (ds *DistributeReleaseBundleService) Distribute(distributeParams Distributi
 	return ds.execDistribute(distributeParams.Name, distributeParams.Version, distribution)
 }
 
-func (cbs *DistributeReleaseBundleService) execDistribute(name, version string, distribution *DistributionBody) error {
-	httpClientsDetails := cbs.DistDetails.CreateHttpClientDetails()
+func (dr *DistributeReleaseBundleService) execDistribute(name, version string, distribution *DistributionBody) error {
+	httpClientsDetails := dr.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(distribution)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	url := cbs.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version
+	url := dr.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	resp, body, err := cbs.client.SendPost(url, content, &httpClientsDetails)
+	resp, body, err := dr.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
