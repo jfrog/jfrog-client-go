@@ -37,17 +37,17 @@ func (cb *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams Cre
 		ReleaseBundleBody: *CreateUpdateReleaseBundleBody,
 	}
 
-	return cb.execCreateReleaseBundle(createReleaseBundleBody)
+	return cb.execCreateReleaseBundle(createBundleParams.GpgPassphrase, createReleaseBundleBody)
 }
 
-func (cb *CreateReleaseBundleService) execCreateReleaseBundle(releaseBundle *CreateReleaseBundleBody) error {
+func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassprase string, releaseBundle *CreateReleaseBundleBody) error {
 	httpClientsDetails := cb.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
 	url := cb.DistDetails.GetUrl() + "api/v1/release_bundle"
-	distrbutionServiceUtils.SetGpgPassphrase(cb.GpgPassphrase, &httpClientsDetails.Headers)
+	distrbutionServiceUtils.SetGpgPassphrase(gpgPassprase, &httpClientsDetails.Headers)
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := cb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {

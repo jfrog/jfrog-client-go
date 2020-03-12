@@ -15,9 +15,8 @@ import (
 )
 
 type SignBundleService struct {
-	client        *rthttpclient.ArtifactoryHttpClient
-	DistDetails   auth.CommonDetails
-	GpgPassphrase string
+	client      *rthttpclient.ArtifactoryHttpClient
+	DistDetails auth.CommonDetails
 }
 
 func NewSignBundleService(client *rthttpclient.ArtifactoryHttpClient) *SignBundleService {
@@ -32,10 +31,10 @@ func (sb *SignBundleService) SignReleaseBundle(signBundleParams SignBundleParams
 	signBundleBody := &SignBundleBody{
 		StoringRepository: signBundleParams.StoringRepository,
 	}
-	return sb.execSignReleaseBundle(signBundleParams.Name, signBundleParams.Version, signBundleBody)
+	return sb.execSignReleaseBundle(signBundleParams.Name, signBundleParams.Version, signBundleParams.GpgPassphrase, signBundleBody)
 }
 
-func (sb *SignBundleService) execSignReleaseBundle(name, version string, signBundleBody *SignBundleBody) error {
+func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase string, signBundleBody *SignBundleBody) error {
 	httpClientsDetails := sb.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(signBundleBody)
 	if err != nil {
@@ -43,7 +42,7 @@ func (sb *SignBundleService) execSignReleaseBundle(name, version string, signBun
 	}
 	url := sb.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version + "/sign"
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	distrbutionServiceUtils.SetGpgPassphrase(sb.GpgPassphrase, &httpClientsDetails.Headers)
+	distrbutionServiceUtils.SetGpgPassphrase(gpgPassphrase, &httpClientsDetails.Headers)
 	resp, body, err := sb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
@@ -65,6 +64,7 @@ type SignBundleParams struct {
 	Name              string
 	Version           string
 	StoringRepository string
+	GpgPassphrase     string
 }
 
 func NewSignBundleParams(name, version string) SignBundleParams {

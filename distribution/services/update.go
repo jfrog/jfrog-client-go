@@ -23,10 +23,9 @@ const (
 )
 
 type UpdateReleaseBundleService struct {
-	client        *rthttpclient.ArtifactoryHttpClient
-	DistDetails   auth.CommonDetails
-	DryRun        bool
-	GpgPassphrase string
+	client      *rthttpclient.ArtifactoryHttpClient
+	DistDetails auth.CommonDetails
+	DryRun      bool
 }
 
 func NewUpdateReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *UpdateReleaseBundleService {
@@ -42,17 +41,17 @@ func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams Cre
 	if err != nil {
 		return err
 	}
-	return ur.execUpdateReleaseBundle(createBundleParams.Name, createBundleParams.Version, releaseBundleBody)
+	return ur.execUpdateReleaseBundle(createBundleParams.Name, createBundleParams.Version, createBundleParams.GpgPassphrase, releaseBundleBody)
 }
 
-func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version string, releaseBundle *ReleaseBundleBody) error {
+func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpgPassphrase string, releaseBundle *ReleaseBundleBody) error {
 	httpClientsDetails := ur.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
 	url := ur.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version
-	distrbutionServiceUtils.SetGpgPassphrase(ur.GpgPassphrase, &httpClientsDetails.Headers)
+	distrbutionServiceUtils.SetGpgPassphrase(gpgPassphrase, &httpClientsDetails.Headers)
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := ur.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
@@ -135,6 +134,7 @@ type CreateUpdateReleaseBundleParams struct {
 	Description        string
 	ReleaseNotes       string
 	ReleaseNotesSyntax ReleaseNotesSyntax
+	GpgPassphrase      string
 }
 
 func NewCreateUpdateBundleParams(name, version string) CreateUpdateReleaseBundleParams {

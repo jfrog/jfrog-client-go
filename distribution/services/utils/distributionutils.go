@@ -5,7 +5,7 @@ import (
 )
 
 func SetGpgPassphrase(gpgPassphrase string, headers *map[string]string) {
-	if len(gpgPassphrase) > 0 {
+	if gpgPassphrase != "" {
 		utils.AddHeader("X-GPG-PASSPHRASE", gpgPassphrase, headers)
 	}
 }
