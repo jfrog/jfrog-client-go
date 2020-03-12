@@ -1,8 +1,8 @@
 package _go
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/auth"
 )
 
 var publishers []PublishGoPackage

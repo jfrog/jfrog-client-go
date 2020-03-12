@@ -12,7 +12,7 @@ func ArtifactoryClientBuilder() *artifactoryHttpClientBuilder {
 type artifactoryHttpClientBuilder struct {
 	certificatesDirPath string
 	insecureTls         bool
-	CommonDetails          *auth.CommonDetails
+	CommonDetails       *auth.CommonDetails
 }
 
 func (builder *artifactoryHttpClientBuilder) SetCertificatesPath(certificatesPath string) *artifactoryHttpClientBuilder {
