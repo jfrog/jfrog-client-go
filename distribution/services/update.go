@@ -29,7 +29,7 @@ type UpdateReleaseBundleService struct {
 	GpgPassphrase string
 }
 
-func NewUpdateReleseBundleService(client *rthttpclient.ArtifactoryHttpClient) *UpdateReleaseBundleService {
+func NewUpdateReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *UpdateReleaseBundleService {
 	return &UpdateReleaseBundleService{client: client}
 }
 

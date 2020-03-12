@@ -34,7 +34,7 @@ func (sm *DistributionServicesManager) CreateReleaseBundle(params services.Creat
 }
 
 func (sm *DistributionServicesManager) UpdateReleaseBundle(params services.CreateUpdateReleaseBundleParams) error {
-	createBundleService := services.NewUpdateReleseBundleService(sm.client)
+	createBundleService := services.NewUpdateReleaseBundleService(sm.client)
 	createBundleService.DistDetails = sm.config.GetCommonDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()
 	return createBundleService.UpdateReleaseBundle(params)
