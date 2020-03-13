@@ -313,6 +313,98 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     apiKey, err := rtManager.RegenerateAPIKey()
 ```
 
+#### Creating and Updating Local Repository
+You can create and update a local repository for the following package types:
+
+Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
+Vagrant, Gitlfs, Go, Yum, Conan, Chef, Puppet and Generic.
+
+Each package type has it's own parameters struct, can be created using the method 
+```New<packageType>LocalRepositoryParams()```.
+
+Example for creating local Generic repository: 
+```
+    params := services.NewGenericLocalRepositoryParams()
+    pparams.Key = "generic-repo"
+    params.Description = "This is a public description for generic-repo"
+    params.Notes = "These are internal notes for generic-repo"
+    params.RepoLayoutRef = "simple-default"
+    params.ArchiveBrowsingEnabled = true
+    params.XrayIndex = true
+    params.IncludesPattern = "**/*"
+    params.ExcludesPattern = "excludedDir/*"
+    params.DownloadRedirect = true
+
+    err = servicesManager.CreateLocalRepository().Generic(params)
+```
+Updating local Generic repository:
+```
+    err = servicesManager.UpdateLocalRepository().Generic(params)
+```
+
+#### Creating and Updating Remote Repository
+You can create and update a remote repository for the following package types:
+
+Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
+Gitlfs, Go, Yum, Conan, Chef, Puppet, Conda, P2, Vcs and Generic.
+
+Each package type has it's own parameters struct, can be created using the method 
+```New<packageType>RemoteRepositoryParams()```.
+
+Example for creating remote Maven repository: 
+```
+    params := services.NewMavenRemoteRepositoryParams()
+    params.Key = "jcenter-remote"
+    params.Url = "http://jcenter.bintray.com"
+    params.RepoLayoutRef = "maven-2-default"
+    params.Description = "A caching proxy repository for a JFrog's jcenter"
+    params.HandleSnapshot = false
+    params.HandleReleases = true
+    params.FetchJarsEagerly = true
+    params.AssumedOfflinePeriodSecs = 600
+    params.SuppressPomConsistencyChecks = true
+    params.RemoteRepoChecksumPolicyType = "pass-thru"
+
+    err = servicesManager.CreateRemoteRepository().Maven(params)
+```
+Updating remote Maven repository:
+```
+    err = servicesManager.UpdateRemoteRepository().Maven(params)
+```
+
+#### Creating and Updating Virtual Repository
+You can create and update a virtual repository for the following package types:
+
+Maven, Gradle, Ivy, Sbt, Helm, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Pypi, Docker, Gitlfs, Go, Yum, Conan,
+Chef, Puppet, Conda, P2 and Generic
+
+Each package type has it's own parameters struct, can be created using the method 
+```New<packageType>VirtualRepositoryParams()```.
+
+Example for creating virtual Go repository: 
+```
+    params := services.NewGoVirtualRepositoryParams()
+    params.Description = "This is an aggregated repository for several go repositories"
+    params.RepoLayoutRef = "go-default"
+    params.Repositories = {"gocenter-remote", "go-local"}
+    params.DefaultDeploymentRepo = "go-local"
+    params.ExternalDependenciesEnabled = true
+    params.ExternalDependenciesPatterns = {"**/github.com/**", "**/golang.org/**", "**/gopkg.in/**"}
+    params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = true
+
+    err = servicesManager.CreateVirtualRepository().Go(params)
+```
+Updating remote Maven repository:
+```
+    err = servicesManager.UpdateVirtualRepository().Go(params)
+```
+
+#### Removing a Repository
+You can remove a repository from Artifactory using its key: 
+```
+    servicesManager.DeleteRepository("generic-repo")
+```
+
 ## Bintray APIs
 ### Creating Bintray Details
  ```
