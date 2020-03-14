@@ -274,7 +274,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params := services.NewCreateTokenParams()
     params.Scope = "api:* member-of-groups:readers"
     params.Username = "user"
-    params.ExpiresIn = 3600
+    params.ExpiresIn = 3600 // default -1 (use server default)
     params.GrantType = "client_credentials"
     params.Refreshable = true
     params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
