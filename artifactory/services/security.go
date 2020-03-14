@@ -126,19 +126,20 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 }
 
 // LookupTokenID looks up a token by username and return token id
-func (ss *SecurityService) LookupTokenID(username string) (string, error) {
+func (ss *SecurityService) LookupTokenID(username string) ([]string, error) {
+	var tokens []string
 	tokenResponseData, err := ss.GetTokens()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for _, token := range tokenResponseData.Tokens {
 		if strings.HasSuffix(token.Subject, "/"+username) {
-			return token.TokenId, nil
+			tokens = append(tokens, token.TokenId)
 		}
 	}
 
-	return "", nil
+	return tokens, nil
 }
 
 func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {

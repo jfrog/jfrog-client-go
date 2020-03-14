@@ -149,13 +149,20 @@ func lookupTokenTest(t *testing.T) {
 	if len(tokens.Tokens) == 0 {
 		t.Error("Token creation/retrival failed")
 	}
-	expectedTokenId := tokens.Tokens[0].TokenId
-	lookedUpTokenId, err := testsSecurityService.LookupTokenID("anonymous")
+	expectedTokenID := tokens.Tokens[0].TokenId
+	lookedUpTokenIDs, err := testsSecurityService.LookupTokenID("anonymous")
 	if err != nil {
 		t.Error(err)
 	}
-	if expectedTokenId != lookedUpTokenId {
-		t.Errorf("expected %s token id,. got %s token id", expectedTokenId, lookedUpTokenId)
+
+	if len(lookedUpTokenIDs) == 0 {
+		t.Errorf("expected at least 1 token, but got 0")
+	}
+
+	lookedUpTokenID := lookedUpTokenIDs[0]
+
+	if expectedTokenID != lookedUpTokenID {
+		t.Errorf("expected %s token id,. got %s token id", expectedTokenID, lookedUpTokenID)
 	}
 }
 
