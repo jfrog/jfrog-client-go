@@ -2,6 +2,7 @@ package services
 
 import "testing"
 
+// Test mapping ExpiresIn to expires_in request value and default handling
 func TestBuildCreateTokenUrlValuesExpiresIn(t *testing.T) {
 	tests := []struct {
 		testName string
@@ -22,6 +23,7 @@ func TestBuildCreateTokenUrlValuesExpiresIn(t *testing.T) {
 	}
 }
 
+// Test default value -1 in NewCreateTokenParams
 func TestNewCreateTokenParams(t *testing.T) {
 	values := buildCreateTokenUrlValues(NewCreateTokenParams())
 	if values.Get("expires_in") != "" {
