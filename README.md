@@ -286,6 +286,11 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     results, err := rtManager.GetTokens()
 ```
 
+#### Fetching access tokens created by a user
+```
+    results, err := rtManager.GetUserTokens(username)
+```
+
 #### Refreshing an access token
 ```
     params := services.NewRefreshTokenParams()
