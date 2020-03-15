@@ -150,7 +150,7 @@ func lookupTokenTest(t *testing.T) {
 		t.Error("Token creation/retrival failed")
 	}
 	expectedTokenID := tokens.Tokens[0].TokenId
-	lookedUpTokenIDs, err := testsSecurityService.LookupTokenID("anonymous")
+	lookedUpTokenIDs, err := testsSecurityService.GetUserTokens("anonymous")
 	if err != nil {
 		t.Error(err)
 	}

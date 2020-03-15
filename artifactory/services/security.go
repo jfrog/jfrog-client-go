@@ -125,8 +125,8 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 	return string(body), err
 }
 
-// LookupTokenID looks up a token by username and return token id
-func (ss *SecurityService) LookupTokenID(username string) ([]string, error) {
+// GetUserTokens looks up all token created by a user
+func (ss *SecurityService) GetUserTokens(username string) ([]string, error) {
 	var tokens []string
 	tokenResponseData, err := ss.GetTokens()
 	if err != nil {
