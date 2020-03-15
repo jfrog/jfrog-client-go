@@ -91,7 +91,7 @@ func (dr *DeleteReleaseBundleService) execDeleteDistribute(name, version string,
 	}
 
 	log.Debug("Distribution response: ", resp.Status)
-	log.Output(utils.IndentJson(body))
+	log.Debug(utils.IndentJson(body))
 	return errorutils.CheckError(err)
 }
 

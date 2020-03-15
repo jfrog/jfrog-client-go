@@ -26,14 +26,14 @@ func New(commonDetails *auth.CommonDetails, config config.Config) (*Distribution
 	return manager, err
 }
 
-func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateUpdateReleaseBundleParams) error {
+func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateReleaseBundleParams) error {
 	createBundleService := services.NewCreateReleseBundleService(sm.client)
 	createBundleService.DistDetails = sm.config.GetCommonDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()
 	return createBundleService.CreateReleaseBundle(params)
 }
 
-func (sm *DistributionServicesManager) UpdateReleaseBundle(params services.CreateUpdateReleaseBundleParams) error {
+func (sm *DistributionServicesManager) UpdateReleaseBundle(params services.UpdateReleaseBundleParams) error {
 	createBundleService := services.NewUpdateReleaseBundleService(sm.client)
 	createBundleService.DistDetails = sm.config.GetCommonDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()

@@ -47,6 +47,5 @@ func (dlr *DeleteLocalReleaseBundleService) execDeleteLocalDistribution(name, ve
 	}
 
 	log.Debug("Distribution response: ", resp.Status)
-	log.Output(utils.IndentJson(body))
 	return errorutils.CheckError(err)
 }
