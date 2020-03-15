@@ -26,6 +26,12 @@ func New(commonDetails *auth.CommonDetails, config config.Config) (*Distribution
 	return manager, err
 }
 
+func (sm *DistributionServicesManager) SetSigningKey(params services.SetSigningKeyParams) error {
+	setSigningKeyService := services.NewSetSigningKeyService(sm.client)
+	setSigningKeyService.DistDetails = sm.config.GetCommonDetails()
+	return setSigningKeyService.SetSigningKey(params)
+}
+
 func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateReleaseBundleParams) error {
 	createBundleService := services.NewCreateReleseBundleService(sm.client)
 	createBundleService.DistDetails = sm.config.GetCommonDetails()

@@ -29,6 +29,7 @@ func InitArtifactoryServiceManager() {
 	createArtifactoryDeleteManager()
 	createArtifactoryDownloadManager()
 	createArtifactorySecurityManager()
+	createDistributionManager()
 	createReposIfNeeded()
 }
 

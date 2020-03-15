@@ -15,14 +15,19 @@ import (
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 	"github.com/jfrog/jfrog-client-go/auth"
+	distributionAuth "github.com/jfrog/jfrog-client-go/distribution/auth"
+	distributionServices "github.com/jfrog/jfrog-client-go/distribution/services"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mholt/archiver"
 )
 
 var RtUrl *string
+var DistUrl *string
 var RtUser *string
 var RtPassword *string
 var RtApiKey *string
@@ -30,11 +35,22 @@ var RtSshKeyPath *string
 var RtSshPassphrase *string
 var RtAccessToken *string
 var LogLevel *string
+
+// Artifactory services
 var testsUploadService *services.UploadService
 var testsSearchService *services.SearchService
 var testsDeleteService *services.DeleteService
 var testsDownloadService *services.DownloadService
 var testsSecurityService *services.SecurityService
+
+// Distribution services
+var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
+var testsBundleCreateService *distributionServices.CreateReleaseBundleService
+var testsBundleUpdateService *distributionServices.UpdateReleaseBundleService
+var testsBundleSignService *distributionServices.SignBundleService
+var testsBundleDistributeService *distributionServices.DistributeReleaseBundleService
+var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundleService
+var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
 
 const (
 	RtTargetRepo                     = "jfrog-client-tests-repo1/"
@@ -45,6 +61,7 @@ const (
 
 func init() {
 	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory/", "Artifactory url")
+	DistUrl = flag.String("rt.distributionUrl", "", "Distribution url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
@@ -55,7 +72,7 @@ func init() {
 }
 
 func createArtifactorySecurityManager() {
-	artDetails := GetCommonDetails()
+	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsSecurityService = services.NewSecurityService(client)
@@ -63,7 +80,7 @@ func createArtifactorySecurityManager() {
 }
 
 func createArtifactorySearchManager() {
-	artDetails := GetCommonDetails()
+	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsSearchService = services.NewSearchService(client)
@@ -71,7 +88,7 @@ func createArtifactorySearchManager() {
 }
 
 func createArtifactoryDeleteManager() {
-	artDetails := GetCommonDetails()
+	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsDeleteService = services.NewDeleteService(client)
@@ -79,7 +96,7 @@ func createArtifactoryDeleteManager() {
 }
 
 func createArtifactoryUploadManager() {
-	artDetails := GetCommonDetails()
+	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsUploadService = services.NewUploadService(client)
@@ -88,12 +105,32 @@ func createArtifactoryUploadManager() {
 }
 
 func createArtifactoryDownloadManager() {
-	artDetails := GetCommonDetails()
+	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsDownloadService = services.NewDownloadService(client)
 	testsDownloadService.ArtDetails = artDetails
 	testsDownloadService.SetThreads(3)
+}
+
+func createDistributionManager() {
+	distDetails := GetDistDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&distDetails).Build()
+	failOnHttpClientCreation(err)
+	testsBundleCreateService = distributionServices.NewCreateReleseBundleService(client)
+	testsBundleUpdateService = distributionServices.NewUpdateReleaseBundleService(client)
+	testsBundleSignService = distributionServices.NewSignBundleService(client)
+	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleService(client)
+	testsBundleDeleteLocalService = distributionServices.NewDeleteLocalDistributionService(client)
+	testsBundleSetSigningKeyService = distributionServices.NewSetSigningKeyService(client)
+	testsBundleDeleteRemoteService = distributionServices.NewDeleteReleaseBundleService(client)
+	testsBundleCreateService.DistDetails = distDetails
+	testsBundleUpdateService.DistDetails = distDetails
+	testsBundleSignService.DistDetails = distDetails
+	testsBundleDistributeService.DistDetails = distDetails
+	testsBundleDeleteLocalService.DistDetails = distDetails
+	testsBundleSetSigningKeyService.DistDetails = distDetails
+	testsBundleDeleteRemoteService.DistDetails = distDetails
 }
 
 func failOnHttpClientCreation(err error) {
@@ -103,27 +140,87 @@ func failOnHttpClientCreation(err error) {
 	}
 }
 
-func GetCommonDetails() auth.CommonDetails {
+func GetRtDetails() auth.CommonDetails {
 	rtDetails := artifactoryAuth.NewArtifactoryDetails()
 	rtDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*RtUrl))
-	if !fileutils.IsSshUrl(rtDetails.GetUrl()) {
+	setAuthenticationDetail(rtDetails)
+	return rtDetails
+}
+
+func GetDistDetails() auth.CommonDetails {
+	distDetails := distributionAuth.NewDistributionDetails()
+	distDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*DistUrl))
+	setAuthenticationDetail(distDetails)
+	return distDetails
+}
+
+func setAuthenticationDetail(commonDetails auth.CommonDetails) {
+	if !fileutils.IsSshUrl(commonDetails.GetUrl()) {
 		if *RtApiKey != "" {
-			rtDetails.SetApiKey(*RtApiKey)
+			commonDetails.SetApiKey(*RtApiKey)
 		} else if *RtAccessToken != "" {
-			rtDetails.SetAccessToken(*RtAccessToken)
+			commonDetails.SetAccessToken(*RtAccessToken)
 		} else {
-			rtDetails.SetUser(*RtUser)
-			rtDetails.SetPassword(*RtPassword)
+			commonDetails.SetUser(*RtUser)
+			commonDetails.SetPassword(*RtPassword)
 		}
-		return rtDetails
+		return
 	}
 
-	err := rtDetails.AuthenticateSsh(*RtSshKeyPath, *RtSshPassphrase)
+	err := commonDetails.AuthenticateSsh(*RtSshKeyPath, *RtSshPassphrase)
 	if err != nil {
-		log.Error("Failed while attempting to authenticate with Artifactory: " + err.Error())
+		log.Error("Failed while attempting to authenticate: " + err.Error())
 		os.Exit(1)
 	}
-	return rtDetails
+}
+
+func uploadDummyFile(t *testing.T) {
+	workingDir, _, err := tests.CreateFileWithContent("a.in", "/out/")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	defer os.RemoveAll(workingDir)
+	pattern := FixWinPath(filepath.Join(workingDir, "*"))
+	up := services.NewUploadParams()
+	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "test/"}
+	up.Flat = true
+	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
+	if uploaded != 1 {
+		t.Error("Expected to upload 1 file.")
+	}
+	if failed != 0 {
+		t.Error("Failed to upload", failed, "files.")
+	}
+	if err != nil {
+		t.Error(err)
+	}
+	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "b.in"}
+	up.Flat = true
+	_, uploaded, failed, err = testsUploadService.UploadFiles(up)
+	if uploaded != 1 {
+		t.Error("Expected to upload 1 file.")
+	}
+	if failed != 0 {
+		t.Error("Failed to upload", failed, "files.")
+	}
+	archivePath := filepath.Join(workingDir, "c.tar.gz")
+	err = archiver.TarGz.Make(archivePath, []string{filepath.Join(workingDir, "out/a.in")})
+	if err != nil {
+		t.Error(err)
+	}
+	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: archivePath, Recursive: true, Target: RtTargetRepo}
+	up.Flat = true
+	_, uploaded, failed, err = testsUploadService.UploadFiles(up)
+	if uploaded != 1 {
+		t.Error("Expected to upload 1 file.")
+	}
+	if failed != 0 {
+		t.Error("Failed to upload", failed, "files.")
+	}
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func artifactoryCleanup(t *testing.T) {
@@ -166,7 +263,7 @@ func createReposIfNeeded() error {
 }
 
 func isRepoExist(repoName string) bool {
-	artDetails := GetCommonDetails()
+	artDetails := GetRtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
@@ -190,7 +287,7 @@ func execCreateRepoRest(repoConfig, repoName string) error {
 	if err != nil {
 		return err
 	}
-	artDetails := GetCommonDetails()
+	artDetails := GetRtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
 
 	artHttpDetails.Headers = map[string]string{"Content-Type": "application/json"}

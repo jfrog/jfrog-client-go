@@ -31,10 +31,10 @@ func (cb *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams Cre
 	if err != nil {
 		return err
 	}
-	
+
 	body := &createReleaseBundleBody{
-		Name: createBundleParams.Name,
-		Version: createBundleParams.Version,
+		Name:              createBundleParams.Name,
+		Version:           createBundleParams.Version,
 		ReleaseBundleBody: *releaseBundleBody,
 	}
 
