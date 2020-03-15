@@ -24,7 +24,7 @@ func TestToken(t *testing.T) {
 	t.Run("RevokeToken: token not found", revokeTokenNotFoundTest)
 	t.Run("RefreshToken", refreshTokenTest)
 	t.Run("GetTokens", getTokensTest)
-	t.Run("LookupTokens", lookupTokenTest)
+	t.Run("GetUserTokens", getUserTokensTest)
 	teardown()
 }
 
@@ -137,7 +137,7 @@ func getTokensTest(t *testing.T) {
 	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
 }
 
-func lookupTokenTest(t *testing.T) {
+func getUserTokensTest(t *testing.T) {
 	_, err := createToken()
 	if err != nil {
 		t.Error(err)
@@ -150,19 +150,19 @@ func lookupTokenTest(t *testing.T) {
 		t.Error("Token creation/retrival failed")
 	}
 	expectedTokenID := tokens.Tokens[0].TokenId
-	lookedUpTokenIDs, err := testsSecurityService.GetUserTokens("anonymous")
+	userTokenIDs, err := testsSecurityService.GetUserTokens("anonymous")
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(lookedUpTokenIDs) == 0 {
+	if len(userTokenIDs) == 0 {
 		t.Errorf("expected at least 1 token, but got 0")
 	}
 
-	lookedUpTokenID := lookedUpTokenIDs[0]
+	firstUserToken := userTokenIDs[0]
 
-	if expectedTokenID != lookedUpTokenID {
-		t.Errorf("expected %s token id,. got %s token id", expectedTokenID, lookedUpTokenID)
+	if expectedTokenID != firstUserToken {
+		t.Errorf("expected %s token id,. got %s token id", expectedTokenID, firstUserToken)
 	}
 }
 
