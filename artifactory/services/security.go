@@ -136,7 +136,7 @@ func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
 	if params.Audience != "" {
 		data.Set("audience", params.Audience)
 	}
-	if params.ExpiresIn != 0 {
+	if params.ExpiresIn >= 0 {
 		data.Set("expires_in", strconv.Itoa(params.ExpiresIn))
 	}
 	return data
@@ -208,7 +208,7 @@ type RevokeTokenParams struct {
 }
 
 func NewCreateTokenParams() CreateTokenParams {
-	return CreateTokenParams{}
+	return CreateTokenParams{ExpiresIn: -1}
 }
 
 func NewRefreshTokenParams() RefreshTokenParams {

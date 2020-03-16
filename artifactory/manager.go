@@ -81,6 +81,7 @@ func (sm *ArtifactoryServicesManager) DeleteFiles(resultItems []utils.ResultItem
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetCommonDetails()
+	deleteService.Threads = sm.config.GetThreads()
 	return deleteService.DeleteFiles(resultItems)
 }
 
