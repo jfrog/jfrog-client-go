@@ -6,19 +6,20 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/xanzy/ssh-agent"
-	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/xanzy/ssh-agent"
+	"golang.org/x/crypto/ssh"
 )
 
-func sshAuthentication(url, sshKeyPath, sshPassphrase string) (sshAuthHeaders map[string]string, newUrl string, err error) {
+func SshAuthentication(url, sshKeyPath, sshPassphrase string) (sshAuthHeaders map[string]string, newUrl string, err error) {
 	_, host, port, err := parseUrl(url)
 	if err != nil {
 		return nil, "", err

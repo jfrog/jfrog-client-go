@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
@@ -20,14 +20,14 @@ const APIKeyPath = "api/security/apiKey"
 
 type SecurityService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewSecurityService(client *rthttpclient.ArtifactoryHttpClient) *SecurityService {
 	return &SecurityService{client: client}
 }
 
-func (ss *SecurityService) getArtifactoryDetails() auth.ArtifactoryDetails {
+func (ss *SecurityService) getArtifactoryDetails() auth.CommonDetails {
 	return ss.ArtDetails
 }
 

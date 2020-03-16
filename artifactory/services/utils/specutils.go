@@ -17,8 +17,8 @@ type Aql struct {
 }
 
 type ArtifactoryCommonParams struct {
-	Aql             Aql
-	Pattern         string
+	Aql     Aql
+	Pattern string
 	// Deprecated, use Exclusions instead
 	ExcludePatterns []string
 	Exclusions      []string

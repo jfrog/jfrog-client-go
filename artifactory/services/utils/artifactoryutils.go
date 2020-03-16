@@ -3,8 +3,8 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -25,7 +25,7 @@ const (
 	LastRelease         = "LAST_RELEASE"
 )
 
-func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ArtifactoryDetails, details *fileutils.FileDetails,
+func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.CommonDetails, details *fileutils.FileDetails,
 	httpClientsDetails httputils.HttpClientDetails, client *rthttpclient.ArtifactoryHttpClient, retries int, progress io.Progress) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
@@ -50,7 +50,7 @@ func AddChecksumHeaders(headers map[string]string, fileDetails *fileutils.FileDe
 	}
 }
 
-func AddAuthHeaders(headers map[string]string, artifactoryDetails auth.ArtifactoryDetails) {
+func AddAuthHeaders(headers map[string]string, artifactoryDetails auth.CommonDetails) {
 	if headers == nil {
 		headers = make(map[string]string)
 	}
@@ -391,22 +391,22 @@ func filterBuildAqlSearchResults(itemsToFilter *[]ResultItem, buildArtifactsSha 
 }
 
 type CommonConf interface {
-	GetArtifactoryDetails() auth.ArtifactoryDetails
-	SetArtifactoryDetails(rt auth.ArtifactoryDetails)
+	GetArtifactoryDetails() auth.CommonDetails
+	SetArtifactoryDetails(rt auth.CommonDetails)
 	GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error)
 	IsDryRun() bool
 }
 
 type CommonConfImpl struct {
-	artDetails auth.ArtifactoryDetails
+	artDetails auth.CommonDetails
 	DryRun     bool
 }
 
-func (flags *CommonConfImpl) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (flags *CommonConfImpl) GetArtifactoryDetails() auth.CommonDetails {
 	return flags.artDetails
 }
 
-func (flags *CommonConfImpl) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (flags *CommonConfImpl) SetArtifactoryDetails(rt auth.CommonDetails) {
 	flags.artDetails = rt
 }
 
@@ -415,5 +415,5 @@ func (flags *CommonConfImpl) IsDryRun() bool {
 }
 
 func (flags *CommonConfImpl) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
-	return rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&flags.artDetails).Build()
+	return rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&flags.artDetails).Build()
 }

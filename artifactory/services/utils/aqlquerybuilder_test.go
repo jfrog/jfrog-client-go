@@ -35,7 +35,8 @@ func TestBuildAqlSearchQuery(t *testing.T) {
 	for _, sample := range buildAqlSearchQueryDataProvider {
 		t.Run(sample.pattern+"_recursive_"+strconv.FormatBool(sample.recursive), func(t *testing.T) {
 			params := ArtifactoryCommonParams{Pattern: sample.pattern, Recursive: sample.recursive, Regexp: false, IncludeDirs: false}
-			aqlResult, _ := createAqlBodyForSpecWithPattern(&params)
+			aqlResult, err := CreateAqlBodyForSpecWithPattern(&params)
+			assert.NoError(t, err)
 			if aqlResult != sample.expectedAql {
 				t.Error("Unexpected download AQL query built. \nExpected: " + sample.expectedAql + " \nGot:      " + aqlResult)
 			}

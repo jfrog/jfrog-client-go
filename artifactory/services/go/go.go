@@ -3,14 +3,15 @@ package _go
 import (
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type GoService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewGoService(client *rthttpclient.ArtifactoryHttpClient) *GoService {
@@ -21,7 +22,7 @@ func (gs *GoService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
 	return gs.client
 }
 
-func (gs *GoService) SetArtDetails(artDetails auth.ArtifactoryDetails) {
+func (gs *GoService) SetArtDetails(artDetails auth.CommonDetails) {
 	gs.ArtDetails = artDetails
 }
 

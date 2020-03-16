@@ -52,7 +52,7 @@ func regenerateAPIKeyTest(t *testing.T) {
 
 	client, err := httpclient.ArtifactoryClientBuilder().
 		SetInsecureTls(true).
-		SetArtDetails(&rtDetails).
+		SetCommonDetails(&rtDetails).
 		Build()
 	if err != nil {
 		t.Fatalf("Failed to create Artifactory client: %v\n", err)

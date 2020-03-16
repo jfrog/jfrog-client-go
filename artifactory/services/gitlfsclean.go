@@ -2,25 +2,26 @@ package services
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"net/url"
+	"os"
+	"path"
+	"regexp"
+	"strings"
+
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	gitconfig "gopkg.in/src-d/go-git.v4/plumbing/format/config"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"net/url"
-	"os"
-	"path"
-	"regexp"
-	"strings"
 )
 
 type GitLfsCleanService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	DryRun     bool
 }
 
@@ -28,11 +29,11 @@ func NewGitLfsCleanService(client *rthttpclient.ArtifactoryHttpClient) *GitLfsCl
 	return &GitLfsCleanService{client: client}
 }
 
-func (glc *GitLfsCleanService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (glc *GitLfsCleanService) GetArtifactoryDetails() auth.CommonDetails {
 	return glc.ArtDetails
 }
 
-func (glc *GitLfsCleanService) SetArtifactoryDetails(art auth.ArtifactoryDetails) {
+func (glc *GitLfsCleanService) SetArtifactoryDetails(art auth.CommonDetails) {
 	glc.ArtDetails = art
 }
 

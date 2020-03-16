@@ -1,20 +1,21 @@
 package tests
 
 import (
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 	"strconv"
 	"strings"
 	"testing"
+
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 )
 
 var testsXrayScanService *services.XrayScanService
 
 func TestNewXrayScanService(t *testing.T) {
 	xrayServerPort := xray.StartXrayMockServer()
-	artDetails := getArtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetArtDetails(&artDetails).Build()
+	artDetails := GetRtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	if err != nil {
 		t.Error(err)
 	}
