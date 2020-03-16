@@ -166,21 +166,21 @@ type LocalRepositoryBaseParams struct {
 	Notes                           string   `json:"notes,omitempty"`
 	IncludesPattern                 string   `json:"includesPattern,omitempty"`
 	ExcludesPattern                 string   `json:"excludesPattern,omitempty"`
-	RepoLayoutRef                   string   `json:"repoLayoutRef, omitempty"`
-	BlackedOut                      bool     `json:"blackedOut, omitempty"`
-	XrayIndex                       bool     `json:"xrayIndex, omitempty"`
-	PropertySets                    []string `json:"propertySets, omitempty"`
-	ArchiveBrowsingEnabled          bool     `json:"archiveBrowsingEnabled, omitempty"`
-	OptionalIndexCompressionFormats []string `json:"optionalIndexCompressionFormats, omitempty"`
-	DownloadRedirect                bool     `json:"downloadRedirect, omitempty"`
-	BlockPushingSchema1             bool     `json:"blockPushingSchema1, omitempty"`
+	RepoLayoutRef                   string   `json:"repoLayoutRef,omitempty"`
+	BlackedOut                      *bool    `json:"blackedOut,omitempty"`
+	XrayIndex                       *bool    `json:"xrayIndex,omitempty"`
+	PropertySets                    []string `json:"propertySets,omitempty"`
+	ArchiveBrowsingEnabled          *bool    `json:"archiveBrowsingEnabled,omitempty"`
+	OptionalIndexCompressionFormats []string `json:"optionalIndexCompressionFormats,omitempty"`
+	DownloadRedirect                *bool    `json:"downloadRedirect,omitempty"`
+	BlockPushingSchema1             *bool    `json:"blockPushingSchema1,omitempty"`
 }
 
 type CommonMavenGradleLocalRepositoryParams struct {
 	MaxUniqueSnapshots           int    `json:"maxUniqueSnapshots,omitempty"`
-	HandleReleases               bool   `json:"handleReleases,omitempty"`
-	HandleSnapshot               bool   `json:"handleSnapshot,omitempty"`
-	SuppressPomConsistencyChecks bool   `json:"suppressPomConsistencyChecks,omitempty"`
+	HandleReleases               *bool  `json:"handleReleases,omitempty"`
+	HandleSnapshots              *bool  `json:"handleSnapshots,omitempty"`
+	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
 	SnapshotVersionBehavior      string `json:"snapshotVersionBehavior,omitempty"`
 	ChecksumPolicyType           string `json:"checksumPolicyType,omitempty"`
 }
@@ -205,9 +205,9 @@ func NewGradleLocalRepositoryParams() GradleLocalRepositoryParams {
 
 type RpmLocalRepositoryParams struct {
 	LocalRepositoryBaseParams
-	YumRootDepth            int  `json:"yumRootDepth,omitempty"`
-	CalculateYumMetadata    bool `json:"calculateYumMetadata,omitempty"`
-	EnableFileListsIndexing bool `json:"enableFileListsIndexing ,omitempty"`
+	YumRootDepth            int   `json:"yumRootDepth,omitempty"`
+	CalculateYumMetadata    *bool `json:"calculateYumMetadata,omitempty"`
+	EnableFileListsIndexing *bool `json:"enableFileListsIndexing,omitempty"`
 }
 
 func NewRpmLocalRepositoryParams() RpmLocalRepositoryParams {
@@ -216,8 +216,8 @@ func NewRpmLocalRepositoryParams() RpmLocalRepositoryParams {
 
 type NugetLocalRepositoryParams struct {
 	LocalRepositoryBaseParams
-	MaxUniqueSnapshots       int  `json:"maxUniqueSnapshots,omitempty"`
-	ForceNugetAuthentication bool `json:"forceNugetAuthentication ,omitempty"`
+	MaxUniqueSnapshots       int   `json:"maxUniqueSnapshots,omitempty"`
+	ForceNugetAuthentication *bool `json:"forceNugetAuthentication,omitempty"`
 }
 
 func NewNugetLocalRepositoryParams() NugetLocalRepositoryParams {
@@ -226,7 +226,7 @@ func NewNugetLocalRepositoryParams() NugetLocalRepositoryParams {
 
 type DebianLocalRepositoryParams struct {
 	LocalRepositoryBaseParams
-	DebianTrivialLayout bool `json:"debianTrivialLayout ,omitempty"`
+	DebianTrivialLayout *bool `json:"debianTrivialLayout,omitempty"`
 }
 
 func NewDebianLocalRepositoryParams() DebianLocalRepositoryParams {
@@ -235,8 +235,8 @@ func NewDebianLocalRepositoryParams() DebianLocalRepositoryParams {
 
 type DockerLocalRepositoryParams struct {
 	LocalRepositoryBaseParams
-	MaxUniqueTags    int  `json:"maxUniqueTags,omitempty"`
-	DockerApiVersion bool `json:"dockerApiVersion ,omitempty"`
+	MaxUniqueTags    int   `json:"maxUniqueTags,omitempty"`
+	DockerApiVersion *bool `json:"dockerApiVersion,omitempty"`
 }
 
 func NewDockerLocalRepositoryParams() DockerLocalRepositoryParams {

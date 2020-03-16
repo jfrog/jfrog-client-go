@@ -191,40 +191,40 @@ type RemoteRepositoryBaseParams struct {
 	Notes                             string                 `json:"notes,omitempty"`
 	IncludesPattern                   string                 `json:"includesPattern,omitempty"`
 	ExcludesPattern                   string                 `json:"excludesPattern,omitempty"`
-	RepoLayoutRef                     string                 `json:"repoLayoutRef, omitempty"`
-	HardFail                          bool                   `json:"hardFail, omitempty"`
-	Offline                           bool                   `json:"offline, omitempty"`
-	BlackedOut                        bool                   `json:"blackedOut, omitempty"`
-	StoreArtifactsLocally             bool                   `json:"storeArtifactsLocally, omitempty"`
-	SocketTimeoutMillis               int                    `json:"socketTimeoutMillis, omitempty"`
-	LocalAddress                      string                 `json:"localAddress, omitempty"`
-	RetrievalCachePeriodSecs          int                    `json:"retrievalCachePeriodSecs, omitempty"`
-	FailedRetrievalCachePeriodSecs    int                    `json:"failedRetrievalCachePeriodSecs, omitempty"`
-	MissedRetrievalCachePeriodSecs    int                    `json:"missedRetrievalCachePeriodSecs, omitempty"`
-	UnusedArtifactsCleanupEnabled     bool                   `json:"unusedArtifactsCleanupEnabled, omitempty"`
-	UnusedArtifactsCleanupPeriodHours int                    `json:"unusedArtifactsCleanupPeriodHours, omitempty"`
-	AssumedOfflinePeriodSecs          int                    `json:"assumedOfflinePeriodSecs, omitempty"`
-	ShareConfiguration                bool                   `json:"shareConfiguration, omitempty"`
-	SynchronizeProperties             bool                   `json:"synchronizeProperties, omitempty"`
-	BlockMismatchingMimeTypes         bool                   `json:"blockMismatchingMimeTypes, omitempty"`
-	PropertySets                      []string               `json:"propertySets, omitempty"`
-	AllowAnyHostAuth                  bool                   `json:""allowAnyHostAuth", omitempty"`
-	EnableCookieManagement            bool                   `json:"enableCookieManagement, omitempty"`
-	BypassHeadRequests                bool                   `json:"bypassHeadRequests, omitempty"`
-	ClientTlsCertificate              string                 `json:"clientTlsCertificate, omitempty"`
-	BlockPushingSchema1               bool                   `json:"blockPushingSchema1, omitempty"`
-	contentSynchronisation            ContentSynchronisation `json:"contentSynchronisation, omitempty"`
+	RepoLayoutRef                     string                 `json:"repoLayoutRef,omitempty"`
+	HardFail                          *bool                  `json:"hardFail,omitempty"`
+	Offline                           *bool                  `json:"offline,omitempty"`
+	BlackedOut                        *bool                  `json:"blackedOut,omitempty"`
+	StoreArtifactsLocally             *bool                  `json:"storeArtifactsLocally,omitempty"`
+	SocketTimeoutMillis               int                    `json:"socketTimeoutMillis,omitempty"`
+	LocalAddress                      string                 `json:"localAddress,omitempty"`
+	RetrievalCachePeriodSecs          int                    `json:"retrievalCachePeriodSecs,omitempty"`
+	FailedRetrievalCachePeriodSecs    int                    `json:"failedRetrievalCachePeriodSecs,omitempty"`
+	MissedRetrievalCachePeriodSecs    int                    `json:"missedRetrievalCachePeriodSecs,omitempty"`
+	UnusedArtifactsCleanupEnabled     *bool                  `json:"unusedArtifactsCleanupEnabled,omitempty"`
+	UnusedArtifactsCleanupPeriodHours int                    `json:"unusedArtifactsCleanupPeriodHours,omitempty"`
+	AssumedOfflinePeriodSecs          int                    `json:"assumedOfflinePeriodSecs,omitempty"`
+	ShareConfiguration                *bool                  `json:"shareConfiguration,omitempty"`
+	SynchronizeProperties             *bool                  `json:"synchronizeProperties,omitempty"`
+	BlockMismatchingMimeTypes         *bool                  `json:"blockMismatchingMimeTypes,omitempty"`
+	PropertySets                      []string               `json:"propertySets,omitempty"`
+	AllowAnyHostAuth                  *bool                  `json:"allowAnyHostAuth,omitempty"`
+	EnableCookieManagement            *bool                  `json:"enableCookieManagement,omitempty"`
+	BypassHeadRequests                *bool                  `json:"bypassHeadRequests,omitempty"`
+	ClientTlsCertificate              string                 `json:"clientTlsCertificate,omitempty"`
+	BlockPushingSchema1               *bool                  `json:"blockPushingSchema1,omitempty"`
+	contentSynchronisation            ContentSynchronisation `json:"contentSynchronisation,omitempty"`
 }
 
 type CommonMavenGradleRemoteRepositoryParams struct {
-	FetchJarsEagerly             bool   `json:"fetchJarsEagerly, omitempty"`
-	FetchSourcesEagerly          bool   `json:"fetchSourcesEagerly, omitempty"`
-	RemoteRepoChecksumPolicyType string `json:"remoteRepoChecksumPolicyType, omitempty"`
-	ListRemoteFolderItems        bool   `json:"listRemoteFolderItems, omitempty"`
-	HandleReleases               bool   `json:"handleReleases, omitempty"`
-	HandleSnapshot               bool   `json:"handleSnapshot, omitempty"`
-	SuppressPomConsistencyChecks bool   `json:"suppressPomConsistencyChecks, omitempty"`
-	RejectInvalidJars            bool   `json:"rejectInvalidJars, omitempty"`
+	FetchJarsEagerly             *bool  `json:"fetchJarsEagerly,omitempty"`
+	FetchSourcesEagerly          *bool  `json:"fetchSourcesEagerly,omitempty"`
+	RemoteRepoChecksumPolicyType string `json:"remoteRepoChecksumPolicyType,omitempty"`
+	ListRemoteFolderItems        *bool  `json:"listRemoteFolderItems,omitempty"`
+	HandleReleases               *bool  `json:"handleReleases,omitempty"`
+	HandleSnapshots              *bool  `json:"handleSnapshots,omitempty"`
+	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
+	RejectInvalidJars            *bool  `json:"rejectInvalidJars,omitempty"`
 }
 
 type MavenRemoteRepositoryParams struct {
@@ -247,7 +247,7 @@ func NewGradleRemoteRepositoryParams() GradleRemoteRepositoryParams {
 
 type CocoapodsRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	PodsSpecsRepoUrl string `json:"podsSpecsRepoUrl, omitempty"`
+	PodsSpecsRepoUrl string `json:"podsSpecsRepoUrl,omitempty"`
 }
 
 func NewCocoapodsRemoteRepositoryParams() CocoapodsRemoteRepositoryParams {
@@ -256,7 +256,7 @@ func NewCocoapodsRemoteRepositoryParams() CocoapodsRemoteRepositoryParams {
 
 type OpkgRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ListRemoteFolderItems bool `json:"listRemoteFolderItems, omitempty"`
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
 func NewOpkgRemoteRepositoryParams() OpkgRemoteRepositoryParams {
@@ -265,7 +265,7 @@ func NewOpkgRemoteRepositoryParams() OpkgRemoteRepositoryParams {
 
 type RpmRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ListRemoteFolderItems bool `json:"listRemoteFolderItems, omitempty"`
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
 func NewRpmRemoteRepositoryParams() RpmRemoteRepositoryParams {
@@ -274,10 +274,10 @@ func NewRpmRemoteRepositoryParams() RpmRemoteRepositoryParams {
 
 type NugetRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	FeedContextPath          string `json:"feedContextPath, omitempty"`
-	DownloadContextPath      string `json:"downloadContextPath, omitempty"`
-	V3FeedUrl                string `json:"v3FeedUrl, omitempty"`
-	ForceNugetAuthentication bool   `json:"forceNugetAuthentication ,omitempty"`
+	FeedContextPath          string `json:"feedContextPath,omitempty"`
+	DownloadContextPath      string `json:"downloadContextPath,omitempty"`
+	V3FeedUrl                string `json:"v3FeedUrl,omitempty"`
+	ForceNugetAuthentication *bool  `json:"forceNugetAuthentication,omitempty"`
 }
 
 func NewNugetRemoteRepositoryParams() NugetRemoteRepositoryParams {
@@ -286,7 +286,7 @@ func NewNugetRemoteRepositoryParams() NugetRemoteRepositoryParams {
 
 type GemsRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ListRemoteFolderItems bool `json:"listRemoteFolderItems, omitempty"`
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
 func NewGemsRemoteRepositoryParams() GemsRemoteRepositoryParams {
@@ -295,7 +295,7 @@ func NewGemsRemoteRepositoryParams() GemsRemoteRepositoryParams {
 
 type NpmRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ListRemoteFolderItems bool `json:"listRemoteFolderItems, omitempty"`
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
 func NewNpmRemoteRepositoryParams() NpmRemoteRepositoryParams {
@@ -304,7 +304,7 @@ func NewNpmRemoteRepositoryParams() NpmRemoteRepositoryParams {
 
 type BowerRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	BowerRegistryUrl string `json:"bowerRegistryUrl, omitempty"`
+	BowerRegistryUrl string `json:"bowerRegistryUrl,omitempty"`
 }
 
 func NewBowerRemoteRepositoryParams() BowerRemoteRepositoryParams {
@@ -313,7 +313,7 @@ func NewBowerRemoteRepositoryParams() BowerRemoteRepositoryParams {
 
 type DebianRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ListRemoteFolderItems bool `json:"listRemoteFolderItems, omitempty"`
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
 func NewDebianRemoteRepositoryParams() DebianRemoteRepositoryParams {
@@ -322,7 +322,7 @@ func NewDebianRemoteRepositoryParams() DebianRemoteRepositoryParams {
 
 type ComposerRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	composerRegistryUrl string `json:"composerRegistryUrl, omitempty"`
+	composerRegistryUrl string `json:"composerRegistryUrl,omitempty"`
 }
 
 func NewComposerRemoteRepositoryParams() ComposerRemoteRepositoryParams {
@@ -331,8 +331,8 @@ func NewComposerRemoteRepositoryParams() ComposerRemoteRepositoryParams {
 
 type PypiRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ListRemoteFolderItems bool   `json:"listRemoteFolderItems, omitempty"`
-	PypiRegistryUrl       string `json:"pypiRegistryUrl, omitempty"`
+	ListRemoteFolderItems *bool  `json:"listRemoteFolderItems,omitempty"`
+	PypiRegistryUrl       string `json:"pypiRegistryUrl,omitempty"`
 }
 
 func NewPypiRemoteRepositoryParams() PypiRemoteRepositoryParams {
@@ -341,9 +341,9 @@ func NewPypiRemoteRepositoryParams() PypiRemoteRepositoryParams {
 
 type DockerRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled, omitempty"`
-	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns, omitempty"`
-	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication, omitempty"`
+	ExternalDependenciesEnabled  *bool    `json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
+	EnableTokenAuthentication    *bool    `json:"enableTokenAuthentication,omitempty"`
 }
 
 func NewDockerRemoteRepositoryParams() DockerRemoteRepositoryParams {
@@ -352,7 +352,7 @@ func NewDockerRemoteRepositoryParams() DockerRemoteRepositoryParams {
 
 type GitlfsRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ListRemoteFolderItems bool `json:"listRemoteFolderItems, omitempty"`
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
 func NewGitlfsRemoteRepositoryParams() GitlfsRemoteRepositoryParams {
@@ -361,11 +361,11 @@ func NewGitlfsRemoteRepositoryParams() GitlfsRemoteRepositoryParams {
 
 type VcsRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	VcsGitProvider        string `json:"vcsGitProvider, omitempty"`
-	VcsType               string `json:"vcsType, omitempty"`
-	MaxUniqueSnapshots    int    `json:"maxUniqueSnapshots, omitempty"`
-	VcsGitDownloadUrl     string `json:"vcsGitDownloadUrl, omitempty"`
-	ListRemoteFolderItems bool   `json:"listRemoteFolderItems, omitempty"`
+	VcsGitProvider        string `json:"vcsGitProvider,omitempty"`
+	VcsType               string `json:"vcsType,omitempty"`
+	MaxUniqueSnapshots    int    `json:"maxUniqueSnapshots,omitempty"`
+	VcsGitDownloadUrl     string `json:"vcsGitDownloadUrl,omitempty"`
+	ListRemoteFolderItems *bool  `json:"listRemoteFolderItems,omitempty"`
 }
 
 func NewVcsRemoteRepositoryParams() VcsRemoteRepositoryParams {
@@ -374,7 +374,7 @@ func NewVcsRemoteRepositoryParams() VcsRemoteRepositoryParams {
 
 type GenericRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ListRemoteFolderItems bool `json:"listRemoteFolderItems, omitempty"`
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
 func NewGenericRemoteRepositoryParams() GenericRemoteRepositoryParams {

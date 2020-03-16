@@ -158,16 +158,16 @@ type VirtualRepositoryBaseParams struct {
 	Notes                                         string   `json:"notes,omitempty"`
 	IncludesPattern                               string   `json:"includesPattern,omitempty"`
 	ExcludesPattern                               string   `json:"excludesPattern,omitempty"`
-	RepoLayoutRef                                 string   `json:"repoLayoutRef, omitempty"`
-	Repositories                                  []string `json:"repositories, omitempty"`
-	ArtifactoryRequestsCanRetrieveRemoteArtifacts bool     `json:"artifactoryRequestsCanRetrieveRemoteArtifacts, omitempty"`
-	DefaultDeploymentRepo                         string   `json:"defaultDeploymentRepo, omitempty"`
+	RepoLayoutRef                                 string   `json:"repoLayoutRef,omitempty"`
+	Repositories                                  []string `json:"repositories,omitempty"`
+	ArtifactoryRequestsCanRetrieveRemoteArtifacts *bool    `json:"artifactoryRequestsCanRetrieveRemoteArtifacts,omitempty"`
+	DefaultDeploymentRepo                         string   `json:"defaultDeploymentRepo,omitempty"`
 }
 
 type CommonMavenGradleVirtualRepositoryParams struct {
-	ForceMavenAuthentication             bool   `json:"forceMavenAuthentication, omitempty"`
-	PomRepositoryReferencesCleanupPolicy string `json:"pomRepositoryReferencesCleanupPolicy, omitempty"`
-	KeyPair                              string `json:"keyPair, omitempty"`
+	ForceMavenAuthentication             *bool  `json:"forceMavenAuthentication,omitempty"`
+	PomRepositoryReferencesCleanupPolicy string `json:"pomRepositoryReferencesCleanupPolicy,omitempty"`
+	KeyPair                              string `json:"keyPair,omitempty"`
 }
 
 type MavenVirtualRepositoryParams struct {
@@ -190,7 +190,7 @@ func NewGradleVirtualRepositoryParams() GradleVirtualRepositoryParams {
 
 type NugetVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	ForceNugetAuthentication bool `json:"forceNugetAuthentication ,omitempty"`
+	ForceNugetAuthentication *bool `json:"forceNugetAuthentication,omitempty"`
 }
 
 func NewNugetVirtualRepositoryParams() NugetVirtualRepositoryParams {
@@ -199,10 +199,10 @@ func NewNugetVirtualRepositoryParams() NugetVirtualRepositoryParams {
 
 type NpmVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	ExternalDependenciesEnabled     bool     `json:"externalDependenciesEnabled, omitempty"`
-	ExternalDependenciesPatterns    []string `json:"externalDependenciesPatterns, omitempty"`
-	ExternalDependenciesRemoteRepo  string   `json:"externalDependenciesRemoteRepo, omitempty"`
-	VirtualRetrievalCachePeriodSecs int      `json:"virtualRetrievalCachePeriodSecs, omitempty"`
+	ExternalDependenciesEnabled     *bool    `json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns    []string `json:"externalDependenciesPatterns,omitempty"`
+	ExternalDependenciesRemoteRepo  string   `json:"externalDependenciesRemoteRepo,omitempty"`
+	VirtualRetrievalCachePeriodSecs int      `json:"virtualRetrievalCachePeriodSecs,omitempty"`
 }
 
 func NewNpmVirtualRepositoryParams() NpmVirtualRepositoryParams {
@@ -211,9 +211,9 @@ func NewNpmVirtualRepositoryParams() NpmVirtualRepositoryParams {
 
 type BowerVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	ExternalDependenciesEnabled    bool     `json:"externalDependenciesEnabled, omitempty"`
-	ExternalDependenciesPatterns   []string `json:"externalDependenciesPatterns, omitempty"`
-	ExternalDependenciesRemoteRepo string   `json:"externalDependenciesRemoteRepo, omitempty"`
+	ExternalDependenciesEnabled    *bool    `json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns   []string `json:"externalDependenciesPatterns,omitempty"`
+	ExternalDependenciesRemoteRepo string   `json:"externalDependenciesRemoteRepo,omitempty"`
 }
 
 func NewBowerVirtualRepositoryParams() BowerVirtualRepositoryParams {
@@ -222,7 +222,7 @@ func NewBowerVirtualRepositoryParams() BowerVirtualRepositoryParams {
 
 type DebianVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	DebianTrivialLayout bool `json:"debianTrivialLayout, omitempty"`
+	DebianTrivialLayout *bool `json:"debianTrivialLayout,omitempty"`
 }
 
 func NewDebianVirtualRepositoryParams() DebianVirtualRepositoryParams {
@@ -231,8 +231,8 @@ func NewDebianVirtualRepositoryParams() DebianVirtualRepositoryParams {
 
 type GoVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled, omitempty"`
-	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns, omitempty"`
+	ExternalDependenciesEnabled  *bool    `json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
 }
 
 func NewGoVirtualRepositoryParams() GoVirtualRepositoryParams {
@@ -241,7 +241,7 @@ func NewGoVirtualRepositoryParams() GoVirtualRepositoryParams {
 
 type ConanVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs, omitempty"`
+	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
 }
 
 func NewConanVirtualRepositoryParams() ConanVirtualRepositoryParams {
@@ -250,7 +250,7 @@ func NewConanVirtualRepositoryParams() ConanVirtualRepositoryParams {
 
 type HelmVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs, omitempty"`
+	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
 }
 
 func NewHelmVirtualRepositoryParams() HelmVirtualRepositoryParams {
@@ -259,7 +259,7 @@ func NewHelmVirtualRepositoryParams() HelmVirtualRepositoryParams {
 
 type RpmVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs, omitempty"`
+	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
 }
 
 func NewRpmVirtualRepositoryParams() RpmVirtualRepositoryParams {
@@ -268,7 +268,7 @@ func NewRpmVirtualRepositoryParams() RpmVirtualRepositoryParams {
 
 type CranVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs, omitempty"`
+	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
 }
 
 func NewCranVirtualRepositoryParams() CranVirtualRepositoryParams {
@@ -277,7 +277,7 @@ func NewCranVirtualRepositoryParams() CranVirtualRepositoryParams {
 
 type ChefVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs, omitempty"`
+	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
 }
 
 func NewChefVirtualRepositoryParams() ChefVirtualRepositoryParams {
