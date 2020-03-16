@@ -61,7 +61,7 @@ const (
 
 func init() {
 	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory/", "Artifactory url")
-	DistUrl = flag.String("rt.distributionUrl", "", "Distribution url")
+	DistUrl = flag.String("rt.distUrl", "", "Distribution url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
