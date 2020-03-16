@@ -372,22 +372,22 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.GpgPassphrase = "123456"
     distManager.SignReleaseBundle(params)
 ```
-#### Distribution a release bundle
+#### Distributing a release bundle
 ```
     params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
-    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tokyo", "CountryCodes": []string{"123"}}}
+    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
     params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
     distManager.DistributeReleaseBundle(params)
 ```
-#### Delete a remote release bundle
+#### Deleting a remote release bundle
 ```
     params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
     params.DeleteFromDistribution = true
-    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tokyo", "CountryCodes": []string{"123"}}}
+    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
     params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
     distManager.DeleteReleaseBundle(params)
 ```
-#### Delete a local release bundle
+#### Deleting a local release bundle
 ```
     params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
     distManager.DeleteLocalReleaseBundle(params)
