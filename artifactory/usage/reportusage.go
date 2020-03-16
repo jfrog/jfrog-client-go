@@ -3,6 +3,8 @@ package usage
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -10,7 +12,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	versionutil "github.com/jfrog/jfrog-client-go/utils/version"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 const minArtifactoryVersion = "6.9.0"
@@ -20,7 +21,7 @@ func SendReportUsage(productId, commandName string, serviceManager *artifactory.
 	if config == nil {
 		return errorutils.CheckError(errors.New("Expected full config, but no configuration exists."))
 	}
-	rtDetails := config.GetArtDetails()
+	rtDetails := config.GetCommonDetails()
 	if rtDetails == nil {
 		return errorutils.CheckError(errors.New("Artifactory details not configured."))
 	}

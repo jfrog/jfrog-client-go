@@ -51,7 +51,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 #### Creating Service Config
 ```
-    serviceConfig, err := artifactory.NewConfigBuilder().
+    serviceConfig, err := config.NewConfigBuilder().
         SetArtDetails(rtDetails).
         SetCertificatesPath(certPath).
         SetThreads(threads).
@@ -274,7 +274,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params := services.NewCreateTokenParams()
     params.Scope = "api:* member-of-groups:readers"
     params.Username = "user"
-    params.ExpiresIn = 3600
+    params.ExpiresIn = 3600 // default -1 (use server default)
     params.GrantType = "client_credentials"
     params.Refreshable = true
     params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
@@ -405,6 +405,85 @@ You can remove a repository from Artifactory using its key:
     servicesManager.DeleteRepository("generic-repo")
 ```
 
+## Distribution APIs
+### Creating a Service Manager
+#### Creating Distribution Details
+```
+    distDetails := auth.NewDistributionDetails()
+    distDetails.SetUrl("http://localhost:8081/distribution")
+    distDetails.SetSshKeysPath("path/to/.ssh/")
+    distDetails.SetApiKey("apikey")
+    distDetails.SetUser("user")
+    distDetails.SetPassword("password")
+    distDetails.SetAccessToken("accesstoken")
+    // if client certificates are required
+    distDetails.SetClientCertPath("path/to/.cer")
+    distDetails.SetClientCertKeyPath("path/to/.key")
+```
+#### Creating Service Config
+```
+    serviceConfig, err := config.NewConfigBuilder().
+        SetArtDetails(rtDetails).
+        SetCertificatesPath(certPath).
+        SetThreads(threads).
+        SetDryRun(false).
+        Build()
+```
+#### Creating New Service Manager
+```
+    distManager, err := distribution.New(&distDetails, serviceConfig)
+```
+
+### Using Services
+#### Setting Distribution Signing Key
+```
+    params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
+    err := distManager.SetSigningKey(params)
+```
+#### Creating a Release Bundle
+```
+    params := services.NewCreateReleaseBundleParams("bundle-name", "1")
+    params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+    params.Description = "Description"
+    params.ReleaseNotes = "Release notes"
+    params.ReleaseNotesSyntax = "plain_text"
+    err := distManager.CreateReleaseBundle(params)
+```
+#### Updating a Release Bundle
+```
+    params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
+    params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+    params.Description = "New Description"
+    params.ReleaseNotes = "New Release notes"
+    params.ReleaseNotesSyntax = "plain_text"
+    err := distManager.CreateReleaseBundle(params)
+```
+#### Signing a Release Bundle
+```
+    params := services.NewSignBundleParams("bundle-name", "1")
+    params.GpgPassphrase = "123456"
+    err := distManager.SignReleaseBundle(params)
+```
+#### Distributing a Release Bundle
+```
+    params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
+    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+    params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+    err := distManager.DistributeReleaseBundle(params)
+```
+#### Deleting a Remote Release Bundle
+```
+    params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
+    params.DeleteFromDistribution = true
+    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+    params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+    err := distManager.DeleteReleaseBundle(params)
+```
+#### Deleting a Local Release Bundle
+```
+    params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
+    err := distManager.DeleteLocalReleaseBundle(params)
+```
 ## Bintray APIs
 ### Creating Bintray Details
  ```
@@ -626,6 +705,7 @@ Optional flags:
 | `-rt.url` | [Default: http://localhost:8081/artifactory] Artifactory URL. |
 | `-rt.user` | [Default: admin] Artifactory username. |
 | `-rt.password` | [Default: password] Artifactory password. |
+| `-rt.distUrl` | [Optional] JFrog Distribution URL. |
 | `-rt.apikey` | [Optional] Artifactory API key. |
 | `-rt.sshKeyPath` | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase. |

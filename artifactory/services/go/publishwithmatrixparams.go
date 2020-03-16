@@ -1,12 +1,13 @@
 package _go
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"net/http"
+
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/version"
-	"net/http"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func (pwmp *publishWithMatrixParams) isCompatible(artifactoryVersion string) boo
 	return true
 }
 
-func (pwmp *publishWithMatrixParams) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.ArtifactoryDetails) error {
+func (pwmp *publishWithMatrixParams) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.CommonDetails) error {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 	addHeaders(params, &clientDetails)

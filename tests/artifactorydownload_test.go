@@ -1,15 +1,14 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/mholt/archiver"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
 func TestArtifactoryDownload(t *testing.T) {
@@ -22,55 +21,6 @@ func TestArtifactoryDownload(t *testing.T) {
 	t.Run("exclusions", exclusionsDownload)
 	t.Run("explodeArchive", explodeArchiveDownload)
 	artifactoryCleanup(t)
-}
-
-func uploadDummyFile(t *testing.T) {
-	workingDir, _, err := tests.CreateFileWithContent("a.in", "/out/")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	defer os.RemoveAll(workingDir)
-	pattern := FixWinPath(filepath.Join(workingDir, "*"))
-	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "test/"}
-	up.Flat = true
-	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
-	if uploaded != 1 {
-		t.Error("Expected to upload 1 file.")
-	}
-	if failed != 0 {
-		t.Error("Failed to upload", failed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
-	}
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "b.in"}
-	up.Flat = true
-	_, uploaded, failed, err = testsUploadService.UploadFiles(up)
-	if uploaded != 1 {
-		t.Error("Expected to upload 1 file.")
-	}
-	if failed != 0 {
-		t.Error("Failed to upload", failed, "files.")
-	}
-	archivePath := filepath.Join(workingDir, "c.tar.gz")
-	err = archiver.TarGz.Make(archivePath, []string{filepath.Join(workingDir, "out/a.in")})
-	if err != nil {
-		t.Error(err)
-	}
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: archivePath, Recursive: true, Target: RtTargetRepo}
-	up.Flat = true
-	_, uploaded, failed, err = testsUploadService.UploadFiles(up)
-	if uploaded != 1 {
-		t.Error("Expected to upload 1 file.")
-	}
-	if failed != 0 {
-		t.Error("Failed to upload", failed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
-	}
 }
 
 func flatDownload(t *testing.T) {

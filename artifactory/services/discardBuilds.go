@@ -3,9 +3,9 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -18,7 +18,7 @@ import (
 
 type DiscardBuildsService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewDiscardBuildsService(client *rthttpclient.ArtifactoryHttpClient) *DiscardBuildsService {
@@ -91,7 +91,7 @@ func calculateMinimumBuildDate(startingDate time.Time, maxDaysString string) (st
 	return minimumBuildDateString, nil
 }
 
-func (ds *DiscardBuildsService) getArtifactoryDetails() auth.ArtifactoryDetails {
+func (ds *DiscardBuildsService) getArtifactoryDetails() auth.CommonDetails {
 	return ds.ArtDetails
 }
 

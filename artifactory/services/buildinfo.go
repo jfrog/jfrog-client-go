@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -16,7 +16,7 @@ import (
 
 type BuildInfoService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	DryRun     bool
 }
 
@@ -24,11 +24,11 @@ func NewBuildInfoService(client *rthttpclient.ArtifactoryHttpClient) *BuildInfoS
 	return &BuildInfoService{client: client}
 }
 
-func (bis *BuildInfoService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (bis *BuildInfoService) GetArtifactoryDetails() auth.CommonDetails {
 	return bis.ArtDetails
 }
 
-func (bis *BuildInfoService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (bis *BuildInfoService) SetArtifactoryDetails(rt auth.CommonDetails) {
 	bis.ArtDetails = rt
 }
 

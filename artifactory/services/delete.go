@@ -2,36 +2,48 @@ package services
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/jfrog/gofrog/parallel"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"strings"
 )
 
 type DeleteService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	DryRun     bool
+	Threads    int
 }
 
 func NewDeleteService(client *rthttpclient.ArtifactoryHttpClient) *DeleteService {
 	return &DeleteService{client: client}
 }
 
-func (ds *DeleteService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (ds *DeleteService) GetArtifactoryDetails() auth.CommonDetails {
 	return ds.ArtDetails
 }
 
-func (ds *DeleteService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (ds *DeleteService) SetArtifactoryDetails(rt auth.CommonDetails) {
 	ds.ArtDetails = rt
 }
 
 func (ds *DeleteService) IsDryRun() bool {
 	return ds.DryRun
+}
+
+func (ds *DeleteService) GetThreads() int {
+	return ds.Threads
+}
+
+func (ds *DeleteService) SetThreads(threads int) {
+	ds.Threads = threads
 }
 
 func (ds *DeleteService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
@@ -74,45 +86,72 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 	return
 }
 
-func (ds *DeleteService) DeleteFiles(deleteItems []utils.ResultItem) (int, error) {
-	deletedCount := 0
-	for _, v := range deleteItems {
-		fileUrl, err := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), v.GetItemRelativePath(), make(map[string]string))
-		if err != nil {
-			return deletedCount, err
-		}
-		if ds.IsDryRun() {
-			log.Info("[Dry run] Deleting:", v.GetItemRelativePath())
-			continue
-		}
+type fileDeleteHandlerFunc func(utils.ResultItem) parallel.TaskFunc
 
-		log.Info("Deleting:", v.GetItemRelativePath())
-		httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
-		resp, body, err := ds.client.SendDelete(fileUrl, nil, &httpClientsDetails)
-		if err != nil {
-			log.Error(err)
-			continue
+func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteHandlerFunc {
+	return func(resultItem utils.ResultItem) parallel.TaskFunc {
+		return func(threadId int) error {
+			result.TotalCount[threadId]++
+			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ds.DryRun)
+			deletePath, e := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), resultItem.GetItemRelativePath(), make(map[string]string))
+			if e != nil {
+				return e
+			}
+			log.Info(logMsgPrefix+"Deleting", resultItem.GetItemRelativePath())
+			if ds.DryRun {
+				return nil
+			}
+			httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
+			resp, body, err := ds.client.SendDelete(deletePath, nil, &httpClientsDetails)
+			if err != nil {
+				log.Error(err)
+				return err
+			}
+			if resp.StatusCode != http.StatusNoContent {
+				err = errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+				log.Error(errorutils.CheckError(err))
+				return err
+			}
+
+			result.SuccessCount[threadId]++
+			return nil
 		}
-		if resp.StatusCode != http.StatusNoContent {
-			log.Error(errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))))
-			continue
-		}
-		deletedCount++
-		log.Debug("Artifactory response:", resp.Status)
 	}
-	return deletedCount, nil
+}
+
+func (ds *DeleteService) DeleteFiles(deleteItems []utils.ResultItem) (int, error) {
+	producerConsumer := parallel.NewBounedRunner(ds.GetThreads(), false)
+	errorsQueue := utils.NewErrorsQueue(1)
+	result := *utils.NewResult(ds.Threads)
+	go func() {
+		defer producerConsumer.Done()
+		for _, deleteItem := range deleteItems {
+			fileDeleteHandlerFunc := ds.createFileHandlerFunc(&result)
+			producerConsumer.AddTaskWithError(fileDeleteHandlerFunc(deleteItem), errorsQueue.AddError)
+		}
+	}()
+	return ds.performTasks(producerConsumer, errorsQueue, result)
+}
+
+func (ds *DeleteService) performTasks(consumer parallel.Runner, errorsQueue *utils.ErrorsQueue, result utils.Result) (totalDeleted int, err error) {
+	consumer.Run()
+	err = errorsQueue.GetError()
+
+	totalDeleted = utils.SumIntArray(result.SuccessCount)
+	log.Debug("Deleted", strconv.Itoa(totalDeleted), "artifacts.")
+	return
 }
 
 type DeleteConfiguration struct {
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	DryRun     bool
 }
 
-func (conf *DeleteConfiguration) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (conf *DeleteConfiguration) GetArtifactoryDetails() auth.CommonDetails {
 	return conf.ArtDetails
 }
 
-func (conf *DeleteConfiguration) SetArtifactoryDetails(art auth.ArtifactoryDetails) {
+func (conf *DeleteConfiguration) SetArtifactoryDetails(art auth.CommonDetails) {
 	conf.ArtDetails = art
 }
 
