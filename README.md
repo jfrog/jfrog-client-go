@@ -51,7 +51,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 #### Creating Service Config
 ```
-    serviceConfig, err := artifactory.NewConfigBuilder().
+    serviceConfig, err := config.NewConfigBuilder().
         SetArtDetails(rtDetails).
         SetCertificatesPath(certPath).
         SetThreads(threads).
@@ -313,6 +313,85 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     apiKey, err := rtManager.RegenerateAPIKey()
 ```
 
+## Distribution APIs
+### Creating a Service Manager
+#### Creating Distribution Details
+```
+    distDetails := auth.NewDistributionDetails()
+    distDetails.SetUrl("http://localhost:8081/distribution")
+    distDetails.SetSshKeysPath("path/to/.ssh/")
+    distDetails.SetApiKey("apikey")
+    distDetails.SetUser("user")
+    distDetails.SetPassword("password")
+    distDetails.SetAccessToken("accesstoken")
+    // if client certificates are required
+    distDetails.SetClientCertPath("path/to/.cer")
+    distDetails.SetClientCertKeyPath("path/to/.key")
+```
+#### Creating Service Config
+```
+    serviceConfig, err := config.NewConfigBuilder().
+        SetArtDetails(rtDetails).
+        SetCertificatesPath(certPath).
+        SetThreads(threads).
+        SetDryRun(false).
+        Build()
+```
+#### Creating New Service Manager
+```
+    distManager, err := distribution.New(&distDetails, serviceConfig)
+```
+
+### Using Services
+#### Setting distribution signing key
+```
+    params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
+    distManager.SetSigningKey(params)
+```
+#### Creating a release bundle
+```
+    params := services.NewCreateReleaseBundleParams("bundle-name", "1")
+    params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+    params.Description = "Description"
+    params.ReleaseNotes = "Release notes"
+    params.ReleaseNotesSyntax = "plain_text"
+    distManager.CreateReleaseBundle(params)
+```
+#### Updating a release bundle
+```
+    params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
+    params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+    params.Description = "New Description"
+    params.ReleaseNotes = "New Release notes"
+    params.ReleaseNotesSyntax = "plain_text"
+    distManager.CreateReleaseBundle(params)
+```
+### Signing a release bundle
+```
+    params := services.NewSignBundleParams("bundle-name", "1")
+    params.GpgPassphrase = "123456"
+    distManager.SignReleaseBundle(params)
+```
+#### Distribution a release bundle
+```
+    params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
+    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tokyo", "CountryCodes": []string{"123"}}}
+    params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+    distManager.DistributeReleaseBundle(params)
+```
+#### Delete a remote release bundle
+```
+    params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
+    params.DeleteFromDistribution = true
+    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tokyo", "CountryCodes": []string{"123"}}}
+    params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+    distManager.DeleteReleaseBundle(params)
+```
+#### Delete a local release bundle
+```
+    params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
+    distManager.DeleteLocalReleaseBundle(params)
+```
 ## Bintray APIs
 ### Creating Bintray Details
  ```
