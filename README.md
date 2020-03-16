@@ -343,12 +343,12 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 ### Using Services
-#### Setting distribution signing key
+#### Setting Distribution Signing Key
 ```
     params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
     distManager.SetSigningKey(params)
 ```
-#### Creating a release bundle
+#### Creating a Release Bundle
 ```
     params := services.NewCreateReleaseBundleParams("bundle-name", "1")
     params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
@@ -357,7 +357,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.ReleaseNotesSyntax = "plain_text"
     distManager.CreateReleaseBundle(params)
 ```
-#### Updating a release bundle
+#### Updating a Release Bundle
 ```
     params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
     params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
@@ -366,20 +366,20 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.ReleaseNotesSyntax = "plain_text"
     distManager.CreateReleaseBundle(params)
 ```
-### Signing a release bundle
+#### Signing a Release Bundle
 ```
     params := services.NewSignBundleParams("bundle-name", "1")
     params.GpgPassphrase = "123456"
     distManager.SignReleaseBundle(params)
 ```
-#### Distributing a release bundle
+#### Distributing a Release Bundle
 ```
     params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
     distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
     params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
     distManager.DistributeReleaseBundle(params)
 ```
-#### Deleting a remote release bundle
+#### Deleting a Remote Release Bundle
 ```
     params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
     params.DeleteFromDistribution = true
@@ -387,7 +387,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
     distManager.DeleteReleaseBundle(params)
 ```
-#### Deleting a local release bundle
+#### Deleting a Local Release Bundle
 ```
     params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
     distManager.DeleteLocalReleaseBundle(params)
