@@ -3,7 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -15,7 +15,7 @@ import (
 type VirtualRepositoryService struct {
 	isUpdate   bool
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewVirtualRepositoryService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *VirtualRepositoryService {

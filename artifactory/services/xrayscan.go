@@ -3,14 +3,15 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"net/http"
+	"time"
+
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
-	"time"
 )
 
 const SCAN_BUILD_API_URL = "api/xray/scanBuild"
@@ -22,7 +23,7 @@ const XRAY_FATAL_FAIL_STATUS = -1
 
 type XrayScanService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewXrayScanService(client *rthttpclient.ArtifactoryHttpClient) *XrayScanService {

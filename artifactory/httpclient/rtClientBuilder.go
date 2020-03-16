@@ -1,7 +1,7 @@
 package httpclient
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 )
 
@@ -12,7 +12,7 @@ func ArtifactoryClientBuilder() *artifactoryHttpClientBuilder {
 type artifactoryHttpClientBuilder struct {
 	certificatesDirPath string
 	insecureTls         bool
-	ArtDetails          *auth.ArtifactoryDetails
+	CommonDetails       *auth.CommonDetails
 }
 
 func (builder *artifactoryHttpClientBuilder) SetCertificatesPath(certificatesPath string) *artifactoryHttpClientBuilder {
@@ -25,13 +25,13 @@ func (builder *artifactoryHttpClientBuilder) SetInsecureTls(insecureTls bool) *a
 	return builder
 }
 
-func (builder *artifactoryHttpClientBuilder) SetArtDetails(rtDetails *auth.ArtifactoryDetails) *artifactoryHttpClientBuilder {
-	builder.ArtDetails = rtDetails
+func (builder *artifactoryHttpClientBuilder) SetCommonDetails(rtDetails *auth.CommonDetails) *artifactoryHttpClientBuilder {
+	builder.CommonDetails = rtDetails
 	return builder
 }
 
 func (builder *artifactoryHttpClientBuilder) Build() (rtHttpClient *ArtifactoryHttpClient, err error) {
-	rtHttpClient = &ArtifactoryHttpClient{ArtDetails: builder.ArtDetails}
+	rtHttpClient = &ArtifactoryHttpClient{ArtDetails: builder.CommonDetails}
 	rtHttpClient.httpClient, err = httpclient.ClientBuilder().
 		SetCertificatesPath(builder.certificatesDirPath).
 		SetInsecureTls(builder.insecureTls).

@@ -10,10 +10,10 @@ import (
 	"strings"
 
 	"github.com/jfrog/gofrog/parallel"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
@@ -26,7 +26,7 @@ import (
 type UploadService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
 	Progress   ioutils.Progress
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	DryRun     bool
 	Threads    int
 }
@@ -43,7 +43,7 @@ func (us *UploadService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClien
 	return us.client
 }
 
-func (us *UploadService) SetArtDetails(artDetails auth.ArtifactoryDetails) {
+func (us *UploadService) SetArtDetails(artDetails auth.CommonDetails) {
 	us.ArtDetails = artDetails
 }
 
@@ -53,19 +53,14 @@ func (us *UploadService) SetDryRun(isDryRun bool) {
 
 func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
 	// Uploading threads are using this struct to report upload results.
-	uploadSummary := uploadResult{
-		UploadCount: make([]int, us.Threads),
-		TotalCount:  make([]int, us.Threads),
-		FileInfo:    make([][]utils.FileInfo, us.Threads),
-	}
-
+	uploadSummary := *utils.NewUploadResult(us.Threads)
 	producerConsumer := parallel.NewRunner(us.Threads, 100, false)
 	errorsQueue := utils.NewErrorsQueue(1)
 	us.prepareUploadTasks(producerConsumer, errorsQueue, uploadSummary, uploadParams...)
 	return us.performUploadTasks(producerConsumer, &uploadSummary, errorsQueue)
 }
 
-func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *utils.ErrorsQueue, uploadSummary uploadResult, uploadParamsSlice ...UploadParams) {
+func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *utils.ErrorsQueue, uploadSummary utils.UploadResult, uploadParamsSlice ...UploadParams) {
 	go func() {
 		defer producer.Done()
 		// Iterate over file-spec groups and produce upload tasks.
@@ -82,13 +77,13 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 	}()
 }
 
-func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSummary *uploadResult, errorsQueue *utils.ErrorsQueue) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
+func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSummary *utils.UploadResult, errorsQueue *utils.ErrorsQueue) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
 	// Blocking until consuming is finished.
 	consumer.Run()
 	err = errorsQueue.GetError()
 
-	totalUploaded = sumIntArray(uploadSummary.UploadCount)
-	totalUploadAttempted := sumIntArray(uploadSummary.TotalCount)
+	totalUploaded = utils.SumIntArray(uploadSummary.SuccessCount)
+	totalUploadAttempted := utils.SumIntArray(uploadSummary.TotalCount)
 
 	log.Debug("Uploaded", strconv.Itoa(totalUploaded), "artifacts.")
 	totalFailed = totalUploadAttempted - totalUploaded
@@ -97,14 +92,6 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 	}
 	artifactsFileInfo = utils.FlattenFileInfoArray(uploadSummary.FileInfo)
 	return
-}
-
-func sumIntArray(arr []int) int {
-	sum := 0
-	for _, i := range arr {
-		sum += i
-	}
-	return sum
 }
 
 func addProps(oldProps, additionalProps string) string {
@@ -493,15 +480,9 @@ type UploadData struct {
 	IsDir    bool
 }
 
-type uploadResult struct {
-	UploadCount []int
-	TotalCount  []int
-	FileInfo    [][]utils.FileInfo
-}
-
 type artifactContext func(UploadData) parallel.TaskFunc
 
-func (us *UploadService) createArtifactHandlerFunc(uploadResult *uploadResult, uploadParams UploadParams) artifactContext {
+func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.UploadResult, uploadParams UploadParams) artifactContext {
 	return func(artifact UploadData) parallel.TaskFunc {
 		return func(threadId int) (e error) {
 			if artifact.IsDir {
@@ -522,7 +503,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *uploadResult, u
 				return
 			}
 			if uploaded {
-				uploadResult.UploadCount[threadId]++
+				uploadResult.SuccessCount[threadId]++
 				uploadResult.FileInfo[threadId] = append(uploadResult.FileInfo[threadId], artifactFileInfo)
 			}
 			return

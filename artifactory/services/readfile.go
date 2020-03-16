@@ -1,17 +1,18 @@
 package services
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"io"
 	"net/http"
+
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type ReadFileService struct {
 	client       *rthttpclient.ArtifactoryHttpClient
-	ArtDetails   auth.ArtifactoryDetails
+	ArtDetails   auth.CommonDetails
 	DryRun       bool
 	MinSplitSize int64
 	SplitCount   int
@@ -21,11 +22,11 @@ func NewReadFileService(client *rthttpclient.ArtifactoryHttpClient) *ReadFileSer
 	return &ReadFileService{client: client}
 }
 
-func (ds *ReadFileService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (ds *ReadFileService) GetArtifactoryDetails() auth.CommonDetails {
 	return ds.ArtDetails
 }
 
-func (ds *ReadFileService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (ds *ReadFileService) SetArtifactoryDetails(rt auth.CommonDetails) {
 	ds.ArtDetails = rt
 }
 
@@ -37,7 +38,7 @@ func (ds *ReadFileService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpCl
 	return ds.client, nil
 }
 
-func (ds *ReadFileService) SetArtDetails(artDetails auth.ArtifactoryDetails) {
+func (ds *ReadFileService) SetArtDetails(artDetails auth.CommonDetails) {
 	ds.ArtDetails = artDetails
 }
 

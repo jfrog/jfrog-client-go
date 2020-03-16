@@ -2,28 +2,29 @@ package services
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"net/http"
+
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
 )
 
 type PingService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewPingService(client *rthttpclient.ArtifactoryHttpClient) *PingService {
 	return &PingService{client: client}
 }
 
-func (ps *PingService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (ps *PingService) GetArtifactoryDetails() auth.CommonDetails {
 	return ps.ArtDetails
 }
 
-func (ps *PingService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (ps *PingService) SetArtifactoryDetails(rt auth.CommonDetails) {
 	ps.ArtDetails = rt
 }
 

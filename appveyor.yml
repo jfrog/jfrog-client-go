@@ -15,6 +15,8 @@ environment:
     secure: YEB5Wiv9a2vNpUhy+MfL+A==
   JFROG_CLI_RT_PASSWORD:
     secure: Um8o75MQIieSavIemF4ySA==
+  JFROG_CLI_DIST_URL:
+    secure: RIh0gGFDn2JAnLUEEqLsQrfLmtDrzDd5Qphea4gOE0Lu1Uz2Xa/y+D0Mld917gwy
 
   matrix:
   - VET:
@@ -22,7 +24,7 @@ environment:
       go vet github.com\jfrog\jfrog-client-go\tests
   - CLIENT_TESTS:
     TEST_SUIT:
-      go test -v github.com\jfrog\jfrog-client-go\tests --timeout 0 --rt.url="%JFROG_CLI_RT_URL%" --rt.user="%JFROG_CLI_RT_USER%" --rt.password="%JFROG_CLI_RT_PASSWORD%"
+      go test -v github.com\jfrog\jfrog-client-go\tests --timeout 0 --rt.url="%JFROG_CLI_RT_URL%" --rt.user="%JFROG_CLI_RT_USER%" --rt.password="%JFROG_CLI_RT_PASSWORD%" --rt.distUrl="%JFROG_CLI_DIST_URL%"
 
 test_script:
   - "%TEST_SUIT%"

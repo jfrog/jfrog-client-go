@@ -9,7 +9,7 @@ import (
 )
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
-func createAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, error) {
+func CreateAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, error) {
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
 	repoPathFileTriples := createRepoPathFileTriples(searchPattern, params.Recursive)
 	includeRoot := strings.Count(searchPattern, "/") < 2
@@ -291,7 +291,7 @@ func prepareFieldsForQuery(fields []string) []string {
 }
 
 // Creates an aql query from a spec file.
-func buildQueryFromSpecFile(specFile *ArtifactoryCommonParams, requiredArtifactProps RequiredArtifactProps) string {
+func BuildQueryFromSpecFile(specFile *ArtifactoryCommonParams, requiredArtifactProps RequiredArtifactProps) string {
 	aqlBody := specFile.Aql.ItemsFind
 	query := fmt.Sprintf(`items.find(%s)%s`, aqlBody, buildIncludeQueryPart(getQueryReturnFields(specFile, requiredArtifactProps)))
 	query = appendSortQueryPart(specFile, query)
