@@ -346,7 +346,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 #### Setting Distribution Signing Key
 ```
     params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
-    distManager.SetSigningKey(params)
+    err := distManager.SetSigningKey(params)
 ```
 #### Creating a Release Bundle
 ```
@@ -355,7 +355,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.Description = "Description"
     params.ReleaseNotes = "Release notes"
     params.ReleaseNotesSyntax = "plain_text"
-    distManager.CreateReleaseBundle(params)
+    err := distManager.CreateReleaseBundle(params)
 ```
 #### Updating a Release Bundle
 ```
@@ -364,20 +364,20 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.Description = "New Description"
     params.ReleaseNotes = "New Release notes"
     params.ReleaseNotesSyntax = "plain_text"
-    distManager.CreateReleaseBundle(params)
+    err := distManager.CreateReleaseBundle(params)
 ```
 #### Signing a Release Bundle
 ```
     params := services.NewSignBundleParams("bundle-name", "1")
     params.GpgPassphrase = "123456"
-    distManager.SignReleaseBundle(params)
+    err := distManager.SignReleaseBundle(params)
 ```
 #### Distributing a Release Bundle
 ```
     params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
     distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
     params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
-    distManager.DistributeReleaseBundle(params)
+    err := distManager.DistributeReleaseBundle(params)
 ```
 #### Deleting a Remote Release Bundle
 ```
@@ -385,12 +385,12 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.DeleteFromDistribution = true
     distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
     params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
-    distManager.DeleteReleaseBundle(params)
+    err := distManager.DeleteReleaseBundle(params)
 ```
 #### Deleting a Local Release Bundle
 ```
     params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
-    distManager.DeleteLocalReleaseBundle(params)
+    err := distManager.DeleteLocalReleaseBundle(params)
 ```
 ## Bintray APIs
 ### Creating Bintray Details
