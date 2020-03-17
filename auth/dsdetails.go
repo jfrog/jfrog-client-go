@@ -193,13 +193,15 @@ func (ds *CommonConfigFields) AuthenticateSsh(sshKeyPath, sshPassphrase string) 
 // If so, acquires a new token from server (if one wasn't acquired yet) and returns true.
 // Otherwise, or in case of an error, returns false.
 func (ds *CommonConfigFields) HandleTokenExpiry(statusCode int, httpClientDetails *httputils.HttpClientDetails) (bool, error) {
-	// If an unauthorized ssh connection -> ssh token has expired.
-	if statusCode == http.StatusUnauthorized && ds.IsSshAuthentication() {
-		return ds.handleSshTokenExpiry(httpClientDetails)
-	}
-
-	if statusCode == http.StatusUnauthorized && ds.GetAccessToken() != "" && ds.GetTokenRefreshHandler() != nil {
-		return ds.handleAccessTokenExpiry(httpClientDetails)
+	if statusCode == http.StatusUnauthorized {
+		// If an unauthorized ssh connection -> ssh token has expired.
+		if ds.IsSshAuthentication() {
+			return ds.handleSshTokenExpiry(httpClientDetails)
+		}
+		// Access token expired
+		if ds.GetAccessToken() != "" && ds.GetTokenRefreshHandler() != nil {
+			return ds.handleAccessTokenExpiry(httpClientDetails)
+		}
 	}
 	return false, nil
 }
