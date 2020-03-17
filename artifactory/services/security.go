@@ -125,7 +125,7 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 }
 
 func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
-	// Gather required data while avoiding sending default/ignored values
+	// Gathers required data while avoiding default/ignored values
 	data := url.Values{}
 	if params.Refreshable {
 		data.Set("refreshable", "true")

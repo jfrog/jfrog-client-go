@@ -11,6 +11,7 @@ import (
 
 var expiryHandleMutex sync.Mutex
 
+// Implement this function and pass it to the CommonDetails struct to handle access token refresh if needed
 type TokenRefreshHandlerFunc func(currentAccessToken string) (newAccessToken string, err error)
 
 type CommonDetails interface {
