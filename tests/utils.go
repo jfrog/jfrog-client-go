@@ -212,7 +212,7 @@ func createArtifactoryReplicationCreateManager() {
 	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
-	testsCreateReplicationService = services.NewCreateReplicationService(client, false)
+	testsCreateReplicationService = services.NewCreateReplicationService(client)
 	testsCreateReplicationService.ArtDetails = artDetails
 }
 
@@ -220,7 +220,7 @@ func createArtifactoryReplicationUpdateManager() {
 	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
-	testsUpdateReplicationService = services.NewUpdateReplicationService(client, false)
+	testsUpdateReplicationService = services.NewUpdateReplicationService(client)
 	testsUpdateReplicationService.ArtDetails = artDetails
 }
 
