@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-  "strconv"
+  	"strconv"
 	"strings"
 	"testing"
-  "time"
+  	"time"
 
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -53,27 +53,18 @@ var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
 
+// Distribution services
+var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
+var testsBundleCreateService *distributionServices.CreateReleaseBundleService
+var testsBundleUpdateService *distributionServices.UpdateReleaseBundleService
+var testsBundleSignService *distributionServices.SignBundleService
+var testsBundleDistributeService *distributionServices.DistributeReleaseBundleService
+var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundleService
+var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
+
 var timestamp = strconv.FormatInt(time.Now().Unix(), 10)
 var trueValue = true
 var falseValue = false
-
-// Distribution services
-var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
-var testsBundleCreateService *distributionServices.CreateReleaseBundleService
-var testsBundleUpdateService *distributionServices.UpdateReleaseBundleService
-var testsBundleSignService *distributionServices.SignBundleService
-var testsBundleDistributeService *distributionServices.DistributeReleaseBundleService
-var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundleService
-var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
-
-// Distribution services
-var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
-var testsBundleCreateService *distributionServices.CreateReleaseBundleService
-var testsBundleUpdateService *distributionServices.UpdateReleaseBundleService
-var testsBundleSignService *distributionServices.SignBundleService
-var testsBundleDistributeService *distributionServices.DistributeReleaseBundleService
-var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundleService
-var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
 
 const (
 	RtTargetRepo                     = "jfrog-client-tests-repo1/"
