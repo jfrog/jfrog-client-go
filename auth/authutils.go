@@ -9,29 +9,36 @@ import (
 	"strings"
 )
 
-func ExtractUsernameFromAccessToken(token string) (string, error) {
+func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	// Separate token parts.
 	tokenParts := strings.Split(token, ".")
 
 	// Decode the payload.
 	if len(tokenParts) != 3 {
-		return "", errorutils.CheckError(errors.New("Received invalid access-token."))
+		return TokenPayload{}, errorutils.CheckError(errors.New("received invalid access-token"))
 	}
 	payload, err := base64.RawStdEncoding.DecodeString(tokenParts[1])
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return TokenPayload{}, errorutils.CheckError(err)
 	}
 
 	// Unmarshal json.
-	var tokenPayload tokenPayload
+	var tokenPayload TokenPayload
 	err = json.Unmarshal(payload, &tokenPayload)
 	if err != nil {
-		return "", errorutils.CheckError(errors.New("Failed extracting payload from the provided access-token." + err.Error()))
+		return TokenPayload{}, errorutils.CheckError(errors.New("Failed extracting payload from the provided access-token." + err.Error()))
 	}
+	return tokenPayload, nil
+}
 
+func ExtractUsernameFromAccessToken(token string) (string, error) {
+	tokenPayload, err := extractPayloadFromAccessToken(token)
+	if err != nil {
+		return "", err
+	}
 	// Extract subject.
 	if tokenPayload.Subject == "" {
-		return "", errorutils.CheckError(errors.New("Could not extract subject from the provided access-token."))
+		return "", errorutils.CheckError(errors.New("could not extract subject from the provided access-token"))
 	}
 
 	// Extract username from subject.
@@ -44,7 +51,17 @@ func ExtractUsernameFromAccessToken(token string) (string, error) {
 	return username, nil
 }
 
-type tokenPayload struct {
+// Extracts the expiry from an access token, in seconds
+func ExtractExpiryFromAccessToken(token string) (int, error) {
+	tokenPayload, err := extractPayloadFromAccessToken(token)
+	if err != nil {
+		return -1, err
+	}
+	expiry := tokenPayload.ExpirationTime - tokenPayload.IssuedAt
+	return expiry, nil
+}
+
+type TokenPayload struct {
 	Subject        string `json:"sub,omitempty"`
 	Scope          string `json:"scp,omitempty"`
 	Audience       string `json:"aud,omitempty"`

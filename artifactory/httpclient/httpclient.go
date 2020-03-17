@@ -16,9 +16,11 @@ type ArtifactoryHttpClient struct {
 	ArtDetails *auth.CommonDetails
 }
 
+const numberOfTokenExpiryRetries = 2
+
 func (rtc *ArtifactoryHttpClient) SendGet(url string, followRedirect bool, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, respBody, redirectUrl, err = rtc.httpClient.SendGet(url, followRedirect, *httpClientsDetails)
 		if err != nil {
 			return
@@ -36,7 +38,7 @@ func (rtc *ArtifactoryHttpClient) SendGet(url string, followRedirect bool, httpC
 
 func (rtc *ArtifactoryHttpClient) SendPost(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, body, err = rtc.httpClient.SendPost(url, content, *httpClientsDetails)
 		if err != nil {
 			return
@@ -59,7 +61,7 @@ func (rtc *ArtifactoryHttpClient) SendPostForm(url string, data url.Values, http
 
 func (rtc *ArtifactoryHttpClient) SendPatch(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, body, err = rtc.httpClient.SendPatch(url, content, *httpClientsDetails)
 		if err != nil {
 			return
@@ -77,7 +79,7 @@ func (rtc *ArtifactoryHttpClient) SendPatch(url string, content []byte, httpClie
 
 func (rtc *ArtifactoryHttpClient) SendDelete(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, body, err = rtc.httpClient.SendDelete(url, content, *httpClientsDetails)
 		if err != nil {
 			return
@@ -95,7 +97,7 @@ func (rtc *ArtifactoryHttpClient) SendDelete(url string, content []byte, httpCli
 
 func (rtc *ArtifactoryHttpClient) SendHead(url string, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, body, err = rtc.httpClient.SendHead(url, *httpClientsDetails)
 		if err != nil {
 			return
@@ -113,7 +115,7 @@ func (rtc *ArtifactoryHttpClient) SendHead(url string, httpClientsDetails *httpu
 
 func (rtc *ArtifactoryHttpClient) SendPut(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, body, err = rtc.httpClient.SendPut(url, content, *httpClientsDetails)
 		if err != nil {
 			return
@@ -132,7 +134,7 @@ func (rtc *ArtifactoryHttpClient) SendPut(url string, content []byte, httpClient
 func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool,
 	httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, respBody, redirectUrl, err = rtc.httpClient.Send(method, url, content, followRedirect, closeBody, *httpClientsDetails)
 		if err != nil {
 			return
@@ -151,7 +153,7 @@ func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte
 func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string,
 	httpClientsDetails *httputils.HttpClientDetails, retries int, progress ioutils.Progress) (resp *http.Response, body []byte, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, body, err = rtc.httpClient.UploadFile(localPath, url, logMsgPrefix, *httpClientsDetails, retries, progress)
 		if err != nil {
 			return
@@ -169,7 +171,7 @@ func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string
 
 func (rtc *ArtifactoryHttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails *httputils.HttpClientDetails) (ioReaderCloser io.ReadCloser, resp *http.Response, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		ioReaderCloser, resp, err = rtc.httpClient.ReadRemoteFile(downloadPath, *httpClientsDetails)
 		if err != nil {
 			return
@@ -188,7 +190,7 @@ func (rtc *ArtifactoryHttpClient) ReadRemoteFile(downloadPath string, httpClient
 func (rtc *ArtifactoryHttpClient) DownloadFileWithProgress(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
 	httpClientsDetails *httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.Progress) (resp *http.Response, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, err = rtc.httpClient.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, *httpClientsDetails,
 			retries, isExplode, progress)
 		if err != nil {
@@ -213,7 +215,7 @@ func (rtc *ArtifactoryHttpClient) DownloadFile(downloadFileDetails *httpclient.D
 func (rtc *ArtifactoryHttpClient) DownloadFileConcurrently(flags httpclient.ConcurrentDownloadFlags,
 	logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails, progress ioutils.Progress) (resp *http.Response, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		resp, err = rtc.httpClient.DownloadFileConcurrently(flags, logMsgPrefix, *httpClientsDetails, progress)
 		if err != nil {
 			return
@@ -231,7 +233,7 @@ func (rtc *ArtifactoryHttpClient) DownloadFileConcurrently(flags httpclient.Conc
 
 func (rtc *ArtifactoryHttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetails *httputils.HttpClientDetails) (isAcceptRanges bool, resp *http.Response, err error) {
 	isNewToken := false
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numberOfTokenExpiryRetries; i++ {
 		isAcceptRanges, resp, err = rtc.httpClient.IsAcceptRanges(downloadUrl, *httpClientsDetails)
 		if err != nil {
 			return

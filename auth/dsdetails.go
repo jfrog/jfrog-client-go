@@ -11,12 +11,15 @@ import (
 
 var expiryHandleMutex sync.Mutex
 
+type TokenRefreshHandlerFunc func(currentAccessToken string) (newAccessToken string, err error)
+
 type CommonDetails interface {
 	GetUrl() string
 	GetUser() string
 	GetPassword() string
 	GetApiKey() string
 	GetAccessToken() string
+	GetTokenRefreshHandler() TokenRefreshHandlerFunc
 	GetClientCertPath() string
 	GetClientCertKeyPath() string
 	GetSshUrl() string
@@ -30,6 +33,7 @@ type CommonDetails interface {
 	SetPassword(password string)
 	SetApiKey(apiKey string)
 	SetAccessToken(accessToken string)
+	SetTokenRefreshHandler(TokenRefreshHandlerFunc)
 	SetClientCertPath(certificatePath string)
 	SetClientCertKeyPath(certificatePath string)
 	SetSshUrl(url string)
@@ -46,19 +50,20 @@ type CommonDetails interface {
 }
 
 type CommonConfigFields struct {
-	Url               string            `json:"-"`
-	User              string            `json:"-"`
-	Password          string            `json:"-"`
-	ApiKey            string            `json:"-"`
-	AccessToken       string            `json:"-"`
-	ClientCertPath    string            `json:"-"`
-	ClientCertKeyPath string            `json:"-"`
-	Version           string            `json:"-"`
-	SshUrl            string            `json:"-"`
-	SshKeyPath        string            `json:"-"`
-	SshPassphrase     string            `json:"-"`
-	SshAuthHeaders    map[string]string `json:"-"`
-	TokenMutex        sync.Mutex
+	Url                 string                  `json:"-"`
+	User                string                  `json:"-"`
+	Password            string                  `json:"-"`
+	ApiKey              string                  `json:"-"`
+	AccessToken         string                  `json:"-"`
+	TokenRefreshHandler TokenRefreshHandlerFunc `json:"-"`
+	ClientCertPath      string                  `json:"-"`
+	ClientCertKeyPath   string                  `json:"-"`
+	Version             string                  `json:"-"`
+	SshUrl              string                  `json:"-"`
+	SshKeyPath          string                  `json:"-"`
+	SshPassphrase       string                  `json:"-"`
+	SshAuthHeaders      map[string]string       `json:"-"`
+	TokenMutex          sync.Mutex
 }
 
 func (ds *CommonConfigFields) GetUrl() string {
@@ -79,6 +84,10 @@ func (ds *CommonConfigFields) GetApiKey() string {
 
 func (ds *CommonConfigFields) GetAccessToken() string {
 	return ds.AccessToken
+}
+
+func (ds *CommonConfigFields) GetTokenRefreshHandler() TokenRefreshHandlerFunc {
+	return ds.TokenRefreshHandler
 }
 
 func (ds *CommonConfigFields) GetClientCertPath() string {
@@ -123,6 +132,10 @@ func (ds *CommonConfigFields) SetApiKey(apiKey string) {
 
 func (ds *CommonConfigFields) SetAccessToken(accessToken string) {
 	ds.AccessToken = accessToken
+}
+
+func (ds *CommonConfigFields) SetTokenRefreshHandler(tokenRefreshHandler TokenRefreshHandlerFunc) {
+	ds.TokenRefreshHandler = tokenRefreshHandler
 }
 
 func (ds *CommonConfigFields) SetClientCertPath(certificatePath string) {
@@ -183,6 +196,10 @@ func (ds *CommonConfigFields) HandleTokenExpiry(statusCode int, httpClientDetail
 	if statusCode == http.StatusUnauthorized && ds.IsSshAuthentication() {
 		return ds.handleSshTokenExpiry(httpClientDetails)
 	}
+
+	if statusCode == http.StatusUnauthorized && ds.GetAccessToken() != "" && ds.GetTokenRefreshHandler() != nil {
+		return ds.handleAccessTokenExpiry(httpClientDetails)
+	}
 	return false, nil
 }
 
@@ -207,6 +224,19 @@ func (ds *CommonConfigFields) handleSshTokenExpiry(httpClientDetails *httputils.
 	utils.MergeMaps(ds.GetSshAuthHeaders(), httpClientDetails.Headers)
 
 	return true, nil
+}
+
+func (ds *CommonConfigFields) handleAccessTokenExpiry(httpClientDetails *httputils.HttpClientDetails) (bool, error) {
+	// Call a predefined handler to manage the refresh process
+	newAccessToken, err := ds.TokenRefreshHandler(httpClientDetails.AccessToken)
+	if err != nil {
+		return false, err
+	}
+	if newAccessToken != "" && newAccessToken != httpClientDetails.AccessToken {
+		httpClientDetails.AccessToken = newAccessToken
+		return true, nil
+	}
+	return false, nil
 }
 
 func (ds *CommonConfigFields) CreateHttpClientDetails() httputils.HttpClientDetails {
