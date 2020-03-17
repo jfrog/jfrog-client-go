@@ -38,7 +38,7 @@ var httpClient *httpclient.HttpClient
 var distHttpDetails httputils.HttpClientDetails
 
 func TestDistribution(t *testing.T) {
-	if (*DistUrl == "") {
+	if *DistUrl == "" {
 		t.Skip("Distribution is not being tested, skipping...")
 	}
 	initClients(t)

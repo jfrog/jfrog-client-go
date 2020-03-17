@@ -36,7 +36,7 @@ func InitArtifactoryServiceManager() {
 	createArtifactoryCreateVirtualRepositoryManager()
 	createArtifactoryUpdateVirtualRepositoryManager()
 	createArtifactoryDeleteRepositoryManager()
-	if (*DistUrl != "") {
+	if *DistUrl != "" {
 		createDistributionManager()
 	}
 	createReposIfNeeded()
