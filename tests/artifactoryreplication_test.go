@@ -33,11 +33,11 @@ func TestReplication(t *testing.T) {
 }
 
 func createReplication() error {
-	params := services.NewReplicationParams()
+	params := services.NewCreateReplicationParams()
 	// Those fields are required
 	params.Username = "anonymous"
 	params.Password = "password"
-	params.URL = "http://www.jfrog.com"
+	params.Url = "http://www.jfrog.com"
 	params.CronExp = "0 0 14 * * ?"
 	params.RepoKey = repoKey
 	params.Enabled = true
@@ -65,7 +65,7 @@ func deleteReplication(t *testing.T) error {
 func GetReplicationConfig() []utils.ReplicationParams {
 	return []utils.ReplicationParams{
 		{
-			URL:                    "http://www.jfrog.com",
+			Url:                    "http://www.jfrog.com",
 			Username:               "anonymous",
 			Password:               "password",
 			CronExp:                "0 0 14 * * ?",

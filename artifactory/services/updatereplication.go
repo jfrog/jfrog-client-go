@@ -26,7 +26,7 @@ func (rs *UpdateReplicationService) GetJfrogHttpClient() *rthttpclient.Artifacto
 	return rs.client
 }
 
-func (rs *UpdateReplicationService) performRequest(params utils.ReplicationParams) error {
+func (rs *UpdateReplicationService) performRequest(params *utils.ReplicationBody) error {
 	content, err := json.Marshal(params)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -34,11 +34,10 @@ func (rs *UpdateReplicationService) performRequest(params utils.ReplicationParam
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.replications.ReplicationConfigRequest+json", &httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/replications/" + params.RepoKey
-	var operationString string
 	var resp *http.Response
 	var body []byte
 	log.Info("Update replication...")
-	operationString = "updating"
+	operationString := "updating"
 	resp, body, err = rs.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
@@ -51,10 +50,14 @@ func (rs *UpdateReplicationService) performRequest(params utils.ReplicationParam
 	return nil
 }
 
-func (rs *UpdateReplicationService) UpdateReplication(params utils.ReplicationParams) error {
-	return rs.performRequest(params)
+func (rs *CreateReplicationService) UpdateReplication(params UpdateReplicationParams) error {
+	return rs.performRequest(utils.CreateReplicationBody(params.ReplicationParams))
 }
 
-func NewUpdateReplicationParams() utils.ReplicationParams {
-	return utils.ReplicationParams{}
+func NewUpdateReplicationParams() UpdateReplicationParams {
+	return UpdateReplicationParams{}
+}
+
+type UpdateReplicationParams struct {
+	utils.ReplicationParams
 }

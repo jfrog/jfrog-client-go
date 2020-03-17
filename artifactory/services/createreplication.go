@@ -26,7 +26,7 @@ func (rs *CreateReplicationService) GetJfrogHttpClient() *rthttpclient.Artifacto
 	return rs.client
 }
 
-func (rs *CreateReplicationService) performRequest(params utils.ReplicationParams) error {
+func (rs *CreateReplicationService) performRequest(params *utils.ReplicationBody) error {
 	content, err := json.Marshal(params)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -34,11 +34,10 @@ func (rs *CreateReplicationService) performRequest(params utils.ReplicationParam
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.replications.ReplicationConfigRequest+json", &httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/replications/" + params.RepoKey
-	var operationString string
 	var resp *http.Response
 	var body []byte
 	log.Info("Creating replication..")
-	operationString = "creating"
+	operationString := "creating"
 	resp, body, err = rs.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
@@ -51,10 +50,14 @@ func (rs *CreateReplicationService) performRequest(params utils.ReplicationParam
 	return nil
 }
 
-func (rs *CreateReplicationService) CreateReplication(params utils.ReplicationParams) error {
-	return rs.performRequest(params)
+func (rs *CreateReplicationService) CreateReplication(params CreateReplicationParams) error {
+	return rs.performRequest(utils.CreateReplicationBody(params.ReplicationParams))
 }
 
-func NewReplicationParams() utils.ReplicationParams {
-	return utils.ReplicationParams{}
+func NewCreateReplicationParams() CreateReplicationParams {
+	return CreateReplicationParams{}
+}
+
+type CreateReplicationParams struct {
+	utils.ReplicationParams
 }
