@@ -25,7 +25,7 @@ func (drs *DeleteReplicationService) GetJfrogHttpClient() *rthttpclient.Artifact
 	return drs.client
 }
 
-func (drs *DeleteReplicationService) Delete(repoKey string) error {
+func (drs *DeleteReplicationService) DeleteReplication(repoKey string) error {
 	httpClientsDetails := drs.ArtDetails.CreateHttpClientDetails()
 	log.Info("Deleting replication job...")
 	resp, body, err := drs.client.SendDelete(drs.ArtDetails.GetUrl()+"api/replications/"+repoKey, nil, &httpClientsDetails)

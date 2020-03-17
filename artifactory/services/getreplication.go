@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -25,24 +26,12 @@ func (drs *GetReplicationService) GetJfrogHttpClient() *rthttpclient.Artifactory
 	return drs.client
 }
 
-func (drs *GetReplicationService) GetPush(repoKey string) ([]PushReplicationParams, error) {
+func (drs *GetReplicationService) GetReplication(repoKey string) ([]utils.ReplicationParams, error) {
 	body, err := drs.preform(repoKey)
 	if err != nil {
 		return nil, err
 	}
-	var replicationConf []PushReplicationParams
-	if err := json.Unmarshal(body, &replicationConf); err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	return replicationConf, nil
-}
-
-func (drs *GetReplicationService) GetPull(repoKey string) ([]PullReplicationParams, error) {
-	body, err := drs.preform(repoKey)
-	if err != nil {
-		return nil, err
-	}
-	var replicationConf []PullReplicationParams
+	var replicationConf []utils.ReplicationParams
 	if err := json.Unmarshal(body, &replicationConf); err != nil {
 		return nil, errorutils.CheckError(err)
 	}

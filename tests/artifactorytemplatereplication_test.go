@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,7 +33,7 @@ func TestReplication(t *testing.T) {
 }
 
 func createReplication() error {
-	params := services.NewPushReplicationParams()
+	params := services.NewReplicationParams()
 	// Those fields are required
 	params.Username = "anonymous"
 	params.Password = "password"
@@ -41,11 +42,11 @@ func createReplication() error {
 	params.RepoKey = repoKey
 	params.Enabled = true
 	params.SocketTimeoutMillis = 100
-	return testsReplicationService.Push(params)
+	return testsCreateReplicationService.CreateReplication(params)
 }
 
-func getPushReplication(t *testing.T, expected []services.PushReplicationParams) error {
-	replicationConf, err := testsReplicationGetService.GetPush(repoKey)
+func getPushReplication(t *testing.T, expected []utils.ReplicationParams) error {
+	replicationConf, err := testsReplicationGetService.GetReplication(repoKey)
 	if err != nil {
 		return err
 	}
@@ -54,30 +55,28 @@ func getPushReplication(t *testing.T, expected []services.PushReplicationParams)
 }
 
 func deleteReplication(t *testing.T) error {
-	err := testsReplicationDeleteService.Delete(repoKey)
+	err := testsReplicationDeleteService.DeleteReplication(repoKey)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GetReplicationConfig() []services.PushReplicationParams {
-	return []services.PushReplicationParams{
+func GetReplicationConfig() []utils.ReplicationParams {
+	return []utils.ReplicationParams{
 		{
-			URL:      "http://www.jfrog.com",
-			Username: "anonymous",
-			Password: "password",
-			CommonReplicationParams: services.CommonReplicationParams{
-				CronExp:                "0 0 14 * * ?",
-				RepoKey:                repoKey,
-				EnableEventReplication: false,
-				SocketTimeoutMillis:    100,
-				Enabled:                true,
-				SyncDeletes:            false,
-				SyncProperties:         false,
-				SyncStatistics:         false,
-				PathPrefix:             "",
-			},
+			URL:                    "http://www.jfrog.com",
+			Username:               "anonymous",
+			Password:               "password",
+			CronExp:                "0 0 14 * * ?",
+			RepoKey:                repoKey,
+			EnableEventReplication: false,
+			SocketTimeoutMillis:    100,
+			Enabled:                true,
+			SyncDeletes:            false,
+			SyncProperties:         false,
+			SyncStatistics:         false,
+			PathPrefix:             "",
 		},
 	}
 }

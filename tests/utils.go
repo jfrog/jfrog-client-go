@@ -52,7 +52,8 @@ var testsUpdateLocalRepositoryService *services.LocalRepositoryService
 var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
-var testsReplicationService *services.ReplicationService
+var testsCreateReplicationService *services.CreateReplicationService
+var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
 var testsReplicationDeleteService *services.DeleteReplicationService
 
@@ -207,15 +208,23 @@ func createArtifactoryDeleteRepositoryManager() {
 	testsDeleteRepositoryService.ArtDetails = artDetails
 }
 
-func createArtifactoryReplicationManager() {
+func createArtifactoryReplicationCreateManager() {
 	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
-	testsReplicationService = services.NewReplicationService(client, false)
-	testsReplicationService.ArtDetails = artDetails
+	testsCreateReplicationService = services.NewCreateReplicationService(client, false)
+	testsCreateReplicationService.ArtDetails = artDetails
 }
 
-func createArtifactoryReplicationShowManager() {
+func createArtifactoryReplicationUpdateManager() {
+	artDetails := GetRtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testsUpdateReplicationService = services.NewUpdateReplicationService(client, false)
+	testsUpdateReplicationService.ArtDetails = artDetails
+}
+
+func createArtifactoryReplicationGetManager() {
 	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)

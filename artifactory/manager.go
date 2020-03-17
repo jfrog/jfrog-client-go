@@ -245,46 +245,28 @@ func (sm *ArtifactoryServicesManager) RevokeToken(params services.RevokeTokenPar
 	return securityService.RevokeToken(params)
 }
 
-func (sm *ArtifactoryServicesManager) CreatePullReplication(params services.PullReplicationParams) error {
-	replicationService := services.NewReplicationService(sm.client, false)
+func (sm *ArtifactoryServicesManager) CreateReplication(params utils.ReplicationParams) error {
+	replicationService := services.NewCreateReplicationService(sm.client, false)
 	replicationService.ArtDetails = sm.config.GetCommonDetails()
-	return replicationService.Pull(params)
+	return replicationService.CreateReplication(params)
 }
 
-func (sm *ArtifactoryServicesManager) UpdatePullReplication(params services.PullReplicationParams) error {
-	replicationService := services.NewReplicationService(sm.client, true)
+func (sm *ArtifactoryServicesManager) UpdateReplication(params utils.ReplicationParams) error {
+	replicationService := services.NewUpdateReplicationService(sm.client, true)
 	replicationService.ArtDetails = sm.config.GetCommonDetails()
-	return replicationService.Pull(params)
-}
-
-func (sm *ArtifactoryServicesManager) CreatePushReplication(params services.PushReplicationParams) error {
-	replicationService := services.NewReplicationService(sm.client, false)
-	replicationService.ArtDetails = sm.config.GetCommonDetails()
-	return replicationService.Push(params)
-}
-
-func (sm *ArtifactoryServicesManager) UpdatePushReplication(params services.PushReplicationParams) error {
-	replicationService := services.NewReplicationService(sm.client, true)
-	replicationService.ArtDetails = sm.config.GetCommonDetails()
-	return replicationService.Push(params)
+	return replicationService.UpdateReplication(params)
 }
 
 func (sm *ArtifactoryServicesManager) DeleteReplication(repoKey string) error {
 	deleteReplicationService := services.NewDeleteReplicationService(sm.client)
 	deleteReplicationService.ArtDetails = sm.config.GetCommonDetails()
-	return deleteReplicationService.Delete(repoKey)
+	return deleteReplicationService.DeleteReplication(repoKey)
 }
 
-func (sm *ArtifactoryServicesManager) GetPushReplication(repoKey string) ([]services.PushReplicationParams, error) {
+func (sm *ArtifactoryServicesManager) GetReplication(repoKey string) ([]utils.ReplicationParams, error) {
 	getPushReplicationService := services.NewGetReplicationService(sm.client)
 	getPushReplicationService.ArtDetails = sm.config.GetCommonDetails()
-	return getPushReplicationService.GetPush(repoKey)
-}
-
-func (sm *ArtifactoryServicesManager) GetPullReplication(repoKey string) ([]services.PullReplicationParams, error) {
-	getPullReplicationService := services.NewGetReplicationService(sm.client)
-	getPullReplicationService.ArtDetails = sm.config.GetCommonDetails()
-	return getPullReplicationService.GetPull(repoKey)
+	return getPushReplicationService.GetReplication(repoKey)
 }
 
 func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
