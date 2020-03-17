@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/go"
+	_go "github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
@@ -243,6 +243,30 @@ func (sm *ArtifactoryServicesManager) RevokeToken(params services.RevokeTokenPar
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetCommonDetails()
 	return securityService.RevokeToken(params)
+}
+
+func (sm *ArtifactoryServicesManager) CreateReplication(params services.CreateReplicationParams) error {
+	replicationService := services.NewCreateReplicationService(sm.client, false)
+	replicationService.ArtDetails = sm.config.GetCommonDetails()
+	return replicationService.CreateReplication(params)
+}
+
+func (sm *ArtifactoryServicesManager) UpdateReplication(params services.UpdateReplicationParams) error {
+	replicationService := services.NewUpdateReplicationService(sm.client, true)
+	replicationService.ArtDetails = sm.config.GetCommonDetails()
+	return replicationService.UpdateReplication(params)
+}
+
+func (sm *ArtifactoryServicesManager) DeleteReplication(repoKey string) error {
+	deleteReplicationService := services.NewDeleteReplicationService(sm.client)
+	deleteReplicationService.ArtDetails = sm.config.GetCommonDetails()
+	return deleteReplicationService.DeleteReplication(repoKey)
+}
+
+func (sm *ArtifactoryServicesManager) GetReplication(repoKey string) ([]utils.ReplicationParams, error) {
+	getPushReplicationService := services.NewGetReplicationService(sm.client)
+	getPushReplicationService.ArtDetails = sm.config.GetCommonDetails()
+	return getPushReplicationService.GetReplication(repoKey)
 }
 
 func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
