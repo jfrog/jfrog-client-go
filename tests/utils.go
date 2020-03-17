@@ -53,7 +53,7 @@ var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
 var testsReplicationService *services.ReplicationService
-var testsReplicationShowService *services.ShowReplicationService
+var testsReplicationGetService *services.GetReplicationService
 var testsReplicationDeleteService *services.DeleteReplicationService
 
 // Distribution services
@@ -219,8 +219,8 @@ func createArtifactoryReplicationShowManager() {
 	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
-	testsReplicationShowService = services.NewShowReplicationService(client)
-	testsReplicationShowService.ArtDetails = artDetails
+	testsReplicationGetService = services.NewGetReplicationService(client)
+	testsReplicationGetService.ArtDetails = artDetails
 }
 
 func createArtifactoryReplicationDeleteManager() {

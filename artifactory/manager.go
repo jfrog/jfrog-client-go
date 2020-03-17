@@ -275,10 +275,16 @@ func (sm *ArtifactoryServicesManager) DeleteReplication(repoKey string) error {
 	return deleteReplicationService.Delete(repoKey)
 }
 
-func (sm *ArtifactoryServicesManager) ShowReplication(repoKey string) ([]services.PushReplicationParams, error) {
-	deleteReplicationService := services.NewShowReplicationService(sm.client)
-	deleteReplicationService.ArtDetails = sm.config.GetCommonDetails()
-	return deleteReplicationService.Show(repoKey)
+func (sm *ArtifactoryServicesManager) GetPushReplication(repoKey string) ([]services.PushReplicationParams, error) {
+	getPushReplicationService := services.NewGetReplicationService(sm.client)
+	getPushReplicationService.ArtDetails = sm.config.GetCommonDetails()
+	return getPushReplicationService.GetPush(repoKey)
+}
+
+func (sm *ArtifactoryServicesManager) GetPullReplication(repoKey string) ([]services.PullReplicationParams, error) {
+	getPullReplicationService := services.NewGetReplicationService(sm.client)
+	getPullReplicationService.ArtDetails = sm.config.GetCommonDetails()
+	return getPullReplicationService.GetPull(repoKey)
 }
 
 func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {

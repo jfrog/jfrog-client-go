@@ -58,7 +58,7 @@ func (rs *ReplicationService) performRequest(replicationParams []byte, repoKey s
 func (rs *ReplicationService) Push(params PushReplicationParams) error {
 	content, err := json.Marshal(params)
 	if err != nil {
-		return err
+		return errorutils.CheckError(err)
 	}
 	return rs.performRequest(content, params.RepoKey)
 }
@@ -66,7 +66,7 @@ func (rs *ReplicationService) Push(params PushReplicationParams) error {
 func (rs *ReplicationService) Pull(params PullReplicationParams) error {
 	content, err := json.Marshal(params)
 	if err != nil {
-		return err
+		return errorutils.CheckError(err)
 	}
 	return rs.performRequest(content, params.RepoKey)
 }

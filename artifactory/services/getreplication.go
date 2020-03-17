@@ -1,0 +1,65 @@
+package services
+
+import (
+	"encoding/json"
+	"errors"
+	"net/http"
+
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/auth"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+)
+
+type GetReplicationService struct {
+	client     *rthttpclient.ArtifactoryHttpClient
+	ArtDetails auth.CommonDetails
+}
+
+func NewGetReplicationService(client *rthttpclient.ArtifactoryHttpClient) *GetReplicationService {
+	return &GetReplicationService{client: client}
+}
+
+func (drs *GetReplicationService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+	return drs.client
+}
+
+func (drs *GetReplicationService) GetPush(repoKey string) ([]PushReplicationParams, error) {
+	body, err := drs.preform(repoKey)
+	if err != nil {
+		return nil, err
+	}
+	var replicationConf []PushReplicationParams
+	if err := json.Unmarshal(body, &replicationConf); err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	return replicationConf, nil
+}
+
+func (drs *GetReplicationService) GetPull(repoKey string) ([]PullReplicationParams, error) {
+	body, err := drs.preform(repoKey)
+	if err != nil {
+		return nil, err
+	}
+	var replicationConf []PullReplicationParams
+	if err := json.Unmarshal(body, &replicationConf); err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	return replicationConf, nil
+}
+
+func (drs *GetReplicationService) preform(repoKey string) ([]byte, error) {
+	httpClientsDetails := drs.ArtDetails.CreateHttpClientDetails()
+	log.Info("Retrive replication configuration...")
+	resp, body, _, err := drs.client.SendGet(drs.ArtDetails.GetUrl()+"api/replications/"+repoKey, true, &httpClientsDetails)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	}
+	log.Debug("Artifactory response:", resp.Status)
+	log.Info("Done retrive replication job.")
+	return body, nil
+}

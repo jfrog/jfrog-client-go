@@ -19,7 +19,7 @@ func TestReplication(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = showReplication(t, GetReplicationConfge())
+	err = getPushReplication(t, GetReplicationConfig())
 	if err != nil {
 		t.Error(err)
 	}
@@ -27,13 +27,13 @@ func TestReplication(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = showReplication(t, nil)
+	err = getPushReplication(t, nil)
 	assert.Error(t, err)
 }
 
 func createReplication() error {
 	params := services.NewPushReplicationParams()
-	//those fields are required
+	// Those fields are required
 	params.Username = "anonymous"
 	params.Password = "password"
 	params.URL = "http://www.jfrog.com"
@@ -44,8 +44,8 @@ func createReplication() error {
 	return testsReplicationService.Push(params)
 }
 
-func showReplication(t *testing.T, expected []services.PushReplicationParams) error {
-	replicationConf, err := testsReplicationShowService.Show(repoKey)
+func getPushReplication(t *testing.T, expected []services.PushReplicationParams) error {
+	replicationConf, err := testsReplicationGetService.GetPush(repoKey)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func deleteReplication(t *testing.T) error {
 	return nil
 }
 
-func GetReplicationConfge() []services.PushReplicationParams {
+func GetReplicationConfig() []services.PushReplicationParams {
 	return []services.PushReplicationParams{
 		{
 			URL:      "http://www.jfrog.com",
