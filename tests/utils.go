@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
   	"time"
+	"reflect"
 
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -419,7 +420,7 @@ func validateRepoConfig(t *testing.T, repoKey string, params interface{}) bool {
 		return false
 	}
 	for key, value := range paramsMap {
-		if confMap[key] != value {
+		if !reflect.DeepEqual(confMap[key], value) {
 			t.Error(fmt.Sprintf("Key %s: Expected: %v, Actual: %v", key, value, confMap[key]))
 			return false
 		}
