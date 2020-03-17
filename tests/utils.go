@@ -5,6 +5,14 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
+  "strconv"
+	"strings"
+	"testing"
+  "time"
 
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -19,14 +27,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/mholt/archiver"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"testing"
-	"time"
 )
 
 var RtUrl *string
@@ -56,6 +56,15 @@ var testsDeleteRepositoryService *services.DeleteRepositoryService
 var timestamp = strconv.FormatInt(time.Now().Unix(), 10)
 var trueValue = true
 var falseValue = false
+
+// Distribution services
+var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
+var testsBundleCreateService *distributionServices.CreateReleaseBundleService
+var testsBundleUpdateService *distributionServices.UpdateReleaseBundleService
+var testsBundleSignService *distributionServices.SignBundleService
+var testsBundleDistributeService *distributionServices.DistributeReleaseBundleService
+var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundleService
+var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
 
 // Distribution services
 var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
