@@ -18,7 +18,7 @@ type UpdateReplicationService struct {
 	ArtDetails auth.CommonDetails
 }
 
-func NewUpdateReplicationService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *UpdateReplicationService {
+func NewUpdateReplicationService(client *rthttpclient.ArtifactoryHttpClient) *UpdateReplicationService {
 	return &UpdateReplicationService{client: client}
 }
 
@@ -50,7 +50,7 @@ func (rs *UpdateReplicationService) performRequest(params *utils.ReplicationBody
 	return nil
 }
 
-func (rs *CreateReplicationService) UpdateReplication(params UpdateReplicationParams) error {
+func (rs *UpdateReplicationService) UpdateReplication(params UpdateReplicationParams) error {
 	return rs.performRequest(utils.CreateReplicationBody(params.ReplicationParams))
 }
 

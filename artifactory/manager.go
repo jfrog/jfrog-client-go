@@ -246,13 +246,13 @@ func (sm *ArtifactoryServicesManager) RevokeToken(params services.RevokeTokenPar
 }
 
 func (sm *ArtifactoryServicesManager) CreateReplication(params services.CreateReplicationParams) error {
-	replicationService := services.NewCreateReplicationService(sm.client, false)
+	replicationService := services.NewCreateReplicationService(sm.client)
 	replicationService.ArtDetails = sm.config.GetCommonDetails()
 	return replicationService.CreateReplication(params)
 }
 
 func (sm *ArtifactoryServicesManager) UpdateReplication(params services.UpdateReplicationParams) error {
-	replicationService := services.NewUpdateReplicationService(sm.client, true)
+	replicationService := services.NewUpdateReplicationService(sm.client)
 	replicationService.ArtDetails = sm.config.GetCommonDetails()
 	return replicationService.UpdateReplication(params)
 }

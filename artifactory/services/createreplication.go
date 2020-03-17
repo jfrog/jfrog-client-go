@@ -18,7 +18,7 @@ type CreateReplicationService struct {
 	ArtDetails auth.CommonDetails
 }
 
-func NewCreateReplicationService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *CreateReplicationService {
+func NewCreateReplicationService(client *rthttpclient.ArtifactoryHttpClient) *CreateReplicationService {
 	return &CreateReplicationService{client: client}
 }
 
