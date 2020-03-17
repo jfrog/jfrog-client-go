@@ -2,11 +2,12 @@ package tests
 
 import (
 	"flag"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/utils/tests"
 )
 
 const (
@@ -36,6 +37,9 @@ func InitArtifactoryServiceManager() {
 	createArtifactoryCreateVirtualRepositoryManager()
 	createArtifactoryUpdateVirtualRepositoryManager()
 	createArtifactoryDeleteRepositoryManager()
+	createArtifactoryReplicationManager()
+	createArtifactoryReplicationShowManager()
+	createArtifactoryReplicationDeleteManager()
 	if *DistUrl != "" {
 		createDistributionManager()
 	}

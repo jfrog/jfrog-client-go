@@ -71,6 +71,10 @@ func (rs *ReplicationService) Pull(params PullReplicationParams) error {
 	return rs.performRequest(content, params.RepoKey)
 }
 
+func NewPushReplicationParams() PushReplicationParams {
+	return PushReplicationParams{}
+}
+
 type CommonReplicationParams struct {
 	CronExp                string `json:"cronExp"`
 	RepoKey                string `json:"repoKey"`
