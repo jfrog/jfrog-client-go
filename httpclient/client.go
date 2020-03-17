@@ -372,16 +372,12 @@ func extractFile(downloadFileDetails *DownloadFileDetails, arch archiver.Archive
 		return err
 	}
 
-	// The local path to which the file is going to be extracted,
-	// needs to be absolute.
-	absolutePath, err := filepath.Abs(downloadFileDetails.LocalPath)
+	extractionPath, err := getExtractionPath(downloadFileDetails.LocalPath)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return err
 	}
-	// Add a trailing slash to the local path, since it has to be a directory.
-	absolutePath = absolutePath + string(os.PathSeparator)
 
-	err = arch.Read(reader, absolutePath)
+	err = arch.Read(reader, extractionPath)
 	return errorutils.CheckError(err)
 }
 
@@ -401,6 +397,17 @@ func extractZip(downloadFileDetails *DownloadFileDetails, logMsgPrefix string) e
 	}
 	err = os.Remove(fileName)
 	return errorutils.CheckError(err)
+}
+
+func getExtractionPath(localPath string) (string, error) {
+	// The local path to which the file is going to be extracted,
+	// needs to be absolute.
+	absolutePath, err := filepath.Abs(localPath)
+	if err != nil {
+		return "", errorutils.CheckError(err)
+	}
+	// Add a trailing slash to the local path, since it has to be a directory.
+	return absolutePath + string(os.PathSeparator), nil
 }
 
 // Downloads a file by chunks, concurrently.
@@ -625,8 +632,12 @@ func extractAndMergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags, 
 	}
 
 	multiReader := io.MultiReader(fileReaders...)
-	log.Info(logMsgPrefix+"Extracting archive:", flags.FileName, "to", flags.LocalPath)
-	err = arch.Read(multiReader, flags.LocalPath)
+	extractionPath, err := getExtractionPath(flags.LocalPath)
+	if err != nil {
+		return false, err
+	}
+	log.Info(logMsgPrefix+"Extracting archive:", flags.FileName, "to", extractionPath)
+	err = arch.Read(multiReader, extractionPath)
 	if err != nil {
 		return false, errorutils.CheckError(err)
 	}
