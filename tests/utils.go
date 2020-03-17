@@ -422,3 +422,9 @@ func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 		assert.Equal(t, confMap[key], value)
 	}
 }
+
+func deleteRepoAndValidate(t *testing.T, repoKey string) {
+	err := testsDeleteRepositoryService.Delete(repoKey)
+	assert.NoError(t, err, "Failed to delete "+repoKey)
+	assert.False(t, isRepoExist(repoKey), repoKey+" still exists")
+}

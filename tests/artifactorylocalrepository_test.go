@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -30,9 +31,7 @@ func localMavenTest(t *testing.T) {
 	mlp.DownloadRedirect = &falseValue
 
 	err := testsCreateLocalRepositoryService.Maven(mlp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, mlp)
 
 	mlp.Description += " - Updated"
@@ -44,18 +43,10 @@ func localMavenTest(t *testing.T) {
 	mlp.ArchiveBrowsingEnabled = &trueValue
 
 	err = testsUpdateLocalRepositoryService.Maven(mlp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, mlp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func localGradleTest(t *testing.T) {
@@ -73,9 +64,7 @@ func localGradleTest(t *testing.T) {
 	glp.DownloadRedirect = &falseValue
 
 	err := testsCreateLocalRepositoryService.Gradle(glp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
@@ -87,18 +76,10 @@ func localGradleTest(t *testing.T) {
 	glp.ArchiveBrowsingEnabled = &trueValue
 
 	err = testsUpdateLocalRepositoryService.Gradle(glp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func localRpmTest(t *testing.T) {
@@ -113,9 +94,7 @@ func localRpmTest(t *testing.T) {
 	rlp.CalculateYumMetadata = &falseValue
 
 	err := testsCreateLocalRepositoryService.Rpm(rlp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, rlp)
 
 	rlp.Description += " - Updated"
@@ -126,18 +105,10 @@ func localRpmTest(t *testing.T) {
 	rlp.EnableFileListsIndexing = &falseValue
 
 	err = testsUpdateLocalRepositoryService.Rpm(rlp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, rlp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func localGoTest(t *testing.T) {
@@ -152,9 +123,7 @@ func localGoTest(t *testing.T) {
 	glp.ArchiveBrowsingEnabled = &trueValue
 
 	err := testsCreateLocalRepositoryService.Go(glp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
@@ -163,18 +132,10 @@ func localGoTest(t *testing.T) {
 	glp.PropertySets = []string{}
 
 	err = testsUpdateLocalRepositoryService.Go(glp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func localGenericTest(t *testing.T) {
@@ -188,9 +149,7 @@ func localGenericTest(t *testing.T) {
 	glp.ArchiveBrowsingEnabled = &falseValue
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
@@ -200,16 +159,8 @@ func localGenericTest(t *testing.T) {
 	glp.BlockPushingSchema1 = nil
 
 	err = testsUpdateLocalRepositoryService.Generic(glp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }

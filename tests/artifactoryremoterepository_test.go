@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -31,9 +32,7 @@ func remoteMavenTest(t *testing.T) {
 	mrp.ShareConfiguration = &falseValue
 
 	err := testsCreateRemoteRepositoryService.Maven(mrp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, mrp)
 
 	mrp.Description += " - Updated"
@@ -46,18 +45,10 @@ func remoteMavenTest(t *testing.T) {
 	mrp.SocketTimeoutMillis = 666
 
 	err = testsUpdateRemoteRepositoryService.Maven(mrp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, mrp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func remoteGradleTest(t *testing.T) {
@@ -76,9 +67,7 @@ func remoteGradleTest(t *testing.T) {
 	grp.ShareConfiguration = &falseValue
 
 	err := testsCreateRemoteRepositoryService.Gradle(grp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
 	grp.Description += " - Updated"
@@ -92,18 +81,10 @@ func remoteGradleTest(t *testing.T) {
 	grp.SocketTimeoutMillis = 666
 
 	err = testsUpdateRemoteRepositoryService.Gradle(grp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func remoteComposerTest(t *testing.T) {
@@ -121,9 +102,7 @@ func remoteComposerTest(t *testing.T) {
 	crp.BypassHeadRequests = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Composer(crp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
 	crp.Description += " - Updated"
@@ -135,18 +114,10 @@ func remoteComposerTest(t *testing.T) {
 	crp.BypassHeadRequests = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Composer(crp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func remoteVcsTest(t *testing.T) {
@@ -167,9 +138,7 @@ func remoteVcsTest(t *testing.T) {
 	vrp.SocketTimeoutMillis = 1111
 
 	err := testsCreateRemoteRepositoryService.Vcs(vrp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, vrp)
 
 	vrp.Description += " - Updated"
@@ -183,18 +152,10 @@ func remoteVcsTest(t *testing.T) {
 	vrp.SocketTimeoutMillis = 1110
 
 	err = testsUpdateRemoteRepositoryService.Vcs(vrp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, vrp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func remoteGenericTest(t *testing.T) {
@@ -209,9 +170,7 @@ func remoteGenericTest(t *testing.T) {
 	grp.ShareConfiguration = &falseValue
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
 	grp.Description += " - Updated"
@@ -221,16 +180,8 @@ func remoteGenericTest(t *testing.T) {
 	grp.SocketTimeoutMillis = 666
 
 	err = testsUpdateRemoteRepositoryService.Generic(grp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }

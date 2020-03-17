@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -26,9 +27,7 @@ func virtualMavenTest(t *testing.T) {
 	mvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Maven(mvp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, mvp)
 
 	mvp.Description += " - Updated"
@@ -39,18 +38,10 @@ func virtualMavenTest(t *testing.T) {
 	mvp.ExcludesPattern = "**/****"
 
 	err = testsUpdateVirtualRepositoryService.Maven(mvp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, mvp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualGradleTest(t *testing.T) {
@@ -64,9 +55,7 @@ func virtualGradleTest(t *testing.T) {
 	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Gradle(gvp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	gvp.Description += " - Updated"
@@ -77,18 +66,10 @@ func virtualGradleTest(t *testing.T) {
 	gvp.ExcludesPattern = "**/****"
 
 	err = testsUpdateVirtualRepositoryService.Gradle(gvp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualP2Test(t *testing.T) {
@@ -101,9 +82,7 @@ func virtualP2Test(t *testing.T) {
 	pvp.ExcludesPattern = "dir1/dir1.1/*"
 
 	err := testsCreateVirtualRepositoryService.P2(pvp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
 	pvp.Description += " - Updated"
@@ -113,18 +92,10 @@ func virtualP2Test(t *testing.T) {
 	pvp.ExcludesPattern = "dir2/*"
 
 	err = testsUpdateVirtualRepositoryService.P2(pvp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualCondaTest(t *testing.T) {
@@ -138,9 +109,7 @@ func virtualCondaTest(t *testing.T) {
 	cvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Conda(cvp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	cvp.Description += " - Updated"
@@ -151,18 +120,10 @@ func virtualCondaTest(t *testing.T) {
 	cvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &trueValue
 
 	err = testsUpdateVirtualRepositoryService.Conda(cvp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualGenericTest(t *testing.T) {
@@ -174,9 +135,7 @@ func virtualGenericTest(t *testing.T) {
 	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Generic(gvp)
-	if err != nil {
-		t.Error("Failed to create " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to create "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	gvp.Description += " - Updated"
@@ -186,16 +145,8 @@ func virtualGenericTest(t *testing.T) {
 	gvp.ExcludesPattern = "**/****,a/b/c/*"
 
 	err = testsUpdateVirtualRepositoryService.Generic(gvp)
-	if err != nil {
-		t.Error("Failed to update " + repoKey)
-	}
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
-	err = testsDeleteRepositoryService.Delete(repoKey)
-	if err != nil {
-		t.Error("Failed to delete " + repoKey)
-	}
-	if isRepoExist(repoKey) {
-		t.Error(repoKey + " still exists")
-	}
+	deleteRepoAndValidate(t, repoKey)
 }
