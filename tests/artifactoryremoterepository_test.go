@@ -34,9 +34,7 @@ func remoteMavenTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, mrp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, mrp)
 
 	mrp.Description += " - Updated"
 	mrp.HandleReleases = nil
@@ -51,9 +49,7 @@ func remoteMavenTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, mrp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, mrp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -83,9 +79,7 @@ func remoteGradleTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, grp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, grp)
 
 	grp.Description += " - Updated"
 	grp.HandleReleases = nil
@@ -101,9 +95,7 @@ func remoteGradleTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, grp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, grp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -132,9 +124,7 @@ func remoteComposerTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, crp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, crp)
 
 	crp.Description += " - Updated"
 	crp.Notes = "Repo been updated"
@@ -148,9 +138,7 @@ func remoteComposerTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, crp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, crp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -182,9 +170,7 @@ func remoteVcsTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, vrp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, vrp)
 
 	vrp.Description += " - Updated"
 	vrp.Notes = "Repo been updated"
@@ -200,9 +186,7 @@ func remoteVcsTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, vrp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, vrp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -228,9 +212,7 @@ func remoteGenericTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, grp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, grp)
 
 	grp.Description += " - Updated"
 	grp.Notes = "Repo been updated"
@@ -242,9 +224,7 @@ func remoteGenericTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, grp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, grp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {

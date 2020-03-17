@@ -29,9 +29,7 @@ func virtualMavenTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, mvp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, mvp)
 
 	mvp.Description += " - Updated"
 	mvp.Notes = "Repo been updated"
@@ -44,9 +42,7 @@ func virtualMavenTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, mvp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, mvp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -71,9 +67,7 @@ func virtualGradleTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, gvp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, gvp)
 
 	gvp.Description += " - Updated"
 	gvp.Notes = "Repo been updated"
@@ -86,9 +80,7 @@ func virtualGradleTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, gvp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, gvp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -112,9 +104,7 @@ func virtualP2Test(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, pvp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, pvp)
 
 	pvp.Description += " - Updated"
 	pvp.Notes = "Repo been updated"
@@ -126,9 +116,7 @@ func virtualP2Test(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, pvp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, pvp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -153,9 +141,7 @@ func virtualCondaTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, cvp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, cvp)
 
 	cvp.Description += " - Updated"
 	cvp.Notes = "Repo been updated"
@@ -168,9 +154,7 @@ func virtualCondaTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, cvp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, cvp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -193,9 +177,7 @@ func virtualGenericTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, gvp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, gvp)
 
 	gvp.Description += " - Updated"
 	gvp.Notes = "Repo been updated"
@@ -207,9 +189,7 @@ func virtualGenericTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, gvp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, gvp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {

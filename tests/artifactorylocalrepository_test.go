@@ -33,9 +33,7 @@ func localMavenTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, mlp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, mlp)
 
 	mlp.Description += " - Updated"
 	mlp.MaxUniqueSnapshots = 36
@@ -49,9 +47,7 @@ func localMavenTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, mlp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, mlp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -80,9 +76,7 @@ func localGradleTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, glp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
 	glp.MaxUniqueSnapshots = 36
@@ -96,9 +90,7 @@ func localGradleTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, glp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, glp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -124,9 +116,7 @@ func localRpmTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, rlp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, rlp)
 
 	rlp.Description += " - Updated"
 	rlp.Notes = "Repo been updated"
@@ -139,9 +129,7 @@ func localRpmTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, rlp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, rlp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -167,9 +155,7 @@ func localGoTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, glp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
 	glp.Notes = "Repo been updated"
@@ -180,9 +166,7 @@ func localGoTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, glp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, glp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {
@@ -207,9 +191,7 @@ func localGenericTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, glp) {
-		t.Error("Validation after create failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
 	glp.Notes = "Repo been updated"
@@ -221,9 +203,7 @@ func localGenericTest(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to update " + repoKey)
 	}
-	if !validateRepoConfig(t, repoKey, glp) {
-		t.Error("Validation after update failed for " + repoKey)
-	}
+	validateRepoConfig(t, repoKey, glp)
 
 	err = testsDeleteRepositoryService.Delete(repoKey)
 	if err != nil {

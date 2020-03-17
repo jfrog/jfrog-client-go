@@ -5,16 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"path/filepath"
-  	"strconv"
-	"strings"
-	"testing"
-  	"time"
-	"reflect"
-
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -28,6 +18,15 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/mholt/archiver"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
 )
 
 var RtUrl *string
@@ -403,27 +402,23 @@ func getRepoConfig(repoKey string) (body []byte) {
 	return
 }
 
-func validateRepoConfig(t *testing.T, repoKey string, params interface{}) bool {
+func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	config := getRepoConfig(repoKey)
 	if config == nil {
-		return false
+		t.Error("Failed to get repository config")
 	}
 	var confMap, paramsMap map[string]interface{}
 	if err := json.Unmarshal(config, &confMap); err != nil {
-		return false
+		t.Error("Failed to marshal config map")
 	}
 	tmpJson, err := json.Marshal(params)
 	if err != nil {
-		return false
+		t.Error("Failed to marshal repository params")
 	}
 	if err := json.Unmarshal(tmpJson, &paramsMap); err != nil {
-		return false
+		t.Error("Failed to unmarshal repository params")
 	}
 	for key, value := range paramsMap {
-		if !reflect.DeepEqual(confMap[key], value) {
-			t.Error(fmt.Sprintf("Key %s: Expected: %v, Actual: %v", key, value, confMap[key]))
-			return false
-		}
+		assert.Equal(t, confMap[key], value)
 	}
-	return true
 }
