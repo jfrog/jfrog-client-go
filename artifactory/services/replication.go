@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -16,7 +16,7 @@ import (
 type ReplicationService struct {
 	isUpdate   bool
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewReplicationService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *ReplicationService {

@@ -3,7 +3,6 @@ package artifactory
 import (
 	"io"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -248,37 +247,37 @@ func (sm *ArtifactoryServicesManager) RevokeToken(params services.RevokeTokenPar
 
 func (sm *ArtifactoryServicesManager) CreatePullReplication(params services.PullReplicationParams) error {
 	replicationService := services.NewReplicationService(sm.client, false)
-	replicationService.ArtDetails = sm.config.GetArtDetails()
+	replicationService.ArtDetails = sm.config.GetCommonDetails()
 	return replicationService.Pull(params)
 }
 
 func (sm *ArtifactoryServicesManager) UpdatePullReplication(params services.PullReplicationParams) error {
 	replicationService := services.NewReplicationService(sm.client, true)
-	replicationService.ArtDetails = sm.config.GetArtDetails()
+	replicationService.ArtDetails = sm.config.GetCommonDetails()
 	return replicationService.Pull(params)
 }
 
 func (sm *ArtifactoryServicesManager) CreatePushReplication(params services.PushReplicationParams) error {
 	replicationService := services.NewReplicationService(sm.client, false)
-	replicationService.ArtDetails = sm.config.GetArtDetails()
+	replicationService.ArtDetails = sm.config.GetCommonDetails()
 	return replicationService.Push(params)
 }
 
 func (sm *ArtifactoryServicesManager) UpdatePushReplication(params services.PushReplicationParams) error {
 	replicationService := services.NewReplicationService(sm.client, true)
-	replicationService.ArtDetails = sm.config.GetArtDetails()
+	replicationService.ArtDetails = sm.config.GetCommonDetails()
 	return replicationService.Push(params)
 }
 
 func (sm *ArtifactoryServicesManager) DeleteReplication(repoKey string) error {
 	deleteReplicationService := services.NewDeleteReplicationService(sm.client)
-	deleteReplicationService.ArtDetails = sm.config.GetArtDetails()
+	deleteReplicationService.ArtDetails = sm.config.GetCommonDetails()
 	return deleteReplicationService.Delete(repoKey)
 }
 
 func (sm *ArtifactoryServicesManager) ShowReplication(repoKey string) ([]services.PushReplicationParams, error) {
 	deleteReplicationService := services.NewShowReplicationService(sm.client)
-	deleteReplicationService.ArtDetails = sm.config.GetArtDetails()
+	deleteReplicationService.ArtDetails = sm.config.GetCommonDetails()
 	return deleteReplicationService.Show(repoKey)
 }
 

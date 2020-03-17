@@ -4,7 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
+
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -13,7 +14,7 @@ import (
 
 type DeleteReplicationService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewDeleteReplicationService(client *rthttpclient.ArtifactoryHttpClient) *DeleteReplicationService {
