@@ -3,15 +3,14 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
-	"strings"
-	"sync"
-
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
+	"strings"
+	"sync"
 )
 
 func NewArtifactoryDetails() auth.CommonDetails {
@@ -37,14 +36,15 @@ func (rt *artifactoryDetails) GetVersion() (string, error) {
 }
 
 func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
-	client, err := httpclient.ClientBuilder().
-		SetClientCertPath(rt.GetClientCertPath()).
-		SetClientCertKeyPath(rt.GetClientCertKeyPath()).
+	cd := auth.CommonDetails(rt)
+	client, err := rthttpclient.ArtifactoryClientBuilder().
+		SetCommonDetails(&cd).
 		Build()
 	if err != nil {
 		return "", err
 	}
-	resp, body, _, err := client.SendGet(rt.GetUrl()+"api/system/version", true, rt.CreateHttpClientDetails())
+	httpDetails := rt.CreateHttpClientDetails()
+	resp, body, _, err := client.SendGet(rt.GetUrl()+"api/system/version", true, &httpDetails)
 	if err != nil {
 		return "", err
 	}

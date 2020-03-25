@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"net/http"
 	"sync"
+	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -45,7 +45,7 @@ type CommonDetails interface {
 	IsSshAuthHeaderSet() bool
 	IsSshAuthentication() bool
 	AuthenticateSsh(sshKey, sshPassphrase string) error
-	HandleTokenExpiry(statusCode int, httpClientDetails *httputils.HttpClientDetails) (bool, error)
+	HandleTokenExpiry(httpClientDetails *httputils.HttpClientDetails) error
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
 }
@@ -189,57 +189,73 @@ func (ds *CommonConfigFields) AuthenticateSsh(sshKeyPath, sshPassphrase string) 
 	return nil
 }
 
-// Checks if a token has expired.
-// If so, acquires a new token from server (if one wasn't acquired yet) and returns true.
-// Otherwise, or in case of an error, returns false.
-func (ds *CommonConfigFields) HandleTokenExpiry(statusCode int, httpClientDetails *httputils.HttpClientDetails) (bool, error) {
-	if statusCode == http.StatusUnauthorized {
-		// If an unauthorized ssh connection -> ssh token has expired.
-		if ds.IsSshAuthentication() {
-			return ds.handleSshTokenExpiry(httpClientDetails)
-		}
-		// Access token expired
-		if ds.GetAccessToken() != "" && ds.GetTokenRefreshHandler() != nil {
-			return ds.handleAccessTokenExpiry(httpClientDetails)
-		}
+// Checks if a token expired or about to expire
+// If so, acquire a new token from server (if one wasn't acquired yet)
+func (ds *CommonConfigFields) HandleTokenExpiry(httpClientDetails *httputils.HttpClientDetails) error {
+	if ds.IsSshAuthentication() {
+		return ds.handleSshTokenExpiry(httpClientDetails)
 	}
-	return false, nil
+	if ds.GetAccessToken() != "" && ds.GetTokenRefreshHandler() != nil {
+		return ds.handleAccessTokenExpiry(httpClientDetails)
+	}
+	return nil
 }
 
-// Handles the process of acquiring a new ssh token from server (if one wasn't acquired yet) and returns true.
-// Returns false if an error has occurred.
-func (ds *CommonConfigFields) handleSshTokenExpiry(httpClientDetails *httputils.HttpClientDetails) (bool, error) {
+// Handles the process of acquiring a new ssh token
+func (ds *CommonConfigFields) handleSshTokenExpiry(httpClientDetails *httputils.HttpClientDetails) error {
+	curToken := httpClientDetails.Headers["Authorization"]
+	timeLeft, err := GetTokenMinutesLeft(curToken)
+	if err != nil || timeLeft > refreshBeforeExpiryMinutes {
+		return err
+	}
+
 	// Lock expiryHandleMutex to make sure only one authentication is made
 	expiryHandleMutex.Lock()
-	// Reauthenticate if a new token wasn't acquired (by another thread) while waiting at mutex.
-	// Otherwise, token has already changed -> get new token and return true without authenticating.
-	if ds.GetSshAuthHeaders()["Authorization"] == httpClientDetails.Headers["Authorization"] {
+	// Reauthenticate only if a new token wasn't acquired (by another thread) while waiting at mutex.
+	if ds.GetSshAuthHeaders()["Authorization"] == curToken {
+		// If token isn't already expired, Wait to make sure requests using the current token are sent before it is refreshed and becomes invalid
+		if timeLeft != 0 {
+			time.Sleep(WaitBeforeRefreshSeconds * time.Second)
+		}
+
 		// Obtain a new token and return true (false for error).
 		err := ds.AuthenticateSsh(ds.GetSshKeyPath(), ds.GetSshPassphrase())
 		if err != nil {
 			expiryHandleMutex.Unlock()
-			return false, err
+			return err
 		}
 	}
 	expiryHandleMutex.Unlock()
 
-	// Copy new token from the mutual headers map in distributionDetails to the private headers map in httpClientDetails
+	// Copy new token from the mutual headers map in CommonDetails to the private headers map in httpClientDetails
 	utils.MergeMaps(ds.GetSshAuthHeaders(), httpClientDetails.Headers)
-
-	return true, nil
+	return nil
 }
 
-func (ds *CommonConfigFields) handleAccessTokenExpiry(httpClientDetails *httputils.HttpClientDetails) (bool, error) {
-	// Call a predefined handler to manage the refresh process
-	newAccessToken, err := ds.TokenRefreshHandler(httpClientDetails.AccessToken)
-	if err != nil {
-		return false, err
+func (ds *CommonConfigFields) handleAccessTokenExpiry(httpClientDetails *httputils.HttpClientDetails) error {
+	timeLeft, err := GetTokenMinutesLeft(httpClientDetails.AccessToken)
+	if err != nil || timeLeft > refreshBeforeExpiryMinutes {
+		return err
 	}
-	if newAccessToken != "" && newAccessToken != httpClientDetails.AccessToken {
-		httpClientDetails.AccessToken = newAccessToken
-		return true, nil
+
+	// Lock expiryHandleMutex to make sure only one thread is trying to refresh
+	expiryHandleMutex.Lock()
+	// Refresh only if a new token wasn't acquired (by another thread) while waiting at mutex.
+	if ds.AccessToken == httpClientDetails.AccessToken {
+		// Call a predefined handler to manage the refresh process
+		newAccessToken, err := ds.TokenRefreshHandler(httpClientDetails.AccessToken)
+		if err != nil {
+			return err
+		}
+		if newAccessToken != "" && newAccessToken != httpClientDetails.AccessToken {
+			ds.AccessToken = newAccessToken
+		}
 	}
-	return false, nil
+	expiryHandleMutex.Unlock()
+
+	// Copy new token from the mutual struct CommonDetails to the private struct in httpClientDetails
+	httpClientDetails.AccessToken = ds.AccessToken
+	return nil
 }
 
 func (ds *CommonConfigFields) CreateHttpClientDetails() httputils.HttpClientDetails {
