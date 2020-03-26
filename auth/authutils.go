@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"strings"
+	"time"
 )
 
 func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
@@ -61,6 +62,19 @@ func ExtractExpiryFromAccessToken(token string) (int, error) {
 	return expiry, nil
 }
 
+// Returns 0 if expired
+func GetTokenMinutesLeft(token string) (int64, error) {
+	payload, err := extractPayloadFromAccessToken(token)
+	if err != nil {
+		return -1, err
+	}
+	left := int64(payload.ExpirationTime) - time.Now().Unix()
+	if left < 0 {
+		return 0, nil
+	}
+	return left / 60, nil
+}
+
 type TokenPayload struct {
 	Subject        string `json:"sub,omitempty"`
 	Scope          string `json:"scp,omitempty"`
@@ -70,3 +84,6 @@ type TokenPayload struct {
 	IssuedAt       int    `json:"iat,omitempty"`
 	JwtId          string `json:"jti,omitempty"`
 }
+
+const RefreshBeforeExpiryMinutes = 10
+const WaitBeforeRefreshSeconds = 15

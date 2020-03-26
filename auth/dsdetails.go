@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"net/http"
 	"sync"
+	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -11,8 +11,8 @@ import (
 
 var expiryHandleMutex sync.Mutex
 
-// Implement this function and pass it to the CommonDetails struct to handle access token refresh if needed
-type TokenRefreshHandlerFunc func(currentAccessToken string) (newAccessToken string, err error)
+// Implement this function and append it to create an interceptor that will run pre request in the http client
+type PreRequestInterceptorFunc func(*CommonConfigFields, *httputils.HttpClientDetails) error
 
 type CommonDetails interface {
 	GetUrl() string
@@ -20,7 +20,7 @@ type CommonDetails interface {
 	GetPassword() string
 	GetApiKey() string
 	GetAccessToken() string
-	GetTokenRefreshHandler() TokenRefreshHandlerFunc
+	GetPreRequestInterceptor() []PreRequestInterceptorFunc
 	GetClientCertPath() string
 	GetClientCertKeyPath() string
 	GetSshUrl() string
@@ -34,7 +34,7 @@ type CommonDetails interface {
 	SetPassword(password string)
 	SetApiKey(apiKey string)
 	SetAccessToken(accessToken string)
-	SetTokenRefreshHandler(TokenRefreshHandlerFunc)
+	AppendPreRequestInterceptor(PreRequestInterceptorFunc)
 	SetClientCertPath(certificatePath string)
 	SetClientCertKeyPath(certificatePath string)
 	SetSshUrl(url string)
@@ -45,26 +45,26 @@ type CommonDetails interface {
 	IsSshAuthHeaderSet() bool
 	IsSshAuthentication() bool
 	AuthenticateSsh(sshKey, sshPassphrase string) error
-	HandleTokenExpiry(statusCode int, httpClientDetails *httputils.HttpClientDetails) (bool, error)
+	RunPreRequestInterceptors(httpClientDetails *httputils.HttpClientDetails) error
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
 }
 
 type CommonConfigFields struct {
-	Url                 string                  `json:"-"`
-	User                string                  `json:"-"`
-	Password            string                  `json:"-"`
-	ApiKey              string                  `json:"-"`
-	AccessToken         string                  `json:"-"`
-	TokenRefreshHandler TokenRefreshHandlerFunc `json:"-"`
-	ClientCertPath      string                  `json:"-"`
-	ClientCertKeyPath   string                  `json:"-"`
-	Version             string                  `json:"-"`
-	SshUrl              string                  `json:"-"`
-	SshKeyPath          string                  `json:"-"`
-	SshPassphrase       string                  `json:"-"`
-	SshAuthHeaders      map[string]string       `json:"-"`
-	TokenMutex          sync.Mutex
+	Url                    string                      `json:"-"`
+	User                   string                      `json:"-"`
+	Password               string                      `json:"-"`
+	ApiKey                 string                      `json:"-"`
+	AccessToken            string                      `json:"-"`
+	PreRequestInterceptors []PreRequestInterceptorFunc `json:"-"`
+	ClientCertPath         string                      `json:"-"`
+	ClientCertKeyPath      string                      `json:"-"`
+	Version                string                      `json:"-"`
+	SshUrl                 string                      `json:"-"`
+	SshKeyPath             string                      `json:"-"`
+	SshPassphrase          string                      `json:"-"`
+	SshAuthHeaders         map[string]string           `json:"-"`
+	TokenMutex             sync.Mutex
 }
 
 func (ds *CommonConfigFields) GetUrl() string {
@@ -87,8 +87,8 @@ func (ds *CommonConfigFields) GetAccessToken() string {
 	return ds.AccessToken
 }
 
-func (ds *CommonConfigFields) GetTokenRefreshHandler() TokenRefreshHandlerFunc {
-	return ds.TokenRefreshHandler
+func (ds *CommonConfigFields) GetPreRequestInterceptor() []PreRequestInterceptorFunc {
+	return ds.PreRequestInterceptors
 }
 
 func (ds *CommonConfigFields) GetClientCertPath() string {
@@ -135,8 +135,8 @@ func (ds *CommonConfigFields) SetAccessToken(accessToken string) {
 	ds.AccessToken = accessToken
 }
 
-func (ds *CommonConfigFields) SetTokenRefreshHandler(tokenRefreshHandler TokenRefreshHandlerFunc) {
-	ds.TokenRefreshHandler = tokenRefreshHandler
+func (ds *CommonConfigFields) AppendPreRequestInterceptor(interceptor PreRequestInterceptorFunc) {
+	ds.PreRequestInterceptors = append(ds.PreRequestInterceptors, interceptor)
 }
 
 func (ds *CommonConfigFields) SetClientCertPath(certificatePath string) {
@@ -189,57 +189,48 @@ func (ds *CommonConfigFields) AuthenticateSsh(sshKeyPath, sshPassphrase string) 
 	return nil
 }
 
-// Checks if a token has expired.
-// If so, acquires a new token from server (if one wasn't acquired yet) and returns true.
-// Otherwise, or in case of an error, returns false.
-func (ds *CommonConfigFields) HandleTokenExpiry(statusCode int, httpClientDetails *httputils.HttpClientDetails) (bool, error) {
-	if statusCode == http.StatusUnauthorized {
-		// If an unauthorized ssh connection -> ssh token has expired.
-		if ds.IsSshAuthentication() {
-			return ds.handleSshTokenExpiry(httpClientDetails)
-		}
-		// Access token expired
-		if ds.GetAccessToken() != "" && ds.GetTokenRefreshHandler() != nil {
-			return ds.handleAccessTokenExpiry(httpClientDetails)
+// Runs an interceptor before sending a request via the http client
+func (ds *CommonConfigFields) RunPreRequestInterceptors(httpClientDetails *httputils.HttpClientDetails) error {
+	for _, exec := range ds.PreRequestInterceptors {
+		err := exec(ds, httpClientDetails)
+		if err != nil {
+			return err
 		}
 	}
-	return false, nil
+	return nil
 }
 
-// Handles the process of acquiring a new ssh token from server (if one wasn't acquired yet) and returns true.
-// Returns false if an error has occurred.
-func (ds *CommonConfigFields) handleSshTokenExpiry(httpClientDetails *httputils.HttpClientDetails) (bool, error) {
+// Handles the process of acquiring a new ssh token
+func SshTokenRefreshPreRequestInterceptor(fields *CommonConfigFields, httpClientDetails *httputils.HttpClientDetails) error {
+	if !fields.IsSshAuthentication() {
+		return nil
+	}
+	curToken := httpClientDetails.Headers["Authorization"]
+	timeLeft, err := GetTokenMinutesLeft(curToken)
+	if err != nil || timeLeft > RefreshBeforeExpiryMinutes {
+		return err
+	}
+
 	// Lock expiryHandleMutex to make sure only one authentication is made
 	expiryHandleMutex.Lock()
-	// Reauthenticate if a new token wasn't acquired (by another thread) while waiting at mutex.
-	// Otherwise, token has already changed -> get new token and return true without authenticating.
-	if ds.GetSshAuthHeaders()["Authorization"] == httpClientDetails.Headers["Authorization"] {
+	defer expiryHandleMutex.Unlock()
+	// Reauthenticate only if a new token wasn't acquired (by another thread) while waiting at mutex.
+	if fields.GetSshAuthHeaders()["Authorization"] == curToken {
+		// If token isn't already expired, Wait to make sure requests using the current token are sent before it is refreshed and becomes invalid
+		if timeLeft != 0 {
+			time.Sleep(WaitBeforeRefreshSeconds * time.Second)
+		}
+
 		// Obtain a new token and return true (false for error).
-		err := ds.AuthenticateSsh(ds.GetSshKeyPath(), ds.GetSshPassphrase())
+		err := fields.AuthenticateSsh(fields.GetSshKeyPath(), fields.GetSshPassphrase())
 		if err != nil {
-			expiryHandleMutex.Unlock()
-			return false, err
+			return err
 		}
 	}
-	expiryHandleMutex.Unlock()
 
-	// Copy new token from the mutual headers map in distributionDetails to the private headers map in httpClientDetails
-	utils.MergeMaps(ds.GetSshAuthHeaders(), httpClientDetails.Headers)
-
-	return true, nil
-}
-
-func (ds *CommonConfigFields) handleAccessTokenExpiry(httpClientDetails *httputils.HttpClientDetails) (bool, error) {
-	// Call a predefined handler to manage the refresh process
-	newAccessToken, err := ds.TokenRefreshHandler(httpClientDetails.AccessToken)
-	if err != nil {
-		return false, err
-	}
-	if newAccessToken != "" && newAccessToken != httpClientDetails.AccessToken {
-		httpClientDetails.AccessToken = newAccessToken
-		return true, nil
-	}
-	return false, nil
+	// Copy new token from the mutual headers map in CommonDetails to the private headers map in httpClientDetails
+	utils.MergeMaps(fields.GetSshAuthHeaders(), httpClientDetails.Headers)
+	return nil
 }
 
 func (ds *CommonConfigFields) CreateHttpClientDetails() httputils.HttpClientDetails {
