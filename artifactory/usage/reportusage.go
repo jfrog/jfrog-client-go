@@ -15,16 +15,16 @@ import (
 )
 
 const minArtifactoryVersion = "6.9.0"
-const usagePrefix = "Usage Report: "
+const ReportUsagePrefix = "Usage Report: "
 
 func SendReportUsage(productId, commandName string, serviceManager *artifactory.ArtifactoryServicesManager) error {
 	config := serviceManager.GetConfig()
 	if config == nil {
-		return errorutils.CheckError(errors.New(usagePrefix + "Expected full config, but no configuration exists."))
+		return errorutils.CheckError(errors.New(ReportUsagePrefix + "Expected full config, but no configuration exists."))
 	}
 	rtDetails := config.GetCommonDetails()
 	if rtDetails == nil {
-		return errorutils.CheckError(errors.New(usagePrefix + "Artifactory details not configured."))
+		return errorutils.CheckError(errors.New(ReportUsagePrefix + "Artifactory details not configured."))
 	}
 	url, err := utils.BuildArtifactoryUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
 	if err != nil {
@@ -34,28 +34,28 @@ func SendReportUsage(productId, commandName string, serviceManager *artifactory.
 	// Check Artifactory version
 	artifactoryVersion, err := rtDetails.GetVersion()
 	if err != nil {
-		return errors.New(usagePrefix + err.Error())
+		return errors.New(ReportUsagePrefix + err.Error())
 	}
 	if !isVersionCompatible(artifactoryVersion) {
-		log.Debug(fmt.Sprintf(usagePrefix+"Expected Artifactory version %s or above, got %s", minArtifactoryVersion, artifactoryVersion))
+		log.Debug(fmt.Sprintf(ReportUsagePrefix+"Expected Artifactory version %s or above, got %s", minArtifactoryVersion, artifactoryVersion))
 		return nil
 	}
 
 	bodyContent, err := reportUsageToJson(productId, commandName)
 	if err != nil {
-		return errors.New(usagePrefix + err.Error())
+		return errors.New(ReportUsagePrefix + err.Error())
 	}
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
-		return errors.New(usagePrefix + err.Error())
+		return errors.New(ReportUsagePrefix + err.Error())
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.New(usagePrefix + "Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+		return errors.New(ReportUsagePrefix + "Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
-	log.Debug(usagePrefix+"Artifactory response:", resp.Status)
-	log.Debug(usagePrefix + "Usage info sent successfully.")
+	log.Debug(ReportUsagePrefix+"Artifactory response:", resp.Status)
+	log.Debug(ReportUsagePrefix + "Usage info sent successfully.")
 	return nil
 }
 
