@@ -16,7 +16,7 @@ type ArtifactoryHttpClient struct {
 }
 
 func (rtc *ArtifactoryHttpClient) SendGet(url string, followRedirect bool, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -24,7 +24,7 @@ func (rtc *ArtifactoryHttpClient) SendGet(url string, followRedirect bool, httpC
 }
 
 func (rtc *ArtifactoryHttpClient) SendPost(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -37,7 +37,7 @@ func (rtc *ArtifactoryHttpClient) SendPostForm(url string, data url.Values, http
 }
 
 func (rtc *ArtifactoryHttpClient) SendPatch(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -45,7 +45,7 @@ func (rtc *ArtifactoryHttpClient) SendPatch(url string, content []byte, httpClie
 }
 
 func (rtc *ArtifactoryHttpClient) SendDelete(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -53,7 +53,7 @@ func (rtc *ArtifactoryHttpClient) SendDelete(url string, content []byte, httpCli
 }
 
 func (rtc *ArtifactoryHttpClient) SendHead(url string, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -61,7 +61,7 @@ func (rtc *ArtifactoryHttpClient) SendHead(url string, httpClientsDetails *httpu
 }
 
 func (rtc *ArtifactoryHttpClient) SendPut(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -70,7 +70,7 @@ func (rtc *ArtifactoryHttpClient) SendPut(url string, content []byte, httpClient
 
 func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool,
 	httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -79,7 +79,7 @@ func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte
 
 func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string,
 	httpClientsDetails *httputils.HttpClientDetails, retries int, progress ioutils.Progress) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -87,7 +87,7 @@ func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string
 }
 
 func (rtc *ArtifactoryHttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails *httputils.HttpClientDetails) (ioReaderCloser io.ReadCloser, resp *http.Response, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -96,7 +96,7 @@ func (rtc *ArtifactoryHttpClient) ReadRemoteFile(downloadPath string, httpClient
 
 func (rtc *ArtifactoryHttpClient) DownloadFileWithProgress(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
 	httpClientsDetails *httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.Progress) (resp *http.Response, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -110,7 +110,7 @@ func (rtc *ArtifactoryHttpClient) DownloadFile(downloadFileDetails *httpclient.D
 
 func (rtc *ArtifactoryHttpClient) DownloadFileConcurrently(flags httpclient.ConcurrentDownloadFlags,
 	logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails, progress ioutils.Progress) (resp *http.Response, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -118,7 +118,7 @@ func (rtc *ArtifactoryHttpClient) DownloadFileConcurrently(flags httpclient.Conc
 }
 
 func (rtc *ArtifactoryHttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetails *httputils.HttpClientDetails) (isAcceptRanges bool, resp *http.Response, err error) {
-	err = (*rtc.ArtDetails).HandleTokenExpiry(httpClientsDetails)
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
