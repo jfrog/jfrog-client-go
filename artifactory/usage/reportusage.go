@@ -15,15 +15,16 @@ import (
 )
 
 const minArtifactoryVersion = "6.9.0"
+const usagePrefix = "Usage Report: "
 
 func SendReportUsage(productId, commandName string, serviceManager *artifactory.ArtifactoryServicesManager) error {
 	config := serviceManager.GetConfig()
 	if config == nil {
-		return errorutils.CheckError(errors.New("Expected full config, but no configuration exists."))
+		return errorutils.CheckError(errors.New(usagePrefix + "Expected full config, but no configuration exists."))
 	}
 	rtDetails := config.GetCommonDetails()
 	if rtDetails == nil {
-		return errorutils.CheckError(errors.New("Artifactory details not configured."))
+		return errorutils.CheckError(errors.New(usagePrefix + "Artifactory details not configured."))
 	}
 	url, err := utils.BuildArtifactoryUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
 	if err != nil {
@@ -33,28 +34,28 @@ func SendReportUsage(productId, commandName string, serviceManager *artifactory.
 	// Check Artifactory version
 	artifactoryVersion, err := rtDetails.GetVersion()
 	if err != nil {
-		return err
+		return errors.New(usagePrefix + err.Error())
 	}
 	if !isVersionCompatible(artifactoryVersion) {
-		log.Debug(fmt.Sprintf("Expected Artifactory version %s or above, got %s", minArtifactoryVersion, artifactoryVersion))
+		log.Debug(fmt.Sprintf(usagePrefix+"Expected Artifactory version %s or above, got %s", minArtifactoryVersion, artifactoryVersion))
 		return nil
 	}
 
 	bodyContent, err := reportUsageToJson(productId, commandName)
 	if err != nil {
-		return err
+		return errors.New(usagePrefix + err.Error())
 	}
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
-		return err
+		return errors.New(usagePrefix + err.Error())
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+		return errors.New(usagePrefix + "Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
-	log.Debug("Artifactory response:", resp.Status)
-	log.Debug("Usage info sent successfully.")
+	log.Debug(usagePrefix+"Artifactory response:", resp.Status)
+	log.Debug(usagePrefix + "Usage info sent successfully.")
 	return nil
 }
 
