@@ -159,10 +159,16 @@ func getUserTokensTest(t *testing.T) {
 		t.Errorf("expected at least 1 token, but got 0")
 	}
 
-	firstUserToken := userTokenIDs[0]
+	found := false
+	for _, token := range userTokenIDs {
+		if token == expectedTokenID {
+			found = true
+			break
+		}
+	}
 
-	if expectedTokenID != firstUserToken {
-		t.Errorf("expected %s token id,. got %s token id", expectedTokenID, firstUserToken)
+	if !found {
+		t.Errorf("expected token id: %s could not be found", expectedTokenID)
 	}
 }
 
