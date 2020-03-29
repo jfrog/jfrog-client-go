@@ -235,8 +235,8 @@ func NewDebianLocalRepositoryParams() DebianLocalRepositoryParams {
 
 type DockerLocalRepositoryParams struct {
 	LocalRepositoryBaseParams
-	MaxUniqueTags    int   `json:"maxUniqueTags,omitempty"`
-	DockerApiVersion *bool `json:"dockerApiVersion,omitempty"`
+	MaxUniqueTags    int    `json:"maxUniqueTags,omitempty"`
+	DockerApiVersion string `json:"dockerApiVersion,omitempty"`
 }
 
 func NewDockerLocalRepositoryParams() DockerLocalRepositoryParams {
