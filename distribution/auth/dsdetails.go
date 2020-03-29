@@ -3,12 +3,12 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -37,14 +37,15 @@ func (ds *distributionDetails) GetVersion() (string, error) {
 }
 
 func (ds *distributionDetails) getDistributionVersion() (string, error) {
-	client, err := httpclient.ClientBuilder().
-		SetClientCertPath(ds.GetClientCertPath()).
-		SetClientCertKeyPath(ds.GetClientCertKeyPath()).
+	cd := auth.CommonDetails(ds)
+	client, err := rthttpclient.ArtifactoryClientBuilder().
+		SetCommonDetails(&cd).
 		Build()
 	if err != nil {
 		return "", err
 	}
-	resp, body, _, err := client.SendGet(ds.GetUrl()+"api/v1/system/info", true, ds.CreateHttpClientDetails())
+	httpDetails := ds.CreateHttpClientDetails()
+	resp, body, _, err := client.SendGet(ds.GetUrl()+"api/v1/system/info", true, &httpDetails)
 	if err != nil {
 		return "", err
 	}

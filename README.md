@@ -210,7 +210,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     rtManager.DownloadFiles(params)
 ```
 
-#### Distributing Published Builds to JFrog Bintray 
+#### Distributing Published Builds to JFrog Bintray
 ```
     params := services.NewBuildDistributionParams()
     params.SourceRepos = "source-repo"
@@ -319,10 +319,10 @@ You can create and update a local repository for the following package types:
 Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
 Vagrant, Gitlfs, Go, Yum, Conan, Chef, Puppet and Generic.
 
-Each package type has it's own parameters struct, can be created using the method 
+Each package type has it's own parameters struct, can be created using the method
 ```New<packageType>LocalRepositoryParams()```.
 
-Example for creating local Generic repository: 
+Example for creating local Generic repository:
 ```
     params := services.NewGenericLocalRepositoryParams()
     pparams.Key = "generic-repo"
@@ -348,10 +348,10 @@ You can create and update a remote repository for the following package types:
 Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
 Gitlfs, Go, Yum, Conan, Chef, Puppet, Conda, P2, Vcs and Generic.
 
-Each package type has it's own parameters struct, can be created using the method 
+Each package type has it's own parameters struct, can be created using the method
 ```New<packageType>RemoteRepositoryParams()```.
 
-Example for creating remote Maven repository: 
+Example for creating remote Maven repository:
 ```
     params := services.NewMavenRemoteRepositoryParams()
     params.Key = "jcenter-remote"
@@ -378,10 +378,10 @@ You can create and update a virtual repository for the following package types:
 Maven, Gradle, Ivy, Sbt, Helm, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Pypi, Docker, Gitlfs, Go, Yum, Conan,
 Chef, Puppet, Conda, P2 and Generic
 
-Each package type has it's own parameters struct, can be created using the method 
+Each package type has it's own parameters struct, can be created using the method
 ```New<packageType>VirtualRepositoryParams()```.
 
-Example for creating virtual Go repository: 
+Example for creating virtual Go repository:
 ```
     params := services.NewGoVirtualRepositoryParams()
     params.Description = "This is an aggregated repository for several go repositories"
@@ -400,9 +400,54 @@ Updating remote Maven repository:
 ```
 
 #### Removing a Repository
-You can remove a repository from Artifactory using its key: 
+You can remove a repository from Artifactory using its key:
 ```
     servicesManager.DeleteRepository("generic-repo")
+```
+#### Creating and Updating Repository Replication
+Example of creating repository replication:
+```
+    params := services.NewCreateReplicationParams()
+    params.RepoKey = "my-repository"
+    params.CronExp = "0 0 12 * * ?"
+    params.Username = "admin"
+	params.Password = "password"
+	params.Url = "http://localhost:8081/artifactory/remote-repo"
+    params.Enabled = true
+	params.SocketTimeoutMillis = 15000
+    params.EnableEventReplication = true
+    params.SyncDeletes = true
+    params.SyncProperties = true
+    params.SyncStatistics = true
+    params.PathPrefix = "/path/to/repo"
+
+    err = servicesManager.CreateReplication(params)
+```
+Updating local repository replication:
+```
+    params := services.NewUpdateReplicationParams()
+    params.RepoKey = "my-repository"
+    params.CronExp = "0 0 12 * * ?"
+    params.Enabled = true
+	params.SocketTimeoutMillis = 15000
+    params.EnableEventReplication = true
+    params.SyncDeletes = true
+    params.SyncProperties = true
+    params.SyncStatistics = true
+    params.PathPrefix = "/path/to/repo"
+    err = servicesManager.UpdateReplication(params)
+```
+
+#### Getting a Repository Replication
+You can get a repository replication configuration from Artifactory using its key:
+```
+    replicationConfiguration, err := servicesManager.GetReplication("my-repository")
+
+```
+#### Removing a Repository Replication
+You can remove a repository replication configuration from Artifactory using its key:
+```
+    err := servicesManager.DeleteReplication("my-repository")
 ```
 
 ## Distribution APIs
@@ -518,7 +563,7 @@ You can remove a repository from Artifactory using its key:
     params.Explode = false
     params.UseRegExp = false
     params.ShowInDownloadList = false
-    
+
     btManager.UploadFiles(params)
 ```
 
@@ -527,7 +572,7 @@ You can remove a repository from Artifactory using its key:
     params := services.NewDownloadFileParams()
     params.Flat = false
     params.IncludeUnpublished = false
-    params.PathDetails = "path/to/file"  
+    params.PathDetails = "path/to/file"
     params.TargetPath = "target/path/"
     // SplitCount default value: 3
     params.SplitCount = 2
@@ -610,7 +655,7 @@ You can remove a repository from Artifactory using its key:
     params.Keys = "keys"
 
     btManager.CreateEntitlement(params)
-    
+
     params.Id = "entitlementID"
     btManager.UpdateEntitlement(params)
 ```
@@ -668,9 +713,9 @@ You can remove a repository from Artifactory using its key:
 ```
     path, err := utils.CreatePathDetails("subject/repository/file-path")
 
-    btManager.GpgSignFile(path, "passphrase") 
+    btManager.GpgSignFile(path, "passphrase")
 ```
-	
+
 #### GPG Signing Version Files
 ```
     path, err := versions.CreatePath("subject/repo/pkg/version")

@@ -3,9 +3,9 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -180,40 +180,40 @@ type ContentSynchronisation struct {
 }
 
 type RemoteRepositoryBaseParams struct {
-	Key                               string                 `json:"key,omitempty"`
-	Rclass                            string                 `json:"rclass"`
-	PackageType                       string                 `json:"packageType,omitempty"`
-	Url                               string                 `json:"url"`
-	Username                          string                 `json:"username,omitempty"`
-	Password                          string                 `json:"password,omitempty"`
-	Proxy                             string                 `json:"proxy,omitempty"`
-	Description                       string                 `json:"description,omitempty"`
-	Notes                             string                 `json:"notes,omitempty"`
-	IncludesPattern                   string                 `json:"includesPattern,omitempty"`
-	ExcludesPattern                   string                 `json:"excludesPattern,omitempty"`
-	RepoLayoutRef                     string                 `json:"repoLayoutRef,omitempty"`
-	HardFail                          *bool                  `json:"hardFail,omitempty"`
-	Offline                           *bool                  `json:"offline,omitempty"`
-	BlackedOut                        *bool                  `json:"blackedOut,omitempty"`
-	StoreArtifactsLocally             *bool                  `json:"storeArtifactsLocally,omitempty"`
-	SocketTimeoutMillis               int                    `json:"socketTimeoutMillis,omitempty"`
-	LocalAddress                      string                 `json:"localAddress,omitempty"`
-	RetrievalCachePeriodSecs          int                    `json:"retrievalCachePeriodSecs,omitempty"`
-	FailedRetrievalCachePeriodSecs    int                    `json:"failedRetrievalCachePeriodSecs,omitempty"`
-	MissedRetrievalCachePeriodSecs    int                    `json:"missedRetrievalCachePeriodSecs,omitempty"`
-	UnusedArtifactsCleanupEnabled     *bool                  `json:"unusedArtifactsCleanupEnabled,omitempty"`
-	UnusedArtifactsCleanupPeriodHours int                    `json:"unusedArtifactsCleanupPeriodHours,omitempty"`
-	AssumedOfflinePeriodSecs          int                    `json:"assumedOfflinePeriodSecs,omitempty"`
-	ShareConfiguration                *bool                  `json:"shareConfiguration,omitempty"`
-	SynchronizeProperties             *bool                  `json:"synchronizeProperties,omitempty"`
-	BlockMismatchingMimeTypes         *bool                  `json:"blockMismatchingMimeTypes,omitempty"`
-	PropertySets                      []string               `json:"propertySets,omitempty"`
-	AllowAnyHostAuth                  *bool                  `json:"allowAnyHostAuth,omitempty"`
-	EnableCookieManagement            *bool                  `json:"enableCookieManagement,omitempty"`
-	BypassHeadRequests                *bool                  `json:"bypassHeadRequests,omitempty"`
-	ClientTlsCertificate              string                 `json:"clientTlsCertificate,omitempty"`
-	BlockPushingSchema1               *bool                  `json:"blockPushingSchema1,omitempty"`
-	contentSynchronisation            ContentSynchronisation `json:"contentSynchronisation,omitempty"`
+	Key                               string                  `json:"key,omitempty"`
+	Rclass                            string                  `json:"rclass"`
+	PackageType                       string                  `json:"packageType,omitempty"`
+	Url                               string                  `json:"url"`
+	Username                          string                  `json:"username,omitempty"`
+	Password                          string                  `json:"password,omitempty"`
+	Proxy                             string                  `json:"proxy,omitempty"`
+	Description                       string                  `json:"description,omitempty"`
+	Notes                             string                  `json:"notes,omitempty"`
+	IncludesPattern                   string                  `json:"includesPattern,omitempty"`
+	ExcludesPattern                   string                  `json:"excludesPattern,omitempty"`
+	RepoLayoutRef                     string                  `json:"repoLayoutRef,omitempty"`
+	HardFail                          *bool                   `json:"hardFail,omitempty"`
+	Offline                           *bool                   `json:"offline,omitempty"`
+	BlackedOut                        *bool                   `json:"blackedOut,omitempty"`
+	StoreArtifactsLocally             *bool                   `json:"storeArtifactsLocally,omitempty"`
+	SocketTimeoutMillis               int                     `json:"socketTimeoutMillis,omitempty"`
+	LocalAddress                      string                  `json:"localAddress,omitempty"`
+	RetrievalCachePeriodSecs          int                     `json:"retrievalCachePeriodSecs,omitempty"`
+	FailedRetrievalCachePeriodSecs    int                     `json:"failedRetrievalCachePeriodSecs,omitempty"`
+	MissedRetrievalCachePeriodSecs    int                     `json:"missedRetrievalCachePeriodSecs,omitempty"`
+	UnusedArtifactsCleanupEnabled     *bool                   `json:"unusedArtifactsCleanupEnabled,omitempty"`
+	UnusedArtifactsCleanupPeriodHours int                     `json:"unusedArtifactsCleanupPeriodHours,omitempty"`
+	AssumedOfflinePeriodSecs          int                     `json:"assumedOfflinePeriodSecs,omitempty"`
+	ShareConfiguration                *bool                   `json:"shareConfiguration,omitempty"`
+	SynchronizeProperties             *bool                   `json:"synchronizeProperties,omitempty"`
+	BlockMismatchingMimeTypes         *bool                   `json:"blockMismatchingMimeTypes,omitempty"`
+	PropertySets                      []string                `json:"propertySets,omitempty"`
+	AllowAnyHostAuth                  *bool                   `json:"allowAnyHostAuth,omitempty"`
+	EnableCookieManagement            *bool                   `json:"enableCookieManagement,omitempty"`
+	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
+	ClientTlsCertificate              string                  `json:"clientTlsCertificate,omitempty"`
+	BlockPushingSchema1               *bool                   `json:"blockPushingSchema1,omitempty"`
+	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
 }
 
 type CommonMavenGradleRemoteRepositoryParams struct {
@@ -322,7 +322,7 @@ func NewDebianRemoteRepositoryParams() DebianRemoteRepositoryParams {
 
 type ComposerRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	composerRegistryUrl string `json:"composerRegistryUrl,omitempty"`
+	ComposerRegistryUrl string `json:"composerRegistryUrl,omitempty"`
 }
 
 func NewComposerRemoteRepositoryParams() ComposerRemoteRepositoryParams {

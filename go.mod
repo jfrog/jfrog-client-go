@@ -15,7 +15,7 @@ require (
 	github.com/gliderlabs/ssh v0.1.1 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
-	github.com/jfrog/gofrog v1.0.5
+	github.com/jfrog/gofrog v1.0.6
 	github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e // indirect
 	github.com/mholt/archiver v2.1.0+incompatible
 	github.com/mitchellh/go-homedir v1.0.0 // indirect

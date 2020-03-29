@@ -5,15 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"path/filepath"
-  	"strconv"
-	"strings"
-	"testing"
-  	"time"
-
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -27,6 +18,15 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/mholt/archiver"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
 )
 
 var RtUrl *string
@@ -52,6 +52,10 @@ var testsUpdateLocalRepositoryService *services.LocalRepositoryService
 var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
+var testsCreateReplicationService *services.CreateReplicationService
+var testsUpdateReplicationService *services.UpdateReplicationService
+var testsReplicationGetService *services.GetReplicationService
+var testsReplicationDeleteService *services.DeleteReplicationService
 
 // Distribution services
 var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
@@ -202,6 +206,38 @@ func createArtifactoryDeleteRepositoryManager() {
 	failOnHttpClientCreation(err)
 	testsDeleteRepositoryService = services.NewDeleteRepositoryService(client)
 	testsDeleteRepositoryService.ArtDetails = artDetails
+}
+
+func createArtifactoryReplicationCreateManager() {
+	artDetails := GetRtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testsCreateReplicationService = services.NewCreateReplicationService(client)
+	testsCreateReplicationService.ArtDetails = artDetails
+}
+
+func createArtifactoryReplicationUpdateManager() {
+	artDetails := GetRtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testsUpdateReplicationService = services.NewUpdateReplicationService(client)
+	testsUpdateReplicationService.ArtDetails = artDetails
+}
+
+func createArtifactoryReplicationGetManager() {
+	artDetails := GetRtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testsReplicationGetService = services.NewGetReplicationService(client)
+	testsReplicationGetService.ArtDetails = artDetails
+}
+
+func createArtifactoryReplicationDeleteManager() {
+	artDetails := GetRtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testsReplicationDeleteService = services.NewDeleteReplicationService(client)
+	testsReplicationDeleteService.ArtDetails = artDetails
 }
 
 func failOnHttpClientCreation(err error) {
@@ -402,27 +438,29 @@ func getRepoConfig(repoKey string) (body []byte) {
 	return
 }
 
-func validateRepoConfig(t *testing.T, repoKey string, params interface{}) bool {
+func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	config := getRepoConfig(repoKey)
 	if config == nil {
-		return false
+		t.Error("Failed to get repository config")
 	}
 	var confMap, paramsMap map[string]interface{}
 	if err := json.Unmarshal(config, &confMap); err != nil {
-		return false
+		t.Error("Failed to marshal config map")
 	}
 	tmpJson, err := json.Marshal(params)
 	if err != nil {
-		return false
+		t.Error("Failed to marshal repository params")
 	}
 	if err := json.Unmarshal(tmpJson, &paramsMap); err != nil {
-		return false
+		t.Error("Failed to unmarshal repository params")
 	}
 	for key, value := range paramsMap {
-		if confMap[key] != value {
-			t.Error(fmt.Sprintf("Key %s: Expected: %v, Actual: %v", key, value, confMap[key]))
-			return false
-		}
+		assert.Equal(t, confMap[key], value)
 	}
-	return true
+}
+
+func deleteRepoAndValidate(t *testing.T, repoKey string) {
+	err := testsDeleteRepositoryService.Delete(repoKey)
+	assert.NoError(t, err, "Failed to delete "+repoKey)
+	assert.False(t, isRepoExist(repoKey), repoKey+" still exists")
 }
