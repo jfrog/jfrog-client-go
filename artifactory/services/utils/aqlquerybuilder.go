@@ -284,10 +284,13 @@ func stringIsInSlice(string string, strings []string) bool {
 }
 
 func prepareFieldsForQuery(fields []string) []string {
-	for i, val := range fields {
-		fields[i] = `"` + val + `"`
+	// Since a slice is basically a pointer, we don't ant to modify the underlying fields array cause it might be used again (like in delete service)
+	// We will create new slice with the quoted values and will return it.
+	var queryFields []string
+	for _, val := range fields {
+		queryFields = append(queryFields, `"`+val+`"`)
 	}
-	return fields
+	return queryFields
 }
 
 // Creates an aql query from a spec file.
