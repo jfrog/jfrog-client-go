@@ -284,7 +284,7 @@ func stringIsInSlice(string string, strings []string) bool {
 }
 
 func prepareFieldsForQuery(fields []string) []string {
-	// Since a slice is basically a pointer, we don't ant to modify the underlying fields array cause it might be used again (like in delete service)
+	// Since a slice is basically a pointer, we don't want to modify the underlying fields array because it might be used again (like in delete service)
 	// We will create new slice with the quoted values and will return it.
 	var queryFields []string
 	for _, val := range fields {
