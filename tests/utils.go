@@ -455,7 +455,7 @@ func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 		t.Error("Failed to unmarshal repository params")
 	}
 	for key, value := range paramsMap {
-		assert.Equal(t, confMap[key], value)
+		assert.Equal(t, confMap[key], value, "faild validating "+key)
 	}
 }
 
