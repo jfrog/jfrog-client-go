@@ -159,6 +159,11 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		if err != nil {
 			return err
 		}
+		vcsProps, err := getVcsProps(artifact.LocalPath, vcsCache)
+		if err != nil {
+			return err
+		}
+		props += vcsProps
 		uploadData := UploadData{Artifact: artifact, Props: props}
 		task := artifactHandlerFunc(uploadData)
 		producer.AddTaskWithError(task, errorsQueue.AddError)
