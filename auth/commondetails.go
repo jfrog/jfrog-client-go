@@ -45,6 +45,7 @@ type CommonDetails interface {
 	IsSshAuthHeaderSet() bool
 	IsSshAuthentication() bool
 	AuthenticateSsh(sshKey, sshPassphrase string) error
+	InitSsh() error
 	RunPreRequestInterceptors(httpClientDetails *httputils.HttpClientDetails) error
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
@@ -67,132 +68,145 @@ type CommonConfigFields struct {
 	TokenMutex             sync.Mutex
 }
 
-func (ds *CommonConfigFields) GetUrl() string {
-	return ds.Url
+func (ccf *CommonConfigFields) GetUrl() string {
+	return ccf.Url
 }
 
-func (ds *CommonConfigFields) GetUser() string {
-	return ds.User
+func (ccf *CommonConfigFields) GetUser() string {
+	return ccf.User
 }
 
-func (ds *CommonConfigFields) GetPassword() string {
-	return ds.Password
+func (ccf *CommonConfigFields) GetPassword() string {
+	return ccf.Password
 }
 
-func (ds *CommonConfigFields) GetApiKey() string {
-	return ds.ApiKey
+func (ccf *CommonConfigFields) GetApiKey() string {
+	return ccf.ApiKey
 }
 
-func (ds *CommonConfigFields) GetAccessToken() string {
-	return ds.AccessToken
+func (ccf *CommonConfigFields) GetAccessToken() string {
+	return ccf.AccessToken
 }
 
-func (ds *CommonConfigFields) GetPreRequestInterceptor() []PreRequestInterceptorFunc {
-	return ds.PreRequestInterceptors
+func (ccf *CommonConfigFields) GetPreRequestInterceptor() []PreRequestInterceptorFunc {
+	return ccf.PreRequestInterceptors
 }
 
-func (ds *CommonConfigFields) GetClientCertPath() string {
-	return ds.ClientCertPath
+func (ccf *CommonConfigFields) GetClientCertPath() string {
+	return ccf.ClientCertPath
 }
 
-func (ds *CommonConfigFields) GetClientCertKeyPath() string {
-	return ds.ClientCertKeyPath
+func (ccf *CommonConfigFields) GetClientCertKeyPath() string {
+	return ccf.ClientCertKeyPath
 }
 
-func (ds *CommonConfigFields) GetSshUrl() string {
-	return ds.SshUrl
+func (ccf *CommonConfigFields) GetSshUrl() string {
+	return ccf.SshUrl
 }
 
-func (ds *CommonConfigFields) GetSshKeyPath() string {
-	return ds.SshKeyPath
+func (ccf *CommonConfigFields) GetSshKeyPath() string {
+	return ccf.SshKeyPath
 }
 
-func (ds *CommonConfigFields) GetSshPassphrase() string {
-	return ds.SshPassphrase
+func (ccf *CommonConfigFields) GetSshPassphrase() string {
+	return ccf.SshPassphrase
 }
 
-func (ds *CommonConfigFields) GetSshAuthHeaders() map[string]string {
-	return ds.SshAuthHeaders
+func (ccf *CommonConfigFields) GetSshAuthHeaders() map[string]string {
+	return ccf.SshAuthHeaders
 }
 
-func (ds *CommonConfigFields) SetUrl(url string) {
-	ds.Url = url
+func (ccf *CommonConfigFields) SetUrl(url string) {
+	ccf.Url = url
 }
 
-func (ds *CommonConfigFields) SetUser(user string) {
-	ds.User = user
+func (ccf *CommonConfigFields) SetUser(user string) {
+	ccf.User = user
 }
 
-func (ds *CommonConfigFields) SetPassword(password string) {
-	ds.Password = password
+func (ccf *CommonConfigFields) SetPassword(password string) {
+	ccf.Password = password
 }
 
-func (ds *CommonConfigFields) SetApiKey(apiKey string) {
-	ds.ApiKey = apiKey
+func (ccf *CommonConfigFields) SetApiKey(apiKey string) {
+	ccf.ApiKey = apiKey
 }
 
-func (ds *CommonConfigFields) SetAccessToken(accessToken string) {
-	ds.AccessToken = accessToken
+func (ccf *CommonConfigFields) SetAccessToken(accessToken string) {
+	ccf.AccessToken = accessToken
 }
 
-func (ds *CommonConfigFields) AppendPreRequestInterceptor(interceptor PreRequestInterceptorFunc) {
-	ds.PreRequestInterceptors = append(ds.PreRequestInterceptors, interceptor)
+func (ccf *CommonConfigFields) AppendPreRequestInterceptor(interceptor PreRequestInterceptorFunc) {
+	ccf.PreRequestInterceptors = append(ccf.PreRequestInterceptors, interceptor)
 }
 
-func (ds *CommonConfigFields) SetClientCertPath(certificatePath string) {
-	ds.ClientCertPath = certificatePath
+func (ccf *CommonConfigFields) SetClientCertPath(certificatePath string) {
+	ccf.ClientCertPath = certificatePath
 }
 
-func (ds *CommonConfigFields) SetClientCertKeyPath(certificatePath string) {
-	ds.ClientCertKeyPath = certificatePath
+func (ccf *CommonConfigFields) SetClientCertKeyPath(certificatePath string) {
+	ccf.ClientCertKeyPath = certificatePath
 }
 
-func (ds *CommonConfigFields) SetSshUrl(sshUrl string) {
-	ds.SshUrl = sshUrl
+func (ccf *CommonConfigFields) SetSshUrl(sshUrl string) {
+	ccf.SshUrl = sshUrl
 }
 
-func (ds *CommonConfigFields) SetSshKeyPath(sshKeyPath string) {
-	ds.SshKeyPath = sshKeyPath
+func (ccf *CommonConfigFields) SetSshKeyPath(sshKeyPath string) {
+	ccf.SshKeyPath = sshKeyPath
 }
 
-func (ds *CommonConfigFields) SetSshPassphrase(sshPassphrase string) {
-	ds.SshPassphrase = sshPassphrase
+func (ccf *CommonConfigFields) SetSshPassphrase(sshPassphrase string) {
+	ccf.SshPassphrase = sshPassphrase
 }
 
-func (ds *CommonConfigFields) SetSshAuthHeaders(sshAuthHeaders map[string]string) {
-	ds.SshAuthHeaders = sshAuthHeaders
+func (ccf *CommonConfigFields) SetSshAuthHeaders(sshAuthHeaders map[string]string) {
+	ccf.SshAuthHeaders = sshAuthHeaders
 }
 
-func (ds *CommonConfigFields) IsSshAuthHeaderSet() bool {
-	return len(ds.SshAuthHeaders) > 0
+func (ccf *CommonConfigFields) IsSshAuthHeaderSet() bool {
+	return len(ccf.SshAuthHeaders) > 0
 }
 
-func (ds *CommonConfigFields) IsSshAuthentication() bool {
-	return fileutils.IsSshUrl(ds.Url) || ds.SshUrl != ""
+func (ccf *CommonConfigFields) IsSshAuthentication() bool {
+	return fileutils.IsSshUrl(ccf.Url) || ccf.SshUrl != ""
 }
 
-func (ds *CommonConfigFields) AuthenticateSsh(sshKeyPath, sshPassphrase string) error {
+func (ccf *CommonConfigFields) AuthenticateSsh(sshKeyPath, sshPassphrase string) error {
 	// If SshUrl is unset, set it and use it to authenticate.
 	// The SshUrl variable could be used again later if there's a need to reauthenticate (Url is being overwritten with baseUrl).
-	if ds.SshUrl == "" {
-		ds.SshUrl = ds.Url
+	if ccf.SshUrl == "" {
+		ccf.SshUrl = ccf.Url
 	}
 
-	sshHeaders, baseUrl, err := SshAuthentication(ds.SshUrl, sshKeyPath, sshPassphrase)
+	sshHeaders, baseUrl, err := SshAuthentication(ccf.SshUrl, sshKeyPath, sshPassphrase)
 	if err != nil {
 		return err
 	}
 
 	// Set base url as the connection url
-	ds.Url = baseUrl
-	ds.SetSshAuthHeaders(sshHeaders)
+	ccf.Url = baseUrl
+	ccf.SetSshAuthHeaders(sshHeaders)
+	return nil
+}
+
+func (ccf *CommonConfigFields) InitSsh() error {
+	if ccf.IsSshAuthentication() {
+		if !ccf.IsSshAuthHeaderSet() {
+			err := ccf.AuthenticateSsh(ccf.SshKeyPath, ccf.SshPassphrase)
+			if err != nil {
+				return err
+			}
+		}
+		ccf.AppendPreRequestInterceptor(SshTokenRefreshPreRequestInterceptor)
+	}
 	return nil
 }
 
 // Runs an interceptor before sending a request via the http client
-func (ds *CommonConfigFields) RunPreRequestInterceptors(httpClientDetails *httputils.HttpClientDetails) error {
-	for _, exec := range ds.PreRequestInterceptors {
-		err := exec(ds, httpClientDetails)
+func (ccf *CommonConfigFields) RunPreRequestInterceptors(httpClientDetails *httputils.HttpClientDetails) error {
+	for _, exec := range ccf.PreRequestInterceptors {
+		err := exec(ccf, httpClientDetails)
 		if err != nil {
 			return err
 		}
@@ -233,11 +247,11 @@ func SshTokenRefreshPreRequestInterceptor(fields *CommonConfigFields, httpClient
 	return nil
 }
 
-func (ds *CommonConfigFields) CreateHttpClientDetails() httputils.HttpClientDetails {
+func (ccf *CommonConfigFields) CreateHttpClientDetails() httputils.HttpClientDetails {
 	return httputils.HttpClientDetails{
-		User:        ds.User,
-		Password:    ds.Password,
-		ApiKey:      ds.ApiKey,
-		AccessToken: ds.AccessToken,
-		Headers:     utils.CopyMap(ds.GetSshAuthHeaders())}
+		User:        ccf.User,
+		Password:    ccf.Password,
+		ApiKey:      ccf.ApiKey,
+		AccessToken: ccf.AccessToken,
+		Headers:     utils.CopyMap(ccf.GetSshAuthHeaders())}
 }
