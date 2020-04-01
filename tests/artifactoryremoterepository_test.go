@@ -529,7 +529,7 @@ func remoteGitlfsTest(t *testing.T) {
 	grp := services.NewGitlfsRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "simple-default"
-	grp.Url = "https:/github.com"
+	grp.Url = "https://github.com/"
 	grp.Description = "Gitlfs Repo for jfrog-client-go remote-repository-test"
 	grp.AssumedOfflinePeriodSecs = 5555
 	grp.StoreArtifactsLocally = &trueValue
