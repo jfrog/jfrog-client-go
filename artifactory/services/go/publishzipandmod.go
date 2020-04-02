@@ -1,16 +1,17 @@
 package _go
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"net/http"
+	"net/url"
+	"strings"
+
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/version"
-	"net/http"
-	"net/url"
-	"strings"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
 	return version.AtLeast(propertiesApi)
 }
 
-func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.ArtifactoryDetails) error {
+func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.CommonDetails) error {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	if err != nil {
 		return err

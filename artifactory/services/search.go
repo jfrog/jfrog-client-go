@@ -1,25 +1,25 @@
 package services
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 )
 
 type SearchService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewSearchService(client *rthttpclient.ArtifactoryHttpClient) *SearchService {
 	return &SearchService{client: client}
 }
 
-func (s *SearchService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (s *SearchService) GetArtifactoryDetails() auth.CommonDetails {
 	return s.ArtDetails
 }
 
-func (s *SearchService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (s *SearchService) SetArtifactoryDetails(rt auth.CommonDetails) {
 	s.ArtDetails = rt
 }
 

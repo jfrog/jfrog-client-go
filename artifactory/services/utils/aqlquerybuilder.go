@@ -9,7 +9,7 @@ import (
 )
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
-func createAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, error) {
+func CreateAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, error) {
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
 	repoPathFileTriples := createRepoPathFileTriples(searchPattern, params.Recursive)
 	includeRoot := strings.Count(searchPattern, "/") < 2
@@ -284,14 +284,17 @@ func stringIsInSlice(string string, strings []string) bool {
 }
 
 func prepareFieldsForQuery(fields []string) []string {
-	for i, val := range fields {
-		fields[i] = `"` + val + `"`
+	// Since a slice is basically a pointer, we don't want to modify the underlying fields array because it might be used again (like in delete service)
+	// We will create new slice with the quoted values and will return it.
+	var queryFields []string
+	for _, val := range fields {
+		queryFields = append(queryFields, `"`+val+`"`)
 	}
-	return fields
+	return queryFields
 }
 
 // Creates an aql query from a spec file.
-func buildQueryFromSpecFile(specFile *ArtifactoryCommonParams, requiredArtifactProps RequiredArtifactProps) string {
+func BuildQueryFromSpecFile(specFile *ArtifactoryCommonParams, requiredArtifactProps RequiredArtifactProps) string {
 	aqlBody := specFile.Aql.ItemsFind
 	query := fmt.Sprintf(`items.find(%s)%s`, aqlBody, buildIncludeQueryPart(getQueryReturnFields(specFile, requiredArtifactProps)))
 	query = appendSortQueryPart(specFile, query)

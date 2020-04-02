@@ -2,17 +2,18 @@ package services
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
+
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -24,18 +25,18 @@ type MoveCopyService struct {
 	moveType   MoveType
 	client     *rthttpclient.ArtifactoryHttpClient
 	DryRun     bool
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewMoveCopyService(client *rthttpclient.ArtifactoryHttpClient, moveType MoveType) *MoveCopyService {
 	return &MoveCopyService{moveType: moveType, client: client}
 }
 
-func (mc *MoveCopyService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (mc *MoveCopyService) GetArtifactoryDetails() auth.CommonDetails {
 	return mc.ArtDetails
 }
 
-func (mc *MoveCopyService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (mc *MoveCopyService) SetArtifactoryDetails(rt auth.CommonDetails) {
 	mc.ArtDetails = rt
 }
 

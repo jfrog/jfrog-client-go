@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
@@ -20,14 +20,14 @@ const APIKeyPath = "api/security/apiKey"
 
 type SecurityService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 }
 
 func NewSecurityService(client *rthttpclient.ArtifactoryHttpClient) *SecurityService {
 	return &SecurityService{client: client}
 }
 
-func (ss *SecurityService) getArtifactoryDetails() auth.ArtifactoryDetails {
+func (ss *SecurityService) getArtifactoryDetails() auth.CommonDetails {
 	return ss.ArtDetails
 }
 
@@ -125,8 +125,11 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 }
 
 func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
+	// Gathers required data while avoiding default/ignored values
 	data := url.Values{}
-	data.Set("refreshable", strconv.FormatBool(params.Refreshable))
+	if params.Refreshable {
+		data.Set("refreshable", "true")
+	}
 	if params.Scope != "" {
 		data.Set("scope", params.Scope)
 	}
@@ -136,7 +139,7 @@ func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
 	if params.Audience != "" {
 		data.Set("audience", params.Audience)
 	}
-	if params.ExpiresIn != 0 {
+	if params.ExpiresIn >= 0 {
 		data.Set("expires_in", strconv.Itoa(params.ExpiresIn))
 	}
 	return data
@@ -208,11 +211,11 @@ type RevokeTokenParams struct {
 }
 
 func NewCreateTokenParams() CreateTokenParams {
-	return CreateTokenParams{}
+	return CreateTokenParams{ExpiresIn: -1}
 }
 
 func NewRefreshTokenParams() RefreshTokenParams {
-	return RefreshTokenParams{}
+	return RefreshTokenParams{Token: NewCreateTokenParams()}
 }
 
 func NewRevokeTokenParams() RevokeTokenParams {

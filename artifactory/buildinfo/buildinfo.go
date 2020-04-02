@@ -1,7 +1,7 @@
 package buildinfo
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"time"
 )
 
@@ -185,18 +185,18 @@ type General struct {
 }
 
 type Configuration struct {
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	BuildUrl   string
 	DryRun     bool
 	EnvInclude string
 	EnvExclude string
 }
 
-func (config *Configuration) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (config *Configuration) GetArtifactoryDetails() auth.CommonDetails {
 	return config.ArtDetails
 }
 
-func (config *Configuration) SetArtifactoryDetails(artDetails auth.ArtifactoryDetails) {
+func (config *Configuration) SetArtifactoryDetails(artDetails auth.CommonDetails) {
 	config.ArtDetails = artDetails
 }
 

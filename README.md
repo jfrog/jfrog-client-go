@@ -51,7 +51,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 #### Creating Service Config
 ```
-    serviceConfig, err := artifactory.NewConfigBuilder().
+    serviceConfig, err := config.NewConfigBuilder().
         SetArtDetails(rtDetails).
         SetCertificatesPath(certPath).
         SetThreads(threads).
@@ -210,7 +210,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     rtManager.DownloadFiles(params)
 ```
 
-#### Distributing Published Builds to JFrog Bintray 
+#### Distributing Published Builds to JFrog Bintray
 ```
     params := services.NewBuildDistributionParams()
     params.SourceRepos = "source-repo"
@@ -274,7 +274,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params := services.NewCreateTokenParams()
     params.Scope = "api:* member-of-groups:readers"
     params.Username = "user"
-    params.ExpiresIn = 3600
+    params.ExpiresIn = 3600 // default -1 (use server default)
     params.GrantType = "client_credentials"
     params.Refreshable = true
     params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
@@ -313,6 +313,222 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     apiKey, err := rtManager.RegenerateAPIKey()
 ```
 
+#### Creating and Updating Local Repository
+You can create and update a local repository for the following package types:
+
+Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
+Vagrant, Gitlfs, Go, Yum, Conan, Chef, Puppet and Generic.
+
+Each package type has it's own parameters struct, can be created using the method
+```New<packageType>LocalRepositoryParams()```.
+
+Example for creating local Generic repository:
+```
+    params := services.NewGenericLocalRepositoryParams()
+    pparams.Key = "generic-repo"
+    params.Description = "This is a public description for generic-repo"
+    params.Notes = "These are internal notes for generic-repo"
+    params.RepoLayoutRef = "simple-default"
+    params.ArchiveBrowsingEnabled = true
+    params.XrayIndex = true
+    params.IncludesPattern = "**/*"
+    params.ExcludesPattern = "excludedDir/*"
+    params.DownloadRedirect = true
+
+    err = servicesManager.CreateLocalRepository().Generic(params)
+```
+Updating local Generic repository:
+```
+    err = servicesManager.UpdateLocalRepository().Generic(params)
+```
+
+#### Creating and Updating Remote Repository
+You can create and update a remote repository for the following package types:
+
+Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
+Gitlfs, Go, Yum, Conan, Chef, Puppet, Conda, P2, Vcs and Generic.
+
+Each package type has it's own parameters struct, can be created using the method
+```New<packageType>RemoteRepositoryParams()```.
+
+Example for creating remote Maven repository:
+```
+    params := services.NewMavenRemoteRepositoryParams()
+    params.Key = "jcenter-remote"
+    params.Url = "http://jcenter.bintray.com"
+    params.RepoLayoutRef = "maven-2-default"
+    params.Description = "A caching proxy repository for a JFrog's jcenter"
+    params.HandleSnapshot = false
+    params.HandleReleases = true
+    params.FetchJarsEagerly = true
+    params.AssumedOfflinePeriodSecs = 600
+    params.SuppressPomConsistencyChecks = true
+    params.RemoteRepoChecksumPolicyType = "pass-thru"
+
+    err = servicesManager.CreateRemoteRepository().Maven(params)
+```
+Updating remote Maven repository:
+```
+    err = servicesManager.UpdateRemoteRepository().Maven(params)
+```
+
+#### Creating and Updating Virtual Repository
+You can create and update a virtual repository for the following package types:
+
+Maven, Gradle, Ivy, Sbt, Helm, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Pypi, Docker, Gitlfs, Go, Yum, Conan,
+Chef, Puppet, Conda, P2 and Generic
+
+Each package type has it's own parameters struct, can be created using the method
+```New<packageType>VirtualRepositoryParams()```.
+
+Example for creating virtual Go repository:
+```
+    params := services.NewGoVirtualRepositoryParams()
+    params.Description = "This is an aggregated repository for several go repositories"
+    params.RepoLayoutRef = "go-default"
+    params.Repositories = {"gocenter-remote", "go-local"}
+    params.DefaultDeploymentRepo = "go-local"
+    params.ExternalDependenciesEnabled = true
+    params.ExternalDependenciesPatterns = {"**/github.com/**", "**/golang.org/**", "**/gopkg.in/**"}
+    params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = true
+
+    err = servicesManager.CreateVirtualRepository().Go(params)
+```
+Updating remote Maven repository:
+```
+    err = servicesManager.UpdateVirtualRepository().Go(params)
+```
+
+#### Removing a Repository
+You can remove a repository from Artifactory using its key:
+```
+    servicesManager.DeleteRepository("generic-repo")
+```
+#### Creating and Updating Repository Replication
+Example of creating repository replication:
+```
+    params := services.NewCreateReplicationParams()
+    params.RepoKey = "my-repository"
+    params.CronExp = "0 0 12 * * ?"
+    params.Username = "admin"
+	params.Password = "password"
+	params.Url = "http://localhost:8081/artifactory/remote-repo"
+    params.Enabled = true
+	params.SocketTimeoutMillis = 15000
+    params.EnableEventReplication = true
+    params.SyncDeletes = true
+    params.SyncProperties = true
+    params.SyncStatistics = true
+    params.PathPrefix = "/path/to/repo"
+
+    err = servicesManager.CreateReplication(params)
+```
+Updating local repository replication:
+```
+    params := services.NewUpdateReplicationParams()
+    params.RepoKey = "my-repository"
+    params.CronExp = "0 0 12 * * ?"
+    params.Enabled = true
+	params.SocketTimeoutMillis = 15000
+    params.EnableEventReplication = true
+    params.SyncDeletes = true
+    params.SyncProperties = true
+    params.SyncStatistics = true
+    params.PathPrefix = "/path/to/repo"
+    err = servicesManager.UpdateReplication(params)
+```
+
+#### Getting a Repository Replication
+You can get a repository replication configuration from Artifactory using its key:
+```
+    replicationConfiguration, err := servicesManager.GetReplication("my-repository")
+
+```
+#### Removing a Repository Replication
+You can remove a repository replication configuration from Artifactory using its key:
+```
+    err := servicesManager.DeleteReplication("my-repository")
+```
+
+## Distribution APIs
+### Creating a Service Manager
+#### Creating Distribution Details
+```
+    distDetails := auth.NewDistributionDetails()
+    distDetails.SetUrl("http://localhost:8081/distribution")
+    distDetails.SetSshKeysPath("path/to/.ssh/")
+    distDetails.SetApiKey("apikey")
+    distDetails.SetUser("user")
+    distDetails.SetPassword("password")
+    distDetails.SetAccessToken("accesstoken")
+    // if client certificates are required
+    distDetails.SetClientCertPath("path/to/.cer")
+    distDetails.SetClientCertKeyPath("path/to/.key")
+```
+#### Creating Service Config
+```
+    serviceConfig, err := config.NewConfigBuilder().
+        SetArtDetails(rtDetails).
+        SetCertificatesPath(certPath).
+        SetThreads(threads).
+        SetDryRun(false).
+        Build()
+```
+#### Creating New Service Manager
+```
+    distManager, err := distribution.New(&distDetails, serviceConfig)
+```
+
+### Using Services
+#### Setting Distribution Signing Key
+```
+    params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
+    err := distManager.SetSigningKey(params)
+```
+#### Creating a Release Bundle
+```
+    params := services.NewCreateReleaseBundleParams("bundle-name", "1")
+    params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+    params.Description = "Description"
+    params.ReleaseNotes = "Release notes"
+    params.ReleaseNotesSyntax = "plain_text"
+    err := distManager.CreateReleaseBundle(params)
+```
+#### Updating a Release Bundle
+```
+    params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
+    params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+    params.Description = "New Description"
+    params.ReleaseNotes = "New Release notes"
+    params.ReleaseNotesSyntax = "plain_text"
+    err := distManager.CreateReleaseBundle(params)
+```
+#### Signing a Release Bundle
+```
+    params := services.NewSignBundleParams("bundle-name", "1")
+    params.GpgPassphrase = "123456"
+    err := distManager.SignReleaseBundle(params)
+```
+#### Distributing a Release Bundle
+```
+    params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
+    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+    params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+    err := distManager.DistributeReleaseBundle(params)
+```
+#### Deleting a Remote Release Bundle
+```
+    params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
+    params.DeleteFromDistribution = true
+    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+    params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+    err := distManager.DeleteReleaseBundle(params)
+```
+#### Deleting a Local Release Bundle
+```
+    params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
+    err := distManager.DeleteLocalReleaseBundle(params)
+```
 ## Bintray APIs
 ### Creating Bintray Details
  ```
@@ -347,7 +563,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.Explode = false
     params.UseRegExp = false
     params.ShowInDownloadList = false
-    
+
     btManager.UploadFiles(params)
 ```
 
@@ -356,7 +572,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params := services.NewDownloadFileParams()
     params.Flat = false
     params.IncludeUnpublished = false
-    params.PathDetails = "path/to/file"  
+    params.PathDetails = "path/to/file"
     params.TargetPath = "target/path/"
     // SplitCount default value: 3
     params.SplitCount = 2
@@ -439,7 +655,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     params.Keys = "keys"
 
     btManager.CreateEntitlement(params)
-    
+
     params.Id = "entitlementID"
     btManager.UpdateEntitlement(params)
 ```
@@ -497,9 +713,9 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
     path, err := utils.CreatePathDetails("subject/repository/file-path")
 
-    btManager.GpgSignFile(path, "passphrase") 
+    btManager.GpgSignFile(path, "passphrase")
 ```
-	
+
 #### GPG Signing Version Files
 ```
     path, err := versions.CreatePath("subject/repo/pkg/version")
@@ -534,6 +750,7 @@ Optional flags:
 | `-rt.url` | [Default: http://localhost:8081/artifactory] Artifactory URL. |
 | `-rt.user` | [Default: admin] Artifactory username. |
 | `-rt.password` | [Default: password] Artifactory password. |
+| `-rt.distUrl` | [Optional] JFrog Distribution URL. |
 | `-rt.apikey` | [Optional] Artifactory API key. |
 | `-rt.sshKeyPath` | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase. |

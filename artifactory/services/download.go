@@ -3,9 +3,9 @@ package services
 import (
 	"errors"
 	"github.com/jfrog/gofrog/parallel"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -24,7 +24,7 @@ import (
 type DownloadService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
 	Progress   io.Progress
-	ArtDetails auth.ArtifactoryDetails
+	ArtDetails auth.CommonDetails
 	DryRun     bool
 	Threads    int
 }
@@ -33,11 +33,11 @@ func NewDownloadService(client *rthttpclient.ArtifactoryHttpClient) *DownloadSer
 	return &DownloadService{client: client}
 }
 
-func (ds *DownloadService) GetArtifactoryDetails() auth.ArtifactoryDetails {
+func (ds *DownloadService) GetArtifactoryDetails() auth.CommonDetails {
 	return ds.ArtDetails
 }
 
-func (ds *DownloadService) SetArtifactoryDetails(rt auth.ArtifactoryDetails) {
+func (ds *DownloadService) SetArtifactoryDetails(rt auth.CommonDetails) {
 	ds.ArtDetails = rt
 }
 
@@ -57,7 +57,7 @@ func (ds *DownloadService) SetThreads(threads int) {
 	ds.Threads = threads
 }
 
-func (ds *DownloadService) SetArtDetails(artDetails auth.ArtifactoryDetails) {
+func (ds *DownloadService) SetArtDetails(artDetails auth.CommonDetails) {
 	ds.ArtDetails = artDetails
 }
 
