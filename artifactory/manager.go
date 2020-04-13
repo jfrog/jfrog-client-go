@@ -24,7 +24,10 @@ func New(artDetails *auth.CommonDetails, config config.Config) (*ArtifactoryServ
 }
 
 func NewWithProgress(artDetails *auth.CommonDetails, config config.Config, progress ioutils.Progress) (*ArtifactoryServicesManager, error) {
-	var err error
+	err := (*artDetails).InitSsh()
+	if err != nil {
+		return nil, err
+	}
 	manager := &ArtifactoryServicesManager{config: config, progress: progress}
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
@@ -267,6 +270,12 @@ func (sm *ArtifactoryServicesManager) GetReplication(repoKey string) ([]utils.Re
 	getPushReplicationService := services.NewGetReplicationService(sm.client)
 	getPushReplicationService.ArtDetails = sm.config.GetCommonDetails()
 	return getPushReplicationService.GetReplication(repoKey)
+}
+
+func (sm *ArtifactoryServicesManager) GetArtifactoryVersion() (string, error) {
+	versionService := services.NewVersionService(sm.client)
+	versionService.ArtDetails = sm.config.GetCommonDetails()
+	return versionService.GetArtifactoryVersion()
 }
 
 func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {

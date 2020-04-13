@@ -13,7 +13,10 @@ type DistributionServicesManager struct {
 }
 
 func New(commonDetails *auth.CommonDetails, config config.Config) (*DistributionServicesManager, error) {
-	var err error
+	err := (*commonDetails).InitSsh()
+	if err != nil {
+		return nil, err
+	}
 	manager := &DistributionServicesManager{config: config}
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
@@ -75,4 +78,10 @@ func (sm *DistributionServicesManager) DeleteLocalReleaseBundle(params services.
 
 func (sm *DistributionServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
 	return sm.client
+}
+
+func (sm *DistributionServicesManager) GetDistributionVersion() (string, error) {
+	versionService := services.NewVersionService(sm.client)
+	versionService.DistDetails = sm.config.GetCommonDetails()
+	return versionService.GetDistributionVersion()
 }
