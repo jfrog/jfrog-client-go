@@ -21,7 +21,7 @@ func NewDeleteLocalDistributionService(client *rthttpclient.ArtifactoryHttpClien
 	return &DeleteLocalReleaseBundleService{DeleteReleaseBundleService: DeleteReleaseBundleService{client: client}}
 }
 
-func (dlr *DeleteLocalReleaseBundleService) GetDistDetails() auth.CommonDetails {
+func (dlr *DeleteLocalReleaseBundleService) GetDistDetails() auth.ServiceDetails {
 	return dlr.DistDetails
 }
 

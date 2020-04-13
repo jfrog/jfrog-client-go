@@ -12,7 +12,7 @@ func ArtifactoryClientBuilder() *artifactoryHttpClientBuilder {
 type artifactoryHttpClientBuilder struct {
 	certificatesDirPath string
 	insecureTls         bool
-	CommonDetails       *auth.CommonDetails
+	ServiceDetails      *auth.ServiceDetails
 }
 
 func (builder *artifactoryHttpClientBuilder) SetCertificatesPath(certificatesPath string) *artifactoryHttpClientBuilder {
@@ -25,13 +25,13 @@ func (builder *artifactoryHttpClientBuilder) SetInsecureTls(insecureTls bool) *a
 	return builder
 }
 
-func (builder *artifactoryHttpClientBuilder) SetCommonDetails(rtDetails *auth.CommonDetails) *artifactoryHttpClientBuilder {
-	builder.CommonDetails = rtDetails
+func (builder *artifactoryHttpClientBuilder) SetServiceDetails(rtDetails *auth.ServiceDetails) *artifactoryHttpClientBuilder {
+	builder.ServiceDetails = rtDetails
 	return builder
 }
 
 func (builder *artifactoryHttpClientBuilder) Build() (rtHttpClient *ArtifactoryHttpClient, err error) {
-	rtHttpClient = &ArtifactoryHttpClient{ArtDetails: builder.CommonDetails}
+	rtHttpClient = &ArtifactoryHttpClient{ArtDetails: builder.ServiceDetails}
 	rtHttpClient.httpClient, err = httpclient.ClientBuilder().
 		SetCertificatesPath(builder.certificatesDirPath).
 		SetInsecureTls(builder.insecureTls).

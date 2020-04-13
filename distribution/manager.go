@@ -12,8 +12,8 @@ type DistributionServicesManager struct {
 	config config.Config
 }
 
-func New(commonDetails *auth.CommonDetails, config config.Config) (*DistributionServicesManager, error) {
-	err := (*commonDetails).InitSsh()
+func New(ServiceDetails *auth.ServiceDetails, config config.Config) (*DistributionServicesManager, error) {
+	err := (*ServiceDetails).InitSsh()
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +21,7 @@ func New(commonDetails *auth.CommonDetails, config config.Config) (*Distribution
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
-		SetCommonDetails(commonDetails).
+		SetServiceDetails(ServiceDetails).
 		Build()
 	if err != nil {
 		return nil, err
@@ -31,47 +31,47 @@ func New(commonDetails *auth.CommonDetails, config config.Config) (*Distribution
 
 func (sm *DistributionServicesManager) SetSigningKey(params services.SetSigningKeyParams) error {
 	setSigningKeyService := services.NewSetSigningKeyService(sm.client)
-	setSigningKeyService.DistDetails = sm.config.GetCommonDetails()
+	setSigningKeyService.DistDetails = sm.config.GetServiceDetails()
 	return setSigningKeyService.SetSigningKey(params)
 }
 
 func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateReleaseBundleParams) error {
 	createBundleService := services.NewCreateReleseBundleService(sm.client)
-	createBundleService.DistDetails = sm.config.GetCommonDetails()
+	createBundleService.DistDetails = sm.config.GetServiceDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()
 	return createBundleService.CreateReleaseBundle(params)
 }
 
 func (sm *DistributionServicesManager) UpdateReleaseBundle(params services.UpdateReleaseBundleParams) error {
 	createBundleService := services.NewUpdateReleaseBundleService(sm.client)
-	createBundleService.DistDetails = sm.config.GetCommonDetails()
+	createBundleService.DistDetails = sm.config.GetServiceDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()
 	return createBundleService.UpdateReleaseBundle(params)
 }
 
 func (sm *DistributionServicesManager) SignReleaseBundle(params services.SignBundleParams) error {
 	signBundleService := services.NewSignBundleService(sm.client)
-	signBundleService.DistDetails = sm.config.GetCommonDetails()
+	signBundleService.DistDetails = sm.config.GetServiceDetails()
 	return signBundleService.SignReleaseBundle(params)
 }
 
 func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.DistributionParams) error {
 	distributeBundleService := services.NewDistributeReleaseBundleService(sm.client)
-	distributeBundleService.DistDetails = sm.config.GetCommonDetails()
+	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
 	distributeBundleService.DryRun = sm.config.IsDryRun()
 	return distributeBundleService.Distribute(params)
 }
 
 func (sm *DistributionServicesManager) DeleteReleaseBundle(params services.DeleteDistributionParams) error {
 	deleteBundleService := services.NewDeleteReleaseBundleService(sm.client)
-	deleteBundleService.DistDetails = sm.config.GetCommonDetails()
+	deleteBundleService.DistDetails = sm.config.GetServiceDetails()
 	deleteBundleService.DryRun = sm.config.IsDryRun()
 	return deleteBundleService.DeleteDistribution(params)
 }
 
 func (sm *DistributionServicesManager) DeleteLocalReleaseBundle(params services.DeleteDistributionParams) error {
 	deleteLocalBundleService := services.NewDeleteLocalDistributionService(sm.client)
-	deleteLocalBundleService.DistDetails = sm.config.GetCommonDetails()
+	deleteLocalBundleService.DistDetails = sm.config.GetServiceDetails()
 	deleteLocalBundleService.DryRun = sm.config.IsDryRun()
 	return deleteLocalBundleService.DeleteDistribution(params)
 }
@@ -82,6 +82,6 @@ func (sm *DistributionServicesManager) Client() *rthttpclient.ArtifactoryHttpCli
 
 func (sm *DistributionServicesManager) GetDistributionVersion() (string, error) {
 	versionService := services.NewVersionService(sm.client)
-	versionService.DistDetails = sm.config.GetCommonDetails()
+	versionService.DistDetails = sm.config.GetServiceDetails()
 	return versionService.GetDistributionVersion()
 }

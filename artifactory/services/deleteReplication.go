@@ -14,7 +14,7 @@ import (
 
 type DeleteReplicationService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewDeleteReplicationService(client *rthttpclient.ArtifactoryHttpClient) *DeleteReplicationService {

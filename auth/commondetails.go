@@ -14,7 +14,7 @@ var expiryHandleMutex sync.Mutex
 // Implement this function and append it to create an interceptor that will run pre request in the http client
 type PreRequestInterceptorFunc func(*CommonConfigFields, *httputils.HttpClientDetails) error
 
-type CommonDetails interface {
+type ServiceDetails interface {
 	GetUrl() string
 	GetUser() string
 	GetPassword() string
@@ -242,7 +242,7 @@ func SshTokenRefreshPreRequestInterceptor(fields *CommonConfigFields, httpClient
 		}
 	}
 
-	// Copy new token from the mutual headers map in CommonDetails to the private headers map in httpClientDetails
+	// Copy new token from the mutual headers map in ServiceDetails to the private headers map in httpClientDetails
 	utils.MergeMaps(fields.GetSshAuthHeaders(), httpClientDetails.Headers)
 	return nil
 }

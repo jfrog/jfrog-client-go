@@ -16,7 +16,7 @@ import (
 
 type PropsService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 	Threads    int
 }
 
@@ -24,11 +24,11 @@ func NewPropsService(client *rthttpclient.ArtifactoryHttpClient) *PropsService {
 	return &PropsService{client: client}
 }
 
-func (ps *PropsService) GetArtifactoryDetails() auth.CommonDetails {
+func (ps *PropsService) GetArtifactoryDetails() auth.ServiceDetails {
 	return ps.ArtDetails
 }
 
-func (ps *PropsService) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (ps *PropsService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	ps.ArtDetails = rt
 }
 

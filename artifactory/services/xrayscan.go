@@ -23,7 +23,7 @@ const XRAY_FATAL_FAIL_STATUS = -1
 
 type XrayScanService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewXrayScanService(client *rthttpclient.ArtifactoryHttpClient) *XrayScanService {

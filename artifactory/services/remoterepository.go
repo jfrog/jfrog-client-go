@@ -15,7 +15,7 @@ import (
 type RemoteRepositoryService struct {
 	isUpdate   bool
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewRemoteRepositoryService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *RemoteRepositoryService {

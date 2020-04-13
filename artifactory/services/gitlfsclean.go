@@ -21,7 +21,7 @@ import (
 
 type GitLfsCleanService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 	DryRun     bool
 }
 
@@ -29,11 +29,11 @@ func NewGitLfsCleanService(client *rthttpclient.ArtifactoryHttpClient) *GitLfsCl
 	return &GitLfsCleanService{client: client}
 }
 
-func (glc *GitLfsCleanService) GetArtifactoryDetails() auth.CommonDetails {
+func (glc *GitLfsCleanService) GetArtifactoryDetails() auth.ServiceDetails {
 	return glc.ArtDetails
 }
 
-func (glc *GitLfsCleanService) SetArtifactoryDetails(art auth.CommonDetails) {
+func (glc *GitLfsCleanService) SetArtifactoryDetails(art auth.ServiceDetails) {
 	glc.ArtDetails = art
 }
 

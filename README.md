@@ -52,7 +52,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 #### Creating Service Config
 ```
     serviceConfig, err := config.NewConfigBuilder().
-        SetArtDetails(rtDetails).
+        SetServiceDetails(rtDetails).
         SetCertificatesPath(certPath).
         SetThreads(threads).
         SetDryRun(false).
@@ -468,7 +468,7 @@ You can remove a repository replication configuration from Artifactory using its
 #### Creating Service Config
 ```
     serviceConfig, err := config.NewConfigBuilder().
-        SetArtDetails(rtDetails).
+        SetServiceDetails(rtDetails).
         SetCertificatesPath(certPath).
         SetThreads(threads).
         SetDryRun(false).

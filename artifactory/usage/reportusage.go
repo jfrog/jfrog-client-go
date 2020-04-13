@@ -22,7 +22,7 @@ func SendReportUsage(productId, commandName string, serviceManager *artifactory.
 	if config == nil {
 		return errorutils.CheckError(errors.New(ReportUsagePrefix + "Expected full config, but no configuration exists."))
 	}
-	rtDetails := config.GetCommonDetails()
+	rtDetails := config.GetServiceDetails()
 	if rtDetails == nil {
 		return errorutils.CheckError(errors.New(ReportUsagePrefix + "Artifactory details not configured."))
 	}

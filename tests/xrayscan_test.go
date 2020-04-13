@@ -15,7 +15,7 @@ var testsXrayScanService *services.XrayScanService
 func TestNewXrayScanService(t *testing.T) {
 	xrayServerPort := xray.StartXrayMockServer()
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	if err != nil {
 		t.Error(err)
 	}

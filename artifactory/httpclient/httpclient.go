@@ -12,7 +12,7 @@ import (
 
 type ArtifactoryHttpClient struct {
 	httpClient *httpclient.HttpClient
-	ArtDetails *auth.CommonDetails
+	ArtDetails *auth.ServiceDetails
 }
 
 func (rtc *ArtifactoryHttpClient) SendGet(url string, followRedirect bool, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {

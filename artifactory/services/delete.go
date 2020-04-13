@@ -17,7 +17,7 @@ import (
 
 type DeleteService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 	DryRun     bool
 	Threads    int
 }
@@ -26,11 +26,11 @@ func NewDeleteService(client *rthttpclient.ArtifactoryHttpClient) *DeleteService
 	return &DeleteService{client: client}
 }
 
-func (ds *DeleteService) GetArtifactoryDetails() auth.CommonDetails {
+func (ds *DeleteService) GetArtifactoryDetails() auth.ServiceDetails {
 	return ds.ArtDetails
 }
 
-func (ds *DeleteService) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (ds *DeleteService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	ds.ArtDetails = rt
 }
 
@@ -143,15 +143,15 @@ func (ds *DeleteService) performTasks(consumer parallel.Runner, errorsQueue *uti
 }
 
 type DeleteConfiguration struct {
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 	DryRun     bool
 }
 
-func (conf *DeleteConfiguration) GetArtifactoryDetails() auth.CommonDetails {
+func (conf *DeleteConfiguration) GetArtifactoryDetails() auth.ServiceDetails {
 	return conf.ArtDetails
 }
 
-func (conf *DeleteConfiguration) SetArtifactoryDetails(art auth.CommonDetails) {
+func (conf *DeleteConfiguration) SetArtifactoryDetails(art auth.ServiceDetails) {
 	conf.ArtDetails = art
 }
 

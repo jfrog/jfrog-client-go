@@ -12,7 +12,7 @@ import (
 
 type DeleteRepositoryService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewDeleteRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *DeleteRepositoryService {

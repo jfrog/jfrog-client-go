@@ -20,14 +20,14 @@ const APIKeyPath = "api/security/apiKey"
 
 type SecurityService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewSecurityService(client *rthttpclient.ArtifactoryHttpClient) *SecurityService {
 	return &SecurityService{client: client}
 }
 
-func (ss *SecurityService) getArtifactoryDetails() auth.CommonDetails {
+func (ss *SecurityService) getArtifactoryDetails() auth.ServiceDetails {
 	return ss.ArtDetails
 }
 

@@ -28,9 +28,9 @@ func (ds *distributionDetails) GetVersion() (string, error) {
 }
 
 func (ds *distributionDetails) getDistributionVersion() (string, error) {
-	cd := auth.CommonDetails(ds)
+	cd := auth.ServiceDetails(ds)
 	serviceConfig, err := config.NewConfigBuilder().
-		SetArtDetails(cd).
+		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
 	sm, err := distribution.New(&cd, serviceConfig)

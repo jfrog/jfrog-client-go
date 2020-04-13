@@ -16,7 +16,7 @@ import (
 
 type DistributeReleaseBundleService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
-	DistDetails auth.CommonDetails
+	DistDetails auth.ServiceDetails
 	DryRun      bool
 }
 
@@ -24,7 +24,7 @@ func NewDistributeReleaseBundleService(client *rthttpclient.ArtifactoryHttpClien
 	return &DistributeReleaseBundleService{client: client}
 }
 
-func (dr *DistributeReleaseBundleService) GetDistDetails() auth.CommonDetails {
+func (dr *DistributeReleaseBundleService) GetDistDetails() auth.ServiceDetails {
 	return dr.DistDetails
 }
 

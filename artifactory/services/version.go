@@ -13,18 +13,18 @@ import (
 
 type VersionService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewVersionService(client *rthttpclient.ArtifactoryHttpClient) *VersionService {
 	return &VersionService{client: client}
 }
 
-func (vs *VersionService) GetArtifactoryDetails() auth.CommonDetails {
+func (vs *VersionService) GetArtifactoryDetails() auth.ServiceDetails {
 	return vs.ArtDetails
 }
 
-func (vs *VersionService) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (vs *VersionService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	vs.ArtDetails = rt
 }
 

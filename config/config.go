@@ -9,13 +9,13 @@ type Config interface {
 	GetCertificatesPath() string
 	GetThreads() int
 	IsDryRun() bool
-	GetCommonDetails() auth.CommonDetails
+	GetServiceDetails() auth.ServiceDetails
 	GetLogger() log.Log
 	IsInsecureTls() bool
 }
 
 type servicesConfig struct {
-	auth.CommonDetails
+	auth.ServiceDetails
 	certificatesPath string
 	dryRun           bool
 	threads          int
@@ -35,8 +35,8 @@ func (config *servicesConfig) GetThreads() int {
 	return config.threads
 }
 
-func (config *servicesConfig) GetCommonDetails() auth.CommonDetails {
-	return config.CommonDetails
+func (config *servicesConfig) GetServiceDetails() auth.ServiceDetails {
+	return config.ServiceDetails
 }
 
 func (config *servicesConfig) GetLogger() log.Log {

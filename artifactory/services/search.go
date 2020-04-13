@@ -8,18 +8,18 @@ import (
 
 type SearchService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewSearchService(client *rthttpclient.ArtifactoryHttpClient) *SearchService {
 	return &SearchService{client: client}
 }
 
-func (s *SearchService) GetArtifactoryDetails() auth.CommonDetails {
+func (s *SearchService) GetArtifactoryDetails() auth.ServiceDetails {
 	return s.ArtDetails
 }
 
-func (s *SearchService) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (s *SearchService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	s.ArtDetails = rt
 }
 

@@ -18,7 +18,7 @@ import (
 
 type DiscardBuildsService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewDiscardBuildsService(client *rthttpclient.ArtifactoryHttpClient) *DiscardBuildsService {
@@ -91,7 +91,7 @@ func calculateMinimumBuildDate(startingDate time.Time, maxDaysString string) (st
 	return minimumBuildDateString, nil
 }
 
-func (ds *DiscardBuildsService) getArtifactoryDetails() auth.CommonDetails {
+func (ds *DiscardBuildsService) getArtifactoryDetails() auth.ServiceDetails {
 	return ds.ArtDetails
 }
 
