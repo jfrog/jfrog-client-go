@@ -32,7 +32,6 @@ func (ds *distributionDetails) getDistributionVersion() (string, error) {
 	serviceConfig, err := config.NewConfigBuilder().
 		SetArtDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
-		SetThreads(0).
 		Build()
 	sm, err := distribution.New(&cd, serviceConfig)
 	if err != nil {

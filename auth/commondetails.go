@@ -225,17 +225,17 @@ func SshTokenRefreshPreRequestInterceptor(fields *CommonConfigFields, httpClient
 		return err
 	}
 
-	// Lock expiryHandleMutex to make sure only one authentication is made
+	// Lock expiryHandleMutex to make sure only one authentication is made.
 	expiryHandleMutex.Lock()
 	defer expiryHandleMutex.Unlock()
 	// Reauthenticate only if a new token wasn't acquired (by another thread) while waiting at mutex.
 	if fields.GetSshAuthHeaders()["Authorization"] == curToken {
-		// If token isn't already expired, Wait to make sure requests using the current token are sent before it is refreshed and becomes invalid
+		// If token isn't already expired, Wait to make sure requests using the current token are sent before it is refreshed and becomes invalid.
 		if timeLeft != 0 {
 			time.Sleep(WaitBeforeRefreshSeconds * time.Second)
 		}
 
-		// Obtain a new token and return true (false for error).
+		// Obtain a new token.
 		err := fields.AuthenticateSsh(fields.GetSshKeyPath(), fields.GetSshPassphrase())
 		if err != nil {
 			return err

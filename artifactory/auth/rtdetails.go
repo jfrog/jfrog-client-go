@@ -32,7 +32,6 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	serviceConfig, err := config.NewConfigBuilder().
 		SetArtDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
-		SetThreads(0).
 		Build()
 	sm, err := artifactory.New(&cd, serviceConfig)
 	if err != nil {
