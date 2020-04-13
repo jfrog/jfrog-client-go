@@ -50,6 +50,15 @@ func getPushReplication(t *testing.T, expected []utils.ReplicationParams) error 
 	if err != nil {
 		return err
 	}
+
+	assert.Len(t, expected, 1, "Error in the test input. Probably a bug. Expecting only 1 replication. Got %d.", len(expected))
+	assert.Len(t, replicationConf, 1, "Expected to fetch only 1 replication. Got %d.", len(replicationConf))
+
+	// Artifactory may return the password encrypted. We therefore remove it,
+	// before we can properly compare 'replicationConf' and 'expected'.
+	replicationConf[0].Password = ""
+	expected[0].Password = ""
+
 	assert.ElementsMatch(t, replicationConf, expected)
 	return nil
 }
