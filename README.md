@@ -22,7 +22,7 @@ We welcome pull requests from the community.
 
 ## General APIs
 ### Set logger
-```
+```go
 var file *os.File
 ...
 log.SetLogger(log.NewLogger(log.INFO, file))
@@ -30,14 +30,14 @@ log.SetLogger(log.NewLogger(log.INFO, file))
 
 ### Setting the temp dir
 The default temp dir used is  'os.TempDir()'. Use the following API to set a new temp dir:
-```
+```go
     fileutils.SetTempDirBase(filepath.Join("my", "temp", "path"))
 ```
 
 ## Artifactory APIs
 ### Creating a Service Manager
 #### Creating Artifactory Details
-```
+```go
     rtDetails := auth.NewArtifactoryDetails()
     rtDetails.SetUrl("http://localhost:8081/artifactory")
     rtDetails.SetSshKeysPath("path/to/.ssh/")
@@ -50,7 +50,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
     rtDetails.SetClientCertKeyPath("path/to/.key")
 ```
 #### Creating Service Config
-```
+```go
     serviceConfig, err := config.NewConfigBuilder().
         SetArtDetails(rtDetails).
         SetCertificatesPath(certPath).
@@ -59,13 +59,13 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
         Build()
 ```
 #### Creating New Service Manager
-```
+```go
     rtManager, err := artifactory.New(&rtDetails, serviceConfig)
 ```
 
 ### Using Services
 #### Uploading Files to Artifactory
-```
+```go
     params := services.NewUploadParams()
     params.Pattern = "repo/*/*.zip"
     params.Target = "repo/path/"
@@ -86,7 +86,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Downloading Files from Artifactory
-```
+```go
     params := services.NewDownloadParams()
     params.Pattern = "repo/*/*.zip"
     params.Target = "target/path/"
@@ -107,7 +107,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Copying Files in Artifactory
-```
+```go
     params := services.NewMoveCopyParams()
     params.Pattern = "repo/*/*.zip"
     params.Target = "target/path/"
@@ -118,7 +118,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Moving Files in Artifactory
-```
+```go
     params := services.NewMoveCopyParams()
     params.Pattern = "repo/*/*.zip"
     params.Target = "target/path/"
@@ -129,7 +129,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Deleting Files from Artifactory
-```
+```go
     params := services.NewDeleteParams()
     params.Pattern = "repo/*/*.zip"
     params.Recursive = true
@@ -139,7 +139,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Searching Files in Artifactory
-```
+```go
     params := services.NewSearchParams()
     params.Pattern = "repo/*/*.zip"
     params.Recursive = true
@@ -148,7 +148,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Setting Properties on Files in Artifactory
-```
+```go
     searchParams = services.NewSearchParams()
     searchParams.Recursive = true
     searchParams.IncludeDirs = false
@@ -164,7 +164,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Deleting Properties from Files in Artifactory
-```
+```go
     searchParams = services.NewSearchParams()
     searchParams.Recursive = true
     searchParams.IncludeDirs = false
@@ -180,14 +180,14 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Publishing Build Info to Artifactory
-```
+```go
     buildInfo := &buildinfo.BuildInfo{}
     ...
     rtManager.PublishBuildInfo(buildInfo)
 ```
 
 #### Fetching Build Info from Artifactory
-```
+```go
     buildInfoParams := services.NewBuildInfoParams{}
     buildInfoParams.BuildName = "buildName"
     buildInfoParams.BuildNumber = "LATEST"
@@ -196,7 +196,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Promoting Published Builds in Artifactory
-```
+```go
     params := services.NewPromotionParams()
     params.BuildName = "buildName"
     params.BuildNumber = "10"
@@ -211,7 +211,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Distributing Published Builds to JFrog Bintray
-```
+```go
     params := services.NewBuildDistributionParams()
     params.SourceRepos = "source-repo"
     params.TargetRepo = "target-repo"
@@ -227,7 +227,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Triggering Build Scanning with JFrog Xray
-```
+```go
     params := services.NewXrayScanParams()
     params.BuildName = buildName
     params.BuildNumber = buildNumber
@@ -236,7 +236,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Discarding Old Builds
-```
+```go
     params := services.NewDiscardBuildsParams()
     params.BuildName = "buildName"
     params.MaxDays = "max-days"
@@ -249,7 +249,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Cleaning Unreferenced Git LFS Files from Artifactory
-```
+```go
     params := services.NewGitLfsCleanParams()
     params.Refs = "refs/remotes/*"
     params.Repo = "my-project-lfs"
@@ -260,17 +260,17 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Executing AQLs
-```
+```go
     rtManager.Aql(aql string)
 ```
 
 #### Reading Files in Artifactory
-```
+```go
     rtManager.ReadRemoteFile(FilePath string)
 ```
 
 #### Creating an access token
-```
+```go
     params := services.NewCreateTokenParams()
     params.Scope = "api:* member-of-groups:readers"
     params.Username = "user"
@@ -282,12 +282,12 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Fetching access tokens
-```
+```go
     results, err := rtManager.GetTokens()
 ```
 
 #### Refreshing an access token
-```
+```go
     params := services.NewRefreshTokenParams()
     params.AccessToken = "<access token>"
     params.RefreshToken = "<refresh token>"
@@ -297,7 +297,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Revoking an access token
-```
+```go
     params := services.NewRevokeTokenParams()
 
     // Provide either TokenId or Token
@@ -308,8 +308,7 @@ The default temp dir used is  'os.TempDir()'. Use the following API to set a new
 ```
 
 #### Regenerate API Key
-
-```
+```go
     apiKey, err := rtManager.RegenerateAPIKey()
 ```
 
@@ -323,7 +322,7 @@ Each package type has it's own parameters struct, can be created using the metho
 ```New<packageType>LocalRepositoryParams()```.
 
 Example for creating local Generic repository:
-```
+```go
     params := services.NewGenericLocalRepositoryParams()
     pparams.Key = "generic-repo"
     params.Description = "This is a public description for generic-repo"
@@ -338,7 +337,7 @@ Example for creating local Generic repository:
     err = servicesManager.CreateLocalRepository().Generic(params)
 ```
 Updating local Generic repository:
-```
+```go
     err = servicesManager.UpdateLocalRepository().Generic(params)
 ```
 
@@ -352,7 +351,7 @@ Each package type has it's own parameters struct, can be created using the metho
 ```New<packageType>RemoteRepositoryParams()```.
 
 Example for creating remote Maven repository:
-```
+```go
     params := services.NewMavenRemoteRepositoryParams()
     params.Key = "jcenter-remote"
     params.Url = "http://jcenter.bintray.com"
@@ -368,7 +367,7 @@ Example for creating remote Maven repository:
     err = servicesManager.CreateRemoteRepository().Maven(params)
 ```
 Updating remote Maven repository:
-```
+```go
     err = servicesManager.UpdateRemoteRepository().Maven(params)
 ```
 
@@ -382,7 +381,7 @@ Each package type has it's own parameters struct, can be created using the metho
 ```New<packageType>VirtualRepositoryParams()```.
 
 Example for creating virtual Go repository:
-```
+```go
     params := services.NewGoVirtualRepositoryParams()
     params.Description = "This is an aggregated repository for several go repositories"
     params.RepoLayoutRef = "go-default"
@@ -395,18 +394,18 @@ Example for creating virtual Go repository:
     err = servicesManager.CreateVirtualRepository().Go(params)
 ```
 Updating remote Maven repository:
-```
+```go
     err = servicesManager.UpdateVirtualRepository().Go(params)
 ```
 
 #### Removing a Repository
 You can remove a repository from Artifactory using its key:
-```
+```go
     servicesManager.DeleteRepository("generic-repo")
 ```
 #### Creating and Updating Repository Replication
 Example of creating repository replication:
-```
+```go
     params := services.NewCreateReplicationParams()
     params.RepoKey = "my-repository"
     params.CronExp = "0 0 12 * * ?"
@@ -424,7 +423,7 @@ Example of creating repository replication:
     err = servicesManager.CreateReplication(params)
 ```
 Updating local repository replication:
-```
+```go
     params := services.NewUpdateReplicationParams()
     params.RepoKey = "my-repository"
     params.CronExp = "0 0 12 * * ?"
@@ -440,20 +439,20 @@ Updating local repository replication:
 
 #### Getting a Repository Replication
 You can get a repository replication configuration from Artifactory using its key:
-```
+```go
     replicationConfiguration, err := servicesManager.GetReplication("my-repository")
 
 ```
 #### Removing a Repository Replication
 You can remove a repository replication configuration from Artifactory using its key:
-```
+```go
     err := servicesManager.DeleteReplication("my-repository")
 ```
 
 ## Distribution APIs
 ### Creating a Service Manager
 #### Creating Distribution Details
-```
+```go
     distDetails := auth.NewDistributionDetails()
     distDetails.SetUrl("http://localhost:8081/distribution")
     distDetails.SetSshKeysPath("path/to/.ssh/")
@@ -466,7 +465,7 @@ You can remove a repository replication configuration from Artifactory using its
     distDetails.SetClientCertKeyPath("path/to/.key")
 ```
 #### Creating Service Config
-```
+```go
     serviceConfig, err := config.NewConfigBuilder().
         SetArtDetails(rtDetails).
         SetCertificatesPath(certPath).
@@ -475,18 +474,18 @@ You can remove a repository replication configuration from Artifactory using its
         Build()
 ```
 #### Creating New Service Manager
-```
+```go
     distManager, err := distribution.New(&distDetails, serviceConfig)
 ```
 
 ### Using Services
 #### Setting Distribution Signing Key
-```
+```go
     params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
     err := distManager.SetSigningKey(params)
 ```
 #### Creating a Release Bundle
-```
+```go
     params := services.NewCreateReleaseBundleParams("bundle-name", "1")
     params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
     params.Description = "Description"
@@ -495,7 +494,7 @@ You can remove a repository replication configuration from Artifactory using its
     err := distManager.CreateReleaseBundle(params)
 ```
 #### Updating a Release Bundle
-```
+```go
     params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
     params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
     params.Description = "New Description"
@@ -504,20 +503,20 @@ You can remove a repository replication configuration from Artifactory using its
     err := distManager.CreateReleaseBundle(params)
 ```
 #### Signing a Release Bundle
-```
+```go
     params := services.NewSignBundleParams("bundle-name", "1")
     params.GpgPassphrase = "123456"
     err := distManager.SignReleaseBundle(params)
 ```
 #### Distributing a Release Bundle
-```
+```go
     params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
     distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
     params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
     err := distManager.DistributeReleaseBundle(params)
 ```
 #### Deleting a Remote Release Bundle
-```
+```go
     params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
     params.DeleteFromDistribution = true
     distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
@@ -525,13 +524,13 @@ You can remove a repository replication configuration from Artifactory using its
     err := distManager.DeleteReleaseBundle(params)
 ```
 #### Deleting a Local Release Bundle
-```
+```go
     params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
     err := distManager.DeleteLocalReleaseBundle(params)
 ```
 ## Bintray APIs
 ### Creating Bintray Details
- ```
+ ```go
     btDetails := auth.NewBintrayDetails()
     btDetails.SetUser("user")
     btDetails.SetKey("key")
@@ -539,7 +538,7 @@ You can remove a repository replication configuration from Artifactory using its
  ```
 
 ### Creating a Service Manager
-```
+```go
     serviceConfig := bintray.NewConfigBuilder().
         SetBintrayDetails(btDetails).
         SetDryRun(false).
@@ -550,7 +549,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 ### Using Services
 #### Uploading a Single File to Bintray
-```
+```go
     params := services.NewUploadParams()
     params.Pattern = "*/*.zip"
     params.Path = versions.CreatePath("subject/repo/pkg/version")
@@ -568,7 +567,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Downloading a Single File from Bintray
-```
+```go
     params := services.NewDownloadFileParams()
     params.Flat = false
     params.IncludeUnpublished = false
@@ -583,7 +582,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Downloading Version Files from Bintray
-```
+```go
     params := services.NewDownloadVersionParams()
     params.Path, err = versions.CreatePath("subject/repo/pkg/version")
 
@@ -594,7 +593,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Showing / Deleting a Bintray Package
-```
+```go
     pkgPath, err := packages.CreatePath("subject/repo/pkg")
 
     btManager.ShowPackage(pkgPath)
@@ -602,7 +601,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Creating / Updating a Bintray Package
-```
+```go
     params := packages.NewPackageParams()
     params.Path, err = packages.CreatePath("subject/repo/pkg")
 
@@ -623,7 +622,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Showing / Deleting a Bintray Version
-```
+```go
     versionPath, err := versions.CreatePath("subject/repo/pkg/version")
 
     btManager.ShowVersion(versionPath)
@@ -631,7 +630,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Creating / Updating a Bintray Version
-```
+```go
     params := versions.NewVersionParams()
     params.Path, err = versions.CreatePath("subject/repo/pkg/version")
 
@@ -646,7 +645,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Creating / Updating Entitlements
-```
+```go
     params := entitlements.NewEntitlementsParams()
     params.VersionPath, err = versions.CreatePath("subject/repo/pkg/version")
 
@@ -661,7 +660,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Showing / Deleting Entitlements
-```
+```go
     versionPath, err := versions.CreatePath("subject/repo/pkg/version")
 
     btManager.ShowAllEntitlements(versionPath)
@@ -670,7 +669,7 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Creating / Updating Access Keys
-```
+```go
     params := accesskeys.NewAccessKeysParams()
     params.Password = "password"
     params.Org = "org"
@@ -688,14 +687,14 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### Showing / Deleting Access Keys
-```
+```go
     btManager.ShowAllAccessKeys("org")
     btManager.ShowAccessKey("org", "KeyID")
     btManager.DeleteAccessKey("org", "KeyID")
 ```
 
 #### Signing a URL
-```
+```go
     params := url.NewURLParams()
     params.PathDetails, err = utils.CreatePathDetails("subject/repository/file-path")
     // Check for errors
@@ -710,28 +709,28 @@ You can remove a repository replication configuration from Artifactory using its
 ```
 
 #### GPG Signing a File
-```
+```go
     path, err := utils.CreatePathDetails("subject/repository/file-path")
 
     btManager.GpgSignFile(path, "passphrase")
 ```
 
 #### GPG Signing Version Files
-```
+```go
     path, err := versions.CreatePath("subject/repo/pkg/version")
 
     btManager.GpgSignVersion(path, "passphrase")
 ```
 
 #### Listing Logs
-```
+```go
     path, err := versions.CreatePath("subject/repo/pkg/version")
 
     btManager.LogsList(versionPath)
 ```
 
 #### Downloading Logs
-```
+```go
     path, err := versions.CreatePath("subject/repo/pkg/version")
 
     btManager.DownloadLog(path, "logName")
@@ -740,7 +739,7 @@ You can remove a repository replication configuration from Artifactory using its
 ## Tests
 To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
 Use the following command with the below options to run the tests.
-````
+````sh
 go test -v github.com/jfrog/jfrog-client-go/tests
 ````
 Optional flags:
