@@ -37,7 +37,7 @@ log.SetLogger(log.NewLogger(log.INFO, file))
 The default temp dir used is 'os.TempDir()'. Use the following API to set a new temp dir:
 
 ```go
-    fileutils.SetTempDirBase(filepath.Join("my", "temp", "path"))
+fileutils.SetTempDirBase(filepath.Join("my", "temp", "path"))
 ```
 
 ## Artifactory APIs
@@ -47,33 +47,33 @@ The default temp dir used is 'os.TempDir()'. Use the following API to set a new 
 #### Creating Artifactory Details
 
 ```go
-    rtDetails := auth.NewArtifactoryDetails()
-    rtDetails.SetUrl("http://localhost:8081/artifactory")
-    rtDetails.SetSshKeysPath("path/to/.ssh/")
-    rtDetails.SetApiKey("apikey")
-    rtDetails.SetUser("user")
-    rtDetails.SetPassword("password")
-    rtDetails.SetAccessToken("accesstoken")
-    // if client certificates are required
-    rtDetails.SetClientCertPath("path/to/.cer")
-    rtDetails.SetClientCertKeyPath("path/to/.key")
+rtDetails := auth.NewArtifactoryDetails()
+rtDetails.SetUrl("http://localhost:8081/artifactory")
+rtDetails.SetSshKeysPath("path/to/.ssh/")
+rtDetails.SetApiKey("apikey")
+rtDetails.SetUser("user")
+rtDetails.SetPassword("password")
+rtDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+rtDetails.SetClientCertPath("path/to/.cer")
+rtDetails.SetClientCertKeyPath("path/to/.key")
 ```
 
 #### Creating Service Config
 
 ```go
-    serviceConfig, err := config.NewConfigBuilder().
-        SetArtDetails(rtDetails).
-        SetCertificatesPath(certPath).
-        SetThreads(threads).
-        SetDryRun(false).
-        Build()
+serviceConfig, err := config.NewConfigBuilder().
+    SetArtDetails(rtDetails).
+    SetCertificatesPath(certPath).
+    SetThreads(threads).
+    SetDryRun(false).
+    Build()
 ```
 
 #### Creating New Service Manager
 
 ```go
-    rtManager, err := artifactory.New(&rtDetails, serviceConfig)
+rtManager, err := artifactory.New(&rtDetails, serviceConfig)
 ```
 
 ### Using Services
@@ -81,271 +81,272 @@ The default temp dir used is 'os.TempDir()'. Use the following API to set a new 
 #### Uploading Files to Artifactory
 
 ```go
-    params := services.NewUploadParams()
-    params.Pattern = "repo/*/*.zip"
-    params.Target = "repo/path/"
-    params.Recursive = true
-    params.Regexp = false
-    params.IncludeDirs = false
-    params.Flat = true
-    params.Explode = false
-    params.Deb = ""
-    params.Symlink = false
-    params.AddVcsProps = false
-    // Retries default value: 3
-    params.Retries = 5
-    // MinChecksumDeploy default value: 10400
-    params.MinChecksumDeploy = 15360
+params := services.NewUploadParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "repo/path/"
+params.Recursive = true
+params.Regexp = false
+params.IncludeDirs = false
+params.Flat = true
+params.Explode = false
+params.Deb = ""
+params.Symlink = false
+params.AddVcsProps = false
+// Retries default value: 3
+params.Retries = 5
+// MinChecksumDeploy default value: 10400
+params.MinChecksumDeploy = 15360
 
-    rtManager.UploadFiles(params)
+rtManager.UploadFiles(params)
 ```
 
 #### Downloading Files from Artifactory
 
 ```go
-    params := services.NewDownloadParams()
-    params.Pattern = "repo/*/*.zip"
-    params.Target = "target/path/"
-    params.Recursive = true
-    params.IncludeDirs = false
-    params.Flat = false
-    params.Explode = false
-    params.Symlink = true
-    params.ValidateSymlink = false
-    // Retries default value: 3
-    params.Retries = 5
-    // SplitCount default value: 3
-    params.SplitCount = 2
-    // MinSplitSize default value: 5120
-    params.MinSplitSize = 7168
+params := services.NewDownloadParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "target/path/"
+params.Recursive = true
+params.IncludeDirs = false
+params.Flat = false
+params.Explode = false
+params.Symlink = true
+params.ValidateSymlink = false
+// Retries default value: 3
+params.Retries = 5
+// SplitCount default value: 3
+params.SplitCount = 2
+// MinSplitSize default value: 5120
+params.MinSplitSize = 7168
 
-    rtManager.DownloadFiles(params)
+rtManager.DownloadFiles(params)
 ```
 
 #### Copying Files in Artifactory
 
 ```go
-    params := services.NewMoveCopyParams()
-    params.Pattern = "repo/*/*.zip"
-    params.Target = "target/path/"
-    params.Recursive = true
-    params.Flat = false
+params := services.NewMoveCopyParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "target/path/"
+params.Recursive = true
+params.Flat = false
 
-    rtManager.Copy(params)
+rtManager.Copy(params)
 ```
 
 #### Moving Files in Artifactory
 
 ```go
-    params := services.NewMoveCopyParams()
-    params.Pattern = "repo/*/*.zip"
-    params.Target = "target/path/"
-    params.Recursive = true
-    params.Flat = false
+params := services.NewMoveCopyParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "target/path/"
+params.Recursive = true
+params.Flat = false
 
-    rtManager.Move(params)
+rtManager.Move(params)
 ```
 
 #### Deleting Files from Artifactory
 
 ```go
-    params := services.NewDeleteParams()
-    params.Pattern = "repo/*/*.zip"
-    params.Recursive = true
+params := services.NewDeleteParams()
+params.Pattern = "repo/*/*.zip"
+params.Recursive = true
 
-    pathsToDelete := rtManager.GetPathsToDelete(params)
-    rtManager.DeleteFiles(pathsToDelete)
+pathsToDelete := rtManager.GetPathsToDelete(params)
+rtManager.DeleteFiles(pathsToDelete)
 ```
 
 #### Searching Files in Artifactory
 
 ```go
-    params := services.NewSearchParams()
-    params.Pattern = "repo/*/*.zip"
-    params.Recursive = true
+params := services.NewSearchParams()
+params.Pattern = "repo/*/*.zip"
+params.Recursive = true
 
-    rtManager.SearchFiles(params)
+rtManager.SearchFiles(params)
 ```
 
 #### Setting Properties on Files in Artifactory
 
 ```go
-    searchParams = services.NewSearchParams()
-    searchParams.Recursive = true
-    searchParams.IncludeDirs = false
+searchParams = services.NewSearchParams()
+searchParams.Recursive = true
+searchParams.IncludeDirs = false
 
-    resultItems = rtManager.SearchFiles(searchParams)
+resultItems = rtManager.SearchFiles(searchParams)
 
-    propsParams = services.NewPropsParams()
-    propsParams.Pattern = "repo/*/*.zip"
-    propsParams.Items = resultItems
-    propsParams.Props = "key=value"
+propsParams = services.NewPropsParams()
+propsParams.Pattern = "repo/*/*.zip"
+propsParams.Items = resultItems
+propsParams.Props = "key=value"
 
-    rtManager.SetProps(propsParams)
+rtManager.SetProps(propsParams)
 ```
 
 #### Deleting Properties from Files in Artifactory
 
 ```go
-    searchParams = services.NewSearchParams()
-    searchParams.Recursive = true
-    searchParams.IncludeDirs = false
+searchParams = services.NewSearchParams()
+searchParams.Recursive = true
+searchParams.IncludeDirs = false
 
-    resultItems = rtManager.SearchFiles(searchParams)
+resultItems = rtManager.SearchFiles(searchParams)
 
-    propsParams = services.NewPropsParams()
-    propsParams.Pattern = "repo/*/*.zip"
-    propsParams.Items = resultItems
-    propsParams.Props = "key=value"
+propsParams = services.NewPropsParams()
+propsParams.Pattern = "repo/*/*.zip"
+propsParams.Items = resultItems
+propsParams.Props = "key=value"
 
-    rtManager.DeleteProps(propsParams)
+rtManager.DeleteProps(propsParams)
 ```
 
 #### Publishing Build Info to Artifactory
 
 ```go
-    buildInfo := &buildinfo.BuildInfo{}
-    ...
-    rtManager.PublishBuildInfo(buildInfo)
+buildInfo := &buildinfo.BuildInfo{}
+...
+rtManager.PublishBuildInfo(buildInfo)
 ```
 
 #### Fetching Build Info from Artifactory
 
 ```go
-    buildInfoParams := services.NewBuildInfoParams{}
-    buildInfoParams.BuildName = "buildName"
-    buildInfoParams.BuildNumber = "LATEST"
+buildInfoParams := services.NewBuildInfoParams{}
+buildInfoParams.BuildName = "buildName"
+buildInfoParams.BuildNumber = "LATEST"
 
-    rtManager.GetBuildInfo(buildInfoParams)
+rtManager.GetBuildInfo(buildInfoParams)
 ```
 
 #### Promoting Published Builds in Artifactory
 
 ```go
-    params := services.NewPromotionParams()
-    params.BuildName = "buildName"
-    params.BuildNumber = "10"
-    params.TargetRepo = "target-repo"
-    params.Status = "status"
-    params.Comment = "comment"
-    params.Copy = true
-    params.IncludeDependencies = false
-    params.SourceRepo = "source-repo"
+params := services.NewPromotionParams()
+params.BuildName = "buildName"
+params.BuildNumber = "10"
+params.TargetRepo = "target-repo"
+params.Status = "status"
+params.Comment = "comment"
+params.Copy = true
+params.IncludeDependencies = false
+params.SourceRepo = "source-repo"
 
-    rtManager.DownloadFiles(params)
+rtManager.DownloadFiles(params)
 ```
 
 #### Distributing Published Builds to JFrog Bintray
 
 ```go
-    params := services.NewBuildDistributionParams()
-    params.SourceRepos = "source-repo"
-    params.TargetRepo = "target-repo"
-    params.GpgPassphrase = "GpgPassphrase"
-    params.Publish = false
-    params.OverrideExistingFiles = false
-    params.Async = true
-    params.BuildName = "buildName"
-    params.BuildNumber = "10"
-    params.Pattern = "repo/*/*.zip"
+params := services.NewBuildDistributionParams()
+params.SourceRepos = "source-repo"
+params.TargetRepo = "target-repo"
+params.GpgPassphrase = "GpgPassphrase"
+params.Publish = false
+params.OverrideExistingFiles = false
+params.Async = true
+params.BuildName = "buildName"
+params.BuildNumber = "10"
+params.Pattern = "repo/*/*.zip"
 
-    rtManager.DistributeBuild(params)
+rtManager.DistributeBuild(params)
 ```
 
 #### Triggering Build Scanning with JFrog Xray
 
 ```go
-    params := services.NewXrayScanParams()
-    params.BuildName = buildName
-    params.BuildNumber = buildNumber
+params := services.NewXrayScanParams()
+params.BuildName = buildName
+params.BuildNumber = buildNumber
 
-    rtManager.XrayScanBuild(params)
+rtManager.XrayScanBuild(params)
 ```
 
 #### Discarding Old Builds
 
 ```go
-    params := services.NewDiscardBuildsParams()
-    params.BuildName = "buildName"
-    params.MaxDays = "max-days"
-    params.MaxBuilds = "max-builds"
-    params.ExcludeBuilds = "1,2"
-    params.DeleteArtifacts = false
-    params.Async = false
+params := services.NewDiscardBuildsParams()
+params.BuildName = "buildName"
+params.MaxDays = "max-days"
+params.MaxBuilds = "max-builds"
+params.ExcludeBuilds = "1,2"
+params.DeleteArtifacts = false
+params.Async = false
 
-    rtManager.DiscardBuilds(params)
+rtManager.DiscardBuilds(params)
 ```
 
 #### Cleaning Unreferenced Git LFS Files from Artifactory
 
 ```go
-    params := services.NewGitLfsCleanParams()
-    params.Refs = "refs/remotes/*"
-    params.Repo = "my-project-lfs"
-    params.GitPath = "path/to/git"
+params := services.NewGitLfsCleanParams()
+params.Refs = "refs/remotes/*"
+params.Repo = "my-project-lfs"
+params.GitPath = "path/to/git"
 
-    filesToDelete := rtManager.GetUnreferencedGitLfsFiles(params)
-    rtManager.DeleteFiles(filesToDelete)
+filesToDelete := rtManager.GetUnreferencedGitLfsFiles(params)
+rtManager.DeleteFiles(filesToDelete)
 ```
 
 #### Executing AQLs
 
 ```go
-    rtManager.Aql(aql string)
+rtManager.Aql(aql string)
 ```
 
 #### Reading Files in Artifactory
 
 ```go
-    rtManager.ReadRemoteFile(FilePath string)
+rtManager.ReadRemoteFile(FilePath string)
 ```
 
 #### Creating an access token
 
 ```go
-    params := services.NewCreateTokenParams()
-    params.Scope = "api:* member-of-groups:readers"
-    params.Username = "user"
-    params.ExpiresIn = 3600 // default -1 (use server default)
-    params.GrantType = "client_credentials"
-    params.Refreshable = true
-    params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
-    results, err := rtManager.CreateToken(params)
+params := services.NewCreateTokenParams()
+params.Scope = "api:* member-of-groups:readers"
+params.Username = "user"
+params.ExpiresIn = 3600 // default -1 (use server default)
+params.GrantType = "client_credentials"
+params.Refreshable = true
+params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
+
+results, err := rtManager.CreateToken(params)
 ```
 
 #### Fetching access tokens
 
 ```go
-    results, err := rtManager.GetTokens()
+results, err := rtManager.GetTokens()
 ```
 
 #### Refreshing an access token
 
 ```go
-    params := services.NewRefreshTokenParams()
-    params.AccessToken = "<access token>"
-    params.RefreshToken = "<refresh token>"
-    params.Token.Scope = "api:*"
-    params.Token.ExpiresIn = 3600
-    results, err := rtManager.RefreshToken(params)
+params := services.NewRefreshTokenParams()
+params.AccessToken = "<access token>"
+params.RefreshToken = "<refresh token>"
+params.Token.Scope = "api:*"
+params.Token.ExpiresIn = 3600
+results, err := rtManager.RefreshToken(params)
 ```
 
 #### Revoking an access token
 
 ```go
-    params := services.NewRevokeTokenParams()
+params := services.NewRevokeTokenParams()
 
-    // Provide either TokenId or Token
-    params.TokenId = "<token id>"
-    // params.Token = "access token"
+// Provide either TokenId or Token
+params.TokenId = "<token id>"
+// params.Token = "access token"
 
-    err := rtManager.RevokeToken(params)
+err := rtManager.RevokeToken(params)
 ```
 
 #### Regenerate API Key
 
 ```go
-    apiKey, err := rtManager.RegenerateAPIKey()
+apiKey, err := rtManager.RegenerateAPIKey()
 ```
 
 #### Creating and Updating Local Repository
@@ -361,24 +362,24 @@ Each package type has it's own parameters struct, can be created using the metho
 Example for creating local Generic repository:
 
 ```go
-    params := services.NewGenericLocalRepositoryParams()
-    pparams.Key = "generic-repo"
-    params.Description = "This is a public description for generic-repo"
-    params.Notes = "These are internal notes for generic-repo"
-    params.RepoLayoutRef = "simple-default"
-    params.ArchiveBrowsingEnabled = true
-    params.XrayIndex = true
-    params.IncludesPattern = "**/*"
-    params.ExcludesPattern = "excludedDir/*"
-    params.DownloadRedirect = true
+params := services.NewGenericLocalRepositoryParams()
+pparams.Key = "generic-repo"
+params.Description = "This is a public description for generic-repo"
+params.Notes = "These are internal notes for generic-repo"
+params.RepoLayoutRef = "simple-default"
+params.ArchiveBrowsingEnabled = true
+params.XrayIndex = true
+params.IncludesPattern = "**/*"
+params.ExcludesPattern = "excludedDir/*"
+params.DownloadRedirect = true
 
-    err = servicesManager.CreateLocalRepository().Generic(params)
+err = servicesManager.CreateLocalRepository().Generic(params)
 ```
 
 Updating local Generic repository:
 
 ```go
-    err = servicesManager.UpdateLocalRepository().Generic(params)
+err = servicesManager.UpdateLocalRepository().Generic(params)
 ```
 
 #### Creating and Updating Remote Repository
@@ -394,25 +395,25 @@ Each package type has it's own parameters struct, can be created using the metho
 Example for creating remote Maven repository:
 
 ```go
-    params := services.NewMavenRemoteRepositoryParams()
-    params.Key = "jcenter-remote"
-    params.Url = "http://jcenter.bintray.com"
-    params.RepoLayoutRef = "maven-2-default"
-    params.Description = "A caching proxy repository for a JFrog's jcenter"
-    params.HandleSnapshot = false
-    params.HandleReleases = true
-    params.FetchJarsEagerly = true
-    params.AssumedOfflinePeriodSecs = 600
-    params.SuppressPomConsistencyChecks = true
-    params.RemoteRepoChecksumPolicyType = "pass-thru"
+params := services.NewMavenRemoteRepositoryParams()
+params.Key = "jcenter-remote"
+params.Url = "http://jcenter.bintray.com"
+params.RepoLayoutRef = "maven-2-default"
+params.Description = "A caching proxy repository for a JFrog's jcenter"
+params.HandleSnapshot = false
+params.HandleReleases = true
+params.FetchJarsEagerly = true
+params.AssumedOfflinePeriodSecs = 600
+params.SuppressPomConsistencyChecks = true
+params.RemoteRepoChecksumPolicyType = "pass-thru"
 
-    err = servicesManager.CreateRemoteRepository().Maven(params)
+err = servicesManager.CreateRemoteRepository().Maven(params)
 ```
 
 Updating remote Maven repository:
 
 ```go
-    err = servicesManager.UpdateRemoteRepository().Maven(params)
+err = servicesManager.UpdateRemoteRepository().Maven(params)
 ```
 
 #### Creating and Updating Virtual Repository
@@ -428,22 +429,22 @@ Each package type has it's own parameters struct, can be created using the metho
 Example for creating virtual Go repository:
 
 ```go
-    params := services.NewGoVirtualRepositoryParams()
-    params.Description = "This is an aggregated repository for several go repositories"
-    params.RepoLayoutRef = "go-default"
-    params.Repositories = {"gocenter-remote", "go-local"}
-    params.DefaultDeploymentRepo = "go-local"
-    params.ExternalDependenciesEnabled = true
-    params.ExternalDependenciesPatterns = {"**/github.com/**", "**/golang.org/**", "**/gopkg.in/**"}
-    params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = true
+params := services.NewGoVirtualRepositoryParams()
+params.Description = "This is an aggregated repository for several go repositories"
+params.RepoLayoutRef = "go-default"
+params.Repositories = {"gocenter-remote", "go-local"}
+params.DefaultDeploymentRepo = "go-local"
+params.ExternalDependenciesEnabled = true
+params.ExternalDependenciesPatterns = {"**/github.com/**", "**/golang.org/**", "**/gopkg.in/**"}
+params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = true
 
-    err = servicesManager.CreateVirtualRepository().Go(params)
+err = servicesManager.CreateVirtualRepository().Go(params)
 ```
 
 Updating remote Maven repository:
 
 ```go
-    err = servicesManager.UpdateVirtualRepository().Go(params)
+err = servicesManager.UpdateVirtualRepository().Go(params)
 ```
 
 #### Removing a Repository
@@ -451,7 +452,7 @@ Updating remote Maven repository:
 You can remove a repository from Artifactory using its key:
 
 ```go
-    servicesManager.DeleteRepository("generic-repo")
+servicesManager.DeleteRepository("generic-repo")
 ```
 
 #### Creating and Updating Repository Replication
@@ -459,37 +460,37 @@ You can remove a repository from Artifactory using its key:
 Example of creating repository replication:
 
 ```go
-    params := services.NewCreateReplicationParams()
-    params.RepoKey = "my-repository"
-    params.CronExp = "0 0 12 * * ?"
-    params.Username = "admin"
-	params.Password = "password"
-	params.Url = "http://localhost:8081/artifactory/remote-repo"
-    params.Enabled = true
-	params.SocketTimeoutMillis = 15000
-    params.EnableEventReplication = true
-    params.SyncDeletes = true
-    params.SyncProperties = true
-    params.SyncStatistics = true
-    params.PathPrefix = "/path/to/repo"
+params := services.NewCreateReplicationParams()
+params.RepoKey = "my-repository"
+params.CronExp = "0 0 12 * * ?"
+params.Username = "admin"
+params.Password = "password"
+params.Url = "http://localhost:8081/artifactory/remote-repo"
+params.Enabled = true
+params.SocketTimeoutMillis = 15000
+params.EnableEventReplication = true
+params.SyncDeletes = true
+params.SyncProperties = true
+params.SyncStatistics = true
+params.PathPrefix = "/path/to/repo"
 
-    err = servicesManager.CreateReplication(params)
+err = servicesManager.CreateReplication(params)
 ```
 
 Updating local repository replication:
 
 ```go
-    params := services.NewUpdateReplicationParams()
-    params.RepoKey = "my-repository"
-    params.CronExp = "0 0 12 * * ?"
-    params.Enabled = true
-	params.SocketTimeoutMillis = 15000
-    params.EnableEventReplication = true
-    params.SyncDeletes = true
-    params.SyncProperties = true
-    params.SyncStatistics = true
-    params.PathPrefix = "/path/to/repo"
-    err = servicesManager.UpdateReplication(params)
+params := services.NewUpdateReplicationParams()
+params.RepoKey = "my-repository"
+params.CronExp = "0 0 12 * * ?"
+params.Enabled = true
+params.SocketTimeoutMillis = 15000
+params.EnableEventReplication = true
+params.SyncDeletes = true
+params.SyncProperties = true
+params.SyncStatistics = true
+params.PathPrefix = "/path/to/repo"
+err = servicesManager.UpdateReplication(params)
 ```
 
 #### Getting a Repository Replication
@@ -497,8 +498,7 @@ Updating local repository replication:
 You can get a repository replication configuration from Artifactory using its key:
 
 ```go
-    replicationConfiguration, err := servicesManager.GetReplication("my-repository")
-
+replicationConfiguration, err := servicesManager.GetReplication("my-repository")
 ```
 
 #### Removing a Repository Replication
@@ -506,7 +506,7 @@ You can get a repository replication configuration from Artifactory using its ke
 You can remove a repository replication configuration from Artifactory using its key:
 
 ```go
-    err := servicesManager.DeleteReplication("my-repository")
+err := servicesManager.DeleteReplication("my-repository")
 ```
 
 ## Distribution APIs
@@ -516,33 +516,33 @@ You can remove a repository replication configuration from Artifactory using its
 #### Creating Distribution Details
 
 ```go
-    distDetails := auth.NewDistributionDetails()
-    distDetails.SetUrl("http://localhost:8081/distribution")
-    distDetails.SetSshKeysPath("path/to/.ssh/")
-    distDetails.SetApiKey("apikey")
-    distDetails.SetUser("user")
-    distDetails.SetPassword("password")
-    distDetails.SetAccessToken("accesstoken")
-    // if client certificates are required
-    distDetails.SetClientCertPath("path/to/.cer")
-    distDetails.SetClientCertKeyPath("path/to/.key")
+distDetails := auth.NewDistributionDetails()
+distDetails.SetUrl("http://localhost:8081/distribution")
+distDetails.SetSshKeysPath("path/to/.ssh/")
+distDetails.SetApiKey("apikey")
+distDetails.SetUser("user")
+distDetails.SetPassword("password")
+distDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+distDetails.SetClientCertPath("path/to/.cer")
+distDetails.SetClientCertKeyPath("path/to/.key")
 ```
 
 #### Creating Service Config
 
 ```go
-    serviceConfig, err := config.NewConfigBuilder().
-        SetArtDetails(rtDetails).
-        SetCertificatesPath(certPath).
-        SetThreads(threads).
-        SetDryRun(false).
-        Build()
+serviceConfig, err := config.NewConfigBuilder().
+    SetArtDetails(rtDetails).
+    SetCertificatesPath(certPath).
+    SetThreads(threads).
+    SetDryRun(false).
+    Build()
 ```
 
 #### Creating New Service Manager
 
 ```go
-    distManager, err := distribution.New(&distDetails, serviceConfig)
+distManager, err := distribution.New(&distDetails, serviceConfig)
 ```
 
 ### Using Services
@@ -550,64 +550,71 @@ You can remove a repository replication configuration from Artifactory using its
 #### Setting Distribution Signing Key
 
 ```go
-    params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
-    err := distManager.SetSigningKey(params)
+params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
+
+err := distManager.SetSigningKey(params)
 ```
 
 #### Creating a Release Bundle
 
 ```go
-    params := services.NewCreateReleaseBundleParams("bundle-name", "1")
-    params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
-    params.Description = "Description"
-    params.ReleaseNotes = "Release notes"
-    params.ReleaseNotesSyntax = "plain_text"
-    err := distManager.CreateReleaseBundle(params)
+params := services.NewCreateReleaseBundleParams("bundle-name", "1")
+params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+params.Description = "Description"
+params.ReleaseNotes = "Release notes"
+params.ReleaseNotesSyntax = "plain_text"
+
+err := distManager.CreateReleaseBundle(params)
 ```
 
 #### Updating a Release Bundle
 
 ```go
-    params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
-    params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
-    params.Description = "New Description"
-    params.ReleaseNotes = "New Release notes"
-    params.ReleaseNotesSyntax = "plain_text"
-    err := distManager.CreateReleaseBundle(params)
+params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
+params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+params.Description = "New Description"
+params.ReleaseNotes = "New Release notes"
+params.ReleaseNotesSyntax = "plain_text"
+
+err := distManager.CreateReleaseBundle(params)
 ```
 
 #### Signing a Release Bundle
 
 ```go
-    params := services.NewSignBundleParams("bundle-name", "1")
-    params.GpgPassphrase = "123456"
-    err := distManager.SignReleaseBundle(params)
+params := services.NewSignBundleParams("bundle-name", "1")
+params.GpgPassphrase = "123456"
+
+err := distManager.SignReleaseBundle(params)
 ```
 
 #### Distributing a Release Bundle
 
 ```go
-    params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
-    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
-    params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
-    err := distManager.DistributeReleaseBundle(params)
+params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
+distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+
+err := distManager.DistributeReleaseBundle(params)
 ```
 
 #### Deleting a Remote Release Bundle
 
 ```go
-    params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
-    params.DeleteFromDistribution = true
-    distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
-    params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
-    err := distManager.DeleteReleaseBundle(params)
+params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
+params.DeleteFromDistribution = true
+distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+
+err := distManager.DeleteReleaseBundle(params)
 ```
 
 #### Deleting a Local Release Bundle
 
 ```go
-    params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
-    err := distManager.DeleteLocalReleaseBundle(params)
+params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
+
+err := distManager.DeleteLocalReleaseBundle(params)
 ```
 
 ## Bintray APIs
@@ -615,22 +622,22 @@ You can remove a repository replication configuration from Artifactory using its
 ### Creating Bintray Details
 
 ```go
-   btDetails := auth.NewBintrayDetails()
-   btDetails.SetUser("user")
-   btDetails.SetKey("key")
-   btDetails.SetDefPackageLicense("Apache 2.0")
+btDetails := auth.NewBintrayDetails()
+btDetails.SetUser("user")
+btDetails.SetKey("key")
+btDetails.SetDefPackageLicense("Apache 2.0")
 ```
 
 ### Creating a Service Manager
 
 ```go
-    serviceConfig := bintray.NewConfigBuilder().
-        SetBintrayDetails(btDetails).
-        SetDryRun(false).
-        SetThreads(threads).
-        Build()
+serviceConfig := bintray.NewConfigBuilder().
+    SetBintrayDetails(btDetails).
+    SetDryRun(false).
+    SetThreads(threads).
+    Build()
 
-    btManager, err := bintray.New(serviceConfig)
+btManager, err := bintray.New(serviceConfig)
 ```
 
 ### Using Services
@@ -638,205 +645,205 @@ You can remove a repository replication configuration from Artifactory using its
 #### Uploading a Single File to Bintray
 
 ```go
-    params := services.NewUploadParams()
-    params.Pattern = "*/*.zip"
-    params.Path = versions.CreatePath("subject/repo/pkg/version")
-    params.TargetPath = "path/to/files"
-    params.Deb = "distribution/component/architecture"
-    params.Recursive = true
-    params.Flat = true
-    params.Publish = false
-    params.Override = false
-    params.Explode = false
-    params.UseRegExp = false
-    params.ShowInDownloadList = false
+params := services.NewUploadParams()
+params.Pattern = "*/*.zip"
+params.Path = versions.CreatePath("subject/repo/pkg/version")
+params.TargetPath = "path/to/files"
+params.Deb = "distribution/component/architecture"
+params.Recursive = true
+params.Flat = true
+params.Publish = false
+params.Override = false
+params.Explode = false
+params.UseRegExp = false
+params.ShowInDownloadList = false
 
-    btManager.UploadFiles(params)
+btManager.UploadFiles(params)
 ```
 
 #### Downloading a Single File from Bintray
 
 ```go
-    params := services.NewDownloadFileParams()
-    params.Flat = false
-    params.IncludeUnpublished = false
-    params.PathDetails = "path/to/file"
-    params.TargetPath = "target/path/"
-    // SplitCount default value: 3
-    params.SplitCount = 2
-    // MinSplitSize default value: 5120
-    params.MinSplitSize = 7168
+params := services.NewDownloadFileParams()
+params.Flat = false
+params.IncludeUnpublished = false
+params.PathDetails = "path/to/file"
+params.TargetPath = "target/path/"
+// SplitCount default value: 3
+params.SplitCount = 2
+// MinSplitSize default value: 5120
+params.MinSplitSize = 7168
 
-    btManager.DownloadFile(params)
+btManager.DownloadFile(params)
 ```
 
 #### Downloading Version Files from Bintray
 
 ```go
-    params := services.NewDownloadVersionParams()
-    params.Path, err = versions.CreatePath("subject/repo/pkg/version")
+params := services.NewDownloadVersionParams()
+params.Path, err = versions.CreatePath("subject/repo/pkg/version")
 
-    params.IncludeUnpublished = false
-    params.TargetPath = "target/path/"
+params.IncludeUnpublished = false
+params.TargetPath = "target/path/"
 
-    btManager.DownloadVersion(params)
+btManager.DownloadVersion(params)
 ```
 
 #### Showing / Deleting a Bintray Package
 
 ```go
-    pkgPath, err := packages.CreatePath("subject/repo/pkg")
+pkgPath, err := packages.CreatePath("subject/repo/pkg")
 
-    btManager.ShowPackage(pkgPath)
-    btManager.DeletePackage(pkgPath)
+btManager.ShowPackage(pkgPath)
+btManager.DeletePackage(pkgPath)
 ```
 
 #### Creating / Updating a Bintray Package
 
 ```go
-    params := packages.NewPackageParams()
-    params.Path, err = packages.CreatePath("subject/repo/pkg")
+params := packages.NewPackageParams()
+params.Path, err = packages.CreatePath("subject/repo/pkg")
 
-    params.Desc = "description"
-    params.Labels = "labels"
-    params.Licenses = "licences"
-    params.CustomLicenses = "custum-licenses"
-    params.VcsUrl = "https://github.com/jfrog/jfrog-cli-go"
-    params.WebsiteUrl = "https://jfrog.com"
-    params.IssueTrackerUrl = "https://github.com/bintray/bintray-client-java/issues"
-    params.GithubRepo = "bintray/bintray-client-java"
-    params.GithubReleaseNotesFile = "RELEASE_1.2.3.txt" "github-rel-notes"
-    params.PublicDownloadNumbers = "true"
-    params.PublicStats = "true"
+params.Desc = "description"
+params.Labels = "labels"
+params.Licenses = "licences"
+params.CustomLicenses = "custum-licenses"
+params.VcsUrl = "https://github.com/jfrog/jfrog-cli-go"
+params.WebsiteUrl = "https://jfrog.com"
+params.IssueTrackerUrl = "https://github.com/bintray/bintray-client-java/issues"
+params.GithubRepo = "bintray/bintray-client-java"
+params.GithubReleaseNotesFile = "RELEASE_1.2.3.txt" "github-rel-notes"
+params.PublicDownloadNumbers = "true"
+params.PublicStats = "true"
 
-    btManager.CreatePackage(params)
-    btManager.UpdatePackage(params)
+btManager.CreatePackage(params)
+btManager.UpdatePackage(params)
 ```
 
 #### Showing / Deleting a Bintray Version
 
 ```go
-    versionPath, err := versions.CreatePath("subject/repo/pkg/version")
+versionPath, err := versions.CreatePath("subject/repo/pkg/version")
 
-    btManager.ShowVersion(versionPath)
-    btManager.DeleteVersion(versionPath)
+btManager.ShowVersion(versionPath)
+btManager.DeleteVersion(versionPath)
 ```
 
 #### Creating / Updating a Bintray Version
 
 ```go
-    params := versions.NewVersionParams()
-    params.Path, err = versions.CreatePath("subject/repo/pkg/version")
+params := versions.NewVersionParams()
+params.Path, err = versions.CreatePath("subject/repo/pkg/version")
 
-    params.Desc = "description"
-    params.VcsTag = "1.1.5"
-    params.Released = "true"
-    params.GithubReleaseNotesFile = "RELEASE_1.2.3.txt"
-    params.GithubUseTagReleaseNotes = "false"
+params.Desc = "description"
+params.VcsTag = "1.1.5"
+params.Released = "true"
+params.GithubReleaseNotesFile = "RELEASE_1.2.3.txt"
+params.GithubUseTagReleaseNotes = "false"
 
-    btManager.CreateVersion(params)
-    btManager.UpdateVersion(params)
+btManager.CreateVersion(params)
+btManager.UpdateVersion(params)
 ```
 
 #### Creating / Updating Entitlements
 
 ```go
-    params := entitlements.NewEntitlementsParams()
-    params.VersionPath, err = versions.CreatePath("subject/repo/pkg/version")
+params := entitlements.NewEntitlementsParams()
+params.VersionPath, err = versions.CreatePath("subject/repo/pkg/version")
 
-    params.Path = "a/b/c"
-    params.Access = "rw"
-    params.Keys = "keys"
+params.Path = "a/b/c"
+params.Access = "rw"
+params.Keys = "keys"
 
-    btManager.CreateEntitlement(params)
+btManager.CreateEntitlement(params)
 
-    params.Id = "entitlementID"
-    btManager.UpdateEntitlement(params)
+params.Id = "entitlementID"
+btManager.UpdateEntitlement(params)
 ```
 
 #### Showing / Deleting Entitlements
 
 ```go
-    versionPath, err := versions.CreatePath("subject/repo/pkg/version")
+versionPath, err := versions.CreatePath("subject/repo/pkg/version")
 
-    btManager.ShowAllEntitlements(versionPath)
-    btManager.ShowEntitlement("entitelmentID", versionPath)
-    btManager.DeleteEntitlement("entitelmentID", versionPath)
+btManager.ShowAllEntitlements(versionPath)
+btManager.ShowEntitlement("entitelmentID", versionPath)
+btManager.DeleteEntitlement("entitelmentID", versionPath)
 ```
 
 #### Creating / Updating Access Keys
 
 ```go
-    params := accesskeys.NewAccessKeysParams()
-    params.Password = "password"
-    params.Org = "org"
-    params.Expiry = time.Now() + time.Hour * 10
-    params.ExistenceCheckUrl = "http://callbacks.myci.org/username=:username,password=:password"
-    params.ExistenceCheckCache = 60
-    params.WhiteCidrs = "127.0.0.1/22,193.5.0.1/92"
-    params.BlackCidrs = "127.0.0.1/22,193.5.0.1/92"
-    params.ApiOnly = true
+params := accesskeys.NewAccessKeysParams()
+params.Password = "password"
+params.Org = "org"
+params.Expiry = time.Now() + time.Hour * 10
+params.ExistenceCheckUrl = "http://callbacks.myci.org/username=:username,password=:password"
+params.ExistenceCheckCache = 60
+params.WhiteCidrs = "127.0.0.1/22,193.5.0.1/92"
+params.BlackCidrs = "127.0.0.1/22,193.5.0.1/92"
+params.ApiOnly = true
 
-    btManager.CreateAccessKey(params)
+btManager.CreateAccessKey(params)
 
-    params.Id = "KeyID"
-    btManager.UpdateAccessKey(params)
+params.Id = "KeyID"
+btManager.UpdateAccessKey(params)
 ```
 
 #### Showing / Deleting Access Keys
 
 ```go
-    btManager.ShowAllAccessKeys("org")
-    btManager.ShowAccessKey("org", "KeyID")
-    btManager.DeleteAccessKey("org", "KeyID")
+btManager.ShowAllAccessKeys("org")
+btManager.ShowAccessKey("org", "KeyID")
+btManager.DeleteAccessKey("org", "KeyID")
 ```
 
 #### Signing a URL
 
 ```go
-    params := url.NewURLParams()
-    params.PathDetails, err = utils.CreatePathDetails("subject/repository/file-path")
-    // Check for errors
-    params.Expiry = time.Now() + time.Hour * 10
-    params.ValidFor = 60
-    params.CallbackId = "callback-id"
-    params.CallbackEmail = "callback-email"
-    params.CallbackUrl = "callback-url"
-    params.CallbackMethod = "callback-method"
+params := url.NewURLParams()
+params.PathDetails, err = utils.CreatePathDetails("subject/repository/file-path")
+// Check for errors
+params.Expiry = time.Now() + time.Hour * 10
+params.ValidFor = 60
+params.CallbackId = "callback-id"
+params.CallbackEmail = "callback-email"
+params.CallbackUrl = "callback-url"
+params.CallbackMethod = "callback-method"
 
-    btManager.SignUrl(params)
+btManager.SignUrl(params)
 ```
 
 #### GPG Signing a File
 
 ```go
-    path, err := utils.CreatePathDetails("subject/repository/file-path")
+path, err := utils.CreatePathDetails("subject/repository/file-path")
 
-    btManager.GpgSignFile(path, "passphrase")
+btManager.GpgSignFile(path, "passphrase")
 ```
 
 #### GPG Signing Version Files
 
 ```go
-    path, err := versions.CreatePath("subject/repo/pkg/version")
+path, err := versions.CreatePath("subject/repo/pkg/version")
 
-    btManager.GpgSignVersion(path, "passphrase")
+btManager.GpgSignVersion(path, "passphrase")
 ```
 
 #### Listing Logs
 
 ```go
-    path, err := versions.CreatePath("subject/repo/pkg/version")
+path, err := versions.CreatePath("subject/repo/pkg/version")
 
-    btManager.LogsList(versionPath)
+btManager.LogsList(versionPath)
 ```
 
 #### Downloading Logs
 
 ```go
-    path, err := versions.CreatePath("subject/repo/pkg/version")
+path, err := versions.CreatePath("subject/repo/pkg/version")
 
-    btManager.DownloadLog(path, "logName")
+btManager.DownloadLog(path, "logName")
 ```
 
 ## Tests
