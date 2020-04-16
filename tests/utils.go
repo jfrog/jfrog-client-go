@@ -75,6 +75,7 @@ const (
 	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
 	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
+	RepoKeyPrefixForRepoServiceTest  = "artifactory-client-go-tests"
 )
 
 func init() {
@@ -463,4 +464,9 @@ func deleteRepoAndValidate(t *testing.T, repoKey string) {
 	err := testsDeleteRepositoryService.Delete(repoKey)
 	assert.NoError(t, err, "Failed to delete "+repoKey)
 	assert.False(t, isRepoExist(repoKey), repoKey+" still exists")
+}
+
+func GenerateRepoKeyForRepoServiceTest(pkgType, rclass string) string {
+	repoKeyParts := []string{RepoKeyPrefixForRepoServiceTest, pkgType, rclass, timestamp}
+	return strings.Join(repoKeyParts, "-")
 }
