@@ -275,7 +275,7 @@ func setAuthenticationDetail(details auth.ServiceDetails) {
 		return
 	}
 
-	err := ServiceDetails.AuthenticateSsh(*RtSshKeyPath, *RtSshPassphrase)
+	err := details.AuthenticateSsh(*RtSshKeyPath, *RtSshPassphrase)
 	if err != nil {
 		log.Error("Failed while attempting to authenticate: " + err.Error())
 		os.Exit(1)
