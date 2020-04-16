@@ -12,8 +12,8 @@ type DistributionServicesManager struct {
 	config config.Config
 }
 
-func New(ServiceDetails *auth.ServiceDetails, config config.Config) (*DistributionServicesManager, error) {
-	err := (*ServiceDetails).InitSsh()
+func New(details *auth.ServiceDetails, config config.Config) (*DistributionServicesManager, error) {
+	err := (*details).InitSsh()
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +21,7 @@ func New(ServiceDetails *auth.ServiceDetails, config config.Config) (*Distributi
 	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
-		SetServiceDetails(ServiceDetails).
+		SetServiceDetails(details).
 		Build()
 	if err != nil {
 		return nil, err

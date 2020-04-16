@@ -261,15 +261,15 @@ func GetDistDetails() auth.ServiceDetails {
 	return distDetails
 }
 
-func setAuthenticationDetail(ServiceDetails auth.ServiceDetails) {
-	if !fileutils.IsSshUrl(ServiceDetails.GetUrl()) {
+func setAuthenticationDetail(details auth.ServiceDetails) {
+	if !fileutils.IsSshUrl(details.GetUrl()) {
 		if *RtApiKey != "" {
-			ServiceDetails.SetApiKey(*RtApiKey)
+			details.SetApiKey(*RtApiKey)
 		} else if *RtAccessToken != "" {
-			ServiceDetails.SetAccessToken(*RtAccessToken)
+			details.SetAccessToken(*RtAccessToken)
 		} else {
-			ServiceDetails.SetUser(*RtUser)
-			ServiceDetails.SetPassword(*RtPassword)
+			details.SetUser(*RtUser)
+			details.SetPassword(*RtPassword)
 		}
 		return
 	}
