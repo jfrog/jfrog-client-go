@@ -67,7 +67,7 @@ func virtualMavenTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, mvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualGradleTest(t *testing.T) {
@@ -97,7 +97,7 @@ func virtualGradleTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualIvyTest(t *testing.T) {
@@ -125,7 +125,7 @@ func virtualIvyTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, ivp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualSbtTest(t *testing.T) {
@@ -152,7 +152,7 @@ func virtualSbtTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, svp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualHelmTest(t *testing.T) {
@@ -181,7 +181,7 @@ func virtualHelmTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, hvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualRpmTest(t *testing.T) {
@@ -210,7 +210,7 @@ func virtualRpmTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, rvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualNugetTest(t *testing.T) {
@@ -239,7 +239,7 @@ func virtualNugetTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualCranTest(t *testing.T) {
@@ -267,7 +267,7 @@ func virtualCranTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualGemsTest(t *testing.T) {
@@ -295,7 +295,7 @@ func virtualGemsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualNpmTest(t *testing.T) {
@@ -329,7 +329,7 @@ func virtualNpmTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualBowerTest(t *testing.T) {
@@ -361,7 +361,7 @@ func virtualBowerTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, bvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualDebianTest(t *testing.T) {
@@ -388,7 +388,7 @@ func virtualDebianTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualPypiTest(t *testing.T) {
@@ -415,7 +415,7 @@ func virtualPypiTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualDockerTest(t *testing.T) {
@@ -443,7 +443,7 @@ func virtualDockerTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualGitlfsTest(t *testing.T) {
@@ -470,7 +470,7 @@ func virtualGitlfsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualGoTest(t *testing.T) {
@@ -502,7 +502,7 @@ func virtualGoTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualYumTest(t *testing.T) {
@@ -533,7 +533,7 @@ func virtualYumTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, yvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualConanTest(t *testing.T) {
@@ -561,7 +561,7 @@ func virtualConanTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualChefTest(t *testing.T) {
@@ -589,7 +589,7 @@ func virtualChefTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualPuppetTest(t *testing.T) {
@@ -618,7 +618,7 @@ func virtualPuppetTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualP2Test(t *testing.T) {
@@ -643,7 +643,7 @@ func virtualP2Test(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualCondaTest(t *testing.T) {
@@ -670,7 +670,7 @@ func virtualCondaTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func virtualGenericTest(t *testing.T) {
@@ -694,5 +694,5 @@ func virtualGenericTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }

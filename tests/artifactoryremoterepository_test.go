@@ -74,7 +74,7 @@ func remoteMavenTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, mrp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteGradleTest(t *testing.T) {
@@ -110,7 +110,7 @@ func remoteGradleTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteIvyTest(t *testing.T) {
@@ -141,7 +141,7 @@ func remoteIvyTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, irp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteSbtTest(t *testing.T) {
@@ -174,7 +174,7 @@ func remoteSbtTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, srp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteHelmTest(t *testing.T) {
@@ -207,7 +207,7 @@ func remoteHelmTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, hrp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteRpmTest(t *testing.T) {
@@ -240,7 +240,7 @@ func remoteRpmTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, rrp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteNugetTest(t *testing.T) {
@@ -276,7 +276,7 @@ func remoteNugetTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nrp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteCranTest(t *testing.T) {
@@ -307,7 +307,7 @@ func remoteCranTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteGemsTest(t *testing.T) {
@@ -343,7 +343,7 @@ func remoteGemsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteNpmTest(t *testing.T) {
@@ -382,7 +382,7 @@ func remoteNpmTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nrp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteBowerTest(t *testing.T) {
@@ -420,7 +420,7 @@ func remoteBowerTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, brp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteDebianTest(t *testing.T) {
@@ -459,7 +459,7 @@ func remoteDebianTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, drp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remotePypiTest(t *testing.T) {
@@ -488,7 +488,7 @@ func remotePypiTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteDockerTest(t *testing.T) {
@@ -523,7 +523,7 @@ func remoteDockerTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, drp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteGitlfsTest(t *testing.T) {
@@ -559,7 +559,7 @@ func remoteGitlfsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteGoTest(t *testing.T) {
@@ -594,7 +594,7 @@ func remoteGoTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteYumTest(t *testing.T) {
@@ -632,7 +632,7 @@ func remoteYumTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, yrp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteConanTest(t *testing.T) {
@@ -667,7 +667,7 @@ func remoteConanTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteChefTest(t *testing.T) {
@@ -705,7 +705,7 @@ func remoteChefTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remotePuppetTest(t *testing.T) {
@@ -741,7 +741,7 @@ func remotePuppetTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, prp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteComposerTest(t *testing.T) {
@@ -774,7 +774,7 @@ func remoteComposerTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteVcsTest(t *testing.T) {
@@ -812,7 +812,7 @@ func remoteVcsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, vrp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteCocoapodsTest(t *testing.T) {
@@ -843,7 +843,7 @@ func remoteCocoapodsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteOpkgTest(t *testing.T) {
@@ -874,7 +874,7 @@ func remoteOpkgTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, orp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteCondaTest(t *testing.T) {
@@ -903,7 +903,7 @@ func remoteCondaTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, crp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteP2Test(t *testing.T) {
@@ -935,7 +935,7 @@ func remoteP2Test(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, prp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func remoteGenericTest(t *testing.T) {
@@ -963,5 +963,5 @@ func remoteGenericTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }

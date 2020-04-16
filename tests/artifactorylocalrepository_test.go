@@ -68,7 +68,7 @@ func localMavenTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, mlp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localGradleTest(t *testing.T) {
@@ -101,7 +101,7 @@ func localGradleTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localIvyTest(t *testing.T) {
@@ -131,7 +131,7 @@ func localIvyTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, ilp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localSbtTest(t *testing.T) {
@@ -159,7 +159,7 @@ func localSbtTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, slp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localHelmTest(t *testing.T) {
@@ -189,7 +189,7 @@ func localHelmTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, hlp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localRpmTest(t *testing.T) {
@@ -218,7 +218,7 @@ func localRpmTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, rlp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localNugetTest(t *testing.T) {
@@ -251,7 +251,7 @@ func localNugetTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nlp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localCranTest(t *testing.T) {
@@ -281,7 +281,7 @@ func localCranTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localGemsTest(t *testing.T) {
@@ -312,7 +312,7 @@ func localGemsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localNpmTest(t *testing.T) {
@@ -341,7 +341,7 @@ func localNpmTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nlp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localBowerTest(t *testing.T) {
@@ -370,7 +370,7 @@ func localBowerTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, blp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localDebianTest(t *testing.T) {
@@ -403,7 +403,7 @@ func localDebianTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localPypiTest(t *testing.T) {
@@ -432,7 +432,7 @@ func localPypiTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, plp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localDockerTest(t *testing.T) {
@@ -466,7 +466,7 @@ func localDockerTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localGitlfsTest(t *testing.T) {
@@ -496,7 +496,7 @@ func localGitlfsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localGoTest(t *testing.T) {
@@ -523,7 +523,7 @@ func localGoTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localYumTest(t *testing.T) {
@@ -555,7 +555,7 @@ func localYumTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, ylp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localConanTest(t *testing.T) {
@@ -585,7 +585,7 @@ func localConanTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localChefTest(t *testing.T) {
@@ -615,7 +615,7 @@ func localChefTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localPuppetTest(t *testing.T) {
@@ -644,7 +644,7 @@ func localPuppetTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, plp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localCocoapodsTest(t *testing.T) {
@@ -674,7 +674,7 @@ func localCocoapodsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localOpkgTest(t *testing.T) {
@@ -704,7 +704,7 @@ func localOpkgTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, olp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localComposerTest(t *testing.T) {
@@ -734,7 +734,7 @@ func localComposerTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localVagrantTest(t *testing.T) {
@@ -763,7 +763,7 @@ func localVagrantTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, vlp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
 
 func localGenericTest(t *testing.T) {
@@ -790,5 +790,5 @@ func localGenericTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	deleteRepoAndValidate(t, repoKey)
+	deleteRepo(t, repoKey)
 }
