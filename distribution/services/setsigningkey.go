@@ -15,14 +15,14 @@ import (
 
 type SetSigningKeyService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
-	DistDetails auth.CommonDetails
+	DistDetails auth.ServiceDetails
 }
 
 func NewSetSigningKeyService(client *rthttpclient.ArtifactoryHttpClient) *SetSigningKeyService {
 	return &SetSigningKeyService{client: client}
 }
 
-func (ssk *SetSigningKeyService) GetDistDetails() auth.CommonDetails {
+func (ssk *SetSigningKeyService) GetDistDetails() auth.ServiceDetails {
 	return ssk.DistDetails
 }
 

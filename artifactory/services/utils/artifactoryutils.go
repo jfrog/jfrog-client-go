@@ -25,7 +25,7 @@ const (
 	LastRelease         = "LAST_RELEASE"
 )
 
-func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.CommonDetails, details *fileutils.FileDetails,
+func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
 	httpClientsDetails httputils.HttpClientDetails, client *rthttpclient.ArtifactoryHttpClient, retries int, progress io.Progress) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
@@ -50,7 +50,7 @@ func AddChecksumHeaders(headers map[string]string, fileDetails *fileutils.FileDe
 	}
 }
 
-func AddAuthHeaders(headers map[string]string, artifactoryDetails auth.CommonDetails) {
+func AddAuthHeaders(headers map[string]string, artifactoryDetails auth.ServiceDetails) {
 	if headers == nil {
 		headers = make(map[string]string)
 	}
@@ -391,22 +391,22 @@ func filterBuildAqlSearchResults(itemsToFilter *[]ResultItem, buildArtifactsSha 
 }
 
 type CommonConf interface {
-	GetArtifactoryDetails() auth.CommonDetails
-	SetArtifactoryDetails(rt auth.CommonDetails)
+	GetArtifactoryDetails() auth.ServiceDetails
+	SetArtifactoryDetails(rt auth.ServiceDetails)
 	GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error)
 	IsDryRun() bool
 }
 
 type CommonConfImpl struct {
-	artDetails auth.CommonDetails
+	artDetails auth.ServiceDetails
 	DryRun     bool
 }
 
-func (flags *CommonConfImpl) GetArtifactoryDetails() auth.CommonDetails {
+func (flags *CommonConfImpl) GetArtifactoryDetails() auth.ServiceDetails {
 	return flags.artDetails
 }
 
-func (flags *CommonConfImpl) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (flags *CommonConfImpl) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	flags.artDetails = rt
 }
 
@@ -415,5 +415,5 @@ func (flags *CommonConfImpl) IsDryRun() bool {
 }
 
 func (flags *CommonConfImpl) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
-	return rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&flags.artDetails).Build()
+	return rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&flags.artDetails).Build()
 }

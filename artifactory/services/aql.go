@@ -8,18 +8,18 @@ import (
 
 type AqlService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewAqlService(client *rthttpclient.ArtifactoryHttpClient) *AqlService {
 	return &AqlService{client: client}
 }
 
-func (s *AqlService) GetArtifactoryDetails() auth.CommonDetails {
+func (s *AqlService) GetArtifactoryDetails() auth.ServiceDetails {
 	return s.ArtDetails
 }
 
-func (s *AqlService) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (s *AqlService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	s.ArtDetails = rt
 }
 

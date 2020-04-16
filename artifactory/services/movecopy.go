@@ -25,18 +25,18 @@ type MoveCopyService struct {
 	moveType   MoveType
 	client     *rthttpclient.ArtifactoryHttpClient
 	DryRun     bool
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewMoveCopyService(client *rthttpclient.ArtifactoryHttpClient, moveType MoveType) *MoveCopyService {
 	return &MoveCopyService{moveType: moveType, client: client}
 }
 
-func (mc *MoveCopyService) GetArtifactoryDetails() auth.CommonDetails {
+func (mc *MoveCopyService) GetArtifactoryDetails() auth.ServiceDetails {
 	return mc.ArtDetails
 }
 
-func (mc *MoveCopyService) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (mc *MoveCopyService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	mc.ArtDetails = rt
 }
 

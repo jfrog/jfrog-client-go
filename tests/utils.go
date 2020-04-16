@@ -92,7 +92,7 @@ func init() {
 
 func createArtifactorySecurityManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsSecurityService = services.NewSecurityService(client)
 	testsSecurityService.ArtDetails = artDetails
@@ -100,7 +100,7 @@ func createArtifactorySecurityManager() {
 
 func createArtifactorySearchManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsSearchService = services.NewSearchService(client)
 	testsSearchService.ArtDetails = artDetails
@@ -108,7 +108,7 @@ func createArtifactorySearchManager() {
 
 func createArtifactoryDeleteManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsDeleteService = services.NewDeleteService(client)
 	testsDeleteService.SetThreads(3)
@@ -117,7 +117,7 @@ func createArtifactoryDeleteManager() {
 
 func createArtifactoryUploadManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsUploadService = services.NewUploadService(client)
 	testsUploadService.ArtDetails = artDetails
@@ -126,7 +126,7 @@ func createArtifactoryUploadManager() {
 
 func createArtifactoryDownloadManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsDownloadService = services.NewDownloadService(client)
 	testsDownloadService.ArtDetails = artDetails
@@ -135,7 +135,7 @@ func createArtifactoryDownloadManager() {
 
 func createDistributionManager() {
 	distDetails := GetDistDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&distDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&distDetails).Build()
 	failOnHttpClientCreation(err)
 	testsBundleCreateService = distributionServices.NewCreateReleseBundleService(client)
 	testsBundleUpdateService = distributionServices.NewUpdateReleaseBundleService(client)
@@ -155,7 +155,7 @@ func createDistributionManager() {
 
 func createArtifactoryCreateLocalRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsCreateLocalRepositoryService = services.NewLocalRepositoryService(client, false)
 	testsCreateLocalRepositoryService.ArtDetails = artDetails
@@ -163,7 +163,7 @@ func createArtifactoryCreateLocalRepositoryManager() {
 
 func createArtifactoryUpdateLocalRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsUpdateLocalRepositoryService = services.NewLocalRepositoryService(client, true)
 	testsUpdateLocalRepositoryService.ArtDetails = artDetails
@@ -171,7 +171,7 @@ func createArtifactoryUpdateLocalRepositoryManager() {
 
 func createArtifactoryCreateRemoteRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsCreateRemoteRepositoryService = services.NewRemoteRepositoryService(client, false)
 	testsCreateRemoteRepositoryService.ArtDetails = artDetails
@@ -179,7 +179,7 @@ func createArtifactoryCreateRemoteRepositoryManager() {
 
 func createArtifactoryUpdateRemoteRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsUpdateRemoteRepositoryService = services.NewRemoteRepositoryService(client, true)
 	testsUpdateRemoteRepositoryService.ArtDetails = artDetails
@@ -187,7 +187,7 @@ func createArtifactoryUpdateRemoteRepositoryManager() {
 
 func createArtifactoryCreateVirtualRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsCreateVirtualRepositoryService = services.NewVirtualRepositoryService(client, false)
 	testsCreateVirtualRepositoryService.ArtDetails = artDetails
@@ -195,7 +195,7 @@ func createArtifactoryCreateVirtualRepositoryManager() {
 
 func createArtifactoryUpdateVirtualRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsUpdateVirtualRepositoryService = services.NewVirtualRepositoryService(client, true)
 	testsUpdateVirtualRepositoryService.ArtDetails = artDetails
@@ -203,7 +203,7 @@ func createArtifactoryUpdateVirtualRepositoryManager() {
 
 func createArtifactoryDeleteRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsDeleteRepositoryService = services.NewDeleteRepositoryService(client)
 	testsDeleteRepositoryService.ArtDetails = artDetails
@@ -211,7 +211,7 @@ func createArtifactoryDeleteRepositoryManager() {
 
 func createArtifactoryReplicationCreateManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsCreateReplicationService = services.NewCreateReplicationService(client)
 	testsCreateReplicationService.ArtDetails = artDetails
@@ -219,7 +219,7 @@ func createArtifactoryReplicationCreateManager() {
 
 func createArtifactoryReplicationUpdateManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsUpdateReplicationService = services.NewUpdateReplicationService(client)
 	testsUpdateReplicationService.ArtDetails = artDetails
@@ -227,7 +227,7 @@ func createArtifactoryReplicationUpdateManager() {
 
 func createArtifactoryReplicationGetManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsReplicationGetService = services.NewGetReplicationService(client)
 	testsReplicationGetService.ArtDetails = artDetails
@@ -235,7 +235,7 @@ func createArtifactoryReplicationGetManager() {
 
 func createArtifactoryReplicationDeleteManager() {
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetCommonDetails(&artDetails).Build()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
 	testsReplicationDeleteService = services.NewDeleteReplicationService(client)
 	testsReplicationDeleteService.ArtDetails = artDetails
@@ -248,34 +248,34 @@ func failOnHttpClientCreation(err error) {
 	}
 }
 
-func GetRtDetails() auth.CommonDetails {
+func GetRtDetails() auth.ServiceDetails {
 	rtDetails := artifactoryAuth.NewArtifactoryDetails()
 	rtDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*RtUrl))
 	setAuthenticationDetail(rtDetails)
 	return rtDetails
 }
 
-func GetDistDetails() auth.CommonDetails {
+func GetDistDetails() auth.ServiceDetails {
 	distDetails := distributionAuth.NewDistributionDetails()
 	distDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*DistUrl))
 	setAuthenticationDetail(distDetails)
 	return distDetails
 }
 
-func setAuthenticationDetail(commonDetails auth.CommonDetails) {
-	if !fileutils.IsSshUrl(commonDetails.GetUrl()) {
+func setAuthenticationDetail(details auth.ServiceDetails) {
+	if !fileutils.IsSshUrl(details.GetUrl()) {
 		if *RtApiKey != "" {
-			commonDetails.SetApiKey(*RtApiKey)
+			details.SetApiKey(*RtApiKey)
 		} else if *RtAccessToken != "" {
-			commonDetails.SetAccessToken(*RtAccessToken)
+			details.SetAccessToken(*RtAccessToken)
 		} else {
-			commonDetails.SetUser(*RtUser)
-			commonDetails.SetPassword(*RtPassword)
+			details.SetUser(*RtUser)
+			details.SetPassword(*RtPassword)
 		}
 		return
 	}
 
-	err := commonDetails.AuthenticateSsh(*RtSshKeyPath, *RtSshPassphrase)
+	err := ServiceDetails.AuthenticateSsh(*RtSshKeyPath, *RtSshPassphrase)
 	if err != nil {
 		log.Error("Failed while attempting to authenticate: " + err.Error())
 		os.Exit(1)

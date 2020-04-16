@@ -12,7 +12,7 @@ import (
 
 type ReadFileService struct {
 	client       *rthttpclient.ArtifactoryHttpClient
-	ArtDetails   auth.CommonDetails
+	ArtDetails   auth.ServiceDetails
 	DryRun       bool
 	MinSplitSize int64
 	SplitCount   int
@@ -22,11 +22,11 @@ func NewReadFileService(client *rthttpclient.ArtifactoryHttpClient) *ReadFileSer
 	return &ReadFileService{client: client}
 }
 
-func (ds *ReadFileService) GetArtifactoryDetails() auth.CommonDetails {
+func (ds *ReadFileService) GetArtifactoryDetails() auth.ServiceDetails {
 	return ds.ArtDetails
 }
 
-func (ds *ReadFileService) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (ds *ReadFileService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	ds.ArtDetails = rt
 }
 
@@ -38,7 +38,7 @@ func (ds *ReadFileService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpCl
 	return ds.client, nil
 }
 
-func (ds *ReadFileService) SetArtDetails(artDetails auth.CommonDetails) {
+func (ds *ReadFileService) SetServiceDetails(artDetails auth.ServiceDetails) {
 	ds.ArtDetails = artDetails
 }
 

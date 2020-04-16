@@ -15,7 +15,7 @@ import (
 
 type GetReplicationService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewGetReplicationService(client *rthttpclient.ArtifactoryHttpClient) *GetReplicationService {

@@ -13,18 +13,18 @@ import (
 
 type PingService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewPingService(client *rthttpclient.ArtifactoryHttpClient) *PingService {
 	return &PingService{client: client}
 }
 
-func (ps *PingService) GetArtifactoryDetails() auth.CommonDetails {
+func (ps *PingService) GetArtifactoryDetails() auth.ServiceDetails {
 	return ps.ArtDetails
 }
 
-func (ps *PingService) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (ps *PingService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	ps.ArtDetails = rt
 }
 

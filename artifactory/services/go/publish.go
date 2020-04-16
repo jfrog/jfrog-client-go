@@ -9,7 +9,7 @@ var publishers []PublishGoPackage
 
 type PublishGoPackage interface {
 	isCompatible(artifactoryVersion string) bool
-	PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.CommonDetails) error
+	PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.ServiceDetails) error
 }
 
 func register(publishApi PublishGoPackage) {

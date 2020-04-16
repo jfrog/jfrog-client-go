@@ -22,7 +22,7 @@ func NewCreateReleseBundleService(client *rthttpclient.ArtifactoryHttpClient) *C
 	return &CreateReleaseBundleService{UpdateReleaseBundleService{client: client}}
 }
 
-func (cb *CreateReleaseBundleService) GetDistDetails() auth.CommonDetails {
+func (cb *CreateReleaseBundleService) GetDistDetails() auth.ServiceDetails {
 	return cb.DistDetails
 }
 

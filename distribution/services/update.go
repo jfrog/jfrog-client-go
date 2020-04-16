@@ -16,7 +16,7 @@ import (
 
 type UpdateReleaseBundleService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
-	DistDetails auth.CommonDetails
+	DistDetails auth.ServiceDetails
 	DryRun      bool
 }
 
@@ -24,7 +24,7 @@ func NewUpdateReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *
 	return &UpdateReleaseBundleService{client: client}
 }
 
-func (ur *UpdateReleaseBundleService) GetDistDetails() auth.CommonDetails {
+func (ur *UpdateReleaseBundleService) GetDistDetails() auth.ServiceDetails {
 	return ur.DistDetails
 }
 

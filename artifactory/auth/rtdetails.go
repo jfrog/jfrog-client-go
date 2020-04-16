@@ -7,7 +7,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-func NewArtifactoryDetails() auth.CommonDetails {
+func NewArtifactoryDetails() auth.ServiceDetails {
 	return &artifactoryDetails{}
 }
 
@@ -28,9 +28,9 @@ func (rt *artifactoryDetails) GetVersion() (string, error) {
 }
 
 func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
-	cd := auth.CommonDetails(rt)
+	cd := auth.ServiceDetails(rt)
 	serviceConfig, err := config.NewConfigBuilder().
-		SetArtDetails(cd).
+		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
 	sm, err := artifactory.New(&cd, serviceConfig)

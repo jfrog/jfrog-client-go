@@ -24,7 +24,7 @@ import (
 type DownloadService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
 	Progress   io.Progress
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 	DryRun     bool
 	Threads    int
 }
@@ -33,11 +33,11 @@ func NewDownloadService(client *rthttpclient.ArtifactoryHttpClient) *DownloadSer
 	return &DownloadService{client: client}
 }
 
-func (ds *DownloadService) GetArtifactoryDetails() auth.CommonDetails {
+func (ds *DownloadService) GetArtifactoryDetails() auth.ServiceDetails {
 	return ds.ArtDetails
 }
 
-func (ds *DownloadService) SetArtifactoryDetails(rt auth.CommonDetails) {
+func (ds *DownloadService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	ds.ArtDetails = rt
 }
 
@@ -57,7 +57,7 @@ func (ds *DownloadService) SetThreads(threads int) {
 	ds.Threads = threads
 }
 
-func (ds *DownloadService) SetArtDetails(artDetails auth.CommonDetails) {
+func (ds *DownloadService) SetServiceDetails(artDetails auth.ServiceDetails) {
 	ds.ArtDetails = artDetails
 }
 

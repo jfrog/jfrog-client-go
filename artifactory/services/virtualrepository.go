@@ -15,7 +15,7 @@ import (
 type VirtualRepositoryService struct {
 	isUpdate   bool
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewVirtualRepositoryService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *VirtualRepositoryService {

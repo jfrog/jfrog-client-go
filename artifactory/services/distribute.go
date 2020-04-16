@@ -16,7 +16,7 @@ import (
 
 type DistributeService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 	DryRun     bool
 }
 
@@ -24,7 +24,7 @@ func NewDistributionService(client *rthttpclient.ArtifactoryHttpClient) *Distrib
 	return &DistributeService{client: client}
 }
 
-func (ds *DistributeService) getArtifactoryDetails() auth.CommonDetails {
+func (ds *DistributeService) getArtifactoryDetails() auth.ServiceDetails {
 	return ds.ArtDetails
 }
 

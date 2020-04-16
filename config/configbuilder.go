@@ -11,15 +11,15 @@ func NewConfigBuilder() *servicesConfigBuilder {
 }
 
 type servicesConfigBuilder struct {
-	auth.CommonDetails
+	auth.ServiceDetails
 	certificatesPath string
 	threads          int
 	isDryRun         bool
 	insecureTls      bool
 }
 
-func (builder *servicesConfigBuilder) SetArtDetails(artDetails auth.CommonDetails) *servicesConfigBuilder {
-	builder.CommonDetails = artDetails
+func (builder *servicesConfigBuilder) SetServiceDetails(artDetails auth.ServiceDetails) *servicesConfigBuilder {
+	builder.ServiceDetails = artDetails
 	return builder
 }
 
@@ -45,7 +45,7 @@ func (builder *servicesConfigBuilder) SetInsecureTls(insecureTls bool) *services
 
 func (builder *servicesConfigBuilder) Build() (Config, error) {
 	c := &servicesConfig{}
-	c.CommonDetails = builder.CommonDetails
+	c.ServiceDetails = builder.ServiceDetails
 	c.threads = builder.threads
 	c.certificatesPath = builder.certificatesPath
 	c.dryRun = builder.isDryRun

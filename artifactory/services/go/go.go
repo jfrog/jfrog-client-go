@@ -11,7 +11,7 @@ import (
 
 type GoService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 }
 
 func NewGoService(client *rthttpclient.ArtifactoryHttpClient) *GoService {
@@ -22,7 +22,7 @@ func (gs *GoService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
 	return gs.client
 }
 
-func (gs *GoService) SetArtDetails(artDetails auth.CommonDetails) {
+func (gs *GoService) SetServiceDetails(artDetails auth.ServiceDetails) {
 	gs.ArtDetails = artDetails
 }
 

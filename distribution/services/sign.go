@@ -16,14 +16,14 @@ import (
 
 type SignBundleService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
-	DistDetails auth.CommonDetails
+	DistDetails auth.ServiceDetails
 }
 
 func NewSignBundleService(client *rthttpclient.ArtifactoryHttpClient) *SignBundleService {
 	return &SignBundleService{client: client}
 }
 
-func (sb *SignBundleService) GetDistDetails() auth.CommonDetails {
+func (sb *SignBundleService) GetDistDetails() auth.ServiceDetails {
 	return sb.DistDetails
 }
 

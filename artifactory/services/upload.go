@@ -26,7 +26,7 @@ import (
 type UploadService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
 	Progress   ioutils.Progress
-	ArtDetails auth.CommonDetails
+	ArtDetails auth.ServiceDetails
 	DryRun     bool
 	Threads    int
 }
@@ -43,7 +43,7 @@ func (us *UploadService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClien
 	return us.client
 }
 
-func (us *UploadService) SetArtDetails(artDetails auth.CommonDetails) {
+func (us *UploadService) SetServiceDetails(artDetails auth.ServiceDetails) {
 	us.ArtDetails = artDetails
 }
 
