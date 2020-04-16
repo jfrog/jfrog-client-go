@@ -63,7 +63,7 @@ rtDetails.SetClientCertKeyPath("path/to/.key")
 
 ```go
 serviceConfig, err := config.NewConfigBuilder().
-    SetArtDetails(rtDetails).
+    SetServiceDetails(rtDetails).
     SetCertificatesPath(certPath).
     SetThreads(threads).
     SetDryRun(false).
@@ -533,7 +533,7 @@ distDetails.SetClientCertKeyPath("path/to/.key")
 
 ```go
 serviceConfig, err := config.NewConfigBuilder().
-    SetArtDetails(rtDetails).
+    SetServiceDetails(rtDetails).
     SetCertificatesPath(certPath).
     SetThreads(threads).
     SetDryRun(false).
