@@ -53,6 +53,7 @@ func virtualMavenTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Maven(mvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, mvp)
 
 	mvp.Description += " - Updated"
@@ -66,8 +67,6 @@ func virtualMavenTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Maven(mvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, mvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualGradleTest(t *testing.T) {
@@ -82,6 +81,7 @@ func virtualGradleTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Gradle(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	gvp.Description += " - Updated"
@@ -96,8 +96,6 @@ func virtualGradleTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Gradle(gvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualIvyTest(t *testing.T) {
@@ -113,6 +111,7 @@ func virtualIvyTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Ivy(ivp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, ivp)
 
 	ivp.Description += " - Updated"
@@ -124,8 +123,6 @@ func virtualIvyTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Ivy(ivp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, ivp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualSbtTest(t *testing.T) {
@@ -140,6 +137,7 @@ func virtualSbtTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Sbt(svp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, svp)
 
 	svp.Description += " - Updated"
@@ -151,8 +149,6 @@ func virtualSbtTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Sbt(svp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, svp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualHelmTest(t *testing.T) {
@@ -168,6 +164,7 @@ func virtualHelmTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Helm(hvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, hvp)
 
 	hvp.Description += " - Updated"
@@ -180,8 +177,6 @@ func virtualHelmTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Helm(hvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, hvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualRpmTest(t *testing.T) {
@@ -196,6 +191,7 @@ func virtualRpmTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Rpm(rvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, rvp)
 
 	rvp.Description += " - Updated"
@@ -209,8 +205,6 @@ func virtualRpmTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Rpm(rvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, rvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualNugetTest(t *testing.T) {
@@ -225,6 +219,7 @@ func virtualNugetTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Nuget(nvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
 	nvp.Description += " - Updated"
@@ -238,8 +233,6 @@ func virtualNugetTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Nuget(nvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualCranTest(t *testing.T) {
@@ -254,6 +247,7 @@ func virtualCranTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Cran(cvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	cvp.Description += " - Updated"
@@ -266,8 +260,6 @@ func virtualCranTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Cran(cvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualGemsTest(t *testing.T) {
@@ -283,6 +275,7 @@ func virtualGemsTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Gems(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	gvp.Description += " - Updated"
@@ -294,8 +287,6 @@ func virtualGemsTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Gems(gvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualNpmTest(t *testing.T) {
@@ -314,6 +305,7 @@ func virtualNpmTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Npm(nvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
 	nvp.Description += " - Updated"
@@ -328,8 +320,6 @@ func virtualNpmTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Npm(nvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualBowerTest(t *testing.T) {
@@ -346,6 +336,7 @@ func virtualBowerTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Bower(bvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, bvp)
 
 	bvp.Description += " - Updated"
@@ -360,8 +351,6 @@ func virtualBowerTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Bower(bvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, bvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualDebianTest(t *testing.T) {
@@ -375,6 +364,7 @@ func virtualDebianTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Debian(dvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
 	dvp.Description += " - Updated"
@@ -387,8 +377,6 @@ func virtualDebianTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Debian(dvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualPypiTest(t *testing.T) {
@@ -402,6 +390,7 @@ func virtualPypiTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Pypi(pvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
 	pvp.Description += " - Updated"
@@ -414,8 +403,6 @@ func virtualPypiTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Pypi(pvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, pvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualDockerTest(t *testing.T) {
@@ -430,6 +417,7 @@ func virtualDockerTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Docker(dvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
 	dvp.Description += " - Updated"
@@ -442,8 +430,6 @@ func virtualDockerTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Docker(dvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualGitlfsTest(t *testing.T) {
@@ -457,6 +443,7 @@ func virtualGitlfsTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Gitlfs(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	gvp.Description += " - Updated"
@@ -469,8 +456,6 @@ func virtualGitlfsTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Gitlfs(gvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualGoTest(t *testing.T) {
@@ -488,6 +473,7 @@ func virtualGoTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	gvp.Description += " - Updated"
@@ -501,8 +487,6 @@ func virtualGoTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Go(gvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualYumTest(t *testing.T) {
@@ -518,6 +502,7 @@ func virtualYumTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Yum(yvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	yvp.PackageType = "rpm"
 	validateRepoConfig(t, repoKey, yvp)
@@ -532,8 +517,6 @@ func virtualYumTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Yum(yvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, yvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualConanTest(t *testing.T) {
@@ -548,6 +531,7 @@ func virtualConanTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Conan(cvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	cvp.Description += " - Updated"
@@ -560,8 +544,6 @@ func virtualConanTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Conan(cvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualChefTest(t *testing.T) {
@@ -578,6 +560,7 @@ func virtualChefTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Chef(cvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	cvp.Description += " - Updated"
@@ -588,8 +571,6 @@ func virtualChefTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Chef(cvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualPuppetTest(t *testing.T) {
@@ -605,6 +586,7 @@ func virtualPuppetTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Puppet(pvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
 	pvp.Description += " - Updated"
@@ -617,8 +599,6 @@ func virtualPuppetTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Puppet(pvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, pvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualP2Test(t *testing.T) {
@@ -632,6 +612,7 @@ func virtualP2Test(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.P2(pvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
 	pvp.Description += " - Updated"
@@ -642,8 +623,6 @@ func virtualP2Test(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.P2(pvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, pvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualCondaTest(t *testing.T) {
@@ -658,6 +637,7 @@ func virtualCondaTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Conda(cvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
 	cvp.Description += " - Updated"
@@ -669,8 +649,6 @@ func virtualCondaTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Conda(cvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, cvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func virtualGenericTest(t *testing.T) {
@@ -683,6 +661,7 @@ func virtualGenericTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Generic(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	gvp.Description += " - Updated"
@@ -693,6 +672,4 @@ func virtualGenericTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Generic(gvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
