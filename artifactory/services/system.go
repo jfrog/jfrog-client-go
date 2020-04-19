@@ -36,7 +36,7 @@ func (ss *SystemService) IsDryRun() bool {
 	return false
 }
 
-func (ss *SystemService) GetArtifactoryVersion() (string, error) {
+func (ss *SystemService) GetVersion() (string, error) {
 	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
 	resp, body, _, err := ss.client.SendGet(ss.ArtDetails.GetUrl()+"api/system/version", true, &httpDetails)
 	if err != nil {
@@ -54,7 +54,7 @@ func (ss *SystemService) GetArtifactoryVersion() (string, error) {
 	return strings.TrimSpace(version.Version), nil
 }
 
-func (ss *SystemService) GetArtifactoryServiceId() (string, error) {
+func (ss *SystemService) GetServiceId() (string, error) {
 	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
 	resp, body, _, err := ss.client.SendGet(ss.ArtDetails.GetUrl()+"api/system/service_id", true, &httpDetails)
 	if err != nil {

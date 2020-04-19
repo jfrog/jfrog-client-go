@@ -272,10 +272,16 @@ func (sm *ArtifactoryServicesManager) GetReplication(repoKey string) ([]utils.Re
 	return getPushReplicationService.GetReplication(repoKey)
 }
 
-func (sm *ArtifactoryServicesManager) CreateSystemService() *services.SystemService {
+func (sm *ArtifactoryServicesManager) GetVersion() (string, error) {
 	systemService := services.NewSystemService(sm.client)
 	systemService.ArtDetails = sm.config.GetServiceDetails()
-	return systemService
+	return systemService.GetVersion()
+}
+
+func (sm *ArtifactoryServicesManager) GetServiceId() (string, error) {
+	systemService := services.NewSystemService(sm.client)
+	systemService.ArtDetails = sm.config.GetServiceDetails()
+	return systemService.GetServiceId()
 }
 
 func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {

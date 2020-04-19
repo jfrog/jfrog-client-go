@@ -37,5 +37,5 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return sm.CreateSystemService().GetArtifactoryVersion()
+	return sm.GetVersion()
 }
