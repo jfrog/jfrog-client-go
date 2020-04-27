@@ -34,12 +34,8 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localGenericTest", localGenericTest)
 }
 
-func generateLocalRepoKey(pkgType string) (repoKey string) {
-	return GenerateRepoKeyForRepoServiceTest(pkgType, "local")
-}
-
 func localMavenTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("maven")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	mlp := services.NewMavenLocalRepositoryParams()
 	mlp.Key = repoKey
 	mlp.RepoLayoutRef = "maven-2-default"
@@ -71,7 +67,7 @@ func localMavenTest(t *testing.T) {
 }
 
 func localGradleTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("gradle")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGradleLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "gradle-default"
@@ -103,7 +99,7 @@ func localGradleTest(t *testing.T) {
 }
 
 func localIvyTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("ivy")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	ilp := services.NewIvyLocalRepositoryParams()
 	ilp.Key = repoKey
 	ilp.RepoLayoutRef = "ivy-default"
@@ -132,7 +128,7 @@ func localIvyTest(t *testing.T) {
 }
 
 func localSbtTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("sbt")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	slp := services.NewSbtLocalRepositoryParams()
 	slp.Key = repoKey
 	slp.RepoLayoutRef = "sbt-default"
@@ -159,7 +155,7 @@ func localSbtTest(t *testing.T) {
 }
 
 func localHelmTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("helm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	hlp := services.NewHelmLocalRepositoryParams()
 	hlp.Key = repoKey
 	hlp.RepoLayoutRef = "simple-default"
@@ -188,7 +184,7 @@ func localHelmTest(t *testing.T) {
 }
 
 func localRpmTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("rpm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	rlp := services.NewRpmLocalRepositoryParams()
 	rlp.Key = repoKey
 	rlp.RepoLayoutRef = "simple-default"
@@ -216,7 +212,7 @@ func localRpmTest(t *testing.T) {
 }
 
 func localNugetTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("nuget")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	nlp := services.NewNugetLocalRepositoryParams()
 	nlp.Key = repoKey
 	nlp.RepoLayoutRef = "nuget-default"
@@ -248,7 +244,7 @@ func localNugetTest(t *testing.T) {
 }
 
 func localCranTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("cran")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewCranLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "simple-default"
@@ -277,7 +273,7 @@ func localCranTest(t *testing.T) {
 }
 
 func localGemsTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("gems")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGemsLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "simple-default"
@@ -307,7 +303,7 @@ func localGemsTest(t *testing.T) {
 }
 
 func localNpmTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("npm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	nlp := services.NewNpmLocalRepositoryParams()
 	nlp.Key = repoKey
 	nlp.RepoLayoutRef = "npm-default"
@@ -335,7 +331,7 @@ func localNpmTest(t *testing.T) {
 }
 
 func localBowerTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("bower")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	blp := services.NewBowerLocalRepositoryParams()
 	blp.Key = repoKey
 	blp.RepoLayoutRef = "bower-default"
@@ -363,7 +359,7 @@ func localBowerTest(t *testing.T) {
 }
 
 func localDebianTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("debian")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	dlp := services.NewDebianLocalRepositoryParams()
 	dlp.Key = repoKey
 	dlp.RepoLayoutRef = "simple-default"
@@ -395,7 +391,7 @@ func localDebianTest(t *testing.T) {
 }
 
 func localPypiTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("pypi")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	plp := services.NewPypiLocalRepositoryParams()
 	plp.Key = repoKey
 	plp.RepoLayoutRef = "simple-default"
@@ -423,7 +419,7 @@ func localPypiTest(t *testing.T) {
 }
 
 func localDockerTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("docker")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	dlp := services.NewDockerLocalRepositoryParams()
 	dlp.Key = repoKey
 	dlp.RepoLayoutRef = "simple-default"
@@ -456,7 +452,7 @@ func localDockerTest(t *testing.T) {
 }
 
 func localGitlfsTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("gitlfs")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGitlfsLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "simple-default"
@@ -485,7 +481,7 @@ func localGitlfsTest(t *testing.T) {
 }
 
 func localGoTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("go")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGoLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "go-default"
@@ -511,7 +507,7 @@ func localGoTest(t *testing.T) {
 }
 
 func localYumTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("yum")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	ylp := services.NewYumLocalRepositoryParams()
 	ylp.Key = repoKey
 	ylp.RepoLayoutRef = "simple-default"
@@ -542,7 +538,7 @@ func localYumTest(t *testing.T) {
 }
 
 func localConanTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("conan")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewConanLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "conan-default"
@@ -571,7 +567,7 @@ func localConanTest(t *testing.T) {
 }
 
 func localChefTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("chef")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewChefLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "simple-default"
@@ -600,7 +596,7 @@ func localChefTest(t *testing.T) {
 }
 
 func localPuppetTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("puppet")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	plp := services.NewPuppetLocalRepositoryParams()
 	plp.Key = repoKey
 	plp.RepoLayoutRef = "puppet-default"
@@ -628,7 +624,7 @@ func localPuppetTest(t *testing.T) {
 }
 
 func localCocoapodsTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("cocoapods")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewCocoapodsLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "simple-default"
@@ -657,7 +653,7 @@ func localCocoapodsTest(t *testing.T) {
 }
 
 func localOpkgTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("opkg")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	olp := services.NewOpkgLocalRepositoryParams()
 	olp.Key = repoKey
 	olp.RepoLayoutRef = "simple-default"
@@ -686,7 +682,7 @@ func localOpkgTest(t *testing.T) {
 }
 
 func localComposerTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("composer")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewComposerLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "composer-default"
@@ -715,7 +711,7 @@ func localComposerTest(t *testing.T) {
 }
 
 func localVagrantTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("vagrant")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	vlp := services.NewVagrantLocalRepositoryParams()
 	vlp.Key = repoKey
 	vlp.RepoLayoutRef = "simple-default"
@@ -743,7 +739,7 @@ func localVagrantTest(t *testing.T) {
 }
 
 func localGenericTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("generic")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "simple-default"

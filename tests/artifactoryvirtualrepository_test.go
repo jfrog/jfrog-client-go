@@ -36,12 +36,8 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualGenericTest", virtualGenericTest)
 }
 
-func generateVirtualRepoKey(pkgType string) (repoKey string) {
-	return GenerateRepoKeyForRepoServiceTest(pkgType, "virtual")
-}
-
 func virtualMavenTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("maven")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	mvp := services.NewMavenVirtualRepositoryParams()
 	mvp.Key = repoKey
 	mvp.RepoLayoutRef = "maven-1-default"
@@ -70,7 +66,7 @@ func virtualMavenTest(t *testing.T) {
 }
 
 func virtualGradleTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("gradle")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	gvp := services.NewGradleVirtualRepositoryParams()
 	gvp.Key = repoKey
 	gvp.RepoLayoutRef = "simple-default"
@@ -99,7 +95,7 @@ func virtualGradleTest(t *testing.T) {
 }
 
 func virtualIvyTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("ivy")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	ivp := services.NewIvyVirtualRepositoryParams()
 	ivp.Key = repoKey
 	ivp.RepoLayoutRef = "ivy-default"
@@ -126,7 +122,7 @@ func virtualIvyTest(t *testing.T) {
 }
 
 func virtualSbtTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("sbt")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	svp := services.NewSbtVirtualRepositoryParams()
 	svp.Key = repoKey
 	svp.RepoLayoutRef = "sbt-default"
@@ -152,7 +148,7 @@ func virtualSbtTest(t *testing.T) {
 }
 
 func virtualHelmTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("helm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	hvp := services.NewHelmVirtualRepositoryParams()
 	hvp.Key = repoKey
 	hvp.RepoLayoutRef = "simple-default"
@@ -180,7 +176,7 @@ func virtualHelmTest(t *testing.T) {
 }
 
 func virtualRpmTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("rpm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	rvp := services.NewRpmVirtualRepositoryParams()
 	rvp.Key = repoKey
 	rvp.RepoLayoutRef = "simple-default"
@@ -208,7 +204,7 @@ func virtualRpmTest(t *testing.T) {
 }
 
 func virtualNugetTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("nuget")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	nvp := services.NewNugetVirtualRepositoryParams()
 	nvp.Key = repoKey
 	nvp.RepoLayoutRef = "nuget-default"
@@ -236,7 +232,7 @@ func virtualNugetTest(t *testing.T) {
 }
 
 func virtualCranTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("cran")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	cvp := services.NewCranVirtualRepositoryParams()
 	cvp.Key = repoKey
 	cvp.RepoLayoutRef = "simple-default"
@@ -263,7 +259,7 @@ func virtualCranTest(t *testing.T) {
 }
 
 func virtualGemsTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("gems")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	gvp := services.NewGemsVirtualRepositoryParams()
 	gvp.Key = repoKey
 	gvp.RepoLayoutRef = "simple-default"
@@ -290,7 +286,7 @@ func virtualGemsTest(t *testing.T) {
 }
 
 func virtualNpmTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("npm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	nvp := services.NewNpmVirtualRepositoryParams()
 	nvp.Key = repoKey
 	nvp.RepoLayoutRef = "npm-default"
@@ -323,7 +319,7 @@ func virtualNpmTest(t *testing.T) {
 }
 
 func virtualBowerTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("bower")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	bvp := services.NewBowerVirtualRepositoryParams()
 	bvp.Key = repoKey
 	bvp.RepoLayoutRef = "bower-default"
@@ -354,7 +350,7 @@ func virtualBowerTest(t *testing.T) {
 }
 
 func virtualDebianTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("debian")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	dvp := services.NewDebianVirtualRepositoryParams()
 	dvp.Key = repoKey
 	dvp.RepoLayoutRef = "simple-default"
@@ -380,7 +376,7 @@ func virtualDebianTest(t *testing.T) {
 }
 
 func virtualPypiTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("pypi")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	pvp := services.NewPypiVirtualRepositoryParams()
 	pvp.Key = repoKey
 	pvp.RepoLayoutRef = "simple-default"
@@ -406,7 +402,7 @@ func virtualPypiTest(t *testing.T) {
 }
 
 func virtualDockerTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("docker")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	dvp := services.NewDockerVirtualRepositoryParams()
 	dvp.Key = repoKey
 	dvp.RepoLayoutRef = "simple-default"
@@ -433,7 +429,7 @@ func virtualDockerTest(t *testing.T) {
 }
 
 func virtualGitlfsTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("gitlfs")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	gvp := services.NewGitlfsVirtualRepositoryParams()
 	gvp.Key = repoKey
 	gvp.RepoLayoutRef = "simple-default"
@@ -459,7 +455,7 @@ func virtualGitlfsTest(t *testing.T) {
 }
 
 func virtualGoTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("go")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	gvp := services.NewGoVirtualRepositoryParams()
 	gvp.Key = repoKey
 	gvp.RepoLayoutRef = "go-default"
@@ -490,7 +486,7 @@ func virtualGoTest(t *testing.T) {
 }
 
 func virtualYumTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("yum")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	yvp := services.NewYumVirtualRepositoryParams()
 	yvp.Key = repoKey
 	yvp.RepoLayoutRef = "simple-default"
@@ -520,7 +516,7 @@ func virtualYumTest(t *testing.T) {
 }
 
 func virtualConanTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("conan")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	cvp := services.NewConanVirtualRepositoryParams()
 	cvp.Key = repoKey
 	cvp.RepoLayoutRef = "conan-default"
@@ -547,7 +543,7 @@ func virtualConanTest(t *testing.T) {
 }
 
 func virtualChefTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("chef")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	cvp := services.NewChefVirtualRepositoryParams()
 	cvp.Key = repoKey
 	cvp.RepoLayoutRef = "simple-default"
@@ -574,7 +570,7 @@ func virtualChefTest(t *testing.T) {
 }
 
 func virtualPuppetTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("gems")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	pvp := services.NewPuppetVirtualRepositoryParams()
 	pvp.Key = repoKey
 	pvp.RepoLayoutRef = "puppet-default"
@@ -602,7 +598,7 @@ func virtualPuppetTest(t *testing.T) {
 }
 
 func virtualP2Test(t *testing.T) {
-	repoKey := generateVirtualRepoKey("p2")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	pvp := services.NewP2VirtualRepositoryParams()
 	pvp.Key = repoKey
 	pvp.RepoLayoutRef = "simple-default"
@@ -626,7 +622,7 @@ func virtualP2Test(t *testing.T) {
 }
 
 func virtualCondaTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("conda")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	cvp := services.NewCondaVirtualRepositoryParams()
 	cvp.Key = repoKey
 	cvp.RepoLayoutRef = "simple-default"
@@ -652,7 +648,7 @@ func virtualCondaTest(t *testing.T) {
 }
 
 func virtualGenericTest(t *testing.T) {
-	repoKey := generateVirtualRepoKey("generic")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	gvp := services.NewGenericVirtualRepositoryParams()
 	gvp.Key = repoKey
 	gvp.RepoLayoutRef = "simple-default"
