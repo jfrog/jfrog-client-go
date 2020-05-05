@@ -32,9 +32,8 @@ func (grs *GetRepositoryService) Get(repoKey string) (*GetRepositoryData, error)
 	if resp.StatusCode != http.StatusOK {
 		return &GetRepositoryData{}, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
-	err = json.Unmarshal(body, &repoDetails)
-	if resp.StatusCode != http.StatusOK {
-		return &GetRepositoryData{}, errorutils.CheckError(err)
+	if err := json.Unmarshal(body, &repoDetails); err != nil {
+		return repoDetails, errorutils.CheckError(err)
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done getting repository details.")
