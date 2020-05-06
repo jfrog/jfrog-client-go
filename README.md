@@ -510,6 +510,18 @@ You can remove a repository replication configuration from Artifactory using its
 err := servicesManager.DeleteReplication("my-repository")
 ```
 
+#### Fetch Artifactory's version
+
+```go
+version, err := servicesManager.GetVersion()
+```
+
+#### Fetch Artifactory's service id
+
+```go
+serviceId, err := servicesManager.GetServiceId()
+```
+
 ## Distribution APIs
 
 ### Creating a Service Manager
