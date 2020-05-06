@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -466,7 +465,6 @@ func deleteRepo(t *testing.T, repoKey string) {
 }
 
 func GenerateRepoKeyForRepoServiceTest() string {
-	repoKeyParts := []string{RepoKeyPrefixForRepoServiceTest, strconv.FormatInt(timestamp, 10)}
 	timestamp++
-	return strings.Join(repoKeyParts, "-")
+	return fmt.Sprintf("%s-%d", RepoKeyPrefixForRepoServiceTest, timestamp)
 }
