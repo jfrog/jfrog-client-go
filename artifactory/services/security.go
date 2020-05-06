@@ -71,7 +71,9 @@ func (ss *SecurityService) CreateToken(params CreateTokenParams) (CreateTokenRes
 		return tokenInfo, errorutils.CheckError(
 			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
-	err = json.Unmarshal(body, &tokenInfo)
+	if err = json.Unmarshal(body, &tokenInfo); err != nil {
+		return tokenInfo, errorutils.CheckError(err)
+	}
 	return tokenInfo, err
 }
 
@@ -87,7 +89,9 @@ func (ss *SecurityService) GetTokens() (GetTokensResponseData, error) {
 		return tokens, errorutils.CheckError(
 			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
-	err = json.Unmarshal(body, &tokens)
+	if err = json.Unmarshal(body, &tokens); err != nil {
+		return tokens, errorutils.CheckError(err)
+	}
 	return tokens, err
 }
 
@@ -104,7 +108,9 @@ func (ss *SecurityService) RefreshToken(params RefreshTokenParams) (CreateTokenR
 		return tokenInfo, errorutils.CheckError(
 			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
-	err = json.Unmarshal(body, &tokenInfo)
+	if err = json.Unmarshal(body, &tokenInfo); err != nil {
+		return tokenInfo, errorutils.CheckError(err)
+	}
 	return tokenInfo, err
 }
 
