@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -66,7 +65,7 @@ var testsBundleDistributeService *distributionServices.DistributeReleaseBundleSe
 var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundleService
 var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
 
-var timestamp = strconv.FormatInt(time.Now().Unix(), 10)
+var timestamp = time.Now().Unix()
 var trueValue = true
 var falseValue = false
 
@@ -75,7 +74,7 @@ const (
 	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
 	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
-	RepoKeyPrefixForRepoServiceTest  = "artifactory-client-go-tests"
+	RepoKeyPrefixForRepoServiceTest  = "jf-client-go-test"
 )
 
 func init() {
@@ -465,7 +464,7 @@ func deleteRepo(t *testing.T, repoKey string) {
 	assert.NoError(t, err, "Failed to delete "+repoKey)
 }
 
-func GenerateRepoKeyForRepoServiceTest(pkgType, rclass string) string {
-	repoKeyParts := []string{RepoKeyPrefixForRepoServiceTest, pkgType, rclass, timestamp}
-	return strings.Join(repoKeyParts, "-")
+func GenerateRepoKeyForRepoServiceTest() string {
+	timestamp++
+	return fmt.Sprintf("%s-%d", RepoKeyPrefixForRepoServiceTest, timestamp)
 }

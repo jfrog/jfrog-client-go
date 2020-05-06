@@ -38,12 +38,8 @@ func TestArtifactoryRemoteRepository(t *testing.T) {
 	t.Run("remoteGenericTest", remoteGenericTest)
 }
 
-func generateRemoteRepoKey(pkgType string) (repoKey string) {
-	return GenerateRepoKeyForRepoServiceTest(pkgType, "remote")
-}
-
 func remoteMavenTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("maven")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	mrp := services.NewMavenRemoteRepositoryParams()
 	mrp.Key = repoKey
 	mrp.RepoLayoutRef = "maven-2-default"
@@ -77,7 +73,7 @@ func remoteMavenTest(t *testing.T) {
 }
 
 func remoteGradleTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("gradle")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGradleRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "gradle-default"
@@ -112,7 +108,7 @@ func remoteGradleTest(t *testing.T) {
 }
 
 func remoteIvyTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("ivy")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	irp := services.NewIvyRemoteRepositoryParams()
 	irp.Key = repoKey
 	irp.RepoLayoutRef = "ivy-default"
@@ -142,7 +138,7 @@ func remoteIvyTest(t *testing.T) {
 }
 
 func remoteSbtTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("sbt")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	srp := services.NewSbtRemoteRepositoryParams()
 	srp.Key = repoKey
 	srp.RepoLayoutRef = "sbt-default"
@@ -174,7 +170,7 @@ func remoteSbtTest(t *testing.T) {
 }
 
 func remoteHelmTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("helm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	hrp := services.NewHelmRemoteRepositoryParams()
 	hrp.Key = repoKey
 	hrp.RepoLayoutRef = "simple-default"
@@ -206,7 +202,7 @@ func remoteHelmTest(t *testing.T) {
 }
 
 func remoteRpmTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("rpm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	rrp := services.NewRpmRemoteRepositoryParams()
 	rrp.Key = repoKey
 	rrp.RepoLayoutRef = "simple-default"
@@ -238,7 +234,7 @@ func remoteRpmTest(t *testing.T) {
 }
 
 func remoteNugetTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("nuget")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	nrp := services.NewNugetRemoteRepositoryParams()
 	nrp.Key = repoKey
 	nrp.RepoLayoutRef = "nuget-default"
@@ -273,7 +269,7 @@ func remoteNugetTest(t *testing.T) {
 }
 
 func remoteCranTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("cran")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	crp := services.NewCranRemoteRepositoryParams()
 	crp.Key = repoKey
 	crp.RepoLayoutRef = "simple-default"
@@ -303,7 +299,7 @@ func remoteCranTest(t *testing.T) {
 }
 
 func remoteGemsTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("gems")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGemsRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "simple-default"
@@ -338,7 +334,7 @@ func remoteGemsTest(t *testing.T) {
 }
 
 func remoteNpmTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("npm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	nrp := services.NewNpmRemoteRepositoryParams()
 	nrp.Key = repoKey
 	nrp.RepoLayoutRef = "npm-default"
@@ -376,7 +372,7 @@ func remoteNpmTest(t *testing.T) {
 }
 
 func remoteBowerTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("bower")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	brp := services.NewBowerRemoteRepositoryParams()
 	brp.Key = repoKey
 	brp.RepoLayoutRef = "bower-default"
@@ -413,7 +409,7 @@ func remoteBowerTest(t *testing.T) {
 }
 
 func remoteDebianTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("debian")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	drp := services.NewDebianRemoteRepositoryParams()
 	drp.Key = repoKey
 	drp.RepoLayoutRef = "simple-default"
@@ -451,7 +447,7 @@ func remoteDebianTest(t *testing.T) {
 }
 
 func remotePypiTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("conda")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	crp := services.NewCondaRemoteRepositoryParams()
 	crp.Key = repoKey
 	crp.RepoLayoutRef = "simple-default"
@@ -479,7 +475,7 @@ func remotePypiTest(t *testing.T) {
 }
 
 func remoteDockerTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("docker")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	drp := services.NewDockerRemoteRepositoryParams()
 	drp.Key = repoKey
 	drp.RepoLayoutRef = "simple-default"
@@ -513,7 +509,7 @@ func remoteDockerTest(t *testing.T) {
 }
 
 func remoteGitlfsTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("gitlfs")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGitlfsRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "simple-default"
@@ -548,7 +544,7 @@ func remoteGitlfsTest(t *testing.T) {
 }
 
 func remoteGoTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("go")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGoRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "go-default"
@@ -582,7 +578,7 @@ func remoteGoTest(t *testing.T) {
 }
 
 func remoteYumTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("yum")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	yrp := services.NewYumRemoteRepositoryParams()
 	yrp.Key = repoKey
 	yrp.RepoLayoutRef = "simple-default"
@@ -619,7 +615,7 @@ func remoteYumTest(t *testing.T) {
 }
 
 func remoteConanTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("conan")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	crp := services.NewConanRemoteRepositoryParams()
 	crp.Key = repoKey
 	crp.RepoLayoutRef = "conan-default"
@@ -653,7 +649,7 @@ func remoteConanTest(t *testing.T) {
 }
 
 func remoteChefTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("chef")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	crp := services.NewChefRemoteRepositoryParams()
 	crp.Key = repoKey
 	crp.RepoLayoutRef = "simple-default"
@@ -690,7 +686,7 @@ func remoteChefTest(t *testing.T) {
 }
 
 func remotePuppetTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("puppet")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	prp := services.NewPuppetRemoteRepositoryParams()
 	prp.Key = repoKey
 	prp.RepoLayoutRef = "puppet-default"
@@ -725,7 +721,7 @@ func remotePuppetTest(t *testing.T) {
 }
 
 func remoteComposerTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("composer")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	crp := services.NewComposerRemoteRepositoryParams()
 	crp.Key = repoKey
 	crp.RepoLayoutRef = "composer-default"
@@ -757,7 +753,7 @@ func remoteComposerTest(t *testing.T) {
 }
 
 func remoteVcsTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("vcs")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	vrp := services.NewVcsRemoteRepositoryParams()
 	vrp.Key = repoKey
 	vrp.RepoLayoutRef = "composer-default"
@@ -794,7 +790,7 @@ func remoteVcsTest(t *testing.T) {
 }
 
 func remoteCocoapodsTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("cocoapods")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	crp := services.NewCocoapodsRemoteRepositoryParams()
 	crp.Key = repoKey
 	crp.RepoLayoutRef = "simple-default"
@@ -824,7 +820,7 @@ func remoteCocoapodsTest(t *testing.T) {
 }
 
 func remoteOpkgTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("opkg")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	orp := services.NewOpkgRemoteRepositoryParams()
 	orp.Key = repoKey
 	orp.RepoLayoutRef = "simple-default"
@@ -854,7 +850,7 @@ func remoteOpkgTest(t *testing.T) {
 }
 
 func remoteCondaTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("conda")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	crp := services.NewCondaRemoteRepositoryParams()
 	crp.Key = repoKey
 	crp.RepoLayoutRef = "simple-default"
@@ -882,7 +878,7 @@ func remoteCondaTest(t *testing.T) {
 }
 
 func remoteP2Test(t *testing.T) {
-	repoKey := generateRemoteRepoKey("p2")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	prp := services.NewP2RemoteRepositoryParams()
 	prp.Key = repoKey
 	prp.RepoLayoutRef = "simple-default"
@@ -913,7 +909,7 @@ func remoteP2Test(t *testing.T) {
 }
 
 func remoteGenericTest(t *testing.T) {
-	repoKey := generateRemoteRepoKey("generic")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGenericRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "simple-default"
