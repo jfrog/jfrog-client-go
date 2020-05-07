@@ -21,16 +21,16 @@ func NewGetRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *GetRep
 	return &GetRepositoryService{client: client}
 }
 
-func (grs *GetRepositoryService) Get(repoKey string) (*GetRepositoryData, error) {
+func (grs *GetRepositoryService) Get(repoKey string) (*RepositoryDetails, error) {
 	httpClientsDetails := grs.ArtDetails.CreateHttpClientDetails()
 	log.Info("Getting repository '" + repoKey + "' details ...")
-	repoDetails := &GetRepositoryData{}
+	repoDetails := &RepositoryDetails{}
 	resp, body, _, err := grs.client.SendGet(grs.ArtDetails.GetUrl()+"api/repositories/"+repoKey, true, &httpClientsDetails)
 	if err != nil {
-		return &GetRepositoryData{}, err
+		return &RepositoryDetails{}, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return &GetRepositoryData{}, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return &RepositoryDetails{}, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 	if err := json.Unmarshal(body, &repoDetails); err != nil {
 		return repoDetails, errorutils.CheckError(err)
@@ -40,7 +40,7 @@ func (grs *GetRepositoryService) Get(repoKey string) (*GetRepositoryData, error)
 	return repoDetails, nil
 }
 
-type GetRepositoryData struct {
+type RepositoryDetails struct {
 	Key         string
 	Rclass      string
 	Description string

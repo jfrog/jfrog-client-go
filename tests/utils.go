@@ -479,7 +479,7 @@ func GenerateRepoKeyForRepoServiceTest() string {
 	return fmt.Sprintf("%s-%d", RepoKeyPrefixForRepoServiceTest, timestamp)
 }
 
-func getRepo(t *testing.T, repoKey string) *services.GetRepositoryData {
+func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
 	data, err := testsGetRepositoryService.Get(repoKey)
 	assert.NoError(t, err, "Failed to get "+repoKey+" details")
 	return data

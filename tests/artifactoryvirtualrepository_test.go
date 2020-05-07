@@ -677,8 +677,7 @@ func getVirtualRepoDetailsTest(t *testing.T) {
 	repoKey := generateVirtualRepoKey("go")
 	gvp := services.NewGoVirtualRepositoryParams()
 	gvp.Key = repoKey
-	gvp.RepoLayoutRef = "simple-default"
-	gvp.Description = "Generic Repo for jfrog-client-go virtual-repository-test"
+	gvp.Description = "Repo for jfrog-client-go virtual-repository-test"
 	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)

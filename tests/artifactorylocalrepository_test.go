@@ -783,7 +783,7 @@ func getLocalRepoDetailsTest(t *testing.T) {
 	data := getRepo(t, repoKey)
 	// Validate
 	assert.Equal(t, data.Key, repoKey)
-	assert.Equal(t, data.Description, "Generic Repo for jfrog-client-go local-repository-test")
+	assert.Equal(t, data.Description, glp.Description)
 	assert.Equal(t, data.Rclass, "local")
 	assert.Empty(t, data.Url)
 	assert.Equal(t, data.PackageType, "generic")
