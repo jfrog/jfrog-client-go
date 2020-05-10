@@ -32,6 +32,7 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localOkgTest", localOpkgTest)
 	t.Run("localComposerTest", localComposerTest)
 	t.Run("localvagrantTest", localVagrantTest)
+	t.Run("localGenericTest", localGenericTest)
 	t.Run("getLocalRepoDetailsTest", getLocalRepoDetailsTest)
 }
 
