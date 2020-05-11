@@ -211,5 +211,5 @@ func (sm *ServicesManager) newMavenCentralSyncService() *mavensync.MavenCentralS
 }
 
 func (sm *ServicesManager) MavenCentralContentSync(p *mavensync.Params, path *versions.Path) error {
-	return sm.newMavenCentralSyncService().ContentSync(p, path)
+	return sm.newMavenCentralSyncService().Sync(p, path)
 }

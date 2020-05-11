@@ -43,10 +43,10 @@ func NewParams(username string, password string, dontClose bool) *Params {
 	return req
 }
 
-func (mcss *MavenCentralSyncService) ContentSync(p *Params, path *versions.Path) error {
+func (mcss *MavenCentralSyncService) Sync(p *Params, path *versions.Path) error {
 	url, err := buildSyncURL(mcss.BintrayDetails, path)
 	if err != nil {
-		return errorutils.CheckError(errors.New("invalid path input"))
+		return err
 	}
 
 	if mcss.BintrayDetails.GetUser() == "" {
@@ -56,17 +56,17 @@ func (mcss *MavenCentralSyncService) ContentSync(p *Params, path *versions.Path)
 	log.Info("Requesting content sync...")
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return errorutils.CheckError(errors.New("failed to build client"))
+		return err
 	}
 
 	requestContent, err := json.Marshal(p)
 	if err != nil {
-		return errorutils.CheckError(errors.New("failed to marshal request"))
+		return errorutils.CheckError(err)
 	}
 
 	resp, body, err := client.SendPost(url, requestContent, mcss.BintrayDetails.CreateHttpClientDetails())
 	if err != nil {
-		return errorutils.CheckError(errors.New("failed to execute request"))
+		return err
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -80,7 +80,7 @@ func (mcss *MavenCentralSyncService) ContentSync(p *Params, path *versions.Path)
 
 func buildSyncURL(bt auth.BintrayDetails, p *versions.Path) (string, error) {
 	if anyEmpty(p.Package, p.Repo, p.Subject, p.Version) {
-		return "", errors.New("invalid path input")
+		return "", errorutils.CheckError(errors.New("invalid path input"))
 	}
 	return bt.GetApiUrl() + path.Join("maven_central_sync", p.Subject, p.Repo, p.Package, "versions", p.Version), nil
 }
