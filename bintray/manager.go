@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/bintray/services/entitlements"
 	"github.com/jfrog/jfrog-client-go/bintray/services/gpg"
 	"github.com/jfrog/jfrog-client-go/bintray/services/logs"
+	"github.com/jfrog/jfrog-client-go/bintray/services/mavensync"
 	"github.com/jfrog/jfrog-client-go/bintray/services/packages"
 	"github.com/jfrog/jfrog-client-go/bintray/services/repositories"
 	"github.com/jfrog/jfrog-client-go/bintray/services/url"
@@ -201,4 +202,14 @@ func (sm *ServicesManager) UpdateEntitlement(params *entitlements.Params) error 
 
 func (sm *ServicesManager) DeleteEntitlement(id string, path *versions.Path) error {
 	return sm.newEntitlementService().Delete(id, path)
+}
+
+func (sm *ServicesManager) newMavenCentralSyncService() *mavensync.MavenCentralSyncService {
+	mavenCentralSyncService := mavensync.NewService(sm.client)
+	mavenCentralSyncService.BintrayDetails = sm.config.GetBintrayDetails()
+	return mavenCentralSyncService
+}
+
+func (sm *ServicesManager) MavenCentralContentSync(p *mavensync.Params, path *versions.Path) error {
+	return sm.newMavenCentralSyncService().Sync(p, path)
 }

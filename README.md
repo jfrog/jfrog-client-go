@@ -867,6 +867,15 @@ path, err := versions.CreatePath("subject/repo/pkg/version")
 btManager.DownloadLog(path, "logName")
 ```
 
+#### Syncing Content To Maven Central
+
+```go
+params := mavensync.NewParams("user","password", false)
+path, err = versions.CreatePath("subject/repo/pkg/version")
+
+btManager.MavenCentralContentSync(params, path)
+```
+
 ## Tests
 
 To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
