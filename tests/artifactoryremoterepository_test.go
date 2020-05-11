@@ -1,9 +1,10 @@
 package tests
 
 import (
+	"testing"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 const ArtifactoryLocalFileCacheSuffix = " (local file cache)"
@@ -36,6 +37,7 @@ func TestArtifactoryRemoteRepository(t *testing.T) {
 	t.Run("remoteP2Test", remoteP2Test)
 	t.Run("remoteVcsTest", remoteVcsTest)
 	t.Run("remoteGenericTest", remoteGenericTest)
+	t.Run("getRemoteRepoDetailsTest", getRemoteRepoDetailsTest)
 }
 
 func remoteMavenTest(t *testing.T) {
@@ -933,4 +935,26 @@ func remoteGenericTest(t *testing.T) {
 	err = testsUpdateRemoteRepositoryService.Generic(grp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, grp)
+}
+
+func getRemoteRepoDetailsTest(t *testing.T) {
+	// Create Repo
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	grp := services.NewGenericRemoteRepositoryParams()
+	grp.Key = repoKey
+	grp.RepoLayoutRef = "simple-default"
+	grp.Url = "https://jcenter.bintray.com"
+	grp.Description = "Generic Repo for jfrog-client-go remote-repository-test"
+
+	err := testsCreateRemoteRepositoryService.Generic(grp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	// Get repo details
+	data := getRepo(t, repoKey)
+	// Validate
+	assert.Equal(t, data.Key, repoKey)
+	assert.Equal(t, data.Description, grp.Description+" (local file cache)")
+	assert.Equal(t, data.Rclass, "remote")
+	assert.Equal(t, data.Url, grp.Url)
+	assert.Equal(t, data.PackageType, "generic")
 }

@@ -37,6 +37,7 @@ func InitArtifactoryServiceManager() {
 	createArtifactoryCreateVirtualRepositoryManager()
 	createArtifactoryUpdateVirtualRepositoryManager()
 	createArtifactoryDeleteRepositoryManager()
+	createArtifactoryGetRepositoryManager()
 	createArtifactoryReplicationCreateManager()
 	createArtifactoryReplicationUpdateManager()
 	createArtifactoryReplicationGetManager()

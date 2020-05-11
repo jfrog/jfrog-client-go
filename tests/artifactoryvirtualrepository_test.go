@@ -1,10 +1,11 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/stretchr/testify/assert"
 )
 
 var trimmedRtTargetRepo = strings.TrimSuffix(RtTargetRepo, "/")
@@ -34,6 +35,7 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualPuppetTest", virtualPuppetTest)
 	t.Run("virtualCondaTest", virtualCondaTest)
 	t.Run("virtualGenericTest", virtualGenericTest)
+	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
 }
 
 func virtualMavenTest(t *testing.T) {
@@ -668,4 +670,25 @@ func virtualGenericTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Generic(gvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
+}
+
+func getVirtualRepoDetailsTest(t *testing.T) {
+	// Create Repo
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	gvp := services.NewGoVirtualRepositoryParams()
+	gvp.Key = repoKey
+	gvp.Description = "Repo for jfrog-client-go virtual-repository-test"
+	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
+
+	err := testsCreateVirtualRepositoryService.Go(gvp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	// Get repo details
+	data := getRepo(t, repoKey)
+	// Validate
+	assert.Equal(t, data.Key, repoKey)
+	assert.Equal(t, data.Description, gvp.Description)
+	assert.Equal(t, data.Rclass, "virtual")
+	assert.Empty(t, data.Url)
+	assert.Equal(t, data.PackageType, "go")
 }
