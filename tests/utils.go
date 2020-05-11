@@ -5,6 +5,14 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -19,13 +27,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/mholt/archiver"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
-	"time"
 )
 
 var RtUrl *string
@@ -51,6 +52,7 @@ var testsUpdateLocalRepositoryService *services.LocalRepositoryService
 var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
+var testsGetRepositoryService *services.GetRepositoryService
 var testsCreateReplicationService *services.CreateReplicationService
 var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
@@ -206,6 +208,14 @@ func createArtifactoryDeleteRepositoryManager() {
 	failOnHttpClientCreation(err)
 	testsDeleteRepositoryService = services.NewDeleteRepositoryService(client)
 	testsDeleteRepositoryService.ArtDetails = artDetails
+}
+
+func createArtifactoryGetRepositoryManager() {
+	artDetails := GetRtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testsGetRepositoryService = services.NewGetRepositoryService(client)
+	testsGetRepositoryService.ArtDetails = artDetails
 }
 
 func createArtifactoryReplicationCreateManager() {
@@ -467,4 +477,10 @@ func deleteRepo(t *testing.T, repoKey string) {
 func GenerateRepoKeyForRepoServiceTest() string {
 	timestamp++
 	return fmt.Sprintf("%s-%d", RepoKeyPrefixForRepoServiceTest, timestamp)
+}
+
+func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
+	data, err := testsGetRepositoryService.Get(repoKey)
+	assert.NoError(t, err, "Failed to get "+repoKey+" details")
+	return data
 }

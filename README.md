@@ -455,6 +455,14 @@ You can remove a repository from Artifactory using its key:
 servicesManager.DeleteRepository("generic-repo")
 ```
 
+#### Getting Repository Details
+
+You can get repository details from Artifactory using its key:
+
+```go
+servicesManager.GetRepository("generic-repo")
+```
+
 #### Creating and Updating Repository Replication
 
 Example of creating repository replication:
