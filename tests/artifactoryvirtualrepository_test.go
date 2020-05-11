@@ -674,7 +674,7 @@ func virtualGenericTest(t *testing.T) {
 
 func getVirtualRepoDetailsTest(t *testing.T) {
 	// Create Repo
-	repoKey := generateVirtualRepoKey("go")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	gvp := services.NewGoVirtualRepositoryParams()
 	gvp.Key = repoKey
 	gvp.Description = "Repo for jfrog-client-go virtual-repository-test"

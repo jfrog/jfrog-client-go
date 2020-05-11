@@ -768,7 +768,7 @@ func localGenericTest(t *testing.T) {
 
 func getLocalRepoDetailsTest(t *testing.T) {
 	// Create Repo
-	repoKey := generateLocalRepoKey("generic")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "simple-default"

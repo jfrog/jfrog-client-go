@@ -939,7 +939,7 @@ func remoteGenericTest(t *testing.T) {
 
 func getRemoteRepoDetailsTest(t *testing.T) {
 	// Create Repo
-	repoKey := generateRemoteRepoKey("generic")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGenericRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "simple-default"
