@@ -1,9 +1,10 @@
 package tests
 
 import (
+	"testing"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestArtifactoryLocalRepository(t *testing.T) {
@@ -32,6 +33,7 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localComposerTest", localComposerTest)
 	t.Run("localvagrantTest", localVagrantTest)
 	t.Run("localGenericTest", localGenericTest)
+	t.Run("getLocalRepoDetailsTest", getLocalRepoDetailsTest)
 }
 
 func localMavenTest(t *testing.T) {
@@ -762,4 +764,28 @@ func localGenericTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
+}
+
+func getLocalRepoDetailsTest(t *testing.T) {
+	// Create Repo
+	repoKey := generateLocalRepoKey("generic")
+	glp := services.NewGenericLocalRepositoryParams()
+	glp.Key = repoKey
+	glp.RepoLayoutRef = "simple-default"
+	glp.Description = "Generic Repo for jfrog-client-go local-repository-test"
+	glp.XrayIndex = &trueValue
+	glp.DownloadRedirect = &falseValue
+	glp.ArchiveBrowsingEnabled = &falseValue
+
+	err := testsCreateLocalRepositoryService.Generic(glp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	// Get repo details
+	data := getRepo(t, repoKey)
+	// Validate
+	assert.Equal(t, data.Key, repoKey)
+	assert.Equal(t, data.Description, glp.Description)
+	assert.Equal(t, data.Rclass, "local")
+	assert.Empty(t, data.Url)
+	assert.Equal(t, data.PackageType, "generic")
 }

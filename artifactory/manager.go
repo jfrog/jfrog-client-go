@@ -82,6 +82,12 @@ func (sm *ArtifactoryServicesManager) DeleteRepository(repoKey string) error {
 	return deleteRepositoryService.Delete(repoKey)
 }
 
+func (sm *ArtifactoryServicesManager) GetRepository(repoKey string) (*services.RepositoryDetails, error) {
+	getRepositoryService := services.NewGetRepositoryService(sm.client)
+	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return getRepositoryService.Get(repoKey)
+}
+
 func (sm *ArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo) error {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
