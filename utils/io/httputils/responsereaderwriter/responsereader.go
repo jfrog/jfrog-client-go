@@ -1,4 +1,4 @@
-package httputils
+package responsereaderwriter
 
 import (
 	"bufio"
