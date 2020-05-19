@@ -17,7 +17,7 @@ type ResponseReader struct {
 	dataChannel chan map[string]interface{}
 }
 
-func NewResponseWriter(filePath string) (*ResponseReader, error) {
+func NewResponseReader(filePath string) (*ResponseReader, error) {
 	self := ResponseReader{}
 	self.filePath = filePath
 	self.dataChannel = make(chan map[string]interface{}, 2)
