@@ -19,6 +19,7 @@ require (
 	github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e // indirect
 	github.com/mholt/archiver v2.1.0+incompatible
 	github.com/mitchellh/go-homedir v1.0.0 // indirect
+	github.com/mitchellh/mapstructure v1.0.0
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/pelletier/go-buffruneio v0.2.0 // indirect
 	github.com/pierrec/lz4 v2.3.0+incompatible // indirect

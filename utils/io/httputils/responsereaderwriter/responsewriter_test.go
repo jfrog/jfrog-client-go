@@ -2,11 +2,12 @@ package responsereaderwriter
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type outputRecord struct {
@@ -92,7 +93,7 @@ func TestResponseReadeAfterWriter(t *testing.T) {
 	rw, err := NewResponseWriter(5, "results")
 	assert.NoError(t, err)
 	writeTestRecords(t, rw)
-	rr, err := NewResponseReader(rw.GetOutputFilePath())
+	rr := NewResponseReader(rw.GetOutputFilePath())
 	assert.NoError(t, err)
 	_, err = rr.Run()
 	assert.NoError(t, err)

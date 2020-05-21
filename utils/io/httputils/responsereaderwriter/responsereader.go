@@ -16,11 +16,11 @@ type ResponseReader struct {
 	dataChannel chan map[string]interface{}
 }
 
-func NewResponseReader(filePath string) (*ResponseReader, error) {
+func NewResponseReader(filePath string) *ResponseReader {
 	self := ResponseReader{}
 	self.filePath = filePath
 	self.dataChannel = make(chan map[string]interface{}, 2)
-	return &self, nil
+	return &self
 }
 
 // Fire up a goroutine in order to fill the data channel.
@@ -52,14 +52,40 @@ func (rr *ResponseReader) GetFilePath() string {
 	return rr.filePath
 }
 
-func (rr *ResponseReader) run() error {
+func (rr *ResponseReader) SetFilePath(newPath string) {
+	rr.filePath = newPath
+	rr.dataChannel = make(chan map[string]interface{}, 2)
+}
+
+func (rr *ResponseReader) IsZeroResults() (bool, error) {
 	fd, err := os.Open(rr.filePath)
 	br := bufio.NewReaderSize(fd, 65536)
 	defer fd.Close()
-	defer close(rr.dataChannel)
 	if err != nil {
+		return false, err
+	}
+	dec := json.NewDecoder(br)
+	err = findDecoderTargetPosition(dec, "results", true)
+	if err != nil {
+		return false, err
+	}
+	t, err := dec.Token()
+	if err != nil {
+		return false, err
+	}
+	return t != json.Delim('{'), nil
+}
+
+func (rr *ResponseReader) run() error {
+	fd, err := os.Open(rr.filePath)
+	if err != nil {
+		x := err.Error()
+		log.Fatal(x)
 		return err
 	}
+	br := bufio.NewReaderSize(fd, 65536)
+	defer fd.Close()
+	defer close(rr.dataChannel)
 	dec := json.NewDecoder(br)
 	err = findDecoderTargetPosition(dec, "results", true)
 	if err != nil {
