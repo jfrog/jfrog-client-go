@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 type ResponseReader struct {
@@ -25,23 +24,39 @@ func NewResponseReader(filePath string) (*ResponseReader, error) {
 }
 
 // Fire up a goroutine in order to fill the data channel.
-func (rw *ResponseReader) Run() (chan map[string]interface{}, error) {
+func (rr *ResponseReader) Run() (chan map[string]interface{}, error) {
 	var err error
 	go func() {
-		err = rw.run()
+		err = rr.run()
 	}()
-	return rw.dataChannel, err
+	return rr.dataChannel, err
 }
 
-func (rw *ResponseReader) DeleteFiles() error {
-	return os.RemoveAll(filepath.Dir(rw.filePath))
+// Iterator to get next record from the file.
+// The file be deleted and io.EOF error will be returned when there are no more records in the channel and the channel is closed.
+func (rr *ResponseReader) GetRecord(recordOutput interface{}) error {
+	record, ok := <-rr.dataChannel
+	if !ok {
+		rr.DeleteFile()
+		return io.EOF
+	}
+	data, _ := json.Marshal(record)
+	return json.Unmarshal(data, recordOutput)
 }
 
-func (rw *ResponseReader) run() error {
-	fd, err := os.Open(rw.filePath)
+func (rr *ResponseReader) DeleteFile() error {
+	return os.Remove(rr.filePath)
+}
+
+func (rr *ResponseReader) GetFilePath() string {
+	return rr.filePath
+}
+
+func (rr *ResponseReader) run() error {
+	fd, err := os.Open(rr.filePath)
 	br := bufio.NewReaderSize(fd, 65536)
 	defer fd.Close()
-	defer close(rw.dataChannel)
+	defer close(rr.dataChannel)
 	if err != nil {
 		return err
 	}
@@ -53,14 +68,14 @@ func (rw *ResponseReader) run() error {
 		}
 		return err
 	}
-	var ResultItem map[string]interface{}
 	for dec.More() {
+		var ResultItem map[string]interface{}
 		err := dec.Decode(&ResultItem)
 		if err != nil {
 			log.Fatal(err)
 			return err
 		}
-		rw.dataChannel <- ResultItem
+		rr.dataChannel <- ResultItem
 	}
 	return err
 }
