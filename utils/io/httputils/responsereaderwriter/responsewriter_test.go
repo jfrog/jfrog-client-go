@@ -71,7 +71,7 @@ func writeTestRecords(t *testing.T, rw *ResponseWriter) {
 }
 
 func TestResponseWriter(t *testing.T) {
-	rw, err := NewResponseWriter(5, "arr")
+	rw, err := NewResponseWriter(5, "arr", true, false)
 	assert.NoError(t, err)
 	writeTestRecords(t, rw)
 	of, err := os.Open(rw.GetOutputFilePath())
@@ -90,7 +90,7 @@ func TestResponseWriter(t *testing.T) {
 }
 
 func TestResponseReadeAfterWriter(t *testing.T) {
-	rw, err := NewResponseWriter(5, "results")
+	rw, err := NewResponseWriter(5, "results", true, false)
 	assert.NoError(t, err)
 	writeTestRecords(t, rw)
 	rr := NewResponseReader(rw.GetOutputFilePath())
