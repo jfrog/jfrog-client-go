@@ -89,13 +89,14 @@ func TestContentWriter(t *testing.T) {
 	}
 }
 
-func TestResponseReadeAfterWriter(t *testing.T) {
+func TestContentReadeAfterWriter(t *testing.T) {
 	rw, err := NewContentWriter(5, "results", true, false)
 	assert.NoError(t, err)
 	writeTestRecords(t, rw)
 	rr := NewContentReader(rw.GetOutputFilePath(), "results")
 	assert.NoError(t, err)
 	_, errQueue := rr.Run()
+	defer rr.Close()
 	recordCount := 0
 	var r outputRecord
 	for e := rr.GetRecord(&r); e == nil; e = rr.GetRecord(&r) {
