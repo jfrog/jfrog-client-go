@@ -1,4 +1,4 @@
-package jsonreaderwriter
+package content
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ const (
 	jsonArraySuffix        = "]\n"
 )
 
-type JsonWriter struct {
+type ContentWriter struct {
 	arrayKey string
 	// The output data file path.
 	outputFile *os.File
@@ -29,7 +29,7 @@ type JsonWriter struct {
 	runWaiter      sync.WaitGroup
 }
 
-func NewJsonWriter(chanCapacity int, arrayKey string, isCompleteFile, useStdout bool) (*JsonWriter, error) {
+func NewContentWriter(chanCapacity int, arrayKey string, isCompleteFile, useStdout bool) (*ContentWriter, error) {
 	var fd *os.File
 	var err error
 	if useStdout {
@@ -40,7 +40,7 @@ func NewJsonWriter(chanCapacity int, arrayKey string, isCompleteFile, useStdout 
 			return nil, errorutils.CheckError(err)
 		}
 	}
-	self := JsonWriter{}
+	self := ContentWriter{}
 	self.arrayKey = arrayKey
 	self.outputFile = fd
 	self.recordsChannel = make(chan interface{}, chanCapacity)
@@ -49,24 +49,24 @@ func NewJsonWriter(chanCapacity int, arrayKey string, isCompleteFile, useStdout 
 	return &self, nil
 }
 
-func (rw *JsonWriter) SetArrayKey(arrKey string) *JsonWriter {
+func (rw *ContentWriter) SetArrayKey(arrKey string) *ContentWriter {
 	rw.arrayKey = arrKey
 	return rw
 }
 
-func (rw *JsonWriter) GetOutputFilePath() string {
+func (rw *ContentWriter) GetOutputFilePath() string {
 	return rw.outputFile.Name()
 }
 
-func (rw *JsonWriter) RemoveOutputFilePath() error {
+func (rw *ContentWriter) RemoveOutputFilePath() error {
 	return errorutils.CheckError(os.Remove(rw.outputFile.Name()))
 }
 
-func (rw *JsonWriter) AddRecord(record interface{}) {
+func (rw *ContentWriter) AddRecord(record interface{}) {
 	rw.recordsChannel <- record
 }
 
-func (rw *JsonWriter) Run() {
+func (rw *ContentWriter) Run() {
 	rw.runWaiter.Add(1)
 	go func() {
 		defer rw.runWaiter.Done()
@@ -75,7 +75,7 @@ func (rw *JsonWriter) Run() {
 	return
 }
 
-func (rw *JsonWriter) run() {
+func (rw *ContentWriter) run() {
 	if rw.outputFile != os.Stdout {
 		defer rw.outputFile.Close()
 	}
@@ -125,7 +125,7 @@ func (rw *JsonWriter) run() {
 	return
 }
 
-func (rw *JsonWriter) Stop() error {
+func (rw *ContentWriter) Stop() error {
 	close(rw.recordsChannel)
 	rw.runWaiter.Wait()
 	return rw.errorsQueue.GetError()

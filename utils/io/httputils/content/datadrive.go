@@ -1,4 +1,4 @@
-package jsonreaderwriter
+package content
 
 import (
 	"bufio"
@@ -18,8 +18,8 @@ const (
 )
 
 type DataDrive struct {
-	Reader      *JsonReader
-	Writer      *JsonWriter
+	Reader      *ContentReader
+	Writer      *ContentWriter
 	buffer      []map[string]interface{}
 	bufferSize  int
 	channel     chan map[string]interface{}
@@ -59,7 +59,7 @@ func NewDataDriveWithStream(src io.Reader, bufferSize int) (*DataDrive, error) {
 		bufferSize--
 	}
 	if bufferSize == 0 {
-		rw, err := NewJsonWriter(self.bufferSize, arrayKey, true, false)
+		rw, err := NewContentWriter(self.bufferSize, arrayKey, true, false)
 		if err != nil {
 			log.Fatal(err)
 			return nil, err
@@ -75,7 +75,7 @@ func NewDataDriveWithStream(src io.Reader, bufferSize int) (*DataDrive, error) {
 			rw.AddRecord(ResultItem)
 		}
 		rw.Stop()
-		self.Reader = NewJsonReader(rw.GetOutputFilePath(), arrayKey)
+		self.Reader = NewContentReader(rw.GetOutputFilePath(), arrayKey)
 	}
 	return &self, nil
 }
@@ -130,7 +130,7 @@ func (dd *DataDrive) AddRecord(dataToWrite map[string]interface{}) error {
 		dd.buffer = append(dd.buffer, dataToWrite)
 	} else {
 		if dd.Writer == nil {
-			dd.Writer, err = NewJsonWriter(dd.bufferSize, "results", true, false)
+			dd.Writer, err = NewContentWriter(dd.bufferSize, "results", true, false)
 			if err != nil {
 				return err
 			}

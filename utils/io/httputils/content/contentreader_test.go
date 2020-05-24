@@ -1,4 +1,4 @@
-package jsonreaderwriter
+package content
 
 import (
 	"encoding/json"
@@ -14,15 +14,15 @@ const (
 	emptySearchResult = "EmptySearchResult.json"
 )
 
-func TestJsonReaderPath(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "jsonreaderwriter", searchResult)
-	rr := NewJsonReader(searchResultPath, arrayKey)
+func TestContentReaderPath(t *testing.T) {
+	searchResultPath := filepath.Join(getTestDataPath(), "content", searchResult)
+	rr := NewContentReader(searchResultPath, arrayKey)
 	assert.Equal(t, rr.GetFilePath(), searchResultPath)
 }
 
-func TestJsonReader(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "jsonreaderwriter", searchResult)
-	rr := NewJsonReader(searchResultPath, arrayKey)
+func TestContentReader(t *testing.T) {
+	searchResultPath := filepath.Join(getTestDataPath(), "content", searchResult)
+	rr := NewContentReader(searchResultPath, arrayKey)
 	assert.Equal(t, rr.GetFilePath(), searchResultPath)
 
 	channel, channelErr := rr.Run()
@@ -36,9 +36,9 @@ func TestJsonReader(t *testing.T) {
 
 }
 
-func TestJsonReaderEmptyResult(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "jsonreaderwriter", emptySearchResult)
-	rr := NewJsonReader(searchResultPath, arrayKey)
+func TestContentReaderEmptyResult(t *testing.T) {
+	searchResultPath := filepath.Join(getTestDataPath(), "content", emptySearchResult)
+	rr := NewContentReader(searchResultPath, arrayKey)
 	channel, channelErr := rr.Run()
 	for range channel {
 		t.Error("Can't loop over empty file")

@@ -1,4 +1,4 @@
-package jsonreaderwriter
+package content
 
 import (
 	"bufio"
@@ -12,7 +12,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-type JsonReader struct {
+type ContentReader struct {
 	// Response data file path.
 	filePath, arrayKey string
 	// The objects from the response data file are being pushed to the data channel.
@@ -21,8 +21,8 @@ type JsonReader struct {
 	errorsQueue *utils.ErrorsQueue
 }
 
-func NewJsonReader(filePath string, arrayKey string) *JsonReader {
-	self := JsonReader{}
+func NewContentReader(filePath string, arrayKey string) *ContentReader {
+	self := ContentReader{}
 	self.filePath = filePath
 	self.arrayKey = arrayKey
 	self.dataChannel = make(chan map[string]interface{}, 50000)
@@ -30,13 +30,13 @@ func NewJsonReader(filePath string, arrayKey string) *JsonReader {
 	return &self
 }
 
-func (rr *JsonReader) ArrayKey(arrayKey string) *JsonReader {
+func (rr *ContentReader) ArrayKey(arrayKey string) *ContentReader {
 	rr.arrayKey = arrayKey
 	return rr
 }
 
 // Fire up a goroutine in order to fill the data channel.
-func (rr *JsonReader) Run() (chan map[string]interface{}, *utils.ErrorsQueue) {
+func (rr *ContentReader) Run() (chan map[string]interface{}, *utils.ErrorsQueue) {
 	go func() {
 		rr.run()
 	}()
@@ -45,7 +45,7 @@ func (rr *JsonReader) Run() (chan map[string]interface{}, *utils.ErrorsQueue) {
 
 // Iterator to get next record from the file.
 // The file be deleted and io.EOF error will be returned when there are no more records in the channel and the channel is closed.
-func (rr *JsonReader) GetRecord(recordOutput interface{}) error {
+func (rr *ContentReader) GetRecord(recordOutput interface{}) error {
 	record, ok := <-rr.dataChannel
 	if !ok {
 		rr.DeleteFile()
@@ -55,18 +55,18 @@ func (rr *JsonReader) GetRecord(recordOutput interface{}) error {
 	return errorutils.CheckError(json.Unmarshal(data, recordOutput))
 }
 
-func (rr *JsonReader) DeleteFile() error {
+func (rr *ContentReader) DeleteFile() error {
 	if rr.filePath != "" {
 		return errorutils.CheckError(os.Remove(rr.filePath))
 	}
 	return nil
 }
 
-func (rr *JsonReader) GetFilePath() string {
+func (rr *ContentReader) GetFilePath() string {
 	return rr.filePath
 }
 
-func (rr *JsonReader) SetFilePath(newPath string) {
+func (rr *ContentReader) SetFilePath(newPath string) {
 	if rr.filePath != "" {
 		rr.DeleteFile()
 	}
@@ -75,7 +75,7 @@ func (rr *JsonReader) SetFilePath(newPath string) {
 }
 
 // Run async  by 'Run' methoed
-func (rr *JsonReader) run() {
+func (rr *ContentReader) run() {
 	fd, err := os.Open(rr.filePath)
 	if err != nil {
 		log.Fatal(err.Error())
