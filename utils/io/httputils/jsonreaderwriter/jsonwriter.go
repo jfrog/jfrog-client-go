@@ -1,14 +1,15 @@
-package responsereaderwriter
+package jsonreaderwriter
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"io/ioutil"
 	"os"
 	"sync"
+
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 const (
@@ -17,7 +18,7 @@ const (
 	jsonArraySuffix        = "]\n"
 )
 
-type ResponseWriter struct {
+type JsonWriter struct {
 	arrayKey string
 	// The output data file path.
 	outputFile *os.File
@@ -28,7 +29,7 @@ type ResponseWriter struct {
 	runWaiter      sync.WaitGroup
 }
 
-func NewResponseWriter(chanCapacity int, arrayKey string, isCompleteFile, useStdout bool) (*ResponseWriter, error) {
+func NewJsonWriter(chanCapacity int, arrayKey string, isCompleteFile, useStdout bool) (*JsonWriter, error) {
 	var fd *os.File
 	var err error
 	if useStdout {
@@ -36,10 +37,10 @@ func NewResponseWriter(chanCapacity int, arrayKey string, isCompleteFile, useStd
 	} else {
 		fd, err = ioutil.TempFile("", fmt.Sprintf(outputFilePattern, arrayKey))
 		if err != nil {
-			return nil, err
+			return nil, errorutils.CheckError(err)
 		}
 	}
-	self := ResponseWriter{}
+	self := JsonWriter{}
 	self.arrayKey = arrayKey
 	self.outputFile = fd
 	self.recordsChannel = make(chan interface{}, chanCapacity)
@@ -48,24 +49,24 @@ func NewResponseWriter(chanCapacity int, arrayKey string, isCompleteFile, useStd
 	return &self, nil
 }
 
-func (rw *ResponseWriter) SetArrayKey(arrKey string) *ResponseWriter {
+func (rw *JsonWriter) SetArrayKey(arrKey string) *JsonWriter {
 	rw.arrayKey = arrKey
 	return rw
 }
 
-func (rw *ResponseWriter) GetOutputFilePath() string {
+func (rw *JsonWriter) GetOutputFilePath() string {
 	return rw.outputFile.Name()
 }
 
-func (rw *ResponseWriter) RemoveOutputFilePath() error {
+func (rw *JsonWriter) RemoveOutputFilePath() error {
 	return errorutils.CheckError(os.Remove(rw.outputFile.Name()))
 }
 
-func (rw *ResponseWriter) AddRecord(record interface{}) {
+func (rw *JsonWriter) AddRecord(record interface{}) {
 	rw.recordsChannel <- record
 }
 
-func (rw *ResponseWriter) Run() {
+func (rw *JsonWriter) Run() {
 	rw.runWaiter.Add(1)
 	go func() {
 		defer rw.runWaiter.Done()
@@ -74,7 +75,7 @@ func (rw *ResponseWriter) Run() {
 	return
 }
 
-func (rw *ResponseWriter) run() {
+func (rw *JsonWriter) run() {
 	if rw.outputFile != os.Stdout {
 		defer rw.outputFile.Close()
 	}
@@ -85,7 +86,7 @@ func (rw *ResponseWriter) run() {
 	}
 	_, err := rw.outputFile.WriteString(fmt.Sprintf(openString, rw.arrayKey))
 	if err != nil {
-		rw.errorsQueue.AddError(err)
+		rw.errorsQueue.AddError(errorutils.CheckError(err))
 		return
 	}
 	buf := bytes.NewBuffer(nil)
@@ -97,12 +98,12 @@ func (rw *ResponseWriter) run() {
 		rw.outputFile.WriteString(recordPrefix)
 		err = enc.Encode(record)
 		if err != nil {
-			rw.errorsQueue.AddError(err)
+			rw.errorsQueue.AddError(errorutils.CheckError(err))
 		}
 		b := bytes.TrimRight(buf.Bytes(), "\n")
 		_, err = rw.outputFile.Write(b)
 		if err != nil {
-			rw.errorsQueue.AddError(err)
+			rw.errorsQueue.AddError(errorutils.CheckError(err))
 		}
 		buf.Reset()
 		if firstRecord {
@@ -119,12 +120,12 @@ func (rw *ResponseWriter) run() {
 	}
 	_, err = rw.outputFile.WriteString(closeString)
 	if err != nil {
-		rw.errorsQueue.AddError(err)
+		rw.errorsQueue.AddError(errorutils.CheckError(err))
 	}
 	return
 }
 
-func (rw *ResponseWriter) Stop() error {
+func (rw *JsonWriter) Stop() error {
 	close(rw.recordsChannel)
 	rw.runWaiter.Wait()
 	return rw.errorsQueue.GetError()

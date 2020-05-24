@@ -1,4 +1,4 @@
-package responsereaderwriter
+package jsonreaderwriter
 
 import (
 	"encoding/json"
@@ -53,7 +53,7 @@ type Response struct {
 	Arr []outputRecord `json:"arr"`
 }
 
-func writeTestRecords(t *testing.T, rw *ResponseWriter) {
+func writeTestRecords(t *testing.T, rw *JsonWriter) {
 	var sendersWaiter sync.WaitGroup
 	rw.Run()
 	for i := 0; i < len(records); i += 3 {
@@ -70,8 +70,8 @@ func writeTestRecords(t *testing.T, rw *ResponseWriter) {
 	assert.NoError(t, err)
 }
 
-func TestResponseWriter(t *testing.T) {
-	rw, err := NewResponseWriter(5, "arr", true, false)
+func TestJsonWriter(t *testing.T) {
+	rw, err := NewJsonWriter(5, "arr", true, false)
 	assert.NoError(t, err)
 	writeTestRecords(t, rw)
 	of, err := os.Open(rw.GetOutputFilePath())
@@ -90,18 +90,18 @@ func TestResponseWriter(t *testing.T) {
 }
 
 func TestResponseReadeAfterWriter(t *testing.T) {
-	rw, err := NewResponseWriter(5, "results", true, false)
+	rw, err := NewJsonWriter(5, "results", true, false)
 	assert.NoError(t, err)
 	writeTestRecords(t, rw)
-	rr := NewResponseReader(rw.GetOutputFilePath())
+	rr := NewJsonReader(rw.GetOutputFilePath(), "results")
 	assert.NoError(t, err)
-	_, err = rr.Run()
-	assert.NoError(t, err)
+	_, errQueue := rr.Run()
 	recordCount := 0
 	var r outputRecord
 	for e := rr.GetRecord(&r); e == nil; e = rr.GetRecord(&r) {
 		assert.Contains(t, records, r, "record %s missing", r.StrKey)
 		recordCount++
 	}
+	assert.NoError(t, errQueue.GetError())
 	assert.Equal(t, len(records), recordCount, "The amount of records were read (%d) is different then expected", recordCount)
 }
