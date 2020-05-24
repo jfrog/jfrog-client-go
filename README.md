@@ -102,6 +102,8 @@ rtManager.UploadFiles(params)
 
 #### Downloading Files from Artifactory
 
+##### Downloading Files without Resutls Reader:
+Using `DownloadFiles()` service, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
 ```go
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
@@ -119,7 +121,40 @@ params.SplitCount = 2
 // MinSplitSize default value: 5120
 params.MinSplitSize = 7168
 
-rtManager.DownloadFiles(params)
+totalDownloaded, totalExpected, err := rtManager.DownloadFiles(params)
+```
+
+##### Downloading Files with Results Reader:
+Using `DownloadFilesWithResultReader()` service, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
+In addition, this service provides us with a reader through which we can iterate the downloaded files information
+```go
+params := services.NewDownloadParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "target/path/"
+params.Recursive = true
+params.IncludeDirs = false
+params.Flat = false
+params.Explode = false
+params.Symlink = true
+params.ValidateSymlink = false
+// Retries default value: 3
+params.Retries = 5
+// SplitCount default value: 3
+params.SplitCount = 2
+// MinSplitSize default value: 5120
+params.MinSplitSize = 7168
+
+reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
+```
+Use `reader.NextRecord()` and `FileInfo` type from `utils` package to iterate over the download results.
+Use `reader.Close()` method (preferably using `defer`), to remove the results reader after it is used:
+``` 
+defer reader.Close()
+var file utils.FileInfo
+for e := resultReader.NextRecord(&file); e == nil; e = resultReader.NextRecord(&file) {
+    // Do somthing with file
+    ...    
+}
 ```
 
 #### Copying Files in Artifactory

@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
@@ -143,13 +144,33 @@ func (sm *ArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCl
 	return readFileService.ReadRemoteFile(readPath)
 }
 
-func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) ([]utils.FileInfo, int, error) {
+func (sm *ArtifactoryServicesManager) initDownloadService() *services.DownloadService {
 	downloadService := services.NewDownloadService(sm.client)
 	downloadService.DryRun = sm.config.IsDryRun()
 	downloadService.ArtDetails = sm.config.GetServiceDetails()
 	downloadService.Threads = sm.config.GetThreads()
 	downloadService.Progress = sm.progress
+	return downloadService
+}
+
+func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error) {
+	downloadService := sm.initDownloadService()
 	return downloadService.DownloadFiles(params...)
+}
+
+func (sm *ArtifactoryServicesManager) DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error) {
+	downloadService := sm.initDownloadService()
+	rw, err := content.NewContentWriter(downloadService.GetThreads(), "results", true, false)
+	if err != nil {
+		return
+	}
+	downloadService.ResultWriter = rw
+	totalDownloaded, totalExpected, err = downloadService.DownloadFiles(params...)
+	if err != nil {
+		return
+	}
+	resultReader = content.NewContentReader(downloadService.ResultWriter.GetOutputFilePath(), "results")
+	return
 }
 
 func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) ([]utils.ResultItem, error) {
