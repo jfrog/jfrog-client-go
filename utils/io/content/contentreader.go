@@ -37,6 +37,7 @@ func (rr *ContentReader) ArrayKey(arrayKey string) *ContentReader {
 
 // Fire up a goroutine in order to fill the data channel.
 func (rr *ContentReader) Run() (chan map[string]interface{}, *utils.ErrorsQueue) {
+	rr.dataChannel = make(chan map[string]interface{}, 50000)
 	go func() {
 		rr.run()
 	}()
@@ -107,6 +108,21 @@ func (rr *ContentReader) run() {
 	}
 }
 
+func (rr *ContentReader) IsEmpty() (bool, error) {
+	fd, err := os.Open(rr.filePath)
+	if err != nil {
+		log.Fatal(err.Error())
+		rr.errorsQueue.AddError(errorutils.CheckError(err))
+		return false, err
+	}
+	br := bufio.NewReaderSize(fd, 65536)
+	defer fd.Close()
+	defer close(rr.dataChannel)
+	dec := json.NewDecoder(br)
+	err = findDecoderTargetPosition(dec, rr.arrayKey, true)
+	return isZeroResult(dec, rr.arrayKey, true)
+}
+
 func findDecoderTargetPosition(dec *json.Decoder, target string, isArray bool) error {
 	for dec.More() {
 		t, err := dec.Token()
@@ -122,4 +138,15 @@ func findDecoderTargetPosition(dec *json.Decoder, target string, isArray bool) e
 		}
 	}
 	return nil
+}
+
+func isZeroResult(dec *json.Decoder, target string, isArray bool) (bool, error) {
+	if err := findDecoderTargetPosition(dec, target, isArray); err != nil {
+		return false, err
+	}
+	t, err := dec.Token()
+	if err != nil {
+		return false, errorutils.CheckError(err)
+	}
+	return t == json.Delim('{'), nil
 }

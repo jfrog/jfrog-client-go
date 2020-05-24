@@ -12,6 +12,7 @@ import (
 const (
 	searchResult      = "SearchResult.json"
 	emptySearchResult = "EmptySearchResult.json"
+	arrayKey          = "results"
 )
 
 func TestContentReaderPath(t *testing.T) {
