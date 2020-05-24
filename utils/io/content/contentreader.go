@@ -48,14 +48,13 @@ func (rr *ContentReader) Run() (chan map[string]interface{}, *utils.ErrorsQueue)
 func (rr *ContentReader) GetRecord(recordOutput interface{}) error {
 	record, ok := <-rr.dataChannel
 	if !ok {
-		rr.DeleteFile()
 		return errorutils.CheckError(io.EOF)
 	}
 	data, _ := json.Marshal(record)
 	return errorutils.CheckError(json.Unmarshal(data, recordOutput))
 }
 
-func (rr *ContentReader) DeleteFile() error {
+func (rr *ContentReader) Close() error {
 	if rr.filePath != "" {
 		return errorutils.CheckError(os.Remove(rr.filePath))
 	}
@@ -68,7 +67,7 @@ func (rr *ContentReader) GetFilePath() string {
 
 func (rr *ContentReader) SetFilePath(newPath string) {
 	if rr.filePath != "" {
-		rr.DeleteFile()
+		rr.Close()
 	}
 	rr.filePath = newPath
 	rr.dataChannel = make(chan map[string]interface{}, 2)

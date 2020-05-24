@@ -72,9 +72,9 @@ func NewDataDriveWithStream(src io.Reader, bufferSize int) (*DataDrive, error) {
 				log.Fatal(err)
 				return nil, errorutils.CheckError(err)
 			}
-			rw.AddRecord(ResultItem)
+			rw.Write(ResultItem)
 		}
-		rw.Stop()
+		rw.Done()
 		self.Reader = NewContentReader(rw.GetOutputFilePath(), arrayKey)
 	}
 	return &self, nil
@@ -136,14 +136,14 @@ func (dd *DataDrive) AddRecord(dataToWrite map[string]interface{}) error {
 			}
 			dd.Writer.Run()
 		}
-		dd.Writer.AddRecord(dataToWrite)
+		dd.Writer.Write(dataToWrite)
 	}
 	return nil
 }
 
 func (dd *DataDrive) CloseWriter() error {
 	if len(dd.buffer) == dd.bufferSize {
-		if err := dd.Writer.Stop(); err != nil {
+		if err := dd.Writer.Done(); err != nil {
 			return err
 		}
 		dd.Reader.SetFilePath(dd.Writer.GetOutputFilePath())
@@ -157,7 +157,7 @@ func (dd *DataDrive) Empty() bool {
 
 func (dd *DataDrive) Cleanup() error {
 	if dd.Reader != nil {
-		if err := dd.Reader.DeleteFile(); err != nil {
+		if err := dd.Reader.Close(); err != nil {
 			return err
 		}
 	}

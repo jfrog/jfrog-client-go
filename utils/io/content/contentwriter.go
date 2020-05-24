@@ -62,7 +62,7 @@ func (rw *ContentWriter) RemoveOutputFilePath() error {
 	return errorutils.CheckError(os.Remove(rw.outputFile.Name()))
 }
 
-func (rw *ContentWriter) AddRecord(record interface{}) {
+func (rw *ContentWriter) Write(record interface{}) {
 	rw.recordsChannel <- record
 }
 
@@ -125,7 +125,7 @@ func (rw *ContentWriter) run() {
 	return
 }
 
-func (rw *ContentWriter) Stop() error {
+func (rw *ContentWriter) Done() error {
 	close(rw.recordsChannel)
 	rw.runWaiter.Wait()
 	return rw.errorsQueue.GetError()

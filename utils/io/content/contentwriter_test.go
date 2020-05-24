@@ -61,12 +61,12 @@ func writeTestRecords(t *testing.T, rw *ContentWriter) {
 		go func(start, end int) {
 			defer sendersWaiter.Done()
 			for j := start; j < end; j++ {
-				rw.AddRecord(records[j])
+				rw.Write(records[j])
 			}
 		}(i, i+3)
 	}
 	sendersWaiter.Wait()
-	err := rw.Stop()
+	err := rw.Done()
 	assert.NoError(t, err)
 }
 
