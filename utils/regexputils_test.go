@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestRemoveCredentialsFromURL(t *testing.T) {
+func TestRemoveCredentialsFromLine(t *testing.T) {
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	regExpProtocol, err := GetRegExp(CredentialsInUrlRegexp)
 	if err != nil {
