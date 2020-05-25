@@ -102,6 +102,8 @@ rtManager.UploadFiles(params)
 
 #### Downloading Files from Artifactory
 
+##### Downloading Files:
+Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
 ```go
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
@@ -119,7 +121,38 @@ params.SplitCount = 2
 // MinSplitSize default value: 5120
 params.MinSplitSize = 7168
 
-rtManager.DownloadFiles(params)
+totalDownloaded, totalExpected, err := rtManager.DownloadFiles(params)
+```
+
+##### Downloading Files with Results Reader:
+Similar to `DownloadFiles()`, but returns a reader, which allows iterating over the details of the downloaded files. Only files which were successfully downloaded are available by the reader.
+```go
+params := services.NewDownloadParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "target/path/"
+params.Recursive = true
+params.IncludeDirs = false
+params.Flat = false
+params.Explode = false
+params.Symlink = true
+params.ValidateSymlink = false
+params.Retries = 5
+params.SplitCount = 2
+params.MinSplitSize = 7168
+
+reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
+```
+Use `reader.NextRecord()` and `FileInfo` type from `utils` package to iterate over the download results.
+Use `reader.Close()` method (preferably using `defer`), to remove the results reader after it is used:
+``` 
+defer reader.Close()
+var file utils.FileInfo
+for e := resultReader.NextRecord(&file); e == nil; e = resultReader.NextRecord(&file) {
+    fmt.Printf("Download source: %s\n", file.ArtifactoryPath)
+    fmt.Printf("Download target: %s\n", file.LocalPath)
+    fmt.Printf("SHA1: %s\n", file.Sha1)
+    fmt.Printf("MD5: %s\n", file.Md5) 
+}
 ```
 
 #### Copying Files in Artifactory
@@ -455,6 +488,14 @@ You can remove a repository from Artifactory using its key:
 servicesManager.DeleteRepository("generic-repo")
 ```
 
+#### Getting Repository Details
+
+You can get repository details from Artifactory using its key:
+
+```go
+servicesManager.GetRepository("generic-repo")
+```
+
 #### Creating and Updating Repository Replication
 
 Example of creating repository replication:
@@ -508,6 +549,18 @@ You can remove a repository replication configuration from Artifactory using its
 
 ```go
 err := servicesManager.DeleteReplication("my-repository")
+```
+
+#### Fetch Artifactory's version
+
+```go
+version, err := servicesManager.GetVersion()
+```
+
+#### Fetch Artifactory's service id
+
+```go
+serviceId, err := servicesManager.GetServiceId()
 ```
 
 ## Distribution APIs
@@ -845,6 +898,15 @@ btManager.LogsList(versionPath)
 path, err := versions.CreatePath("subject/repo/pkg/version")
 
 btManager.DownloadLog(path, "logName")
+```
+
+#### Syncing Content To Maven Central
+
+```go
+params := mavensync.NewParams("user","password", false)
+path, err = versions.CreatePath("subject/repo/pkg/version")
+
+btManager.MavenCentralContentSync(params, path)
 ```
 
 ## Tests

@@ -1,9 +1,10 @@
 package tests
 
 import (
+	"testing"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestArtifactoryLocalRepository(t *testing.T) {
@@ -32,14 +33,11 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localComposerTest", localComposerTest)
 	t.Run("localvagrantTest", localVagrantTest)
 	t.Run("localGenericTest", localGenericTest)
-}
-
-func generateLocalRepoKey(pkgType string) (repoKey string) {
-	return GenerateRepoKeyForRepoServiceTest(pkgType, "local")
+	t.Run("getLocalRepoDetailsTest", getLocalRepoDetailsTest)
 }
 
 func localMavenTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("maven")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	mlp := services.NewMavenLocalRepositoryParams()
 	mlp.Key = repoKey
 	mlp.RepoLayoutRef = "maven-2-default"
@@ -54,6 +52,7 @@ func localMavenTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Maven(mlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, mlp)
 
 	mlp.Description += " - Updated"
@@ -67,12 +66,10 @@ func localMavenTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Maven(mlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, mlp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localGradleTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("gradle")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGradleLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "gradle-default"
@@ -87,6 +84,7 @@ func localGradleTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Gradle(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
@@ -100,12 +98,10 @@ func localGradleTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Gradle(glp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localIvyTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("ivy")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	ilp := services.NewIvyLocalRepositoryParams()
 	ilp.Key = repoKey
 	ilp.RepoLayoutRef = "ivy-default"
@@ -118,6 +114,7 @@ func localIvyTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Ivy(ilp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, ilp)
 
 	ilp.Description += " - Updated"
@@ -130,12 +127,10 @@ func localIvyTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Ivy(ilp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, ilp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localSbtTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("sbt")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	slp := services.NewSbtLocalRepositoryParams()
 	slp.Key = repoKey
 	slp.RepoLayoutRef = "sbt-default"
@@ -147,6 +142,7 @@ func localSbtTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Sbt(slp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, slp)
 
 	slp.Description += " - Updated"
@@ -158,12 +154,10 @@ func localSbtTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Sbt(slp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, slp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localHelmTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("helm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	hlp := services.NewHelmLocalRepositoryParams()
 	hlp.Key = repoKey
 	hlp.RepoLayoutRef = "simple-default"
@@ -174,6 +168,7 @@ func localHelmTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Helm(hlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, hlp)
 
 	hlp.Description += " - Updated"
@@ -188,12 +183,10 @@ func localHelmTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Helm(hlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, hlp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localRpmTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("rpm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	rlp := services.NewRpmLocalRepositoryParams()
 	rlp.Key = repoKey
 	rlp.RepoLayoutRef = "simple-default"
@@ -205,6 +198,7 @@ func localRpmTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Rpm(rlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, rlp)
 
 	rlp.Description += " - Updated"
@@ -217,12 +211,10 @@ func localRpmTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Rpm(rlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, rlp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localNugetTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("nuget")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	nlp := services.NewNugetLocalRepositoryParams()
 	nlp.Key = repoKey
 	nlp.RepoLayoutRef = "nuget-default"
@@ -236,6 +228,7 @@ func localNugetTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Nuget(nlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nlp)
 
 	nlp.Description += " - Updated"
@@ -250,12 +243,10 @@ func localNugetTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Nuget(nlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nlp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localCranTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("cran")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewCranLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "simple-default"
@@ -268,6 +259,7 @@ func localCranTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Cran(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
 	clp.Description += " - Updated"
@@ -280,12 +272,10 @@ func localCranTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Cran(clp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localGemsTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("gems")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGemsLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "simple-default"
@@ -299,6 +289,7 @@ func localGemsTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Gems(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
@@ -311,12 +302,10 @@ func localGemsTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Gems(glp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localNpmTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("npm")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	nlp := services.NewNpmLocalRepositoryParams()
 	nlp.Key = repoKey
 	nlp.RepoLayoutRef = "npm-default"
@@ -328,6 +317,7 @@ func localNpmTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Npm(nlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nlp)
 
 	nlp.Description += " - Updated"
@@ -340,12 +330,10 @@ func localNpmTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Npm(nlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, nlp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localBowerTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("bower")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	blp := services.NewBowerLocalRepositoryParams()
 	blp.Key = repoKey
 	blp.RepoLayoutRef = "bower-default"
@@ -356,6 +344,7 @@ func localBowerTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Bower(blp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, blp)
 
 	blp.Description += " - Updated"
@@ -369,12 +358,10 @@ func localBowerTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Bower(blp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, blp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localDebianTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("debian")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	dlp := services.NewDebianLocalRepositoryParams()
 	dlp.Key = repoKey
 	dlp.RepoLayoutRef = "simple-default"
@@ -388,6 +375,7 @@ func localDebianTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Debian(dlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 
 	dlp.Description += " - Updated"
@@ -402,12 +390,10 @@ func localDebianTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Debian(dlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dlp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localPypiTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("pypi")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	plp := services.NewPypiLocalRepositoryParams()
 	plp.Key = repoKey
 	plp.RepoLayoutRef = "simple-default"
@@ -418,6 +404,7 @@ func localPypiTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Pypi(plp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, plp)
 	plp.Description += " - Updated"
 	plp.Notes = "Repo been updated"
@@ -431,12 +418,10 @@ func localPypiTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Pypi(plp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, plp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localDockerTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("docker")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	dlp := services.NewDockerLocalRepositoryParams()
 	dlp.Key = repoKey
 	dlp.RepoLayoutRef = "simple-default"
@@ -449,6 +434,7 @@ func localDockerTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Docker(dlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 
 	dlp.Description += " - Updated"
@@ -465,12 +451,10 @@ func localDockerTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Docker(dlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dlp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localGitlfsTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("gitlfs")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGitlfsLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "simple-default"
@@ -483,6 +467,7 @@ func localGitlfsTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Gitlfs(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
@@ -495,12 +480,10 @@ func localGitlfsTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Gitlfs(glp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localGoTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("go")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGoLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "go-default"
@@ -512,6 +495,7 @@ func localGoTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Go(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
@@ -522,12 +506,10 @@ func localGoTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Go(glp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localYumTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("yum")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	ylp := services.NewYumLocalRepositoryParams()
 	ylp.Key = repoKey
 	ylp.RepoLayoutRef = "simple-default"
@@ -540,6 +522,7 @@ func localYumTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Yum(ylp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	ylp.PackageType = "rpm"
 	validateRepoConfig(t, repoKey, ylp)
@@ -554,12 +537,10 @@ func localYumTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Yum(ylp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, ylp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localConanTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("conan")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewConanLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "conan-default"
@@ -572,6 +553,7 @@ func localConanTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Conan(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
 	clp.Description += " - Updated"
@@ -584,12 +566,10 @@ func localConanTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Conan(clp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localChefTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("chef")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewChefLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "simple-default"
@@ -600,6 +580,7 @@ func localChefTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Chef(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
 	clp.Description += " - Updated"
@@ -614,12 +595,10 @@ func localChefTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Chef(clp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localPuppetTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("puppet")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	plp := services.NewPuppetLocalRepositoryParams()
 	plp.Key = repoKey
 	plp.RepoLayoutRef = "puppet-default"
@@ -630,6 +609,7 @@ func localPuppetTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Puppet(plp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, plp)
 	plp.Description += " - Updated"
 	plp.Notes = "Repo been updated"
@@ -643,12 +623,10 @@ func localPuppetTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Puppet(plp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, plp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localCocoapodsTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("cocoapods")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewCocoapodsLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "simple-default"
@@ -659,6 +637,7 @@ func localCocoapodsTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Cocoapods(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
 	clp.Description += " - Updated"
@@ -673,12 +652,10 @@ func localCocoapodsTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Cocoapods(clp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localOpkgTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("opkg")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	olp := services.NewOpkgLocalRepositoryParams()
 	olp.Key = repoKey
 	olp.RepoLayoutRef = "simple-default"
@@ -689,6 +666,7 @@ func localOpkgTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Opkg(olp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, olp)
 
 	olp.Description += " - Updated"
@@ -703,12 +681,10 @@ func localOpkgTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Opkg(olp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, olp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localComposerTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("composer")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	clp := services.NewComposerLocalRepositoryParams()
 	clp.Key = repoKey
 	clp.RepoLayoutRef = "composer-default"
@@ -720,6 +696,7 @@ func localComposerTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Composer(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
 	clp.Description += " - Updated"
@@ -733,12 +710,10 @@ func localComposerTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Composer(clp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, clp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localVagrantTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("vagrant")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	vlp := services.NewVagrantLocalRepositoryParams()
 	vlp.Key = repoKey
 	vlp.RepoLayoutRef = "simple-default"
@@ -748,6 +723,7 @@ func localVagrantTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Vagrant(vlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, vlp)
 
 	vlp.Description += " - Updated"
@@ -762,12 +738,10 @@ func localVagrantTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Vagrant(vlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, vlp)
-
-	deleteRepoAndValidate(t, repoKey)
 }
 
 func localGenericTest(t *testing.T) {
-	repoKey := generateLocalRepoKey("generic")
+	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "simple-default"
@@ -778,6 +752,7 @@ func localGenericTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
 	glp.Description += " - Updated"
@@ -789,6 +764,28 @@ func localGenericTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
+}
 
-	deleteRepoAndValidate(t, repoKey)
+func getLocalRepoDetailsTest(t *testing.T) {
+	// Create Repo
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	glp := services.NewGenericLocalRepositoryParams()
+	glp.Key = repoKey
+	glp.RepoLayoutRef = "simple-default"
+	glp.Description = "Generic Repo for jfrog-client-go local-repository-test"
+	glp.XrayIndex = &trueValue
+	glp.DownloadRedirect = &falseValue
+	glp.ArchiveBrowsingEnabled = &falseValue
+
+	err := testsCreateLocalRepositoryService.Generic(glp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	// Get repo details
+	data := getRepo(t, repoKey)
+	// Validate
+	assert.Equal(t, data.Key, repoKey)
+	assert.Equal(t, data.Description, glp.Description)
+	assert.Equal(t, data.Rclass, "local")
+	assert.Empty(t, data.Url)
+	assert.Equal(t, data.PackageType, "generic")
 }

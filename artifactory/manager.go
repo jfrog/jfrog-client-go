@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
@@ -82,6 +83,12 @@ func (sm *ArtifactoryServicesManager) DeleteRepository(repoKey string) error {
 	return deleteRepositoryService.Delete(repoKey)
 }
 
+func (sm *ArtifactoryServicesManager) GetRepository(repoKey string) (*services.RepositoryDetails, error) {
+	getRepositoryService := services.NewGetRepositoryService(sm.client)
+	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return getRepositoryService.Get(repoKey)
+}
+
 func (sm *ArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo) error {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
@@ -137,13 +144,33 @@ func (sm *ArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCl
 	return readFileService.ReadRemoteFile(readPath)
 }
 
-func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) ([]utils.FileInfo, int, error) {
+func (sm *ArtifactoryServicesManager) initDownloadService() *services.DownloadService {
 	downloadService := services.NewDownloadService(sm.client)
 	downloadService.DryRun = sm.config.IsDryRun()
 	downloadService.ArtDetails = sm.config.GetServiceDetails()
 	downloadService.Threads = sm.config.GetThreads()
 	downloadService.Progress = sm.progress
+	return downloadService
+}
+
+func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error) {
+	downloadService := sm.initDownloadService()
 	return downloadService.DownloadFiles(params...)
+}
+
+func (sm *ArtifactoryServicesManager) DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error) {
+	downloadService := sm.initDownloadService()
+	rw, err := content.NewContentWriter("results", true, false)
+	if err != nil {
+		return
+	}
+	downloadService.ResultWriter = rw
+	totalDownloaded, totalExpected, err = downloadService.DownloadFiles(params...)
+	if err != nil {
+		return
+	}
+	resultReader = content.NewContentReader(downloadService.ResultWriter.GetFilePath(), "results")
+	return
 }
 
 func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) ([]utils.ResultItem, error) {
@@ -272,10 +299,16 @@ func (sm *ArtifactoryServicesManager) GetReplication(repoKey string) ([]utils.Re
 	return getPushReplicationService.GetReplication(repoKey)
 }
 
-func (sm *ArtifactoryServicesManager) GetArtifactoryVersion() (string, error) {
-	versionService := services.NewVersionService(sm.client)
-	versionService.ArtDetails = sm.config.GetServiceDetails()
-	return versionService.GetArtifactoryVersion()
+func (sm *ArtifactoryServicesManager) GetVersion() (string, error) {
+	systemService := services.NewSystemService(sm.client)
+	systemService.ArtDetails = sm.config.GetServiceDetails()
+	return systemService.GetVersion()
+}
+
+func (sm *ArtifactoryServicesManager) GetServiceId() (string, error) {
+	systemService := services.NewSystemService(sm.client)
+	systemService.ArtDetails = sm.config.GetServiceDetails()
+	return systemService.GetServiceId()
 }
 
 func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {

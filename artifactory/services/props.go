@@ -96,7 +96,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 
 	successCounters := make([]int, ps.GetThreads())
 	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), true)
-	errorsQueue := utils.NewErrorsQueue(1)
+	errorsQueue := clientutils.NewErrorsQueue(1)
 
 	go func() {
 		for _, item := range propsParams.GetItems() {

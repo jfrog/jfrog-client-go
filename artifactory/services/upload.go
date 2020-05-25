@@ -55,12 +55,12 @@ func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (artifactsFil
 	// Uploading threads are using this struct to report upload results.
 	uploadSummary := *utils.NewUploadResult(us.Threads)
 	producerConsumer := parallel.NewRunner(us.Threads, 100, false)
-	errorsQueue := utils.NewErrorsQueue(1)
+	errorsQueue := clientutils.NewErrorsQueue(1)
 	us.prepareUploadTasks(producerConsumer, errorsQueue, uploadSummary, uploadParams...)
 	return us.performUploadTasks(producerConsumer, &uploadSummary, errorsQueue)
 }
 
-func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *utils.ErrorsQueue, uploadSummary utils.UploadResult, uploadParamsSlice ...UploadParams) {
+func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, uploadSummary utils.UploadResult, uploadParamsSlice ...UploadParams) {
 	go func() {
 		defer producer.Done()
 		// Iterate over file-spec groups and produce upload tasks.
@@ -77,7 +77,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 	}()
 }
 
-func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSummary *utils.UploadResult, errorsQueue *utils.ErrorsQueue) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
+func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSummary *utils.UploadResult, errorsQueue *clientutils.ErrorsQueue) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
 	// Blocking until consuming is finished.
 	consumer.Run()
 	err = errorsQueue.GetError()
@@ -133,7 +133,7 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 	return artifactProps, nil
 }
 
-func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
+func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *clientutils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
 	if strings.Index(uploadParams.GetTarget(), "/") < 0 {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
@@ -159,11 +159,13 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		if err != nil {
 			return err
 		}
-		vcsProps, err := getVcsProps(artifact.LocalPath, vcsCache)
-		if err != nil {
-			return err
+		if uploadParams.IsAddVcsProps() {
+			vcsProps, err := getVcsProps(artifact.LocalPath, vcsCache)
+			if err != nil {
+				return err
+			}
+			props += vcsProps
 		}
-		props += vcsProps
 		uploadData := UploadData{Artifact: artifact, Props: props}
 		task := artifactHandlerFunc(uploadData)
 		producer.AddTaskWithError(task, errorsQueue.AddError)
@@ -174,7 +176,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 	return err
 }
 
-func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *utils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
+func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *clientutils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
 	if errorutils.CheckError(err) != nil {
@@ -230,7 +232,7 @@ type uploadTaskData struct {
 	uploadParams        UploadParams
 	producer            parallel.Runner
 	artifactHandlerFunc artifactContext
-	errorsQueue         *utils.ErrorsQueue
+	errorsQueue         *clientutils.ErrorsQueue
 }
 
 func createUploadTask(taskData *uploadTaskData, vcsCache *clientutils.VcsCache) error {
@@ -314,7 +316,7 @@ func prepareUploadData(localPath, baseTargetPath, props string, uploadParams Upl
 
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadParams UploadParams, logMsgPrefix string) (utils.FileInfo, bool, error) {
+func (us *UploadService) uploadFile(localPath, targetPath, pathInArtifactory, props string, uploadParams UploadParams, logMsgPrefix string) (utils.FileInfo, bool, error) {
 	fileInfo, targetPathWithProps, err := prepareUploadData(localPath, targetPath, props, uploadParams, logMsgPrefix)
 	if err != nil {
 		return utils.FileInfo{}, false, err
@@ -337,7 +339,7 @@ func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadP
 		return utils.FileInfo{}, false, err
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
-	artifact := createBuildArtifactItem(details, localPath, targetPath)
+	artifact := createBuildArtifactItem(details, localPath, targetPath, pathInArtifactory)
 	return artifact, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
 
@@ -394,10 +396,11 @@ func logUploadResponse(logMsgPrefix string, resp *http.Response, body []byte, ch
 	}
 }
 
-func createBuildArtifactItem(details *fileutils.FileDetails, localPath, targetPath string) utils.FileInfo {
+func createBuildArtifactItem(details *fileutils.FileDetails, localPath, targetPath, pathInArtifactory string) utils.FileInfo {
 	return utils.FileInfo{
-		LocalPath:       localPath,
-		ArtifactoryPath: targetPath,
+		LocalPath:               localPath,
+		ArtifactoryPath:         targetPath,
+		InternalArtifactoryPath: pathInArtifactory,
 		FileHashes: &utils.FileHashes{
 			Sha256: details.Checksum.Sha256,
 			Sha1:   details.Checksum.Sha1,
@@ -503,7 +506,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.UploadRes
 			if e != nil {
 				return
 			}
-			artifactFileInfo, uploaded, e = us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Props, uploadParams, logMsgPrefix)
+			artifactFileInfo, uploaded, e = us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Artifact.TargetPath, artifact.Props, uploadParams, logMsgPrefix)
 			if e != nil {
 				return
 			}

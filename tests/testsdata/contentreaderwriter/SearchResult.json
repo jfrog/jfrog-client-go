@@ -1,0 +1,26 @@
+{
+    "results": [
+        {
+            "IntKey": 1,
+            "StrKey": "A",
+            "BoolKey": true,
+            "ArrayKey": [
+                {
+                    "key": "build.number",
+                    "value": "6"
+                }
+            ]
+        },
+        {
+            "IntKey": 2,
+            "StrKey": "B",
+            "BoolKey": false,
+            "ArrayKey": []
+        }
+    ],
+    "range": {
+        "start_pos": 0,
+        "end_pos": 2,
+        "total": 2
+    }
+}

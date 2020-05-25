@@ -121,7 +121,7 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 
 func (ds *DeleteService) DeleteFiles(deleteItems []utils.ResultItem) (int, error) {
 	producerConsumer := parallel.NewBounedRunner(ds.GetThreads(), false)
-	errorsQueue := utils.NewErrorsQueue(1)
+	errorsQueue := clientutils.NewErrorsQueue(1)
 	result := *utils.NewResult(ds.Threads)
 	go func() {
 		defer producerConsumer.Done()
@@ -133,7 +133,7 @@ func (ds *DeleteService) DeleteFiles(deleteItems []utils.ResultItem) (int, error
 	return ds.performTasks(producerConsumer, errorsQueue, result)
 }
 
-func (ds *DeleteService) performTasks(consumer parallel.Runner, errorsQueue *utils.ErrorsQueue, result utils.Result) (totalDeleted int, err error) {
+func (ds *DeleteService) performTasks(consumer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, result utils.Result) (totalDeleted int, err error) {
 	consumer.Run()
 	err = errorsQueue.GetError()
 

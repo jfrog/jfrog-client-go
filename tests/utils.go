@@ -5,6 +5,14 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -19,14 +27,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/mholt/archiver"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"testing"
-	"time"
 )
 
 var RtUrl *string
@@ -52,6 +52,7 @@ var testsUpdateLocalRepositoryService *services.LocalRepositoryService
 var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
+var testsGetRepositoryService *services.GetRepositoryService
 var testsCreateReplicationService *services.CreateReplicationService
 var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
@@ -66,7 +67,7 @@ var testsBundleDistributeService *distributionServices.DistributeReleaseBundleSe
 var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundleService
 var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
 
-var timestamp = strconv.FormatInt(time.Now().Unix(), 10)
+var timestamp = time.Now().Unix()
 var trueValue = true
 var falseValue = false
 
@@ -75,7 +76,7 @@ const (
 	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
 	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
-	RepoKeyPrefixForRepoServiceTest  = "artifactory-client-go-tests"
+	RepoKeyPrefixForRepoServiceTest  = "jf-client-go-test"
 )
 
 func init() {
@@ -207,6 +208,14 @@ func createArtifactoryDeleteRepositoryManager() {
 	failOnHttpClientCreation(err)
 	testsDeleteRepositoryService = services.NewDeleteRepositoryService(client)
 	testsDeleteRepositoryService.ArtDetails = artDetails
+}
+
+func createArtifactoryGetRepositoryManager() {
+	artDetails := GetRtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testsGetRepositoryService = services.NewGetRepositoryService(client)
+	testsGetRepositoryService.ArtDetails = artDetails
 }
 
 func createArtifactoryReplicationCreateManager() {
@@ -460,13 +469,18 @@ func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	}
 }
 
-func deleteRepoAndValidate(t *testing.T, repoKey string) {
+func deleteRepo(t *testing.T, repoKey string) {
 	err := testsDeleteRepositoryService.Delete(repoKey)
 	assert.NoError(t, err, "Failed to delete "+repoKey)
-	assert.False(t, isRepoExist(repoKey), repoKey+" still exists")
 }
 
-func GenerateRepoKeyForRepoServiceTest(pkgType, rclass string) string {
-	repoKeyParts := []string{RepoKeyPrefixForRepoServiceTest, pkgType, rclass, timestamp}
-	return strings.Join(repoKeyParts, "-")
+func GenerateRepoKeyForRepoServiceTest() string {
+	timestamp++
+	return fmt.Sprintf("%s-%d", RepoKeyPrefixForRepoServiceTest, timestamp)
+}
+
+func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
+	data, err := testsGetRepositoryService.Get(repoKey)
+	assert.NoError(t, err, "Failed to get "+repoKey+" details")
+	return data
 }

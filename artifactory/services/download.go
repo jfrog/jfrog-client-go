@@ -2,6 +2,12 @@ package services
 
 import (
 	"errors"
+	"net/http"
+	"os"
+	"path"
+	"path/filepath"
+	"sort"
+
 	"github.com/jfrog/gofrog/parallel"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -10,23 +16,20 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/mholt/archiver"
-	"net/http"
-	"os"
-	"path"
-	"path/filepath"
-	"sort"
 )
 
 type DownloadService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
-	Progress   io.Progress
-	ArtDetails auth.ServiceDetails
-	DryRun     bool
-	Threads    int
+	client       *rthttpclient.ArtifactoryHttpClient
+	Progress     io.Progress
+	ArtDetails   auth.ServiceDetails
+	DryRun       bool
+	Threads      int
+	ResultWriter *content.ContentWriter
 }
 
 func NewDownloadService(client *rthttpclient.ArtifactoryHttpClient) *DownloadService {
@@ -65,18 +68,22 @@ func (ds *DownloadService) SetDryRun(isDryRun bool) {
 	ds.DryRun = isDryRun
 }
 
-func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) ([]utils.FileInfo, int, error) {
-	buildDependencies := make([][]utils.FileInfo, ds.GetThreads())
+func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (int, int, error) {
 	producerConsumer := parallel.NewBounedRunner(ds.GetThreads(), false)
-	errorsQueue := utils.NewErrorsQueue(1)
+	errorsQueue := clientutils.NewErrorsQueue(1)
 	expectedChan := make(chan int, 1)
-	ds.prepareTasks(producerConsumer, buildDependencies, expectedChan, errorsQueue, downloadParams...)
+	successCounters := make([]int, ds.GetThreads())
+	ds.prepareTasks(producerConsumer, expectedChan, successCounters, errorsQueue, downloadParams...)
 
-	err := performTasks(producerConsumer, errorsQueue)
-	return utils.FlattenFileInfoArray(buildDependencies), <-expectedChan, err
+	err := ds.performTasks(producerConsumer, errorsQueue)
+	totalSuccess := 0
+	for _, v := range successCounters {
+		totalSuccess += v
+	}
+	return totalSuccess, <-expectedChan, err
 }
 
-func (ds *DownloadService) prepareTasks(producer parallel.Runner, buildDependencies [][]utils.FileInfo, expectedChan chan int, errorsQueue *utils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
+func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan chan int, successCounters []int, errorsQueue *clientutils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
 	go func() {
 		defer producer.Done()
 		defer close(expectedChan)
@@ -89,7 +96,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, buildDependenc
 			var resultItems []utils.ResultItem
 
 			// Create handler function for the current group.
-			fileHandlerFunc := ds.createFileHandlerFunc(buildDependencies, downloadParams)
+			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
 
 			// Search items.
 			log.Info("Searching items to download...")
@@ -119,7 +126,7 @@ func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams Downl
 	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
 }
 
-func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *utils.ErrorsQueue) int {
+func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
 	flat := downloadParams.IsFlat()
 	// Collect all folders path which might be needed to create.
 	// key = folder path, value = the necessary data for producing create folder task.
@@ -167,7 +174,7 @@ func collectDirPathsToCreate(aqlResultItem utils.ResultItem, directoriesData map
 	return directoriesData, directoriesDataKeys
 }
 
-func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[string]bool, producer parallel.Runner, fileHandler fileHandlerFunc, directoriesData map[string]DownloadData, errorsQueue *utils.ErrorsQueue, isFlat bool) {
+func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[string]bool, producer parallel.Runner, fileHandler fileHandlerFunc, directoriesData map[string]DownloadData, errorsQueue *clientutils.ErrorsQueue, isFlat bool) {
 	// Longest path first
 	// We are going to create the longest path first by doing so all sub paths of the longest path will be created implicitly.
 	sort.Sort(sort.Reverse(sort.StringSlice(directoriesDataKeys)))
@@ -188,9 +195,15 @@ func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[str
 	return
 }
 
-func performTasks(consumer parallel.Runner, errorsQueue *utils.ErrorsQueue) error {
+func (ds *DownloadService) performTasks(consumer parallel.Runner, errorsQueue *clientutils.ErrorsQueue) error {
 	// Blocked until finish consuming
 	consumer.Run()
+	if ds.ResultWriter != nil {
+		err := ds.ResultWriter.Close()
+		if err != nil {
+			return err
+		}
+	}
 	return errorsQueue.GetError()
 }
 
@@ -357,7 +370,7 @@ func getArtifactSymlinkChecksum(properties []utils.Property) string {
 
 type fileHandlerFunc func(DownloadData) parallel.TaskFunc
 
-func (ds *DownloadService) createFileHandlerFunc(buildDependencies [][]utils.FileInfo, downloadParams DownloadParams) fileHandlerFunc {
+func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, successCounters []int) fileHandlerFunc {
 	return func(downloadData DownloadData) parallel.TaskFunc {
 		return func(threadId int) error {
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ds.DryRun)
@@ -382,7 +395,7 @@ func (ds *DownloadService) createFileHandlerFunc(buildDependencies [][]utils.Fil
 				return e
 			}
 			if downloadParams.IsSymlink() {
-				if isSymlink, e := createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix, downloadData, buildDependencies, threadId, downloadParams); isSymlink {
+				if isSymlink, e := createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix, downloadData, successCounters, ds.ResultWriter, threadId, downloadParams); isSymlink {
 					return e
 				}
 			}
@@ -392,7 +405,10 @@ func (ds *DownloadService) createFileHandlerFunc(buildDependencies [][]utils.Fil
 				log.Error(logMsgPrefix, "Received an error: "+e.Error())
 				return e
 			}
-			buildDependencies[threadId] = append(buildDependencies[threadId], dependency)
+			successCounters[threadId]++
+			if ds.ResultWriter != nil {
+				ds.ResultWriter.Write(dependency)
+			}
 			return nil
 		}
 	}
@@ -443,7 +459,7 @@ func createDir(localPath, localFileName, logMsgPrefix string) error {
 	return nil
 }
 
-func createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix string, downloadData DownloadData, buildDependencies [][]utils.FileInfo, threadId int, downloadParams DownloadParams) (bool, error) {
+func createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix string, downloadData DownloadData, successCounters []int, responseWriter *content.ContentWriter, threadId int, downloadParams DownloadParams) (bool, error) {
 	symlinkArtifact := getArtifactSymlinkPath(downloadData.Dependency.Properties)
 	isSymlink := len(symlinkArtifact) > 0
 	if isSymlink {
@@ -452,7 +468,10 @@ func createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix string, downlo
 			return isSymlink, e
 		}
 		dependency := createDependencyFileInfo(downloadData.Dependency, localPath, localFileName)
-		buildDependencies[threadId] = append(buildDependencies[threadId], dependency)
+		successCounters[threadId]++
+		if responseWriter != nil {
+			responseWriter.Write(dependency)
+		}
 		return isSymlink, nil
 	}
 	return isSymlink, nil
