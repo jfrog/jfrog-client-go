@@ -70,7 +70,7 @@ func addGoVersion(version string, urlPath *string) {
 // ext - The extension of the file: zip, mod, info. This extension will be joined with the version for the path. For example v1.2.3.info or v1.2.3.zip
 // urlPath - The url including the repository. For example: http://127.0.0.1/artifactory/api/go/go-local
 func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext, urlPath string) error {
-	err := createUrlPath(moduleId, version, props, ext, &urlPath)
+	err := CreateUrlPath(moduleId, version, props, ext, &urlPath)
 	if err != nil {
 		return err
 	}

@@ -36,7 +36,7 @@ func (pwmp *publishWithMatrixParams) PublishPackage(params GoParams, client *rth
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 	addHeaders(params, &clientDetails)
 
-	err = createUrlPath(params.GetModuleId(), params.GetVersion(), params.GetProps(), ".zip", &url)
+	err = CreateUrlPath(params.GetModuleId(), params.GetVersion(), params.GetProps(), ".zip", &url)
 	if err != nil {
 		return err
 	}

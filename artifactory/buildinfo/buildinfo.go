@@ -115,6 +115,7 @@ type Module struct {
 type Artifact struct {
 	Name string `json:"name,omitempty"`
 	Type string `json:"type,omitempty"`
+	Path string `json:"path,omitempty"`
 	*Checksum
 }
 
