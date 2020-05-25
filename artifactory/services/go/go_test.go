@@ -24,7 +24,7 @@ func TestCreateUrlPath(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			createUrlPath(test.moduleId, test.version, test.props, test.extension, &test.url)
+			CreateUrlPath(test.moduleId, test.version, test.props, test.extension, &test.url)
 			if !strings.EqualFold(test.url, test.expectedUrl) {
 				t.Error("Expected:", test.expectedUrl, "Got:", test.url)
 			}

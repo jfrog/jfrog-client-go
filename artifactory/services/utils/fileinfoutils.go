@@ -14,8 +14,9 @@ type FileHashes struct {
 
 type FileInfo struct {
 	*FileHashes
-	LocalPath       string `json:"localPath,omitempty"`
-	ArtifactoryPath string `json:"artifactoryPath,omitempty"`
+	LocalPath               string `json:"localPath,omitempty"`
+	ArtifactoryPath         string `json:"artifactoryPath,omitempty"`
+	InternalArtifactoryPath string `json:"internalArtifactoryPath,omitempty"`
 }
 
 func (fileInfo *FileInfo) ToBuildArtifacts() buildinfo.Artifact {
@@ -28,6 +29,7 @@ func (fileInfo *FileInfo) ToBuildArtifacts() buildinfo.Artifact {
 	if i := strings.LastIndex(filename, "."); i != -1 {
 		artifact.Type = filename[i+1:]
 	}
+	artifact.Path = fileInfo.InternalArtifactoryPath
 	return artifact
 }
 
