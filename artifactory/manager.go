@@ -160,7 +160,7 @@ func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadP
 
 func (sm *ArtifactoryServicesManager) DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error) {
 	downloadService := sm.initDownloadService()
-	rw, err := content.NewContentWriter(downloadService.GetThreads(), "results", true, false)
+	rw, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return
 	}
@@ -169,7 +169,7 @@ func (sm *ArtifactoryServicesManager) DownloadFilesWithResultReader(params ...se
 	if err != nil {
 		return
 	}
-	resultReader = content.NewContentReader(downloadService.ResultWriter.GetOutputFilePath(), "results")
+	resultReader = content.NewContentReader(downloadService.ResultWriter.GetFilePath(), "results")
 	return
 }
 

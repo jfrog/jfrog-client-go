@@ -199,7 +199,7 @@ func (ds *DownloadService) performTasks(consumer parallel.Runner, errorsQueue *c
 	// Blocked until finish consuming
 	consumer.Run()
 	if ds.ResultWriter != nil {
-		err := ds.ResultWriter.Done()
+		err := ds.ResultWriter.Close()
 		if err != nil {
 			return err
 		}
