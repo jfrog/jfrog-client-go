@@ -102,8 +102,8 @@ rtManager.UploadFiles(params)
 
 #### Downloading Files from Artifactory
 
-##### Downloading Files without Resutls Reader:
-Using `DownloadFiles()` service, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
+##### Downloading Files:
+Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
 ```go
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
@@ -125,8 +125,7 @@ totalDownloaded, totalExpected, err := rtManager.DownloadFiles(params)
 ```
 
 ##### Downloading Files with Results Reader:
-Using `DownloadFilesWithResultReader()` service, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
-In addition, this service provides us with a reader through which we can iterate the downloaded files information
+Similar to `DownloadFiles()`, but returns a reader, which allows iterating over the details of the downloaded files. Only files which were successfully downloaded are available by the reader.
 ```go
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
@@ -137,11 +136,8 @@ params.Flat = false
 params.Explode = false
 params.Symlink = true
 params.ValidateSymlink = false
-// Retries default value: 3
 params.Retries = 5
-// SplitCount default value: 3
 params.SplitCount = 2
-// MinSplitSize default value: 5120
 params.MinSplitSize = 7168
 
 reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
@@ -152,8 +148,10 @@ Use `reader.Close()` method (preferably using `defer`), to remove the results re
 defer reader.Close()
 var file utils.FileInfo
 for e := resultReader.NextRecord(&file); e == nil; e = resultReader.NextRecord(&file) {
-    // Do somthing with file
-    ...    
+    fmt.Printf("Download source: %s\n", file.ArtifactoryPath)
+    fmt.Printf("Download target: %s\n", file.LocalPath)
+    fmt.Printf("SHA1: %s\n", file.Sha1)
+    fmt.Printf("MD5: %s\n", file.Md5) 
 }
 ```
 
