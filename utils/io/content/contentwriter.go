@@ -44,6 +44,7 @@ func NewContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*Content
 		if err != nil {
 			return nil, errorutils.CheckError(err)
 		}
+		fd.Close()
 	}
 	self := ContentWriter{}
 	self.arrayKey = arrayKey
@@ -83,6 +84,12 @@ func (rw *ContentWriter) Write(record interface{}) {
 // The channel may block the thread, therefore should run async.
 func (rw *ContentWriter) run() {
 	if rw.outputFile != os.Stdout {
+		var err error
+		rw.outputFile, err = os.OpenFile(rw.outputFile.Name(), os.O_RDWR, 0600)
+		if err != nil {
+			rw.errorsQueue.AddError(errorutils.CheckError(err))
+			return
+		}
 		defer rw.outputFile.Close()
 	}
 	openString := jsonArrayPrefixPattern
