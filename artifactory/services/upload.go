@@ -400,7 +400,7 @@ func createBuildArtifactItem(details *fileutils.FileDetails, localPath, targetPa
 	return utils.FileInfo{
 		LocalPath:               localPath,
 		ArtifactoryPath:         targetPath,
-		RelativeArtifactoryPath: pathInArtifactory,
+		InternalArtifactoryPath: pathInArtifactory,
 		FileHashes: &utils.FileHashes{
 			Sha256: details.Checksum.Sha256,
 			Sha1:   details.Checksum.Sha1,
