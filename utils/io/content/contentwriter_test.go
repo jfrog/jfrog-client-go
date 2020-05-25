@@ -65,15 +65,15 @@ func writeTestRecords(t *testing.T, rw *ContentWriter) {
 		}(i, i+3)
 	}
 	sendersWaiter.Wait()
-	err := rw.Done()
+	err := rw.Close()
 	assert.NoError(t, err)
 }
 
 func TestContentWriter(t *testing.T) {
-	rw, err := NewContentWriter(5, "arr", true, false)
+	rw, err := NewContentWriter("arr", true, false)
 	assert.NoError(t, err)
 	writeTestRecords(t, rw)
-	of, err := os.Open(rw.GetOutputFilePath())
+	of, err := os.Open(rw.GetFilePath())
 	assert.NoError(t, err)
 	byteValue, _ := ioutil.ReadAll(of)
 	var response Response
@@ -89,10 +89,10 @@ func TestContentWriter(t *testing.T) {
 }
 
 func TestContentReadeAfterWriter(t *testing.T) {
-	rw, err := NewContentWriter(5, "results", true, false)
+	rw, err := NewContentWriter("results", true, false)
 	assert.NoError(t, err)
 	writeTestRecords(t, rw)
-	rr := NewContentReader(rw.GetOutputFilePath(), "results")
+	rr := NewContentReader(rw.GetFilePath(), "results")
 	assert.NoError(t, err)
 	defer rr.Close()
 	recordCount := 0

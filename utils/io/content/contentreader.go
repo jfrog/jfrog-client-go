@@ -5,20 +5,31 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"os"
 	"sync"
+
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
+const (
+	memorySize = 100
+)
+
+// Open and read JSON file, find the array key inside it and load its value to the memory in small chunks.
+// Only array objects are valides to be fetch.
+// Each chunk can be fetch using 'GetRecord' (thread-safe).
+//
+// This technick solve the limit of memory size which may be too small to fit.
+// That way, we can handle big queries result from Artifactory that may not fit in size to the host total memory.
 type ContentReader struct {
-	// Response data file path.
+	// filePath - Source data file path.
+	// arrayKey = Read the value of the specific object in JSON.
 	filePath, arrayKey string
-	// The objects from the response data file are being pushed to the data channel.
+	// The objects from the source data file are being pushed into the data channel.
 	dataChannel chan map[string]interface{}
-	buffer      []map[string]interface{}
 	errorsQueue *utils.ErrorsQueue
 	once        *sync.Once
 }
@@ -27,24 +38,26 @@ func NewContentReader(filePath string, arrayKey string) *ContentReader {
 	self := ContentReader{}
 	self.filePath = filePath
 	self.arrayKey = arrayKey
-	self.dataChannel = make(chan map[string]interface{}, 50000)
-	self.errorsQueue = utils.NewErrorsQueue(50000)
+	self.dataChannel = make(chan map[string]interface{}, memorySize)
+	self.errorsQueue = utils.NewErrorsQueue(memorySize)
 	self.once = new(sync.Once)
 	return &self
 }
 
-func (rr *ContentReader) ArrayKey(arrayKey string) *ContentReader {
-	rr.arrayKey = arrayKey
-	return rr
+func (rc *ContentReader) ArrayKey(arrayKey string) *ContentReader {
+	rc.arrayKey = arrayKey
+	return rc
 }
 
-func (rr *ContentReader) NextRecord(recordOutput interface{}) error {
-	rr.once.Do(func() {
+// fetch the next chunk into 'recordOutput' param.
+// 'io.EOF' will be returned if no data is left.
+func (rc *ContentReader) NextRecord(recordOutput interface{}) error {
+	rc.once.Do(func() {
 		go func() {
-			rr.run()
+			rc.run()
 		}()
 	})
-	record, ok := <-rr.dataChannel
+	record, ok := <-rc.dataChannel
 	if !ok {
 		return errorutils.CheckError(io.EOF)
 	}
@@ -52,83 +65,94 @@ func (rr *ContentReader) NextRecord(recordOutput interface{}) error {
 	return errorutils.CheckError(json.Unmarshal(data, recordOutput))
 }
 
-func (rr *ContentReader) Reset() {
-	rr.dataChannel = make(chan map[string]interface{}, 50000)
-	rr.once = new(sync.Once)
+// Initialize the reader to read a file that has already been read (not thread-safe).
+func (rc *ContentReader) Reset() {
+	rc.dataChannel = make(chan map[string]interface{}, memorySize)
+	rc.once = new(sync.Once)
 }
 
-func (rr *ContentReader) Close() error {
-	if rr.filePath != "" {
-		return errorutils.CheckError(os.Remove(rr.filePath))
+// Cleanup the reader data.
+func (rc *ContentReader) Close() error {
+	if rc.filePath != "" {
+		if err := errorutils.CheckError(os.Remove(rc.filePath)); err != nil {
+			return err
+		}
+		rc.filePath = ""
 	}
 	return nil
 }
 
-func (rr *ContentReader) GetFilePath() string {
-	return rr.filePath
+func (rc *ContentReader) GetFilePath() string {
+	return rc.filePath
 }
 
-func (rr *ContentReader) SetFilePath(newPath string) {
-	if rr.filePath != "" {
-		rr.Close()
+func (rc *ContentReader) SetFilePath(newPath string) error {
+	if rc.filePath != "" {
+		if err := rc.Close(); err != nil {
+			return err
+		}
 	}
-	rr.filePath = newPath
-	rr.dataChannel = make(chan map[string]interface{}, 2)
+	rc.filePath = newPath
+	rc.dataChannel = make(chan map[string]interface{}, memorySize)
+	return nil
 }
 
-// Fill the channel from local file path
-func (rr *ContentReader) run() {
-	fd, err := os.Open(rr.filePath)
+// Open and read the file. Push each array element to the channel.
+// The channel may block the thread, therefore should run async.
+func (rc *ContentReader) run() {
+	fd, err := os.Open(rc.filePath)
 	if err != nil {
-		log.Fatal(err.Error())
-		rr.errorsQueue.AddError(errorutils.CheckError(err))
+		log.Error(err.Error())
+		rc.errorsQueue.AddError(errorutils.CheckError(err))
 		return
 	}
 	br := bufio.NewReaderSize(fd, 65536)
 	defer fd.Close()
-	defer close(rr.dataChannel)
+	defer close(rc.dataChannel)
 	dec := json.NewDecoder(br)
-	err = findDecoderTargetPosition(dec, rr.arrayKey, true)
+	err = findDecoderTargetPosition(dec, rc.arrayKey, true)
 	if err != nil {
 		if err == io.EOF {
-			rr.errorsQueue.AddError(errors.New("results not found"))
+			rc.errorsQueue.AddError(errors.New("results not found"))
 			return
 		}
-		rr.errorsQueue.AddError(err)
-		log.Fatal(err.Error())
+		rc.errorsQueue.AddError(err)
+		log.Error(err.Error())
 		return
 	}
 	for dec.More() {
 		var ResultItem map[string]interface{}
 		err := dec.Decode(&ResultItem)
 		if err != nil {
-			log.Fatal(err)
-			rr.errorsQueue.AddError(errorutils.CheckError(err))
+			log.Error(err)
+			rc.errorsQueue.AddError(errorutils.CheckError(err))
 			return
 		}
-		rr.dataChannel <- ResultItem
+		rc.dataChannel <- ResultItem
 	}
 }
 
-func (rr *ContentReader) IsEmpty() (bool, error) {
-	fd, err := os.Open(rr.filePath)
+// Return true if the file has more than one element in array.
+func (rc *ContentReader) IsEmpty() (bool, error) {
+	fd, err := os.Open(rc.filePath)
 	if err != nil {
-		log.Fatal(err.Error())
-		rr.errorsQueue.AddError(errorutils.CheckError(err))
+		log.Error(err.Error())
+		rc.errorsQueue.AddError(errorutils.CheckError(err))
 		return false, err
 	}
 	br := bufio.NewReaderSize(fd, 65536)
 	defer fd.Close()
-	defer close(rr.dataChannel)
+	defer close(rc.dataChannel)
 	dec := json.NewDecoder(br)
-	err = findDecoderTargetPosition(dec, rr.arrayKey, true)
-	return isZeroResult(dec, rr.arrayKey, true)
+	err = findDecoderTargetPosition(dec, rc.arrayKey, true)
+	return isEmptyArray(dec, rc.arrayKey, true)
 }
 
-func (rr *ContentReader) GetError() error {
-	return rr.errorsQueue.GetError()
+func (rc *ContentReader) GetError() error {
+	return rc.errorsQueue.GetError()
 }
 
+// Search and set the decoder's position at the desired key in the JSON file.
 func findDecoderTargetPosition(dec *json.Decoder, target string, isArray bool) error {
 	for dec.More() {
 		t, err := dec.Token()
@@ -146,7 +170,8 @@ func findDecoderTargetPosition(dec *json.Decoder, target string, isArray bool) e
 	return nil
 }
 
-func isZeroResult(dec *json.Decoder, target string, isArray bool) (bool, error) {
+// Scan the JSON file and check if the array contains at least one element.
+func isEmptyArray(dec *json.Decoder, target string, isArray bool) (bool, error) {
 	if err := findDecoderTargetPosition(dec, target, isArray); err != nil {
 		return false, err
 	}

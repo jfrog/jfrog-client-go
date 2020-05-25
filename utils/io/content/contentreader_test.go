@@ -2,9 +2,12 @@ package content
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -58,7 +61,6 @@ func TestContentReader(t *testing.T) {
 		assert.Empty(t, rSlice[1].ArrayKey)
 		rr.Reset()
 	}
-
 }
 
 func TestContentReaderEmptyResult(t *testing.T) {
@@ -74,4 +76,16 @@ func TestContentReaderEmptyResult(t *testing.T) {
 func getTestDataPath() string {
 	dir, _ := os.Getwd()
 	return filepath.Join(dir, "..", "..", "..", "tests", "testsdata")
+}
+
+func TestCloseReader(t *testing.T) {
+	fd, err := ioutil.TempFile("", strconv.FormatInt(time.Now().Unix(), 10))
+	assert.NoError(t, err)
+	fd.Close()
+	fileName := fd.Name()
+	rr := NewContentReader(fileName, arrayKey)
+	err = rr.Close()
+	assert.NoError(t, err)
+	_, err = os.Open(fileName)
+	assert.Error(t, err)
 }

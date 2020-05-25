@@ -18,19 +18,23 @@ const (
 	jsonArraySuffix        = "]\n"
 )
 
+// Write a JSON file in small chunks. Only a single JSON key can be written to the file, and array as its value, the array's values could be any JSON value types (number, string, etc...).
+// Once the first 'Write" call is made, the file will stay open, waiting for the next struct to be written (thread-safe).
+// Finally, 'Close' will fill the end of the JSON file and the operation will be completed.
 type ContentWriter struct {
+	// arrayKey = JSON object key to be written.
 	arrayKey string
 	// The output data file path.
 	outputFile *os.File
 	// The chanel which from the output records will be pulled.
-	recordsChannel chan interface{}
+	dataChannel    chan interface{}
 	isCompleteFile bool
 	errorsQueue    *utils.ErrorsQueue
 	runWaiter      sync.WaitGroup
 	once           sync.Once
 }
 
-func NewContentWriter(chanCapacity int, arrayKey string, isCompleteFile, useStdout bool) (*ContentWriter, error) {
+func NewContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*ContentWriter, error) {
 	var fd *os.File
 	var err error
 	if useStdout {
@@ -44,8 +48,8 @@ func NewContentWriter(chanCapacity int, arrayKey string, isCompleteFile, useStdo
 	self := ContentWriter{}
 	self.arrayKey = arrayKey
 	self.outputFile = fd
-	self.recordsChannel = make(chan interface{}, chanCapacity)
-	self.errorsQueue = utils.NewErrorsQueue(chanCapacity)
+	self.dataChannel = make(chan interface{}, memorySize)
+	self.errorsQueue = utils.NewErrorsQueue(memorySize)
 	self.isCompleteFile = isCompleteFile
 	return &self, nil
 }
@@ -55,7 +59,7 @@ func (rw *ContentWriter) SetArrayKey(arrKey string) *ContentWriter {
 	return rw
 }
 
-func (rw *ContentWriter) GetOutputFilePath() string {
+func (rw *ContentWriter) GetFilePath() string {
 	return rw.outputFile.Name()
 }
 
@@ -63,6 +67,7 @@ func (rw *ContentWriter) RemoveOutputFilePath() error {
 	return errorutils.CheckError(os.Remove(rw.outputFile.Name()))
 }
 
+// Write a single item to the JSON array.
 func (rw *ContentWriter) Write(record interface{}) {
 	rw.once.Do(func() {
 		rw.runWaiter.Add(1)
@@ -71,9 +76,11 @@ func (rw *ContentWriter) Write(record interface{}) {
 			rw.run()
 		}()
 	})
-	rw.recordsChannel <- record
+	rw.dataChannel <- record
 }
 
+// Write the data from the channel to JSON file.
+// The channel may block the thread, therefore should run async.
 func (rw *ContentWriter) run() {
 	if rw.outputFile != os.Stdout {
 		defer rw.outputFile.Close()
@@ -93,18 +100,19 @@ func (rw *ContentWriter) run() {
 	enc.SetIndent("    ", "  ")
 	recordPrefix := "\n    "
 	firstRecord := true
-	for record := range rw.recordsChannel {
-		rw.outputFile.WriteString(recordPrefix)
+	for record := range rw.dataChannel {
+		buf.Reset()
 		err = enc.Encode(record)
 		if err != nil {
 			rw.errorsQueue.AddError(errorutils.CheckError(err))
+			continue
 		}
-		b := bytes.TrimRight(buf.Bytes(), "\n")
-		_, err = rw.outputFile.Write(b)
+		record := recordPrefix + string(bytes.TrimRight(buf.Bytes(), "\n"))
+		_, err = rw.outputFile.WriteString(record)
 		if err != nil {
 			rw.errorsQueue.AddError(errorutils.CheckError(err))
+			continue
 		}
-		buf.Reset()
 		if firstRecord {
 			// If a record was printed, we want to print a comma and ne before each and every future record.
 			recordPrefix = "," + recordPrefix
@@ -124,8 +132,9 @@ func (rw *ContentWriter) run() {
 	return
 }
 
-func (rw *ContentWriter) Done() error {
-	close(rw.recordsChannel)
+// Finish writing to the file.
+func (rw *ContentWriter) Close() error {
+	close(rw.dataChannel)
 	rw.runWaiter.Wait()
 	return rw.errorsQueue.GetError()
 }
