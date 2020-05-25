@@ -14,7 +14,7 @@ func addHeaders(params GoParams, clientDetails *httputils.HttpClientDetails) {
 	utils.AddHeader("X-GO-MODULE-CONTENT", base64.StdEncoding.EncodeToString(params.GetModContent()), &clientDetails.Headers)
 }
 
-func createUrlPath(moduleId, version, props, extension string, url *string) error {
+func CreateUrlPath(moduleId, version, props, extension string, url *string) error {
 	*url = strings.Join([]string{*url, moduleId, "@v", version + extension}, "/")
 	properties, err := utils.ParseProperties(props, utils.JoinCommas)
 	if err != nil {

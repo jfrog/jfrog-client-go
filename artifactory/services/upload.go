@@ -316,7 +316,7 @@ func prepareUploadData(localPath, baseTargetPath, props string, uploadParams Upl
 
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadParams UploadParams, logMsgPrefix string) (utils.FileInfo, bool, error) {
+func (us *UploadService) uploadFile(localPath, targetPath, pathInArtifactory, props string, uploadParams UploadParams, logMsgPrefix string) (utils.FileInfo, bool, error) {
 	fileInfo, targetPathWithProps, err := prepareUploadData(localPath, targetPath, props, uploadParams, logMsgPrefix)
 	if err != nil {
 		return utils.FileInfo{}, false, err
@@ -339,7 +339,7 @@ func (us *UploadService) uploadFile(localPath, targetPath, props string, uploadP
 		return utils.FileInfo{}, false, err
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
-	artifact := createBuildArtifactItem(details, localPath, targetPath)
+	artifact := createBuildArtifactItem(details, localPath, targetPath, pathInArtifactory)
 	return artifact, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
 
@@ -396,10 +396,11 @@ func logUploadResponse(logMsgPrefix string, resp *http.Response, body []byte, ch
 	}
 }
 
-func createBuildArtifactItem(details *fileutils.FileDetails, localPath, targetPath string) utils.FileInfo {
+func createBuildArtifactItem(details *fileutils.FileDetails, localPath, targetPath, pathInArtifactory string) utils.FileInfo {
 	return utils.FileInfo{
-		LocalPath:       localPath,
-		ArtifactoryPath: targetPath,
+		LocalPath:               localPath,
+		ArtifactoryPath:         targetPath,
+		RelativeArtifactoryPath: pathInArtifactory,
 		FileHashes: &utils.FileHashes{
 			Sha256: details.Checksum.Sha256,
 			Sha1:   details.Checksum.Sha1,
@@ -505,7 +506,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.UploadRes
 			if e != nil {
 				return
 			}
-			artifactFileInfo, uploaded, e = us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Props, uploadParams, logMsgPrefix)
+			artifactFileInfo, uploaded, e = us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Artifact.TargetPath, artifact.Props, uploadParams, logMsgPrefix)
 			if e != nil {
 				return
 			}
