@@ -2,6 +2,12 @@ package services
 
 import (
 	"errors"
+	"net/http"
+	"os"
+	"path"
+	"path/filepath"
+	"sort"
+
 	"github.com/jfrog/gofrog/parallel"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -14,11 +20,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/mholt/archiver"
-	"net/http"
-	"os"
-	"path"
-	"path/filepath"
-	"sort"
 )
 
 type DownloadService struct {
@@ -68,7 +69,7 @@ func (ds *DownloadService) SetDryRun(isDryRun bool) {
 func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) ([]utils.FileInfo, int, error) {
 	buildDependencies := make([][]utils.FileInfo, ds.GetThreads())
 	producerConsumer := parallel.NewBounedRunner(ds.GetThreads(), false)
-	errorsQueue := utils.NewErrorsQueue(1)
+	errorsQueue := clientutils.NewErrorsQueue(1)
 	expectedChan := make(chan int, 1)
 	ds.prepareTasks(producerConsumer, buildDependencies, expectedChan, errorsQueue, downloadParams...)
 
@@ -76,7 +77,7 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) ([]ut
 	return utils.FlattenFileInfoArray(buildDependencies), <-expectedChan, err
 }
 
-func (ds *DownloadService) prepareTasks(producer parallel.Runner, buildDependencies [][]utils.FileInfo, expectedChan chan int, errorsQueue *utils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
+func (ds *DownloadService) prepareTasks(producer parallel.Runner, buildDependencies [][]utils.FileInfo, expectedChan chan int, errorsQueue *clientutils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
 	go func() {
 		defer producer.Done()
 		defer close(expectedChan)
@@ -119,7 +120,7 @@ func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams Downl
 	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
 }
 
-func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *utils.ErrorsQueue) int {
+func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
 	flat := downloadParams.IsFlat()
 	// Collect all folders path which might be needed to create.
 	// key = folder path, value = the necessary data for producing create folder task.
@@ -167,7 +168,7 @@ func collectDirPathsToCreate(aqlResultItem utils.ResultItem, directoriesData map
 	return directoriesData, directoriesDataKeys
 }
 
-func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[string]bool, producer parallel.Runner, fileHandler fileHandlerFunc, directoriesData map[string]DownloadData, errorsQueue *utils.ErrorsQueue, isFlat bool) {
+func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[string]bool, producer parallel.Runner, fileHandler fileHandlerFunc, directoriesData map[string]DownloadData, errorsQueue *clientutils.ErrorsQueue, isFlat bool) {
 	// Longest path first
 	// We are going to create the longest path first by doing so all sub paths of the longest path will be created implicitly.
 	sort.Sort(sort.Reverse(sort.StringSlice(directoriesDataKeys)))
@@ -188,7 +189,7 @@ func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[str
 	return
 }
 
-func performTasks(consumer parallel.Runner, errorsQueue *utils.ErrorsQueue) error {
+func performTasks(consumer parallel.Runner, errorsQueue *clientutils.ErrorsQueue) error {
 	// Blocked until finish consuming
 	consumer.Run()
 	return errorsQueue.GetError()
