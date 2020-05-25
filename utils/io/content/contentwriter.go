@@ -48,8 +48,8 @@ func NewContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*Content
 	self := ContentWriter{}
 	self.arrayKey = arrayKey
 	self.outputFile = fd
-	self.dataChannel = make(chan interface{}, memorySize)
-	self.errorsQueue = utils.NewErrorsQueue(memorySize)
+	self.dataChannel = make(chan interface{}, channelSize)
+	self.errorsQueue = utils.NewErrorsQueue(channelSize)
 	self.isCompleteFile = isCompleteFile
 	return &self, nil
 }

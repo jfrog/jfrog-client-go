@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	memorySize = 100
+	channelSize = 100
 )
 
 // Open and read JSON file, find the array key inside it and load its value to the memory in small chunks.
@@ -38,8 +38,8 @@ func NewContentReader(filePath string, arrayKey string) *ContentReader {
 	self := ContentReader{}
 	self.filePath = filePath
 	self.arrayKey = arrayKey
-	self.dataChannel = make(chan map[string]interface{}, memorySize)
-	self.errorsQueue = utils.NewErrorsQueue(memorySize)
+	self.dataChannel = make(chan map[string]interface{}, channelSize)
+	self.errorsQueue = utils.NewErrorsQueue(channelSize)
 	self.once = new(sync.Once)
 	return &self
 }
@@ -67,7 +67,7 @@ func (rc *ContentReader) NextRecord(recordOutput interface{}) error {
 
 // Initialize the reader to read a file that has already been read (not thread-safe).
 func (rc *ContentReader) Reset() {
-	rc.dataChannel = make(chan map[string]interface{}, memorySize)
+	rc.dataChannel = make(chan map[string]interface{}, channelSize)
 	rc.once = new(sync.Once)
 }
 
@@ -93,7 +93,7 @@ func (rc *ContentReader) SetFilePath(newPath string) error {
 		}
 	}
 	rc.filePath = newPath
-	rc.dataChannel = make(chan map[string]interface{}, memorySize)
+	rc.dataChannel = make(chan map[string]interface{}, channelSize)
 	return nil
 }
 
