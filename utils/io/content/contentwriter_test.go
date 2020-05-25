@@ -104,3 +104,20 @@ func TestContentReadeAfterWriter(t *testing.T) {
 	assert.NoError(t, rr.GetError())
 	assert.Equal(t, len(records), recordCount, "The amount of records were read (%d) is different then expected", recordCount)
 }
+
+func TestRemoveOutputFilePath(t *testing.T) {
+	// Create a file.
+	rw, err := NewContentWriter("results", true, false)
+	assert.NoError(t, err)
+	rw.Close()
+	filePathToBeDeleted := rw.GetFilePath()
+
+	// Check file exists
+	_, err = os.Stat(filePathToBeDeleted)
+	assert.NoError(t, err)
+
+	// Check if the file got deleted
+	rw.RemoveOutputFilePath()
+	_, err = os.Stat(filePathToBeDeleted)
+	assert.True(t, os.IsNotExist(err))
+}

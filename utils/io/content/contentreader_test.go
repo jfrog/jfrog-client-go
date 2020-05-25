@@ -79,13 +79,22 @@ func getTestDataPath() string {
 }
 
 func TestCloseReader(t *testing.T) {
+	// Create a file.
 	fd, err := ioutil.TempFile("", strconv.FormatInt(time.Now().Unix(), 10))
 	assert.NoError(t, err)
 	fd.Close()
-	fileName := fd.Name()
-	rr := NewContentReader(fileName, arrayKey)
+	filePathToBeDeleted := fd.Name()
+
+	// Load file to reader
+	rr := NewContentReader(filePathToBeDeleted, arrayKey)
+
+	// Check file exists
+	_, err = os.Stat(filePathToBeDeleted)
+	assert.NoError(t, err)
+
+	// Check if the file got deleted
 	err = rr.Close()
 	assert.NoError(t, err)
-	_, err = os.Open(fileName)
-	assert.Error(t, err)
+	_, err = os.Stat(filePathToBeDeleted)
+	assert.True(t, os.IsNotExist(err))
 }
