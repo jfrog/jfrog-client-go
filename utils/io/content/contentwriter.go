@@ -27,6 +27,7 @@ type ContentWriter struct {
 	isCompleteFile bool
 	errorsQueue    *utils.ErrorsQueue
 	runWaiter      sync.WaitGroup
+	once           sync.Once
 }
 
 func NewContentWriter(chanCapacity int, arrayKey string, isCompleteFile, useStdout bool) (*ContentWriter, error) {
@@ -63,16 +64,14 @@ func (rw *ContentWriter) RemoveOutputFilePath() error {
 }
 
 func (rw *ContentWriter) Write(record interface{}) {
+	rw.once.Do(func() {
+		rw.runWaiter.Add(1)
+		go func() {
+			defer rw.runWaiter.Done()
+			rw.run()
+		}()
+	})
 	rw.recordsChannel <- record
-}
-
-func (rw *ContentWriter) Run() {
-	rw.runWaiter.Add(1)
-	go func() {
-		defer rw.runWaiter.Done()
-		rw.run()
-	}()
-	return
 }
 
 func (rw *ContentWriter) run() {
@@ -128,5 +127,9 @@ func (rw *ContentWriter) run() {
 func (rw *ContentWriter) Done() error {
 	close(rw.recordsChannel)
 	rw.runWaiter.Wait()
+	return rw.errorsQueue.GetError()
+}
+
+func (rw *ContentWriter) GetError() error {
 	return rw.errorsQueue.GetError()
 }

@@ -1,13 +1,21 @@
 {
     "results": [
         {
-            "repo": "MyRepo",
-            "properties": [
+            "IntKey": 1,
+            "StrKey": "A",
+            "BoolKey": true,
+            "ArrayKey": [
                 {
                     "key": "build.number",
                     "value": "6"
                 }
             ]
+        },
+        {
+            "IntKey": 2,
+            "StrKey": "B",
+            "BoolKey": false,
+            "ArrayKey": []
         }
     ],
     "range": {

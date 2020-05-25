@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -19,6 +20,7 @@ type ContentReader struct {
 	dataChannel chan map[string]interface{}
 	buffer      []map[string]interface{}
 	errorsQueue *utils.ErrorsQueue
+	once        *sync.Once
 }
 
 func NewContentReader(filePath string, arrayKey string) *ContentReader {
@@ -27,6 +29,7 @@ func NewContentReader(filePath string, arrayKey string) *ContentReader {
 	self.arrayKey = arrayKey
 	self.dataChannel = make(chan map[string]interface{}, 50000)
 	self.errorsQueue = utils.NewErrorsQueue(50000)
+	self.once = new(sync.Once)
 	return &self
 }
 
@@ -35,24 +38,23 @@ func (rr *ContentReader) ArrayKey(arrayKey string) *ContentReader {
 	return rr
 }
 
-// Fire up a goroutine in order to fill the data channel.
-func (rr *ContentReader) Run() (chan map[string]interface{}, *utils.ErrorsQueue) {
-	rr.dataChannel = make(chan map[string]interface{}, 50000)
-	go func() {
-		rr.run()
-	}()
-	return rr.dataChannel, rr.errorsQueue
-}
-
-// Iterator to get next record from the file.
-// The file be deleted and io.EOF error will be returned when there are no more records in the channel and the channel is closed.
-func (rr *ContentReader) GetRecord(recordOutput interface{}) error {
+func (rr *ContentReader) NextRecord(recordOutput interface{}) error {
+	rr.once.Do(func() {
+		go func() {
+			rr.run()
+		}()
+	})
 	record, ok := <-rr.dataChannel
 	if !ok {
 		return errorutils.CheckError(io.EOF)
 	}
 	data, _ := json.Marshal(record)
 	return errorutils.CheckError(json.Unmarshal(data, recordOutput))
+}
+
+func (rr *ContentReader) Reset() {
+	rr.dataChannel = make(chan map[string]interface{}, 50000)
+	rr.once = new(sync.Once)
 }
 
 func (rr *ContentReader) Close() error {
@@ -74,7 +76,7 @@ func (rr *ContentReader) SetFilePath(newPath string) {
 	rr.dataChannel = make(chan map[string]interface{}, 2)
 }
 
-// Run async  by 'Run' methoed
+// Fill the channel from local file path
 func (rr *ContentReader) run() {
 	fd, err := os.Open(rr.filePath)
 	if err != nil {
@@ -121,6 +123,10 @@ func (rr *ContentReader) IsEmpty() (bool, error) {
 	dec := json.NewDecoder(br)
 	err = findDecoderTargetPosition(dec, rr.arrayKey, true)
 	return isZeroResult(dec, rr.arrayKey, true)
+}
+
+func (rr *ContentReader) GetError() error {
+	return rr.errorsQueue.GetError()
 }
 
 func findDecoderTargetPosition(dec *json.Decoder, target string, isArray bool) error {

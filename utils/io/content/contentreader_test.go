@@ -1,7 +1,7 @@
 package content
 
 import (
-	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,40 +15,63 @@ const (
 	arrayKey          = "results"
 )
 
+type inputRecord struct {
+	IntKey   int          `json:"intKey"`
+	StrKey   string       `json:"strKey"`
+	BoolKey  bool         `json:"boolKey"`
+	ArrayKey []ArrayValue `json:"arrayKey"`
+}
+
+type ArrayValue struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 func TestContentReaderPath(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "content", searchResult)
+	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
 	rr := NewContentReader(searchResultPath, arrayKey)
 	assert.Equal(t, rr.GetFilePath(), searchResultPath)
 }
 
 func TestContentReader(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "content", searchResult)
+	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
 	rr := NewContentReader(searchResultPath, arrayKey)
-	assert.Equal(t, rr.GetFilePath(), searchResultPath)
-
-	channel, channelErr := rr.Run()
-	for data := range channel {
-		rawJson, err := json.Marshal(data)
-		assert.NoError(t, err)
-		x := string(rawJson)
-		assert.Equal(t, x, `{"properties":[{"key":"build.number","value":"6"}],"repo":"MyRepo"}`)
+	// Read the same file two times
+	for i := 0; i < 2; i++ {
+		var rSlice []inputRecord
+		var r inputRecord
+		var err error
+		for err = rr.NextRecord(&r); err == nil; err = rr.NextRecord(&r) {
+			rSlice = append(rSlice, r)
+		}
+		assert.Equal(t, err, io.EOF)
+		assert.NoError(t, rr.GetError())
+		// First element
+		assert.Equal(t, rSlice[0].IntKey, 1)
+		assert.Equal(t, rSlice[0].StrKey, "A")
+		assert.Equal(t, rSlice[0].BoolKey, true)
+		assert.ElementsMatch(t, rSlice[0].ArrayKey, []ArrayValue{{Key: "build.number", Value: "6"}})
+		// Second element
+		assert.Equal(t, rSlice[1].IntKey, 2)
+		assert.Equal(t, rSlice[1].StrKey, "B")
+		assert.Equal(t, rSlice[1].BoolKey, false)
+		assert.Empty(t, rSlice[1].ArrayKey)
+		rr.Reset()
 	}
-	assert.NoError(t, channelErr.GetError())
 
 }
 
 func TestContentReaderEmptyResult(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "content", emptySearchResult)
+	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", emptySearchResult)
 	rr := NewContentReader(searchResultPath, arrayKey)
-	channel, channelErr := rr.Run()
-	for range channel {
+	var r inputRecord
+	for e := rr.NextRecord(&r); e == nil; e = rr.NextRecord(&r) {
 		t.Error("Can't loop over empty file")
 	}
-	assert.NoError(t, channelErr.GetError())
-
+	assert.NoError(t, rr.GetError())
 }
 
 func getTestDataPath() string {
 	dir, _ := os.Getwd()
-	return filepath.Join(dir, "..", "..", "..", "..", "tests", "testsdata")
+	return filepath.Join(dir, "..", "..", "..", "tests", "testsdata")
 }

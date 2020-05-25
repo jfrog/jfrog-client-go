@@ -13,7 +13,7 @@ import (
 type outputRecord struct {
 	IntKey  int    `json:"intKey"`
 	StrKey  string `json:"strKey"`
-	BoolKey bool   `json:boolKey`
+	BoolKey bool   `json:"boolKey"`
 }
 
 var records = []outputRecord{
@@ -55,7 +55,6 @@ type Response struct {
 
 func writeTestRecords(t *testing.T, rw *ContentWriter) {
 	var sendersWaiter sync.WaitGroup
-	rw.Run()
 	for i := 0; i < len(records); i += 3 {
 		sendersWaiter.Add(1)
 		go func(start, end int) {
@@ -84,7 +83,7 @@ func TestContentWriter(t *testing.T) {
 	assert.NoError(t, err)
 	err = rw.RemoveOutputFilePath()
 	assert.NoError(t, err)
-	for i, _ := range records {
+	for i := range records {
 		assert.Contains(t, response.Arr, records[i], "record %s missing", records[i].StrKey)
 	}
 }
@@ -95,14 +94,13 @@ func TestContentReadeAfterWriter(t *testing.T) {
 	writeTestRecords(t, rw)
 	rr := NewContentReader(rw.GetOutputFilePath(), "results")
 	assert.NoError(t, err)
-	_, errQueue := rr.Run()
 	defer rr.Close()
 	recordCount := 0
 	var r outputRecord
-	for e := rr.GetRecord(&r); e == nil; e = rr.GetRecord(&r) {
+	for e := rr.NextRecord(&r); e == nil; e = rr.NextRecord(&r) {
 		assert.Contains(t, records, r, "record %s missing", r.StrKey)
 		recordCount++
 	}
-	assert.NoError(t, errQueue.GetError())
+	assert.NoError(t, rr.GetError())
 	assert.Equal(t, len(records), recordCount, "The amount of records were read (%d) is different then expected", recordCount)
 }
