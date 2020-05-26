@@ -434,39 +434,57 @@ func FixWinPath(filePath string) string {
 	return fixedPath
 }
 
-func getRepoConfig(repoKey string) (body []byte) {
+func getRepoConfig(repoKey string) (body []byte, err error) {
 	artDetails := GetRtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return nil
+		return
 	}
 	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/repositories/"+repoKey, false, artHttpDetails)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		return nil
+		return
 	}
 	return
 }
 
-func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
-	config := getRepoConfig(repoKey)
-	if config == nil {
-		t.Error("Failed to get repository config")
+func createRepoConfigValidationFunc(repoKey string, params interface{}) clientutils.ExecutionHandlerFunc {
+	return func() (shouldRetry bool, err error) {
+		config, err := getRepoConfig(repoKey)
+		if err != nil || config == nil {
+			return true, errors.New("failed reading repository config for " + repoKey)
+		}
+		var confMap, paramsMap map[string]interface{}
+		if err = json.Unmarshal(config, &confMap); err != nil {
+			return true, errors.New("failed unmarshal repository config for " + repoKey)
+		}
+		tmpJson, err := json.Marshal(params)
+		if err != nil {
+			return true, errors.New("failed marshal expected config for " + repoKey)
+		}
+		if err = json.Unmarshal(tmpJson, &paramsMap); err != nil {
+			return true, errors.New("failed unmarshal expected config for " + repoKey)
+		}
+		for key, value := range paramsMap {
+			if !assert.ObjectsAreEqual(confMap[key], value) {
+				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual  : %s", repoKey, key, confMap[key], value)
+				return true, errors.New(errMsg)
+
+			}
+		}
+		return false, nil
 	}
-	var confMap, paramsMap map[string]interface{}
-	if err := json.Unmarshal(config, &confMap); err != nil {
-		t.Error("Failed to marshal config map")
+}
+
+func validateRepoConfigWithRetries(t *testing.T, repoKey string, params interface{}) {
+	retryExecutor := &clientutils.RetryExecutor{
+		MaxRetries:       120,
+		RetriesInterval:  1,
+		ErrorMessage:     "Waiting for Artifactory to evaluate repository operation...",
+		ExecutionHandler: createRepoConfigValidationFunc(repoKey, params),
 	}
-	tmpJson, err := json.Marshal(params)
-	if err != nil {
-		t.Error("Failed to marshal repository params")
-	}
-	if err := json.Unmarshal(tmpJson, &paramsMap); err != nil {
-		t.Error("Failed to unmarshal repository params")
-	}
-	for key, value := range paramsMap {
-		assert.Equal(t, confMap[key], value, "faild validating "+key)
-	}
+	err := retryExecutor.Execute()
+	assert.NoError(t, err)
 }
 
 func deleteRepo(t *testing.T, repoKey string) {
