@@ -448,26 +448,26 @@ func getRepoConfig(repoKey string) (body []byte, err error) {
 	return
 }
 
-func createRepoConfigValidationFunc(repoKey string, params interface{}) clientutils.ExecutionHandlerFunc {
+func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) clientutils.ExecutionHandlerFunc {
 	return func() (shouldRetry bool, err error) {
 		config, err := getRepoConfig(repoKey)
 		if err != nil || config == nil {
 			return true, errors.New("failed reading repository config for " + repoKey)
 		}
-		var confMap, paramsMap map[string]interface{}
+		var confMap, expectedConfigMap map[string]interface{}
 		if err = json.Unmarshal(config, &confMap); err != nil {
-			return true, errors.New("failed unmarshal repository config for " + repoKey)
+			return false, errors.New("failed unmarshalling repository config for " + repoKey)
 		}
-		tmpJson, err := json.Marshal(params)
+		tmpJson, err := json.Marshal(expectedConfig)
 		if err != nil {
-			return true, errors.New("failed marshal expected config for " + repoKey)
+			return false, errors.New("failed marshalling expected config for " + repoKey)
 		}
-		if err = json.Unmarshal(tmpJson, &paramsMap); err != nil {
-			return true, errors.New("failed unmarshal expected config for " + repoKey)
+		if err = json.Unmarshal(tmpJson, &expectedConfigMap); err != nil {
+			return false, errors.New("failed unmarshalling expected config for " + repoKey)
 		}
-		for key, value := range paramsMap {
-			if !assert.ObjectsAreEqual(confMap[key], value) {
-				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual  : %s", repoKey, key, confMap[key], value)
+		for key, expectedValue := range expectedConfigMap {
+			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
+				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual: %s", repoKey, key, expectedValue, confMap[key])
 				return true, errors.New(errMsg)
 
 			}
@@ -476,7 +476,7 @@ func createRepoConfigValidationFunc(repoKey string, params interface{}) clientut
 	}
 }
 
-func validateRepoConfigWithRetries(t *testing.T, repoKey string, params interface{}) {
+func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	retryExecutor := &clientutils.RetryExecutor{
 		MaxRetries:       120,
 		RetriesInterval:  1,
