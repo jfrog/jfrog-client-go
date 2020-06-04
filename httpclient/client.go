@@ -1,18 +1,12 @@
 package httpclient
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/mholt/archiver"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -21,10 +15,18 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync"
+
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mholt/archiver"
 )
 
 func (jc *HttpClient) sendGetLeaveBodyOpen(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	return jc.Send("GET", url, nil, followRedirect, false, httpClientsDetails)
+	return jc.Send("GET", url, nil, followRedirect, false, false, httpClientsDetails)
 }
 
 type HttpClient struct {
@@ -41,35 +43,40 @@ func (jc *HttpClient) Stream(url string, httpClientsDetails httputils.HttpClient
 }
 
 func (jc *HttpClient) SendGet(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	return jc.Send("GET", url, nil, followRedirect, true, httpClientsDetails)
+	return jc.Send("GET", url, nil, followRedirect, true, false, httpClientsDetails)
 }
 
 func (jc *HttpClient) SendPost(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("POST", url, content, true, true, httpClientsDetails)
+	resp, body, _, err = jc.Send("POST", url, content, true, true, false, httpClientsDetails)
+	return
+}
+
+func (jc *HttpClient) SendPostResponseToFile(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
+	resp, body, _, err = jc.Send("POST", url, content, true, true, true, httpClientsDetails)
 	return
 }
 
 func (jc *HttpClient) SendPatch(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("PATCH", url, content, true, true, httpClientsDetails)
+	resp, body, _, err = jc.Send("PATCH", url, content, true, true, false, httpClientsDetails)
 	return
 }
 
 func (jc *HttpClient) SendDelete(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("DELETE", url, content, true, true, httpClientsDetails)
+	resp, body, _, err = jc.Send("DELETE", url, content, true, true, false, httpClientsDetails)
 	return
 }
 
 func (jc *HttpClient) SendHead(url string, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("HEAD", url, nil, true, true, httpClientsDetails)
+	resp, body, _, err = jc.Send("HEAD", url, nil, true, true, false, httpClientsDetails)
 	return
 }
 
 func (jc *HttpClient) SendPut(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("PUT", url, content, true, true, httpClientsDetails)
+	resp, body, _, err = jc.Send("PUT", url, content, true, true, false, httpClientsDetails)
 	return
 }
 
-func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, ResponseToFile bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	var req *http.Request
 	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
 	if content != nil {
@@ -81,10 +88,10 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 		return nil, nil, "", err
 	}
 
-	return jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
+	return jc.doRequest(req, content, followRedirect, closeBody, ResponseToFile, httpClientsDetails)
 }
 
-func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirect bool, closeBody bool, ResponseToFile bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	req.Close = true
 	setAuthentication(req, httpClientsDetails)
 	addUserAgentHeader(req)
@@ -109,7 +116,11 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 		// for POST requests. We therefore implement the redirect on our own.
 		if req.Method == "POST" {
 			log.Debug("HTTP redirecting to ", redirectUrl)
-			resp, respBody, err = jc.SendPost(redirectUrl, content, httpClientsDetails)
+			if ResponseToFile {
+				resp, respBody, err = jc.SendPostResponseToFile(redirectUrl, content, httpClientsDetails)
+			} else {
+				resp, respBody, err = jc.SendPost(redirectUrl, content, httpClientsDetails)
+			}
 			redirectUrl = ""
 			return
 		}
@@ -121,6 +132,10 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	}
 	if closeBody {
 		defer resp.Body.Close()
+		if ResponseToFile {
+			respBody, err = streamToFile(resp.Body)
+			return
+		}
 		respBody, _ = ioutil.ReadAll(resp.Body)
 	}
 	return
@@ -756,6 +771,20 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 
 func addUserAgentHeader(req *http.Request) {
 	req.Header.Set("User-Agent", utils.GetUserAgent())
+}
+
+// Save the reader output into a temp file.
+// return the file path.
+func streamToFile(reader io.Reader) ([]byte, error) {
+	var fd *os.File
+	bufio := bufio.NewReaderSize(reader, 65536)
+	fd, err := fileutils.CreateReaderWriterTempFile()
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+	_, err = io.Copy(fd, bufio)
+	return []byte(fd.Name()), err
 }
 
 type DownloadFileDetails struct {

@@ -1,13 +1,15 @@
 package httpclient
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/httpclient"
+	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	clientcontent "github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
 type ArtifactoryHttpClient struct {
@@ -29,6 +31,17 @@ func (rtc *ArtifactoryHttpClient) SendPost(url string, content []byte, httpClien
 		return
 	}
 	return rtc.httpClient.SendPost(url, content, *httpClientsDetails)
+}
+
+func (rtc *ArtifactoryHttpClient) SendPostResponseToFile(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, cr *clientcontent.ContentReader, err error) {
+	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
+	if err != nil {
+		return
+	}
+
+	resp, b, err := rtc.httpClient.SendPostResponseToFile(url, content, *httpClientsDetails)
+	cr = clientcontent.NewContentReader(string(b), "results")
+	return
 }
 
 func (rtc *ArtifactoryHttpClient) SendPostForm(url string, data url.Values, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
@@ -68,13 +81,13 @@ func (rtc *ArtifactoryHttpClient) SendPut(url string, content []byte, httpClient
 	return rtc.httpClient.SendPut(url, content, *httpClientsDetails)
 }
 
-func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool,
+func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool, bodyToFile bool,
 	httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
-	return rtc.httpClient.Send(method, url, content, followRedirect, closeBody, *httpClientsDetails)
+	return rtc.httpClient.Send(method, url, content, followRedirect, closeBody, bodyToFile, *httpClientsDetails)
 }
 
 func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string,
