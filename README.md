@@ -84,6 +84,8 @@ rtManager, err := artifactory.New(&rtDetails, serviceConfig)
 params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
+// Attach properties to the uploaded files.
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.Regexp = false
 params.IncludeDirs = false
@@ -108,6 +110,8 @@ Using the `DownloadFiles()` function, we can download files and get the general 
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
+// Filter the downloaded files by properties. 
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.IncludeDirs = false
 params.Flat = false
@@ -130,6 +134,8 @@ Similar to `DownloadFiles()`, but returns a reader, which allows iterating over 
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
+// Filter the downloaded files by properties. 
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.IncludeDirs = false
 params.Flat = false
@@ -161,6 +167,8 @@ for e := resultReader.NextRecord(&file); e == nil; e = resultReader.NextRecord(&
 params := services.NewMoveCopyParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
+// Filter the files by properties. 
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.Flat = false
 
@@ -173,6 +181,8 @@ rtManager.Copy(params)
 params := services.NewMoveCopyParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
+// Filter the files by properties. 
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.Flat = false
 
@@ -184,6 +194,8 @@ rtManager.Move(params)
 ```go
 params := services.NewDeleteParams()
 params.Pattern = "repo/*/*.zip"
+// Filter the files by properties. 
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 
 pathsToDelete := rtManager.GetPathsToDelete(params)
@@ -195,6 +207,8 @@ rtManager.DeleteFiles(pathsToDelete)
 ```go
 params := services.NewSearchParams()
 params.Pattern = "repo/*/*.zip"
+// Filter the files by properties. 
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 
 rtManager.SearchFiles(params)
@@ -212,6 +226,7 @@ resultItems = rtManager.SearchFiles(searchParams)
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
 propsParams.Items = resultItems
+// Filter the files by properties. 
 propsParams.Props = "key=value"
 
 rtManager.SetProps(propsParams)
@@ -229,6 +244,7 @@ resultItems = rtManager.SearchFiles(searchParams)
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
 propsParams.Items = resultItems
+// Filter the files by properties. 
 propsParams.Props = "key=value"
 
 rtManager.DeleteProps(propsParams)
