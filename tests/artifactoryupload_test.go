@@ -1,13 +1,15 @@
 package tests
 
 import (
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"os"
-	"path/filepath"
-	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestArtifactoryUpload(t *testing.T) {
@@ -42,18 +44,18 @@ func flatUpload(t *testing.T) {
 	searchParams := services.NewSearchParams()
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
-	items, err := testsSearchService.Search(searchParams)
+	cr, err := testsSearchService.Search(searchParams)
+	// TODO: Remove this
+	// defer cr.Close()
 	if err != nil {
 		t.Error(err)
 	}
-	if len(items) > 1 {
-		t.Error("Expected single file.")
-	}
-	for _, item := range items {
+	for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
 		if item.Path != "." {
 			t.Error("Expected path to be root due to using the flat flag.", "Got:", item.Path)
 		}
 	}
+	assert.NoError(t, cr.GetError())
 	artifactoryCleanup(t)
 }
 
@@ -81,20 +83,23 @@ func recursiveUpload(t *testing.T) {
 	searchParams := services.NewSearchParams()
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
-	items, err := testsSearchService.Search(searchParams)
+	cr, err := testsSearchService.Search(searchParams)
 	if err != nil {
 		t.Error(err)
 	}
-	if len(items) > 1 {
-		t.Error("Expected single file.")
-	}
-	for _, item := range items {
+	// TODO: Remove this
+	// defer cr.Close()
+	for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
 		if item.Path != "." {
 			t.Error("Expected path to be root(flat by default).", "Got:", item.Path)
 		}
 		if item.Name != "a.in" {
 			t.Error("Missing File a.in")
 		}
+	}
+	assert.NoError(t, cr.GetError())
+	if cr.Length() > 1 {
+		t.Error("Expected single file.")
 	}
 	artifactoryCleanup(t)
 }
@@ -123,20 +128,24 @@ func placeholderUpload(t *testing.T) {
 	searchParams := services.NewSearchParams()
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
-	items, err := testsSearchService.Search(searchParams)
+	cr, err := testsSearchService.Search(searchParams)
 	if err != nil {
 		t.Error(err)
 	}
-	if len(items) > 1 {
-		t.Error("Expected single file.")
-	}
-	for _, item := range items {
+	// TODO: Remove this
+	// defer cr.Close()
+	for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
 		if item.Path != "out" {
 			t.Error("Expected path to be out.", "Got:", item.Path)
 		}
 		if item.Name != "a" {
 			t.Error("Missing File a")
 		}
+	}
+	assert.NoError(t, cr.GetError())
+	assert.NoError(t, cr.GetError())
+	if cr.Length() > 1 {
+		t.Error("Expected single file.")
 	}
 	artifactoryCleanup(t)
 }
@@ -166,14 +175,13 @@ func includeDirsUpload(t *testing.T) {
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	searchParams.IncludeDirs = true
-	items, err := testsSearchService.Search(searchParams)
+	cr, err := testsSearchService.Search(searchParams)
 	if err != nil {
 		t.Error(err)
 	}
-	if len(items) < 2 {
-		t.Error("Expected to get at least two items, default and the out folder.")
-	}
-	for _, item := range items {
+	// TODO: Remove this
+	// defer cr.Close()
+	for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
 		if item.Name == "." {
 			continue
 		}
@@ -183,6 +191,10 @@ func includeDirsUpload(t *testing.T) {
 		if item.Name != "out" {
 			t.Error("Missing directory out.")
 		}
+	}
+	assert.NoError(t, cr.GetError())
+	if cr.Length() < 2 {
+		t.Error("Expected to get at least two items, default and the out folder.")
 	}
 	artifactoryCleanup(t)
 }
@@ -223,20 +235,23 @@ func explodeUpload(t *testing.T) {
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	searchParams.IncludeDirs = true
-	items, err := testsSearchService.Search(searchParams)
+	cr, err := testsSearchService.Search(searchParams)
 	if err != nil {
 		t.Error(err)
 	}
-	if len(items) < 2 {
-		t.Error("Expected to get at least two items, default and the out folder.")
-	}
-	for _, item := range items {
+	// TODO: Remove this
+	// defer cr.Close()
+	for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
 		if item.Name == "." {
 			continue
 		}
 		if item.Name != "a.in" {
 			t.Error("Missing file a.in")
 		}
+	}
+	assert.NoError(t, cr.GetError())
+	if cr.Length() < 2 {
+		t.Error("Expected to get at least two items, default and the out folder.")
 	}
 	artifactoryCleanup(t)
 }

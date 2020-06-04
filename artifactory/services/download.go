@@ -15,7 +15,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io"
+	clientio "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
@@ -25,7 +25,7 @@ import (
 
 type DownloadService struct {
 	client       *rthttpclient.ArtifactoryHttpClient
-	Progress     io.Progress
+	Progress     clientio.Progress
 	ArtDetails   auth.ServiceDetails
 	DryRun       bool
 	Threads      int
@@ -93,7 +93,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
 			var err error
-			var resultItems []utils.ResultItem
+			var cr *content.ContentReader
 
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
@@ -102,11 +102,11 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			log.Info("Searching items to download...")
 			switch downloadParams.GetSpecType() {
 			case utils.WILDCARD:
-				resultItems, err = ds.collectFilesUsingWildcardPattern(downloadParams)
+				cr, err = ds.collectFilesUsingWildcardPattern(downloadParams)
 			case utils.BUILD:
-				resultItems, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
+				cr, err = utils.SearchBySpecWithBuildSaveToFile(downloadParams.GetFile(), ds)
 			case utils.AQL:
-				resultItems, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
+				cr, err = utils.SearchBySpecWithAqlSaveToFile(downloadParams.GetFile(), ds, utils.SYMLINK)
 			}
 			// Check for search errors.
 			if err != nil {
@@ -114,19 +114,18 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 				errorsQueue.AddError(err)
 				continue
 			}
-
 			// Produce download tasks for the download consumers.
-			totalTasks += produceTasks(resultItems, downloadParams, producer, fileHandlerFunc, errorsQueue)
+			totalTasks += produceTasks(cr, downloadParams, producer, fileHandlerFunc, errorsQueue)
 		}
 		expectedChan <- totalTasks
 	}()
 }
 
-func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) ([]utils.ResultItem, error) {
-	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
+func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) (*content.ContentReader, error) {
+	return utils.SearchBySpecWithPatternSaveToFile(downloadParams.GetFile(), ds, utils.SYMLINK)
 }
 
-func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
+func produceTasks(cr *content.ContentReader, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
 	flat := downloadParams.IsFlat()
 	// Collect all folders path which might be needed to create.
 	// key = folder path, value = the necessary data for producing create folder task.
@@ -137,25 +136,38 @@ func produceTasks(items []utils.ResultItem, downloadParams DownloadParams, produ
 	var directoriesDataKeys []string
 	// Task counter
 	var tasksCount int
-	for _, v := range items {
+
+	for resultItem := new(utils.ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		tempData := DownloadData{
-			Dependency:   v,
+			Dependency:   *resultItem,
 			DownloadPath: downloadParams.GetPattern(),
 			Target:       downloadParams.GetTarget(),
 			Flat:         flat,
 		}
-		if v.Type != "folder" {
+		if resultItem.Type != "folder" {
 			// Add a task. A task is a function of type TaskFunc which later on will be executed by other go routine, the communication is done using channels.
 			// The second argument is an error handling func in case the taskFunc return an error.
 			tasksCount++
 			producer.AddTaskWithError(fileHandler(tempData), errorsQueue.AddError)
 			// We don't want to create directories which are created explicitly by download files when ArtifactoryCommonParams.IncludeDirs is used.
-			alreadyCreatedDirs[v.Path] = true
+			alreadyCreatedDirs[resultItem.Path] = true
 		} else {
-			directoriesData, directoriesDataKeys = collectDirPathsToCreate(v, directoriesData, tempData, directoriesDataKeys)
+			directoriesData, directoriesDataKeys = collectDirPathsToCreate(*resultItem, directoriesData, tempData, directoriesDataKeys)
 		}
 	}
-
+	if err := cr.GetError(); err != nil {
+		errorsQueue.AddError(errorutils.CheckError(err))
+		// TODO: Remove this
+		// if err := cr.Close(); err != nil {
+		// 	errorsQueue.AddError(errorutils.CheckError(err))
+		// }
+		return tasksCount
+	}
+	// TODO: Remove this
+	// if err := cr.Close(); err != nil {
+	// 	errorsQueue.AddError(errorutils.CheckError(err))
+	// 	return tasksCount
+	// }
 	addCreateDirsTasks(directoriesDataKeys, alreadyCreatedDirs, producer, fileHandler, directoriesData, errorsQueue, flat)
 	return tasksCount
 }

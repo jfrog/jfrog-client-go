@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
@@ -12,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
 
 type ArtifactoryServicesManager struct {
@@ -122,19 +122,19 @@ func (sm *ArtifactoryServicesManager) XrayScanBuild(params services.XrayScanPara
 	return xrayScanService.ScanBuild(params)
 }
 
-func (sm *ArtifactoryServicesManager) GetPathsToDelete(params services.DeleteParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManager) GetPathsToDelete(params services.DeleteParams) (*content.ContentReader, error) {
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetServiceDetails()
 	return deleteService.GetPathsToDelete(params)
 }
 
-func (sm *ArtifactoryServicesManager) DeleteFiles(resultItems []utils.ResultItem) (int, error) {
+func (sm *ArtifactoryServicesManager) DeleteFiles(ResultItemReader *content.ContentReader) (int, error) {
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetServiceDetails()
 	deleteService.Threads = sm.config.GetThreads()
-	return deleteService.DeleteFiles(resultItems)
+	return deleteService.DeleteFiles(ResultItemReader)
 }
 
 func (sm *ArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCloser, error) {
@@ -180,7 +180,7 @@ func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services
 	return gitLfsCleanService.GetUnreferencedGitLfsFiles(params)
 }
 
-func (sm *ArtifactoryServicesManager) SearchFiles(params services.SearchParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManager) SearchFiles(params services.SearchParams) (*content.ContentReader, error) {
 	searchService := services.NewSearchService(sm.client)
 	searchService.ArtDetails = sm.config.GetServiceDetails()
 	return searchService.Search(params)
@@ -192,14 +192,14 @@ func (sm *ArtifactoryServicesManager) Aql(aql string) ([]byte, error) {
 	return aqlService.ExecAql(aql)
 }
 
-func (sm *ArtifactoryServicesManager) SetProps(params services.PropsParams) (int, error) {
+func (sm *ArtifactoryServicesManager) SetProps(params services.PropsParams) (int, int, error) {
 	setPropsService := services.NewPropsService(sm.client)
 	setPropsService.ArtDetails = sm.config.GetServiceDetails()
 	setPropsService.Threads = sm.config.GetThreads()
 	return setPropsService.SetProps(params)
 }
 
-func (sm *ArtifactoryServicesManager) DeleteProps(params services.PropsParams) (int, error) {
+func (sm *ArtifactoryServicesManager) DeleteProps(params services.PropsParams) (int, int, error) {
 	setPropsService := services.NewPropsService(sm.client)
 	setPropsService.ArtDetails = sm.config.GetServiceDetails()
 	setPropsService.Threads = sm.config.GetThreads()
