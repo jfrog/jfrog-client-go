@@ -53,19 +53,19 @@ type Response struct {
 	Arr []outputRecord `json:"arr"`
 }
 
-func writeTestRecords(t *testing.T, rw *ContentWriter) {
+func writeTestRecords(t *testing.T, cw *ContentWriter) {
 	var sendersWaiter sync.WaitGroup
 	for i := 0; i < len(records); i += 3 {
 		sendersWaiter.Add(1)
 		go func(start, end int) {
 			defer sendersWaiter.Done()
 			for j := start; j < end; j++ {
-				rw.Write(records[j])
+				cw.Write(records[j])
 			}
 		}(i, i+3)
 	}
 	sendersWaiter.Wait()
-	err := rw.Close()
+	err := cw.Close()
 	assert.NoError(t, err)
 }
 
@@ -88,36 +88,35 @@ func TestContentWriter(t *testing.T) {
 	}
 }
 
-func TestContentReadeAfterWriter(t *testing.T) {
-	rw, err := NewContentWriter("results", true, false)
+func TestContentReaderAfterWriter(t *testing.T) {
+	cw, err := NewContentWriter("results", true, false)
 	assert.NoError(t, err)
-	writeTestRecords(t, rw)
-	rr := NewContentReader(rw.GetFilePath(), "results")
+	writeTestRecords(t, cw)
+	cr := NewContentReader(cw.GetFilePath(), "results")
 	assert.NoError(t, err)
-	defer rr.Close()
+	defer cr.Close()
 	recordCount := 0
-	var r outputRecord
-	for e := rr.NextRecord(&r); e == nil; e = rr.NextRecord(&r) {
-		assert.Contains(t, records, r, "record %s missing", r.StrKey)
+	for item := new(outputRecord); cr.NextRecord(item) == nil; item = new(outputRecord) {
+		assert.Contains(t, records, *item, "record %s missing", item.StrKey)
 		recordCount++
 	}
-	assert.NoError(t, rr.GetError())
+	assert.NoError(t, cr.GetError())
 	assert.Equal(t, len(records), recordCount, "The amount of records were read (%d) is different then expected", recordCount)
 }
 
 func TestRemoveOutputFilePath(t *testing.T) {
 	// Create a file.
-	rw, err := NewContentWriter("results", true, false)
+	cw, err := NewContentWriter("results", true, false)
 	assert.NoError(t, err)
-	rw.Close()
-	filePathToBeDeleted := rw.GetFilePath()
+	cw.Close()
+	filePathToBeDeleted := cw.GetFilePath()
 
 	// Check file exists
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.NoError(t, err)
 
 	// Check if the file got deleted
-	rw.RemoveOutputFilePath()
+	cw.RemoveOutputFilePath()
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
 }

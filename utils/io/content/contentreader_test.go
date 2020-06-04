@@ -1,14 +1,13 @@
 package content
 
 import (
+	"crypto/md5"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"testing"
-	"time"
 
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,23 +31,20 @@ type ArrayValue struct {
 
 func TestContentReaderPath(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
-	rr := NewContentReader(searchResultPath, arrayKey)
-	assert.Equal(t, rr.GetFilePath(), searchResultPath)
+	cr := NewContentReader(searchResultPath, arrayKey)
+	assert.Equal(t, cr.GetFilePath(), searchResultPath)
 }
 
-func TestContentReader(t *testing.T) {
+func TestContentReaderNextRecord(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
-	rr := NewContentReader(searchResultPath, arrayKey)
+	cr := NewContentReader(searchResultPath, arrayKey)
 	// Read the same file two times
 	for i := 0; i < 2; i++ {
 		var rSlice []inputRecord
-		var r inputRecord
-		var err error
-		for err = rr.NextRecord(&r); err == nil; err = rr.NextRecord(&r) {
-			rSlice = append(rSlice, r)
+		for item := new(inputRecord); cr.NextRecord(item) == nil; item = new(inputRecord) {
+			rSlice = append(rSlice, *item)
 		}
-		assert.Equal(t, err, io.EOF)
-		assert.NoError(t, rr.GetError())
+		assert.NoError(t, cr.GetError())
 		// First element
 		assert.Equal(t, rSlice[0].IntKey, 1)
 		assert.Equal(t, rSlice[0].StrKey, "A")
@@ -59,18 +55,19 @@ func TestContentReader(t *testing.T) {
 		assert.Equal(t, rSlice[1].StrKey, "B")
 		assert.Equal(t, rSlice[1].BoolKey, false)
 		assert.Empty(t, rSlice[1].ArrayKey)
-		rr.Reset()
+		// Length validation
+		assert.Equal(t, cr.Length(), 2)
+		cr.Reset()
 	}
 }
 
 func TestContentReaderEmptyResult(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", emptySearchResult)
-	rr := NewContentReader(searchResultPath, arrayKey)
-	var r inputRecord
-	for e := rr.NextRecord(&r); e == nil; e = rr.NextRecord(&r) {
+	cr := NewContentReader(searchResultPath, arrayKey)
+	for item := new(inputRecord); cr.NextRecord(item) == nil; item = new(inputRecord) {
 		t.Error("Can't loop over empty file")
 	}
-	assert.NoError(t, rr.GetError())
+	assert.NoError(t, cr.GetError())
 }
 
 func getTestDataPath() string {
@@ -80,21 +77,59 @@ func getTestDataPath() string {
 
 func TestCloseReader(t *testing.T) {
 	// Create a file.
-	fd, err := ioutil.TempFile("", strconv.FormatInt(time.Now().Unix(), 10))
+	fd, err := fileutils.CreateReaderWriterTempFile()
 	assert.NoError(t, err)
 	fd.Close()
 	filePathToBeDeleted := fd.Name()
 
 	// Load file to reader
-	rr := NewContentReader(filePathToBeDeleted, arrayKey)
+	cr := NewContentReader(filePathToBeDeleted, arrayKey)
 
 	// Check file exists
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.NoError(t, err)
 
 	// Check if the file got deleted
-	err = rr.Close()
+	err = cr.Close()
 	assert.NoError(t, err)
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
+}
+
+func TestDuplicate(t *testing.T) {
+	// Create files
+	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
+	cr := NewContentReader(searchResultPath, arrayKey)
+	dupCr, err := cr.Duplicate()
+	// Don't delete the origin testdata file, only the duplicate.
+	defer dupCr.Close()
+	assert.NoError(t, err)
+
+	// Create md5
+	originMd5, err := getFileMd5(cr.filePath)
+	assert.NoError(t, err)
+	expectedMd5, err := getFileMd5(dupCr.filePath)
+	assert.NoError(t, err)
+	assert.Equal(t, originMd5, expectedMd5)
+}
+
+func TestLengthCount(t *testing.T) {
+	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
+	cr := NewContentReader(searchResultPath, arrayKey)
+	assert.Equal(t, cr.Length(), 2)
+	// Check cache works with no Reset() being called.
+	assert.Equal(t, cr.Length(), 2)
+}
+
+func getFileMd5(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	h := md5.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+	return string(h.Sum(nil)), nil
 }

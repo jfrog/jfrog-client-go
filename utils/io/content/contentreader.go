@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -18,20 +19,21 @@ const (
 	channelSize = 100
 )
 
-// Open and read JSON file, find the array key inside it and load its value to the memory in small chunks.
-// Only array objects are valides to be fetch.
-// Each chunk can be fetch using 'GetRecord' (thread-safe).
-//
-// This technick solve the limit of memory size which may be too small to fit.
-// That way, we can handle big queries result from Artifactory that may not fit in size to the host total memory.
+// Open and read JSON file, find the array key inside it and load its value into the memory in small chunks.
+// Currently, 'ContentReader' only support extracting a single value for a given key(arrayKey), other keys are ignored.
+// The value must of of type array.
+// Each array value can be fetch using 'GetRecord' (thread-safe).
+// This technique solves the limit of memory size which may be too small to fit large JSON.
 type ContentReader struct {
-	// filePath - Source data file path.
+	// filePath - Soucre data file path.
 	// arrayKey = Read the value of the specific object in JSON.
 	filePath, arrayKey string
-	// The objects from the source data file are being pushed into the data channel.
+	// The objects from the soucre data file are being pushed into the data channel.
 	dataChannel chan map[string]interface{}
 	errorsQueue *utils.ErrorsQueue
 	once        *sync.Once
+	// Number of element in the array (cache)
+	length int
 }
 
 func NewContentReader(filePath string, arrayKey string) *ContentReader {
@@ -44,79 +46,106 @@ func NewContentReader(filePath string, arrayKey string) *ContentReader {
 	return &self
 }
 
-func (rc *ContentReader) ArrayKey(arrayKey string) *ContentReader {
-	rc.arrayKey = arrayKey
-	return rc
+func (cr *ContentReader) ArrayKey(arrayKey string) *ContentReader {
+	cr.arrayKey = arrayKey
+	return cr
 }
 
-// fetch the next chunk into 'recordOutput' param.
+func (cr *ContentReader) GetArrayKey() string {
+	return cr.arrayKey
+}
+
+// Each call to 'NextRecord()' will return a single element from the channel.
+// Only the first call will spine up a goroutine to read data from the file and push it into the channel.
 // 'io.EOF' will be returned if no data is left.
-func (rc *ContentReader) NextRecord(recordOutput interface{}) error {
-	rc.once.Do(func() {
+func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
+	cr.once.Do(func() {
 		go func() {
-			rc.run()
+			cr.length = 0
+			cr.run()
 		}()
 	})
-	record, ok := <-rc.dataChannel
+	record, ok := <-cr.dataChannel
 	if !ok {
 		return errorutils.CheckError(io.EOF)
 	}
-	data, _ := json.Marshal(record)
-	return errorutils.CheckError(json.Unmarshal(data, recordOutput))
+	// Transform the data into a Go type
+	data, err := json.Marshal(record)
+	if err != nil {
+		cr.errorsQueue.AddError(err)
+		return err
+	}
+	err = errorutils.CheckError(json.Unmarshal(data, recordOutput))
+	if err != nil {
+		cr.errorsQueue.AddError(err)
+	}
+	cr.length++
+	return err
 }
 
-// Initialize the reader to read a file that has already been read (not thread-safe).
-func (rc *ContentReader) Reset() {
-	rc.dataChannel = make(chan map[string]interface{}, channelSize)
-	rc.once = new(sync.Once)
+// Prepare the reader to read the  file all over again (not thread-safe).
+func (cr *ContentReader) Reset() {
+	cr.dataChannel = make(chan map[string]interface{}, channelSize)
+	cr.once = new(sync.Once)
 }
 
 // Cleanup the reader data.
-func (rc *ContentReader) Close() error {
-	if rc.filePath != "" {
-		if err := errorutils.CheckError(os.Remove(rc.filePath)); err != nil {
+func (cr *ContentReader) Close() error {
+	if cr.filePath != "" {
+		if err := errorutils.CheckError(os.Remove(cr.filePath)); err != nil {
 			return err
 		}
-		rc.filePath = ""
+		cr.filePath = ""
 	}
 	return nil
 }
 
-func (rc *ContentReader) GetFilePath() string {
-	return rc.filePath
+func (cr *ContentReader) GetFilePath() string {
+	return cr.filePath
 }
 
-func (rc *ContentReader) SetFilePath(newPath string) error {
-	if rc.filePath != "" {
-		if err := rc.Close(); err != nil {
+func (cr *ContentReader) SetFilePath(newPath string) error {
+	if cr.filePath != "" {
+		if err := cr.Close(); err != nil {
 			return err
 		}
 	}
-	rc.filePath = newPath
-	rc.dataChannel = make(chan map[string]interface{}, channelSize)
+	cr.filePath = newPath
+	cr.length = 0
+	cr.Reset()
 	return nil
 }
 
-// Open and read the file. Push each array element to the channel.
+// Number of element in the array.
+func (cr *ContentReader) Length() int {
+	if cr.length == 0 {
+		for item := new(interface{}); cr.NextRecord(item) == nil; item = new(interface{}) {
+		}
+		cr.Reset()
+	}
+	return cr.length
+}
+
+// Open and read the file. Push each array element into the channel.
 // The channel may block the thread, therefore should run async.
-func (rc *ContentReader) run() {
-	fd, err := os.Open(rc.filePath)
+func (cr *ContentReader) run() {
+	fd, err := os.Open(cr.filePath)
 	if err != nil {
 		log.Error(err.Error())
-		rc.errorsQueue.AddError(errorutils.CheckError(err))
+		cr.errorsQueue.AddError(errorutils.CheckError(err))
 		return
 	}
 	br := bufio.NewReaderSize(fd, 65536)
 	defer fd.Close()
-	defer close(rc.dataChannel)
+	defer close(cr.dataChannel)
 	dec := json.NewDecoder(br)
-	err = findDecoderTargetPosition(dec, rc.arrayKey, true)
+	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
 	if err != nil {
 		if err == io.EOF {
-			rc.errorsQueue.AddError(errors.New("results not found"))
+			cr.errorsQueue.AddError(errors.New("results not found"))
 			return
 		}
-		rc.errorsQueue.AddError(err)
+		cr.errorsQueue.AddError(err)
 		log.Error(err.Error())
 		return
 	}
@@ -125,36 +154,55 @@ func (rc *ContentReader) run() {
 		err := dec.Decode(&ResultItem)
 		if err != nil {
 			log.Error(err)
-			rc.errorsQueue.AddError(errorutils.CheckError(err))
+			cr.errorsQueue.AddError(errorutils.CheckError(err))
 			return
 		}
-		rc.dataChannel <- ResultItem
+		cr.dataChannel <- ResultItem
 	}
 }
 
+// Return a new copy of the reader.
+func (cr *ContentReader) Duplicate() (*ContentReader, error) {
+	in, err := fileutils.CreateReaderWriterTempFile()
+	if err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	defer in.Close()
+	out, err := os.Open(cr.filePath)
+	if err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	defer out.Close()
+	_, err = io.Copy(in, out)
+	if err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	return NewContentReader(in.Name(), cr.arrayKey), nil
+}
+
 // Return true if the file has more than one element in array.
-func (rc *ContentReader) IsEmpty() (bool, error) {
-	fd, err := os.Open(rc.filePath)
+func (cr *ContentReader) IsEmpty() (bool, error) {
+	fd, err := os.Open(cr.filePath)
 	if err != nil {
 		log.Error(err.Error())
-		rc.errorsQueue.AddError(errorutils.CheckError(err))
+		cr.errorsQueue.AddError(errorutils.CheckError(err))
 		return false, err
 	}
 	br := bufio.NewReaderSize(fd, 65536)
 	defer fd.Close()
-	defer close(rc.dataChannel)
 	dec := json.NewDecoder(br)
-	err = findDecoderTargetPosition(dec, rc.arrayKey, true)
-	return isEmptyArray(dec, rc.arrayKey, true)
+	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
+	return isEmptyArray(dec, cr.arrayKey, true)
 }
 
-func (rc *ContentReader) GetError() error {
-	return rc.errorsQueue.GetError()
+func (cr *ContentReader) GetError() error {
+	return cr.errorsQueue.GetError()
 }
 
 // Search and set the decoder's position at the desired key in the JSON file.
 func findDecoderTargetPosition(dec *json.Decoder, target string, isArray bool) error {
 	for dec.More() {
+		// Token returns the next JSON token in the input stream. At the end of the input stream, Token returns nil, io.EOF.
 		t, err := dec.Token()
 		if err != nil {
 			return errorutils.CheckError(err)
@@ -180,4 +228,22 @@ func isEmptyArray(dec *json.Decoder, target string, isArray bool) (bool, error) 
 		return false, errorutils.CheckError(err)
 	}
 	return t == json.Delim('{'), nil
+}
+
+func MergeReaders(arr []*ContentReader, arrayKey string) (*ContentReader, error) {
+	cw, err := NewContentWriter(arrayKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	for _, cr := range arr {
+		for item := new(interface{}); cr.NextRecord(item) == nil; item = new(interface{}) {
+			cw.Write(*item)
+		}
+		if err := cr.GetError(); err != nil {
+			return nil, err
+		}
+		cr.Close()
+	}
+	cw.Close()
+	return NewContentReader(cw.GetFilePath(), arrayKey), nil
 }

@@ -4,21 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sync"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
 const (
-	outputFilePattern      = "%s.*.json"
 	jsonArrayPrefixPattern = "  \"%s\": ["
 	jsonArraySuffix        = "]\n"
 )
 
-// Write a JSON file in small chunks. Only a single JSON key can be written to the file, and array as its value, the array's values could be any JSON value types (number, string, etc...).
+// Write a JSON file in small chunks. Only a single JSON key can be written to the file, and array as its value.
+// The array's values could be any JSON value types (number, string, etc...).
 // Once the first 'Write" call is made, the file will stay open, waiting for the next struct to be written (thread-safe).
 // Finally, 'Close' will fill the end of the JSON file and the operation will be completed.
 type ContentWriter struct {
@@ -40,7 +40,7 @@ func NewContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*Content
 	if useStdout {
 		fd = os.Stdout
 	} else {
-		fd, err = ioutil.TempFile("", fmt.Sprintf(outputFilePattern, arrayKey))
+		fd, err = fileutils.CreateReaderWriterTempFile()
 		if err != nil {
 			return nil, errorutils.CheckError(err)
 		}
@@ -58,6 +58,10 @@ func NewContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*Content
 func (rw *ContentWriter) SetArrayKey(arrKey string) *ContentWriter {
 	rw.arrayKey = arrKey
 	return rw
+}
+
+func (rw *ContentWriter) GetArrayKey() string {
+	return rw.arrayKey
 }
 
 func (rw *ContentWriter) GetFilePath() string {
