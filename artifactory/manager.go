@@ -1,8 +1,9 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"io"
+
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -297,6 +298,30 @@ func (sm *ArtifactoryServicesManager) GetReplication(repoKey string) ([]utils.Re
 	getPushReplicationService := services.NewGetReplicationService(sm.client)
 	getPushReplicationService.ArtDetails = sm.config.GetServiceDetails()
 	return getPushReplicationService.GetReplication(repoKey)
+}
+
+func (sm *ArtifactoryServicesManager) CreateMultipleReplication(params services.CreateMultipleReplicationParams) error {
+	createMultipleReplicationService := services.NewCreateMultipleReplicationService(sm.client)
+	createMultipleReplicationService.ArtDetails = sm.config.GetServiceDetails()
+	return createMultipleReplicationService.CreateMultipleReplication(params)
+}
+
+func (sm *ArtifactoryServicesManager) UpdateMultipleReplication(params services.UpdateMultipleReplicationParams) error {
+	updateMultipleReplicationService := services.NewUpdateMultipleReplicationService(sm.client)
+	updateMultipleReplicationService.ArtDetails = sm.config.GetServiceDetails()
+	return updateMultipleReplicationService.UpdateMultipleReplication(params)
+}
+
+func (sm *ArtifactoryServicesManager) GetMultipleReplication(repoKey string) ([]utils.MultipleReplicationParams, error) {
+	getMultipleReplicationService := services.NewGetMultipleReplicationService(sm.client)
+	getMultipleReplicationService.ArtDetails = sm.config.GetServiceDetails()
+	return getMultipleReplicationService.GetMultipleReplication(repoKey)
+}
+
+func (sm *ArtifactoryServicesManager) DeleteMultipleReplication(repoKey, repoUrl string) error {
+	delMultipleReplicationService := services.NewDeleteMultipleReplicationService(sm.client)
+	delMultipleReplicationService.ArtDetails = sm.config.GetServiceDetails()
+	return delMultipleReplicationService.DeleteMultipleReplication(repoKey, repoUrl)
 }
 
 func (sm *ArtifactoryServicesManager) GetVersion() (string, error) {
