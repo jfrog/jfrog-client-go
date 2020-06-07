@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	clientcontent "github.com/jfrog/jfrog-client-go/utils/io/content"
+	iocontent "github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
@@ -33,14 +33,14 @@ func (rtc *ArtifactoryHttpClient) SendPost(url string, content []byte, httpClien
 	return rtc.httpClient.SendPost(url, content, *httpClientsDetails)
 }
 
-func (rtc *ArtifactoryHttpClient) SendPostResponseToFile(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, cr *clientcontent.ContentReader, err error) {
+func (rtc *ArtifactoryHttpClient) SendPostBodyToFile(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, cr *iocontent.ContentReader, err error) {
 	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
 
-	resp, b, err := rtc.httpClient.SendPostResponseToFile(url, content, *httpClientsDetails)
-	cr = clientcontent.NewContentReader(string(b), "results")
+	resp, filePath, err := rtc.httpClient.SendPostBodyToFile(url, content, *httpClientsDetails)
+	cr = iocontent.NewContentReader(filePath, "results")
 	return
 }
 
@@ -81,13 +81,13 @@ func (rtc *ArtifactoryHttpClient) SendPut(url string, content []byte, httpClient
 	return rtc.httpClient.SendPut(url, content, *httpClientsDetails)
 }
 
-func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool, bodyToFile bool,
+func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool,
 	httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
-	return rtc.httpClient.Send(method, url, content, followRedirect, closeBody, bodyToFile, *httpClientsDetails)
+	return rtc.httpClient.Send(method, url, content, followRedirect, closeBody, *httpClientsDetails)
 }
 
 func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string,

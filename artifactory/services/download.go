@@ -157,17 +157,8 @@ func produceTasks(cr *content.ContentReader, downloadParams DownloadParams, prod
 	}
 	if err := cr.GetError(); err != nil {
 		errorsQueue.AddError(errorutils.CheckError(err))
-		// TODO: Remove this
-		// if err := cr.Close(); err != nil {
-		// 	errorsQueue.AddError(errorutils.CheckError(err))
-		// }
 		return tasksCount
 	}
-	// TODO: Remove this
-	// if err := cr.Close(); err != nil {
-	// 	errorsQueue.AddError(errorutils.CheckError(err))
-	// 	return tasksCount
-	// }
 	addCreateDirsTasks(directoriesDataKeys, alreadyCreatedDirs, producer, fileHandler, directoriesData, errorsQueue, flat)
 	return tasksCount
 }

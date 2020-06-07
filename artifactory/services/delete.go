@@ -118,8 +118,6 @@ func (ds *DeleteService) DeleteFiles(deleteItems *content.ContentReader) (int, e
 	producerConsumer := parallel.NewBounedRunner(ds.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	result := *utils.NewResult(ds.Threads)
-	// TODO: Remove this
-	//defer deleteItems.Close()
 	go func() {
 		defer producerConsumer.Done()
 		for deleteItem := new(utils.ResultItem); deleteItems.NextRecord(deleteItem) == nil; deleteItem = new(utils.ResultItem) {
@@ -217,8 +215,5 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 		return nil, err
 	}
 	cw.Close()
-	// TODO: Remove this
-	// remainArtifacts.Close()
-	// deleteCandidates.Close()
 	return content.NewContentReader(cw.GetFilePath(), "results"), nil
 }

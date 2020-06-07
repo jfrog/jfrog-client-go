@@ -243,7 +243,7 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReade
 	aqlUrl := flags.GetArtifactoryDetails().GetUrl() + "api/search/aql"
 	log.Debug("Searching Artifactory using AQL query:\n", aqlQuery)
 	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
-	resp, cr, err := client.SendPostResponseToFile(aqlUrl, []byte(aqlQuery), &httpClientsDetails)
+	resp, cr, err := client.SendPostBodyToFile(aqlUrl, []byte(aqlQuery), &httpClientsDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -394,9 +394,6 @@ func FilterTopChainResultsSaveToFile(cr *content.ContentReader) (*content.Conten
 		return nil, err
 	}
 	cw.Close()
-	// TODO: Remove this
-	// dupCr.Close()
-	// cr.Close()
 	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
 }
 

@@ -45,8 +45,6 @@ func flatUpload(t *testing.T) {
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	cr, err := testsSearchService.Search(searchParams)
-	// TODO: Remove this
-	// defer cr.Close()
 	if err != nil {
 		t.Error(err)
 	}
@@ -87,8 +85,6 @@ func recursiveUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	// TODO: Remove this
-	// defer cr.Close()
 	for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
 		if item.Path != "." {
 			t.Error("Expected path to be root(flat by default).", "Got:", item.Path)
@@ -132,8 +128,6 @@ func placeholderUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	// TODO: Remove this
-	// defer cr.Close()
 	for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
 		if item.Path != "out" {
 			t.Error("Expected path to be out.", "Got:", item.Path)
@@ -179,8 +173,6 @@ func includeDirsUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	// TODO: Remove this
-	// defer cr.Close()
 	for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
 		if item.Name == "." {
 			continue
@@ -239,8 +231,6 @@ func explodeUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	// TODO: Remove this
-	// defer cr.Close()
 	for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
 		if item.Name == "." {
 			continue

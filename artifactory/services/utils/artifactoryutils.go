@@ -341,7 +341,7 @@ func loadMissingProperties(cr *content.ContentReader, crWithProps *content.Conte
 			buffer[getResultItemKey(*resultItem)] = resultItem
 		} else {
 			// Buffer was full, write all data to a file.
-			err = UpdatePropsAndSaveToFile(crWithProps, resultFile, buffer)
+			err = updateProps(crWithProps, resultFile, buffer)
 			if err != nil {
 				return nil, err
 			}
@@ -354,20 +354,17 @@ func loadMissingProperties(cr *content.ContentReader, crWithProps *content.Conte
 	if err = cr.GetError(); err != nil {
 		return nil, err
 	}
-	if err := UpdatePropsAndSaveToFile(crWithProps, resultFile, buffer); err != nil {
+	if err := updateProps(crWithProps, resultFile, buffer); err != nil {
 		return nil, err
 	}
 	resultFile.Close()
-	// TODO: Remove this
-	// cr.Close()
-	// crWithProps.Close()
 	return content.NewContentReader(resultFile.GetFilePath(), "results"), nil
 }
 
-// buffer - hold limit amount of items (sorted)
-// crWithProps - file which contain all the results with proprties
+// buffer - hold limited amount of items (sorted)
+// crWithProps - file containing all the results with proprties
 // cw - file to write sorted result item with properties
-func UpdatePropsAndSaveToFile(crWithProps *content.ContentReader, cw *content.ContentWriter, buffer map[string]*ResultItem) error {
+func updateProps(crWithProps *content.ContentReader, cw *content.ContentWriter, buffer map[string]*ResultItem) error {
 	if len(buffer) == 0 {
 		return nil
 	}
@@ -416,8 +413,6 @@ func fetchBuildArtifactsSha1SaveToFile(buildName, buildNumber string, flags Comm
 	if err != nil {
 		return nil, err
 	}
-	// TODO: Remove this
-	// cr.Close()
 	return buildArtifactsSha, nil
 }
 
@@ -550,17 +545,20 @@ func filterBuildAqlSearchResults(itemsToFilter *[]ResultItem, buildArtifactsSha 
 /*
  * buildArtifactsSha - List of all the build-name's sha1
  * cr - reader of the aql result
- * return a new file without  filter results
+ * Returns a filtered search result file.
  *
- * Filter search results by the following priorities:
+ * Map each search result into one of the tree priority files:
  * 1st priority: Match {Sha1, build name, build number}
  * 2nd priority: Match {Sha1, build name}
  * 3rd priority: Match {Sha1}
  *
+ *As a result, any duplicated search result items will be split into a different priority list.
+ *Then merge all the priority list into a single file, so each item is present once in the result file according to the priority list.
+ *
  * Side note: for each priority level, a single SHA1 can match multi artifacts under different modules
  */
 func filterBuildAqlSearchResultsSaveToFile(cr *content.ContentReader, buildArtifactsSha map[string]byte, buildName, buildNumber string) (*content.ContentReader, error) {
-	priorityArray, err := CreatePrioritiesFiles()
+	priorityArray, err := createPrioritiesFiles()
 	if err != nil {
 		return nil, err
 	}
@@ -592,8 +590,6 @@ func filterBuildAqlSearchResultsSaveToFile(cr *content.ContentReader, buildArtif
 	if err := cr.GetError(); err != nil {
 		return nil, err
 	}
-	// TODO: Remove this
-	// cr.Close()
 	var priorityLevel byte = 0
 	// Step 2 - Append the files to the final results file.
 	// Scan each priority artifacts and apply them to the final result, starting for priority 0 to 2.
@@ -614,8 +610,6 @@ func filterBuildAqlSearchResultsSaveToFile(cr *content.ContentReader, buildArtif
 		if err = temp.GetError(); err != nil {
 			return nil, err
 		}
-		// TODO: Remove this
-		// err = priority.RemoveOutputFilePath()
 		if err != nil {
 			return nil, err
 		}
@@ -627,7 +621,8 @@ func filterBuildAqlSearchResultsSaveToFile(cr *content.ContentReader, buildArtif
 	return content.NewContentReader(resultCw.GetFilePath(), "results"), nil
 }
 
-func CreatePrioritiesFiles() ([]*content.ContentWriter, error) {
+// Create writers to hold each result item according to its priority.
+func createPrioritiesFiles() ([]*content.ContentWriter, error) {
 	firstPriority, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
