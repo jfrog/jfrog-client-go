@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
 	"regexp"
 	"strings"
 )
@@ -26,11 +27,11 @@ func createRepoPathFileTriples(pattern string, recursive bool) []RepoPathFile {
 	firstSlashIndex := strings.Index(pattern, "/")
 	asteriskIndices := asteriskRegexp.FindAllStringIndex(pattern, -1)
 
-	if asteriskIndices != nil && !isSlashPrecedeAsterisk(asteriskIndices[0][0], firstSlashIndex) {
+	if asteriskIndices != nil && !utils.IsSlashPrecedeAsterisk(asteriskIndices[0][0], firstSlashIndex) {
 		var triples []RepoPathFile
 		var lastRepoAsteriskIndex int
 		for _, asteriskIndex := range asteriskIndices {
-			if isSlashPrecedeAsterisk(asteriskIndex[0], firstSlashIndex) {
+			if utils.IsSlashPrecedeAsterisk(asteriskIndex[0], firstSlashIndex) {
 				break
 			}
 			repo := pattern[:asteriskIndex[0]+1]     // '<repo>*'
@@ -58,10 +59,6 @@ func createRepoPathFileTriples(pattern string, recursive bool) []RepoPathFile {
 	repo := pattern[:firstSlashIndex]
 	pattern = pattern[firstSlashIndex+1:]
 	return createPathFilePairs(repo, pattern, recursive)
-}
-
-func isSlashPrecedeAsterisk(asteriskIndex, slashIndex int) bool {
-	return slashIndex < asteriskIndex && slashIndex >= 0
 }
 
 func createPathFilePairs(repo, pattern string, recursive bool) []RepoPathFile {
