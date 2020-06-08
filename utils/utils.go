@@ -199,15 +199,15 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 	asteriskIndex := strings.Index(pattern, "*")
 	slashIndex := strings.Index(pattern, "/")
 	if shouldRemoveRepo(ignoreRepo, asteriskIndex, slashIndex) {
-		// Required when working with virtual repositories as the pattern may contain the virtual-repository name,
-		// but the path will contain the local-repository name.
+		// Removing the repository part of the path is required when working with virtual repositories, as the pattern
+		// may contain the virtual-repository name, but the path contains the local-repository name.
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
 	pattern = addEscapingParentheses(pattern, target)
 	pattern = pathToRegExp(pattern)
 	if slashIndex < 0 {
-		// '/' doesn't exists, add an optional trailing-slash to support cases in which the provided pattern
+		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
 		// is only the repository name.
 		dollarIndex := strings.LastIndex(pattern, "$")
 		pattern = pattern[:dollarIndex]
