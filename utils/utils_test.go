@@ -5,6 +5,22 @@ import (
 	"testing"
 )
 
+func TestRemoveRepoFromPath(t *testing.T) {
+	assertRemoveRepoFromPath("repo/abc/def", "/abc/def", t)
+	assertRemoveRepoFromPath("repo/(*)", "/(*)", t)
+	assertRemoveRepoFromPath("repo/", "/", t)
+	assertRemoveRepoFromPath("/abc/def", "/abc/def", t)
+	assertRemoveRepoFromPath("aaa", "aaa", t)
+	assertRemoveRepoFromPath("", "", t)
+}
+
+func assertRemoveRepoFromPath(path, expected string, t *testing.T) {
+	result := removeRepoFromPath(path)
+	if expected != result {
+		t.Error("Unexpected string built by removeRepoFromPath. Expected: `" + expected + "` Got `" + result + "`")
+	}
+}
+
 func TestBuildTargetPath(t *testing.T) {
 	assertBuildTargetPath("1(*)234", "1hello234", "{1}", "hello", true, t)
 	assertBuildTargetPath("1234", "1hello234", "{1}", "{1}", true, t)
