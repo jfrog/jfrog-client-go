@@ -36,6 +36,9 @@ func (jc *HttpClient) sendPostLeaveBodyOpen(url string, content []byte, httpClie
 
 func (jc *HttpClient) SendPostBodyToFile(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, filePath string, err error) {
 	resp, err = jc.sendPostLeaveBodyOpen(url, content, httpClientsDetails)
+	if err != nil {
+		return
+	}
 	defer resp.Body.Close()
 	filePath, err = streamToFile(resp.Body)
 	return

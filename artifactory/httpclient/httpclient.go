@@ -40,6 +40,9 @@ func (rtc *ArtifactoryHttpClient) SendPostBodyToFile(url string, content []byte,
 	}
 
 	resp, filePath, err := rtc.httpClient.SendPostBodyToFile(url, content, *httpClientsDetails)
+	if err != nil {
+		return
+	}
 	cr = iocontent.NewContentReader(filePath, "results")
 	return
 }
