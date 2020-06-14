@@ -70,7 +70,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		if err != nil {
 			return
 		}
-		resultItems, err = utils.ReduceDirResultSaveToFile(tempResultItems, utils.FilterTopChainResultsSaveToFile)
+		resultItems, err = utils.ReduceTopChainDirResult(tempResultItems)
 		if err != nil {
 			return
 		}

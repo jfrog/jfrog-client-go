@@ -1,0 +1,24 @@
+{
+    "results": [
+        {
+            "Repo": "repo1",
+            "Path": "b",
+            "Name": "c/"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "br",
+            "Name": "c/"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "br/c/dont/care",
+            "Name": "somename"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "bl",
+            "Name": "c1/"
+        }
+    ]
+}

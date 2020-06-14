@@ -1,8 +1,6 @@
 package content
 
 import (
-	"crypto/md5"
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -104,13 +102,7 @@ func TestDuplicate(t *testing.T) {
 	// Don't delete the origin testdata file, only the duplicate.
 	defer dupCr.Close()
 	assert.NoError(t, err)
-
-	// Create md5
-	originMd5, err := getFileMd5(cr.filePath)
-	assert.NoError(t, err)
-	expectedMd5, err := getFileMd5(dupCr.filePath)
-	assert.NoError(t, err)
-	assert.Equal(t, originMd5, expectedMd5)
+	assert.True(t, filesMath(t, cr, dupCr))
 }
 
 func TestLengthCount(t *testing.T) {
@@ -121,15 +113,10 @@ func TestLengthCount(t *testing.T) {
 	assert.Equal(t, cr.Length(), 2)
 }
 
-func getFileMd5(path string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	h := md5.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
-	}
-	return string(h.Sum(nil)), nil
+func filesMath(t *testing.T, src *ContentReader, toCompare *ContentReader) bool {
+	srcDetails, err := fileutils.GetFileDetails(src.GetFilePath())
+	assert.NoError(t, err)
+	toCompareDetails, err := fileutils.GetFileDetails(toCompare.GetFilePath())
+	assert.NoError(t, err)
+	return srcDetails.Checksum.Md5 == toCompareDetails.Checksum.Md5
 }

@@ -21,7 +21,8 @@ type RequiredArtifactProps int
 // This enum defines which properties are required in the result of the aql.
 // For example, when performing a copy/move command - the props are not needed, so we set RequiredArtifactProps to NONE.
 const (
-	ALL RequiredArtifactProps = iota
+	MAX_BUFFER_SIZE                       = 50000
+	ALL             RequiredArtifactProps = iota
 	SYMLINK
 	NONE
 )
@@ -276,16 +277,16 @@ type AqlSearchResult struct {
 }
 
 type ResultItem struct {
-	Repo        string
-	Path        string
-	Name        string
-	Actual_Md5  string
-	Actual_Sha1 string
-	Size        int64
-	Created     string
-	Modified    string
-	Properties  []Property
-	Type        string
+	Repo        string     `json:"repo,omitempty"`
+	Path        string     `json:"path,omitempty"`
+	Name        string     `json:"name,omitempty"`
+	Actual_Md5  string     `json:"actual_md5,omitempty"`
+	Actual_Sha1 string     `json:"actual_sha1,omitempty"`
+	Size        int64      `json:"size,omitempty"`
+	Created     string     `json:"created,omitempty"`
+	Modified    string     `json:"modified,omitempty"`
+	Properties  []Property `json:"properties,omitempty"`
+	Type        string     `json:"type,omitempty"`
 }
 
 func (item ResultItem) GetItemRelativePath() string {
@@ -324,110 +325,160 @@ func (item *ResultItem) ToDependency() buildinfo.Dependency {
 type AqlSearchResultItemFilter func(map[string]ResultItem, []string) []ResultItem
 type AqlSearchResultItemFilterSaveToFile func(*content.ContentReader) (*content.ContentReader, error)
 
-func FilterBottomChainResults(paths map[string]ResultItem, pathsKeys []string) []ResultItem {
-	var result []ResultItem
-	sort.Sort(sort.Reverse(sort.StringSlice(pathsKeys)))
-	for i, k := range pathsKeys {
-		if i == 0 || !IsSubPath(pathsKeys, i, "/") {
-			result = append(result, paths[k])
-		}
-	}
-
-	return result
-}
-
-func FilterTopChainResults(paths map[string]ResultItem, pathsKeys []string) []ResultItem {
-	sort.Strings(pathsKeys)
-	for _, k := range pathsKeys {
-		for _, k2 := range pathsKeys {
-			prefix := k2
-			if paths[k2].Type == "folder" && !strings.HasSuffix(k2, "/") {
-				prefix += "/"
-			}
-
-			if k != k2 && strings.HasPrefix(k, prefix) {
-				delete(paths, k)
-				continue
-			}
-		}
-	}
-
-	var result []ResultItem
-	for _, v := range paths {
-		result = append(result, v)
-	}
-
-	return result
-}
-
-// Reduce the amount of items by saves only the shortest item path for each uniq path e.g.:
-// a | a/b | c | e/f -> a | c | e/f
-func FilterTopChainResultsSaveToFile(cr *content.ContentReader) (*content.ContentReader, error) {
+func FilterBottomChainResults(cr *content.ContentReader) (*content.ContentReader, error) {
 	cw, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
 	}
-	dupCr, err := cr.Duplicate()
-	if err != nil {
-		return nil, err
-	}
+	var temp string
 	for resultItem := new(ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
-		skip := false
-		for temp := new(ResultItem); dupCr.NextRecord(temp) == nil; temp = new(ResultItem) {
-			prefix := temp.GetItemRelativePath()
-			if temp.Type == "folder" && !strings.HasSuffix(temp.GetItemRelativePath(), "/") {
-				prefix += "/"
-			}
-			if resultItem.GetItemRelativePath() != temp.GetItemRelativePath() && strings.HasPrefix(resultItem.GetItemRelativePath(), prefix) {
-				skip = true
-			}
+		rPath := resultItem.GetItemRelativePath()
+		if resultItem.Type == "folder" && !strings.HasSuffix(rPath, "/") {
+			rPath += "/"
 		}
-		if err := dupCr.GetError(); err != nil {
-			return nil, err
-		}
-		if !skip {
+		if temp == "" || !strings.HasPrefix(temp, rPath) {
 			cw.Write(*resultItem)
+			temp = rPath
 		}
-		dupCr.Reset()
 	}
 	if err := cr.GetError(); err != nil {
 		return nil, err
 	}
-	cw.Close()
+	if err := cw.Close(); err != nil {
+		return nil, err
+	}
 	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
 }
 
-// Reduce Dir results by using the resultsFilter
-func ReduceDirResult(searchResults []ResultItem, resultsFilter AqlSearchResultItemFilter) []ResultItem {
-	paths := make(map[string]ResultItem)
-	pathsKeys := make([]string, 0, len(searchResults))
-	for _, file := range searchResults {
-		if file.Name == "." {
-			continue
-		}
-
-		url := file.GetItemRelativePath()
-		paths[url] = file
-		pathsKeys = append(pathsKeys, url)
-	}
-	return resultsFilter(paths, pathsKeys)
-}
-
-func ReduceDirResultSaveToFile(searchResults *content.ContentReader, resultsFilter AqlSearchResultItemFilterSaveToFile) (*content.ContentReader, error) {
-	cw, err := content.NewContentWriter(searchResults.GetArrayKey(), true, false)
+// Reduce the amount of items by saves only the shortest item path for each uniq path e.g.:
+// a | a/b | c | e/f -> a | c | e/f
+func FilterTopChainResults(cr *content.ContentReader) (*content.ContentReader, error) {
+	cw, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
 	}
+	var temp string
+	for resultItem := new(ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+		rPath := resultItem.GetItemRelativePath()
+		if resultItem.Type == "folder" && !strings.HasSuffix(rPath, "/") {
+			rPath += "/"
+		}
+		if temp == "" || !strings.HasPrefix(rPath, temp) {
+			cw.Write(*resultItem)
+			temp = rPath
+		}
+	}
+	if err := cr.GetError(); err != nil {
+		return nil, err
+	}
+	if err := cw.Close(); err != nil {
+		return nil, err
+	}
+	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
+}
+
+func ReduceTopChainDirResult(searchResults *content.ContentReader) (*content.ContentReader, error) {
+	return ReduceDirResult(searchResults, true, FilterTopChainResults)
+
+}
+
+func ReduceBottomChainDirResult(searchResults *content.ContentReader) (*content.ContentReader, error) {
+	return ReduceDirResult(searchResults, false, FilterBottomChainResults)
+
+}
+
+// Reduce Dir results by using the resultsFilter
+func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder bool, resultsFilter AqlSearchResultItemFilterSaveToFile) (*content.ContentReader, error) {
+	paths := make(map[string]ResultItem)
+	pathsKeys := make([]string, 0, MAX_BUFFER_SIZE)
+	sortedFiles := []*content.ContentReader{}
 	for resultItem := new(ResultItem); searchResults.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if resultItem.Name == "." {
 			continue
 		}
-		cw.Write(*resultItem)
+		rPath := resultItem.GetItemRelativePath()
+		paths[rPath] = *resultItem
+		pathsKeys = append(pathsKeys, rPath)
+		if len(pathsKeys) == MAX_BUFFER_SIZE {
+			sortedFile, err := saveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
+			if err != nil {
+				return nil, err
+			}
+			sortedFiles = append(sortedFiles, sortedFile)
+			paths = make(map[string]ResultItem)
+			pathsKeys = make([]string, MAX_BUFFER_SIZE)
+		}
 	}
 	if err := searchResults.GetError(); err != nil {
 		return nil, err
 	}
-	cw.Close()
-	searchResults.SetFilePath(cw.GetFilePath())
-	return resultsFilter(searchResults)
+	sortedFile, err := saveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
+	if err != nil {
+		return nil, err
+	}
+	sortedFiles = append(sortedFiles, sortedFile)
+	sortedFile, err = mergeSortedFiles(sortedFiles)
+	if err != nil {
+		return nil, err
+	}
+	return resultsFilter(sortedFile)
+}
+
+func saveBufferToFile(paths map[string]ResultItem, pathsKeys []string, sortIncreasingOrder bool) (*content.ContentReader, error) {
+	if len(pathsKeys) == 0 {
+		return nil, nil
+	}
+	cw, err := content.NewContentWriter("results", true, false)
+	if err != nil {
+		return nil, err
+	}
+	if sortIncreasingOrder {
+		sort.Strings(pathsKeys)
+	} else {
+		sort.Sort(sort.Reverse(sort.StringSlice(pathsKeys)))
+	}
+	for _, v := range pathsKeys {
+		cw.Write(paths[v])
+	}
+	if err := cw.Close(); err != nil {
+		return nil, err
+	}
+	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
+}
+
+func mergeSortedFiles(sortedFiles []*content.ContentReader) (*content.ContentReader, error) {
+	if len(sortedFiles) == 1 {
+		return sortedFiles[0], nil
+	}
+	resultWriter, err := content.NewContentWriter("results", true, false)
+	if err != nil {
+		return nil, err
+	}
+	arr := make([]*ResultItem, len(sortedFiles))
+	for {
+		var smallest *ResultItem
+		smallestIndex := 0
+		for i := 0; i < len(sortedFiles); i++ {
+			if arr[i] == nil && sortedFiles[i] != nil {
+				arr[i] = new(ResultItem)
+				if err := sortedFiles[i].NextRecord(arr[i]); nil != err {
+					sortedFiles[i] = nil
+					continue
+				}
+			}
+			if smallest == nil || smallest.GetItemRelativePath() > arr[i].GetItemRelativePath() {
+				smallest = arr[i]
+				smallestIndex = i
+			}
+		}
+		if smallest == nil {
+			break
+		}
+		resultWriter.Write(*smallest)
+		arr[smallestIndex] = nil
+	}
+	if err := resultWriter.Close(); err != nil {
+		return nil, err
+	}
+	return content.NewContentReader(resultWriter.GetFilePath(), resultWriter.GetArrayKey()), nil
 }

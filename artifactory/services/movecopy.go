@@ -79,9 +79,9 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyPara
 
 func reduceMovePaths(resultItems []utils.ResultItem, params MoveCopyParams) []utils.ResultItem {
 	if params.IsFlat() {
-		return utils.ReduceDirResult(resultItems, utils.FilterBottomChainResults)
+		return utils.ReduceBottomChainDirResult(resultItems)
 	}
-	return utils.ReduceDirResult(resultItems, utils.FilterTopChainResults)
+	return utils.ReduceTopChainDirResult(resultItems)
 }
 
 func (mc *MoveCopyService) moveFiles(resultItems []utils.ResultItem, params MoveCopyParams) (successCount, failedCount int, err error) {

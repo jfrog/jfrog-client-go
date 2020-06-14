@@ -1,8 +1,14 @@
 package utils
 
 import (
-	"strconv"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetFullUrl(t *testing.T) {
@@ -21,62 +27,34 @@ func assertUrl(repo, path, name, fullUrl string, t *testing.T) {
 	}
 }
 
-func TestReduceDirResult(t *testing.T) {
-	paths := []ResultItem{}
-	expected := []ResultItem{}
-
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "b", Name: "c/"})
-	expected = append(expected, ResultItem{Repo: "repo1", Path: "b", Name: "c/"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
-
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "br", Name: "c/"})
-	expected = append(expected, ResultItem{Repo: "repo1", Path: "br", Name: "c/"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
-
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "br/c/dont/care", Name: "somename"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
-
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "bl", Name: "c1/"})
-	expected = append(expected, ResultItem{Repo: "repo1", Path: "bl", Name: "c1/"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
-
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "bl/c1/you/dont/care", Name: "somename"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
-
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "bl/c1/i/dont/care", Name: "somename"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
-
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "b", Name: "."})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
-
-	paths = append(paths, ResultItem{Repo: "repo2", Path: "bl", Name: "c1"})
-	expected = append(expected, ResultItem{Repo: "repo2", Path: "bl", Name: "c1"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
+func TestReduceTopChainDirResult(t *testing.T) {
+	dir, _ := os.Getwd()
+	testDataPath := filepath.Join(dir, "reduce_top_chain_tests", "testsdata", "reducedirresult")
+	testResult := []int{1, 2, 2, 3, 3, 3, 3, 4}
+	for i := 1; i <= 8; i++ {
+		cr := content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("step%v.json", i)), "results")
+		resultReader, err := ReduceTopChainDirResult(cr)
+		assert.NoError(t, err)
+		assert.True(t, filesMath(t, filepath.Join(testDataPath, fmt.Sprintf("reduce_top_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath()))
+	}
 }
 
-func assertPackageFiles(expected, actual []ResultItem, t *testing.T) {
-	if len(actual) != len(expected) {
-		t.Error("Expected: " + strconv.Itoa(len(expected)) + ", Got: " + strconv.Itoa(len(actual)) + " files.")
+func TestReduceBottomChainDirResult(t *testing.T) {
+	dir, _ := os.Getwd()
+	testDataPath := filepath.Join(dir, "tests", "testsdata", "reducedirresult")
+	testResult := []int{1, 2, 2, 2, 3}
+	for i := 1; i <= 5; i++ {
+		cr := content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%v.json", i)), "results")
+		resultReader, err := ReduceBottomChainDirResult(cr)
+		assert.NoError(t, err)
+		assert.True(t, filesMath(t, filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath()))
 	}
+}
 
-	expectedMap := make(map[string]ResultItem)
-	for _, v := range expected {
-		expectedMap[v.GetItemRelativePath()] = v
-	}
-
-	actualMap := make(map[string]ResultItem)
-	for _, v := range actual {
-		actualMap[v.GetItemRelativePath()] = v
-	}
-
-	for _, v := range actual {
-		if _, ok := expectedMap[v.GetItemRelativePath()]; !ok {
-			t.Error("Unexpected path:", v.GetItemRelativePath())
-		}
-	}
-	for _, v := range expected {
-		if _, ok := actualMap[v.GetItemRelativePath()]; !ok {
-			t.Error("Path not found:", v.GetItemRelativePath())
-		}
-	}
+func filesMath(t *testing.T, srcPath string, toComparePath string) bool {
+	srcDetails, err := fileutils.GetFileDetails(srcPath)
+	assert.NoError(t, err)
+	toCompareDetails, err := fileutils.GetFileDetails(toComparePath)
+	assert.NoError(t, err)
+	return srcDetails.Checksum.Md5 == toCompareDetails.Checksum.Md5
 }

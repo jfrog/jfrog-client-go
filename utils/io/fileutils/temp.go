@@ -15,8 +15,10 @@ import (
 
 const (
 	tempPrefix = "jfrog.temp."
-	deadline   = 24.0
 )
+
+// Expiration date
+var deadline = 24.0
 
 //Path to the root temp dir
 var tempDirBase string
@@ -69,11 +71,10 @@ func CreateReaderWriterTempDir() (err error) {
 
 // Create a new temp file named "tempPrefix+timeStamp".
 func CreateReaderWriterTempFile() (*os.File, error) {
-	timeStamp := strconv.FormatInt(time.Now().Unix(), 10)
 	if tempDirReaderWriter == "" {
 		return nil, errorutils.CheckError(errors.New("Temp folder was not created"))
 	}
-	fd, err := ioutil.TempFile(tempDirReaderWriter, tempPrefix+timeStamp)
+	fd, err := ioutil.TempFile(tempDirReaderWriter, tempPrefix+"*.json")
 	return fd, err
 }
 
