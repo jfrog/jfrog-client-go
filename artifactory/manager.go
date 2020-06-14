@@ -173,7 +173,7 @@ func (sm *ArtifactoryServicesManager) DownloadFilesWithResultReader(params ...se
 	return
 }
 
-func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error) {
 	gitLfsCleanService := services.NewGitLfsCleanService(sm.client)
 	gitLfsCleanService.DryRun = sm.config.IsDryRun()
 	gitLfsCleanService.ArtDetails = sm.config.GetServiceDetails()

@@ -12,6 +12,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -49,23 +50,23 @@ func (mc *MoveCopyService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpCl
 }
 
 func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyParams) (successCount, failedCount int, err error) {
-	var resultItems []utils.ResultItem
+	var resultReader *content.ContentReader
 	log.Info("Searching items...")
 
 	switch moveSpec.GetSpecType() {
 	case utils.BUILD:
-		resultItems, err = utils.SearchBySpecWithBuild(moveSpec.GetFile(), mc)
+		resultReader, err = utils.SearchBySpecWithBuildSaveToFile(moveSpec.GetFile(), mc)
 	case utils.AQL:
-		resultItems, err = utils.SearchBySpecWithAql(moveSpec.GetFile(), mc, utils.NONE)
+		resultReader, err = utils.SearchBySpecWithAqlSaveToFile(moveSpec.GetFile(), mc, utils.NONE)
 	case utils.WILDCARD:
 		moveSpec.SetIncludeDir(true)
-		resultItems, err = utils.SearchBySpecWithPattern(moveSpec.GetFile(), mc, utils.NONE)
+		resultReader, err = utils.SearchBySpecWithPatternSaveToFile(moveSpec.GetFile(), mc, utils.NONE)
 	}
 	if err != nil {
 		return 0, 0, err
 	}
 
-	successCount, failedCount, err = mc.moveFiles(resultItems, moveSpec)
+	successCount, failedCount, err = mc.moveFiles(resultReader, moveSpec)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -77,41 +78,41 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyPara
 	return
 }
 
-func reduceMovePaths(resultItems []utils.ResultItem, params MoveCopyParams) []utils.ResultItem {
+func reduceMovePaths(cr *content.ContentReader, params MoveCopyParams) (*content.ContentReader, error) {
 	if params.IsFlat() {
-		return utils.ReduceBottomChainDirResult(resultItems)
+		return utils.ReduceBottomChainDirResult(cr)
 	}
-	return utils.ReduceTopChainDirResult(resultItems)
+	return utils.ReduceTopChainDirResult(cr)
 }
 
-func (mc *MoveCopyService) moveFiles(resultItems []utils.ResultItem, params MoveCopyParams) (successCount, failedCount int, err error) {
+func (mc *MoveCopyService) moveFiles(cr *content.ContentReader, params MoveCopyParams) (successCount, failedCount int, err error) {
 	successCount = 0
 	failedCount = 0
-	resultItems = reduceMovePaths(resultItems, params)
-	utils.LogSearchResults(len(resultItems))
-	for _, v := range resultItems {
+	cr, err = reduceMovePaths(cr, params)
+	utils.LogSearchResults(cr.Length())
+	for resultItem := new(utils.ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		destPathLocal := params.GetFile().Target
 		if !params.IsFlat() {
 			if strings.Contains(destPathLocal, "/") {
 				file, dir := fileutils.GetFileAndDirFromPath(destPathLocal)
-				destPathLocal = clientutils.TrimPath(dir + "/" + v.Path + "/" + file)
+				destPathLocal = clientutils.TrimPath(dir + "/" + resultItem.Path + "/" + file)
 			} else {
-				destPathLocal = clientutils.TrimPath(destPathLocal + "/" + v.Path + "/")
+				destPathLocal = clientutils.TrimPath(destPathLocal + "/" + resultItem.Path + "/")
 			}
 		}
-		destFile, err := clientutils.BuildTargetPath(params.GetFile().Pattern, v.GetItemRelativePath(), destPathLocal, true)
+		destFile, err := clientutils.BuildTargetPath(params.GetFile().Pattern, resultItem.GetItemRelativePath(), destPathLocal, true)
 		if err != nil {
 			log.Error(err)
 			continue
 		}
 		if strings.HasSuffix(destFile, "/") {
-			if v.Type != "folder" {
-				destFile += v.Name
+			if resultItem.Type != "folder" {
+				destFile += resultItem.Name
 			} else {
 				mc.createPathForMoveAction(destFile)
 			}
 		}
-		success, err := mc.moveFile(v.GetItemRelativePath(), destFile)
+		success, err := mc.moveFile(resultItem.GetItemRelativePath(), destFile)
 		if err != nil {
 			log.Error(err)
 			continue
