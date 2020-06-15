@@ -82,6 +82,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error 
 		return err
 	}
 	if bis.IsDryRun() {
+		log.Info("[Dry run] Outputting Build info preview...")
 		log.Output(clientutils.IndentJson(content))
 		return nil
 	}
