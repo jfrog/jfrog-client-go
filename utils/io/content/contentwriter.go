@@ -55,6 +55,16 @@ func NewContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*Content
 	return &self, nil
 }
 
+func NewEmptyContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*ContentWriter, error) {
+	self, err := NewContentWriter(arrayKey, isCompleteFile, useStdout)
+	if err != nil {
+		return nil, err
+	}
+	close(self.dataChannel)
+	self.run()
+	return self, nil
+}
+
 func (rw *ContentWriter) SetArrayKey(arrKey string) *ContentWriter {
 	rw.arrayKey = arrKey
 	return rw

@@ -178,9 +178,10 @@ func NewDeleteParams() DeleteParams {
 // These directories must be removed, because they include files, which should not be deleted, because of the excludeProps params.
 // These directories must not be deleted from Artifactory.
 func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (*content.ContentReader, error) {
-	if specFile.ExcludeProps == "" {
+	if specFile.ExcludeProps == "" || deleteCandidates.Length() == 0 {
 		return deleteCandidates, nil
 	}
+	totalToBeDeleted := 0
 	specFile.Props = specFile.ExcludeProps
 	specFile.ExcludeProps = ""
 	remainArtifacts, err := utils.SearchBySpecWithPatternSaveToFile(specFile, ds, utils.NONE)
@@ -209,11 +210,15 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 		}
 		if deleteCandidate {
 			cw.Write(candidate)
+			totalToBeDeleted++
 		}
 	}
 	if err := deleteCandidates.GetError(); err != nil {
 		return nil, err
 	}
 	cw.Close()
-	return content.NewContentReader(cw.GetFilePath(), "results"), nil
+	if totalToBeDeleted == 0 {
+		cw, err = content.NewEmptyContentWriter("results", true, false)
+	}
+	return content.NewContentReader(cw.GetFilePath(), "results"), err
 }

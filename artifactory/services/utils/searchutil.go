@@ -379,16 +379,17 @@ func FilterTopChainResults(cr *content.ContentReader) (*content.ContentReader, e
 
 func ReduceTopChainDirResult(searchResults *content.ContentReader) (*content.ContentReader, error) {
 	return ReduceDirResult(searchResults, true, FilterTopChainResults)
-
 }
 
 func ReduceBottomChainDirResult(searchResults *content.ContentReader) (*content.ContentReader, error) {
 	return ReduceDirResult(searchResults, false, FilterBottomChainResults)
-
 }
 
 // Reduce Dir results by using the resultsFilter
 func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder bool, resultsFilter AqlSearchResultItemFilterSaveToFile) (*content.ContentReader, error) {
+	if searchResults == nil || searchResults.Length() == 0 {
+		return searchResults, nil
+	}
 	paths := make(map[string]ResultItem)
 	pathsKeys := make([]string, 0, MAX_BUFFER_SIZE)
 	sortedFiles := []*content.ContentReader{}
@@ -412,12 +413,15 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 	if err := searchResults.GetError(); err != nil {
 		return nil, err
 	}
-	sortedFile, err := saveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
-	if err != nil {
-		return nil, err
+	var sortedFile *content.ContentReader
+	if len(pathsKeys) > 0 {
+		sortedFile, err := saveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
+		if err != nil {
+			return nil, err
+		}
+		sortedFiles = append(sortedFiles, sortedFile)
 	}
-	sortedFiles = append(sortedFiles, sortedFile)
-	sortedFile, err = mergeSortedFiles(sortedFiles)
+	sortedFile, err := mergeSortedFiles(sortedFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -447,6 +451,10 @@ func saveBufferToFile(paths map[string]ResultItem, pathsKeys []string, sortIncre
 }
 
 func mergeSortedFiles(sortedFiles []*content.ContentReader) (*content.ContentReader, error) {
+	if len(sortedFiles) == 0 {
+		cw, err := content.NewEmptyContentWriter("results", true, false)
+		return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), err
+	}
 	if len(sortedFiles) == 1 {
 		return sortedFiles[0], nil
 	}

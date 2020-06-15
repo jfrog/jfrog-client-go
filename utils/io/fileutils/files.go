@@ -484,3 +484,15 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 }
 
 type ItemType string
+
+func FilesMath(src string, toCompare string) (bool, error) {
+	srcDetails, err := GetFileDetails(src)
+	if err != nil {
+		return false, err
+	}
+	toCompareDetails, err := GetFileDetails(toCompare)
+	if err != nil {
+		return false, err
+	}
+	return srcDetails.Checksum.Md5 == toCompareDetails.Checksum.Md5, nil
+}

@@ -60,7 +60,7 @@ func TestContentReaderNextRecord(t *testing.T) {
 }
 
 func TestContentReaderEmptyResult(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", emptySearchResult)
+	searchResultPath := filepath.Join(getTestDataPath(), emptySearchResult)
 	cr := NewContentReader(searchResultPath, arrayKey)
 	for item := new(inputRecord); cr.NextRecord(item) == nil; item = new(inputRecord) {
 		t.Error("Can't loop over empty file")
@@ -70,7 +70,7 @@ func TestContentReaderEmptyResult(t *testing.T) {
 
 func getTestDataPath() string {
 	dir, _ := os.Getwd()
-	return filepath.Join(dir, "..", "..", "..", "tests", "testsdata")
+	return filepath.Join(dir, "..", "..", "..", "tests", "testsdata", "contentreaderwriter")
 }
 
 func TestCloseReader(t *testing.T) {
@@ -96,27 +96,21 @@ func TestCloseReader(t *testing.T) {
 
 func TestDuplicate(t *testing.T) {
 	// Create files
-	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
+	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
 	cr := NewContentReader(searchResultPath, arrayKey)
 	dupCr, err := cr.Duplicate()
 	// Don't delete the origin testdata file, only the duplicate.
 	defer dupCr.Close()
 	assert.NoError(t, err)
-	assert.True(t, filesMath(t, cr, dupCr))
+	result, err := fileutils.FilesMath(cr.GetFilePath(), dupCr.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, result)
 }
 
 func TestLengthCount(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
+	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
 	cr := NewContentReader(searchResultPath, arrayKey)
 	assert.Equal(t, cr.Length(), 2)
 	// Check cache works with no Reset() being called.
 	assert.Equal(t, cr.Length(), 2)
-}
-
-func filesMath(t *testing.T, src *ContentReader, toCompare *ContentReader) bool {
-	srcDetails, err := fileutils.GetFileDetails(src.GetFilePath())
-	assert.NoError(t, err)
-	toCompareDetails, err := fileutils.GetFileDetails(toCompare.GetFilePath())
-	assert.NoError(t, err)
-	return srcDetails.Checksum.Md5 == toCompareDetails.Checksum.Md5
 }

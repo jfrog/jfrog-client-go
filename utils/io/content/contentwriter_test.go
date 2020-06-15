@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -119,4 +121,14 @@ func TestRemoveOutputFilePath(t *testing.T) {
 	cw.RemoveOutputFilePath()
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
+}
+
+func TestEmptyContentWriter(t *testing.T) {
+	cw, err := NewEmptyContentWriter("results", true, false)
+	searchResultPath := filepath.Join(getTestDataPath(), emptySearchResult)
+	assert.NoError(t, err)
+	result, err := fileutils.FilesMath(cw.GetFilePath(), searchResultPath)
+	assert.NoError(t, err)
+	assert.True(t, result)
+
 }

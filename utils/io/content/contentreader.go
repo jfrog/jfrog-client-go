@@ -61,6 +61,7 @@ func (cr *ContentReader) GetArrayKey() string {
 func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 	cr.once.Do(func() {
 		go func() {
+			defer close(cr.dataChannel)
 			cr.length = 0
 			cr.run()
 		}()
@@ -135,9 +136,8 @@ func (cr *ContentReader) run() {
 		cr.errorsQueue.AddError(errorutils.CheckError(err))
 		return
 	}
-	br := bufio.NewReaderSize(fd, 65536)
 	defer fd.Close()
-	defer close(cr.dataChannel)
+	br := bufio.NewReaderSize(fd, 65536)
 	dec := json.NewDecoder(br)
 	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
 	if err != nil {
