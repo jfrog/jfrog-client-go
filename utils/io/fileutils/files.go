@@ -371,7 +371,8 @@ func CopyFile(dst, src string) error {
 
 // Copy directory content from one path to another.
 // includeDirs means to copy also the dirs if presented in the src folder.
-func CopyDir(fromPath, toPath string, includeDirs bool) error {
+// excludeNames - Skip files/dirs in the src folder that match names in provided slice. ONLY excludes first layer (only in src folder).
+func CopyDir(fromPath, toPath string, includeDirs bool, excludeNames []string) error {
 	err := CreateDirIfNotExist(toPath)
 	if err != nil {
 		return err
@@ -383,6 +384,11 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 	}
 
 	for _, v := range files {
+		// Skip if excluded
+		if IsStringInSlice(filepath.Base(v), excludeNames) {
+			continue
+		}
+
 		dir, err := IsDirExists(v, false)
 		if err != nil {
 			return err
@@ -390,7 +396,7 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 
 		if dir {
 			toPath := toPath + GetFileSeparator() + filepath.Base(v)
-			err := CopyDir(v, toPath, true)
+			err := CopyDir(v, toPath, true, nil)
 			if err != nil {
 				return err
 			}
@@ -402,6 +408,15 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 		}
 	}
 	return err
+}
+
+func IsStringInSlice(string string, strings []string) bool {
+	for _, v := range strings {
+		if v == string {
+			return true
+		}
+	}
+	return false
 }
 
 // Removing the provided path from the filesystem
@@ -418,7 +433,7 @@ func RemovePath(testPath string) error {
 
 // Renaming from old path to new path.
 func RenamePath(oldPath, newPath string) error {
-	err := CopyDir(oldPath, newPath, true)
+	err := CopyDir(oldPath, newPath, true, nil)
 	if err != nil {
 		return errors.New("Error copying directory: " + oldPath + "to" + newPath + err.Error())
 	}
