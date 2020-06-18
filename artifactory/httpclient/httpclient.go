@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	iocontent "github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
@@ -33,17 +32,16 @@ func (rtc *ArtifactoryHttpClient) SendPost(url string, content []byte, httpClien
 	return rtc.httpClient.SendPost(url, content, *httpClientsDetails)
 }
 
-func (rtc *ArtifactoryHttpClient) SendPostBodyToFile(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, cr *iocontent.ContentReader, err error) {
+func (rtc *ArtifactoryHttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, err error) {
 	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
 
-	resp, filePath, err := rtc.httpClient.SendPostBodyToFile(url, content, *httpClientsDetails)
+	resp, err = rtc.httpClient.SendPostLeaveBodyOpen(url, content, *httpClientsDetails)
 	if err != nil {
 		return
 	}
-	cr = iocontent.NewContentReader(filePath, "results")
 	return
 }
 

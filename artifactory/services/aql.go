@@ -1,6 +1,8 @@
 package services
 
 import (
+	"io"
+
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -31,10 +33,10 @@ func (s *AqlService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, 
 	return s.client, nil
 }
 
-func (s *AqlService) ExecAql(aql string) ([]byte, error) {
+func (s *AqlService) ExecAql(aql string) (io.ReadCloser, error) {
 	return s.exec(aql)
 }
 
-func (s *AqlService) exec(aql string) ([]byte, error) {
+func (s *AqlService) exec(aql string) (io.ReadCloser, error) {
 	return utils.ExecAql(aql, s)
 }
