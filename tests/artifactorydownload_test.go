@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestArtifactoryDownload(t *testing.T) {
@@ -21,6 +22,7 @@ func TestArtifactoryDownload(t *testing.T) {
 	t.Run("exclusions", exclusionsDownload)
 	t.Run("explodeArchive", explodeArchiveDownload)
 	artifactoryCleanup(t)
+	assert.NoError(t, fileutils.CleanupReaderWriterTempFilesAndDirs())
 }
 
 func flatDownload(t *testing.T) {

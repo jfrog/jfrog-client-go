@@ -18,6 +18,7 @@ func TestArtifactoryUpload(t *testing.T) {
 	t.Run("placeholder", placeholderUpload)
 	t.Run("includeDirs", includeDirsUpload)
 	t.Run("explode", explodeUpload)
+	assert.NoError(t, fileutils.CleanupReaderWriterTempFilesAndDirs())
 }
 
 func flatUpload(t *testing.T) {
@@ -94,7 +95,9 @@ func recursiveUpload(t *testing.T) {
 		}
 	}
 	assert.NoError(t, cr.GetError())
-	if cr.Length() > 1 {
+	length, err := cr.Length()
+	assert.NoError(t, err)
+	if length > 1 {
 		t.Error("Expected single file.")
 	}
 	artifactoryCleanup(t)
@@ -137,8 +140,9 @@ func placeholderUpload(t *testing.T) {
 		}
 	}
 	assert.NoError(t, cr.GetError())
-	assert.NoError(t, cr.GetError())
-	if cr.Length() > 1 {
+	length, err := cr.Length()
+	assert.NoError(t, err)
+	if length > 1 {
 		t.Error("Expected single file.")
 	}
 	artifactoryCleanup(t)
@@ -185,7 +189,9 @@ func includeDirsUpload(t *testing.T) {
 		}
 	}
 	assert.NoError(t, cr.GetError())
-	if cr.Length() < 2 {
+	length, err := cr.Length()
+	assert.NoError(t, err)
+	if length < 2 {
 		t.Error("Expected to get at least two items, default and the out folder.")
 	}
 	artifactoryCleanup(t)
@@ -240,7 +246,9 @@ func explodeUpload(t *testing.T) {
 		}
 	}
 	assert.NoError(t, cr.GetError())
-	if cr.Length() < 2 {
+	length, err := cr.Length()
+	assert.NoError(t, err)
+	if length < 2 {
 		t.Error("Expected to get at least two items, default and the out folder.")
 	}
 	artifactoryCleanup(t)

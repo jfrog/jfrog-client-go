@@ -13,6 +13,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/distribution/services"
 	distributionServicesUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/stretchr/testify/assert"
 )
@@ -51,6 +52,7 @@ func TestDistribution(t *testing.T) {
 	t.Run("createSignDistributeDelete", createSignDistributeDelete)
 
 	artifactoryCleanup(t)
+	assert.NoError(t, fileutils.CleanupReaderWriterTempFilesAndDirs())
 	deleteGpgKeys(t)
 }
 

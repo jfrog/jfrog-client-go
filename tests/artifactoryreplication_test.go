@@ -6,6 +6,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,6 +31,7 @@ func TestReplication(t *testing.T) {
 	}
 	err = getPushReplication(t, nil)
 	assert.Error(t, err)
+	assert.NoError(t, fileutils.CleanupReaderWriterTempFilesAndDirs())
 }
 
 func createReplication() error {
