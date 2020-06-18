@@ -1,7 +1,6 @@
 package httpclient
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
@@ -29,18 +28,8 @@ func (jc *HttpClient) sendGetLeaveBodyOpen(url string, followRedirect bool, http
 	return jc.Send("GET", url, nil, followRedirect, false, httpClientsDetails)
 }
 
-func (jc *HttpClient) sendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, err error) {
+func (jc *HttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, err error) {
 	resp, _, _, err = jc.Send("POST", url, content, true, false, httpClientsDetails)
-	return
-}
-
-func (jc *HttpClient) SendPostBodyToFile(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, filePath string, err error) {
-	resp, err = jc.sendPostLeaveBodyOpen(url, content, httpClientsDetails)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-	filePath, err = streamToFile(resp.Body)
 	return
 }
 
@@ -773,20 +762,6 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 
 func addUserAgentHeader(req *http.Request) {
 	req.Header.Set("User-Agent", utils.GetUserAgent())
-}
-
-// Save the reader output into a temp file.
-// return the file path.
-func streamToFile(reader io.Reader) (string, error) {
-	var fd *os.File
-	bufio := bufio.NewReaderSize(reader, 65536)
-	fd, err := fileutils.CreateReaderWriterTempFile()
-	if err != nil {
-		return "", err
-	}
-	defer fd.Close()
-	_, err = io.Copy(fd, bufio)
-	return fd.Name(), err
 }
 
 type DownloadFileDetails struct {

@@ -1,18 +1,21 @@
 package utils
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
+	"os"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -20,41 +23,13 @@ type RequiredArtifactProps int
 
 // This enum defines which properties are required in the result of the aql.
 // For example, when performing a copy/move command - the props are not needed, so we set RequiredArtifactProps to NONE.
+var MAX_BUFFER_SIZE = 50000
+
 const (
-	MAX_BUFFER_SIZE                       = 50000
-	ALL             RequiredArtifactProps = iota
+	ALL RequiredArtifactProps = iota
 	SYMLINK
 	NONE
 )
-
-// Use this function when searching by build without pattern or aql.
-// This will prevent unnecessary search upon all Artifactory.
-func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) ([]ResultItem, error) {
-	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
-	if err != nil {
-		return nil, err
-	}
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuild(buildName, buildNumber)}
-
-	executionQuery := BuildQueryFromSpecFile(specFile, ALL)
-	results, err := aqlSearch(executionQuery, flags)
-	if err != nil {
-		return nil, err
-	}
-
-	// If artifacts' properties weren't fetched in previous aql, fetch now and add to results.
-	if !includePropertiesInAqlForSpec(specFile) {
-		err = searchAndAddPropsToAqlResult(results, specFile.Aql.ItemsFind, "build.name", buildName, flags)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Extract artifacts sha1 for filtering.
-	buildArtifactsSha1, err := extractSha1FromAqlResponse(results)
-	// Filter artifacts by priorities.
-	return filterBuildAqlSearchResults(&results, &buildArtifactsSha1, buildName, buildNumber), err
-}
 
 // Search with builds returns many results, some are not part of the build and others may be duplicated of the same artifact.
 // To shrink the results:
@@ -62,21 +37,21 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 // 2. Remove artifacts that not are present on the sha1 list
 // 3. If we have more than one artifacts with the same sha1:
 // 	3.1 Compare the build-name & build-number among all the artifact with the same sha1.
-func SearchBySpecWithBuildSaveToFile(specFile *ArtifactoryCommonParams, flags CommonConf) (*content.ContentReader, error) {
+func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) (*content.ContentReader, error) {
 	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
 	if err != nil {
 		return nil, err
 	}
 	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuild(buildName, buildNumber)}
 	executionQuery := BuildQueryFromSpecFile(specFile, ALL)
-	cr, err := aqlSearchSaveToFile(executionQuery, flags)
+	cr, err := aqlSearch(executionQuery, flags)
 	if err != nil {
 		return nil, err
 	}
 
 	// If artifacts' properties weren't fetched in previous aql, fetch now and add to results.
 	if !includePropertiesInAqlForSpec(specFile) {
-		crWithProps, err := searchPropsSaveToFile(specFile.Aql.ItemsFind, "build.name", buildName, flags)
+		crWithProps, err := searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
 		if err != nil {
 			return nil, err
 		}
@@ -86,12 +61,12 @@ func SearchBySpecWithBuildSaveToFile(specFile *ArtifactoryCommonParams, flags Co
 		}
 	}
 
-	buildArtifactsSha1, err := extractSha1AndPropertyFromAqlResponseSaveToFile(cr)
-	return filterBuildAqlSearchResultsSaveToFile(cr, buildArtifactsSha1, buildName, buildNumber)
+	buildArtifactsSha1, err := extractSha1AndPropertyFromAqlResponse(cr)
+	return filterBuildAqlSearchResults(cr, buildArtifactsSha1, buildName, buildNumber)
 }
 
 // Perform search by pattern.
-func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
+func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
 	// Create AQL according to spec fields.
 	query, err := CreateAqlBodyForSpecWithPattern(specFile)
 	if err != nil {
@@ -101,23 +76,12 @@ func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf
 	return SearchBySpecWithAql(specFile, flags, requiredArtifactProps)
 }
 
-// Perform search by pattern.
-func SearchBySpecWithPatternSaveToFile(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
-	// Create AQL according to spec fields.
-	query, err := CreateAqlBodyForSpecWithPattern(specFile)
-	if err != nil {
-		return nil, err
-	}
-	specFile.Aql = Aql{ItemsFind: query}
-	return SearchBySpecWithAqlSaveToFile(specFile, flags, requiredArtifactProps)
-}
-
 // Use this function when running Aql with pattern
-func SearchBySpecWithAqlSaveToFile(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
+func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
 	// Execute the search according to provided aql in specFile.
 	var crWithProps *content.ContentReader
 	query := BuildQueryFromSpecFile(specFile, requiredArtifactProps)
-	cr, err := aqlSearchSaveToFile(query, flags)
+	cr, err := aqlSearch(query, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +93,7 @@ func SearchBySpecWithAqlSaveToFile(specFile *ArtifactoryCommonParams, flags Comm
 	if specFile.Build != "" && !isEmpty {
 		// If requiredArtifactProps is not NONE and 'includePropertiesInAqlForSpec' for specFile returned true, results contains properties for artifacts.
 		resultsArtifactsIncludeProperties := requiredArtifactProps != NONE && includePropertiesInAqlForSpec(specFile)
-		cr, err = filterAqlSearchResultsByBuildSaveToFile(specFile, cr, flags, resultsArtifactsIncludeProperties)
+		cr, err = filterAqlSearchResultsByBuild(specFile, cr, flags, resultsArtifactsIncludeProperties)
 		if err != nil {
 			return nil, err
 		}
@@ -143,10 +107,10 @@ func SearchBySpecWithAqlSaveToFile(specFile *ArtifactoryCommonParams, flags Comm
 	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" {
 		switch requiredArtifactProps {
 		case ALL:
-			crWithProps, err = searchPropsSaveToFile(specFile.Aql.ItemsFind, "*", "*", flags)
+			crWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", "*", flags)
 			break
 		case SYMLINK:
-			crWithProps, err = searchPropsSaveToFile(specFile.Aql.ItemsFind, "symlink.dest", "*", flags)
+			crWithProps, err = searchProps(specFile.Aql.ItemsFind, "symlink.dest", "*", flags)
 			break
 		}
 		if err != nil {
@@ -161,82 +125,11 @@ func SearchBySpecWithAqlSaveToFile(specFile *ArtifactoryCommonParams, flags Comm
 	return cr, err
 }
 
-// Use this function when running Aql with pattern
-func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) ([]ResultItem, error) {
-	// Execute the search according to provided aql in specFile.
-	query := BuildQueryFromSpecFile(specFile, requiredArtifactProps)
-	results, err := aqlSearch(query, flags)
-	if err != nil {
-		return nil, err
-	}
-
-	// Filter results by build.
-	if specFile.Build != "" && len(results) > 0 {
-		// If requiredArtifactProps is not NONE and 'includePropertiesInAqlForSpec' for specFile returned true, results contains properties for artifacts.
-		resultsArtifactsIncludeProperties := requiredArtifactProps != NONE && includePropertiesInAqlForSpec(specFile)
-		results, err = filterAqlSearchResultsByBuild(specFile, results, flags, resultsArtifactsIncludeProperties)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// If:
-	// 1. Properties weren't included in 'results'.
-	// AND
-	// 2. Properties weren't fetched during 'build' filtering
-	// Then: we should fetch them now.
-	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" {
-		switch requiredArtifactProps {
-		case ALL:
-			err = searchAndAddPropsToAqlResult(results, specFile.Aql.ItemsFind, "*", "*", flags)
-			break
-		case SYMLINK:
-			err = searchAndAddPropsToAqlResult(results, specFile.Aql.ItemsFind, "symlink.dest", "*", flags)
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-	return results, err
-}
-
-func aqlSearch(aqlQuery string, flags CommonConf) ([]ResultItem, error) {
-	json, err := ExecAql(aqlQuery, flags)
-	if err != nil {
-		return nil, err
-	}
-
-	resultItems, err := parseAqlSearchResponse(json)
-	return resultItems, err
-}
-
-func aqlSearchSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReader, error) {
+func aqlSearch(aqlQuery string, flags CommonConf) (*content.ContentReader, error) {
 	return ExecAqlSaveToFile(aqlQuery, flags)
 }
 
-func ExecAql(aqlQuery string, flags CommonConf) ([]byte, error) {
-	client, err := flags.GetJfrogHttpClient()
-	if err != nil {
-		return nil, err
-	}
-	aqlUrl := flags.GetArtifactoryDetails().GetUrl() + "api/search/aql"
-	log.Debug("Searching Artifactory using AQL query:\n", aqlQuery)
-
-	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
-	resp, body, err := client.SendPost(aqlUrl, []byte(aqlQuery), &httpClientsDetails)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
-	}
-
-	log.Debug("Artifactory response: ", resp.Status)
-	return body, err
-}
-
-func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReader, error) {
+func ExecAql(aqlQuery string, flags CommonConf) (io.ReadCloser, error) {
 	client, err := flags.GetJfrogHttpClient()
 	if err != nil {
 		return nil, err
@@ -244,7 +137,7 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReade
 	aqlUrl := flags.GetArtifactoryDetails().GetUrl() + "api/search/aql"
 	log.Debug("Searching Artifactory using AQL query:\n", aqlQuery)
 	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
-	resp, cr, err := client.SendPostBodyToFile(aqlUrl, []byte(aqlQuery), &httpClientsDetails)
+	resp, err := client.SendPostLeaveBodyOpen(aqlUrl, []byte(aqlQuery), &httpClientsDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +145,34 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReade
 		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n"))
 	}
 	log.Debug("Artifactory response: ", resp.Status)
-	return cr, err
+	return resp.Body, err
+}
+
+func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReader, error) {
+	body, err := ExecAql(aqlQuery, flags)
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	filePath, err := streamToFile(body)
+	if err != nil {
+		return nil, err
+	}
+	return content.NewContentReader(filePath, "results"), err
+}
+
+// Save the reader output into a temp file.
+// return the file path.
+func streamToFile(reader io.Reader) (string, error) {
+	var fd *os.File
+	bufio := bufio.NewReaderSize(reader, 65536)
+	fd, err := fileutils.CreateReaderWriterTempFile()
+	if err != nil {
+		return "", err
+	}
+	defer fd.Close()
+	_, err = io.Copy(fd, bufio)
+	return fd.Name(), err
 }
 
 func LogSearchResults(numOfArtifacts int) {
@@ -322,8 +242,7 @@ func (item *ResultItem) ToDependency() buildinfo.Dependency {
 	return buildinfo.Dependency{Id: item.Name, Checksum: &buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}}
 }
 
-type AqlSearchResultItemFilter func(map[string]ResultItem, []string) []ResultItem
-type AqlSearchResultItemFilterSaveToFile func(*content.ContentReader) (*content.ContentReader, error)
+type AqlSearchResultItemFilter func(*content.ContentReader) (*content.ContentReader, error)
 
 func FilterBottomChainResults(cr *content.ContentReader) (*content.ContentReader, error) {
 	cw, err := content.NewContentWriter("results", true, false)
@@ -386,8 +305,12 @@ func ReduceBottomChainDirResult(searchResults *content.ContentReader) (*content.
 }
 
 // Reduce Dir results by using the resultsFilter
-func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder bool, resultsFilter AqlSearchResultItemFilterSaveToFile) (*content.ContentReader, error) {
-	if searchResults == nil || searchResults.Length() == 0 {
+func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder bool, resultsFilter AqlSearchResultItemFilter) (*content.ContentReader, error) {
+	length, err := searchResults.Length()
+	if err != nil {
+		return nil, err
+	}
+	if searchResults == nil || length == 0 {
 		return searchResults, nil
 	}
 	paths := make(map[string]ResultItem)
@@ -401,7 +324,7 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 		paths[rPath] = *resultItem
 		pathsKeys = append(pathsKeys, rPath)
 		if len(pathsKeys) == MAX_BUFFER_SIZE {
-			sortedFile, err := saveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
+			sortedFile, err := SortAndSaveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
 			if err != nil {
 				return nil, err
 			}
@@ -415,20 +338,20 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 	}
 	var sortedFile *content.ContentReader
 	if len(pathsKeys) > 0 {
-		sortedFile, err := saveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
+		sortedFile, err := SortAndSaveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
 		if err != nil {
 			return nil, err
 		}
 		sortedFiles = append(sortedFiles, sortedFile)
 	}
-	sortedFile, err := mergeSortedFiles(sortedFiles)
+	sortedFile, err = MergeSortedFiles(sortedFiles)
 	if err != nil {
 		return nil, err
 	}
 	return resultsFilter(sortedFile)
 }
 
-func saveBufferToFile(paths map[string]ResultItem, pathsKeys []string, sortIncreasingOrder bool) (*content.ContentReader, error) {
+func SortAndSaveBufferToFile(paths map[string]ResultItem, pathsKeys []string, sortIncreasingOrder bool) (*content.ContentReader, error) {
 	if len(pathsKeys) == 0 {
 		return nil, nil
 	}
@@ -450,7 +373,7 @@ func saveBufferToFile(paths map[string]ResultItem, pathsKeys []string, sortIncre
 	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
 }
 
-func mergeSortedFiles(sortedFiles []*content.ContentReader) (*content.ContentReader, error) {
+func MergeSortedFiles(sortedFiles []*content.ContentReader) (*content.ContentReader, error) {
 	if len(sortedFiles) == 0 {
 		cw, err := content.NewEmptyContentWriter("results", true, false)
 		return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), err
@@ -468,13 +391,14 @@ func mergeSortedFiles(sortedFiles []*content.ContentReader) (*content.ContentRea
 		smallestIndex := 0
 		for i := 0; i < len(sortedFiles); i++ {
 			if arr[i] == nil && sortedFiles[i] != nil {
-				arr[i] = new(ResultItem)
-				if err := sortedFiles[i].NextRecord(arr[i]); nil != err {
+				temp := new(ResultItem)
+				if err := sortedFiles[i].NextRecord(temp); nil != err {
 					sortedFiles[i] = nil
 					continue
 				}
+				arr[i] = temp
 			}
-			if smallest == nil || smallest.GetItemRelativePath() > arr[i].GetItemRelativePath() {
+			if smallest == nil || (arr[i] != nil && smallest.GetItemRelativePath() > arr[i].GetItemRelativePath()) {
 				smallest = arr[i]
 				smallestIndex = i
 			}

@@ -55,12 +55,12 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyPara
 
 	switch moveSpec.GetSpecType() {
 	case utils.BUILD:
-		resultReader, err = utils.SearchBySpecWithBuildSaveToFile(moveSpec.GetFile(), mc)
+		resultReader, err = utils.SearchBySpecWithBuild(moveSpec.GetFile(), mc)
 	case utils.AQL:
-		resultReader, err = utils.SearchBySpecWithAqlSaveToFile(moveSpec.GetFile(), mc, utils.NONE)
+		resultReader, err = utils.SearchBySpecWithAql(moveSpec.GetFile(), mc, utils.NONE)
 	case utils.WILDCARD:
 		moveSpec.SetIncludeDir(true)
-		resultReader, err = utils.SearchBySpecWithPatternSaveToFile(moveSpec.GetFile(), mc, utils.NONE)
+		resultReader, err = utils.SearchBySpecWithPattern(moveSpec.GetFile(), mc, utils.NONE)
 	}
 	if err != nil {
 		return 0, 0, err
@@ -89,7 +89,11 @@ func (mc *MoveCopyService) moveFiles(cr *content.ContentReader, params MoveCopyP
 	successCount = 0
 	failedCount = 0
 	cr, err = reduceMovePaths(cr, params)
-	utils.LogSearchResults(cr.Length())
+	length, err := cr.Length()
+	if err != nil {
+		return
+	}
+	utils.LogSearchResults(length)
 	for resultItem := new(utils.ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		destPathLocal := params.GetFile().Target
 		if !params.IsFlat() {

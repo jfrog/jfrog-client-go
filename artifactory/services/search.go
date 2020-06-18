@@ -54,13 +54,12 @@ func NewSearchParams() SearchParams {
 func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requiredArtifactProps utils.RequiredArtifactProps) (*content.ContentReader, error) {
 	switch searchParams.GetSpecType() {
 	case utils.WILDCARD:
-		return utils.SearchBySpecWithPatternSaveToFile(searchParams.GetFile(), flags, requiredArtifactProps)
+		return utils.SearchBySpecWithPattern(searchParams.GetFile(), flags, requiredArtifactProps)
 	case utils.BUILD:
-		return utils.SearchBySpecWithBuildSaveToFile(searchParams.GetFile(), flags)
+		return utils.SearchBySpecWithBuild(searchParams.GetFile(), flags)
 	case utils.AQL:
-		return utils.SearchBySpecWithAqlSaveToFile(searchParams.GetFile(), flags, requiredArtifactProps)
+		return utils.SearchBySpecWithAql(searchParams.GetFile(), flags, requiredArtifactProps)
 	default:
 		return nil, errorutils.CheckError(errors.New("Error at SearchBySpecFiles: Unknown spec type"))
-
 	}
 }
