@@ -32,6 +32,7 @@ type ContentWriter struct {
 	errorsQueue    *utils.ErrorsQueue
 	runWaiter      sync.WaitGroup
 	once           sync.Once
+	started        bool
 }
 
 func NewContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*ContentWriter, error) {
@@ -84,6 +85,12 @@ func (rw *ContentWriter) RemoveOutputFilePath() error {
 
 // Write a single item to the JSON array.
 func (rw *ContentWriter) Write(record interface{}) {
+	rw.started = true
+	rw.startWritingWorker()
+	rw.dataChannel <- record
+}
+
+func (rw *ContentWriter) startWritingWorker() {
 	rw.once.Do(func() {
 		rw.runWaiter.Add(1)
 		go func() {
@@ -91,7 +98,6 @@ func (rw *ContentWriter) Write(record interface{}) {
 			rw.run()
 		}()
 	})
-	rw.dataChannel <- record
 }
 
 // Write the data from the channel to JSON file.
@@ -155,6 +161,10 @@ func (rw *ContentWriter) run() {
 
 // Finish writing to the file.
 func (rw *ContentWriter) Close() error {
+	if !rw.started {
+		rw.startWritingWorker()
+	}
+	rw.started = false
 	close(rw.dataChannel)
 	rw.runWaiter.Wait()
 	return rw.errorsQueue.GetError()

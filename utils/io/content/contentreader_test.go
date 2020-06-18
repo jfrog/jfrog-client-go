@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,14 +28,18 @@ type ArrayValue struct {
 	Value string `json:"value"`
 }
 
+func init() {
+	log.SetLogger(log.NewLogger(log.DEBUG, nil))
+}
+
 func TestContentReaderPath(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
+	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
 	cr := NewContentReader(searchResultPath, arrayKey)
 	assert.Equal(t, cr.GetFilePath(), searchResultPath)
 }
 
 func TestContentReaderNextRecord(t *testing.T) {
-	searchResultPath := filepath.Join(getTestDataPath(), "contentreaderwriter", searchResult)
+	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
 	cr := NewContentReader(searchResultPath, arrayKey)
 	// Read the same file two times
 	for i := 0; i < 2; i++ {
@@ -54,7 +59,9 @@ func TestContentReaderNextRecord(t *testing.T) {
 		assert.Equal(t, rSlice[1].BoolKey, false)
 		assert.Empty(t, rSlice[1].ArrayKey)
 		// Length validation
-		assert.Equal(t, cr.Length(), 2)
+		len, err := cr.Length()
+		assert.NoError(t, err)
+		assert.Equal(t, len, 2)
 		cr.Reset()
 	}
 }
@@ -110,7 +117,11 @@ func TestDuplicate(t *testing.T) {
 func TestLengthCount(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
 	cr := NewContentReader(searchResultPath, arrayKey)
-	assert.Equal(t, cr.Length(), 2)
+	len, err := cr.Length()
+	assert.NoError(t, err)
+	assert.Equal(t, len, 2)
 	// Check cache works with no Reset() being called.
-	assert.Equal(t, cr.Length(), 2)
+	len, err = cr.Length()
+	assert.NoError(t, err)
+	assert.Equal(t, len, 2)
 }

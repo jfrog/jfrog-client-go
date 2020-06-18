@@ -131,4 +131,12 @@ func TestEmptyContentWriter(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, result)
 
+	cw, err = NewContentWriter("results", true, false)
+	assert.NoError(t, err)
+	assert.NoError(t, cw.Close())
+	searchResultPath = filepath.Join(getTestDataPath(), emptySearchResult)
+	assert.NoError(t, err)
+	result, err = fileutils.FilesMath(cw.GetFilePath(), searchResultPath)
+	assert.NoError(t, err)
+	assert.True(t, result)
 }

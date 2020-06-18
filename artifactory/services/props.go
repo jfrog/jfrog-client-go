@@ -135,7 +135,11 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
-	return totalSuccess, cr.Length() - totalSuccess, errorsQueue.GetError()
+	length, err := cr.Length()
+	if err != nil {
+		return 0, 0, err
+	}
+	return totalSuccess, length - totalSuccess, errorsQueue.GetError()
 }
 
 func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {

@@ -118,13 +118,16 @@ func (cr *ContentReader) SetFilePath(newPath string) error {
 }
 
 // Number of element in the array.
-func (cr *ContentReader) Length() int {
+func (cr *ContentReader) Length() (int, error) {
 	if cr.length == 0 {
 		for item := new(interface{}); cr.NextRecord(item) == nil; item = new(interface{}) {
 		}
 		cr.Reset()
+		if err := cr.GetError(); err != nil {
+			return 0, err
+		}
 	}
-	return cr.length
+	return cr.length, nil
 }
 
 // Open and read the file. Push each array element into the channel.
