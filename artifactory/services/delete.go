@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/jfrog/gofrog/parallel"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -55,14 +54,14 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 	log.Info("Searching artifacts...")
 	switch deleteParams.GetSpecType() {
 	case utils.AQL:
-		resultItems, err = utils.SearchBySpecWithAqlSaveToFile(deleteParams.GetFile(), ds, utils.NONE)
+		resultItems, err = utils.SearchBySpecWithAql(deleteParams.GetFile(), ds, utils.NONE)
 		if err != nil {
 			return
 		}
 	case utils.WILDCARD:
 		deleteParams.SetIncludeDirs(true)
 		var tempResultItems *content.ContentReader
-		tempResultItems, err = utils.SearchBySpecWithPatternSaveToFile(deleteParams.GetFile(), ds, utils.NONE)
+		tempResultItems, err = utils.SearchBySpecWithPattern(deleteParams.GetFile(), ds, utils.NONE)
 		if err != nil {
 			return
 		}
@@ -75,9 +74,13 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 			return
 		}
 	case utils.BUILD:
-		resultItems, err = utils.SearchBySpecWithBuildSaveToFile(deleteParams.GetFile(), ds)
+		resultItems, err = utils.SearchBySpecWithBuild(deleteParams.GetFile(), ds)
 	}
-	utils.LogSearchResults(resultItems.Length())
+	length, err := resultItems.Length()
+	if err != nil {
+		return
+	}
+	utils.LogSearchResults(length)
 	return
 }
 
@@ -173,52 +176,43 @@ func NewDeleteParams() DeleteParams {
 	return DeleteParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }
 
-// This function receives as an argument the list of files and folders to be deleted from Artifactory.
+// This function receives as an argument the list of files and dirs to be deleted from Artifactory.
 // In case the search params used to create this list included excludeProps, we might need to remove some directories from this list.
 // These directories must be removed, because they include files, which should not be deleted, because of the excludeProps params.
 // These directories must not be deleted from Artifactory.
 func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (*content.ContentReader, error) {
-	if specFile.ExcludeProps == "" || deleteCandidates.Length() == 0 {
+	length, err := deleteCandidates.Length()
+	if err != nil {
+		return nil, err
+	}
+	if specFile.ExcludeProps == "" || length == 0 {
 		return deleteCandidates, nil
 	}
-	totalToBeDeleted := 0
+	// Send AQL to get all artifact including the exclude props.
+	resultWriter, err := content.NewContentWriter("results", true, false)
+	if err != nil {
+		return nil, err
+	}
+	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter)
+	if len(bufferFiles) > 0 {
+		artifactNotToBeDeleteReader, err := getSortedArtifactNotToBeDelete(specFile, ds)
+		if err != nil {
+			return nil, err
+		}
+
+		if err = utils.WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter); err != nil {
+			return nil, err
+		}
+	}
+	if err = resultWriter.Close(); err != nil {
+		return nil, err
+	}
+	return content.NewContentReader(resultWriter.GetFilePath(), "results"), err
+}
+
+func getSortedArtifactNotToBeDelete(specFile *utils.ArtifactoryCommonParams, ds *DeleteService) (*content.ContentReader, error) {
 	specFile.Props = specFile.ExcludeProps
+	specFile.SortOrder = "asc"
 	specFile.ExcludeProps = ""
-	remainArtifacts, err := utils.SearchBySpecWithPatternSaveToFile(specFile, ds, utils.NONE)
-	if err != nil {
-		return nil, err
-	}
-	cw, err := content.NewContentWriter("results", true, false)
-	if err != nil {
-		return nil, err
-	}
-	for candidate := new(utils.ResultItem); deleteCandidates.NextRecord(candidate) == nil; candidate = new(utils.ResultItem) {
-		deleteCandidate := true
-		if candidate.Type == "folder" {
-			candidatePath := candidate.GetItemRelativePath()
-			for artifact := new(utils.ResultItem); remainArtifacts.NextRecord(artifact) == nil; artifact = new(utils.ResultItem) {
-				artifactPath := artifact.GetItemRelativePath()
-				if strings.HasPrefix(artifactPath, candidatePath) {
-					deleteCandidate = false
-					break
-				}
-			}
-			if err := remainArtifacts.GetError(); err != nil {
-				return nil, err
-			}
-			remainArtifacts.Reset()
-		}
-		if deleteCandidate {
-			cw.Write(candidate)
-			totalToBeDeleted++
-		}
-	}
-	if err := deleteCandidates.GetError(); err != nil {
-		return nil, err
-	}
-	cw.Close()
-	if totalToBeDeleted == 0 {
-		cw, err = content.NewEmptyContentWriter("results", true, false)
-	}
-	return content.NewContentReader(cw.GetFilePath(), "results"), err
+	return utils.SearchBySpecWithPattern(specFile, ds, utils.NONE)
 }

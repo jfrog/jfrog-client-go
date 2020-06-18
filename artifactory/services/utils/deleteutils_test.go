@@ -1,7 +1,13 @@
 package utils
 
 import (
+	"path/filepath"
+	"strconv"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMatchingDelete(t *testing.T) {
@@ -48,4 +54,43 @@ func assertDeletePatternErr(expected, actual string, t *testing.T) {
 	if expected != actual {
 		t.Error("Wrong err message expected: `" + expected + "` Got `" + actual + "`")
 	}
+}
+
+func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
+	testPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	var bufferFiles []*content.ContentReader
+	for i := 1; i <= 3; i++ {
+		bufferFiles = append(bufferFiles, content.NewContentReader(filepath.Join(testPath, "buffer_file_1_"+strconv.Itoa(i)+".json"), "results"))
+	}
+	resultWriter, err := content.NewContentWriter("results", true, false)
+	assert.NoError(t, err)
+	artifactNotToBeDeleteReader := content.NewContentReader(filepath.Join(testPath, "artifact_file_1.json"), "results")
+	assert.NoError(t, WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter))
+	assert.NoError(t, resultWriter.Close())
+	result, err := fileutils.FilesMath(filepath.Join(testPath, "candidate_dirs_to_be_deleted_results.json"), resultWriter.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, result)
+}
+
+func TestFilterCandidateToBeDeleted(t *testing.T) {
+	testPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	resultWriter, err := content.NewContentWriter("results", true, false)
+	assert.NoError(t, err)
+	deleteCandidates := content.NewContentReader(filepath.Join(testPath, "prebuffer_file.json"), "results")
+	assert.NoError(t, err)
+	MAX_BUFFER_SIZE = 3
+	sortedFiles, err := FilterCandidateToBeDeleted(deleteCandidates, resultWriter)
+	assert.Len(t, sortedFiles, 3)
+	assert.NoError(t, err)
+	for i, val := range sortedFiles {
+		result, err := fileutils.FilesMath(val.GetFilePath(), filepath.Join(testPath, "buffer_file_1_"+strconv.Itoa(i+1)+".json"))
+		assert.NoError(t, err)
+		assert.True(t, result)
+	}
+	assert.NoError(t, resultWriter.Close())
+	result, err := fileutils.FilesMath(resultWriter.GetFilePath(), filepath.Join(testPath, "candidate_artifact_to_be_deleted_results.json"))
+	assert.NoError(t, err)
+	assert.True(t, result)
 }

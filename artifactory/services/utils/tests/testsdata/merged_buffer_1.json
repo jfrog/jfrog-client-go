@@ -1,0 +1,32 @@
+{
+  "results": [
+    {
+      "repo": "a",
+      "path": "b"
+    },
+    {
+      "repo": "a",
+      "path": "b/c"
+    },
+    {
+      "repo": "a",
+      "path": "b/c/d"
+    },
+    {
+      "repo": "a",
+      "path": "e"
+    },
+    {
+      "repo": "b",
+      "path": "cc"
+    },
+    {
+      "repo": "bb",
+      "path": "b"
+    },
+    {
+      "repo": "repo1",
+      "path": "b"
+    }
+  ]
+}

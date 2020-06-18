@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -28,45 +27,65 @@ func assertUrl(repo, path, name, fullUrl string, t *testing.T) {
 }
 
 func TestReduceTopChainDirResult(t *testing.T) {
-	testDataPath := getTestBaseDir()
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
 	testResult := []int{1, 2, 2, 3, 3, 3, 3, 4}
 	for i := 1; i <= 8; i++ {
 		cr := content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("reduce_top_chain_step%v.json", i)), "results")
 		resultReader, err := ReduceTopChainDirResult(cr)
 		assert.NoError(t, err)
-		assert.True(t, filesMath(t, filepath.Join(testDataPath, fmt.Sprintf("reduce_top_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath()))
+		result, err := fileutils.FilesMath(filepath.Join(testDataPath, fmt.Sprintf("reduce_top_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath())
+		assert.NoError(t, err)
+		assert.True(t, result)
 	}
 }
 
 func TestReduceTopChainDirResultNoResults(t *testing.T) {
-	testDataPath := getTestBaseDir()
-	// testDataPath := filepath.Join(dir, "reduce_top_chain_tests", "testsdata", "reducedirresult")
-	cr := content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_empty.json"), "results")
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	cr := content.NewContentReader(filepath.Join(testDataPath, "no_results.json"), "results")
 	resultReader, err := ReduceTopChainDirResult(cr)
 	assert.NoError(t, err)
-	assert.Equal(t, cr.GetFilePath(), resultReader.GetFilePath())
+	result, err := fileutils.FilesMath(filepath.Join(testDataPath, "no_results.json"), resultReader.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, result)
+}
+
+func TestReduceTopChainDirResultEmptyRepo(t *testing.T) {
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	cr := content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_empty_repo.json"), "results")
+	resultReader, err := ReduceTopChainDirResult(cr)
+	assert.NoError(t, err)
+	result, err := fileutils.FilesMath(filepath.Join(testDataPath, "no_results.json"), resultReader.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, result)
 }
 
 func TestReduceBottomChainDirResult(t *testing.T) {
-	testDataPath := getTestBaseDir()
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
 	testResult := []int{1, 2, 2, 2, 3}
 	for i := 1; i <= 5; i++ {
 		cr := content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%v.json", i)), "results")
 		resultReader, err := ReduceBottomChainDirResult(cr)
 		assert.NoError(t, err)
-		assert.True(t, filesMath(t, filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath()))
+		result, err := fileutils.FilesMath(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath())
+		assert.NoError(t, err)
+		assert.True(t, result)
 	}
 }
 
-func filesMath(t *testing.T, srcPath string, toComparePath string) bool {
-	srcDetails, err := fileutils.GetFileDetails(srcPath)
+func TestMergeSortedFiles(t *testing.T) {
+	testDataPath, err := getBaseTestDir()
 	assert.NoError(t, err)
-	toCompareDetails, err := fileutils.GetFileDetails(toComparePath)
+	var sortedFiles []*content.ContentReader
+	for i := 1; i <= 3; i++ {
+		sortedFiles = append(sortedFiles, content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("buffer_file_1_%v.json", i)), "results"))
+	}
+	cr, err := MergeSortedFiles(sortedFiles)
 	assert.NoError(t, err)
-	return srcDetails.Checksum.Md5 == toCompareDetails.Checksum.Md5
-}
-
-func getTestBaseDir() string {
-	dir, _ := os.Getwd()
-	return filepath.Join(dir, "tests", "testsdata", "reducedirresult")
+	result, err := fileutils.FilesMath(cr.GetFilePath(), filepath.Join(testDataPath, "merged_buffer_1.json"))
+	assert.NoError(t, err)
+	assert.True(t, result)
 }
