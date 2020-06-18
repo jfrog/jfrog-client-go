@@ -2,31 +2,38 @@
   "results": [
     {
       "repo": "a",
-      "path": "b"
+      "path": "b",
+      "type": "folder"
     },
     {
       "repo": "a",
-      "path": "b/c"
+      "path": "b/c",
+      "type": "folder"
     },
     {
       "repo": "a",
-      "path": "b/c/d"
+      "path": "b/c/d",
+      "type": "folder"
     },
     {
       "repo": "a",
-      "path": "e"
+      "path": "e",
+      "type": "folder"
     },
     {
       "repo": "b",
-      "path": "cc"
+      "path": "cc",
+      "type": "folder"
     },
     {
       "repo": "bb",
-      "path": "b"
+      "path": "b",
+      "type": "folder"
     },
     {
       "repo": "repo1",
-      "path": "b"
+      "path": "b",
+      "type": "folder"
     }
   ]
 }
