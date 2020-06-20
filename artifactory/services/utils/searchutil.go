@@ -271,20 +271,23 @@ func FilterBottomChainResults(cr *content.ContentReader) (*content.ContentReader
 
 // Reduce the amount of items by saves only the shortest item path for each uniq path e.g.:
 // a | a/b | c | e/f -> a | c | e/f
+
 func FilterTopChainResults(cr *content.ContentReader) (*content.ContentReader, error) {
 	cw, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
 	}
-	var temp string
+	var prevFolder string
 	for resultItem := new(ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		rPath := resultItem.GetItemRelativePath()
 		if resultItem.Type == "folder" && !strings.HasSuffix(rPath, "/") {
 			rPath += "/"
 		}
-		if temp == "" || !strings.HasPrefix(rPath, temp) {
+		if prevFolder == "" || !strings.HasPrefix(rPath, prevFolder) {
 			cw.Write(*resultItem)
-			temp = rPath
+			if resultItem.Type == "folder" {
+				prevFolder = rPath
+			}
 		}
 	}
 	if err := cr.GetError(); err != nil {
