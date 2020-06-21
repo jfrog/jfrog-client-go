@@ -8,7 +8,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -162,25 +161,6 @@ func (cr *ContentReader) run() {
 		}
 		cr.dataChannel <- ResultItem
 	}
-}
-
-// Return a new copy of the reader.
-func (cr *ContentReader) Duplicate() (*ContentReader, error) {
-	in, err := fileutils.CreateReaderWriterTempFile()
-	if err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	defer in.Close()
-	out, err := os.Open(cr.filePath)
-	if err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	defer out.Close()
-	_, err = io.Copy(in, out)
-	if err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	return NewContentReader(in.Name(), cr.arrayKey), nil
 }
 
 // Return true if the file has more than one element in array.

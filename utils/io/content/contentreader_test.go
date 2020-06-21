@@ -49,19 +49,19 @@ func TestContentReaderNextRecord(t *testing.T) {
 		}
 		assert.NoError(t, cr.GetError())
 		// First element
-		assert.Equal(t, rSlice[0].IntKey, 1)
-		assert.Equal(t, rSlice[0].StrKey, "A")
-		assert.Equal(t, rSlice[0].BoolKey, true)
+		assert.Equal(t, 1, rSlice[0].IntKey)
+		assert.Equal(t, "A", rSlice[0].StrKey)
+		assert.Equal(t, true, rSlice[0].BoolKey)
 		assert.ElementsMatch(t, rSlice[0].ArrayKey, []ArrayValue{{Key: "build.number", Value: "6"}})
 		// Second element
-		assert.Equal(t, rSlice[1].IntKey, 2)
-		assert.Equal(t, rSlice[1].StrKey, "B")
-		assert.Equal(t, rSlice[1].BoolKey, false)
+		assert.Equal(t, 2, rSlice[1].IntKey)
+		assert.Equal(t, "B", rSlice[1].StrKey)
+		assert.Equal(t, false, rSlice[1].BoolKey)
 		assert.Empty(t, rSlice[1].ArrayKey)
 		// Length validation
 		len, err := cr.Length()
 		assert.NoError(t, err)
-		assert.Equal(t, len, 2)
+		assert.Equal(t, 2, len)
 		cr.Reset()
 	}
 }
@@ -99,19 +99,6 @@ func TestCloseReader(t *testing.T) {
 	assert.NoError(t, err)
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
-}
-
-func TestDuplicate(t *testing.T) {
-	// Create files
-	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
-	cr := NewContentReader(searchResultPath, arrayKey)
-	dupCr, err := cr.Duplicate()
-	// Don't delete the origin testdata file, only the duplicate.
-	defer dupCr.Close()
-	assert.NoError(t, err)
-	result, err := fileutils.FilesMath(cr.GetFilePath(), dupCr.GetFilePath())
-	assert.NoError(t, err)
-	assert.True(t, result)
 }
 
 func TestLengthCount(t *testing.T) {

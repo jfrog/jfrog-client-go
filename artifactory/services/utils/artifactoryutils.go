@@ -363,9 +363,8 @@ func fetchBuildArtifactsSha1(buildName, buildNumber string, flags CommonConf) (m
 
 /*
 * ## Refactore##
- * Find artifact properties by the AQL, add them to the result items.
+ * Find artifacts with a specific property.
  *
- * resultItems - Artifacts to add properties to.
  * aqlBody - AQL to execute together with property filter.
  * filterByPropName - Property name to filter.
  * filterByPropValue - Property value to filter.
