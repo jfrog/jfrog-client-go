@@ -186,7 +186,7 @@ func (sm *ArtifactoryServicesManager) SearchFiles(params services.SearchParams) 
 	return searchService.Search(params)
 }
 
-func (sm *ArtifactoryServicesManager) Aql(aql string) (io.Reader, error) {
+func (sm *ArtifactoryServicesManager) Aql(aql string) (io.ReadCloser, error) {
 	aqlService := services.NewAqlService(sm.client)
 	aqlService.ArtDetails = sm.config.GetServiceDetails()
 	return aqlService.ExecAql(aql)
