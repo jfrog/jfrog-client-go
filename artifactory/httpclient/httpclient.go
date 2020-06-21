@@ -32,17 +32,11 @@ func (rtc *ArtifactoryHttpClient) SendPost(url string, content []byte, httpClien
 	return rtc.httpClient.SendPost(url, content, *httpClientsDetails)
 }
 
-func (rtc *ArtifactoryHttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, err error) {
-	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
-	if err != nil {
-		return
+func (rtc *ArtifactoryHttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (*http.Response, error) {
+	if err := (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails); err != nil {
+		return nil, err
 	}
-
-	resp, err = rtc.httpClient.SendPostLeaveBodyOpen(url, content, *httpClientsDetails)
-	if err != nil {
-		return
-	}
-	return
+	return rtc.httpClient.SendPostLeaveBodyOpen(url, content, *httpClientsDetails)
 }
 
 func (rtc *ArtifactoryHttpClient) SendPostForm(url string, data url.Values, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
