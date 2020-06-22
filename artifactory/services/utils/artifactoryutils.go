@@ -299,7 +299,7 @@ func loadMissingProperties(cr *content.ContentReader, crWithProps *content.Conte
 	bufferCounter := 0
 	for resultItem := new(ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		// save the item in a buffer.
-		if bufferCounter < 50000 {
+		if bufferCounter < utils.MAX_BUFFER_SIZE {
 			buffer[getResultItemKey(*resultItem)] = resultItem
 		} else {
 			// Buffer was full, write all data to a file.

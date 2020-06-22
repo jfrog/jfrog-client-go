@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
@@ -80,7 +81,7 @@ func TestFilterCandidateToBeDeleted(t *testing.T) {
 	assert.NoError(t, err)
 	deleteCandidates := content.NewContentReader(filepath.Join(testPath, "prebuffer_file.json"), "results")
 	assert.NoError(t, err)
-	MAX_BUFFER_SIZE = 3
+	utils.MAX_BUFFER_SIZE = 3
 	sortedFiles, err := FilterCandidateToBeDeleted(deleteCandidates, resultWriter)
 	assert.Len(t, sortedFiles, 3)
 	assert.NoError(t, err)

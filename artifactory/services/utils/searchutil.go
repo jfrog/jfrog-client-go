@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -23,8 +24,6 @@ type RequiredArtifactProps int
 
 // This enum defines which properties are required in the result of the aql.
 // For example, when performing a copy/move command - the props are not needed, so we set RequiredArtifactProps to NONE.
-var MAX_BUFFER_SIZE = 50000
-
 const (
 	ALL RequiredArtifactProps = iota
 	SYMLINK
@@ -317,7 +316,7 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 		return searchResults, nil
 	}
 	paths := make(map[string]ResultItem)
-	pathsKeys := make([]string, 0, MAX_BUFFER_SIZE)
+	pathsKeys := make([]string, 0, utils.MAX_BUFFER_SIZE)
 	sortedFiles := []*content.ContentReader{}
 	for resultItem := new(ResultItem); searchResults.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if resultItem.Name == "." {
@@ -326,14 +325,14 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 		rPath := resultItem.GetItemRelativePath()
 		paths[rPath] = *resultItem
 		pathsKeys = append(pathsKeys, rPath)
-		if len(pathsKeys) == MAX_BUFFER_SIZE {
+		if len(pathsKeys) == utils.MAX_BUFFER_SIZE {
 			sortedFile, err := SortAndSaveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
 			if err != nil {
 				return nil, err
 			}
 			sortedFiles = append(sortedFiles, sortedFile)
 			paths = make(map[string]ResultItem)
-			pathsKeys = make([]string, MAX_BUFFER_SIZE)
+			pathsKeys = make([]string, utils.MAX_BUFFER_SIZE)
 		}
 	}
 	if err := searchResults.GetError(); err != nil {

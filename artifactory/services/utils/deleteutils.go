@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
@@ -83,14 +84,14 @@ func writeRemainCandidate(cw *content.ContentWriter, mergeResult *content.Conten
 
 func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultWriter *content.ContentWriter) ([]*content.ContentReader, error) {
 	paths := make(map[string]ResultItem)
-	pathsKeys := make([]string, 0, MAX_BUFFER_SIZE)
+	pathsKeys := make([]string, 0, utils.MAX_BUFFER_SIZE)
 	dirsToBeDeleted := []*content.ContentReader{}
 	for candidate := new(ResultItem); deleteCandidates.NextRecord(candidate) == nil; candidate = new(ResultItem) {
 		// Save all dirs candidate in a diffrent temp file.
 		if candidate.Type == "folder" {
 			pathsKeys = append(pathsKeys, candidate.GetItemRelativePath())
 			paths[candidate.GetItemRelativePath()] = *candidate
-			if len(pathsKeys) == MAX_BUFFER_SIZE {
+			if len(pathsKeys) == utils.MAX_BUFFER_SIZE {
 				sortedCandidateDirsFile, err := SortAndSaveBufferToFile(paths, pathsKeys, true)
 				if err != nil {
 					return nil, err
@@ -98,7 +99,7 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 				dirsToBeDeleted = append(dirsToBeDeleted, sortedCandidateDirsFile)
 				// Init buffer.
 				paths = make(map[string]ResultItem)
-				pathsKeys = make([]string, 0, MAX_BUFFER_SIZE)
+				pathsKeys = make([]string, 0, utils.MAX_BUFFER_SIZE)
 			}
 		} else {
 			// Write none dir results.

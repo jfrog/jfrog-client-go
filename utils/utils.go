@@ -21,6 +21,9 @@ const (
 	Version     = "0.11.0"
 )
 
+//  Maximum number of elements in memory.
+var MAX_BUFFER_SIZE = 50000
+
 var userAgent = getDefaultUserAgent()
 
 func getVersion() string {
