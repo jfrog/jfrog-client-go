@@ -129,8 +129,16 @@ func AddTrailingSlashIfNeeded(url string) string {
 }
 
 func IndentJson(jsonStr []byte) string {
+	return performJsonIndentation(jsonStr, "", "  ")
+}
+
+func IndentJsonArray(jsonStr []byte) string {
+	return performJsonIndentation(jsonStr, "  ", "  ")
+}
+
+func performJsonIndentation(jsonStr []byte, prefix, indent string) string {
 	var content bytes.Buffer
-	err := json.Indent(&content, jsonStr, "", "  ")
+	err := json.Indent(&content, jsonStr, prefix, indent)
 	if err == nil {
 		return content.String()
 	}
