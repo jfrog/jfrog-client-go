@@ -103,7 +103,7 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 			}
 		} else {
 			// Write none dir results.
-			resultWriter.Write(candidate)
+			resultWriter.Write(*candidate)
 		}
 	}
 	if err := deleteCandidates.GetError(); err != nil {
