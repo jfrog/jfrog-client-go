@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
@@ -11,7 +12,8 @@ func TestGitManager(t *testing.T) {
 	tests := []string{"vcs", "packedVcs"}
 	for _, test := range tests {
 		t.Run(test, func(t *testing.T) {
-			projectPath := initVcsTestDir(t, filepath.Join("testsdata", test))
+			projectPath, tmpDir := initVcsTestDir(t, filepath.Join("testsdata", test))
+			defer fileutils.RemoveTempDir(tmpDir)
 			gitManager := NewGitManager(projectPath)
 			err := gitManager.ReadConfig()
 			assert.NoError(t, err)
