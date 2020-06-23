@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	channelSize = 100
+	channelSize = 10000
 )
 
 // Open and read JSON file, find the array key inside it and load its value into the memory in small chunks.
