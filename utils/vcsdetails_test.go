@@ -11,8 +11,8 @@ import (
 func TestVcsDetails(t *testing.T) {
 	projectPath, tmpDir := initVcsTestDir(t, filepath.Join("testsdata", "vcs"))
 	defer fileutils.RemoveTempDir(tmpDir)
-	vcsDetals := NewVcsDetals()
-	revision, url, err := vcsDetals.GetVcsDetails(filepath.Join(projectPath))
+	vcsDetails := NewVcsDetals()
+	revision, url, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
 	assert.NoError(t, err)
 	assert.Equal(t, "https://github.com/jfrog/jfrog-cli.git", url)
 	assert.Equal(t, "d63c5957ad6819f4c02a817abe757f210d35ff92", revision)
