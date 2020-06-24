@@ -1,0 +1,58 @@
+{
+  "results": [
+    {
+      "repo": "repo1",
+      "path": "b",
+      "name": "a/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "b",
+      "name": "m/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "b",
+      "name": "z/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "bl",
+      "name": "4/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "bl",
+      "name": "b/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "bl",
+      "name": "c1/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "br",
+      "name": "e/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "br",
+      "name": "mm/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "br",
+      "name": "x/",
+      "type": "folder"
+    }
+  ]
+}

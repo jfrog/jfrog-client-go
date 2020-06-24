@@ -192,14 +192,14 @@ func (sm *ArtifactoryServicesManager) Aql(aql string) (io.ReadCloser, error) {
 	return aqlService.ExecAql(aql)
 }
 
-func (sm *ArtifactoryServicesManager) SetProps(params services.PropsParams) (int, int, error) {
+func (sm *ArtifactoryServicesManager) SetProps(params services.PropsParams) (int, error) {
 	setPropsService := services.NewPropsService(sm.client)
 	setPropsService.ArtDetails = sm.config.GetServiceDetails()
 	setPropsService.Threads = sm.config.GetThreads()
 	return setPropsService.SetProps(params)
 }
 
-func (sm *ArtifactoryServicesManager) DeleteProps(params services.PropsParams) (int, int, error) {
+func (sm *ArtifactoryServicesManager) DeleteProps(params services.PropsParams) (int, error) {
 	setPropsService := services.NewPropsService(sm.client)
 	setPropsService.ArtDetails = sm.config.GetServiceDetails()
 	setPropsService.Threads = sm.config.GetThreads()

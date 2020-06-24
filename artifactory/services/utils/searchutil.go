@@ -315,6 +315,8 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 	if searchResults == nil || length == 0 {
 		return searchResults, nil
 	}
+	// Sort results in asc order according to relative path.
+	// Split to files if the total result is bigget than the maximum buffest.
 	paths := make(map[string]ResultItem)
 	pathsKeys := make([]string, 0, utils.MAX_BUFFER_SIZE)
 	sortedFiles := []*content.ContentReader{}
@@ -332,7 +334,7 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 			}
 			sortedFiles = append(sortedFiles, sortedFile)
 			paths = make(map[string]ResultItem)
-			pathsKeys = make([]string, utils.MAX_BUFFER_SIZE)
+			pathsKeys = make([]string, 0, utils.MAX_BUFFER_SIZE)
 		}
 	}
 	if err := searchResults.GetError(); err != nil {
@@ -346,6 +348,7 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 		}
 		sortedFiles = append(sortedFiles, sortedFile)
 	}
+	// Merge sorted files
 	sortedFile, err = MergeSortedFiles(sortedFiles)
 	if err != nil {
 		return nil, err

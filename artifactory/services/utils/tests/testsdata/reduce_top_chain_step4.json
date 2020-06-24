@@ -3,22 +3,56 @@
         {
             "Repo": "repo1",
             "Path": "b",
-            "Name": "c/"
+            "Name": "z/",
+            "Type": "folder"
         },
         {
             "Repo": "repo1",
             "Path": "br",
-            "Name": "c/"
-        },
-        {
-            "Repo": "repo1",
-            "Path": "br/c/dont/care",
-            "Name": "somename"
+            "Name": "x/",
+            "Type": "folder"
         },
         {
             "Repo": "repo1",
             "Path": "bl",
-            "Name": "c1/"
+            "Name": "b/",
+            "Type": "folder"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "b",
+            "Name": "a/",
+            "Type": "folder"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "br",
+            "Name": "e/",
+            "Type": "folder"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "bl",
+            "Name": "c1/",
+            "Type": "folder"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "b",
+            "Name": "m/",
+            "Type": "folder"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "br",
+            "Name": "mm/",
+            "Type": "folder"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "bl",
+            "Name": "4/",
+            "Type": "folder"
         }
     ]
 }

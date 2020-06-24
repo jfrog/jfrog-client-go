@@ -41,22 +41,22 @@ func (ps *PropsService) GetThreads() int {
 	return ps.Threads
 }
 
-func (ps *PropsService) SetProps(propsParams PropsParams) (int, int, error) {
+func (ps *PropsService) SetProps(propsParams PropsParams) (int, error) {
 	log.Info("Setting properties...")
-	totalSuccess, totalfail, err := ps.performRequest(propsParams, false)
+	totalSuccess, err := ps.performRequest(propsParams, false)
 	if err != nil {
 		log.Info("Done setting properties.")
 	}
-	return totalSuccess, totalfail, err
+	return totalSuccess, err
 }
 
-func (ps *PropsService) DeleteProps(propsParams PropsParams) (int, int, error) {
+func (ps *PropsService) DeleteProps(propsParams PropsParams) (int, error) {
 	log.Info("Deleting properties...")
-	totalSuccess, totalfail, err := ps.performRequest(propsParams, true)
+	totalSuccess, err := ps.performRequest(propsParams, true)
 	if err != nil {
 		log.Info("Done deleting properties.")
 	}
-	return totalSuccess, totalfail, err
+	return totalSuccess, err
 }
 
 type PropsParams struct {
@@ -72,13 +72,13 @@ func (sp *PropsParams) GetProps() string {
 	return sp.Props
 }
 
-func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (int, int, error) {
+func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (int, error) {
 	updatePropertiesBaseUrl := ps.GetArtifactoryDetails().GetUrl() + "api/storage"
 	var encodedParam string
 	if !isDelete {
 		props, err := utils.ParseProperties(propsParams.GetProps(), utils.JoinCommas)
 		if err != nil {
-			return 0, 0, err
+			return 0, err
 		}
 		encodedParam = props.ToEncodedString()
 	} else {
@@ -135,11 +135,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
-	length, err := cr.Length()
-	if err != nil {
-		return 0, 0, err
-	}
-	return totalSuccess, length - totalSuccess, errorsQueue.GetError()
+	return totalSuccess, errorsQueue.GetError()
 }
 
 func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {

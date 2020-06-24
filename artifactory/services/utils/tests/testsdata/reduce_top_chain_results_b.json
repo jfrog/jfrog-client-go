@@ -3,12 +3,14 @@
     {
       "repo": "repo1",
       "path": "b",
-      "name": "c/"
+      "name": "c/",
+      "type": "folder"
     },
     {
       "repo": "repo1",
       "path": "br",
-      "name": "c/"
+      "name": "c/",
+      "type": "folder"
     }
   ]
 }

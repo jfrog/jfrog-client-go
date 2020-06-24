@@ -3,7 +3,8 @@
         {
             "Repo": "repo1",
             "Path": "b",
-            "Name": "c/"
+            "Name": "c/",
+            "Type": "folder"
         }
     ]
 }

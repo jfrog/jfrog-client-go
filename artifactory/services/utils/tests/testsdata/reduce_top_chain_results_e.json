@@ -1,0 +1,9 @@
+{
+  "results": [
+    {
+      "repo": "a",
+      "path": "b",
+      "type": "folder"
+    }
+  ]
+}
