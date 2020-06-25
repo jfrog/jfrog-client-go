@@ -3,6 +3,7 @@ package services
 import (
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/jfrog/gofrog/parallel"
@@ -74,7 +75,6 @@ func (sp *PropsParams) GetProps() string {
 }
 
 func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (int, error) {
-	updatePropertiesBaseUrl := ps.GetArtifactoryDetails().GetUrl() + "api/storage"
 	var encodedParam string
 	if !isDelete {
 		props, err := utils.ParseProperties(propsParams.GetProps(), utils.JoinCommas)
@@ -102,10 +102,17 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 		for _, item := range propsParams.GetItems() {
 			relativePath := item.GetItemRelativePath()
 			setPropsTask := func(threadId int) error {
-				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
-				setPropertiesUrl := updatePropertiesBaseUrl + "/" + relativePath + "?properties=" + encodedParam
-				var resp *http.Response
 				var err error
+				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
+
+				restApi := path.Join("api", "storage", relativePath)
+				setPropertiesUrl, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restApi, make(map[string]string))
+				if err != nil {
+					return err
+				}
+				setPropertiesUrl += "?properties=" + encodedParam
+
+				var resp *http.Response
 				if isDelete {
 					resp, _, err = ps.sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl)
 				} else {
