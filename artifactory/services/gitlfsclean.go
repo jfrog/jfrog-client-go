@@ -77,7 +77,11 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 	if err != nil {
 		return nil, err
 	}
-	log.Info("Found", len(gitLfsFiles), "files to keep, and", filesToDeleteReader.Length, "to clean")
+	length, err := filesToDeleteReader.Length()
+	if err != nil {
+		return nil, err
+	}
+	log.Info("Found", len(gitLfsFiles), "files to keep, and", length, "to clean")
 	return filesToDeleteReader, nil
 }
 

@@ -44,7 +44,7 @@ func (ps *PropsService) GetThreads() int {
 func (ps *PropsService) SetProps(propsParams PropsParams) (int, error) {
 	log.Info("Setting properties...")
 	totalSuccess, err := ps.performRequest(propsParams, false)
-	if err != nil {
+	if err == nil {
 		log.Info("Done setting properties.")
 	}
 	return totalSuccess, err
@@ -53,7 +53,7 @@ func (ps *PropsService) SetProps(propsParams PropsParams) (int, error) {
 func (ps *PropsService) DeleteProps(propsParams PropsParams) (int, error) {
 	log.Info("Deleting properties...")
 	totalSuccess, err := ps.performRequest(propsParams, true)
-	if err != nil {
+	if err == nil {
 		log.Info("Done deleting properties.")
 	}
 	return totalSuccess, err

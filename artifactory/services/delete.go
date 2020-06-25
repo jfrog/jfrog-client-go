@@ -188,7 +188,7 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 	if specFile.ExcludeProps == "" || length == 0 {
 		return deleteCandidates, nil
 	}
-	// Send AQL to get all artifact including the exclude props.
+	// Send AQL to get all artifacts that includes the exclude props.
 	resultWriter, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
@@ -213,6 +213,7 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 func getSortedArtifactNotToBeDelete(specFile *utils.ArtifactoryCommonParams, ds *DeleteService) (*content.ContentReader, error) {
 	specFile.Props = specFile.ExcludeProps
 	specFile.SortOrder = "asc"
+	specFile.SortBy = []string{"repo", "path", "name"}
 	specFile.ExcludeProps = ""
 	return utils.SearchBySpecWithPattern(specFile, ds, utils.NONE)
 }

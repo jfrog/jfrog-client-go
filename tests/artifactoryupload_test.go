@@ -55,6 +55,11 @@ func flatUpload(t *testing.T) {
 		}
 	}
 	assert.NoError(t, cr.GetError())
+	length, err := cr.Length()
+	assert.NoError(t, err)
+	if length > 1 {
+		t.Error("Expected single file.")
+	}
 	artifactoryCleanup(t)
 }
 

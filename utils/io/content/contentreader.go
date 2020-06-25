@@ -24,10 +24,10 @@ const (
 // Each array value can be fetch using 'GetRecord' (thread-safe).
 // This technique solves the limit of memory size which may be too small to fit large JSON.
 type ContentReader struct {
-	// filePath - Soucre data file path.
+	// filePath - source data file path.
 	// arrayKey = Read the value of the specific object in JSON.
 	filePath, arrayKey string
-	// The objects from the soucre data file are being pushed into the data channel.
+	// The objects from the source data file are being pushed into the data channel.
 	dataChannel chan map[string]interface{}
 	errorsQueue *utils.ErrorsQueue
 	once        *sync.Once
@@ -83,7 +83,7 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 	return err
 }
 
-// Prepare the reader to read the  file all over again (not thread-safe).
+// Prepare the reader to read the file all over again (not thread-safe).
 func (cr *ContentReader) Reset() {
 	cr.dataChannel = make(chan map[string]interface{}, channelSize)
 	cr.once = new(sync.Once)
@@ -144,7 +144,7 @@ func (cr *ContentReader) run() {
 	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
 	if err != nil {
 		if err == io.EOF {
-			cr.errorsQueue.AddError(errors.New("results not found"))
+			cr.errorsQueue.AddError(errorutils.CheckError(errors.New("results not found")))
 			return
 		}
 		cr.errorsQueue.AddError(err)
@@ -183,9 +183,10 @@ func (cr *ContentReader) GetError() error {
 }
 
 // Search and set the decoder's position at the desired key in the JSON file.
+// If the desired key is not found, return io.EOF
 func findDecoderTargetPosition(dec *json.Decoder, target string, isArray bool) error {
 	for dec.More() {
-		// Token returns the next JSON token in the input stream. At the end of the input stream, Token returns nil, io.EOF.
+		// Token returns the next JSON token in the input stream.
 		t, err := dec.Token()
 		if err != nil {
 			return errorutils.CheckError(err)

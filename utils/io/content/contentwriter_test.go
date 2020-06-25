@@ -67,8 +67,7 @@ func writeTestRecords(t *testing.T, cw *ContentWriter) {
 		}(i, i+3)
 	}
 	sendersWaiter.Wait()
-	err := cw.Close()
-	assert.NoError(t, err)
+	assert.NoError(t, cw.Close())
 }
 
 func TestContentWriter(t *testing.T) {
@@ -79,12 +78,9 @@ func TestContentWriter(t *testing.T) {
 	assert.NoError(t, err)
 	byteValue, _ := ioutil.ReadAll(of)
 	var response Response
-	err = json.Unmarshal(byteValue, &response)
-	assert.NoError(t, err)
-	err = of.Close()
-	assert.NoError(t, err)
-	err = rw.RemoveOutputFilePath()
-	assert.NoError(t, err)
+	assert.NoError(t, json.Unmarshal(byteValue, &response))
+	assert.NoError(t, of.Close())
+	assert.NoError(t, rw.RemoveOutputFilePath())
 	for i := range records {
 		assert.Contains(t, response.Arr, records[i], "record %s missing", records[i].StrKey)
 	}
@@ -110,7 +106,7 @@ func TestRemoveOutputFilePath(t *testing.T) {
 	// Create a file.
 	cw, err := NewContentWriter("results", true, false)
 	assert.NoError(t, err)
-	cw.Close()
+	assert.NoError(t, cw.Close())
 	filePathToBeDeleted := cw.GetFilePath()
 
 	// Check file exists
@@ -125,8 +121,8 @@ func TestRemoveOutputFilePath(t *testing.T) {
 
 func TestEmptyContentWriter(t *testing.T) {
 	cw, err := NewEmptyContentWriter("results", true, false)
-	searchResultPath := filepath.Join(getTestDataPath(), emptySearchResult)
 	assert.NoError(t, err)
+	searchResultPath := filepath.Join(getTestDataPath(), emptySearchResult)
 	result, err := fileutils.FilesMath(cw.GetFilePath(), searchResultPath)
 	assert.NoError(t, err)
 	assert.True(t, result)

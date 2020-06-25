@@ -29,6 +29,9 @@ func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 	return "", nil
 }
 
+// bufferFiles - sorted list of search result.
+// artifactNotToBeDeleteReader - sorted artifact that includes the exclude props.
+// resultWriter - File contain the dirs to be deleted.
 // Write all the dir results in 'bufferFiles' to the 'resultWriter'.
 // However, skip dirs with artifact(s) that should not be deleted.
 func WriteCandidateDirsToBeDeleted(bufferFiles []*content.ContentReader, artifactNotToBeDeleteReader *content.ContentReader, resultWriter *content.ContentWriter) (err error) {
@@ -45,6 +48,9 @@ func WriteCandidateDirsToBeDeleted(bufferFiles []*content.ContentReader, artifac
 			candidateDirToBeDeleted = new(ResultItem)
 			if err = dirsToBeDeletedReader.NextRecord(candidateDirToBeDeleted); err != nil {
 				break
+			}
+			if candidateDirToBeDeleted.Name == "." {
+				continue
 			}
 			candidateDirToBeDeletedPath = strings.ToLower(candidateDirToBeDeleted.GetItemRelativePath())
 		}
@@ -64,7 +70,7 @@ func WriteCandidateDirsToBeDeleted(bufferFiles []*content.ContentReader, artifac
 			candidateDirToBeDeleted = nil
 			continue
 		}
-		// 'artifactNotToBeDeletePath' & 'candidateDirToBeDeletedPath' are sorted, if 'candidateDirToBeDeleted'. As a result 'candidateDirToBeDeleted' cant be a prefix for any of the remaining artifacts.
+		// 'artifactNotToBeDeletePath' & 'candidateDirToBeDeletedPath' are both sorted. As a result 'candidateDirToBeDeleted' cant be a prefix for any of the remaining artifacts.
 		if artifactNotToBeDeletePath > candidateDirToBeDeletedPath {
 			resultWriter.Write(*candidateDirToBeDeleted)
 			candidateDirToBeDeleted = nil
@@ -89,6 +95,9 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 	for candidate := new(ResultItem); deleteCandidates.NextRecord(candidate) == nil; candidate = new(ResultItem) {
 		// Save all dirs candidate in a diffrent temp file.
 		if candidate.Type == "folder" {
+			if candidate.Name == "." {
+				continue
+			}
 			pathsKeys = append(pathsKeys, candidate.GetItemRelativePath())
 			paths[candidate.GetItemRelativePath()] = *candidate
 			if len(pathsKeys) == utils.MAX_BUFFER_SIZE {

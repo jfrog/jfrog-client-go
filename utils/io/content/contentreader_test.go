@@ -95,8 +95,7 @@ func TestCloseReader(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check if the file got deleted
-	err = cr.Close()
-	assert.NoError(t, err)
+	assert.NoError(t, cr.Close())
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
 }

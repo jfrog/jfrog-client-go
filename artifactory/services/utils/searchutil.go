@@ -103,14 +103,12 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 	// AND
 	// 2. Properties weren't fetched during 'build' filtering
 	// Then: we should fetch them now.
-	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" {
+	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" && requiredArtifactProps != NONE {
 		switch requiredArtifactProps {
 		case ALL:
 			crWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", "*", flags)
-			break
 		case SYMLINK:
 			crWithProps, err = searchProps(specFile.Aql.ItemsFind, "symlink.dest", "*", flags)
-			break
 		}
 		if err != nil {
 			return nil, err
