@@ -36,13 +36,20 @@ func CreateBundleBody(createBundleParams ReleaseBundleParams, dryRun bool) (*Rel
 	// Create release bundle queries
 	for _, specFile := range createBundleParams.SpecFiles {
 		if specFile.GetSpecType() != utils.AQL {
+			props, err := utils.ParseProperties(specFile.GetProps(), utils.SplitCommas)
+			if err != nil {
+				return nil, err
+			}
+			// Remove properties from spec to exclude them from the AQL
+			specFile.SetProps("")
+
 			query, err := utils.CreateAqlBodyForSpecWithPattern(specFile)
 			if err != nil {
 				return nil, err
 			}
 			specFile.Aql = utils.Aql{ItemsFind: query}
 			aql := utils.BuildQueryFromSpecFile(specFile, utils.NONE)
-			bundleQueries = append(bundleQueries, BundleQuery{Aql: aql})
+			bundleQueries = append(bundleQueries, BundleQuery{Aql: aql, AddedProps: createBundleProps(props)})
 		}
 	}
 
@@ -65,6 +72,15 @@ func CreateBundleBody(createBundleParams ReleaseBundleParams, dryRun bool) (*Rel
 		}
 	}
 	return releaseBundleBody, nil
+}
+
+// Create BundleProps from Properties
+func createBundleProps(props *utils.Properties) []BundleProps {
+	var bundleProps []BundleProps
+	for key, values := range props.ToMap() {
+		bundleProps = append(bundleProps, BundleProps{key, values})
+	}
+	return bundleProps
 }
 
 func AddGpgPassphraseHeader(gpgPassphrase string, headers *map[string]string) {

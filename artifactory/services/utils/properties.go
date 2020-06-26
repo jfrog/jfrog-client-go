@@ -73,13 +73,13 @@ func (props *Properties) ToHeadersMap() map[string]string {
 	return headers
 }
 
-// Convert properties from Slice to map that build promotion REST API requires
-func (props *Properties) ToBuildPromoteMap() map[string][]string {
-	buildPromote := map[string][]string{}
+// Convert properties from Slice to map
+func (props *Properties) ToMap() map[string][]string {
+	propertiesMap := map[string][]string{}
 	for _, prop := range props.Properties {
-		buildPromote[prop.Key] = []string{prop.Value}
+		propertiesMap[prop.Key] = append(propertiesMap[prop.Key], prop.Value)
 	}
-	return buildPromote
+	return propertiesMap
 }
 
 // Split properties string of format key=value to key value strings

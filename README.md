@@ -628,7 +628,7 @@ err := distManager.SetSigningKey(params)
 
 ```go
 params := services.NewCreateReleaseBundleParams("bundle-name", "1")
-params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip", Props: "key1=val1;key2=val2"}}
 params.Description = "Description"
 params.ReleaseNotes = "Release notes"
 params.ReleaseNotesSyntax = "plain_text"
@@ -640,7 +640,7 @@ err := distManager.CreateReleaseBundle(params)
 
 ```go
 params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
-params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
+params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip", Props: "key1=val1;key2=val2"}}
 params.Description = "New Description"
 params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"

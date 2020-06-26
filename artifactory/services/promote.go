@@ -54,7 +54,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 		SourceRepo:          promotionParams.GetSourceRepo(),
 		TargetRepo:          promotionParams.GetTargetRepo(),
 		DryRun:              ps.isDryRun(),
-		Properties:          props.ToBuildPromoteMap()}
+		Properties:          props.ToMap()}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
 		return errorutils.CheckError(err)

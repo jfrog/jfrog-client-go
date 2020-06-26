@@ -1,6 +1,30 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestToMap(t *testing.T) {
+	properties := Properties{[]Property{
+		{Key: "a", Value: "b"},
+		{Key: "c", Value: "d"},
+		{Key: "c", Value: "e"}},
+	}
+	propertiesMap := properties.ToMap()
+	assert.Len(t, propertiesMap, 2)
+	for key, values := range propertiesMap {
+		switch key {
+		case "a":
+			assert.Equal(t, []string{"b"}, values)
+		case "c":
+			assert.ElementsMatch(t, []string{"d", "e"}, values)
+		default:
+			assert.Fail(t, "Unexpected key "+key)
+		}
+	}
+}
 
 func TestToEncodedString(t *testing.T) {
 	tests := []struct {
