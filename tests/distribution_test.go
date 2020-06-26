@@ -45,8 +45,12 @@ func TestDistribution(t *testing.T) {
 	initClients(t)
 	sendGpgKeys(t)
 
+	// Local release bundle tests
 	t.Run("createDelete", createDelete)
 	t.Run("createUpdate", createUpdate)
+	t.Run("createWithProps", createWithProps)
+
+	// Remote release bundle tests
 	t.Run("createSignDistributeDelete", createSignDistributeDelete)
 	t.Run("createSignSyncDistributeDelete", createSignSyncDistributeDelete)
 
@@ -63,13 +67,23 @@ func initClients(t *testing.T) {
 
 func initDistributionTest(t *testing.T, bundleName string) string {
 	artifactoryCleanup(t)
-	deleteTestBundle(t, bundleName)
 	uploadDummyFile(t)
 	return bundleName
 }
 
+func initLocalDistributionTest(t *testing.T, bundleName string) string {
+	deleteRemoteAndLocalBundle(t, bundleName, false)
+	return initDistributionTest(t, bundleName)
+}
+
+func initRemoteDistributionTest(t *testing.T, bundleName string) string {
+	deleteLocalBundle(t, bundleName, false)
+	return initDistributionTest(t, bundleName)
+}
+
 func createDelete(t *testing.T) {
-	bundleName := initDistributionTest(t, "client-test-bundle-1")
+	bundleName := initLocalDistributionTest(t, "client-test-bundle-1")
+	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create signed release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
@@ -79,17 +93,11 @@ func createDelete(t *testing.T) {
 	assert.NoError(t, err)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assertReleaseBundleSigned(t, distributionResponse.State)
-
-	// Delete local release bundle
-	deleteLocalBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
-	err = testsBundleDeleteLocalService.DeleteDistribution(deleteLocalBundleParams)
-	assert.NoError(t, err)
-	distributionResponse = getLocalBundle(t, bundleName, false)
-	assert.Nil(t, distributionResponse)
 }
 
 func createUpdate(t *testing.T) {
-	bundleName := initDistributionTest(t, "client-test-bundle-2")
+	bundleName := initLocalDistributionTest(t, "client-test-bundle-2")
+	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
@@ -102,7 +110,7 @@ func createUpdate(t *testing.T) {
 	assert.Equal(t, open, distributionResponse.State)
 	assert.Equal(t, createBundleParams.Description, distributionResponse.Description)
 	assert.Equal(t, createBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
-	spec := distributionResponse.Spec
+	spec := distributionResponse.BundleSpec
 
 	// Update release bundle
 	updateBundleParams := services.NewUpdateReleaseBundleParams(bundleName, bundleVersion)
@@ -115,18 +123,51 @@ func createUpdate(t *testing.T) {
 	assert.Equal(t, open, distributionResponse.State)
 	assert.Equal(t, updateBundleParams.Description, distributionResponse.Description)
 	assert.Equal(t, updateBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
-	assert.NotEqual(t, spec, distributionResponse.Spec)
+	assert.NotEqual(t, spec, distributionResponse.BundleSpec)
+}
 
-	// Delete local release bundle
-	deleteLocalBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
-	err = testsBundleDeleteLocalService.DeleteDistribution(deleteLocalBundleParams)
+func createWithProps(t *testing.T) {
+	bundleName := initLocalDistributionTest(t, "client-test-bundle-3")
+	defer deleteLocalBundle(t, bundleName, true)
+
+	// Create release bundle with properties
+	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
+	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.AddedProps = "key1=value1;key2=value2,value3"
+	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
-	distributionResponse = getLocalBundle(t, bundleName, false)
-	assert.Nil(t, distributionResponse)
+
+	// Check results
+	distributionResponse := getLocalBundle(t, bundleName, true)
+	addedProps := distributionResponse.BundleSpec.Queries[0].AddedProps
+	assert.Len(t, addedProps, 2)
+
+	// Populate prop1Values and prop2Values
+	var prop1Values []string
+	var prop2Values []string
+	if addedProps[0].Key == "key1" {
+		assert.Equal(t, "key2", addedProps[1].Key)
+		prop1Values = addedProps[0].Values
+		prop2Values = addedProps[1].Values
+	} else if addedProps[0].Key == "key2" {
+		assert.Equal(t, "key1", addedProps[1].Key)
+		prop1Values = addedProps[1].Values
+		prop2Values = addedProps[0].Values
+	} else {
+		assert.Fail(t, "Unexpected key", addedProps[0].Key)
+	}
+
+	// Check prop1Values and prop2Values
+	assert.Len(t, prop1Values, 1)
+	assert.Len(t, prop2Values, 2)
+	assert.Equal(t, "value1", prop1Values[0])
+	assert.Equal(t, "value2", prop2Values[0])
+	assert.Equal(t, "value3", prop2Values[1])
 }
 
 func createSignDistributeDelete(t *testing.T) {
-	bundleName := initDistributionTest(t, "client-test-bundle-3")
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-4")
+	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
@@ -158,15 +199,11 @@ func createSignDistributeDelete(t *testing.T) {
 	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
 	assert.NoError(t, err)
 	assert.Equal(t, services.Completed, (*response)[0].Status)
-
-	// Delete release bundle
-	err = deleteTestBundle(t, bundleName)
-	assert.NoError(t, err)
-	waitForDeletion(t, bundleName)
 }
 
 func createSignSyncDistributeDelete(t *testing.T) {
-	bundleName := initDistributionTest(t, "client-test-bundle-4")
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-5")
+	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
@@ -199,11 +236,6 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
 	assert.NoError(t, err)
 	assert.Equal(t, services.Completed, (*response)[0].Status)
-
-	// Delete release bundle
-	err = deleteTestBundle(t, bundleName)
-	assert.NoError(t, err)
-	waitForDeletion(t, bundleName)
 }
 
 // Send GPG keys to Distribution and Artifactory to allow signing of release bundles
@@ -260,13 +292,6 @@ func getGpgKeyId(t *testing.T) string {
 		}
 	}
 	return ""
-}
-
-func deleteTestBundle(t *testing.T, bundleName string) error {
-	deleteBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
-	deleteBundleParams.DeleteFromDistribution = true
-	deleteBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
-	return testsBundleDeleteRemoteService.DeleteDistribution(deleteBundleParams)
 }
 
 func assertReleaseBundleSigned(t *testing.T, status distributableDistributionStatus) {
@@ -328,17 +353,10 @@ func waitForDeletion(t *testing.T, bundleName string) {
 }
 
 type distributableResponse struct {
-	Name         string                          `json:"name,omitempty"`
-	Version      string                          `json:"version,omitempty"`
-	State        distributableDistributionStatus `json:"state,omitempty"`
-	Description  string                          `json:"description,omitempty"`
-	ReleaseNotes releaseNotesResponse            `json:"release_notes,omitempty"`
-	Spec         interface{}                     `json:"spec,omitempty"`
-}
-
-type releaseNotesResponse struct {
-	Content string `json:"content,omitempty"`
-	Syntax  string `json:"syntax,omitempty"`
+	distributionServicesUtils.ReleaseBundleBody
+	Name    string                          `json:"name,omitempty"`
+	Version string                          `json:"version,omitempty"`
+	State   distributableDistributionStatus `json:"state,omitempty"`
 }
 
 type gpgKeysResponse struct {
@@ -365,4 +383,28 @@ func getLocalBundle(t *testing.T, bundleName string, expectExist bool) *distribu
 	err = json.Unmarshal(body, &response)
 	assert.NoError(t, err)
 	return response
+}
+
+func deleteLocalBundle(t *testing.T, bundleName string, assertDeletion bool) {
+	deleteLocalBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
+	err := testsBundleDeleteLocalService.DeleteDistribution(deleteLocalBundleParams)
+	if !assertDeletion {
+		return
+	}
+	assert.NoError(t, err)
+	distributionResponse := getLocalBundle(t, bundleName, false)
+	assert.Nil(t, distributionResponse)
+}
+
+func deleteRemoteAndLocalBundle(t *testing.T, bundleName string, assertDeletion bool) {
+	deleteBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
+	// Delete also local release bundle
+	deleteBundleParams.DeleteFromDistribution = true
+	deleteBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
+	err := testsBundleDeleteRemoteService.DeleteDistribution(deleteBundleParams)
+	if !assertDeletion {
+		return
+	}
+	assert.NoError(t, err)
+	waitForDeletion(t, bundleName)
 }

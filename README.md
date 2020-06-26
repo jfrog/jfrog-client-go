@@ -803,6 +803,7 @@ params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "Description"
 params.ReleaseNotes = "Release notes"
 params.ReleaseNotesSyntax = "plain_text"
+params.AddedProps = "key1=val1;key2=val2,val3"
 
 err := distManager.CreateReleaseBundle(params)
 ```
@@ -814,6 +815,7 @@ params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "New Description"
 params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"
+params.AddedProps = "key1=val1;key2=val2,val3"
 
 err := distManager.CreateReleaseBundle(params)
 ```
