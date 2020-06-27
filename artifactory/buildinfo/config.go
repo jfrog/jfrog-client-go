@@ -8,6 +8,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
+const BuildInfoEnvPrefix = "buildInfo.env."
+
 type Configuration struct {
 	ArtDetails auth.ServiceDetails
 	BuildUrl   string
@@ -31,13 +33,13 @@ func (config *Configuration) IsDryRun() bool {
 type Filter func(map[string]string) (map[string]string, error)
 
 // IncludeFilter returns a function used to filter entries of a map based on key
-func (config Configuration) IncludeFilter(prefix string) Filter {
+func (config Configuration) IncludeFilter() Filter {
 	pats := strings.Split(config.EnvInclude, ";")
 	return func(tempMap map[string]string) (map[string]string, error) {
 		result := make(map[string]string)
 		for k, v := range tempMap {
 			for _, filterPattern := range pats {
-				matched, err := filepath.Match(strings.ToLower(filterPattern), strings.ToLower(strings.TrimPrefix(k, prefix)))
+				matched, err := filepath.Match(strings.ToLower(filterPattern), strings.ToLower(strings.TrimPrefix(k, BuildInfoEnvPrefix)))
 				if errorutils.CheckError(err) != nil {
 					return nil, err
 				}
@@ -52,14 +54,14 @@ func (config Configuration) IncludeFilter(prefix string) Filter {
 }
 
 // ExcludeFilter returns a function used to filter entries of a map based on key
-func (config Configuration) ExcludeFilter(prefix string) Filter {
+func (config Configuration) ExcludeFilter() Filter {
 	pats := strings.Split(config.EnvExclude, ";")
 	return func(tempMap map[string]string) (map[string]string, error) {
 		result := make(map[string]string)
 		for k, v := range tempMap {
 			include := true
 			for _, filterPattern := range pats {
-				matched, err := filepath.Match(strings.ToLower(filterPattern), strings.ToLower(strings.TrimPrefix(k, prefix)))
+				matched, err := filepath.Match(strings.ToLower(filterPattern), strings.ToLower(strings.TrimPrefix(k, BuildInfoEnvPrefix)))
 				if errorutils.CheckError(err) != nil {
 					return nil, err
 				}

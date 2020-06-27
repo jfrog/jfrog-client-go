@@ -11,7 +11,6 @@ func TestInclude(t *testing.T) {
 		description string
 		config      Configuration
 		input       map[string]string
-		prefix      string
 		expected    map[string]string
 		expectError bool
 	}{
@@ -19,7 +18,6 @@ func TestInclude(t *testing.T) {
 			description: "empty input",
 			config:      Configuration{},
 			input:       map[string]string{},
-			prefix:      "",
 			expected:    map[string]string{},
 			expectError: false,
 		},
@@ -30,7 +28,6 @@ func TestInclude(t *testing.T) {
 				"USER":     "jfrog",
 				"PASSWORD": "password",
 			},
-			prefix:      "",
 			expected:    map[string]string{},
 			expectError: false,
 		},
@@ -41,7 +38,6 @@ func TestInclude(t *testing.T) {
 				"USER":     "jfrog",
 				"PASSWORD": "password",
 			},
-			prefix: "",
 			expected: map[string]string{
 				"USER": "jfrog",
 			},
@@ -53,28 +49,14 @@ func TestInclude(t *testing.T) {
 			input: map[string]string{
 				"USER": "jfrog",
 			},
-			prefix:      "",
 			expected:    nil,
 			expectError: true,
-		},
-		{
-			description: "input with prefix",
-			config:      Configuration{EnvInclude: "*user*"},
-			input: map[string]string{
-				"buildInfo.env.USER":     "jfrog",
-				"buildInfo.env.PASSWORD": "password",
-			},
-			prefix: "buildInfo.env.",
-			expected: map[string]string{
-				"buildInfo.env.USER": "jfrog",
-			},
-			expectError: false,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			out, err := tc.config.IncludeFilter(tc.prefix)(tc.input)
+			out, err := tc.config.IncludeFilter()(tc.input)
 			if tc.expectError {
 				assert.NotNil(t, err)
 			}
@@ -89,7 +71,6 @@ func TestExclude(t *testing.T) {
 		description string
 		config      Configuration
 		input       map[string]string
-		prefix      string
 		expected    map[string]string
 		expectError bool
 	}{
@@ -97,7 +78,6 @@ func TestExclude(t *testing.T) {
 			description: "empty input",
 			config:      Configuration{},
 			input:       map[string]string{},
-			prefix:      "",
 			expected:    map[string]string{},
 			expectError: false,
 		},
@@ -108,7 +88,6 @@ func TestExclude(t *testing.T) {
 				"USER":     "jfrog",
 				"PASSWORD": "password",
 			},
-			prefix: "",
 			expected: map[string]string{
 				"USER":     "jfrog",
 				"PASSWORD": "password",
@@ -122,7 +101,6 @@ func TestExclude(t *testing.T) {
 				"USER":     "jfrog",
 				"PASSWORD": "password",
 			},
-			prefix: "",
 			expected: map[string]string{
 				"USER": "jfrog",
 			},
@@ -134,7 +112,6 @@ func TestExclude(t *testing.T) {
 			input: map[string]string{
 				"USER": "jfrog",
 			},
-			prefix: "",
 			expected: map[string]string{
 				"USER": "jfrog",
 			},
@@ -147,28 +124,14 @@ func TestExclude(t *testing.T) {
 				"USER":     "jfrog",
 				"PASSWORD": "password",
 			},
-			prefix:      "",
 			expected:    nil,
 			expectError: true,
-		},
-		{
-			description: "input with prefix",
-			config:      Configuration{EnvExclude: "*pass*"},
-			input: map[string]string{
-				"buildInfo.env.USER":     "jfrog",
-				"buildInfo.env.PASSWORD": "password",
-			},
-			prefix: "buildInfo.env.",
-			expected: map[string]string{
-				"buildInfo.env.USER": "jfrog",
-			},
-			expectError: false,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			out, err := tc.config.ExcludeFilter(tc.prefix)(tc.input)
+			out, err := tc.config.ExcludeFilter()(tc.input)
 			if tc.expectError {
 				assert.NotNil(t, err)
 			}
