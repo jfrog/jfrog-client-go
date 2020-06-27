@@ -1,16 +1,15 @@
-package buildinfo_test
+package buildinfo
 
 import (
 	"testing"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInclude(t *testing.T) {
 	tests := []struct {
 		description string
-		config      buildinfo.Configuration
+		config      Configuration
 		input       map[string]string
 		prefix      string
 		expected    map[string]string
@@ -18,7 +17,7 @@ func TestInclude(t *testing.T) {
 	}{
 		{
 			description: "empty input",
-			config:      buildinfo.Configuration{},
+			config:      Configuration{},
 			input:       map[string]string{},
 			prefix:      "",
 			expected:    map[string]string{},
@@ -26,7 +25,7 @@ func TestInclude(t *testing.T) {
 		},
 		{
 			description: "input with no pattern",
-			config:      buildinfo.Configuration{},
+			config:      Configuration{},
 			input: map[string]string{
 				"USER":     "jfrog",
 				"PASSWORD": "password",
@@ -37,7 +36,7 @@ func TestInclude(t *testing.T) {
 		},
 		{
 			description: "input with pattern",
-			config:      buildinfo.Configuration{EnvInclude: "*user*"},
+			config:      Configuration{EnvInclude: "*user*"},
 			input: map[string]string{
 				"USER":     "jfrog",
 				"PASSWORD": "password",
@@ -50,7 +49,7 @@ func TestInclude(t *testing.T) {
 		},
 		{
 			description: "input with bad pattern",
-			config:      buildinfo.Configuration{EnvInclude: "use[*"},
+			config:      Configuration{EnvInclude: "use[*"},
 			input: map[string]string{
 				"USER": "jfrog",
 			},
@@ -60,7 +59,7 @@ func TestInclude(t *testing.T) {
 		},
 		{
 			description: "input with prefix",
-			config:      buildinfo.Configuration{EnvInclude: "*user*"},
+			config:      Configuration{EnvInclude: "*user*"},
 			input: map[string]string{
 				"buildInfo.env.USER":     "jfrog",
 				"buildInfo.env.PASSWORD": "password",
@@ -88,7 +87,7 @@ func TestInclude(t *testing.T) {
 func TestExclude(t *testing.T) {
 	tests := []struct {
 		description string
-		config      buildinfo.Configuration
+		config      Configuration
 		input       map[string]string
 		prefix      string
 		expected    map[string]string
@@ -96,7 +95,7 @@ func TestExclude(t *testing.T) {
 	}{
 		{
 			description: "empty input",
-			config:      buildinfo.Configuration{},
+			config:      Configuration{},
 			input:       map[string]string{},
 			prefix:      "",
 			expected:    map[string]string{},
@@ -104,7 +103,7 @@ func TestExclude(t *testing.T) {
 		},
 		{
 			description: "input with no pattern",
-			config:      buildinfo.Configuration{},
+			config:      Configuration{},
 			input: map[string]string{
 				"USER":     "jfrog",
 				"PASSWORD": "password",
@@ -118,7 +117,7 @@ func TestExclude(t *testing.T) {
 		},
 		{
 			description: "input with pattern",
-			config:      buildinfo.Configuration{EnvExclude: "*pass*"},
+			config:      Configuration{EnvExclude: "*pass*"},
 			input: map[string]string{
 				"USER":     "jfrog",
 				"PASSWORD": "password",
@@ -131,7 +130,7 @@ func TestExclude(t *testing.T) {
 		},
 		{
 			description: "input with bad non-matching pattern",
-			config:      buildinfo.Configuration{EnvExclude: "pas[*"},
+			config:      Configuration{EnvExclude: "pas[*"},
 			input: map[string]string{
 				"USER": "jfrog",
 			},
@@ -143,7 +142,7 @@ func TestExclude(t *testing.T) {
 		},
 		{
 			description: "input with bad matching pattern",
-			config:      buildinfo.Configuration{EnvExclude: "pas[*"},
+			config:      Configuration{EnvExclude: "pas[*"},
 			input: map[string]string{
 				"USER":     "jfrog",
 				"PASSWORD": "password",
@@ -154,7 +153,7 @@ func TestExclude(t *testing.T) {
 		},
 		{
 			description: "input with prefix",
-			config:      buildinfo.Configuration{EnvExclude: "*pass*"},
+			config:      Configuration{EnvExclude: "*pass*"},
 			input: map[string]string{
 				"buildInfo.env.USER":     "jfrog",
 				"buildInfo.env.PASSWORD": "password",
