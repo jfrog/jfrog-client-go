@@ -23,7 +23,7 @@ func initVcsTestDir(t *testing.T, srcPath string) (projectPath, tmpDir string) {
 	tmpDir, err = fileutils.CreateTempDir()
 	assert.NoError(t, err)
 
-	err = fileutils.CopyDir(srcPath, tmpDir, true)
+	err = fileutils.CopyDir(srcPath, tmpDir, true, nil)
 	assert.NoError(t, err)
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
 		assert.NoError(t, err)

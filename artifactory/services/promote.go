@@ -30,7 +30,7 @@ func (ps *PromoteService) isDryRun() bool {
 
 func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	message := "Promoting build..."
-	if ps.DryRun == true {
+	if ps.DryRun {
 		message = "[Dry run] " + message
 	}
 	log.Info(message)
