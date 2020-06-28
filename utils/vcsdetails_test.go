@@ -30,9 +30,9 @@ func initVcsTestDir(t *testing.T, srcPath string) (projectPath, tmpDir string) {
 		err := fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git"))
 		assert.NoError(t, err)
 	}
-	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "OtherGit", "gitdata"), false); found {
+	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "othergit", "gitdata"), false); found {
 		assert.NoError(t, err)
-		err := fileutils.RenamePath(filepath.Join(tmpDir, "OtherGit", "gitdata"), filepath.Join(tmpDir, "OtherGit", ".git"))
+		err := fileutils.RenamePath(filepath.Join(tmpDir, "othergit", "gitdata"), filepath.Join(tmpDir, "othergit", ".git"))
 		assert.NoError(t, err)
 	}
 	projectPath, err = filepath.Abs(tmpDir)
