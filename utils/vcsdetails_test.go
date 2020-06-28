@@ -25,7 +25,7 @@ func TestVcsDetails(t *testing.T) {
 func initVcsTestDir(t *testing.T) string {
 	testsdataSrc := filepath.Join("testsdata", "vcs")
 	testsdataTarget := filepath.Join("testsdata", "tmp")
-	err := fileutils.CopyDir(testsdataSrc, testsdataTarget, true)
+	err := fileutils.CopyDir(testsdataSrc, testsdataTarget, true, nil)
 	if err != nil {
 		t.Error(err)
 	}
