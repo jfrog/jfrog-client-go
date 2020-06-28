@@ -185,9 +185,14 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			line := scanner.Text()
+			// Expecting to find the revision (the full extended SHA-1, or a unique leading substring) followed by the ref.
 			if strings.HasSuffix(line, ref) {
 				split := strings.Split(line, " ")
-				m.revision = split[0]
+				if len(split) == 2 {
+					m.revision = split[0]
+				} else {
+					m.err = errorutils.CheckError(errors.New("failed fetching revision for ref :" + ref + " - Unexpected line structure in packed-refs file"))
+				}
 				return
 			}
 		}
