@@ -89,6 +89,12 @@ func (sm *ArtifactoryServicesManager) GetRepository(repoKey string) (*services.R
 	return getRepositoryService.Get(repoKey)
 }
 
+func (sm *ArtifactoryServicesManager) DeletePermissionTarget(permissionTargetName string) error {
+	deletePermissionTargetService := services.NewDeletePermissionTargetService(sm.client)
+	deletePermissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return deletePermissionTargetService.Delete(permissionTargetName)
+}
+
 func (sm *ArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo) error {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
