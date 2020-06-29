@@ -104,12 +104,14 @@ rtManager.UploadFiles(params)
 #### Downloading Files from Artifactory
 
 ##### Downloading Files:
+
 Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
+
 ```go
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
-// Filter the downloaded files by properties. 
+// Filter the downloaded files by properties.
 params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.IncludeDirs = false
@@ -128,12 +130,14 @@ totalDownloaded, totalExpected, err := rtManager.DownloadFiles(params)
 ```
 
 ##### Downloading Files with Results Reader:
+
 Similar to `DownloadFiles()`, but returns a reader, which allows iterating over the details of the downloaded files. Only files which were successfully downloaded are available by the reader.
+
 ```go
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
-// Filter the downloaded files by properties. 
+// Filter the downloaded files by properties.
 params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.IncludeDirs = false
@@ -147,16 +151,18 @@ params.MinSplitSize = 7168
 
 reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
 ```
+
 Use `reader.NextRecord()` and `FileInfo` type from `utils` package to iterate over the download results.
 Use `reader.Close()` method (preferably using `defer`), to remove the results reader after it is used:
-``` 
+
+```
 defer reader.Close()
 var file utils.FileInfo
 for e := resultReader.NextRecord(&file); e == nil; e = resultReader.NextRecord(&file) {
     fmt.Printf("Download source: %s\n", file.ArtifactoryPath)
     fmt.Printf("Download target: %s\n", file.LocalPath)
     fmt.Printf("SHA1: %s\n", file.Sha1)
-    fmt.Printf("MD5: %s\n", file.Md5) 
+    fmt.Printf("MD5: %s\n", file.Md5)
 }
 ```
 
@@ -166,7 +172,7 @@ for e := resultReader.NextRecord(&file); e == nil; e = resultReader.NextRecord(&
 params := services.NewMoveCopyParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
-// Filter the files by properties. 
+// Filter the files by properties.
 params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.Flat = false
@@ -180,7 +186,7 @@ rtManager.Copy(params)
 params := services.NewMoveCopyParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
-// Filter the files by properties. 
+// Filter the files by properties.
 params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.Flat = false
@@ -193,7 +199,7 @@ rtManager.Move(params)
 ```go
 params := services.NewDeleteParams()
 params.Pattern = "repo/*/*.zip"
-// Filter the files by properties. 
+// Filter the files by properties.
 params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 
@@ -206,7 +212,7 @@ rtManager.DeleteFiles(pathsToDelete)
 ```go
 params := services.NewSearchParams()
 params.Pattern = "repo/*/*.zip"
-// Filter the files by properties. 
+// Filter the files by properties.
 params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 
@@ -225,7 +231,7 @@ resultItems = rtManager.SearchFiles(searchParams)
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
 propsParams.Items = resultItems
-// Filter the files by properties. 
+// Filter the files by properties.
 propsParams.Props = "key=value"
 
 rtManager.SetProps(propsParams)
@@ -243,7 +249,7 @@ resultItems = rtManager.SearchFiles(searchParams)
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
 propsParams.Items = resultItems
-// Filter the files by properties. 
+// Filter the files by properties.
 propsParams.Props = "key=value"
 
 rtManager.DeleteProps(propsParams)
@@ -657,7 +663,7 @@ params.GpgPassphrase = "123456"
 err := distManager.SignReleaseBundle(params)
 ```
 
-#### Distributing a Release Bundle
+#### Async Distributing a Release Bundle
 
 ```go
 params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
@@ -665,6 +671,28 @@ distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityNa
 params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
 
 err := distManager.DistributeReleaseBundle(params)
+```
+
+#### Sync Distributing a Release Bundle
+
+```go
+params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
+distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+// Wait up to 120 minutes for the release bundle distribution
+err := distManager.DistributeReleaseBundleSync(params, 120)
+```
+
+#### Getting Distribution Status
+
+```go
+params := services.NewDistributionStatusParams()
+// Optional parameters:
+params.Name = "bundle-name"
+params.Version = "1"
+params.TrackerId = "123456789"
+
+status, err := distributeBundleService.GetStatus(params)
 ```
 
 #### Deleting a Remote Release Bundle

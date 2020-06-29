@@ -3,7 +3,10 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -14,10 +17,15 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
+const defaultMaxWaitSecs = 3600     // 1 hour
+const defaultSyncSleepInterval = 10 // 10 seconds
+
 type DistributeReleaseBundleService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
 	DistDetails auth.ServiceDetails
 	DryRun      bool
+	Sync        bool
+	MaxWait     int // Time in minutes for sync distribution
 }
 
 func NewDistributeReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *DistributeReleaseBundleService {
@@ -28,7 +36,7 @@ func (dr *DistributeReleaseBundleService) GetDistDetails() auth.ServiceDetails {
 	return dr.DistDetails
 }
 
-func (ds *DistributeReleaseBundleService) Distribute(distributeParams DistributionParams) error {
+func (dr *DistributeReleaseBundleService) Distribute(distributeParams DistributionParams) error {
 	var distributionRules []DistributionRulesBody
 	for _, spec := range distributeParams.DistributionRules {
 		distributionRule := DistributionRulesBody{
@@ -39,32 +47,79 @@ func (ds *DistributeReleaseBundleService) Distribute(distributeParams Distributi
 		distributionRules = append(distributionRules, distributionRule)
 	}
 	distribution := &DistributionBody{
-		DryRun:            ds.DryRun,
+		DryRun:            dr.DryRun,
 		DistributionRules: distributionRules,
 	}
 
-	return ds.execDistribute(distributeParams.Name, distributeParams.Version, distribution)
+	trackerId, err := dr.execDistribute(distributeParams.Name, distributeParams.Version, distribution)
+	if err != nil || !dr.Sync {
+		return err
+	}
+
+	// Sync distribution
+	return dr.waitForDistribution(&distributeParams, trackerId)
 }
 
-func (dr *DistributeReleaseBundleService) execDistribute(name, version string, distribution *DistributionBody) error {
+func (dr *DistributeReleaseBundleService) execDistribute(name, version string, distribution *DistributionBody) (int, error) {
 	httpClientsDetails := dr.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(distribution)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return 0, errorutils.CheckError(err)
 	}
 	url := dr.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := dr.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return 0, errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	}
+	response := distributionResponseBody{}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return 0, err
 	}
 
 	log.Debug("Distribution response: ", resp.Status)
 	log.Debug(utils.IndentJson(body))
-	return errorutils.CheckError(err)
+	return response.TrackerId, errorutils.CheckError(err)
+}
+
+func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *DistributionParams, trackerId int) error {
+	distributeBundleService := NewDistributionStatusService(dr.client)
+	distributeBundleService.DistDetails = dr.GetDistDetails()
+	distributionStatusParams := DistributionStatusParams{
+		Name:      distributeParams.Name,
+		Version:   distributeParams.Version,
+		TrackerId: strconv.Itoa(trackerId),
+	}
+	maxWait := defaultMaxWaitSecs
+	if dr.MaxWait >= 1 {
+		maxWait = dr.MaxWait * 60
+	}
+	// Each round the loop adds ".". To get cleaner output, we add a new line in the end of the loop.
+	defer fmt.Println()
+	for timeElapsed := 0; timeElapsed < maxWait; timeElapsed += defaultSyncSleepInterval {
+		response, err := distributeBundleService.GetStatus(distributionStatusParams)
+		if err != nil {
+			return err
+		}
+
+		if (*response)[0].Status == Failed {
+			bytes, err := json.Marshal(response)
+			if err != nil {
+				return errorutils.CheckError(err)
+			}
+			return errorutils.CheckError(errors.New("Distribution failed: " + utils.IndentJson(bytes)))
+		}
+		if (*response)[0].Status == Completed {
+			return nil
+		}
+		fmt.Print(".")
+		time.Sleep(time.Second * defaultSyncSleepInterval)
+	}
+	return errorutils.CheckError(errors.New("Timeout for sync distribution"))
 }
 
 type DistributionBody struct {
@@ -76,6 +131,10 @@ type DistributionRulesBody struct {
 	SiteName     string   `json:"site_name,omitempty"`
 	CityName     string   `json:"city_name,omitempty"`
 	CountryCodes []string `json:"country_codes,omitempty"`
+}
+
+type distributionResponseBody struct {
+	TrackerId int `json:"id"`
 }
 
 type DistributionParams struct {

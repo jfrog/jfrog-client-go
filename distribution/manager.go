@@ -62,6 +62,21 @@ func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.D
 	return distributeBundleService.Distribute(params)
 }
 
+func (sm *DistributionServicesManager) DistributeReleaseBundleSync(params services.DistributionParams, maxWait int) error {
+	distributeBundleService := services.NewDistributeReleaseBundleService(sm.client)
+	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
+	distributeBundleService.DryRun = sm.config.IsDryRun()
+	distributeBundleService.MaxWait = maxWait
+	distributeBundleService.Sync = true
+	return distributeBundleService.Distribute(params)
+}
+
+func (sm *DistributionServicesManager) GetDistributionStatus(params services.DistributionStatusParams) (*[]services.DistributionStatusResponse, error) {
+	distributeBundleService := services.NewDistributionStatusService(sm.client)
+	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
+	return distributeBundleService.GetStatus(params)
+}
+
 func (sm *DistributionServicesManager) DeleteReleaseBundle(params services.DeleteDistributionParams) error {
 	deleteBundleService := services.NewDeleteReleaseBundleService(sm.client)
 	deleteBundleService.DistDetails = sm.config.GetServiceDetails()

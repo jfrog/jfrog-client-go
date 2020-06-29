@@ -64,6 +64,7 @@ var testsBundleCreateService *distributionServices.CreateReleaseBundleService
 var testsBundleUpdateService *distributionServices.UpdateReleaseBundleService
 var testsBundleSignService *distributionServices.SignBundleService
 var testsBundleDistributeService *distributionServices.DistributeReleaseBundleService
+var testsBundleDistributionStatusService *distributionServices.DistributionStatusService
 var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundleService
 var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
 
@@ -142,6 +143,7 @@ func createDistributionManager() {
 	testsBundleUpdateService = distributionServices.NewUpdateReleaseBundleService(client)
 	testsBundleSignService = distributionServices.NewSignBundleService(client)
 	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleService(client)
+	testsBundleDistributionStatusService = distributionServices.NewDistributionStatusService(client)
 	testsBundleDeleteLocalService = distributionServices.NewDeleteLocalDistributionService(client)
 	testsBundleSetSigningKeyService = distributionServices.NewSetSigningKeyService(client)
 	testsBundleDeleteRemoteService = distributionServices.NewDeleteReleaseBundleService(client)
@@ -149,6 +151,7 @@ func createDistributionManager() {
 	testsBundleUpdateService.DistDetails = distDetails
 	testsBundleSignService.DistDetails = distDetails
 	testsBundleDistributeService.DistDetails = distDetails
+	testsBundleDistributionStatusService.DistDetails = distDetails
 	testsBundleDeleteLocalService.DistDetails = distDetails
 	testsBundleSetSigningKeyService.DistDetails = distDetails
 	testsBundleDeleteRemoteService.DistDetails = distDetails
