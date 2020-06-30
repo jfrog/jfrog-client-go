@@ -85,5 +85,7 @@ type TokenPayload struct {
 	JwtId          string `json:"jti,omitempty"`
 }
 
-const RefreshBeforeExpiryMinutes = 10
+// Refreshable Tokens Constants.
+var RefreshBeforeExpiryMinutes = int64(10)
+
 const WaitBeforeRefreshSeconds = 15
