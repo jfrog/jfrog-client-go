@@ -62,11 +62,11 @@ func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.D
 	return distributeBundleService.Distribute(params)
 }
 
-func (sm *DistributionServicesManager) DistributeReleaseBundleSync(params services.DistributionParams, maxWait int) error {
+func (sm *DistributionServicesManager) DistributeReleaseBundleSync(params services.DistributionParams, maxWaitMinutes int) error {
 	distributeBundleService := services.NewDistributeReleaseBundleService(sm.client)
 	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
 	distributeBundleService.DryRun = sm.config.IsDryRun()
-	distributeBundleService.MaxWait = maxWait
+	distributeBundleService.MaxWaitMinutes = maxWaitMinutes
 	distributeBundleService.Sync = true
 	return distributeBundleService.Distribute(params)
 }

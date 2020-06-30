@@ -17,7 +17,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-const defaultMaxWaitSecs = 3600     // 1 hour
+const defaultMaxWaitMinutes = 60    // 1 hour
 const defaultSyncSleepInterval = 10 // 10 seconds
 
 type DistributeReleaseBundleService struct {
@@ -25,7 +25,8 @@ type DistributeReleaseBundleService struct {
 	DistDetails auth.ServiceDetails
 	DryRun      bool
 	Sync        bool
-	MaxWait     int // Time in minutes for sync distribution
+	// Max time in minutes to wait for sync distribution to finish.
+	MaxWaitMinutes int
 }
 
 func NewDistributeReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *DistributeReleaseBundleService {
@@ -94,13 +95,15 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 		Version:   distributeParams.Version,
 		TrackerId: strconv.Itoa(trackerId),
 	}
-	maxWait := defaultMaxWaitSecs
-	if dr.MaxWait >= 1 {
-		maxWait = dr.MaxWait * 60
+	maxWaitMinutes := defaultMaxWaitMinutes
+	if dr.MaxWaitMinutes >= 1 {
+		maxWaitMinutes = dr.MaxWaitMinutes
 	}
-	// Each round the loop adds ".". To get cleaner output, we add a new line in the end of the loop.
-	defer fmt.Println()
-	for timeElapsed := 0; timeElapsed < maxWait; timeElapsed += defaultSyncSleepInterval {
+	distributingMessage := fmt.Sprintf("Distributing %s/%s...", distributeParams.Name, distributeParams.Version)
+	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepInterval {
+		if timeElapsed%60 == 0 {
+			log.Info(distributingMessage)
+		}
 		response, err := distributeBundleService.GetStatus(distributionStatusParams)
 		if err != nil {
 			return err
@@ -116,7 +119,6 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 		if (*response)[0].Status == Completed {
 			return nil
 		}
-		fmt.Print(".")
 		time.Sleep(time.Second * defaultSyncSleepInterval)
 	}
 	return errorutils.CheckError(errors.New("Timeout for sync distribution"))

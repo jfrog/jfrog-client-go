@@ -688,8 +688,11 @@ err := distManager.DistributeReleaseBundleSync(params, 120)
 ```go
 params := services.NewDistributionStatusParams()
 // Optional parameters:
+// If missing, get status for all distributions
 params.Name = "bundle-name"
+// If missing, get status for all versions of "bundle-name"
 params.Version = "1"
+// If missing, get status for all "bundle-name" with version "1"
 params.TrackerId = "123456789"
 
 status, err := distributeBundleService.GetStatus(params)
