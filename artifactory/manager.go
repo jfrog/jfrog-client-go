@@ -89,10 +89,22 @@ func (sm *ArtifactoryServicesManager) GetRepository(repoKey string) (*services.R
 	return getRepositoryService.Get(repoKey)
 }
 
+func (sm *ArtifactoryServicesManager) CreatePermissionTarget(params services.PermissionTargetParams) error {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Create(params)
+}
+
+func (sm *ArtifactoryServicesManager) UpdatePermissionTarget(params services.PermissionTargetParams) error {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Update(params)
+}
+
 func (sm *ArtifactoryServicesManager) DeletePermissionTarget(permissionTargetName string) error {
-	deletePermissionTargetService := services.NewDeletePermissionTargetService(sm.client)
-	deletePermissionTargetService.ArtDetails = sm.config.GetServiceDetails()
-	return deletePermissionTargetService.Delete(permissionTargetName)
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Delete(permissionTargetName)
 }
 
 func (sm *ArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo) error {
