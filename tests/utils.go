@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -17,7 +18,6 @@ import (
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 	"github.com/jfrog/jfrog-client-go/auth"
 	distributionAuth "github.com/jfrog/jfrog-client-go/distribution/auth"
 	distributionServices "github.com/jfrog/jfrog-client-go/distribution/services"
@@ -57,6 +57,7 @@ var testsCreateReplicationService *services.CreateReplicationService
 var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
 var testsReplicationDeleteService *services.DeleteReplicationService
+var testsPermissionTargetService *services.PermissionTargetService
 
 // Distribution services
 var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
@@ -251,6 +252,14 @@ func createArtifactoryReplicationDeleteManager() {
 	failOnHttpClientCreation(err)
 	testsReplicationDeleteService = services.NewDeleteReplicationService(client)
 	testsReplicationDeleteService.ArtDetails = artDetails
+}
+
+func createArtifactoryPermissionTargetManager() {
+	artDetails := GetRtDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testsPermissionTargetService = services.NewPermissionTargetService(client)
+	testsPermissionTargetService.ArtDetails = artDetails
 }
 
 func failOnHttpClientCreation(err error) {
