@@ -9,6 +9,8 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
@@ -160,6 +162,7 @@ func (rw *ContentWriter) run() {
 }
 
 // Finish writing to the file.
+// To avoid creating an empty file whenever 'Write' never been called, we start the worker so an empty array will be created.
 func (rw *ContentWriter) Close() error {
 	if !rw.started {
 		rw.startWritingWorker()
@@ -167,7 +170,11 @@ func (rw *ContentWriter) Close() error {
 	rw.started = false
 	close(rw.dataChannel)
 	rw.runWaiter.Wait()
-	return rw.errorsQueue.GetError()
+	if err := rw.GetError(); err != nil {
+		log.Error(err)
+		return err
+	}
+	return nil
 }
 
 func (rw *ContentWriter) GetError() error {

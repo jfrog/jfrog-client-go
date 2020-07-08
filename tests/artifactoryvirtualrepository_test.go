@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,7 +36,6 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualCondaTest", virtualCondaTest)
 	t.Run("virtualGenericTest", virtualGenericTest)
 	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
-	assert.NoError(t, fileutils.CleanupReaderWriterTempFilesAndDirs())
 }
 
 func virtualMavenTest(t *testing.T) {

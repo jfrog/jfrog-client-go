@@ -29,16 +29,17 @@ func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 	return "", nil
 }
 
-// bufferFiles - sorted list of search result.
-// artifactNotToBeDeleteReader - sorted artifact that includes the exclude props.
-// resultWriter - File contain the dirs to be deleted.
-// Write all the dir results in 'bufferFiles' to the 'resultWriter'.
-// However, skip dirs with artifact(s) that should not be deleted.
-func WriteCandidateDirsToBeDeleted(bufferFiles []*content.ContentReader, artifactNotToBeDeleteReader *content.ContentReader, resultWriter *content.ContentWriter) (err error) {
-	dirsToBeDeletedReader, err := MergeSortedFiles(bufferFiles)
+// Write all the dirs to be deleted into 'resultWriter'.
+// However, skip dirs with files(s) that should not be deleted.
+// candidateDirsReaders - Sorted list of dirs to be deleted.
+// filesNotToBeDeleteReader - Sorted files that should not be deleted.
+// resultWriter - The filtered list of dirs to be deleted.
+func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader, filesNotToBeDeleteReader *content.ContentReader, resultWriter *content.ContentWriter) (err error) {
+	dirsToBeDeletedReader, err := MergeSortedFiles(candidateDirsReaders)
 	if err != nil {
 		return
 	}
+	defer dirsToBeDeletedReader.Close()
 	var candidateDirToBeDeletedPath string
 	var artifactNotToBeDeletePath string
 	var candidateDirToBeDeleted, artifactNotToBeDeleted *ResultItem
@@ -57,7 +58,7 @@ func WriteCandidateDirsToBeDeleted(bufferFiles []*content.ContentReader, artifac
 		// Fetch the next 'artifactNotToBeDelete'.
 		if artifactNotToBeDeleted == nil {
 			artifactNotToBeDeleted = new(ResultItem)
-			if err = artifactNotToBeDeleteReader.NextRecord(artifactNotToBeDeleted); err != nil {
+			if err = filesNotToBeDeleteReader.NextRecord(artifactNotToBeDeleted); err != nil {
 				// No artifacts left, write remaining dirs to be deleted to result file.
 				resultWriter.Write(*candidateDirToBeDeleted)
 				writeRemainCandidate(resultWriter, dirsToBeDeletedReader)
@@ -78,7 +79,8 @@ func WriteCandidateDirsToBeDeleted(bufferFiles []*content.ContentReader, artifac
 		}
 		artifactNotToBeDeleted = nil
 	}
-	err = artifactNotToBeDeleteReader.GetError()
+	err = filesNotToBeDeleteReader.GetError()
+	filesNotToBeDeleteReader.Reset()
 	return
 }
 
@@ -90,7 +92,7 @@ func writeRemainCandidate(cw *content.ContentWriter, mergeResult *content.Conten
 
 func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultWriter *content.ContentWriter) ([]*content.ContentReader, error) {
 	paths := make(map[string]ResultItem)
-	pathsKeys := make([]string, 0, utils.MAX_BUFFER_SIZE)
+	pathsKeys := make([]string, 0, utils.MaxBufferSize)
 	dirsToBeDeleted := []*content.ContentReader{}
 	for candidate := new(ResultItem); deleteCandidates.NextRecord(candidate) == nil; candidate = new(ResultItem) {
 		// Save all dirs candidate in a diffrent temp file.
@@ -100,7 +102,7 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 			}
 			pathsKeys = append(pathsKeys, candidate.GetItemRelativePath())
 			paths[candidate.GetItemRelativePath()] = *candidate
-			if len(pathsKeys) == utils.MAX_BUFFER_SIZE {
+			if len(pathsKeys) == utils.MaxBufferSize {
 				sortedCandidateDirsFile, err := SortAndSaveBufferToFile(paths, pathsKeys, true)
 				if err != nil {
 					return nil, err
@@ -108,7 +110,7 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 				dirsToBeDeleted = append(dirsToBeDeleted, sortedCandidateDirsFile)
 				// Init buffer.
 				paths = make(map[string]ResultItem)
-				pathsKeys = make([]string, 0, utils.MAX_BUFFER_SIZE)
+				pathsKeys = make([]string, 0, utils.MaxBufferSize)
 			}
 		} else {
 			// Write none dir results.
@@ -118,6 +120,7 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 	if err := deleteCandidates.GetError(); err != nil {
 		return nil, err
 	}
+	deleteCandidates.Reset()
 	if len(pathsKeys) > 0 {
 		sortedFile, err := SortAndSaveBufferToFile(paths, pathsKeys, true)
 		if err != nil {

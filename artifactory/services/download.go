@@ -88,25 +88,22 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		defer producer.Done()
 		defer close(expectedChan)
 		totalTasks := 0
-
 		// Iterate over file-spec groups and produce download tasks.
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
 			var err error
-			var cr *content.ContentReader
-
+			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
-
 			// Search items.
 			log.Info("Searching items to download...")
 			switch downloadParams.GetSpecType() {
 			case utils.WILDCARD:
-				cr, err = ds.collectFilesUsingWildcardPattern(downloadParams)
+				reader, err = ds.collectFilesUsingWildcardPattern(downloadParams)
 			case utils.BUILD:
-				cr, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
+				reader, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
 			case utils.AQL:
-				cr, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
+				reader, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
 			}
 			// Check for search errors.
 			if err != nil {
@@ -115,7 +112,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 				continue
 			}
 			// Produce download tasks for the download consumers.
-			totalTasks += produceTasks(cr, downloadParams, producer, fileHandlerFunc, errorsQueue)
+			totalTasks += produceTasks(reader, downloadParams, producer, fileHandlerFunc, errorsQueue)
 		}
 		expectedChan <- totalTasks
 	}()
@@ -125,7 +122,7 @@ func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams Downl
 	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
 }
 
-func produceTasks(cr *content.ContentReader, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
+func produceTasks(reader *content.ContentReader, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
 	flat := downloadParams.IsFlat()
 	// Collect all folders path which might be needed to create.
 	// key = folder path, value = the necessary data for producing create folder task.
@@ -136,8 +133,8 @@ func produceTasks(cr *content.ContentReader, downloadParams DownloadParams, prod
 	var directoriesDataKeys []string
 	// Task counter
 	var tasksCount int
-
-	for resultItem := new(utils.ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
+	defer reader.Close()
+	for resultItem := new(utils.ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		tempData := DownloadData{
 			Dependency:   *resultItem,
 			DownloadPath: downloadParams.GetPattern(),
@@ -155,7 +152,7 @@ func produceTasks(cr *content.ContentReader, downloadParams DownloadParams, prod
 			directoriesData, directoriesDataKeys = collectDirPathsToCreate(*resultItem, directoriesData, tempData, directoriesDataKeys)
 		}
 	}
-	if err := cr.GetError(); err != nil {
+	if err := reader.GetError(); err != nil {
 		errorsQueue.AddError(errorutils.CheckError(err))
 		return tasksCount
 	}

@@ -68,6 +68,7 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
+	defer artifactoryLfsFilesReader.Close()
 	log.Info("Collecting files to preserve from Git references matching the pattern", gitLfsCleanParams.GetRef(), "...")
 	gitLfsFiles, err := getLfsFilesFromGit(gitPath, refsRegex)
 	if err != nil {
@@ -90,14 +91,13 @@ func findFilesToDelete(artifactoryLfsFilesReader *content.ContentReader, gitLfsF
 	if err != nil {
 		return nil, err
 	}
+	defer cw.Close()
 	for resultItem := new(utils.ResultItem); artifactoryLfsFilesReader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		if _, keepFile := gitLfsFiles[resultItem.Name]; !keepFile {
 			cw.Write(*resultItem)
 		}
 	}
-	if err := cw.Close(); err != nil {
-		return nil, err
-	}
+	artifactoryLfsFilesReader.Reset()
 	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
 }
 

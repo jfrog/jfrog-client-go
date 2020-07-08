@@ -96,10 +96,9 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	successCounters := make([]int, ps.GetThreads())
 	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
-	cr := propsParams.GetItemsReader()
-
+	reader := propsParams.GetItemsReader()
 	go func() {
-		for resultItem := new(utils.ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
+		for resultItem := new(utils.ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 			relativePath := resultItem.GetItemRelativePath()
 			setPropsTask := func(threadId int) error {
 				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
@@ -125,9 +124,10 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 			producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
 		}
 		defer producerConsumer.Done()
-		if err := cr.GetError(); err != nil {
+		if err := reader.GetError(); err != nil {
 			errorsQueue.AddError(err)
 		}
+		reader.Reset()
 	}()
 
 	producerConsumer.Run()

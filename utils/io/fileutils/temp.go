@@ -61,14 +61,6 @@ func RemoveTempDir(dirPath string) error {
 	return nil
 }
 
-// Create a temp dir named "tempPrefix+timeStamp".
-func CreateReaderWriterTempDir() (err error) {
-	timeStamp := strconv.FormatInt(time.Now().Unix(), 10)
-	tempDirReaderWriter, err = ioutil.TempDir(tempDirBase, tempPrefix+timeStamp)
-	err = errorutils.CheckError(err)
-	return
-}
-
 // Create a new temp file named "tempPrefix+timeStamp".
 func CreateReaderWriterTempFile() (*os.File, error) {
 	if tempDirReaderWriter == "" {
@@ -78,41 +70,17 @@ func CreateReaderWriterTempFile() (*os.File, error) {
 	return fd, err
 }
 
-func CleanupReaderWriterTempFilesAndDirs() error {
-	// Cleanup dirs
-	exists, err := IsDirExists(tempDirReaderWriter, false)
-	if err != nil {
-		return err
-	}
-	if exists {
-		err = os.RemoveAll(tempDirReaderWriter)
-		if err != nil {
-			return err
-		}
-	}
-	// Cleanup files
-	exists, err = IsFileExists(tempDirReaderWriter, false)
-	if exists {
-		err = os.RemoveAll(tempDirReaderWriter)
-		if err != nil {
-			return err
-		}
-	}
-	return cleanOldDirs()
-}
-
 // Old runs/tests may left junk at temp dir.
 // Each temp file/Dir is named with prefix+timestamp, search for all temp files/dirs that match the common prefix and validate their timestamp.
-func cleanOldDirs() error {
+func CleanOldDirs() error {
 	// Get all files at temp dir
 	files, err := ioutil.ReadDir(tempDirBase)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	// Search for files/dirs that match the template.
 	for _, file := range files {
-		if file.IsDir() && strings.HasPrefix(file.Name(), tempPrefix) {
+		if strings.HasPrefix(file.Name(), tempPrefix) {
 			timeStamp, err := extractTimestamp(file.Name())
 			if err != nil {
 				return err
@@ -120,7 +88,7 @@ func cleanOldDirs() error {
 			now := time.Now()
 			// Delete old file/dirs.
 			if now.Sub(timeStamp).Hours() > deadline {
-				if err := os.RemoveAll(path.Join(tempDirBase, file.Name())); err != nil {
+				if err := os.Remove(path.Join(tempDirBase, file.Name())); err != nil {
 					return err
 				}
 			}

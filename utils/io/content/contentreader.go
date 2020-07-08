@@ -93,6 +93,7 @@ func (cr *ContentReader) Reset() {
 func (cr *ContentReader) Close() error {
 	if cr.filePath != "" {
 		if err := errorutils.CheckError(os.Remove(cr.filePath)); err != nil {
+			log.Error(err)
 			return err
 		}
 		cr.filePath = ""

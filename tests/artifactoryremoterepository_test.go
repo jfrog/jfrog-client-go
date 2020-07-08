@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,7 +38,6 @@ func TestArtifactoryRemoteRepository(t *testing.T) {
 	t.Run("remoteVcsTest", remoteVcsTest)
 	t.Run("remoteGenericTest", remoteGenericTest)
 	t.Run("getRemoteRepoDetailsTest", getRemoteRepoDetailsTest)
-	assert.NoError(t, fileutils.CleanupReaderWriterTempFilesAndDirs())
 }
 
 func remoteMavenTest(t *testing.T) {

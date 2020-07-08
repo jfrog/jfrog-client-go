@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -32,9 +31,9 @@ const (
 
 // Search with builds returns many results, some are not part of the build and others may be duplicated of the same artifact.
 // To shrink the results:
-// 1. Save build-name's sha1s(all the artifact's sha1 that is bound to build-name build)
+// 1. Save SHA1 values received for build-name.
 // 2. Remove artifacts that not are present on the sha1 list
-// 3. If we have more than one artifacts with the same sha1:
+// 3. If we have more than one artifact with the same sha1:
 // 	3.1 Compare the build-name & build-number among all the artifact with the same sha1.
 func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) (*content.ContentReader, error) {
 	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
@@ -43,25 +42,30 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	}
 	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuild(buildName, buildNumber)}
 	executionQuery := BuildQueryFromSpecFile(specFile, ALL)
-	cr, err := aqlSearch(executionQuery, flags)
+	reader, err := aqlSearch(executionQuery, flags)
 	if err != nil {
 		return nil, err
 	}
+	defer reader.Close()
 
 	// If artifacts' properties weren't fetched in previous aql, fetch now and add to results.
 	if !includePropertiesInAqlForSpec(specFile) {
-		crWithProps, err := searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
+		readerWithProps, err := searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
 		if err != nil {
 			return nil, err
 		}
-		cr, err = loadMissingProperties(cr, crWithProps)
+		defer readerWithProps.Close()
+		readerSortedWithProps, err := loadMissingProperties(reader, readerWithProps)
 		if err != nil {
+			return nil, err
+		}
+		if err := reader.SetFilePath(readerSortedWithProps.GetFilePath()); err != nil {
 			return nil, err
 		}
 	}
 
-	buildArtifactsSha1, err := extractSha1AndPropertyFromAqlResponse(cr)
-	return filterBuildAqlSearchResults(cr, buildArtifactsSha1, buildName, buildNumber)
+	buildArtifactsSha1, err := extractSha1FromAqlResponse(reader)
+	return filterBuildAqlSearchResults(reader, buildArtifactsSha1, buildName, buildNumber)
 }
 
 // Perform search by pattern.
@@ -78,13 +82,13 @@ func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf
 // Use this function when running Aql with pattern
 func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
 	// Execute the search according to provided aql in specFile.
-	var crWithProps *content.ContentReader
+	var readerWithProps *content.ContentReader
 	query := BuildQueryFromSpecFile(specFile, requiredArtifactProps)
-	cr, err := aqlSearch(query, flags)
+	reader, err := aqlSearch(query, flags)
 	if err != nil {
 		return nil, err
 	}
-	isEmpty, err := cr.IsEmpty()
+	isEmpty, err := reader.IsEmpty()
 	if err != nil {
 		return nil, err
 	}
@@ -92,10 +96,11 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 	if specFile.Build != "" && !isEmpty {
 		// If requiredArtifactProps is not NONE and 'includePropertiesInAqlForSpec' for specFile returned true, results contains properties for artifacts.
 		resultsArtifactsIncludeProperties := requiredArtifactProps != NONE && includePropertiesInAqlForSpec(specFile)
-		cr, err = filterAqlSearchResultsByBuild(specFile, cr, flags, resultsArtifactsIncludeProperties)
+		tempReader, err := filterAqlSearchResultsByBuild(specFile, reader, flags, resultsArtifactsIncludeProperties)
 		if err != nil {
 			return nil, err
 		}
+		reader.SetFilePath(tempReader.GetFilePath())
 	}
 
 	// If:
@@ -106,20 +111,21 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" && requiredArtifactProps != NONE {
 		switch requiredArtifactProps {
 		case ALL:
-			crWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", "*", flags)
+			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", "*", flags)
 		case SYMLINK:
-			crWithProps, err = searchProps(specFile.Aql.ItemsFind, "symlink.dest", "*", flags)
+			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "symlink.dest", "*", flags)
 		}
 		if err != nil {
 			return nil, err
 		}
-		cr, err = loadMissingProperties(cr, crWithProps)
+		defer readerWithProps.Close()
+		tempReader, err := loadMissingProperties(reader, readerWithProps)
 		if err != nil {
 			return nil, err
 		}
+		reader.SetFilePath(tempReader.GetFilePath())
 	}
-	cr.Reset()
-	return cr, err
+	return reader, err
 }
 
 func aqlSearch(aqlQuery string, flags CommonConf) (*content.ContentReader, error) {
@@ -169,7 +175,7 @@ func streamToFile(reader io.Reader) (string, error) {
 	}
 	defer fd.Close()
 	_, err = io.Copy(fd, bufio)
-	return fd.Name(), err
+	return fd.Name(), errorutils.CheckError(err)
 }
 
 func LogSearchResults(numOfArtifacts int) {
@@ -178,15 +184,6 @@ func LogSearchResults(numOfArtifacts int) {
 		msgSuffix = "artifact."
 	}
 	log.Info("Found", strconv.Itoa(numOfArtifacts), msgSuffix)
-}
-
-func parseAqlSearchResponse(resp []byte) ([]ResultItem, error) {
-	var result AqlSearchResult
-	err := json.Unmarshal(resp, &result)
-	if errorutils.CheckError(err) != nil {
-		return nil, err
-	}
-	return result.Results, nil
 }
 
 type AqlSearchResult struct {
@@ -241,59 +238,56 @@ func (item *ResultItem) ToDependency() buildinfo.Dependency {
 
 type AqlSearchResultItemFilter func(*content.ContentReader) (*content.ContentReader, error)
 
-func FilterBottomChainResults(cr *content.ContentReader) (*content.ContentReader, error) {
-	cw, err := content.NewContentWriter("results", true, false)
+func FilterBottomChainResults(reader *content.ContentReader) (*content.ContentReader, error) {
+	writer, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
 	}
+	defer writer.Close()
 	var temp string
-	for resultItem := new(ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		rPath := resultItem.GetItemRelativePath()
 		if resultItem.Type == "folder" && !strings.HasSuffix(rPath, "/") {
 			rPath += "/"
 		}
 		if temp == "" || !strings.HasPrefix(temp, rPath) {
-			cw.Write(*resultItem)
+			writer.Write(*resultItem)
 			temp = rPath
 		}
 	}
-	if err := cr.GetError(); err != nil {
+	if err := reader.GetError(); err != nil {
 		return nil, err
 	}
-	if err := cw.Close(); err != nil {
-		return nil, err
-	}
-	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
+	reader.Reset()
+	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
 }
 
-// Reduce the amount of items by saves only the shortest item path for each uniq path e.g.:
+// Reduce the amount of items by saveing only the shortest item path for each unique path e.g.:
 // a | a/b | c | e/f -> a | c | e/f
-
-func FilterTopChainResults(cr *content.ContentReader) (*content.ContentReader, error) {
-	cw, err := content.NewContentWriter("results", true, false)
+func FilterTopChainResults(reader *content.ContentReader) (*content.ContentReader, error) {
+	writer, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
 	}
+	defer writer.Close()
 	var prevFolder string
-	for resultItem := new(ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		rPath := resultItem.GetItemRelativePath()
 		if resultItem.Type == "folder" && !strings.HasSuffix(rPath, "/") {
 			rPath += "/"
 		}
 		if prevFolder == "" || !strings.HasPrefix(rPath, prevFolder) {
-			cw.Write(*resultItem)
+			writer.Write(*resultItem)
 			if resultItem.Type == "folder" {
 				prevFolder = rPath
 			}
 		}
 	}
-	if err := cr.GetError(); err != nil {
+	if err := reader.GetError(); err != nil {
 		return nil, err
 	}
-	if err := cw.Close(); err != nil {
-		return nil, err
-	}
-	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
+	reader.Reset()
+	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
 }
 
 func ReduceTopChainDirResult(searchResults *content.ContentReader) (*content.ContentReader, error) {
@@ -307,17 +301,19 @@ func ReduceBottomChainDirResult(searchResults *content.ContentReader) (*content.
 // Reduce Dir results by using the resultsFilter
 func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder bool, resultsFilter AqlSearchResultItemFilter) (*content.ContentReader, error) {
 	length, err := searchResults.Length()
-	if err != nil {
-		return nil, err
-	}
-	if searchResults == nil || length == 0 {
-		return searchResults, nil
+	if searchResults == nil || length == 0 || err != nil {
+		return searchResults, err
 	}
 	// Sort results in asc order according to relative path.
 	// Split to files if the total result is bigget than the maximum buffest.
 	paths := make(map[string]ResultItem)
-	pathsKeys := make([]string, 0, utils.MAX_BUFFER_SIZE)
+	pathsKeys := make([]string, 0, utils.MaxBufferSize)
 	sortedFiles := []*content.ContentReader{}
+	defer func() {
+		for _, file := range sortedFiles {
+			file.Close()
+		}
+	}()
 	for resultItem := new(ResultItem); searchResults.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if resultItem.Name == "." {
 			continue
@@ -325,19 +321,20 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 		rPath := resultItem.GetItemRelativePath()
 		paths[rPath] = *resultItem
 		pathsKeys = append(pathsKeys, rPath)
-		if len(pathsKeys) == utils.MAX_BUFFER_SIZE {
+		if len(pathsKeys) == utils.MaxBufferSize {
 			sortedFile, err := SortAndSaveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
 			if err != nil {
 				return nil, err
 			}
 			sortedFiles = append(sortedFiles, sortedFile)
 			paths = make(map[string]ResultItem)
-			pathsKeys = make([]string, 0, utils.MAX_BUFFER_SIZE)
+			pathsKeys = make([]string, 0, utils.MaxBufferSize)
 		}
 	}
 	if err := searchResults.GetError(); err != nil {
 		return nil, err
 	}
+	searchResults.Reset()
 	var sortedFile *content.ContentReader
 	if len(pathsKeys) > 0 {
 		sortedFile, err := SortAndSaveBufferToFile(paths, pathsKeys, sortIncreasingOrder)
@@ -351,6 +348,7 @@ func ReduceDirResult(searchResults *content.ContentReader, sortIncreasingOrder b
 	if err != nil {
 		return nil, err
 	}
+	defer sortedFile.Close()
 	return resultsFilter(sortedFile)
 }
 
@@ -358,51 +356,50 @@ func SortAndSaveBufferToFile(paths map[string]ResultItem, pathsKeys []string, so
 	if len(pathsKeys) == 0 {
 		return nil, nil
 	}
-	cw, err := content.NewContentWriter("results", true, false)
+	writer, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
 	}
+	defer writer.Close()
 	if sortIncreasingOrder {
 		sort.Strings(pathsKeys)
 	} else {
 		sort.Sort(sort.Reverse(sort.StringSlice(pathsKeys)))
 	}
 	for _, v := range pathsKeys {
-		cw.Write(paths[v])
+		writer.Write(paths[v])
 	}
-	if err := cw.Close(); err != nil {
-		return nil, err
-	}
-	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
+	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
 }
 
+// Merge all the sorted files into a single sorted file.
 func MergeSortedFiles(sortedFiles []*content.ContentReader) (*content.ContentReader, error) {
 	if len(sortedFiles) == 0 {
 		cw, err := content.NewEmptyContentWriter("results", true, false)
 		return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), err
 	}
-	if len(sortedFiles) == 1 {
-		return sortedFiles[0], nil
-	}
 	resultWriter, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
 	}
-	arr := make([]*ResultItem, len(sortedFiles))
+	defer resultWriter.Close()
+	currentResultItem := make([]*ResultItem, len(sortedFiles))
+	sortedFilesClone := make([]*content.ContentReader, len(sortedFiles))
+	copy(sortedFilesClone, sortedFiles)
 	for {
 		var smallest *ResultItem
 		smallestIndex := 0
-		for i := 0; i < len(sortedFiles); i++ {
-			if arr[i] == nil && sortedFiles[i] != nil {
+		for i := 0; i < len(sortedFilesClone); i++ {
+			if currentResultItem[i] == nil && sortedFilesClone[i] != nil {
 				temp := new(ResultItem)
-				if err := sortedFiles[i].NextRecord(temp); nil != err {
-					sortedFiles[i] = nil
+				if err := sortedFilesClone[i].NextRecord(temp); nil != err {
+					sortedFilesClone[i] = nil
 					continue
 				}
-				arr[i] = temp
+				currentResultItem[i] = temp
 			}
-			if smallest == nil || (arr[i] != nil && smallest.GetItemRelativePath() > arr[i].GetItemRelativePath()) {
-				smallest = arr[i]
+			if smallest == nil || (currentResultItem[i] != nil && smallest.GetItemRelativePath() > currentResultItem[i].GetItemRelativePath()) {
+				smallest = currentResultItem[i]
 				smallestIndex = i
 			}
 		}
@@ -410,10 +407,7 @@ func MergeSortedFiles(sortedFiles []*content.ContentReader) (*content.ContentRea
 			break
 		}
 		resultWriter.Write(*smallest)
-		arr[smallestIndex] = nil
-	}
-	if err := resultWriter.Close(); err != nil {
-		return nil, err
+		currentResultItem[smallestIndex] = nil
 	}
 	return content.NewContentReader(resultWriter.GetFilePath(), resultWriter.GetArrayKey()), nil
 }

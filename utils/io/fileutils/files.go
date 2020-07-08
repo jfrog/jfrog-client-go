@@ -485,7 +485,7 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 
 type ItemType string
 
-func FilesMath(src string, toCompare string) (bool, error) {
+func FilesIdentical(src string, toCompare string) (bool, error) {
 	srcDetails, err := GetFileDetails(src)
 	if err != nil {
 		return false, err

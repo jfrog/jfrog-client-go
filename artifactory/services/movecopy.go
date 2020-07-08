@@ -65,7 +65,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpec MoveCopyPara
 	if err != nil {
 		return 0, 0, err
 	}
-
+	defer resultReader.Close()
 	successCount, failedCount, err = mc.moveFiles(resultReader, moveSpec)
 	if err != nil {
 		return 0, 0, err
@@ -85,16 +85,19 @@ func reduceMovePaths(cr *content.ContentReader, params MoveCopyParams) (*content
 	return utils.ReduceTopChainDirResult(cr)
 }
 
-func (mc *MoveCopyService) moveFiles(cr *content.ContentReader, params MoveCopyParams) (successCount, failedCount int, err error) {
-	successCount = 0
-	failedCount = 0
-	cr, err = reduceMovePaths(cr, params)
-	length, err := cr.Length()
+func (mc *MoveCopyService) moveFiles(reader *content.ContentReader, params MoveCopyParams) (successCount, failedCount int, err error) {
+	successCount, failedCount = 0, 0
+	reduceMovePathsReader, err := reduceMovePaths(reader, params)
+	if err != nil {
+		return
+	}
+	defer reduceMovePathsReader.Close()
+	length, err := reduceMovePathsReader.Length()
 	if err != nil {
 		return
 	}
 	utils.LogSearchResults(length)
-	for resultItem := new(utils.ResultItem); cr.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
+	for resultItem := new(utils.ResultItem); reduceMovePathsReader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		destPathLocal := params.GetFile().Target
 		if !params.IsFlat() {
 			if strings.Contains(destPathLocal, "/") {

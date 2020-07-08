@@ -73,6 +73,12 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		if err != nil {
 			return
 		}
+		// Can't use defer here
+		if tempResultItems.GetFilePath() != resultItems.GetFilePath() {
+			if err = tempResultItems.Close(); err != nil {
+				return
+			}
+		}
 	case utils.BUILD:
 		resultItems, err = utils.SearchBySpecWithBuild(deleteParams.GetFile(), ds)
 	}
@@ -130,6 +136,7 @@ func (ds *DeleteService) DeleteFiles(deleteItems *content.ContentReader) (int, e
 		if err := deleteItems.GetError(); err != nil {
 			errorsQueue.AddError(err)
 		}
+		deleteItems.Reset()
 	}()
 	return ds.performTasks(producerConsumer, errorsQueue, result)
 }
@@ -195,11 +202,16 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 	}
 	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter)
 	if len(bufferFiles) > 0 {
+		defer func() {
+			for _, file := range bufferFiles {
+				file.Close()
+			}
+		}()
 		artifactNotToBeDeleteReader, err := getSortedArtifactNotToBeDelete(specFile, ds)
 		if err != nil {
 			return nil, err
 		}
-
+		defer artifactNotToBeDeleteReader.Close()
 		if err = utils.WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter); err != nil {
 			return nil, err
 		}

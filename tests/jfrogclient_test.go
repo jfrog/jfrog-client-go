@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/utils/tests"
 )
@@ -20,19 +19,12 @@ const (
 func TestMain(m *testing.M) {
 	InitArtifactoryServiceManager()
 	result := m.Run()
-	cleanUp()
 	os.Exit(result)
 }
 
 func InitArtifactoryServiceManager() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
-	// Create temp dir for integration tests
-	err := fileutils.CreateReaderWriterTempDir()
-	if err != nil {
-		log.Error(("Creating temp folder failed: " + err.Error()))
-		os.Exit(1)
-	}
 	createArtifactoryUploadManager()
 	createArtifactorySearchManager()
 	createArtifactoryDeleteManager()
@@ -54,14 +46,6 @@ func InitArtifactoryServiceManager() {
 		createDistributionManager()
 	}
 	createReposIfNeeded()
-}
-
-func cleanUp() {
-	err := fileutils.CleanupReaderWriterTempFilesAndDirs()
-	if err != nil {
-		log.Error(("Deleting temp folder failed: " + err.Error()))
-		os.Exit(1)
-	}
 }
 
 func TestUnitTests(t *testing.T) {

@@ -22,7 +22,7 @@ const (
 )
 
 //  Maximum number of elements in memory.
-var MAX_BUFFER_SIZE = 50000
+var MaxBufferSize = 50000
 
 var userAgent = getDefaultUserAgent()
 

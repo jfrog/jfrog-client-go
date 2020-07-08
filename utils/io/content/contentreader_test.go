@@ -34,20 +34,20 @@ func init() {
 
 func TestContentReaderPath(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
-	cr := NewContentReader(searchResultPath, arrayKey)
-	assert.Equal(t, cr.GetFilePath(), searchResultPath)
+	reader := NewContentReader(searchResultPath, arrayKey)
+	assert.Equal(t, reader.GetFilePath(), searchResultPath)
 }
 
 func TestContentReaderNextRecord(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
-	cr := NewContentReader(searchResultPath, arrayKey)
+	reader := NewContentReader(searchResultPath, arrayKey)
 	// Read the same file two times
 	for i := 0; i < 2; i++ {
 		var rSlice []inputRecord
-		for item := new(inputRecord); cr.NextRecord(item) == nil; item = new(inputRecord) {
+		for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 			rSlice = append(rSlice, *item)
 		}
-		assert.NoError(t, cr.GetError())
+		assert.NoError(t, reader.GetError())
 		// First element
 		assert.Equal(t, 1, rSlice[0].IntKey)
 		assert.Equal(t, "A", rSlice[0].StrKey)
@@ -59,20 +59,20 @@ func TestContentReaderNextRecord(t *testing.T) {
 		assert.Equal(t, false, rSlice[1].BoolKey)
 		assert.Empty(t, rSlice[1].ArrayKey)
 		// Length validation
-		len, err := cr.Length()
+		len, err := reader.Length()
 		assert.NoError(t, err)
 		assert.Equal(t, 2, len)
-		cr.Reset()
+		reader.Reset()
 	}
 }
 
 func TestContentReaderEmptyResult(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), emptySearchResult)
-	cr := NewContentReader(searchResultPath, arrayKey)
-	for item := new(inputRecord); cr.NextRecord(item) == nil; item = new(inputRecord) {
+	reader := NewContentReader(searchResultPath, arrayKey)
+	for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 		t.Error("Can't loop over empty file")
 	}
-	assert.NoError(t, cr.GetError())
+	assert.NoError(t, reader.GetError())
 }
 
 func getTestDataPath() string {
@@ -88,26 +88,26 @@ func TestCloseReader(t *testing.T) {
 	filePathToBeDeleted := fd.Name()
 
 	// Load file to reader
-	cr := NewContentReader(filePathToBeDeleted, arrayKey)
+	reader := NewContentReader(filePathToBeDeleted, arrayKey)
 
 	// Check file exists
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.NoError(t, err)
 
 	// Check if the file got deleted
-	assert.NoError(t, cr.Close())
+	assert.NoError(t, reader.Close())
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
 }
 
 func TestLengthCount(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
-	cr := NewContentReader(searchResultPath, arrayKey)
-	len, err := cr.Length()
+	reader := NewContentReader(searchResultPath, arrayKey)
+	len, err := reader.Length()
 	assert.NoError(t, err)
 	assert.Equal(t, len, 2)
 	// Check cache works with no Reset() being called.
-	len, err = cr.Length()
+	len, err = reader.Length()
 	assert.NoError(t, err)
 	assert.Equal(t, len, 2)
 }

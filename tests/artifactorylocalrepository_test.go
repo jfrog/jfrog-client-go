@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -35,7 +34,6 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localvagrantTest", localVagrantTest)
 	t.Run("localGenericTest", localGenericTest)
 	t.Run("getLocalRepoDetailsTest", getLocalRepoDetailsTest)
-	assert.NoError(t, fileutils.CleanupReaderWriterTempFilesAndDirs())
 }
 
 func localMavenTest(t *testing.T) {

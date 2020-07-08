@@ -69,9 +69,10 @@ func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
 	artifactNotToBeDeleteReader := content.NewContentReader(filepath.Join(testPath, "artifact_file_1.json"), "results")
 	assert.NoError(t, WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter))
 	assert.NoError(t, resultWriter.Close())
-	result, err := fileutils.FilesMath(filepath.Join(testPath, "candidate_dirs_to_be_deleted_results.json"), resultWriter.GetFilePath())
+	result, err := fileutils.FilesIdentical(filepath.Join(testPath, "candidate_dirs_to_be_deleted_results.json"), resultWriter.GetFilePath())
 	assert.NoError(t, err)
 	assert.True(t, result)
+	assert.NoError(t, resultWriter.RemoveOutputFilePath())
 }
 
 func TestFilterCandidateToBeDeleted(t *testing.T) {
@@ -81,17 +82,19 @@ func TestFilterCandidateToBeDeleted(t *testing.T) {
 	assert.NoError(t, err)
 	deleteCandidates := content.NewContentReader(filepath.Join(testPath, "prebuffer_file.json"), "results")
 	assert.NoError(t, err)
-	utils.MAX_BUFFER_SIZE = 3
+	utils.MaxBufferSize = 3
 	sortedFiles, err := FilterCandidateToBeDeleted(deleteCandidates, resultWriter)
 	assert.Len(t, sortedFiles, 3)
 	assert.NoError(t, err)
 	for i, val := range sortedFiles {
-		result, err := fileutils.FilesMath(val.GetFilePath(), filepath.Join(testPath, "buffer_file_1_"+strconv.Itoa(i+1)+".json"))
+		result, err := fileutils.FilesIdentical(val.GetFilePath(), filepath.Join(testPath, "buffer_file_1_"+strconv.Itoa(i+1)+".json"))
 		assert.NoError(t, err)
 		assert.True(t, result)
+		assert.NoError(t, val.Close())
 	}
 	assert.NoError(t, resultWriter.Close())
-	result, err := fileutils.FilesMath(resultWriter.GetFilePath(), filepath.Join(testPath, "candidate_artifact_to_be_deleted_results.json"))
+	result, err := fileutils.FilesIdentical(resultWriter.GetFilePath(), filepath.Join(testPath, "candidate_artifact_to_be_deleted_results.json"))
 	assert.NoError(t, err)
 	assert.True(t, result)
+	assert.NoError(t, resultWriter.RemoveOutputFilePath())
 }

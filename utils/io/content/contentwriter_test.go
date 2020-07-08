@@ -71,68 +71,71 @@ func writeTestRecords(t *testing.T, cw *ContentWriter) {
 }
 
 func TestContentWriter(t *testing.T) {
-	rw, err := NewContentWriter("arr", true, false)
+	writer, err := NewContentWriter("arr", true, false)
 	assert.NoError(t, err)
-	writeTestRecords(t, rw)
-	of, err := os.Open(rw.GetFilePath())
+	writeTestRecords(t, writer)
+	of, err := os.Open(writer.GetFilePath())
 	assert.NoError(t, err)
 	byteValue, _ := ioutil.ReadAll(of)
 	var response Response
 	assert.NoError(t, json.Unmarshal(byteValue, &response))
 	assert.NoError(t, of.Close())
-	assert.NoError(t, rw.RemoveOutputFilePath())
+	assert.NoError(t, writer.RemoveOutputFilePath())
 	for i := range records {
 		assert.Contains(t, response.Arr, records[i], "record %s missing", records[i].StrKey)
 	}
 }
 
 func TestContentReaderAfterWriter(t *testing.T) {
-	cw, err := NewContentWriter("results", true, false)
+	writer, err := NewContentWriter("results", true, false)
 	assert.NoError(t, err)
-	writeTestRecords(t, cw)
-	cr := NewContentReader(cw.GetFilePath(), "results")
+	writeTestRecords(t, writer)
+	reader := NewContentReader(writer.GetFilePath(), "results")
 	assert.NoError(t, err)
-	defer cr.Close()
+	defer reader.Close()
 	recordCount := 0
-	for item := new(outputRecord); cr.NextRecord(item) == nil; item = new(outputRecord) {
+	for item := new(outputRecord); reader.NextRecord(item) == nil; item = new(outputRecord) {
 		assert.Contains(t, records, *item, "record %s missing", item.StrKey)
 		recordCount++
 	}
-	assert.NoError(t, cr.GetError())
+	assert.NoError(t, reader.GetError())
 	assert.Equal(t, len(records), recordCount, "The amount of records were read (%d) is different then expected", recordCount)
 }
 
 func TestRemoveOutputFilePath(t *testing.T) {
 	// Create a file.
-	cw, err := NewContentWriter("results", true, false)
+	writer, err := NewContentWriter("results", true, false)
 	assert.NoError(t, err)
-	assert.NoError(t, cw.Close())
-	filePathToBeDeleted := cw.GetFilePath()
+	assert.NoError(t, writer.Close())
+	filePathToBeDeleted := writer.GetFilePath()
 
 	// Check file exists
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.NoError(t, err)
 
 	// Check if the file got deleted
-	cw.RemoveOutputFilePath()
+	writer.RemoveOutputFilePath()
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
 }
 
 func TestEmptyContentWriter(t *testing.T) {
-	cw, err := NewEmptyContentWriter("results", true, false)
+	writer, err := NewEmptyContentWriter("results", true, false)
 	assert.NoError(t, err)
 	searchResultPath := filepath.Join(getTestDataPath(), emptySearchResult)
-	result, err := fileutils.FilesMath(cw.GetFilePath(), searchResultPath)
+	result, err := fileutils.FilesIdentical(writer.GetFilePath(), searchResultPath)
 	assert.NoError(t, err)
 	assert.True(t, result)
+	assert.NoError(t, writer.RemoveOutputFilePath())
 
-	cw, err = NewContentWriter("results", true, false)
+	writer, err = NewContentWriter("results", true, false)
 	assert.NoError(t, err)
-	assert.NoError(t, cw.Close())
+	assert.NoError(t, writer.Close())
 	searchResultPath = filepath.Join(getTestDataPath(), emptySearchResult)
 	assert.NoError(t, err)
-	result, err = fileutils.FilesMath(cw.GetFilePath(), searchResultPath)
+	result, err = fileutils.FilesIdentical(writer.GetFilePath(), searchResultPath)
 	assert.NoError(t, err)
 	assert.True(t, result)
+	assert.NoError(t, writer.RemoveOutputFilePath())
+
 }
