@@ -52,6 +52,8 @@ func (ds *DeleteService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClie
 
 func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItems *content.ContentReader, err error) {
 	log.Info("Searching artifacts...")
+	var tempResultItems *content.ContentReader
+	var toBeDeletedDirs *content.ContentReader
 	switch deleteParams.GetSpecType() {
 	case utils.AQL:
 		resultItems, err = utils.SearchBySpecWithAql(deleteParams.GetFile(), ds, utils.NONE)
@@ -60,24 +62,24 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		}
 	case utils.WILDCARD:
 		deleteParams.SetIncludeDirs(true)
-		var tempResultItems *content.ContentReader
+
 		tempResultItems, err = utils.SearchBySpecWithPattern(deleteParams.GetFile(), ds, utils.NONE)
 		if err != nil {
 			return
 		}
-		tempResultItems, err = removeNotToBeDeletedDirs(deleteParams.GetFile(), ds, tempResultItems)
+		toBeDeletedDirs, err = removeNotToBeDeletedDirs(deleteParams.GetFile(), ds, tempResultItems)
 		if err != nil {
 			return
 		}
-		resultItems, err = utils.ReduceTopChainDirResult(tempResultItems)
+		if toBeDeletedDirs.GetFilePath() != tempResultItems.GetFilePath() {
+			defer tempResultItems.Close()
+		}
+		resultItems, err = utils.ReduceTopChainDirResult(toBeDeletedDirs)
 		if err != nil {
 			return
 		}
-		// Can't use defer here
-		if tempResultItems.GetFilePath() != resultItems.GetFilePath() {
-			if err = tempResultItems.Close(); err != nil {
-				return
-			}
+		if toBeDeletedDirs.GetFilePath() != resultItems.GetFilePath() {
+			defer toBeDeletedDirs.Close()
 		}
 	case utils.BUILD:
 		resultItems, err = utils.SearchBySpecWithBuild(deleteParams.GetFile(), ds)
