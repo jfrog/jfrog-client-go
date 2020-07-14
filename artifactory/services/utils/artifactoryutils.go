@@ -298,7 +298,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 	buffer := make(map[string]*ResultItem)
 	var err error
 	// Create new file to write result output
-	resultFile, err := content.NewContentWriter("results", true, false)
+	resultFile, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +323,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 	if err := updateProps(readerWithProps, resultFile, buffer); err != nil {
 		return nil, err
 	}
-	return content.NewContentReader(resultFile.GetFilePath(), "results"), nil
+	return content.NewContentReader(resultFile.GetFilePath(), content.DefaultKey), nil
 }
 
 // Load the properties from readerWithProps into buffer's ResultItem, sort the buffers keys, and write its values into the resultWriter.
@@ -406,7 +406,7 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 	if err != nil {
 		return nil, err
 	}
-	resultCw, err := content.NewContentWriter("results", true, false)
+	resultCw, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -443,7 +443,7 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 		if err = priority.Close(); err != nil {
 			return nil, err
 		}
-		temp := content.NewContentReader(priority.GetFilePath(), "results")
+		temp := content.NewContentReader(priority.GetFilePath(), content.DefaultKey)
 		for resultItem := new(ResultItem); temp.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 			if buildArtifactsSha[resultItem.Actual_Sha1] == priorityLevel {
 				resultCw.Write(*resultItem)
@@ -457,20 +457,20 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 		}
 		priorityLevel++
 	}
-	return content.NewContentReader(resultCw.GetFilePath(), "results"), nil
+	return content.NewContentReader(resultCw.GetFilePath(), content.DefaultKey), nil
 }
 
 // Create priority files.
 func createPrioritiesFiles() ([]*content.ContentWriter, error) {
-	firstPriority, err := content.NewContentWriter("results", true, false)
+	firstPriority, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	secondPriority, err := content.NewContentWriter("results", true, false)
+	secondPriority, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	thirdPriority, err := content.NewContentWriter("results", true, false)
+	thirdPriority, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}

@@ -32,7 +32,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Single folder.
-	reader := content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step1.json"), "results")
+	reader := content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step1.json"), content.DefaultKey)
 	resultReader, err := ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
 	isMatch, err := fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_a.json"), resultReader.GetFilePath())
@@ -41,7 +41,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	assert.NoError(t, resultReader.Close())
 
 	// Two different folders not sorted.
-	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step2.json"), "results")
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step2.json"), content.DefaultKey)
 	resultReader, err = ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
 	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_b.json"), resultReader.GetFilePath())
@@ -50,7 +50,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	assert.NoError(t, resultReader.Close())
 
 	// One folder contains another, should reduce results.
-	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step3.json"), "results")
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step3.json"), content.DefaultKey)
 	resultReader, err = ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
 	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_b.json"), resultReader.GetFilePath())
@@ -60,7 +60,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 
 	//Test buffer + sort
 	utils.MaxBufferSize = 3
-	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step4.json"), "results")
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step4.json"), content.DefaultKey)
 	resultReader, err = ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
 	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_c.json"), resultReader.GetFilePath())
@@ -69,7 +69,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	assert.NoError(t, resultReader.Close())
 
 	//Two files in the same folder and one is a prefix to another.
-	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step5.json"), "results")
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step5.json"), content.DefaultKey)
 	resultReader, err = ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
 	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_d.json"), resultReader.GetFilePath())
@@ -78,7 +78,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	assert.NoError(t, resultReader.Close())
 
 	//Two files in the same folder and one is a prefix to another and their folder.
-	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step6.json"), "results")
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step6.json"), content.DefaultKey)
 	resultReader, err = ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
 	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_e.json"), resultReader.GetFilePath())
@@ -90,7 +90,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 func TestReduceTopChainDirResultNoResults(t *testing.T) {
 	testDataPath, err := getBaseTestDir()
 	assert.NoError(t, err)
-	reader := content.NewContentReader(filepath.Join(testDataPath, "no_results.json"), "results")
+	reader := content.NewContentReader(filepath.Join(testDataPath, "no_results.json"), content.DefaultKey)
 	resultReader, err := ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
 	isMatch, err := fileutils.FilesIdentical(filepath.Join(testDataPath, "no_results.json"), resultReader.GetFilePath())
@@ -101,7 +101,7 @@ func TestReduceTopChainDirResultNoResults(t *testing.T) {
 func TestReduceTopChainDirResultEmptyRepo(t *testing.T) {
 	testDataPath, err := getBaseTestDir()
 	assert.NoError(t, err)
-	reader := content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_empty_repo.json"), "results")
+	reader := content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_empty_repo.json"), content.DefaultKey)
 	resultReader, err := ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
 	isMatch, err := fileutils.FilesIdentical(filepath.Join(testDataPath, "no_results.json"), resultReader.GetFilePath())
@@ -115,7 +115,7 @@ func TestReduceBottomChainDirResult(t *testing.T) {
 	assert.NoError(t, err)
 	testResult := []int{1, 2, 2, 2, 3}
 	for i := 1; i <= 5; i++ {
-		reader := content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%v.json", i)), "results")
+		reader := content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%v.json", i)), content.DefaultKey)
 		resultReader, err := ReduceBottomChainDirResult(reader)
 		assert.NoError(t, err)
 		isMatch, err := fileutils.FilesIdentical(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath())
@@ -130,7 +130,7 @@ func TestMergeSortedFiles(t *testing.T) {
 	assert.NoError(t, err)
 	var sortedFiles []*content.ContentReader
 	for i := 1; i <= 3; i++ {
-		sortedFiles = append(sortedFiles, content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("buffer_file_1_%v.json", i)), "results"))
+		sortedFiles = append(sortedFiles, content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("buffer_file_1_%v.json", i)), content.DefaultKey))
 	}
 	resultReader, err := MergeSortedFiles(sortedFiles)
 	assert.NoError(t, err)

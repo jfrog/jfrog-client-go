@@ -72,7 +72,7 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 	// Transform the data into a Go type
 	data, err := json.Marshal(record)
 	if err != nil {
-		cr.errorsQueue.AddError(err)
+		cr.errorsQueue.AddError(errorutils.CheckError(err))
 		return err
 	}
 	err = errorutils.CheckError(json.Unmarshal(data, recordOutput))
@@ -145,7 +145,7 @@ func (cr *ContentReader) run() {
 	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
 	if err != nil {
 		if err == io.EOF {
-			cr.errorsQueue.AddError(errorutils.CheckError(errors.New("results not found")))
+			cr.errorsQueue.AddError(errorutils.CheckError(errors.New(cr.arrayKey + " not found")))
 			return
 		}
 		cr.errorsQueue.AddError(err)
@@ -220,6 +220,7 @@ func MergeReaders(arr []*ContentReader, arrayKey string) (*ContentReader, error)
 	if err != nil {
 		return nil, err
 	}
+	defer cw.Close()
 	for _, cr := range arr {
 		for item := new(interface{}); cr.NextRecord(item) == nil; item = new(interface{}) {
 			cw.Write(*item)
@@ -227,8 +228,6 @@ func MergeReaders(arr []*ContentReader, arrayKey string) (*ContentReader, error)
 		if err := cr.GetError(); err != nil {
 			return nil, err
 		}
-		cr.Close()
 	}
-	cw.Close()
 	return NewContentReader(cw.GetFilePath(), arrayKey), nil
 }

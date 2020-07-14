@@ -13,8 +13,8 @@ import (
 func TestLoadMissingProperties(t *testing.T) {
 	testDataPath, err := getBaseTestDir()
 	assert.NoError(t, err)
-	notSortedWithProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_nosorted_withprops.json"), "results")
-	sortedNoProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_sorted_noprops.json"), "results")
+	notSortedWithProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_nosorted_withprops.json"), content.DefaultKey)
+	sortedNoProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_sorted_noprops.json"), content.DefaultKey)
 	utils.MaxBufferSize = 3
 	reader, err := loadMissingProperties(sortedNoProps, notSortedWithProps)
 	defer reader.Close()
@@ -27,7 +27,7 @@ func TestLoadMissingProperties(t *testing.T) {
 func TestFilterBuildAqlSearchResults(t *testing.T) {
 	testDataPath, err := getBaseTestDir()
 	assert.NoError(t, err)
-	resultsToFilter := content.NewContentReader(filepath.Join(testDataPath, "filter_build_aql_search.json"), "results")
+	resultsToFilter := content.NewContentReader(filepath.Join(testDataPath, "filter_build_aql_search.json"), content.DefaultKey)
 	buildArtifactsSha := map[string]int{"a": 2, "b": 2, "c": 2}
 	resultReader, err := filterBuildAqlSearchResults(resultsToFilter, buildArtifactsSha, "myBuild", "1")
 	defer resultReader.Close()

@@ -156,12 +156,19 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReade
 	if err != nil {
 		return nil, err
 	}
-	defer body.Close()
+	defer func() {
+		err := body.Close()
+		if err != nil {
+			log.Warn("Could not close connection:" + err.Error() + ".")
+		}
+	}()
+	log.Debug("Streaming data to file...")
 	filePath, err := streamToFile(body)
 	if err != nil {
 		return nil, err
 	}
-	return content.NewContentReader(filePath, "results"), err
+	log.Debug("Finish streaming data successfully.")
+	return content.NewContentReader(filePath, content.DefaultKey), err
 }
 
 // Save the reader output into a temp file.
@@ -169,7 +176,7 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReade
 func streamToFile(reader io.Reader) (string, error) {
 	var fd *os.File
 	bufio := bufio.NewReaderSize(reader, 65536)
-	fd, err := fileutils.CreateReaderWriterTempFile()
+	fd, err := fileutils.CreateTempFile()
 	if err != nil {
 		return "", err
 	}
@@ -239,7 +246,7 @@ func (item *ResultItem) ToDependency() buildinfo.Dependency {
 type AqlSearchResultItemFilter func(*content.ContentReader) (*content.ContentReader, error)
 
 func FilterBottomChainResults(reader *content.ContentReader) (*content.ContentReader, error) {
-	writer, err := content.NewContentWriter("results", true, false)
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +272,7 @@ func FilterBottomChainResults(reader *content.ContentReader) (*content.ContentRe
 // Reduce the amount of items by saveing only the shortest item path for each unique path e.g.:
 // a | a/b | c | e/f -> a | c | e/f
 func FilterTopChainResults(reader *content.ContentReader) (*content.ContentReader, error) {
-	writer, err := content.NewContentWriter("results", true, false)
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +363,7 @@ func SortAndSaveBufferToFile(paths map[string]ResultItem, pathsKeys []string, so
 	if len(pathsKeys) == 0 {
 		return nil, nil
 	}
-	writer, err := content.NewContentWriter("results", true, false)
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -375,10 +382,10 @@ func SortAndSaveBufferToFile(paths map[string]ResultItem, pathsKeys []string, so
 // Merge all the sorted files into a single sorted file.
 func MergeSortedFiles(sortedFiles []*content.ContentReader) (*content.ContentReader, error) {
 	if len(sortedFiles) == 0 {
-		cw, err := content.NewEmptyContentWriter("results", true, false)
+		cw, err := content.NewEmptyContentWriter(content.DefaultKey, true, false)
 		return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), err
 	}
-	resultWriter, err := content.NewContentWriter("results", true, false)
+	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}

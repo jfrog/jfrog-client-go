@@ -87,10 +87,10 @@ func TestContentWriter(t *testing.T) {
 }
 
 func TestContentReaderAfterWriter(t *testing.T) {
-	writer, err := NewContentWriter("results", true, false)
+	writer, err := NewContentWriter(DefaultKey, true, false)
 	assert.NoError(t, err)
 	writeTestRecords(t, writer)
-	reader := NewContentReader(writer.GetFilePath(), "results")
+	reader := NewContentReader(writer.GetFilePath(), DefaultKey)
 	assert.NoError(t, err)
 	defer reader.Close()
 	recordCount := 0
@@ -104,23 +104,31 @@ func TestContentReaderAfterWriter(t *testing.T) {
 
 func TestRemoveOutputFilePath(t *testing.T) {
 	// Create a file.
-	writer, err := NewContentWriter("results", true, false)
+	writer, err := NewContentWriter(DefaultKey, true, false)
 	assert.NoError(t, err)
 	assert.NoError(t, writer.Close())
-	filePathToBeDeleted := writer.GetFilePath()
+	filePath := writer.GetFilePath()
 
 	// Check file exists
-	_, err = os.Stat(filePathToBeDeleted)
+	_, err = os.Stat(filePath)
 	assert.NoError(t, err)
+
+	// Check if the file is readable
+	reader := NewContentReader(filePath, DefaultKey)
+	for item := new(outputRecord); reader.NextRecord(item) == nil; item = new(outputRecord) {
+		assert.NotNil(t, *item)
+	}
+	assert.NoError(t, reader.GetError())
+	reader.Reset()
 
 	// Check if the file got deleted
 	writer.RemoveOutputFilePath()
-	_, err = os.Stat(filePathToBeDeleted)
+	_, err = os.Stat(filePath)
 	assert.True(t, os.IsNotExist(err))
 }
 
 func TestEmptyContentWriter(t *testing.T) {
-	writer, err := NewEmptyContentWriter("results", true, false)
+	writer, err := NewEmptyContentWriter(DefaultKey, true, false)
 	assert.NoError(t, err)
 	searchResultPath := filepath.Join(getTestDataPath(), emptySearchResult)
 	result, err := fileutils.FilesIdentical(writer.GetFilePath(), searchResultPath)
@@ -128,7 +136,7 @@ func TestEmptyContentWriter(t *testing.T) {
 	assert.True(t, result)
 	assert.NoError(t, writer.RemoveOutputFilePath())
 
-	writer, err = NewContentWriter("results", true, false)
+	writer, err = NewContentWriter(DefaultKey, true, false)
 	assert.NoError(t, err)
 	assert.NoError(t, writer.Close())
 	searchResultPath = filepath.Join(getTestDataPath(), emptySearchResult)

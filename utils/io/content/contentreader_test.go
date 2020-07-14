@@ -13,7 +13,6 @@ import (
 const (
 	searchResult      = "SearchResult.json"
 	emptySearchResult = "EmptySearchResult.json"
-	arrayKey          = "results"
 )
 
 type inputRecord struct {
@@ -34,13 +33,13 @@ func init() {
 
 func TestContentReaderPath(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
-	reader := NewContentReader(searchResultPath, arrayKey)
+	reader := NewContentReader(searchResultPath, DefaultKey)
 	assert.Equal(t, reader.GetFilePath(), searchResultPath)
 }
 
 func TestContentReaderNextRecord(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
-	reader := NewContentReader(searchResultPath, arrayKey)
+	reader := NewContentReader(searchResultPath, DefaultKey)
 	// Read the same file two times
 	for i := 0; i < 2; i++ {
 		var rSlice []inputRecord
@@ -68,7 +67,7 @@ func TestContentReaderNextRecord(t *testing.T) {
 
 func TestContentReaderEmptyResult(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), emptySearchResult)
-	reader := NewContentReader(searchResultPath, arrayKey)
+	reader := NewContentReader(searchResultPath, DefaultKey)
 	for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 		t.Error("Can't loop over empty file")
 	}
@@ -82,13 +81,13 @@ func getTestDataPath() string {
 
 func TestCloseReader(t *testing.T) {
 	// Create a file.
-	fd, err := fileutils.CreateReaderWriterTempFile()
+	fd, err := fileutils.CreateTempFile()
 	assert.NoError(t, err)
 	fd.Close()
 	filePathToBeDeleted := fd.Name()
 
 	// Load file to reader
-	reader := NewContentReader(filePathToBeDeleted, arrayKey)
+	reader := NewContentReader(filePathToBeDeleted, DefaultKey)
 
 	// Check file exists
 	_, err = os.Stat(filePathToBeDeleted)
@@ -102,7 +101,7 @@ func TestCloseReader(t *testing.T) {
 
 func TestLengthCount(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
-	reader := NewContentReader(searchResultPath, arrayKey)
+	reader := NewContentReader(searchResultPath, DefaultKey)
 	len, err := reader.Length()
 	assert.NoError(t, err)
 	assert.Equal(t, len, 2)

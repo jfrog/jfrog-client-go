@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	tempPrefix = "jfrog.temp."
+	tempPrefix     = "jfrog.cli.temp."
+	tempFileSuffix = ".json"
 )
 
 // Expiration date
@@ -23,11 +24,8 @@ var deadline = 24.0
 //Path to the root temp dir
 var tempDirBase string
 
-//Path to the current flow temp dir
-var tempDirReaderWriter string
-
 func init() {
-	tempDirBase, tempDirReaderWriter = os.TempDir(), os.TempDir()
+	tempDirBase = os.TempDir()
 }
 
 // Creates the temp dir at tempDirBase.
@@ -36,8 +34,8 @@ func CreateTempDir() (string, error) {
 	if tempDirBase == "" {
 		return "", errorutils.CheckError(errors.New("Temp dir cannot be created in an empty base dir."))
 	}
-
-	path, err := ioutil.TempDir(tempDirBase, "jfrog.cli.")
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	path, err := ioutil.TempDir(tempDirBase, tempPrefix+"*-"+timestamp)
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
@@ -62,11 +60,12 @@ func RemoveTempDir(dirPath string) error {
 }
 
 // Create a new temp file named "tempPrefix+timeStamp".
-func CreateReaderWriterTempFile() (*os.File, error) {
-	if tempDirReaderWriter == "" {
-		return nil, errorutils.CheckError(errors.New("Temp folder was not created"))
+func CreateTempFile() (*os.File, error) {
+	if tempDirBase == "" {
+		return nil, errorutils.CheckError(errors.New("Temp File cannot be created in an empty base dir."))
 	}
-	fd, err := ioutil.TempFile(tempDirReaderWriter, tempPrefix+"*.json")
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	fd, err := ioutil.TempFile(tempDirBase, tempPrefix+"*-"+timestamp+tempFileSuffix)
 	return fd, err
 }
 
@@ -99,7 +98,8 @@ func CleanOldDirs() error {
 
 func extractTimestamp(item string) (time.Time, error) {
 	// Get timestamp from file/dir.
-	timestampStr := strings.Replace(item, tempPrefix, "", 1)
+	idx := strings.Index(item, "-")
+	timestampStr := strings.TrimSuffix(item[idx:], tempFileSuffix)
 	// Convert to int.
 	timeStampint, err := strconv.ParseInt(timestampStr, 10, 64)
 	if err != nil {

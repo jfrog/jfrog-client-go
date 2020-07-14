@@ -17,6 +17,7 @@ import (
 const (
 	jsonArrayPrefixPattern = "  \"%s\": ["
 	jsonArraySuffix        = "]\n"
+	DefaultKey             = "results"
 )
 
 // Write a JSON file in small chunks. Only a single JSON key can be written to the file, and array as its value.
@@ -43,7 +44,7 @@ func NewContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*Content
 	if useStdout {
 		fd = os.Stdout
 	} else {
-		fd, err = fileutils.CreateReaderWriterTempFile()
+		fd, err = fileutils.CreateTempFile()
 		if err != nil {
 			return nil, errorutils.CheckError(err)
 		}
@@ -171,7 +172,7 @@ func (rw *ContentWriter) Close() error {
 	close(rw.dataChannel)
 	rw.runWaiter.Wait()
 	if err := rw.GetError(); err != nil {
-		log.Error(err)
+		log.Error("Failed to close writer: " + err.Error())
 		return err
 	}
 	return nil

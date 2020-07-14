@@ -156,6 +156,7 @@ func produceTasks(reader *content.ContentReader, downloadParams DownloadParams, 
 		errorsQueue.AddError(errorutils.CheckError(err))
 		return tasksCount
 	}
+	reader.Reset()
 	addCreateDirsTasks(directoriesDataKeys, alreadyCreatedDirs, producer, fileHandler, directoriesData, errorsQueue, flat)
 	return tasksCount
 }
