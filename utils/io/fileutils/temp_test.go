@@ -19,7 +19,14 @@ func TestCleanOldDirs(t *testing.T) {
 	_, err = os.Stat(tempFile.Name())
 	assert.NoError(t, err)
 
-	// Delete expired files
+	// Don't delete valid files.
+	assert.NoError(t, CleanOldDirs())
+	_, err = os.Stat(tempDir)
+	assert.NoError(t, err)
+	_, err = os.Stat(tempFile.Name())
+	assert.NoError(t, err)
+
+	// Delete expired files.
 	deadline = 0
 	assert.NoError(t, CleanOldDirs())
 

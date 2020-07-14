@@ -98,7 +98,7 @@ func CleanOldDirs() error {
 
 func extractTimestamp(item string) (time.Time, error) {
 	// Get timestamp from file/dir.
-	idx := strings.Index(item, "-")
+	idx := strings.Index(item, "-") + 1
 	timestampStr := strings.TrimSuffix(item[idx:], tempFileSuffix)
 	// Convert to int.
 	timeStampint, err := strconv.ParseInt(timestampStr, 10, 64)
