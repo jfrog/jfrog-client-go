@@ -39,11 +39,7 @@ func NewContentReader(filePath string, arrayKey string) *ContentReader {
 	self.dataChannel = make(chan map[string]interface{}, utils.MaxBufferSize)
 	self.errorsQueue = utils.NewErrorsQueue(utils.MaxBufferSize)
 	self.once = new(sync.Once)
-	if filePath == "" {
-		self.empty = true
-	} else {
-		self.empty = false
-	}
+	self.empty = filePath == ""
 	return &self
 }
 
