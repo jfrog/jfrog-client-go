@@ -14,14 +14,10 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-const (
-	channelSize = 10000
-)
-
 // Open and read JSON file, find the array key inside it and load its value into the memory in small chunks.
-// Currently, 'ContentReader' only support extracting a single value for a given key(arrayKey), other keys are ignored.
+// Currently, 'ContentReader' only support extracting a single value for a given key (arrayKey), other keys are ignored.
 // The value must of of type array.
-// Each array value can be fetch using 'GetRecord' (thread-safe).
+// Each array value can be fetched using 'GetRecord' (thread-safe).
 // This technique solves the limit of memory size which may be too small to fit large JSON.
 type ContentReader struct {
 	// filePath - source data file path.
@@ -33,31 +29,40 @@ type ContentReader struct {
 	once        *sync.Once
 	// Number of element in the array (cache)
 	length int
+	empty  bool
 }
 
 func NewContentReader(filePath string, arrayKey string) *ContentReader {
 	self := ContentReader{}
 	self.filePath = filePath
 	self.arrayKey = arrayKey
-	self.dataChannel = make(chan map[string]interface{}, channelSize)
-	self.errorsQueue = utils.NewErrorsQueue(channelSize)
+	self.dataChannel = make(chan map[string]interface{}, utils.MaxBufferSize)
+	self.errorsQueue = utils.NewErrorsQueue(utils.MaxBufferSize)
 	self.once = new(sync.Once)
+	if filePath == "" {
+		self.empty = true
+	} else {
+		self.empty = false
+	}
 	return &self
 }
 
-func (cr *ContentReader) ArrayKey(arrayKey string) *ContentReader {
-	cr.arrayKey = arrayKey
-	return cr
+func NewEmptyContentReader(arrayKey string) *ContentReader {
+	self := NewContentReader("", arrayKey)
+	return self
 }
 
-func (cr *ContentReader) GetArrayKey() string {
-	return cr.arrayKey
+func (cr *ContentReader) IsEmpty() bool {
+	return cr.empty
 }
 
-// Each call to 'NextRecord()' will return a single element from the channel.
-// Only the first call will spine up a goroutine to read data from the file and push it into the channel.
+// Each call to 'NextRecord()' will returns a single element from the channel.
+// Only the first call invokes a goroutine to read data from the file and push it into the channel.
 // 'io.EOF' will be returned if no data is left.
 func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
+	if cr.empty {
+		return errorutils.CheckError(errors.New("Empty"))
+	}
 	cr.once.Do(func() {
 		go func() {
 			defer close(cr.dataChannel)
@@ -85,7 +90,7 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 
 // Prepare the reader to read the file all over again (not thread-safe).
 func (cr *ContentReader) Reset() {
-	cr.dataChannel = make(chan map[string]interface{}, channelSize)
+	cr.dataChannel = make(chan map[string]interface{}, utils.MaxBufferSize)
 	cr.once = new(sync.Once)
 }
 
@@ -105,20 +110,11 @@ func (cr *ContentReader) GetFilePath() string {
 	return cr.filePath
 }
 
-func (cr *ContentReader) SetFilePath(newPath string) error {
-	if cr.filePath != "" {
-		if err := cr.Close(); err != nil {
-			return err
-		}
-	}
-	cr.filePath = newPath
-	cr.length = 0
-	cr.Reset()
-	return nil
-}
-
 // Number of element in the array.
 func (cr *ContentReader) Length() (int, error) {
+	if cr.empty == true {
+		return 0, nil
+	}
 	if cr.length == 0 {
 		for item := new(interface{}); cr.NextRecord(item) == nil; item = new(interface{}) {
 		}
@@ -162,21 +158,6 @@ func (cr *ContentReader) run() {
 		}
 		cr.dataChannel <- ResultItem
 	}
-}
-
-// Return true if the file has more than one element in array.
-func (cr *ContentReader) IsEmpty() (bool, error) {
-	fd, err := os.Open(cr.filePath)
-	if err != nil {
-		log.Error(err.Error())
-		cr.errorsQueue.AddError(errorutils.CheckError(err))
-		return false, err
-	}
-	br := bufio.NewReaderSize(fd, 65536)
-	defer fd.Close()
-	dec := json.NewDecoder(br)
-	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
-	return isEmptyArray(dec, cr.arrayKey, true)
 }
 
 func (cr *ContentReader) GetError() error {

@@ -31,11 +31,17 @@ func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 
 // Write all the dirs to be deleted into 'resultWriter'.
 // However, skip dirs with files(s) that should not be deleted.
+// In order to accomplish this, we check if the dirs are a prefix of any artifact, witch means the folder contains the artifact and should not be deleted.
+// Optimization: In order not to scan for each dir the entire artifact reader and see if it is a prefix or not, we rely on the fact that the dirs and artifacts are sorted.
+// We have two sorted readers in ascending order, we will start scanning from the beginning of the lists and compare whether the folder is a prefix of the current artifact,
+// in case this is true the dir should not be deleted and we can move on to the next dir, otherwise we have to continue to the next dir or artifact.
+// To know this, we will choose to move on with the lexicographic largest between the two.
+//
 // candidateDirsReaders - Sorted list of dirs to be deleted.
 // filesNotToBeDeleteReader - Sorted files that should not be deleted.
 // resultWriter - The filtered list of dirs to be deleted.
 func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader, filesNotToBeDeleteReader *content.ContentReader, resultWriter *content.ContentWriter) (err error) {
-	dirsToBeDeletedReader, err := MergeSortedFiles(candidateDirsReaders)
+	dirsToBeDeletedReader, err := MergeSortedFiles(candidateDirsReaders, true)
 	if err != nil {
 		return
 	}

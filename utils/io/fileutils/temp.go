@@ -3,7 +3,6 @@ package fileutils
 import (
 	"errors"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -18,10 +18,10 @@ const (
 	tempFileSuffix = ".json"
 )
 
-// Expiration date
-var deadline = 24.0
+// Max temp file age in hours
+var maxFileAge = 24.0
 
-//Path to the root temp dir
+// Path to the root temp dir
 var tempDirBase string
 
 func init() {
@@ -69,14 +69,16 @@ func CreateTempFile() (*os.File, error) {
 	return fd, err
 }
 
-// Old runs/tests may left junk at temp dir.
+// Old runs/tests may leave junk at temp dir.
 // Each temp file/Dir is named with prefix+timestamp, search for all temp files/dirs that match the common prefix and validate their timestamp.
 func CleanOldDirs() error {
 	// Get all files at temp dir
 	files, err := ioutil.ReadDir(tempDirBase)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return errorutils.CheckError(err)
 	}
+	now := time.Now()
 	// Search for files/dirs that match the template.
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), tempPrefix) {
@@ -84,11 +86,10 @@ func CleanOldDirs() error {
 			if err != nil {
 				return err
 			}
-			now := time.Now()
 			// Delete old file/dirs.
-			if now.Sub(timeStamp).Hours() > deadline {
+			if now.Sub(timeStamp).Hours() > maxFileAge {
 				if err := os.Remove(path.Join(tempDirBase, file.Name())); err != nil {
-					return err
+					return errorutils.CheckError(err)
 				}
 			}
 		}

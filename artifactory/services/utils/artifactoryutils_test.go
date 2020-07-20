@@ -11,17 +11,21 @@ import (
 )
 
 func TestLoadMissingProperties(t *testing.T) {
-	testDataPath, err := getBaseTestDir()
-	assert.NoError(t, err)
-	notSortedWithProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_nosorted_withprops.json"), content.DefaultKey)
-	sortedNoProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_sorted_noprops.json"), content.DefaultKey)
-	utils.MaxBufferSize = 3
-	reader, err := loadMissingProperties(sortedNoProps, notSortedWithProps)
-	defer reader.Close()
-	assert.NoError(t, err)
-	isMatch, err := fileutils.FilesIdentical(reader.GetFilePath(), filepath.Join(testDataPath, "load_missing_props_expected_results.json"))
-	assert.NoError(t, err)
-	assert.True(t, isMatch)
+	oldMaxSize := utils.MaxBufferSize
+	defer func() { utils.MaxBufferSize = oldMaxSize }()
+	for i := 0; i < 2; i++ {
+		testDataPath, err := getBaseTestDir()
+		assert.NoError(t, err)
+		notSortedWithProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_nosorted_withprops.json"), content.DefaultKey)
+		sortedNoProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_sorted_noprops.json"), content.DefaultKey)
+		reader, err := loadMissingProperties(sortedNoProps, notSortedWithProps)
+		defer reader.Close()
+		assert.NoError(t, err)
+		isMatch, err := fileutils.FilesIdentical(reader.GetFilePath(), filepath.Join(testDataPath, "load_missing_props_expected_results.json"))
+		assert.NoError(t, err)
+		assert.True(t, isMatch)
+		utils.MaxBufferSize = 3
+	}
 }
 
 func TestFilterBuildAqlSearchResults(t *testing.T) {

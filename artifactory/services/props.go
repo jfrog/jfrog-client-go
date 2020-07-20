@@ -60,12 +60,12 @@ func (ps *PropsService) DeleteProps(propsParams PropsParams) (int, error) {
 }
 
 type PropsParams struct {
-	ItemsReader *content.ContentReader
-	Props       string
+	Reader *content.ContentReader
+	Props  string
 }
 
-func (sp *PropsParams) GetItemsReader() *content.ContentReader {
-	return sp.ItemsReader
+func (sp *PropsParams) GetReader() *content.ContentReader {
+	return sp.Reader
 }
 
 func (sp *PropsParams) GetProps() string {
@@ -96,7 +96,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	successCounters := make([]int, ps.GetThreads())
 	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
-	reader := propsParams.GetItemsReader()
+	reader := propsParams.GetReader()
 	go func() {
 		for resultItem := new(utils.ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 			relativePath := resultItem.GetItemRelativePath()

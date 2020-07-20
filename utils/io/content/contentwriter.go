@@ -35,38 +35,19 @@ type ContentWriter struct {
 	errorsQueue    *utils.ErrorsQueue
 	runWaiter      sync.WaitGroup
 	once           sync.Once
-	started        bool
+	empty          bool
+	useStdout      bool
 }
 
 func NewContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*ContentWriter, error) {
-	var fd *os.File
-	var err error
-	if useStdout {
-		fd = os.Stdout
-	} else {
-		fd, err = fileutils.CreateTempFile()
-		if err != nil {
-			return nil, errorutils.CheckError(err)
-		}
-		fd.Close()
-	}
 	self := ContentWriter{}
+	self.useStdout = useStdout
 	self.arrayKey = arrayKey
-	self.outputFile = fd
-	self.dataChannel = make(chan interface{}, channelSize)
-	self.errorsQueue = utils.NewErrorsQueue(channelSize)
+	self.dataChannel = make(chan interface{}, utils.MaxBufferSize)
+	self.errorsQueue = utils.NewErrorsQueue(utils.MaxBufferSize)
 	self.isCompleteFile = isCompleteFile
+	self.empty = true
 	return &self, nil
-}
-
-func NewEmptyContentWriter(arrayKey string, isCompleteFile, useStdout bool) (*ContentWriter, error) {
-	self, err := NewContentWriter(arrayKey, isCompleteFile, useStdout)
-	if err != nil {
-		return nil, err
-	}
-	close(self.dataChannel)
-	self.run()
-	return self, nil
 }
 
 func (rw *ContentWriter) SetArrayKey(arrKey string) *ContentWriter {
@@ -78,8 +59,15 @@ func (rw *ContentWriter) GetArrayKey() string {
 	return rw.arrayKey
 }
 
+func (rw *ContentWriter) IsEmpty() bool {
+	return rw.empty
+}
+
 func (rw *ContentWriter) GetFilePath() string {
-	return rw.outputFile.Name()
+	if rw.outputFile != nil {
+		return rw.outputFile.Name()
+	}
+	return ""
 }
 
 func (rw *ContentWriter) RemoveOutputFilePath() error {
@@ -88,13 +76,23 @@ func (rw *ContentWriter) RemoveOutputFilePath() error {
 
 // Write a single item to the JSON array.
 func (rw *ContentWriter) Write(record interface{}) {
-	rw.started = true
+	rw.empty = false
 	rw.startWritingWorker()
 	rw.dataChannel <- record
 }
 
 func (rw *ContentWriter) startWritingWorker() {
 	rw.once.Do(func() {
+		var err error
+		if rw.useStdout {
+			rw.outputFile = os.Stdout
+		} else {
+			rw.outputFile, err = fileutils.CreateTempFile()
+			if err != nil {
+				rw.errorsQueue.AddError(errorutils.CheckError(err))
+				return
+			}
+		}
 		rw.runWaiter.Add(1)
 		go func() {
 			defer rw.runWaiter.Done()
@@ -106,13 +104,8 @@ func (rw *ContentWriter) startWritingWorker() {
 // Write the data from the channel to JSON file.
 // The channel may block the thread, therefore should run async.
 func (rw *ContentWriter) run() {
-	if rw.outputFile != os.Stdout {
-		var err error
-		rw.outputFile, err = os.OpenFile(rw.outputFile.Name(), os.O_RDWR, 0600)
-		if err != nil {
-			rw.errorsQueue.AddError(errorutils.CheckError(err))
-			return
-		}
+	var err error
+	if !rw.useStdout {
 		defer rw.outputFile.Close()
 	}
 	openString := jsonArrayPrefixPattern
@@ -120,7 +113,7 @@ func (rw *ContentWriter) run() {
 	if rw.isCompleteFile {
 		openString = "{\n" + openString
 	}
-	_, err := rw.outputFile.WriteString(fmt.Sprintf(openString, rw.arrayKey))
+	_, err = rw.outputFile.WriteString(fmt.Sprintf(openString, rw.arrayKey))
 	if err != nil {
 		rw.errorsQueue.AddError(errorutils.CheckError(err))
 		return
@@ -163,12 +156,10 @@ func (rw *ContentWriter) run() {
 }
 
 // Finish writing to the file.
-// To avoid creating an empty file whenever 'Write' never been called, we start the worker so an empty array will be created.
 func (rw *ContentWriter) Close() error {
-	if !rw.started {
-		rw.startWritingWorker()
+	if rw.empty {
+		return nil
 	}
-	rw.started = false
 	close(rw.dataChannel)
 	rw.runWaiter.Wait()
 	if err := rw.GetError(); err != nil {

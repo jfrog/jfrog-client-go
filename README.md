@@ -143,18 +143,20 @@ params.MinSplitSize = 7168
 reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
 ```
 Use `reader.NextRecord()` and `FileInfo` type from `utils` package to iterate over the download results.
-Use `reader.Close()` method (preferably using `defer`), to remove the results reader after it is used:
-``` 
+```
 defer reader.Close()
-var file utils.FileInfo
-for e := resultReader.NextRecord(&file); e == nil; e = resultReader.NextRecord(&file) {
+for file := new(utils.FileInfo); resultReader.NextRecord(file) == nil; file = new(utils.FileInfo) {
     fmt.Printf("Download source: %s\n", file.ArtifactoryPath)
     fmt.Printf("Download target: %s\n", file.LocalPath)
     fmt.Printf("SHA1: %s\n", file.Sha1)
-    fmt.Printf("MD5: %s\n", file.Md5) 
+    fmt.Printf("MD5: %s\n", file.Md5)
 }
+if err := resultReader.GetError(); err != nil {
+    return err
+}
+resultReader.Reset()
 ```
-
+Read more about [ContentReader](#using-contentReader).
 #### Copying Files in Artifactory
 
 ```go
@@ -186,7 +188,11 @@ params := services.NewDeleteParams()
 params.Pattern = "repo/*/*.zip"
 params.Recursive = true
 
-pathsToDelete := rtManager.GetPathsToDelete(params)
+pathsToDelete, err := rtManager.GetPathsToDelete(params)
+if err != nil {
+    return err
+}
+defer pathsToDelete.Close()
 rtManager.DeleteFiles(pathsToDelete)
 ```
 
@@ -197,7 +203,11 @@ params := services.NewSearchParams()
 params.Pattern = "repo/*/*.zip"
 params.Recursive = true
 
-rtManager.SearchFiles(params)
+reader, err := rtManager.SearchFiles(params)
+if err != nil {
+    return err
+}
+defer reader.Close()
 ```
 
 #### Setting Properties on Files in Artifactory
@@ -207,11 +217,14 @@ searchParams = services.NewSearchParams()
 searchParams.Recursive = true
 searchParams.IncludeDirs = false
 
-resultItems = rtManager.SearchFiles(searchParams)
-
+reader, err = rtManager.SearchFiles(searchParams)
+if err != nil {
+    return err
+}
+defer reader.Close()
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
-propsParams.Items = resultItems
+propsParams.Reader = reader
 propsParams.Props = "key=value"
 
 rtManager.SetProps(propsParams)
@@ -224,11 +237,14 @@ searchParams = services.NewSearchParams()
 searchParams.Recursive = true
 searchParams.IncludeDirs = false
 
-resultItems = rtManager.SearchFiles(searchParams)
-
+resultItems, err = rtManager.SearchFiles(searchParams)
+if err != nil {
+    return err
+}
+defer reader.Close()
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
-propsParams.Items = resultItems
+propsParams.Reader = reader
 propsParams.Props = "key=value"
 
 rtManager.DeleteProps(propsParams)
@@ -317,8 +333,10 @@ params.Refs = "refs/remotes/*"
 params.Repo = "my-project-lfs"
 params.GitPath = "path/to/git"
 
-filesToDelete := rtManager.GetUnreferencedGitLfsFiles(params)
-rtManager.DeleteFiles(filesToDelete)
+reader,err := rtManager.GetUnreferencedGitLfsFiles(params)
+
+defer reader.Close()
+rtManager.DeleteFiles(reader)
 ```
 
 #### Executing AQLs
@@ -908,6 +926,32 @@ path, err = versions.CreatePath("subject/repo/pkg/version")
 
 btManager.MavenCentralContentSync(params, path)
 ```
+
+#### Using ContentReader
+
+Some APIs return a content.ContentReader which allow reading the API output.
+Here's an example for how it can be used:
+
+```go
+reader, err := servicesManager.SearchFiles(searchParams)
+if err != nil {
+    return err
+}
+defer reader.Close()
+for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(ResultItem)  {
+    fmt.Printf("Found artifact: %s of type: %s\n", searchResult.Name, searchResult.Type)
+}
+if err := resultReader.GetError(); err != nil {
+    return err
+}
+resultReader.Reset()
+```
+
+
+`reader.NextRecord(currentResult)` load the next record from the reader into `currentResult`  of type `ResultItem`.
+`reader.Close()` remove the results reader after it is used (preferably using `defer`).
+`reader.GetError()` any error that may accur during `NextRecord()`, can be return using `GetError()`.
+`reader.Reset()` after a successful reading of the whole reader, trying to read it again will not work and will not output any error, therefore `Reset()` is required before reading again. For best practice, always reset the reader after finish reading.
 
 ## Tests
 

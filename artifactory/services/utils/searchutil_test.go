@@ -8,6 +8,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -58,6 +59,8 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	assert.True(t, isMatch)
 	assert.NoError(t, resultReader.Close())
 
+	oldMaxSize := utils.MaxBufferSize
+	defer func() { utils.MaxBufferSize = oldMaxSize }()
 	//Test buffer + sort
 	utils.MaxBufferSize = 3
 	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step4.json"), content.DefaultKey)
@@ -93,9 +96,7 @@ func TestReduceTopChainDirResultNoResults(t *testing.T) {
 	reader := content.NewContentReader(filepath.Join(testDataPath, "no_results.json"), content.DefaultKey)
 	resultReader, err := ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
-	isMatch, err := fileutils.FilesIdentical(filepath.Join(testDataPath, "no_results.json"), resultReader.GetFilePath())
-	assert.NoError(t, err)
-	assert.True(t, isMatch)
+	assert.True(t, resultReader.IsEmpty())
 }
 
 func TestReduceTopChainDirResultEmptyRepo(t *testing.T) {
@@ -104,37 +105,60 @@ func TestReduceTopChainDirResultEmptyRepo(t *testing.T) {
 	reader := content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_empty_repo.json"), content.DefaultKey)
 	resultReader, err := ReduceTopChainDirResult(reader)
 	assert.NoError(t, err)
-	isMatch, err := fileutils.FilesIdentical(filepath.Join(testDataPath, "no_results.json"), resultReader.GetFilePath())
-	assert.NoError(t, err)
-	assert.True(t, isMatch)
+	assert.True(t, resultReader.IsEmpty())
 	assert.NoError(t, resultReader.Close())
 }
 
 func TestReduceBottomChainDirResult(t *testing.T) {
 	testDataPath, err := getBaseTestDir()
 	assert.NoError(t, err)
-	testResult := []int{1, 2, 2, 2, 3}
-	for i := 1; i <= 5; i++ {
-		reader := content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%v.json", i)), content.DefaultKey)
-		resultReader, err := ReduceBottomChainDirResult(reader)
-		assert.NoError(t, err)
-		isMatch, err := fileutils.FilesIdentical(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath())
-		assert.NoError(t, err)
-		assert.True(t, isMatch)
-		assert.NoError(t, resultReader.Close())
+	oldMaxSize := utils.MaxBufferSize
+	defer func() { utils.MaxBufferSize = oldMaxSize }()
+	for i := 0; i < 2; i++ {
+		testResult := []int{1, 2, 2, 2, 3}
+		for i := 1; i <= 5; i++ {
+			reader := content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%v.json", i)), content.DefaultKey)
+			resultReader, err := ReduceBottomChainDirResult(reader)
+			assert.NoError(t, err)
+			isMatch, err := fileutils.FilesIdentical(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath())
+			assert.NoError(t, err)
+			assert.True(t, isMatch)
+			if isMatch == false {
+				l, _ := resultReader.Length()
+				log.Debug(fmt.Sprintf("reduce_bottom_chain_step%v.json  length: %v name %v", i, l, resultReader.GetFilePath()))
+			} else {
+				assert.NoError(t, resultReader.Close())
+			}
+		}
+		utils.MaxBufferSize = 2
 	}
 }
 
-func TestMergeSortedFiles(t *testing.T) {
+func TestMergeIncreasingSortedFiles(t *testing.T) {
 	testDataPath, err := getBaseTestDir()
 	assert.NoError(t, err)
 	var sortedFiles []*content.ContentReader
 	for i := 1; i <= 3; i++ {
-		sortedFiles = append(sortedFiles, content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("buffer_file_1_%v.json", i)), content.DefaultKey))
+		sortedFiles = append(sortedFiles, content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("buffer_file_ascending_order_%v.json", i)), content.DefaultKey))
 	}
-	resultReader, err := MergeSortedFiles(sortedFiles)
+	resultReader, err := MergeSortedFiles(sortedFiles, true)
 	assert.NoError(t, err)
-	isMatch, err := fileutils.FilesIdentical(resultReader.GetFilePath(), filepath.Join(testDataPath, "merged_buffer_1.json"))
+	isMatch, err := fileutils.FilesIdentical(resultReader.GetFilePath(), filepath.Join(testDataPath, "merged_buffer_ascending_order.json"))
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, resultReader.Close())
+}
+
+func TestMergeDecreasingSortedFiles(t *testing.T) {
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	var sortedFiles []*content.ContentReader
+	for i := 1; i <= 3; i++ {
+		sortedFiles = append(sortedFiles, content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("buffer_file_descending_order_%v.json", i)), content.DefaultKey))
+	}
+	resultReader, err := MergeSortedFiles(sortedFiles, false)
+	assert.NoError(t, err)
+	isMatch, err := fileutils.FilesIdentical(resultReader.GetFilePath(), filepath.Join(testDataPath, "merged_buffer_descending_order.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
 	assert.NoError(t, resultReader.Close())

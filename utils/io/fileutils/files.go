@@ -485,12 +485,13 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 
 type ItemType string
 
-func FilesIdentical(src string, toCompare string) (bool, error) {
-	srcDetails, err := GetFileDetails(src)
+// Returns true if the two files have the same MD5 checksum.
+func FilesIdentical(file1 string, file2 string) (bool, error) {
+	srcDetails, err := GetFileDetails(file1)
 	if err != nil {
 		return false, err
 	}
-	toCompareDetails, err := GetFileDetails(toCompare)
+	toCompareDetails, err := GetFileDetails(file2)
 	if err != nil {
 		return false, err
 	}

@@ -243,7 +243,7 @@ func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte
 }
 
 func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
-	var addPropsErr, aqlSearchErr error
+	var aqlSearchErr error
 	var readerWithProps *content.ContentReader
 	var buildArtifactsSha1 map[string]int
 	var wg sync.WaitGroup
@@ -261,29 +261,27 @@ func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, reader *co
 	}()
 
 	if !itemsAlreadyContainProperties {
-		wg.Add(1)
 		// Add properties to the previously found artifacts (in case properties haven't already fetched from Artifactory)
-		go func() {
-			defer wg.Done()
-			readerWithProps, addPropsErr = searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
-			if addPropsErr != nil {
-				return
-			}
-			defer readerWithProps.Close()
-			tempReader, addPropsErr := loadMissingProperties(reader, readerWithProps)
-			if addPropsErr != nil {
-				return
-			}
-			reader.SetFilePath(tempReader.GetFilePath())
-		}()
+		readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
+		if err != nil {
+			return nil, err
+		}
+		defer readerWithProps.Close()
+		tempReader, err := loadMissingProperties(reader, readerWithProps)
+		if err != nil {
+			return nil, err
+		}
+		defer tempReader.Close()
+		wg.Wait()
+		if aqlSearchErr != nil {
+			return nil, aqlSearchErr
+		}
+		return filterBuildAqlSearchResults(tempReader, buildArtifactsSha1, buildName, buildNumber)
 	}
 
 	wg.Wait()
 	if aqlSearchErr != nil {
 		return nil, aqlSearchErr
-	}
-	if addPropsErr != nil {
-		return nil, addPropsErr
 	}
 	return filterBuildAqlSearchResults(reader, buildArtifactsSha1, buildName, buildNumber)
 }

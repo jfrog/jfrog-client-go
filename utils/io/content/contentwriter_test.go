@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"sync"
 	"testing"
 
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -91,7 +89,6 @@ func TestContentReaderAfterWriter(t *testing.T) {
 	assert.NoError(t, err)
 	writeTestRecords(t, writer)
 	reader := NewContentReader(writer.GetFilePath(), DefaultKey)
-	assert.NoError(t, err)
 	defer reader.Close()
 	recordCount := 0
 	for item := new(outputRecord); reader.NextRecord(item) == nil; item = new(outputRecord) {
@@ -100,50 +97,4 @@ func TestContentReaderAfterWriter(t *testing.T) {
 	}
 	assert.NoError(t, reader.GetError())
 	assert.Equal(t, len(records), recordCount, "The amount of records were read (%d) is different then expected", recordCount)
-}
-
-func TestRemoveOutputFilePath(t *testing.T) {
-	// Create a file.
-	writer, err := NewContentWriter(DefaultKey, true, false)
-	assert.NoError(t, err)
-	assert.NoError(t, writer.Close())
-	filePath := writer.GetFilePath()
-
-	// Check file exists
-	_, err = os.Stat(filePath)
-	assert.NoError(t, err)
-
-	// Check if the file is readable
-	reader := NewContentReader(filePath, DefaultKey)
-	for item := new(outputRecord); reader.NextRecord(item) == nil; item = new(outputRecord) {
-		assert.NotNil(t, *item)
-	}
-	assert.NoError(t, reader.GetError())
-	reader.Reset()
-
-	// Check if the file got deleted
-	writer.RemoveOutputFilePath()
-	_, err = os.Stat(filePath)
-	assert.True(t, os.IsNotExist(err))
-}
-
-func TestEmptyContentWriter(t *testing.T) {
-	writer, err := NewEmptyContentWriter(DefaultKey, true, false)
-	assert.NoError(t, err)
-	searchResultPath := filepath.Join(getTestDataPath(), emptySearchResult)
-	result, err := fileutils.FilesIdentical(writer.GetFilePath(), searchResultPath)
-	assert.NoError(t, err)
-	assert.True(t, result)
-	assert.NoError(t, writer.RemoveOutputFilePath())
-
-	writer, err = NewContentWriter(DefaultKey, true, false)
-	assert.NoError(t, err)
-	assert.NoError(t, writer.Close())
-	searchResultPath = filepath.Join(getTestDataPath(), emptySearchResult)
-	assert.NoError(t, err)
-	result, err = fileutils.FilesIdentical(writer.GetFilePath(), searchResultPath)
-	assert.NoError(t, err)
-	assert.True(t, result)
-	assert.NoError(t, writer.RemoveOutputFilePath())
-
 }

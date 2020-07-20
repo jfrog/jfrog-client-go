@@ -113,6 +113,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			}
 			// Produce download tasks for the download consumers.
 			totalTasks += produceTasks(reader, downloadParams, producer, fileHandlerFunc, errorsQueue)
+			reader.Close()
 		}
 		expectedChan <- totalTasks
 	}()
@@ -133,7 +134,6 @@ func produceTasks(reader *content.ContentReader, downloadParams DownloadParams, 
 	var directoriesDataKeys []string
 	// Task counter
 	var tasksCount int
-	defer reader.Close()
 	for resultItem := new(utils.ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		tempData := DownloadData{
 			Dependency:   *resultItem,

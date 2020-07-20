@@ -62,7 +62,7 @@ func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
 	assert.NoError(t, err)
 	var bufferFiles []*content.ContentReader
 	for i := 1; i <= 3; i++ {
-		bufferFiles = append(bufferFiles, content.NewContentReader(filepath.Join(testPath, "buffer_file_1_"+strconv.Itoa(i)+".json"), content.DefaultKey))
+		bufferFiles = append(bufferFiles, content.NewContentReader(filepath.Join(testPath, "buffer_file_ascending_order_"+strconv.Itoa(i)+".json"), content.DefaultKey))
 	}
 	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 	assert.NoError(t, err)
@@ -82,12 +82,14 @@ func TestFilterCandidateToBeDeleted(t *testing.T) {
 	assert.NoError(t, err)
 	deleteCandidates := content.NewContentReader(filepath.Join(testPath, "prebuffer_file.json"), content.DefaultKey)
 	assert.NoError(t, err)
+	oldMaxSize := utils.MaxBufferSize
+	defer func() { utils.MaxBufferSize = oldMaxSize }()
 	utils.MaxBufferSize = 3
 	sortedFiles, err := FilterCandidateToBeDeleted(deleteCandidates, resultWriter)
 	assert.Len(t, sortedFiles, 3)
 	assert.NoError(t, err)
 	for i, val := range sortedFiles {
-		result, err := fileutils.FilesIdentical(val.GetFilePath(), filepath.Join(testPath, "buffer_file_1_"+strconv.Itoa(i+1)+".json"))
+		result, err := fileutils.FilesIdentical(val.GetFilePath(), filepath.Join(testPath, "buffer_file_ascending_order_"+strconv.Itoa(i+1)+".json"))
 		assert.NoError(t, err)
 		assert.True(t, result)
 		assert.NoError(t, val.Close())

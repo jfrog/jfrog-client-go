@@ -52,8 +52,7 @@ func (ds *DeleteService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClie
 
 func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItems *content.ContentReader, err error) {
 	log.Info("Searching artifacts...")
-	var tempResultItems *content.ContentReader
-	var toBeDeletedDirs *content.ContentReader
+	var tempResultItems, toBeDeletedDirs *content.ContentReader
 	switch deleteParams.GetSpecType() {
 	case utils.AQL:
 		resultItems, err = utils.SearchBySpecWithAql(deleteParams.GetFile(), ds, utils.NONE)
@@ -62,24 +61,24 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		}
 	case utils.WILDCARD:
 		deleteParams.SetIncludeDirs(true)
-
 		tempResultItems, err = utils.SearchBySpecWithPattern(deleteParams.GetFile(), ds, utils.NONE)
 		if err != nil {
 			return
 		}
+		defer tempResultItems.Close()
 		toBeDeletedDirs, err = removeNotToBeDeletedDirs(deleteParams.GetFile(), ds, tempResultItems)
 		if err != nil {
 			return
 		}
-		if toBeDeletedDirs.GetFilePath() != tempResultItems.GetFilePath() {
-			defer tempResultItems.Close()
+		// The 'removeNotToBeDeletedDirs' should filter out any folders that should not be deleted, if no action is needed, nil will be return.
+		// As a result, we should keep the flow with tempResultItems reader instead.
+		if toBeDeletedDirs == nil {
+			toBeDeletedDirs = tempResultItems
 		}
+		defer toBeDeletedDirs.Close()
 		resultItems, err = utils.ReduceTopChainDirResult(toBeDeletedDirs)
 		if err != nil {
 			return
-		}
-		if toBeDeletedDirs.GetFilePath() != resultItems.GetFilePath() {
-			defer toBeDeletedDirs.Close()
 		}
 	case utils.BUILD:
 		resultItems, err = utils.SearchBySpecWithBuild(deleteParams.GetFile(), ds)
@@ -185,17 +184,15 @@ func NewDeleteParams() DeleteParams {
 	return DeleteParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }
 
-// This function receives as an argument the list of files and dirs to be deleted from Artifactory.
+// This function receives as an argument a reader within the list of files and dirs to be deleted from Artifactory.
 // In case the search params used to create this list included excludeProps, we might need to remove some directories from this list.
 // These directories must be removed, because they include files, which should not be deleted, because of the excludeProps params.
 // These directories must not be deleted from Artifactory.
+// In case of no excludeProps filed in the file spec, nil will be return so all deleteCandidates will get deleted.
 func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (*content.ContentReader, error) {
 	length, err := deleteCandidates.Length()
-	if err != nil {
+	if err != nil || specFile.ExcludeProps == "" || length == 0 {
 		return nil, err
-	}
-	if specFile.ExcludeProps == "" || length == 0 {
-		return deleteCandidates, nil
 	}
 	// Send AQL to get all artifacts that includes the exclude props.
 	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
@@ -209,7 +206,7 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 				file.Close()
 			}
 		}()
-		artifactNotToBeDeleteReader, err := getSortedArtifactNotToBeDelete(specFile, ds)
+		artifactNotToBeDeleteReader, err := getSortedArtifactsToNotDelete(specFile, ds)
 		if err != nil {
 			return nil, err
 		}
@@ -224,7 +221,7 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 	return content.NewContentReader(resultWriter.GetFilePath(), content.DefaultKey), err
 }
 
-func getSortedArtifactNotToBeDelete(specFile *utils.ArtifactoryCommonParams, ds *DeleteService) (*content.ContentReader, error) {
+func getSortedArtifactsToNotDelete(specFile *utils.ArtifactoryCommonParams, ds *DeleteService) (*content.ContentReader, error) {
 	specFile.Props = specFile.ExcludeProps
 	specFile.SortOrder = "asc"
 	specFile.SortBy = []string{"repo", "path", "name"}

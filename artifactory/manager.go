@@ -129,12 +129,12 @@ func (sm *ArtifactoryServicesManager) GetPathsToDelete(params services.DeletePar
 	return deleteService.GetPathsToDelete(params)
 }
 
-func (sm *ArtifactoryServicesManager) DeleteFiles(ResultItemReader *content.ContentReader) (int, error) {
+func (sm *ArtifactoryServicesManager) DeleteFiles(reader *content.ContentReader) (int, error) {
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetServiceDetails()
 	deleteService.Threads = sm.config.GetThreads()
-	return deleteService.DeleteFiles(ResultItemReader)
+	return deleteService.DeleteFiles(reader)
 }
 
 func (sm *ArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCloser, error) {
