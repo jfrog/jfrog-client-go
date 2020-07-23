@@ -289,6 +289,19 @@ params.SourceRepo = "source-repo"
 rtManager.DownloadFiles(params)
 ```
 
+#### Promoting a docker image in Artifactory
+
+```go
+params := services.NewDockerPromoteParams(sourceRepo, targetRepo, dockerRepository)
+// Optional parameters:
+params.TargetDockerRepository = "target-docker-image"
+params.Tag = "42"
+params.TargetTag = "43"
+params.Copy = true
+
+rtManager.PromoteDocker(params)
+```
+
 #### Distributing Published Builds to JFrog Bintray
 
 ```go
