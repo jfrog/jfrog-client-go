@@ -45,6 +45,14 @@ func TestFindParentheses(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("sortNoDuplicates(%s, %s) == %v, want %v", pattern, target, got, want)
 	}
+
+	pattern = "(a)养只/(b)"
+	target = "{1}/{2}"
+	got = findParentheses(pattern, target)
+	want = []Parentheses{{0, 2}, {10, 12}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("sortNoDuplicates(%s, %s) == %v, want %v", pattern, target, got, want)
+	}
 }
 
 func TestGetPlaceHoldersValues(t *testing.T) {

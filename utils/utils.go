@@ -18,7 +18,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "0.11.0"
+	Version     = "0.12.0"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -196,11 +196,10 @@ func pathToRegExp(localPath string) string {
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
 		localPath += wildcard
 	}
-	localPath = "^" + localPath + "$"
-	return localPath
+	return "^" + localPath + "$"
 }
 
-// Replaces matched regular expression from path to corresponding {i} at target.
+// Replaces matched regular expression from path to corresponding placeholder {i} at target.
 // Example 1:
 //      pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
 //      returns "hello"
@@ -208,12 +207,24 @@ func pathToRegExp(localPath string) string {
 //      pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
 //      returns "hello"
 func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, error) {
-	if ignoreRepo {
+	asteriskIndex := strings.Index(pattern, "*")
+	slashIndex := strings.Index(pattern, "/")
+	if shouldRemoveRepo(ignoreRepo, asteriskIndex, slashIndex) {
+		// Removing the repository part of the path is required when working with virtual repositories, as the pattern
+		// may contain the virtual-repository name, but the path contains the local-repository name.
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
 	pattern = addEscapingParentheses(pattern, target)
 	pattern = pathToRegExp(pattern)
+	if slashIndex < 0 {
+		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
+		// is only the repository name.
+		dollarIndex := strings.LastIndex(pattern, "$")
+		pattern = pattern[:dollarIndex]
+		pattern += "(/.*)?$"
+	}
+
 	r, err := regexp.Compile(pattern)
 	err = errorutils.CheckError(err)
 	if err != nil {
@@ -303,6 +314,20 @@ func removeRepoFromPath(path string) string {
 		return path[idx:]
 	}
 	return path
+}
+
+func shouldRemoveRepo(ignoreRepo bool, asteriskIndex, slashIndex int) bool {
+	if !ignoreRepo || slashIndex < 0 {
+		return false
+	}
+	if asteriskIndex < 0 {
+		return true
+	}
+	return IsSlashPrecedeAsterisk(asteriskIndex, slashIndex)
+}
+
+func IsSlashPrecedeAsterisk(asteriskIndex, slashIndex int) bool {
+	return slashIndex < asteriskIndex && slashIndex >= 0
 }
 
 // Split str by the provided separator, escaping the separator if it is prefixed by a back-slash.
