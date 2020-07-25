@@ -142,21 +142,9 @@ params.MinSplitSize = 7168
 
 reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
 ```
-Use `reader.NextRecord()` and `FileInfo` type from `utils` package to iterate over the download results.
-```
-defer reader.Close()
-for file := new(utils.FileInfo); resultReader.NextRecord(file) == nil; file = new(utils.FileInfo) {
-    fmt.Printf("Download source: %s\n", file.ArtifactoryPath)
-    fmt.Printf("Download target: %s\n", file.LocalPath)
-    fmt.Printf("SHA1: %s\n", file.Sha1)
-    fmt.Printf("MD5: %s\n", file.Md5)
-}
-if err := resultReader.GetError(); err != nil {
-    return err
-}
-resultReader.Reset()
-```
+
 Read more about [ContentReader](#using-contentReader).
+
 #### Copying Files in Artifactory
 
 ```go
@@ -196,6 +184,8 @@ defer pathsToDelete.Close()
 rtManager.DeleteFiles(pathsToDelete)
 ```
 
+Read more about [ContentReader](#using-contentReader).
+
 #### Searching Files in Artifactory
 
 ```go
@@ -209,6 +199,8 @@ if err != nil {
 }
 defer reader.Close()
 ```
+
+Read more about [ContentReader](#using-contentReader).
 
 #### Setting Properties on Files in Artifactory
 
@@ -230,6 +222,8 @@ propsParams.Props = "key=value"
 rtManager.SetProps(propsParams)
 ```
 
+Read more about [ContentReader](#using-contentReader).
+
 #### Deleting Properties from Files in Artifactory
 
 ```go
@@ -249,6 +243,8 @@ propsParams.Props = "key=value"
 
 rtManager.DeleteProps(propsParams)
 ```
+
+Read more about [ContentReader](#using-contentReader).
 
 #### Publishing Build Info to Artifactory
 
@@ -938,6 +934,7 @@ if err != nil {
     return err
 }
 defer reader.Close()
+// Iterate over the results.
 for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(ResultItem)  {
     fmt.Printf("Found artifact: %s of type: %s\n", searchResult.Name, searchResult.Type)
 }
@@ -948,10 +945,10 @@ resultReader.Reset()
 ```
 
 
-`reader.NextRecord(currentResult)` load the next record from the reader into `currentResult`  of type `ResultItem`.
-`reader.Close()` remove the results reader after it is used (preferably using `defer`).
-`reader.GetError()` any error that may accur during `NextRecord()`, can be return using `GetError()`.
-`reader.Reset()` after a successful reading of the whole reader, trying to read it again will not work and will not output any error, therefore `Reset()` is required before reading again. For best practice, always reset the reader after finish reading.
+`reader.NextRecord(currentResult)` loads the next record from the reader into `currentResult`  of type `ResultItem`.
+`reader.Close()`  removes the file used by the reader after it is used (preferably using `defer`).
+`reader.GetError()` any error that may occur during `NextRecord()`, can be returned using `GetError()`.
+`reader.Reset()` sets the reader back to the begging of the input.
 
 ## Tests
 
