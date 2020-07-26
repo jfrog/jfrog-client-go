@@ -27,7 +27,9 @@ func TestCleanOldDirs(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Delete expired files.
+	oldMaxFileAge := maxFileAge
 	maxFileAge = 0
+	defer func() { maxFileAge = oldMaxFileAge }()
 	assert.NoError(t, CleanOldDirs())
 
 	// Check if the file got deleted.

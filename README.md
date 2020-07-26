@@ -257,6 +257,7 @@ defer reader.Close()
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
 propsParams.Reader = reader
+// Filter the files by properties.
 propsParams.Props = "key=value"
 
 rtManager.DeleteProps(propsParams)

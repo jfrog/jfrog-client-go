@@ -29,12 +29,13 @@ const (
 	NONE
 )
 
+// Use this function when searching by build without pattern or aql.
 // Search with builds returns many results, some are not part of the build and others may be duplicated of the same artifact.
-// To shrink the results:
 // 1. Save SHA1 values received for build-name.
 // 2. Remove artifacts that not are present on the sha1 list
 // 3. If we have more than one artifact with the same sha1:
 // 	3.1 Compare the build-name & build-number among all the artifact with the same sha1.
+// This will prevent unnecessary search upon all Artifactory:
 func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) (*content.ContentReader, error) {
 	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
 	if err != nil {
@@ -96,14 +97,14 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 		fetchedProps, err = fetchProps(specFile, flags, requiredArtifactProps, filteredReader)
 		if fetchedProps != nil {
 			defer filteredReader.Close()
-			return fetchedProps,err
+			return fetchedProps, err
 		}
 		return filteredReader, err
 	}
 	fetchedProps, err = fetchProps(specFile, flags, requiredArtifactProps, reader)
 	if fetchedProps != nil {
 		defer reader.Close()
-		return fetchedProps,err
+		return fetchedProps, err
 	}
 	return reader, err
 }
@@ -396,7 +397,7 @@ func SortAndSaveBufferToFile(paths map[string]ResultItem, pathsKeys []string, in
 // Merge all the sorted files into a single sorted file.
 func MergeSortedFiles(sortedFiles []*content.ContentReader, ascendingOrder bool) (*content.ContentReader, error) {
 	if len(sortedFiles) == 0 {
-		return content.NewEmptyContentReader(content.DefaultKey),nil
+		return content.NewEmptyContentReader(content.DefaultKey), nil
 	}
 	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
