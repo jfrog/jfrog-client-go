@@ -576,7 +576,7 @@ err := servicesManager.DeleteReplication("my-repository")
 You can create or update a permission target in Artifactory.
 Permissions are set according to the following conventions:
 `read, write, annotate, delete, manage, managedXrayMeta, distribute`
-For repositories You can specify the name `"ANY"` in order to apply to all repositories, `"ANY REMOTE"` for all remote repositories and `"ANY LOCAL"` for all local repositories.
+For repositories You can specify the name `"ANY"` in order to apply to all repositories, `"ANY REMOTE"` for all remote repositories or `"ANY LOCAL"` for all local repositories.
  
 Creating a new permission target :
 
@@ -605,6 +605,14 @@ err = servicesManager.CreatePermissionTarget(params)
 Updating an existing permission target :
 ```go
 err = servicesManager.UpdatePermissionTarget(params)
+```
+
+#### Removing a Permission Target
+
+You can remove a permission target from Artifactory using its name:
+
+```go
+servicesManager.DeletePermissionTarget("java-developers")
 ```
 
 #### Fetch Artifactory's version

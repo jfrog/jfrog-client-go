@@ -50,7 +50,7 @@ func (pts *PermissionTargetService) Update(params PermissionTargetParams) error 
 	return pts.performRequest(params, true)
 }
 
-func (pts *PermissionTargetService) performRequest(params PermissionTargetParams, isUpdate bool) error {
+func (pts *PermissionTargetService) performRequest(params PermissionTargetParams, update bool) error {
 	content, err := json.Marshal(params)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -61,7 +61,7 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 	var operationString string
 	var resp *http.Response
 	var body []byte
-	if isUpdate {
+	if update {
 		log.Info("Updating permission target...")
 		operationString = "updating"
 		resp, body, err = pts.client.SendPut(url, content, &httpClientsDetails)
