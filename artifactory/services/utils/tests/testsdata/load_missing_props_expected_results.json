@@ -1,0 +1,88 @@
+{
+  "results": [
+    {
+      "repo": "repo1",
+      "path": "b",
+      "name": "a/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "b",
+      "name": "m/",
+      "properties": [
+        {
+          "Key": "c",
+          "Value": "1"
+        }
+      ],
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "b",
+      "name": "z/",
+      "properties": [
+        {
+          "Key": "c",
+          "Value": "c"
+        }
+      ],
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "bl",
+      "name": "4/",
+      "properties": [
+        {
+          "Key": "c",
+          "Value": "1"
+        }
+      ],
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "bl",
+      "name": "b/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "bl",
+      "name": "c1/",
+      "properties": [
+        {
+          "Key": "c",
+          "Value": "1"
+        }
+      ],
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "br",
+      "name": "e/",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "br",
+      "name": "mm/",
+      "properties": [
+        {
+          "Key": "1",
+          "Value": "1"
+        }
+      ],
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "br",
+      "name": "x/",
+      "type": "folder"
+    }
+  ]
+}

@@ -3,10 +3,6 @@ package httpclient
 import (
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,6 +10,11 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/utils/tests"
 )
 
 const SUCCESS_RESPONSE = "successful response"

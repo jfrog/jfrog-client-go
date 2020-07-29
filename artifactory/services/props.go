@@ -12,6 +12,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -44,30 +45,28 @@ func (ps *PropsService) GetThreads() int {
 func (ps *PropsService) SetProps(propsParams PropsParams) (int, error) {
 	log.Info("Setting properties...")
 	totalSuccess, err := ps.performRequest(propsParams, false)
-	if err != nil {
-		return totalSuccess, err
+	if err == nil {
+		log.Info("Done setting properties.")
 	}
-	log.Info("Done setting properties.")
-	return totalSuccess, nil
+	return totalSuccess, err
 }
 
 func (ps *PropsService) DeleteProps(propsParams PropsParams) (int, error) {
 	log.Info("Deleting properties...")
 	totalSuccess, err := ps.performRequest(propsParams, true)
-	if err != nil {
-		return totalSuccess, err
+	if err == nil {
+		log.Info("Done deleting properties.")
 	}
-	log.Info("Done deleting properties.")
-	return totalSuccess, nil
+	return totalSuccess, err
 }
 
 type PropsParams struct {
-	Items []utils.ResultItem
-	Props string
+	Reader *content.ContentReader
+	Props  string
 }
 
-func (sp *PropsParams) GetItems() []utils.ResultItem {
-	return sp.Items
+func (sp *PropsParams) GetReader() *content.ContentReader {
+	return sp.Reader
 }
 
 func (sp *PropsParams) GetProps() string {
@@ -95,12 +94,12 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	}
 
 	successCounters := make([]int, ps.GetThreads())
-	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), true)
+	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
-
+	reader := propsParams.GetReader()
 	go func() {
-		for _, item := range propsParams.GetItems() {
-			relativePath := item.GetItemRelativePath()
+		for resultItem := new(utils.ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
+			relativePath := resultItem.GetItemRelativePath()
 			setPropsTask := func(threadId int) error {
 				var err error
 				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
@@ -132,6 +131,10 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 			producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
 		}
 		defer producerConsumer.Done()
+		if err := reader.GetError(); err != nil {
+			errorsQueue.AddError(err)
+		}
+		reader.Reset()
 	}()
 
 	producerConsumer.Run()
@@ -139,12 +142,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
-
-	err := errorsQueue.GetError()
-	if err != nil {
-		return totalSuccess, err
-	}
-	return totalSuccess, nil
+	return totalSuccess, errorsQueue.GetError()
 }
 
 func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {

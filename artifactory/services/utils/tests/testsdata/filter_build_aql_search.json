@@ -1,0 +1,129 @@
+{
+    "results": [
+        {
+            "repo": "repo1",
+            "path": "a",
+            "name": "ses.in",
+            "type": "file",
+            "size": 11,
+            "created": "2020-06-25T10:21:17.488+03:00",
+            "modified": "2020-06-25T10:21:17.496+03:00",
+            "actual_md5": "e53098d3d8ee1f5eb38c2ec3c783ef3d",
+            "actual_sha1": "a",
+            "properties": [
+                {
+                    "key": "ca",
+                    "value": "1"
+                },
+                {
+                    "key": "build.name",
+                    "value": "myBuild"
+                }
+            ]
+        },
+        {
+            "repo": "repo1",
+            "path": "a",
+            "name": "no.in",
+            "type": "file",
+            "size": 11,
+            "created": "2020-06-25T10:21:17.502+03:00",
+            "modified": "2020-06-25T10:21:17.510+03:00",
+            "actual_md5": "e53098d3d8ee1f5eb38c2ec3c783ef3d",
+            "actual_sha1": "a",
+            "properties": [
+                {
+                    "key": "c",
+                    "value": "1"
+                },
+                {
+                    "key": "build.name",
+                    "value": "myBuild"
+                },
+                {
+                    "key": "build.number",
+                    "value": "1"
+                }
+            ]
+        },
+        {},
+        {
+            "repo": "repo1",
+            "path": "a",
+            "name": "no.in",
+            "type": "file",
+            "size": 11,
+            "created": "2020-06-25T10:21:17.502+03:00",
+            "modified": "2020-06-25T10:21:17.510+03:00",
+            "actual_md5": "e53098d3d8ee1f5eb38c2ec3c783ef3d",
+            "actual_sha1": "a",
+            "properties": [
+                {
+                    "key": "c",
+                    "value": "1"
+                }
+            ]
+        },
+        {},
+        {
+            "repo": "repo1",
+            "path": "a",
+            "name": "yes.in",
+            "type": "file",
+            "size": 11,
+            "created": "2020-06-25T10:21:17.502+03:00",
+            "modified": "2020-06-25T10:21:17.510+03:00",
+            "actual_md5": "e53098d3d8ee1f5eb38c2ec3c783ef3d",
+            "actual_sha1": "b",
+            "properties": [
+                {
+                    "key": "css",
+                    "value": "1"
+                },
+                {
+                    "key": "build.name",
+                    "value": "myBuild"
+                }
+            ]
+        },
+        {
+            "repo": "repo1",
+            "path": "a",
+            "name": "no.in",
+            "type": "file",
+            "size": 11,
+            "created": "2020-06-25T10:21:17.502+03:00",
+            "modified": "2020-06-25T10:21:17.510+03:00",
+            "actual_md5": "e53098d3d8ee1f5eb38c2ec3c783ef3d",
+            "actual_sha1": "b",
+            "properties": [
+                {
+                    "key": "css",
+                    "value": "1"
+                }
+            ]
+        },
+        {
+            "repo": "repo1",
+            "path": "a",
+            "name": "c1.in",
+            "type": "file",
+            "size": 11,
+            "created": "2020-06-25T10:21:17.502+03:00",
+            "modified": "2020-06-25T10:21:17.510+03:00",
+            "actual_md5": "e53098d3d8ee1f5eb38c2ec3c783ef3d",
+            "actual_sha1": "c",
+            "properties": [
+                {
+                    "key": "c",
+                    "value": "1"
+                }
+            ]
+        }
+    ],
+    "range": {
+        "start_pos": 0,
+        "end_pos": 5,
+        "total": 5
+    }
+}

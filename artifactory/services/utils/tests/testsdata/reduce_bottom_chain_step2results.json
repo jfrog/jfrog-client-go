@@ -1,0 +1,19 @@
+{
+  "results": [
+    {
+      "repo": "repo1",
+      "path": "c",
+      "name": "file2.file"
+    },
+    {
+      "repo": "repo1",
+      "path": "b/c",
+      "name": "file3.file"
+    },
+    {
+      "repo": "repo1",
+      "path": "a",
+      "name": "file.file"
+    }
+  ]
+}

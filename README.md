@@ -152,19 +152,7 @@ params.MinSplitSize = 7168
 reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
 ```
 
-Use `reader.NextRecord()` and `FileInfo` type from `utils` package to iterate over the download results.
-Use `reader.Close()` method (preferably using `defer`), to remove the results reader after it is used:
-
-```
-defer reader.Close()
-var file utils.FileInfo
-for e := resultReader.NextRecord(&file); e == nil; e = resultReader.NextRecord(&file) {
-    fmt.Printf("Download source: %s\n", file.ArtifactoryPath)
-    fmt.Printf("Download target: %s\n", file.LocalPath)
-    fmt.Printf("SHA1: %s\n", file.Sha1)
-    fmt.Printf("MD5: %s\n", file.Md5)
-}
-```
+Read more about [ContentReader](#using-contentReader).
 
 #### Copying Files in Artifactory
 
@@ -203,9 +191,15 @@ params.Pattern = "repo/*/*.zip"
 params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 
-pathsToDelete := rtManager.GetPathsToDelete(params)
+pathsToDelete, err := rtManager.GetPathsToDelete(params)
+if err != nil {
+    return err
+}
+defer pathsToDelete.Close()
 rtManager.DeleteFiles(pathsToDelete)
 ```
+
+Read more about [ContentReader](#using-contentReader).
 
 #### Searching Files in Artifactory
 
@@ -216,8 +210,14 @@ params.Pattern = "repo/*/*.zip"
 params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 
-rtManager.SearchFiles(params)
+reader, err := rtManager.SearchFiles(params)
+if err != nil {
+    return err
+}
+defer reader.Close()
 ```
+
+Read more about [ContentReader](#using-contentReader).
 
 #### Setting Properties on Files in Artifactory
 
@@ -226,16 +226,21 @@ searchParams = services.NewSearchParams()
 searchParams.Recursive = true
 searchParams.IncludeDirs = false
 
-resultItems = rtManager.SearchFiles(searchParams)
-
+reader, err = rtManager.SearchFiles(searchParams)
+if err != nil {
+    return err
+}
+defer reader.Close()
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
-propsParams.Items = resultItems
+propsParams.Reader = reader
 // Filter the files by properties.
 propsParams.Props = "key=value"
 
 rtManager.SetProps(propsParams)
 ```
+
+Read more about [ContentReader](#using-contentReader).
 
 #### Deleting Properties from Files in Artifactory
 
@@ -244,16 +249,21 @@ searchParams = services.NewSearchParams()
 searchParams.Recursive = true
 searchParams.IncludeDirs = false
 
-resultItems = rtManager.SearchFiles(searchParams)
-
+resultItems, err = rtManager.SearchFiles(searchParams)
+if err != nil {
+    return err
+}
+defer reader.Close()
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
-propsParams.Items = resultItems
+propsParams.Reader = reader
 // Filter the files by properties.
 propsParams.Props = "key=value"
 
 rtManager.DeleteProps(propsParams)
 ```
+
+Read more about [ContentReader](#using-contentReader).
 
 #### Publishing Build Info to Artifactory
 
@@ -338,8 +348,10 @@ params.Refs = "refs/remotes/*"
 params.Repo = "my-project-lfs"
 params.GitPath = "path/to/git"
 
-filesToDelete := rtManager.GetUnreferencedGitLfsFiles(params)
-rtManager.DeleteFiles(filesToDelete)
+reader,err := rtManager.GetUnreferencedGitLfsFiles(params)
+
+defer reader.Close()
+rtManager.DeleteFiles(reader)
 ```
 
 #### Executing AQLs
@@ -954,6 +966,33 @@ path, err = versions.CreatePath("subject/repo/pkg/version")
 
 btManager.MavenCentralContentSync(params, path)
 ```
+
+#### Using ContentReader
+
+Some APIs return a content.ContentReader which allow reading the API output.
+Here's an example for how it can be used:
+
+```go
+reader, err := servicesManager.SearchFiles(searchParams)
+if err != nil {
+    return err
+}
+defer reader.Close()
+// Iterate over the results.
+for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(ResultItem)  {
+    fmt.Printf("Found artifact: %s of type: %s\n", searchResult.Name, searchResult.Type)
+}
+if err := resultReader.GetError(); err != nil {
+    return err
+}
+resultReader.Reset()
+```
+
+
+`reader.NextRecord(currentResult)` loads the next record from the reader into `currentResult`  of type `ResultItem`.
+`reader.Close()`  removes the file used by the reader after it is used (preferably using `defer`).
+`reader.GetError()` any error that may occur during `NextRecord()`, can be returned using `GetError()`.
+`reader.Reset()` sets the reader back to the begging of the input.
 
 ## Tests
 

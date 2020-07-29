@@ -350,18 +350,20 @@ func artifactoryCleanup(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	deleteItems := make([]utils.ResultItem, len(toDelete))
-	for i, item := range toDelete {
-		deleteItems[i] = item
-	}
-	testsDeleteService.SetThreads(3)
-	deletedCount, err := testsDeleteService.DeleteFiles(deleteItems)
+	defer toDelete.Close()
+	NumberOfItemToDelete, err := toDelete.Length()
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	if len(toDelete) != deletedCount {
-		t.Errorf("Failed to delete files from Artifactory expected %d items to be deleted got %d.", len(toDelete), deletedCount)
+	testsDeleteService.SetThreads(3)
+	deletedCount, err := testsDeleteService.DeleteFiles(toDelete)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if NumberOfItemToDelete != deletedCount {
+		t.Errorf("Failed to delete files from Artifactory expected %d items to be deleted got %d.", NumberOfItemToDelete, deletedCount)
 	}
 }
 
