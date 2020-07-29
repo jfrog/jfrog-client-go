@@ -989,7 +989,7 @@ resultReader.Reset()
 ```
 
 
-`reader.NextRecord(currentResult)` loads the next record from the reader into `currentResult`  of type `ResultItem`.
+`reader.NextRecord(currentResult)` loads the next record from the reader into `currentResult` of type `ResultItem`.
 `reader.Close()`  removes the file used by the reader after it is used (preferably using `defer`).
 `reader.GetError()` any error that may occur during `NextRecord()`, can be returned using `GetError()`.
 `reader.Reset()` sets the reader back to the begging of the input.

@@ -11,6 +11,7 @@ func TestCleanOldDirs(t *testing.T) {
 	tempDir, err := CreateTempDir()
 	assert.NoError(t, err)
 	tempFile, err := CreateTempFile()
+	tempFile.Close()
 	assert.NoError(t, err)
 
 	// Check file exists.
@@ -41,14 +42,14 @@ func TestCleanOldDirs(t *testing.T) {
 
 func TestExtractTimestamp(t *testing.T) {
 	// Extract time from a file.
-	fileName := "jfrog.cli.temp.008652489-1595147819.json"
+	fileName := "jfrog.cli.temp.-008652489-1595147819.json"
 	timeStamp, err := extractTimestamp(fileName)
 	assert.NoError(t, err)
-	assert.Equal(t, timeStamp.Unix(), int64(1595147819))
+	assert.Equal(t, int64(8652489), timeStamp.Unix())
 
 	// Extract time from a dir.
-	fileName = "jfrog.cli.temp.008652489-1595147444"
+	fileName = "asd-asjfrog.cli.temp.-008652489-1595147444"
 	timeStamp, err = extractTimestamp(fileName)
 	assert.NoError(t, err)
-	assert.Equal(t, timeStamp.Unix(), int64(1595147444))
+	assert.Equal(t, int64(8652489), timeStamp.Unix())
 }
