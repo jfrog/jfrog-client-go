@@ -16,5 +16,5 @@ func getBaseTestDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(pwd, "tests", "testsdata"), nil
+	return filepath.Join(pwd, "tests", "testdata"), nil
 }

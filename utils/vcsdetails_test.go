@@ -9,7 +9,7 @@ import (
 )
 
 func TestVcsDetails(t *testing.T) {
-	projectPath, tmpDir := initVcsTestDir(t, filepath.Join("testsdata", "vcs"))
+	projectPath, tmpDir := initVcsTestDir(t, filepath.Join("testdata", "vcs"))
 	defer fileutils.RemoveTempDir(tmpDir)
 	vcsDetails := NewVcsDetals()
 	revision, url, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))

@@ -431,7 +431,7 @@ func execCreateRepoRest(repoConfig, repoName string) error {
 
 func getTestDataPath() string {
 	dir, _ := os.Getwd()
-	return filepath.Join(dir, "testsdata")
+	return filepath.Join(dir, "testdata")
 }
 
 func FixWinPath(filePath string) string {
