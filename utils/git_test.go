@@ -8,11 +8,11 @@ import (
 )
 
 func TestGitManager(t *testing.T) {
-	// Test the following .git types, on their corresponding paths in testsdata.
+	// Test the following .git types, on their corresponding paths in testdata.
 	tests := []string{"vcs", "packedVcs"}
 	for _, test := range tests {
 		t.Run(test, func(t *testing.T) {
-			projectPath, tmpDir := initVcsTestDir(t, filepath.Join("testsdata", test))
+			projectPath, tmpDir := initVcsTestDir(t, filepath.Join("testdata", test))
 			defer fileutils.RemoveTempDir(tmpDir)
 			gitManager := NewGitManager(projectPath)
 			err := gitManager.ReadConfig()

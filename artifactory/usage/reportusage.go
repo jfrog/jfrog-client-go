@@ -28,7 +28,7 @@ func SendReportUsage(productId, commandName string, serviceManager *artifactory.
 	}
 	url, err := utils.BuildArtifactoryUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
 	if err != nil {
-		return err
+		return errors.New(ReportUsagePrefix + err.Error())
 	}
 	clientDetails := rtDetails.CreateHttpClientDetails()
 	// Check Artifactory version
