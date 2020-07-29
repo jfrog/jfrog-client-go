@@ -15,7 +15,6 @@ import (
 
 const (
 	tempPrefix     = "jfrog.cli.temp."
-	tempFileSuffix = ".json"
 )
 
 // Max temp file age in hours
