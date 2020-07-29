@@ -35,7 +35,7 @@ func CreateTempDir() (string, error) {
 		return "", errorutils.CheckError(errors.New("Temp dir cannot be created in an empty base dir."))
 	}
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	path, err := ioutil.TempDir(tempDirBase, tempPrefix+"*-"+timestamp)
+	path, err := ioutil.TempDir(tempDirBase, tempPrefix+"-"+timestamp+"-")
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
@@ -65,7 +65,7 @@ func CreateTempFile() (*os.File, error) {
 		return nil, errorutils.CheckError(errors.New("Temp File cannot be created in an empty base dir."))
 	}
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	fd, err := ioutil.TempFile(tempDirBase, tempPrefix+"*-"+timestamp+tempFileSuffix)
+	fd, err := ioutil.TempFile(tempDirBase, tempPrefix+"-"+timestamp+"-")
 	return fd, err
 }
 
@@ -99,8 +99,9 @@ func CleanOldDirs() error {
 
 func extractTimestamp(item string) (time.Time, error) {
 	// Get timestamp from file/dir.
-	idx := strings.Index(item, "-") + 1
-	timestampStr := strings.TrimSuffix(item[idx:], tempFileSuffix)
+	endTimestampIdx := strings.LastIndex(item, "-")
+	beginingTimestampIdx := strings.LastIndex(item[:endTimestampIdx], "-")
+	timestampStr := item[beginingTimestampIdx+1:endTimestampIdx]
 	// Convert to int.
 	timeStampint, err := strconv.ParseInt(timestampStr, 10, 64)
 	if err != nil {

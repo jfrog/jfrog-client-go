@@ -41,14 +41,14 @@ func TestCleanOldDirs(t *testing.T) {
 
 func TestExtractTimestamp(t *testing.T) {
 	// Extract time from a file.
-	fileName := "jfrog.cli.temp.008652489-1595147819.json"
+	fileName := "jfrog.cli.temp.-008652489-1595147819.json"
 	timeStamp, err := extractTimestamp(fileName)
 	assert.NoError(t, err)
-	assert.Equal(t, timeStamp.Unix(), int64(1595147819))
+	assert.Equal(t, int64(8652489), timeStamp.Unix())
 
 	// Extract time from a dir.
-	fileName = "jfrog.cli.temp.008652489-1595147444"
+	fileName = "asd-asjfrog.cli.temp.-008652489-1595147444"
 	timeStamp, err = extractTimestamp(fileName)
 	assert.NoError(t, err)
-	assert.Equal(t, timeStamp.Unix(), int64(1595147444))
+	assert.Equal(t, int64(8652489), timeStamp.Unix())
 }
