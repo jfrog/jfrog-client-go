@@ -429,7 +429,7 @@ Example for creating local Generic repository:
 
 ```go
 params := services.NewGenericLocalRepositoryParams()
-pparams.Key = "generic-repo"
+params.Key = "generic-repo"
 params.Description = "This is a public description for generic-repo"
 params.Notes = "These are internal notes for generic-repo"
 params.RepoLayoutRef = "simple-default"
@@ -582,6 +582,49 @@ You can remove a repository replication configuration from Artifactory using its
 
 ```go
 err := servicesManager.DeleteReplication("my-repository")
+```
+
+#### Creating and Updating Permission Target
+You can create or update a permission target in Artifactory.
+Permissions are set according to the following conventions:
+`read, write, annotate, delete, manage, managedXrayMeta, distribute`
+For repositories You can specify the name `"ANY"` in order to apply to all repositories, `"ANY REMOTE"` for all remote repositories or `"ANY LOCAL"` for all local repositories.
+ 
+Creating a new permission target :
+
+```go
+params := services.NewPermissionTargetParams()
+params.Name = "java-developers"
+params.Repo.Repositories = []string{"ANY REMOTE", "local-repo1", "local-repo2"}
+params.Repo.ExcludePatterns = []string{"dir/*"}
+params.Repo.Actions.Users = map[string][]string {
+	"user1" : {"read", "write"},
+    "user2" : {"write","annotate", "read"},
+}
+params.Repo.Actions.Groups = map[string][]string {
+	"group1" : {"manage","read","annotate"},
+}
+// This is the default value that cannot be changed
+params.Build.Repositories = []string{"artifactory-build-info"}
+params.Build.Actions.Groups = map[string][]string {
+	"group1" : {"manage","read","write","annotate","delete"},
+	"group2" : {"read"},
+
+}
+
+err = servicesManager.CreatePermissionTarget(params)
+```
+Updating an existing permission target :
+```go
+err = servicesManager.UpdatePermissionTarget(params)
+```
+
+#### Removing a Permission Target
+
+You can remove a permission target from Artifactory using its name:
+
+```go
+servicesManager.DeletePermissionTarget("java-developers")
 ```
 
 #### Fetch Artifactory's version
