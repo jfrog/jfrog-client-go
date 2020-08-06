@@ -20,6 +20,7 @@ type ReplicationParams struct {
 	Password               string
 	Url                    string
 	CronExp                string
+	// Source repository which configuration will be load to.
 	RepoKey                string
 	EnableEventReplication bool
 	SocketTimeoutMillis    int

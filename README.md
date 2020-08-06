@@ -535,6 +535,7 @@ Example of creating repository replication:
 
 ```go
 params := services.NewCreateReplicationParams()
+// Source repository which configuration will be load to.
 params.RepoKey = "my-repository"
 params.CronExp = "0 0 12 * * ?"
 params.Username = "admin"
@@ -555,6 +556,7 @@ Updating local repository replication:
 
 ```go
 params := services.NewUpdateReplicationParams()
+// Source repository which configuration will be load to.
 params.RepoKey = "my-repository"
 params.CronExp = "0 0 12 * * ?"
 params.Enabled = true
@@ -589,7 +591,7 @@ You can create or update a permission target in Artifactory.
 Permissions are set according to the following conventions:
 `read, write, annotate, delete, manage, managedXrayMeta, distribute`
 For repositories You can specify the name `"ANY"` in order to apply to all repositories, `"ANY REMOTE"` for all remote repositories or `"ANY LOCAL"` for all local repositories.
- 
+
 Creating a new permission target :
 
 ```go
