@@ -16,11 +16,11 @@ type ReplicationBody struct {
 }
 
 type ReplicationParams struct {
-	Username               string
-	Password               string
-	Url                    string
-	CronExp                string
-	// Source repository which configuration will be load to.
+	Username string
+	Password string
+	Url      string
+	CronExp  string
+	// Source replication repository.
 	RepoKey                string
 	EnableEventReplication bool
 	SocketTimeoutMillis    int

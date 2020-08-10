@@ -535,7 +535,7 @@ Example of creating repository replication:
 
 ```go
 params := services.NewCreateReplicationParams()
-// Source repository which configuration will be load to.
+// Source replication repository.
 params.RepoKey = "my-repository"
 params.CronExp = "0 0 12 * * ?"
 params.Username = "admin"
@@ -556,7 +556,7 @@ Updating local repository replication:
 
 ```go
 params := services.NewUpdateReplicationParams()
-// Source repository which configuration will be load to.
+// Source replication repository.
 params.RepoKey = "my-repository"
 params.CronExp = "0 0 12 * * ?"
 params.Enabled = true
