@@ -1,13 +1,14 @@
 package httpclient
 
 import (
+	"io"
+	"net/http"
+	"net/url"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"io"
-	"net/http"
-	"net/url"
 )
 
 type ArtifactoryHttpClient struct {
@@ -29,6 +30,13 @@ func (rtc *ArtifactoryHttpClient) SendPost(url string, content []byte, httpClien
 		return
 	}
 	return rtc.httpClient.SendPost(url, content, *httpClientsDetails)
+}
+
+func (rtc *ArtifactoryHttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (*http.Response, error) {
+	if err := (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails); err != nil {
+		return nil, err
+	}
+	return rtc.httpClient.SendPostLeaveBodyOpen(url, content, *httpClientsDetails)
 }
 
 func (rtc *ArtifactoryHttpClient) SendPostForm(url string, data url.Values, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {

@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "repo": "repo1",
+      "path": "c/x",
+      "name": "1234.1234"
+    },
+    {
+      "repo": "repo1",
+      "path": "b/k/c"
+    },
+    {
+      "repo": "repo1",
+      "path": "b/c"
+    },
+    {
+      "repo": "repo1",
+      "path": "a/b",
+      "name": "foo.foo"
+    }
+  ]
+}

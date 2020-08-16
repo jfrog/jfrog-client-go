@@ -53,71 +53,48 @@ type Response struct {
 	Arr []outputRecord `json:"arr"`
 }
 
-func writeTestRecords(t *testing.T, rw *ContentWriter) {
+func writeTestRecords(t *testing.T, cw *ContentWriter) {
 	var sendersWaiter sync.WaitGroup
 	for i := 0; i < len(records); i += 3 {
 		sendersWaiter.Add(1)
 		go func(start, end int) {
 			defer sendersWaiter.Done()
 			for j := start; j < end; j++ {
-				rw.Write(records[j])
+				cw.Write(records[j])
 			}
 		}(i, i+3)
 	}
 	sendersWaiter.Wait()
-	err := rw.Close()
-	assert.NoError(t, err)
+	assert.NoError(t, cw.Close())
 }
 
 func TestContentWriter(t *testing.T) {
-	rw, err := NewContentWriter("arr", true, false)
+	writer, err := NewContentWriter("arr", true, false)
 	assert.NoError(t, err)
-	writeTestRecords(t, rw)
-	of, err := os.Open(rw.GetFilePath())
+	writeTestRecords(t, writer)
+	of, err := os.Open(writer.GetFilePath())
 	assert.NoError(t, err)
 	byteValue, _ := ioutil.ReadAll(of)
 	var response Response
-	err = json.Unmarshal(byteValue, &response)
-	assert.NoError(t, err)
-	err = of.Close()
-	assert.NoError(t, err)
-	err = rw.RemoveOutputFilePath()
-	assert.NoError(t, err)
+	assert.NoError(t, json.Unmarshal(byteValue, &response))
+	assert.NoError(t, of.Close())
+	assert.NoError(t, writer.RemoveOutputFilePath())
 	for i := range records {
 		assert.Contains(t, response.Arr, records[i], "record %s missing", records[i].StrKey)
 	}
 }
 
-func TestContentReadeAfterWriter(t *testing.T) {
-	rw, err := NewContentWriter("results", true, false)
+func TestContentReaderAfterWriter(t *testing.T) {
+	writer, err := NewContentWriter(DefaultKey, true, false)
 	assert.NoError(t, err)
-	writeTestRecords(t, rw)
-	rr := NewContentReader(rw.GetFilePath(), "results")
-	assert.NoError(t, err)
-	defer rr.Close()
+	writeTestRecords(t, writer)
+	reader := NewContentReader(writer.GetFilePath(), DefaultKey)
+	defer reader.Close()
 	recordCount := 0
-	var r outputRecord
-	for e := rr.NextRecord(&r); e == nil; e = rr.NextRecord(&r) {
-		assert.Contains(t, records, r, "record %s missing", r.StrKey)
+	for item := new(outputRecord); reader.NextRecord(item) == nil; item = new(outputRecord) {
+		assert.Contains(t, records, *item, "record %s missing", item.StrKey)
 		recordCount++
 	}
-	assert.NoError(t, rr.GetError())
+	assert.NoError(t, reader.GetError())
 	assert.Equal(t, len(records), recordCount, "The amount of records were read (%d) is different then expected", recordCount)
-}
-
-func TestRemoveOutputFilePath(t *testing.T) {
-	// Create a file.
-	rw, err := NewContentWriter("results", true, false)
-	assert.NoError(t, err)
-	rw.Close()
-	filePathToBeDeleted := rw.GetFilePath()
-
-	// Check file exists
-	_, err = os.Stat(filePathToBeDeleted)
-	assert.NoError(t, err)
-
-	// Check if the file got deleted
-	rw.RemoveOutputFilePath()
-	_, err = os.Stat(filePathToBeDeleted)
-	assert.True(t, os.IsNotExist(err))
 }

@@ -2,14 +2,18 @@ package utils
 
 import (
 	"fmt"
-	gofrogio "github.com/jfrog/gofrog/io"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"strings"
 	"testing"
+
+	gofrogio "github.com/jfrog/gofrog/io"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-func TestRemoveCredentialsFromLine(t *testing.T) {
+func init() {
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
+}
+
+func TestRemoveCredentialsFromLine(t *testing.T) {
 	regExpProtocol, err := GetRegExp(CredentialsInUrlRegexp)
 	if err != nil {
 		t.Error(err)

@@ -2,11 +2,11 @@ package io
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
-	"strconv"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
 func TestNewMultiFileReaderAt(t *testing.T) {
@@ -29,8 +29,8 @@ func TestNewMultiFileReaderAt(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			files := []string{}
 			// Create file with content
-			for k, v := range test.filesContent {
-				f, err := ioutil.TempFile("", strconv.Itoa(k))
+			for _, v := range test.filesContent {
+				f, err := fileutils.CreateTempFile()
 				if err != nil {
 					t.Error(err)
 				}

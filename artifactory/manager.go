@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
@@ -12,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
 
 type ArtifactoryServicesManager struct {
@@ -89,6 +89,24 @@ func (sm *ArtifactoryServicesManager) GetRepository(repoKey string) (*services.R
 	return getRepositoryService.Get(repoKey)
 }
 
+func (sm *ArtifactoryServicesManager) CreatePermissionTarget(params services.PermissionTargetParams) error {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Create(params)
+}
+
+func (sm *ArtifactoryServicesManager) UpdatePermissionTarget(params services.PermissionTargetParams) error {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Update(params)
+}
+
+func (sm *ArtifactoryServicesManager) DeletePermissionTarget(permissionTargetName string) error {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Delete(permissionTargetName)
+}
+
 func (sm *ArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo) error {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
@@ -122,19 +140,19 @@ func (sm *ArtifactoryServicesManager) XrayScanBuild(params services.XrayScanPara
 	return xrayScanService.ScanBuild(params)
 }
 
-func (sm *ArtifactoryServicesManager) GetPathsToDelete(params services.DeleteParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManager) GetPathsToDelete(params services.DeleteParams) (*content.ContentReader, error) {
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetServiceDetails()
 	return deleteService.GetPathsToDelete(params)
 }
 
-func (sm *ArtifactoryServicesManager) DeleteFiles(resultItems []utils.ResultItem) (int, error) {
+func (sm *ArtifactoryServicesManager) DeleteFiles(reader *content.ContentReader) (int, error) {
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetServiceDetails()
 	deleteService.Threads = sm.config.GetThreads()
-	return deleteService.DeleteFiles(resultItems)
+	return deleteService.DeleteFiles(reader)
 }
 
 func (sm *ArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCloser, error) {
@@ -160,7 +178,7 @@ func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadP
 
 func (sm *ArtifactoryServicesManager) DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error) {
 	downloadService := sm.initDownloadService()
-	rw, err := content.NewContentWriter("results", true, false)
+	rw, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return
 	}
@@ -169,24 +187,24 @@ func (sm *ArtifactoryServicesManager) DownloadFilesWithResultReader(params ...se
 	if err != nil {
 		return
 	}
-	resultReader = content.NewContentReader(downloadService.ResultWriter.GetFilePath(), "results")
+	resultReader = content.NewContentReader(downloadService.ResultWriter.GetFilePath(), content.DefaultKey)
 	return
 }
 
-func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error) {
 	gitLfsCleanService := services.NewGitLfsCleanService(sm.client)
 	gitLfsCleanService.DryRun = sm.config.IsDryRun()
 	gitLfsCleanService.ArtDetails = sm.config.GetServiceDetails()
 	return gitLfsCleanService.GetUnreferencedGitLfsFiles(params)
 }
 
-func (sm *ArtifactoryServicesManager) SearchFiles(params services.SearchParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManager) SearchFiles(params services.SearchParams) (*content.ContentReader, error) {
 	searchService := services.NewSearchService(sm.client)
 	searchService.ArtDetails = sm.config.GetServiceDetails()
 	return searchService.Search(params)
 }
 
-func (sm *ArtifactoryServicesManager) Aql(aql string) ([]byte, error) {
+func (sm *ArtifactoryServicesManager) Aql(aql string) (io.ReadCloser, error) {
 	aqlService := services.NewAqlService(sm.client)
 	aqlService.ArtDetails = sm.config.GetServiceDetails()
 	return aqlService.ExecAql(aql)

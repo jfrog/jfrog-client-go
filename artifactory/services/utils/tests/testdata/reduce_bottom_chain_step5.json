@@ -1,0 +1,39 @@
+{
+    "results": [
+        {
+            "Repo": "repo1",
+            "Path": "a",
+            "Name": ""
+        },
+        {
+            "Repo": "repo1",
+            "Path": "c",
+            "Name": ""
+        },
+        {
+            "Repo": "repo1",
+            "Path": "b/c",
+            "Name": ""
+        },
+        {
+            "Repo": "repo1",
+            "Path": "b/",
+            "Name": ""
+        },
+        {
+            "Repo": "repo1",
+            "Path": "b/k/c",
+            "Name": ""
+        },
+        {
+            "Repo": "repo1",
+            "Path": "a/b",
+            "Name": "foo.foo"
+        },
+        {
+            "Repo": "repo1",
+            "Path": "c/x",
+            "Name": "1234.1234"
+        }
+    ]
+}
