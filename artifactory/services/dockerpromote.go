@@ -79,21 +79,21 @@ func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error 
 }
 
 type DockerPromoteParams struct {
+	DockerRepository       string
 	SourceRepo             string
 	TargetRepo             string
-	DockerRepository       string
 	TargetDockerRepository string
 	Tag                    string
 	TargetTag              string
 	Copy                   bool
 }
 
-func (dp *DockerPromoteParams) GetTargetRepo() string {
-	return dp.TargetRepo
-}
-
 func (dp *DockerPromoteParams) GetDockerRepository() string {
 	return dp.DockerRepository
+}
+
+func (dp *DockerPromoteParams) GetTargetRepo() string {
+	return dp.TargetRepo
 }
 
 func (dp *DockerPromoteParams) GetTargetDockerRepository() string {
@@ -112,11 +112,11 @@ func (dp *DockerPromoteParams) IsCopy() bool {
 	return dp.Copy
 }
 
-func NewDockerPromoteParams(sourceRepo, targetRepo, dockerRepository string) DockerPromoteParams {
+func NewDockerPromoteParams(dockerRepository, sourceRepo, targetRepo string) DockerPromoteParams {
 	return DockerPromoteParams{
+		DockerRepository: dockerRepository,
 		SourceRepo:       sourceRepo,
 		TargetRepo:       targetRepo,
-		DockerRepository: dockerRepository,
 	}
 }
 

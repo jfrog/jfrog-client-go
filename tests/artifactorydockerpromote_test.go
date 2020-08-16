@@ -76,7 +76,7 @@ func createDockerPromoteService(t *testing.T, url string) *services.DockerPromot
 }
 
 func createTestParams() services.DockerPromoteParams {
-	params := services.NewDockerPromoteParams(sourceRepo, targetRepo, dockerRepo)
+	params := services.NewDockerPromoteParams(dockerRepo, sourceRepo, targetRepo)
 	params.TargetDockerRepository = targetDockerRepo
 	params.Tag = tag
 	params.TargetTag = targetTag
