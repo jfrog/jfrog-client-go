@@ -329,6 +329,12 @@ func (sm *ArtifactoryServicesManager) GetServiceId() (string, error) {
 	return systemService.GetServiceId()
 }
 
+func (sm *ArtifactoryServicesManager) PromoteDocker(params services.DockerPromoteParams) error {
+	systemService := services.NewDockerPromoteService(sm.client)
+	systemService.ArtDetails = sm.config.GetServiceDetails()
+	return systemService.PromoteDocker(params)
+}
+
 func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
 	return sm.client
 }
