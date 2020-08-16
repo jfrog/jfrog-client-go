@@ -302,10 +302,14 @@ rtManager.DownloadFiles(params)
 #### Promoting a docker image in Artifactory
 
 ```go
-params := services.NewDockerPromoteParams(sourceRepo, targetRepo, dockerRepository)
+sourceDockerImage := "hello-world"
+sourceRepo := "docker-local-1"
+targetRepo := "docker-local-2"
+params := services.NewDockerPromoteParams(sourceDockerImage, sourceRepo, targetRepo)
+
 // Optional parameters:
-params.TargetDockerRepository = "target-docker-image"
-params.Tag = "42"
+params.TargetDockerImage = "target-docker-image"
+params.SourceTag = "42"
 params.TargetTag = "43"
 params.Copy = true
 

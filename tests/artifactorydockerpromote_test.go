@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	sourceRepo       = "source-repo"
-	targetRepo       = "target-repo"
-	dockerRepo       = "docker-repo"
-	targetDockerRepo = "target-docker-repo"
-	tag              = "tag"
-	targetTag        = "target-tag"
-	copy             = true
+	sourceRepo        = "source-repo"
+	targetRepo        = "target-repo"
+	sourceDockerImage = "source-docker-image"
+	targetDockerImage = "target-docker-image"
+	sourceTag         = "source-tag"
+	targetTag         = "target-tag"
+	copy              = true
 )
 
 func TestDockerPromote(t *testing.T) {
@@ -39,9 +39,9 @@ func TestDockerPromote(t *testing.T) {
 		err = json.Unmarshal(body, &response)
 		assert.NoError(t, err)
 		assert.Equal(t, targetRepo, response.TargetRepo)
-		assert.Equal(t, dockerRepo, response.DockerRepository)
-		assert.Equal(t, targetDockerRepo, response.TargetDockerRepository)
-		assert.Equal(t, tag, response.Tag)
+		assert.Equal(t, sourceDockerImage, response.DockerRepository)
+		assert.Equal(t, targetDockerImage, response.TargetDockerRepository)
+		assert.Equal(t, sourceTag, response.Tag)
 		assert.Equal(t, targetTag, response.TargetTag)
 		assert.Equal(t, copy, response.Copy)
 
@@ -76,9 +76,9 @@ func createDockerPromoteService(t *testing.T, url string) *services.DockerPromot
 }
 
 func createTestParams() services.DockerPromoteParams {
-	params := services.NewDockerPromoteParams(dockerRepo, sourceRepo, targetRepo)
-	params.TargetDockerRepository = targetDockerRepo
-	params.Tag = tag
+	params := services.NewDockerPromoteParams(sourceDockerImage, sourceRepo, targetRepo)
+	params.TargetDockerImage = targetDockerImage
+	params.SourceTag = sourceTag
 	params.TargetTag = targetTag
 	params.Copy = copy
 	return params

@@ -50,9 +50,9 @@ func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error 
 	// Create body
 	data := DockerPromoteBody{
 		TargetRepo:             params.TargetRepo,
-		DockerRepository:       params.DockerRepository,
-		TargetDockerRepository: params.TargetDockerRepository,
-		Tag:                    params.Tag,
+		DockerRepository:       params.SourceDockerImage,
+		TargetDockerRepository: params.TargetDockerImage,
+		Tag:                    params.SourceTag,
 		TargetTag:              params.TargetTag,
 		Copy:                   params.Copy,
 	}
@@ -79,29 +79,39 @@ func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error 
 }
 
 type DockerPromoteParams struct {
-	DockerRepository       string
-	SourceRepo             string
-	TargetRepo             string
-	TargetDockerRepository string
-	Tag                    string
-	TargetTag              string
-	Copy                   bool
-}
+	// Mandatory:
+	// The name of the source repository in Artifactory, e.g. "docker-local-1". Supported by local repositories only.
+	SourceRepo string
+	// The name of the target repository in Artifactory, e.g. "docker-local-2". Supported by local repositories only.
+	TargetRepo string
+	// The name of the source Docker image, e.g. "hello-world".
+	SourceDockerImage string
 
-func (dp *DockerPromoteParams) GetDockerRepository() string {
-	return dp.DockerRepository
+	// Optional:
+	// The name of the target Docker image, e.g "hello-world2". If not specified - will use the same name as 'SourceDockerImage'.
+	TargetDockerImage string
+	// The name of the source image tag. If not specified - the entire docker repository will be promoted.
+	SourceTag string
+	// The name of the target image tag. If not specified - will use the same tag as 'SourceTag'.
+	TargetTag string
+	// If set to true, will do copy instead of move.
+	Copy bool
 }
 
 func (dp *DockerPromoteParams) GetTargetRepo() string {
 	return dp.TargetRepo
 }
 
-func (dp *DockerPromoteParams) GetTargetDockerRepository() string {
-	return dp.TargetDockerRepository
+func (dp *DockerPromoteParams) GetSourceDockerImage() string {
+	return dp.SourceDockerImage
 }
 
-func (dp *DockerPromoteParams) GetTag() string {
-	return dp.Tag
+func (dp *DockerPromoteParams) GetTargetDockerRepository() string {
+	return dp.TargetDockerImage
+}
+
+func (dp *DockerPromoteParams) GetSourceTag() string {
+	return dp.SourceTag
 }
 
 func (dp *DockerPromoteParams) GetTargetTag() string {
@@ -112,11 +122,11 @@ func (dp *DockerPromoteParams) IsCopy() bool {
 	return dp.Copy
 }
 
-func NewDockerPromoteParams(dockerRepository, sourceRepo, targetRepo string) DockerPromoteParams {
+func NewDockerPromoteParams(sourceDockerImage, sourceRepo, targetRepo string) DockerPromoteParams {
 	return DockerPromoteParams{
-		DockerRepository: dockerRepository,
-		SourceRepo:       sourceRepo,
-		TargetRepo:       targetRepo,
+		SourceDockerImage: sourceDockerImage,
+		SourceRepo:        sourceRepo,
+		TargetRepo:        targetRepo,
 	}
 }
 
