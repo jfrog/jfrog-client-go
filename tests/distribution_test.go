@@ -21,12 +21,18 @@ type distributableDistributionStatus string
 type receivedDistributionStatus string
 
 const (
-	open                           distributableDistributionStatus = "OPEN"
-	readyForDistribution           distributableDistributionStatus = "READY_FOR_DISTRIBUTION"
-	signed                         distributableDistributionStatus = "SIGNED"
-	gpgKeyId                                                       = "234503"
-	artifactoryGpgKeyCreatePattern                                 = `{"alias":"cli tests distribution key","public_key":"%s"}`
-	bundleVersion                                                  = "10"
+	// Release bundle created and open for changes:
+	open distributableDistributionStatus = "OPEN"
+	// Relese bundle is signed, but not stored:
+	signed distributableDistributionStatus = "SIGNED"
+	// Release bundle is signed and stored, but not scanned by Xray:
+	stored distributableDistributionStatus = "STORED"
+	// Release bundle is signed, stored and scanned by Xray:
+	readyForDistribution distributableDistributionStatus = "READY_FOR_DISTRIBUTION"
+
+	gpgKeyId                       = "234503"
+	artifactoryGpgKeyCreatePattern = `{"alias":"cli tests distribution key","public_key":"%s"}`
+	bundleVersion                  = "10"
 )
 
 var httpClient *httpclient.HttpClient
@@ -72,7 +78,7 @@ func createDelete(t *testing.T) {
 	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 	distributionResponse := getLocalBundle(t, bundleName, true)
-	assert.Contains(t, [2]distributableDistributionStatus{readyForDistribution, signed}, distributionResponse.State)
+	assertReleaseBundleSigned(t, distributionResponse.State)
 
 	// Delete local release bundle
 	deleteLocalBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
@@ -135,7 +141,7 @@ func createSignDistributeDelete(t *testing.T) {
 	err = testsBundleSignService.SignReleaseBundle(signBundleParams)
 	assert.NoError(t, err)
 	distributionResponse = getLocalBundle(t, bundleName, true)
-	assert.Contains(t, [2]distributableDistributionStatus{readyForDistribution, signed}, distributionResponse.State)
+	assertReleaseBundleSigned(t, distributionResponse.State)
 
 	// Distribute release bundle
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
@@ -175,7 +181,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	err = testsBundleSignService.SignReleaseBundle(signBundleParams)
 	assert.NoError(t, err)
 	distributionResponse = getLocalBundle(t, bundleName, true)
-	assert.Contains(t, [2]distributableDistributionStatus{readyForDistribution, signed}, distributionResponse.State)
+	assertReleaseBundleSigned(t, distributionResponse.State)
 
 	// Distribute release bundle
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
@@ -237,6 +243,10 @@ func deleteTestBundle(t *testing.T, bundleName string) error {
 	deleteBundleParams.DeleteFromDistribution = true
 	deleteBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	return testsBundleDeleteRemoteService.DeleteDistribution(deleteBundleParams)
+}
+
+func assertReleaseBundleSigned(t *testing.T, status distributableDistributionStatus) {
+	assert.Contains(t, []distributableDistributionStatus{signed, stored, readyForDistribution}, status)
 }
 
 type receivedResponse struct {
