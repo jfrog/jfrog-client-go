@@ -72,7 +72,7 @@ func localGradleTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGradleLocalRepositoryParams()
 	glp.Key = repoKey
-	glp.RepoLayoutRef = "gradle-default"
+	glp.RepoLayoutRef = "maven-2-default"
 	glp.Description = "Gradle Repo for jfrog-client-go local-repository-test"
 	glp.SuppressPomConsistencyChecks = &trueValue
 	glp.HandleReleases = &trueValue

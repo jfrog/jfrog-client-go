@@ -84,7 +84,7 @@ func virtualGradleTest(t *testing.T) {
 
 	gvp.Description += " - Updated"
 	gvp.Notes = "Repo been updated"
-	gvp.RepoLayoutRef = "gradle-default"
+	gvp.RepoLayoutRef = "maven-2-default"
 	gvp.ForceMavenAuthentication = nil
 	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &trueValue
 	gvp.ExcludesPattern = "**/****"

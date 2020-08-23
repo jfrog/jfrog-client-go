@@ -78,7 +78,7 @@ func remoteGradleTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGradleRemoteRepositoryParams()
 	grp.Key = repoKey
-	grp.RepoLayoutRef = "gradle-default"
+	grp.RepoLayoutRef = "maven-2-default"
 	grp.Url = "https://jcenter.bintray.com"
 	grp.Description = "Gradle Repo for jfrog-client-go remote-repository-test"
 	grp.SuppressPomConsistencyChecks = &trueValue
