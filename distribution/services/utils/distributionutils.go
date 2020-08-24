@@ -41,9 +41,9 @@ func CreateBundleBody(createBundleParams ReleaseBundleParams, dryRun bool) (*Rel
 				return nil, err
 			}
 			specFile.Aql = utils.Aql{ItemsFind: query}
-			aql := utils.BuildQueryFromSpecFile(specFile, utils.NONE)
-			bundleQueries = append(bundleQueries, BundleQuery{Aql: aql})
 		}
+		aql := utils.BuildQueryFromSpecFile(specFile, utils.NONE)
+		bundleQueries = append(bundleQueries, BundleQuery{Aql: aql})
 	}
 
 	// Create release bundle struct
