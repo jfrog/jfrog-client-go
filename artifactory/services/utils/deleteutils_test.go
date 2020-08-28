@@ -75,7 +75,7 @@ func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
 		assert.True(t, result)
 		assert.NoError(t, resultWriter.RemoveOutputFilePath())
 	}
-	// Issue...
+	// Fixes issue https://github.com/jfrog/jfrog-cli/issues/808
 	{
 		resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 		assert.NoError(t, err)
