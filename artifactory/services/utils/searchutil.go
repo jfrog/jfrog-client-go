@@ -243,9 +243,9 @@ func (item ResultItem) GetItemRelativePath() string {
 	return url
 }
 
-// Returns item.Repo/item.Path/
+// Returns "item.Repo/item.Path/" lowercased.
 func (item ResultItem) GetItemRelativeLocation() string {
-	return addSeparator(strings.ToLower(item.Repo), "/", strings.ToLower(item.Path)) + "/"
+	return strings.ToLower(addSeparator(item.Repo, "/", item.Path) + "/")
 }
 
 func addSeparator(str1, separator, str2 string) string {
