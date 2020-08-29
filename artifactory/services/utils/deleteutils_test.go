@@ -86,7 +86,6 @@ func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
 		assert.NoError(t, resultWriter.Close())
 		assert.True(t, resultWriter.IsEmpty())
 	}
-
 }
 
 func TestFilterCandidateToBeDeleted(t *testing.T) {
