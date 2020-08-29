@@ -59,20 +59,33 @@ func assertDeletePatternErr(expected, actual string, t *testing.T) {
 
 func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
 	testPath, err := getBaseTestDir()
-	assert.NoError(t, err)
-	var bufferFiles []*content.ContentReader
-	for i := 1; i <= 3; i++ {
-		bufferFiles = append(bufferFiles, content.NewContentReader(filepath.Join(testPath, "buffer_file_ascending_order_"+strconv.Itoa(i)+".json"), content.DefaultKey))
+	{
+		assert.NoError(t, err)
+		var bufferFiles []*content.ContentReader
+		for i := 1; i <= 3; i++ {
+			bufferFiles = append(bufferFiles, content.NewContentReader(filepath.Join(testPath, "buffer_file_ascending_order_"+strconv.Itoa(i)+".json"), content.DefaultKey))
+		}
+		resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
+		assert.NoError(t, err)
+		artifactNotToBeDeleteReader := content.NewContentReader(filepath.Join(testPath, "artifact_file_1.json"), content.DefaultKey)
+		assert.NoError(t, WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter))
+		assert.NoError(t, resultWriter.Close())
+		result, err := fileutils.FilesIdentical(filepath.Join(testPath, "candidate_dirs_to_be_deleted_results.json"), resultWriter.GetFilePath())
+		assert.NoError(t, err)
+		assert.True(t, result)
+		assert.NoError(t, resultWriter.RemoveOutputFilePath())
 	}
-	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
-	assert.NoError(t, err)
-	artifactNotToBeDeleteReader := content.NewContentReader(filepath.Join(testPath, "artifact_file_1.json"), content.DefaultKey)
-	assert.NoError(t, WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter))
-	assert.NoError(t, resultWriter.Close())
-	result, err := fileutils.FilesIdentical(filepath.Join(testPath, "candidate_dirs_to_be_deleted_results.json"), resultWriter.GetFilePath())
-	assert.NoError(t, err)
-	assert.True(t, result)
-	assert.NoError(t, resultWriter.RemoveOutputFilePath())
+	// Fixes issue https://github.com/jfrog/jfrog-cli/issues/808
+	{
+		resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
+		assert.NoError(t, err)
+		var bufferFiles []*content.ContentReader
+		bufferFiles = append(bufferFiles, content.NewContentReader(filepath.Join(testPath, "buffer_file_ascending_order_4.json"), content.DefaultKey))
+		artifactNotToBeDeleteReader := content.NewContentReader(filepath.Join(testPath, "artifact_file_2.json"), content.DefaultKey)
+		assert.NoError(t, WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter))
+		assert.NoError(t, resultWriter.Close())
+		assert.True(t, resultWriter.IsEmpty())
+	}
 }
 
 func TestFilterCandidateToBeDeleted(t *testing.T) {

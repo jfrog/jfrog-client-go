@@ -47,7 +47,7 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 	}
 	defer dirsToBeDeletedReader.Close()
 	var candidateDirToBeDeletedPath string
-	var artifactNotToBeDeletePath string
+	var itemNotToBeDeletedLocation string
 	var candidateDirToBeDeleted, artifactNotToBeDeleted *ResultItem
 	for {
 		// Fetch the next 'candidateDirToBeDeleted'.
@@ -70,15 +70,15 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 				writeRemainCandidate(resultWriter, dirsToBeDeletedReader)
 				break
 			}
-			artifactNotToBeDeletePath = strings.ToLower(artifactNotToBeDeleted.GetItemRelativePath())
+			itemNotToBeDeletedLocation = strings.ToLower(artifactNotToBeDeleted.GetItemRelativeLocation())
 		}
 		// Found an 'artifact not to be deleted' in 'dir to be deleted', therefore skip writing the dir to the result file.
-		if strings.HasPrefix(artifactNotToBeDeletePath, candidateDirToBeDeletedPath) {
+		if strings.HasPrefix(itemNotToBeDeletedLocation, candidateDirToBeDeletedPath) {
 			candidateDirToBeDeleted = nil
 			continue
 		}
 		// 'artifactNotToBeDeletePath' & 'candidateDirToBeDeletedPath' are both sorted. As a result 'candidateDirToBeDeleted' cant be a prefix for any of the remaining artifacts.
-		if artifactNotToBeDeletePath > candidateDirToBeDeletedPath {
+		if itemNotToBeDeletedLocation > candidateDirToBeDeletedPath {
 			resultWriter.Write(*candidateDirToBeDeleted)
 			candidateDirToBeDeleted = nil
 			continue
