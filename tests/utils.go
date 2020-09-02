@@ -52,7 +52,7 @@ var testsUpdateLocalRepositoryService *services.LocalRepositoryService
 var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
-var testsGetRepositoryService *services.GetRepositoryService
+var testsGetRepositoryService *services.GetRepositoriesService
 var testsCreateReplicationService *services.CreateReplicationService
 var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
