@@ -32,10 +32,10 @@ func (targetBuildInfo *BuildInfo) SetArtifactoryPluginVersion(artifactoryPluginV
 // Append the modules of the received build info to this build info.
 // If the two build info instances contain modules with identical names, these modules are merged.
 // When merging the modules, the artifacts and dependencies remain unique according to their checksum.
-func (targetBuildInfo *BuildInfo) Append(buildInfo *BuildInfo) {
+func (targetBuildInfo *BuildInfo) Append(buildInfo *PartialBuildInfo) {
 	for _, newModule := range buildInfo.Modules {
 		exists := false
-		for i, _ := range targetBuildInfo.Modules {
+		for i := range targetBuildInfo.Modules {
 			if newModule.Id == targetBuildInfo.Modules[i].Id {
 				mergeModules(&newModule, &targetBuildInfo.Modules[i])
 				exists = true
@@ -99,6 +99,11 @@ type BuildInfo struct {
 	*Vcs
 }
 
+type PartialBuildInfo struct {
+	Modules              []Module `json:"modules,omitempty"`
+	ResolverRepositories []string   `json:"resolverRepositories,omitempty"`
+}
+
 type Agent struct {
 	Name    string `json:"name,omitempty"`
 	Version string `json:"version,omitempty"`
@@ -120,6 +125,7 @@ type Artifact struct {
 
 type Dependency struct {
 	Id     string   `json:"id,omitempty"`
+	Build  string   `json:"build,omitempty"`
 	Type   string   `json:"type,omitempty"`
 	Scopes []string `json:"scopes,omitempty"`
 	*Checksum
@@ -165,6 +171,7 @@ type Partial struct {
 	Timestamp    int64        `json:"Timestamp,omitempty"`
 	ModuleId     string       `json:"ModuleId,omitempty"`
 	Issues       *Issues      `json:"Issues,omitempty"`
+	ResolverRepo string       `json:"ResolverRepo,omitempty"`
 	*Vcs
 }
 

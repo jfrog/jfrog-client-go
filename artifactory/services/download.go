@@ -215,9 +215,27 @@ func createDependencyFileInfo(resultItem utils.ResultItem, localPath, localFileN
 			Sha1: resultItem.Actual_Sha1,
 			Md5:  resultItem.Actual_Md5,
 		},
+		Build: getResultItemBuild(resultItem.Properties),
 	}
 	fileInfo.LocalPath = filepath.Join(localPath, localFileName)
 	return fileInfo
+}
+
+// Iterate over []Property and search for build.name, build.number and timestamp properties.
+// Returns build.name/build.number/timestamp.
+func getResultItemBuild(Properties []utils.Property) string {
+	var buildName, buildNumber, timestamp string
+	for _, prop := range Properties {
+		switch prop.Key {
+		case "build.name":
+			buildName = prop.Value + "/"
+		case "build.number":
+			buildNumber = prop.Value + "/"
+		case "build.timestamp":
+			timestamp = prop.Value
+		}
+	}
+	return buildName + buildNumber + timestamp
 }
 
 func createDownloadFileDetails(downloadPath, localPath, localFileName string, downloadData DownloadData) (details *httpclient.DownloadFileDetails) {

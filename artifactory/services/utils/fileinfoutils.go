@@ -1,9 +1,10 @@
 package utils
 
 import (
+	"strings"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"strings"
 )
 
 type FileHashes struct {
@@ -17,6 +18,7 @@ type FileInfo struct {
 	LocalPath               string `json:"localPath,omitempty"`
 	ArtifactoryPath         string `json:"artifactoryPath,omitempty"`
 	InternalArtifactoryPath string `json:"internalArtifactoryPath,omitempty"`
+	Build                   string `json:"build,omitempty"`
 }
 
 func (fileInfo *FileInfo) ToBuildArtifacts() buildinfo.Artifact {
