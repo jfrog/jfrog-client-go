@@ -17,7 +17,7 @@ import (
 const minArtifactoryVersion = "6.9.0"
 const ReportUsagePrefix = "Usage Report: "
 
-func SendReportUsage(productId, commandName string, serviceManager *artifactory.ArtifactoryServicesManager) error {
+func SendReportUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager) error {
 	config := serviceManager.GetConfig()
 	if config == nil {
 		return errorutils.CheckError(errors.New(ReportUsagePrefix + "Expected full config, but no configuration exists."))
