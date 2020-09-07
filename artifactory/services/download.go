@@ -221,8 +221,8 @@ func createDependencyFileInfo(resultItem utils.ResultItem, localPath, localFileN
 	return fileInfo
 }
 
-// Iterate over []Property and search for build.name, build.number and timestamp properties.
-// Returns build.name/build.number/timestamp.
+// Iterate over []Property and search for build.name, build.number and build.timestamp properties.
+// Returns build.name/build.number/build.timestamp.
 func getResultItemBuild(Properties []utils.Property) string {
 	var buildName, buildNumber, timestamp string
 	for _, prop := range Properties {

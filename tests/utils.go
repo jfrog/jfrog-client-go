@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -218,7 +219,7 @@ func createArtifactoryGetRepositoryManager() {
 	artDetails := GetRtDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
-	testsGetRepositoryService = services.NewGetRepositoryService(client)
+	testsGetRepositoryService = services.NewGetRepositoriesService(client)
 	testsGetRepositoryService.ArtDetails = artDetails
 }
 

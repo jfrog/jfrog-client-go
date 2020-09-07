@@ -1,4 +1,3 @@
-
 package services
 
 import (
@@ -18,7 +17,7 @@ type GetRepositoriesService struct {
 	ArtDetails auth.ServiceDetails
 }
 
-func NewGetRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *GetRepositoriesService {
+func NewGetRepositoriesService(client *rthttpclient.ArtifactoryHttpClient) *GetRepositoriesService {
 	return &GetRepositoriesService{client: client}
 }
 
@@ -37,7 +36,7 @@ func (grs *GetRepositoriesService) Get(repoKey string) (*RepositoryDetails, erro
 		return repoDetails, errorutils.CheckError(err)
 	}
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done getting repository details.")
+	log.Info("Done getting repositories.")
 	return repoDetails, nil
 }
 

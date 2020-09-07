@@ -101,7 +101,7 @@ type BuildInfo struct {
 
 type PartialBuildInfo struct {
 	Modules              []Module `json:"modules,omitempty"`
-	ResolverRepositories []string   `json:"resolverRepositories,omitempty"`
+	ResolverRepositories []string `json:"resolverRepositories,omitempty"`
 }
 
 type Agent struct {
@@ -165,13 +165,13 @@ type Vcs struct {
 type Partials []*Partial
 
 type Partial struct {
-	Artifacts    []Artifact   `json:"Artifacts,omitempty"`
-	Dependencies []Dependency `json:"Dependencies,omitempty"`
-	Env          Env          `json:"Env,omitempty"`
-	Timestamp    int64        `json:"Timestamp,omitempty"`
-	ModuleId     string       `json:"ModuleId,omitempty"`
-	Issues       *Issues      `json:"Issues,omitempty"`
-	ResolverRepo string       `json:"ResolverRepo,omitempty"`
+	Artifacts      []Artifact   `json:"Artifacts,omitempty"`
+	Dependencies   []Dependency `json:"Dependencies,omitempty"`
+	Env            Env          `json:"Env,omitempty"`
+	Timestamp      int64        `json:"Timestamp,omitempty"`
+	ModuleId       string       `json:"ModuleId,omitempty"`
+	Issues         *Issues      `json:"Issues,omitempty"`
+	ResolutionRepo string       `json:"ResolutionRepo,omitempty"`
 	*Vcs
 }
 

@@ -90,7 +90,7 @@ func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string) (*service
 }
 
 func (sm *ArtifactoryServicesManager) GetRepositories() ([]*services.RepositoryDetails, error) {
-	getRepositoryService := services.NewGetRepositoryService(sm.client)
+	getRepositoryService := services.NewGetRepositoriesService(sm.client)
 	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return getRepositoryService.GetAll()
 }

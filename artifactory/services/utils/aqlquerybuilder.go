@@ -122,8 +122,8 @@ func CreateAqlQueryForPypi(repo, file string) string {
 	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1"}))
 }
 
-func CreateSearchBySha1AqlQuery(repo []string, sha1s []string) string {
-	itemsPart := `items.find({` +getRepoQuery(repo) + "," + getRepoQuery(repo) + "," + getsha1sQuery(sha1s) + `})%s`
+func CreateSearchBySha1AndRepoAqlQuery(repo []string, sha1s []string) string {
+	itemsPart := `items.find({` + getRepoQuery(repo) + "," + getSha1sQueryPart(sha1s) + `})%s`
 	// actual_sha1 & property are the only fields we need, we must add the other files like name, repo, path, etc. because if we don't, Artifactory will return 400 bad request.
 	return fmt.Sprintf(itemsPart, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "property"}))
 }
@@ -140,7 +140,7 @@ func getRepoQuery(repositories []string) string {
 	return `"repo": "` + repositories[0] + `"`
 }
 
-func getsha1sQuery(sha1s []string) string {
+func getSha1sQueryPart(sha1s []string) string {
 	if len(sha1s) > 1 {
 		result := `"$or":[{`
 		for _, sha1 := range sha1s {
@@ -151,7 +151,7 @@ func getsha1sQuery(sha1s []string) string {
 	return `"actual_sha1": "` + sha1s[0] + `"`
 }
 
-func getBuildPropsQuery() string {
+func getBuildPropsQueryPart() string {
 	return `"artifact.module.build":"*"`
 }
 
