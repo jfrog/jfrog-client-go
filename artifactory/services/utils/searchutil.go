@@ -278,7 +278,7 @@ func FilterBottomChainResults(reader *content.ContentReader) (*content.ContentRe
 	var temp string
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		rPath := resultItem.GetItemRelativePath()
-		if resultItem.Type == "folder" && !strings.HasSuffix(rPath, "/") {
+		if !strings.HasSuffix(rPath, "/") {
 			rPath += "/"
 		}
 		if temp == "" || !strings.HasPrefix(temp, rPath) {
