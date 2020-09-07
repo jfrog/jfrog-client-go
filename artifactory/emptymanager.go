@@ -61,6 +61,9 @@ type ArtifactoryServicesManager interface {
 	Client() *rthttpclient.ArtifactoryHttpClient
 }
 
+// By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
+// interface's methods, but still implement this interface.
+// This comes in very handy for tests.
 type EmptyArtifactoryServicesManager struct {
 }
 

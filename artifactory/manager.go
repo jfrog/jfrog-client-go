@@ -20,11 +20,11 @@ type ArtifactoryServicesManagerImp struct {
 	progress ioutils.Progress
 }
 
-func New(artDetails *auth.ServiceDetails, config config.Config) (*ArtifactoryServicesManagerImp, error) {
+func New(artDetails *auth.ServiceDetails, config config.Config) (ArtifactoryServicesManager, error) {
 	return NewWithProgress(artDetails, config, nil)
 }
 
-func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, progress ioutils.Progress) (*ArtifactoryServicesManagerImp, error) {
+func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, progress ioutils.Progress) (ArtifactoryServicesManager, error) {
 	err := (*artDetails).InitSsh()
 	if err != nil {
 		return nil, err
