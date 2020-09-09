@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"sort"
 	"strings"
 	"sync"
 
@@ -294,6 +293,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 	// Key -> Relative path, value -> ResultItem
 	// Contains limited amount of items from a file, to not overflow memory.
 	buffer := make(map[string]*ResultItem)
+	var writeOrder []*ResultItem
 	var err error
 	// Create new file to write result output
 	resultFile, err := content.NewContentWriter(content.DefaultKey, true, false)
@@ -304,21 +304,23 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		// Save the item in a buffer.
 		buffer[resultItem.GetItemRelativePath()] = resultItem
+		writeOrder = append(writeOrder, resultItem)
 		if len(buffer) == utils.MaxBufferSize {
 			// Buffer was full, write all data to a file.
-			err = updateProps(readerWithProps, resultFile, buffer)
+			err = updateProps(readerWithProps, resultFile, buffer, writeOrder)
 			if err != nil {
 				return nil, err
 			}
 			// Init buffer.
 			buffer = make(map[string]*ResultItem)
+			writeOrder = make([]*ResultItem, 0)
 		}
 	}
 	if reader.GetError() != nil {
 		return nil, err
 	}
 	reader.Reset()
-	if err := updateProps(readerWithProps, resultFile, buffer); err != nil {
+	if err := updateProps(readerWithProps, resultFile, buffer, writeOrder); err != nil {
 		return nil, err
 	}
 	return content.NewContentReader(resultFile.GetFilePath(), content.DefaultKey), nil
@@ -328,7 +330,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 // buffer - Search result buffer (sorted) Key -> relative path, value -> ResultItem.
 // crWithProps - File containing all the results with proprties.
 // resultWriter - Sorted search result with props.
-func updateProps(crWithProps *content.ContentReader, resultWriter *content.ContentWriter, buffer map[string]*ResultItem) error {
+func updateProps(crWithProps *content.ContentReader, resultWriter *content.ContentWriter, buffer map[string]*ResultItem, writeOrder []*ResultItem) error {
 	if len(buffer) == 0 {
 		return nil
 	}
@@ -342,14 +344,9 @@ func updateProps(crWithProps *content.ContentReader, resultWriter *content.Conte
 		return err
 	}
 	crWithProps.Reset()
-	// Write the items to a file sorted.
-	keys := make([]string, 0)
-	for k := range buffer {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		resultWriter.Write(*buffer[k])
+	// Write the items to a file with the same search result order.
+	for _, itemToWrite := range writeOrder {
+		resultWriter.Write(*itemToWrite)
 	}
 	return nil
 }

@@ -26,6 +26,17 @@ func TestLoadMissingProperties(t *testing.T) {
 		assert.True(t, isMatch)
 		utils.MaxBufferSize = 3
 	}
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	notSortedWithProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_nosorted_by_created_withprops.json"), content.DefaultKey)
+	sortedNoProps := content.NewContentReader(filepath.Join(testDataPath, "load_missing_props_sorted_by_created_noprops.json"), content.DefaultKey)
+	reader, err := loadMissingProperties(sortedNoProps, notSortedWithProps)
+	defer reader.Close()
+	assert.NoError(t, err)
+	isMatch, err := fileutils.FilesIdentical(reader.GetFilePath(), filepath.Join(testDataPath, "load_missing_props_by_created_expected_results.json"))
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	utils.MaxBufferSize = 3
 }
 
 func TestFilterBuildAqlSearchResults(t *testing.T) {
