@@ -1,0 +1,43 @@
+{
+  "results": [
+    {
+      "repo": "repo1",
+      "path": ".",
+      "name": "abb",
+      "actual_md5": "65298e78fe5883eee82056bc6d0d7f4c",
+      "actual_sha1": "507ac63c6b0f650fb6f36b5621e70ebca3b0965c",
+      "size": 7,
+      "created": "2020-09-09T08:24:17.457Z",
+      "modified": "2020-09-09T08:24:17.123Z",
+      "type": "file"
+    },
+    {
+      "repo": "repo1",
+      "path": ".",
+      "name": "a",
+      "actual_md5": "65298e78fe5883eee82056bc6d0d7f4c",
+      "actual_sha1": "507ac63c6b0f650fb6f36b5621e70ebca3b0965c",
+      "size": 7,
+      "created": "2020-09-09T08:24:17.433Z",
+      "modified": "2020-09-09T08:24:17.120Z",
+      "type": "file"
+    },
+    {
+      "repo": "repo1",
+      "path": ".",
+      "name": "ab",
+      "actual_md5": "65298e78fe5883eee82056bc6d0d7f4c",
+      "actual_sha1": "507ac63c6b0f650fb6f36b5621e70ebca3b0965c",
+      "size": 7,
+      "created": "2020-09-09T08:24:17.388Z",
+      "modified": "2020-09-09T08:24:17.140Z",
+      "properties": [
+        {
+          "Key": "c",
+          "Value": "1"
+        }
+      ],
+      "type": "file"
+    }
+  ]
+}
