@@ -68,7 +68,7 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 	})
 	record, ok := <-cr.dataChannel
 	if !ok {
-		return errorutils.CheckError(io.EOF)
+		return io.EOF
 	}
 	// Transform the data into a Go type
 	data, err := json.Marshal(record)
