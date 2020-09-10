@@ -290,8 +290,8 @@ func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, reader *co
 // crWithProps - Result item with properties
 // Return a content reader which points to the result file.
 func loadMissingProperties(reader *content.ContentReader, readerWithProps *content.ContentReader) (*content.ContentReader, error) {
-	// Key -> Relative path, value -> ResultItem
-	// Contains limited amount of items from a file, to not overflow memory.
+	// Key -> Relative path, value -> *ResultItem
+	// Contains a limited amount of items from a file, to not overflow memory.
 	buffer := make(map[string]*ResultItem)
 	var writeOrder []*ResultItem
 	var err error
@@ -302,8 +302,8 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 	}
 	defer resultFile.Close()
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
-		// Save the item in a buffer.
 		buffer[resultItem.GetItemRelativePath()] = resultItem
+		// Since maps are an unordered collection, we use slice to save the order of the items
 		writeOrder = append(writeOrder, resultItem)
 		if len(buffer) == utils.MaxBufferSize {
 			// Buffer was full, write all data to a file.
@@ -311,7 +311,6 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 			if err != nil {
 				return nil, err
 			}
-			// Init buffer.
 			buffer = make(map[string]*ResultItem)
 			writeOrder = make([]*ResultItem, 0)
 		}
@@ -326,24 +325,25 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 	return content.NewContentReader(resultFile.GetFilePath(), content.DefaultKey), nil
 }
 
-// Load the properties from readerWithProps into buffer's ResultItem, sort the buffers keys, and write its values into the resultWriter.
-// buffer - Search result buffer (sorted) Key -> relative path, value -> ResultItem.
+// Load the properties from readerWithProps into buffer's ResultItem and write its values into the resultWriter.
+// buffer - Search result buffer Key -> relative path, value -> ResultItem. We use this to load the props into the item by matching the uniqueness of relevant path.
 // crWithProps - File containing all the results with proprties.
-// resultWriter - Sorted search result with props.
-func updateProps(crWithProps *content.ContentReader, resultWriter *content.ContentWriter, buffer map[string]*ResultItem, writeOrder []*ResultItem) error {
+// writeOrder - List of sorted buffer's searchResults(Map is an unordered collection).
+// resultWriter - Search results (sorted) with props.
+func updateProps(readerWithProps *content.ContentReader, resultWriter *content.ContentWriter, buffer map[string]*ResultItem, writeOrder []*ResultItem) error {
 	if len(buffer) == 0 {
 		return nil
 	}
 	// Load buffer items with their properties.
-	for resultItem := new(ResultItem); crWithProps.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+	for resultItem := new(ResultItem); readerWithProps.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if value, ok := buffer[resultItem.GetItemRelativePath()]; ok {
 			value.Properties = resultItem.Properties
 		}
 	}
-	if err := crWithProps.GetError(); err != nil {
+	if err := readerWithProps.GetError(); err != nil {
 		return err
 	}
-	crWithProps.Reset()
+	readerWithProps.Reset()
 	// Write the items to a file with the same search result order.
 	for _, itemToWrite := range writeOrder {
 		resultWriter.Write(*itemToWrite)
