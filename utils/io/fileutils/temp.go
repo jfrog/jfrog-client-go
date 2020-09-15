@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	tempPrefix     = "jfrog.cli.temp."
+	tempPrefix = "jfrog.cli.temp."
 )
 
 // Max temp file age in hours
@@ -100,7 +100,7 @@ func extractTimestamp(item string) (time.Time, error) {
 	// Get timestamp from file/dir.
 	endTimestampIdx := strings.LastIndex(item, "-")
 	beginingTimestampIdx := strings.LastIndex(item[:endTimestampIdx], "-")
-	timestampStr := item[beginingTimestampIdx+1:endTimestampIdx]
+	timestampStr := item[beginingTimestampIdx+1 : endTimestampIdx]
 	// Convert to int.
 	timeStampint, err := strconv.ParseInt(timestampStr, 10, 64)
 	if err != nil {

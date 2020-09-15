@@ -30,8 +30,8 @@ const (
 	// Release bundle is signed, stored and scanned by Xray:
 	readyForDistribution distributableDistributionStatus = "READY_FOR_DISTRIBUTION"
 
-	gpgKeyId                       = "234503"
-	artifactoryGpgKeyCreatePattern = `{"alias":"cli tests distribution key","public_key":"%s"}`
+	gpgKeyAlias                    = "client tests distribution key"
+	artifactoryGpgKeyCreatePattern = `{"alias":"` + gpgKeyAlias + `","public_key":"%s"}`
 	bundleVersion                  = "10"
 )
 
@@ -230,12 +230,36 @@ func sendGpgKeys(t *testing.T) {
 // Delete GPG key from Artifactory to clean up the test environment
 func deleteGpgKeys(t *testing.T) {
 	// Delete public key from Artifactory
+	gpgKeyId := getGpgKeyId(t)
+	if gpgKeyId == "" {
+		return
+	}
 	resp, body, err := httpClient.SendDelete(GetRtDetails().GetUrl()+"api/security/keys/trusted/"+gpgKeyId, nil, distHttpDetails)
 	assert.NoError(t, err)
 	if resp.StatusCode != http.StatusNoContent {
 		t.Error(resp.Status)
 		t.Error(string(body))
 	}
+}
+
+// Get GPG key ID created in the tests
+func getGpgKeyId(t *testing.T) string {
+	resp, body, _, err := httpClient.SendGet(GetRtDetails().GetUrl()+"api/security/keys/trusted", true, distHttpDetails)
+	assert.NoError(t, err)
+	if resp.StatusCode != http.StatusOK {
+		t.Error(resp.Status)
+		t.Error(string(body))
+		return ""
+	}
+	responses := &gpgKeysResponse{}
+	err = json.Unmarshal(body, &responses)
+	assert.NoError(t, err)
+	for _, gpgKeyResponse := range responses.Keys {
+		if gpgKeyResponse.Alias == gpgKeyAlias {
+			return gpgKeyResponse.Kid
+		}
+	}
+	return ""
 }
 
 func deleteTestBundle(t *testing.T, bundleName string) error {
@@ -315,6 +339,15 @@ type distributableResponse struct {
 type releaseNotesResponse struct {
 	Content string `json:"content,omitempty"`
 	Syntax  string `json:"syntax,omitempty"`
+}
+
+type gpgKeysResponse struct {
+	Keys []gpgKeyResponse `json:"keys,omitempty"`
+}
+
+type gpgKeyResponse struct {
+	Kid   string `json:"kid,omitempty"`
+	Alias string `json:"alias,omitempty"`
 }
 
 func getLocalBundle(t *testing.T, bundleName string, expectExist bool) *distributableResponse {
