@@ -5,7 +5,6 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/buger/jsonparser v0.0.0-20180910192245-6acdf747ae99
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/frankban/quicktest v1.7.2 // indirect
@@ -19,14 +18,12 @@ require (
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/pelletier/go-buffruneio v0.2.0 // indirect
 	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
-	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/src-d/gcfg v1.3.0 // indirect
 	github.com/stretchr/testify v1.2.2
 	github.com/xanzy/ssh-agent v0.2.0
 	golang.org/x/crypto v0.0.0-20181001203147-e3636079e1a4
-	golang.org/x/net v0.0.0-20180926154720-4dfa2610cdf3 // indirect
 	golang.org/x/sys v0.0.0-20180906133057-8cf3aee42992 // indirect
 	golang.org/x/text v0.3.0 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.0 // indirect
