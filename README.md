@@ -71,14 +71,14 @@
     - [Uploading a Single File to Bintray](#uploading-a-single-file-to-bintray)
     - [Downloading a Single File from Bintray](#downloading-a-single-file-from-bintray)
     - [Downloading Version Files from Bintray](#downloading-version-files-from-bintray)
-    - [Showing / Deleting a Bintray Package](#showing-deleting-a-bintray-package)
-    - [Creating / Updating a Bintray Package](#creating-updating-a-bintray-package)
-    - [Showing / Deleting a Bintray Version](#showing-deleting-a-bintray-version)
-    - [Creating / Updating a Bintray Version](#creating-updating-a-bintray-version)
-    - [Creating / Updating Entitlements](#creating-updating-entitlements)
-    - [Showing / Deleting Entitlements](#showing-deleting-entitlements)
-    - [Creating / Updating Access Keys](#creating-updating-access-keys)
-    - [Showing / Deleting Access Keys](#showing-deleting-access-keys)
+    - [Showing and Deleting a Bintray Package](#showing-and-deleting-a-bintray-package)
+    - [Creating and Updating a Bintray Package](#creating-and-updating-a-bintray-package)
+    - [Showing and Deleting a Bintray Version](#showing-and-deleting-a-bintray-version)
+    - [Creating and Updating a Bintray Version](#creating-and-updating-a-bintray-version)
+    - [Creating and Updating Entitlements](#creating-and-updating-entitlements)
+    - [Showing and Deleting Entitlements](#showing-and-deleting-entitlements)
+    - [Creating and Updating Access Keys](#creating-and-updating-access-keys)
+    - [Showing and Deleting Access Keys](#showing-and-deleting-access-keys)
     - [Signing a URL](#signing-a-url)
     - [GPG Signing a File](#gpg-signing-a-file)
     - [GPG Signing Version Files](#gpg-signing-version-files)
@@ -876,7 +876,7 @@ params.TargetPath = "target/path/"
 btManager.DownloadVersion(params)
 ```
 
-#### Showing / Deleting a Bintray Package
+#### Showing and Deleting a Bintray Package
 ```go
 pkgPath, err := packages.CreatePath("subject/repo/pkg")
 
@@ -884,7 +884,7 @@ btManager.ShowPackage(pkgPath)
 btManager.DeletePackage(pkgPath)
 ```
 
-#### Creating / Updating a Bintray Package
+#### Creating and Updating a Bintray Package
 ```go
 params := packages.NewPackageParams()
 params.Path, err = packages.CreatePath("subject/repo/pkg")
@@ -905,7 +905,7 @@ btManager.CreatePackage(params)
 btManager.UpdatePackage(params)
 ```
 
-#### Showing / Deleting a Bintray Version
+#### Showing and Deleting a Bintray Version
 ```go
 versionPath, err := versions.CreatePath("subject/repo/pkg/version")
 
@@ -913,7 +913,7 @@ btManager.ShowVersion(versionPath)
 btManager.DeleteVersion(versionPath)
 ```
 
-#### Creating / Updating a Bintray Version
+#### Creating and Updating a Bintray Version
 ```go
 params := versions.NewVersionParams()
 params.Path, err = versions.CreatePath("subject/repo/pkg/version")
@@ -928,7 +928,7 @@ btManager.CreateVersion(params)
 btManager.UpdateVersion(params)
 ```
 
-#### Creating / Updating Entitlements
+#### Creating and Updating Entitlements
 ```go
 params := entitlements.NewEntitlementsParams()
 params.VersionPath, err = versions.CreatePath("subject/repo/pkg/version")
@@ -943,7 +943,7 @@ params.Id = "entitlementID"
 btManager.UpdateEntitlement(params)
 ```
 
-#### Showing / Deleting Entitlements
+#### Showing and Deleting Entitlements
 ```go
 versionPath, err := versions.CreatePath("subject/repo/pkg/version")
 
@@ -952,7 +952,7 @@ btManager.ShowEntitlement("entitelmentID", versionPath)
 btManager.DeleteEntitlement("entitelmentID", versionPath)
 ```
 
-#### Creating / Updating Access Keys
+#### Creating and Updating Access Keys
 ```go
 params := accesskeys.NewAccessKeysParams()
 params.Password = "password"
@@ -970,7 +970,7 @@ params.Id = "KeyID"
 btManager.UpdateAccessKey(params)
 ```
 
-#### Showing / Deleting Access Keys
+#### Showing and Deleting Access Keys
 ```go
 btManager.ShowAllAccessKeys("org")
 btManager.ShowAccessKey("org", "KeyID")
@@ -1047,7 +1047,6 @@ if err := resultReader.GetError(); err != nil {
 }
 resultReader.Reset()
 ```
-
 
 `reader.NextRecord(currentResult)` loads the next record from the reader into `currentResult` of type `ResultItem`.
 `reader.Close()`  removes the file used by the reader after it is used (preferably using `defer`).
