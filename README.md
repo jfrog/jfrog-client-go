@@ -17,7 +17,7 @@
   - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
     - [Creating Artifactory Details](#creating-artifactory-details)
     - [Creating Artifactory Service Config](#creating-artifactory-service-config)
-    - [Creating New Artifactory Service Config](#creating-new-artifactory-service-config)
+    - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
   - [Using Artifactory Services](#using-artifactory-services)
     - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
     - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
@@ -41,6 +41,7 @@
     - [Fetching Access Tokens](#fetching-access-tokens)
     - [Refreshing an Access Token](#refreshing-an-access-token)
     - [Revoking an Access Token](#revoking-an-access-token)
+    - [Regenerate API Key](#regenerate-api-key)
     - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
     - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
     - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
@@ -56,6 +57,7 @@
   - [Creating Distribution Service Manager](#creating-distribution-service-manager)
     - [Creating Distribution Details](#creating-distribution-details)
     - [Creating Distribution Service Config](#creating-distribution-service-config)
+    - [Creating New Distribution Service Manager](#creating-new-distribution-service-manager)
   - [Using Distribution Services](#using-distribution-services)
     - [Setting Distribution Signing Key](#setting-distribution-signing-key)
     - [Creating a Release Bundle](#creating-a-release-bundle)
@@ -67,6 +69,7 @@
     - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle)
     - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle)
 - [Bintray APIs](#bintray-apis)
+  - [Creating Bintray Details](#creating-bintray-details)
   - [Creating Bintray Service Manager](#creating-bintray-service-manager)
   - [Using Bintray Services](#using-bintray-services)
     - [Uploading a Single File to Bintray](#uploading-a-single-file-to-bintray)
@@ -1049,6 +1052,9 @@ resultReader.Reset()
 ```
 
 `reader.NextRecord(currentResult)` loads the next record from the reader into `currentResult` of type `ResultItem`.
-`reader.Close()`  removes the file used by the reader after it is used (preferably using `defer`).
+
+`reader.Close()` removes the file used by the reader after it is used (preferably using `defer`).
+
 `reader.GetError()` any error that may occur during `NextRecord()`, can be returned using `GetError()`.
+
 `reader.Reset()` sets the reader back to the begging of the input.
