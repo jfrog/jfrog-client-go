@@ -9,6 +9,7 @@
 - [General](#general)
 - [Pull Requests](#pull-requests)
   - [Guidelines](#guidelines)
+- [Tests](#tests)
 - [General APIs](#general-apis)
   - [Setting the Logger](#setting-the-logger)
   - [Setting the Temp Dir](#setting-the-temp-dir)
@@ -85,7 +86,6 @@
     - [Listing Logs](#listing-logs)
     - [Downloading Logs](#downloading-logs)
 - [Using ContentReader](#using-contentreader)
-- [Tests](#tests)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
