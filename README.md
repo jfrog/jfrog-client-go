@@ -9,15 +9,14 @@
 - [General](#general)
 - [Pull Requests](#pull-requests)
   - [Guidelines](#guidelines)
-- [Tests](#tests)
 - [General APIs](#general-apis)
   - [Setting the Logger](#setting-the-logger)
   - [Setting the Temp Dir](#setting-the-temp-dir)
 - [Artifactory APIs](#artifactory-apis)
   - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
     - [Creating Artifactory Details](#creating-artifactory-details)
-    - [Creating Artifactory Service Config](#creating-artifactory-service-confog)
-    - [Creating New Artifactory Service Config](#creating-new-artifactory-service-confog)
+    - [Creating Artifactory Service Config](#creating-artifactory-service-config)
+    - [Creating New Artifactory Service Config](#creating-new-artifactory-service-config)
   - [Using Artifactory Services](#using-artifactory-services)
     - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
     - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
@@ -50,8 +49,8 @@
     - [Removing a Repository Replication](#removing-a-repository-replication)
     - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
     - [Removing a Permission Target](#removing-a-permission-target)
-    - [Fetching Artifactory's Version](#fetching-artifactory's-version)
-    - [Fetching Artifactory's Service ID](#fetching-artifactory's-service-id)
+    - [Fetching Artifactory's Version](#fetching-artifactorys-version)
+    - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
 - [Distribution APIs](#distribution-apis)
   - [Creating Distribution Service Manager](#creating-distribution-service-manager)
     - [Creating Distribution Details](#creating-distribution-details)
@@ -72,20 +71,21 @@
     - [Uploading a Single File to Bintray](#uploading-a-single-file-to-bintray)
     - [Downloading a Single File from Bintray](#downloading-a-single-file-from-bintray)
     - [Downloading Version Files from Bintray](#downloading-version-files-from-bintray)
-    - [Showing / Deleting a Bintray Package](#showing-/-deleting-a-bintray-package)
-    - [Creating / Updating a Bintray Package](#creating-/-updating-a-bintray-package)
-    - [Showing / Deleting a Bintray Version](#showing-/-deleting-a-bintray-version)
-    - [Creating / Updating a Bintray Version](#creating-/-updating-a-bintray-version)
-    - [Creating / Updating Entitlements](#creating-/-updating-entitlements)
-    - [Showing / Deleting Entitlements](#showing-/-deleting-entitlements)
-    - [Creating / Updating Access Keys](#creating-/-updating-access-keys)
-    - [Showing / Deleting Access Keys](#showing-/-deleting-access-keys)
+    - [Showing / Deleting a Bintray Package](#showing-deleting-a-bintray-package)
+    - [Creating / Updating a Bintray Package](#creating-updating-a-bintray-package)
+    - [Showing / Deleting a Bintray Version](#showing-deleting-a-bintray-version)
+    - [Creating / Updating a Bintray Version](#creating-updating-a-bintray-version)
+    - [Creating / Updating Entitlements](#creating-updating-entitlements)
+    - [Showing / Deleting Entitlements](#showing-deleting-entitlements)
+    - [Creating / Updating Access Keys](#creating-updating-access-keys)
+    - [Showing / Deleting Access Keys](#showing-deleting-access-keys)
     - [Signing a URL](#signing-a-url)
-    - [GPG Signing a File](#gpg signing-a-file)
+    - [GPG Signing a File](#gpg-signing-a-file)
     - [GPG Signing Version Files](#gpg-signing-version-files)
     - [Listing Logs](#listing-logs)
     - [Downloading Logs](#downloading-logs)
 - [Using ContentReader](#using-contentreader)
+- [Tests](#tests)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -99,7 +99,6 @@ We welcome pull requests from the community.
 - If the existing tests do not already cover your changes, please add tests.
 - Pull requests should be created on the **dev** branch.
 - Please use gofmt for formatting the code before submitting the pull request.
-
 
 ## Tests
 To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
