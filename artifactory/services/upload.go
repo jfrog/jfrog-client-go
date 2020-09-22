@@ -164,9 +164,9 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 			if err != nil {
 				return err
 			}
-			props += vcsProps
+			uploadParams.BuildProps += vcsProps
 		}
-		uploadData := UploadData{Artifact: artifact, Props: props}
+		uploadData := UploadData{Artifact: artifact, Props: props, BuildProps: uploadParams.BuildProps}
 		task := artifactHandlerFunc(uploadData)
 		producer.AddTaskWithError(task, errorsQueue.AddError)
 		return err
@@ -265,9 +265,9 @@ func createUploadTask(taskData *uploadTaskData, vcsCache *clientutils.VcsCache) 
 		if err != nil {
 			return err
 		}
-		props += vcsProps
+		taskData.uploadParams.BuildProps += vcsProps
 	}
-	uploadData := UploadData{Artifact: artifact, Props: props}
+	uploadData := UploadData{Artifact: artifact, Props: props, BuildProps: taskData.uploadParams.BuildProps}
 	if taskData.isDir && taskData.uploadParams.IsIncludeDirs() && !taskData.isSymlinkFlow {
 		if taskData.path != "." && (taskData.index == 0 || !utils.IsSubPath(taskData.paths, taskData.index, fileutils.GetFileSeparator())) {
 			uploadData.IsDir = true
@@ -293,17 +293,21 @@ func getUploadTarget(rootPath, target string, isFlat bool) string {
 	return target
 }
 
-func addPropsToTargetPath(targetPath, props, debConfig string) (string, error) {
+func addPropsToTargetPath(targetPath, props, buildProps, debConfig string) (string, error) {
 	propsStr := strings.Join([]string{props, getDebianProps(debConfig)}, ";")
 	properties, err := utils.ParseProperties(propsStr, utils.SplitCommas)
 	if err != nil {
 		return "", err
 	}
-	return strings.Join([]string{targetPath, properties.ToEncodedString()}, ";"), nil
+	buildProperties, err := utils.ParseProperties(buildProps, utils.JoinCommas)
+	if err != nil {
+		return "", err
+	}
+	return strings.Join([]string{targetPath, properties.ToEncodedString(), buildProperties.ToEncodedString()}, ";"), nil
 }
 
-func prepareUploadData(localPath, baseTargetPath, props string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, err error) {
-	targetPath, err = addPropsToTargetPath(baseTargetPath, props, uploadParams.GetDebian())
+func prepareUploadData(localPath, baseTargetPath, props, buildProps string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, err error) {
+	targetPath, err = addPropsToTargetPath(baseTargetPath, props, buildProps, uploadParams.GetDebian())
 	if errorutils.CheckError(err) != nil {
 		return
 	}
@@ -316,8 +320,8 @@ func prepareUploadData(localPath, baseTargetPath, props string, uploadParams Upl
 
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) uploadFile(localPath, targetPath, pathInArtifactory, props string, uploadParams UploadParams, logMsgPrefix string) (utils.FileInfo, bool, error) {
-	fileInfo, targetPathWithProps, err := prepareUploadData(localPath, targetPath, props, uploadParams, logMsgPrefix)
+func (us *UploadService) uploadFile(localPath, targetPath, pathInArtifactory, props, buildProps string, uploadParams UploadParams, logMsgPrefix string) (utils.FileInfo, bool, error) {
+	fileInfo, targetPathWithProps, err := prepareUploadData(localPath, targetPath, props, buildProps, uploadParams, logMsgPrefix)
 	if err != nil {
 		return utils.FileInfo{}, false, err
 	}
@@ -450,6 +454,7 @@ func getDebianProps(debianPropsStr string) string {
 type UploadParams struct {
 	*utils.ArtifactoryCommonParams
 	Deb               string
+	BuildProps        string
 	Symlink           bool
 	ExplodeArchive    bool
 	Flat              bool
@@ -483,9 +488,10 @@ func (up *UploadParams) GetRetries() int {
 }
 
 type UploadData struct {
-	Artifact clientutils.Artifact
-	Props    string
-	IsDir    bool
+	Artifact   clientutils.Artifact
+	Props      string
+	BuildProps string
+	IsDir      bool
 }
 
 type artifactContext func(UploadData) parallel.TaskFunc
@@ -506,7 +512,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.UploadRes
 			if e != nil {
 				return
 			}
-			artifactFileInfo, uploaded, e = us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Artifact.TargetPath, artifact.Props, uploadParams, logMsgPrefix)
+			artifactFileInfo, uploaded, e = us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Artifact.TargetPath, artifact.Props, artifact.BuildProps, uploadParams, logMsgPrefix)
 			if e != nil {
 				return
 			}
