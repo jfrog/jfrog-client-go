@@ -100,8 +100,8 @@ type BuildInfo struct {
 }
 
 type PartialBuildInfo struct {
-	Modules              []Module `json:"modules,omitempty"`
-	ResolverRepositories []string `json:"resolverRepositories,omitempty"`
+	Modules                []Module `json:"modules,omitempty"`
+	ResolutionRepositories []string `json:"resolutionRepositories,omitempty"`
 }
 
 type Agent struct {
