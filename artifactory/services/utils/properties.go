@@ -44,7 +44,7 @@ func ParseProperties(propStr string, option PropertyParseOptions) (*Properties, 
 		case SplitCommas:
 			splitedValues := strings.Split(values, ",")
 			for i, val := range splitedValues {
-				// If \ found it means the original string contains the \, which indicate this "," is part of the value
+				// If "\" is found, then it means that the original string contains the "\," which indicate this "," is part of the value
 				// and not a sperator
 				if strings.HasSuffix(val, "\\") && i+1 < len(splitedValues) {
 					splitedValues[i+1] = val[:len(val)-1] + "," + splitedValues[i+1]
