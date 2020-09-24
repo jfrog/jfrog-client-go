@@ -179,6 +179,8 @@ params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
 // Attach properties to the uploaded files.
 params.Props = "key1=val1;key2=val2"
+params.AddVcsProps = false
+params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
 params.Recursive = true
 params.Regexp = false
 params.IncludeDirs = false
@@ -186,7 +188,6 @@ params.Flat = true
 params.Explode = false
 params.Deb = ""
 params.Symlink = false
-params.AddVcsProps = false
 // Retries default value: 3
 params.Retries = 5
 // MinChecksumDeploy default value: 10400
