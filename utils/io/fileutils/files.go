@@ -512,3 +512,19 @@ func FilesIdentical(file1 string, file2 string) (bool, error) {
 	}
 	return srcDetails.Checksum.Md5 == toCompareDetails.Checksum.Md5, nil
 }
+
+// Compares provided Md5 and Sha1 to those of a local file.
+func IsEqualToLocalFile(localFilePath, md5, sha1 string) (bool, error) {
+	exists, err := IsFileExists(localFilePath, false)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return true, nil
+	}
+	localFileDetails, err := GetFileDetails(localFilePath)
+	if err != nil {
+		return false, err
+	}
+	return localFileDetails.Checksum.Md5 != md5 || localFileDetails.Checksum.Sha1 != sha1, nil
+}

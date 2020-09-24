@@ -285,21 +285,6 @@ func (ds *DownloadService) isFileAcceptRange(downloadFileDetails *httpclient.Dow
 	return isAcceptRange, err
 }
 
-func shouldDownloadFile(localFilePath, md5, sha1 string) (bool, error) {
-	exists, err := fileutils.IsFileExists(localFilePath, false)
-	if err != nil {
-		return false, err
-	}
-	if !exists {
-		return true, nil
-	}
-	localFileDetails, err := fileutils.GetFileDetails(localFilePath)
-	if err != nil {
-		return false, err
-	}
-	return localFileDetails.Checksum.Md5 != md5 || localFileDetails.Checksum.Sha1 != sha1, nil
-}
-
 func removeIfSymlink(localSymlinkPath string) error {
 	if fileutils.IsPathSymlink(localSymlinkPath) {
 		if err := os.Remove(localSymlinkPath); errorutils.CheckError(err) != nil {
@@ -416,7 +401,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 }
 
 func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix string, downloadData DownloadData, downloadParams DownloadParams) error {
-	shouldDownload, e := shouldDownloadFile(filepath.Join(localPath, localFileName), downloadData.Dependency.Actual_Md5, downloadData.Dependency.Actual_Sha1)
+	shouldDownload, e := fileutils.IsEqualToLocalFile(filepath.Join(localPath, localFileName), downloadData.Dependency.Actual_Md5, downloadData.Dependency.Actual_Sha1)
 	if e != nil {
 		return e
 	}
