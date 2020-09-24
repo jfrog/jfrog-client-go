@@ -401,11 +401,11 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 }
 
 func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix string, downloadData DownloadData, downloadParams DownloadParams) error {
-	shouldDownload, e := fileutils.IsEqualToLocalFile(filepath.Join(localPath, localFileName), downloadData.Dependency.Actual_Md5, downloadData.Dependency.Actual_Sha1)
+	isEqual, e := fileutils.IsEqualToLocalFile(filepath.Join(localPath, localFileName), downloadData.Dependency.Actual_Md5, downloadData.Dependency.Actual_Sha1)
 	if e != nil {
 		return e
 	}
-	if !shouldDownload {
+	if isEqual {
 		log.Debug(logMsgPrefix, "File already exists locally.")
 		if downloadParams.IsExplode() {
 			e = explodeLocalFile(localPath, localFileName)

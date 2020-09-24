@@ -520,11 +520,11 @@ func IsEqualToLocalFile(localFilePath, md5, sha1 string) (bool, error) {
 		return false, err
 	}
 	if !exists {
-		return true, nil
+		return false, nil
 	}
 	localFileDetails, err := GetFileDetails(localFilePath)
 	if err != nil {
 		return false, err
 	}
-	return localFileDetails.Checksum.Md5 != md5 || localFileDetails.Checksum.Sha1 != sha1, nil
+	return localFileDetails.Checksum.Md5 == md5 && localFileDetails.Checksum.Sha1 == sha1, nil
 }
