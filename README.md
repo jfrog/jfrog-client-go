@@ -46,6 +46,7 @@
     - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
     - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
     - [Getting Repository Details](#getting-repository-details)
+    - [Getting Repositories Details](#getting-repositories-details)
     - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
     - [Getting a Repository Replication](#getting-a-repository-replication)
     - [Removing a Repository Replication](#removing-a-repository-replication)
@@ -595,6 +596,12 @@ servicesManager.DeleteRepository("generic-repo")
 You can get repository details from Artifactory using its key:
 ```go
 servicesManager.GetRepository("generic-repo")
+```
+
+#### Getting Repositories Details
+You can get a list of minimal repositories details from Artifactory (requires a privileged user) :
+```go
+servicesManager.GetRepositories()
 ```
 
 #### Creating and Updating Repository Replications
