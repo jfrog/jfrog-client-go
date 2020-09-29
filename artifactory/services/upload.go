@@ -248,14 +248,9 @@ func createUploadTask(taskData *uploadTaskData, vcsCache *clientutils.VcsCache) 
 		return err
 	}
 
-	// If preserving symlinks or symlink target is empty, use root path name for upload (symlink itself / regular file)
-	if taskData.uploadParams.IsSymlink() || symlinkPath == "" {
-		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat())
-	} else {
-		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat())
-	}
+	artifact := utils.GetArtifactToUpload(taskData.path, taskData.target, symlinkPath, taskData.uploadParams.IsFlat(), taskData.uploadParams.IsSymlink())
+	taskData.target = artifact.TargetPath
 
-	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
 	props, e := addSymlinkProps(artifact, taskData.uploadParams)
 	if e != nil {
 		return e
@@ -278,19 +273,6 @@ func createUploadTask(taskData *uploadTaskData, vcsCache *clientutils.VcsCache) 
 	task = taskData.artifactHandlerFunc(uploadData)
 	taskData.producer.AddTaskWithError(task, taskData.errorsQueue.AddError)
 	return nil
-}
-
-// Construct the target path while taking `flat` flag into account.
-func getUploadTarget(rootPath, target string, isFlat bool) string {
-	if strings.HasSuffix(target, "/") {
-		if isFlat {
-			fileName, _ := fileutils.GetFileAndDirFromPath(rootPath)
-			target += fileName
-		} else {
-			target += clientutils.TrimPath(rootPath)
-		}
-	}
-	return target
 }
 
 func addPropsToTargetPath(targetPath, props, debConfig string) (string, error) {
