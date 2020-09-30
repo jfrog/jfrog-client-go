@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/user"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -531,4 +532,38 @@ func IsEqualToLocalFile(localFilePath, md5, sha1 string) (bool, error) {
 		return false, err
 	}
 	return localFileDetails.Checksum.Md5 == md5 && localFileDetails.Checksum.Sha1 == sha1, nil
+}
+
+// Copy directory content from one path to another.
+func MoveDir(fromPath, toPath string) error {
+	err := CreateDirIfNotExist(toPath)
+	if err != nil {
+		return err
+	}
+
+	files, err := ListFiles(fromPath, true)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range files {
+		dir, err := IsDirExists(v, true)
+		if err != nil {
+			return err
+		}
+
+		if dir {
+			toPath := toPath + GetFileSeparator() + filepath.Base(v)
+			err := MoveDir(v, toPath)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		err = os.Rename(v, path.Join(toPath, path.Base(v)))
+		if err != nil {
+			return err
+		}
+	}
+	return err
 }

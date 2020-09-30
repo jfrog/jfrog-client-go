@@ -22,7 +22,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/mholt/archiver"
 )
 
 func (jc *HttpClient) sendGetLeaveBodyOpen(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
@@ -316,26 +315,17 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 		return resp, redirectUrl, nil
 	}
 
-	isZip := fileutils.IsZip(downloadFileDetails.FileName)
-	arch := archiver.MatchingFormat(downloadFileDetails.FileName)
-
-	// If explode flag is true and the file is an archive but not zip, extract the file.
-	if isExplode && !isZip && arch != nil {
-		err = extractFile(downloadFileDetails, arch, resp.Body, logMsgPrefix)
-		return
-	}
-
-	// Save the file to the file system
+	// Save the file to the file system.
 	err = saveToFile(downloadFileDetails, resp, progress)
 	if err != nil {
 		return
 	}
 
-	// Extract zip if necessary
-	// Extracting zip after download to prevent out of memory issues.
-	if isExplode && isZip {
-		err = extractZip(downloadFileDetails, logMsgPrefix)
+	// Extract archive.
+	if isExplode && fileutils.IsSupportedArchive(downloadFileDetails.FileName) {
+		err = extractArchive(downloadFileDetails.LocalFileName, downloadFileDetails.LocalPath, logMsgPrefix)
 	}
+
 	return
 }
 
@@ -380,38 +370,21 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 	return errorutils.CheckError(err)
 }
 
-func extractFile(downloadFileDetails *DownloadFileDetails, arch archiver.Archiver, reader io.Reader, logMsgPrefix string) error {
-	log.Info(logMsgPrefix+"Extracting archive:", downloadFileDetails.FileName, "to", downloadFileDetails.LocalPath)
-	err := fileutils.CreateDirIfNotExist(downloadFileDetails.LocalPath)
+func extractArchive(localFileName, localPath, logMsgPrefix string) error {
+	fileName, err := fileutils.CreateFilePath(localPath, localFileName)
 	if err != nil {
 		return err
 	}
-
-	extractionPath, err := getExtractionPath(downloadFileDetails.LocalPath)
-	if err != nil {
-		return err
-	}
-
-	err = arch.Read(reader, extractionPath)
-	return errorutils.CheckError(err)
-}
-
-func extractZip(downloadFileDetails *DownloadFileDetails, logMsgPrefix string) error {
-	fileName, err := fileutils.CreateFilePath(downloadFileDetails.LocalPath, downloadFileDetails.LocalFileName)
-	if err != nil {
-		return err
-	}
-	log.Info(logMsgPrefix+"Extracting archive:", fileName, "to", downloadFileDetails.LocalPath)
-	absLocalPath, err := filepath.Abs(downloadFileDetails.LocalPath)
+	log.Info(logMsgPrefix+"Extracting archive:", fileName, "to", localPath)
+	absLocalPath, err := filepath.Abs(localPath)
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	err = archiver.Zip.Open(fileName, absLocalPath)
-	if errorutils.CheckError(err) != nil {
+	err = fileutils.Unarchive(fileName, absLocalPath)
+	if err != nil {
 		return err
 	}
-	err = os.Remove(fileName)
-	return errorutils.CheckError(err)
+	return errorutils.CheckError(os.Remove(fileName))
 }
 
 func getExtractionPath(localPath string) (string, error) {
@@ -472,17 +445,6 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 			return nil, err
 		}
 	}
-
-	// Explode and merge archive if necessary
-	if flags.Explode {
-		extracted, err := extractAndMergeChunks(chunksPaths, flags, logMsgPrefix)
-		if err != nil {
-			return nil, err
-		}
-		if extracted {
-			return resp, nil
-		}
-	}
 	if progress != nil {
 		progress.SetProgressState(downloadProgressId, "Merging")
 	}
@@ -490,6 +452,14 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 	if errorutils.CheckError(err) != nil {
 		return nil, err
 	}
+
+	if flags.Explode && fileutils.IsSupportedArchive(flags.FileName) {
+		err = handleArchive(flags, logMsgPrefix)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	log.Info(logMsgPrefix + "Done downloading.")
 	return resp, nil
 }
@@ -616,48 +586,25 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
 	return err
 }
 
-func extractAndMergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags, logMsgPrefix string) (bool, error) {
-	if fileutils.IsZip(flags.FileName) {
-		multiReader, err := ioutils.NewMultiFileReaderAt(chunksPaths)
-		if errorutils.CheckError(err) != nil {
-			return false, err
-		}
-		log.Info(logMsgPrefix+"Extracting archive:", flags.FileName, "to", flags.LocalPath)
-		err = fileutils.Unzip(multiReader, multiReader.Size(), flags.LocalPath)
-		if errorutils.CheckError(err) != nil {
-			return false, err
-		}
-		return true, nil
-	}
-
-	arch := archiver.MatchingFormat(flags.FileName)
-	if arch == nil {
+func handleArchive(flags ConcurrentDownloadFlags, logMsgPrefix string) error {
+	isSupportedArchive := fileutils.IsSupportedArchive(flags.FileName)
+	if !isSupportedArchive {
 		log.Debug(logMsgPrefix+"Not an archive:", flags.FileName, "downloading file without extracting it.")
-		return false, nil
+		return nil
 	}
 
-	fileReaders := make([]io.Reader, len(chunksPaths))
-	var err error
-	for k, v := range chunksPaths {
-		f, err := os.Open(v)
-		fileReaders[k] = f
-		if err != nil {
-			return false, errorutils.CheckError(err)
-		}
-		defer f.Close()
-	}
-
-	multiReader := io.MultiReader(fileReaders...)
 	extractionPath, err := getExtractionPath(flags.LocalPath)
 	if err != nil {
-		return false, err
+		return err
 	}
+
 	log.Info(logMsgPrefix+"Extracting archive:", flags.FileName, "to", extractionPath)
-	err = arch.Read(multiReader, extractionPath)
+	err = extractArchive(flags.LocalFileName, flags.LocalPath, extractionPath)
 	if err != nil {
-		return false, errorutils.CheckError(err)
+		return err
 	}
-	return true, nil
+
+	return nil
 }
 
 func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,

@@ -28,7 +28,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayAuth "github.com/jfrog/jfrog-client-go/xray/auth"
 	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
-	"github.com/mholt/archiver"
+	"github.com/mholt/archiver/v3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -366,7 +366,7 @@ func uploadDummyFile(t *testing.T) {
 		t.Error("Failed to upload", failed, "files.")
 	}
 	archivePath := filepath.Join(workingDir, "c.tar.gz")
-	err = archiver.TarGz.Make(archivePath, []string{filepath.Join(workingDir, "out/a.in")})
+	err = archiver.Archive([]string{filepath.Join(workingDir, "out/a.in")}, archivePath)
 	if err != nil {
 		t.Error(err)
 	}
