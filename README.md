@@ -597,6 +597,12 @@ You can get repository details from Artifactory using its key:
 servicesManager.GetRepository("generic-repo")
 ```
 
+#### Getting All repositories
+You can all repositories from Artifactory:
+```go
+servicesManager.GetAllRepositories()
+```
+
 #### Creating and Updating Repository Replications
 Example of creating a repository replication:
 ```go

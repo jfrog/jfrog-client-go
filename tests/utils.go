@@ -516,3 +516,9 @@ func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
 	assert.NoError(t, err, "Failed to get "+repoKey+" details")
 	return data
 }
+
+func getAllRepos(t *testing.T) *[]services.RepositoryDetails {
+	data, err := testsGetRepositoryService.GetAll()
+	assert.NoError(t, err, "Failed to get all repositories details")
+	return data
+}

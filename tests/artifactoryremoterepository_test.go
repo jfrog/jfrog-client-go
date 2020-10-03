@@ -38,6 +38,7 @@ func TestArtifactoryRemoteRepository(t *testing.T) {
 	t.Run("remoteVcsTest", remoteVcsTest)
 	t.Run("remoteGenericTest", remoteGenericTest)
 	t.Run("getRemoteRepoDetailsTest", getRemoteRepoDetailsTest)
+	t.Run("getAllRemoteRepoDetailsTest", getAllRemoteRepoDetailsTest)
 }
 
 func remoteMavenTest(t *testing.T) {
@@ -957,4 +958,33 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	assert.Equal(t, data.Rclass, "remote")
 	assert.Equal(t, data.Url, grp.Url)
 	assert.Equal(t, data.PackageType, "generic")
+}
+
+func getAllRemoteRepoDetailsTest(t *testing.T) {
+	// Create Repo
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	grp := services.NewGenericRemoteRepositoryParams()
+	grp.Key = repoKey
+	grp.RepoLayoutRef = "simple-default"
+	grp.Url = "https://jcenter.bintray.com"
+	grp.Description = "Generic Repo for jfrog-client-go remote-repository-test"
+
+	err := testsCreateRemoteRepositoryService.Generic(grp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	// Get repo details
+	data := getAllRepos(t)
+	assert.NotNil(t, data)
+	repo := &services.RepositoryDetails{}
+	for _, v := range *data {
+		if v.Key == repoKey {
+			repo = &v
+			break
+		}
+	}
+	// Validate
+	assert.NotNil(t, repo, "Repo "+repoKey+" not found")
+	assert.Equal(t, grp.Description+" (local file cache)", repo.Description)
+	assert.Equal(t, "Generic", repo.PackageType)
+	assert.Equal(t, grp.Url, repo.Url)
 }

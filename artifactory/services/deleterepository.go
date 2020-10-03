@@ -25,7 +25,7 @@ func (drs *DeleteRepositoryService) GetJfrogHttpClient() *rthttpclient.Artifacto
 
 func (drs *DeleteRepositoryService) Delete(repoKey string) error {
 	httpClientsDetails := drs.ArtDetails.CreateHttpClientDetails()
-	log.Info("Deleting repository...")
+	log.Info("Deleting repository " + repoKey + "...")
 	resp, body, err := drs.client.SendDelete(drs.ArtDetails.GetUrl()+"api/repositories/"+repoKey, nil, &httpClientsDetails)
 	if err != nil {
 		return err
