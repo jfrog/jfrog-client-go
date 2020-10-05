@@ -1,9 +1,9 @@
 package fileutils
 
 import (
+	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
-	"strconv"
 	"testing"
 )
 
@@ -22,9 +22,7 @@ func TestIsSsh(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.url, func(t *testing.T) {
-			if IsSshUrl(test.url) != test.expected {
-				t.Error("Expected '"+strconv.FormatBool(test.expected)+"' Got: '"+strconv.FormatBool(!test.expected)+"' For URL:", test.url)
-			}
+			assert.Equal(t, test.expected, IsSshUrl(test.url), "Wrong ssh for URL: " + test.url)
 		})
 	}
 }
@@ -32,7 +30,8 @@ func TestIsSsh(t *testing.T) {
 func TestGetFileOrDirPathFile(t *testing.T) {
 	wd, err := os.Getwd()
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 	defer os.Chdir(wd)
 
@@ -40,31 +39,30 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	projectRoot := filepath.Join("testdata", "project")
 	err = os.Chdir(projectRoot)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 
 	// Make projectRoot an absolute path.
 	projectRoot, err = os.Getwd()
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 
 	// Get the project root.
 	root, exists, err := FindUpstream("go.mod", File)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
-	if !exists {
-		t.Error("File go.mod is missing.")
-	}
-
-	if root != projectRoot {
-		t.Error("Expecting", projectRoot, "got:", root)
-	}
+	assert.True(t, exists, "File go.mod is missing.")
+	assert.Equal(t, projectRoot, root)
 
 	// CD back to the original directory.
 	if err := os.Chdir(wd); err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 
 	// CD into a sub directory in the same project, and expect to get the same project root.
@@ -72,58 +70,52 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	projectSubDirectory := filepath.Join("testdata", "project", "dir")
 	err = os.Chdir(projectSubDirectory)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 	root, exists, err = FindUpstream("go.mod", File)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
-	if !exists {
-		t.Error("File go.mod is missing.")
-	}
-	if root != projectRoot {
-		t.Error("Expecting", projectRoot, "got:", root)
-	}
+	assert.True(t, exists, "File go.mod is missing.")
+	assert.Equal(t, projectRoot, root)
 
 	root, exists, err = FindUpstream("go-missing.mod", File)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
-	if exists {
-		t.Error("File go-missing.mod found but shouldn't.")
-	}
-
-	if root != "" {
-		t.Error("File go-missing.mod shouldn't be found, however, got:", root)
-	}
+	assert.False(t, exists, "File go-missing.mod found but shouldn't.")
+	assert.Empty(t, root, "File go-missing.mod shouldn't be found")
 
 	// CD back to the original directory.
 	if err := os.Chdir(wd); err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 
 	// Now CD into a directory outside the project, and expect to get a different project root.
 	noProjectRoot := filepath.Join("testdata", "noproject")
 	err = os.Chdir(noProjectRoot)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 	root, exists, err = FindUpstream("go.mod", File)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
-	if !exists {
-		t.Error("File go.mod is missing.")
-	}
-	if root == projectRoot {
-		t.Error("Expecting a different value than", root)
-	}
+	assert.True(t, exists, "File go.mod is missing.")
+	assert.NotEqual(t, projectRoot, root)
 }
 
 func TestGetFileOrDirPathFolder(t *testing.T) {
 	wd, err := os.Getwd()
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 	defer os.Chdir(wd)
 
@@ -131,34 +123,73 @@ func TestGetFileOrDirPathFolder(t *testing.T) {
 	dirPath := filepath.Join("testdata")
 	err = os.Chdir(dirPath)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 	// Get absolute path.
 	dirPath, err = os.Getwd()
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 	// CD back to the original directory.
 	if err := os.Chdir(wd); err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 
 	// Go to starting dir to search from.
 	searchFromDir := filepath.Join("testdata", "project", "dir")
 	err = os.Chdir(searchFromDir)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
 
 	// Get the directory path.
 	root, exists, err := FindUpstream("noproject", Dir)
 	if err != nil {
-		t.Error(err)
+		assert.Error(t, err)
+		return
 	}
-	if !exists {
-		t.Error("Dir noproject is missing.")
+	assert.True(t, exists, "Dir noproject is missing.")
+	assert.Equal(t, dirPath, root)
+}
+
+func TestIsEqualToLocalFile(t *testing.T) {
+	localFilePath := filepath.Join("testdata", "files", "comparisonFile")
+
+	// Get file actual details.
+	localFileDetails, err := GetFileDetails(localFilePath)
+	if err != nil {
+		assert.NoError(t, err)
+		return
 	}
-	if root != dirPath {
-		t.Error("Expecting", dirPath, "got:", root)
+
+	actualMd5 := localFileDetails.Checksum.Md5
+	actualSha1 := localFileDetails.Checksum.Sha1
+	tests := []struct {
+		name           string
+		localPath      string
+		remoteMd5      string
+		remoteSha1     string
+		expectedResult bool
+	}{
+		{"realEquality", localFilePath, actualMd5, actualSha1, true},
+		{"unequalPath", "non/existing/path", actualMd5, actualSha1, false},
+		{"unequalChecksum", localFilePath, "wrongMd5", "wrongSha1", false},
+		{"unequalMd5", localFilePath, "wrongMd5", actualSha1, false},
+		{"unequalSha1", localFilePath, actualMd5, "wrongSha1", false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			isEqual, err := IsEqualToLocalFile(test.localPath, test.remoteMd5, test.remoteSha1)
+			if err != nil {
+				assert.NoError(t, err)
+				return
+			}
+			assert.Equal(t, test.expectedResult, isEqual)
+		})
 	}
 }
