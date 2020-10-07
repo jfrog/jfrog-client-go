@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,15 +18,15 @@ import (
 )
 
 func TestXrayWatch(t *testing.T) {
-	policyName := fmt.Sprintf("%s-%d", "fake-policy", time.Now().Unix())
-	err := addFakePolicy(policyName)
+	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1", time.Now().Unix())
+	err := addFakePolicy(policy1Name)
 	assert.NoError(t, err)
-	defer deletePolicy(policyName)
+	defer deletePolicy(policy1Name)
 
-	buildName := fmt.Sprintf("%s-%d", "fake-build", time.Now().Unix())
-	err = addFakeBuild(buildName)
+	policy2Name := fmt.Sprintf("%s-%d", "jfrog-policy2", time.Now().Unix())
+	err = addFakePolicy(policy2Name)
 	assert.NoError(t, err)
-	defer deleteBuild(buildName)
+	defer deletePolicy(policy2Name)
 
 	AllWatchName := fmt.Sprintf("%s-%d", "jfrog-client-go-tests-watch-all-repos", time.Now().Unix())
 	paramsAllRepos := services.NewXrayWatchParams()
@@ -34,21 +35,27 @@ func TestXrayWatch(t *testing.T) {
 	paramsAllRepos.Active = true
 
 	paramsAllRepos.Repositories.Type = services.WatchRepositoriesAll
-	paramsAllRepos.Repositories.All.Filters.PackageTypes = []string{"npm", "maven"}
-	paramsAllRepos.Repositories.All.Filters.Names = []string{"example-name"}
-	paramsAllRepos.Repositories.All.Filters.Paths = []string{"example-path"}
-	paramsAllRepos.Repositories.All.Filters.MimeTypes = []string{"example-mime-type"}
-	paramsAllRepos.Repositories.All.Filters.Properties = map[string]string{"some-key": "some-value"}
+	paramsAllRepos.Repositories.All.Filters.PackageTypes = []string{"NpM", "maven"}
+	paramsAllRepos.Repositories.All.Filters.Names = []string{"example-name-1"}
+	paramsAllRepos.Repositories.All.Filters.Paths = []string{"example-path-1"}
+	paramsAllRepos.Repositories.All.Filters.MimeTypes = []string{"example-mime-type-1"}
+	paramsAllRepos.Repositories.All.Filters.Properties = map[string]string{"some-key-1": "some-value-1"}
 
 	paramsAllRepos.Repositories.ExcludePatterns = []string{"excludePath1", "excludePath2"}
 	paramsAllRepos.Repositories.IncludePatterns = []string{"includePath1", "includePath2"}
 
 	paramsAllRepos.Builds.Type = services.WatchBuildAll
 	paramsAllRepos.Builds.All.Bin_Mgr_ID = "default"
-	paramsAllRepos.Policies = []services.XrayWatchPolicy{{
-		Name: policyName,
-		Type: "security",
-	}}
+	paramsAllRepos.Policies = []services.XrayWatchPolicy{
+		{
+			Name: policy1Name,
+			Type: "security",
+		},
+		{
+			Name: policy2Name,
+			Type: "security",
+		},
+	}
 
 	err = testsXrayWatchService.Create(paramsAllRepos)
 	assert.NoError(t, err)
@@ -56,43 +63,97 @@ func TestXrayWatch(t *testing.T) {
 
 	validateWatchGeneralSettings(t, paramsAllRepos)
 	targetConfig, err := testsXrayWatchService.Get(paramsAllRepos.Name)
+	assert.NoError(t, err)
+
 	assert.Equal(t, []string{"excludePath1", "excludePath2"}, targetConfig.Repositories.ExcludePatterns)
 	assert.Equal(t, []string{"includePath1", "includePath2"}, targetConfig.Repositories.IncludePatterns)
 	assert.Equal(t, []string{"Maven", "Npm"}, targetConfig.Repositories.All.Filters.PackageTypes)
-	assert.Equal(t, []string{"example-name"}, targetConfig.Repositories.All.Filters.Names)
-	assert.Equal(t, []string{"example-path"}, targetConfig.Repositories.All.Filters.Paths)
-	assert.Equal(t, []string{"example-mime-type"}, targetConfig.Repositories.All.Filters.MimeTypes)
-	assert.Equal(t, map[string]string{"some-key": "some-value"}, targetConfig.Repositories.All.Filters.Properties)
+	assert.Equal(t, []string{"example-name-1"}, targetConfig.Repositories.All.Filters.Names)
+	assert.Equal(t, []string{"example-path-1"}, targetConfig.Repositories.All.Filters.Paths)
+	assert.Equal(t, []string{"example-mime-type-1"}, targetConfig.Repositories.All.Filters.MimeTypes)
+	assert.Equal(t, map[string]string{"some-key-1": "some-value-1"}, targetConfig.Repositories.All.Filters.Properties)
 	assert.Equal(t, services.WatchRepositoriesAll, targetConfig.Repositories.Type)
 
 	assert.Equal(t, services.WatchBuildAll, targetConfig.Builds.Type)
 	assert.Equal(t, "default", targetConfig.Builds.All.Bin_Mgr_ID)
+
+	paramsAllRepos.Description = "Updated Description"
+	paramsAllRepos.Repositories.All.Filters.PackageTypes = []string{"generic", "pypi"}
+	paramsAllRepos.Repositories.All.Filters.Names = []string{"example-name-2"}
+	paramsAllRepos.Repositories.All.Filters.Paths = []string{"example-path-2"}
+	paramsAllRepos.Repositories.All.Filters.MimeTypes = []string{"example-mime-type-2"}
+	paramsAllRepos.Repositories.All.Filters.Properties = map[string]string{"some-key-2": "some-value-2"}
+
+	paramsAllRepos.Repositories.ExcludePatterns = []string{"excludePath3", "excludePath4"}
+	paramsAllRepos.Repositories.IncludePatterns = []string{"includePath3", "includePath4"}
+
+	paramsAllRepos.Builds.Type = services.WatchBuildAll
+	paramsAllRepos.Builds.All.Bin_Mgr_ID = "default"
+	paramsAllRepos.Policies = []services.XrayWatchPolicy{
+		{
+			Name: policy2Name,
+			Type: "security",
+		},
+	}
+
+	err = testsXrayWatchService.Update(paramsAllRepos)
+	assert.NoError(t, err)
+
+	validateWatchGeneralSettings(t, paramsAllRepos)
+	targetConfig, err = testsXrayWatchService.Get(paramsAllRepos.Name)
+	assert.NoError(t, err)
+
+	assert.Equal(t, []string{"excludePath3", "excludePath4"}, targetConfig.Repositories.ExcludePatterns)
+	assert.Equal(t, []string{"includePath3", "includePath4"}, targetConfig.Repositories.IncludePatterns)
+	assert.Equal(t, []string{"Generic", "Pypi"}, targetConfig.Repositories.All.Filters.PackageTypes)
+	assert.Equal(t, []string{"example-name-2"}, targetConfig.Repositories.All.Filters.Names)
+	assert.Equal(t, []string{"example-path-2"}, targetConfig.Repositories.All.Filters.Paths)
+	assert.Equal(t, []string{"example-mime-type-2"}, targetConfig.Repositories.All.Filters.MimeTypes)
+	assert.Equal(t, map[string]string{"some-key-2": "some-value-2"}, targetConfig.Repositories.All.Filters.Properties)
+
+}
+
+func TestXrayWatchSelectedRepos(t *testing.T) {
+	repo1Name := fmt.Sprintf("%s-%d", "jfrog-repo1", time.Now().Unix())
+	createRepo(t, repo1Name)
+	defer deleteRepo(t, repo1Name)
+	repo2Name := fmt.Sprintf("%s-%d", "jfrog-repo2", time.Now().Unix())
+	createRepo(t, repo2Name)
+	defer deleteRepo(t, repo2Name)
+
+	build1Name := fmt.Sprintf("%s-%d", "jfrog-build1", time.Now().Unix())
+	err := createBuild(build1Name)
+	assert.NoError(t, err)
+	defer deleteBuild(build1Name)
+
+	build2Name := fmt.Sprintf("%s-%d", "jfrog-build2", time.Now().Unix())
+	err = createBuild(build2Name)
+	assert.NoError(t, err)
+	defer deleteBuild(build2Name)
 
 	paramsSelectedRepos := services.NewXrayWatchParams()
 	paramsSelectedRepos.Name = fmt.Sprintf("%s-%d", "jfrog-client-go-tests-watch-selected-repos", time.Now().Unix())
 	paramsSelectedRepos.Description = "Selected Repos"
 	paramsSelectedRepos.Active = true
 
-	// Todo: update repository name
-	// Repository must exist
 	var repos = map[string]services.XrayWatchRepository{}
-	repo := services.NewXrayWatchRepository("example-repo-local", "default")
+	repo := services.NewXrayWatchRepository(repo1Name, "default")
 	repo.Filters.PackageTypes = []string{"npm", "maven"}
 	repo.Filters.Names = []string{"example-name"}
 	repo.Filters.Paths = []string{"example-path"}
 	repo.Filters.MimeTypes = []string{"example-mime-type"}
 	repo.Filters.Properties = map[string]string{"some-key": "some-value"}
 
-	repos["example-repo-local"] = repo
+	repos[repo1Name] = repo
 
-	anotherRepo := services.NewXrayWatchRepository("another-repo", "default")
+	anotherRepo := services.NewXrayWatchRepository(repo2Name, "default")
 	anotherRepo.Filters.PackageTypes = []string{"nuget"}
 	anotherRepo.Filters.Names = []string{"another-example-name"}
 	anotherRepo.Filters.Paths = []string{"another-example-path"}
 	anotherRepo.Filters.MimeTypes = []string{"another-example-mime-type"}
 	anotherRepo.Filters.Properties = map[string]string{"another-key": "some-value"}
 
-	repos["another-repo"] = anotherRepo
+	repos[repo2Name] = anotherRepo
 
 	paramsSelectedRepos.Repositories.Type = services.WatchRepositoriesByName
 	paramsSelectedRepos.Repositories.Repositories = repos
@@ -101,42 +162,47 @@ func TestXrayWatch(t *testing.T) {
 
 	paramsSelectedRepos.Builds.Type = services.WatchBuildByName
 	paramsSelectedRepos.Builds.ByNames = map[string]services.XrayWatchBuildsByNameParams{}
-	paramsSelectedRepos.Builds.ByNames[buildName] = services.XrayWatchBuildsByNameParams{
-		Name:       buildName,
+	paramsSelectedRepos.Builds.ByNames[build1Name] = services.XrayWatchBuildsByNameParams{
+		Name:       build1Name,
 		Bin_Mgr_ID: "default",
 	}
 	err = testsXrayWatchService.Create(paramsSelectedRepos)
 	assert.NoError(t, err)
 	defer testsXrayWatchService.Delete(paramsSelectedRepos.Name)
 	validateWatchGeneralSettings(t, paramsSelectedRepos)
-	targetConfig, err = testsXrayWatchService.Get(paramsSelectedRepos.Name)
+
+	targetConfig, err := testsXrayWatchService.Get(paramsSelectedRepos.Name)
+	assert.NoError(t, err)
 	assert.Equal(t, []string{"selectedExcludePath1", "selectedExcludePath2"}, targetConfig.Repositories.ExcludePatterns)
 	assert.Equal(t, []string{"selectedIncludePath1", "selectedIncludePath2"}, targetConfig.Repositories.IncludePatterns)
 	assert.Equal(t, services.WatchRepositoriesByName, targetConfig.Repositories.Type)
 
-	assert.Equal(t, "example-repo-local", targetConfig.Repositories.Repositories["example-repo-local"].Name)
-	assert.Equal(t, "default", targetConfig.Repositories.Repositories["example-repo-local"].Bin_Mgr_ID)
-	assert.Equal(t, []string{"Maven", "Npm"}, targetConfig.Repositories.Repositories["example-repo-local"].Filters.PackageTypes)
-	assert.Equal(t, []string{"example-name"}, targetConfig.Repositories.Repositories["example-repo-local"].Filters.Names)
-	assert.Equal(t, []string{"example-path"}, targetConfig.Repositories.Repositories["example-repo-local"].Filters.Paths)
-	assert.Equal(t, []string{"example-mime-type"}, targetConfig.Repositories.Repositories["example-repo-local"].Filters.MimeTypes)
-	assert.Equal(t, map[string]string{"some-key": "some-value"}, targetConfig.Repositories.Repositories["example-repo-local"].Filters.Properties)
+	assert.Equal(t, repo1Name, targetConfig.Repositories.Repositories[repo1Name].Name)
+	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo1Name].Bin_Mgr_ID)
+	assert.Equal(t, []string{"Maven", "Npm"}, targetConfig.Repositories.Repositories[repo1Name].Filters.PackageTypes)
+	assert.Equal(t, []string{"example-name"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Names)
+	assert.Equal(t, []string{"example-path"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Paths)
+	assert.Equal(t, []string{"example-mime-type"}, targetConfig.Repositories.Repositories[repo1Name].Filters.MimeTypes)
+	assert.Equal(t, map[string]string{"some-key": "some-value"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Properties)
 
-	assert.Equal(t, "another-repo", targetConfig.Repositories.Repositories["another-repo"].Name)
-	assert.Equal(t, "default", targetConfig.Repositories.Repositories["another-repo"].Bin_Mgr_ID)
-	assert.Equal(t, []string{"NuGet"}, targetConfig.Repositories.Repositories["another-repo"].Filters.PackageTypes)
-	assert.Equal(t, []string{"another-example-name"}, targetConfig.Repositories.Repositories["another-repo"].Filters.Names)
-	assert.Equal(t, []string{"another-example-path"}, targetConfig.Repositories.Repositories["another-repo"].Filters.Paths)
-	assert.Equal(t, []string{"another-example-mime-type"}, targetConfig.Repositories.Repositories["another-repo"].Filters.MimeTypes)
-	assert.Equal(t, map[string]string{"another-key": "some-value"}, targetConfig.Repositories.Repositories["another-repo"].Filters.Properties)
+	assert.Equal(t, repo2Name, targetConfig.Repositories.Repositories[repo2Name].Name)
+	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo2Name].Bin_Mgr_ID)
+	assert.Equal(t, []string{"NuGet"}, targetConfig.Repositories.Repositories[repo2Name].Filters.PackageTypes)
+	assert.Equal(t, []string{"another-example-name"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Names)
+	assert.Equal(t, []string{"another-example-path"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Paths)
+	assert.Equal(t, []string{"another-example-mime-type"}, targetConfig.Repositories.Repositories[repo2Name].Filters.MimeTypes)
+	assert.Equal(t, map[string]string{"another-key": "some-value"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Properties)
 
 	assert.Equal(t, services.WatchBuildByName, targetConfig.Builds.Type)
 	assert.Empty(t, targetConfig.Builds.All.ExcludePatterns)
 	assert.Empty(t, targetConfig.Builds.All.IncludePatterns)
 
-	assert.Equal(t, buildName, targetConfig.Builds.ByNames[buildName].Name)
-	assert.Equal(t, "default", targetConfig.Builds.ByNames[buildName].Bin_Mgr_ID)
+	assert.Equal(t, build1Name, targetConfig.Builds.ByNames[build1Name].Name)
+	assert.Equal(t, "default", targetConfig.Builds.ByNames[build1Name].Bin_Mgr_ID)
 
+}
+
+func TestXrayWatchBuildsByPattern(t *testing.T) {
 	paramsBuildsByPattern := services.NewXrayWatchParams()
 	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%d", "jfrog-client-go-tests-watch-builds-by-pattern", time.Now().Unix())
 	paramsBuildsByPattern.Description = "Builds By Pattern"
@@ -144,11 +210,13 @@ func TestXrayWatch(t *testing.T) {
 	paramsBuildsByPattern.Builds.All.ExcludePatterns = []string{"excludePath"}
 	paramsBuildsByPattern.Builds.All.IncludePatterns = []string{"includePath", "fake"}
 	paramsBuildsByPattern.Builds.All.Bin_Mgr_ID = "default"
-	err = testsXrayWatchService.Create(paramsBuildsByPattern)
+	err := testsXrayWatchService.Create(paramsBuildsByPattern)
 	assert.NoError(t, err)
 	defer testsXrayWatchService.Delete(paramsBuildsByPattern.Name)
 	validateWatchGeneralSettings(t, paramsBuildsByPattern)
-	targetConfig, err = testsXrayWatchService.Get(paramsBuildsByPattern.Name)
+
+	targetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
+	assert.NoError(t, err)
 	assert.Equal(t, services.WatchBuildAll, targetConfig.Builds.Type)
 	assert.Equal(t, []string{"excludePath"}, targetConfig.Builds.All.ExcludePatterns)
 	assert.Equal(t, []string{"includePath", "fake"}, targetConfig.Builds.All.IncludePatterns)
@@ -169,24 +237,16 @@ func validateWatchGeneralSettings(t *testing.T, params services.XrayWatchParams)
 	return
 }
 
-// func getPermissionTarget(targetName string) (targetParams *services.PermissionTargetParams, err error) {
-// 	artDetails := GetRtDetails()
-// 	artHttpDetails := artDetails.CreateHttpClientDetails()
-// 	client, err := httpclient.ClientBuilder().Build()
-// 	if err != nil {
-// 		return
-// 	}
-// 	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/v2/security/permissions/"+targetName, false, artHttpDetails)
-// 	if err != nil || resp.StatusCode != http.StatusOK {
-// 		return
-// 	}
-// 	if err = json.Unmarshal(body, &targetParams); err != nil {
-// 		return nil, errors.New("failed unmarshalling permission target " + targetName)
-// 	}
-// 	return
-// }
+func createRepo(t *testing.T, repoKey string) {
+	glp := services.NewGenericLocalRepositoryParams()
+	glp.Key = repoKey
+	glp.XrayIndex = &trueValue
 
-func addFakeBuild(buildName string) error {
+	err := testsCreateLocalRepositoryService.Generic(glp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+}
+
+func createBuild(buildName string) error {
 	artDetails := GetRtDetails()
 	artHTTPDetails := artDetails.CreateHttpClientDetails()
 
@@ -220,8 +280,7 @@ func addFakeBuild(buildName string) error {
 		return errors.New("failed marshalling build " + buildName)
 	}
 
-	// TODO: Update URL
-	resp, _, err := client.SendPut("https://artifactoryprovider.jfrog.io/artifactory/api/build", requestContentArtifactoryBuild, artHTTPDetails)
+	resp, _, err := client.SendPut(artDetails.GetUrl()+"api/build", requestContentArtifactoryBuild, artHTTPDetails)
 	if err != nil {
 		return err
 	}
@@ -238,8 +297,8 @@ func addFakeBuild(buildName string) error {
 
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
 
-	// TODO: Update URL
-	resp, _, err = client.SendPost("https://artifactoryprovider.jfrog.io/xray/api/v1/binMgr/builds", requestContentIndexBuild, artHTTPDetails)
+	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
+	resp, _, err = client.SendPost(xrayUrl+"api/v1/binMgr/builds", requestContentIndexBuild, artHTTPDetails)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return err
 	}
@@ -264,8 +323,8 @@ func deleteBuildIndex(buildName string) error {
 
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
 
-	// TODO: Update URL
-	resp, _, err := client.SendPut("https://artifactoryprovider.jfrog.io/xray/api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails)
+	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
+	resp, _, err := client.SendPut(xrayUrl+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return err
 	}
@@ -283,8 +342,7 @@ func deleteBuild(buildName string) error {
 		return nil
 	}
 
-	// TODO: Update URL
-	resp, _, err := client.SendDelete("https://artifactoryprovider.jfrog.io/artifactory/api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails)
+	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return errors.New("failed unmarshalling build " + resp.Status)
 	}
@@ -351,8 +409,8 @@ func addFakePolicy(policyName string) error {
 		return errors.New("failed marshalling policy " + policyName)
 	}
 
-	// TODO: Update URL
-	resp, _, err := client.SendPost("https://artifactoryprovider.jfrog.io/xray/api/v2/policies", requestContent, artHTTPDetails)
+	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
+	resp, _, err := client.SendPost(xrayUrl + "api/v2/policies", requestContent, artHTTPDetails)
 	if err != nil {
 		return err
 	}
@@ -372,8 +430,8 @@ func deletePolicy(policyName string) error {
 	if err != nil {
 		return nil
 	}
-	// TODO: Update URL
-	resp, _, err := client.SendDelete("https://artifactoryprovider.jfrog.io/xray/api/v2/policies/"+policyName, nil, artHTTPDetails)
+	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
+	resp, _, err := client.SendDelete(xrayUrl + "api/v2/policies/"+policyName, nil, artHTTPDetails)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return errors.New("failed to delete policy " + resp.Status)
 	}
