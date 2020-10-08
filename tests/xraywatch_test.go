@@ -19,12 +19,12 @@ import (
 
 func TestXrayWatch(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1", time.Now().Unix())
-	err := addFakePolicy(policy1Name)
+	err := addPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer deletePolicy(policy1Name)
 
 	policy2Name := fmt.Sprintf("%s-%d", "jfrog-policy2", time.Now().Unix())
-	err = addFakePolicy(policy2Name)
+	err = addPolicy(policy2Name)
 	assert.NoError(t, err)
 	defer deletePolicy(policy2Name)
 
@@ -222,11 +222,6 @@ func TestXrayWatchBuildsByPattern(t *testing.T) {
 	assert.Equal(t, []string{"includePath", "fake"}, targetConfig.Builds.All.IncludePatterns)
 }
 
-func prettyPrint(i interface{}) string {
-	s, _ := json.MarshalIndent(i, "", "\t")
-	return string(s)
-}
-
 func validateWatchGeneralSettings(t *testing.T, params services.XrayWatchParams) {
 	targetConfig, err := testsXrayWatchService.Get(params.Name)
 	assert.NoError(t, err)
@@ -289,6 +284,7 @@ func createBuild(buildName string) error {
 		return errors.New("Status is not OK or NoContent - " + strconv.Itoa(resp.StatusCode))
 	}
 
+	// the build needs to be indexed before a watch can be associated with it.
 	dataIndexBuild := struct {
 		Names []string `json:"names"`
 	}{
@@ -333,7 +329,10 @@ func deleteBuildIndex(buildName string) error {
 }
 
 func deleteBuild(buildName string) error {
-	deleteBuildIndex(buildName)
+	err := deleteBuildIndex(buildName)
+	if err != nil {
+		return nil
+	}
 
 	artDetails := GetRtDetails()
 	artHTTPDetails := artDetails.CreateHttpClientDetails()
@@ -371,7 +370,7 @@ type ArtifactoryArtifact struct {
 	Name string `json:"name"`
 }
 
-func addFakePolicy(policyName string) error {
+func addPolicy(policyName string) error {
 	artDetails := GetRtDetails()
 	artHTTPDetails := artDetails.CreateHttpClientDetails()
 
@@ -410,7 +409,7 @@ func addFakePolicy(policyName string) error {
 	}
 
 	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
-	resp, _, err := client.SendPost(xrayUrl + "api/v2/policies", requestContent, artHTTPDetails)
+	resp, _, err := client.SendPost(xrayUrl+"api/v2/policies", requestContent, artHTTPDetails)
 	if err != nil {
 		return err
 	}
@@ -431,7 +430,7 @@ func deletePolicy(policyName string) error {
 		return nil
 	}
 	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
-	resp, _, err := client.SendDelete(xrayUrl + "api/v2/policies/"+policyName, nil, artHTTPDetails)
+	resp, _, err := client.SendDelete(xrayUrl+"api/v2/policies/"+policyName, nil, artHTTPDetails)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return errors.New("failed to delete policy " + resp.Status)
 	}

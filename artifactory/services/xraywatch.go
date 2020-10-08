@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"regexp"
 	"sort"
-	"time"
 
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -25,11 +24,6 @@ const (
 )
 
 const WATCH_API_URL = "api/v2/watches"
-const XRAY_WATCH_RETRY_CONSECUTIVE_RETRIES = 10           // Retrying to resume the watch 10 times after a stable connection
-const XRAY_WATCH_CONNECTION_TIMEOUT = 90 * time.Second    // Expecting \r\n every 30 seconds
-const XRAY_WATCH_SLEEP_BETWEEN_RETRIES = 15 * time.Second // 15 seconds sleep between retry
-const XRAY_WATCH_STABLE_CONNECTION_WINDOW = 100 * time.Second
-const XRAY_WATCH_FATAL_FAIL_STATUS = -1
 
 type XrayWatchService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
@@ -45,6 +39,7 @@ func (xws *XrayWatchService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpC
 }
 
 func (xws *XrayWatchService) GetXrayWatchUrl() string {
+	// Updating url endpoint from https://something.jfrog.io/artifactory to https://something.jfrog.io/xray
 	url := xws.ArtDetails.GetUrl()
 	r := regexp.MustCompile("artifactory/?$")
 
@@ -63,7 +58,7 @@ func (xws *XrayWatchService) Delete(watchName string) error {
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done deleting watches.")
+	log.Info("Done deleting watch.")
 	return nil
 }
 
@@ -137,7 +132,7 @@ func ConfigureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) e
 	if params.Repositories.Type == WatchRepositoriesAll {
 		allFilters := XrayWatchProjectResourcesElement{
 			Type:          "all-repos",
-			StringFilters: []XrayWatchFilterString{},
+			StringFilters: []XrayWatchFilter{},
 		}
 
 		allFilters.StringFilters = append(allFilters.StringFilters, CreateFilters(params.Repositories.All.Filters, params.Repositories)...)
@@ -152,7 +147,7 @@ func ConfigureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) e
 				StringFilters: repository.StringFilters,
 			}
 			if repo.StringFilters == nil {
-				repo.StringFilters = []XrayWatchFilterString{}
+				repo.StringFilters = []XrayWatchFilter{}
 			}
 			repo.StringFilters = append(repo.StringFilters, CreateFilters(repository.Filters, params.Repositories)...)
 
@@ -163,11 +158,11 @@ func ConfigureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) e
 	return nil
 }
 
-func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) []XrayWatchFilterString {
-	result := []XrayWatchFilterString{}
+func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) []XrayWatchFilter {
+	result := []XrayWatchFilter{}
 
 	for _, packageType := range filters.PackageTypes {
-		filter := XrayWatchFilterString{
+		filter := XrayWatchFilter{
 			Type:  "package-type",
 			Value: packageType,
 		}
@@ -175,7 +170,7 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	for _, name := range filters.Names {
-		filter := XrayWatchFilterString{
+		filter := XrayWatchFilter{
 			Type:  "regex",
 			Value: name,
 		}
@@ -183,7 +178,7 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	for _, path := range filters.Paths {
-		filter := XrayWatchFilterString{
+		filter := XrayWatchFilter{
 			Type:  "path-regex",
 			Value: path,
 		}
@@ -191,7 +186,7 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	for _, mimeType := range filters.MimeTypes {
-		filter := XrayWatchFilterString{
+		filter := XrayWatchFilter{
 			Type:  "mime-type",
 			Value: mimeType,
 		}
@@ -199,7 +194,7 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	for key, value := range filters.Properties {
-		filter := XrayWatchFilterString{
+		filter := XrayWatchFilter{
 			Type: "property",
 			Value: XrayWatchFilterPropertyValue{
 				Key:   key,
@@ -210,7 +205,7 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	if repo.ExcludePatterns != nil || repo.IncludePatterns != nil {
-		filter := XrayWatchFilterString{
+		filter := XrayWatchFilter{
 			Type: "path-ant-patterns",
 			Value: XrayWatchPathFilters{
 				ExcludePatterns: repo.ExcludePatterns,
@@ -229,11 +224,11 @@ func ConfigureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 			Name:          "All Builds",
 			Type:          "all-builds",
 			Bin_Mgr_ID:    params.Builds.All.Bin_Mgr_ID,
-			StringFilters: []XrayWatchFilterString{},
+			StringFilters: []XrayWatchFilter{},
 		}
 
 		if params.Builds.All.ExcludePatterns != nil || params.Builds.All.IncludePatterns != nil {
-			filters := []XrayWatchFilterString{{
+			filters := []XrayWatchFilter{{
 				Type: "ant-patterns",
 				Value: XrayWatchPathFilters{
 					ExcludePatterns: params.Builds.All.ExcludePatterns,
@@ -303,11 +298,11 @@ func (xws *XrayWatchService) Update(params XrayWatchParams) error {
 	return nil
 }
 
-func (xws *XrayWatchService) Get(watchName string) (watchesResp *XrayWatchParams, err error) {
+func (xws *XrayWatchService) Get(watchName string) (watchResp *XrayWatchParams, err error) {
 	httpClientsDetails := xws.ArtDetails.CreateHttpClientDetails()
 	log.Info("Getting watch...")
 	resp, body, _, err := xws.client.SendGet(xws.GetXrayWatchUrl()+"/"+watchName, true, &httpClientsDetails)
-	watches := XrayWatchBody{}
+	watch := XrayWatchBody{}
 
 	if err != nil {
 		return &XrayWatchParams{}, err
@@ -316,16 +311,16 @@ func (xws *XrayWatchService) Get(watchName string) (watchesResp *XrayWatchParams
 		return &XrayWatchParams{}, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
-	err = json.Unmarshal(body, &watches)
+	err = json.Unmarshal(body, &watch)
 
 	if err != nil {
-		return &XrayWatchParams{}, errors.New("failed unmarshalling watches " + watchName)
+		return &XrayWatchParams{}, errors.New("failed unmarshalling watch " + watchName)
 	}
 
 	result := XrayWatchParams{
-		Name:        watches.GeneralData.Name,
-		Description: watches.GeneralData.Description,
-		Active:      watches.GeneralData.Active,
+		Name:        watch.GeneralData.Name,
+		Description: watch.GeneralData.Description,
+		Active:      watch.GeneralData.Active,
 		Repositories: XrayWatchRepositoriesParams{
 			Type:         "",             // WatchRepositoriesType
 			All:          XrayWatchAll{}, // XrayWatchAll
@@ -340,35 +335,35 @@ func (xws *XrayWatchService) Get(watchName string) (watchesResp *XrayWatchParams
 			All:     XrayWatchBuildsAllParams{},
 			ByNames: map[string]XrayWatchBuildsByNameParams{},
 		},
-		Policies: watches.AssignedPolicies,
+		Policies: watch.AssignedPolicies,
 	}
 
-	unpackWatchBody(&result, &watches)
+	unpackWatchBody(&result, &watch)
 
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done getting watches.")
+	log.Info("Done getting watch.")
 
 	return &result, nil
 }
 
-func unpackWatchBody(watches *XrayWatchParams, body *XrayWatchBody) {
+func unpackWatchBody(watch *XrayWatchParams, body *XrayWatchBody) {
 	for _, resource := range body.ProjectResources.Resources {
 		if resource.Type == "all-repos" {
-			watches.Repositories.Type = WatchRepositoriesAll
-			unpackFilters(resource.StringFilters, &watches.Repositories.All.Filters, &watches.Repositories)
+			watch.Repositories.Type = WatchRepositoriesAll
+			unpackFilters(resource.StringFilters, &watch.Repositories.All.Filters, &watch.Repositories)
 		}
 		if resource.Type == "repository" {
-			watches.Repositories.Type = WatchRepositoriesByName
+			watch.Repositories.Type = WatchRepositoriesByName
 			repository := XrayWatchRepository{
 				Name:       resource.Name,
 				Bin_Mgr_ID: resource.Bin_Mgr_ID,
 			}
-			unpackFilters(resource.StringFilters, &repository.Filters, &watches.Repositories)
-			watches.Repositories.Repositories[repository.Name] = repository
+			unpackFilters(resource.StringFilters, &repository.Filters, &watch.Repositories)
+			watch.Repositories.Repositories[repository.Name] = repository
 		}
 		if resource.Type == "all-builds" {
-			watches.Builds.Type = WatchBuildAll
-			watches.Builds.All.Bin_Mgr_ID = resource.Bin_Mgr_ID
+			watch.Builds.Type = WatchBuildAll
+			watch.Builds.All.Bin_Mgr_ID = resource.Bin_Mgr_ID
 
 			for _, filter := range resource.StringFilters {
 				if filter.Type == "ant-patterns" {
@@ -376,12 +371,12 @@ func unpackWatchBody(watches *XrayWatchParams, body *XrayWatchBody) {
 
 					if pathFilters["ExcludePatterns"] != nil {
 						for _, path := range pathFilters["ExcludePatterns"].([]interface{}) {
-							watches.Builds.All.ExcludePatterns = append(watches.Builds.All.ExcludePatterns, path.(string))
+							watch.Builds.All.ExcludePatterns = append(watch.Builds.All.ExcludePatterns, path.(string))
 						}
 					}
 					if pathFilters["IncludePatterns"] != nil {
 						for _, path := range pathFilters["IncludePatterns"].([]interface{}) {
-							watches.Builds.All.IncludePatterns = append(watches.Builds.All.IncludePatterns, path.(string))
+							watch.Builds.All.IncludePatterns = append(watch.Builds.All.IncludePatterns, path.(string))
 						}
 					}
 				}
@@ -389,8 +384,8 @@ func unpackWatchBody(watches *XrayWatchParams, body *XrayWatchBody) {
 
 		}
 		if resource.Type == "build" {
-			watches.Builds.Type = WatchBuildByName
-			watches.Builds.ByNames[resource.Name] = XrayWatchBuildsByNameParams{
+			watch.Builds.Type = WatchBuildByName
+			watch.Builds.ByNames[resource.Name] = XrayWatchBuildsByNameParams{
 				Name:       resource.Name,
 				Bin_Mgr_ID: resource.Bin_Mgr_ID,
 			}
@@ -399,11 +394,11 @@ func unpackWatchBody(watches *XrayWatchParams, body *XrayWatchBody) {
 
 	// Sort all the properties so they are returned in a consistent format
 
-	sort.Strings(watches.Repositories.ExcludePatterns)
-	sort.Strings(watches.Repositories.IncludePatterns)
+	sort.Strings(watch.Repositories.ExcludePatterns)
+	sort.Strings(watch.Repositories.IncludePatterns)
 }
 
-func unpackFilters(filters []XrayWatchFilterString, output *XrayWatchFilters, repos *XrayWatchRepositoriesParams) {
+func unpackFilters(filters []XrayWatchFilter, output *XrayWatchFilters, repos *XrayWatchRepositoriesParams) {
 
 	for _, filter := range filters {
 		if filter.Type == "package-type" {
@@ -451,11 +446,6 @@ func unpackFilters(filters []XrayWatchFilterString, output *XrayWatchFilters, re
 	sort.Strings(output.Names)
 	sort.Strings(output.Paths)
 	sort.Strings(output.MimeTypes)
-}
-
-func prettyPrint(i interface{}) string {
-	s, _ := json.MarshalIndent(i, "", "\t")
-	return string(s)
 }
 
 func NewXrayWatchParams() XrayWatchParams {
@@ -524,14 +514,9 @@ type XrayWatchBuildsByNameParams struct {
 	Bin_Mgr_ID string
 }
 
-type XrayWatchFilterString struct {
+type XrayWatchFilter struct {
 	Type  string      `json:"type"`
 	Value interface{} `json:"value"`
-}
-
-type XrayWatchFilterProperty struct {
-	Type  string                       `json:"type"`
-	Value XrayWatchFilterPropertyValue `json:"value"`
 }
 
 type XrayWatchFilterPropertyValue struct {
@@ -544,16 +529,16 @@ type XrayWatchProjectResources struct {
 }
 
 type XrayWatchProjectResourcesElement struct {
-	Name          string                  `json:"name,omitempty"`
-	Bin_Mgr_ID    string                  `json:"bin_mgr_id,omitempty"`
-	Type          string                  `json:"type"`
-	StringFilters []XrayWatchFilterString `json:"filters,omitempty"`
+	Name          string            `json:"name,omitempty"`
+	Bin_Mgr_ID    string            `json:"bin_mgr_id,omitempty"`
+	Type          string            `json:"type"`
+	StringFilters []XrayWatchFilter `json:"filters,omitempty"`
 }
 
 type XrayWatchRepository struct {
-	Name          string                  `json:"name"`
-	StringFilters []XrayWatchFilterString `json:"filters"`
-	Bin_Mgr_ID    string                  `json:"bin_mgr_id`
+	Name          string            `json:"name"`
+	StringFilters []XrayWatchFilter `json:"filters"`
+	Bin_Mgr_ID    string            `json:"bin_mgr_id`
 	Filters       XrayWatchFilters
 }
 
