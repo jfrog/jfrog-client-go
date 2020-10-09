@@ -43,6 +43,7 @@ func InitArtifactoryServiceManager() {
 	createArtifactoryReplicationGetManager()
 	createArtifactoryReplicationDeleteManager()
 	createArtifactoryPermissionTargetManager()
+	createXrayWatchManager()
 	if *DistUrl != "" {
 		createDistributionManager()
 	}
