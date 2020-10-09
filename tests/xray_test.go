@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestGetXrayVersion(t *testing.T) {
+func TestXrayVersion(t *testing.T) {
 	version, err := GetXrayDetails().GetVersion()
 	if err != nil {
 		t.Error(err)
