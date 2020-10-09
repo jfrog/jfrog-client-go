@@ -46,6 +46,9 @@ func InitArtifactoryServiceManager() {
 	if *DistUrl != "" {
 		createDistributionManager()
 	}
+	if *XrayUrl != "" {
+		createXrayManager()
+	}
 	createReposIfNeeded()
 }
 
