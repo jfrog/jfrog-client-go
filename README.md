@@ -98,6 +98,16 @@
       - [Downloading Logs](#downloading-logs)
       - [Syncing Content To Maven Central](#syncing-content-to-maven-central)
   - [Using ContentReader](#using-contentreader)
+  - [Xray APIs](#xray-apis)
+    - [Creating Xray Service Manager](#creating-xray-service-manager)
+      - [Creating Xray Details](#creating-xray-details)
+      - [Creating Xray Service Config](#creating-xray-service-config)
+      - [Creating New Xray Service Manager](#creating-new-xray-service-manager)
+    - [Using Xray Services](#using-xray-services)
+      - [Creating an Xray Watch](#creating-an-xray-watch)
+      - [Get an Xray Watch](#get-an-xray-watch)
+      - [Update an Xray Watch](#update-an-xray-watch)
+      - [Delete an Xray Watch](#delete-an-xray-watch)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -126,6 +136,7 @@ Optional flags:
 | `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
 | `-rt.password`      | [Default: password] Artifactory password.                                                              |
 | `-rt.distUrl`       | [Optional] JFrog Distribution URL.                                                                     |
+| `-rt.xrayUrl`       | [Optional] JFrog Xray URL.                                                                     |
 | `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
 | `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
@@ -1111,3 +1122,82 @@ reader.Reset()
 * `reader.GetError()` returns any error that might have occurd during `NextRecord()`.
 
 * `reader.Reset()` resets the reader back to the beginning of the output.
+
+## Xray APIs
+### Creating Xray Service Manager
+#### Creating Xray Details
+```go
+xrayDetails := auth.NewXrayDetails()
+xrayDetails.SetUrl("http://localhost:8081/xray")
+xrayDetails.SetSshKeysPath("path/to/.ssh/")
+xrayDetails.SetApiKey("apikey")
+xrayDetails.SetUser("user")
+xrayDetails.SetPassword("password")
+xrayDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+xrayDetails.SetClientCertPath("path/to/.cer")
+xrayDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Xray Service Config
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(rtDetails).
+    SetCertificatesPath(certPath).
+    SetThreads(threads).
+    SetDryRun(false).
+    Build()
+```
+
+#### Creating New Xray Service Manager
+```go
+xrayManager, err := xray.New(&xrayDetails, serviceConfig)
+```
+
+### Using Xray Services
+#### Creating an Xray Watch
+```go
+params := services.NewXrayWatchParams()
+params.Name = "example-watch-all"
+params.Description = "All Repos"
+params.Active = true
+
+params.Repositories.Type = services.WatchRepositoriesAll
+params.Repositories.All.Filters.PackageTypes = []string{"Npm", "maven"}
+params.Repositories.ExcludePatterns = []string{"excludePath1", "excludePath2"}
+params.Repositories.IncludePatterns = []string{"includePath1", "includePath2"}
+
+params.Builds.Type = services.WatchBuildAll
+params.Builds.All.Bin_Mgr_ID = "default"
+
+params.Policies = []services.XrayWatchPolicy{
+  {
+    Name: policy1Name,
+    Type: "security",
+  },
+  {
+    Name: policy2Name,
+    Type: "security",
+  },
+}
+
+err := xrayManager.CreateXrayWatch(params)
+```
+
+#### Get an Xray Watch
+```go
+watch, err := xrayManager.GetXrayWatch("example-watch-all")
+```
+
+#### Update an Xray Watch
+```go
+watch, err := xrayManager.GetXrayWatch("example-watch-all")
+watch.Description = "Updated description"
+
+xrayManager.UpdateXrayWatch(*watch)
+```
+
+#### Delete an Xray Watch
+```go
+err := xrayManager.DeleteXrayWatch("example-watch-all")
+```
