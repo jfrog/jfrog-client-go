@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"regexp"
 	"sort"
 
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -26,8 +25,8 @@ const (
 const WATCH_API_URL = "api/v2/watches"
 
 type XrayWatchService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
-	ArtDetails auth.ServiceDetails
+	client      *rthttpclient.ArtifactoryHttpClient
+	XrayDetails auth.ServiceDetails
 }
 
 func NewXrayWatchService(client *rthttpclient.ArtifactoryHttpClient) *XrayWatchService {
@@ -39,15 +38,11 @@ func (xws *XrayWatchService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpC
 }
 
 func (xws *XrayWatchService) GetXrayWatchUrl() string {
-	// Updating url endpoint from https://something.jfrog.io/artifactory to https://something.jfrog.io/xray
-	url := xws.ArtDetails.GetUrl()
-	r := regexp.MustCompile("artifactory/?$")
-
-	return r.ReplaceAllString(url, "xray/") + WATCH_API_URL
+	return xws.XrayDetails.GetUrl() + WATCH_API_URL
 }
 
 func (xws *XrayWatchService) Delete(watchName string) error {
-	httpClientsDetails := xws.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
 	log.Info("Deleting watch...")
 	resp, body, err := xws.client.SendDelete(xws.GetXrayWatchUrl()+"/"+watchName, nil, &httpClientsDetails)
 	if err != nil {
@@ -73,7 +68,7 @@ func (xws *XrayWatchService) Create(params XrayWatchParams) error {
 		return errorutils.CheckError(err)
 	}
 
-	httpClientsDetails := xws.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var url = xws.GetXrayWatchUrl()
 	var resp *http.Response
@@ -274,7 +269,7 @@ func (xws *XrayWatchService) Update(params XrayWatchParams) error {
 		return errorutils.CheckError(err)
 	}
 
-	httpClientsDetails := xws.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var url = xws.GetXrayWatchUrl() + "/" + params.Name
 	var resp *http.Response
@@ -299,7 +294,7 @@ func (xws *XrayWatchService) Update(params XrayWatchParams) error {
 }
 
 func (xws *XrayWatchService) Get(watchName string) (watchResp *XrayWatchParams, err error) {
-	httpClientsDetails := xws.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
 	log.Info("Getting watch...")
 	resp, body, _, err := xws.client.SendGet(xws.GetXrayWatchUrl()+"/"+watchName, true, &httpClientsDetails)
 	watch := XrayWatchBody{}

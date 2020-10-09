@@ -75,7 +75,7 @@ var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleServ
 
 // Xray Services
 var testsXrayVersionService *xrayServices.VersionService
-var testsXrayWatchService *services.XrayWatchService
+var testsXrayWatchService *xrayServices.XrayWatchService
 
 var timestamp = time.Now().Unix()
 var trueValue = true
@@ -280,11 +280,11 @@ func createArtifactoryPermissionTargetManager() {
 }
 
 func createXrayWatchManager() {
-	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
+	XrayDetails := GetXrayDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&XrayDetails).Build()
 	failOnHttpClientCreation(err)
-	testsXrayWatchService = services.NewXrayWatchService(client)
-	testsXrayWatchService.ArtDetails = artDetails
+	testsXrayWatchService = xrayServices.NewXrayWatchService(client)
+	testsXrayWatchService.XrayDetails = XrayDetails
 }
 
 func failOnHttpClientCreation(err error) {

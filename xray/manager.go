@@ -38,3 +38,27 @@ func (sm *XrayServicesManager) GetXrayVersion() (string, error) {
 	versionService.XrayDetails = sm.config.GetServiceDetails()
 	return versionService.GetXrayVersion()
 }
+
+func (sm *XrayServicesManager) CreateXrayWatch(params services.XrayWatchParams) error {
+	XrayWatchService := services.NewXrayWatchService(sm.client)
+	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
+	return XrayWatchService.Create(params)
+}
+
+func (sm *XrayServicesManager) GetXrayWatch(watchName string) (*services.XrayWatchParams, error) {
+	XrayWatchService := services.NewXrayWatchService(sm.client)
+	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
+	return XrayWatchService.Get(watchName)
+}
+
+func (sm *XrayServicesManager) UpdateXrayWatch(params services.XrayWatchParams) error {
+	XrayWatchService := services.NewXrayWatchService(sm.client)
+	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
+	return XrayWatchService.Update(params)
+}
+
+func (sm *XrayServicesManager) DeleteXrayWatch(watchName string) error {
+	XrayWatchService := services.NewXrayWatchService(sm.client)
+	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
+	return XrayWatchService.Delete(watchName)
+}

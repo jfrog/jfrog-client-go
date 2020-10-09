@@ -6,25 +6,25 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/xray/services"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestXrayWatch(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1", time.Now().Unix())
-	err := addPolicy(policy1Name)
+	err := createPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer deletePolicy(policy1Name)
 
 	policy2Name := fmt.Sprintf("%s-%d", "jfrog-policy2", time.Now().Unix())
-	err = addPolicy(policy2Name)
+	err = createPolicy(policy2Name)
 	assert.NoError(t, err)
 	defer deletePolicy(policy2Name)
 
@@ -233,7 +233,7 @@ func validateWatchGeneralSettings(t *testing.T, params services.XrayWatchParams)
 }
 
 func createRepo(t *testing.T, repoKey string) {
-	glp := services.NewGenericLocalRepositoryParams()
+	glp := artifactoryServices.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.XrayIndex = &trueValue
 
@@ -246,10 +246,20 @@ func createBuild(buildName string) error {
 	artHTTPDetails := artDetails.CreateHttpClientDetails()
 
 	utils.SetContentType("application/json", &artHTTPDetails.Headers)
-	client, err := httpclient.ClientBuilder().Build()
+	artClient, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return err
 	}
+
+	xrayDetails := GetXrayDetails()
+	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
+
+	utils.SetContentType("application/json", &xrayHTTPDetails.Headers)
+	xrayClient, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
+
 	dataArtifactoryBuild := ArtifactoryBuild{
 		Name:       buildName,
 		Version:    "1.0.0",
@@ -275,7 +285,7 @@ func createBuild(buildName string) error {
 		return errors.New("failed marshalling build " + buildName)
 	}
 
-	resp, _, err := client.SendPut(artDetails.GetUrl()+"api/build", requestContentArtifactoryBuild, artHTTPDetails)
+	resp, _, err := artClient.SendPut(artDetails.GetUrl()+"api/build", requestContentArtifactoryBuild, artHTTPDetails)
 	if err != nil {
 		return err
 	}
@@ -293,8 +303,7 @@ func createBuild(buildName string) error {
 
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
 
-	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
-	resp, _, err = client.SendPost(xrayUrl+"api/v1/binMgr/builds", requestContentIndexBuild, artHTTPDetails)
+	resp, _, err = xrayClient.SendPost(xrayDetails.GetUrl()+"api/v1/binMgr/builds", requestContentIndexBuild, artHTTPDetails)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return err
 	}
@@ -303,8 +312,8 @@ func createBuild(buildName string) error {
 }
 
 func deleteBuildIndex(buildName string) error {
-	artDetails := GetRtDetails()
-	artHTTPDetails := artDetails.CreateHttpClientDetails()
+	xrayDetails := GetXrayDetails()
+	artHTTPDetails := xrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &artHTTPDetails.Headers)
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
@@ -319,8 +328,7 @@ func deleteBuildIndex(buildName string) error {
 
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
 
-	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
-	resp, _, err := client.SendPut(xrayUrl+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails)
+	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return err
 	}
@@ -370,11 +378,11 @@ type ArtifactoryArtifact struct {
 	Name string `json:"name"`
 }
 
-func addPolicy(policyName string) error {
-	artDetails := GetRtDetails()
-	artHTTPDetails := artDetails.CreateHttpClientDetails()
+func createPolicy(policyName string) error {
+	xrayDetails := GetXrayDetails()
+	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
 
-	utils.SetContentType("application/json", &artHTTPDetails.Headers)
+	utils.SetContentType("application/json", &xrayHTTPDetails.Headers)
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return err
@@ -408,8 +416,7 @@ func addPolicy(policyName string) error {
 		return errors.New("failed marshalling policy " + policyName)
 	}
 
-	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
-	resp, _, err := client.SendPost(xrayUrl+"api/v2/policies", requestContent, artHTTPDetails)
+	resp, _, err := client.SendPost(xrayDetails.GetUrl()+"api/v2/policies", requestContent, xrayHTTPDetails)
 	if err != nil {
 		return err
 	}
@@ -422,15 +429,15 @@ func addPolicy(policyName string) error {
 }
 
 func deletePolicy(policyName string) error {
-	artDetails := GetRtDetails()
-	artHTTPDetails := artDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &artHTTPDetails.Headers)
+	xrayDetails := GetXrayDetails()
+	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &xrayHTTPDetails.Headers)
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return nil
 	}
-	xrayUrl := strings.Replace(artDetails.GetUrl(), "/artifactory/", "/xray/", 1)
-	resp, _, err := client.SendDelete(xrayUrl+"api/v2/policies/"+policyName, nil, artHTTPDetails)
+
+	resp, _, err := client.SendDelete(xrayDetails.GetUrl()+"api/v2/policies/"+policyName, nil, xrayHTTPDetails)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return errors.New("failed to delete policy " + resp.Status)
 	}

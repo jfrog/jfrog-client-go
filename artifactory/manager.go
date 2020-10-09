@@ -362,24 +362,6 @@ func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPro
 	return systemService.PromoteDocker(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateXrayWatch(params services.XrayWatchParams) error {
-	XrayWatchService := services.NewXrayWatchService(sm.client)
-	XrayWatchService.ArtDetails = sm.config.GetServiceDetails()
-	return XrayWatchService.Create(params)
-}
-
-func (sm *ArtifactoryServicesManagerImp) UpdateXrayWatch(params services.XrayWatchParams) error {
-	XrayWatchService := services.NewXrayWatchService(sm.client)
-	XrayWatchService.ArtDetails = sm.config.GetServiceDetails()
-	return XrayWatchService.Update(params)
-}
-
-func (sm *ArtifactoryServicesManagerImp) DeleteXrayWatch(watchesName string) error {
-	XrayWatchService := services.NewXrayWatchService(sm.client)
-	XrayWatchService.ArtDetails = sm.config.GetServiceDetails()
-	return XrayWatchService.Delete(watchesName)
-}
-
 func (sm *ArtifactoryServicesManagerImp) Client() *rthttpclient.ArtifactoryHttpClient {
 	return sm.client
 }
