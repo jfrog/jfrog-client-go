@@ -20,9 +20,9 @@ const (
 
 	WatchRepositoriesAll    WatchRepositoriesType = "all"
 	WatchRepositoriesByName WatchRepositoriesType = "byname"
-)
 
-const WATCH_API_URL = "api/v2/watches"
+	WatchAPIURL = "api/v2/watches"
+)
 
 type XrayWatchService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
@@ -38,7 +38,7 @@ func (xws *XrayWatchService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpC
 }
 
 func (xws *XrayWatchService) GetXrayWatchUrl() string {
-	return xws.XrayDetails.GetUrl() + WATCH_API_URL
+	return xws.XrayDetails.GetUrl() + WatchAPIURL
 }
 
 func (xws *XrayWatchService) Delete(watchName string) error {
@@ -138,7 +138,7 @@ func ConfigureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) e
 			repo := XrayWatchProjectResourcesElement{
 				Type:          "repository",
 				Name:          repository.Name,
-				Bin_Mgr_ID:    repository.Bin_Mgr_ID,
+				BinMgrID:      repository.BinMgrID,
 				StringFilters: repository.StringFilters,
 			}
 			if repo.StringFilters == nil {
@@ -218,7 +218,7 @@ func ConfigureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 		allBuilds := XrayWatchProjectResourcesElement{
 			Name:          "All Builds",
 			Type:          "all-builds",
-			Bin_Mgr_ID:    params.Builds.All.Bin_Mgr_ID,
+			BinMgrID:      params.Builds.All.BinMgrID,
 			StringFilters: []XrayWatchFilter{},
 		}
 
@@ -237,9 +237,9 @@ func ConfigureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 	} else if params.Builds.Type == WatchBuildByName {
 		for _, byName := range params.Builds.ByNames {
 			build := XrayWatchProjectResourcesElement{
-				Type:       "build",
-				Name:       byName.Name,
-				Bin_Mgr_ID: byName.Bin_Mgr_ID,
+				Type:     "build",
+				Name:     byName.Name,
+				BinMgrID: byName.BinMgrID,
 			}
 
 			payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, build)
@@ -350,15 +350,15 @@ func unpackWatchBody(watch *XrayWatchParams, body *XrayWatchBody) {
 		if resource.Type == "repository" {
 			watch.Repositories.Type = WatchRepositoriesByName
 			repository := XrayWatchRepository{
-				Name:       resource.Name,
-				Bin_Mgr_ID: resource.Bin_Mgr_ID,
+				Name:     resource.Name,
+				BinMgrID: resource.BinMgrID,
 			}
 			unpackFilters(resource.StringFilters, &repository.Filters, &watch.Repositories)
 			watch.Repositories.Repositories[repository.Name] = repository
 		}
 		if resource.Type == "all-builds" {
 			watch.Builds.Type = WatchBuildAll
-			watch.Builds.All.Bin_Mgr_ID = resource.Bin_Mgr_ID
+			watch.Builds.All.BinMgrID = resource.BinMgrID
 
 			for _, filter := range resource.StringFilters {
 				if filter.Type == "ant-patterns" {
@@ -381,8 +381,8 @@ func unpackWatchBody(watch *XrayWatchParams, body *XrayWatchBody) {
 		if resource.Type == "build" {
 			watch.Builds.Type = WatchBuildByName
 			watch.Builds.ByNames[resource.Name] = XrayWatchBuildsByNameParams{
-				Name:       resource.Name,
-				Bin_Mgr_ID: resource.Bin_Mgr_ID,
+				Name:     resource.Name,
+				BinMgrID: resource.BinMgrID,
 			}
 		}
 	}
@@ -500,13 +500,13 @@ type XrayWatchBuildsParams struct {
 }
 
 type XrayWatchBuildsAllParams struct {
-	Bin_Mgr_ID string `json:"bin_mgr_id"`
+	BinMgrID string `json:"bin_mgr_id"`
 	XrayWatchPathFilters
 }
 
 type XrayWatchBuildsByNameParams struct {
-	Name       string
-	Bin_Mgr_ID string
+	Name     string
+	BinMgrID string
 }
 
 type XrayWatchFilter struct {
@@ -525,7 +525,7 @@ type XrayWatchProjectResources struct {
 
 type XrayWatchProjectResourcesElement struct {
 	Name          string            `json:"name,omitempty"`
-	Bin_Mgr_ID    string            `json:"bin_mgr_id,omitempty"`
+	BinMgrID      string            `json:"bin_mgr_id,oitempty"`
 	Type          string            `json:"type"`
 	StringFilters []XrayWatchFilter `json:"filters,omitempty"`
 }
@@ -533,7 +533,7 @@ type XrayWatchProjectResourcesElement struct {
 type XrayWatchRepository struct {
 	Name          string            `json:"name"`
 	StringFilters []XrayWatchFilter `json:"filters"`
-	Bin_Mgr_ID    string            `json:"bin_mgr_id`
+	BinMgrID      string            `json:"bin_mgr_id"`
 	Filters       XrayWatchFilters
 }
 
@@ -542,10 +542,10 @@ type XrayWatchPathFilters struct {
 	IncludePatterns []string `json:"IncludePatterns"`
 }
 
-func NewXrayWatchRepository(name string, bin_mgr_id string) XrayWatchRepository {
+func NewXrayWatchRepository(name string, binMgrID string) XrayWatchRepository {
 	return XrayWatchRepository{
-		Name:       name,
-		Bin_Mgr_ID: bin_mgr_id,
+		Name:     name,
+		BinMgrID: binMgrID,
 	}
 }
 

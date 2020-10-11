@@ -45,7 +45,7 @@ func TestXrayWatchAll(t *testing.T) {
 	paramsAllRepos.Repositories.IncludePatterns = []string{"includePath1", "includePath2"}
 
 	paramsAllRepos.Builds.Type = services.WatchBuildAll
-	paramsAllRepos.Builds.All.Bin_Mgr_ID = "default"
+	paramsAllRepos.Builds.All.BinMgrID = "default"
 	paramsAllRepos.Policies = []services.XrayWatchPolicy{
 		{
 			Name: policy1Name,
@@ -75,7 +75,7 @@ func TestXrayWatchAll(t *testing.T) {
 	assert.Equal(t, services.WatchRepositoriesAll, targetConfig.Repositories.Type)
 
 	assert.Equal(t, services.WatchBuildAll, targetConfig.Builds.Type)
-	assert.Equal(t, "default", targetConfig.Builds.All.Bin_Mgr_ID)
+	assert.Equal(t, "default", targetConfig.Builds.All.BinMgrID)
 
 	targetConfig.Description = "Updated Description"
 	targetConfig.Repositories.All.Filters.PackageTypes = []string{"generic", "pypi"}
@@ -88,7 +88,7 @@ func TestXrayWatchAll(t *testing.T) {
 	targetConfig.Repositories.IncludePatterns = []string{"includePath3", "includePath4"}
 
 	targetConfig.Builds.Type = services.WatchBuildAll
-	targetConfig.Builds.All.Bin_Mgr_ID = "default"
+	targetConfig.Builds.All.BinMgrID = "default"
 	targetConfig.Policies = []services.XrayWatchPolicy{
 		{
 			Name: policy2Name,
@@ -172,8 +172,8 @@ func TestXrayWatchSelectedRepos(t *testing.T) {
 	paramsSelectedRepos.Builds.Type = services.WatchBuildByName
 	paramsSelectedRepos.Builds.ByNames = map[string]services.XrayWatchBuildsByNameParams{}
 	paramsSelectedRepos.Builds.ByNames[build1Name] = services.XrayWatchBuildsByNameParams{
-		Name:       build1Name,
-		Bin_Mgr_ID: "default",
+		Name:     build1Name,
+		BinMgrID: "default",
 	}
 	err = testsXrayWatchService.Create(paramsSelectedRepos)
 	assert.NoError(t, err)
@@ -187,7 +187,7 @@ func TestXrayWatchSelectedRepos(t *testing.T) {
 	assert.Equal(t, services.WatchRepositoriesByName, targetConfig.Repositories.Type)
 
 	assert.Equal(t, repo1Name, targetConfig.Repositories.Repositories[repo1Name].Name)
-	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo1Name].Bin_Mgr_ID)
+	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo1Name].BinMgrID)
 	assert.Equal(t, []string{"Maven", "Npm"}, targetConfig.Repositories.Repositories[repo1Name].Filters.PackageTypes)
 	assert.Equal(t, []string{"example-name"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Names)
 	assert.Equal(t, []string{"example-path"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Paths)
@@ -195,7 +195,7 @@ func TestXrayWatchSelectedRepos(t *testing.T) {
 	assert.Equal(t, map[string]string{"some-key": "some-value"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Properties)
 
 	assert.Equal(t, repo2Name, targetConfig.Repositories.Repositories[repo2Name].Name)
-	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo2Name].Bin_Mgr_ID)
+	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo2Name].BinMgrID)
 	assert.Equal(t, []string{"NuGet"}, targetConfig.Repositories.Repositories[repo2Name].Filters.PackageTypes)
 	assert.Equal(t, []string{"another-example-name"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Names)
 	assert.Equal(t, []string{"another-example-path"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Paths)
@@ -207,13 +207,13 @@ func TestXrayWatchSelectedRepos(t *testing.T) {
 	assert.Empty(t, targetConfig.Builds.All.IncludePatterns)
 
 	assert.Equal(t, build1Name, targetConfig.Builds.ByNames[build1Name].Name)
-	assert.Equal(t, "default", targetConfig.Builds.ByNames[build1Name].Bin_Mgr_ID)
+	assert.Equal(t, "default", targetConfig.Builds.ByNames[build1Name].BinMgrID)
 
 	targetConfig.Repositories.ExcludePatterns = []string{"excludePath-2"}
 	targetConfig.Repositories.IncludePatterns = []string{"includePath-2", "fake-2"}
 	targetConfig.Builds.ByNames[build2Name] = services.XrayWatchBuildsByNameParams{
-		Name:       build2Name,
-		Bin_Mgr_ID: "default",
+		Name:     build2Name,
+		BinMgrID: "default",
 	}
 
 	delete(targetConfig.Repositories.Repositories, repo2Name)
@@ -260,7 +260,7 @@ func TestXrayWatchBuildsByPattern(t *testing.T) {
 	paramsBuildsByPattern.Builds.Type = services.WatchBuildAll
 	paramsBuildsByPattern.Builds.All.ExcludePatterns = []string{"excludePath"}
 	paramsBuildsByPattern.Builds.All.IncludePatterns = []string{"includePath", "fake"}
-	paramsBuildsByPattern.Builds.All.Bin_Mgr_ID = "default"
+	paramsBuildsByPattern.Builds.All.BinMgrID = "default"
 	paramsBuildsByPattern.Policies = []services.XrayWatchPolicy{
 		{
 			Name: policy1Name,
