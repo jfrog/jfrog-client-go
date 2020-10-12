@@ -1157,20 +1157,20 @@ xrayManager, err := xray.New(&xrayDetails, serviceConfig)
 ### Using Xray Services
 #### Creating an Xray Watch
 ```go
-params := services.NewXrayWatchParams()
+params := utils.NewXrayWatchParams()
 params.Name = "example-watch-all"
 params.Description = "All Repos"
 params.Active = true
 
-params.Repositories.Type = services.WatchRepositoriesAll
+params.Repositories.Type = utils.WatchRepositoriesAll
 params.Repositories.All.Filters.PackageTypes = []string{"Npm", "maven"}
 params.Repositories.ExcludePatterns = []string{"excludePath1", "excludePath2"}
 params.Repositories.IncludePatterns = []string{"includePath1", "includePath2"}
 
-params.Builds.Type = services.WatchBuildAll
+params.Builds.Type = utils.WatchBuildAll
 params.Builds.All.Bin_Mgr_ID = "default"
 
-params.Policies = []services.XrayWatchPolicy{
+params.Policies = []utils.XrayWatchPolicy{
   {
     Name: policy1Name,
     Type: "security",

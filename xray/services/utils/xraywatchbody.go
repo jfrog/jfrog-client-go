@@ -6,17 +6,23 @@ import (
 )
 
 const (
-	WatchBuildAll    WatchBuildType = "all"
+	// WatchBuildAll is the option where all builds are watched
+	WatchBuildAll WatchBuildType = "all"
+	// WatchBuildByName is the option where builds are selected by name to be watched
 	WatchBuildByName WatchBuildType = "byname"
 
-	WatchRepositoriesAll    WatchRepositoriesType = "all"
+	// WatchRepositoriesAll is the option where all repositories are watched
+	WatchRepositoriesAll WatchRepositoriesType = "all"
+	// WatchRepositoriesByName is the option where repositories are selected by name to be watched
 	WatchRepositoriesByName WatchRepositoriesType = "byname"
 )
 
+// NewXrayWatchParams creates a new struct to configure an Xray watch
 func NewXrayWatchParams() XrayWatchParams {
 	return XrayWatchParams{}
 }
 
+// XrayWatchParams defines all the properties to create an Xray watch
 type XrayWatchParams struct {
 	Name        string
 	Description string
@@ -25,37 +31,43 @@ type XrayWatchParams struct {
 	Repositories XrayWatchRepositoriesParams
 
 	Builds   XrayWatchBuildsParams
-	Policies []XrayPolicy
+	Policies []XrayAssignedPolicy
 }
 
+// XrayWatchBody is the top level payload to be sent to xray
 type XrayWatchBody struct {
-	GeneralData      XrayWatchGeneralParams    `json:"general_data"`
-	ProjectResources XrayWatchProjectResources `json:"project_resources,omitempty"`
-	AssignedPolicies []XrayPolicy              `json:"assigned_policies,omitempty"`
+	GeneralData      xrayWatchGeneralParams    `json:"general_data"`
+	ProjectResources xrayWatchProjectResources `json:"project_resources,omitempty"`
+	AssignedPolicies []XrayAssignedPolicy      `json:"assigned_policies,omitempty"`
 }
 
+// WatchBuildType defines the type of filter for a builds on a watch
 type WatchBuildType string
+
+// WatchRepositoriesType defines the type of filter for a repositories on a watch
 type WatchRepositoriesType string
 
-type XrayWatchGeneralParams struct {
+type xrayWatchGeneralParams struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"` // Must be empty on update.
 	Description string `json:"description"`
 	Active      bool   `json:"active"`
 }
 
+// XrayWatchRepositoriesParams is a struct that stores the repository configuration for watch
 type XrayWatchRepositoriesParams struct {
 	Type         WatchRepositoriesType
-	All          XrayWatchAll
+	All          XrayWatchRepositoryAll
 	Repositories map[string]XrayWatchRepository
 	XrayWatchPathFilters
 }
 
-type XrayWatchAll struct {
-	Filters XrayWatchFilters
+// XrayWatchRepositoryAll is used to define the parameters when a watch uses all repositories
+type XrayWatchRepositoryAll struct {
+	Filters xrayWatchFilters
 }
 
-type XrayWatchFilters struct {
+type xrayWatchFilters struct {
 	PackageTypes []string
 	Names        []string
 	Paths        []string
@@ -63,84 +75,91 @@ type XrayWatchFilters struct {
 	Properties   map[string]string
 }
 
+// XrayWatchBuildsParams is a struct that stores the build configuration for watch
 type XrayWatchBuildsParams struct {
 	Type    WatchBuildType
 	All     XrayWatchBuildsAllParams
 	ByNames map[string]XrayWatchBuildsByNameParams
 }
 
+// XrayWatchBuildsAllParams is used to define the parameters when a watch uses all builds
 type XrayWatchBuildsAllParams struct {
 	BinMgrID string `json:"bin_mgr_id"`
 	XrayWatchPathFilters
 }
 
+// XrayWatchBuildsByNameParams is used to define a specific build in a watch
 type XrayWatchBuildsByNameParams struct {
 	Name     string
 	BinMgrID string
 }
 
-type XrayWatchFilter struct {
+type xrayWatchFilter struct {
 	Type  string      `json:"type"`
 	Value interface{} `json:"value"`
 }
 
-type XrayWatchFilterPropertyValue struct {
+type xrayWatchFilterPropertyValue struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
-type XrayWatchProjectResources struct {
-	Resources []XrayWatchProjectResourcesElement `json:"resources"`
+type xrayWatchProjectResources struct {
+	Resources []xrayWatchProjectResourcesElement `json:"resources"`
 }
 
-type XrayWatchProjectResourcesElement struct {
+type xrayWatchProjectResourcesElement struct {
 	Name          string            `json:"name,omitempty"`
 	BinMgrID      string            `json:"bin_mgr_id,oitempty"`
 	Type          string            `json:"type"`
-	StringFilters []XrayWatchFilter `json:"filters,omitempty"`
+	StringFilters []xrayWatchFilter `json:"filters,omitempty"`
 }
 
+// XrayWatchRepository is used to define a specific repository in a watch
 type XrayWatchRepository struct {
 	Name          string            `json:"name"`
-	StringFilters []XrayWatchFilter `json:"filters"`
+	StringFilters []xrayWatchFilter `json:"filters"`
 	BinMgrID      string            `json:"bin_mgr_id"`
-	Filters       XrayWatchFilters
+	Filters       xrayWatchFilters
 }
 
+// XrayWatchPathFilters is used to define path filters on a repository or a build in a watch
 type XrayWatchPathFilters struct {
 	ExcludePatterns []string `json:"ExcludePatterns"`
 	IncludePatterns []string `json:"IncludePatterns"`
 }
 
-type XrayPolicy struct {
+// XrayAssignedPolicy struct is used to define a policy associated with a watch
+type XrayAssignedPolicy struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
 
+// CreateBody creates a payload to configure a Watch in Xray
 func CreateBody(params XrayWatchParams) (*XrayWatchBody, error) {
 	payloadBody := XrayWatchBody{
-		GeneralData: XrayWatchGeneralParams{
+		GeneralData: xrayWatchGeneralParams{
 			Name:        params.Name,
 			Description: params.Description,
 			Active:      params.Active,
 		},
-		ProjectResources: XrayWatchProjectResources{
-			Resources: []XrayWatchProjectResourcesElement{},
+		ProjectResources: xrayWatchProjectResources{
+			Resources: []xrayWatchProjectResourcesElement{},
 		},
 		AssignedPolicies: params.Policies,
 	}
 
-	err := ConfigureRepositories(&payloadBody, params)
+	err := configureRepositories(&payloadBody, params)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ConfigureBuilds(&payloadBody, params)
+	err = configureBuilds(&payloadBody, params)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ConfigureBundles(&payloadBody, params)
+	err = configureBundles(&payloadBody, params)
 	if err != nil {
 		return nil, err
 	}
@@ -148,31 +167,31 @@ func CreateBody(params XrayWatchParams) (*XrayWatchBody, error) {
 	return &payloadBody, nil
 }
 
-func ConfigureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) error {
+func configureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 	switch params.Repositories.Type {
 
 	case WatchRepositoriesAll:
-		allFilters := XrayWatchProjectResourcesElement{
+		allFilters := xrayWatchProjectResourcesElement{
 			Type:          "all-repos",
-			StringFilters: []XrayWatchFilter{},
+			StringFilters: []xrayWatchFilter{},
 		}
 
-		allFilters.StringFilters = append(allFilters.StringFilters, CreateFilters(params.Repositories.All.Filters, params.Repositories)...)
+		allFilters.StringFilters = append(allFilters.StringFilters, createFilters(params.Repositories.All.Filters, params.Repositories)...)
 
 		payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, allFilters)
 
 	case WatchRepositoriesByName:
 		for _, repository := range params.Repositories.Repositories {
-			repo := XrayWatchProjectResourcesElement{
+			repo := xrayWatchProjectResourcesElement{
 				Type:          "repository",
 				Name:          repository.Name,
 				BinMgrID:      repository.BinMgrID,
 				StringFilters: repository.StringFilters,
 			}
 			if repo.StringFilters == nil {
-				repo.StringFilters = []XrayWatchFilter{}
+				repo.StringFilters = []xrayWatchFilter{}
 			}
-			repo.StringFilters = append(repo.StringFilters, CreateFilters(repository.Filters, params.Repositories)...)
+			repo.StringFilters = append(repo.StringFilters, createFilters(repository.Filters, params.Repositories)...)
 
 			payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, repo)
 		}
@@ -185,11 +204,11 @@ func ConfigureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) e
 	return nil
 }
 
-func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) []XrayWatchFilter {
-	result := []XrayWatchFilter{}
+func createFilters(filters xrayWatchFilters, repo XrayWatchRepositoriesParams) []xrayWatchFilter {
+	result := []xrayWatchFilter{}
 
 	for _, packageType := range filters.PackageTypes {
-		filter := XrayWatchFilter{
+		filter := xrayWatchFilter{
 			Type:  "package-type",
 			Value: packageType,
 		}
@@ -197,7 +216,7 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	for _, name := range filters.Names {
-		filter := XrayWatchFilter{
+		filter := xrayWatchFilter{
 			Type:  "regex",
 			Value: name,
 		}
@@ -205,7 +224,7 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	for _, path := range filters.Paths {
-		filter := XrayWatchFilter{
+		filter := xrayWatchFilter{
 			Type:  "path-regex",
 			Value: path,
 		}
@@ -213,7 +232,7 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	for _, mimeType := range filters.MimeTypes {
-		filter := XrayWatchFilter{
+		filter := xrayWatchFilter{
 			Type:  "mime-type",
 			Value: mimeType,
 		}
@@ -221,9 +240,9 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	for key, value := range filters.Properties {
-		filter := XrayWatchFilter{
+		filter := xrayWatchFilter{
 			Type: "property",
-			Value: XrayWatchFilterPropertyValue{
+			Value: xrayWatchFilterPropertyValue{
 				Key:   key,
 				Value: value,
 			},
@@ -232,7 +251,7 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	}
 
 	if repo.ExcludePatterns != nil || repo.IncludePatterns != nil {
-		filter := XrayWatchFilter{
+		filter := xrayWatchFilter{
 			Type: "path-ant-patterns",
 			Value: XrayWatchPathFilters{
 				ExcludePatterns: repo.ExcludePatterns,
@@ -245,18 +264,18 @@ func CreateFilters(filters XrayWatchFilters, repo XrayWatchRepositoriesParams) [
 	return result
 }
 
-func ConfigureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
+func configureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 	switch params.Builds.Type {
 	case WatchBuildAll:
-		allBuilds := XrayWatchProjectResourcesElement{
+		allBuilds := xrayWatchProjectResourcesElement{
 			Name:          "All Builds",
 			Type:          "all-builds",
 			BinMgrID:      params.Builds.All.BinMgrID,
-			StringFilters: []XrayWatchFilter{},
+			StringFilters: []xrayWatchFilter{},
 		}
 
 		if params.Builds.All.ExcludePatterns != nil || params.Builds.All.IncludePatterns != nil {
-			filters := []XrayWatchFilter{{
+			filters := []xrayWatchFilter{{
 				Type: "ant-patterns",
 				Value: XrayWatchPathFilters{
 					ExcludePatterns: params.Builds.All.ExcludePatterns,
@@ -270,7 +289,7 @@ func ConfigureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 
 	case WatchBuildByName:
 		for _, byName := range params.Builds.ByNames {
-			build := XrayWatchProjectResourcesElement{
+			build := xrayWatchProjectResourcesElement{
 				Type:     "build",
 				Name:     byName.Name,
 				BinMgrID: byName.BinMgrID,
@@ -287,11 +306,13 @@ func ConfigureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 	return nil
 }
 
-func ConfigureBundles(payloadBody *XrayWatchBody, params XrayWatchParams) error {
+func configureBundles(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 	// placeholder method to support bundles in a future release
 	return nil
 }
 
+// UnpackWatchBody unpacks a payload response from Xray.
+// It transforms the data into the params object so that a consumer can interact with a watch in a consistent way.
 func UnpackWatchBody(watch *XrayWatchParams, body *XrayWatchBody) {
 	for _, resource := range body.ProjectResources.Resources {
 		switch resource.Type {
@@ -344,7 +365,7 @@ func UnpackWatchBody(watch *XrayWatchParams, body *XrayWatchBody) {
 	sort.Strings(watch.Repositories.IncludePatterns)
 }
 
-func unpackFilters(filters []XrayWatchFilter, output *XrayWatchFilters, repos *XrayWatchRepositoriesParams) {
+func unpackFilters(filters []xrayWatchFilter, output *xrayWatchFilters, repos *XrayWatchRepositoriesParams) {
 
 	for _, filter := range filters {
 		switch filter.Type {
@@ -398,4 +419,12 @@ func unpackFilters(filters []XrayWatchFilter, output *XrayWatchFilters, repos *X
 	sort.Strings(output.Names)
 	sort.Strings(output.Paths)
 	sort.Strings(output.MimeTypes)
+}
+
+// NewXrayWatchRepository creates a new repository struct to configure an Xray Watch
+func NewXrayWatchRepository(name string, binMgrID string) XrayWatchRepository {
+	return XrayWatchRepository{
+		Name:     name,
+		BinMgrID: binMgrID,
+	}
 }

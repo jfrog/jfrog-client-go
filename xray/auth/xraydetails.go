@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/xray"
 )
 
+// NewXrayDetails creates a struct of the Xray details
 func NewXrayDetails() *xrayDetails {
 	return &xrayDetails{}
 }
