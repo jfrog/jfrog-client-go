@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/xray/services"
+	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 )
 
 type XrayServicesManager struct {
@@ -39,19 +40,19 @@ func (sm *XrayServicesManager) GetXrayVersion() (string, error) {
 	return versionService.GetXrayVersion()
 }
 
-func (sm *XrayServicesManager) CreateXrayWatch(params services.XrayWatchParams) error {
+func (sm *XrayServicesManager) CreateXrayWatch(params utils.XrayWatchParams) error {
 	XrayWatchService := services.NewXrayWatchService(sm.client)
 	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
 	return XrayWatchService.Create(params)
 }
 
-func (sm *XrayServicesManager) GetXrayWatch(watchName string) (*services.XrayWatchParams, error) {
+func (sm *XrayServicesManager) GetXrayWatch(watchName string) (*utils.XrayWatchParams, error) {
 	XrayWatchService := services.NewXrayWatchService(sm.client)
 	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
 	return XrayWatchService.Get(watchName)
 }
 
-func (sm *XrayServicesManager) UpdateXrayWatch(params services.XrayWatchParams) error {
+func (sm *XrayServicesManager) UpdateXrayWatch(params utils.XrayWatchParams) error {
 	XrayWatchService := services.NewXrayWatchService(sm.client)
 	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
 	return XrayWatchService.Update(params)

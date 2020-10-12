@@ -10,9 +10,11 @@ import (
 	"time"
 
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
+
+	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -46,7 +48,7 @@ func TestXrayWatchAll(t *testing.T) {
 
 	paramsAllRepos.Builds.Type = services.WatchBuildAll
 	paramsAllRepos.Builds.All.BinMgrID = "default"
-	paramsAllRepos.Policies = []services.XrayWatchPolicy{
+	paramsAllRepos.Policies = []utils.XrayPolicy{
 		{
 			Name: policy1Name,
 			Type: "security",
@@ -89,7 +91,7 @@ func TestXrayWatchAll(t *testing.T) {
 
 	targetConfig.Builds.Type = services.WatchBuildAll
 	targetConfig.Builds.All.BinMgrID = "default"
-	targetConfig.Policies = []services.XrayWatchPolicy{
+	targetConfig.Policies = []utils.XrayPolicy{
 		{
 			Name: policy2Name,
 			Type: "security",
@@ -138,14 +140,14 @@ func TestXrayWatchSelectedRepos(t *testing.T) {
 	paramsSelectedRepos.Name = fmt.Sprintf("%s-%d", "jfrog-client-go-tests-watch-selected-repos", time.Now().Unix())
 	paramsSelectedRepos.Description = "Selected Repos"
 	paramsSelectedRepos.Active = true
-	paramsSelectedRepos.Policies = []services.XrayWatchPolicy{
+	paramsSelectedRepos.Policies = []utils.XrayPolicy{
 		{
 			Name: policy1Name,
 			Type: "security",
 		},
 	}
 
-	var repos = map[string]services.XrayWatchRepository{}
+	var repos = map[string]utils.XrayWatchRepository{}
 	repo := services.NewXrayWatchRepository(repo1Name, "default")
 	repo.Filters.PackageTypes = []string{"npm", "maven"}
 	repo.Filters.Names = []string{"example-name"}
@@ -170,8 +172,8 @@ func TestXrayWatchSelectedRepos(t *testing.T) {
 	paramsSelectedRepos.Repositories.IncludePatterns = []string{"selectedIncludePath1", "selectedIncludePath2"}
 
 	paramsSelectedRepos.Builds.Type = services.WatchBuildByName
-	paramsSelectedRepos.Builds.ByNames = map[string]services.XrayWatchBuildsByNameParams{}
-	paramsSelectedRepos.Builds.ByNames[build1Name] = services.XrayWatchBuildsByNameParams{
+	paramsSelectedRepos.Builds.ByNames = map[string]utils.XrayWatchBuildsByNameParams{}
+	paramsSelectedRepos.Builds.ByNames[build1Name] = utils.XrayWatchBuildsByNameParams{
 		Name:     build1Name,
 		BinMgrID: "default",
 	}
@@ -211,7 +213,7 @@ func TestXrayWatchSelectedRepos(t *testing.T) {
 
 	targetConfig.Repositories.ExcludePatterns = []string{"excludePath-2"}
 	targetConfig.Repositories.IncludePatterns = []string{"includePath-2", "fake-2"}
-	targetConfig.Builds.ByNames[build2Name] = services.XrayWatchBuildsByNameParams{
+	targetConfig.Builds.ByNames[build2Name] = utils.XrayWatchBuildsByNameParams{
 		Name:     build2Name,
 		BinMgrID: "default",
 	}
@@ -261,7 +263,7 @@ func TestXrayWatchBuildsByPattern(t *testing.T) {
 	paramsBuildsByPattern.Builds.All.ExcludePatterns = []string{"excludePath"}
 	paramsBuildsByPattern.Builds.All.IncludePatterns = []string{"includePath", "fake"}
 	paramsBuildsByPattern.Builds.All.BinMgrID = "default"
-	paramsBuildsByPattern.Policies = []services.XrayWatchPolicy{
+	paramsBuildsByPattern.Policies = []utils.XrayPolicy{
 		{
 			Name: policy1Name,
 			Type: "security",
@@ -293,7 +295,7 @@ func TestXrayWatchBuildsByPattern(t *testing.T) {
 	assert.Equal(t, []string{"includePath-2", "fake-2"}, updatedTargetConfig.Builds.All.IncludePatterns)
 }
 
-func validateWatchGeneralSettings(t *testing.T, params services.XrayWatchParams) {
+func validateWatchGeneralSettings(t *testing.T, params utils.XrayWatchParams) {
 	targetConfig, err := testsXrayWatchService.Get(params.Name)
 	assert.NoError(t, err)
 	assert.Equal(t, params.Name, targetConfig.Name)
@@ -316,7 +318,7 @@ func createBuild(buildName string) error {
 	artDetails := GetRtDetails()
 	artHTTPDetails := artDetails.CreateHttpClientDetails()
 
-	utils.SetContentType("application/json", &artHTTPDetails.Headers)
+	artUtils.SetContentType("application/json", &artHTTPDetails.Headers)
 	artClient, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return err
@@ -325,7 +327,7 @@ func createBuild(buildName string) error {
 	xrayDetails := GetXrayDetails()
 	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
 
-	utils.SetContentType("application/json", &xrayHTTPDetails.Headers)
+	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
 	xrayClient, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return err
@@ -385,7 +387,7 @@ func createBuild(buildName string) error {
 func deleteBuildIndex(buildName string) error {
 	xrayDetails := GetXrayDetails()
 	artHTTPDetails := xrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &artHTTPDetails.Headers)
+	artUtils.SetContentType("application/json", &artHTTPDetails.Headers)
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return nil
@@ -453,7 +455,7 @@ func createPolicy(policyName string) error {
 	xrayDetails := GetXrayDetails()
 	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
 
-	utils.SetContentType("application/json", &xrayHTTPDetails.Headers)
+	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return err
@@ -502,7 +504,7 @@ func createPolicy(policyName string) error {
 func deletePolicy(policyName string) error {
 	xrayDetails := GetXrayDetails()
 	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &xrayHTTPDetails.Headers)
+	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return nil
