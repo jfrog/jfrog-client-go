@@ -98,6 +98,9 @@ func (xws *XrayWatchService) Create(params utils.XrayWatchParams) error {
 // It will error if no watch can be found by that name.
 func (xws *XrayWatchService) Update(params utils.XrayWatchParams) error {
 	payloadBody, err := utils.CreateBody(params)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
 
 	// the update payload must not have a name
 	payloadBody.GeneralData.Name = ""
