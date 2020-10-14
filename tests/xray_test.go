@@ -5,6 +5,10 @@ import (
 )
 
 func TestXrayVersion(t *testing.T) {
+	if *XrayUrl == "" {
+		t.Skip("Xray is not being tested, skipping...")
+	}
+
 	version, err := GetXrayDetails().GetVersion()
 	if err != nil {
 		t.Error(err)

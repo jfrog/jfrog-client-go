@@ -43,12 +43,13 @@ func InitArtifactoryServiceManager() {
 	createArtifactoryReplicationGetManager()
 	createArtifactoryReplicationDeleteManager()
 	createArtifactoryPermissionTargetManager()
-	createXrayWatchManager()
+
 	if *DistUrl != "" {
 		createDistributionManager()
 	}
 	if *XrayUrl != "" {
 		createXrayManager()
+		createXrayWatchManager()
 	}
 	createReposIfNeeded()
 }

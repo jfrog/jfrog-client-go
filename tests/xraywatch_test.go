@@ -18,7 +18,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestXrayWatchAll(t *testing.T) {
+func TestXrayWatch(t *testing.T) {
+	if *XrayUrl == "" {
+		t.Skip("Xray is not being tested, skipping...")
+	}
+
+	t.Run("testXrayWatchAll", testXrayWatchAll)
+	t.Run("testXrayWatchSelectedRepos", testXrayWatchSelectedRepos)
+	t.Run("testXrayWatchBuildsByPattern", testXrayWatchBuildsByPattern)
+	t.Run("testXrayWatchUpdateMissingWatch", testXrayWatchUpdateMissingWatch)
+	t.Run("testXrayWatchDeleteMissingWatch", testXrayWatchDeleteMissingWatch)
+	t.Run("testXrayWatchGetMissingWatch", testXrayWatchGetMissingWatch)
+}
+
+func testXrayWatchAll(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1", time.Now().Unix())
 	err := createPolicy(policy1Name)
 	assert.NoError(t, err)
@@ -112,7 +125,7 @@ func TestXrayWatchAll(t *testing.T) {
 	assert.Equal(t, map[string]string{"some-key-2": "some-value-2"}, updatedTargetConfig.Repositories.All.Filters.Properties)
 }
 
-func TestXrayWatchSelectedRepos(t *testing.T) {
+func testXrayWatchSelectedRepos(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1-pattern", time.Now().Unix())
 	err := createPolicy(policy1Name)
 	assert.NoError(t, err)
@@ -249,7 +262,7 @@ func TestXrayWatchSelectedRepos(t *testing.T) {
 
 }
 
-func TestXrayWatchBuildsByPattern(t *testing.T) {
+func testXrayWatchBuildsByPattern(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1-pattern", time.Now().Unix())
 	err := createPolicy(policy1Name)
 	assert.NoError(t, err)
@@ -294,7 +307,7 @@ func TestXrayWatchBuildsByPattern(t *testing.T) {
 	assert.Equal(t, []string{"includePath-2", "fake-2"}, updatedTargetConfig.Builds.All.IncludePatterns)
 }
 
-func TestXrayWatchUpdateMissingWatch(t *testing.T) {
+func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch := utils.NewXrayWatchParams()
 	paramsMissingWatch.Name = fmt.Sprintf("%s-%d", "jfrog-client-go-tests-watch-missing", time.Now().Unix())
 	paramsMissingWatch.Description = "Missing Watch"
@@ -305,12 +318,12 @@ func TestXrayWatchUpdateMissingWatch(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestXrayWatchDeleteMissingWatch(t *testing.T) {
+func testXrayWatchDeleteMissingWatch(t *testing.T) {
 	err := testsXrayWatchService.Delete("jfrog-client-go-tests-watch-builds-missing")
 	assert.Error(t, err)
 }
 
-func TestXrayWatchGetMissingWatch(t *testing.T) {
+func testXrayWatchGetMissingWatch(t *testing.T) {
 	_, err := testsXrayWatchService.Get("jfrog-client-go-tests-watch-builds-missing")
 	assert.Error(t, err)
 }
