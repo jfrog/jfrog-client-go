@@ -109,18 +109,17 @@ type xrayWatchProjectResources struct {
 }
 
 type xrayWatchProjectResourcesElement struct {
-	Name          string            `json:"name,omitempty"`
-	BinMgrID      string            `json:"bin_mgr_id,oitempty"`
-	Type          string            `json:"type"`
-	StringFilters []xrayWatchFilter `json:"filters,omitempty"`
+	Name     string            `json:"name,omitempty"`
+	BinMgrID string            `json:"bin_mgr_id,oitempty"`
+	Type     string            `json:"type"`
+	Filters  []xrayWatchFilter `json:"filters,omitempty"`
 }
 
 // XrayWatchRepository is used to define a specific repository in a watch
 type XrayWatchRepository struct {
-	Name          string            `json:"name"`
-	StringFilters []xrayWatchFilter `json:"filters"`
-	BinMgrID      string            `json:"bin_mgr_id"`
-	Filters       xrayWatchFilters
+	Name     string
+	BinMgrID string
+	Filters  xrayWatchFilters
 }
 
 // XrayWatchPathFilters is used to define path filters on a repository or a build in a watch
@@ -172,26 +171,24 @@ func configureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) e
 
 	case WatchRepositoriesAll:
 		allFilters := xrayWatchProjectResourcesElement{
-			Type:          "all-repos",
-			StringFilters: []xrayWatchFilter{},
+			Type:    "all-repos",
+			Filters: []xrayWatchFilter{},
 		}
 
-		allFilters.StringFilters = append(allFilters.StringFilters, createFilters(params.Repositories.All.Filters, params.Repositories)...)
+		allFilters.Filters = append(allFilters.Filters, createFilters(params.Repositories.All.Filters, params.Repositories)...)
 
 		payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, allFilters)
 
 	case WatchRepositoriesByName:
 		for _, repository := range params.Repositories.Repositories {
 			repo := xrayWatchProjectResourcesElement{
-				Type:          "repository",
-				Name:          repository.Name,
-				BinMgrID:      repository.BinMgrID,
-				StringFilters: repository.StringFilters,
+				Type:     "repository",
+				Name:     repository.Name,
+				BinMgrID: repository.BinMgrID,
+				Filters:  []xrayWatchFilter{},
 			}
-			if repo.StringFilters == nil {
-				repo.StringFilters = []xrayWatchFilter{}
-			}
-			repo.StringFilters = append(repo.StringFilters, createFilters(repository.Filters, params.Repositories)...)
+
+			repo.Filters = append(repo.Filters, createFilters(repository.Filters, params.Repositories)...)
 
 			payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, repo)
 		}
@@ -268,10 +265,10 @@ func configureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 	switch params.Builds.Type {
 	case WatchBuildAll:
 		allBuilds := xrayWatchProjectResourcesElement{
-			Name:          "All Builds",
-			Type:          "all-builds",
-			BinMgrID:      params.Builds.All.BinMgrID,
-			StringFilters: []xrayWatchFilter{},
+			Name:     "All Builds",
+			Type:     "all-builds",
+			BinMgrID: params.Builds.All.BinMgrID,
+			Filters:  []xrayWatchFilter{},
 		}
 
 		if params.Builds.All.ExcludePatterns != nil || params.Builds.All.IncludePatterns != nil {
@@ -282,7 +279,7 @@ func configureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 					IncludePatterns: params.Builds.All.IncludePatterns,
 				}},
 			}
-			allBuilds.StringFilters = filters
+			allBuilds.Filters = filters
 		}
 
 		payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, allBuilds)
@@ -319,7 +316,7 @@ func UnpackWatchBody(watch *XrayWatchParams, body *XrayWatchBody) {
 
 		case "all-repos":
 			watch.Repositories.Type = WatchRepositoriesAll
-			unpackFilters(resource.StringFilters, &watch.Repositories.All.Filters, &watch.Repositories)
+			unpackFilters(resource.Filters, &watch.Repositories.All.Filters, &watch.Repositories)
 
 		case "repository":
 			watch.Repositories.Type = WatchRepositoriesByName
@@ -327,14 +324,14 @@ func UnpackWatchBody(watch *XrayWatchParams, body *XrayWatchBody) {
 				Name:     resource.Name,
 				BinMgrID: resource.BinMgrID,
 			}
-			unpackFilters(resource.StringFilters, &repository.Filters, &watch.Repositories)
+			unpackFilters(resource.Filters, &repository.Filters, &watch.Repositories)
 			watch.Repositories.Repositories[repository.Name] = repository
 
 		case "all-builds":
 			watch.Builds.Type = WatchBuildAll
 			watch.Builds.All.BinMgrID = resource.BinMgrID
 
-			for _, filter := range resource.StringFilters {
+			for _, filter := range resource.Filters {
 				if filter.Type == "ant-patterns" {
 					pathFilters := filter.Value.(map[string]interface{})
 
