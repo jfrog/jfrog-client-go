@@ -17,6 +17,12 @@ const (
 	WatchRepositoriesByName WatchRepositoriesType = "byname"
 )
 
+// WatchBuildType defines the type of filter for a builds on a watch
+type WatchBuildType string
+
+// WatchRepositoriesType defines the type of filter for a repositories on a watch
+type WatchRepositoriesType string
+
 // NewXrayWatchParams creates a new struct to configure an Xray watch
 func NewXrayWatchParams() XrayWatchParams {
 	return XrayWatchParams{}
@@ -34,26 +40,6 @@ type XrayWatchParams struct {
 	Policies []XrayAssignedPolicy
 }
 
-// XrayWatchBody is the top level payload to be sent to xray
-type XrayWatchBody struct {
-	GeneralData      xrayWatchGeneralParams    `json:"general_data"`
-	ProjectResources xrayWatchProjectResources `json:"project_resources,omitempty"`
-	AssignedPolicies []XrayAssignedPolicy      `json:"assigned_policies,omitempty"`
-}
-
-// WatchBuildType defines the type of filter for a builds on a watch
-type WatchBuildType string
-
-// WatchRepositoriesType defines the type of filter for a repositories on a watch
-type WatchRepositoriesType string
-
-type xrayWatchGeneralParams struct {
-	ID          string `json:"id,omitempty"`
-	Name        string `json:"name,omitempty"` // Must be empty on update.
-	Description string `json:"description"`
-	Active      bool   `json:"active"`
-}
-
 // XrayWatchRepositoriesParams is a struct that stores the repository configuration for watch
 type XrayWatchRepositoriesParams struct {
 	Type         WatchRepositoriesType
@@ -67,12 +53,11 @@ type XrayWatchRepositoryAll struct {
 	Filters xrayWatchFilters
 }
 
-type xrayWatchFilters struct {
-	PackageTypes []string
-	Names        []string
-	Paths        []string
-	MimeTypes    []string
-	Properties   map[string]string
+// XrayWatchRepository is used to define a specific repository in a watch
+type XrayWatchRepository struct {
+	Name     string
+	BinMgrID string
+	Filters  xrayWatchFilters
 }
 
 // XrayWatchBuildsParams is a struct that stores the build configuration for watch
@@ -84,7 +69,7 @@ type XrayWatchBuildsParams struct {
 
 // XrayWatchBuildsAllParams is used to define the parameters when a watch uses all builds
 type XrayWatchBuildsAllParams struct {
-	BinMgrID string `json:"bin_mgr_id"`
+	BinMgrID string
 	XrayWatchPathFilters
 }
 
@@ -94,14 +79,32 @@ type XrayWatchBuildsByNameParams struct {
 	BinMgrID string
 }
 
-type xrayWatchFilter struct {
-	Type  string      `json:"type"`
-	Value interface{} `json:"value"`
+// XrayWatchPathFilters is used to define path filters on a repository or a build in a watch
+type XrayWatchPathFilters struct {
+	ExcludePatterns []string `json:"ExcludePatterns"`
+	IncludePatterns []string `json:"IncludePatterns"`
 }
 
-type xrayWatchFilterPropertyValue struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+// XrayAssignedPolicy struct is used to define a policy associated with a watch
+type XrayAssignedPolicy struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+// XrayWatchBody is the top level payload to be sent to xray
+type XrayWatchBody struct {
+	GeneralData      xrayWatchGeneralParams    `json:"general_data"`
+	ProjectResources xrayWatchProjectResources `json:"project_resources,omitempty"`
+	AssignedPolicies []XrayAssignedPolicy      `json:"assigned_policies,omitempty"`
+}
+
+// structs that aren't exported
+
+type xrayWatchGeneralParams struct {
+	ID          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"` // Name must be empty on update.
+	Description string `json:"description"`
+	Active      bool   `json:"active"`
 }
 
 type xrayWatchProjectResources struct {
@@ -115,23 +118,22 @@ type xrayWatchProjectResourcesElement struct {
 	Filters  []xrayWatchFilter `json:"filters,omitempty"`
 }
 
-// XrayWatchRepository is used to define a specific repository in a watch
-type XrayWatchRepository struct {
-	Name     string
-	BinMgrID string
-	Filters  xrayWatchFilters
+type xrayWatchFilters struct {
+	PackageTypes []string
+	Names        []string
+	Paths        []string
+	MimeTypes    []string
+	Properties   map[string]string
 }
 
-// XrayWatchPathFilters is used to define path filters on a repository or a build in a watch
-type XrayWatchPathFilters struct {
-	ExcludePatterns []string `json:"ExcludePatterns"`
-	IncludePatterns []string `json:"IncludePatterns"`
+type xrayWatchFilter struct {
+	Type  string      `json:"type"`
+	Value interface{} `json:"value"`
 }
 
-// XrayAssignedPolicy struct is used to define a policy associated with a watch
-type XrayAssignedPolicy struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
+type xrayWatchFilterPropertyValue struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 // CreateBody creates a payload to configure a Watch in Xray
