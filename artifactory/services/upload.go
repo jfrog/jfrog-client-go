@@ -17,6 +17,7 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
@@ -24,11 +25,12 @@ import (
 )
 
 type UploadService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
-	Progress   ioutils.Progress
-	ArtDetails auth.ServiceDetails
-	DryRun     bool
-	Threads    int
+	client       *rthttpclient.ArtifactoryHttpClient
+	Progress     ioutils.Progress
+	ArtDetails   auth.ServiceDetails
+	DryRun       bool
+	Threads      int
+	ResultWriter *content.ContentWriter
 }
 
 func NewUploadService(client *rthttpclient.ArtifactoryHttpClient) *UploadService {
@@ -51,16 +53,16 @@ func (us *UploadService) SetDryRun(isDryRun bool) {
 	us.DryRun = isDryRun
 }
 
-func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
+func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (totalUploaded, totalFailed int, err error) {
 	// Uploading threads are using this struct to report upload results.
-	uploadSummary := *utils.NewUploadResult(us.Threads)
+	uploadSummary := *utils.NewResult(us.Threads)
 	producerConsumer := parallel.NewRunner(us.Threads, 100, false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	us.prepareUploadTasks(producerConsumer, errorsQueue, uploadSummary, uploadParams...)
 	return us.performUploadTasks(producerConsumer, &uploadSummary, errorsQueue)
 }
 
-func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, uploadSummary utils.UploadResult, uploadParamsSlice ...UploadParams) {
+func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, uploadSummary utils.Result, uploadParamsSlice ...UploadParams) {
 	go func() {
 		defer producer.Done()
 		// Iterate over file-spec groups and produce upload tasks.
@@ -77,11 +79,9 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 	}()
 }
 
-func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSummary *utils.UploadResult, errorsQueue *clientutils.ErrorsQueue) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
+func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSummary *utils.Result, errorsQueue *clientutils.ErrorsQueue) (totalUploaded, totalFailed int, err error) {
 	// Blocking until consuming is finished.
 	consumer.Run()
-	err = errorsQueue.GetError()
-
 	totalUploaded = utils.SumIntArray(uploadSummary.SuccessCount)
 	totalUploadAttempted := utils.SumIntArray(uploadSummary.TotalCount)
 
@@ -90,7 +90,13 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 	if totalFailed > 0 {
 		log.Error("Failed uploading", strconv.Itoa(totalFailed), "artifacts.")
 	}
-	artifactsFileInfo = utils.FlattenFileInfoArray(uploadSummary.FileInfo)
+	if us.ResultWriter != nil {
+		err = us.ResultWriter.Close()
+		if err != nil {
+			return
+		}
+	}
+	err = errorsQueue.GetError()
 	return
 }
 
@@ -496,7 +502,7 @@ type UploadData struct {
 
 type artifactContext func(UploadData) parallel.TaskFunc
 
-func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.UploadResult, uploadParams UploadParams) artifactContext {
+func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, uploadParams UploadParams) artifactContext {
 	return func(artifact UploadData) parallel.TaskFunc {
 		return func(threadId int) (e error) {
 			if artifact.IsDir {
@@ -518,7 +524,9 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.UploadRes
 			}
 			if uploaded {
 				uploadResult.SuccessCount[threadId]++
-				uploadResult.FileInfo[threadId] = append(uploadResult.FileInfo[threadId], artifactFileInfo)
+				if us.ResultWriter != nil {
+					us.ResultWriter.Write(artifactFileInfo)
+				}
 			}
 			return
 		}
