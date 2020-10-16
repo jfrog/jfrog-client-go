@@ -46,6 +46,7 @@
     - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
     - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
     - [Getting Repository Details](#getting-repository-details)
+    - [Getting All Repositories](#getting-all-repositories)
     - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
     - [Getting a Repository Replication](#getting-a-repository-replication)
     - [Removing a Repository Replication](#removing-a-repository-replication)
@@ -597,8 +598,8 @@ You can get repository details from Artifactory using its key:
 servicesManager.GetRepository("generic-repo")
 ```
 
-#### Getting All repositories
-You can all repositories from Artifactory:
+#### Getting All Repositories
+You can get all repositories from Artifactory:
 ```go
 servicesManager.GetAllRepositories()
 ```

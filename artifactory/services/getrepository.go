@@ -25,7 +25,7 @@ func NewGetRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *GetRep
 
 func (grs *GetRepositoryService) Get(repoKey string) (*RepositoryDetails, error) {
 	log.Info("Getting repository '" + repoKey + "' details ...")
-	body, err := grs.sendGet("api/repositories/" + repoKey)
+	body, err := grs.sendGet(apiRepositories + "/" + repoKey)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (grs *GetRepositoryService) Get(repoKey string) (*RepositoryDetails, error)
 
 func (grs *GetRepositoryService) GetAll() (*[]RepositoryDetails, error) {
 	log.Info("Getting all repositories ...")
-	body, err := grs.sendGet("api/repositories")
+	body, err := grs.sendGet(apiRepositories)
 	if err != nil {
 		return nil, err
 	}
