@@ -21,6 +21,7 @@ type ArtifactoryServicesManager interface {
 	UpdateVirtualRepository() *services.VirtualRepositoryService
 	DeleteRepository(repoKey string) error
 	GetRepository(repoKey string) (*services.RepositoryDetails, error)
+	GetAllRepositories() (*[]services.RepositoryDetails, error)
 	CreatePermissionTarget(params services.PermissionTargetParams) error
 	UpdatePermissionTarget(params services.PermissionTargetParams) error
 	DeletePermissionTarget(permissionTargetName string) error

@@ -89,6 +89,12 @@ func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string) (*service
 	return getRepositoryService.Get(repoKey)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
+	getRepositoryService := services.NewGetRepositoryService(sm.client)
+	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return getRepositoryService.GetAll()
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreatePermissionTarget(params services.PermissionTargetParams) error {
 	permissionTargetService := services.NewPermissionTargetService(sm.client)
 	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
