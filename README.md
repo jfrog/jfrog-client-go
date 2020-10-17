@@ -1040,14 +1040,16 @@ btManager.MavenCentralContentSync(params, path)
 ```
 
 ## Using ContentReader
-Some APIs return a content.ContentReader which allow reading the API output.
-Here's an example for how it can be used:
+Some APIs return a ```content.ContentReader``` struct, which allows reading the API's output. ```content.ContentReader``` provides access to large amounts of data safely, without loading all of it into the memory.
+Here's an example for how ```content.ContentReader``` should be used:
 
 ```go
 reader, err := servicesManager.SearchFiles(searchParams)
 if err != nil {
     return err
 }
+
+// Remove the data file used by the reader.
 defer reader.Close()
 // Iterate over the results.
 for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(ResultItem)  {
@@ -1056,13 +1058,15 @@ for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; c
 if err := resultReader.GetError(); err != nil {
     return err
 }
-resultReader.Reset()
+
+// Resets the reader pointer back to the beginning of the output. Make sure not to call this method after the reader had been closed using ```reader.Close()```
+reader.Reset()
 ```
 
-`reader.NextRecord(currentResult)` loads the next record from the reader into `currentResult` of type `ResultItem`.
+* `reader.NextRecord(currentResult)` reads the next record from the reader into `currentResult` of type `ResultItem`.
 
-`reader.Close()` removes the file used by the reader after it is used (preferably using `defer`).
+* `reader.Close()` removes the file used by the reader after it is used (preferably using `defer`).
 
-`reader.GetError()` any error that may occur during `NextRecord()`, can be returned using `GetError()`.
+* `reader.GetError()` returns any error that might have occurd during `NextRecord()`.
 
-`reader.Reset()` sets the reader back to the begging of the input.
+* `reader.Reset()` resets the reader back to the beginning of the output.
