@@ -1050,7 +1050,12 @@ if err != nil {
 }
 
 // Remove the data file used by the reader.
-defer reader.Close()
+defer func() {
+    if reader != nil {
+        err = reader.Close()
+    }
+}()
+
 // Iterate over the results.
 for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(ResultItem)  {
     fmt.Printf("Found artifact: %s of type: %s\n", searchResult.Name, searchResult.Type)
