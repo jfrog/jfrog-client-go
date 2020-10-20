@@ -92,7 +92,12 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 		}
 
 	}
-
+	var action func(string, string, string) (*http.Response, []byte, error)
+	if isDelete {
+		action = ps.sendDeleteRequest
+	} else {
+		action = ps.sendPutRequest
+	}
 	successCounters := make([]int, ps.GetThreads())
 	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
@@ -104,19 +109,15 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				var err error
 				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
 
-				restApi := path.Join("api", "storage", relativePath)
-				setPropertiesUrl, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restApi, make(map[string]string))
+				restAPI := path.Join("api", "storage", relativePath)
+				setPropertiesURL, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 				if err != nil {
 					return err
 				}
-				setPropertiesUrl += "?properties=" + encodedParam
-
-				var resp *http.Response
-				if isDelete {
-					resp, _, err = ps.sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl)
-				} else {
-					resp, _, err = ps.sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl)
-				}
+				// Because we do set/delete props on search results that took into account the
+				// recursive flag, we do not want the action itself to be recursive.
+				setPropertiesURL += "?properties=" + encodedParam + "&recursive=0"
+				resp, _, err := action(logMsgPrefix, relativePath, setPropertiesURL)
 
 				if err != nil {
 					return err

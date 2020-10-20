@@ -94,12 +94,7 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 	}
 	if filteredReader != nil {
 		defer reader.Close()
-		fetchedProps, err = fetchProps(specFile, flags, requiredArtifactProps, filteredReader)
-		if fetchedProps != nil {
-			defer filteredReader.Close()
-			return fetchedProps, err
-		}
-		return filteredReader, err
+		reader = filteredReader
 	}
 	fetchedProps, err = fetchProps(specFile, flags, requiredArtifactProps, reader)
 	if fetchedProps != nil {
