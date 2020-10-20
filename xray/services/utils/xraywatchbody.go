@@ -3,6 +3,8 @@ package utils
 import (
 	"errors"
 	"sort"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 const (
@@ -197,7 +199,7 @@ func configureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) e
 	case "":
 		// Empty is fine
 	default:
-		return errors.New("Invalid Repository Type. Must be " + string(WatchRepositoriesAll) + " or " + string(WatchRepositoriesByName))
+		return errorutils.CheckError(errors.New("Invalid Repository Type. Must be " + string(WatchRepositoriesAll) + " or " + string(WatchRepositoriesByName)))
 	}
 
 	return nil
@@ -299,7 +301,7 @@ func configureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 	case "":
 		// Empty is fine
 	default:
-		return errors.New("Invalid Build Type. Must be " + string(WatchBuildAll) + " or " + string(WatchBuildByName))
+		return errorutils.CheckError(errors.New("Invalid Build Type. Must be " + string(WatchBuildAll) + " or " + string(WatchBuildByName)))
 	}
 
 	return nil
