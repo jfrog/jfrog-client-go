@@ -1142,10 +1142,8 @@ xrayDetails.SetClientCertKeyPath("path/to/.key")
 #### Creating Xray Service Config
 ```go
 serviceConfig, err := config.NewConfigBuilder().
-    SetServiceDetails(rtDetails).
+    SetServiceDetails(xrayDetails).
     SetCertificatesPath(certPath).
-    SetThreads(threads).
-    SetDryRun(false).
     Build()
 ```
 
@@ -1156,6 +1154,12 @@ xrayManager, err := xray.New(&xrayDetails, serviceConfig)
 
 ### Using Xray Services
 #### Creating an Xray Watch
+
+This uses API version 2.
+
+You are able to configure repositories and builds on a watch.
+However, bundles are not supported.
+
 ```go
 params := utils.NewXrayWatchParams()
 params.Name = "example-watch-all"

@@ -139,6 +139,8 @@ type xrayWatchFilterPropertyValue struct {
 }
 
 // CreateBody creates a payload to configure a Watch in Xray
+// This can configure repositories and builds
+// However, bundles are not supported.
 func CreateBody(params XrayWatchParams) (*XrayWatchBody, error) {
 	payloadBody := XrayWatchBody{
 		GeneralData: xrayWatchGeneralParams{
@@ -158,11 +160,6 @@ func CreateBody(params XrayWatchParams) (*XrayWatchBody, error) {
 	}
 
 	err = configureBuilds(&payloadBody, params)
-	if err != nil {
-		return nil, err
-	}
-
-	err = configureBundles(&payloadBody, params)
 	if err != nil {
 		return nil, err
 	}
@@ -304,11 +301,6 @@ func configureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 		return errorutils.CheckError(errors.New("Invalid Build Type. Must be " + string(WatchBuildAll) + " or " + string(WatchBuildByName)))
 	}
 
-	return nil
-}
-
-func configureBundles(payloadBody *XrayWatchBody, params XrayWatchParams) error {
-	// placeholder method to support bundles in a future release
 	return nil
 }
 
