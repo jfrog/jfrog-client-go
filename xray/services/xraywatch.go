@@ -35,8 +35,10 @@ func (xws *XrayWatchService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpC
 	return xws.client
 }
 
+// The getXrayWatchURL does not end with a slash
+// So, calling functions will need to add it
 func (xws *XrayWatchService) getXrayWatchURL() string {
-	return xws.XrayDetails.GetUrl() + watchAPIURL
+	return clientutils.AddTrailingSlashIfNeeded(xws.XrayDetails.GetUrl()) + watchAPIURL
 }
 
 // Delete will delete an existing watch by name
