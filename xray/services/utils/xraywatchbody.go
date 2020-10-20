@@ -98,7 +98,7 @@ type XrayWatchBody struct {
 	AssignedPolicies []XrayAssignedPolicy      `json:"assigned_policies,omitempty"`
 }
 
-// structs that aren't exported
+// These structs are internal
 
 type xrayWatchGeneralParams struct {
 	ID          string `json:"id,omitempty"`
@@ -195,7 +195,7 @@ func configureRepositories(payloadBody *XrayWatchBody, params XrayWatchParams) e
 			payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, repo)
 		}
 	case "":
-		// empty is fine
+		// Empty is fine
 	default:
 		return errors.New("Invalid Repository Type. Must be " + string(WatchRepositoriesAll) + " or " + string(WatchRepositoriesByName))
 	}
@@ -297,7 +297,7 @@ func configureBuilds(payloadBody *XrayWatchBody, params XrayWatchParams) error {
 			payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, build)
 		}
 	case "":
-		// empty is fine
+		// Empty is fine
 	default:
 		return errors.New("Invalid Build Type. Must be " + string(WatchBuildAll) + " or " + string(WatchBuildByName))
 	}

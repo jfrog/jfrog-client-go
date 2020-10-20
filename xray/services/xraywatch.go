@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
-	// "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 
 	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -102,7 +101,9 @@ func (xws *XrayWatchService) Update(params utils.XrayWatchParams) error {
 		return errorutils.CheckError(err)
 	}
 
-	// the update payload must not have a name
+	// Xray does not allow you to update a watch's name
+	// The endpoint throws an error when the name is specified and the method is update.
+	// Therefore, remove the name before sending the update payload
 	payloadBody.GeneralData.Name = ""
 
 	if err != nil {
@@ -138,7 +139,7 @@ func (xws *XrayWatchService) Update(params utils.XrayWatchParams) error {
 	return nil
 }
 
-// Get retrieves the details about an Xray watch by name
+// Get retrieves the details about an Xray watch by its name
 // It will error if no watch can be found by that name.
 func (xws *XrayWatchService) Get(watchName string) (watchResp *utils.XrayWatchParams, err error) {
 	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
