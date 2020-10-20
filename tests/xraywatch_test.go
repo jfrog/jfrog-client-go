@@ -335,7 +335,6 @@ func validateWatchGeneralSettings(t *testing.T, params utils.XrayWatchParams) {
 	assert.Equal(t, params.Description, targetConfig.Description)
 	assert.Equal(t, params.Active, targetConfig.Active)
 	assert.Equal(t, params.Policies, targetConfig.Policies)
-	return
 }
 
 func createRepo(t *testing.T, repoKey string) {
@@ -397,7 +396,7 @@ func createBuild(buildName string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.New("Status is not OK or NoContent - " + strconv.Itoa(resp.StatusCode))
+		return errors.New("failed to create build " + resp.Status)
 	}
 
 	// the build needs to be indexed before a watch can be associated with it.
@@ -410,8 +409,11 @@ func createBuild(buildName string) error {
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
 
 	resp, _, err = xrayClient.SendPost(xrayDetails.GetUrl()+"api/v1/binMgr/builds", requestContentIndexBuild, artHTTPDetails)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil {
 		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to create build index" + resp.Status)
 	}
 
 	return nil
@@ -423,7 +425,7 @@ func deleteBuildIndex(buildName string) error {
 	artUtils.SetContentType("application/json", &artHTTPDetails.Headers)
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	dataIndexBuild := struct {
@@ -435,8 +437,11 @@ func deleteBuildIndex(buildName string) error {
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
 
 	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil {
 		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to delete build index " + resp.Status)
 	}
 
 	return nil
@@ -445,19 +450,23 @@ func deleteBuildIndex(buildName string) error {
 func deleteBuild(buildName string) error {
 	err := deleteBuildIndex(buildName)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	artDetails := GetRtDetails()
 	artHTTPDetails := artDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return errors.New("failed unmarshalling build " + resp.Status)
+
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to delete build " + resp.Status)
 	}
 
 	return nil
@@ -540,11 +549,14 @@ func deletePolicy(policyName string) error {
 	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	resp, _, err := client.SendDelete(xrayDetails.GetUrl()+"api/v2/policies/"+policyName, nil, xrayHTTPDetails)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
 		return errors.New("failed to delete policy " + resp.Status)
 	}
 	return nil

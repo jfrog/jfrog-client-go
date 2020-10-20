@@ -167,7 +167,7 @@ func createDistributionManager() {
 	testsBundleDeleteRemoteService.DistDetails = distDetails
 }
 
-func createXrayManager() {
+func createXrayVersionManager() {
 	xrayDetails := GetXrayDetails()
 	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&xrayDetails).Build()
 	failOnHttpClientCreation(err)
