@@ -49,10 +49,10 @@ func (xws *XrayWatchService) Delete(watchName string) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
-	log.Debug("Artifactory response:", resp.Status)
+	log.Debug("Xray response:", resp.Status)
 	log.Info("Done deleting watch.")
 	return nil
 }
@@ -77,18 +77,13 @@ func (xws *XrayWatchService) Create(params utils.XrayWatchParams) error {
 
 	log.Info("Creating watch...")
 	resp, respBody, err = xws.client.SendPost(url, content, &httpClientsDetails)
-
-	log.Info("Finished request")
 	if err != nil {
-		log.Info("err: " + err.Error())
-		log.Error("error")
 		return err
 	}
-	log.Info("statuscode: " + resp.Status)
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
+		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
 	}
-	log.Debug("Artifactory response:", resp.Status)
+	log.Debug("Xray response:", resp.Status)
 	log.Info("Done creating watch.")
 	return nil
 }
@@ -124,17 +119,13 @@ func (xws *XrayWatchService) Update(params utils.XrayWatchParams) error {
 	log.Info("Updating watch...")
 	resp, respBody, err = xws.client.SendPut(url, content, &httpClientsDetails)
 
-	log.Info("Finished request")
 	if err != nil {
-		log.Info("err: " + err.Error())
-		log.Error("error")
 		return err
 	}
-	log.Info("statuscode: " + resp.Status)
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
+		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
 	}
-	log.Debug("Artifactory response:", resp.Status)
+	log.Debug("Xray response:", resp.Status)
 	log.Info("Done updating watch.")
 	return nil
 }
@@ -180,7 +171,7 @@ func (xws *XrayWatchService) Get(watchName string) (watchResp *utils.XrayWatchPa
 
 	utils.UnpackWatchBody(&result, &watch)
 
-	log.Debug("Artifactory response:", resp.Status)
+	log.Debug("Xray response:", resp.Status)
 	log.Info("Done getting watch.")
 
 	return &result, nil
