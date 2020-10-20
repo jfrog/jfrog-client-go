@@ -28,8 +28,8 @@ func (vs *VersionService) GetXrayDetails() auth.ServiceDetails {
 	return vs.XrayDetails
 }
 
-// GetXrayVersion returns the version of xray
-func (vs *VersionService) GetXrayVersion() (string, error) {
+// GetVersion returns the version of xray
+func (vs *VersionService) GetVersion() (string, error) {
 	httpDetails := vs.XrayDetails.CreateHttpClientDetails()
 	resp, body, _, err := vs.client.SendGet(vs.XrayDetails.GetUrl()+"api/v1/system/version", true, &httpDetails)
 	if err != nil {

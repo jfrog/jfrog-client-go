@@ -1161,7 +1161,7 @@ You are able to configure repositories and builds on a watch.
 However, bundles are not supported.
 
 ```go
-params := utils.NewXrayWatchParams()
+params := utils.NewWatchParams()
 params.Name = "example-watch-all"
 params.Description = "All Repos"
 params.Active = true
@@ -1174,7 +1174,7 @@ params.Repositories.IncludePatterns = []string{"includePath1", "includePath2"}
 params.Builds.Type = utils.WatchBuildAll
 params.Builds.All.Bin_Mgr_ID = "default"
 
-params.Policies = []utils.XrayWatchPolicy{
+params.Policies = []utils.AssignedPolicy{
   {
     Name: policy1Name,
     Type: "security",
@@ -1185,23 +1185,23 @@ params.Policies = []utils.XrayWatchPolicy{
   },
 }
 
-err := xrayManager.CreateXrayWatch(params)
+err := xrayManager.CreateWatch(params)
 ```
 
 #### Get an Xray Watch
 ```go
-watch, err := xrayManager.GetXrayWatch("example-watch-all")
+watch, err := xrayManager.GetWatch("example-watch-all")
 ```
 
 #### Update an Xray Watch
 ```go
-watch, err := xrayManager.GetXrayWatch("example-watch-all")
+watch, err := xrayManager.GetWatch("example-watch-all")
 watch.Description = "Updated description"
 
-xrayManager.UpdateXrayWatch(*watch)
+xrayManager.UpdateWatch(*watch)
 ```
 
 #### Delete an Xray Watch
 ```go
-err := xrayManager.DeleteXrayWatch("example-watch-all")
+err := xrayManager.DeleteWatch("example-watch-all")
 ```

@@ -38,5 +38,5 @@ func (ds *xrayDetails) getXrayVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return sm.GetXrayVersion()
+	return sm.GetVersion()
 }

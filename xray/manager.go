@@ -37,40 +37,40 @@ func (sm *XrayServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
 	return sm.client
 }
 
-// GetXrayVersion will return the xray version
-func (sm *XrayServicesManager) GetXrayVersion() (string, error) {
+// GetVersion will return the xray version
+func (sm *XrayServicesManager) GetVersion() (string, error) {
 	versionService := services.NewVersionService(sm.client)
 	versionService.XrayDetails = sm.config.GetServiceDetails()
-	return versionService.GetXrayVersion()
+	return versionService.GetVersion()
 }
 
-// CreateXrayWatch will create a new xray watch
-func (sm *XrayServicesManager) CreateXrayWatch(params utils.XrayWatchParams) error {
-	XrayWatchService := services.NewXrayWatchService(sm.client)
-	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
-	return XrayWatchService.Create(params)
+// CreateWatch will create a new xray watch
+func (sm *XrayServicesManager) CreateWatch(params utils.WatchParams) error {
+	WatchService := services.NewWatchService(sm.client)
+	WatchService.XrayDetails = sm.config.GetServiceDetails()
+	return WatchService.Create(params)
 }
 
-// GetXrayWatch retrieves the details about an Xray watch by name
+// GetWatch retrieves the details about an Xray watch by name
 // It will error if no watch can be found by that name.
-func (sm *XrayServicesManager) GetXrayWatch(watchName string) (*utils.XrayWatchParams, error) {
-	XrayWatchService := services.NewXrayWatchService(sm.client)
-	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
-	return XrayWatchService.Get(watchName)
+func (sm *XrayServicesManager) GetWatch(watchName string) (*utils.WatchParams, error) {
+	WatchService := services.NewWatchService(sm.client)
+	WatchService.XrayDetails = sm.config.GetServiceDetails()
+	return WatchService.Get(watchName)
 }
 
-// UpdateXrayWatch will update an existing Xray watch by name
+// UpdateWatch will update an existing Xray watch by name
 // It will error if no watch can be found by that name.
-func (sm *XrayServicesManager) UpdateXrayWatch(params utils.XrayWatchParams) error {
-	XrayWatchService := services.NewXrayWatchService(sm.client)
-	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
-	return XrayWatchService.Update(params)
+func (sm *XrayServicesManager) UpdateWatch(params utils.WatchParams) error {
+	WatchService := services.NewWatchService(sm.client)
+	WatchService.XrayDetails = sm.config.GetServiceDetails()
+	return WatchService.Update(params)
 }
 
-// DeleteXrayWatch will delete an existing watch by name
+// DeleteWatch will delete an existing watch by name
 // It will error if no watch can be found by that name.
-func (sm *XrayServicesManager) DeleteXrayWatch(watchName string) error {
-	XrayWatchService := services.NewXrayWatchService(sm.client)
-	XrayWatchService.XrayDetails = sm.config.GetServiceDetails()
-	return XrayWatchService.Delete(watchName)
+func (sm *XrayServicesManager) DeleteWatch(watchName string) error {
+	WatchService := services.NewWatchService(sm.client)
+	WatchService.XrayDetails = sm.config.GetServiceDetails()
+	return WatchService.Delete(watchName)
 }

@@ -19,34 +19,34 @@ const (
 	watchAPIURL = "api/v2/watches"
 )
 
-// XrayWatchService defines the http client and xray details
-type XrayWatchService struct {
+// WatchService defines the http client and xray details
+type WatchService struct {
 	client      *rthttpclient.ArtifactoryHttpClient
 	XrayDetails auth.ServiceDetails
 }
 
-// NewXrayWatchService creates a new Xray Watch Service
-func NewXrayWatchService(client *rthttpclient.ArtifactoryHttpClient) *XrayWatchService {
-	return &XrayWatchService{client: client}
+// NewWatchService creates a new Xray Watch Service
+func NewWatchService(client *rthttpclient.ArtifactoryHttpClient) *WatchService {
+	return &WatchService{client: client}
 }
 
 // GetJfrogHttpClient returns the http client
-func (xws *XrayWatchService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+func (xws *WatchService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
 	return xws.client
 }
 
-// The getXrayWatchURL does not end with a slash
+// The getWatchURL does not end with a slash
 // So, calling functions will need to add it
-func (xws *XrayWatchService) getXrayWatchURL() string {
+func (xws *WatchService) getWatchURL() string {
 	return clientutils.AddTrailingSlashIfNeeded(xws.XrayDetails.GetUrl()) + watchAPIURL
 }
 
 // Delete will delete an existing watch by name
 // It will error if no watch can be found by that name.
-func (xws *XrayWatchService) Delete(watchName string) error {
+func (xws *WatchService) Delete(watchName string) error {
 	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
 	log.Info("Deleting watch...")
-	resp, body, err := xws.client.SendDelete(xws.getXrayWatchURL()+"/"+watchName, nil, &httpClientsDetails)
+	resp, body, err := xws.client.SendDelete(xws.getWatchURL()+"/"+watchName, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (xws *XrayWatchService) Delete(watchName string) error {
 }
 
 // Create will create a new xray watch
-func (xws *XrayWatchService) Create(params utils.XrayWatchParams) error {
+func (xws *WatchService) Create(params utils.WatchParams) error {
 	payloadBody, err := utils.CreateBody(params)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -73,7 +73,7 @@ func (xws *XrayWatchService) Create(params utils.XrayWatchParams) error {
 
 	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
 	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	var url = xws.getXrayWatchURL()
+	var url = xws.getWatchURL()
 	var resp *http.Response
 	var respBody []byte
 
@@ -92,7 +92,7 @@ func (xws *XrayWatchService) Create(params utils.XrayWatchParams) error {
 
 // Update will update an existing Xray watch by name
 // It will error if no watch can be found by that name.
-func (xws *XrayWatchService) Update(params utils.XrayWatchParams) error {
+func (xws *WatchService) Update(params utils.WatchParams) error {
 	payloadBody, err := utils.CreateBody(params)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -114,7 +114,7 @@ func (xws *XrayWatchService) Update(params utils.XrayWatchParams) error {
 
 	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
 	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	var url = xws.getXrayWatchURL() + "/" + params.Name
+	var url = xws.getWatchURL() + "/" + params.Name
 	var resp *http.Response
 	var respBody []byte
 
@@ -134,40 +134,40 @@ func (xws *XrayWatchService) Update(params utils.XrayWatchParams) error {
 
 // Get retrieves the details about an Xray watch by its name
 // It will error if no watch can be found by that name.
-func (xws *XrayWatchService) Get(watchName string) (watchResp *utils.XrayWatchParams, err error) {
+func (xws *WatchService) Get(watchName string) (watchResp *utils.WatchParams, err error) {
 	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
 	log.Info("Getting watch...")
-	resp, body, _, err := xws.client.SendGet(xws.getXrayWatchURL()+"/"+watchName, true, &httpClientsDetails)
-	watch := utils.XrayWatchBody{}
+	resp, body, _, err := xws.client.SendGet(xws.getWatchURL()+"/"+watchName, true, &httpClientsDetails)
+	watch := utils.WatchBody{}
 
 	if err != nil {
-		return &utils.XrayWatchParams{}, err
+		return &utils.WatchParams{}, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return &utils.XrayWatchParams{}, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return &utils.WatchParams{}, errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	err = json.Unmarshal(body, &watch)
 
 	if err != nil {
-		return &utils.XrayWatchParams{}, errors.New("failed unmarshalling watch " + watchName)
+		return &utils.WatchParams{}, errors.New("failed unmarshalling watch " + watchName)
 	}
 
-	result := utils.NewXrayWatchParams()
+	result := utils.NewWatchParams()
 	result.Name = watch.GeneralData.Name
 	result.Description = watch.GeneralData.Description
 	result.Active = watch.GeneralData.Active
-	result.Repositories = utils.XrayWatchRepositoriesParams{
-		All:          utils.XrayWatchRepositoryAll{},
-		Repositories: map[string]utils.XrayWatchRepository{},
-		XrayWatchPathFilters: utils.XrayWatchPathFilters{
+	result.Repositories = utils.WatchRepositoriesParams{
+		All:          utils.WatchRepositoryAll{},
+		Repositories: map[string]utils.WatchRepository{},
+		WatchPathFilters: utils.WatchPathFilters{
 			ExcludePatterns: []string{},
 			IncludePatterns: []string{},
 		},
 	}
-	result.Builds = utils.XrayWatchBuildsParams{
-		All:     utils.XrayWatchBuildsAllParams{},
-		ByNames: map[string]utils.XrayWatchBuildsByNameParams{},
+	result.Builds = utils.WatchBuildsParams{
+		All:     utils.WatchBuildsAllParams{},
+		ByNames: map[string]utils.WatchBuildsByNameParams{},
 	}
 	result.Policies = watch.AssignedPolicies
 
