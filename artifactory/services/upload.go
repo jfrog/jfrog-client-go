@@ -90,12 +90,6 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 	if totalFailed > 0 {
 		log.Error("Failed uploading", strconv.Itoa(totalFailed), "artifacts.")
 	}
-	if us.ResultWriter != nil {
-		err = us.ResultWriter.Close()
-		if err != nil {
-			return
-		}
-	}
 	err = errorsQueue.GetError()
 	return
 }
@@ -509,16 +503,13 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 				us.createFolderInArtifactory(artifact)
 				return
 			}
-			var uploaded bool
-			var target string
-			var artifactFileInfo utils.FileInfo
 			uploadResult.TotalCount[threadId]++
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
-			target, e = utils.BuildArtifactoryUrl(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, make(map[string]string))
+			target, e := utils.BuildArtifactoryUrl(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, make(map[string]string))
 			if e != nil {
 				return
 			}
-			artifactFileInfo, uploaded, e = us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Artifact.TargetPath, artifact.Props, artifact.BuildProps, uploadParams, logMsgPrefix)
+			artifactFileInfo, uploaded, e := us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Artifact.TargetPath, artifact.Props, artifact.BuildProps, uploadParams, logMsgPrefix)
 			if e != nil {
 				return
 			}

@@ -188,6 +188,7 @@ func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithResultReader(params ..
 	if err != nil {
 		return
 	}
+	defer rw.Close()
 	downloadService.ResultWriter = rw
 	totalDownloaded, totalExpected, err = downloadService.DownloadFiles(params...)
 	if err != nil {
@@ -249,6 +250,7 @@ func (sm *ArtifactoryServicesManagerImp) UploadFilesWithResultReader(params ...s
 	if err != nil {
 		return
 	}
+	defer resultWriter.Close()
 	uploadService.ResultWriter = resultWriter
 	totalUploaded, totalFailed, err = uploadService.UploadFiles(params...)
 	if err != nil {
