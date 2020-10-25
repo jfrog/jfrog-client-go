@@ -4,6 +4,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -22,7 +24,7 @@ func TestIsSsh(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.url, func(t *testing.T) {
-			assert.Equal(t, test.expected, IsSshUrl(test.url), "Wrong ssh for URL: " + test.url)
+			assert.Equal(t, test.expected, IsSshUrl(test.url), "Wrong ssh for URL: "+test.url)
 		})
 	}
 }
@@ -192,4 +194,32 @@ func TestIsEqualToLocalFile(t *testing.T) {
 			assert.Equal(t, test.expectedResult, isEqual)
 		})
 	}
+}
+
+func TestListFilesWithExtension(t *testing.T) {
+	testDir := filepath.Join("testdata", "listextension")
+	expected := []string{"testdata/listextension/b.csproj", "testdata/listextension/someproj.csproj"}
+	files, err := ListFilesWithExtension(testDir, ".csproj")
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+	assert.ElementsMatch(t, expected, files)
+}
+
+func TestListFilesWithExtensionByCompareFunc(t *testing.T) {
+	testDir := filepath.Join("testdata", "listextension")
+	expected := []string{"testdata/listextension/a.proj", "testdata/listextension/b.csproj", "testdata/listextension/someproj.csproj"}
+
+	// List files with extension that matches a custom match function.
+	compareFunc := func(actualExt string) (bool, error) {
+		actualExt = strings.TrimLeft(actualExt, ".")
+		return regexp.MatchString(`.*proj$`, actualExt)
+	}
+	files, err := ListFilesWithExtensionByCompareFunc(testDir, compareFunc)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+	assert.ElementsMatch(t, expected, files)
 }

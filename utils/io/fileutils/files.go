@@ -128,18 +128,23 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 	return
 }
 
-// Return all files with the specified extension in the specified path. Not recursive.
-func ListFilesWithExtension(path, ext string) ([]string, error) {
+// Return all files in the specified path, whose extension satisfy the compareFunc. Not recursive.
+func ListFilesWithExtensionByCompareFunc(path string, compareFunc func(actualExt string) (bool, error)) ([]string, error) {
 	sep := GetFileSeparator()
 	if !strings.HasSuffix(path, sep) {
 		path += sep
 	}
-	fileList := []string{}
+	var fileList []string
 	files, _ := ioutil.ReadDir(path)
 	path = strings.TrimPrefix(path, "."+sep)
 
 	for _, f := range files {
-		if !strings.HasSuffix(f.Name(), ext) {
+		actualExt := filepath.Ext(f.Name())
+		match, err := compareFunc(actualExt)
+		if err != nil {
+			return nil, err
+		}
+		if !match {
 			continue
 		}
 		filePath := path + f.Name()
@@ -166,6 +171,14 @@ func ListFilesWithExtension(path, ext string) ([]string, error) {
 		}
 	}
 	return fileList, nil
+}
+
+// Return all files with the specified extension in the specified path. Not recursive.
+func ListFilesWithExtension(path, requiredExt string) ([]string, error) {
+	return ListFilesWithExtensionByCompareFunc(path,
+		func(actualExt string) (bool, error) {
+			return actualExt == requiredExt, nil
+		})
 }
 
 // Return the list of files and directories in the specified path
