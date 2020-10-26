@@ -38,7 +38,7 @@ func createRepoPathFileTriples(pattern string, recursive bool) []RepoPathFile {
 			newPattern := pattern[asteriskIndex[0]:] // '*<pattern>'
 			slashCount := strings.Count(newPattern, "/")
 			asteriskCount := strings.Count(newPattern, "*")
-			// If slashCount or asterixCount are 1 or less, don't trim prefix of '*/' to allow specific-name enforce in triple.
+			// If slashCount or asteriskCount are 1 or less, don't trim prefix of '*/' to allow specific-name enforce in triple.
 			// For example, in case of pattern '*/a1.in', the calculated triple should contain 'a1.in' as the 'file'.
 			if slashCount > 1 || asteriskCount > 1 {
 				// Remove '/' character as the pattern precedes it may be the repository name.
