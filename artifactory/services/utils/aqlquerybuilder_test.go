@@ -20,7 +20,7 @@ var buildAqlSearchQueryDataProvider = []struct {
 	{"repo-local2/a*b*c/dd/", true,
 		`{"path":{"$ne":"."},"$or":[{"$and":[{"repo":"repo-local2","path":{"$match":"a*b*c/dd"},"name":{"$match":"*"}}]},{"$and":[{"repo":"repo-local2","path":{"$match":"a*b*c/dd/*"},"name":{"$match":"*"}}]}]}`},
 	{"repo-local*/a*b*c/dd/", true,
-		`{"path":{"$ne":"."},"$or":[{"$and":[{"repo":{"$match":"repo-local*"},"path":{"$match":"a*b*c/dd"},"name":{"$match":"*"}}]},{"$and":[{"repo":{"$match":"repo-local*"},"path":{"$match":"a*b*c/dd/*"},"name":{"$match":"*"}}]}]}`},
+		`{"path":{"$ne":"."},"$or":[{"$and":[{"repo":{"$match":"repo-local*"},"path":{"$match":"*a*b*c/dd"},"name":{"$match":"*"}}]},{"$and":[{"repo":{"$match":"repo-local*"},"path":{"$match":"*a*b*c/dd/*"},"name":{"$match":"*"}}]}]}`},
 	{"repo-local", false,
 		`{"$or":[{"$and":[{"repo":"repo-local","path":".","name":{"$match":"*"}}]}]}`},
 	{"*repo-local", false,
@@ -28,7 +28,7 @@ var buildAqlSearchQueryDataProvider = []struct {
 	{"repo-local2/a*b*c/dd/", false,
 		`{"path":{"$ne":"."},"$or":[{"$and":[{"repo":"repo-local2","path":{"$match":"a*b*c/dd"},"name":{"$match":"*"}}]}]}`},
 	{"*/a*b*c/dd/", false,
-		`{"path":{"$ne":"."},"$or":[{"$and":[{"repo":{"$match":"*"},"path":{"$match":"a*b*c/dd"},"name":{"$match":"*"}}]}]}`},
+		`{"path":{"$ne":"."},"$or":[{"$and":[{"repo":{"$match":"*"},"path":{"$match":"*a*b*c/dd"},"name":{"$match":"*"}}]}]}`},
 }
 
 func TestBuildAqlSearchQuery(t *testing.T) {
