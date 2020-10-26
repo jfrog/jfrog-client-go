@@ -4,6 +4,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -22,7 +24,7 @@ func TestIsSsh(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.url, func(t *testing.T) {
-			assert.Equal(t, test.expected, IsSshUrl(test.url), "Wrong ssh for URL: " + test.url)
+			assert.Equal(t, test.expected, IsSshUrl(test.url), "Wrong ssh for URL: "+test.url)
 		})
 	}
 }
@@ -192,4 +194,23 @@ func TestIsEqualToLocalFile(t *testing.T) {
 			assert.Equal(t, test.expectedResult, isEqual)
 		})
 	}
+}
+
+func TestListFilesByFilterFunc(t *testing.T) {
+	testDir := filepath.Join("testdata", "listextension")
+	expected := []string{filepath.Join(testDir, "a.proj"),
+		filepath.Join(testDir, "b.csproj"),
+		filepath.Join(testDir, "someproj.csproj")}
+
+	// List files with extension that satisfy the filter function.
+	filterFunc := func(filePath string) (bool, error) {
+		ext := strings.TrimLeft(filepath.Ext(filePath), ".")
+		return regexp.MatchString(`.*proj$`, ext)
+	}
+	files, err := ListFilesByFilterFunc(testDir, filterFunc)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+	assert.ElementsMatch(t, expected, files)
 }
