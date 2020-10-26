@@ -196,27 +196,16 @@ func TestIsEqualToLocalFile(t *testing.T) {
 	}
 }
 
-func TestListFilesWithExtension(t *testing.T) {
-	testDir := filepath.Join("testdata", "listextension")
-	expected := []string{"testdata/listextension/b.csproj", "testdata/listextension/someproj.csproj"}
-	files, err := ListFilesWithExtension(testDir, ".csproj")
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
-	assert.ElementsMatch(t, expected, files)
-}
-
-func TestListFilesWithExtensionByCompareFunc(t *testing.T) {
+func TestListFilesByFilterFunc(t *testing.T) {
 	testDir := filepath.Join("testdata", "listextension")
 	expected := []string{"testdata/listextension/a.proj", "testdata/listextension/b.csproj", "testdata/listextension/someproj.csproj"}
 
-	// List files with extension that matches a custom match function.
-	compareFunc := func(actualExt string) (bool, error) {
-		actualExt = strings.TrimLeft(actualExt, ".")
-		return regexp.MatchString(`.*proj$`, actualExt)
+	// List files with extension that satisfy the filter function.
+	filterFunc := func(filePath string) (bool, error) {
+		ext := strings.TrimLeft(filepath.Ext(filePath), ".")
+		return regexp.MatchString(`.*proj$`, ext)
 	}
-	files, err := ListFilesWithExtensionByCompareFunc(testDir, compareFunc)
+	files, err := ListFilesByFilterFunc(testDir, filterFunc)
 	if err != nil {
 		assert.NoError(t, err)
 		return

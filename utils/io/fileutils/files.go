@@ -128,8 +128,8 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 	return
 }
 
-// Return all files in the specified path, whose extension satisfy the compareFunc. Not recursive.
-func ListFilesWithExtensionByCompareFunc(path string, compareFunc func(actualExt string) (bool, error)) ([]string, error) {
+// Return all files in the specified path who satisfy the filter func. Not recursive.
+func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, error)) ([]string, error) {
 	sep := GetFileSeparator()
 	if !strings.HasSuffix(path, sep) {
 		path += sep
@@ -139,15 +139,14 @@ func ListFilesWithExtensionByCompareFunc(path string, compareFunc func(actualExt
 	path = strings.TrimPrefix(path, "."+sep)
 
 	for _, f := range files {
-		actualExt := filepath.Ext(f.Name())
-		match, err := compareFunc(actualExt)
+		filePath := path + f.Name()
+		satisfy, err := filterFunc(filePath)
 		if err != nil {
 			return nil, err
 		}
-		if !match {
+		if !satisfy {
 			continue
 		}
-		filePath := path + f.Name()
 		exists, err := IsFileExists(filePath, false)
 		if err != nil {
 			return nil, err
@@ -171,14 +170,6 @@ func ListFilesWithExtensionByCompareFunc(path string, compareFunc func(actualExt
 		}
 	}
 	return fileList, nil
-}
-
-// Return all files with the specified extension in the specified path. Not recursive.
-func ListFilesWithExtension(path, requiredExt string) ([]string, error) {
-	return ListFilesWithExtensionByCompareFunc(path,
-		func(actualExt string) (bool, error) {
-			return actualExt == requiredExt, nil
-		})
 }
 
 // Return the list of files and directories in the specified path
