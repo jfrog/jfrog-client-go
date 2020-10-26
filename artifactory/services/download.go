@@ -199,12 +199,6 @@ func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[str
 func (ds *DownloadService) performTasks(consumer parallel.Runner, errorsQueue *clientutils.ErrorsQueue) error {
 	// Blocked until finish consuming
 	consumer.Run()
-	if ds.ResultWriter != nil {
-		err := ds.ResultWriter.Close()
-		if err != nil {
-			return err
-		}
-	}
 	return errorsQueue.GetError()
 }
 

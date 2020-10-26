@@ -188,6 +188,7 @@ func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithResultReader(params ..
 	if err != nil {
 		return
 	}
+	defer rw.Close()
 	downloadService.ResultWriter = rw
 	totalDownloaded, totalExpected, err = downloadService.DownloadFiles(params...)
 	if err != nil {
@@ -229,14 +230,34 @@ func (sm *ArtifactoryServicesManagerImp) DeleteProps(params services.PropsParams
 	setPropsService.Threads = sm.config.GetThreads()
 	return setPropsService.DeleteProps(params)
 }
-
-func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
+func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadService {
 	uploadService := services.NewUploadService(sm.client)
 	uploadService.Threads = sm.config.GetThreads()
 	uploadService.ArtDetails = sm.config.GetServiceDetails()
 	uploadService.DryRun = sm.config.IsDryRun()
 	uploadService.Progress = sm.progress
+	return uploadService
+}
+
+func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
+	uploadService := sm.initUploadService()
 	return uploadService.UploadFiles(params...)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UploadFilesWithResultReader(params ...services.UploadParams) (resultReader *content.ContentReader, totalUploaded, totalFailed int, err error) {
+	uploadService := sm.initUploadService()
+	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return
+	}
+	defer resultWriter.Close()
+	uploadService.ResultWriter = resultWriter
+	totalUploaded, totalFailed, err = uploadService.UploadFiles(params...)
+	if err != nil {
+		return
+	}
+	resultReader = content.NewContentReader(uploadService.ResultWriter.GetFilePath(), content.DefaultKey)
+	return
 }
 
 func (sm *ArtifactoryServicesManagerImp) Copy(params services.MoveCopyParams) (successCount, failedCount int, err error) {
