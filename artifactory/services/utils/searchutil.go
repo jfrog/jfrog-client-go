@@ -93,19 +93,19 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 		return nil, err
 	}
 	if filteredReader != nil {
+		// This one will close the original reader that was used
+		// to create the filteredReader (a new pointer will be created by the defer mechanism).
 		defer reader.Close()
-		fetchedProps, err = fetchProps(specFile, flags, requiredArtifactProps, filteredReader)
-		if fetchedProps != nil {
-			defer filteredReader.Close()
-			return fetchedProps, err
-		}
-		return filteredReader, err
+		// The new reader assignment will not affect the defer statement.
+		reader = filteredReader
 	}
 	fetchedProps, err = fetchProps(specFile, flags, requiredArtifactProps, reader)
 	if fetchedProps != nil {
+		// Before returning the new reader, we close the one we used to creat it.
 		defer reader.Close()
 		return fetchedProps, err
 	}
+	// Returns the open filteredReader or the original reader that returned from the AQL search.
 	return reader, err
 }
 
