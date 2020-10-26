@@ -198,7 +198,9 @@ func TestIsEqualToLocalFile(t *testing.T) {
 
 func TestListFilesByFilterFunc(t *testing.T) {
 	testDir := filepath.Join("testdata", "listextension")
-	expected := []string{"testdata/listextension/a.proj", "testdata/listextension/b.csproj", "testdata/listextension/someproj.csproj"}
+	expected := []string{filepath.Join(testDir, "a.proj"),
+		filepath.Join(testDir, "b.csproj"),
+		filepath.Join(testDir, "someproj.csproj")}
 
 	// List files with extension that satisfy the filter function.
 	filterFunc := func(filePath string) (bool, error) {
