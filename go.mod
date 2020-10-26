@@ -5,6 +5,7 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/buger/jsonparser v0.0.0-20180910192245-6acdf747ae99
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/frankban/quicktest v1.7.2 // indirect
@@ -22,10 +23,10 @@ require (
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/src-d/gcfg v1.3.0 // indirect
 	github.com/stretchr/testify v1.2.2
+	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/xanzy/ssh-agent v0.2.0
-	golang.org/x/crypto v0.0.0-20181001203147-e3636079e1a4
-	golang.org/x/sys v0.0.0-20180906133057-8cf3aee42992 // indirect
-	golang.org/x/text v0.3.0 // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/net v0.0.0-20201010224723-4f7140c49acb // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.0 // indirect
 	gopkg.in/src-d/go-git-fixtures.v3 v3.1.1 // indirect
 	gopkg.in/src-d/go-git.v4 v4.7.0
