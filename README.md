@@ -6,90 +6,98 @@
 |  dev   |    [![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/dev?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/dev)    |
 
 ## Table of Contents
-- [General](#general)
-- [Pull Requests](#pull-requests)
-  - [Guidelines](#guidelines)
-- [Tests](#tests)
-- [General APIs](#general-apis)
-  - [Setting the Logger](#setting-the-logger)
-  - [Setting the Temp Dir](#setting-the-temp-dir)
-- [Artifactory APIs](#artifactory-apis)
-  - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
-    - [Creating Artifactory Details](#creating-artifactory-details)
-    - [Creating Artifactory Service Config](#creating-artifactory-service-config)
-    - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
-  - [Using Artifactory Services](#using-artifactory-services)
-    - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
-    - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
-    - [Copying Files in Artifactory](#copying-files-in-artifactory)
-    - [Moving Files in Artifactory](#moving-files-in-artifactory)
-    - [Deleting Files from Artifactory](#deleting-files-from-artifactory)
-    - [Searching Files in Artifactory](#searching-files-in-artifactory)
-    - [Setting Properties on Files in Artifactory](#setting-properties-on-files-in-artifactory)
-    - [Deleting Properties from Files in Artifactory](#deleting-properties-from-files-in-artifactory)
-    - [Publishing Build Info to Artifactory](#publishing-build-info-to-artifactory)
-    - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
-    - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
-    - [Promoting a Docker Image in Artifactory](#promoting-a-docker-image-in-artifactory)
-    - [Distributing Published Builds to JFrog Bintray](#distributing-published-builds-to-jFrog-bintray)
-    - [Triggering Build Scanning with JFrog Xray](#triggering-build-scanning-with-jFrog-xray)
-    - [Discarding Old Builds](#discarding-old-builds)
-    - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
-    - [Executing AQLs](#executing-aqls)
-    - [Reading Files in Artifactory](#reading-files-in-artifactory)
-    - [Creating an Access Token](#creating-an-access-token)
-    - [Fetching Access Tokens](#fetching-access-tokens)
-    - [Refreshing an Access Token](#refreshing-an-access-token)
-    - [Revoking an Access Token](#revoking-an-access-token)
-    - [Regenerate API Key](#regenerate-api-key)
-    - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
-    - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
-    - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
-    - [Getting Repository Details](#getting-repository-details)
-    - [Getting All Repositories](#getting-all-repositories)
-    - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
-    - [Getting a Repository Replication](#getting-a-repository-replication)
-    - [Removing a Repository Replication](#removing-a-repository-replication)
-    - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
-    - [Removing a Permission Target](#removing-a-permission-target)
-    - [Fetching Artifactory's Version](#fetching-artifactorys-version)
-    - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
-- [Distribution APIs](#distribution-apis)
-  - [Creating Distribution Service Manager](#creating-distribution-service-manager)
-    - [Creating Distribution Details](#creating-distribution-details)
-    - [Creating Distribution Service Config](#creating-distribution-service-config)
-    - [Creating New Distribution Service Manager](#creating-new-distribution-service-manager)
-  - [Using Distribution Services](#using-distribution-services)
-    - [Setting Distribution Signing Key](#setting-distribution-signing-key)
-    - [Creating a Release Bundle](#creating-a-release-bundle)
-    - [Updating a Release Bundle](#updating-a-release-bundle)
-    - [Signing a Release Bundle](#signing-a-release-bundle)
-    - [Async Distributing a Release Bundle](#async-distributing-a-release-bundle)
-    - [Sync Distributing a Release Bundle](#sync-distributing-a-release-bundle)
-    - [Getting Distribution Status](#getting-distribution-status)
-    - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle)
-    - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle)
-- [Bintray APIs](#bintray-apis)
-  - [Creating Bintray Details](#creating-bintray-details)
-  - [Creating Bintray Service Manager](#creating-bintray-service-manager)
-  - [Using Bintray Services](#using-bintray-services)
-    - [Uploading a Single File to Bintray](#uploading-a-single-file-to-bintray)
-    - [Downloading a Single File from Bintray](#downloading-a-single-file-from-bintray)
-    - [Downloading Version Files from Bintray](#downloading-version-files-from-bintray)
-    - [Showing and Deleting a Bintray Package](#showing-and-deleting-a-bintray-package)
-    - [Creating and Updating a Bintray Package](#creating-and-updating-a-bintray-package)
-    - [Showing and Deleting a Bintray Version](#showing-and-deleting-a-bintray-version)
-    - [Creating and Updating a Bintray Version](#creating-and-updating-a-bintray-version)
-    - [Creating and Updating Entitlements](#creating-and-updating-entitlements)
-    - [Showing and Deleting Entitlements](#showing-and-deleting-entitlements)
-    - [Creating and Updating Access Keys](#creating-and-updating-access-keys)
-    - [Showing and Deleting Access Keys](#showing-and-deleting-access-keys)
-    - [Signing a URL](#signing-a-url)
-    - [GPG Signing a File](#gpg-signing-a-file)
-    - [GPG Signing Version Files](#gpg-signing-version-files)
-    - [Listing Logs](#listing-logs)
-    - [Downloading Logs](#downloading-logs)
-- [Using ContentReader](#using-contentreader)
+- [jfrog-client-go](#jfrog-client-go)
+  - [Table of Contents](#table-of-contents)
+  - [General](#general)
+  - [Pull Requests](#pull-requests)
+    - [Guidelines](#guidelines)
+  - [Tests](#tests)
+  - [General APIs](#general-apis)
+    - [Setting the Logger](#setting-the-logger)
+    - [Setting the Temp Dir](#setting-the-temp-dir)
+  - [Artifactory APIs](#artifactory-apis)
+    - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
+      - [Creating Artifactory Details](#creating-artifactory-details)
+      - [Creating Artifactory Service Config](#creating-artifactory-service-config)
+      - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
+    - [Using Artifactory Services](#using-artifactory-services)
+      - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
+        - [Uploading Files:](#uploading-files)
+        - [Uploading Files with Results Reader:](#uploading-files-with-results-reader)
+      - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
+        - [Downloading Files:](#downloading-files)
+        - [Downloading Files with Results Reader:](#downloading-files-with-results-reader)
+      - [Copying Files in Artifactory](#copying-files-in-artifactory)
+      - [Moving Files in Artifactory](#moving-files-in-artifactory)
+      - [Deleting Files from Artifactory](#deleting-files-from-artifactory)
+      - [Searching Files in Artifactory](#searching-files-in-artifactory)
+      - [Setting Properties on Files in Artifactory](#setting-properties-on-files-in-artifactory)
+      - [Deleting Properties from Files in Artifactory](#deleting-properties-from-files-in-artifactory)
+      - [Publishing Build Info to Artifactory](#publishing-build-info-to-artifactory)
+      - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
+      - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
+      - [Promoting a Docker Image in Artifactory](#promoting-a-docker-image-in-artifactory)
+      - [Distributing Published Builds to JFrog Bintray](#distributing-published-builds-to-jfrog-bintray)
+      - [Triggering Build Scanning with JFrog Xray](#triggering-build-scanning-with-jfrog-xray)
+      - [Discarding Old Builds](#discarding-old-builds)
+      - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
+      - [Executing AQLs](#executing-aqls)
+      - [Reading Files in Artifactory](#reading-files-in-artifactory)
+      - [Creating an Access Token](#creating-an-access-token)
+      - [Fetching Access Tokens](#fetching-access-tokens)
+      - [Refreshing an Access Token](#refreshing-an-access-token)
+      - [Revoking an Access Token](#revoking-an-access-token)
+      - [Regenerate API Key](#regenerate-api-key)
+      - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
+      - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
+      - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
+      - [Removing a Repository](#removing-a-repository)
+      - [Getting Repository Details](#getting-repository-details)
+      - [Getting All Repositories](#getting-all-repositories)
+      - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
+      - [Getting a Repository Replication](#getting-a-repository-replication)
+      - [Removing a Repository Replication](#removing-a-repository-replication)
+      - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
+      - [Removing a Permission Target](#removing-a-permission-target)
+      - [Fetching Artifactory's Version](#fetching-artifactorys-version)
+      - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
+  - [Distribution APIs](#distribution-apis)
+    - [Creating Distribution Service Manager](#creating-distribution-service-manager)
+      - [Creating Distribution Details](#creating-distribution-details)
+      - [Creating Distribution Service Config](#creating-distribution-service-config)
+      - [Creating New Distribution Service Manager](#creating-new-distribution-service-manager)
+    - [Using Distribution Services](#using-distribution-services)
+      - [Setting Distribution Signing Key](#setting-distribution-signing-key)
+      - [Creating a Release Bundle](#creating-a-release-bundle)
+      - [Updating a Release Bundle](#updating-a-release-bundle)
+      - [Signing a Release Bundle](#signing-a-release-bundle)
+      - [Async Distributing a Release Bundle](#async-distributing-a-release-bundle)
+      - [Sync Distributing a Release Bundle](#sync-distributing-a-release-bundle)
+      - [Getting Distribution Status](#getting-distribution-status)
+      - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle)
+      - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle)
+  - [Bintray APIs](#bintray-apis)
+    - [Creating Bintray Details](#creating-bintray-details)
+    - [Creating Bintray Service Manager](#creating-bintray-service-manager)
+    - [Using Bintray Services](#using-bintray-services)
+      - [Uploading a Single File to Bintray](#uploading-a-single-file-to-bintray)
+      - [Downloading a Single File from Bintray](#downloading-a-single-file-from-bintray)
+      - [Downloading Version Files from Bintray](#downloading-version-files-from-bintray)
+      - [Showing and Deleting a Bintray Package](#showing-and-deleting-a-bintray-package)
+      - [Creating and Updating a Bintray Package](#creating-and-updating-a-bintray-package)
+      - [Showing and Deleting a Bintray Version](#showing-and-deleting-a-bintray-version)
+      - [Creating and Updating a Bintray Version](#creating-and-updating-a-bintray-version)
+      - [Creating and Updating Entitlements](#creating-and-updating-entitlements)
+      - [Showing and Deleting Entitlements](#showing-and-deleting-entitlements)
+      - [Creating and Updating Access Keys](#creating-and-updating-access-keys)
+      - [Showing and Deleting Access Keys](#showing-and-deleting-access-keys)
+      - [Signing a URL](#signing-a-url)
+      - [GPG Signing a File](#gpg-signing-a-file)
+      - [GPG Signing Version Files](#gpg-signing-version-files)
+      - [Listing Logs](#listing-logs)
+      - [Downloading Logs](#downloading-logs)
+      - [Syncing Content To Maven Central](#syncing-content-to-maven-central)
+  - [Using ContentReader](#using-contentreader)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -174,6 +182,8 @@ rtManager, err := artifactory.New(&rtDetails, serviceConfig)
 
 ### Using Artifactory Services
 #### Uploading Files to Artifactory
+##### Uploading Files:
+Using the `UploadFiles()` function, we can upload files and get the general statistics of the action (The actual number of successful and failed uploads), and the error value if it occurred.
 ```go
 params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
@@ -194,8 +204,33 @@ params.Retries = 5
 // MinChecksumDeploy default value: 10400
 params.MinChecksumDeploy = 15360
 
-rtManager.UploadFiles(params)
+totalUploaded, totalFailed, err := rtManager.UploadFiles(params)
 ```
+##### Uploading Files with Results Reader:
+Similar to `UploadFlies()`, but returns a reader, which allows iterating over the details of the uploaded files. Only files which were successfully uploaded are available by the reader.
+```go
+params := services.NewUploadParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "repo/path/"
+// Attach properties to the uploaded files.
+params.Props = "key1=val1;key2=val2"
+params.AddVcsProps = false
+params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
+params.Recursive = true
+params.Regexp = false
+params.IncludeDirs = false
+params.Flat = true
+params.Explode = false
+params.Deb = ""
+params.Symlink = false
+// Retries default value: 3
+params.Retries = 5
+// MinChecksumDeploy default value: 10400
+params.MinChecksumDeploy = 15360
+
+reader, totalUploaded, totalFailed, err := rtManager.UploadFilesWithResultReader(params)
+```
+Read more about [ContentReader](#using-contentReader).
 
 #### Downloading Files from Artifactory
 ##### Downloading Files:
