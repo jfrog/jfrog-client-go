@@ -1185,7 +1185,7 @@ params.Policies = []utils.AssignedPolicy{
   },
 }
 
-err := xrayManager.CreateWatch(params)
+err := xrayManager.CreateWatch(*params)
 ```
 
 #### Get an Xray Watch

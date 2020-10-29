@@ -168,12 +168,14 @@ func CreateBody(params WatchParams) (*WatchBody, error) {
 }
 
 func configureRepositories(payloadBody *WatchBody, params WatchParams) error {
+	// Filters needs to be an empty array for Xray to accept the payload.
+
 	switch params.Repositories.Type {
 
 	case WatchRepositoriesAll:
 		allFilters := watchProjectResourcesElement{
 			Type:    "all-repos",
-			Filters: []watchFilter{},
+			Filters: make([]watchFilter, 0),
 		}
 
 		allFilters.Filters = append(allFilters.Filters, createFilters(params.Repositories.All.Filters, params.Repositories)...)
@@ -186,7 +188,7 @@ func configureRepositories(payloadBody *WatchBody, params WatchParams) error {
 				Type:     "repository",
 				Name:     repository.Name,
 				BinMgrID: repository.BinMgrID,
-				Filters:  []watchFilter{},
+				Filters:  make([]watchFilter, 0),
 			}
 
 			repo.Filters = append(repo.Filters, createFilters(repository.Filters, params.Repositories)...)
@@ -359,6 +361,8 @@ func UnpackWatchBody(watch *WatchParams, body *WatchBody) {
 }
 
 func unpackFilters(filters []watchFilter, output *watchFilters, repos *WatchRepositoriesParams) {
+	// Initialize properties before looping through filters so that all properties are captured
+	output.Properties = map[string]string{}
 
 	for _, filter := range filters {
 		switch filter.Type {
@@ -376,7 +380,6 @@ func unpackFilters(filters []watchFilter, output *watchFilters, repos *WatchRepo
 			output.MimeTypes = append(output.MimeTypes, filter.Value.(string))
 
 		case "property":
-			output.Properties = map[string]string{}
 			filterParams := filter.Value.(map[string]interface{})
 			key := filterParams["key"].(string)
 			value := filterParams["value"].(string)

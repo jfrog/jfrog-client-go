@@ -53,7 +53,7 @@ func testXrayWatchAll(t *testing.T) {
 	paramsAllRepos.Repositories.All.Filters.Names = []string{"example-name-1"}
 	paramsAllRepos.Repositories.All.Filters.Paths = []string{"example-path-1"}
 	paramsAllRepos.Repositories.All.Filters.MimeTypes = []string{"example-mime-type-1"}
-	paramsAllRepos.Repositories.All.Filters.Properties = map[string]string{"some-key-1": "some-value-1"}
+	paramsAllRepos.Repositories.All.Filters.Properties = map[string]string{"some-key-1": "some-value-1", "some-key-2": "some-value-2"}
 
 	paramsAllRepos.Repositories.ExcludePatterns = []string{"excludePath1", "excludePath2"}
 	paramsAllRepos.Repositories.IncludePatterns = []string{"includePath1", "includePath2"}
@@ -85,7 +85,7 @@ func testXrayWatchAll(t *testing.T) {
 	assert.Equal(t, []string{"example-name-1"}, targetConfig.Repositories.All.Filters.Names)
 	assert.Equal(t, []string{"example-path-1"}, targetConfig.Repositories.All.Filters.Paths)
 	assert.Equal(t, []string{"example-mime-type-1"}, targetConfig.Repositories.All.Filters.MimeTypes)
-	assert.Equal(t, map[string]string{"some-key-1": "some-value-1"}, targetConfig.Repositories.All.Filters.Properties)
+	assert.Equal(t, map[string]string{"some-key-1": "some-value-1", "some-key-2": "some-value-2"}, targetConfig.Repositories.All.Filters.Properties)
 	assert.Equal(t, utils.WatchRepositoriesAll, targetConfig.Repositories.Type)
 
 	assert.Equal(t, utils.WatchBuildAll, targetConfig.Builds.Type)
@@ -96,7 +96,7 @@ func testXrayWatchAll(t *testing.T) {
 	targetConfig.Repositories.All.Filters.Names = []string{"example-name-2"}
 	targetConfig.Repositories.All.Filters.Paths = []string{"example-path-2"}
 	targetConfig.Repositories.All.Filters.MimeTypes = []string{"example-mime-type-2"}
-	targetConfig.Repositories.All.Filters.Properties = map[string]string{"some-key-2": "some-value-2"}
+	targetConfig.Repositories.All.Filters.Properties = map[string]string{"some-key-2": "some-value-2", "some-key-4": "some-value-4"}
 
 	targetConfig.Repositories.ExcludePatterns = []string{"excludePath3", "excludePath4"}
 	targetConfig.Repositories.IncludePatterns = []string{"includePath3", "includePath4"}
@@ -122,7 +122,7 @@ func testXrayWatchAll(t *testing.T) {
 	assert.Equal(t, []string{"example-name-2"}, updatedTargetConfig.Repositories.All.Filters.Names)
 	assert.Equal(t, []string{"example-path-2"}, updatedTargetConfig.Repositories.All.Filters.Paths)
 	assert.Equal(t, []string{"example-mime-type-2"}, updatedTargetConfig.Repositories.All.Filters.MimeTypes)
-	assert.Equal(t, map[string]string{"some-key-2": "some-value-2"}, updatedTargetConfig.Repositories.All.Filters.Properties)
+	assert.Equal(t, map[string]string{"some-key-2": "some-value-2", "some-key-4": "some-value-4"}, updatedTargetConfig.Repositories.All.Filters.Properties)
 }
 
 func testXrayWatchSelectedRepos(t *testing.T) {
@@ -165,7 +165,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	repo.Filters.Names = []string{"example-name"}
 	repo.Filters.Paths = []string{"example-path"}
 	repo.Filters.MimeTypes = []string{"example-mime-type"}
-	repo.Filters.Properties = map[string]string{"some-key": "some-value"}
+	repo.Filters.Properties = map[string]string{"some-key": "some-value", "some-key1": "some-value1"}
 
 	repos[repo1Name] = repo
 
@@ -174,7 +174,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	anotherRepo.Filters.Names = []string{"another-example-name"}
 	anotherRepo.Filters.Paths = []string{"another-example-path"}
 	anotherRepo.Filters.MimeTypes = []string{"another-example-mime-type"}
-	anotherRepo.Filters.Properties = map[string]string{"another-key": "some-value"}
+	anotherRepo.Filters.Properties = map[string]string{"another-key": "some-value", "another-key1": "another-value1"}
 
 	repos[repo2Name] = anotherRepo
 
@@ -206,7 +206,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	assert.Equal(t, []string{"example-name"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Names)
 	assert.Equal(t, []string{"example-path"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Paths)
 	assert.Equal(t, []string{"example-mime-type"}, targetConfig.Repositories.Repositories[repo1Name].Filters.MimeTypes)
-	assert.Equal(t, map[string]string{"some-key": "some-value"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Properties)
+	assert.Equal(t, map[string]string{"some-key": "some-value", "some-key1": "some-value1"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Properties)
 
 	assert.Equal(t, repo2Name, targetConfig.Repositories.Repositories[repo2Name].Name)
 	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo2Name].BinMgrID)
@@ -214,7 +214,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	assert.Equal(t, []string{"another-example-name"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Names)
 	assert.Equal(t, []string{"another-example-path"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Paths)
 	assert.Equal(t, []string{"another-example-mime-type"}, targetConfig.Repositories.Repositories[repo2Name].Filters.MimeTypes)
-	assert.Equal(t, map[string]string{"another-key": "some-value"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Properties)
+	assert.Equal(t, map[string]string{"another-key": "some-value", "another-key1": "another-value1"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Properties)
 
 	assert.Equal(t, utils.WatchBuildByName, targetConfig.Builds.Type)
 	assert.Empty(t, targetConfig.Builds.All.ExcludePatterns)
