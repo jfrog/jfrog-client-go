@@ -27,7 +27,20 @@ type WatchRepositoriesType string
 
 // NewWatchParams creates a new struct to configure an Xray watch
 func NewWatchParams() WatchParams {
-	return WatchParams{}
+	return WatchParams{
+		Repositories: WatchRepositoriesParams{
+			Repositories: make(map[string]WatchRepository, 0),
+
+			WatchPathFilters: WatchPathFilters{
+				ExcludePatterns: []string{},
+				IncludePatterns: []string{},
+			},
+		},
+		Builds: WatchBuildsParams{
+			ByNames: make(map[string]WatchBuildsByNameParams, 0),
+		},
+		Policies: make([]AssignedPolicy, 0),
+	}
 }
 
 // WatchParams defines all the properties to create an Xray watch
