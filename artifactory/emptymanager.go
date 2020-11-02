@@ -33,7 +33,6 @@ type ArtifactoryServicesManager interface {
 	GetPathsToDelete(params services.DeleteParams) (*content.ContentReader, error)
 	DeleteFiles(reader *content.ContentReader) (int, error)
 	ReadRemoteFile(readPath string) (io.ReadCloser, error)
-	initDownloadService() *services.DownloadService
 	DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error)
 	DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error)
 	GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error)
