@@ -314,7 +314,7 @@ func uploadDummyFile(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "test/"}
 	up.Flat = true
-	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
+	uploaded, failed, err := testsUploadService.UploadFiles(up)
 	if uploaded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -326,7 +326,7 @@ func uploadDummyFile(t *testing.T) {
 	}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "b.in"}
 	up.Flat = true
-	_, uploaded, failed, err = testsUploadService.UploadFiles(up)
+	uploaded, failed, err = testsUploadService.UploadFiles(up)
 	if uploaded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -340,7 +340,7 @@ func uploadDummyFile(t *testing.T) {
 	}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: archivePath, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
-	_, uploaded, failed, err = testsUploadService.UploadFiles(up)
+	uploaded, failed, err = testsUploadService.UploadFiles(up)
 	if uploaded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}

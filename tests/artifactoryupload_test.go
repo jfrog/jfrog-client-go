@@ -31,7 +31,7 @@ func flatUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
-	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
+	uploaded, failed, err := testsUploadService.UploadFiles(up)
 	if uploaded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -74,7 +74,7 @@ func recursiveUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
-	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
+	uploaded, failed, err := testsUploadService.UploadFiles(up)
 	if uploaded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -120,7 +120,7 @@ func placeholderUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
 	up.Flat = true
-	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
+	uploaded, failed, err := testsUploadService.UploadFiles(up)
 	if uploaded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -166,7 +166,7 @@ func includeDirsUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
-	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
+	uploaded, failed, err := testsUploadService.UploadFiles(up)
 	if uploaded != 0 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -227,7 +227,7 @@ func explodeUpload(t *testing.T) {
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
 	up.ExplodeArchive = true
-	_, uploaded, failed, err := testsUploadService.UploadFiles(up)
+	uploaded, failed, err := testsUploadService.UploadFiles(up)
 	if uploaded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
