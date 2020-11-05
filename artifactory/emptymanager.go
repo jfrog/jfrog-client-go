@@ -255,3 +255,7 @@ func (esm *EmptyArtifactoryServicesManager) PromoteDocker(params services.Docker
 func (esm *EmptyArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
 	panic("Failed: Method is not implemented")
 }
+
+func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.RepositoryDetails, error) {
+	panic("Failed: Method is not implemented")
+}
