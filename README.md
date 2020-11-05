@@ -546,6 +546,7 @@ params.Description = "A caching proxy repository for a JFrog's jcenter"
 params.HandleSnapshot = false
 params.HandleReleases = true
 params.FetchJarsEagerly = true
+params.XrayIndex = true
 params.AssumedOfflinePeriodSecs = 600
 params.SuppressPomConsistencyChecks = true
 params.RemoteRepoChecksumPolicyType = "pass-thru"
