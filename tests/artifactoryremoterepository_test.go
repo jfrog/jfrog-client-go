@@ -51,6 +51,7 @@ func remoteMavenTest(t *testing.T) {
 	mrp.SuppressPomConsistencyChecks = &trueValue
 	mrp.HandleReleases = &trueValue
 	mrp.HandleSnapshots = &trueValue
+	mrp.XrayIndex = &trueValue
 	mrp.RemoteRepoChecksumPolicyType = "ignore-and-generate"
 	mrp.AssumedOfflinePeriodSecs = 2345
 	mrp.StoreArtifactsLocally = &falseValue
@@ -85,6 +86,7 @@ func remoteGradleTest(t *testing.T) {
 	grp.SuppressPomConsistencyChecks = &trueValue
 	grp.HandleReleases = &trueValue
 	grp.HandleSnapshots = &trueValue
+	grp.XrayIndex = &trueValue
 	grp.RemoteRepoChecksumPolicyType = "ignore-and-generate"
 	grp.AssumedOfflinePeriodSecs = 2345
 	grp.StoreArtifactsLocally = &falseValue
@@ -120,6 +122,7 @@ func remoteIvyTest(t *testing.T) {
 	irp.AssumedOfflinePeriodSecs = 8080
 	irp.StoreArtifactsLocally = &trueValue
 	irp.ShareConfiguration = &trueValue
+	irp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Ivy(irp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -134,6 +137,7 @@ func remoteIvyTest(t *testing.T) {
 	irp.EnableCookieManagement = &trueValue
 	irp.SocketTimeoutMillis = 1818
 	irp.ShareConfiguration = &falseValue
+	irp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Ivy(irp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -166,6 +170,7 @@ func remoteSbtTest(t *testing.T) {
 	srp.StoreArtifactsLocally = &falseValue
 	srp.ShareConfiguration = &falseValue
 	srp.AllowAnyHostAuth = &trueValue
+	srp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Sbt(srp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -198,6 +203,7 @@ func remoteHelmTest(t *testing.T) {
 	hrp.IncludesPattern = "dir1/*,dir5/*"
 	hrp.SocketTimeoutMillis = 666
 	hrp.BlackedOut = &falseValue
+	hrp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Helm(hrp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -215,6 +221,7 @@ func remoteRpmTest(t *testing.T) {
 	rrp.ListRemoteFolderItems = &falseValue
 	rrp.StoreArtifactsLocally = &trueValue
 	rrp.ShareConfiguration = &trueValue
+	rrp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Rpm(rrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -249,6 +256,7 @@ func remoteNugetTest(t *testing.T) {
 	nrp.BypassHeadRequests = &trueValue
 	nrp.DownloadContextPath = "api/v1"
 	nrp.V3FeedUrl = "https://api.nuget.org/v3/index.json"
+	nrp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Nuget(nrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -281,6 +289,7 @@ func remoteCranTest(t *testing.T) {
 	crp.AssumedOfflinePeriodSecs = 8080
 	crp.StoreArtifactsLocally = &trueValue
 	crp.ShareConfiguration = &trueValue
+	crp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Cran(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -295,6 +304,7 @@ func remoteCranTest(t *testing.T) {
 	crp.EnableCookieManagement = &trueValue
 	crp.SocketTimeoutMillis = 1818
 	crp.ShareConfiguration = &falseValue
+	crp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Cran(crp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -314,6 +324,7 @@ func remoteGemsTest(t *testing.T) {
 	grp.BlockMismatchingMimeTypes = &trueValue
 	grp.IncludesPattern = "**/*"
 	grp.ExcludesPattern = "dirEx/*"
+	grp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Gems(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -330,6 +341,7 @@ func remoteGemsTest(t *testing.T) {
 	grp.Offline = &trueValue
 	grp.AllowAnyHostAuth = &trueValue
 	grp.ShareConfiguration = &falseValue
+	grp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Gems(grp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -350,6 +362,7 @@ func remoteNpmTest(t *testing.T) {
 	nrp.ListRemoteFolderItems = &trueValue
 	nrp.Offline = &trueValue
 	nrp.RetrievalCachePeriodSecs = 999
+	nrp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Npm(nrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -387,6 +400,7 @@ func remoteBowerTest(t *testing.T) {
 	brp.Offline = &trueValue
 	brp.BypassHeadRequests = &trueValue
 	brp.IncludesPattern = "**/*"
+	brp.XrayIndex = &falseValue
 
 	err := testsCreateRemoteRepositoryService.Bower(brp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -405,6 +419,7 @@ func remoteBowerTest(t *testing.T) {
 	brp.BlackedOut = &trueValue
 	brp.BlockMismatchingMimeTypes = &falseValue
 	brp.BypassHeadRequests = &falseValue
+	brp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Bower(brp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -425,6 +440,7 @@ func remoteDebianTest(t *testing.T) {
 	drp.ListRemoteFolderItems = &trueValue
 	drp.Offline = &trueValue
 	drp.RetrievalCachePeriodSecs = 999
+	drp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Debian(drp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -443,6 +459,7 @@ func remoteDebianTest(t *testing.T) {
 	drp.ExcludesPattern = "goDir2/*,dir3/dir4/*"
 	drp.AllowAnyHostAuth = &trueValue
 	drp.ListRemoteFolderItems = &falseValue
+	drp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Debian(drp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -459,6 +476,7 @@ func remotePypiTest(t *testing.T) {
 	crp.AssumedOfflinePeriodSecs = 1800
 	crp.StoreArtifactsLocally = &falseValue
 	crp.ShareConfiguration = &trueValue
+	crp.XrayIndex = &falseValue
 
 	err := testsCreateRemoteRepositoryService.Conda(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -471,6 +489,7 @@ func remotePypiTest(t *testing.T) {
 	crp.EnableCookieManagement = &trueValue
 	crp.SocketTimeoutMillis = 1818
 	crp.ShareConfiguration = &falseValue
+	crp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Conda(crp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -505,6 +524,7 @@ func remoteDockerTest(t *testing.T) {
 	drp.StoreArtifactsLocally = &falseValue
 	drp.ShareConfiguration = &falseValue
 	drp.UnusedArtifactsCleanupPeriodHours = 48
+	drp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Docker(drp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -524,6 +544,7 @@ func remoteGitlfsTest(t *testing.T) {
 	grp.BypassHeadRequests = &trueValue
 	grp.BlockMismatchingMimeTypes = &falseValue
 	grp.ListRemoteFolderItems = &trueValue
+	grp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Gitlfs(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -540,6 +561,7 @@ func remoteGitlfsTest(t *testing.T) {
 	grp.ShareConfiguration = &falseValue
 	grp.ListRemoteFolderItems = &falseValue
 	grp.BlockMismatchingMimeTypes = &trueValue
+	grp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Gitlfs(grp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -557,6 +579,7 @@ func remoteGoTest(t *testing.T) {
 	grp.StoreArtifactsLocally = &trueValue
 	grp.ShareConfiguration = &trueValue
 	grp.IncludesPattern = "goDir1/*"
+	grp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Go(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -592,6 +615,7 @@ func remoteYumTest(t *testing.T) {
 	yrp.BlockMismatchingMimeTypes = &trueValue
 	yrp.BlackedOut = &trueValue
 	yrp.IncludesPattern = "*/**"
+	yrp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Yum(yrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -611,6 +635,7 @@ func remoteYumTest(t *testing.T) {
 	yrp.SocketTimeoutMillis = 666
 	yrp.Offline = &trueValue
 	yrp.BlockMismatchingMimeTypes = &falseValue
+	yrp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Yum(yrp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -630,6 +655,7 @@ func remoteConanTest(t *testing.T) {
 	crp.ShareConfiguration = &trueValue
 	crp.BlockMismatchingMimeTypes = &falseValue
 	crp.BypassHeadRequests = &trueValue
+	crp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Conan(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -645,6 +671,7 @@ func remoteConanTest(t *testing.T) {
 	crp.AssumedOfflinePeriodSecs = 4321
 	crp.BypassHeadRequests = &falseValue
 	crp.BlockMismatchingMimeTypes = &trueValue
+	crp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Conan(crp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -666,6 +693,7 @@ func remoteChefTest(t *testing.T) {
 	crp.IncludesPattern = "**/*"
 	crp.ExcludesPattern = "dir1/dir2/dir3/*"
 	crp.AllowAnyHostAuth = &trueValue
+	crp.XrayIndex = &falseValue
 
 	err := testsCreateRemoteRepositoryService.Chef(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -682,6 +710,7 @@ func remoteChefTest(t *testing.T) {
 	crp.IncludesPattern = "**/*"
 	crp.ExcludesPattern = "dir1/dir2/dir3/dir4/*,dir1/dir2/dir3/dir5/*"
 	crp.AllowAnyHostAuth = &falseValue
+	crp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Chef(crp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -700,6 +729,7 @@ func remotePuppetTest(t *testing.T) {
 	prp.ShareConfiguration = &trueValue
 	prp.AssumedOfflinePeriodSecs = 1803
 	prp.Offline = &trueValue
+	prp.XrayIndex = &falseValue
 
 	err := testsCreateRemoteRepositoryService.Puppet(prp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -717,6 +747,7 @@ func remotePuppetTest(t *testing.T) {
 	prp.ShareConfiguration = &falseValue
 	prp.BlockMismatchingMimeTypes = &falseValue
 	prp.SynchronizeProperties = &trueValue
+	prp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Puppet(prp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -736,6 +767,7 @@ func remoteComposerTest(t *testing.T) {
 	crp.ComposerRegistryUrl = "https://composer.registry.com/"
 	crp.IncludesPattern = "dir1/*, dir2/dir2.1/*"
 	crp.BypassHeadRequests = &trueValue
+	crp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Composer(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -749,6 +781,7 @@ func remoteComposerTest(t *testing.T) {
 	crp.SocketTimeoutMillis = 666
 	crp.IncludesPattern = "**/*"
 	crp.BypassHeadRequests = &falseValue
+	crp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Composer(crp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -771,6 +804,7 @@ func remoteVcsTest(t *testing.T) {
 	vrp.IncludesPattern = "dir1/*, dir2/dir2.1/*"
 	vrp.BypassHeadRequests = &trueValue
 	vrp.SocketTimeoutMillis = 1111
+	vrp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Vcs(vrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -786,6 +820,7 @@ func remoteVcsTest(t *testing.T) {
 	vrp.BypassHeadRequests = &falseValue
 	vrp.VcsGitProvider = "OLDSTASH"
 	vrp.SocketTimeoutMillis = 1110
+	vrp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Vcs(vrp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -816,6 +851,7 @@ func remoteCocoapodsTest(t *testing.T) {
 	crp.EnableCookieManagement = &trueValue
 	crp.SocketTimeoutMillis = 1818
 	crp.ShareConfiguration = &falseValue
+	crp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Cocoapods(crp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -833,6 +869,7 @@ func remoteOpkgTest(t *testing.T) {
 	orp.StoreArtifactsLocally = &falseValue
 	orp.ShareConfiguration = &trueValue
 	orp.ListRemoteFolderItems = &falseValue
+	orp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Opkg(orp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -846,6 +883,7 @@ func remoteOpkgTest(t *testing.T) {
 	orp.SocketTimeoutMillis = 1818
 	orp.ShareConfiguration = &falseValue
 	orp.ListRemoteFolderItems = &trueValue
+	orp.XrayIndex = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Opkg(orp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -874,6 +912,7 @@ func remoteCondaTest(t *testing.T) {
 	crp.EnableCookieManagement = &trueValue
 	crp.SocketTimeoutMillis = 1818
 	crp.ShareConfiguration = &falseValue
+	crp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Conda(crp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -890,6 +929,7 @@ func remoteP2Test(t *testing.T) {
 	prp.AssumedOfflinePeriodSecs = 999
 	prp.StoreArtifactsLocally = &trueValue
 	prp.ShareConfiguration = &trueValue
+	prp.XrayIndex = &falseValue
 
 	err := testsCreateRemoteRepositoryService.P2(prp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -905,6 +945,7 @@ func remoteP2Test(t *testing.T) {
 	prp.ShareConfiguration = &falseValue
 	prp.StoreArtifactsLocally = &falseValue
 	prp.ShareConfiguration = &falseValue
+	prp.XrayIndex = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.P2(prp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -921,6 +962,7 @@ func remoteGenericTest(t *testing.T) {
 	grp.AssumedOfflinePeriodSecs = 2345
 	grp.StoreArtifactsLocally = &falseValue
 	grp.ShareConfiguration = &falseValue
+	grp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -946,6 +988,7 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	grp.RepoLayoutRef = "simple-default"
 	grp.Url = "https://jcenter.bintray.com"
 	grp.Description = "Generic Repo for jfrog-client-go remote-repository-test"
+	grp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -968,6 +1011,7 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	grp.RepoLayoutRef = "simple-default"
 	grp.Url = "https://jcenter.bintray.com"
 	grp.Description = "Generic Repo for jfrog-client-go remote-repository-test"
+	grp.XrayIndex = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
