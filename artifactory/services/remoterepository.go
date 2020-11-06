@@ -3,13 +3,14 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
 )
 
 type RemoteRepositoryService struct {
@@ -195,6 +196,7 @@ type RemoteRepositoryBaseParams struct {
 	HardFail                          *bool                   `json:"hardFail,omitempty"`
 	Offline                           *bool                   `json:"offline,omitempty"`
 	BlackedOut                        *bool                   `json:"blackedOut,omitempty"`
+	XrayIndex                         *bool                   `json:"xrayIndex,omitempty"`
 	StoreArtifactsLocally             *bool                   `json:"storeArtifactsLocally,omitempty"`
 	SocketTimeoutMillis               int                     `json:"socketTimeoutMillis,omitempty"`
 	LocalAddress                      string                  `json:"localAddress,omitempty"`
