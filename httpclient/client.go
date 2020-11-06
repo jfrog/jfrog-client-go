@@ -765,7 +765,7 @@ func addUserAgentHeader(req *http.Request) {
 }
 
 type DownloadFileDetails struct {
-	FileName      string `json:"LocalFileName,omitempty"`
+	FileName      string `json:"FileName,omitempty"`
 	DownloadPath  string `json:"DownloadPath,omitempty"`
 	RelativePath  string `json:"RelativePath,omitempty"`
 	LocalPath     string `json:"LocalPath,omitempty"`
