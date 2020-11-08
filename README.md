@@ -1185,23 +1185,23 @@ params.Policies = []utils.AssignedPolicy{
   },
 }
 
-err := xrayManager.CreateWatch(*params)
+resp, err := xrayManager.CreateWatch(*params)
 ```
 
 #### Get an Xray Watch
 ```go
-watch, err := xrayManager.GetWatch("example-watch-all")
+watch, resp, err := xrayManager.GetWatch("example-watch-all")
 ```
 
 #### Update an Xray Watch
 ```go
-watch, err := xrayManager.GetWatch("example-watch-all")
+watch, resp, err := xrayManager.GetWatch("example-watch-all")
 watch.Description = "Updated description"
 
-xrayManager.UpdateWatch(*watch)
+resp, err := xrayManager.UpdateWatch(*watch)
 ```
 
 #### Delete an Xray Watch
 ```go
-err := xrayManager.DeleteWatch("example-watch-all")
+resp, err := xrayManager.DeleteWatch("example-watch-all")
 ```
