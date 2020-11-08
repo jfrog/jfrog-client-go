@@ -47,7 +47,7 @@ type ArtifactoryServicesManager interface {
 	PublishGoProject(params _go.GoParams) error
 	Ping() ([]byte, error)
 	GetConfig() config.Config
-	GetBuildInfo(params services.BuildInfoParams) (*buildinfo.BuildInfo, error)
+	GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, error)
 	CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error)
 	GetTokens() (services.GetTokensResponseData, error)
 	RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error)
@@ -204,7 +204,7 @@ func (esm *EmptyArtifactoryServicesManager) GetConfig() config.Config {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.BuildInfo, error) {
+func (esm *EmptyArtifactoryServicesManager) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, string, error) {
 	panic("Failed: Method is not implemented")
 }
 

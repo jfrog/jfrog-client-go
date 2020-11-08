@@ -49,7 +49,8 @@ func NewBuildInfoParams() BuildInfoParams {
 	return BuildInfoParams{}
 }
 
-func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (*buildinfo.BuildInfo, error) {
+// Returns the build info and it's uri of the provided parameters.
+func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (*buildinfo.PublishedBuildInfo, error) {
 	// Resolve LATEST build number from Artifactory if required.
 	name, number, err := utils.GetBuildNameAndNumberFromArtifactory(params.BuildName, params.BuildNumber, bis)
 	if err != nil {
@@ -66,14 +67,12 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (*buildinfo.Bu
 	}
 
 	// Build BuildInfo struct from json.
-	var buildInfoJson struct {
-		BuildInfo buildinfo.BuildInfo `json:"buildInfo,omitempty"`
-	}
-	if err := json.Unmarshal(body, &buildInfoJson); err != nil {
+	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
+	if err := json.Unmarshal(body, publishedBuildInfo); err != nil {
 		return nil, err
 	}
 
-	return &buildInfoJson.BuildInfo, nil
+	return publishedBuildInfo, nil
 }
 
 func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error {

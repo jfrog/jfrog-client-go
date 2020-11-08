@@ -99,6 +99,12 @@ type BuildInfo struct {
 	*Vcs
 }
 
+// Represents the object returned from Artifactory when getting a build info.
+type PublishedBuildInfo struct {
+	Uri       string    `json:"uri,omitempty"`
+	BuildInfo BuildInfo `json:"buildInfo,omitempty"`
+}
+
 type Agent struct {
 	Name    string `json:"name,omitempty"`
 	Version string `json:"version,omitempty"`
