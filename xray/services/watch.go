@@ -30,6 +30,11 @@ func NewWatchService(client *rthttpclient.ArtifactoryHttpClient) *WatchService {
 	return &WatchService{client: client}
 }
 
+// GetXrayDetails returns the xray details
+func (vs *WatchService) GetXrayDetails() auth.ServiceDetails {
+	return vs.XrayDetails
+}
+
 // GetJfrogHttpClient returns the http client
 func (xws *WatchService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
 	return xws.client
