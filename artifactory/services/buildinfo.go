@@ -61,9 +61,12 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (*buildinfo.Pu
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	buildInfoUrl := fmt.Sprintf("%sapi/build/%s/%s", bis.GetArtifactoryDetails().GetUrl(), name, number)
 	log.Debug("Getting build-info from: ", buildInfoUrl)
-	_, body, _, err := bis.client.SendGet(buildInfoUrl, true, &httpClientsDetails)
+	resp, body, _, err := bis.client.SendGet(buildInfoUrl, true, &httpClientsDetails)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	// Build BuildInfo struct from json.
