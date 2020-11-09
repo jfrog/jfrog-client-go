@@ -98,6 +98,16 @@
       - [Downloading Logs](#downloading-logs)
       - [Syncing Content To Maven Central](#syncing-content-to-maven-central)
   - [Using ContentReader](#using-contentreader)
+  - [Xray APIs](#xray-apis)
+    - [Creating Xray Service Manager](#creating-xray-service-manager)
+      - [Creating Xray Details](#creating-xray-details)
+      - [Creating Xray Service Config](#creating-xray-service-config)
+      - [Creating New Xray Service Manager](#creating-new-xray-service-manager)
+    - [Using Xray Services](#using-xray-services)
+      - [Creating an Xray Watch](#creating-an-xray-watch)
+      - [Get an Xray Watch](#get-an-xray-watch)
+      - [Update an Xray Watch](#update-an-xray-watch)
+      - [Delete an Xray Watch](#delete-an-xray-watch)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -126,6 +136,7 @@ Optional flags:
 | `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
 | `-rt.password`      | [Default: password] Artifactory password.                                                              |
 | `-rt.distUrl`       | [Optional] JFrog Distribution URL.                                                                     |
+| `-rt.xrayUrl`       | [Optional] JFrog Xray URL.                                                                     |
 | `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
 | `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
@@ -1111,3 +1122,86 @@ reader.Reset()
 * `reader.GetError()` returns any error that might have occurd during `NextRecord()`.
 
 * `reader.Reset()` resets the reader back to the beginning of the output.
+
+## Xray APIs
+### Creating Xray Service Manager
+#### Creating Xray Details
+```go
+xrayDetails := auth.NewXrayDetails()
+xrayDetails.SetUrl("http://localhost:8081/xray")
+xrayDetails.SetSshKeysPath("path/to/.ssh/")
+xrayDetails.SetApiKey("apikey")
+xrayDetails.SetUser("user")
+xrayDetails.SetPassword("password")
+xrayDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+xrayDetails.SetClientCertPath("path/to/.cer")
+xrayDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Xray Service Config
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(xrayDetails).
+    SetCertificatesPath(certPath).
+    Build()
+```
+
+#### Creating New Xray Service Manager
+```go
+xrayManager, err := xray.New(&xrayDetails, serviceConfig)
+```
+
+### Using Xray Services
+#### Creating an Xray Watch
+
+This uses API version 2.
+
+You are able to configure repositories and builds on a watch.
+However, bundles are not supported.
+
+```go
+params := utils.NewWatchParams()
+params.Name = "example-watch-all"
+params.Description = "All Repos"
+params.Active = true
+
+params.Repositories.Type = utils.WatchRepositoriesAll
+params.Repositories.All.Filters.PackageTypes = []string{"Npm", "maven"}
+params.Repositories.ExcludePatterns = []string{"excludePath1", "excludePath2"}
+params.Repositories.IncludePatterns = []string{"includePath1", "includePath2"}
+
+params.Builds.Type = utils.WatchBuildAll
+params.Builds.All.Bin_Mgr_ID = "default"
+
+params.Policies = []utils.AssignedPolicy{
+  {
+    Name: policy1Name,
+    Type: "security",
+  },
+  {
+    Name: policy2Name,
+    Type: "security",
+  },
+}
+
+resp, err := xrayManager.CreateWatch(*params)
+```
+
+#### Get an Xray Watch
+```go
+watch, resp, err := xrayManager.GetWatch("example-watch-all")
+```
+
+#### Update an Xray Watch
+```go
+watch, resp, err := xrayManager.GetWatch("example-watch-all")
+watch.Description = "Updated description"
+
+resp, err := xrayManager.UpdateWatch(*watch)
+```
+
+#### Delete an Xray Watch
+```go
+resp, err := xrayManager.DeleteWatch("example-watch-all")
+```

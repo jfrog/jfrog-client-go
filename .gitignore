@@ -9,3 +9,6 @@
 
 # IOS
 *.DS_Store
+
+# go coverage
+coverage.out

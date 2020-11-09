@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
@@ -25,12 +26,15 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	xrayAuth "github.com/jfrog/jfrog-client-go/xray/auth"
+	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/mholt/archiver"
 	"github.com/stretchr/testify/assert"
 )
 
 var RtUrl *string
 var DistUrl *string
+var XrayUrl *string
 var RtUser *string
 var RtPassword *string
 var RtApiKey *string
@@ -69,6 +73,10 @@ var testsBundleDistributionStatusService *distributionServices.DistributionStatu
 var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundleService
 var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
 
+// Xray Services
+var testsXrayVersionService *xrayServices.VersionService
+var testsXrayWatchService *xrayServices.WatchService
+
 var timestamp = time.Now().Unix()
 var trueValue = true
 var falseValue = false
@@ -84,6 +92,7 @@ const (
 func init() {
 	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory/", "Artifactory url")
 	DistUrl = flag.String("rt.distUrl", "", "Distribution url")
+	XrayUrl = flag.String("rt.xrayUrl", "", "Xray url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
@@ -156,6 +165,14 @@ func createDistributionManager() {
 	testsBundleDeleteLocalService.DistDetails = distDetails
 	testsBundleSetSigningKeyService.DistDetails = distDetails
 	testsBundleDeleteRemoteService.DistDetails = distDetails
+}
+
+func createXrayVersionManager() {
+	xrayDetails := GetXrayDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&xrayDetails).Build()
+	failOnHttpClientCreation(err)
+	testsXrayVersionService = xrayServices.NewVersionService(client)
+	testsXrayVersionService.XrayDetails = xrayDetails
 }
 
 func createArtifactoryCreateLocalRepositoryManager() {
@@ -262,6 +279,14 @@ func createArtifactoryPermissionTargetManager() {
 	testsPermissionTargetService.ArtDetails = artDetails
 }
 
+func createXrayWatchManager() {
+	XrayDetails := GetXrayDetails()
+	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&XrayDetails).Build()
+	failOnHttpClientCreation(err)
+	testsXrayWatchService = xrayServices.NewWatchService(client)
+	testsXrayWatchService.XrayDetails = XrayDetails
+}
+
 func failOnHttpClientCreation(err error) {
 	if err != nil {
 		log.Error(fmt.Sprintf(HttpClientCreationFailureMessage, err.Error()))
@@ -281,6 +306,13 @@ func GetDistDetails() auth.ServiceDetails {
 	distDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*DistUrl))
 	setAuthenticationDetail(distDetails)
 	return distDetails
+}
+
+func GetXrayDetails() auth.ServiceDetails {
+	xrayDetails := xrayAuth.NewXrayDetails()
+	xrayDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*XrayUrl))
+	setAuthenticationDetail(xrayDetails)
+	return xrayDetails
 }
 
 func setAuthenticationDetail(details auth.ServiceDetails) {
