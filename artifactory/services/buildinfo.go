@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -12,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
+	"path"
 )
 
 type BuildInfoService struct {
@@ -59,9 +59,12 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (*buildinfo.Pu
 
 	// Get build-info json from Artifactory.
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
-	buildInfoUrl := fmt.Sprintf("%sapi/build/%s/%s", bis.GetArtifactoryDetails().GetUrl(), name, number)
-	log.Debug("Getting build-info from: ", buildInfoUrl)
-	resp, body, _, err := bis.client.SendGet(buildInfoUrl, true, &httpClientsDetails)
+
+	restApi := path.Join("api/build/", name, number)
+	requestFullUrl, err := utils.BuildArtifactoryUrl(bis.GetArtifactoryDetails().GetUrl(), restApi, make(map[string]string))
+
+	log.Debug("Getting build-info from: ", requestFullUrl)
+	resp, body, _, err := bis.client.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
 		return nil, err
 	}
