@@ -49,12 +49,12 @@ func NewBuildInfoParams() BuildInfoParams {
 	return BuildInfoParams{}
 }
 
-// Returns the build info and it's uri of the provided parameters.
-func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (*buildinfo.PublishedBuildInfo, error) {
+// Returns the build info and it's uri of the provided parameters. If build info was not found (404), returns notFound=true.
+func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinfo.PublishedBuildInfo, notFound bool, err error) {
 	// Resolve LATEST build number from Artifactory if required.
 	name, number, err := utils.GetBuildNameAndNumberFromArtifactory(params.BuildName, params.BuildNumber, bis)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// Get build-info json from Artifactory.
@@ -66,19 +66,23 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (*buildinfo.Pu
 	log.Debug("Getting build-info from: ", requestFullUrl)
 	resp, body, _, err := bis.client.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, true, nil
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return nil, false, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	// Build BuildInfo struct from json.
 	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
 	if err := json.Unmarshal(body, publishedBuildInfo); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	return publishedBuildInfo, nil
+	return publishedBuildInfo, false, nil
 }
 
 func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error {

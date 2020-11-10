@@ -290,7 +290,7 @@ func (sm *ArtifactoryServicesManagerImp) GetConfig() config.Config {
 	return sm.config
 }
 
-func (sm *ArtifactoryServicesManagerImp) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, error) {
+func (sm *ArtifactoryServicesManagerImp) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error) {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.ArtDetails = sm.config.GetServiceDetails()
 	return buildInfoService.GetBuildInfo(params)
