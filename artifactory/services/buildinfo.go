@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -12,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
+	"path"
 )
 
 type BuildInfoService struct {
@@ -49,33 +49,43 @@ func NewBuildInfoParams() BuildInfoParams {
 	return BuildInfoParams{}
 }
 
-// Returns the build info and it's uri of the provided parameters.
-func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (*buildinfo.PublishedBuildInfo, error) {
+// Returns the build info and its uri of the provided parameters.
+// If build info was not found (404), returns found=false (with error nil).
+// For any other response that isn't 200, an error is returned.
+func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinfo.PublishedBuildInfo, found bool, err error) {
 	// Resolve LATEST build number from Artifactory if required.
 	name, number, err := utils.GetBuildNameAndNumberFromArtifactory(params.BuildName, params.BuildNumber, bis)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// Get build-info json from Artifactory.
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
-	buildInfoUrl := fmt.Sprintf("%sapi/build/%s/%s", bis.GetArtifactoryDetails().GetUrl(), name, number)
-	log.Debug("Getting build-info from: ", buildInfoUrl)
-	resp, body, _, err := bis.client.SendGet(buildInfoUrl, true, &httpClientsDetails)
+
+	restApi := path.Join("api/build/", name, number)
+	requestFullUrl, err := utils.BuildArtifactoryUrl(bis.GetArtifactoryDetails().GetUrl(), restApi, make(map[string]string))
+
+	log.Debug("Getting build-info from: ", requestFullUrl)
+	resp, body, _, err := bis.client.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
+	if resp.StatusCode == http.StatusNotFound {
+		log.Debug("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+		return nil, false, nil
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return nil, false, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 
 	// Build BuildInfo struct from json.
 	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
 	if err := json.Unmarshal(body, publishedBuildInfo); err != nil {
-		return nil, err
+		return nil, true, err
 	}
 
-	return publishedBuildInfo, nil
+	return publishedBuildInfo, true, nil
 }
 
 func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error {
