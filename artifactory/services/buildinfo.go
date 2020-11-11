@@ -49,8 +49,10 @@ func NewBuildInfoParams() BuildInfoParams {
 	return BuildInfoParams{}
 }
 
-// Returns the build info and it's uri of the provided parameters. If build info was not found (404), returns notFound=true.
-func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinfo.PublishedBuildInfo, notFound bool, err error) {
+// Returns the build info and its uri of the provided parameters.
+// If build info was not found (404), returns found=false (with error nil).
+// For any other response that isn't 200, an error is returned.
+func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinfo.PublishedBuildInfo, found bool, err error) {
 	// Resolve LATEST build number from Artifactory if required.
 	name, number, err := utils.GetBuildNameAndNumberFromArtifactory(params.BuildName, params.BuildNumber, bis)
 	if err != nil {
@@ -69,7 +71,8 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinf
 		return nil, false, err
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, true, nil
+		log.Debug("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+		return nil, false, nil
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -79,10 +82,10 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinf
 	// Build BuildInfo struct from json.
 	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
 	if err := json.Unmarshal(body, publishedBuildInfo); err != nil {
-		return nil, false, err
+		return nil, true, err
 	}
 
-	return publishedBuildInfo, false, nil
+	return publishedBuildInfo, true, nil
 }
 
 func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error {
