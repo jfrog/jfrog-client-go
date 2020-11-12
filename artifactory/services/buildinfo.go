@@ -17,6 +17,7 @@ import (
 type BuildInfoService struct {
 	client     *rthttpclient.ArtifactoryHttpClient
 	ArtDetails auth.ServiceDetails
+	Project    string
 	DryRun     bool
 }
 
@@ -34,6 +35,10 @@ func (bis *BuildInfoService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 
 func (bis *BuildInfoService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
 	return bis.client, nil
+}
+
+func (bis *BuildInfoService) GetProject() string {
+	return bis.Project
 }
 
 func (bis *BuildInfoService) IsDryRun() bool {
@@ -101,7 +106,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error 
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
 	log.Info("Deploying build info...")
-	resp, body, err := bis.client.SendPut(bis.ArtDetails.GetUrl()+"api/build/", content, &httpClientsDetails)
+	resp, body, err := bis.client.SendPut(bis.ArtDetails.GetUrl()+"api/build"+bis.getProjectQueryParam(), content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
@@ -112,4 +117,11 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error 
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Build info successfully deployed. Browse it in Artifactory under " + bis.GetArtifactoryDetails().GetUrl() + "webapp/builds/" + build.Name + "/" + build.Number)
 	return nil
+}
+
+func (bis *BuildInfoService) getProjectQueryParam() string {
+	if bis.Project == "" {
+		return ""
+	}
+	return "?project=" + bis.Project
 }
