@@ -394,8 +394,10 @@ Read more about [ContentReader](#using-contentReader).
 #### Publishing Build Info to Artifactory
 ```go
 buildInfo := &buildinfo.BuildInfo{}
+// Optional Artifactory project name
+project := "my-project"
 ...
-rtManager.PublishBuildInfo(buildInfo)
+rtManager.PublishBuildInfo(buildInfo, project)
 ```
 
 #### Fetching Build Info from Artifactory
