@@ -86,7 +86,7 @@ func (rtc *ArtifactoryHttpClient) Send(method string, url string, content []byte
 }
 
 func (rtc *ArtifactoryHttpClient) UploadFile(localPath, url, logMsgPrefix string,
-	httpClientsDetails *httputils.HttpClientDetails, retries int, progress ioutils.Progress) (resp *http.Response, body []byte, err error) {
+	httpClientsDetails *httputils.HttpClientDetails, retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
@@ -103,7 +103,7 @@ func (rtc *ArtifactoryHttpClient) ReadRemoteFile(downloadPath string, httpClient
 }
 
 func (rtc *ArtifactoryHttpClient) DownloadFileWithProgress(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails *httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.Progress) (resp *http.Response, err error) {
+	httpClientsDetails *httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, err error) {
 	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
@@ -117,7 +117,7 @@ func (rtc *ArtifactoryHttpClient) DownloadFile(downloadFileDetails *httpclient.D
 }
 
 func (rtc *ArtifactoryHttpClient) DownloadFileConcurrently(flags httpclient.ConcurrentDownloadFlags,
-	logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails, progress ioutils.Progress) (resp *http.Response, err error) {
+	logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails, progress ioutils.ProgressMgr) (resp *http.Response, err error) {
 	err = (*rtc.ArtDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return

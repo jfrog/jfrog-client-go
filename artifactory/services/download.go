@@ -25,7 +25,7 @@ import (
 
 type DownloadService struct {
 	client       *rthttpclient.ArtifactoryHttpClient
-	Progress     clientio.Progress
+	Progress     clientio.ProgressMgr
 	ArtDetails   auth.ServiceDetails
 	DryRun       bool
 	Threads      int

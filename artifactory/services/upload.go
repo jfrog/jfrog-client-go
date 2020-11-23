@@ -26,7 +26,7 @@ import (
 
 type UploadService struct {
 	client       *rthttpclient.ArtifactoryHttpClient
-	Progress     ioutils.Progress
+	Progress     ioutils.ProgressMgr
 	ArtDetails   auth.ServiceDetails
 	DryRun       bool
 	Threads      int
