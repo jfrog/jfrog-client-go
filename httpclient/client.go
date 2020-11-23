@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
@@ -35,6 +36,7 @@ func (jc *HttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClie
 
 type HttpClient struct {
 	Client *http.Client
+	ctx    context.Context
 }
 
 func (jc *HttpClient) sendGetForFileDownload(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails, currentSplit int) (resp *http.Response, redirectUrl string, err error) {
@@ -75,13 +77,20 @@ func (jc *HttpClient) SendPut(url string, content []byte, httpClientsDetails htt
 	return
 }
 
+func (jc *HttpClient) newRequest(method, url string, body io.Reader) (*http.Request, error) {
+	if jc.ctx != nil {
+		return http.NewRequestWithContext(jc.ctx, method, url, body)
+	}
+	return http.NewRequest(method, url, body)
+}
+
 func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	var req *http.Request
 	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
 	if content != nil {
-		req, err = http.NewRequest(method, url, bytes.NewBuffer(content))
+		req, err = jc.newRequest(method, url, bytes.NewBuffer(content))
 	} else {
-		req, err = http.NewRequest(method, url, nil)
+		req, err = jc.newRequest(method, url, nil)
 	}
 	if errorutils.CheckError(err) != nil {
 		return nil, nil, "", err
@@ -203,7 +212,7 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 		reader = reqContent
 	}
 
-	req, err := http.NewRequest("PUT", url, reader)
+	req, err := jc.newRequest("PUT", url, reader)
 	if errorutils.CheckError(err) != nil {
 		return nil, nil, err
 	}

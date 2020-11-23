@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"github.com/jfrog/jfrog-client-go/auth"
 )
 
@@ -16,6 +17,7 @@ type servicesConfigBuilder struct {
 	threads          int
 	isDryRun         bool
 	insecureTls      bool
+	ctx              context.Context
 }
 
 func (builder *servicesConfigBuilder) SetServiceDetails(artDetails auth.ServiceDetails) *servicesConfigBuilder {
@@ -43,6 +45,11 @@ func (builder *servicesConfigBuilder) SetInsecureTls(insecureTls bool) *services
 	return builder
 }
 
+func (builder *servicesConfigBuilder) SetContext(ctx context.Context) *servicesConfigBuilder {
+	builder.ctx = ctx
+	return builder
+}
+
 func (builder *servicesConfigBuilder) Build() (Config, error) {
 	c := &servicesConfig{}
 	c.ServiceDetails = builder.ServiceDetails
@@ -50,5 +57,6 @@ func (builder *servicesConfigBuilder) Build() (Config, error) {
 	c.certificatesPath = builder.certificatesPath
 	c.dryRun = builder.isDryRun
 	c.insecureTls = builder.insecureTls
+	c.ctx = builder.ctx
 	return c, nil
 }
