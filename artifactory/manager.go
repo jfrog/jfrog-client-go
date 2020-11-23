@@ -34,6 +34,7 @@ func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, prog
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetServiceDetails(artDetails).
+		SetContext(config.GetContext()).
 		Build()
 	if err != nil {
 		return nil, err
