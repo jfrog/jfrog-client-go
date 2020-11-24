@@ -161,7 +161,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	}
 
 	var repos = map[string]utils.WatchRepository{}
-	repo := utils.NewWatchRepository(repo1Name, "default")
+	repo := utils.NewWatchRepository(repo1Name, "default", utils.WatchRepositoryLocal)
 	repo.Filters.PackageTypes = []string{"npm", "maven"}
 	repo.Filters.Names = []string{"example-name"}
 	repo.Filters.Paths = []string{"example-path"}
@@ -170,7 +170,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 	repos[repo1Name] = repo
 
-	anotherRepo := utils.NewWatchRepository(repo2Name, "default")
+	anotherRepo := utils.NewWatchRepository(repo2Name, "default", utils.WatchRepositoryRemote)
 	anotherRepo.Filters.PackageTypes = []string{"nuget"}
 	anotherRepo.Filters.Names = []string{"another-example-name"}
 	anotherRepo.Filters.Paths = []string{"another-example-path"}
@@ -203,6 +203,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 	assert.Equal(t, repo1Name, targetConfig.Repositories.Repositories[repo1Name].Name)
 	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo1Name].BinMgrID)
+	assert.Equal(t, utils.WatchRepositoryLocal, targetConfig.Repositories.Repositories[repo1Name].RepoType)
 	assert.Equal(t, []string{"Maven", "Npm"}, targetConfig.Repositories.Repositories[repo1Name].Filters.PackageTypes)
 	assert.Equal(t, []string{"example-name"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Names)
 	assert.Equal(t, []string{"example-path"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Paths)
@@ -211,6 +212,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 	assert.Equal(t, repo2Name, targetConfig.Repositories.Repositories[repo2Name].Name)
 	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo2Name].BinMgrID)
+	assert.Equal(t, utils.WatchRepositoryRemote, targetConfig.Repositories.Repositories[repo2Name].RepoType)
 	assert.Equal(t, []string{"NuGet"}, targetConfig.Repositories.Repositories[repo2Name].Filters.PackageTypes)
 	assert.Equal(t, []string{"another-example-name"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Names)
 	assert.Equal(t, []string{"another-example-path"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Paths)
