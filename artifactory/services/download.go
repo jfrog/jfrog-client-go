@@ -111,6 +111,10 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 				errorsQueue.AddError(err)
 				continue
 			}
+			if ds.Progress != nil {
+				total, _ := reader.Length()
+				ds.Progress.IncreaseGeneralProgressTotalBy(int64(total))
+			}
 			// Produce download tasks for the download consumers.
 			totalTasks += produceTasks(reader, downloadParams, producer, fileHandlerFunc, errorsQueue)
 			reader.Close()
