@@ -261,4 +261,6 @@ func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.Re
 }
 
 // Compile time check of interface implementation.
+// ArtifactoryServicesManager requires that *EmptyArtifactoryServicesManager implements ArtifactoryServicesManager, otherwise,
+// this will no longer compile and we will be on notice that it needs to be updated.
 var _ ArtifactoryServicesManager = (*EmptyArtifactoryServicesManager)(nil)
