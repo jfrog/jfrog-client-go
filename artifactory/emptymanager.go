@@ -259,3 +259,6 @@ func (esm *EmptyArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHt
 func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.RepositoryDetails, error) {
 	panic("Failed: Method is not implemented")
 }
+
+// Compile time check of interface implementation.
+var _ ArtifactoryServicesManager = (*EmptyArtifactoryServicesManager)(nil)
