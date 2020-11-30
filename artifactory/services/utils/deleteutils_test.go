@@ -98,7 +98,7 @@ func TestFilterCandidateToBeDeleted(t *testing.T) {
 	oldMaxSize := utils.MaxBufferSize
 	defer func() { utils.MaxBufferSize = oldMaxSize }()
 	utils.MaxBufferSize = 3
-	sortedFiles, err := FilterCandidateToBeDeleted(deleteCandidates, resultWriter)
+	sortedFiles, err := FilterCandidateToBeDeleted(deleteCandidates, resultWriter, "folder")
 	assert.Len(t, sortedFiles, 3)
 	assert.NoError(t, err)
 	for i, val := range sortedFiles {

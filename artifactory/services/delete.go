@@ -199,7 +199,7 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 	if err != nil {
 		return nil, err
 	}
-	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter)
+	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter, "folder")
 	if len(bufferFiles) > 0 {
 		defer func() {
 			for _, file := range bufferFiles {
@@ -223,8 +223,19 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 
 func getSortedArtifactsToNotDelete(specFile *utils.ArtifactoryCommonParams, ds *DeleteService) (*content.ContentReader, error) {
 	specFile.Props = specFile.ExcludeProps
-	specFile.SortOrder = "asc"
-	specFile.SortBy = []string{"repo", "path", "name"}
 	specFile.ExcludeProps = ""
-	return utils.SearchBySpecWithPattern(specFile, ds, utils.NONE)
+	tempResults, err := utils.SearchBySpecWithPattern(specFile, ds, utils.NONE)
+	if err != nil {
+		return nil, err
+	}
+	// Note that we have to sort the result by ourself and not relay on Artifactory OrderBy because 2 main reasons:
+	// 1. It was found that go strings comparer and Artifactory returns diffrent results when the string contains special char
+	//    like '-'.
+	// 2. Artifactory sorting sorts by DB columns so directories will be sorted differently than files because the path and name
+	//    cols have different values.
+	sortedResults, err := utils.FilterCandidateToBeDeleted(tempResults, nil, "file")
+	if err != nil {
+		return nil, err
+	}
+	return utils.MergeSortedFiles(sortedResults, true)
 }
