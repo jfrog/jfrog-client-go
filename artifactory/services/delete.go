@@ -228,12 +228,16 @@ func getSortedArtifactsToNotDelete(specFile *utils.ArtifactoryCommonParams, ds *
 	if err != nil {
 		return nil, err
 	}
+	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
 	// Note that we have to sort the result by ourself and not relay on Artifactory OrderBy because 2 main reasons:
 	// 1. It was found that go strings comparer and Artifactory returns diffrent results when the string contains special char
 	//    like '-'.
 	// 2. Artifactory sorting sorts by DB columns so directories will be sorted differently than files because the path and name
 	//    cols have different values.
-	sortedResults, err := utils.FilterCandidateToBeDeleted(tempResults, nil, "file")
+	sortedResults, err := utils.FilterCandidateToBeDeleted(tempResults, resultWriter, "file")
 	if err != nil {
 		return nil, err
 	}
