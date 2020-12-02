@@ -204,13 +204,11 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 
 	reqContent := fileutils.GetUploadRequestContent(file)
 	var reader io.Reader
-	var ok = false
 	if file != nil && progress != nil {
-		progressReader := progress.NewReaderProgressBar(size, "Uploading", localPath)
-		reader, ok = progressReader.ActionWithProgress(reqContent).(io.Reader)
-		defer progress.Abort(progressReader.GetId())
-	}
-	if !ok {
+		progressReader := progress.NewProgressReader(size, "Uploading", localPath)
+		reader = progressReader.ActionWithProgress(reqContent)
+		defer progress.RemoveProgress(progressReader.GetId())
+	} else {
 		reader = reqContent
 	}
 
@@ -355,13 +353,11 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 	defer out.Close()
 
 	var reader io.Reader
-	var ok = false
 	if progress != nil {
-		readerProgress := progress.NewReaderProgressBar(resp.ContentLength, "Downloading", downloadFileDetails.RelativePath)
-		reader, ok = readerProgress.ActionWithProgress(resp.Body).(io.Reader)
-		defer progress.Abort(readerProgress.GetId())
-	}
-	if !ok {
+		readerProgress := progress.NewProgressReader(resp.ContentLength, "Downloading", downloadFileDetails.RelativePath)
+		reader = readerProgress.ActionWithProgress(resp.Body)
+		defer progress.RemoveProgress(readerProgress.GetId())
+	} else {
 		reader = resp.Body
 	}
 
@@ -447,12 +443,10 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 	var downloadProgressId int
 	if progress != nil {
-		downloadProgress := progress.NewReaderProgressBar(flags.FileSize, "Downloading", flags.RelativePath)
+		downloadProgress := progress.NewProgressReader(flags.FileSize, "Downloading", flags.RelativePath)
 		downloadProgressId = downloadProgress.GetId()
-		mergingProgressId := progress.AddNewReplacementSpinner(downloadProgressId, "  Merging  ", flags.RelativePath)
 		// Aborting order matters. mergingProgress depends on the existence of downloadingProgress
-		defer progress.Abort(downloadProgressId)
-		defer progress.Abort(mergingProgressId)
+		defer progress.RemoveProgress(downloadProgressId)
 	}
 
 	resp, err := jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, tempDirPath, httpClientsDetails, progress, downloadProgressId)
@@ -489,7 +483,9 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 			return resp, nil
 		}
 	}
-
+	if progress != nil {
+		progress.SetProgressState(downloadProgressId, "Merging")
+	}
 	err = mergeChunks(chunksPaths, flags)
 	if errorutils.CheckError(err) != nil {
 		return nil, err
@@ -725,11 +721,9 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	}
 
 	var reader io.Reader
-	var ok = false
 	if progress != nil {
-		reader, ok = progress.GetProgressBar(progressId).ActionWithProgress(resp.Body).(io.Reader)
-	}
-	if !ok {
+		reader = progress.GetProgress(progressId).ActionWithProgress(resp.Body)
+	} else {
 		reader = resp.Body
 	}
 

@@ -169,7 +169,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		uploadData := UploadData{Artifact: artifact, Props: props, BuildProps: uploadParams.BuildProps}
 		task := artifactHandlerFunc(uploadData)
 		if progressMgr != nil {
-			progressMgr.IncreaseGeneralProgressTotalBy(1)
+			progressMgr.IncGeneralProgressTotalBy(1)
 		}
 		producer.AddTaskWithError(task, errorsQueue.AddError)
 		return err
@@ -218,7 +218,7 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 				producer: producer, artifactHandlerFunc: artifactHandlerFunc, errorsQueue: errorsQueue,
 			}
 			if progressMgr != nil {
-				progressMgr.IncreaseGeneralProgressTotalBy(1)
+				progressMgr.IncGeneralProgressTotalBy(1)
 			}
 			createUploadTask(taskData, vcsCache)
 		}
