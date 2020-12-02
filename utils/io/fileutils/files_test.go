@@ -1,12 +1,14 @@
 package fileutils
 
 import (
-	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIsSsh(t *testing.T) {
@@ -40,6 +42,12 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	// CD into a directory with a go.mod file.
 	projectRoot := filepath.Join("testdata", "project")
 	err = os.Chdir(projectRoot)
+	if err != nil {
+		assert.Error(t, err)
+		return
+	}
+	// Creates go.mod file
+	err = ioutil.WriteFile("go.mod", []byte{}, 0755)
 	if err != nil {
 		assert.Error(t, err)
 		return
@@ -111,6 +119,17 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	}
 	assert.True(t, exists, "File go.mod is missing.")
 	assert.NotEqual(t, projectRoot, root)
+
+	// CD to original project dir and delete the go.mod file we created
+	if err = os.Chdir(projectRoot); err != nil {
+		assert.Error(t, err)
+		return
+	}
+	if err = os.Remove("go.mod"); err != nil {
+		assert.Error(t, err)
+		return
+	}
+
 }
 
 func TestGetFileOrDirPathFolder(t *testing.T) {
