@@ -13,6 +13,11 @@ const (
 	// WatchBuildByName is the option where builds are selected by name to be watched
 	WatchBuildByName WatchBuildType = "byname"
 
+	// WatchRepositoryLocal is a local repository
+	WatchRepositoryLocal WatchRepositoryType = "local"
+	// WatchRepositoryRemote is a remote repository
+	WatchRepositoryRemote WatchRepositoryType = "remote"
+
 	// WatchRepositoriesAll is the option where all repositories are watched
 	WatchRepositoriesAll WatchRepositoriesType = "all"
 	// WatchRepositoriesByName is the option where repositories are selected by name to be watched
@@ -24,6 +29,9 @@ type WatchBuildType string
 
 // WatchRepositoriesType defines the type of filter for a repositories on a watch
 type WatchRepositoriesType string
+
+// WatchRepositoryType defines the type of Repository for a watch
+type WatchRepositoryType string
 
 // NewWatchParams creates a new struct to configure an Xray watch
 func NewWatchParams() WatchParams {
@@ -72,6 +80,7 @@ type WatchRepositoryAll struct {
 type WatchRepository struct {
 	Name     string
 	BinMgrID string
+	RepoType WatchRepositoryType
 	Filters  watchFilters
 }
 
@@ -127,10 +136,11 @@ type watchProjectResources struct {
 }
 
 type watchProjectResourcesElement struct {
-	Name     string        `json:"name,omitempty"`
-	BinMgrID string        `json:"bin_mgr_id,oitempty"`
-	Type     string        `json:"type"`
-	Filters  []watchFilter `json:"filters,omitempty"`
+	Name     string              `json:"name,omitempty"`
+	BinMgrID string              `json:"bin_mgr_id,omitempty"`
+	Type     string              `json:"type"`
+	RepoType WatchRepositoryType `json:"repo_type,omitempty"`
+	Filters  []watchFilter       `json:"filters,omitempty"`
 }
 
 type watchFilters struct {
@@ -201,6 +211,7 @@ func configureRepositories(payloadBody *WatchBody, params WatchParams) error {
 				Type:     "repository",
 				Name:     repository.Name,
 				BinMgrID: repository.BinMgrID,
+				RepoType: repository.RepoType,
 				Filters:  make([]watchFilter, 0),
 			}
 
@@ -334,6 +345,7 @@ func UnpackWatchBody(watch *WatchParams, body *WatchBody) {
 			repository := WatchRepository{
 				Name:     resource.Name,
 				BinMgrID: resource.BinMgrID,
+				RepoType: resource.RepoType,
 			}
 			unpackFilters(resource.Filters, &repository.Filters, &watch.Repositories)
 			watch.Repositories.Repositories[repository.Name] = repository
@@ -431,9 +443,10 @@ func unpackFilters(filters []watchFilter, output *watchFilters, repos *WatchRepo
 }
 
 // NewWatchRepository creates a new repository struct to configure an Xray Watch
-func NewWatchRepository(name string, binMgrID string) WatchRepository {
+func NewWatchRepository(name string, binMgrID string, repoType WatchRepositoryType) WatchRepository {
 	return WatchRepository{
 		Name:     name,
 		BinMgrID: binMgrID,
+		RepoType: repoType,
 	}
 }

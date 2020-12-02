@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
 	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/httpclient"
@@ -132,10 +133,10 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	defer deletePolicy(policy1Name)
 
 	repo1Name := fmt.Sprintf("%s-%d", "jfrog-repo1", time.Now().Unix())
-	createRepo(t, repo1Name)
+	createRepoLocal(t, repo1Name)
 	defer deleteRepo(t, repo1Name)
 	repo2Name := fmt.Sprintf("%s-%d", "jfrog-repo2", time.Now().Unix())
-	createRepo(t, repo2Name)
+	createRepoRemote(t, repo2Name)
 	defer deleteRepo(t, repo2Name)
 
 	build1Name := fmt.Sprintf("%s-%d", "jfrog-build1", time.Now().Unix())
@@ -160,7 +161,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	}
 
 	var repos = map[string]utils.WatchRepository{}
-	repo := utils.NewWatchRepository(repo1Name, "default")
+	repo := utils.NewWatchRepository(repo1Name, "default", utils.WatchRepositoryLocal)
 	repo.Filters.PackageTypes = []string{"npm", "maven"}
 	repo.Filters.Names = []string{"example-name"}
 	repo.Filters.Paths = []string{"example-path"}
@@ -169,7 +170,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 	repos[repo1Name] = repo
 
-	anotherRepo := utils.NewWatchRepository(repo2Name, "default")
+	anotherRepo := utils.NewWatchRepository(repo2Name, "default", utils.WatchRepositoryRemote)
 	anotherRepo.Filters.PackageTypes = []string{"nuget"}
 	anotherRepo.Filters.Names = []string{"another-example-name"}
 	anotherRepo.Filters.Paths = []string{"another-example-path"}
@@ -202,6 +203,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 	assert.Equal(t, repo1Name, targetConfig.Repositories.Repositories[repo1Name].Name)
 	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo1Name].BinMgrID)
+	assert.Equal(t, utils.WatchRepositoryLocal, targetConfig.Repositories.Repositories[repo1Name].RepoType)
 	assert.Equal(t, []string{"Maven", "Npm"}, targetConfig.Repositories.Repositories[repo1Name].Filters.PackageTypes)
 	assert.Equal(t, []string{"example-name"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Names)
 	assert.Equal(t, []string{"example-path"}, targetConfig.Repositories.Repositories[repo1Name].Filters.Paths)
@@ -210,6 +212,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 	assert.Equal(t, repo2Name, targetConfig.Repositories.Repositories[repo2Name].Name)
 	assert.Equal(t, "default", targetConfig.Repositories.Repositories[repo2Name].BinMgrID)
+	assert.Equal(t, utils.WatchRepositoryRemote, targetConfig.Repositories.Repositories[repo2Name].RepoType)
 	assert.Equal(t, []string{"NuGet"}, targetConfig.Repositories.Repositories[repo2Name].Filters.PackageTypes)
 	assert.Equal(t, []string{"another-example-name"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Names)
 	assert.Equal(t, []string{"another-example-path"}, targetConfig.Repositories.Repositories[repo2Name].Filters.Paths)
@@ -339,12 +342,23 @@ func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {
 	assert.Equal(t, params.Policies, targetConfig.Policies)
 }
 
-func createRepo(t *testing.T, repoKey string) {
+func createRepoLocal(t *testing.T, repoKey string) {
 	glp := artifactoryServices.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+}
+
+func createRepoRemote(t *testing.T, repoKey string) {
+	nrp := services.NewNpmRemoteRepositoryParams()
+	nrp.Key = repoKey
+	nrp.RepoLayoutRef = "npm-default"
+	nrp.Url = "https://registry.npmjs.org"
+	nrp.XrayIndex = &trueValue
+
+	err := testsCreateRemoteRepositoryService.Npm(nrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
 }
 
