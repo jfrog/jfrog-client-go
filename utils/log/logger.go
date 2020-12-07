@@ -51,9 +51,11 @@ type jfrogLogger struct {
 func SetLogger(newLogger Log) {
 	Logger = newLogger
 }
+
 func (logger *jfrogLogger) SetLogLevel(LevelEnum LevelType) {
 	logger.LogLevel = LevelEnum
 }
+
 func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 	logger.OutputLog = log.New(writer, "", 0)
 }
