@@ -1,7 +1,6 @@
 package fileutils
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -39,15 +38,9 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	}
 	defer os.Chdir(wd)
 
-	// CD into a directory with a go.mod file.
+	// CD into a directory with a goDotMod.test file.
 	projectRoot := filepath.Join("testdata", "project")
 	err = os.Chdir(projectRoot)
-	if err != nil {
-		assert.Error(t, err)
-		return
-	}
-	// Creates go.mod file
-	err = ioutil.WriteFile("go.mod", []byte{}, 0755)
 	if err != nil {
 		assert.Error(t, err)
 		return
@@ -61,12 +54,12 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	}
 
 	// Get the project root.
-	root, exists, err := FindUpstream("go.mod", File)
+	root, exists, err := FindUpstream("goDotMod.test", File)
 	if err != nil {
 		assert.Error(t, err)
 		return
 	}
-	assert.True(t, exists, "File go.mod is missing.")
+	assert.True(t, exists, "File goDotMod.test is missing.")
 	assert.Equal(t, projectRoot, root)
 
 	// CD back to the original directory.
@@ -83,12 +76,12 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 		assert.Error(t, err)
 		return
 	}
-	root, exists, err = FindUpstream("go.mod", File)
+	root, exists, err = FindUpstream("goDotMod.test", File)
 	if err != nil {
 		assert.Error(t, err)
 		return
 	}
-	assert.True(t, exists, "File go.mod is missing.")
+	assert.True(t, exists, "File goDotMod.test is missing.")
 	assert.Equal(t, projectRoot, root)
 
 	root, exists, err = FindUpstream("go-missing.mod", File)
@@ -112,24 +105,13 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 		assert.Error(t, err)
 		return
 	}
-	root, exists, err = FindUpstream("go.mod", File)
+	root, exists, err = FindUpstream("goDotMod.test", File)
 	if err != nil {
 		assert.Error(t, err)
 		return
 	}
-	assert.True(t, exists, "File go.mod is missing.")
+	assert.True(t, exists, "File goDotMod.test is missing.")
 	assert.NotEqual(t, projectRoot, root)
-
-	// CD to original project dir and delete the go.mod file we created
-	if err = os.Chdir(projectRoot); err != nil {
-		assert.Error(t, err)
-		return
-	}
-	if err = os.Remove("go.mod"); err != nil {
-		assert.Error(t, err)
-		return
-	}
-
 }
 
 func TestGetFileOrDirPathFolder(t *testing.T) {
