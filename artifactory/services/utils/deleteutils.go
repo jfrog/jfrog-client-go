@@ -101,7 +101,7 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 	pathsKeys := make([]string, 0, utils.MaxBufferSize)
 	toBeDeleted := []*content.ContentReader{}
 	for candidate := new(ResultItem); deleteCandidates.NextRecord(candidate) == nil; candidate = new(ResultItem) {
-		// Save all requested type candidate in a diffrent temp file.
+		// Save all candidates, of the requested type, to a different temp file.
 		if candidate.Type == candidateType {
 			if candidateType == "folder" && candidate.Name == "." {
 				continue
@@ -119,7 +119,7 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 				pathsKeys = make([]string, 0, utils.MaxBufferSize)
 			}
 		} else {
-			// Write none requested type results.
+			// Write none results of the requested type.
 			resultWriter.Write(*candidate)
 		}
 	}
