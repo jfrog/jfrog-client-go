@@ -11,6 +11,7 @@ require (
 	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/gliderlabs/ssh v0.1.1 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/gookit/color v1.3.2
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jfrog/gofrog v1.0.6
 	github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e // indirect
@@ -19,10 +20,9 @@ require (
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/pelletier/go-buffruneio v0.2.0 // indirect
 	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/src-d/gcfg v1.3.0 // indirect
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.3.0
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/xanzy/ssh-agent v0.2.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
