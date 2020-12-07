@@ -14,6 +14,7 @@ var Logger Log
 type LevelType int
 type LogFormat string
 
+// Used for coloring sections of the log message. For example log.Format.Path("...")
 var Format LogFormat
 
 // Determines whether the terminal is available. This variable should not be accessed directly,
@@ -75,57 +76,70 @@ func (logger *jfrogLogger) SetLogsWriter(writer io.Writer) {
 	logger.WarnLog = log.New(writer, "[Warn] ", 0)
 	logger.ErrorLog = log.New(writer, "[Error] ", 0)
 }
+
 func GetLogLevel() LevelType {
 	return Logger.GetLogLevel()
 }
+
 func validateLogInit() {
 	if Logger == nil {
 		panic("Logger not initialized. See API documentation.")
 	}
 }
+
 func Debug(a ...interface{}) {
 	validateLogInit()
 	Logger.Debug(a...)
 }
+
 func Info(a ...interface{}) {
 	validateLogInit()
 	Logger.Info(a...)
 }
+
 func Warn(a ...interface{}) {
 	validateLogInit()
 	Logger.Warn(a...)
 }
+
 func Error(a ...interface{}) {
 	validateLogInit()
 	Logger.Error(a...)
 }
+
 func Output(a ...interface{}) {
 	validateLogInit()
 	Logger.Output(a...)
 }
+
 func (logger jfrogLogger) GetLogLevel() LevelType {
 	return logger.LogLevel
 }
+
 func (logger jfrogLogger) Debug(a ...interface{}) {
 	if logger.GetLogLevel() >= DEBUG {
 		logger.DebugLog.Println(a...)
 	}
 }
+
 func (logger jfrogLogger) Info(a ...interface{}) {
 	if logger.GetLogLevel() >= INFO {
 		logger.InfoLog.Println(a...)
 	}
 }
+
 func (logger jfrogLogger) Warn(a ...interface{}) {
 	if logger.GetLogLevel() >= WARN {
 		logger.WarnLog.Println(a...)
 	}
 }
+
 func (logger jfrogLogger) Error(a ...interface{}) {
 	if logger.GetLogLevel() >= ERROR {
 		logger.ErrorLog.Println(a...)
 	}
 }
+
 func (logger jfrogLogger) Output(a ...interface{}) {
 	logger.OutputLog.Println(a...)
 }
@@ -158,9 +172,10 @@ func (f *LogFormat) Path(message string) string {
 	}
 	return message
 }
+
 func (f *LogFormat) URL(message string) string {
 	if isTerminalMode() {
-		return color.Green.Render(message)
+		return color.Cyan.Render(message)
 	}
 	return message
 }
