@@ -10,10 +10,10 @@ import (
 	"strings"
 
 	"github.com/jfrog/gofrog/parallel"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
@@ -25,8 +25,13 @@ import (
 )
 
 type UploadService struct {
-	client       *httpclient.JfrogHttpClient
+<<<<<<< HEAD
+	client       *rthttpclient.ArtifactoryHttpClient
 	Progress     ioutils.ProgressMgr
+=======
+	client       *httpclient.JfrogHttpClient
+	Progress     ioutils.Progress
+>>>>>>> 34a2ceb... Refactor ArtifactoryHttpClient to JfrogHttpClient
 	ArtDetails   auth.ServiceDetails
 	DryRun       bool
 	Threads      int

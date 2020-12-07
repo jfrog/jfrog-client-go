@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"path"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -15,12 +15,12 @@ import (
 )
 
 type PromoteService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 	DryRun     bool
 }
 
-func NewPromotionService(client *rthttpclient.ArtifactoryHttpClient) *PromoteService {
+func NewPromotionService(client *httpclient.JfrogHttpClient) *PromoteService {
 	return &PromoteService{client: client}
 }
 

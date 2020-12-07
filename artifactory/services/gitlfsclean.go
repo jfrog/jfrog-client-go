@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -21,12 +21,12 @@ import (
 )
 
 type GitLfsCleanService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 	DryRun     bool
 }
 
-func NewGitLfsCleanService(client *rthttpclient.ArtifactoryHttpClient) *GitLfsCleanService {
+func NewGitLfsCleanService(client *httpclient.JfrogHttpClient) *GitLfsCleanService {
 	return &GitLfsCleanService{client: client}
 }
 
@@ -42,7 +42,7 @@ func (glc *GitLfsCleanService) IsDryRun() bool {
 	return glc.DryRun
 }
 
-func (glc *GitLfsCleanService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (glc *GitLfsCleanService) GetJfrogHttpClient() (*httpclient.JfrogHttpClient, error) {
 	return glc.client, nil
 }
 

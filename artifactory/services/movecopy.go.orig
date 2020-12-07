@@ -7,10 +7,14 @@ import (
 	"strconv"
 	"strings"
 
+<<<<<<< HEAD
 	"github.com/jfrog/gofrog/parallel"
+	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+=======
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
+>>>>>>> 34a2ceb... Refactor ArtifactoryHttpClient to JfrogHttpClient
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"

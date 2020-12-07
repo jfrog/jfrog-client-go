@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 )
 
 var testsXrayScanService *services.XrayScanService
@@ -15,7 +15,7 @@ var testsXrayScanService *services.XrayScanService
 func TestNewXrayScanService(t *testing.T) {
 	xrayServerPort := xray.StartXrayMockServer()
 	artDetails := GetRtDetails()
-	client, err := rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&artDetails).Build()
+	client, err := httpclient.JfrogClientBuilder().SetServiceDetails(&artDetails).Build()
 	if err != nil {
 		t.Error(err)
 	}

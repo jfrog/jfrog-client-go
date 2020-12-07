@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -17,7 +17,7 @@ type DeleteLocalReleaseBundleService struct {
 	DeleteReleaseBundleService
 }
 
-func NewDeleteLocalDistributionService(client *rthttpclient.ArtifactoryHttpClient) *DeleteLocalReleaseBundleService {
+func NewDeleteLocalDistributionService(client *httpclient.JfrogHttpClient) *DeleteLocalReleaseBundleService {
 	return &DeleteLocalReleaseBundleService{DeleteReleaseBundleService: DeleteReleaseBundleService{client: client}}
 }
 

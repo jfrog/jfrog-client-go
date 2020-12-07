@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -14,15 +14,15 @@ import (
 )
 
 type UpdateReplicationService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewUpdateReplicationService(client *rthttpclient.ArtifactoryHttpClient) *UpdateReplicationService {
+func NewUpdateReplicationService(client *httpclient.JfrogHttpClient) *UpdateReplicationService {
 	return &UpdateReplicationService{client: client}
 }
 
-func (rs *UpdateReplicationService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+func (rs *UpdateReplicationService) GetJfrogHttpClient() *httpclient.JfrogHttpClient {
 	return rs.client
 }
 

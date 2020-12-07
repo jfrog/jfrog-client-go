@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -63,7 +63,7 @@ func createDockerPromoteService(t *testing.T, url string) *services.DockerPromot
 	rtDetails.SetUrl(url + "/")
 
 	// Create http client
-	client, err := httpclient.ArtifactoryClientBuilder().
+	client, err := httpclient.JfrogClientBuilder().
 		SetInsecureTls(true).
 		SetServiceDetails(&rtDetails).
 		Build()

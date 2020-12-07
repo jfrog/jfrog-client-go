@@ -5,24 +5,24 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type CreateReplicationService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewCreateReplicationService(client *rthttpclient.ArtifactoryHttpClient) *CreateReplicationService {
+func NewCreateReplicationService(client *httpclient.JfrogHttpClient) *CreateReplicationService {
 	return &CreateReplicationService{client: client}
 }
 
-func (rs *CreateReplicationService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+func (rs *CreateReplicationService) GetJfrogHttpClient() *httpclient.JfrogHttpClient {
 	return rs.client
 }
 

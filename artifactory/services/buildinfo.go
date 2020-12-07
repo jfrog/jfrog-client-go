@@ -3,25 +3,26 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+	"path"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"path"
 )
 
 type BuildInfoService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 	Project    string
 	DryRun     bool
 }
 
-func NewBuildInfoService(client *rthttpclient.ArtifactoryHttpClient) *BuildInfoService {
+func NewBuildInfoService(client *httpclient.JfrogHttpClient) *BuildInfoService {
 	return &BuildInfoService{client: client}
 }
 
@@ -33,7 +34,7 @@ func (bis *BuildInfoService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	bis.ArtDetails = rt
 }
 
-func (bis *BuildInfoService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (bis *BuildInfoService) GetJfrogHttpClient() (*httpclient.JfrogHttpClient, error) {
 	return bis.client, nil
 }
 

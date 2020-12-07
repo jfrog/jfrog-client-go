@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	distrbutionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
@@ -15,12 +15,12 @@ import (
 )
 
 type UpdateReleaseBundleService struct {
-	client      *rthttpclient.ArtifactoryHttpClient
+	client      *httpclient.JfrogHttpClient
 	DistDetails auth.ServiceDetails
 	DryRun      bool
 }
 
-func NewUpdateReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *UpdateReleaseBundleService {
+func NewUpdateReleaseBundleService(client *httpclient.JfrogHttpClient) *UpdateReleaseBundleService {
 	return &UpdateReleaseBundleService{client: client}
 }
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"path"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -15,11 +15,11 @@ import (
 )
 
 type DockerPromoteService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewDockerPromoteService(client *rthttpclient.ArtifactoryHttpClient) *DockerPromoteService {
+func NewDockerPromoteService(client *httpclient.JfrogHttpClient) *DockerPromoteService {
 	return &DockerPromoteService{client: client}
 }
 
@@ -31,7 +31,7 @@ func (ps *DockerPromoteService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	ps.ArtDetails = rt
 }
 
-func (ps *DockerPromoteService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (ps *DockerPromoteService) GetJfrogHttpClient() (*httpclient.JfrogHttpClient, error) {
 	return ps.client, nil
 }
 

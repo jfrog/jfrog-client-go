@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/jfrog/gofrog/parallel"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -17,12 +17,12 @@ import (
 )
 
 type PropsService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 	Threads    int
 }
 
-func NewPropsService(client *rthttpclient.ArtifactoryHttpClient) *PropsService {
+func NewPropsService(client *httpclient.JfrogHttpClient) *PropsService {
 	return &PropsService{client: client}
 }
 

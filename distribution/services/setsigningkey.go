@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -14,11 +14,11 @@ import (
 )
 
 type SetSigningKeyService struct {
-	client      *rthttpclient.ArtifactoryHttpClient
+	client      *httpclient.JfrogHttpClient
 	DistDetails auth.ServiceDetails
 }
 
-func NewSetSigningKeyService(client *rthttpclient.ArtifactoryHttpClient) *SetSigningKeyService {
+func NewSetSigningKeyService(client *httpclient.JfrogHttpClient) *SetSigningKeyService {
 	return &SetSigningKeyService{client: client}
 }
 

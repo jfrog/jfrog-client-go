@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -15,15 +15,15 @@ import (
 
 type RemoteRepositoryService struct {
 	isUpdate   bool
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewRemoteRepositoryService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *RemoteRepositoryService {
+func NewRemoteRepositoryService(client *httpclient.JfrogHttpClient, isUpdate bool) *RemoteRepositoryService {
 	return &RemoteRepositoryService{client: client, isUpdate: isUpdate}
 }
 
-func (rrs *RemoteRepositoryService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+func (rrs *RemoteRepositoryService) GetJfrogHttpClient() *httpclient.JfrogHttpClient {
 	return rrs.client
 }
 

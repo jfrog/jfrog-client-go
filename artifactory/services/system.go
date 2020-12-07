@@ -3,7 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -12,11 +12,11 @@ import (
 )
 
 type SystemService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewSystemService(client *rthttpclient.ArtifactoryHttpClient) *SystemService {
+func NewSystemService(client *httpclient.JfrogHttpClient) *SystemService {
 	return &SystemService{client: client}
 }
 
@@ -28,7 +28,7 @@ func (ss *SystemService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	ss.ArtDetails = rt
 }
 
-func (ss *SystemService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (ss *SystemService) GetJfrogHttpClient() (*httpclient.JfrogHttpClient, error) {
 	return ss.client, nil
 }
 

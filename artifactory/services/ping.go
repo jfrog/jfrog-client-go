@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -12,11 +12,11 @@ import (
 )
 
 type PingService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *httpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewPingService(client *rthttpclient.ArtifactoryHttpClient) *PingService {
+func NewPingService(client *httpclient.JfrogHttpClient) *PingService {
 	return &PingService{client: client}
 }
 
@@ -28,7 +28,7 @@ func (ps *PingService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	ps.ArtDetails = rt
 }
 
-func (ps *PingService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (ps *PingService) GetJfrogHttpClient() (*httpclient.JfrogHttpClient, error) {
 	return ps.client, nil
 }
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	distrbutionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
@@ -15,11 +15,11 @@ import (
 )
 
 type SignBundleService struct {
-	client      *rthttpclient.ArtifactoryHttpClient
+	client      *httpclient.JfrogHttpClient
 	DistDetails auth.ServiceDetails
 }
 
-func NewSignBundleService(client *rthttpclient.ArtifactoryHttpClient) *SignBundleService {
+func NewSignBundleService(client *httpclient.JfrogHttpClient) *SignBundleService {
 	return &SignBundleService{client: client}
 }
 

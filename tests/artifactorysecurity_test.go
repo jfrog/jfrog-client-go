@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -50,7 +50,7 @@ func regenerateAPIKeyTest(t *testing.T) {
 	rtDetails.SetUrl(ts.URL + "/")
 	rtDetails.SetApiKey("fake-api-key")
 
-	client, err := httpclient.ArtifactoryClientBuilder().
+	client, err := httpclient.JfrogClientBuilder().
 		SetInsecureTls(true).
 		SetServiceDetails(&rtDetails).
 		Build()

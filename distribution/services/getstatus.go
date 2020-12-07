@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -14,11 +14,11 @@ import (
 )
 
 type DistributionStatusService struct {
-	client      *rthttpclient.ArtifactoryHttpClient
+	client      *httpclient.JfrogHttpClient
 	DistDetails auth.ServiceDetails
 }
 
-func NewDistributionStatusService(client *rthttpclient.ArtifactoryHttpClient) *DistributionStatusService {
+func NewDistributionStatusService(client *httpclient.JfrogHttpClient) *DistributionStatusService {
 	return &DistributionStatusService{client: client}
 }
 

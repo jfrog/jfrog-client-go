@@ -176,7 +176,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 				return false, nil
 			}
 			// Perform retry
-			log.Warn(fmt.Sprintf("%sArtifactory response: %s", logMsgPrefix, resp.Status))
+			log.Warn(fmt.Sprintf("%sThe server response: %s", logMsgPrefix, resp.Status))
 			return true, nil
 		},
 	}
@@ -294,7 +294,7 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 				return false, nil
 			}
 			// Perform retry
-			log.Warn(fmt.Sprintf("%sArtifactory response: %s", logMsgPrefix, resp.Status))
+			log.Warn(fmt.Sprintf("%sThe server response: %s", logMsgPrefix, resp.Status))
 			return true, nil
 		},
 	}
@@ -577,7 +577,7 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 				return false, nil
 			}
 			// Perform retry
-			log.Warn(fmt.Sprintf("%s[%s]: Artifactory response: %s", logMsgPrefix, strconv.Itoa(currentSplit), resp.Status))
+			log.Warn(fmt.Sprintf("%s[%s]: The server response: %s", logMsgPrefix, strconv.Itoa(currentSplit), resp.Status))
 			return true, nil
 		},
 	}
