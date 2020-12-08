@@ -183,17 +183,7 @@ serviceConfig, err := config.NewConfigBuilder().
     SetCertificatesPath(certPath).
     SetThreads(threads).
     SetDryRun(false).
-    Build()
-```
-
-#### Creating Artifactory Service Config with [Context](https://golang.org/pkg/context/)
-```go
-ctx := context.Background()
-serviceConfig, err := config.NewConfigBuilder().
-    SetServiceDetails(rtDetails).
-    SetCertificatesPath(certPath).
-    SetThreads(threads).
-    SetDryRun(false).
+    // Add [Context](https://golang.org/pkg/context/)
     SetContext(ctx).
     Build()
 ```
@@ -788,6 +778,8 @@ serviceConfig, err := config.NewConfigBuilder().
     SetCertificatesPath(certPath).
     SetThreads(threads).
     SetDryRun(false).
+    // Add [Context](https://golang.org/pkg/context/)
+    SetContext(ctx).
     Build()
 ```
 
