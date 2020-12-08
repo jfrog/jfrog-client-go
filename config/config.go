@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -12,6 +13,7 @@ type Config interface {
 	GetServiceDetails() auth.ServiceDetails
 	GetLogger() log.Log
 	IsInsecureTls() bool
+	GetContext() context.Context
 }
 
 type servicesConfig struct {
@@ -21,6 +23,7 @@ type servicesConfig struct {
 	threads          int
 	logger           log.Log
 	insecureTls      bool
+	ctx              context.Context
 }
 
 func (config *servicesConfig) IsDryRun() bool {
@@ -45,4 +48,8 @@ func (config *servicesConfig) GetLogger() log.Log {
 
 func (config *servicesConfig) IsInsecureTls() bool {
 	return config.insecureTls
+}
+
+func (config *servicesConfig) GetContext() context.Context {
+	return config.ctx
 }

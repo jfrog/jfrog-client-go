@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"net"
@@ -20,6 +21,7 @@ type httpClientBuilder struct {
 	clientCertPath      string
 	clientCertKeyPath   string
 	insecureTls         bool
+	ctx                 context.Context
 }
 
 func (builder *httpClientBuilder) SetCertificatesPath(certificatesPath string) *httpClientBuilder {
@@ -39,6 +41,11 @@ func (builder *httpClientBuilder) SetClientCertKeyPath(certificatePath string) *
 
 func (builder *httpClientBuilder) SetInsecureTls(insecureTls bool) *httpClientBuilder {
 	builder.insecureTls = insecureTls
+	return builder
+}
+
+func (builder *httpClientBuilder) SetContext(ctx context.Context) *httpClientBuilder {
+	builder.ctx = ctx
 	return builder
 }
 
@@ -62,7 +69,7 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &HttpClient{Client: &http.Client{Transport: transport}}, nil
+		return &HttpClient{Client: &http.Client{Transport: transport}, ctx: builder.ctx}, nil
 	}
 
 	transport, err := cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, createDefaultHttpTransport())

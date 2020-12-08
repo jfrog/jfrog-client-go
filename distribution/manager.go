@@ -22,6 +22,7 @@ func New(details *auth.ServiceDetails, config config.Config) (*DistributionServi
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetServiceDetails(details).
+		SetContext(config.GetContext()).
 		Build()
 	if err != nil {
 		return nil, err

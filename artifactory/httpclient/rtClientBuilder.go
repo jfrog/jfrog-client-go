@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"context"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/httpclient"
 )
@@ -12,6 +13,7 @@ func ArtifactoryClientBuilder() *artifactoryHttpClientBuilder {
 type artifactoryHttpClientBuilder struct {
 	certificatesDirPath string
 	insecureTls         bool
+	ctx                 context.Context
 	ServiceDetails      *auth.ServiceDetails
 }
 
@@ -30,6 +32,11 @@ func (builder *artifactoryHttpClientBuilder) SetServiceDetails(rtDetails *auth.S
 	return builder
 }
 
+func (builder *artifactoryHttpClientBuilder) SetContext(ctx context.Context) *artifactoryHttpClientBuilder {
+	builder.ctx = ctx
+	return builder
+}
+
 func (builder *artifactoryHttpClientBuilder) Build() (rtHttpClient *ArtifactoryHttpClient, err error) {
 	rtHttpClient = &ArtifactoryHttpClient{ArtDetails: builder.ServiceDetails}
 	rtHttpClient.httpClient, err = httpclient.ClientBuilder().
@@ -37,6 +44,7 @@ func (builder *artifactoryHttpClientBuilder) Build() (rtHttpClient *ArtifactoryH
 		SetInsecureTls(builder.insecureTls).
 		SetClientCertPath((*rtHttpClient.ArtDetails).GetClientCertPath()).
 		SetClientCertKeyPath((*rtHttpClient.ArtDetails).GetClientCertKeyPath()).
+		SetContext(builder.ctx).
 		Build()
 	return
 }

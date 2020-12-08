@@ -186,6 +186,18 @@ serviceConfig, err := config.NewConfigBuilder().
     Build()
 ```
 
+#### Creating Artifactory Service Config with [Context](https://golang.org/pkg/context/)
+```go
+ctx := context.Background()
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(rtDetails).
+    SetCertificatesPath(certPath).
+    SetThreads(threads).
+    SetDryRun(false).
+    SetContext(ctx).
+    Build()
+```
+
 #### Creating New Artifactory Service Manager
 ```go
 rtManager, err := artifactory.New(&rtDetails, serviceConfig)
