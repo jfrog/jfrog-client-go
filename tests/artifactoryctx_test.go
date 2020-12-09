@@ -3,12 +3,13 @@ package tests
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestCtx(t *testing.T) {
@@ -31,7 +32,8 @@ func testCtx(t *testing.T) {
 
 func testCtxTimeout(t *testing.T) {
 	artDetails := GetRtDetails()
-	timeoutCtx, _ := context.WithTimeout(context.Background(), time.Millisecond*250)
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Millisecond*250)
+	defer cancel()
 	sm, err := ctxMgr(t, artDetails, timeoutCtx)
 	time.Sleep(time.Millisecond * 300)
 	_, err = sm.GetVersion()
