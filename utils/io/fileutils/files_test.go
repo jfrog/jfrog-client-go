@@ -1,12 +1,13 @@
 package fileutils
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIsSsh(t *testing.T) {
@@ -37,7 +38,7 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	}
 	defer os.Chdir(wd)
 
-	// CD into a directory with a go.mod file.
+	// CD into a directory with a goDotMod.test file.
 	projectRoot := filepath.Join("testdata", "project")
 	err = os.Chdir(projectRoot)
 	if err != nil {
@@ -53,12 +54,12 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	}
 
 	// Get the project root.
-	root, exists, err := FindUpstream("go.mod", File)
+	root, exists, err := FindUpstream("goDotMod.test", File)
 	if err != nil {
 		assert.Error(t, err)
 		return
 	}
-	assert.True(t, exists, "File go.mod is missing.")
+	assert.True(t, exists, "File goDotMod.test is missing.")
 	assert.Equal(t, projectRoot, root)
 
 	// CD back to the original directory.
@@ -75,12 +76,12 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 		assert.Error(t, err)
 		return
 	}
-	root, exists, err = FindUpstream("go.mod", File)
+	root, exists, err = FindUpstream("goDotMod.test", File)
 	if err != nil {
 		assert.Error(t, err)
 		return
 	}
-	assert.True(t, exists, "File go.mod is missing.")
+	assert.True(t, exists, "File goDotMod.test is missing.")
 	assert.Equal(t, projectRoot, root)
 
 	root, exists, err = FindUpstream("go-missing.mod", File)
@@ -104,12 +105,12 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 		assert.Error(t, err)
 		return
 	}
-	root, exists, err = FindUpstream("go.mod", File)
+	root, exists, err = FindUpstream("goDotMod.test", File)
 	if err != nil {
 		assert.Error(t, err)
 		return
 	}
-	assert.True(t, exists, "File go.mod is missing.")
+	assert.True(t, exists, "File goDotMod.test is missing.")
 	assert.NotEqual(t, projectRoot, root)
 }
 
