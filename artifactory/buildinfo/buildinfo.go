@@ -4,6 +4,23 @@ import (
 	"time"
 )
 
+type ModuleType string
+
+const (
+	// Build type
+	Build ModuleType = "build"
+
+	// Package managers types
+	Generic ModuleType = "generic"
+	Maven   ModuleType = "maven"
+	Gradle  ModuleType = "gradle"
+	Docker  ModuleType = "docker"
+	Npm     ModuleType = "npm"
+	Nuget   ModuleType = "nuget"
+	Go      ModuleType = "go"
+	Pip     ModuleType = "pip"
+)
+
 func New() *BuildInfo {
 	return &BuildInfo{
 		Agent:      &Agent{},
@@ -35,7 +52,7 @@ func (targetBuildInfo *BuildInfo) SetArtifactoryPluginVersion(artifactoryPluginV
 func (targetBuildInfo *BuildInfo) Append(buildInfo *BuildInfo) {
 	for _, newModule := range buildInfo.Modules {
 		exists := false
-		for i, _ := range targetBuildInfo.Modules {
+		for i := range targetBuildInfo.Modules {
 			if newModule.Id == targetBuildInfo.Modules[i].Id {
 				mergeModules(&newModule, &targetBuildInfo.Modules[i])
 				exists = true
@@ -111,10 +128,12 @@ type Agent struct {
 }
 
 type Module struct {
+	Type         ModuleType   `json:"type,omitempty"`
 	Properties   interface{}  `json:"properties,omitempty"`
 	Id           string       `json:"id,omitempty"`
 	Artifacts    []Artifact   `json:"artifacts,omitempty"`
 	Dependencies []Dependency `json:"dependencies,omitempty"`
+	*Checksum
 }
 
 type Artifact struct {
@@ -165,6 +184,7 @@ type Vcs struct {
 type Partials []*Partial
 
 type Partial struct {
+	ModuleType   ModuleType   `json:"Type,omitempty"`
 	Artifacts    []Artifact   `json:"Artifacts,omitempty"`
 	Dependencies []Dependency `json:"Dependencies,omitempty"`
 	Env          Env          `json:"Env,omitempty"`
@@ -172,6 +192,7 @@ type Partial struct {
 	ModuleId     string       `json:"ModuleId,omitempty"`
 	Issues       *Issues      `json:"Issues,omitempty"`
 	*Vcs
+	*Checksum
 }
 
 func (partials Partials) Len() int {
