@@ -7,6 +7,18 @@
     },
     {
       "repo": "a",
+      "path": "b/a",
+      "name": "bigFile-2",
+      "type": "folder"
+    },
+    {
+      "repo": "a",
+      "path": "b/a",
+      "name": "bigFile",
+      "type": "folder"
+    },
+    {
+      "repo": "a",
       "path": "b/c",
       "type": "folder"
     },

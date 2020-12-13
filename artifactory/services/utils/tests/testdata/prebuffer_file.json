@@ -39,6 +39,18 @@
             "Repo": "a",
             "Path": "b",
             "Type": "folder"
-        }
+        },
+        {
+            "repo": "a",
+            "path": "b/a",
+            "name": "bigFile-2",
+            "type": "folder"
+          },
+          {
+            "repo": "a",
+            "path": "b/a",
+            "name": "bigFile",
+            "type": "folder"
+          }
     ]
 }
