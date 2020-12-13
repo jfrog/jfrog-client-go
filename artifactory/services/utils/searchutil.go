@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"sort"
+	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -216,6 +215,14 @@ type AqlSearchResult struct {
 	Results []ResultItem
 }
 
+// Implement this interface to allow creating 'content.ContentReader' items which can be used with 'searchutils' functions.
+type SearchBasedContentItem interface {
+	content.SortableContentItem
+	GetItemRelativePath() string
+	GetName() string
+	GetType() string
+}
+
 type ResultItem struct {
 	Repo        string     `json:"repo,omitempty"`
 	Path        string     `json:"path,omitempty"`
@@ -227,6 +234,18 @@ type ResultItem struct {
 	Modified    string     `json:"modified,omitempty"`
 	Properties  []Property `json:"properties,omitempty"`
 	Type        string     `json:"type,omitempty"`
+}
+
+func (item ResultItem) GetSortKey() string {
+	return item.GetItemRelativePath()
+}
+
+func (item ResultItem) GetName() string {
+	return item.Name
+}
+
+func (item ResultItem) GetType() string {
+	return item.Type
 }
 
 func (item ResultItem) GetItemRelativePath() string {
@@ -267,22 +286,35 @@ func (item *ResultItem) ToDependency() buildinfo.Dependency {
 	return buildinfo.Dependency{Id: item.Name, Checksum: &buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}}
 }
 
-type AqlSearchResultItemFilter func(*content.ContentReader) (*content.ContentReader, error)
+type AqlSearchResultItemFilter func(SearchBasedContentItem, *content.ContentReader) (*content.ContentReader, error)
 
-func FilterBottomChainResults(reader *content.ContentReader) (*content.ContentReader, error) {
+func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (*content.ContentReader, error) {
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
 	defer writer.Close()
+
+	// Get the expected record type from the reader.
+	recordValue := reflect.ValueOf(readerRecord)
+	recordType := recordValue.Type()
+
 	var temp string
-	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+	for newRecord := (reflect.New(recordType)).Interface(); reader.NextRecord(newRecord) == nil; newRecord = (reflect.New(recordType)).Interface() {
+		resultItem, ok := newRecord.(SearchBasedContentItem)
+		if !ok {
+			return nil, errorutils.CheckError(errors.New("Reader record is not search-based."))
+		}
+
+		if resultItem.GetName() == "." {
+			continue
+		}
 		rPath := resultItem.GetItemRelativePath()
 		if !strings.HasSuffix(rPath, "/") {
 			rPath += "/"
 		}
 		if temp == "" || !strings.HasPrefix(temp, rPath) {
-			writer.Write(*resultItem)
+			writer.Write(resultItem)
 			temp = rPath
 		}
 	}
@@ -293,23 +325,36 @@ func FilterBottomChainResults(reader *content.ContentReader) (*content.ContentRe
 	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
 }
 
-// Reduce the amount of items by saveing only the shortest item path for each unique path e.g.:
+// Reduce the amount of items by saving only the shortest item path for each unique path e.g.:
 // a | a/b | c | e/f -> a | c | e/f
-func FilterTopChainResults(reader *content.ContentReader) (*content.ContentReader, error) {
+func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (*content.ContentReader, error) {
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
 	defer writer.Close()
+
+	// Get the expected record type from the reader.
+	recordValue := reflect.ValueOf(readerRecord)
+	recordType := recordValue.Type()
+
 	var prevFolder string
-	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+	for newRecord := (reflect.New(recordType)).Interface(); reader.NextRecord(newRecord) == nil; newRecord = (reflect.New(recordType)).Interface() {
+		resultItem, ok := newRecord.(SearchBasedContentItem)
+		if !ok {
+			return nil, errorutils.CheckError(errors.New("Reader record is not search-based."))
+		}
+
+		if resultItem.GetName() == "." {
+			continue
+		}
 		rPath := resultItem.GetItemRelativePath()
-		if resultItem.Type == "folder" && !strings.HasSuffix(rPath, "/") {
+		if resultItem.GetType() == "folder" && !strings.HasSuffix(rPath, "/") {
 			rPath += "/"
 		}
 		if prevFolder == "" || !strings.HasPrefix(rPath, prevFolder) {
-			writer.Write(*resultItem)
-			if resultItem.Type == "folder" {
+			writer.Write(resultItem)
+			if resultItem.GetType() == "folder" {
 				prevFolder = rPath
 			}
 		}
@@ -321,126 +366,20 @@ func FilterTopChainResults(reader *content.ContentReader) (*content.ContentReade
 	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
 }
 
-func ReduceTopChainDirResult(searchResults *content.ContentReader) (*content.ContentReader, error) {
-	return ReduceDirResult(searchResults, true, FilterTopChainResults)
+func ReduceTopChainDirResult(readerRecord SearchBasedContentItem, searchResults *content.ContentReader) (*content.ContentReader, error) {
+	return ReduceDirResult(readerRecord, searchResults, true, FilterTopChainResults)
 }
 
-func ReduceBottomChainDirResult(searchResults *content.ContentReader) (*content.ContentReader, error) {
-	return ReduceDirResult(searchResults, false, FilterBottomChainResults)
+func ReduceBottomChainDirResult(readerRecord SearchBasedContentItem, searchResults *content.ContentReader) (*content.ContentReader, error) {
+	return ReduceDirResult(readerRecord, searchResults, false, FilterBottomChainResults)
 }
 
-// Reduce Dir results by using the resultsFilter
-func ReduceDirResult(searchResults *content.ContentReader, ascendingOrder bool, resultsFilter AqlSearchResultItemFilter) (*content.ContentReader, error) {
-	// Sort results in asc order according to relative path.
-	// Split to files if the total result is bigget than the maximum buffest.
-	paths := make(map[string]ResultItem)
-	pathsKeys := make([]string, 0, utils.MaxBufferSize)
-	sortedFiles := []*content.ContentReader{}
-	defer func() {
-		for _, file := range sortedFiles {
-			file.Close()
-		}
-	}()
-	for resultItem := new(ResultItem); searchResults.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
-		if resultItem.Name == "." {
-			continue
-		}
-		rPath := resultItem.GetItemRelativePath()
-		paths[rPath] = *resultItem
-		pathsKeys = append(pathsKeys, rPath)
-		if len(pathsKeys) == utils.MaxBufferSize {
-			sortedFile, err := SortAndSaveBufferToFile(paths, pathsKeys, ascendingOrder)
-			if err != nil {
-				return nil, err
-			}
-			sortedFiles = append(sortedFiles, sortedFile)
-			paths = make(map[string]ResultItem)
-			pathsKeys = make([]string, 0, utils.MaxBufferSize)
-		}
-	}
-	if err := searchResults.GetError(); err != nil {
-		return nil, err
-	}
-	searchResults.Reset()
-	var sortedFile *content.ContentReader
-	if len(pathsKeys) > 0 {
-		sortedFile, err := SortAndSaveBufferToFile(paths, pathsKeys, ascendingOrder)
-		if err != nil {
-			return nil, err
-		}
-		sortedFiles = append(sortedFiles, sortedFile)
-	}
-	// Merge sorted files
-	sortedFile, err := MergeSortedFiles(sortedFiles, ascendingOrder)
+// Reduce Dir results by using the resultsFilter.
+func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content.ContentReader, ascendingOrder bool, resultsFilter AqlSearchResultItemFilter) (*content.ContentReader, error) {
+	sortedFile, err := content.SortContentReader(readerRecord, searchResults, ascendingOrder)
 	if err != nil {
 		return nil, err
 	}
 	defer sortedFile.Close()
-	return resultsFilter(sortedFile)
-}
-
-func SortAndSaveBufferToFile(paths map[string]ResultItem, pathsKeys []string, increasingOrder bool) (*content.ContentReader, error) {
-	if len(pathsKeys) == 0 {
-		return nil, nil
-	}
-	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
-	if err != nil {
-		return nil, err
-	}
-	defer writer.Close()
-	if increasingOrder {
-		sort.Strings(pathsKeys)
-	} else {
-		sort.Sort(sort.Reverse(sort.StringSlice(pathsKeys)))
-	}
-	for _, v := range pathsKeys {
-		writer.Write(paths[v])
-	}
-	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
-}
-
-// Merge all the sorted files into a single sorted file.
-func MergeSortedFiles(sortedFiles []*content.ContentReader, ascendingOrder bool) (*content.ContentReader, error) {
-	if len(sortedFiles) == 0 {
-		return content.NewEmptyContentReader(content.DefaultKey), nil
-	}
-	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
-	if err != nil {
-		return nil, err
-	}
-	defer resultWriter.Close()
-	currentResultItem := make([]*ResultItem, len(sortedFiles))
-	sortedFilesClone := make([]*content.ContentReader, len(sortedFiles))
-	copy(sortedFilesClone, sortedFiles)
-	for {
-		var candidateToWrite *ResultItem
-		smallestIndex := 0
-		for i := 0; i < len(sortedFilesClone); i++ {
-			if currentResultItem[i] == nil && sortedFilesClone[i] != nil {
-				temp := new(ResultItem)
-				if err := sortedFilesClone[i].NextRecord(temp); nil != err {
-					sortedFilesClone[i] = nil
-					continue
-				}
-				currentResultItem[i] = temp
-			}
-			if candidateToWrite == nil || (currentResultItem[i] != nil && compareStrings(candidateToWrite.GetItemRelativePath(), currentResultItem[i].GetItemRelativePath(), ascendingOrder)) {
-				candidateToWrite = currentResultItem[i]
-				smallestIndex = i
-			}
-		}
-		if candidateToWrite == nil {
-			break
-		}
-		resultWriter.Write(*candidateToWrite)
-		currentResultItem[smallestIndex] = nil
-	}
-	return content.NewContentReader(resultWriter.GetFilePath(), resultWriter.GetArrayKey()), nil
-}
-
-func compareStrings(src, against string, ascendingOrder bool) bool {
-	if ascendingOrder {
-		return src > against
-	}
-	return src < against
+	return resultsFilter(readerRecord, sortedFile)
 }

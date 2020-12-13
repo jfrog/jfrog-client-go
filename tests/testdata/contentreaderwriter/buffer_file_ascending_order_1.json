@@ -1,0 +1,19 @@
+{
+  "results": [
+    {
+      "repo": "a",
+      "path": "e",
+      "type": "folder"
+    },
+    {
+      "repo": "bb",
+      "path": "b",
+      "type": "folder"
+    },
+    {
+      "repo": "repo1",
+      "path": "b",
+      "type": "folder"
+    }
+  ]
+}
