@@ -17,14 +17,14 @@ import (
 type ArtifactoryServicesManagerImp struct {
 	client   *rthttpclient.ArtifactoryHttpClient
 	config   config.Config
-	progress ioutils.Progress
+	progress ioutils.ProgressMgr
 }
 
 func New(artDetails *auth.ServiceDetails, config config.Config) (ArtifactoryServicesManager, error) {
 	return NewWithProgress(artDetails, config, nil)
 }
 
-func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, progress ioutils.Progress) (ArtifactoryServicesManager, error) {
+func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, progress ioutils.ProgressMgr) (ArtifactoryServicesManager, error) {
 	err := (*artDetails).InitSsh()
 	if err != nil {
 		return nil, err

@@ -157,7 +157,7 @@ func setRequestHeaders(httpClientsDetails httputils.HttpClientDetails, size int6
 
 // You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails,
-	retries int, progress ioutils.Progress) (resp *http.Response, body []byte, err error) {
+	retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      retries,
 		RetriesInterval: 0,
@@ -186,7 +186,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 	return
 }
 
-func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails httputils.HttpClientDetails, progress ioutils.Progress) (*http.Response, []byte, error) {
+func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails httputils.HttpClientDetails, progress ioutils.ProgressMgr) (*http.Response, []byte, error) {
 	var file *os.File
 	var err error
 	if localPath != "" {
@@ -205,9 +205,9 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	reqContent := fileutils.GetUploadRequestContent(file)
 	var reader io.Reader
 	if file != nil && progress != nil {
-		progressId := progress.New(size, "Uploading", localPath)
-		reader = progress.ReadWithProgress(progressId, reqContent)
-		defer progress.Abort(progressId)
+		progressReader := progress.NewProgressReader(size, "Uploading", localPath)
+		reader = progressReader.ActionWithProgress(reqContent)
+		defer progress.RemoveProgress(progressReader.GetId())
 	} else {
 		reader = reqContent
 	}
@@ -252,7 +252,7 @@ func (jc *HttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails htt
 // Bulk downloads a file.
 // You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) DownloadFileWithProgress(downloadFileDetails *DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.Progress) (*http.Response, error) {
+	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.ProgressMgr) (*http.Response, error) {
 	resp, _, err := jc.downloadFile(downloadFileDetails, logMsgPrefix, true, httpClientsDetails, retries, isExplode, progress)
 	return resp, err
 }
@@ -269,7 +269,7 @@ func (jc *HttpClient) DownloadFileNoRedirect(downloadPath, localPath, fileName s
 }
 
 func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string, followRedirect bool,
-	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.Progress) (resp *http.Response, redirectUrl string, err error) {
+	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      retries,
 		RetriesInterval: 0,
@@ -305,7 +305,7 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 }
 
 func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string, followRedirect bool,
-	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.Progress) (resp *http.Response, redirectUrl string, err error) {
+	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
 	resp, redirectUrl, err = jc.sendGetForFileDownload(downloadFileDetails.DownloadPath, followRedirect, httpClientsDetails, 0)
 	if err != nil {
 		return
@@ -339,7 +339,7 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 	return
 }
 
-func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, progress ioutils.Progress) error {
+func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, progress ioutils.ProgressMgr) error {
 	fileName, err := fileutils.CreateFilePath(downloadFileDetails.LocalPath, downloadFileDetails.LocalFileName)
 	if err != nil {
 		return err
@@ -354,9 +354,9 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 
 	var reader io.Reader
 	if progress != nil {
-		progressId := progress.New(resp.ContentLength, "Downloading", downloadFileDetails.RelativePath)
-		reader = progress.ReadWithProgress(progressId, resp.Body)
-		defer progress.Abort(progressId)
+		readerProgress := progress.NewProgressReader(resp.ContentLength, "Downloading", downloadFileDetails.RelativePath)
+		reader = readerProgress.ActionWithProgress(resp.Body)
+		defer progress.RemoveProgress(readerProgress.GetId())
 	} else {
 		reader = resp.Body
 	}
@@ -431,7 +431,7 @@ func getExtractionPath(localPath string) (string, error) {
 // The caller is responsible to check the resp.StatusCode.
 // You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, logMsgPrefix string,
-	httpClientsDetails httputils.HttpClientDetails, progress ioutils.Progress) (*http.Response, error) {
+	httpClientsDetails httputils.HttpClientDetails, progress ioutils.ProgressMgr) (*http.Response, error) {
 	// Create temp dir for file chunks.
 	tempDirPath, err := fileutils.CreateTempDir()
 	if err != nil {
@@ -443,11 +443,10 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 	var downloadProgressId int
 	if progress != nil {
-		downloadProgressId = progress.New(flags.FileSize, "Downloading", flags.RelativePath)
-		mergingProgressId := progress.NewReplacement(downloadProgressId, "  Merging  ", flags.RelativePath)
+		downloadProgress := progress.NewProgressReader(flags.FileSize, "Downloading", flags.RelativePath)
+		downloadProgressId = downloadProgress.GetId()
 		// Aborting order matters. mergingProgress depends on the existence of downloadingProgress
-		defer progress.Abort(downloadProgressId)
-		defer progress.Abort(mergingProgressId)
+		defer progress.RemoveProgress(downloadProgressId)
 	}
 
 	resp, err := jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, tempDirPath, httpClientsDetails, progress, downloadProgressId)
@@ -484,7 +483,9 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 			return resp, nil
 		}
 	}
-
+	if progress != nil {
+		progress.SetProgressState(downloadProgressId, "Merging")
+	}
 	err = mergeChunks(chunksPaths, flags)
 	if errorutils.CheckError(err) != nil {
 		return nil, err
@@ -525,7 +526,7 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 // Otherwise: if an error occurred - returns the error with resp=nil, else - err=nil and the resp of the first chunk that received statusCode!=http.StatusPartialContent
 // The caller is responsible to check the resp.StatusCode.
 func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags ConcurrentDownloadFlags, logMsgPrefix,
-	chunksDownloadPath string, httpClientsDetails httputils.HttpClientDetails, progress ioutils.Progress, progressId int) (*http.Response, error) {
+	chunksDownloadPath string, httpClientsDetails httputils.HttpClientDetails, progress ioutils.ProgressMgr, progressId int) (*http.Response, error) {
 	var wg sync.WaitGroup
 	chunkSize := flags.FileSize / int64(flags.SplitCount)
 	mod := flags.FileSize % int64(flags.SplitCount)
@@ -660,7 +661,7 @@ func extractAndMergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags, 
 }
 
 func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
-	httpClientsDetails httputils.HttpClientDetails, retries int, progress ioutils.Progress, progressId int) (fileName string, resp *http.Response, err error) {
+	httpClientsDetails httputils.HttpClientDetails, retries int, progress ioutils.ProgressMgr, progressId int) (fileName string, resp *http.Response, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      retries,
 		RetriesInterval: 0,
@@ -690,7 +691,7 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 }
 
 func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
-	httpClientsDetails httputils.HttpClientDetails, progress ioutils.Progress, progressId int) (fileName string, resp *http.Response, err error) {
+	httpClientsDetails httputils.HttpClientDetails, progress ioutils.ProgressMgr, progressId int) (fileName string, resp *http.Response, err error) {
 
 	tempFile, err := ioutil.TempFile(chunkDownloadPath, strconv.Itoa(currentSplit)+"_")
 	if errorutils.CheckError(err) != nil {
@@ -721,7 +722,7 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 
 	var reader io.Reader
 	if progress != nil {
-		reader = progress.ReadWithProgress(progressId, resp.Body)
+		reader = progress.GetProgress(progressId).ActionWithProgress(resp.Body)
 	} else {
 		reader = resp.Body
 	}

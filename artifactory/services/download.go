@@ -25,7 +25,7 @@ import (
 
 type DownloadService struct {
 	client       *rthttpclient.ArtifactoryHttpClient
-	Progress     clientio.Progress
+	Progress     clientio.ProgressMgr
 	ArtDetails   auth.ServiceDetails
 	DryRun       bool
 	Threads      int
@@ -110,6 +110,10 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 				log.Error(err)
 				errorsQueue.AddError(err)
 				continue
+			}
+			if ds.Progress != nil {
+				total, _ := reader.Length()
+				ds.Progress.IncGeneralProgressTotalBy(int64(total))
 			}
 			// Produce download tasks for the download consumers.
 			totalTasks += produceTasks(reader, downloadParams, producer, fileHandlerFunc, errorsQueue)

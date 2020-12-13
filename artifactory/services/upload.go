@@ -26,7 +26,7 @@ import (
 
 type UploadService struct {
 	client       *rthttpclient.ArtifactoryHttpClient
-	Progress     ioutils.Progress
+	Progress     ioutils.ProgressMgr
 	ArtDetails   auth.ServiceDetails
 	DryRun       bool
 	Threads      int
@@ -58,11 +58,11 @@ func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (totalUploade
 	uploadSummary := *utils.NewResult(us.Threads)
 	producerConsumer := parallel.NewRunner(us.Threads, 100, false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
-	us.prepareUploadTasks(producerConsumer, errorsQueue, uploadSummary, uploadParams...)
+	us.prepareUploadTasks(producerConsumer, us.Progress, errorsQueue, uploadSummary, uploadParams...)
 	return us.performUploadTasks(producerConsumer, &uploadSummary, errorsQueue)
 }
 
-func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, uploadSummary utils.Result, uploadParamsSlice ...UploadParams) {
+func (us *UploadService) prepareUploadTasks(producer parallel.Runner, progressMgr ioutils.ProgressMgr, errorsQueue *clientutils.ErrorsQueue, uploadSummary utils.Result, uploadParamsSlice ...UploadParams) {
 	go func() {
 		defer producer.Done()
 		// Iterate over file-spec groups and produce upload tasks.
@@ -70,7 +70,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		vcsCache := clientutils.NewVcsDetals()
 		for _, uploadParams := range uploadParamsSlice {
 			artifactHandlerFunc := us.createArtifactHandlerFunc(&uploadSummary, uploadParams)
-			err := collectFilesForUpload(uploadParams, producer, artifactHandlerFunc, errorsQueue, vcsCache)
+			err := collectFilesForUpload(uploadParams, producer, progressMgr, artifactHandlerFunc, errorsQueue, vcsCache)
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
@@ -133,7 +133,7 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 	return artifactProps, nil
 }
 
-func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *clientutils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
+func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, progressMgr ioutils.ProgressMgr, artifactHandlerFunc artifactContext, errorsQueue *clientutils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
 	if strings.Index(uploadParams.GetTarget(), "/") < 0 {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
@@ -168,15 +168,18 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		}
 		uploadData := UploadData{Artifact: artifact, Props: props, BuildProps: uploadParams.BuildProps}
 		task := artifactHandlerFunc(uploadData)
+		if progressMgr != nil {
+			progressMgr.IncGeneralProgressTotalBy(1)
+		}
 		producer.AddTaskWithError(task, errorsQueue.AddError)
 		return err
 	}
 	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.IsRegexp()))
-	err = collectPatternMatchingFiles(uploadParams, rootPath, producer, artifactHandlerFunc, errorsQueue, vcsCache)
+	err = collectPatternMatchingFiles(uploadParams, rootPath, producer, progressMgr, artifactHandlerFunc, errorsQueue, vcsCache)
 	return err
 }
 
-func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, artifactHandlerFunc artifactContext, errorsQueue *clientutils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
+func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, progressMgr ioutils.ProgressMgr, artifactHandlerFunc artifactContext, errorsQueue *clientutils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
 	if errorutils.CheckError(err) != nil {
@@ -213,6 +216,9 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 			taskData := &uploadTaskData{target: target, path: path, isDir: isDir, isSymlinkFlow: isSymlinkFlow,
 				paths: tempPaths, groups: matches, index: tempIndex, size: len(matches), uploadParams: uploadParams,
 				producer: producer, artifactHandlerFunc: artifactHandlerFunc, errorsQueue: errorsQueue,
+			}
+			if progressMgr != nil {
+				progressMgr.IncGeneralProgressTotalBy(1)
 			}
 			createUploadTask(taskData, vcsCache)
 		}
