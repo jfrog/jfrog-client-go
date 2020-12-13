@@ -96,14 +96,14 @@ func writeRemainCandidate(cw *content.ContentWriter, mergeResult *content.Conten
 	}
 }
 
-func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultWriter *content.ContentWriter) ([]*content.ContentReader, error) {
+func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultWriter *content.ContentWriter, candidateType string) ([]*content.ContentReader, error) {
 	paths := make(map[string]ResultItem)
 	pathsKeys := make([]string, 0, utils.MaxBufferSize)
-	dirsToBeDeleted := []*content.ContentReader{}
+	toBeDeleted := []*content.ContentReader{}
 	for candidate := new(ResultItem); deleteCandidates.NextRecord(candidate) == nil; candidate = new(ResultItem) {
-		// Save all dirs candidate in a diffrent temp file.
-		if candidate.Type == "folder" {
-			if candidate.Name == "." {
+		// Save all candidates, of the requested type, to a different temp file.
+		if candidate.Type == candidateType {
+			if candidateType == "folder" && candidate.Name == "." {
 				continue
 			}
 			pathsKeys = append(pathsKeys, candidate.GetItemRelativePath())
@@ -113,13 +113,13 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 				if err != nil {
 					return nil, err
 				}
-				dirsToBeDeleted = append(dirsToBeDeleted, sortedCandidateDirsFile)
+				toBeDeleted = append(toBeDeleted, sortedCandidateDirsFile)
 				// Init buffer.
 				paths = make(map[string]ResultItem)
 				pathsKeys = make([]string, 0, utils.MaxBufferSize)
 			}
 		} else {
-			// Write none dir results.
+			// Write none results of the requested type.
 			resultWriter.Write(*candidate)
 		}
 	}
@@ -132,7 +132,7 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 		if err != nil {
 			return nil, err
 		}
-		dirsToBeDeleted = append(dirsToBeDeleted, sortedFile)
+		toBeDeleted = append(toBeDeleted, sortedFile)
 	}
-	return dirsToBeDeleted, nil
+	return toBeDeleted, nil
 }

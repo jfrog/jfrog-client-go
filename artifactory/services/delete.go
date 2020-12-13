@@ -199,13 +199,16 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 	if err != nil {
 		return nil, err
 	}
-	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter)
+	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter, "folder")
 	if len(bufferFiles) > 0 {
 		defer func() {
 			for _, file := range bufferFiles {
 				file.Close()
 			}
 		}()
+		if err != nil {
+			return nil, err
+		}
 		artifactNotToBeDeleteReader, err := getSortedArtifactsToNotDelete(specFile, ds)
 		if err != nil {
 			return nil, err
@@ -215,6 +218,9 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 			return nil, err
 		}
 	}
+	if err != nil {
+		return nil, err
+	}
 	if err = resultWriter.Close(); err != nil {
 		return nil, err
 	}
@@ -223,8 +229,22 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 
 func getSortedArtifactsToNotDelete(specFile *utils.ArtifactoryCommonParams, ds *DeleteService) (*content.ContentReader, error) {
 	specFile.Props = specFile.ExcludeProps
-	specFile.SortOrder = "asc"
-	specFile.SortBy = []string{"repo", "path", "name"}
 	specFile.ExcludeProps = ""
-	return utils.SearchBySpecWithPattern(specFile, ds, utils.NONE)
+	tempResults, err := utils.SearchBySpecWithPattern(specFile, ds, utils.NONE)
+	if err != nil {
+		return nil, err
+	}
+	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	// Note that we have to sort the result by ourselves, and not relay on Artifactory's OrderBy, because of 2 main reasons:
+	// 1. Go sorts strings differently from Artifactory's database, when the strings include special chars, such as dashes.
+	// 2. Artifactory sorts by database columns, so directories will be sorted differently than files,
+	//    because the path and name cols have different values.
+	sortedResults, err := utils.FilterCandidateToBeDeleted(tempResults, resultWriter, "file")
+	if err != nil {
+		return nil, err
+	}
+	return utils.MergeSortedFiles(sortedResults, true)
 }
