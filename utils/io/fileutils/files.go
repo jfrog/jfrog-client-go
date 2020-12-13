@@ -534,7 +534,7 @@ func IsEqualToLocalFile(localFilePath, md5, sha1 string) (bool, error) {
 	return localFileDetails.Checksum.Md5 == md5 && localFileDetails.Checksum.Sha1 == sha1, nil
 }
 
-// Copy directory content from one path to another.
+// Move directory content from one path to another.
 func MoveDir(fromPath, toPath string) error {
 	err := CreateDirIfNotExist(toPath)
 	if err != nil {

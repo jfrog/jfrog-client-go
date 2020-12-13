@@ -587,18 +587,11 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
 }
 
 func handleArchive(flags ConcurrentDownloadFlags, logMsgPrefix string) error {
-	isSupportedArchive := fileutils.IsSupportedArchive(flags.FileName)
-	if !isSupportedArchive {
-		log.Debug(logMsgPrefix+"Not an archive:", flags.FileName, "downloading file without extracting it.")
-		return nil
-	}
-
 	extractionPath, err := getExtractionPath(flags.LocalPath)
 	if err != nil {
 		return err
 	}
 
-	log.Info(logMsgPrefix+"Extracting archive:", flags.FileName, "to", extractionPath)
 	err = extractArchive(flags.LocalFileName, flags.LocalPath, extractionPath)
 	if err != nil {
 		return err
