@@ -509,7 +509,7 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 	contentLength := resp.Header.Get("Content-Length")
 	if len(contentLength) > 0 {
 		fileSize, err = strconv.ParseInt(contentLength, 10, 64)
-		if err != nil {
+		if errorutils.CheckError(err) != nil {
 			return nil, nil, err
 		}
 	}
