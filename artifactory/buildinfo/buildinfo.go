@@ -23,10 +23,10 @@ const (
 
 func New() *BuildInfo {
 	return &BuildInfo{
-		Agent:                 &Agent{},
-		BuildAgent:            &Agent{Name: "GENERIC"},
-		Modules:               make([]Module, 0),
-		VersionControlSystems: make([]Vcs, 0),
+		Agent:      &Agent{},
+		BuildAgent: &Agent{Name: "GENERIC"},
+		Modules:    make([]Module, 0),
+		VcsList:    make([]Vcs, 0),
 	}
 }
 
@@ -113,7 +113,7 @@ type BuildInfo struct {
 	BuildUrl                 string   `json:"url,omitempty"`
 	Issues                   *Issues  `json:"issues,omitempty"`
 	ArtifactoryPluginVersion string   `json:"artifactoryPluginVersion,omitempty"`
-	VersionControlSystems    []Vcs    `json:"vcs,omitempty"`
+	VcsList                  []Vcs    `json:"vcs,omitempty"`
 }
 
 // Represents the object returned from Artifactory when getting a build info.
@@ -184,14 +184,14 @@ type Vcs struct {
 type Partials []*Partial
 
 type Partial struct {
-	ModuleType            ModuleType   `json:"Type,omitempty"`
-	Artifacts             []Artifact   `json:"Artifacts,omitempty"`
-	Dependencies          []Dependency `json:"Dependencies,omitempty"`
-	Env                   Env          `json:"Env,omitempty"`
-	Timestamp             int64        `json:"Timestamp,omitempty"`
-	ModuleId              string       `json:"ModuleId,omitempty"`
-	Issues                *Issues      `json:"Issues,omitempty"`
-	VersionControlSystems []Vcs        `json:"vcs,omitempty"`
+	ModuleType   ModuleType   `json:"Type,omitempty"`
+	Artifacts    []Artifact   `json:"Artifacts,omitempty"`
+	Dependencies []Dependency `json:"Dependencies,omitempty"`
+	Env          Env          `json:"Env,omitempty"`
+	Timestamp    int64        `json:"Timestamp,omitempty"`
+	ModuleId     string       `json:"ModuleId,omitempty"`
+	Issues       *Issues      `json:"Issues,omitempty"`
+	VcsList      []Vcs        `json:"vcs,omitempty"`
 	*Checksum
 }
 
