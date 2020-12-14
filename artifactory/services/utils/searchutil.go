@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -29,18 +30,70 @@ const (
 )
 
 // Use this function when searching by build without pattern or aql.
+// Collect build artifacts and build dependencies separately, then merge the results into one reader.
+func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) (*content.ContentReader, error) {
+	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
+	if err != nil {
+		return nil, err
+	}
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Get build artifacts.
+	var artifactsReader *content.ContentReader
+	var artErr error
+	go func() {
+		defer wg.Done()
+		if !specFile.ExcludeArtifacts {
+			artifactsReader, artErr = getBuildArtifactsForBuildSearch(specFile, flags, buildName, buildNumber)
+		}
+	}()
+
+	// Get build dependencies.
+	var dependenciesReader *content.ContentReader
+	var depErr error
+	go func() {
+		defer wg.Done()
+		if specFile.IncludeDeps {
+			dependenciesReader, depErr = getBuildDependenciesForBuildSearch(*specFile, flags, buildName, buildNumber)
+		}
+	}()
+
+	wg.Wait()
+	var readers []*content.ContentReader
+	if artifactsReader != nil {
+		defer artifactsReader.Close()
+		readers = append(readers, artifactsReader)
+	}
+	if dependenciesReader != nil {
+		defer dependenciesReader.Close()
+		readers = append(readers, dependenciesReader)
+	}
+	if artErr != nil {
+		return nil, err
+	}
+	if depErr != nil {
+		return nil, err
+	}
+
+	// Return merged readers.
+	return content.MergeReaders(readers, content.DefaultKey)
+}
+
+func getBuildDependenciesForBuildSearch(specFile ArtifactoryCommonParams, flags CommonConf, buildName, buildNumber string) (*content.ContentReader, error) {
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependencies(buildName, buildNumber)}
+	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
+	return aqlSearch(executionQuery, flags)
+}
+
 // Search with builds returns many results, some are not part of the build and others may be duplicated of the same artifact.
 // 1. Save SHA1 values received for build-name.
 // 2. Remove artifacts that not are present on the sha1 list
 // 3. If we have more than one artifact with the same sha1:
 // 	3.1 Compare the build-name & build-number among all the artifact with the same sha1.
 // This will prevent unnecessary search upon all Artifactory:
-func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) (*content.ContentReader, error) {
-	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
-	if err != nil {
-		return nil, err
-	}
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuild(buildName, buildNumber)}
+func getBuildArtifactsForBuildSearch(specFile *ArtifactoryCommonParams, flags CommonConf, buildName, buildNumber string) (*content.ContentReader, error) {
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifacts(buildName, buildNumber)}
 	executionQuery := BuildQueryFromSpecFile(specFile, ALL)
 	reader, err := aqlSearch(executionQuery, flags)
 	if err != nil {

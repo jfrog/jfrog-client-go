@@ -242,47 +242,73 @@ func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte
 }
 
 func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
-	var aqlSearchErr error
+	var artifactsAqlSearchErr, dependenciesAqlSearchErr error
 	var readerWithProps *content.ContentReader
-	var buildArtifactsSha1 map[string]int
+	buildArtifactsSha1 := make(map[string]int)
+	buildDependenciesSha1 := make(map[string]int)
 	var wg sync.WaitGroup
-	// If 'build-number' is missing in spec file, we fetch the laster from artifactory.
+	wg.Add(2)
+	// If 'build-number' is missing in spec file, we fetch the latest from artifactory.
 	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
 	if err != nil {
 		return nil, err
 	}
 
-	wg.Add(1)
-	// Get Sha1 for artifacts by build name and number
 	go func() {
-		buildArtifactsSha1, aqlSearchErr = fetchBuildArtifactsSha1(buildName, buildNumber, flags)
-		wg.Done()
+		// Get Sha1 for artifacts.
+		defer wg.Done()
+		if !specFile.ExcludeArtifacts {
+			buildArtifactsSha1, artifactsAqlSearchErr = fetchBuildArtifactsOrDependenciesSha1(buildName, buildNumber, flags, true)
+		}
 	}()
 
-	if !itemsAlreadyContainProperties {
-		// Add properties to the previously found artifacts (in case properties haven't already fetched from Artifactory)
-		readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
-		if err != nil {
-			return nil, err
+	go func() {
+		// Get Sha1 for dependencies.
+		defer wg.Done()
+		if specFile.IncludeDeps {
+			buildDependenciesSha1, dependenciesAqlSearchErr = fetchBuildArtifactsOrDependenciesSha1(buildName, buildNumber, flags, false)
 		}
-		defer readerWithProps.Close()
-		tempReader, err := loadMissingProperties(reader, readerWithProps)
-		if err != nil {
-			return nil, err
-		}
-		defer tempReader.Close()
+	}()
+
+	if specFile.ExcludeArtifacts || itemsAlreadyContainProperties {
+		// No need to add properties to the search results.
 		wg.Wait()
-		if aqlSearchErr != nil {
-			return nil, aqlSearchErr
+		for k, v := range buildDependenciesSha1 {
+			buildArtifactsSha1[k] = v
 		}
-		return filterBuildAqlSearchResults(tempReader, buildArtifactsSha1, buildName, buildNumber)
+		if artifactsAqlSearchErr != nil {
+			return nil, artifactsAqlSearchErr
+		}
+		if dependenciesAqlSearchErr != nil {
+			return nil, dependenciesAqlSearchErr
+		}
+		return filterBuildAqlSearchResults(reader, buildArtifactsSha1, buildName, buildNumber)
 	}
 
-	wg.Wait()
-	if aqlSearchErr != nil {
-		return nil, aqlSearchErr
+	// Add properties to the previously found artifacts.
+	readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
+	if err != nil {
+		return nil, err
 	}
-	return filterBuildAqlSearchResults(reader, buildArtifactsSha1, buildName, buildNumber)
+	defer readerWithProps.Close()
+	tempReader, err := loadMissingProperties(reader, readerWithProps)
+	if err != nil {
+		return nil, err
+	}
+	defer tempReader.Close()
+
+	wg.Wait()
+	// Merge artifacts and dependencies Sha1 maps.
+	for k, v := range buildDependenciesSha1 {
+		buildArtifactsSha1[k] = v
+	}
+	if artifactsAqlSearchErr != nil {
+		return nil, artifactsAqlSearchErr
+	}
+	if dependenciesAqlSearchErr != nil {
+		return nil, dependenciesAqlSearchErr
+	}
+	return filterBuildAqlSearchResults(tempReader, buildArtifactsSha1, buildName, buildNumber)
 }
 
 // Load all properties to the sorted result items. Save the new result items to a file.
@@ -351,10 +377,10 @@ func updateProps(readerWithProps *content.ContentReader, resultWriter *content.C
 	return nil
 }
 
-// Run AQL to retrieve all artifacts associated with a specific build.
-// Return a map of the artifacts SHA1.
-func fetchBuildArtifactsSha1(buildName, buildNumber string, flags CommonConf) (map[string]int, error) {
-	buildQuery := createAqlQueryForBuild(buildName, buildNumber, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}))
+// Run AQL to retrieve artifacts or dependencies which are associated with a specific build.
+// Return a map of the items' SHA1.
+func fetchBuildArtifactsOrDependenciesSha1(buildName, buildNumber string, flags CommonConf, artifacts bool) (map[string]int, error) {
+	buildQuery := createAqlQueryForBuild(buildName, buildNumber, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}), artifacts)
 	reader, err := aqlSearch(buildQuery, flags)
 	if err != nil {
 		return nil, err
