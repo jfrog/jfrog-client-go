@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -560,7 +559,7 @@ func MoveDir(fromPath, toPath string) error {
 			}
 			continue
 		}
-		err = os.Rename(v, path.Join(toPath, path.Base(v)))
+		err = os.Rename(v, filepath.Join(toPath, filepath.Base(v)))
 		if err != nil {
 			return err
 		}
