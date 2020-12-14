@@ -237,8 +237,7 @@ func SortContentReader(readerRecord SortableContentItem, reader *ContentReader, 
 func splitReaderToSortedBufferSizeReaders(readerRecord SortableContentItem, reader *ContentReader, ascendingOrder bool) ([]*ContentReader, error) {
 	splitReaders := []*ContentReader{}
 	// Get the expected record type from the reader.
-	recordValue := reflect.ValueOf(readerRecord)
-	recordType := recordValue.Type()
+	recordType := reflect.ValueOf(readerRecord).Type()
 
 	// Split and sort.
 	keysToContentItems := make(map[string]SortableContentItem)

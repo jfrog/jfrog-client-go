@@ -296,8 +296,7 @@ func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *conte
 	defer writer.Close()
 
 	// Get the expected record type from the reader.
-	recordValue := reflect.ValueOf(readerRecord)
-	recordType := recordValue.Type()
+	recordType := reflect.ValueOf(readerRecord).Type()
 
 	var temp string
 	for newRecord := (reflect.New(recordType)).Interface(); reader.NextRecord(newRecord) == nil; newRecord = (reflect.New(recordType)).Interface() {
@@ -335,8 +334,7 @@ func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.
 	defer writer.Close()
 
 	// Get the expected record type from the reader.
-	recordValue := reflect.ValueOf(readerRecord)
-	recordType := recordValue.Type()
+	recordType := reflect.ValueOf(readerRecord).Type()
 
 	var prevFolder string
 	for newRecord := (reflect.New(recordType)).Interface(); reader.NextRecord(newRecord) == nil; newRecord = (reflect.New(recordType)).Interface() {

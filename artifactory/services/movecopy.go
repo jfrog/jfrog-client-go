@@ -60,33 +60,34 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	}()
 	for i, moveSpec := range moveSpecs {
 		// Create reader for each spec.
-		moveReader, err := mc.getPathsToMove(moveSpec)
+		var moveReader *content.ContentReader
+		moveReader, err = mc.getPathsToMove(moveSpec)
 		if err != nil {
-			return 0, 0, err
+			return
 		}
 		moveReaders = append(moveReaders, &ReaderSpecTuple{moveReader, i})
 	}
 
-	tempAggregatedReader, err := mergeReaders(moveReaders, content.DefaultKey)
+	var tempAggregatedReader *content.ContentReader
+	tempAggregatedReader, err = mergeReaders(moveReaders, content.DefaultKey)
 	if err != nil {
-		return 0, 0, err
+		return
 	}
 	defer tempAggregatedReader.Close()
 
 	aggregatedReader := tempAggregatedReader
 	if mc.moveType == MOVE {
 		// If move command, reduce top dir chain results.
-		defer tempAggregatedReader.Close()
 		aggregatedReader, err = reduceMovePaths(MoveResultItem{}, tempAggregatedReader, false)
 		if err != nil {
-			return 0, 0, err
+			return
 		}
 	}
 
 	defer aggregatedReader.Close()
-	successCount, failedCount, err = mc.parallelMoveFiles(aggregatedReader, moveSpecs)
+	successCount, failedCount, err = mc.moveFiles(aggregatedReader, moveSpecs)
 	if err != nil {
-		return 0, 0, err
+		return
 	}
 
 	log.Debug(moveMsgs[mc.moveType].MovedMsg, strconv.Itoa(successCount), "artifacts.")
@@ -134,7 +135,7 @@ func reduceMovePaths(readerItem utils.SearchBasedContentItem, cr *content.Conten
 	return utils.ReduceTopChainDirResult(readerItem, cr)
 }
 
-func (mc *MoveCopyService) parallelMoveFiles(reader *content.ContentReader, params []MoveCopyParams) (successCount, failedCount int, err error) {
+func (mc *MoveCopyService) moveFiles(reader *content.ContentReader, params []MoveCopyParams) (successCount, failedCount int, err error) {
 	promptMoveCopyMessage(reader, mc.moveType)
 	producerConsumer := parallel.NewBounedRunner(mc.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
@@ -142,7 +143,7 @@ func (mc *MoveCopyService) parallelMoveFiles(reader *content.ContentReader, para
 	go func() {
 		defer producerConsumer.Done()
 		for resultItem := new(MoveResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(MoveResultItem) {
-			fileMoveCopyHandlerFunc := mc.createFileMoveCopyHandlerFunc(&result)
+			fileMoveCopyHandlerFunc := mc.createMoveCopyFileHandlerFunc(&result)
 			producerConsumer.AddTaskWithError(fileMoveCopyHandlerFunc(resultItem.ResultItem, &params[resultItem.FileSpecId]),
 				errorsQueue.AddError)
 		}
@@ -163,7 +164,7 @@ func (mc *MoveCopyService) performTasks(consumer parallel.Runner, errorsQueue *c
 
 type fileMoveCopyHandlerFunc func(utils.ResultItem, *MoveCopyParams) parallel.TaskFunc
 
-func (mc *MoveCopyService) createFileMoveCopyHandlerFunc(result *utils.Result) fileMoveCopyHandlerFunc {
+func (mc *MoveCopyService) createMoveCopyFileHandlerFunc(result *utils.Result) fileMoveCopyHandlerFunc {
 	return func(resultItem utils.ResultItem, params *MoveCopyParams) parallel.TaskFunc {
 		return func(threadId int) error {
 			result.TotalCount[threadId]++
@@ -184,7 +185,7 @@ func (mc *MoveCopyService) createFileMoveCopyHandlerFunc(result *utils.Result) f
 			}
 
 			// Perform move/copy.
-			success, err := mc.moveFile(resultItem.GetItemRelativePath(), destFile, logMsgPrefix)
+			success, err := mc.moveOrCopyFile(resultItem.GetItemRelativePath(), destFile, logMsgPrefix)
 			if err != nil {
 				log.Error(err)
 				return err
@@ -220,7 +221,7 @@ func getDestinationPath(specTarget, specPattern, sourceItemPath, sourceItemRelat
 	return destFile, nil
 }
 
-func (mc *MoveCopyService) moveFile(sourcePath, destPath, logMsgPrefix string) (bool, error) {
+func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix string) (bool, error) {
 	message := moveMsgs[mc.moveType].MovingMsg + " artifact: " + sourcePath + " to: " + destPath
 	moveUrl := mc.GetArtifactoryDetails().GetUrl()
 	restApi := path.Join("api", string(mc.moveType), sourcePath)
@@ -280,7 +281,7 @@ func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string
 	return resp.StatusCode == http.StatusOK, nil
 }
 
-// Receive multiple 'ReaderSpecTuple' items and merge them into a single 'ContentReader' of 'MoveResultItem'.
+// Receives multiple 'ReaderSpecTuple' items and merge them into a single 'ContentReader' of 'MoveResultItem'.
 // Each item in the reader, keeps the index of its corresponding MoveSpec.
 func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (*content.ContentReader, error) {
 	cw, err := content.NewContentWriter(arrayKey, true, false)
