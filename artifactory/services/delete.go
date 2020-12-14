@@ -246,5 +246,5 @@ func getSortedArtifactsToNotDelete(specFile *utils.ArtifactoryCommonParams, ds *
 	if err != nil {
 		return nil, err
 	}
-	return content.MergeSortedReaders(&utils.ResultItem{}, sortedResults, true)
+	return content.MergeSortedReaders(utils.ResultItem{}, sortedResults, true)
 }
