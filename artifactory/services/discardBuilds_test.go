@@ -9,9 +9,9 @@ import (
 
 func TestCalculateMinimumBuildDate(t *testing.T) {
 
-	time1, _ := time.Parse(buildinfo.TimeLayout, "2018-05-07T17:34:49.729+0300")
-	time2, _ := time.Parse(buildinfo.TimeLayout, "2018-05-07T17:34:49.729+0300")
-	time3, _ := time.Parse(buildinfo.TimeLayout, "2018-05-07T17:34:49.729+0300")
+	time1, _ := time.Parse(buildinfo.TimeFormat, "2018-05-07T17:34:49.729+0300")
+	time2, _ := time.Parse(buildinfo.TimeFormat, "2018-05-07T17:34:49.729+0300")
+	time3, _ := time.Parse(buildinfo.TimeFormat, "2018-05-07T17:34:49.729+0300")
 
 	tests := []struct {
 		testName      string

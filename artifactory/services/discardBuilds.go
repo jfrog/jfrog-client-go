@@ -88,7 +88,7 @@ func calculateMinimumBuildDate(startingDate time.Time, maxDaysString string) (st
 	}
 
 	minimumBuildDate := startingDate.Add(-24 * time.Hour * (time.Duration(maxDays)))
-	minimumBuildDateString := minimumBuildDate.Format(buildinfo.TimeLayout)
+	minimumBuildDateString := minimumBuildDate.Format(buildinfo.TimeFormat)
 
 	return minimumBuildDateString, nil
 }
