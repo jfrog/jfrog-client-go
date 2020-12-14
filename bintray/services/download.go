@@ -170,7 +170,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 	httpClientsDetails := ds.BintrayDetails.CreateHttpClientDetails()
 	details, resp, err := client.GetRemoteFileDetails(url, httpClientsDetails)
 	if err != nil {
-		return errorutils.CheckError(errors.New("Bintray " + err.Error()))
+		return err
 	}
 	err = errorutils.CheckResponseStatus(resp, http.StatusOK)
 	if errorutils.CheckError(err) != nil {

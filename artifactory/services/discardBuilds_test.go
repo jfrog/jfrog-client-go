@@ -3,14 +3,15 @@ package services
 import (
 	"testing"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 )
 
 func TestCalculateMinimumBuildDate(t *testing.T) {
 
-	layout := "2006-01-02T15:04:05.000-0700"
-	time1, _ := time.Parse(layout, "2018-05-07T17:34:49.729+0300")
-	time2, _ := time.Parse(layout, "2018-05-07T17:34:49.729+0300")
-	time3, _ := time.Parse(layout, "2018-05-07T17:34:49.729+0300")
+	time1, _ := time.Parse(buildinfo.TimeFormat, "2018-05-07T17:34:49.729+0300")
+	time2, _ := time.Parse(buildinfo.TimeFormat, "2018-05-07T17:34:49.729+0300")
+	time3, _ := time.Parse(buildinfo.TimeFormat, "2018-05-07T17:34:49.729+0300")
 
 	tests := []struct {
 		testName      string

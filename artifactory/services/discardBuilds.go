@@ -3,17 +3,19 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+	"path"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"path"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type DiscardBuildsService struct {
@@ -86,7 +88,7 @@ func calculateMinimumBuildDate(startingDate time.Time, maxDaysString string) (st
 	}
 
 	minimumBuildDate := startingDate.Add(-24 * time.Hour * (time.Duration(maxDays)))
-	minimumBuildDateString := minimumBuildDate.Format("2006-01-02T15:04:05.000-0700")
+	minimumBuildDateString := minimumBuildDate.Format(buildinfo.TimeFormat)
 
 	return minimumBuildDateString, nil
 }
