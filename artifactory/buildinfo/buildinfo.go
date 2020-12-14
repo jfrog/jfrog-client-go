@@ -26,7 +26,7 @@ func New() *BuildInfo {
 		Agent:      &Agent{},
 		BuildAgent: &Agent{Name: "GENERIC"},
 		Modules:    make([]Module, 0),
-		Vcs:        &Vcs{},
+		VcsList:    make([]Vcs, 0),
 	}
 }
 
@@ -113,7 +113,7 @@ type BuildInfo struct {
 	BuildUrl                 string   `json:"url,omitempty"`
 	Issues                   *Issues  `json:"issues,omitempty"`
 	ArtifactoryPluginVersion string   `json:"artifactoryPluginVersion,omitempty"`
-	*Vcs
+	VcsList                  []Vcs    `json:"vcs,omitempty"`
 }
 
 // Represents the object returned from Artifactory when getting a build info.
@@ -177,8 +177,8 @@ type Checksum struct {
 type Env map[string]string
 
 type Vcs struct {
-	Url      string `json:"vcsUrl,omitempty"`
-	Revision string `json:"vcsRevision,omitempty"`
+	Url      string `json:"url,omitempty"`
+	Revision string `json:"revision,omitempty"`
 }
 
 type Partials []*Partial
@@ -191,7 +191,7 @@ type Partial struct {
 	Timestamp    int64        `json:"Timestamp,omitempty"`
 	ModuleId     string       `json:"ModuleId,omitempty"`
 	Issues       *Issues      `json:"Issues,omitempty"`
-	*Vcs
+	VcsList      []Vcs        `json:"vcs,omitempty"`
 	*Checksum
 }
 
