@@ -262,18 +262,20 @@ func (sm *ArtifactoryServicesManagerImp) UploadFilesWithResultReader(params ...s
 	return
 }
 
-func (sm *ArtifactoryServicesManagerImp) Copy(params services.MoveCopyParams) (successCount, failedCount int, err error) {
+func (sm *ArtifactoryServicesManagerImp) Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {
 	copyService := services.NewMoveCopyService(sm.client, services.COPY)
 	copyService.DryRun = sm.config.IsDryRun()
 	copyService.ArtDetails = sm.config.GetServiceDetails()
-	return copyService.MoveCopyServiceMoveFilesWrapper(params)
+	copyService.Threads = sm.config.GetThreads()
+	return copyService.MoveCopyServiceMoveFilesWrapper(params...)
 }
 
-func (sm *ArtifactoryServicesManagerImp) Move(params services.MoveCopyParams) (successCount, failedCount int, err error) {
+func (sm *ArtifactoryServicesManagerImp) Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {
 	moveService := services.NewMoveCopyService(sm.client, services.MOVE)
 	moveService.DryRun = sm.config.IsDryRun()
 	moveService.ArtDetails = sm.config.GetServiceDetails()
-	return moveService.MoveCopyServiceMoveFilesWrapper(params)
+	moveService.Threads = sm.config.GetThreads()
+	return moveService.MoveCopyServiceMoveFilesWrapper(params...)
 }
 
 func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) error {

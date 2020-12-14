@@ -1,7 +1,9 @@
 package content
 
 import (
+	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -109,4 +111,43 @@ func TestLengthCount(t *testing.T) {
 	len, err = reader.Length()
 	assert.NoError(t, err)
 	assert.Equal(t, len, 2)
+}
+
+func TestMergeIncreasingSortedFiles(t *testing.T) {
+	testDataPath := getTestDataPath()
+	var sortedFiles []*ContentReader
+	for i := 1; i <= 3; i++ {
+		sortedFiles = append(sortedFiles, NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("buffer_file_ascending_order_%v.json", i)), DefaultKey))
+	}
+	resultReader, err := MergeSortedReaders(ReaderTestItem{}, sortedFiles, true)
+	assert.NoError(t, err)
+	isMatch, err := fileutils.FilesIdentical(resultReader.GetFilePath(), filepath.Join(testDataPath, "merged_buffer_ascending_order.json"))
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, resultReader.Close())
+}
+
+func TestMergeDecreasingSortedFiles(t *testing.T) {
+	testDataPath := getTestDataPath()
+	var sortedFiles []*ContentReader
+	for i := 1; i <= 3; i++ {
+		sortedFiles = append(sortedFiles, NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("buffer_file_descending_order_%v.json", i)), DefaultKey))
+	}
+	resultReader, err := MergeSortedReaders(ReaderTestItem{}, sortedFiles, false)
+	assert.NoError(t, err)
+	isMatch, err := fileutils.FilesIdentical(resultReader.GetFilePath(), filepath.Join(testDataPath, "merged_buffer_descending_order.json"))
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, resultReader.Close())
+}
+
+type ReaderTestItem struct {
+	Repo string `json:"repo,omitempty"`
+	Path string `json:"path,omitempty"`
+	Name string `json:"name,omitempty"`
+	Type string `json:"type,omitempty"`
+}
+
+func (rti ReaderTestItem) GetSortKey() string {
+	return path.Join(rti.Repo, rti.Path, rti.Name)
 }

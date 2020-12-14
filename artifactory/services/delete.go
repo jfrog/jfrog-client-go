@@ -76,7 +76,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 			toBeDeletedDirs = tempResultItems
 		}
 		defer toBeDeletedDirs.Close()
-		resultItems, err = utils.ReduceTopChainDirResult(toBeDeletedDirs)
+		resultItems, err = utils.ReduceTopChainDirResult(utils.ResultItem{}, toBeDeletedDirs)
 		if err != nil {
 			return
 		}
@@ -246,5 +246,5 @@ func getSortedArtifactsToNotDelete(specFile *utils.ArtifactoryCommonParams, ds *
 	if err != nil {
 		return nil, err
 	}
-	return utils.MergeSortedFiles(sortedResults, true)
+	return content.MergeSortedReaders(utils.ResultItem{}, sortedResults, true)
 }

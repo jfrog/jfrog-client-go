@@ -6,6 +6,8 @@ import (
 	"errors"
 	"io"
 	"os"
+	"reflect"
+	"sort"
 	"sync"
 
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -206,4 +208,150 @@ func MergeReaders(arr []*ContentReader, arrayKey string) (*ContentReader, error)
 		}
 	}
 	return NewContentReader(cw.GetFilePath(), arrayKey), nil
+}
+
+// Sort a content-reader in the required order (ascending or descending).
+// Performs a merge-sort on the reader, splitting the reader to multiple readers of size 'utils.MaxBufferSize'.
+// Sort each of the split readers, and merge them into a single sorted reader.
+func SortContentReader(readerRecord SortableContentItem, reader *ContentReader, ascendingOrder bool) (*ContentReader, error) {
+	var sortedReaders []*ContentReader
+	defer func() {
+		for _, r := range sortedReaders {
+			r.Close()
+		}
+	}()
+
+	// Split reader to multiple sorted readers of size 'utils.MaxBufferSize'.
+	var err error
+	sortedReaders, err = splitReaderToSortedBufferSizeReaders(readerRecord, reader, ascendingOrder)
+	if err != nil {
+		return nil, err
+	}
+
+	// Merge the sorted readers.
+	return MergeSortedReaders(readerRecord, sortedReaders, ascendingOrder)
+}
+
+// Split the reader to multiple readers of size 'utils.MaxBufferSize' to prevent memory overflow.
+// Sort each split-reader content according to the provided 'ascendingOrder'.
+func splitReaderToSortedBufferSizeReaders(readerRecord SortableContentItem, reader *ContentReader, ascendingOrder bool) ([]*ContentReader, error) {
+	splitReaders := []*ContentReader{}
+	// Get the expected record type from the reader.
+	recordType := reflect.ValueOf(readerRecord).Type()
+
+	// Split and sort.
+	keysToContentItems := make(map[string]SortableContentItem)
+	allKeys := make([]string, 0, utils.MaxBufferSize)
+	for newRecord := (reflect.New(recordType)).Interface(); reader.NextRecord(newRecord) == nil; newRecord = (reflect.New(recordType)).Interface() {
+		// Expect to receive 'SortableContentItem' which is sortable by its sort-key.
+		contentItem, ok := newRecord.(SortableContentItem)
+		if !ok {
+			return nil, errorutils.CheckError(errors.New("Attempting to sort a content-reader with unsortable items."))
+		}
+		sortKey := contentItem.GetSortKey()
+
+		keysToContentItems[sortKey] = contentItem
+		allKeys = append(allKeys, sortKey)
+		if len(allKeys) == utils.MaxBufferSize {
+			sortedFile, err := SortAndSaveBufferToFile(keysToContentItems, allKeys, ascendingOrder)
+			if err != nil {
+				return nil, err
+			}
+			splitReaders = append(splitReaders, sortedFile)
+			keysToContentItems = make(map[string]SortableContentItem)
+			allKeys = make([]string, 0, utils.MaxBufferSize)
+		}
+	}
+	if err := reader.GetError(); err != nil {
+		return nil, err
+	}
+	reader.Reset()
+	if len(allKeys) > 0 {
+		sortedFile, err := SortAndSaveBufferToFile(keysToContentItems, allKeys, ascendingOrder)
+		if err != nil {
+			return nil, err
+		}
+		splitReaders = append(splitReaders, sortedFile)
+	}
+
+	return splitReaders, nil
+}
+
+// Merge a slice of sorted content-readers into a single sorted content-reader.
+func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*ContentReader, ascendingOrder bool) (*ContentReader, error) {
+	if len(sortedReaders) == 0 {
+		return NewEmptyContentReader(DefaultKey), nil
+	}
+	resultWriter, err := NewContentWriter(DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	defer resultWriter.Close()
+
+	// Get the expected record type from the reader.
+	value := reflect.ValueOf(readerRecord)
+	valueType := value.Type()
+
+	currentContentItem := make([]*SortableContentItem, len(sortedReaders))
+	sortedFilesClone := make([]*ContentReader, len(sortedReaders))
+	copy(sortedFilesClone, sortedReaders)
+
+	for {
+		var candidateToWrite *SortableContentItem
+		smallestIndex := 0
+		for i := 0; i < len(sortedFilesClone); i++ {
+			if currentContentItem[i] == nil && sortedFilesClone[i] != nil {
+				temp := (reflect.New(valueType)).Interface()
+				if err := sortedFilesClone[i].NextRecord(temp); nil != err {
+					sortedFilesClone[i] = nil
+					continue
+				}
+				// Expect to receive 'SortableContentItem'.
+				contentItem, ok := (temp).(SortableContentItem)
+				if !ok {
+					return nil, errorutils.CheckError(errors.New("Attempting to sort a content-reader with unsortable items."))
+				}
+				currentContentItem[i] = &contentItem
+			}
+
+			if candidateToWrite == nil || (currentContentItem[i] != nil && compareStrings((*candidateToWrite).GetSortKey(),
+				(*currentContentItem[i]).GetSortKey(), ascendingOrder)) {
+				candidateToWrite = currentContentItem[i]
+				smallestIndex = i
+			}
+		}
+		if candidateToWrite == nil {
+			break
+		}
+		resultWriter.Write(*candidateToWrite)
+		currentContentItem[smallestIndex] = nil
+	}
+	return NewContentReader(resultWriter.GetFilePath(), resultWriter.GetArrayKey()), nil
+}
+
+func compareStrings(src, against string, ascendingOrder bool) bool {
+	if ascendingOrder {
+		return src > against
+	}
+	return src < against
+}
+
+func SortAndSaveBufferToFile(keysToContentItems map[string]SortableContentItem, allKeys []string, increasingOrder bool) (*ContentReader, error) {
+	if len(allKeys) == 0 {
+		return nil, nil
+	}
+	writer, err := NewContentWriter(DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	defer writer.Close()
+	if increasingOrder {
+		sort.Strings(allKeys)
+	} else {
+		sort.Sort(sort.Reverse(sort.StringSlice(allKeys)))
+	}
+	for _, v := range allKeys {
+		writer.Write(keysToContentItems[v])
+	}
+	return NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
 }
