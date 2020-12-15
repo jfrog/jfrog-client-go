@@ -7,7 +7,7 @@ import (
 type ModuleType string
 
 const (
-	TimeFormat = "2006-01-02T15:04:05.999Z0700"
+	TimeFormat = "2006-01-02T15:04:05.000-0700"
 
 	// Build type
 	Build ModuleType = "build"
