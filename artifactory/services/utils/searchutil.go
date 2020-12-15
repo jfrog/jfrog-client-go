@@ -115,7 +115,7 @@ func filterBuildArtifactsAndDependencies(reader *content.ContentReader, specFile
 	}
 
 	// Artifacts' properties weren't fetched in previous aql, fetch now and add to results.
-	readerWithProps, err := searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
+	readerWithProps, err := searchProps(createAqlBodyForBuildArtifacts(buildName, buildNumber), "build.name", buildName, flags)
 	if err != nil {
 		return nil, err
 	}
