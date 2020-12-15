@@ -56,7 +56,7 @@ func (us *UploadService) SetDryRun(isDryRun bool) {
 func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (totalUploaded, totalFailed int, err error) {
 	// Uploading threads are using this struct to report upload results.
 	uploadSummary := *utils.NewResult(us.Threads)
-	producerConsumer := parallel.NewRunner(us.Threads, 100, false)
+	producerConsumer := parallel.NewRunner(us.Threads, 20000, false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	us.prepareUploadTasks(producerConsumer, us.Progress, errorsQueue, uploadSummary, uploadParams...)
 	return us.performUploadTasks(producerConsumer, &uploadSummary, errorsQueue)
