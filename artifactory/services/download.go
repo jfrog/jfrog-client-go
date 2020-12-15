@@ -68,7 +68,7 @@ func (ds *DownloadService) SetDryRun(isDryRun bool) {
 }
 
 func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (int, int, error) {
-	producerConsumer := parallel.NewBounedRunner(ds.GetThreads(), false)
+	producerConsumer := parallel.NewRunner(ds.GetThreads(), 20000, false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	expectedChan := make(chan int, 1)
 	successCounters := make([]int, ds.GetThreads())
