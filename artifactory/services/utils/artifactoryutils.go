@@ -468,6 +468,8 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 		for resultItem := new(ResultItem); temp.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 			if buildArtifactsSha[resultItem.Actual_Sha1] == priorityLevel {
 				resultCw.Write(*resultItem)
+				// Remove item from map to avoid duplicates.
+				delete(buildArtifactsSha, resultItem.Actual_Sha1)
 			}
 		}
 		if err = temp.GetError(); err != nil {

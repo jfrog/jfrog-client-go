@@ -45,7 +45,7 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	go func() {
 		defer wg.Done()
 		if !specFile.ExcludeArtifacts {
-			artifactsReader, artErr = getBuildArtifactsForBuildSearch(specFile, flags, buildName, buildNumber)
+			artifactsReader, artErr = getBuildArtifactsForBuildSearch(*specFile, flags, buildName, buildNumber)
 		}
 	}()
 
@@ -60,14 +60,11 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	}()
 
 	wg.Wait()
-	var readers []*content.ContentReader
 	if artifactsReader != nil {
 		defer artifactsReader.Close()
-		readers = append(readers, artifactsReader)
 	}
 	if dependenciesReader != nil {
 		defer dependenciesReader.Close()
-		readers = append(readers, dependenciesReader)
 	}
 	if artErr != nil {
 		return nil, err
@@ -76,8 +73,7 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 		return nil, err
 	}
 
-	// Return merged readers.
-	return content.MergeReaders(readers, content.DefaultKey)
+	return filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, buildName, buildNumber)
 }
 
 func getBuildDependenciesForBuildSearch(specFile ArtifactoryCommonParams, flags CommonConf, buildName, buildNumber string) (*content.ContentReader, error) {
@@ -86,38 +82,63 @@ func getBuildDependenciesForBuildSearch(specFile ArtifactoryCommonParams, flags 
 	return aqlSearch(executionQuery, flags)
 }
 
-// Search with builds returns many results, some are not part of the build and others may be duplicated of the same artifact.
+func getBuildArtifactsForBuildSearch(specFile ArtifactoryCommonParams, flags CommonConf, buildName, buildNumber string) (*content.ContentReader, error) {
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifacts(buildName, buildNumber)}
+	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
+	return aqlSearch(executionQuery, flags)
+}
+
+// Search with builds may return duplicated items, as the search is performed by checksums.
+// Some are not part of the build and others may be duplicated of the same artifact.
 // 1. Save SHA1 values received for build-name.
 // 2. Remove artifacts that not are present on the sha1 list
 // 3. If we have more than one artifact with the same sha1:
 // 	3.1 Compare the build-name & build-number among all the artifact with the same sha1.
 // This will prevent unnecessary search upon all Artifactory:
-func getBuildArtifactsForBuildSearch(specFile *ArtifactoryCommonParams, flags CommonConf, buildName, buildNumber string) (*content.ContentReader, error) {
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifacts(buildName, buildNumber)}
-	executionQuery := BuildQueryFromSpecFile(specFile, ALL)
-	reader, err := aqlSearch(executionQuery, flags)
+func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *ArtifactoryCommonParams, flags CommonConf, buildName, buildNumber string) (*content.ContentReader, error) {
+	if includePropertiesInAqlForSpec(specFile) {
+		// Don't fetch artifacts' properties from Artifactory.
+		mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader)
+		if err != nil {
+			return nil, err
+		}
+		defer mergedReader.Close()
+		buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
+		if err != nil {
+			return nil, err
+		}
+		return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, buildName, buildNumber)
+	}
+
+	// Artifacts' properties weren't fetched in previous aql, fetch now and add to results.
+	readerWithProps, err := searchProps(createAqlBodyForBuildArtifacts(buildName, buildNumber), "build.name", buildName, flags)
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
-
-	// If artifacts' properties weren't fetched in previous aql, fetch now and add to results.
-	if !includePropertiesInAqlForSpec(specFile) {
-		readerWithProps, err := searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
-		if err != nil {
-			return nil, err
-		}
-		defer readerWithProps.Close()
-		readerSortedWithProps, err := loadMissingProperties(reader, readerWithProps)
-		if err != nil {
-			return nil, err
-		}
-		buildArtifactsSha1, err := extractSha1FromAqlResponse(readerSortedWithProps)
-		return filterBuildAqlSearchResults(readerSortedWithProps, buildArtifactsSha1, buildName, buildNumber)
+	defer readerWithProps.Close()
+	artifactsSortedReaderWithProps, err := loadMissingProperties(artifactsReader, readerWithProps)
+	if err != nil {
+		return nil, err
 	}
+	defer artifactsSortedReaderWithProps.Close()
+	mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsSortedReaderWithProps, dependenciesReader)
+	if err != nil {
+		return nil, err
+	}
+	defer mergedReader.Close()
+	buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
+	return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, buildName, buildNumber)
+}
 
-	buildArtifactsSha1, err := extractSha1FromAqlResponse(reader)
-	return filterBuildAqlSearchResults(reader, buildArtifactsSha1, buildName, buildNumber)
+func mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader *content.ContentReader) (*content.ContentReader, error) {
+	var readers []*content.ContentReader
+	if artifactsReader != nil {
+		readers = append(readers, artifactsReader)
+	}
+	if dependenciesReader != nil {
+		readers = append(readers, dependenciesReader)
+	}
+	return content.MergeReaders(readers, content.DefaultKey)
 }
 
 // Perform search by pattern.
