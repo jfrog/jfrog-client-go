@@ -20,21 +20,23 @@ type ArtifactoryCommonParams struct {
 	Aql     Aql
 	Pattern string
 	// Deprecated, use Exclusions instead
-	ExcludePatterns []string
-	Exclusions      []string
-	Target          string
-	Props           string
-	ExcludeProps    string
-	SortOrder       string
-	SortBy          []string
-	Offset          int
-	Limit           int
-	Build           string
-	Bundle          string
-	Recursive       bool
-	IncludeDirs     bool
-	Regexp          bool
-	ArchiveEntries  string
+	ExcludePatterns  []string
+	Exclusions       []string
+	Target           string
+	Props            string
+	ExcludeProps     string
+	SortOrder        string
+	SortBy           []string
+	Offset           int
+	Limit            int
+	Build            string
+	ExcludeArtifacts bool
+	IncludeDeps      bool
+	Bundle           string
+	Recursive        bool
+	IncludeDirs      bool
+	Regexp           bool
+	ArchiveEntries   string
 }
 
 type FileGetter interface {
