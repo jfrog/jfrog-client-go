@@ -323,7 +323,13 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 
 	// Extract archive.
 	if isExplode && fileutils.IsSupportedArchive(downloadFileDetails.FileName) {
-		err = extractArchive(downloadFileDetails.LocalFileName, downloadFileDetails.LocalPath, logMsgPrefix)
+		var extractionPath string
+		extractionPath, err = getExtractionPath(downloadFileDetails.LocalPath)
+		if err != nil {
+			return
+		}
+		archivePath := filepath.Join(extractionPath, downloadFileDetails.LocalFileName)
+		err = extractArchive(archivePath, extractionPath, logMsgPrefix)
 	}
 
 	return
@@ -370,21 +376,22 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 	return errorutils.CheckError(err)
 }
 
-func extractArchive(localFileName, localPath, logMsgPrefix string) error {
-	fileName, err := fileutils.CreateFilePath(localPath, localFileName)
-	if err != nil {
-		return err
-	}
-	log.Info(logMsgPrefix+"Extracting archive:", fileName, "to", localPath)
-	absLocalPath, err := filepath.Abs(localPath)
+func extractArchive(localFilePath, extractionPath, logMsgPrefix string) error {
+	err := os.MkdirAll(extractionPath, 0777)
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	err = fileutils.Unarchive(fileName, absLocalPath)
+
+	log.Info(logMsgPrefix+"Extracting archive:", localFilePath, "to", extractionPath)
+	localFilePath, err = filepath.Abs(localFilePath)
+	if errorutils.CheckError(err) != nil {
+		return err
+	}
+	err = fileutils.Unarchive(localFilePath, extractionPath)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckError(os.Remove(fileName))
+	return errorutils.CheckError(os.Remove(localFilePath))
 }
 
 func getExtractionPath(localPath string) (string, error) {
@@ -592,7 +599,12 @@ func handleArchive(flags ConcurrentDownloadFlags, logMsgPrefix string) error {
 		return err
 	}
 
-	err = extractArchive(flags.LocalFileName, flags.LocalPath, extractionPath)
+	archivePath, err := filepath.Abs(flags.LocalFileName)
+	if err != nil {
+		return err
+	}
+
+	err = extractArchive(archivePath, extractionPath, logMsgPrefix)
 	if err != nil {
 		return err
 	}
