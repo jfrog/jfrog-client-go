@@ -322,16 +322,9 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 	}
 
 	// Extract archive.
-	if isExplode && fileutils.IsSupportedArchive(downloadFileDetails.FileName) {
-		var extractionPath string
-		extractionPath, err = getExtractionPath(downloadFileDetails.LocalPath)
-		if err != nil {
-			return
-		}
-		archivePath := filepath.Join(extractionPath, downloadFileDetails.LocalFileName)
-		err = extractArchive(archivePath, extractionPath, logMsgPrefix)
+	if isExplode {
+		err = utils.HandleArchive(downloadFileDetails.LocalPath, downloadFileDetails.LocalFileName, downloadFileDetails.FileName, logMsgPrefix)
 	}
-
 	return
 }
 
@@ -374,35 +367,6 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 	}
 
 	return errorutils.CheckError(err)
-}
-
-func extractArchive(localFilePath, extractionPath, logMsgPrefix string) error {
-	err := os.MkdirAll(extractionPath, 0777)
-	if errorutils.CheckError(err) != nil {
-		return err
-	}
-
-	log.Info(logMsgPrefix+"Extracting archive:", localFilePath, "to", extractionPath)
-	localFilePath, err = filepath.Abs(localFilePath)
-	if errorutils.CheckError(err) != nil {
-		return err
-	}
-	err = fileutils.Unarchive(localFilePath, extractionPath)
-	if err != nil {
-		return err
-	}
-	return errorutils.CheckError(os.Remove(localFilePath))
-}
-
-func getExtractionPath(localPath string) (string, error) {
-	// The local path to which the file is going to be extracted,
-	// needs to be absolute.
-	absolutePath, err := filepath.Abs(localPath)
-	if err != nil {
-		return "", errorutils.CheckError(err)
-	}
-	// Add a trailing slash to the local path, since it has to be a directory.
-	return absolutePath + string(os.PathSeparator), nil
 }
 
 // Downloads a file by chunks, concurrently.
@@ -460,9 +424,8 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 		return nil, err
 	}
 
-	if flags.Explode && fileutils.IsSupportedArchive(flags.FileName) {
-		err = handleArchive(flags, logMsgPrefix)
-		if err != nil {
+	if flags.Explode {
+		if err := utils.HandleArchive(flags.LocalPath, flags.LocalFileName, flags.FileName, logMsgPrefix); err != nil {
 			return nil, err
 		}
 	}
@@ -591,25 +554,6 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
 		}
 	}
 	return err
-}
-
-func handleArchive(flags ConcurrentDownloadFlags, logMsgPrefix string) error {
-	extractionPath, err := getExtractionPath(flags.LocalPath)
-	if err != nil {
-		return err
-	}
-
-	archivePath, err := filepath.Abs(flags.LocalFileName)
-	if err != nil {
-		return err
-	}
-
-	err = extractArchive(archivePath, extractionPath, logMsgPrefix)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,

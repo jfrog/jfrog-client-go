@@ -405,30 +405,12 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 	if isEqual {
 		log.Debug(logMsgPrefix, "File already exists locally.")
 		if downloadParams.IsExplode() {
-			e = explodeLocalFile(localPath, localFileName)
+			e = clientutils.HandleArchive(localPath, localFileName, downloadData.Dependency.Name, logMsgPrefix)
 		}
 		return e
 	}
 	downloadFileDetails := createDownloadFileDetails(downloadPath, localPath, localFileName, downloadData)
 	return ds.downloadFile(downloadFileDetails, logMsgPrefix, downloadParams)
-}
-
-func explodeLocalFile(localPath, localFileName string) (err error) {
-	log.Info("Extracting archive:", localFileName, "to", localPath)
-	absolutePath := filepath.Join(localPath, localFileName)
-	err = nil
-
-	// The file is indeed an archive
-	if fileutils.IsSupportedArchive(localFileName) {
-		err := fileutils.Unarchive(absolutePath, localPath)
-		if err != nil {
-			return errorutils.CheckError(err)
-		}
-		// If the file was extracted successfully, remove it from the file system
-		err = os.Remove(absolutePath)
-	}
-
-	return errorutils.CheckError(err)
 }
 
 func createDir(localPath, localFileName, logMsgPrefix string) error {
