@@ -15,7 +15,7 @@ import (
 // originFileName - name of the archive file in Artifactory.
 // logMsgPrefix - prefix log message.
 // Extract an archive file to the 'localPath'.
-func HandleArchive(localPath, localFileName, originFileName, logMsgPrefix string) error {
+func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix string) error {
 	if !fileutils.IsSupportedArchive(originFileName) {
 		return nil
 	}
@@ -45,10 +45,10 @@ func HandleArchive(localPath, localFileName, originFileName, logMsgPrefix string
 		return err
 	}
 	log.Info(logMsgPrefix+"Extracting archive:", archivePath, "to", extractionPath)
-	return extractArchive(archivePath, extractionPath)
+	return extract(archivePath, extractionPath)
 }
 
-func extractArchive(localFilePath, extractionPath string) error {
+func extract(localFilePath, extractionPath string) error {
 	err := fileutils.Unarchive(localFilePath, extractionPath)
 	if err != nil {
 		return err

@@ -405,7 +405,7 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 	if isEqual {
 		log.Debug(logMsgPrefix, "File already exists locally.")
 		if downloadParams.IsExplode() {
-			e = clientutils.HandleArchive(localPath, localFileName, downloadData.Dependency.Name, logMsgPrefix)
+			e = clientutils.ExtractArchive(localPath, localFileName, downloadData.Dependency.Name, logMsgPrefix)
 		}
 		return e
 	}

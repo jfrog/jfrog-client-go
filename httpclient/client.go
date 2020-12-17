@@ -323,7 +323,7 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 
 	// Extract archive.
 	if isExplode {
-		err = utils.HandleArchive(downloadFileDetails.LocalPath, downloadFileDetails.LocalFileName, downloadFileDetails.FileName, logMsgPrefix)
+		err = utils.ExtractArchive(downloadFileDetails.LocalPath, downloadFileDetails.LocalFileName, downloadFileDetails.FileName, logMsgPrefix)
 	}
 	return
 }
@@ -425,7 +425,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 	}
 
 	if flags.Explode {
-		if err := utils.HandleArchive(flags.LocalPath, flags.LocalFileName, flags.FileName, logMsgPrefix); err != nil {
+		if err := utils.ExtractArchive(flags.LocalPath, flags.LocalFileName, flags.FileName, logMsgPrefix); err != nil {
 			return nil, err
 		}
 	}
