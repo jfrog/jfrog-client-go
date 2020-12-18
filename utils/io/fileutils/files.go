@@ -571,20 +571,29 @@ func MoveDir(fromPath, toPath string) error {
 // MoveFile(source, destination) will work moving file between folders
 // Therefore, we are using our own implementation (MoveFile) in order to rename files.
 func MoveFile(sourcePath, destPath string) error {
+	inputFileOpen := true
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	defer inputFile.Close()
+	defer func() {
+		if inputFileOpen {
+			inputFile.Close()
+		}
+	}()
+
 	outputFile, err := os.Create(destPath)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
 	defer outputFile.Close()
+
 	_, err = io.Copy(outputFile, inputFile)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
 	// The copy was successful, so now delete the original file
+	inputFile.Close()
+	inputFileOpen = false
 	return errorutils.CheckError(os.Remove(sourcePath))
 }
