@@ -31,7 +31,7 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 		if !strings.HasPrefix(relativeLocalFilePath, localPath) {
 			relativeLocalFilePath = filepath.Join(localPath, relativeLocalFilePath)
 		}
-		err = os.Rename(relativeLocalFilePath, archivePath)
+		err = fileutils.MoveFile(relativeLocalFilePath, archivePath)
 		if err != nil {
 			return err
 		}

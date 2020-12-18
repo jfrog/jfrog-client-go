@@ -559,10 +559,32 @@ func MoveDir(fromPath, toPath string) error {
 			}
 			continue
 		}
-		err = os.Rename(v, filepath.Join(toPath, filepath.Base(v)))
+		err = MoveFile(v, filepath.Join(toPath, filepath.Base(v)))
 		if err != nil {
 			return err
 		}
 	}
 	return err
+}
+
+// GoLang: os.Rename() give error "invalid cross-device link" for Docker container with Volumes.
+// MoveFile(source, destination) will work moving file between folders
+// Therefore, we are using our own implementation (MoveFile) in order to rename files.
+func MoveFile(sourcePath, destPath string) error {
+	inputFile, err := os.Open(sourcePath)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	defer inputFile.Close()
+	outputFile, err := os.Create(destPath)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	defer outputFile.Close()
+	_, err = io.Copy(outputFile, inputFile)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	// The copy was successful, so now delete the original file
+	return errorutils.CheckError(os.Remove(sourcePath))
 }
