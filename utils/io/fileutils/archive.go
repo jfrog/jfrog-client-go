@@ -3,6 +3,7 @@ package fileutils
 import (
 	"errors"
 	"fmt"
+
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/mholt/archiver/v3"
 )
@@ -16,17 +17,103 @@ func IsSupportedArchive(filePath string) bool {
 	return ok
 }
 
-func Unarchive(archivePath, destinationPath string) error {
-	tempDirPath, err := CreateTempDir()
+// 'archiver' dependency contains an API called 'Unarchive' to extract archive files. However, it uses the source file path arg to get the file extension AND as destination to the archive file.
+// This can go wrong if the local file lost its extension. therefore, we implement our own 'Unarchive' and uses the origin file name in Artifactory to retrieve the file extension and
+// the local file path to extract the archive.
+func Unarchive(localArchivePath, originArchiveName, destinationPath string) error {
+	uaIface, err := byExtension(originArchiveName)
 	if err != nil {
 		return err
 	}
-	defer RemoveTempDir(tempDirPath)
-
-	err = archiver.Unarchive(archivePath, tempDirPath)
-	if err != nil {
-		return errorutils.CheckError(errors.New(fmt.Sprintf("Failed unarchiving: %s", archivePath) + err.Error()))
+	u, ok := uaIface.(archiver.Unarchiver)
+	if !ok {
+		return errorutils.CheckError(errors.New("format specified by source filename is not an archive format: " + originArchiveName))
 	}
+	return u.Unarchive(localArchivePath, destinationPath)
+}
 
-	return MoveDir(tempDirPath, destinationPath)
+// Instead of using 'archiver.byExtension' that by default sets OverwriteExisting to false, we implement our own.
+func byExtension(filename string) (interface{}, error) {
+	var ec interface{}
+	for _, c := range extCheckers {
+		if err := c.CheckExt(filename); err == nil {
+			ec = c
+			break
+		}
+	}
+	switch ec.(type) {
+	case *archiver.Rar:
+		archiveInstance := archiver.NewRar()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.Tar:
+		archiveInstance := archiver.NewTar()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.TarBrotli:
+		archiveInstance := archiver.NewTarBrotli()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.TarBz2:
+		archiveInstance := archiver.NewTarBz2()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.TarGz:
+		archiveInstance := archiver.NewTarGz()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.TarLz4:
+		archiveInstance := archiver.NewTarLz4()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.TarSz:
+		archiveInstance := archiver.NewTarSz()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.TarXz:
+		archiveInstance := archiver.NewTarXz()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.TarZstd:
+		archiveInstance := archiver.NewTarZstd()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.Zip:
+		archiveInstance := archiver.NewZip()
+		archiveInstance.OverwriteExisting = true
+		return archiveInstance, nil
+	case *archiver.Gz:
+		return archiver.NewGz(), nil
+	case *archiver.Bz2:
+		return archiver.NewBz2(), nil
+	case *archiver.Lz4:
+		return archiver.NewLz4(), nil
+	case *archiver.Snappy:
+		return archiver.NewSnappy(), nil
+	case *archiver.Xz:
+		return archiver.NewXz(), nil
+	case *archiver.Zstd:
+		return archiver.NewZstd(), nil
+	}
+	return nil, fmt.Errorf("format unrecognized by filename: %s", filename)
+}
+
+var extCheckers = []archiver.ExtensionChecker{
+	&archiver.TarBrotli{},
+	&archiver.TarBz2{},
+	&archiver.TarGz{},
+	&archiver.TarLz4{},
+	&archiver.TarSz{},
+	&archiver.TarXz{},
+	&archiver.TarZstd{},
+	&archiver.Rar{},
+	&archiver.Tar{},
+	&archiver.Zip{},
+	&archiver.Brotli{},
+	&archiver.Gz{},
+	&archiver.Bz2{},
+	&archiver.Lz4{},
+	&archiver.Snappy{},
+	&archiver.Xz{},
+	&archiver.Zstd{},
 }
