@@ -17,9 +17,10 @@ func IsSupportedArchive(filePath string) bool {
 	return ok
 }
 
-// 'archiver' dependency contains an API called 'Unarchive' to extract archive files. However, it uses the source file path arg to get the file extension AND as destination to the archive file.
-// This can go wrong if the local file lost its extension. therefore, we implement our own 'Unarchive' and uses the origin file name in Artifactory to retrieve the file extension and
-// the local file path to extract the archive.
+// The 'archiver' dependency includes an API called 'Unarchive' to extract archive files. This API uses the archive file
+// extension to determine the archive type.// the local file path to extract the archive.
+// We therefore need to use the file name as it was in Artifactory, and not the file name which was downloaded. To achieve this,
+// we added a new implementation of the 'Unarchive' func and use it instead of the default one.
 func Unarchive(localArchivePath, originArchiveName, destinationPath string) error {
 	uaIface, err := byExtension(originArchiveName)
 	if err != nil {

@@ -23,8 +23,6 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 	if err != nil {
 		return err
 	}
-	// TODO: localFileName may already include the local path.
-	// We should investigate and make sure 'localFileName' contains file name only.
 	var archivePath string
 	if !strings.HasPrefix(localFileName, localPath) {
 		archivePath = filepath.Join(localPath, localFileName)
@@ -40,10 +38,7 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 		return err
 	}
 	log.Info(logMsgPrefix+"Extracting archive:", archivePath, "to", extractionPath)
-	if err = extract(archivePath, originFileName, extractionPath); err != nil {
-		log.Info(logMsgPrefix+"failed to extract", archivePath, ". error:", err.Error())
-	}
-	return err
+	return extract(archivePath, originFileName, extractionPath)
 }
 
 func extract(localFilePath, originArchiveName, extractionPath string) error {
