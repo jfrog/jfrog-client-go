@@ -23,18 +23,11 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 	if err != nil {
 		return err
 	}
-	// In order to extract an archive file, the file extension is required, therefore,
-	// we replace the local downloaded file name, with its origin in Artifactory.
-	archivePath := filepath.Join(localPath, originFileName)
-	if !strings.HasSuffix(localFileName, originFileName) {
-		relativeLocalFilePath := localFileName
-		if !strings.HasPrefix(relativeLocalFilePath, localPath) {
-			relativeLocalFilePath = filepath.Join(localPath, relativeLocalFilePath)
-		}
-		err = fileutils.MoveFile(relativeLocalFilePath, archivePath)
-		if err != nil {
-			return err
-		}
+	var archivePath string
+	if !strings.HasPrefix(localFileName, localPath) {
+		archivePath = filepath.Join(localPath, localFileName)
+	} else {
+		archivePath = localFileName
 	}
 	archivePath, err = filepath.Abs(archivePath)
 	if err != nil {
@@ -45,11 +38,11 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 		return err
 	}
 	log.Info(logMsgPrefix+"Extracting archive:", archivePath, "to", extractionPath)
-	return extract(archivePath, extractionPath)
+	return extract(archivePath, originFileName, extractionPath)
 }
 
-func extract(localFilePath, extractionPath string) error {
-	err := fileutils.Unarchive(localFilePath, extractionPath)
+func extract(localFilePath, originArchiveName, extractionPath string) error {
+	err := fileutils.Unarchive(localFilePath, originArchiveName, extractionPath)
 	if err != nil {
 		return err
 	}
