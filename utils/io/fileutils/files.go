@@ -111,7 +111,8 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 	}
 
 	fileName = originalFileName
-	if targetFileName != "" {
+	// '.' as a target path is equivalent to an empty target path.
+	if targetFileName != "" && targetFileName != "." {
 		fileName = targetFileName
 	}
 	return
