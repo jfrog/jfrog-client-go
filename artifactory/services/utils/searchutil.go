@@ -362,6 +362,15 @@ func (item *ResultItem) ToDependency() buildinfo.Dependency {
 
 type AqlSearchResultItemFilter func(SearchBasedContentItem, *content.ContentReader) (*content.ContentReader, error)
 
+func (item *ResultItem) GetProperty(key string) string {
+	for _, prop := range item.Properties {
+		if prop.Key == key {
+			return prop.Value
+		}
+	}
+	return ""
+}
+
 func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (*content.ContentReader, error) {
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
