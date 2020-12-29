@@ -29,6 +29,7 @@ func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, prog
 	if err != nil {
 		return nil, err
 	}
+
 	manager := &ArtifactoryServicesManagerImp{config: config, progress: progress}
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
@@ -381,6 +382,30 @@ func (sm *ArtifactoryServicesManagerImp) GroupExists(name string) (bool, error) 
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()
 	return groupService.GroupExits(name)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetUser(name string) (*services.User, error) {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.GetUser(name)
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreateUser(user services.User) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.CreateOrUpdateUser(user)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.DeleteUser(name)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UserExists(name string) (bool, error) {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.UserExists(name)
 }
 
 func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPromoteParams) error {

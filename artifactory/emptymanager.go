@@ -64,6 +64,10 @@ type ArtifactoryServicesManager interface {
 	CreateGroup(group services.Group) error
 	DeleteGroup(name string) error
 	GroupExists(name string) (bool, error)
+	GetUser(name string) (*services.User, error)
+	CreateUser(user services.User) error
+	DeleteUser(name string) error
+	UserExists(name string) (bool, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -261,6 +265,21 @@ func (esm *EmptyArtifactoryServicesManager) Client() *jfroghttpclient.JfrogHttpC
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.RepositoryDetails, error) {
+	panic("Failed: Method is not implemented")
+}
+func (esm *EmptyArtifactoryServicesManager) GetUser(name string) (*services.User, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateUser(user services.User) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DeleteUser(name string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) UserExists(name string) (bool, error) {
 	panic("Failed: Method is not implemented")
 }
 
