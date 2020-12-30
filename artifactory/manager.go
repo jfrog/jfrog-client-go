@@ -9,13 +9,13 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
 
 type ArtifactoryServicesManagerImp struct {
-	client   *httpclient.JfrogHttpClient
+	client   *jfroghttpclient.JfrogHttpClient
 	config   config.Config
 	progress ioutils.ProgressMgr
 }
@@ -30,7 +30,7 @@ func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, prog
 		return nil, err
 	}
 	manager := &ArtifactoryServicesManagerImp{config: config, progress: progress}
-	manager.client, err = httpclient.JfrogClientBuilder().
+	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetServiceDetails(artDetails).
@@ -366,6 +366,6 @@ func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPro
 	return systemService.PromoteDocker(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) Client() *httpclient.JfrogHttpClient {
+func (sm *ArtifactoryServicesManagerImp) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 
 	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -21,12 +21,12 @@ const (
 
 // WatchService defines the http client and xray details
 type WatchService struct {
-	client      *httpclient.JfrogHttpClient
+	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
 }
 
 // NewWatchService creates a new Xray Watch Service
-func NewWatchService(client *httpclient.JfrogHttpClient) *WatchService {
+func NewWatchService(client *jfroghttpclient.JfrogHttpClient) *WatchService {
 	return &WatchService{client: client}
 }
 
@@ -36,7 +36,7 @@ func (vs *WatchService) GetXrayDetails() auth.ServiceDetails {
 }
 
 // GetJfrogHttpClient returns the http client
-func (xws *WatchService) GetJfrogHttpClient() *httpclient.JfrogHttpClient {
+func (xws *WatchService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return xws.client
 }
 

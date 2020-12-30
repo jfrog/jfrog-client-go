@@ -12,18 +12,18 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type DiscardBuildsService struct {
-	client     *httpclient.JfrogHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewDiscardBuildsService(client *httpclient.JfrogHttpClient) *DiscardBuildsService {
+func NewDiscardBuildsService(client *jfroghttpclient.JfrogHttpClient) *DiscardBuildsService {
 	return &DiscardBuildsService{client: client}
 }
 

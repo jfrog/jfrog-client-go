@@ -5,22 +5,22 @@ import (
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type DeleteRepositoryService struct {
-	client     *httpclient.JfrogHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewDeleteRepositoryService(client *httpclient.JfrogHttpClient) *DeleteRepositoryService {
+func NewDeleteRepositoryService(client *jfroghttpclient.JfrogHttpClient) *DeleteRepositoryService {
 	return &DeleteRepositoryService{client: client}
 }
 
-func (drs *DeleteRepositoryService) GetJfrogHttpClient() *httpclient.JfrogHttpClient {
+func (drs *DeleteRepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return drs.client
 }
 

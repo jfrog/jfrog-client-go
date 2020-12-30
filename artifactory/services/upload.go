@@ -13,7 +13,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
@@ -25,7 +25,7 @@ import (
 )
 
 type UploadService struct {
-	client       *httpclient.JfrogHttpClient
+	client       *jfroghttpclient.JfrogHttpClient
 	Progress     ioutils.ProgressMgr
 	ArtDetails   auth.ServiceDetails
 	DryRun       bool
@@ -33,7 +33,7 @@ type UploadService struct {
 	ResultWriter *content.ContentWriter
 }
 
-func NewUploadService(client *httpclient.JfrogHttpClient) *UploadService {
+func NewUploadService(client *jfroghttpclient.JfrogHttpClient) *UploadService {
 	return &UploadService{client: client}
 }
 
@@ -41,7 +41,7 @@ func (us *UploadService) SetThreads(threads int) {
 	us.Threads = threads
 }
 
-func (us *UploadService) GetJfrogHttpClient() *httpclient.JfrogHttpClient {
+func (us *UploadService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return us.client
 }
 
@@ -426,7 +426,7 @@ func addExplodeHeader(httpClientsDetails *httputils.HttpClientDetails, isExplode
 }
 
 func (us *UploadService) tryChecksumDeploy(filePath, targetPath string, httpClientsDetails httputils.HttpClientDetails,
-	client *httpclient.JfrogHttpClient) (resp *http.Response, details *fileutils.FileDetails, body []byte, err error) {
+	client *jfroghttpclient.JfrogHttpClient) (resp *http.Response, details *fileutils.FileDetails, body []byte, err error) {
 	if us.DryRun {
 		return
 	}

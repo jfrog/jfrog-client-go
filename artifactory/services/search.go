@@ -3,7 +3,7 @@ package services
 import (
 	"errors"
 
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -11,11 +11,11 @@ import (
 )
 
 type SearchService struct {
-	client     *httpclient.JfrogHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewSearchService(client *httpclient.JfrogHttpClient) *SearchService {
+func NewSearchService(client *jfroghttpclient.JfrogHttpClient) *SearchService {
 	return &SearchService{client: client}
 }
 
@@ -31,7 +31,7 @@ func (s *SearchService) IsDryRun() bool {
 	return false
 }
 
-func (s *SearchService) GetJfrogHttpClient() (*httpclient.JfrogHttpClient, error) {
+func (s *SearchService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return s.client, nil
 }
 

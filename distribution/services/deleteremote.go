@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -22,12 +22,12 @@ const (
 
 // Delete received release bundles from the edge nodes. On success, keep or delete the release bundle from the distribution service.
 type DeleteReleaseBundleService struct {
-	client      *httpclient.JfrogHttpClient
+	client      *jfroghttpclient.JfrogHttpClient
 	DistDetails auth.ServiceDetails
 	DryRun      bool
 }
 
-func NewDeleteReleaseBundleService(client *httpclient.JfrogHttpClient) *DeleteReleaseBundleService {
+func NewDeleteReleaseBundleService(client *jfroghttpclient.JfrogHttpClient) *DeleteReleaseBundleService {
 	return &DeleteReleaseBundleService{client: client}
 }
 

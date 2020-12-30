@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -14,11 +14,11 @@ import (
 )
 
 type DistributionStatusService struct {
-	client      *httpclient.JfrogHttpClient
+	client      *jfroghttpclient.JfrogHttpClient
 	DistDetails auth.ServiceDetails
 }
 
-func NewDistributionStatusService(client *httpclient.JfrogHttpClient) *DistributionStatusService {
+func NewDistributionStatusService(client *jfroghttpclient.JfrogHttpClient) *DistributionStatusService {
 	return &DistributionStatusService{client: client}
 }
 

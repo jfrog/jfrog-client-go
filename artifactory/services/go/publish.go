@@ -1,7 +1,7 @@
 package _go
 
 import (
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
 )
 
@@ -9,7 +9,7 @@ var publishers []PublishGoPackage
 
 type PublishGoPackage interface {
 	isCompatible(artifactoryVersion string) bool
-	PublishPackage(params GoParams, client *httpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) error
+	PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) error
 }
 
 func register(publishApi PublishGoPackage) {

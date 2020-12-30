@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
@@ -16,13 +16,13 @@ import (
 )
 
 type DeleteService struct {
-	client     *httpclient.JfrogHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 	DryRun     bool
 	Threads    int
 }
 
-func NewDeleteService(client *httpclient.JfrogHttpClient) *DeleteService {
+func NewDeleteService(client *jfroghttpclient.JfrogHttpClient) *DeleteService {
 	return &DeleteService{client: client}
 }
 
@@ -46,7 +46,7 @@ func (ds *DeleteService) SetThreads(threads int) {
 	ds.Threads = threads
 }
 
-func (ds *DeleteService) GetJfrogHttpClient() (*httpclient.JfrogHttpClient, error) {
+func (ds *DeleteService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return ds.client, nil
 }
 

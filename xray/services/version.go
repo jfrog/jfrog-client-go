@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -14,12 +14,12 @@ import (
 
 // VersionService returns the https client and xray details
 type VersionService struct {
-	client      *httpclient.JfrogHttpClient
+	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
 }
 
 // NewVersionService creates a new service to retrieve the version of Xray
-func NewVersionService(client *httpclient.JfrogHttpClient) *VersionService {
+func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService {
 	return &VersionService{client: client}
 }
 

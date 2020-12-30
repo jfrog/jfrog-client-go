@@ -4,11 +4,11 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/distribution/services"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
 
 type DistributionServicesManager struct {
-	client *httpclient.JfrogHttpClient
+	client *jfroghttpclient.JfrogHttpClient
 	config config.Config
 }
 
@@ -18,7 +18,7 @@ func New(details *auth.ServiceDetails, config config.Config) (*DistributionServi
 		return nil, err
 	}
 	manager := &DistributionServicesManager{config: config}
-	manager.client, err = httpclient.JfrogClientBuilder().
+	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetServiceDetails(details).
@@ -92,7 +92,7 @@ func (sm *DistributionServicesManager) DeleteLocalReleaseBundle(params services.
 	return deleteLocalBundleService.DeleteDistribution(params)
 }
 
-func (sm *DistributionServicesManager) Client() *httpclient.JfrogHttpClient {
+func (sm *DistributionServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }
 

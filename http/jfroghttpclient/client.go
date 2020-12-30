@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/http"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )

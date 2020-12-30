@@ -3,7 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -12,11 +12,11 @@ import (
 )
 
 type VersionService struct {
-	client      *httpclient.JfrogHttpClient
+	client      *jfroghttpclient.JfrogHttpClient
 	DistDetails auth.ServiceDetails
 }
 
-func NewVersionService(client *httpclient.JfrogHttpClient) *VersionService {
+func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService {
 	return &VersionService{client: client}
 }
 

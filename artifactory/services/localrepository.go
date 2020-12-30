@@ -3,7 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -14,15 +14,15 @@ import (
 
 type LocalRepositoryService struct {
 	isUpdate   bool
-	client     *httpclient.JfrogHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewLocalRepositoryService(client *httpclient.JfrogHttpClient, isUpdate bool) *LocalRepositoryService {
+func NewLocalRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *LocalRepositoryService {
 	return &LocalRepositoryService{client: client, isUpdate: isUpdate}
 }
 
-func (lrs *LocalRepositoryService) GetJfrogHttpClient() *httpclient.JfrogHttpClient {
+func (lrs *LocalRepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return lrs.client
 }
 

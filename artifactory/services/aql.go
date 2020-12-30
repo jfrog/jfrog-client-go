@@ -5,15 +5,15 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
 
 type AqlService struct {
-	client     *httpclient.JfrogHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewAqlService(client *httpclient.JfrogHttpClient) *AqlService {
+func NewAqlService(client *jfroghttpclient.JfrogHttpClient) *AqlService {
 	return &AqlService{client: client}
 }
 
@@ -29,7 +29,7 @@ func (s *AqlService) IsDryRun() bool {
 	return false
 }
 
-func (s *AqlService) GetJfrogHttpClient() (*httpclient.JfrogHttpClient, error) {
+func (s *AqlService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return s.client, nil
 }
 

@@ -7,22 +7,22 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type CreateReplicationService struct {
-	client     *httpclient.JfrogHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewCreateReplicationService(client *httpclient.JfrogHttpClient) *CreateReplicationService {
+func NewCreateReplicationService(client *jfroghttpclient.JfrogHttpClient) *CreateReplicationService {
 	return &CreateReplicationService{client: client}
 }
 
-func (rs *CreateReplicationService) GetJfrogHttpClient() *httpclient.JfrogHttpClient {
+func (rs *CreateReplicationService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return rs.client
 }
 

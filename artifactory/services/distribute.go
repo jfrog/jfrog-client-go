@@ -3,7 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -15,12 +15,12 @@ import (
 )
 
 type DistributeService struct {
-	client     *httpclient.JfrogHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 	DryRun     bool
 }
 
-func NewDistributionService(client *httpclient.JfrogHttpClient) *DistributeService {
+func NewDistributionService(client *jfroghttpclient.JfrogHttpClient) *DistributeService {
 	return &DistributeService{client: client}
 }
 
