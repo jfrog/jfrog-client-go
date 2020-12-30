@@ -60,6 +60,10 @@ type ArtifactoryServicesManager interface {
 	GetServiceId() (string, error)
 	PromoteDocker(params services.DockerPromoteParams) error
 	Client() *jfroghttpclient.JfrogHttpClient
+	GetGroup(name string) (*services.Group, error)
+	CreateGroup(group services.Group) error
+	DeleteGroup(name string) error
+	GroupExists(name string) (bool, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -257,6 +261,22 @@ func (esm *EmptyArtifactoryServicesManager) Client() *jfroghttpclient.JfrogHttpC
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.RepositoryDetails, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetGroup(name string) (*services.Group, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateGroup(group services.Group) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DeleteGroup(name string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GroupExists(name string) (bool, error) {
 	panic("Failed: Method is not implemented")
 }
 
