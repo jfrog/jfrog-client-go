@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/http"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"net/http"
 	"testing"
 	"time"

@@ -12,7 +12,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
 	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/http"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 
