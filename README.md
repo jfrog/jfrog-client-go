@@ -61,6 +61,9 @@
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
+      - [Fetching Group Details](#fetching-group-details)
+      - [Creating and Updating a Group](#creating-and-updating-a-group)
+      - [Deleting a Group](#deleting-a-group)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -753,6 +756,22 @@ version, err := servicesManager.GetVersion()
 #### Fetching Artifactory's Service ID
 ```go
 serviceId, err := servicesManager.GetServiceId()
+```
+
+#### Fetching Group Details
+```go
+group, err := serviceManager.GetGroup("myGroupName")
+
+```
+
+#### Creating and Updating a Group
+```go
+err := serviceManager.CreateOrUpdateGroup(group)
+```
+
+#### Deleting a Group
+```go
+err := serviceManager.DeleteGroup(name)
 ```
 
 ## Distribution APIs
