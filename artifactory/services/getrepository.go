@@ -36,6 +36,19 @@ func (grs *GetRepositoryService) Get(repoKey string) (*RepositoryDetails, error)
 	return repoDetails, nil
 }
 
+func (grs *GetRepositoryService) GetRemote(repoKey string) (*RemoteRepositoryDetails, error) {
+	log.Info("Getting repository '" + repoKey + "' details ...")
+	body, err := grs.sendGet(apiRepositories + "/" + repoKey)
+	if err != nil {
+		return nil, err
+	}
+	repoDetails := &RemoteRepositoryDetails{}
+	if err := json.Unmarshal(body, &repoDetails); err != nil {
+		return repoDetails, errorutils.CheckError(err)
+	}
+	return repoDetails, nil
+}
+
 func (grs *GetRepositoryService) GetAll() (*[]RepositoryDetails, error) {
 	log.Info("Getting all repositories ...")
 	body, err := grs.sendGet(apiRepositories)
@@ -61,6 +74,10 @@ func (grs *GetRepositoryService) sendGet(api string) ([]byte, error) {
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done getting repository details.")
 	return body, nil
+}
+
+type RemoteRepositoryDetails struct {
+	RemoteRepositoryBaseParams
 }
 
 type RepositoryDetails struct {
