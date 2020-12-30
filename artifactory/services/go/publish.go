@@ -1,7 +1,7 @@
 package _go
 
 import (
-	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
+	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
 )
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
+	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"

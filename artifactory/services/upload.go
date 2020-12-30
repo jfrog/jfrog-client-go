@@ -13,7 +13,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
+	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"

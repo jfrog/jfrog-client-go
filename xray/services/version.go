@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	httpclient "github.com/jfrog/jfrog-client-go/httpclient/jfrog"
+	httpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"

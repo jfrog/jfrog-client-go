@@ -1,4 +1,4 @@
-package httpclient
+package jfroghttpclient
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/http"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
