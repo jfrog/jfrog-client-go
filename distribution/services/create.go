@@ -5,10 +5,10 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	distrbutionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -18,7 +18,7 @@ type CreateReleaseBundleService struct {
 	UpdateReleaseBundleService
 }
 
-func NewCreateReleseBundleService(client *rthttpclient.ArtifactoryHttpClient) *CreateReleaseBundleService {
+func NewCreateReleseBundleService(client *jfroghttpclient.JfrogHttpClient) *CreateReleaseBundleService {
 	return &CreateReleaseBundleService{UpdateReleaseBundleService{client: client}}
 }
 

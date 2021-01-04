@@ -4,21 +4,21 @@ import (
 	"errors"
 	"fmt"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type GoService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewGoService(client *rthttpclient.ArtifactoryHttpClient) *GoService {
+func NewGoService(client *jfroghttpclient.JfrogHttpClient) *GoService {
 	return &GoService{client: client}
 }
 
-func (gs *GoService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+func (gs *GoService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return gs.client
 }
 

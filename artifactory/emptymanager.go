@@ -4,11 +4,11 @@ import (
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	_go "github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/config"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
 
@@ -59,7 +59,7 @@ type ArtifactoryServicesManager interface {
 	GetVersion() (string, error)
 	GetServiceId() (string, error)
 	PromoteDocker(params services.DockerPromoteParams) error
-	Client() *rthttpclient.ArtifactoryHttpClient
+	Client() *jfroghttpclient.JfrogHttpClient
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -252,7 +252,7 @@ func (esm *EmptyArtifactoryServicesManager) PromoteDocker(params services.Docker
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
+func (esm *EmptyArtifactoryServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	panic("Failed: Method is not implemented")
 }
 
