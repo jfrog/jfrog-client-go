@@ -38,7 +38,7 @@ func (gs *GroupService) GetGroup(name string) (*Group, error) {
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode > 204 {
+	if res.StatusCode > http.StatusNoContent {
 		return nil, fmt.Errorf("%d %s: %s", res.StatusCode, res.Status, string(body))
 	}
 	var group Group
@@ -78,7 +78,7 @@ func (gs *GroupService) DeleteGroup(name string) error {
 	if resp == nil {
 		return fmt.Errorf("no response provided (including status code)")
 	}
-	if resp.StatusCode > 204 {
+	if resp.StatusCode > http.StatusNoContent {
 		return fmt.Errorf("%d %s", resp.StatusCode, resp.Status)
 	}
 	return err
