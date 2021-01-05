@@ -256,7 +256,7 @@ func (esm *EmptyArtifactoryServicesManager) PromoteDocker(params services.Docker
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
+func (esm *EmptyArtifactoryServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	panic("Failed: Method is not implemented")
 }
 
