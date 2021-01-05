@@ -42,7 +42,7 @@ func testCreateUser(t *testing.T) {
 		InternalPasswordDisabled: false,
 	}
 
-	err = gs.CreateUser(user)
+	err = gs.CreateOrUpdateUser(user)
 	assert.NoError(t, err)
 
 	u, err := gs.GetUser(user.Name)
@@ -79,10 +79,10 @@ func testUpdateUser(t *testing.T) {
 		DisableUIAccess:          false,
 		InternalPasswordDisabled: false,
 	}
-	err = gs.CreateUser(user)
+	err = gs.CreateOrUpdateUser(user)
 	assert.NoError(t, err)
 
-	err = gs.UpdateUser(user)
+	err = gs.CreateOrUpdateUser(user)
 	assert.NoError(t, err)
 	usr, err := gs.GetUser(user.Name)
 
@@ -119,7 +119,7 @@ func testDeleteUser(t *testing.T) {
 		DisableUIAccess:          false,
 		InternalPasswordDisabled: false,
 	}
-	err = userService.CreateUser(user)
+	err = userService.CreateOrUpdateUser(user)
 	assert.NoError(t, err)
 	err = userService.DeleteUser(user.Name)
 	assert.NoError(t, err)

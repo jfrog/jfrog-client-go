@@ -3,9 +3,10 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"net/http"
 )
 
 // application/vnd.org.jfrog.artifactory.security.User+json
@@ -23,11 +24,11 @@ type User struct {
 }
 
 type UserService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewUserService(client *rthttpclient.ArtifactoryHttpClient) *UserService {
+func NewUserService(client *jfroghttpclient.JfrogHttpClient) *UserService {
 	return &UserService{client: client}
 }
 
@@ -42,7 +43,7 @@ func (us *UserService) GetUser(name string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode > 204 {
+	if res.StatusCode > http.StatusNoContent {
 		return nil, fmt.Errorf("%d %s: %s", res.StatusCode, res.Status, string(body))
 	}
 	var user User
@@ -69,7 +70,7 @@ func (us *UserService) CreateOrUpdateUser(user User) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode > 204 {
+	if resp.StatusCode > http.StatusNoContent {
 		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
 	}
 	return nil
@@ -82,7 +83,7 @@ func (us *UserService) DeleteUser(name string) error {
 	if resp == nil {
 		return fmt.Errorf("no response provided (including status code)")
 	}
-	if resp.StatusCode > 204 {
+	if resp.StatusCode > http.StatusNoContent {
 		return fmt.Errorf("%d %s", resp.StatusCode, resp.Status)
 	}
 	return err
