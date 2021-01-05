@@ -2,24 +2,25 @@ package services
 
 import (
 	"errors"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
 )
 
 type DeleteRepositoryService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewDeleteRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *DeleteRepositoryService {
+func NewDeleteRepositoryService(client *jfroghttpclient.JfrogHttpClient) *DeleteRepositoryService {
 	return &DeleteRepositoryService{client: client}
 }
 
-func (drs *DeleteRepositoryService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+func (drs *DeleteRepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return drs.client
 }
 

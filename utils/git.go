@@ -85,7 +85,7 @@ func (m *manager) readUrl() {
 	if matchedResult == "" {
 		return
 	}
-	m.url = MaskCredentials(originUrl, matchedResult)
+	m.url = RemoveCredentials(originUrl, matchedResult)
 }
 
 func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error) {

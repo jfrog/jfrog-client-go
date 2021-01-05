@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/jfrog/gofrog/parallel"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
@@ -25,13 +25,13 @@ const (
 
 type MoveCopyService struct {
 	moveType   MoveType
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	DryRun     bool
 	ArtDetails auth.ServiceDetails
 	Threads    int
 }
 
-func NewMoveCopyService(client *rthttpclient.ArtifactoryHttpClient, moveType MoveType) *MoveCopyService {
+func NewMoveCopyService(client *jfroghttpclient.JfrogHttpClient, moveType MoveType) *MoveCopyService {
 	return &MoveCopyService{moveType: moveType, client: client}
 }
 
@@ -47,7 +47,7 @@ func (mc *MoveCopyService) IsDryRun() bool {
 	return mc.DryRun
 }
 
-func (mc *MoveCopyService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (mc *MoveCopyService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return mc.client, nil
 }
 

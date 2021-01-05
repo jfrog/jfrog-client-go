@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"net/http"
 	"os"
 	"path"
@@ -9,10 +10,10 @@ import (
 	"sort"
 
 	"github.com/jfrog/gofrog/parallel"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	clientio "github.com/jfrog/jfrog-client-go/utils/io"
@@ -23,7 +24,7 @@ import (
 )
 
 type DownloadService struct {
-	client       *rthttpclient.ArtifactoryHttpClient
+	client       *jfroghttpclient.JfrogHttpClient
 	Progress     clientio.ProgressMgr
 	ArtDetails   auth.ServiceDetails
 	DryRun       bool
@@ -31,7 +32,7 @@ type DownloadService struct {
 	ResultWriter *content.ContentWriter
 }
 
-func NewDownloadService(client *rthttpclient.ArtifactoryHttpClient) *DownloadService {
+func NewDownloadService(client *jfroghttpclient.JfrogHttpClient) *DownloadService {
 	return &DownloadService{client: client}
 }
 
@@ -47,7 +48,7 @@ func (ds *DownloadService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *DownloadService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (ds *DownloadService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return ds.client, nil
 }
 

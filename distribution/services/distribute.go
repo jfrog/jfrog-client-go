@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"time"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	distributionUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -21,7 +21,7 @@ const defaultMaxWaitMinutes = 60    // 1 hour
 const defaultSyncSleepInterval = 10 // 10 seconds
 
 type DistributeReleaseBundleService struct {
-	client      *rthttpclient.ArtifactoryHttpClient
+	client      *jfroghttpclient.JfrogHttpClient
 	DistDetails auth.ServiceDetails
 	DryRun      bool
 	Sync        bool
@@ -29,7 +29,7 @@ type DistributeReleaseBundleService struct {
 	MaxWaitMinutes int
 }
 
-func NewDistributeReleaseBundleService(client *rthttpclient.ArtifactoryHttpClient) *DistributeReleaseBundleService {
+func NewDistributeReleaseBundleService(client *jfroghttpclient.JfrogHttpClient) *DistributeReleaseBundleService {
 	return &DistributeReleaseBundleService{client: client}
 }
 

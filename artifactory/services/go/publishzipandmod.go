@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"strings"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
@@ -24,7 +24,7 @@ const ArtifactoryMinSupportedVersionForInfoFile = "6.10.0"
 type publishZipAndModApi struct {
 	artifactoryVersion string
 	clientDetails      httputils.HttpClientDetails
-	client             *rthttpclient.ArtifactoryHttpClient
+	client             *jfroghttpclient.JfrogHttpClient
 }
 
 func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
@@ -34,7 +34,7 @@ func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
 	return version.AtLeast(propertiesApi)
 }
 
-func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *rthttpclient.ArtifactoryHttpClient, ArtDetails auth.ServiceDetails) error {
+func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) error {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	if err != nil {
 		return err
