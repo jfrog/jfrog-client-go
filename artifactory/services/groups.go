@@ -26,6 +26,7 @@ type GroupService struct {
 func NewGroupService(client *jfroghttpclient.JfrogHttpClient) *GroupService {
 	return &GroupService{client: client}
 }
+
 func (gs *GroupService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	gs.ArtDetails = rt
 }
