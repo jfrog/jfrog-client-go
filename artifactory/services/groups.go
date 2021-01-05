@@ -3,9 +3,10 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"net/http"
 )
 
 type Group struct {
@@ -16,12 +17,13 @@ type Group struct {
 	Realm           string `json:"realm,omitempty"`
 	RealmAttributes string `json:"realmAttributes,omitempty"`
 }
+
 type GroupService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewGroupService(client *rthttpclient.ArtifactoryHttpClient) *GroupService {
+func NewGroupService(client *jfroghttpclient.JfrogHttpClient) *GroupService {
 	return &GroupService{client: client}
 }
 func (gs *GroupService) SetArtifactoryDetails(rt auth.ServiceDetails) {
@@ -62,7 +64,7 @@ func (gs *GroupService) CreateOrUpdateGroup(group Group) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode > 204 {
+	if resp.StatusCode > http.StatusNoContent {
 		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
 	}
 	return nil
