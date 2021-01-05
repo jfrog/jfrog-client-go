@@ -6,23 +6,23 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type PermissionTargetService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewPermissionTargetService(client *rthttpclient.ArtifactoryHttpClient) *PermissionTargetService {
+func NewPermissionTargetService(client *jfroghttpclient.JfrogHttpClient) *PermissionTargetService {
 	return &PermissionTargetService{client: client}
 }
 
-func (pts *PermissionTargetService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+func (pts *PermissionTargetService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return pts.client
 }
 

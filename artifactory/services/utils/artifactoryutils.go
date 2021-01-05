@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	clientio "github.com/jfrog/jfrog-client-go/utils/io"
@@ -28,7 +28,7 @@ const (
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
-	httpClientsDetails httputils.HttpClientDetails, client *rthttpclient.ArtifactoryHttpClient, retries int, progress clientio.ProgressMgr) (*http.Response, []byte, error) {
+	httpClientsDetails httputils.HttpClientDetails, client *jfroghttpclient.JfrogHttpClient, retries int, progress clientio.ProgressMgr) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
 		details, err = fileutils.GetFileDetails(localPath)
@@ -503,7 +503,7 @@ func createPrioritiesFiles() ([]*content.ContentWriter, error) {
 type CommonConf interface {
 	GetArtifactoryDetails() auth.ServiceDetails
 	SetArtifactoryDetails(rt auth.ServiceDetails)
-	GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error)
+	GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error)
 	IsDryRun() bool
 }
 
@@ -524,6 +524,6 @@ func (flags *CommonConfImpl) IsDryRun() bool {
 	return flags.DryRun
 }
 
-func (flags *CommonConfImpl) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
-	return rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&flags.artDetails).Build()
+func (flags *CommonConfImpl) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
+	return jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&flags.artDetails).Build()
 }

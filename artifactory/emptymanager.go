@@ -4,11 +4,11 @@ import (
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	_go "github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/config"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
 
@@ -59,7 +59,7 @@ type ArtifactoryServicesManager interface {
 	GetVersion() (string, error)
 	GetServiceId() (string, error)
 	PromoteDocker(params services.DockerPromoteParams) error
-	Client() *rthttpclient.ArtifactoryHttpClient
+	Client() *jfroghttpclient.JfrogHttpClient
 	GetGroup(name string) (*services.Group, error)
 	CreateGroup(group services.Group) error
 	DeleteGroup(name string) error

@@ -6,20 +6,20 @@ import (
 	"net/http"
 	"path"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type DockerPromoteService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewDockerPromoteService(client *rthttpclient.ArtifactoryHttpClient) *DockerPromoteService {
+func NewDockerPromoteService(client *jfroghttpclient.JfrogHttpClient) *DockerPromoteService {
 	return &DockerPromoteService{client: client}
 }
 
@@ -31,7 +31,7 @@ func (ps *DockerPromoteService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	ps.ArtDetails = rt
 }
 
-func (ps *DockerPromoteService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (ps *DockerPromoteService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return ps.client, nil
 }
 
@@ -73,8 +73,9 @@ func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error 
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
+	
 	log.Debug("Artifactory response: ", resp.Status)
-
+	log.Info("Promoted image", params.SourceDockerImage, "to:", params.TargetRepo, "repository.")
 	return nil
 }
 

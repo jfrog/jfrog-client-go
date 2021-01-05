@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -15,11 +15,11 @@ import (
 const apiRepositories = "api/repositories"
 
 type GetRepositoryService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewGetRepositoryService(client *rthttpclient.ArtifactoryHttpClient) *GetRepositoryService {
+func NewGetRepositoryService(client *jfroghttpclient.JfrogHttpClient) *GetRepositoryService {
 	return &GetRepositoryService{client: client}
 }
 

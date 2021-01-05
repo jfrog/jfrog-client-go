@@ -3,16 +3,16 @@ package xray
 import (
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 )
 
 // XrayServicesManager defines the http client and general configuration
 type XrayServicesManager struct {
-	client *rthttpclient.ArtifactoryHttpClient
+	client *jfroghttpclient.JfrogHttpClient
 	config config.Config
 }
 
@@ -23,7 +23,7 @@ func New(details *auth.ServiceDetails, config config.Config) (*XrayServicesManag
 		return nil, err
 	}
 	manager := &XrayServicesManager{config: config}
-	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
+	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetServiceDetails(details).
@@ -35,7 +35,7 @@ func New(details *auth.ServiceDetails, config config.Config) (*XrayServicesManag
 }
 
 // Client will return the http client
-func (sm *XrayServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
+func (sm *XrayServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }
 
