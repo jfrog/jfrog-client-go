@@ -7,7 +7,7 @@ require (
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/gliderlabs/ssh v0.1.1 // indirect
-	github.com/golang/snappy v0.0.1 // indirect
+	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/gookit/color v1.3.2
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jfrog/gofrog v1.0.6
@@ -15,7 +15,6 @@ require (
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pelletier/go-buffruneio v0.2.0 // indirect
-	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/src-d/gcfg v1.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
