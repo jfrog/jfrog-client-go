@@ -3,10 +3,11 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
 )
 
 // application/vnd.org.jfrog.artifactory.security.User+json
@@ -51,6 +52,16 @@ func (us *UserService) GetUser(name string) (*User, error) {
 		return nil, errorutils.CheckError(err)
 	}
 	return &user, nil
+}
+
+func (us *UserService) CreateOrUpdateUsers(users []User) (err error) {
+	for _, user := range users {
+		err = us.CreateOrUpdateUser(user)
+		if err != nil {
+			break
+		}
+	}
+	return err
 }
 
 func (us *UserService) CreateOrUpdateUser(user User) error {

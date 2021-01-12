@@ -66,6 +66,7 @@ type ArtifactoryServicesManager interface {
 	GroupExists(name string) (bool, error)
 	GetUser(name string) (*services.User, error)
 	CreateUser(user services.User) error
+	CreateUsers(user []services.User) error
 	DeleteUser(name string) error
 	UserExists(name string) (bool, error)
 }
@@ -272,6 +273,10 @@ func (esm *EmptyArtifactoryServicesManager) GetUser(name string) (*services.User
 }
 
 func (esm *EmptyArtifactoryServicesManager) CreateUser(user services.User) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateUsers(users []services.User) error {
 	panic("Failed: Method is not implemented")
 }
 
