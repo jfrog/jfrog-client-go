@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
@@ -384,34 +385,31 @@ func (sm *ArtifactoryServicesManagerImp) GroupExists(name string) (bool, error) 
 	return groupService.GroupExits(name)
 }
 
-func (sm *ArtifactoryServicesManagerImp) GetUser(name string) (*services.User, error) {
+func (sm *ArtifactoryServicesManagerImp) GetUser(name string) (*services.User, bool, error) {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
 	return userService.GetUser(name)
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateUser(user services.User) error {
+func (sm *ArtifactoryServicesManagerImp) CreateUser(user services.User, replaceExistUser bool) error {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
+	if !replaceExistUser {
+		_, notExists, err := userService.GetUser(user.Name)
+		if err != nil {
+			return err
+		}
+		if !notExists {
+			return fmt.Errorf("User %s is allready exists in the system", user.Name)
+		}
+	}
 	return userService.CreateOrUpdateUser(user)
-}
-
-func (sm *ArtifactoryServicesManagerImp) CreateUsers(users []services.User) error {
-	userService := services.NewUserService(sm.client)
-	userService.ArtDetails = sm.config.GetServiceDetails()
-	return userService.CreateOrUpdateUsers(users)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
 	return userService.DeleteUser(name)
-}
-
-func (sm *ArtifactoryServicesManagerImp) UserExists(name string) (bool, error) {
-	userService := services.NewUserService(sm.client)
-	userService.ArtDetails = sm.config.GetServiceDetails()
-	return userService.UserExists(name)
 }
 
 func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPromoteParams) error {

@@ -37,31 +37,23 @@ func (us *UserService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	us.ArtDetails = rt
 }
 
-func (us *UserService) GetUser(name string) (*User, error) {
+func (us *UserService) GetUser(name string) (user *User, notExists bool, err error) {
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), name)
 	res, body, _, err := us.client.SendGet(url, true, &httpDetails)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	if res.StatusCode > http.StatusNoContent {
-		return nil, fmt.Errorf("%d %s: %s", res.StatusCode, res.Status, string(body))
-	}
-	var user User
-	if err := json.Unmarshal(body, &user); err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	return &user, nil
-}
-
-func (us *UserService) CreateOrUpdateUsers(users []User) (err error) {
-	for _, user := range users {
-		err = us.CreateOrUpdateUser(user)
-		if err != nil {
-			break
+	if res.StatusCode != http.StatusOK {
+		if res.StatusCode == http.StatusNotFound {
+			return nil, true, err
 		}
+		return nil, false, fmt.Errorf("%d %s: %s", res.StatusCode, res.Status, string(body))
 	}
-	return err
+	if err := json.Unmarshal(body, user); err != nil {
+		return nil, false, errorutils.CheckError(err)
+	}
+	return user, false, nil
 }
 
 func (us *UserService) CreateOrUpdateUser(user User) error {
@@ -98,11 +90,4 @@ func (us *UserService) DeleteUser(name string) error {
 		return fmt.Errorf("%d %s", resp.StatusCode, resp.Status)
 	}
 	return err
-}
-
-func (us *UserService) UserExists(name string) (bool, error) {
-	// Normally, HEAD on a resource is all that's needed to determine the existence of an entity.
-	// However, HEAD seems to choke on an internal proxy issue.
-	user, err := us.GetUser(name)
-	return err != nil && user != nil, err
 }
