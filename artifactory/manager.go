@@ -370,7 +370,13 @@ func (sm *ArtifactoryServicesManagerImp) GetGroup(name string) (*services.Group,
 func (sm *ArtifactoryServicesManagerImp) CreateGroup(group services.Group) error {
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()
-	return groupService.CreateOrUpdateGroup(group)
+	return groupService.CreateGroup(group)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdateGroup(group services.Group) error {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.UpdateGroup(group)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DeleteGroup(name string) error {

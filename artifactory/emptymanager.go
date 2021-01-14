@@ -62,6 +62,7 @@ type ArtifactoryServicesManager interface {
 	Client() *jfroghttpclient.JfrogHttpClient
 	GetGroup(name string) (*services.Group, error)
 	CreateGroup(group services.Group) error
+	UpdateGroup(group services.Group) error
 	DeleteGroup(name string) error
 	GroupExists(name string) (bool, error)
 	GetUser(name string) (*services.User, bool, error)
@@ -283,6 +284,10 @@ func (esm *EmptyArtifactoryServicesManager) GetGroup(name string) (*services.Gro
 }
 
 func (esm *EmptyArtifactoryServicesManager) CreateGroup(group services.Group) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) UpdateGroup(group services.Group) error {
 	panic("Failed: Method is not implemented")
 }
 

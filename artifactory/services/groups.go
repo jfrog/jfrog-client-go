@@ -3,19 +3,22 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
 type Group struct {
-	Name            string `json:"name,omitempty"`
-	Description     string `json:"description,omitempty"`
-	AutoJoin        bool   `json:"autoJoin,omitempty"`
-	AdminPrivileges bool   `json:"adminPrivileges,omitempty"`
-	Realm           string `json:"realm,omitempty"`
-	RealmAttributes string `json:"realmAttributes,omitempty"`
+	Name            string   `json:"name,omitempty"`
+	Description     string   `json:"description,omitempty"`
+	AutoJoin        bool     `json:"autoJoin,omitempty"`
+	AdminPrivileges bool     `json:"adminPrivileges,omitempty"`
+	Realm           string   `json:"realm,omitempty"`
+	RealmAttributes string   `json:"realmAttributes,omitempty"`
+	UsersNames      []string `json:"userNames,omitempty"`
 }
 
 type GroupService struct {
@@ -48,27 +51,49 @@ func (gs *GroupService) GetGroup(name string) (*Group, error) {
 	return &group, nil
 }
 
-func (gs *GroupService) CreateOrUpdateGroup(group Group) error {
-	httpDetails := gs.ArtDetails.CreateHttpClientDetails()
-	content, err := json.Marshal(group)
+func (gs *GroupService) CreateGroup(group Group) error {
+	url, content, httpDetails, err := gs.createOrUpdateGroupRequest(group)
 	if err != nil {
 		return err
+	}
+	resp, body, err := gs.client.SendPut(url, content, &httpDetails)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
+	}
+	return nil
+}
+
+func (gs *GroupService) UpdateGroup(group Group) error {
+	url, content, httpDetails, err := gs.createOrUpdateGroupRequest(group)
+	if err != nil {
+		return err
+	}
+	resp, body, err := gs.client.SendPost(url, content, &httpDetails)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
+	}
+	return nil
+}
+
+func (gs *GroupService) createOrUpdateGroupRequest(group Group) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
+	httpDetails = gs.ArtDetails.CreateHttpClientDetails()
+	requestContent, err = json.Marshal(group)
+	if err != nil {
+		return
 	}
 
 	httpDetails.Headers = map[string]string{
 		"Content-Type": "application/json",
 		"Accept":       "application/json",
 	}
-	//
-	url := fmt.Sprintf("%sapi/security/groups/%s", gs.ArtDetails.GetUrl(), group.Name)
-	resp, body, err := gs.client.SendPut(url, content, &httpDetails)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode > http.StatusNoContent {
-		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
-	}
-	return nil
+	url = fmt.Sprintf("%sapi/security/groups/%s", gs.ArtDetails.GetUrl(), group.Name)
+	return
 }
 
 func (gs *GroupService) DeleteGroup(name string) error {
