@@ -19,7 +19,7 @@ func TestUsers(t *testing.T) {
 func testCreateUser(t *testing.T) {
 	usersParams := getTestUsersParams(false)
 
-	err := testUsersService.CreateOrUpdateUser(usersParams)
+	err := testUsersService.CreateUser(usersParams)
 	defer testUsersService.DeleteUser(usersParams.UserDetails.Name)
 	assert.NoError(t, err)
 
@@ -36,12 +36,12 @@ func testCreateUser(t *testing.T) {
 func testUpdateUser(t *testing.T) {
 	usersParams := getTestUsersParams(true)
 
-	err := testUsersService.CreateOrUpdateUser(usersParams)
+	err := testUsersService.CreateUser(usersParams)
 	defer testUsersService.DeleteUser(usersParams.UserDetails.Name)
 	assert.NoError(t, err)
 
 	usersParams.UserDetails.Email = "changed@mail.com"
-	err = testUsersService.CreateOrUpdateUser(usersParams)
+	err = testUsersService.UpdateUser(usersParams)
 	assert.NoError(t, err)
 	user, _, err := testUsersService.GetUser(usersParams)
 
@@ -56,7 +56,7 @@ func testUpdateUser(t *testing.T) {
 
 func testDeleteUser(t *testing.T) {
 	usersParams := getTestUsersParams(false)
-	err := testUsersService.CreateOrUpdateUser(usersParams)
+	err := testUsersService.CreateUser(usersParams)
 	assert.NoError(t, err)
 	err = testUsersService.DeleteUser(usersParams.UserDetails.Name)
 	assert.NoError(t, err)
@@ -71,7 +71,7 @@ func getTestUsersParams(replaceExistUsers bool) services.UsersParams {
 		Name:                     fmt.Sprintf("test%d", rand.Int()),
 		Email:                    "christianb@jfrog.com",
 		Password:                 "Password1",
-		Admin:                    true,
+		Admin:                    false,
 		Realm:                    "internal",
 		ProfileUpdatable:         true,
 		DisableUIAccess:          false,

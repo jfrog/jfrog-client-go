@@ -394,7 +394,13 @@ func (sm *ArtifactoryServicesManagerImp) GetUser(params services.UsersParams) (*
 func (sm *ArtifactoryServicesManagerImp) CreateUser(params services.UsersParams) error {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
-	return userService.CreateOrUpdateUser(params)
+	return userService.CreateUser(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdateUser(params services.UsersParams) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.UpdateUser(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {

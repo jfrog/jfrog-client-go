@@ -8,6 +8,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
 type UsersParams struct {
@@ -67,7 +68,7 @@ func (us *UserService) GetUser(params UsersParams) (u *User, notExists bool, err
 	return &user, false, nil
 }
 
-func (us *UserService) CreateOrUpdateUser(params UsersParams) error {
+func (us *UserService) CreateUser(params UsersParams) error {
 	user := params.UserDetails
 	// Checks if the user allready exists in the system and act according to replaceExistUsers parameter.
 	if !params.ReplaceExistUsers {
@@ -79,18 +80,10 @@ func (us *UserService) CreateOrUpdateUser(params UsersParams) error {
 			return fmt.Errorf("User %s is allready exists in the system", user.Name)
 		}
 	}
-	httpDetails := us.ArtDetails.CreateHttpClientDetails()
-	content, err := json.Marshal(user)
+	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
 	if err != nil {
 		return err
 	}
-
-	httpDetails.Headers = map[string]string{
-		"Content-Type": "application/json",
-		"Accept":       "application/json",
-	}
-
-	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), user.Name)
 	resp, body, err := us.client.SendPut(url, content, &httpDetails)
 	if err != nil {
 		return err
@@ -99,6 +92,37 @@ func (us *UserService) CreateOrUpdateUser(params UsersParams) error {
 		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
 	}
 	return nil
+}
+
+func (us *UserService) UpdateUser(params UsersParams) error {
+	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
+	if err != nil {
+		return err
+	}
+	resp, body, err := us.client.SendPost(url, content, &httpDetails)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
+	}
+	return nil
+}
+
+func (us *UserService) createOrUpdateUserRequest(user User) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
+	httpDetails = us.ArtDetails.CreateHttpClientDetails()
+	requestContent, err = json.Marshal(user)
+	if err != nil {
+		return
+	}
+
+	httpDetails.Headers = map[string]string{
+		"Content-Type": "application/json",
+		"Accept":       "application/json",
+	}
+
+	url = fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), user.Name)
+	return
 }
 
 func (us *UserService) DeleteUser(name string) error {

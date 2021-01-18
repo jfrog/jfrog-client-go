@@ -12,8 +12,9 @@ import (
 )
 
 type GroupParams struct {
-	GroupDetails Group
-	IncludeUsers bool
+	GroupDetails      Group
+	ReplaceExistGroup bool
+	IncludeUsers      bool
 }
 
 func NewGroupParams() GroupParams {
@@ -67,6 +68,16 @@ func (gs *GroupService) GetGroup(params GroupParams) (g *Group, notExists bool, 
 }
 
 func (gs *GroupService) CreateGroup(params GroupParams) error {
+	// Checks if the group allready exists in the system and act according to ReplaceExistGroup parameter.
+	if !params.ReplaceExistGroup {
+		_, notExists, err := gs.GetGroup(params)
+		if err != nil {
+			return err
+		}
+		if !notExists {
+			return fmt.Errorf("Group %s is allready exists in the system", params.GroupDetails.Name)
+		}
+	}
 	url, content, httpDetails, err := gs.createOrUpdateGroupRequest(params.GroupDetails)
 	if err != nil {
 		return err
