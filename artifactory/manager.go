@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
@@ -361,22 +360,23 @@ func (sm *ArtifactoryServicesManagerImp) GetServiceId() (string, error) {
 	systemService.ArtDetails = sm.config.GetServiceDetails()
 	return systemService.GetServiceId()
 }
-func (sm *ArtifactoryServicesManagerImp) GetGroup(name string) (*services.Group, error) {
+
+func (sm *ArtifactoryServicesManagerImp) GetGroup(params services.GroupParams) (*services.Group, bool, error) {
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()
-	return groupService.GetGroup(name)
+	return groupService.GetGroup(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateGroup(group services.Group) error {
+func (sm *ArtifactoryServicesManagerImp) CreateGroup(params services.GroupParams) error {
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()
-	return groupService.CreateGroup(group)
+	return groupService.CreateGroup(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) UpdateGroup(group services.Group) error {
+func (sm *ArtifactoryServicesManagerImp) UpdateGroup(params services.GroupParams) error {
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()
-	return groupService.UpdateGroup(group)
+	return groupService.UpdateGroup(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DeleteGroup(name string) error {
@@ -385,31 +385,16 @@ func (sm *ArtifactoryServicesManagerImp) DeleteGroup(name string) error {
 	return groupService.DeleteGroup(name)
 }
 
-func (sm *ArtifactoryServicesManagerImp) GroupExists(name string) (bool, error) {
-	groupService := services.NewGroupService(sm.client)
-	groupService.ArtDetails = sm.config.GetServiceDetails()
-	return groupService.GroupExits(name)
-}
-
-func (sm *ArtifactoryServicesManagerImp) GetUser(name string) (*services.User, bool, error) {
+func (sm *ArtifactoryServicesManagerImp) GetUser(params services.UsersParams) (*services.User, bool, error) {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
-	return userService.GetUser(name)
+	return userService.GetUser(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateUser(user services.User, replaceExistUser bool) error {
+func (sm *ArtifactoryServicesManagerImp) CreateUser(params services.UsersParams) error {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
-	if !replaceExistUser {
-		_, notExists, err := userService.GetUser(user.Name)
-		if err != nil {
-			return err
-		}
-		if !notExists {
-			return fmt.Errorf("User %s is allready exists in the system", user.Name)
-		}
-	}
-	return userService.CreateOrUpdateUser(user)
+	return userService.CreateOrUpdateUser(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {

@@ -10,6 +10,15 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
+type UsersParams struct {
+	UserDetails       User
+	ReplaceExistUsers bool
+}
+
+func NewUsersParams() UsersParams {
+	return UsersParams{}
+}
+
 // application/vnd.org.jfrog.artifactory.security.User+json
 type User struct {
 	Name                     string   `json:"name,omitempty"`
@@ -37,26 +46,39 @@ func (us *UserService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	us.ArtDetails = rt
 }
 
-func (us *UserService) GetUser(name string) (user *User, notExists bool, err error) {
+func (us *UserService) GetUser(params UsersParams) (u *User, notExists bool, err error) {
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), name)
+	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), params.UserDetails.Name)
 	res, body, _, err := us.client.SendGet(url, true, &httpDetails)
 	if err != nil {
 		return nil, false, err
 	}
 	if res.StatusCode != http.StatusOK {
+		// The case the requseted user is not found
 		if res.StatusCode == http.StatusNotFound {
 			return nil, true, err
 		}
 		return nil, false, fmt.Errorf("%d %s: %s", res.StatusCode, res.Status, string(body))
 	}
-	if err := json.Unmarshal(body, user); err != nil {
+	var user User
+	if err := json.Unmarshal(body, &user); err != nil {
 		return nil, false, errorutils.CheckError(err)
 	}
-	return user, false, nil
+	return &user, false, nil
 }
 
-func (us *UserService) CreateOrUpdateUser(user User) error {
+func (us *UserService) CreateOrUpdateUser(params UsersParams) error {
+	user := params.UserDetails
+	// Checks if the user allready exists in the system and act according to replaceExistUsers parameter.
+	if !params.ReplaceExistUsers {
+		_, notExists, err := us.GetUser(params)
+		if err != nil {
+			return err
+		}
+		if !notExists {
+			return fmt.Errorf("User %s is allready exists in the system", user.Name)
+		}
+	}
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(user)
 	if err != nil {
@@ -73,7 +95,7 @@ func (us *UserService) CreateOrUpdateUser(user User) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode > http.StatusNoContent {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
 	}
 	return nil
@@ -86,7 +108,7 @@ func (us *UserService) DeleteUser(name string) error {
 	if resp == nil {
 		return fmt.Errorf("no response provided (including status code)")
 	}
-	if resp.StatusCode > http.StatusNoContent {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("%d %s", resp.StatusCode, resp.Status)
 	}
 	return err

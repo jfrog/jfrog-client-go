@@ -11,6 +11,15 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
+type GroupParams struct {
+	GroupDetails Group
+	IncludeUsers bool
+}
+
+func NewGroupParams() GroupParams {
+	return GroupParams{}
+}
+
 type Group struct {
 	Name            string   `json:"name,omitempty"`
 	Description     string   `json:"description,omitempty"`
@@ -34,25 +43,31 @@ func (gs *GroupService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	gs.ArtDetails = rt
 }
 
-func (gs *GroupService) GetGroup(name string) (*Group, error) {
+func (gs *GroupService) GetGroup(params GroupParams) (g *Group, notExists bool, err error) {
 	httpDetails := gs.ArtDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%sapi/security/groups/%s", gs.ArtDetails.GetUrl(), name)
+	url := fmt.Sprintf("%sapi/security/groups/%s?includeUsers=%t", gs.ArtDetails.GetUrl(), params.GroupDetails.Name, params.IncludeUsers)
 	res, body, _, err := gs.client.SendGet(url, true, &httpDetails)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	if res.StatusCode > http.StatusNoContent {
-		return nil, fmt.Errorf("%d %s: %s", res.StatusCode, res.Status, string(body))
+	if res.StatusCode != http.StatusOK {
+		// If the requseted group isn't exists.
+		if res.StatusCode == http.StatusNotFound {
+			return nil, true, err
+		}
+		// Other errors from the server
+		return nil, false, fmt.Errorf("%d %s: %s", res.StatusCode, res.Status, string(body))
 	}
+
 	var group Group
 	if err := json.Unmarshal(body, &group); err != nil {
-		return nil, errorutils.CheckError(err)
+		return nil, false, errorutils.CheckError(err)
 	}
-	return &group, nil
+	return &group, false, nil
 }
 
-func (gs *GroupService) CreateGroup(group Group) error {
-	url, content, httpDetails, err := gs.createOrUpdateGroupRequest(group)
+func (gs *GroupService) CreateGroup(params GroupParams) error {
+	url, content, httpDetails, err := gs.createOrUpdateGroupRequest(params.GroupDetails)
 	if err != nil {
 		return err
 	}
@@ -60,14 +75,14 @@ func (gs *GroupService) CreateGroup(group Group) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
 	}
 	return nil
 }
 
-func (gs *GroupService) UpdateGroup(group Group) error {
-	url, content, httpDetails, err := gs.createOrUpdateGroupRequest(group)
+func (gs *GroupService) UpdateGroup(params GroupParams) error {
+	url, content, httpDetails, err := gs.createOrUpdateGroupRequest(params.GroupDetails)
 	if err != nil {
 		return err
 	}
@@ -103,15 +118,8 @@ func (gs *GroupService) DeleteGroup(name string) error {
 	if resp == nil {
 		return fmt.Errorf("no response provided (including status code)")
 	}
-	if resp.StatusCode > http.StatusNoContent {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("%d %s", resp.StatusCode, resp.Status)
 	}
 	return err
-}
-
-func (gs *GroupService) GroupExits(name string) (bool, error) {
-	// usage of HEAD chokes on an internal proxy issue. Apparently multiple services
-	// are running in 1 container
-	group, err := gs.GetGroup(name)
-	return err != nil && group != nil, err
 }

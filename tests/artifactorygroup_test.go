@@ -2,13 +2,11 @@ package tests
 
 import (
 	"fmt"
-	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/config"
-	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGroups(t *testing.T) {
@@ -18,87 +16,54 @@ func TestGroups(t *testing.T) {
 }
 
 func testCreateGroup(t *testing.T) {
-	details := auth.NewArtifactoryDetails()
-	details.SetUser("admin")
-	details.SetPassword("password")
-	details.SetUrl("http://localhost:8081/artifactory/")
-
-	cfg, err := config.NewConfigBuilder().
-		SetServiceDetails(details).
-		SetDryRun(false).
-		Build()
-	rt, err := artifactorynew.New(&details, cfg)
-	gs := services.NewGroupService(rt.Client())
-	gs.SetArtifactoryDetails(details)
-
-	group := services.Group{
-		Name:            fmt.Sprintf("test%d", rand.Int()),
-		Description:     "hello",
-		AutoJoin:        false,
-		AdminPrivileges: true,
-		Realm:           "internal",
-		RealmAttributes: "",
-	}
-	err = gs.CreateOrUpdateGroup(group)
+	groupParams := getTestGroupParams(false)
+	err := testGroupService.CreateGroup(groupParams)
+	defer testGroupService.DeleteGroup(groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
-
-	g, err := gs.GetGroup(group.Name)
-	assert.NotNil(t, g)
-	assert.Equal(t, group, *g)
-	gs.DeleteGroup(group.Name)
-
+	createdGroup, _, err := testGroupService.GetGroup(groupParams)
+	assert.NotNil(t, createdGroup)
+	assert.Equal(t, groupParams.GroupDetails, *createdGroup)
 }
 
 func testUpdateGroup(t *testing.T) {
-	details := auth.NewArtifactoryDetails()
-	details.SetUser("admin")
-	details.SetPassword("password")
-	details.SetUrl("http://localhost:8081/artifactory/")
-
-	cfg, err := config.NewConfigBuilder().
-		SetServiceDetails(details).
-		SetDryRun(false).
-		Build()
-	rt, err := artifactorynew.New(&details, cfg)
-	gs := services.NewGroupService(rt.Client())
-	gs.SetArtifactoryDetails(details)
-
-	group := services.Group{
-		Name:            fmt.Sprintf("test%d", rand.Int()),
-		Description:     "hello",
-		AutoJoin:        false,
-		AdminPrivileges: true,
-		Realm:           "internal",
-		RealmAttributes: "",
-	}
-	err = gs.CreateOrUpdateGroup(group)
+	groupParams := getTestGroupParams(false)
+	err := testGroupService.CreateGroup(groupParams)
+	defer testGroupService.DeleteGroup(groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
-
-	group.Description = "Changed description"
-	err = gs.CreateOrUpdateGroup(group)
+	groupParams.GroupDetails.Description = "Changed description"
+	err = testGroupService.UpdateGroup(groupParams)
 	assert.NoError(t, err)
-	grp, err := gs.GetGroup(group.Name)
+	grp, _, err := testGroupService.GetGroup(groupParams)
 	assert.NoError(t, err)
-	assert.Equal(t, group, *grp)
-	gs.DeleteGroup(group.Name)
+	assert.Equal(t, groupParams.GroupDetails, *grp)
+}
 
+func testAddUsersToGroup(t *testing.T) {
+	groupParams := getTestGroupParams(true)
+	err := testGroupService.CreateGroup(groupParams)
+	defer testGroupService.DeleteGroup(groupParams.GroupDetails.Name)
+	assert.NoError(t, err)
+	groupParams.GroupDetails.UsersNames = []string{"Alice", "Bob"}
+	err = testGroupService.UpdateGroup(groupParams)
+	assert.NoError(t, err)
+	grp, _, err := testGroupService.GetGroup(groupParams)
+	assert.NoError(t, err)
+	assert.Equal(t, groupParams.GroupDetails, *grp)
 }
 
 func testDeleteGroup(t *testing.T) {
-	details := auth.NewArtifactoryDetails()
-	details.SetUser("admin")
-	details.SetPassword("password")
-	details.SetUrl("http://localhost:8081/artifactory/")
+	groupParams := getTestGroupParams(false)
+	err := testGroupService.CreateGroup(groupParams)
+	assert.NoError(t, err)
+	err = testGroupService.DeleteGroup(groupParams.GroupDetails.Name)
+	assert.NoError(t, err)
+	group, notExists, err := testGroupService.GetGroup(groupParams)
+	assert.True(t, notExists)
+	assert.Nil(t, group)
+}
 
-	cfg, err := config.NewConfigBuilder().
-		SetServiceDetails(details).
-		SetDryRun(false).
-		Build()
-	rt, err := artifactorynew.New(&details, cfg)
-	gs := services.NewGroupService(rt.Client())
-	gs.SetArtifactoryDetails(details)
-
-	group := services.Group{
+func getTestGroupParams(includeUsers bool) services.GroupParams {
+	groupDetails := services.Group{
 		Name:            fmt.Sprintf("test%d", rand.Int()),
 		Description:     "hello",
 		AutoJoin:        false,
@@ -106,11 +71,8 @@ func testDeleteGroup(t *testing.T) {
 		Realm:           "internal",
 		RealmAttributes: "",
 	}
-	err = gs.CreateOrUpdateGroup(group)
-	assert.NoError(t, err)
-	err = gs.DeleteGroup(group.Name)
-	assert.NoError(t, err)
-	g, err := gs.GetGroup(group.Name)
-	assert.Nil(t, g)
-
+	return services.GroupParams{
+		GroupDetails: groupDetails,
+		IncludeUsers: includeUsers,
+	}
 }
