@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -539,17 +538,13 @@ func deleteRepo(t *testing.T, repoKey string) {
 	assert.NoError(t, err, "Failed to delete "+repoKey)
 }
 
-func GenericHttpRetries(updateFunc func() error) error {
-	var reflectVal reflect.Value = reflect.ValueOf(updateFunc)
-	if reflectVal.Type().Kind() != reflect.Func {
-		return errors.New("The second arg is not a func")
-	}
+func GenericHttpRetries(checkFunc func() error) error {
 	retryExecutor := &clientutils.RetryExecutor{
 		MaxRetries:      120,
 		RetriesInterval: 1,
 		ErrorMessage:    "Waiting for Artifactory to evaluate repository operation...",
 		ExecutionHandler: func() (shouldRetry bool, err error) {
-			if err := updateFunc(); err != nil {
+			if err := checkFunc(); err != nil {
 				return true, err
 			}
 			return false, nil
