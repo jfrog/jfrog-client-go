@@ -59,7 +59,7 @@ func remoteMavenTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Maven(mrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, mrp)
@@ -96,7 +96,7 @@ func remoteGradleTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Gradle(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, grp)
@@ -130,7 +130,7 @@ func remoteIvyTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Ivy(irp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -163,7 +163,7 @@ func remoteSbtTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Sbt(srp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -200,7 +200,7 @@ func remoteHelmTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Helm(hrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, hrp)
@@ -235,7 +235,7 @@ func remoteRpmTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Rpm(rrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -272,7 +272,7 @@ func remoteNugetTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Nuget(nrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nrp)
@@ -307,7 +307,7 @@ func remoteCranTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Cran(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -344,7 +344,7 @@ func remoteGemsTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Gems(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -384,7 +384,7 @@ func remoteNpmTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Npm(nrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -424,7 +424,7 @@ func remoteBowerTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Bower(brp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -466,7 +466,7 @@ func remoteDebianTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Debian(drp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -504,7 +504,7 @@ func remotePypiTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Conda(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
@@ -537,7 +537,7 @@ func remoteDockerTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Docker(drp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -576,7 +576,7 @@ func remoteGitlfsTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Gitlfs(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -613,7 +613,7 @@ func remoteGoTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Go(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -651,7 +651,7 @@ func remoteYumTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Yum(yrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
@@ -693,7 +693,7 @@ func remoteConanTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Conan(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
@@ -733,7 +733,7 @@ func remoteChefTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Chef(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
@@ -771,7 +771,7 @@ func remotePuppetTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Puppet(prp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -811,7 +811,7 @@ func remoteComposerTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Composer(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
@@ -850,7 +850,7 @@ func remoteVcsTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Vcs(vrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, vrp)
@@ -884,7 +884,7 @@ func remoteCocoapodsTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Cocoapods(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -919,7 +919,7 @@ func remoteOpkgTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Opkg(orp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, orp)
@@ -951,7 +951,7 @@ func remoteCondaTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Conda(crp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, crp)
@@ -983,7 +983,7 @@ func remoteP2Test(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.P2(prp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
@@ -1018,7 +1018,7 @@ func remoteGenericTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, grp)
@@ -1046,7 +1046,7 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
@@ -1071,7 +1071,7 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details

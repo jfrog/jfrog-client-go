@@ -538,10 +538,10 @@ func deleteRepo(t *testing.T, repoKey string) {
 	assert.NoError(t, err, "Failed to delete "+repoKey)
 }
 
-func GenericHttpRetries(checkFunc func() error) error {
+func WaitForSuccess(checkFunc func() error) error {
 	retryExecutor := &clientutils.RetryExecutor{
 		MaxRetries:      120,
-		RetriesInterval: 1,
+		RetriesInterval: 5,
 		ErrorMessage:    "Waiting for Artifactory to evaluate repository operation...",
 		ExecutionHandler: func() (shouldRetry bool, err error) {
 			if err := checkFunc(); err != nil {

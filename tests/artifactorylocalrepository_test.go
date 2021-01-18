@@ -53,7 +53,7 @@ func localMavenTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Maven(mlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, mlp)
@@ -87,7 +87,7 @@ func localGradleTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Gradle(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
@@ -119,7 +119,7 @@ func localIvyTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Ivy(ilp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, ilp)
@@ -149,7 +149,7 @@ func localSbtTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Sbt(slp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, slp)
@@ -177,7 +177,7 @@ func localHelmTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Helm(hlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, hlp)
@@ -209,7 +209,7 @@ func localRpmTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Rpm(rlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, rlp)
@@ -241,7 +241,7 @@ func localNugetTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Nuget(nlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nlp)
@@ -274,7 +274,7 @@ func localCranTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Cran(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
@@ -306,7 +306,7 @@ func localGemsTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Gems(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
@@ -336,7 +336,7 @@ func localNpmTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Npm(nlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nlp)
@@ -365,7 +365,7 @@ func localBowerTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Bower(blp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, blp)
@@ -398,7 +398,7 @@ func localDebianTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Debian(dlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dlp)
@@ -429,7 +429,7 @@ func localPypiTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Pypi(plp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, plp)
@@ -461,7 +461,7 @@ func localDockerTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Docker(dlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dlp)
@@ -496,7 +496,7 @@ func localGitlfsTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Gitlfs(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
@@ -526,7 +526,7 @@ func localGoTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Go(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
@@ -555,7 +555,7 @@ func localYumTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Yum(ylp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
@@ -588,7 +588,7 @@ func localConanTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Conan(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
@@ -617,7 +617,7 @@ func localChefTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Chef(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
@@ -648,7 +648,7 @@ func localPuppetTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Puppet(plp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, plp)
@@ -678,7 +678,7 @@ func localCocoapodsTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Cocoapods(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
@@ -709,7 +709,7 @@ func localOpkgTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Opkg(olp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, olp)
@@ -741,7 +741,7 @@ func localComposerTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Composer(clp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
@@ -770,7 +770,7 @@ func localVagrantTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Vagrant(vlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, vlp)
@@ -801,7 +801,7 @@ func localGenericTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
@@ -830,7 +830,7 @@ func getLocalRepoDetailsTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
@@ -856,7 +856,7 @@ func getAllLocalRepoDetailsTest(t *testing.T) {
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details

@@ -52,7 +52,7 @@ func virtualMavenTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Maven(mvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, mvp)
@@ -82,7 +82,7 @@ func virtualGradleTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Gradle(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
@@ -114,7 +114,7 @@ func virtualIvyTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Ivy(ivp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, ivp)
@@ -142,7 +142,7 @@ func virtualSbtTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Sbt(svp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, svp)
@@ -171,7 +171,7 @@ func virtualHelmTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Helm(hvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, hvp)
@@ -200,7 +200,7 @@ func virtualRpmTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Rpm(rvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, rvp)
@@ -230,7 +230,7 @@ func virtualNugetTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Nuget(nvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
@@ -260,7 +260,7 @@ func virtualCranTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Cran(cvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
@@ -290,7 +290,7 @@ func virtualGemsTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Gems(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
@@ -322,7 +322,7 @@ func virtualNpmTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Npm(nvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
@@ -355,7 +355,7 @@ func virtualBowerTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Bower(bvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, bvp)
@@ -385,7 +385,7 @@ func virtualDebianTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Debian(dvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
@@ -413,7 +413,7 @@ func virtualPypiTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Pypi(pvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
@@ -442,7 +442,7 @@ func virtualDockerTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Docker(dvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
@@ -470,7 +470,7 @@ func virtualGitlfsTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Gitlfs(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
@@ -502,7 +502,7 @@ func virtualGoTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
@@ -533,7 +533,7 @@ func virtualYumTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Yum(yvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
@@ -564,7 +564,7 @@ func virtualConanTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Conan(cvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
@@ -595,7 +595,7 @@ func virtualChefTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Chef(cvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
@@ -623,7 +623,7 @@ func virtualPuppetTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Puppet(pvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
@@ -651,7 +651,7 @@ func virtualP2Test(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.P2(pvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
@@ -678,7 +678,7 @@ func virtualCondaTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Conda(cvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
@@ -704,7 +704,7 @@ func virtualGenericTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Generic(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
@@ -729,7 +729,7 @@ func getVirtualRepoDetailsTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
@@ -752,7 +752,7 @@ func getAllVirtualRepoDetailsTest(t *testing.T) {
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
-	err = GenericHttpRetries(func() error { _, err := getRepoConfig(repoKey); return err })
+	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
