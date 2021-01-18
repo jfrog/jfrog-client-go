@@ -488,8 +488,11 @@ func getRepoConfig(repoKey string) (body []byte, err error) {
 		return
 	}
 	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/repositories/"+repoKey, false, artHttpDetails)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil {
 		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		return body, errors.New("Artifactory respons: " + resp.Status)
 	}
 	return
 }
