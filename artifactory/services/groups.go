@@ -59,7 +59,6 @@ func (gs *GroupService) GetGroup(params GroupParams) (g *Group, notExists bool, 
 		// Other errors from the server
 		return nil, false, fmt.Errorf("%d %s: %s", res.StatusCode, res.Status, string(body))
 	}
-
 	var group Group
 	if err := json.Unmarshal(body, &group); err != nil {
 		return nil, false, errorutils.CheckError(err)

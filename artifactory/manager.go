@@ -29,7 +29,6 @@ func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, prog
 	if err != nil {
 		return nil, err
 	}
-
 	manager := &ArtifactoryServicesManagerImp{config: config, progress: progress}
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
