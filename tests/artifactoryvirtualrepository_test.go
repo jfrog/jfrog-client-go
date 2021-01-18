@@ -6,6 +6,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var trimmedRtTargetRepo = strings.TrimSuffix(RtTargetRepo, "/")
@@ -51,9 +52,9 @@ func virtualMavenTest(t *testing.T) {
 	mvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Maven(mvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, mvp)
 
@@ -81,9 +82,9 @@ func virtualGradleTest(t *testing.T) {
 	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Gradle(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
@@ -113,9 +114,9 @@ func virtualIvyTest(t *testing.T) {
 	ivp.IncludesPattern = "onlyDir/*"
 
 	err := testsCreateVirtualRepositoryService.Ivy(ivp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, ivp)
 
@@ -141,9 +142,9 @@ func virtualSbtTest(t *testing.T) {
 	svp.DefaultDeploymentRepo = trimmedRtTargetRepo
 
 	err := testsCreateVirtualRepositoryService.Sbt(svp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, svp)
 
@@ -170,9 +171,9 @@ func virtualHelmTest(t *testing.T) {
 	hvp.DefaultDeploymentRepo = trimmedRtTargetRepo
 
 	err := testsCreateVirtualRepositoryService.Helm(hvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, hvp)
 
@@ -199,9 +200,9 @@ func virtualRpmTest(t *testing.T) {
 	rvp.Repositories = repos
 
 	err := testsCreateVirtualRepositoryService.Rpm(rvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, rvp)
 
@@ -229,9 +230,9 @@ func virtualNugetTest(t *testing.T) {
 	nvp.ExcludesPattern = "*/ex/*"
 
 	err := testsCreateVirtualRepositoryService.Nuget(nvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
@@ -259,9 +260,9 @@ func virtualCranTest(t *testing.T) {
 	cvp.VirtualRetrievalCachePeriodSecs = 5555
 
 	err := testsCreateVirtualRepositoryService.Cran(cvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
@@ -289,9 +290,9 @@ func virtualGemsTest(t *testing.T) {
 	gvp.ExcludesPattern = "dir1/"
 
 	err := testsCreateVirtualRepositoryService.Gems(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
@@ -321,9 +322,9 @@ func virtualNpmTest(t *testing.T) {
 	nvp.VirtualRetrievalCachePeriodSecs = 1818
 
 	err := testsCreateVirtualRepositoryService.Npm(nvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
@@ -354,9 +355,9 @@ func virtualBowerTest(t *testing.T) {
 	bvp.ExternalDependenciesPatterns = []string{"**/*github*/**"}
 
 	err := testsCreateVirtualRepositoryService.Bower(bvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, bvp)
 
@@ -384,9 +385,9 @@ func virtualDebianTest(t *testing.T) {
 	dvp.ExcludesPattern = "dir1/dir2/*"
 
 	err := testsCreateVirtualRepositoryService.Debian(dvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
@@ -412,9 +413,9 @@ func virtualPypiTest(t *testing.T) {
 	pvp.ExcludesPattern = "dir1/dir2/*"
 
 	err := testsCreateVirtualRepositoryService.Pypi(pvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
@@ -441,9 +442,9 @@ func virtualDockerTest(t *testing.T) {
 	dvp.ExcludesPattern = "*/ex/*"
 
 	err := testsCreateVirtualRepositoryService.Docker(dvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
@@ -469,9 +470,9 @@ func virtualGitlfsTest(t *testing.T) {
 	gvp.ExcludesPattern = "dir1/dir1.1/*"
 
 	err := testsCreateVirtualRepositoryService.Gitlfs(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
@@ -501,9 +502,9 @@ func virtualGoTest(t *testing.T) {
 	gvp.ExternalDependenciesPatterns = []string{"**/*microsoft*/**", "**/*github*/**"}
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
@@ -532,9 +533,9 @@ func virtualYumTest(t *testing.T) {
 	yvp.IncludesPattern = "onlyDir/*"
 
 	err := testsCreateVirtualRepositoryService.Yum(yvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	yvp.PackageType = "rpm"
@@ -563,9 +564,9 @@ func virtualConanTest(t *testing.T) {
 	cvp.VirtualRetrievalCachePeriodSecs = 1818
 
 	err := testsCreateVirtualRepositoryService.Conan(cvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
@@ -594,9 +595,9 @@ func virtualChefTest(t *testing.T) {
 	cvp.DefaultDeploymentRepo = trimmedRtTargetRepo
 
 	err := testsCreateVirtualRepositoryService.Chef(cvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
@@ -622,9 +623,9 @@ func virtualPuppetTest(t *testing.T) {
 	pvp.ExcludesPattern = "dir1/*"
 
 	err := testsCreateVirtualRepositoryService.Puppet(pvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
@@ -650,9 +651,9 @@ func virtualP2Test(t *testing.T) {
 	pvp.ExcludesPattern = "dir1/dir1.1/*"
 
 	err := testsCreateVirtualRepositoryService.P2(pvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
@@ -677,9 +678,9 @@ func virtualCondaTest(t *testing.T) {
 	cvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Conda(cvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
@@ -703,9 +704,9 @@ func virtualGenericTest(t *testing.T) {
 	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Generic(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
@@ -728,9 +729,9 @@ func getVirtualRepoDetailsTest(t *testing.T) {
 	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
 	data := getRepo(t, repoKey)
@@ -751,9 +752,9 @@ func getAllVirtualRepoDetailsTest(t *testing.T) {
 	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
 	data := getAllRepos(t)

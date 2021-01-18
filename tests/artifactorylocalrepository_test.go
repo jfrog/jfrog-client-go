@@ -5,6 +5,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestArtifactoryLocalRepository(t *testing.T) {
@@ -52,9 +53,9 @@ func localMavenTest(t *testing.T) {
 	mlp.DownloadRedirect = &falseValue
 
 	err := testsCreateLocalRepositoryService.Maven(mlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, mlp)
 
@@ -86,9 +87,9 @@ func localGradleTest(t *testing.T) {
 	glp.DownloadRedirect = &falseValue
 
 	err := testsCreateLocalRepositoryService.Gradle(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
@@ -118,9 +119,9 @@ func localIvyTest(t *testing.T) {
 	ilp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Ivy(ilp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, ilp)
 
@@ -148,9 +149,9 @@ func localSbtTest(t *testing.T) {
 	slp.BlackedOut = &falseValue
 
 	err := testsCreateLocalRepositoryService.Sbt(slp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, slp)
 
@@ -176,9 +177,9 @@ func localHelmTest(t *testing.T) {
 	hlp.BlackedOut = &falseValue
 
 	err := testsCreateLocalRepositoryService.Helm(hlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, hlp)
 
@@ -208,9 +209,9 @@ func localRpmTest(t *testing.T) {
 	rlp.CalculateYumMetadata = &falseValue
 
 	err := testsCreateLocalRepositoryService.Rpm(rlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, rlp)
 
@@ -240,9 +241,9 @@ func localNugetTest(t *testing.T) {
 	nlp.MaxUniqueSnapshots = 24
 
 	err := testsCreateLocalRepositoryService.Nuget(nlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nlp)
 
@@ -273,9 +274,9 @@ func localCranTest(t *testing.T) {
 	clp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Cran(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
@@ -305,9 +306,9 @@ func localGemsTest(t *testing.T) {
 	glp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Gems(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
@@ -335,9 +336,9 @@ func localNpmTest(t *testing.T) {
 	nlp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Npm(nlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nlp)
 
@@ -364,9 +365,9 @@ func localBowerTest(t *testing.T) {
 	blp.XrayIndex = &falseValue
 
 	err := testsCreateLocalRepositoryService.Bower(blp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, blp)
 
@@ -397,9 +398,9 @@ func localDebianTest(t *testing.T) {
 	dlp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Debian(dlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 
@@ -428,9 +429,9 @@ func localPypiTest(t *testing.T) {
 	plp.XrayIndex = &falseValue
 
 	err := testsCreateLocalRepositoryService.Pypi(plp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, plp)
 	plp.Description += " - Updated"
@@ -460,9 +461,9 @@ func localDockerTest(t *testing.T) {
 	dlp.MaxUniqueTags = 18
 
 	err := testsCreateLocalRepositoryService.Docker(dlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 
@@ -495,9 +496,9 @@ func localGitlfsTest(t *testing.T) {
 	glp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Gitlfs(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
@@ -525,9 +526,9 @@ func localGoTest(t *testing.T) {
 	glp.ArchiveBrowsingEnabled = &trueValue
 
 	err := testsCreateLocalRepositoryService.Go(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
@@ -554,9 +555,9 @@ func localYumTest(t *testing.T) {
 	ylp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Yum(ylp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	ylp.PackageType = "rpm"
@@ -587,9 +588,9 @@ func localConanTest(t *testing.T) {
 	clp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Conan(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
@@ -616,9 +617,9 @@ func localChefTest(t *testing.T) {
 	clp.XrayIndex = &falseValue
 
 	err := testsCreateLocalRepositoryService.Chef(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
@@ -647,9 +648,9 @@ func localPuppetTest(t *testing.T) {
 	plp.XrayIndex = &falseValue
 
 	err := testsCreateLocalRepositoryService.Puppet(plp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, plp)
 	plp.Description += " - Updated"
@@ -677,9 +678,9 @@ func localCocoapodsTest(t *testing.T) {
 	clp.BlackedOut = &falseValue
 
 	err := testsCreateLocalRepositoryService.Cocoapods(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
@@ -708,9 +709,9 @@ func localOpkgTest(t *testing.T) {
 	olp.XrayIndex = &trueValue
 
 	err := testsCreateLocalRepositoryService.Opkg(olp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, olp)
 
@@ -740,9 +741,9 @@ func localComposerTest(t *testing.T) {
 	clp.IncludesPattern = "dir1/*,"
 
 	err := testsCreateLocalRepositoryService.Composer(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, clp)
 
@@ -769,9 +770,9 @@ func localVagrantTest(t *testing.T) {
 	vlp.BlackedOut = &trueValue
 
 	err := testsCreateLocalRepositoryService.Vagrant(vlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, vlp)
 
@@ -800,9 +801,9 @@ func localGenericTest(t *testing.T) {
 	glp.ArchiveBrowsingEnabled = &falseValue
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
@@ -829,9 +830,9 @@ func getLocalRepoDetailsTest(t *testing.T) {
 	glp.ArchiveBrowsingEnabled = &falseValue
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
 	data := getRepo(t, repoKey)
@@ -855,9 +856,9 @@ func getAllLocalRepoDetailsTest(t *testing.T) {
 	glp.ArchiveBrowsingEnabled = &falseValue
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	err = WaitForSuccess(func() error { _, err := getRepoConfig(repoKey); return err })
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	require.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
 	data := getAllRepos(t)
