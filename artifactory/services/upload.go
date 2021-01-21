@@ -73,7 +73,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, progressMg
 			if len(uploadParams.Props) > 0 {
 				uploadParams.AddedProps = addProps(uploadParams.GetAddedProps(), uploadParams.GetProps())
 			}
-			
+
 			artifactHandlerFunc := us.createArtifactHandlerFunc(&uploadSummary, uploadParams)
 			err := collectFilesForUpload(uploadParams, producer, progressMgr, artifactHandlerFunc, errorsQueue, vcsCache)
 			if err != nil {
