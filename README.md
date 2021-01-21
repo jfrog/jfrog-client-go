@@ -763,16 +763,15 @@ serviceId, err := servicesManager.GetServiceId()
 
 #### Fetching Users Details
 ```go
-params := services.NewUsersParams()
+params := services.NewUserParams()
 params.UserDetails.Name = "myUserName"
 
-user, notExists, err := serviceManager.GetUser(params)
-
+user, err := serviceManager.GetUser(params)
 ```
 
 #### Creating and Updating a User
 ```go
-params := services.NewUsersParams()
+params := services.NewUserParams()
 params.UserDetails.Name = "myUserName"
 params.UserDetails.Email = "myUser@jfrog.com"
 params.UserDetails.Password = "Password1"
@@ -782,13 +781,12 @@ params.UserDetails.ProfileUpdatable = true
 params.UserDetails.DisableUIAccess = false
 params.UserDetails.InternalPasswordDisabled = false
 params.UserDetails.groups = [2]string{"GroupA", "GroupB"}
-// Set to true in order to override exist user with the same name
-params.ReplaceExistUsers = false
+// Set to true in order to replace exist user with the same name
+params.ReplaceIfExists = false
 err := serviceManager.CreateUser(params)
 
 params.UserDetails.groups = [3]string{"GroupA", "GroupB", "GroupC"}
 err := serviceManager.UpdateUser(params)
-
 ```
 
 #### Deleting a User
@@ -800,11 +798,10 @@ err := serviceManager.DeleteUser("myUserName")
 ```go
 params := services.NewGroupParams()
 params.GroupDetails.Name = "myGroupName"
-// Set this param to true in order to receive the user names which associated with this group
+// Set this param to true to receive the user names associated with this group
 params.IncludeUsers = true
 
-group, notExists, err := serviceManager.GetGroup(params)
-
+group, err := serviceManager.GetGroup(params)
 ```
 
 #### Creating and Updating a Group
@@ -816,8 +813,8 @@ params.GroupDetails.AutoJoin = false
 params.GroupDetails.AdminPrivileges = true
 params.GroupDetails.Realm = "internal"
 params.GroupDetails.UsersNames = [2]string{"UserA", "UserB"}
-// Set to true in order to override exist group with the same name
-params.ReplaceExistGroup = false
+// Set to true in order to replace exist group with the same name
+params.ReplaceIfExists = false
 err := serviceManager.CreateGroup(params)
 
 params.GroupDetails.Description = "Newer Description"
@@ -825,7 +822,6 @@ params.GroupDetails.Description = "Newer Description"
 params.GroupDetails.UsersNames = [1]string{"UserC"}
 
 err := serviceManager.UpdateGroup(params)
-
 ```
 
 #### Deleting a Group

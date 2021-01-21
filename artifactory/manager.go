@@ -360,7 +360,7 @@ func (sm *ArtifactoryServicesManagerImp) GetServiceId() (string, error) {
 	return systemService.GetServiceId()
 }
 
-func (sm *ArtifactoryServicesManagerImp) GetGroup(params services.GroupParams) (*services.Group, bool, error) {
+func (sm *ArtifactoryServicesManagerImp) GetGroup(params services.GroupParams) (*services.Group, error) {
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()
 	return groupService.GetGroup(params)
@@ -384,19 +384,19 @@ func (sm *ArtifactoryServicesManagerImp) DeleteGroup(name string) error {
 	return groupService.DeleteGroup(name)
 }
 
-func (sm *ArtifactoryServicesManagerImp) GetUser(params services.UsersParams) (*services.User, bool, error) {
+func (sm *ArtifactoryServicesManagerImp) GetUser(params services.UserParams) (*services.User, error) {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
 	return userService.GetUser(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateUser(params services.UsersParams) error {
+func (sm *ArtifactoryServicesManagerImp) CreateUser(params services.UserParams) error {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
 	return userService.CreateUser(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) UpdateUser(params services.UsersParams) error {
+func (sm *ArtifactoryServicesManagerImp) UpdateUser(params services.UserParams) error {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
 	return userService.UpdateUser(params)

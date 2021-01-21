@@ -2,22 +2,24 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
-type UsersParams struct {
-	UserDetails       User
-	ReplaceExistUsers bool
+type UserParams struct {
+	UserDetails     User
+	ReplaceIfExists bool
 }
 
-func NewUsersParams() UsersParams {
-	return UsersParams{}
+func NewUserParams() UserParams {
+	return UserParams{}
 }
 
 // application/vnd.org.jfrog.artifactory.security.User+json
@@ -47,37 +49,36 @@ func (us *UserService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	us.ArtDetails = rt
 }
 
-func (us *UserService) GetUser(params UsersParams) (u *User, notExists bool, err error) {
+func (us *UserService) GetUser(params UserParams) (u *User, err error) {
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), params.UserDetails.Name)
-	res, body, _, err := us.client.SendGet(url, true, &httpDetails)
+	resp, body, _, err := us.client.SendGet(url, true, &httpDetails)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
-	if res.StatusCode != http.StatusOK {
-		// The case the requseted user is not found
-		if res.StatusCode == http.StatusNotFound {
-			return nil, true, err
-		}
-		return nil, false, fmt.Errorf("%d %s: %s", res.StatusCode, res.Status, string(body))
+	// The case the requseted user is not found
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 	var user User
 	if err := json.Unmarshal(body, &user); err != nil {
-		return nil, false, errorutils.CheckError(err)
+		return nil, errorutils.CheckError(err)
 	}
-	return &user, false, nil
+	return &user, nil
 }
 
-func (us *UserService) CreateUser(params UsersParams) error {
-	user := params.UserDetails
-	// Checks if the user allready exists in the system and act according to replaceExistUsers parameter.
-	if !params.ReplaceExistUsers {
-		_, notExists, err := us.GetUser(params)
+func (us *UserService) CreateUser(params UserParams) error {
+	// Checks if the user allready exist and act according to ReplaceIfExists parameter.
+	if !params.ReplaceIfExists {
+		user, err := us.GetUser(params)
 		if err != nil {
 			return err
 		}
-		if !notExists {
-			return fmt.Errorf("User %s is allready exists in the system", user.Name)
+		if user != nil {
+			return fmt.Errorf("User %s allready exists.", user.Name)
 		}
 	}
 	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
@@ -89,12 +90,12 @@ func (us *UserService) CreateUser(params UsersParams) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
+		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 	return nil
 }
 
-func (us *UserService) UpdateUser(params UsersParams) error {
+func (us *UserService) UpdateUser(params UserParams) error {
 	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
 	if err != nil {
 		return err
@@ -104,7 +105,7 @@ func (us *UserService) UpdateUser(params UsersParams) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("%d %s: %s", resp.StatusCode, resp.Status, string(body))
+		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 	return nil
 }
@@ -112,7 +113,7 @@ func (us *UserService) UpdateUser(params UsersParams) error {
 func (us *UserService) createOrUpdateUserRequest(user User) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
 	httpDetails = us.ArtDetails.CreateHttpClientDetails()
 	requestContent, err = json.Marshal(user)
-	if err != nil {
+	if errorutils.CheckError(err) != nil {
 		return
 	}
 
@@ -130,10 +131,10 @@ func (us *UserService) DeleteUser(name string) error {
 	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), name)
 	resp, _, err := us.client.SendDelete(url, nil, &httpDetails)
 	if resp == nil {
-		return fmt.Errorf("no response provided (including status code)")
+		return errorutils.CheckError(fmt.Errorf("no response provided (including status code)"))
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%d %s", resp.StatusCode, resp.Status)
+		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status))
 	}
 	return err
 }

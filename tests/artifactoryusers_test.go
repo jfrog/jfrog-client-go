@@ -17,56 +17,54 @@ func TestUsers(t *testing.T) {
 }
 
 func testCreateUser(t *testing.T) {
-	usersParams := getTestUsersParams(false)
+	UserParams := getTestUserParams(false)
 
-	err := testUsersService.CreateUser(usersParams)
-	defer testUsersService.DeleteUser(usersParams.UserDetails.Name)
+	err := testUserService.CreateUser(UserParams)
+	defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
 	assert.NoError(t, err)
 
-	u, _, err := testUsersService.GetUser(usersParams)
+	user, err := testUserService.GetUser(UserParams)
 	// we don't know the default group when created, so just set it
-	usersParams.UserDetails.Groups = u.Groups
+	UserParams.UserDetails.Groups = user.Groups
 	// password is not carried in reply
-	u.Password = usersParams.UserDetails.Password
-	assert.NotNil(t, u)
-	assert.True(t, reflect.DeepEqual(usersParams.UserDetails, *u))
-
+	user.Password = UserParams.UserDetails.Password
+	assert.NotNil(t, user)
+	assert.True(t, reflect.DeepEqual(UserParams.UserDetails, *user))
 }
 
 func testUpdateUser(t *testing.T) {
-	usersParams := getTestUsersParams(true)
+	UserParams := getTestUserParams(true)
 
-	err := testUsersService.CreateUser(usersParams)
-	defer testUsersService.DeleteUser(usersParams.UserDetails.Name)
+	err := testUserService.CreateUser(UserParams)
+	defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
 	assert.NoError(t, err)
 
-	usersParams.UserDetails.Email = "changed@mail.com"
-	err = testUsersService.UpdateUser(usersParams)
+	UserParams.UserDetails.Email = "changed@mail.com"
+	err = testUserService.UpdateUser(UserParams)
 	assert.NoError(t, err)
-	user, _, err := testUsersService.GetUser(usersParams)
+	user, err := testUserService.GetUser(UserParams)
 
-	// we don't know the default group when created, so just set it
-	usersParams.UserDetails.Groups = user.Groups
-	// password is not carried in reply
-	user.Password = usersParams.UserDetails.Password
+	// We don't know the default group when created, so just set it
+	UserParams.UserDetails.Groups = user.Groups
+	// Password is not carried in reply
+	user.Password = UserParams.UserDetails.Password
 
 	assert.NoError(t, err)
-	assert.True(t, reflect.DeepEqual(usersParams.UserDetails, *user))
+	assert.True(t, reflect.DeepEqual(UserParams.UserDetails, *user))
 }
 
 func testDeleteUser(t *testing.T) {
-	usersParams := getTestUsersParams(false)
-	err := testUsersService.CreateUser(usersParams)
+	UserParams := getTestUserParams(false)
+	err := testUserService.CreateUser(UserParams)
 	assert.NoError(t, err)
-	err = testUsersService.DeleteUser(usersParams.UserDetails.Name)
+	err = testUserService.DeleteUser(UserParams.UserDetails.Name)
 	assert.NoError(t, err)
-	user, notExists, err := testUsersService.GetUser(usersParams)
-	assert.True(t, notExists)
+	user, err := testUserService.GetUser(UserParams)
+	assert.NoError(t, err)
 	assert.Nil(t, user)
-
 }
 
-func getTestUsersParams(replaceExistUsers bool) services.UsersParams {
+func getTestUserParams(replaceIfExists bool) services.UserParams {
 	userDetails := services.User{
 		Name:                     fmt.Sprintf("test%d", rand.Int()),
 		Email:                    "christianb@jfrog.com",
@@ -77,8 +75,13 @@ func getTestUsersParams(replaceExistUsers bool) services.UsersParams {
 		DisableUIAccess:          false,
 		InternalPasswordDisabled: false,
 	}
-	return services.UsersParams{
-		UserDetails:       userDetails,
-		ReplaceExistUsers: replaceExistUsers,
+	return services.UserParams{
+		UserDetails:     userDetails,
+		ReplaceIfExists: replaceIfExists,
 	}
+}
+
+func deleteUserAndAssert(t *testing.T, username string) {
+	err := testUserService.DeleteUser(username)
+	assert.NoError(t, err)
 }

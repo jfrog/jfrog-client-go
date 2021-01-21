@@ -62,7 +62,7 @@ var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
 var testsReplicationDeleteService *services.DeleteReplicationService
 var testsPermissionTargetService *services.PermissionTargetService
-var testUsersService *services.UserService
+var testUserService *services.UserService
 var testGroupService *services.GroupService
 
 // Distribution services
@@ -138,12 +138,12 @@ func createArtifactoryUploadManager() {
 	testsUploadService.Threads = 3
 }
 
-func createArtifactoryUsersManager() {
+func createArtifactoryUserManager() {
 	artDetails := GetRtDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&artDetails).Build()
 	failOnHttpClientCreation(err)
-	testUsersService = services.NewUserService(client)
-	testUsersService.ArtDetails = artDetails
+	testUserService = services.NewUserService(client)
+	testUserService.ArtDetails = artDetails
 }
 
 func createArtifactoryGroupManager() {

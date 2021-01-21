@@ -18,9 +18,9 @@ func TestGroups(t *testing.T) {
 func testCreateGroup(t *testing.T) {
 	groupParams := getTestGroupParams(false)
 	err := testGroupService.CreateGroup(groupParams)
-	defer testGroupService.DeleteGroup(groupParams.GroupDetails.Name)
+	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
-	createdGroup, _, err := testGroupService.GetGroup(groupParams)
+	createdGroup, err := testGroupService.GetGroup(groupParams)
 	assert.NotNil(t, createdGroup)
 	assert.Equal(t, groupParams.GroupDetails, *createdGroup)
 }
@@ -28,27 +28,27 @@ func testCreateGroup(t *testing.T) {
 func testUpdateGroup(t *testing.T) {
 	groupParams := getTestGroupParams(false)
 	err := testGroupService.CreateGroup(groupParams)
-	defer testGroupService.DeleteGroup(groupParams.GroupDetails.Name)
+	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
 	groupParams.GroupDetails.Description = "Changed description"
 	err = testGroupService.UpdateGroup(groupParams)
 	assert.NoError(t, err)
-	grp, _, err := testGroupService.GetGroup(groupParams)
+	group, err := testGroupService.GetGroup(groupParams)
 	assert.NoError(t, err)
-	assert.Equal(t, groupParams.GroupDetails, *grp)
+	assert.Equal(t, groupParams.GroupDetails, *group)
 }
 
 func testAddUsersToGroup(t *testing.T) {
 	groupParams := getTestGroupParams(true)
 	err := testGroupService.CreateGroup(groupParams)
-	defer testGroupService.DeleteGroup(groupParams.GroupDetails.Name)
+	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
 	groupParams.GroupDetails.UsersNames = []string{"Alice", "Bob"}
 	err = testGroupService.UpdateGroup(groupParams)
 	assert.NoError(t, err)
-	grp, _, err := testGroupService.GetGroup(groupParams)
+	group, err := testGroupService.GetGroup(groupParams)
 	assert.NoError(t, err)
-	assert.Equal(t, groupParams.GroupDetails, *grp)
+	assert.Equal(t, groupParams.GroupDetails, *group)
 }
 
 func testDeleteGroup(t *testing.T) {
@@ -57,8 +57,8 @@ func testDeleteGroup(t *testing.T) {
 	assert.NoError(t, err)
 	err = testGroupService.DeleteGroup(groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
-	group, notExists, err := testGroupService.GetGroup(groupParams)
-	assert.True(t, notExists)
+	group, err := testGroupService.GetGroup(groupParams)
+	assert.NoError(t, err)
 	assert.Nil(t, group)
 }
 
@@ -75,4 +75,9 @@ func getTestGroupParams(includeUsers bool) services.GroupParams {
 		GroupDetails: groupDetails,
 		IncludeUsers: includeUsers,
 	}
+}
+
+func deleteGroupAndAssert(t *testing.T, groupName string) {
+	err := testGroupService.DeleteGroup(groupName)
+	assert.NoError(t, err)
 }

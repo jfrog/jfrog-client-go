@@ -60,13 +60,13 @@ type ArtifactoryServicesManager interface {
 	GetServiceId() (string, error)
 	PromoteDocker(params services.DockerPromoteParams) error
 	Client() *jfroghttpclient.JfrogHttpClient
-	GetGroup(params services.GroupParams) (*services.Group, bool, error)
+	GetGroup(params services.GroupParams) (*services.Group, error)
 	CreateGroup(params services.GroupParams) error
 	UpdateGroup(params services.GroupParams) error
 	DeleteGroup(name string) error
-	GetUser(params services.UsersParams) (*services.User, bool, error)
-	CreateUser(params services.UsersParams) error
-	UpdateUser(params services.UsersParams) error
+	GetUser(params services.UserParams) (*services.User, error)
+	CreateUser(params services.UserParams) error
+	UpdateUser(params services.UserParams) error
 	DeleteUser(name string) error
 }
 
@@ -267,15 +267,15 @@ func (esm *EmptyArtifactoryServicesManager) Client() *jfroghttpclient.JfrogHttpC
 func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.RepositoryDetails, error) {
 	panic("Failed: Method is not implemented")
 }
-func (esm *EmptyArtifactoryServicesManager) GetUser(params services.UsersParams) (*services.User, bool, error) {
+func (esm *EmptyArtifactoryServicesManager) GetUser(params services.UserParams) (*services.User, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateUser(params services.UsersParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreateUser(params services.UserParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UpdateUser(params services.UsersParams) error {
+func (esm *EmptyArtifactoryServicesManager) UpdateUser(params services.UserParams) error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -283,7 +283,7 @@ func (esm *EmptyArtifactoryServicesManager) DeleteUser(name string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetGroup(params services.GroupParams) (*services.Group, bool, error) {
+func (esm *EmptyArtifactoryServicesManager) GetGroup(params services.GroupParams) (*services.Group, error) {
 	panic("Failed: Method is not implemented")
 }
 
