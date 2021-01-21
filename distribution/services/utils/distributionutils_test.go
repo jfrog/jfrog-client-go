@@ -30,7 +30,7 @@ func TestCreateBundleBody(t *testing.T) {
 
 func TestCreateBundleBodyQuery(t *testing.T) {
 	releaseBundleParam := ReleaseBundleParams{
-		SpecFiles: []*utils.ArtifactoryCommonParams{{Pattern: "dist-repo/*", AddedProps: "a=b;c=d;c=e"}},
+		SpecFiles: []*utils.ArtifactoryCommonParams{{Pattern: "dist-repo/*", AddProps: "a=b;c=d;c=e"}},
 	}
 
 	releaseBundleBody, err := CreateBundleBody(releaseBundleParam, true)
@@ -39,7 +39,7 @@ func TestCreateBundleBodyQuery(t *testing.T) {
 	assert.Len(t, releaseBundleBody.BundleSpec.Queries, 1)
 	query := releaseBundleBody.BundleSpec.Queries[0]
 	assert.Contains(t, query.Aql, "dist-repo")
-	props := query.AddedProps
+	props := query.AddProps
 	assert.Len(t, props, 2)
 	for _, prop := range props {
 		switch prop.Key {
