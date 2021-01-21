@@ -202,7 +202,7 @@ params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
 // Attach properties to the uploaded files.
-params.Props = "key1=val1;key2=val2"
+params.AddedProps = "key1=val1;key2=val2"
 params.AddVcsProps = false
 params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
 params.Recursive = true
@@ -226,7 +226,7 @@ params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
 // Attach properties to the uploaded files.
-params.Props = "key1=val1;key2=val2"
+params.AddedProps = "key1=val1;key2=val2"
 params.AddVcsProps = false
 params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
 params.Recursive = true

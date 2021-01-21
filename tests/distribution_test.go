@@ -132,8 +132,10 @@ func createWithProps(t *testing.T) {
 
 	// Create release bundle with properties
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
-	createBundleParams.AddedProps = "key1=value1;key2=value2,value3"
+	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{
+		Pattern:    RtTargetRepo + "b.in",
+		AddedProps: "key1=value1;key2=value2,value3",
+	}}
 	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 

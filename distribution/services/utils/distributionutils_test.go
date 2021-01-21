@@ -30,8 +30,7 @@ func TestCreateBundleBody(t *testing.T) {
 
 func TestCreateBundleBodyQuery(t *testing.T) {
 	releaseBundleParam := ReleaseBundleParams{
-		SpecFiles:  []*utils.ArtifactoryCommonParams{{Pattern: "dist-repo/*"}},
-		AddedProps: "a=b;c=d;c=e",
+		SpecFiles: []*utils.ArtifactoryCommonParams{{Pattern: "dist-repo/*", AddedProps: "a=b;c=d;c=e"}},
 	}
 
 	releaseBundleBody, err := CreateBundleBody(releaseBundleParam, true)

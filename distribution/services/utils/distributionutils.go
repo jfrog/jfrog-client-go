@@ -22,7 +22,6 @@ type ReleaseBundleParams struct {
 	ReleaseNotes       string
 	ReleaseNotesSyntax ReleaseNotesSyntax
 	GpgPassphrase      string
-	AddedProps         string
 }
 
 func NewReleaseBundleParams(name, version string) ReleaseBundleParams {
@@ -43,7 +42,7 @@ func CreateBundleBody(releaseBundleParams ReleaseBundleParams, dryRun bool) (*Re
 		}
 
 		// Create added properties
-		addedProps, err := createAddedProps(&releaseBundleParams)
+		addedProps, err := createAddedProps(specFile)
 		if err != nil {
 			return nil, err
 		}
@@ -86,8 +85,8 @@ func createAql(specFile *utils.ArtifactoryCommonParams) (string, error) {
 }
 
 // Create the AddedProps array from the input AddedProps string
-func createAddedProps(releaseBundleParams *ReleaseBundleParams) ([]AddedProps, error) {
-	props, err := utils.ParseProperties(releaseBundleParams.AddedProps, utils.SplitCommas)
+func createAddedProps(specFile *utils.ArtifactoryCommonParams) ([]AddedProps, error) {
+	props, err := utils.ParseProperties(specFile.AddedProps, utils.SplitCommas)
 	if err != nil {
 		return nil, err
 	}

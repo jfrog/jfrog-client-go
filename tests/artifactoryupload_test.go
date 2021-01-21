@@ -18,15 +18,13 @@ func TestArtifactoryUpload(t *testing.T) {
 	t.Run("placeholder", placeholderUpload)
 	t.Run("includeDirs", includeDirsUpload)
 	t.Run("explode", explodeUpload)
+	t.Run("props", propsUpload)
 }
 
 func flatUpload(t *testing.T) {
-	workingDir, _, err := tests.CreateFileWithContent("a.in", "/out/")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
+	workingDir, _ := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
+
 	pattern := FixWinPath(filepath.Join(workingDir, "out", "*"))
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
@@ -64,12 +62,9 @@ func flatUpload(t *testing.T) {
 }
 
 func recursiveUpload(t *testing.T) {
-	workingDir, _, err := tests.CreateFileWithContent("a.in", "/out/")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
+	workingDir, _ := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
+
 	pattern := FixWinPath(filepath.Join(workingDir, "*"))
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
@@ -110,12 +105,9 @@ func recursiveUpload(t *testing.T) {
 }
 
 func placeholderUpload(t *testing.T) {
-	workingDir, _, err := tests.CreateFileWithContent("a.in", "/out/")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
+	workingDir, _ := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
+
 	pattern := FixWinPath(filepath.Join(workingDir, "(*).in"))
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
@@ -156,12 +148,9 @@ func placeholderUpload(t *testing.T) {
 }
 
 func includeDirsUpload(t *testing.T) {
-	workingDir, _, err := tests.CreateFileWithContent("a.in", "/out/")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
+	workingDir, _ := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
+
 	pattern := FixWinPath(filepath.Join(workingDir, "*"))
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
@@ -206,21 +195,16 @@ func includeDirsUpload(t *testing.T) {
 }
 
 func explodeUpload(t *testing.T) {
-	workingDir, filePath, err := tests.CreateFileWithContent("a.in", "/out/")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
+	workingDir, filePath := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
-	err = fileutils.ZipFolderFiles(filePath, filepath.Join(workingDir, "zipFile.zip"))
+
+	err := fileutils.ZipFolderFiles(filePath, filepath.Join(workingDir, "zipFile.zip"))
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Fatal(err)
 	}
 	err = os.Remove(filePath)
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Fatal(err)
 	}
 	pattern := FixWinPath(filepath.Join(workingDir, "*.zip"))
 	up := services.NewUploadParams()
@@ -261,4 +245,54 @@ func explodeUpload(t *testing.T) {
 		t.Error("Expected to get at least two items, default and the out folder.")
 	}
 	artifactoryCleanup(t)
+}
+
+func propsUpload(t *testing.T) {
+	workingDir, _ := createWorkingDir(t)
+	defer os.RemoveAll(workingDir)
+
+	pattern := FixWinPath(filepath.Join(workingDir, "out", "*"))
+	up := services.NewUploadParams()
+	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Target: RtTargetRepo, AddedProps: "key1=val1"}
+	up.Flat = true
+	uploaded, failed, err := testsUploadService.UploadFiles(up)
+	if uploaded != 1 {
+		t.Error("Expected to upload 1 file.")
+	}
+	if failed != 0 {
+		t.Error("Failed to upload", failed, "files.")
+	}
+	if err != nil {
+		t.Error(err)
+	}
+	searchParams := services.NewSearchParams()
+	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
+	searchParams.Pattern = RtTargetRepo
+	searchParams.Props = "key1=val2"
+	reader, err := testsSearchService.Search(searchParams)
+	defer reader.Close()
+	if err != nil {
+		t.Error(err)
+	}
+	for item := new(utils.ResultItem); reader.NextRecord(item) == nil; item = new(utils.ResultItem) {
+		if item.Path != "." {
+			t.Error("Expected path to be root due to using the flat flag.", "Got:", item.Path)
+		}
+	}
+	assert.NoError(t, reader.GetError())
+	length, err := reader.Length()
+	assert.NoError(t, err)
+	if length > 1 {
+		t.Error("Expected single file.")
+	}
+	artifactoryCleanup(t)
+}
+
+func createWorkingDir(t *testing.T) (string, string) {
+	workingDir, relativePath, err := tests.CreateFileWithContent("a.in", "/out/")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	return workingDir, relativePath
 }
