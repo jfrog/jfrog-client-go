@@ -24,16 +24,16 @@ func NewUserParams() UserParams {
 
 // application/vnd.org.jfrog.artifactory.security.User+json
 type User struct {
-	Name                     string   `json:"name,omitempty"`
-	Email                    string   `json:"email,omitempty"`
-	Password                 string   `json:"password,omitempty"`
-	Admin                    bool     `json:"admin,omitempty"`
-	ProfileUpdatable         bool     `json:"profileUpdatable,omitempty"`
-	DisableUIAccess          bool     `json:"disableUIAccess,omitempty"`
-	InternalPasswordDisabled bool     `json:"internalPasswordDisabled,omitempty"`
-	LastLoggedIn             string   `json:"lastLoggedIn,omitempty"`
-	Realm                    string   `json:"realm,omitempty"`
-	Groups                   []string `json:"groups,omitempty"`
+	Name                     string   `json:"name,omitempty" csv:"name,omitempty"`
+	Email                    string   `json:"email,omitempty" csv:"email,omitempty"`
+	Password                 string   `json:"password,omitempty" csv:"password,omitempty"`
+	Admin                    bool     `json:"admin,omitempty" csv:"admin,omitempty"`
+	ProfileUpdatable         bool     `json:"profileUpdatable,omitempty" csv:"profileUpdatable,omitempty"`
+	DisableUIAccess          bool     `json:"disableUIAccess,omitempty" csv:"disableUIAccess,omitempty"`
+	InternalPasswordDisabled bool     `json:"internalPasswordDisabled,omitempty" csv:"internalPasswordDisabled,omitempty"`
+	LastLoggedIn             string   `json:"lastLoggedIn,omitempty" csv:"lastLoggedIn,omitempty"`
+	Realm                    string   `json:"realm,omitempty" csv:"realm,omitempty"`
+	Groups                   []string `json:"groups,omitempty" csv:"groups,omitempty"`
 }
 
 type UserService struct {
