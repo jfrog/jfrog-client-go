@@ -524,8 +524,8 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 
 func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	retryExecutor := &clientutils.RetryExecutor{
-		MaxRetries:       120,
-		RetriesInterval:  1,
+		MaxRetries:       12,
+		RetriesInterval:  10,
 		ErrorMessage:     "Waiting for Artifactory to evaluate repository operation...",
 		ExecutionHandler: createRepoConfigValidationFunc(repoKey, params),
 	}
