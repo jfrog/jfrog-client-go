@@ -94,13 +94,6 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 	return
 }
 
-func addProps(oldProps, additionalProps string) string {
-	if len(oldProps) > 0 && !strings.HasSuffix(oldProps, ";") && len(additionalProps) > 0 {
-		oldProps += ";"
-	}
-	return oldProps + additionalProps
-}
-
 func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) error {
 	artifactProps := ""
 	artifactSymlink := artifact.Symlink
@@ -128,7 +121,7 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) e
 		}
 		artifactProps += utils.ARTIFACTORY_SYMLINK + "=" + artifactSymlink + sha1Property
 	}
-	uploadParams.TargetProps = addProps(uploadParams.GetTargetProps(), artifactProps)
+	uploadParams.TargetProps = clientutils.AddProps(uploadParams.GetTargetProps(), artifactProps)
 	return nil
 }
 

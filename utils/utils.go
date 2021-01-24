@@ -353,6 +353,13 @@ func SplitWithEscape(str string, separator rune) []string {
 	return parts
 }
 
+func AddProps(oldProps, additionalProps string) string {
+	if len(oldProps) > 0 && !strings.HasSuffix(oldProps, ";") && len(additionalProps) > 0 {
+		oldProps += ";"
+	}
+	return oldProps + additionalProps
+}
+
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
 }
