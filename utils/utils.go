@@ -45,7 +45,7 @@ func getDefaultUserAgent() string {
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
-func GetRootPath(path string, useRegExp bool, parentheses ParenthesesSlice) string {
+func GetRootPath(path string, useRegExp bool, useAnt bool, parentheses ParenthesesSlice) string {
 	// The first step is to split the local path pattern into sections, by the file separator.
 	separator := "/"
 	sections := strings.Split(path, separator)
@@ -60,7 +60,8 @@ func GetRootPath(path string, useRegExp bool, parentheses ParenthesesSlice) stri
 		if section == "" {
 			continue
 		}
-		if useRegExp {
+		//gai
+		if useRegExp || useAnt {
 			if strings.Index(section, "(") != -1 {
 				break
 			}
@@ -180,9 +181,9 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool, useAnt bool) st
 	return localPath
 }
 
-//gai - at first "?" -> "."
+//gai - at first "?" -> "{1}"
 func antPatternToRegExp(path string) string {
-	path = strings.Replace(path, `?`, `.`, -1)
+	path = strings.Replace(path, `?`, `{1}`, -1)
 	return path
 }
 

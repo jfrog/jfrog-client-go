@@ -250,7 +250,7 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 
 	// Save parentheses index in pattern, witch have corresponding placeholder.
 	placeholderParentheses := clientutils.NewParenthesesSlice(uploadDetails.Pattern, uploadDetails.TargetPath)
-	rootPath := clientutils.GetRootPath(uploadDetails.Pattern, uploadDetails.UseRegExp, placeholderParentheses)
+	rootPath := clientutils.GetRootPath(uploadDetails.Pattern, uploadDetails.UseRegExp, uploadDetails.UseAnt, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, false) {
 		err := errorutils.CheckError(errors.New("Path does not exist: " + rootPath))
 		if err != nil {
