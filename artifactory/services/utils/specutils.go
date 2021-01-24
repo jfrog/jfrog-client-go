@@ -24,6 +24,7 @@ type ArtifactoryCommonParams struct {
 	Exclusions       []string
 	Target           string
 	Props            string
+	TargetProps      string
 	ExcludeProps     string
 	SortOrder        string
 	SortBy           []string
@@ -92,6 +93,10 @@ func (params *ArtifactoryCommonParams) GetProps() string {
 	return params.Props
 }
 
+func (params *ArtifactoryCommonParams) GetTargetProps() string {
+	return params.TargetProps
+}
+
 func (params *ArtifactoryCommonParams) GetExcludeProps() string {
 	return params.ExcludeProps
 }
@@ -126,6 +131,10 @@ func (params ArtifactoryCommonParams) IsIncludeDirs() bool {
 
 func (params *ArtifactoryCommonParams) SetProps(props string) {
 	params.Props = props
+}
+
+func (params *ArtifactoryCommonParams) SetTargetProps(targetProps string) {
+	params.TargetProps = targetProps
 }
 
 func (params *ArtifactoryCommonParams) SetExcludeProps(excludeProps string) {

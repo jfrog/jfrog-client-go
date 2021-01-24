@@ -94,14 +94,7 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 	return
 }
 
-func addProps(oldProps, additionalProps string) string {
-	if len(oldProps) > 0 && !strings.HasSuffix(oldProps, ";") && len(additionalProps) > 0 {
-		oldProps += ";"
-	}
-	return oldProps + additionalProps
-}
-
-func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (string, error) {
+func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) error {
 	artifactProps := ""
 	artifactSymlink := artifact.Symlink
 	if uploadParams.IsSymlink() && len(artifactSymlink) > 0 {
@@ -110,27 +103,26 @@ func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (
 		if err != nil {
 			// If error occurred, but not due to nonexistence of Symlink target -> return empty
 			if !os.IsNotExist(err) {
-				return "", err
+				return errorutils.CheckError(err)
 			}
 			// If Symlink target exists -> get SHA1 if isn't a directory
 		} else if !fileInfo.IsDir() {
 			file, err := os.Open(artifact.LocalPath)
 			if err != nil {
-				return "", errorutils.CheckError(err)
+				return errorutils.CheckError(err)
 			}
 			defer file.Close()
 			checksumInfo, err := checksum.Calc(file, checksum.SHA1)
 			if err != nil {
-				return "", err
+				return err
 			}
 			sha1 := checksumInfo[checksum.SHA1]
 			sha1Property = ";" + utils.SYMLINK_SHA1 + "=" + sha1
 		}
 		artifactProps += utils.ARTIFACTORY_SYMLINK + "=" + artifactSymlink + sha1Property
 	}
-	props := uploadParams.GetProps()
-	artifactProps = addProps(props, artifactProps)
-	return artifactProps, nil
+	uploadParams.TargetProps = clientutils.AddProps(uploadParams.GetTargetProps(), artifactProps)
+	return nil
 }
 
 func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, progressMgr ioutils.ProgressMgr, artifactHandlerFunc artifactContext, errorsQueue *clientutils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
@@ -155,8 +147,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		if err != nil {
 			return err
 		}
-		props, err := addSymlinkProps(artifact, uploadParams)
-		if err != nil {
+		if err = addSymlinkProps(artifact, uploadParams); err != nil {
 			return err
 		}
 		if uploadParams.IsAddVcsProps() {
@@ -166,7 +157,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 			}
 			uploadParams.BuildProps += vcsProps
 		}
-		uploadData := UploadData{Artifact: artifact, Props: props, BuildProps: uploadParams.BuildProps}
+		uploadData := UploadData{Artifact: artifact, TargetProps: uploadParams.GetTargetProps(), BuildProps: uploadParams.BuildProps}
 		task := artifactHandlerFunc(uploadData)
 		if progressMgr != nil {
 			progressMgr.IncGeneralProgressTotalBy(1)
@@ -262,9 +253,8 @@ func createUploadTask(taskData *uploadTaskData, vcsCache *clientutils.VcsCache) 
 	}
 
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
-	props, e := addSymlinkProps(artifact, taskData.uploadParams)
-	if e != nil {
-		return e
+	if err := addSymlinkProps(artifact, taskData.uploadParams); err != nil {
+		return err
 	}
 	if taskData.uploadParams.IsAddVcsProps() {
 		vcsProps, err := getVcsProps(taskData.path, vcsCache)
@@ -273,7 +263,7 @@ func createUploadTask(taskData *uploadTaskData, vcsCache *clientutils.VcsCache) 
 		}
 		taskData.uploadParams.BuildProps += vcsProps
 	}
-	uploadData := UploadData{Artifact: artifact, Props: props, BuildProps: taskData.uploadParams.BuildProps}
+	uploadData := UploadData{Artifact: artifact, TargetProps: taskData.uploadParams.GetTargetProps(), BuildProps: taskData.uploadParams.BuildProps}
 	if taskData.isDir && taskData.uploadParams.IsIncludeDirs() && !taskData.isSymlinkFlow {
 		if taskData.path != "." && (taskData.index == 0 || !utils.IsSubPath(taskData.paths, taskData.index, fileutils.GetFileSeparator())) {
 			uploadData.IsDir = true
@@ -494,10 +484,10 @@ func (up *UploadParams) GetRetries() int {
 }
 
 type UploadData struct {
-	Artifact   clientutils.Artifact
-	Props      string
-	BuildProps string
-	IsDir      bool
+	Artifact    clientutils.Artifact
+	TargetProps string
+	BuildProps  string
+	IsDir       bool
 }
 
 type artifactContext func(UploadData) parallel.TaskFunc
@@ -515,7 +505,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			if e != nil {
 				return
 			}
-			artifactFileInfo, uploaded, e := us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Artifact.TargetPath, artifact.Props, artifact.BuildProps, uploadParams, logMsgPrefix)
+			artifactFileInfo, uploaded, e := us.uploadFile(artifact.Artifact.LocalPath, target, artifact.Artifact.TargetPath, artifact.TargetProps, artifact.BuildProps, uploadParams, logMsgPrefix)
 			if e != nil {
 				return
 			}
