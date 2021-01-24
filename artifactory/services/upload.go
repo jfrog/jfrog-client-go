@@ -31,6 +31,7 @@ type UploadService struct {
 	DryRun       bool
 	Threads      int
 	ResultWriter *content.ContentWriter
+
 }
 
 func NewUploadService(client *jfroghttpclient.JfrogHttpClient) *UploadService {
@@ -174,11 +175,13 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		producer.AddTaskWithError(task, errorsQueue.AddError)
 		return err
 	}
-	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.IsRegexp()))
+	//gai
+	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.IsRegexp(), uploadParams.IsAnt()))
 	err = collectPatternMatchingFiles(uploadParams, rootPath, producer, progressMgr, artifactHandlerFunc, errorsQueue, vcsCache)
 	return err
 }
 
+//using regexp package- gai
 func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, producer parallel.Runner, progressMgr ioutils.ProgressMgr, artifactHandlerFunc artifactContext, errorsQueue *clientutils.ErrorsQueue, vcsCache *clientutils.VcsCache) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
@@ -467,6 +470,7 @@ type UploadParams struct {
 	AddVcsProps       bool
 	Retries           int
 	MinChecksumDeploy int64
+
 }
 
 func (up *UploadParams) IsFlat() bool {

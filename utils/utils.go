@@ -159,7 +159,8 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 	return
 }
 
-func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
+//gai - one step before compiling path to regexp
+func PrepareLocalPathForUpload(localPath string, useRegExp bool, useAnt bool) string {
 	if localPath == "./" || localPath == ".\\" {
 		return "^.*$"
 	}
@@ -168,10 +169,21 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
 	} else if strings.HasPrefix(localPath, ".\\") {
 		localPath = localPath[3:]
 	}
-	if !useRegExp {
+	//gai
+	if useAnt {
+		localPath=antPatternToRegExp(localPath)
+
+	} else if !useRegExp {
 		localPath = pathToRegExp(cleanPath(localPath))
 	}
+
 	return localPath
+}
+
+//gai - at first "?" -> "."
+func antPatternToRegExp(path string) string {
+	path = strings.Replace(path, `?`, `.`, -1)
+	return path
 }
 
 // Clean /../ | /./ using filepath.Clean.

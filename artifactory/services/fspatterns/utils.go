@@ -43,7 +43,8 @@ func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
 		for _, singleExcludePattern := range exclusions {
 			if len(singleExcludePattern) > 0 {
 				singleExcludePattern = utils.ReplaceTildeWithUserHome(singleExcludePattern)
-				singleExcludePattern = utils.PrepareLocalPathForUpload(singleExcludePattern, params.IsRegexp())
+				//gai
+				singleExcludePattern = utils.PrepareLocalPathForUpload(singleExcludePattern, params.IsRegexp(),params.IsAnt())
 				if params.IsRecursive() && strings.HasSuffix(singleExcludePattern, fileutils.GetFileSeparator()) {
 					singleExcludePattern += "*"
 				}

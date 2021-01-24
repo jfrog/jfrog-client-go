@@ -47,6 +47,8 @@ type UploadParams struct {
 	TargetPath string
 
 	UseRegExp          bool
+	//gai
+	UseAnt			   bool
 	Flat               bool
 	Recursive          bool
 	Explode            bool
@@ -256,7 +258,7 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 		}
 	}
 	localPath := clientutils.ReplaceTildeWithUserHome(uploadDetails.Pattern)
-	localPath = clientutils.PrepareLocalPathForUpload(localPath, uploadDetails.UseRegExp)
+	localPath = clientutils.PrepareLocalPathForUpload(localPath, uploadDetails.UseRegExp, uploadDetails.UseAnt)
 
 	artifacts := []clientutils.Artifact{}
 	// If the path is a single file then return it
