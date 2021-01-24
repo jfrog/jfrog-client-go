@@ -133,30 +133,30 @@ func createWithProps(t *testing.T) {
 	// Create release bundle with properties
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{
-		Pattern:  RtTargetRepo + "b.in",
-		AddProps: "key1=value1;key2=value2,value3",
+		Pattern:     RtTargetRepo + "b.in",
+		TargetProps: "key1=value1;key2=value2,value3",
 	}}
 	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 
 	// Check results
 	distributionResponse := getLocalBundle(t, bundleName, true)
-	addProps := distributionResponse.BundleSpec.Queries[0].AddProps
-	assert.Len(t, addProps, 2)
+	addedProps := distributionResponse.BundleSpec.Queries[0].AddedProps
+	assert.Len(t, addedProps, 2)
 
 	// Populate prop1Values and prop2Values
 	var prop1Values []string
 	var prop2Values []string
-	if addProps[0].Key == "key1" {
-		assert.Equal(t, "key2", addProps[1].Key)
-		prop1Values = addProps[0].Values
-		prop2Values = addProps[1].Values
-	} else if addProps[0].Key == "key2" {
-		assert.Equal(t, "key1", addProps[1].Key)
-		prop1Values = addProps[1].Values
-		prop2Values = addProps[0].Values
+	if addedProps[0].Key == "key1" {
+		assert.Equal(t, "key2", addedProps[1].Key)
+		prop1Values = addedProps[0].Values
+		prop2Values = addedProps[1].Values
+	} else if addedProps[0].Key == "key2" {
+		assert.Equal(t, "key1", addedProps[1].Key)
+		prop1Values = addedProps[1].Values
+		prop2Values = addedProps[0].Values
 	} else {
-		assert.Fail(t, "Unexpected key", addProps[0].Key)
+		assert.Fail(t, "Unexpected key", addedProps[0].Key)
 	}
 
 	// Check prop1Values and prop2Values

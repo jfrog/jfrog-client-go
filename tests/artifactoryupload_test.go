@@ -251,40 +251,38 @@ func propsUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
 
+	// Upload a.in with property key1=val1
 	pattern := FixWinPath(filepath.Join(workingDir, "out", "*"))
 	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Target: RtTargetRepo, AddProps: "key1=val1"}
+	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Target: RtTargetRepo, TargetProps: "key1=val1"}
 	up.Flat = true
 	uploaded, failed, err := testsUploadService.UploadFiles(up)
-	if uploaded != 1 {
-		t.Error("Expected to upload 1 file.")
-	}
-	if failed != 0 {
-		t.Error("Failed to upload", failed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
-	}
+	assert.Equal(t, 1, uploaded)
+	assert.Equal(t, 0, failed)
+	assert.NoError(t, err)
+
+	// Search a.in with property key1=val1
 	searchParams := services.NewSearchParams()
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
 	searchParams.Pattern = RtTargetRepo
-	searchParams.Props = "key1=val2"
+	searchParams.Props = "key1=val1"
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
 	if err != nil {
 		t.Error(err)
 	}
-	for item := new(utils.ResultItem); reader.NextRecord(item) == nil; item = new(utils.ResultItem) {
-		if item.Path != "." {
-			t.Error("Expected path to be root due to using the flat flag.", "Got:", item.Path)
-		}
-	}
-	assert.NoError(t, reader.GetError())
 	length, err := reader.Length()
 	assert.NoError(t, err)
-	if length > 1 {
-		t.Error("Expected single file.")
-	}
+	assert.Equal(t, 1, length)
+
+	// Assert property key and value exist in the search results
+	item := new(utils.ResultItem)
+	err = reader.NextRecord(item)
+	assert.NoError(t, err)
+	assert.Len(t, item.Properties, 1)
+	assert.Equal(t, "key1", item.Properties[0].Key)
+	assert.Equal(t, "val1", item.Properties[0].Value)
+
 	artifactoryCleanup(t)
 }
 

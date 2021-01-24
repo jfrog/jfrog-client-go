@@ -202,7 +202,7 @@ params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
 // Attach properties to the uploaded files.
-params.AddProps = "key1=val1;key2=val2"
+params.TargetProps = "key1=val1;key2=val2"
 params.AddVcsProps = false
 params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
 params.Recursive = true
@@ -226,7 +226,7 @@ params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
 // Attach properties to the uploaded files.
-params.AddProps = "key1=val1;key2=val2"
+params.TargetProps = "key1=val1;key2=val2"
 params.AddVcsProps = false
 params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
 params.Recursive = true
@@ -803,7 +803,7 @@ params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "Description"
 params.ReleaseNotes = "Release notes"
 params.ReleaseNotesSyntax = "plain_text"
-params.AddProps = "key1=val1;key2=val2,val3"
+params.TargetProps = "key1=val1;key2=val2,val3"
 
 err := distManager.CreateReleaseBundle(params)
 ```
@@ -815,7 +815,7 @@ params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "New Description"
 params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"
-params.AddProps = "key1=val1;key2=val2,val3"
+params.TargetProps = "key1=val1;key2=val2,val3"
 
 err := distManager.CreateReleaseBundle(params)
 ```

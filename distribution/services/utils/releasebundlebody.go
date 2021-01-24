@@ -20,11 +20,11 @@ type BundleSpec struct {
 }
 
 type BundleQuery struct {
-	QueryName string     `json:"query_name,omitempty"`
-	Aql       string     `json:"aql"`
-	AddProps  []AddProps `json:"added_props,omitempty"`
+	QueryName  string       `json:"query_name,omitempty"`
+	Aql        string       `json:"aql"`
+	AddedProps []AddedProps `json:"added_props,omitempty"`
 }
-type AddProps struct {
+type AddedProps struct {
 	Key    string   `json:"key"`
 	Values []string `json:"values"`
 }

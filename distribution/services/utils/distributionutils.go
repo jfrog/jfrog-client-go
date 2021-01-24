@@ -42,13 +42,13 @@ func CreateBundleBody(releaseBundleParams ReleaseBundleParams, dryRun bool) (*Re
 		}
 
 		// Create added properties
-		addProps, err := createAddProps(specFile)
+		addedProps, err := createAddedProps(specFile)
 		if err != nil {
 			return nil, err
 		}
 
 		// Append bundle query
-		bundleQueries = append(bundleQueries, BundleQuery{Aql: aql, AddProps: addProps})
+		bundleQueries = append(bundleQueries, BundleQuery{Aql: aql, AddedProps: addedProps})
 	}
 
 	// Create release bundle struct
@@ -84,18 +84,18 @@ func createAql(specFile *utils.ArtifactoryCommonParams) (string, error) {
 	return utils.BuildQueryFromSpecFile(specFile, utils.NONE), nil
 }
 
-// Create the AddProps array from the input AddProps string
-func createAddProps(specFile *utils.ArtifactoryCommonParams) ([]AddProps, error) {
-	props, err := utils.ParseProperties(specFile.AddProps, utils.SplitCommas)
+// Create the AddedProps array from the input TargetProps string
+func createAddedProps(specFile *utils.ArtifactoryCommonParams) ([]AddedProps, error) {
+	props, err := utils.ParseProperties(specFile.TargetProps, utils.SplitCommas)
 	if err != nil {
 		return nil, err
 	}
 
-	var addProps []AddProps
+	var addedProps []AddedProps
 	for key, values := range props.ToMap() {
-		addProps = append(addProps, AddProps{key, values})
+		addedProps = append(addedProps, AddedProps{key, values})
 	}
-	return addProps, nil
+	return addedProps, nil
 }
 
 func AddGpgPassphraseHeader(gpgPassphrase string, headers *map[string]string) {
