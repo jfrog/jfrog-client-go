@@ -184,6 +184,8 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool, useAnt bool) st
 //gai - at first "?" -> "{1}"
 func antPatternToRegExp(path string) string {
 	path = strings.Replace(path, `?`, `{1}`, -1)
+	path = strings.Replace(path, `(.*)`, "([^/]*)", -1)
+	path = strings.Replace(path, `(.**)/`, "(.*/)?", -1)
 	return path
 }
 
