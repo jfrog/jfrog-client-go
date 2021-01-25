@@ -805,6 +805,13 @@ params.ReleaseNotes = "Release notes"
 params.ReleaseNotesSyntax = "plain_text"
 params.TargetProps = "key1=val1;key2=val2,val3"
 
+// Artifact path mapping:
+// After distribution, the artifact "source-repo/a/123.zip" destination in the edge node will be "target-repo/a-123.zip".
+// The spec's pattern is a wildcard with capturing groups surrounded by parenthesis. 
+// Respectfully, the spec target's replacement groups surrounded by curly brackets.
+pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
+params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
+
 err := distManager.CreateReleaseBundle(params)
 ```
 
@@ -816,6 +823,13 @@ params.Description = "New Description"
 params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"
 params.TargetProps = "key1=val1;key2=val2,val3"
+
+// Artifact path mapping:
+// After distribution, the artifact "source-repo/a/123.zip" destination in the edge node will be "target-repo/a-123.zip".
+// The spec's pattern is a wildcard with capturing groups surrounded by parenthesis. 
+// Respectfully, the spec target's replacement groups surrounded by curly brackets.
+pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
+params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
 err := distManager.CreateReleaseBundle(params)
 ```
