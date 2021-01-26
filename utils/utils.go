@@ -60,8 +60,7 @@ func GetRootPath(path string, useRegExp bool, useAnt bool, parentheses Parenthes
 		if section == "" {
 			continue
 		}
-		//gai
-		if useRegExp || useAnt {
+		if useRegExp {
 			if strings.Index(section, "(") != -1 {
 				break
 			}
@@ -72,6 +71,11 @@ func GetRootPath(path string, useRegExp bool, useAnt bool, parentheses Parenthes
 			if strings.Index(section, "(") != -1 {
 				temp := rootPath + section
 				if isWildcardParentheses(temp, parentheses) {
+					break
+				}
+			}
+			if useAnt {
+				if strings.Index(section, "?") != -1 {
 					break
 				}
 			}
@@ -170,23 +174,16 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool, useAnt bool) st
 	} else if strings.HasPrefix(localPath, ".\\") {
 		localPath = localPath[3:]
 	}
-	//gai
-	if useAnt {
-		localPath=antPatternToRegExp(localPath)
+	if !useRegExp {
+		if useAnt {
+			localPath = antPathToRegExp(localPath)
 
-	} else if !useRegExp {
-		localPath = pathToRegExp(cleanPath(localPath))
+		} else {
+			localPath = wildcardPathToRegExp(cleanPath(localPath))
+		}
 	}
 
 	return localPath
-}
-
-//gai - at first "?" -> "{1}"
-func antPatternToRegExp(path string) string {
-	path = strings.Replace(path, `?`, `{1}`, -1)
-	path = strings.Replace(path, `(.*)`, "([^/]*)", -1)
-	path = strings.Replace(path, `(.**)/`, "(.*/)?", -1)
-	return path
 }
 
 // Clean /../ | /./ using filepath.Clean.
@@ -201,13 +198,29 @@ func cleanPath(path string) string {
 	return path
 }
 
-func pathToRegExp(localPath string) string {
+func wildcardPathToRegExp(localPath string) string {
 	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
 	for _, char := range SPECIAL_CHARS {
 		localPath = strings.Replace(localPath, char, "\\"+char, -1)
 	}
 	var wildcard = ".*"
 	localPath = strings.Replace(localPath, "*", wildcard, -1)
+	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
+		localPath += wildcard
+	}
+	return "^" + localPath + "$"
+}
+
+func antPathToRegExp(localPath string) string {
+	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
+	for _, char := range SPECIAL_CHARS {
+		localPath = strings.Replace(localPath, char, "\\"+char, -1)
+	}
+	var wildcard = ".*"
+	localPath = strings.Replace(localPath, `?`, `{1}?`, -1)
+	localPath = strings.Replace(localPath, `**/`, "#", -1)
+	localPath = strings.Replace(localPath, `*`, "([^/]*)", -1)
+	localPath = strings.Replace(localPath, `#`, "(.*/)?", -1)
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
 		localPath += wildcard
 	}
@@ -231,7 +244,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 		path = removeRepoFromPath(path)
 	}
 	pattern = addEscapingParentheses(pattern, target)
-	pattern = pathToRegExp(pattern)
+	pattern = wildcardPathToRegExp(pattern)
 	if slashIndex < 0 {
 		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
 		// is only the repository name.
