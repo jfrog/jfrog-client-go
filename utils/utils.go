@@ -217,7 +217,7 @@ func antPathToRegExp(localPath string) string {
 		localPath = strings.Replace(localPath, char, "\\"+char, -1)
 	}
 	var wildcard = ".*"
-	localPath = strings.Replace(localPath, `?`, `{1}?`, -1)
+	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
 	localPath = strings.Replace(localPath, `**/`, "#", -1)
 	localPath = strings.Replace(localPath, `*`, "([^/]*)", -1)
 	localPath = strings.Replace(localPath, `#`, "(.*/)?", -1)

@@ -2,6 +2,8 @@ package utils
 
 import (
 	"reflect"
+	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -166,4 +168,56 @@ func TestIsWildcardParentheses(t *testing.T) {
 	if got != want {
 		t.Errorf("TestIsWildcardParentheses() == %t, want %t", got, want)
 	}
+}
+
+func TestAntPathToRegExp(t *testing.T) {
+	var fileSystemPaths []string = []string{
+		"dev/a/b.txt",
+		"dev/a/bb.txt",
+		"dev/a/bc.txt",
+		"dev/aa/b.txt",
+		"dev/aa/bb.txt",
+		"dev/aa/bc.txt",
+		"dev/aa/b.zip",
+		"dev/aa/b.zip",
+		"dev/aa/bc.zip",
+
+		"test/a/b.txt",
+		"test/a/bb.txt",
+		"test/a/bc.txt",
+		"test/aa/b.txt",
+		"test/aa/bb.txt",
+		"test/aa/bc.txt",
+		"test/aa/b.zip",
+		"test/aa/b.zip",
+		"test/aa/bc.zip",
+	}
+
+	assertAntPathToRegExp("dev/a/b?.txt", addRegExpPrefixAndSuffix("dev/a/b.{1}\\.txt"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt"}, t)
+	assertAntPathToRegExp("dev/a?/b.txt", addRegExpPrefixAndSuffix("dev/a.{1}/b\\.txt"), fileSystemPaths, []string{"dev/aa/b.txt"}, t)
+	assertAntPathToRegExp("dev/a/b*.txt", addRegExpPrefixAndSuffix("dev/a/b([^/]*)\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/a/bb.txt", "dev/a/bc.txt"}, t)
+	assertAntPathToRegExp("dev/*/b.txt", addRegExpPrefixAndSuffix("dev/([^/]*)/b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt"}, t)
+	assertAntPathToRegExp("**/b.txt", addRegExpPrefixAndSuffix("(.*/)?b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt", "test/a/b.txt", "test/aa/b.txt"}, t)
+	assertAntPathToRegExp("**/b?.*", addRegExpPrefixAndSuffix("(.*/)?b.{1}\\.([^/]*)"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt", "dev/aa/bb.txt", "dev/aa/bc.txt", "dev/aa/bc.zip", "test/a/bb.txt", "test/a/bc.txt", "test/aa/bb.txt", "test/aa/bc.txt", "test/aa/bc.zip"}, t)
+}
+
+func addRegExpPrefixAndSuffix(str string) string {
+	return "^" + str + "$"
+}
+func assertAntPathToRegExp(antPattern, expectedRegExp string, fileSystemPaths, matchedPaths []string, t *testing.T) {
+	regExpStr := antPathToRegExp(antPattern)
+	if expectedRegExp != regExpStr {
+		t.Error("Unmatched! for ant pattern `" + antPattern + "` : Expected `" + expectedRegExp + "` Got `" + regExpStr + "`")
+	}
+	var matches []string
+	for _, checkedPath := range fileSystemPaths {
+		match, _ := regexp.MatchString(regExpStr, checkedPath)
+		if match {
+			matches = append(matches, checkedPath)
+		}
+	}
+	if !reflect.DeepEqual(matches, matchedPaths) {
+		t.Error("Unmatched! : ant pattern `" + antPattern + "` matches urls:\n[" + strings.Join(matchedPaths, ",") + "]\nbut got:\n[" + strings.Join(matches, ",") + "]")
+	}
+
 }
