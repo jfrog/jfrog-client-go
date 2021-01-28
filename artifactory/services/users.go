@@ -71,14 +71,14 @@ func (us *UserService) GetUser(params UserParams) (u *User, err error) {
 }
 
 func (us *UserService) CreateUser(params UserParams) error {
-	// Checks if the user allready exist and act according to ReplaceIfExists parameter.
+	// Checks if the user already exist and act according to ReplaceIfExists parameter.
 	if !params.ReplaceIfExists {
 		user, err := us.GetUser(params)
 		if err != nil {
 			return err
 		}
 		if user != nil {
-			return fmt.Errorf("User %s allready exists.", user.Name)
+			return fmt.Errorf("User %s already exists.", user.Name)
 		}
 	}
 	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
