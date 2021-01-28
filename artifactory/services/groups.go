@@ -69,14 +69,14 @@ func (gs *GroupService) GetGroup(params GroupParams) (g *Group, err error) {
 }
 
 func (gs *GroupService) CreateGroup(params GroupParams) error {
-	// Checks if the group allready exists and act according to ReplaceIfExists parameter.
+	// Checks if the group already exists and act according to ReplaceIfExists parameter.
 	if !params.ReplaceIfExists {
 		group, err := gs.GetGroup(params)
 		if err != nil {
 			return err
 		}
 		if group != nil {
-			return fmt.Errorf("Group %s allready exists.", params.GroupDetails.Name)
+			return fmt.Errorf("Group %s already exists.", params.GroupDetails.Name)
 		}
 	}
 	url, content, httpDetails, err := gs.createOrUpdateGroupRequest(params.GroupDetails)
