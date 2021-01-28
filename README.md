@@ -61,6 +61,12 @@
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
+      - [Fetching Users Details](#fetching-users-details)
+      - [Creating and Updating a User](#creating-and-updating-a-user)
+      - [Deleting a User](#deleting-a-user)
+      - [Fetching Group Details](#fetching-group-details)
+      - [Creating and Updating a Group](#creating-and-updating-a-group)
+      - [Deleting a Group](#deleting-a-group)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -753,6 +759,74 @@ version, err := servicesManager.GetVersion()
 #### Fetching Artifactory's Service ID
 ```go
 serviceId, err := servicesManager.GetServiceId()
+```
+
+#### Fetching Users Details
+```go
+params := services.NewUserParams()
+params.UserDetails.Name = "myUserName"
+
+user, err := serviceManager.GetUser(params)
+```
+
+#### Creating and Updating a User
+```go
+params := services.NewUserParams()
+params.UserDetails.Name = "myUserName"
+params.UserDetails.Email = "myUser@jfrog.com"
+params.UserDetails.Password = "Password1"
+params.UserDetails.Admin = false
+params.UserDetails.Realm= "internal"
+params.UserDetails.ProfileUpdatable = true
+params.UserDetails.DisableUIAccess = false
+params.UserDetails.InternalPasswordDisabled = false
+params.UserDetails.groups = [2]string{"GroupA", "GroupB"}
+// Set to true in order to replace exist user with the same name
+params.ReplaceIfExists = false
+err := serviceManager.CreateUser(params)
+
+params.UserDetails.groups = [3]string{"GroupA", "GroupB", "GroupC"}
+err := serviceManager.UpdateUser(params)
+```
+
+#### Deleting a User
+```go
+err := serviceManager.DeleteUser("myUserName")
+```
+
+#### Fetching Group Details
+```go
+params := services.NewGroupParams()
+params.GroupDetails.Name = "myGroupName"
+// Set this param to true to receive the user names associated with this group
+params.IncludeUsers = true
+
+group, err := serviceManager.GetGroup(params)
+```
+
+#### Creating and Updating a Group
+```go
+params := services.NewGroupParams()
+params.GroupDetails.Name = "myGroupName"
+params.GroupDetails.Description = "Description"
+params.GroupDetails.AutoJoin = false
+params.GroupDetails.AdminPrivileges = true
+params.GroupDetails.Realm = "internal"
+params.GroupDetails.UsersNames = [2]string{"UserA", "UserB"}
+// Set to true in order to replace exist group with the same name
+params.ReplaceIfExists = false
+err := serviceManager.CreateGroup(params)
+
+params.GroupDetails.Description = "Newer Description"
+// Will add UserC to the group (in addition to existing UserA and UserB)
+params.GroupDetails.UsersNames = [1]string{"UserC"}
+
+err := serviceManager.UpdateGroup(params)
+```
+
+#### Deleting a Group
+```go
+err := serviceManager.DeleteGroup("myGroupName")
 ```
 
 ## Distribution APIs

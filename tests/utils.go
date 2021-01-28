@@ -62,6 +62,8 @@ var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
 var testsReplicationDeleteService *services.DeleteReplicationService
 var testsPermissionTargetService *services.PermissionTargetService
+var testUserService *services.UserService
+var testGroupService *services.GroupService
 
 // Distribution services
 var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
@@ -136,6 +138,21 @@ func createArtifactoryUploadManager() {
 	testsUploadService.Threads = 3
 }
 
+func createArtifactoryUserManager() {
+	artDetails := GetRtDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testUserService = services.NewUserService(client)
+	testUserService.ArtDetails = artDetails
+}
+
+func createArtifactoryGroupManager() {
+	artDetails := GetRtDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testGroupService = services.NewGroupService(client)
+	testGroupService.ArtDetails = artDetails
+}
 func createArtifactoryDownloadManager() {
 	artDetails := GetRtDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&artDetails).Build()

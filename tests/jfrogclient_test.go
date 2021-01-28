@@ -43,6 +43,8 @@ func InitServiceManagers() {
 	createArtifactoryReplicationGetManager()
 	createArtifactoryReplicationDeleteManager()
 	createArtifactoryPermissionTargetManager()
+	createArtifactoryUserManager()
+	createArtifactoryGroupManager()
 
 	if *DistUrl != "" {
 		createDistributionManager()
