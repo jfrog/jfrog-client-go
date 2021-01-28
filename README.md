@@ -805,10 +805,15 @@ params.ReleaseNotes = "Release notes"
 params.ReleaseNotesSyntax = "plain_text"
 params.TargetProps = "key1=val1;key2=val2,val3"
 
-// Artifact path mapping:
-// After distribution, the artifact "source-repo/a/123.zip" destination in the edge node will be "target-repo/a-123.zip".
-// The spec's pattern is a wildcard with capturing groups surrounded by parenthesis. 
-// Respectfully, the spec target's replacement groups surrounded by curly brackets.
+// Be default, artifacts that are distributed as part of a release bundle, have the same path in their destination server
+// (the edge node) as the path they had on the distributing Artifactory server.
+// You have however the option for modifying the target path on edge node. You do this by defining the Target property as shown below.
+// The Pattern property is a wildcard based pattern. Any wildcards enclosed in parenthesis in the pattern (source)
+// path can be matched with a corresponding placeholder in the target path, to determine the path and name
+// of the artifact, once distributed to the edge node.
+// In the following example, the path in the edge node is similar to the path in the source Artifactory server, except for the additional "dir" level at the root of the repository.
+// Pattern: my-repo/(*)/a.zip
+// Target: my-repo/dir/{1}/a.zip
 pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
@@ -824,10 +829,8 @@ params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"
 params.TargetProps = "key1=val1;key2=val2,val3"
 
-// Artifact path mapping:
-// After distribution, the artifact "source-repo/a/123.zip" destination in the edge node will be "target-repo/a-123.zip".
-// The spec's pattern is a wildcard with capturing groups surrounded by parenthesis. 
-// Respectfully, the spec target's replacement groups surrounded by curly brackets.
+// The Target property defines the target path in the edge node, and can include replaceable in the form of {1}, {2}, ...
+// Read more about it in the above "Creating a Release Bundle" section.
 pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
