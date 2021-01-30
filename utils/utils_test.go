@@ -192,32 +192,42 @@ func TestAntPathToRegExp(t *testing.T) {
 		"test/aa/b.zip",
 		"test/aa/bc.zip",
 	}
+	tests := []struct {
+		name               string
+		antPattern         string
+		expectedRegExp     string
+		allFileSystemPaths []string
+		matchedPaths       []string
+	}{
+		{"check '?' in file's name", "dev/a/b?.txt", addRegExpPrefixAndSuffix("dev/a/b.{1}\\.txt"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt"}},
+		{"check '?' in directory's name", "dev/a?/b.txt", addRegExpPrefixAndSuffix("dev/a.{1}/b\\.txt"), fileSystemPaths, []string{"dev/aa/b.txt"}},
+		{"check '*' in file's name", "dev/a/b*.txt", addRegExpPrefixAndSuffix("dev/a/b([^/]*)\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/a/bb.txt", "dev/a/bc.txt"}},
+		{"check '*' in directory's name", "dev/*/b.txt", addRegExpPrefixAndSuffix("dev/([^/]*)/b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt"}},
+		{"check '**' in directory path", "**/b.txt", addRegExpPrefixAndSuffix("(.*/)?b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt", "test/a/b.txt", "test/aa/b.txt"}},
+		{"combine all signs", "**/b?.*", addRegExpPrefixAndSuffix("(.*/)?b.{1}\\.([^/]*)"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt", "dev/aa/bb.txt", "dev/aa/bc.txt", "dev/aa/bc.zip", "test/a/bb.txt", "test/a/bc.txt", "test/aa/bb.txt", "test/aa/bc.txt", "test/aa/bc.zip"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			regExpStr := antPathToRegExp(test.antPattern)
+			if test.expectedRegExp != regExpStr {
+				t.Error("Unmatched! for ant pattern `" + test.antPattern + "` : Expected `" + test.expectedRegExp + "` Got `" + regExpStr + "`")
+			}
+			var matches []string
+			for _, checkedPath := range fileSystemPaths {
+				match, _ := regexp.MatchString(regExpStr, checkedPath)
+				if match {
+					matches = append(matches, checkedPath)
+				}
+			}
+			if !reflect.DeepEqual(matches, test.matchedPaths) {
+				t.Error("Unmatched! : ant pattern `" + test.antPattern + "` matches urls:\n[" + strings.Join(test.matchedPaths, ",") + "]\nbut got:\n[" + strings.Join(matches, ",") + "]")
+			}
+		})
 
-	assertAntPathToRegExp("dev/a/b?.txt", addRegExpPrefixAndSuffix("dev/a/b.{1}\\.txt"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt"}, t)
-	assertAntPathToRegExp("dev/a?/b.txt", addRegExpPrefixAndSuffix("dev/a.{1}/b\\.txt"), fileSystemPaths, []string{"dev/aa/b.txt"}, t)
-	assertAntPathToRegExp("dev/a/b*.txt", addRegExpPrefixAndSuffix("dev/a/b([^/]*)\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/a/bb.txt", "dev/a/bc.txt"}, t)
-	assertAntPathToRegExp("dev/*/b.txt", addRegExpPrefixAndSuffix("dev/([^/]*)/b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt"}, t)
-	assertAntPathToRegExp("**/b.txt", addRegExpPrefixAndSuffix("(.*/)?b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt", "test/a/b.txt", "test/aa/b.txt"}, t)
-	assertAntPathToRegExp("**/b?.*", addRegExpPrefixAndSuffix("(.*/)?b.{1}\\.([^/]*)"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt", "dev/aa/bb.txt", "dev/aa/bc.txt", "dev/aa/bc.zip", "test/a/bb.txt", "test/a/bc.txt", "test/aa/bb.txt", "test/aa/bc.txt", "test/aa/bc.zip"}, t)
+	}
+
 }
 
 func addRegExpPrefixAndSuffix(str string) string {
 	return "^" + str + "$"
-}
-func assertAntPathToRegExp(antPattern, expectedRegExp string, fileSystemPaths, matchedPaths []string, t *testing.T) {
-	regExpStr := antPathToRegExp(antPattern)
-	if expectedRegExp != regExpStr {
-		t.Error("Unmatched! for ant pattern `" + antPattern + "` : Expected `" + expectedRegExp + "` Got `" + regExpStr + "`")
-	}
-	var matches []string
-	for _, checkedPath := range fileSystemPaths {
-		match, _ := regexp.MatchString(regExpStr, checkedPath)
-		if match {
-			matches = append(matches, checkedPath)
-		}
-	}
-	if !reflect.DeepEqual(matches, matchedPaths) {
-		t.Error("Unmatched! : ant pattern `" + antPattern + "` matches urls:\n[" + strings.Join(matchedPaths, ",") + "]\nbut got:\n[" + strings.Join(matches, ",") + "]")
-	}
-
 }
