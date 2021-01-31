@@ -78,6 +78,7 @@ var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleServ
 // Xray Services
 var testsXrayVersionService *xrayServices.VersionService
 var testsXrayWatchService *xrayServices.WatchService
+var testsXrayPolicyService *xrayServices.PolicyService
 
 var timestamp = time.Now().Unix()
 var trueValue = true
@@ -297,11 +298,19 @@ func createArtifactoryPermissionTargetManager() {
 }
 
 func createXrayWatchManager() {
-	XrayDetails := GetXrayDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&XrayDetails).Build()
+	xrayDetails := GetXrayDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&xrayDetails).Build()
 	failOnHttpClientCreation(err)
 	testsXrayWatchService = xrayServices.NewWatchService(client)
-	testsXrayWatchService.XrayDetails = XrayDetails
+	testsXrayWatchService.XrayDetails = xrayDetails
+}
+
+func createXrayPolicyManager() {
+	xrayDetails := GetXrayDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&xrayDetails).Build()
+	failOnHttpClientCreation(err)
+	testsXrayPolicyService = xrayServices.NewPolicyService(client)
+	testsXrayPolicyService.XrayDetails = xrayDetails
 }
 
 func failOnHttpClientCreation(err error) {

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"testing"
 	"time"
 
+	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
 	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -34,14 +34,14 @@ func TestXrayWatch(t *testing.T) {
 
 func testXrayWatchAll(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1", time.Now().Unix())
-	err := createPolicy(policy1Name)
+	err := createExamplePolicy(policy1Name)
 	assert.NoError(t, err)
-	defer deletePolicy(policy1Name)
+	defer testsXrayPolicyService.Delete(policy1Name)
 
 	policy2Name := fmt.Sprintf("%s-%d", "jfrog-policy2", time.Now().Unix())
-	err = createPolicy(policy2Name)
+	err = createExamplePolicy(policy2Name)
 	assert.NoError(t, err)
-	defer deletePolicy(policy2Name)
+	defer testsXrayPolicyService.Delete(policy2Name)
 
 	AllWatchName := fmt.Sprintf("%s-%d", "jfrog-client-go-tests-watch-all-repos", time.Now().Unix())
 	paramsAllRepos := utils.NewWatchParams()
@@ -128,9 +128,9 @@ func testXrayWatchAll(t *testing.T) {
 
 func testXrayWatchSelectedRepos(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1-pattern", time.Now().Unix())
-	err := createPolicy(policy1Name)
+	err := createExamplePolicy(policy1Name)
 	assert.NoError(t, err)
-	defer deletePolicy(policy1Name)
+	defer testsXrayPolicyService.Delete(policy1Name)
 
 	repo1Name := fmt.Sprintf("%s-%d", "jfrog-repo1", time.Now().Unix())
 	createRepoLocal(t, repo1Name)
@@ -267,9 +267,9 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 func testXrayWatchBuildsByPattern(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1-pattern", time.Now().Unix())
-	err := createPolicy(policy1Name)
+	err := createExamplePolicy(policy1Name)
 	assert.NoError(t, err)
-	defer deletePolicy(policy1Name)
+	defer testsXrayPolicyService.Delete(policy1Name)
 
 	paramsBuildsByPattern := utils.NewWatchParams()
 	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%d", "jfrog-client-go-tests-watch-builds-by-pattern", time.Now().Unix())
@@ -339,7 +339,7 @@ func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {
 	assert.Equal(t, params.Name, targetConfig.Name)
 	assert.Equal(t, params.Description, targetConfig.Description)
 	assert.Equal(t, params.Active, targetConfig.Active)
-	assert.Equal(t, params.Policies, targetConfig.Policies)
+	assert.ElementsMatch(t, params.Policies, targetConfig.Policies)
 }
 
 func createRepoLocal(t *testing.T, repoKey string) {
@@ -381,25 +381,23 @@ func createBuild(buildName string) error {
 		return err
 	}
 
-	dataArtifactoryBuild := ArtifactoryBuild{
-		Name:       buildName,
-		Version:    "1.0.0",
-		Number:     "2",
-		Started:    "2014-09-30T12:00:19.893+0300",
-		Properties: map[string]interface{}{},
-		Modules: []ArtifactoryModule{
-			{
-				ID: "example-mdule",
-				Artifacts: []ArtifactoryArtifact{
-					{
-						Type: "gz",
+	dataArtifactoryBuild := buildinfo.BuildInfo{
+		Name:    buildName,
+		Number:  "1.0.0",
+		Started: "2014-09-30T12:00:19.893+0300",
+		Modules: []buildinfo.Module{{
+			Id: "example-mdule",
+			Artifacts: []buildinfo.Artifact{
+				{
+					Type: "gz",
+					Name: "c.tar.gz",
+					Checksum: &buildinfo.Checksum{
 						Sha1: "9d4336ff7bc2d2348aee4e27ad55e42110df4a80",
 						Md5:  "b4918187cc9b3bf1b0772546d9398d7d",
-						Name: "c.tar.gz",
 					},
 				},
 			},
-		},
+		}},
 	}
 	requestContentArtifactoryBuild, err := json.Marshal(dataArtifactoryBuild)
 	if err != nil {
@@ -488,49 +486,17 @@ func deleteBuild(buildName string) error {
 	return nil
 }
 
-type ArtifactoryBuild struct {
-	Version    string              `json:"version"`
-	Name       string              `json:"name"`
-	Number     string              `json:"number"`
-	Started    string              `json:"started"`
-	Properties interface{}         `json:"properties"`
-	Modules    []ArtifactoryModule `json:"modules"`
-}
-
-type ArtifactoryModule struct {
-	ID        string                `json:"id"`
-	Artifacts []ArtifactoryArtifact `json:"artifacts"`
-}
-
-type ArtifactoryArtifact struct {
-	Type string `json:"type"`
-	Sha1 string `json:"sha1"`
-	Md5  string `json:"md5"`
-	Name string `json:"name"`
-}
-
-func createPolicy(policyName string) error {
-	xrayDetails := GetXrayDetails()
-	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
-
-	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-	data := ArtifactoryPolicy{
+func createExamplePolicy(policyName string) error {
+	params := utils.PolicyParams{
 		Name:        policyName,
 		Description: "example policy",
-		Type:        "security",
-		Rules: []ArtifactoryPolicyRules{{
+		Type:        utils.Security,
+		Rules: []utils.PolicyRule{{
 			Name:     "sec_rule",
-			Priority: 1,
-			Criteria: map[string]string{
-				"min_severity": "medium",
-			},
-			Actions: ArtifactoryPolicyActions{
+			Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
+			Actions: &utils.PolicyAction{
 				Webhooks: []string{},
-				BlockDownload: ArtifactoryPolicyActionsBlockDownload{
+				BlockDownload: utils.PolicyBlockDownload{
 					Active:    true,
 					Unscanned: false,
 				},
@@ -539,69 +505,9 @@ func createPolicy(policyName string) error {
 				NotifyDeployer:                 true,
 				NotifyWatchRecipients:          true,
 			},
+			Priority: 1,
 		}},
 	}
-
-	requestContent, err := json.Marshal(data)
-	if err != nil {
-		return errors.New("failed marshalling policy " + policyName)
-	}
-
-	resp, _, err := client.SendPost(xrayDetails.GetUrl()+"api/v2/policies", requestContent, xrayHTTPDetails)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return errors.New("Status is not Created - " + strconv.Itoa(resp.StatusCode))
-	}
-
+	testsXrayPolicyService.Create(params)
 	return nil
-}
-
-func deletePolicy(policyName string) error {
-	xrayDetails := GetXrayDetails()
-	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	resp, _, err := client.SendDelete(xrayDetails.GetUrl()+"api/v2/policies/"+policyName, nil, xrayHTTPDetails)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("failed to delete policy " + resp.Status)
-	}
-	return nil
-}
-
-type ArtifactoryPolicy struct {
-	Name        string                   `json:"name"`
-	Description string                   `json:"description"`
-	Type        string                   `json:"type"`
-	Rules       []ArtifactoryPolicyRules `json:"rules"`
-}
-
-type ArtifactoryPolicyRules struct {
-	Name     string                   `json:"name"`
-	Priority int                      `json:"priority"`
-	Criteria map[string]string        `json:"criteria"`
-	Actions  ArtifactoryPolicyActions `json:"actions"`
-}
-
-type ArtifactoryPolicyActions struct {
-	Webhooks                       []string                              `json:"webhooks"`
-	BlockDownload                  ArtifactoryPolicyActionsBlockDownload `json:"block_download"`
-	BlockReleaseBundleDistribution bool                                  `json:"block_release_bundle_distribution"`
-	FailBuild                      bool                                  `json:"fail_build"`
-	NotifyDeployer                 bool                                  `json:"notify_deployer"`
-	NotifyWatchRecipients          bool                                  `json:"notify_watch_recipients"`
-}
-
-type ArtifactoryPolicyActionsBlockDownload struct {
-	Active    bool `json:"active"`
-	Unscanned bool `json:"unscanned"`
 }

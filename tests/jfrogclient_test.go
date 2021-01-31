@@ -52,6 +52,7 @@ func InitServiceManagers() {
 	if *XrayUrl != "" {
 		createXrayVersionManager()
 		createXrayWatchManager()
+		createXrayPolicyManager()
 	}
 	createReposIfNeeded()
 }

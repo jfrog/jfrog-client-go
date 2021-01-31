@@ -39,40 +39,71 @@ func (sm *XrayServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }
 
-// GetVersion will return the xray version
+// GetVersion will return the Xray version
 func (sm *XrayServicesManager) GetVersion() (string, error) {
 	versionService := services.NewVersionService(sm.client)
 	versionService.XrayDetails = sm.config.GetServiceDetails()
 	return versionService.GetVersion()
 }
 
-// CreateWatch will create a new xray watch
+// CreateWatch will create a new Xray watch
 func (sm *XrayServicesManager) CreateWatch(params utils.WatchParams) (*http.Response, error) {
-	WatchService := services.NewWatchService(sm.client)
-	WatchService.XrayDetails = sm.config.GetServiceDetails()
-	return WatchService.Create(params)
+	watchService := services.NewWatchService(sm.client)
+	watchService.XrayDetails = sm.config.GetServiceDetails()
+	return watchService.Create(params)
 }
 
 // GetWatch retrieves the details about an Xray watch by name
 // It will error if no watch can be found by that name.
 func (sm *XrayServicesManager) GetWatch(watchName string) (*utils.WatchParams, *http.Response, error) {
-	WatchService := services.NewWatchService(sm.client)
-	WatchService.XrayDetails = sm.config.GetServiceDetails()
-	return WatchService.Get(watchName)
+	watchService := services.NewWatchService(sm.client)
+	watchService.XrayDetails = sm.config.GetServiceDetails()
+	return watchService.Get(watchName)
 }
 
 // UpdateWatch will update an existing Xray watch by name
 // It will error if no watch can be found by that name.
 func (sm *XrayServicesManager) UpdateWatch(params utils.WatchParams) (*http.Response, error) {
-	WatchService := services.NewWatchService(sm.client)
-	WatchService.XrayDetails = sm.config.GetServiceDetails()
-	return WatchService.Update(params)
+	watchService := services.NewWatchService(sm.client)
+	watchService.XrayDetails = sm.config.GetServiceDetails()
+	return watchService.Update(params)
 }
 
 // DeleteWatch will delete an existing watch by name
 // It will error if no watch can be found by that name.
 func (sm *XrayServicesManager) DeleteWatch(watchName string) (*http.Response, error) {
-	WatchService := services.NewWatchService(sm.client)
-	WatchService.XrayDetails = sm.config.GetServiceDetails()
-	return WatchService.Delete(watchName)
+	watchService := services.NewWatchService(sm.client)
+	watchService.XrayDetails = sm.config.GetServiceDetails()
+	return watchService.Delete(watchName)
+}
+
+// CreatePolicy will create a new Xray policy
+func (sm *XrayServicesManager) CreatePolicy(params utils.PolicyParams) (*http.Response, error) {
+	policyService := services.NewPolicyService(sm.client)
+	policyService.XrayDetails = sm.config.GetServiceDetails()
+	return policyService.Create(params)
+}
+
+// GetPolicy retrieves the details about an Xray policy by name
+// It will error if no policy can be found by that name.
+func (sm *XrayServicesManager) GetPolicy(policyName string) (*utils.PolicyParams, *http.Response, error) {
+	policyService := services.NewPolicyService(sm.client)
+	policyService.XrayDetails = sm.config.GetServiceDetails()
+	return policyService.Get(policyName)
+}
+
+// UpdatePolicy will update an existing Xray policy by name
+// It will error if no policy can be found by that name.
+func (sm *XrayServicesManager) UpdatePolicy(params utils.PolicyParams) (*http.Response, error) {
+	policyService := services.NewPolicyService(sm.client)
+	policyService.XrayDetails = sm.config.GetServiceDetails()
+	return policyService.Update(params)
+}
+
+// DeletePolicy will delete an existing policy by name
+// It will error if no policy can be found by that name.
+func (sm *XrayServicesManager) DeletePolicy(policyName string) (*http.Response, error) {
+	policyService := services.NewPolicyService(sm.client)
+	policyService.XrayDetails = sm.config.GetServiceDetails()
+	return policyService.Delete(policyName)
 }

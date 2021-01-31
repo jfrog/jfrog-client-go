@@ -110,10 +110,15 @@
       - [Creating Xray Service Config](#creating-xray-service-config)
       - [Creating New Xray Service Manager](#creating-new-xray-service-manager)
     - [Using Xray Services](#using-xray-services)
+      - [Fetching Xray's Version](#fetching-xrays-version)
       - [Creating an Xray Watch](#creating-an-xray-watch)
       - [Get an Xray Watch](#get-an-xray-watch)
       - [Update an Xray Watch](#update-an-xray-watch)
       - [Delete an Xray Watch](#delete-an-xray-watch)
+      - [Creating a Security Xray Policy](#creating-a-security-xray-policy)
+      - [Creating a License Xray Policy](#creating-a-license-xray-policy)
+      - [Update an Xray Policy](#update-an-xray-policy)
+      - [Delete an Xray Policy](#delete-an-xray-policy)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -1048,8 +1053,8 @@ params.Path, err = packages.CreatePath("subject/repo/pkg")
 
 params.Desc = "description"
 params.Labels = "labels"
-params.Licenses = "licences"
-params.CustomLicenses = "custum-licenses"
+params.Licenses = "licenses"
+params.CustomLicenses = "custom-licenses"
 params.VcsUrl = "https://github.com/jfrog/jfrog-cli-go"
 params.WebsiteUrl = "https://jfrog.com"
 params.IssueTrackerUrl = "https://github.com/bintray/bintray-client-java/issues"
@@ -1252,8 +1257,11 @@ xrayManager, err := xray.New(&xrayDetails, serviceConfig)
 ```
 
 ### Using Xray Services
+#### Fetching Xray's Version
+```go
+version, err := xrayManager.GetVersion()
+```
 #### Creating an Xray Watch
-
 This uses API version 2.
 
 You are able to configure repositories and builds on a watch.
@@ -1303,4 +1311,76 @@ resp, err := xrayManager.UpdateWatch(*watch)
 #### Delete an Xray Watch
 ```go
 resp, err := xrayManager.DeleteWatch("example-watch-all")
+```
+
+#### Creating a Security Xray Policy
+```go
+params := utils.NewPolicyParams()
+params.Name = "example-security-policy"
+params.Type = utils.Security
+params.Description = "Security policy with 2 rules"
+params.Rules = []utils.PolicyRule{
+	{
+		Name:     "min-severity-rule",
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
+		Priority: 1,
+	},
+	{
+		Name:     "cvss-range-rule",
+		Criteria: *utils.CreateCvssRangePolicyCriteria(5.7, 8.9),
+		Priority: 2,
+		Actions: &utils.PolicyAction{
+			Webhooks: []string{"sec_webhook"},
+			BlockDownload: utils.PolicyBlockDownload{
+				Active:    true,
+				Unscanned: false,
+			},
+			BlockReleaseBundleDistribution: false,
+			FailBuild:                      true,
+			NotifyDeployer:                 false,
+			NotifyWatchRecipients:          true,
+			CustomSeverity:                 utils.Medium,
+		},
+	},
+}
+resp, err := xrayManager.CreatePolicy(params)
+```
+
+#### Creating a License Xray Policy
+```go
+params := utils.NewPolicyParams()
+params.Name = "example-licence-policy"
+params.Type = utils.License
+params.Description = "License policy with 2 rules"
+params.Rules = []utils.PolicyRule{
+	{
+		Name:     "allowed-licenses",
+		Criteria: *utils.CreateLicensePolicyCriteria(true, true, false, "MIT", "Apache-2.0"),
+		Priority: 1,
+	},
+	{
+		Name:     "baned-licenses",
+		Criteria: *utils.CreateLicensePolicyCriteria(false, true, false, "GPL"),
+		Priority: 2,
+	},
+}
+resp, err := xrayManager.CreatePolicy(params)
+```
+
+#### Get an Xray Policy
+```go
+policy, resp, err := xrayManager.GetPolicy("example-policy")
+```
+
+#### Update an Xray Policy
+```go
+policy, resp, err := xrayManager.GetPolicy("example-policy")
+policy.Description = "Updated description"
+
+resp, err := xrayManager.UpdatePolicy(*policy)
+```
+
+#### Delete an Xray Policy
+```go
+resp, err := xrayManager.DeletePolicy("example-policy")
 ```
