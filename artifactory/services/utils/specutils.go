@@ -36,8 +36,7 @@ type ArtifactoryCommonParams struct {
 	Recursive        bool
 	IncludeDirs      bool
 	Regexp           bool
-	//gai
-	Ant				 bool
+	Ant              bool
 	ArchiveEntries   string
 }
 
@@ -60,8 +59,7 @@ type FileGetter interface {
 	GetBundle() string
 	GetSpecType() (specType SpecType)
 	IsRegexp() bool
-	//gai
-	IsAnt()	bool
+	IsAnt() bool
 	IsRecursive() bool
 	IsIncludeDirs() bool
 	GetArchiveEntries() string
@@ -112,7 +110,6 @@ func (params *ArtifactoryCommonParams) IsRegexp() bool {
 	return params.Regexp
 }
 
-//gai
 func (params *ArtifactoryCommonParams) IsAnt() bool {
 	return params.Ant
 }

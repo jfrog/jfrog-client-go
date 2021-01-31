@@ -164,7 +164,6 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 	return
 }
 
-//gai - one step before compiling path to regexp
 func PrepareLocalPathForUpload(localPath string, useRegExp bool, useAnt bool) string {
 	if localPath == "./" || localPath == ".\\" {
 		return "^.*$"

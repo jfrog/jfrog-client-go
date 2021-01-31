@@ -47,8 +47,7 @@ type UploadParams struct {
 	TargetPath string
 
 	UseRegExp          bool
-	//gai
-	UseAnt			   bool
+	UseAnt             bool
 	Flat               bool
 	Recursive          bool
 	Explode            bool
