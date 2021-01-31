@@ -24,7 +24,7 @@ func NewUserParams() UserParams {
 
 // application/vnd.org.jfrog.artifactory.security.User+json
 type User struct {
-	Name                     string   `json:"name,omitempty" csv:"name,omitempty"`
+	Name                     string   `json:"name,omitempty" csv:"username,omitempty"`
 	Email                    string   `json:"email,omitempty" csv:"email,omitempty"`
 	Password                 string   `json:"password,omitempty" csv:"password,omitempty"`
 	Admin                    bool     `json:"admin,omitempty" csv:"admin,omitempty"`
