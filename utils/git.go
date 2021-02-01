@@ -15,6 +15,7 @@ type manager struct {
 	err      error
 	revision string
 	url      string
+	branch   string
 }
 
 func NewGitManager(path string) *manager {
@@ -37,6 +38,10 @@ func (m *manager) GetUrl() string {
 
 func (m *manager) GetRevision() string {
 	return m.revision
+}
+
+func (m *manager) GetBranch() string {
+	return m.branch
 }
 
 func (m *manager) readUrl() {
@@ -121,6 +126,10 @@ func (m *manager) readRevision() {
 	if err != nil {
 		m.err = err
 		return
+	}
+	if ref != "" {
+		splitRefArr := strings.Split(ref, "/")
+		m.branch = splitRefArr[len(splitRefArr)-1]
 	}
 	// If the revision was returned, then we're done:
 	if revision != "" {
