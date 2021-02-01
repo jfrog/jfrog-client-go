@@ -557,7 +557,7 @@ func getVcsProps(path string, vcsCache *clientutils.VcsCache) (string, error) {
 		return "", errorutils.CheckError(err)
 	}
 	props := ""
-	revision, url, err := vcsCache.GetVcsDetails(filepath.Dir(path))
+	revision, url, branch, err := vcsCache.GetVcsDetails(filepath.Dir(path))
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
@@ -566,6 +566,9 @@ func getVcsProps(path string, vcsCache *clientutils.VcsCache) (string, error) {
 	}
 	if url != "" {
 		props += ";vcs.url=" + url
+	}
+	if branch != "" {
+		props += ";vcs.branch=" + branch
 	}
 	return props, nil
 }

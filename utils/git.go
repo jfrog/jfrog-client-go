@@ -27,7 +27,7 @@ func (m *manager) ReadConfig() error {
 	if m.path == "" {
 		return errorutils.CheckError(errors.New(".git path must be defined."))
 	}
-	m.readRevision()
+	m.readRevisionAndBranch()
 	m.readUrl()
 	return m.err
 }
@@ -93,7 +93,7 @@ func (m *manager) readUrl() {
 	m.url = RemoveCredentials(originUrl, matchedResult)
 }
 
-func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error) {
+func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
 	file, e := os.Open(dotGitPath)
 	if errorutils.CheckError(e) != nil {
@@ -117,12 +117,12 @@ func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error)
 	return
 }
 
-func (m *manager) readRevision() {
+func (m *manager) readRevisionAndBranch() {
 	if m.err != nil {
 		return
 	}
 	// This function will either return the revision or the branch ref:
-	revision, ref, err := m.getRevisionOrBranchPath()
+	revision, ref, err := m.getRevisionAndBranchPath()
 	if err != nil {
 		m.err = err
 		return
