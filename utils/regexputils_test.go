@@ -2,14 +2,18 @@ package utils
 
 import (
 	"fmt"
-	gofrogio "github.com/jfrog/gofrog/io"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"strings"
 	"testing"
+
+	gofrogio "github.com/jfrog/gofrog/io"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-func TestRemoveCredentialsFromLine(t *testing.T) {
+func init() {
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
+}
+
+func TestRemoveCredentialsFromLine(t *testing.T) {
 	regExpProtocol, err := GetRegExp(CredentialsInUrlRegexp)
 	if err != nil {
 		t.Error(err)
@@ -21,10 +25,16 @@ func TestRemoveCredentialsFromLine(t *testing.T) {
 		expectedLine string
 		matched      bool
 	}{
-		{"http", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line http://***.***@127.0.0.1:8081/artifactory/path/to/repo", true},
-		{"https", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://***.***@127.0.0.1:8081/artifactory/path/to/repo", true},
-		{"Special characters 1", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://u-s!<e>_r:!p-a&%%s%sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://***.***@127.0.0.1:8081/artifactory/path/to/repo", true},
-		{"Special characters 2", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://!user:[p]a(s)sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://***.***@127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"http", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line http://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"https", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"git", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line git://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line git://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"Special characters 1", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://u-s!<e>_r:!p-a&%%s%sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"Special characters 2", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://!user:[p]a(s)sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"http with token", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line http://123456@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line http://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"https with token", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://123456@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"git with token", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line git://123456@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line git://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"Special characters 1 with token", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://u-s!<e>_r!p-a&%%s%sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"Special characters 2 with token", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://!user[p]a(s)sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},
 		{"No credentials", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", false},
 		{"No http", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line"}, "This is an example line", false},
 	}
@@ -38,7 +48,7 @@ func TestRemoveCredentialsFromLine(t *testing.T) {
 				t.Error("Expected to find a match.")
 			}
 			if test.matched {
-				actual := MaskCredentials(test.regex.Line, test.regex.MatchedResults[0])
+				actual := RemoveCredentials(test.regex.Line, test.regex.MatchedResults[0])
 				if !strings.EqualFold(actual, test.expectedLine) {
 					t.Errorf("Expected: %s, The Regex found %s and the masked line: %s", test.expectedLine, test.regex.MatchedResults[0], actual)
 				}

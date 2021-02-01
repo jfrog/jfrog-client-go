@@ -1,0 +1,15 @@
+{
+    "results": [
+        {
+            "repo": "repo1",
+            "path": ".",
+            "name": "ab",
+            "properties": [
+                {
+                    "Key": "c",
+                    "Value": "1"
+                }
+            ]
+        }
+    ]
+}

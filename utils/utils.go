@@ -18,8 +18,11 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "0.11.0"
+	Version     = "0.19.0"
 )
+
+// In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
+var MaxBufferSize = 50000
 
 var userAgent = getDefaultUserAgent()
 
@@ -126,8 +129,16 @@ func AddTrailingSlashIfNeeded(url string) string {
 }
 
 func IndentJson(jsonStr []byte) string {
+	return doIndentJson(jsonStr, "", "  ")
+}
+
+func IndentJsonArray(jsonStr []byte) string {
+	return doIndentJson(jsonStr, "  ", "  ")
+}
+
+func doIndentJson(jsonStr []byte, prefix, indent string) string {
 	var content bytes.Buffer
-	err := json.Indent(&content, jsonStr, "", "  ")
+	err := json.Indent(&content, jsonStr, prefix, indent)
 	if err == nil {
 		return content.String()
 	}
@@ -158,7 +169,7 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
 		localPath = localPath[3:]
 	}
 	if !useRegExp {
-		localPath = pathToRegExp(cleanPath(localPath))
+		localPath = PathToRegExp(cleanPath(localPath))
 	}
 	return localPath
 }
@@ -175,7 +186,7 @@ func cleanPath(path string) string {
 	return path
 }
 
-func pathToRegExp(localPath string) string {
+func PathToRegExp(localPath string) string {
 	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
 	for _, char := range SPECIAL_CHARS {
 		localPath = strings.Replace(localPath, char, "\\"+char, -1)
@@ -185,11 +196,10 @@ func pathToRegExp(localPath string) string {
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
 		localPath += wildcard
 	}
-	localPath = "^" + localPath + "$"
-	return localPath
+	return "^" + localPath + "$"
 }
 
-// Replaces matched regular expression from path to corresponding {i} at target.
+// Replaces matched regular expression from path to corresponding placeholder {i} at target.
 // Example 1:
 //      pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
 //      returns "hello"
@@ -197,12 +207,24 @@ func pathToRegExp(localPath string) string {
 //      pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
 //      returns "hello"
 func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, error) {
-	if ignoreRepo {
+	asteriskIndex := strings.Index(pattern, "*")
+	slashIndex := strings.Index(pattern, "/")
+	if shouldRemoveRepo(ignoreRepo, asteriskIndex, slashIndex) {
+		// Removing the repository part of the path is required when working with virtual repositories, as the pattern
+		// may contain the virtual-repository name, but the path contains the local-repository name.
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
 	pattern = addEscapingParentheses(pattern, target)
-	pattern = pathToRegExp(pattern)
+	pattern = PathToRegExp(pattern)
+	if slashIndex < 0 {
+		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
+		// is only the repository name.
+		dollarIndex := strings.LastIndex(pattern, "$")
+		pattern = pattern[:dollarIndex]
+		pattern += "(/.*)?$"
+	}
+
 	r, err := regexp.Compile(pattern)
 	err = errorutils.CheckError(err)
 	if err != nil {
@@ -294,6 +316,20 @@ func removeRepoFromPath(path string) string {
 	return path
 }
 
+func shouldRemoveRepo(ignoreRepo bool, asteriskIndex, slashIndex int) bool {
+	if !ignoreRepo || slashIndex < 0 {
+		return false
+	}
+	if asteriskIndex < 0 {
+		return true
+	}
+	return IsSlashPrecedeAsterisk(asteriskIndex, slashIndex)
+}
+
+func IsSlashPrecedeAsterisk(asteriskIndex, slashIndex int) bool {
+	return slashIndex < asteriskIndex && slashIndex >= 0
+}
+
 // Split str by the provided separator, escaping the separator if it is prefixed by a back-slash.
 func SplitWithEscape(str string, separator rune) []string {
 	var parts []string
@@ -315,6 +351,13 @@ func SplitWithEscape(str string, separator rune) []string {
 	}
 	parts = append(parts, current.String())
 	return parts
+}
+
+func AddProps(oldProps, additionalProps string) string {
+	if len(oldProps) > 0 && !strings.HasSuffix(oldProps, ";") && len(additionalProps) > 0 {
+		oldProps += ";"
+	}
+	return oldProps + additionalProps
 }
 
 func IsWindows() bool {

@@ -35,26 +35,25 @@ func RemovePlaceholderParentheses(pattern, target string) string {
 	parentheses := NewParenthesesSlice(pattern, target)
 	// Remove parentheses which have a corresponding placeholder.
 	var temp string
-	for i := 0; i < len(pattern); i++ {
-		if (pattern[i] == '(' || pattern[i] == ')') && parentheses.IsPresent(i) {
+	for i, c := range pattern {
+		if (c == '(' || c == ')') && parentheses.IsPresent(i) {
 			continue
 		} else {
-			temp = temp + string(pattern[i])
+			temp = temp + string(c)
 		}
-
 	}
 	return temp
 }
 
-// Escapoing Parentheses with no corresponding placeholder
+// Escaping Parentheses with no corresponding placeholder.
 func addEscapingParentheses(pattern, target string) string {
 	parentheses := NewParenthesesSlice(pattern, target)
 	var temp string
-	for i := 0; i < len(pattern); i++ {
-		if (pattern[i] == '(' || pattern[i] == ')') && !parentheses.IsPresent(i) {
-			temp = temp + "\\" + string(pattern[i])
+	for i, c := range pattern {
+		if (c == '(' || c == ')') && !parentheses.IsPresent(i) {
+			temp = temp + "\\" + string(c)
 		} else {
-			temp = temp + string(pattern[i])
+			temp = temp + string(c)
 		}
 	}
 	return temp

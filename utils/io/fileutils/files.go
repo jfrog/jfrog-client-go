@@ -111,7 +111,8 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 	}
 
 	fileName = originalFileName
-	if targetFileName != "" {
+	// '.' as a target path is equivalent to an empty target path.
+	if targetFileName != "" && targetFileName != "." {
 		fileName = targetFileName
 	}
 	return
@@ -128,21 +129,25 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 	return
 }
 
-// Return all files with the specified extension in the specified path. Not recursive.
-func ListFilesWithExtension(path, ext string) ([]string, error) {
+// Return all files in the specified path who satisfy the filter func. Not recursive.
+func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, error)) ([]string, error) {
 	sep := GetFileSeparator()
 	if !strings.HasSuffix(path, sep) {
 		path += sep
 	}
-	fileList := []string{}
+	var fileList []string
 	files, _ := ioutil.ReadDir(path)
 	path = strings.TrimPrefix(path, "."+sep)
 
 	for _, f := range files {
-		if !strings.HasSuffix(f.Name(), ext) {
+		filePath := path + f.Name()
+		satisfy, err := filterFunc(filePath)
+		if err != nil {
+			return nil, err
+		}
+		if !satisfy {
 			continue
 		}
-		filePath := path + f.Name()
 		exists, err := IsFileExists(filePath, false)
 		if err != nil {
 			return nil, err
@@ -371,7 +376,8 @@ func CopyFile(dst, src string) error {
 
 // Copy directory content from one path to another.
 // includeDirs means to copy also the dirs if presented in the src folder.
-func CopyDir(fromPath, toPath string, includeDirs bool) error {
+// excludeNames - Skip files/dirs in the src folder that match names in provided slice. ONLY excludes first layer (only in src folder).
+func CopyDir(fromPath, toPath string, includeDirs bool, excludeNames []string) error {
 	err := CreateDirIfNotExist(toPath)
 	if err != nil {
 		return err
@@ -383,6 +389,11 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 	}
 
 	for _, v := range files {
+		// Skip if excluded
+		if IsStringInSlice(filepath.Base(v), excludeNames) {
+			continue
+		}
+
 		dir, err := IsDirExists(v, false)
 		if err != nil {
 			return err
@@ -390,7 +401,7 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 
 		if dir {
 			toPath := toPath + GetFileSeparator() + filepath.Base(v)
-			err := CopyDir(v, toPath, true)
+			err := CopyDir(v, toPath, true, nil)
 			if err != nil {
 				return err
 			}
@@ -402,6 +413,15 @@ func CopyDir(fromPath, toPath string, includeDirs bool) error {
 		}
 	}
 	return err
+}
+
+func IsStringInSlice(string string, strings []string) bool {
+	for _, v := range strings {
+		if v == string {
+			return true
+		}
+	}
+	return false
 }
 
 // Removing the provided path from the filesystem
@@ -418,7 +438,7 @@ func RemovePath(testPath string) error {
 
 // Renaming from old path to new path.
 func RenamePath(oldPath, newPath string) error {
-	err := CopyDir(oldPath, newPath, true)
+	err := CopyDir(oldPath, newPath, true, nil)
 	if err != nil {
 		return errors.New("Error copying directory: " + oldPath + "to" + newPath + err.Error())
 	}
@@ -484,3 +504,114 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 }
 
 type ItemType string
+
+// Returns true if the two files have the same MD5 checksum.
+func FilesIdentical(file1 string, file2 string) (bool, error) {
+	srcDetails, err := GetFileDetails(file1)
+	if err != nil {
+		return false, err
+	}
+	toCompareDetails, err := GetFileDetails(file2)
+	if err != nil {
+		return false, err
+	}
+	return srcDetails.Checksum.Md5 == toCompareDetails.Checksum.Md5, nil
+}
+
+// Compares provided Md5 and Sha1 to those of a local file.
+func IsEqualToLocalFile(localFilePath, md5, sha1 string) (bool, error) {
+	exists, err := IsFileExists(localFilePath, false)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, nil
+	}
+	localFileDetails, err := GetFileDetails(localFilePath)
+	if err != nil {
+		return false, err
+	}
+	return localFileDetails.Checksum.Md5 == md5 && localFileDetails.Checksum.Sha1 == sha1, nil
+}
+
+// Move directory content from one path to another.
+func MoveDir(fromPath, toPath string) error {
+	err := CreateDirIfNotExist(toPath)
+	if err != nil {
+		return err
+	}
+
+	files, err := ListFiles(fromPath, true)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range files {
+		dir, err := IsDirExists(v, true)
+		if err != nil {
+			return err
+		}
+
+		if dir {
+			toPath := toPath + GetFileSeparator() + filepath.Base(v)
+			err := MoveDir(v, toPath)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		err = MoveFile(v, filepath.Join(toPath, filepath.Base(v)))
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+// GoLang: os.Rename() give error "invalid cross-device link" for Docker container with Volumes.
+// MoveFile(source, destination) will work moving file between folders
+// Therefore, we are using our own implementation (MoveFile) in order to rename files.
+func MoveFile(sourcePath, destPath string) (err error) {
+	inputFileOpen := true
+	var inputFile *os.File
+	inputFile, err = os.Open(sourcePath)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	defer func() {
+		if inputFileOpen {
+			e := inputFile.Close()
+			if err == nil {
+				err = e
+				errorutils.CheckError(err)
+			}
+		}
+	}()
+
+	var outputFile *os.File
+	outputFile, err = os.Create(destPath)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	defer func() {
+		e := outputFile.Close()
+		if err == nil {
+			err = e
+			errorutils.CheckError(err)
+		}
+	}()
+
+	_, err = io.Copy(outputFile, inputFile)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+
+	// The copy was successful, so now delete the original file
+	err = inputFile.Close()
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	inputFileOpen = false
+	err = os.Remove(sourcePath)
+	return errorutils.CheckError(err)
+}

@@ -1,0 +1,464 @@
+{
+    "results": [
+        {
+            "Repo": "as",
+            "Path": "package/latest",
+            "Name": ".buildinfo"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest",
+            "Name": "genindex.html"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest",
+            "Name": "index.html"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest",
+            "Name": "objects.inv"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest",
+            "Name": "search.html"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest",
+            "Name": "searchindex.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/.doctrees",
+            "Name": "environment.pickle"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/.doctrees",
+            "Name": "index.doctree"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_sources",
+            "Name": "index.rst.txt"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "basic.css"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "doctools.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "documentation_options.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "file.png"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "jquery-3.5.1.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "jquery.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "language_data.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "minus.png"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "plus.png"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "pygments.css"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "searchtools.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "underscore-1.3.1.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static",
+            "Name": "underscore.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css",
+            "Name": "badge_only.css"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css",
+            "Name": "theme.css"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "Roboto-Slab-Bold.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "Roboto-Slab-Bold.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "Roboto-Slab-Regular.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "Roboto-Slab-Regular.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "fontawesome-webfont.eot"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "fontawesome-webfont.svg"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "fontawesome-webfont.ttf"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "fontawesome-webfont.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "fontawesome-webfont.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "lato-bold-italic.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "lato-bold-italic.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "lato-bold.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "lato-bold.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "lato-normal-italic.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "lato-normal-italic.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "lato-normal.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/css/fonts",
+            "Name": "lato-normal.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "FontAwesome.otf"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "Roboto-Slab-Bold.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "Roboto-Slab-Bold.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "Roboto-Slab-Light.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "Roboto-Slab-Light.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "Roboto-Slab-Regular.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "Roboto-Slab-Regular.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "Roboto-Slab-Thin.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "Roboto-Slab-Thin.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "fontawesome-webfont.eot"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "fontawesome-webfont.svg"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "fontawesome-webfont.ttf"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "fontawesome-webfont.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "fontawesome-webfont.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "lato-bold-italic.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "lato-bold-italic.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "lato-bold.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "lato-bold.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "lato-normal-italic.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "lato-normal-italic.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "lato-normal.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts",
+            "Name": "lato-normal.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-bold.eot"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-bold.ttf"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-bold.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-bold.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-bolditalic.eot"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-bolditalic.ttf"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-bolditalic.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-bolditalic.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-italic.eot"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-italic.ttf"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-italic.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-italic.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-regular.eot"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-regular.ttf"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-regular.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/Lato",
+            "Name": "lato-regular.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/RobotoSlab",
+            "Name": "roboto-slab-v7-bold.eot"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/RobotoSlab",
+            "Name": "roboto-slab-v7-bold.ttf"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/RobotoSlab",
+            "Name": "roboto-slab-v7-bold.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/RobotoSlab",
+            "Name": "roboto-slab-v7-bold.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/RobotoSlab",
+            "Name": "roboto-slab-v7-regular.eot"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/RobotoSlab",
+            "Name": "roboto-slab-v7-regular.ttf"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/RobotoSlab",
+            "Name": "roboto-slab-v7-regular.woff"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/fonts/RobotoSlab",
+            "Name": "roboto-slab-v7-regular.woff2"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/js",
+            "Name": "badge_only.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/js",
+            "Name": "html5shiv-printshiv.min.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/js",
+            "Name": "html5shiv.min.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/js",
+            "Name": "modernizr.min.js"
+        },
+        {
+            "Repo": "as",
+            "Path": "package/latest/_static/js",
+            "Name": "theme.js"
+        }
+    ]
+}

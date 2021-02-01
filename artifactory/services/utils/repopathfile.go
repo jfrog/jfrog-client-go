@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
 	"regexp"
 	"strings"
 )
@@ -26,16 +27,27 @@ func createRepoPathFileTriples(pattern string, recursive bool) []RepoPathFile {
 	firstSlashIndex := strings.Index(pattern, "/")
 	asteriskIndices := asteriskRegexp.FindAllStringIndex(pattern, -1)
 
-	if asteriskIndices != nil && !isSlashPrecedeAsterisk(asteriskIndices[0][0], firstSlashIndex) {
+	if asteriskIndices != nil && !utils.IsSlashPrecedeAsterisk(asteriskIndices[0][0], firstSlashIndex) {
 		var triples []RepoPathFile
 		var lastRepoAsteriskIndex int
 		for _, asteriskIndex := range asteriskIndices {
-			if isSlashPrecedeAsterisk(asteriskIndex[0], firstSlashIndex) {
+			if utils.IsSlashPrecedeAsterisk(asteriskIndex[0], firstSlashIndex) {
 				break
 			}
 			repo := pattern[:asteriskIndex[0]+1]     // '<repo>*'
 			newPattern := pattern[asteriskIndex[0]:] // '*<pattern>'
-			newPattern = strings.TrimPrefix(newPattern, "*/")
+			slashCount := strings.Count(newPattern, "/")
+			asteriskCount := strings.Count(newPattern, "*")
+			// If slashCount or asteriskCount are 1 or less, don't trim prefix of '*/' to allow specific-name enforce in triple.
+			// For example, in case of pattern '*/a1.in', the calculated triple should contain 'a1.in' as the 'file'.
+			if slashCount > 1 || asteriskCount > 1 {
+				// Remove '/' character as the pattern precedes it may be the repository name.
+				// Leaving the '/' causes forcing another hierarchy in the 'path' of the triple, which isn't correct.
+				newPattern = strings.TrimPrefix(newPattern, "*/")
+				if !strings.HasPrefix(newPattern, "*") {
+					newPattern = "*" + newPattern
+				}
+			}
 			triples = append(triples, createPathFilePairs(repo, newPattern, recursive)...)
 			lastRepoAsteriskIndex = asteriskIndex[1]
 		}
@@ -58,10 +70,6 @@ func createRepoPathFileTriples(pattern string, recursive bool) []RepoPathFile {
 	repo := pattern[:firstSlashIndex]
 	pattern = pattern[firstSlashIndex+1:]
 	return createPathFilePairs(repo, pattern, recursive)
-}
-
-func isSlashPrecedeAsterisk(asteriskIndex, slashIndex int) bool {
-	return slashIndex < asteriskIndex && slashIndex >= 0
 }
 
 func createPathFilePairs(repo, pattern string, recursive bool) []RepoPathFile {

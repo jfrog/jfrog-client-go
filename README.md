@@ -5,47 +5,170 @@
 | master | [![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/master?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/master) |
 |  dev   |    [![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/dev?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/dev)    |
 
-## General
+## Table of Contents
+- [jfrog-client-go](#jfrog-client-go)
+  - [Table of Contents](#table-of-contents)
+  - [General](#general)
+  - [Pull Requests](#pull-requests)
+    - [Guidelines](#guidelines)
+  - [Tests](#tests)
+  - [General APIs](#general-apis)
+    - [Setting the Logger](#setting-the-logger)
+    - [Setting the Temp Dir](#setting-the-temp-dir)
+  - [Artifactory APIs](#artifactory-apis)
+    - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
+      - [Creating Artifactory Details](#creating-artifactory-details)
+      - [Creating Artifactory Service Config](#creating-artifactory-service-config)
+      - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
+    - [Using Artifactory Services](#using-artifactory-services)
+      - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
+        - [Uploading Files:](#uploading-files)
+        - [Uploading Files with Results Reader:](#uploading-files-with-results-reader)
+      - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
+        - [Downloading Files:](#downloading-files)
+        - [Downloading Files with Results Reader:](#downloading-files-with-results-reader)
+      - [Copying Files in Artifactory](#copying-files-in-artifactory)
+      - [Moving Files in Artifactory](#moving-files-in-artifactory)
+      - [Deleting Files from Artifactory](#deleting-files-from-artifactory)
+      - [Searching Files in Artifactory](#searching-files-in-artifactory)
+      - [Setting Properties on Files in Artifactory](#setting-properties-on-files-in-artifactory)
+      - [Deleting Properties from Files in Artifactory](#deleting-properties-from-files-in-artifactory)
+      - [Publishing Build Info to Artifactory](#publishing-build-info-to-artifactory)
+      - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
+      - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
+      - [Promoting a Docker Image in Artifactory](#promoting-a-docker-image-in-artifactory)
+      - [Distributing Published Builds to JFrog Bintray](#distributing-published-builds-to-jfrog-bintray)
+      - [Triggering Build Scanning with JFrog Xray](#triggering-build-scanning-with-jfrog-xray)
+      - [Discarding Old Builds](#discarding-old-builds)
+      - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
+      - [Executing AQLs](#executing-aqls)
+      - [Reading Files in Artifactory](#reading-files-in-artifactory)
+      - [Creating an Access Token](#creating-an-access-token)
+      - [Fetching Access Tokens](#fetching-access-tokens)
+      - [Refreshing an Access Token](#refreshing-an-access-token)
+      - [Revoking an Access Token](#revoking-an-access-token)
+      - [Regenerate API Key](#regenerate-api-key)
+      - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
+      - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
+      - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
+      - [Removing a Repository](#removing-a-repository)
+      - [Getting Repository Details](#getting-repository-details)
+      - [Getting All Repositories](#getting-all-repositories)
+      - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
+      - [Getting a Repository Replication](#getting-a-repository-replication)
+      - [Removing a Repository Replication](#removing-a-repository-replication)
+      - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
+      - [Removing a Permission Target](#removing-a-permission-target)
+      - [Fetching Artifactory's Version](#fetching-artifactorys-version)
+      - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
+      - [Fetching Users Details](#fetching-users-details)
+      - [Creating and Updating a User](#creating-and-updating-a-user)
+      - [Deleting a User](#deleting-a-user)
+      - [Fetching Group Details](#fetching-group-details)
+      - [Creating and Updating a Group](#creating-and-updating-a-group)
+      - [Deleting a Group](#deleting-a-group)
+  - [Distribution APIs](#distribution-apis)
+    - [Creating Distribution Service Manager](#creating-distribution-service-manager)
+      - [Creating Distribution Details](#creating-distribution-details)
+      - [Creating Distribution Service Config](#creating-distribution-service-config)
+      - [Creating New Distribution Service Manager](#creating-new-distribution-service-manager)
+    - [Using Distribution Services](#using-distribution-services)
+      - [Setting Distribution Signing Key](#setting-distribution-signing-key)
+      - [Creating a Release Bundle](#creating-a-release-bundle)
+      - [Updating a Release Bundle](#updating-a-release-bundle)
+      - [Signing a Release Bundle](#signing-a-release-bundle)
+      - [Async Distributing a Release Bundle](#async-distributing-a-release-bundle)
+      - [Sync Distributing a Release Bundle](#sync-distributing-a-release-bundle)
+      - [Getting Distribution Status](#getting-distribution-status)
+      - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle)
+      - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle)
+  - [Bintray APIs](#bintray-apis)
+    - [Creating Bintray Details](#creating-bintray-details)
+    - [Creating Bintray Service Manager](#creating-bintray-service-manager)
+    - [Using Bintray Services](#using-bintray-services)
+      - [Uploading a Single File to Bintray](#uploading-a-single-file-to-bintray)
+      - [Downloading a Single File from Bintray](#downloading-a-single-file-from-bintray)
+      - [Downloading Version Files from Bintray](#downloading-version-files-from-bintray)
+      - [Showing and Deleting a Bintray Package](#showing-and-deleting-a-bintray-package)
+      - [Creating and Updating a Bintray Package](#creating-and-updating-a-bintray-package)
+      - [Showing and Deleting a Bintray Version](#showing-and-deleting-a-bintray-version)
+      - [Creating and Updating a Bintray Version](#creating-and-updating-a-bintray-version)
+      - [Creating and Updating Entitlements](#creating-and-updating-entitlements)
+      - [Showing and Deleting Entitlements](#showing-and-deleting-entitlements)
+      - [Creating and Updating Access Keys](#creating-and-updating-access-keys)
+      - [Showing and Deleting Access Keys](#showing-and-deleting-access-keys)
+      - [Signing a URL](#signing-a-url)
+      - [GPG Signing a File](#gpg-signing-a-file)
+      - [GPG Signing Version Files](#gpg-signing-version-files)
+      - [Listing Logs](#listing-logs)
+      - [Downloading Logs](#downloading-logs)
+      - [Syncing Content To Maven Central](#syncing-content-to-maven-central)
+  - [Using ContentReader](#using-contentreader)
+  - [Xray APIs](#xray-apis)
+    - [Creating Xray Service Manager](#creating-xray-service-manager)
+      - [Creating Xray Details](#creating-xray-details)
+      - [Creating Xray Service Config](#creating-xray-service-config)
+      - [Creating New Xray Service Manager](#creating-new-xray-service-manager)
+    - [Using Xray Services](#using-xray-services)
+      - [Creating an Xray Watch](#creating-an-xray-watch)
+      - [Get an Xray Watch](#get-an-xray-watch)
+      - [Update an Xray Watch](#update-an-xray-watch)
+      - [Delete an Xray Watch](#delete-an-xray-watch)
 
+## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
 The project is still relatively new, and its APIs may therefore change frequently between releases.
 The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you may look at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
 
 ## Pull Requests
-
 We welcome pull requests from the community.
 
 ### Guidelines
-
-- Before creating your first pull request, please join our contributors community by signing [JFrog's CLA](https://secure.echosign.com/public/hostedForm?formid=5IYKLZ2RXB543N).
 - If the existing tests do not already cover your changes, please add tests.
 - Pull requests should be created on the **dev** branch.
 - Please use gofmt for formatting the code before submitting the pull request.
 
+## Tests
+To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
+Use the following command with the below options to run the tests.
+```sh
+go test -v github.com/jfrog/jfrog-client-go/tests
+```
+Optional flags:
+
+| Flag                | Description                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
+| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
+| `-rt.password`      | [Default: password] Artifactory password.                                                              |
+| `-rt.distUrl`       | [Optional] JFrog Distribution URL.                                                                     |
+| `-rt.xrayUrl`       | [Optional] JFrog Xray URL.                                                                     |
+| `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
+| `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
+| `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
+| `-rt.accessToken`   | [Optional] Artifactory access token.                                                                   |
+| `-log-level`        | [Default: INFO] Sets the log level.                                                                    |
+
+- The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
+  Once the tests are completed, the content of this repository is deleted.
+
 ## General APIs
-
-### Set logger
-
+### Setting the Logger
 ```go
 var file *os.File
 ...
 log.SetLogger(log.NewLogger(log.INFO, file))
 ```
 
-### Setting the temp dir
-
+### Setting the Temp Dir
 The default temp dir used is 'os.TempDir()'. Use the following API to set a new temp dir:
-
 ```go
 fileutils.SetTempDirBase(filepath.Join("my", "temp", "path"))
 ```
 
 ## Artifactory APIs
-
-### Creating a Service Manager
-
+### Creating Artifactory Service Manager
 #### Creating Artifactory Details
-
 ```go
 rtDetails := auth.NewArtifactoryDetails()
 rtDetails.SetUrl("http://localhost:8081/artifactory")
@@ -59,31 +182,35 @@ rtDetails.SetClientCertPath("path/to/.cer")
 rtDetails.SetClientCertKeyPath("path/to/.key")
 ```
 
-#### Creating Service Config
-
+#### Creating Artifactory Service Config
 ```go
 serviceConfig, err := config.NewConfigBuilder().
     SetServiceDetails(rtDetails).
     SetCertificatesPath(certPath).
     SetThreads(threads).
     SetDryRun(false).
+    // Add [Context](https://golang.org/pkg/context/)
+    SetContext(ctx).
     Build()
 ```
 
-#### Creating New Service Manager
-
+#### Creating New Artifactory Service Manager
 ```go
 rtManager, err := artifactory.New(&rtDetails, serviceConfig)
 ```
 
-### Using Services
-
+### Using Artifactory Services
 #### Uploading Files to Artifactory
-
+##### Uploading Files:
+Using the `UploadFiles()` function, we can upload files and get the general statistics of the action (The actual number of successful and failed uploads), and the error value if it occurred.
 ```go
 params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
+// Attach properties to the uploaded files.
+params.TargetProps = "key1=val1;key2=val2"
+params.AddVcsProps = false
+params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
 params.Recursive = true
 params.Regexp = false
 params.IncludeDirs = false
@@ -91,23 +218,48 @@ params.Flat = true
 params.Explode = false
 params.Deb = ""
 params.Symlink = false
-params.AddVcsProps = false
 // Retries default value: 3
 params.Retries = 5
 // MinChecksumDeploy default value: 10400
 params.MinChecksumDeploy = 15360
 
-rtManager.UploadFiles(params)
+totalUploaded, totalFailed, err := rtManager.UploadFiles(params)
 ```
+##### Uploading Files with Results Reader:
+Similar to `UploadFlies()`, but returns a reader, which allows iterating over the details of the uploaded files. Only files which were successfully uploaded are available by the reader.
+```go
+params := services.NewUploadParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "repo/path/"
+// Attach properties to the uploaded files.
+params.TargetProps = "key1=val1;key2=val2"
+params.AddVcsProps = false
+params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
+params.Recursive = true
+params.Regexp = false
+params.IncludeDirs = false
+params.Flat = true
+params.Explode = false
+params.Deb = ""
+params.Symlink = false
+// Retries default value: 3
+params.Retries = 5
+// MinChecksumDeploy default value: 10400
+params.MinChecksumDeploy = 15360
+
+reader, totalUploaded, totalFailed, err := rtManager.UploadFilesWithResultReader(params)
+```
+Read more about [ContentReader](#using-contentReader).
 
 #### Downloading Files from Artifactory
-
 ##### Downloading Files:
 Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
 ```go
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
+// Filter the downloaded files by properties.
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.IncludeDirs = false
 params.Flat = false
@@ -130,6 +282,8 @@ Similar to `DownloadFiles()`, but returns a reader, which allows iterating over 
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
+// Filter the downloaded files by properties.
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.IncludeDirs = false
 params.Flat = false
@@ -142,25 +296,15 @@ params.MinSplitSize = 7168
 
 reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
 ```
-Use `reader.NextRecord()` and `FileInfo` type from `utils` package to iterate over the download results.
-Use `reader.Close()` method (preferably using `defer`), to remove the results reader after it is used:
-``` 
-defer reader.Close()
-var file utils.FileInfo
-for e := resultReader.NextRecord(&file); e == nil; e = resultReader.NextRecord(&file) {
-    fmt.Printf("Download source: %s\n", file.ArtifactoryPath)
-    fmt.Printf("Download target: %s\n", file.LocalPath)
-    fmt.Printf("SHA1: %s\n", file.Sha1)
-    fmt.Printf("MD5: %s\n", file.Md5) 
-}
-```
+Read more about [ContentReader](#using-contentReader).
 
 #### Copying Files in Artifactory
-
 ```go
 params := services.NewMoveCopyParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
+// Filter the files by properties.
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.Flat = false
 
@@ -168,11 +312,12 @@ rtManager.Copy(params)
 ```
 
 #### Moving Files in Artifactory
-
 ```go
 params := services.NewMoveCopyParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "target/path/"
+// Filter the files by properties.
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 params.Flat = false
 
@@ -180,70 +325,90 @@ rtManager.Move(params)
 ```
 
 #### Deleting Files from Artifactory
-
 ```go
 params := services.NewDeleteParams()
 params.Pattern = "repo/*/*.zip"
+// Filter the files by properties.
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 
-pathsToDelete := rtManager.GetPathsToDelete(params)
+pathsToDelete, err := rtManager.GetPathsToDelete(params)
+if err != nil {
+    return err
+}
+defer pathsToDelete.Close()
 rtManager.DeleteFiles(pathsToDelete)
 ```
+Read more about [ContentReader](#using-contentReader).
 
 #### Searching Files in Artifactory
-
 ```go
 params := services.NewSearchParams()
 params.Pattern = "repo/*/*.zip"
+// Filter the files by properties.
+params.Props = "key1=val1;key2=val2"
 params.Recursive = true
 
-rtManager.SearchFiles(params)
+reader, err := rtManager.SearchFiles(params)
+if err != nil {
+    return err
+}
+defer reader.Close()
 ```
+Read more about [ContentReader](#using-contentReader).
 
 #### Setting Properties on Files in Artifactory
-
 ```go
 searchParams = services.NewSearchParams()
 searchParams.Recursive = true
 searchParams.IncludeDirs = false
 
-resultItems = rtManager.SearchFiles(searchParams)
-
+reader, err = rtManager.SearchFiles(searchParams)
+if err != nil {
+    return err
+}
+defer reader.Close()
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
-propsParams.Items = resultItems
+propsParams.Reader = reader
+// Filter the files by properties.
 propsParams.Props = "key=value"
 
 rtManager.SetProps(propsParams)
 ```
+Read more about [ContentReader](#using-contentReader).
 
 #### Deleting Properties from Files in Artifactory
-
 ```go
 searchParams = services.NewSearchParams()
 searchParams.Recursive = true
 searchParams.IncludeDirs = false
 
-resultItems = rtManager.SearchFiles(searchParams)
-
+resultItems, err = rtManager.SearchFiles(searchParams)
+if err != nil {
+    return err
+}
+defer reader.Close()
 propsParams = services.NewPropsParams()
 propsParams.Pattern = "repo/*/*.zip"
-propsParams.Items = resultItems
+propsParams.Reader = reader
+// Filter the files by properties.
 propsParams.Props = "key=value"
 
 rtManager.DeleteProps(propsParams)
 ```
+Read more about [ContentReader](#using-contentReader).
 
 #### Publishing Build Info to Artifactory
-
 ```go
 buildInfo := &buildinfo.BuildInfo{}
+// Optional Artifactory project name
+project := "my-project"
 ...
-rtManager.PublishBuildInfo(buildInfo)
+rtManager.PublishBuildInfo(buildInfo, project)
 ```
 
 #### Fetching Build Info from Artifactory
-
 ```go
 buildInfoParams := services.NewBuildInfoParams{}
 buildInfoParams.BuildName = "buildName"
@@ -253,7 +418,6 @@ rtManager.GetBuildInfo(buildInfoParams)
 ```
 
 #### Promoting Published Builds in Artifactory
-
 ```go
 params := services.NewPromotionParams()
 params.BuildName = "buildName"
@@ -268,8 +432,23 @@ params.SourceRepo = "source-repo"
 rtManager.DownloadFiles(params)
 ```
 
-#### Distributing Published Builds to JFrog Bintray
+#### Promoting a Docker Image in Artifactory
+```go
+sourceDockerImage := "hello-world"
+sourceRepo := "docker-local-1"
+targetRepo := "docker-local-2"
+params := services.NewDockerPromoteParams(sourceDockerImage, sourceRepo, targetRepo)
 
+// Optional parameters:
+params.TargetDockerImage = "target-docker-image"
+params.SourceTag = "42"
+params.TargetTag = "43"
+params.Copy = true
+
+rtManager.PromoteDocker(params)
+```
+
+#### Distributing Published Builds to JFrog Bintray
 ```go
 params := services.NewBuildDistributionParams()
 params.SourceRepos = "source-repo"
@@ -286,7 +465,6 @@ rtManager.DistributeBuild(params)
 ```
 
 #### Triggering Build Scanning with JFrog Xray
-
 ```go
 params := services.NewXrayScanParams()
 params.BuildName = buildName
@@ -296,7 +474,6 @@ rtManager.XrayScanBuild(params)
 ```
 
 #### Discarding Old Builds
-
 ```go
 params := services.NewDiscardBuildsParams()
 params.BuildName = "buildName"
@@ -310,31 +487,29 @@ rtManager.DiscardBuilds(params)
 ```
 
 #### Cleaning Unreferenced Git LFS Files from Artifactory
-
 ```go
 params := services.NewGitLfsCleanParams()
 params.Refs = "refs/remotes/*"
 params.Repo = "my-project-lfs"
 params.GitPath = "path/to/git"
 
-filesToDelete := rtManager.GetUnreferencedGitLfsFiles(params)
-rtManager.DeleteFiles(filesToDelete)
+reader,err := rtManager.GetUnreferencedGitLfsFiles(params)
+
+defer reader.Close()
+rtManager.DeleteFiles(reader)
 ```
 
 #### Executing AQLs
-
 ```go
 rtManager.Aql(aql string)
 ```
 
 #### Reading Files in Artifactory
-
 ```go
 rtManager.ReadRemoteFile(FilePath string)
 ```
 
-#### Creating an access token
-
+#### Creating an Access Token
 ```go
 params := services.NewCreateTokenParams()
 params.Scope = "api:* member-of-groups:readers"
@@ -347,14 +522,12 @@ params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
 results, err := rtManager.CreateToken(params)
 ```
 
-#### Fetching access tokens
-
+#### Fetching Access Tokens
 ```go
 results, err := rtManager.GetTokens()
 ```
 
-#### Refreshing an access token
-
+#### Refreshing an Access Token
 ```go
 params := services.NewRefreshTokenParams()
 params.AccessToken = "<access token>"
@@ -364,8 +537,7 @@ params.Token.ExpiresIn = 3600
 results, err := rtManager.RefreshToken(params)
 ```
 
-#### Revoking an access token
-
+#### Revoking an Access Token
 ```go
 params := services.NewRevokeTokenParams()
 
@@ -377,13 +549,11 @@ err := rtManager.RevokeToken(params)
 ```
 
 #### Regenerate API Key
-
 ```go
 apiKey, err := rtManager.RegenerateAPIKey()
 ```
 
 #### Creating and Updating Local Repository
-
 You can create and update a local repository for the following package types:
 
 Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
@@ -393,10 +563,9 @@ Each package type has it's own parameters struct, can be created using the metho
 `New<packageType>LocalRepositoryParams()`.
 
 Example for creating local Generic repository:
-
 ```go
 params := services.NewGenericLocalRepositoryParams()
-pparams.Key = "generic-repo"
+params.Key = "generic-repo"
 params.Description = "This is a public description for generic-repo"
 params.Notes = "These are internal notes for generic-repo"
 params.RepoLayoutRef = "simple-default"
@@ -410,13 +579,11 @@ err = servicesManager.CreateLocalRepository().Generic(params)
 ```
 
 Updating local Generic repository:
-
 ```go
 err = servicesManager.UpdateLocalRepository().Generic(params)
 ```
 
 #### Creating and Updating Remote Repository
-
 You can create and update a remote repository for the following package types:
 
 Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
@@ -426,7 +593,6 @@ Each package type has it's own parameters struct, can be created using the metho
 `New<packageType>RemoteRepositoryParams()`.
 
 Example for creating remote Maven repository:
-
 ```go
 params := services.NewMavenRemoteRepositoryParams()
 params.Key = "jcenter-remote"
@@ -436,6 +602,7 @@ params.Description = "A caching proxy repository for a JFrog's jcenter"
 params.HandleSnapshot = false
 params.HandleReleases = true
 params.FetchJarsEagerly = true
+params.XrayIndex = true
 params.AssumedOfflinePeriodSecs = 600
 params.SuppressPomConsistencyChecks = true
 params.RemoteRepoChecksumPolicyType = "pass-thru"
@@ -444,13 +611,11 @@ err = servicesManager.CreateRemoteRepository().Maven(params)
 ```
 
 Updating remote Maven repository:
-
 ```go
 err = servicesManager.UpdateRemoteRepository().Maven(params)
 ```
 
 #### Creating and Updating Virtual Repository
-
 You can create and update a virtual repository for the following package types:
 
 Maven, Gradle, Ivy, Sbt, Helm, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Pypi, Docker, Gitlfs, Go, Yum, Conan,
@@ -460,7 +625,6 @@ Each package type has it's own parameters struct, can be created using the metho
 `New<packageType>VirtualRepositoryParams()`.
 
 Example for creating virtual Go repository:
-
 ```go
 params := services.NewGoVirtualRepositoryParams()
 params.Description = "This is an aggregated repository for several go repositories"
@@ -475,33 +639,33 @@ err = servicesManager.CreateVirtualRepository().Go(params)
 ```
 
 Updating remote Maven repository:
-
 ```go
 err = servicesManager.UpdateVirtualRepository().Go(params)
 ```
 
 #### Removing a Repository
-
 You can remove a repository from Artifactory using its key:
-
 ```go
 servicesManager.DeleteRepository("generic-repo")
 ```
 
 #### Getting Repository Details
-
 You can get repository details from Artifactory using its key:
-
 ```go
 servicesManager.GetRepository("generic-repo")
 ```
 
-#### Creating and Updating Repository Replication
+#### Getting All Repositories
+You can get all repositories from Artifactory:
+```go
+servicesManager.GetAllRepositories()
+```
 
-Example of creating repository replication:
-
+#### Creating and Updating Repository Replications
+Example of creating a repository replication:
 ```go
 params := services.NewCreateReplicationParams()
+// Source replication repository.
 params.RepoKey = "my-repository"
 params.CronExp = "0 0 12 * * ?"
 params.Username = "admin"
@@ -518,10 +682,10 @@ params.PathPrefix = "/path/to/repo"
 err = servicesManager.CreateReplication(params)
 ```
 
-Updating local repository replication:
-
+Example of updating a local repository replication:
 ```go
 params := services.NewUpdateReplicationParams()
+// Source replication repository.
 params.RepoKey = "my-repository"
 params.CronExp = "0 0 12 * * ?"
 params.Enabled = true
@@ -536,39 +700,138 @@ err = servicesManager.UpdateReplication(params)
 ```
 
 #### Getting a Repository Replication
-
 You can get a repository replication configuration from Artifactory using its key:
-
 ```go
 replicationConfiguration, err := servicesManager.GetReplication("my-repository")
 ```
 
 #### Removing a Repository Replication
-
 You can remove a repository replication configuration from Artifactory using its key:
-
 ```go
 err := servicesManager.DeleteReplication("my-repository")
 ```
 
-#### Fetch Artifactory's version
+#### Creating and Updating Permission Targets
+You can create or update a permission target in Artifactory.
+Permissions are set according to the following conventions:
+`read, write, annotate, delete, manage, managedXrayMeta, distribute`
+For repositories You can specify the name `"ANY"` in order to apply to all repositories, `"ANY REMOTE"` for all remote repositories or `"ANY LOCAL"` for all local repositories.
 
+Creating a new permission target :
+```go
+params := services.NewPermissionTargetParams()
+params.Name = "java-developers"
+params.Repo.Repositories = []string{"ANY REMOTE", "local-repo1", "local-repo2"}
+params.Repo.ExcludePatterns = []string{"dir/*"}
+params.Repo.Actions.Users = map[string][]string {
+	"user1" : {"read", "write"},
+    "user2" : {"write","annotate", "read"},
+}
+params.Repo.Actions.Groups = map[string][]string {
+	"group1" : {"manage","read","annotate"},
+}
+// This is the default value that cannot be changed
+params.Build.Repositories = []string{"artifactory-build-info"}
+params.Build.Actions.Groups = map[string][]string {
+	"group1" : {"manage","read","write","annotate","delete"},
+	"group2" : {"read"},
+
+}
+
+err = servicesManager.CreatePermissionTarget(params)
+```
+Updating an existing permission target :
+```go
+err = servicesManager.UpdatePermissionTarget(params)
+```
+
+#### Removing a Permission Target
+You can remove a permission target from Artifactory using its name:
+```go
+servicesManager.DeletePermissionTarget("java-developers")
+```
+
+#### Fetching Artifactory's Version
 ```go
 version, err := servicesManager.GetVersion()
 ```
 
-#### Fetch Artifactory's service id
-
+#### Fetching Artifactory's Service ID
 ```go
 serviceId, err := servicesManager.GetServiceId()
 ```
 
+#### Fetching Users Details
+```go
+params := services.NewUserParams()
+params.UserDetails.Name = "myUserName"
+
+user, err := serviceManager.GetUser(params)
+```
+
+#### Creating and Updating a User
+```go
+params := services.NewUserParams()
+params.UserDetails.Name = "myUserName"
+params.UserDetails.Email = "myUser@jfrog.com"
+params.UserDetails.Password = "Password1"
+params.UserDetails.Admin = false
+params.UserDetails.Realm= "internal"
+params.UserDetails.ProfileUpdatable = true
+params.UserDetails.DisableUIAccess = false
+params.UserDetails.InternalPasswordDisabled = false
+params.UserDetails.groups = [2]string{"GroupA", "GroupB"}
+// Set to true in order to replace exist user with the same name
+params.ReplaceIfExists = false
+err := serviceManager.CreateUser(params)
+
+params.UserDetails.groups = [3]string{"GroupA", "GroupB", "GroupC"}
+err := serviceManager.UpdateUser(params)
+```
+
+#### Deleting a User
+```go
+err := serviceManager.DeleteUser("myUserName")
+```
+
+#### Fetching Group Details
+```go
+params := services.NewGroupParams()
+params.GroupDetails.Name = "myGroupName"
+// Set this param to true to receive the user names associated with this group
+params.IncludeUsers = true
+
+group, err := serviceManager.GetGroup(params)
+```
+
+#### Creating and Updating a Group
+```go
+params := services.NewGroupParams()
+params.GroupDetails.Name = "myGroupName"
+params.GroupDetails.Description = "Description"
+params.GroupDetails.AutoJoin = false
+params.GroupDetails.AdminPrivileges = true
+params.GroupDetails.Realm = "internal"
+params.GroupDetails.UsersNames = [2]string{"UserA", "UserB"}
+// Set to true in order to replace exist group with the same name
+params.ReplaceIfExists = false
+err := serviceManager.CreateGroup(params)
+
+params.GroupDetails.Description = "Newer Description"
+// Will add UserC to the group (in addition to existing UserA and UserB)
+params.GroupDetails.UsersNames = [1]string{"UserC"}
+
+err := serviceManager.UpdateGroup(params)
+```
+
+#### Deleting a Group
+```go
+err := serviceManager.DeleteGroup("myGroupName")
+```
+
 ## Distribution APIs
-
-### Creating a Service Manager
-
+### Creating Distribution Service Manager
 #### Creating Distribution Details
-
 ```go
 distDetails := auth.NewDistributionDetails()
 distDetails.SetUrl("http://localhost:8081/distribution")
@@ -582,27 +845,25 @@ distDetails.SetClientCertPath("path/to/.cer")
 distDetails.SetClientCertKeyPath("path/to/.key")
 ```
 
-#### Creating Service Config
-
+#### Creating Distribution Service Config
 ```go
 serviceConfig, err := config.NewConfigBuilder().
     SetServiceDetails(rtDetails).
     SetCertificatesPath(certPath).
     SetThreads(threads).
     SetDryRun(false).
+    // Add [Context](https://golang.org/pkg/context/)
+    SetContext(ctx).
     Build()
 ```
 
-#### Creating New Service Manager
-
+#### Creating New Distribution Service Manager
 ```go
 distManager, err := distribution.New(&distDetails, serviceConfig)
 ```
 
-### Using Services
-
+### Using Distribution Services
 #### Setting Distribution Signing Key
-
 ```go
 params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
 
@@ -610,31 +871,47 @@ err := distManager.SetSigningKey(params)
 ```
 
 #### Creating a Release Bundle
-
 ```go
 params := services.NewCreateReleaseBundleParams("bundle-name", "1")
 params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "Description"
 params.ReleaseNotes = "Release notes"
 params.ReleaseNotesSyntax = "plain_text"
+params.TargetProps = "key1=val1;key2=val2,val3"
+
+// Be default, artifacts that are distributed as part of a release bundle, have the same path in their destination server
+// (the edge node) as the path they had on the distributing Artifactory server.
+// You have however the option for modifying the target path on edge node. You do this by defining the Target property as shown below.
+// The Pattern property is a wildcard based pattern. Any wildcards enclosed in parenthesis in the pattern (source)
+// path can be matched with a corresponding placeholder in the target path, to determine the path and name
+// of the artifact, once distributed to the edge node.
+// In the following example, the path in the edge node is similar to the path in the source Artifactory server, except for the additional "dir" level at the root of the repository.
+// Pattern: my-repo/(*)/a.zip
+// Target: my-repo/dir/{1}/a.zip
+pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
+params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
 err := distManager.CreateReleaseBundle(params)
 ```
 
 #### Updating a Release Bundle
-
 ```go
 params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
 params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "New Description"
 params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"
+params.TargetProps = "key1=val1;key2=val2,val3"
+
+// The Target property defines the target path in the edge node, and can include replaceable in the form of {1}, {2}, ...
+// Read more about it in the above "Creating a Release Bundle" section.
+pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
+params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
 err := distManager.CreateReleaseBundle(params)
 ```
 
 #### Signing a Release Bundle
-
 ```go
 params := services.NewSignBundleParams("bundle-name", "1")
 params.GpgPassphrase = "123456"
@@ -642,8 +919,7 @@ params.GpgPassphrase = "123456"
 err := distManager.SignReleaseBundle(params)
 ```
 
-#### Distributing a Release Bundle
-
+#### Async Distributing a Release Bundle
 ```go
 params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
 distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
@@ -652,8 +928,30 @@ params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
 err := distManager.DistributeReleaseBundle(params)
 ```
 
-#### Deleting a Remote Release Bundle
+#### Sync Distributing a Release Bundle
+```go
+params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
+distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+// Wait up to 120 minutes for the release bundle distribution
+err := distManager.DistributeReleaseBundleSync(params, 120)
+```
 
+#### Getting Distribution Status
+```go
+params := services.NewDistributionStatusParams()
+// Optional parameters:
+// If missing, get status for all distributions
+params.Name = "bundle-name"
+// If missing, get status for all versions of "bundle-name"
+params.Version = "1"
+// If missing, get status for all "bundle-name" with version "1"
+params.TrackerId = "123456789"
+
+status, err := distributeBundleService.GetStatus(params)
+```
+
+#### Deleting a Remote Release Bundle
 ```go
 params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
 params.DeleteFromDistribution = true
@@ -664,7 +962,6 @@ err := distManager.DeleteReleaseBundle(params)
 ```
 
 #### Deleting a Local Release Bundle
-
 ```go
 params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
 
@@ -672,9 +969,7 @@ err := distManager.DeleteLocalReleaseBundle(params)
 ```
 
 ## Bintray APIs
-
 ### Creating Bintray Details
-
 ```go
 btDetails := auth.NewBintrayDetails()
 btDetails.SetUser("user")
@@ -682,8 +977,7 @@ btDetails.SetKey("key")
 btDetails.SetDefPackageLicense("Apache 2.0")
 ```
 
-### Creating a Service Manager
-
+### Creating Bintray Service Manager
 ```go
 serviceConfig := bintray.NewConfigBuilder().
     SetBintrayDetails(btDetails).
@@ -694,10 +988,8 @@ serviceConfig := bintray.NewConfigBuilder().
 btManager, err := bintray.New(serviceConfig)
 ```
 
-### Using Services
-
+### Using Bintray Services
 #### Uploading a Single File to Bintray
-
 ```go
 params := services.NewUploadParams()
 params.Pattern = "*/*.zip"
@@ -716,7 +1008,6 @@ btManager.UploadFiles(params)
 ```
 
 #### Downloading a Single File from Bintray
-
 ```go
 params := services.NewDownloadFileParams()
 params.Flat = false
@@ -732,7 +1023,6 @@ btManager.DownloadFile(params)
 ```
 
 #### Downloading Version Files from Bintray
-
 ```go
 params := services.NewDownloadVersionParams()
 params.Path, err = versions.CreatePath("subject/repo/pkg/version")
@@ -743,8 +1033,7 @@ params.TargetPath = "target/path/"
 btManager.DownloadVersion(params)
 ```
 
-#### Showing / Deleting a Bintray Package
-
+#### Showing and Deleting a Bintray Package
 ```go
 pkgPath, err := packages.CreatePath("subject/repo/pkg")
 
@@ -752,8 +1041,7 @@ btManager.ShowPackage(pkgPath)
 btManager.DeletePackage(pkgPath)
 ```
 
-#### Creating / Updating a Bintray Package
-
+#### Creating and Updating a Bintray Package
 ```go
 params := packages.NewPackageParams()
 params.Path, err = packages.CreatePath("subject/repo/pkg")
@@ -774,8 +1062,7 @@ btManager.CreatePackage(params)
 btManager.UpdatePackage(params)
 ```
 
-#### Showing / Deleting a Bintray Version
-
+#### Showing and Deleting a Bintray Version
 ```go
 versionPath, err := versions.CreatePath("subject/repo/pkg/version")
 
@@ -783,8 +1070,7 @@ btManager.ShowVersion(versionPath)
 btManager.DeleteVersion(versionPath)
 ```
 
-#### Creating / Updating a Bintray Version
-
+#### Creating and Updating a Bintray Version
 ```go
 params := versions.NewVersionParams()
 params.Path, err = versions.CreatePath("subject/repo/pkg/version")
@@ -799,8 +1085,7 @@ btManager.CreateVersion(params)
 btManager.UpdateVersion(params)
 ```
 
-#### Creating / Updating Entitlements
-
+#### Creating and Updating Entitlements
 ```go
 params := entitlements.NewEntitlementsParams()
 params.VersionPath, err = versions.CreatePath("subject/repo/pkg/version")
@@ -815,8 +1100,7 @@ params.Id = "entitlementID"
 btManager.UpdateEntitlement(params)
 ```
 
-#### Showing / Deleting Entitlements
-
+#### Showing and Deleting Entitlements
 ```go
 versionPath, err := versions.CreatePath("subject/repo/pkg/version")
 
@@ -825,8 +1109,7 @@ btManager.ShowEntitlement("entitelmentID", versionPath)
 btManager.DeleteEntitlement("entitelmentID", versionPath)
 ```
 
-#### Creating / Updating Access Keys
-
+#### Creating and Updating Access Keys
 ```go
 params := accesskeys.NewAccessKeysParams()
 params.Password = "password"
@@ -844,8 +1127,7 @@ params.Id = "KeyID"
 btManager.UpdateAccessKey(params)
 ```
 
-#### Showing / Deleting Access Keys
-
+#### Showing and Deleting Access Keys
 ```go
 btManager.ShowAllAccessKeys("org")
 btManager.ShowAccessKey("org", "KeyID")
@@ -853,7 +1135,6 @@ btManager.DeleteAccessKey("org", "KeyID")
 ```
 
 #### Signing a URL
-
 ```go
 params := url.NewURLParams()
 params.PathDetails, err = utils.CreatePathDetails("subject/repository/file-path")
@@ -869,7 +1150,6 @@ btManager.SignUrl(params)
 ```
 
 #### GPG Signing a File
-
 ```go
 path, err := utils.CreatePathDetails("subject/repository/file-path")
 
@@ -877,7 +1157,6 @@ btManager.GpgSignFile(path, "passphrase")
 ```
 
 #### GPG Signing Version Files
-
 ```go
 path, err := versions.CreatePath("subject/repo/pkg/version")
 
@@ -885,7 +1164,6 @@ btManager.GpgSignVersion(path, "passphrase")
 ```
 
 #### Listing Logs
-
 ```go
 path, err := versions.CreatePath("subject/repo/pkg/version")
 
@@ -893,7 +1171,6 @@ btManager.LogsList(versionPath)
 ```
 
 #### Downloading Logs
-
 ```go
 path, err := versions.CreatePath("subject/repo/pkg/version")
 
@@ -901,7 +1178,6 @@ btManager.DownloadLog(path, "logName")
 ```
 
 #### Syncing Content To Maven Central
-
 ```go
 params := mavensync.NewParams("user","password", false)
 path, err = versions.CreatePath("subject/repo/pkg/version")
@@ -909,28 +1185,122 @@ path, err = versions.CreatePath("subject/repo/pkg/version")
 btManager.MavenCentralContentSync(params, path)
 ```
 
-## Tests
+## Using ContentReader
+Some APIs return a ```content.ContentReader``` struct, which allows reading the API's output. ```content.ContentReader``` provides access to large amounts of data safely, without loading all of it into the memory.
+Here's an example for how ```content.ContentReader``` should be used:
 
-To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
-Use the following command with the below options to run the tests.
+```go
+reader, err := servicesManager.SearchFiles(searchParams)
+if err != nil {
+    return err
+}
 
-```sh
-go test -v github.com/jfrog/jfrog-client-go/tests
+// Remove the data file used by the reader.
+defer func() {
+    if reader != nil {
+        err = reader.Close()
+    }
+}()
+
+// Iterate over the results.
+for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(ResultItem)  {
+    fmt.Printf("Found artifact: %s of type: %s\n", searchResult.Name, searchResult.Type)
+}
+if err := resultReader.GetError(); err != nil {
+    return err
+}
+
+// Resets the reader pointer back to the beginning of the output. Make sure not to call this method after the reader had been closed using ```reader.Close()```
+reader.Reset()
 ```
 
-Optional flags:
+* `reader.NextRecord(currentResult)` reads the next record from the reader into `currentResult` of type `ResultItem`.
 
-| Flag                | Description                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------ |
-| `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
-| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
-| `-rt.password`      | [Default: password] Artifactory password.                                                              |
-| `-rt.distUrl`       | [Optional] JFrog Distribution URL.                                                                     |
-| `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
-| `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
-| `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
-| `-rt.accessToken`   | [Optional] Artifactory access token.                                                                   |
-| `-log-level`        | [Default: INFO] Sets the log level.                                                                    |
+* `reader.Close()` removes the file used by the reader after it is used (preferably using `defer`).
 
-- The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
-  Once the tests are completed, the content of this repository is deleted.
+* `reader.GetError()` returns any error that might have occurd during `NextRecord()`.
+
+* `reader.Reset()` resets the reader back to the beginning of the output.
+
+## Xray APIs
+### Creating Xray Service Manager
+#### Creating Xray Details
+```go
+xrayDetails := auth.NewXrayDetails()
+xrayDetails.SetUrl("http://localhost:8081/xray")
+xrayDetails.SetSshKeysPath("path/to/.ssh/")
+xrayDetails.SetApiKey("apikey")
+xrayDetails.SetUser("user")
+xrayDetails.SetPassword("password")
+xrayDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+xrayDetails.SetClientCertPath("path/to/.cer")
+xrayDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Xray Service Config
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(xrayDetails).
+    SetCertificatesPath(certPath).
+    Build()
+```
+
+#### Creating New Xray Service Manager
+```go
+xrayManager, err := xray.New(&xrayDetails, serviceConfig)
+```
+
+### Using Xray Services
+#### Creating an Xray Watch
+
+This uses API version 2.
+
+You are able to configure repositories and builds on a watch.
+However, bundles are not supported.
+
+```go
+params := utils.NewWatchParams()
+params.Name = "example-watch-all"
+params.Description = "All Repos"
+params.Active = true
+
+params.Repositories.Type = utils.WatchRepositoriesAll
+params.Repositories.All.Filters.PackageTypes = []string{"Npm", "maven"}
+params.Repositories.ExcludePatterns = []string{"excludePath1", "excludePath2"}
+params.Repositories.IncludePatterns = []string{"includePath1", "includePath2"}
+
+params.Builds.Type = utils.WatchBuildAll
+params.Builds.All.Bin_Mgr_ID = "default"
+
+params.Policies = []utils.AssignedPolicy{
+  {
+    Name: policy1Name,
+    Type: "security",
+  },
+  {
+    Name: policy2Name,
+    Type: "security",
+  },
+}
+
+resp, err := xrayManager.CreateWatch(*params)
+```
+
+#### Get an Xray Watch
+```go
+watch, resp, err := xrayManager.GetWatch("example-watch-all")
+```
+
+#### Update an Xray Watch
+```go
+watch, resp, err := xrayManager.GetWatch("example-watch-all")
+watch.Description = "Updated description"
+
+resp, err := xrayManager.UpdateWatch(*watch)
+```
+
+#### Delete an Xray Watch
+```go
+resp, err := xrayManager.DeleteWatch("example-watch-all")
+```

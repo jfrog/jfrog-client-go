@@ -1,8 +1,15 @@
 package utils
 
 import (
-	"strconv"
+	"fmt"
+	"path/filepath"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetFullUrl(t *testing.T) {
@@ -21,62 +28,110 @@ func assertUrl(repo, path, name, fullUrl string, t *testing.T) {
 	}
 }
 
-func TestReduceDirResult(t *testing.T) {
-	paths := []ResultItem{}
-	expected := []ResultItem{}
+func TestReduceTopChainDirResult(t *testing.T) {
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	var reader, resultReader *content.ContentReader
+	var isMatch bool
 
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "b", Name: "c/"})
-	expected = append(expected, ResultItem{Repo: "repo1", Path: "b", Name: "c/"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
+	// Single folder.
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step1.json"), content.DefaultKey)
+	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
+	assert.NoError(t, err)
+	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_a.json"), resultReader.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, resultReader.Close())
 
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "br", Name: "c/"})
-	expected = append(expected, ResultItem{Repo: "repo1", Path: "br", Name: "c/"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
+	// Two different folders not sorted.
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step2.json"), content.DefaultKey)
+	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
+	assert.NoError(t, err)
+	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_b.json"), resultReader.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, resultReader.Close())
 
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "br/c/dont/care", Name: "somename"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
+	// One folder contains another, should reduce results.
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step3.json"), content.DefaultKey)
+	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
+	assert.NoError(t, err)
+	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_b.json"), resultReader.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, resultReader.Close())
 
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "bl", Name: "c1/"})
-	expected = append(expected, ResultItem{Repo: "repo1", Path: "bl", Name: "c1/"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
+	oldMaxSize := utils.MaxBufferSize
+	defer func() { utils.MaxBufferSize = oldMaxSize }()
+	//Test buffer + sort
+	utils.MaxBufferSize = 3
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step4.json"), content.DefaultKey)
+	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
+	assert.NoError(t, err)
+	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_c.json"), resultReader.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, resultReader.Close())
 
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "bl/c1/you/dont/care", Name: "somename"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
+	//Two files in the same folder and one is a prefix to another.
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step5.json"), content.DefaultKey)
+	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
+	assert.NoError(t, err)
+	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_d.json"), resultReader.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, resultReader.Close())
 
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "bl/c1/i/dont/care", Name: "somename"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
-
-	paths = append(paths, ResultItem{Repo: "repo1", Path: "b", Name: "."})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
-
-	paths = append(paths, ResultItem{Repo: "repo2", Path: "bl", Name: "c1"})
-	expected = append(expected, ResultItem{Repo: "repo2", Path: "bl", Name: "c1"})
-	assertPackageFiles(expected, ReduceDirResult(paths, FilterTopChainResults), t)
+	//Two files in the same folder and one is a prefix to another and their folder.
+	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step6.json"), content.DefaultKey)
+	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
+	assert.NoError(t, err)
+	isMatch, err = fileutils.FilesIdentical(filepath.Join(testDataPath, "reduce_top_chain_results_e.json"), resultReader.GetFilePath())
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, resultReader.Close())
 }
 
-func assertPackageFiles(expected, actual []ResultItem, t *testing.T) {
-	if len(actual) != len(expected) {
-		t.Error("Expected: " + strconv.Itoa(len(expected)) + ", Got: " + strconv.Itoa(len(actual)) + " files.")
-	}
+func TestReduceTopChainDirResultNoResults(t *testing.T) {
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	reader := content.NewContentReader(filepath.Join(testDataPath, "no_results.json"), content.DefaultKey)
+	resultReader, err := ReduceTopChainDirResult(ResultItem{}, reader)
+	assert.NoError(t, err)
+	assert.True(t, resultReader.IsEmpty())
+}
 
-	expectedMap := make(map[string]ResultItem)
-	for _, v := range expected {
-		expectedMap[v.GetItemRelativePath()] = v
-	}
+func TestReduceTopChainDirResultEmptyRepo(t *testing.T) {
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	reader := content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_empty_repo.json"), content.DefaultKey)
+	resultReader, err := ReduceTopChainDirResult(ResultItem{}, reader)
+	assert.NoError(t, err)
+	assert.True(t, resultReader.IsEmpty())
+	assert.NoError(t, resultReader.Close())
+}
 
-	actualMap := make(map[string]ResultItem)
-	for _, v := range actual {
-		actualMap[v.GetItemRelativePath()] = v
-	}
-
-	for _, v := range actual {
-		if _, ok := expectedMap[v.GetItemRelativePath()]; !ok {
-			t.Error("Unexpected path:", v.GetItemRelativePath())
+func TestReduceBottomChainDirResult(t *testing.T) {
+	testDataPath, err := getBaseTestDir()
+	assert.NoError(t, err)
+	oldMaxSize := utils.MaxBufferSize
+	defer func() { utils.MaxBufferSize = oldMaxSize }()
+	for i := 0; i < 2; i++ {
+		testResult := []int{1, 2, 2, 2, 3}
+		for i := 1; i <= 5; i++ {
+			reader := content.NewContentReader(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%v.json", i)), content.DefaultKey)
+			resultReader, err := ReduceBottomChainDirResult(ResultItem{}, reader)
+			assert.NoError(t, err)
+			isMatch, err := fileutils.FilesIdentical(filepath.Join(testDataPath, fmt.Sprintf("reduce_bottom_chain_step%vresults.json", testResult[i-1])), resultReader.GetFilePath())
+			assert.NoError(t, err)
+			assert.True(t, isMatch)
+			if isMatch == false {
+				l, _ := resultReader.Length()
+				log.Debug(fmt.Sprintf("reduce_bottom_chain_step%v.json  length: %v name %v", i, l, resultReader.GetFilePath()))
+			} else {
+				assert.NoError(t, resultReader.Close())
+			}
 		}
-	}
-	for _, v := range expected {
-		if _, ok := actualMap[v.GetItemRelativePath()]; !ok {
-			t.Error("Path not found:", v.GetItemRelativePath())
-		}
+		utils.MaxBufferSize = 2
 	}
 }

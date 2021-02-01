@@ -4,25 +4,25 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/jfrog/gofrog/parallel"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type DeleteService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 	DryRun     bool
 	Threads    int
 }
 
-func NewDeleteService(client *rthttpclient.ArtifactoryHttpClient) *DeleteService {
+func NewDeleteService(client *jfroghttpclient.JfrogHttpClient) *DeleteService {
 	return &DeleteService{client: client}
 }
 
@@ -46,43 +46,48 @@ func (ds *DeleteService) SetThreads(threads int) {
 	ds.Threads = threads
 }
 
-func (ds *DeleteService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (ds *DeleteService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return ds.client, nil
 }
 
-func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItems []utils.ResultItem, err error) {
+func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItems *content.ContentReader, err error) {
 	log.Info("Searching artifacts...")
+	var tempResultItems, toBeDeletedDirs *content.ContentReader
 	switch deleteParams.GetSpecType() {
 	case utils.AQL:
-		if resultItemsTemp, e := utils.SearchBySpecWithAql(deleteParams.GetFile(), ds, utils.NONE); e == nil {
-			resultItems = append(resultItems, resultItemsTemp...)
-		} else {
-			err = e
+		resultItems, err = utils.SearchBySpecWithAql(deleteParams.GetFile(), ds, utils.NONE)
+		if err != nil {
 			return
 		}
 	case utils.WILDCARD:
 		deleteParams.SetIncludeDirs(true)
-		tempResultItems, e := utils.SearchBySpecWithPattern(deleteParams.GetFile(), ds, utils.NONE)
-		if e != nil {
-			err = e
+		tempResultItems, err = utils.SearchBySpecWithPattern(deleteParams.GetFile(), ds, utils.NONE)
+		if err != nil {
 			return
 		}
-		tempResultItems, e = removeNotToBeDeletedDirs(*deleteParams.GetFile(), ds, tempResultItems)
-		if e != nil {
-			err = e
+		defer tempResultItems.Close()
+		toBeDeletedDirs, err = removeNotToBeDeletedDirs(deleteParams.GetFile(), ds, tempResultItems)
+		if err != nil {
 			return
 		}
-		paths := utils.ReduceDirResult(tempResultItems, utils.FilterTopChainResults)
-		resultItems = append(resultItems, paths...)
+		// The 'removeNotToBeDeletedDirs' should filter out any folders that should not be deleted, if no action is needed, nil will be return.
+		// As a result, we should keep the flow with tempResultItems reader instead.
+		if toBeDeletedDirs == nil {
+			toBeDeletedDirs = tempResultItems
+		}
+		defer toBeDeletedDirs.Close()
+		resultItems, err = utils.ReduceTopChainDirResult(utils.ResultItem{}, toBeDeletedDirs)
+		if err != nil {
+			return
+		}
 	case utils.BUILD:
-		if resultItemsTemp, e := utils.SearchBySpecWithBuild(deleteParams.GetFile(), ds); e == nil {
-			resultItems = append(resultItems, resultItemsTemp...)
-		} else {
-			err = e
-			return
-		}
+		resultItems, err = utils.SearchBySpecWithBuild(deleteParams.GetFile(), ds)
 	}
-	utils.LogSearchResults(len(resultItems))
+	length, err := resultItems.Length()
+	if err != nil {
+		return
+	}
+	utils.LogSearchResults(length)
 	return
 }
 
@@ -119,16 +124,20 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 	}
 }
 
-func (ds *DeleteService) DeleteFiles(deleteItems []utils.ResultItem) (int, error) {
+func (ds *DeleteService) DeleteFiles(deleteItems *content.ContentReader) (int, error) {
 	producerConsumer := parallel.NewBounedRunner(ds.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	result := *utils.NewResult(ds.Threads)
 	go func() {
 		defer producerConsumer.Done()
-		for _, deleteItem := range deleteItems {
+		for deleteItem := new(utils.ResultItem); deleteItems.NextRecord(deleteItem) == nil; deleteItem = new(utils.ResultItem) {
 			fileDeleteHandlerFunc := ds.createFileHandlerFunc(&result)
-			producerConsumer.AddTaskWithError(fileDeleteHandlerFunc(deleteItem), errorsQueue.AddError)
+			producerConsumer.AddTaskWithError(fileDeleteHandlerFunc(*deleteItem), errorsQueue.AddError)
 		}
+		if err := deleteItems.GetError(); err != nil {
+			errorsQueue.AddError(err)
+		}
+		deleteItems.Reset()
 	}()
 	return ds.performTasks(producerConsumer, errorsQueue, result)
 }
@@ -175,36 +184,67 @@ func NewDeleteParams() DeleteParams {
 	return DeleteParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }
 
-// This function receives as an argument the list of files and folders to be deleted from Artifactory.
+// This function receives as an argument a reader within the list of files and dirs to be deleted from Artifactory.
 // In case the search params used to create this list included excludeProps, we might need to remove some directories from this list.
 // These directories must be removed, because they include files, which should not be deleted, because of the excludeProps params.
-// hese directories must not be deleted from Artifactory.
-func removeNotToBeDeletedDirs(specFile utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates []utils.ResultItem) ([]utils.ResultItem, error) {
-	if specFile.ExcludeProps == "" {
-		return deleteCandidates, nil
+// These directories must not be deleted from Artifactory.
+// In case of no excludeProps filed in the file spec, nil will be return so all deleteCandidates will get deleted.
+func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (*content.ContentReader, error) {
+	length, err := deleteCandidates.Length()
+	if err != nil || specFile.ExcludeProps == "" || length == 0 {
+		return nil, err
 	}
-	specFile.Props = specFile.ExcludeProps
-	specFile.ExcludeProps = ""
-	remainArtifacts, err := utils.SearchBySpecWithPattern(&specFile, ds, utils.NONE)
+	// Send AQL to get all artifacts that includes the exclude props.
+	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	var result []utils.ResultItem
-	for _, candidate := range deleteCandidates {
-		deleteCandidate := true
-		if candidate.Type == "folder" {
-			candidatePath := candidate.GetItemRelativePath()
-			for _, artifact := range remainArtifacts {
-				artifactPath := artifact.GetItemRelativePath()
-				if strings.HasPrefix(artifactPath, candidatePath) {
-					deleteCandidate = false
-					break
-				}
+	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter, "folder")
+	if len(bufferFiles) > 0 {
+		defer func() {
+			for _, file := range bufferFiles {
+				file.Close()
 			}
+		}()
+		if err != nil {
+			return nil, err
 		}
-		if deleteCandidate {
-			result = append(result, candidate)
+		artifactNotToBeDeleteReader, err := getSortedArtifactsToNotDelete(specFile, ds)
+		if err != nil {
+			return nil, err
+		}
+		defer artifactNotToBeDeleteReader.Close()
+		if err = utils.WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter); err != nil {
+			return nil, err
 		}
 	}
-	return result, nil
+	if err != nil {
+		return nil, err
+	}
+	if err = resultWriter.Close(); err != nil {
+		return nil, err
+	}
+	return content.NewContentReader(resultWriter.GetFilePath(), content.DefaultKey), err
+}
+
+func getSortedArtifactsToNotDelete(specFile *utils.ArtifactoryCommonParams, ds *DeleteService) (*content.ContentReader, error) {
+	specFile.Props = specFile.ExcludeProps
+	specFile.ExcludeProps = ""
+	tempResults, err := utils.SearchBySpecWithPattern(specFile, ds, utils.NONE)
+	if err != nil {
+		return nil, err
+	}
+	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	// Note that we have to sort the result by ourselves, and not relay on Artifactory's OrderBy, because of 2 main reasons:
+	// 1. Go sorts strings differently from Artifactory's database, when the strings include special chars, such as dashes.
+	// 2. Artifactory sorts by database columns, so directories will be sorted differently than files,
+	//    because the path and name cols have different values.
+	sortedResults, err := utils.FilterCandidateToBeDeleted(tempResults, resultWriter, "file")
+	if err != nil {
+		return nil, err
+	}
+	return content.MergeSortedReaders(utils.ResultItem{}, sortedResults, true)
 }

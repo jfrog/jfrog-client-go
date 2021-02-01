@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
@@ -22,11 +22,11 @@ const XRAY_SCAN_STABLE_CONNECTION_WINDOW = 100 * time.Second
 const XRAY_FATAL_FAIL_STATUS = -1
 
 type XrayScanService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewXrayScanService(client *rthttpclient.ArtifactoryHttpClient) *XrayScanService {
+func NewXrayScanService(client *jfroghttpclient.JfrogHttpClient) *XrayScanService {
 	return &XrayScanService{client: client}
 }
 
@@ -94,7 +94,7 @@ func checkForXrayResponseError(content []byte, ignoreFatalError bool) error {
 		// fatal error should be interpreted as no errors so no more retries will accrue
 		return nil
 	}
-	return errorutils.CheckError(errors.New("Artifactory response: " + string(content)))
+	return errorutils.CheckError(errors.New("Server response: " + string(content)))
 }
 
 func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Response, error) {
@@ -115,7 +115,7 @@ func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Re
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = errorutils.CheckError(errors.New("Artifactory Response: " + resp.Status))
+		err = errorutils.CheckError(errors.New("Server Response: " + resp.Status))
 	}
 	return resp, err
 }

@@ -1,6 +1,9 @@
 package log
 
 import (
+	"fmt"
+	"github.com/gookit/color"
+	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"log"
 	"os"
@@ -9,6 +12,14 @@ import (
 var Logger Log
 
 type LevelType int
+type LogFormat string
+
+// Used for coloring sections of the log message. For example log.Format.Path("...")
+var Format LogFormat
+
+// Determines whether the terminal is available. This variable should not be accessed directly,
+// but through the 'isTerminalMode' function.
+var terminalMode *bool
 
 const (
 	ERROR LevelType = iota
@@ -50,9 +61,17 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 }
 
 // Set the logs writer to Stderr unless an alternative one is provided.
+// In case the writer is set for file, colors will not be in use.
 func (logger *jfrogLogger) SetLogsWriter(writer io.Writer) {
 	if writer == nil {
 		writer = os.Stderr
+		if isTerminalMode() {
+			logger.DebugLog = log.New(writer, fmt.Sprintf("[%s] ", color.Cyan.Render("Debug")), 0)
+			logger.InfoLog = log.New(writer, fmt.Sprintf("[%s] ", color.Blue.Render("Info")), 0)
+			logger.WarnLog = log.New(writer, fmt.Sprintf("[%s] ", color.Yellow.Render("Warn")), 0)
+			logger.ErrorLog = log.New(writer, fmt.Sprintf("[%s] ", color.Red.Render("Error")), 0)
+			return
+		}
 	}
 	logger.DebugLog = log.New(writer, "[Debug] ", 0)
 	logger.InfoLog = log.New(writer, "[Info] ", 0)
@@ -132,10 +151,33 @@ type Log interface {
 	SetLogLevel(LevelType)
 	SetOutputWriter(writer io.Writer)
 	SetLogsWriter(writer io.Writer)
-
 	Debug(a ...interface{})
 	Info(a ...interface{})
 	Warn(a ...interface{})
 	Error(a ...interface{})
 	Output(a ...interface{})
+}
+
+// Check if Stderr is a terminal
+func isTerminalMode() bool {
+	if terminalMode == nil {
+		t := terminal.IsTerminal(int(os.Stderr.Fd()))
+		terminalMode = &t
+	}
+	return *terminalMode
+}
+
+// Predefined color formatting functions
+func (f *LogFormat) Path(message string) string {
+	if isTerminalMode() {
+		return color.Green.Render(message)
+	}
+	return message
+}
+
+func (f *LogFormat) URL(message string) string {
+	if isTerminalMode() {
+		return color.Cyan.Render(message)
+	}
+	return message
 }

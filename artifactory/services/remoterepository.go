@@ -3,26 +3,27 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
 )
 
 type RemoteRepositoryService struct {
 	isUpdate   bool
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewRemoteRepositoryService(client *rthttpclient.ArtifactoryHttpClient, isUpdate bool) *RemoteRepositoryService {
+func NewRemoteRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *RemoteRepositoryService {
 	return &RemoteRepositoryService{client: client, isUpdate: isUpdate}
 }
 
-func (rrs *RemoteRepositoryService) GetJfrogHttpClient() *rthttpclient.ArtifactoryHttpClient {
+func (rrs *RemoteRepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return rrs.client
 }
 
@@ -195,6 +196,7 @@ type RemoteRepositoryBaseParams struct {
 	HardFail                          *bool                   `json:"hardFail,omitempty"`
 	Offline                           *bool                   `json:"offline,omitempty"`
 	BlackedOut                        *bool                   `json:"blackedOut,omitempty"`
+	XrayIndex                         *bool                   `json:"xrayIndex,omitempty"`
 	StoreArtifactsLocally             *bool                   `json:"storeArtifactsLocally,omitempty"`
 	SocketTimeoutMillis               int                     `json:"socketTimeoutMillis,omitempty"`
 	LocalAddress                      string                  `json:"localAddress,omitempty"`

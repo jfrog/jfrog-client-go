@@ -12,7 +12,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/bintray/services/url"
 	"github.com/jfrog/jfrog-client-go/bintray/services/utils"
 	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
-	"github.com/jfrog/jfrog-client-go/httpclient"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 )
 
 type ServicesManager struct {

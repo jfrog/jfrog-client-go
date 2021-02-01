@@ -34,6 +34,7 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localvagrantTest", localVagrantTest)
 	t.Run("localGenericTest", localGenericTest)
 	t.Run("getLocalRepoDetailsTest", getLocalRepoDetailsTest)
+	t.Run("getAllLocalRepoDetailsTest", getAllLocalRepoDetailsTest)
 }
 
 func localMavenTest(t *testing.T) {
@@ -72,7 +73,7 @@ func localGradleTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGradleLocalRepositoryParams()
 	glp.Key = repoKey
-	glp.RepoLayoutRef = "gradle-default"
+	glp.RepoLayoutRef = "maven-2-default"
 	glp.Description = "Gradle Repo for jfrog-client-go local-repository-test"
 	glp.SuppressPomConsistencyChecks = &trueValue
 	glp.HandleReleases = &trueValue
@@ -788,4 +789,34 @@ func getLocalRepoDetailsTest(t *testing.T) {
 	assert.Equal(t, data.Rclass, "local")
 	assert.Empty(t, data.Url)
 	assert.Equal(t, data.PackageType, "generic")
+}
+
+func getAllLocalRepoDetailsTest(t *testing.T) {
+	// Create Repo
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	glp := services.NewGenericLocalRepositoryParams()
+	glp.Key = repoKey
+	glp.RepoLayoutRef = "simple-default"
+	glp.Description = "Generic Repo for jfrog-client-go local-repository-test"
+	glp.XrayIndex = &trueValue
+	glp.DownloadRedirect = &falseValue
+	glp.ArchiveBrowsingEnabled = &falseValue
+
+	err := testsCreateLocalRepositoryService.Generic(glp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	// Get repo details
+	data := getAllRepos(t)
+	assert.NotNil(t, data)
+	repo := &services.RepositoryDetails{}
+	for _, v := range *data {
+		if v.Key == repoKey {
+			repo = &v
+			break
+		}
+	}
+	// Validate
+	assert.NotNil(t, repo, "Repo "+repoKey+" not found")
+	assert.Equal(t, glp.Description, repo.Description)
+	assert.Equal(t, "Generic", repo.PackageType)
 }

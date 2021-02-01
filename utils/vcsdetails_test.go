@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
 
@@ -8,48 +9,33 @@ import (
 )
 
 func TestVcsDetails(t *testing.T) {
-	path := initVcsTestDir(t)
-	vcsDetals := NewVcsDetals()
-	revision, url, err := vcsDetals.GetVcsDetails(filepath.Join(path))
-	if err != nil {
-		t.Error(err)
-	}
-	if url != "https://github.com/jfrog/jfrog-cli.git" {
-		t.Errorf("TestGitManager() error, want %s, got %s", url, "https://github.com/jfrog/jfrog-cli.git")
-	}
-	if revision != "d63c5957ad6819f4c02a817abe757f210d35ff92" {
-		t.Errorf("TestGitManager() error, want %s, got %s", url, "d63c5957ad6819f4c02a817abe757f210d35ff92")
-	}
+	projectPath, tmpDir := initVcsTestDir(t, filepath.Join("testdata", "vcs"))
+	defer fileutils.RemoveTempDir(tmpDir)
+	vcsDetails := NewVcsDetals()
+	revision, url, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
+	assert.NoError(t, err)
+	assert.Equal(t, "https://github.com/jfrog/jfrog-cli.git", url)
+	assert.Equal(t, "d63c5957ad6819f4c02a817abe757f210d35ff92", revision)
 }
 
-func initVcsTestDir(t *testing.T) string {
-	testsdataSrc := filepath.Join("testsdata", "vcs")
-	testsdataTarget := filepath.Join("testsdata", "tmp")
-	err := fileutils.CopyDir(testsdataSrc, testsdataTarget, true)
-	if err != nil {
-		t.Error(err)
+func initVcsTestDir(t *testing.T, srcPath string) (projectPath, tmpDir string) {
+	var err error
+	tmpDir, err = fileutils.CreateTempDir()
+	assert.NoError(t, err)
+
+	err = fileutils.CopyDir(srcPath, tmpDir, true, nil)
+	assert.NoError(t, err)
+	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
+		assert.NoError(t, err)
+		err := fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git"))
+		assert.NoError(t, err)
 	}
-	if found, err := fileutils.IsDirExists(filepath.Join(testsdataTarget, "gitdata"), false); found {
-		if err != nil {
-			t.Error(err)
-		}
-		err := fileutils.RenamePath(filepath.Join(testsdataTarget, "gitdata"), filepath.Join(testsdataTarget, ".git"))
-		if err != nil {
-			t.Error(err)
-		}
+	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "othergit", "gitdata"), false); found {
+		assert.NoError(t, err)
+		err := fileutils.RenamePath(filepath.Join(tmpDir, "othergit", "gitdata"), filepath.Join(tmpDir, "othergit", ".git"))
+		assert.NoError(t, err)
 	}
-	if found, err := fileutils.IsDirExists(filepath.Join(testsdataTarget, "OtherGit", "gitdata"), false); found {
-		if err != nil {
-			t.Error(err)
-		}
-		err := fileutils.RenamePath(filepath.Join(testsdataTarget, "OtherGit", "gitdata"), filepath.Join(testsdataTarget, "OtherGit", ".git"))
-		if err != nil {
-			t.Error(err)
-		}
-	}
-	path, err := filepath.Abs(testsdataTarget)
-	if err != nil {
-		t.Error(err)
-	}
-	return path
+	projectPath, err = filepath.Abs(tmpDir)
+	assert.NoError(t, err)
+	return projectPath, tmpDir
 }

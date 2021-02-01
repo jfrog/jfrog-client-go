@@ -6,21 +6,21 @@ import (
 	"net/http"
 	"path"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type PromoteService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 	DryRun     bool
 }
 
-func NewPromotionService(client *rthttpclient.ArtifactoryHttpClient) *PromoteService {
+func NewPromotionService(client *jfroghttpclient.JfrogHttpClient) *PromoteService {
 	return &PromoteService{client: client}
 }
 
@@ -30,7 +30,7 @@ func (ps *PromoteService) isDryRun() bool {
 
 func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	message := "Promoting build..."
-	if ps.DryRun == true {
+	if ps.DryRun {
 		message = "[Dry run] " + message
 	}
 	log.Info(message)
@@ -54,7 +54,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 		SourceRepo:          promotionParams.GetSourceRepo(),
 		TargetRepo:          promotionParams.GetTargetRepo(),
 		DryRun:              ps.isDryRun(),
-		Properties:          props.ToBuildPromoteMap()}
+		Properties:          props.ToMap()}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
 		return errorutils.CheckError(err)

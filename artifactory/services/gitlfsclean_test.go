@@ -1,18 +1,21 @@
 package services
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExtractRepo(t *testing.T) {
 	pwd, err := os.Getwd()
-	testPath := filepath.Join(pwd, "testsdata", "gitlfs")
+	assert.NoError(t, err)
+	testPath := filepath.Join(pwd, "testdata", "gitlfs")
 	repo, err := extractRepo(testPath, "lfsConfigExample", "https://localhost:8080/artifactory", lfsConfigUrlExtractor)
 	if err != nil {
 		t.Error("Got err: ", err)

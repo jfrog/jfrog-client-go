@@ -4,21 +4,21 @@ import (
 	"io"
 	"net/http"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type ReadFileService struct {
-	client       *rthttpclient.ArtifactoryHttpClient
+	client       *jfroghttpclient.JfrogHttpClient
 	ArtDetails   auth.ServiceDetails
 	DryRun       bool
 	MinSplitSize int64
 	SplitCount   int
 }
 
-func NewReadFileService(client *rthttpclient.ArtifactoryHttpClient) *ReadFileService {
+func NewReadFileService(client *jfroghttpclient.JfrogHttpClient) *ReadFileService {
 	return &ReadFileService{client: client}
 }
 
@@ -34,7 +34,7 @@ func (ds *ReadFileService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *ReadFileService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (ds *ReadFileService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return ds.client, nil
 }
 

@@ -1,14 +1,14 @@
 package distribution
 
 import (
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/distribution/services"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
 
 type DistributionServicesManager struct {
-	client *rthttpclient.ArtifactoryHttpClient
+	client *jfroghttpclient.JfrogHttpClient
 	config config.Config
 }
 
@@ -18,10 +18,11 @@ func New(details *auth.ServiceDetails, config config.Config) (*DistributionServi
 		return nil, err
 	}
 	manager := &DistributionServicesManager{config: config}
-	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
+	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetServiceDetails(details).
+		SetContext(config.GetContext()).
 		Build()
 	if err != nil {
 		return nil, err
@@ -62,6 +63,21 @@ func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.D
 	return distributeBundleService.Distribute(params)
 }
 
+func (sm *DistributionServicesManager) DistributeReleaseBundleSync(params services.DistributionParams, maxWaitMinutes int) error {
+	distributeBundleService := services.NewDistributeReleaseBundleService(sm.client)
+	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
+	distributeBundleService.DryRun = sm.config.IsDryRun()
+	distributeBundleService.MaxWaitMinutes = maxWaitMinutes
+	distributeBundleService.Sync = true
+	return distributeBundleService.Distribute(params)
+}
+
+func (sm *DistributionServicesManager) GetDistributionStatus(params services.DistributionStatusParams) (*[]services.DistributionStatusResponse, error) {
+	distributeBundleService := services.NewDistributionStatusService(sm.client)
+	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
+	return distributeBundleService.GetStatus(params)
+}
+
 func (sm *DistributionServicesManager) DeleteReleaseBundle(params services.DeleteDistributionParams) error {
 	deleteBundleService := services.NewDeleteReleaseBundleService(sm.client)
 	deleteBundleService.DistDetails = sm.config.GetServiceDetails()
@@ -76,7 +92,7 @@ func (sm *DistributionServicesManager) DeleteLocalReleaseBundle(params services.
 	return deleteLocalBundleService.DeleteDistribution(params)
 }
 
-func (sm *DistributionServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
+func (sm *DistributionServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }
 

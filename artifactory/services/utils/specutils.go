@@ -20,21 +20,24 @@ type ArtifactoryCommonParams struct {
 	Aql     Aql
 	Pattern string
 	// Deprecated, use Exclusions instead
-	ExcludePatterns []string
-	Exclusions      []string
-	Target          string
-	Props           string
-	ExcludeProps    string
-	SortOrder       string
-	SortBy          []string
-	Offset          int
-	Limit           int
-	Build           string
-	Bundle          string
-	Recursive       bool
-	IncludeDirs     bool
-	Regexp          bool
-	ArchiveEntries  string
+	ExcludePatterns  []string
+	Exclusions       []string
+	Target           string
+	Props            string
+	TargetProps      string
+	ExcludeProps     string
+	SortOrder        string
+	SortBy           []string
+	Offset           int
+	Limit            int
+	Build            string
+	ExcludeArtifacts bool
+	IncludeDeps      bool
+	Bundle           string
+	Recursive        bool
+	IncludeDirs      bool
+	Regexp           bool
+	ArchiveEntries   string
 }
 
 type FileGetter interface {
@@ -90,6 +93,10 @@ func (params *ArtifactoryCommonParams) GetProps() string {
 	return params.Props
 }
 
+func (params *ArtifactoryCommonParams) GetTargetProps() string {
+	return params.TargetProps
+}
+
 func (params *ArtifactoryCommonParams) GetExcludeProps() string {
 	return params.ExcludeProps
 }
@@ -124,6 +131,10 @@ func (params ArtifactoryCommonParams) IsIncludeDirs() bool {
 
 func (params *ArtifactoryCommonParams) SetProps(props string) {
 	params.Props = props
+}
+
+func (params *ArtifactoryCommonParams) SetTargetProps(targetProps string) {
+	params.TargetProps = targetProps
 }
 
 func (params *ArtifactoryCommonParams) SetExcludeProps(excludeProps string) {

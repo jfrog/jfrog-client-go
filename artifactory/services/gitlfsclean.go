@@ -8,10 +8,11 @@ import (
 	"regexp"
 	"strings"
 
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -20,12 +21,12 @@ import (
 )
 
 type GitLfsCleanService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 	DryRun     bool
 }
 
-func NewGitLfsCleanService(client *rthttpclient.ArtifactoryHttpClient) *GitLfsCleanService {
+func NewGitLfsCleanService(client *jfroghttpclient.JfrogHttpClient) *GitLfsCleanService {
 	return &GitLfsCleanService{client: client}
 }
 
@@ -41,11 +42,11 @@ func (glc *GitLfsCleanService) IsDryRun() bool {
 	return glc.DryRun
 }
 
-func (glc *GitLfsCleanService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (glc *GitLfsCleanService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return glc.client, nil
 }
 
-func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitLfsCleanParams) ([]utils.ResultItem, error) {
+func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitLfsCleanParams) (*content.ContentReader, error) {
 	var err error
 	repo := gitLfsCleanParams.GetRepo()
 	gitPath := gitLfsCleanParams.GetGitPath()
@@ -63,28 +64,41 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 	}
 	log.Info("Searching files from Artifactory repository", repo, "...")
 	refsRegex := getRefsRegex(gitLfsCleanParams.GetRef())
-	artifactoryLfsFiles, err := glc.searchLfsFilesInArtifactory(repo)
+	artifactoryLfsFilesReader, err := glc.searchLfsFilesInArtifactory(repo)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
+	defer artifactoryLfsFilesReader.Close()
 	log.Info("Collecting files to preserve from Git references matching the pattern", gitLfsCleanParams.GetRef(), "...")
 	gitLfsFiles, err := getLfsFilesFromGit(gitPath, refsRegex)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	filesToDelete := findFilesToDelete(artifactoryLfsFiles, gitLfsFiles)
-	log.Info("Found", len(gitLfsFiles), "files to keep, and", len(filesToDelete), "to clean")
-	return filesToDelete, nil
+	filesToDeleteReader, err := findFilesToDelete(artifactoryLfsFilesReader, gitLfsFiles)
+	if err != nil {
+		return nil, err
+	}
+	length, err := filesToDeleteReader.Length()
+	if err != nil {
+		return nil, err
+	}
+	log.Info("Found", len(gitLfsFiles), "files to keep, and", length, "to clean")
+	return filesToDeleteReader, nil
 }
 
-func findFilesToDelete(artifactoryLfsFiles []utils.ResultItem, gitLfsFiles map[string]struct{}) []utils.ResultItem {
-	results := make([]utils.ResultItem, 0, len(artifactoryLfsFiles))
-	for _, file := range artifactoryLfsFiles {
-		if _, keepFile := gitLfsFiles[file.Name]; !keepFile {
-			results = append(results, file)
+func findFilesToDelete(artifactoryLfsFilesReader *content.ContentReader, gitLfsFiles map[string]struct{}) (*content.ContentReader, error) {
+	cw, err := content.NewContentWriter("results", true, false)
+	if err != nil {
+		return nil, err
+	}
+	defer cw.Close()
+	for resultItem := new(utils.ResultItem); artifactoryLfsFilesReader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
+		if _, keepFile := gitLfsFiles[resultItem.Name]; !keepFile {
+			cw.Write(*resultItem)
 		}
 	}
-	return results
+	artifactoryLfsFilesReader.Reset()
+	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
 }
 
 func lfsConfigUrlExtractor(conf *gitconfig.Config) (*url.URL, error) {
@@ -153,7 +167,7 @@ func getRefsRegex(refs string) string {
 	return replacer.Replace(regexp.QuoteMeta(refs))
 }
 
-func (glc *GitLfsCleanService) searchLfsFilesInArtifactory(repo string) ([]utils.ResultItem, error) {
+func (glc *GitLfsCleanService) searchLfsFilesInArtifactory(repo string) (*content.ContentReader, error) {
 	spec := &utils.ArtifactoryCommonParams{Pattern: repo, Target: "", Props: "", ExcludeProps: "", Build: "", Recursive: true, Regexp: false, IncludeDirs: false}
 	return utils.SearchBySpecWithPattern(spec, glc, utils.NONE)
 }

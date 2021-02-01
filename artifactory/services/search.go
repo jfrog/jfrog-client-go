@@ -1,17 +1,21 @@
 package services
 
 import (
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
+	"errors"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
 
 type SearchService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewSearchService(client *rthttpclient.ArtifactoryHttpClient) *SearchService {
+func NewSearchService(client *jfroghttpclient.JfrogHttpClient) *SearchService {
 	return &SearchService{client: client}
 }
 
@@ -27,11 +31,11 @@ func (s *SearchService) IsDryRun() bool {
 	return false
 }
 
-func (s *SearchService) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
+func (s *SearchService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
 	return s.client, nil
 }
 
-func (s *SearchService) Search(searchParams SearchParams) ([]utils.ResultItem, error) {
+func (s *SearchService) Search(searchParams SearchParams) (*content.ContentReader, error) {
 	return SearchBySpecFiles(searchParams, s, utils.ALL)
 }
 
@@ -47,23 +51,15 @@ func NewSearchParams() SearchParams {
 	return SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
 }
 
-func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requiredArtifactProps utils.RequiredArtifactProps) ([]utils.ResultItem, error) {
-	var resultItems []utils.ResultItem
-	var itemsFound []utils.ResultItem
-	var err error
-
+func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requiredArtifactProps utils.RequiredArtifactProps) (*content.ContentReader, error) {
 	switch searchParams.GetSpecType() {
 	case utils.WILDCARD:
-		itemsFound, err = utils.SearchBySpecWithPattern(searchParams.GetFile(), flags, requiredArtifactProps)
+		return utils.SearchBySpecWithPattern(searchParams.GetFile(), flags, requiredArtifactProps)
 	case utils.BUILD:
-		itemsFound, err = utils.SearchBySpecWithBuild(searchParams.GetFile(), flags)
+		return utils.SearchBySpecWithBuild(searchParams.GetFile(), flags)
 	case utils.AQL:
-		itemsFound, err = utils.SearchBySpecWithAql(searchParams.GetFile(), flags, requiredArtifactProps)
+		return utils.SearchBySpecWithAql(searchParams.GetFile(), flags, requiredArtifactProps)
+	default:
+		return nil, errorutils.CheckError(errors.New("Error at SearchBySpecFiles: Unknown spec type"))
 	}
-	if err != nil {
-		return resultItems, err
-	}
-	resultItems = append(resultItems, itemsFound...)
-
-	return resultItems, err
 }

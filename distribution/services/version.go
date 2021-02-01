@@ -3,8 +3,8 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/http"
@@ -12,11 +12,11 @@ import (
 )
 
 type VersionService struct {
-	client      *rthttpclient.ArtifactoryHttpClient
+	client      *jfroghttpclient.JfrogHttpClient
 	DistDetails auth.ServiceDetails
 }
 
-func NewVersionService(client *rthttpclient.ArtifactoryHttpClient) *VersionService {
+func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService {
 	return &VersionService{client: client}
 }
 

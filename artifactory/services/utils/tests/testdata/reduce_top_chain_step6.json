@@ -1,0 +1,22 @@
+{
+    "results": [
+        {
+            "Repo": "a",
+            "Path": "b",
+            "Name": "fileA",
+            "Type": "file"
+        },
+        {
+            "Repo": "a",
+            "Path": "b",
+            "Name": "fileAA",
+            "Type": "file"
+        },
+        {
+            "Repo": "a",
+            "Path": "b",
+            "Name": "",
+            "Type": "folder"
+        }
+    ]
+}

@@ -3,19 +3,21 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	clientio "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -26,7 +28,7 @@ const (
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
-	httpClientsDetails httputils.HttpClientDetails, client *rthttpclient.ArtifactoryHttpClient, retries int, progress io.Progress) (*http.Response, []byte, error) {
+	httpClientsDetails httputils.HttpClientDetails, client *jfroghttpclient.JfrogHttpClient, retries int, progress clientio.ProgressMgr) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
 		details, err = fileutils.GetFileDetails(localPath)
@@ -93,10 +95,10 @@ func IsWildcardPattern(pattern string) bool {
 	return strings.Contains(pattern, "*") || strings.HasSuffix(pattern, "/") || !strings.Contains(pattern, "/")
 }
 
-// @paths - sorted array
-// @index - index of the current path which we want to check if it a prefix of any of the other previous paths
-// @separator - file separator
-// returns true paths[index] is a prefix of any of the paths[i] where i<index , otherwise returns false
+// paths - Sorted array.
+// index - Index of the current path which we want to check if it a prefix of any of the other previous paths.
+// separator - File separator.
+// Returns true paths[index] is a prefix of any of the paths[i] where i<index, otherwise returns false.
 func IsSubPath(paths []string, index int, separator string) bool {
 	currentPath := paths[index]
 	if !strings.HasSuffix(currentPath, separator) {
@@ -111,7 +113,7 @@ func IsSubPath(paths []string, index int, separator string) bool {
 }
 
 // This method parses buildIdentifier. buildIdentifier should be from the format "buildName/buildNumber".
-// If no buildNumber provided LATEST wil be downloaded.
+// If no buildNumber provided LATEST will be downloaded.
 // If buildName or buildNumber contains "/" (slash) it should be escaped by "\" (backslash).
 // Result examples of parsing: "aaa/123" > "aaa"-"123", "aaa" > "aaa"-"LATEST", "aaa\\/aaa" > "aaa/aaa"-"LATEST",  "aaa/12\\/3" > "aaa"-"12/3".
 func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier string, flags CommonConf) (string, string, error) {
@@ -185,7 +187,7 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in the bundle"))
 		}
 	}
-	// Remove escape chars
+	// Remove escape chars.
 	name = strings.Replace(name, "\\/", "/", -1)
 	version = strings.Replace(version, "\\/", "/", -1)
 	return name, version, nil
@@ -239,161 +241,269 @@ func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte
 	return
 }
 
-func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, itemsToFilter []ResultItem, flags CommonConf, itemsAlreadyContainProperties bool) ([]ResultItem, error) {
-	var addPropsErr error
-	var aqlSearchErr error
-	var buildArtifactsSha1 map[string]bool
+func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
+	var artifactsAqlSearchErr, dependenciesAqlSearchErr error
+	var readerWithProps *content.ContentReader
+	buildArtifactsSha1 := make(map[string]int)
+	buildDependenciesSha1 := make(map[string]int)
 	var wg sync.WaitGroup
+	wg.Add(2)
+	// If 'build-number' is missing in spec file, we fetch the latest from artifactory.
 	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
 	if err != nil {
 		return nil, err
 	}
 
-	wg.Add(2)
-	// Get Sha1 for artifacts by build name and number
 	go func() {
-		buildArtifactsSha1, aqlSearchErr = fetchBuildArtifactsSha1(buildName, buildNumber, flags)
-		wg.Done()
+		// Get Sha1 for artifacts.
+		defer wg.Done()
+		if !specFile.ExcludeArtifacts {
+			buildArtifactsSha1, artifactsAqlSearchErr = fetchBuildArtifactsOrDependenciesSha1(buildName, buildNumber, flags, true)
+		}
 	}()
 
-	if !itemsAlreadyContainProperties {
-		// Add properties to the previously found artifacts (in case properties weren't already fetched from Artifactory)
-		go func() {
-			addPropsErr = searchAndAddPropsToAqlResult(itemsToFilter, specFile.Aql.ItemsFind, "build.name", buildName, flags)
-			wg.Done()
-		}()
-	} else {
-		wg.Done()
+	go func() {
+		// Get Sha1 for dependencies.
+		defer wg.Done()
+		if specFile.IncludeDeps {
+			buildDependenciesSha1, dependenciesAqlSearchErr = fetchBuildArtifactsOrDependenciesSha1(buildName, buildNumber, flags, false)
+		}
+	}()
+
+	if specFile.ExcludeArtifacts || itemsAlreadyContainProperties {
+		// No need to add properties to the search results.
+		wg.Wait()
+		for k, v := range buildDependenciesSha1 {
+			buildArtifactsSha1[k] = v
+		}
+		if artifactsAqlSearchErr != nil {
+			return nil, artifactsAqlSearchErr
+		}
+		if dependenciesAqlSearchErr != nil {
+			return nil, dependenciesAqlSearchErr
+		}
+		return filterBuildAqlSearchResults(reader, buildArtifactsSha1, buildName, buildNumber)
 	}
+
+	// Add properties to the previously found artifacts.
+	readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "build.name", buildName, flags)
+	if err != nil {
+		return nil, err
+	}
+	defer readerWithProps.Close()
+	tempReader, err := loadMissingProperties(reader, readerWithProps)
+	if err != nil {
+		return nil, err
+	}
+	defer tempReader.Close()
 
 	wg.Wait()
-	if aqlSearchErr != nil {
-		return nil, aqlSearchErr
+	// Merge artifacts and dependencies Sha1 maps.
+	for k, v := range buildDependenciesSha1 {
+		buildArtifactsSha1[k] = v
 	}
-	if addPropsErr != nil {
-		return nil, addPropsErr
+	if artifactsAqlSearchErr != nil {
+		return nil, artifactsAqlSearchErr
 	}
-
-	return filterBuildAqlSearchResults(&itemsToFilter, &buildArtifactsSha1, buildName, buildNumber), err
+	if dependenciesAqlSearchErr != nil {
+		return nil, dependenciesAqlSearchErr
+	}
+	return filterBuildAqlSearchResults(tempReader, buildArtifactsSha1, buildName, buildNumber)
 }
 
-// Run AQL to retrieve all artifacts associated with a specific build.
-// Return a map of the artifacts SHA1.
-func fetchBuildArtifactsSha1(buildName, buildNumber string, flags CommonConf) (map[string]bool, error) {
-	buildQuery := createAqlQueryForBuild(buildName, buildNumber, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}))
-
-	parsedBuildAqlResponse, err := aqlSearch(buildQuery, flags)
+// Load all properties to the sorted result items. Save the new result items to a file.
+// cr - Sorted result without properties
+// crWithProps - Result item with properties
+// Return a content reader which points to the result file.
+func loadMissingProperties(reader *content.ContentReader, readerWithProps *content.ContentReader) (*content.ContentReader, error) {
+	// Key -> Relative path, value -> *ResultItem
+	// Contains a limited amount of items from a file, to not overflow memory.
+	buffer := make(map[string]*ResultItem)
+	var writeOrder []*ResultItem
+	var err error
+	// Create new file to write result output
+	resultFile, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	buildArtifactsSha, err := extractSha1FromAqlResponse(parsedBuildAqlResponse)
-	if err != nil {
+	defer resultFile.Close()
+	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+		buffer[resultItem.GetItemRelativePath()] = resultItem
+		// Since maps are an unordered collection, we use slice to save the order of the items
+		writeOrder = append(writeOrder, resultItem)
+		if len(buffer) == utils.MaxBufferSize {
+			// Buffer was full, write all data to a file.
+			err = updateProps(readerWithProps, resultFile, buffer, writeOrder)
+			if err != nil {
+				return nil, err
+			}
+			buffer = make(map[string]*ResultItem)
+			writeOrder = make([]*ResultItem, 0)
+		}
+	}
+	if reader.GetError() != nil {
 		return nil, err
 	}
-
-	return buildArtifactsSha, nil
+	reader.Reset()
+	if err := updateProps(readerWithProps, resultFile, buffer, writeOrder); err != nil {
+		return nil, err
+	}
+	return content.NewContentReader(resultFile.GetFilePath(), content.DefaultKey), nil
 }
 
-/*
- * Find artifact properties by the AQL, add them to the result items.
- *
- * resultItems - Artifacts to add properties to.
- * aqlBody - AQL to execute together with property filter.
- * filterByPropName - Property name to filter.
- * filterByPropValue - Property value to filter.
- * flags - Command flags for AQL execution.
- */
-func searchAndAddPropsToAqlResult(resultItems []ResultItem, aqlBody, filterByPropName, filterByPropValue string, flags CommonConf) error {
-	propsAqlResponseJson, err := ExecAql(createPropsQuery(aqlBody, filterByPropName, filterByPropValue), flags)
-	if err != nil {
+// Load the properties from readerWithProps into buffer's ResultItem and write its values into the resultWriter.
+// buffer - Search result buffer Key -> relative path, value -> ResultItem. We use this to load the props into the item by matching the uniqueness of relevant path.
+// crWithProps - File containing all the results with proprties.
+// writeOrder - List of sorted buffer's searchResults(Map is an unordered collection).
+// resultWriter - Search results (sorted) with props.
+func updateProps(readerWithProps *content.ContentReader, resultWriter *content.ContentWriter, buffer map[string]*ResultItem, writeOrder []*ResultItem) error {
+	if len(buffer) == 0 {
+		return nil
+	}
+	// Load buffer items with their properties.
+	for resultItem := new(ResultItem); readerWithProps.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+		if value, ok := buffer[resultItem.GetItemRelativePath()]; ok {
+			value.Properties = resultItem.Properties
+		}
+	}
+	if err := readerWithProps.GetError(); err != nil {
 		return err
 	}
-	propsAqlResponse, err := parseAqlSearchResponse(propsAqlResponseJson)
-	if err != nil {
-		return err
+	readerWithProps.Reset()
+	// Write the items to a file with the same search result order.
+	for _, itemToWrite := range writeOrder {
+		resultWriter.Write(*itemToWrite)
 	}
-	addPropsToAqlResult(resultItems, propsAqlResponse)
 	return nil
 }
 
-func addPropsToAqlResult(items []ResultItem, props []ResultItem) {
-	propsMap := createPropsMap(props)
-	for i := range items {
-		props, propsExists := propsMap[getResultItemKey(items[i])]
-		if propsExists {
-			items[i].Properties = props
-		}
+// Run AQL to retrieve artifacts or dependencies which are associated with a specific build.
+// Return a map of the items' SHA1.
+func fetchBuildArtifactsOrDependenciesSha1(buildName, buildNumber string, flags CommonConf, artifacts bool) (map[string]int, error) {
+	buildQuery := createAqlQueryForBuild(buildName, buildNumber, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}), artifacts)
+	reader, err := aqlSearch(buildQuery, flags)
+	if err != nil {
+		return nil, err
 	}
+	defer reader.Close()
+	return extractSha1FromAqlResponse(reader)
 }
 
-func createPropsMap(items []ResultItem) (propsMap map[string][]Property) {
-	propsMap = make(map[string][]Property)
-	for _, item := range items {
-		propsMap[getResultItemKey(item)] = item.Properties
+// Find artifacts with a specific property.
+// aqlBody - AQL to execute together with property filter.
+// filterByPropName - Property name to filter.
+// filterByPropValue - Property value to filter.
+// flags - Command flags for AQL execution.
+func searchProps(aqlBody, filterByPropName, filterByPropValue string, flags CommonConf) (*content.ContentReader, error) {
+	return ExecAqlSaveToFile(createPropsQuery(aqlBody, filterByPropName, filterByPropValue), flags)
+}
+
+// Gets a reader of AQL results, and return map with all the SHA1's as keys.
+// The values for all the keys in the map is 2
+func extractSha1FromAqlResponse(reader *content.ContentReader) (elementsMap map[string]int, err error) {
+	elementsMap = make(map[string]int)
+	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+		elementsMap[resultItem.Actual_Sha1] = 2
 	}
+	if err = reader.GetError(); err != nil {
+		return
+	}
+	reader.Reset()
 	return
 }
 
-func getResultItemKey(item ResultItem) string {
-	return item.Repo + item.Path + item.Name + item.Actual_Sha1
-}
-
-func extractSha1FromAqlResponse(elements []ResultItem) (map[string]bool, error) {
-	elementsMap := make(map[string]bool)
-	for _, element := range elements {
-		elementsMap[element.Actual_Sha1] = true
+// Returns a filtered search result file.
+// Map each search result in one of three priority files:
+// 1st priority: Match {Sha1, build name, build number}
+// 2nd priority: Match {Sha1, build name}
+// 3rd priority: Match {Sha1}
+// As a result, any duplicated search result item will be split into a different priority list.
+// Then merge all the priority list into a single file, so each item is present once in the result file according to the priority list.
+// Side note: For each priority level, a single SHA1 can match multi artifacts under different modules.
+// reader - Reader of the aql result.
+// buildArtifactsSha - Map of all the build-name's sha1 as keys and int as its values. The int value represents priority wheres 0 is a high priority and 2 is lowest.
+func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSha map[string]int, buildName, buildNumber string) (*content.ContentReader, error) {
+	priorityArray, err := createPrioritiesFiles()
+	if err != nil {
+		return nil, err
 	}
-	return elementsMap, nil
-}
-
-/*
- * Filter search results by the following priorities:
- * 1st priority: Match {Sha1, build name, build number}
- * 2nd priority: Match {Sha1, build name}
- * 3rd priority: Match {Sha1}
- */
-func filterBuildAqlSearchResults(itemsToFilter *[]ResultItem, buildArtifactsSha *map[string]bool, buildName, buildNumber string) []ResultItem {
-	filteredResults := []ResultItem{}
-	firstPriority := map[string][]ResultItem{}
-	secondPriority := map[string][]ResultItem{}
-	thirdPriority := map[string][]ResultItem{}
-
-	// Step 1 - Populate 3 priorities mappings.
-	for _, item := range *itemsToFilter {
-		if _, ok := (*buildArtifactsSha)[item.Actual_Sha1]; !ok {
+	resultCw, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	defer resultCw.Close()
+	// Step 1 - Fill the priority files with search results.
+	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+		if _, ok := buildArtifactsSha[resultItem.Actual_Sha1]; !ok {
 			continue
 		}
-		resultBuildName, resultBuildNumber := getBuildNameAndNumberFromProps(item.Properties)
+		resultBuildName, resultBuildNumber := getBuildNameAndNumberFromProps(resultItem.Properties)
 		isBuildNameMatched := resultBuildName == buildName
 		if isBuildNameMatched && resultBuildNumber == buildNumber {
-			firstPriority[item.Actual_Sha1] = append(firstPriority[item.Actual_Sha1], item)
+			priorityArray[0].Write(*resultItem)
+			buildArtifactsSha[resultItem.Actual_Sha1] = 0
 			continue
 		}
-		if isBuildNameMatched {
-			secondPriority[item.Actual_Sha1] = append(secondPriority[item.Actual_Sha1], item)
+		if isBuildNameMatched && buildArtifactsSha[resultItem.Actual_Sha1] != 0 {
+			priorityArray[1].Write(*resultItem)
+			buildArtifactsSha[resultItem.Actual_Sha1] = 1
 			continue
 		}
-		thirdPriority[item.Actual_Sha1] = append(thirdPriority[item.Actual_Sha1], item)
-	}
-
-	// Step 2 - Append mappings to the final results, respectively.
-	for shaToMatch := range *buildArtifactsSha {
-		if _, ok := firstPriority[shaToMatch]; ok {
-			filteredResults = append(filteredResults, firstPriority[shaToMatch]...)
-		} else if _, ok := secondPriority[shaToMatch]; ok {
-			filteredResults = append(filteredResults, secondPriority[shaToMatch]...)
-		} else if _, ok := thirdPriority[shaToMatch]; ok {
-			filteredResults = append(filteredResults, thirdPriority[shaToMatch]...)
+		if buildArtifactsSha[resultItem.Actual_Sha1] == 2 {
+			priorityArray[2].Write(*resultItem)
 		}
 	}
+	if err = reader.GetError(); err != nil {
+		return nil, err
+	}
+	reader.Reset()
+	var priorityLevel int = 0
+	// Step 2 - Append the files to the final results file.
+	// Scan each priority artifacts and apply them to the final result, skip results that have been already written, by higher priority.
+	for _, priority := range priorityArray {
+		if err = priority.Close(); err != nil {
+			return nil, err
+		}
+		temp := content.NewContentReader(priority.GetFilePath(), content.DefaultKey)
+		for resultItem := new(ResultItem); temp.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+			if buildArtifactsSha[resultItem.Actual_Sha1] == priorityLevel {
+				resultCw.Write(*resultItem)
+				// Remove item from map to avoid duplicates.
+				delete(buildArtifactsSha, resultItem.Actual_Sha1)
+			}
+		}
+		if err = temp.GetError(); err != nil {
+			return nil, err
+		}
+		if err = temp.Close(); err != nil {
+			return nil, err
+		}
+		priorityLevel++
+	}
+	return content.NewContentReader(resultCw.GetFilePath(), content.DefaultKey), nil
+}
 
-	return filteredResults
+// Create priority files.
+func createPrioritiesFiles() ([]*content.ContentWriter, error) {
+	firstPriority, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	secondPriority, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	thirdPriority, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	return []*content.ContentWriter{firstPriority, secondPriority, thirdPriority}, nil
 }
 
 type CommonConf interface {
 	GetArtifactoryDetails() auth.ServiceDetails
 	SetArtifactoryDetails(rt auth.ServiceDetails)
-	GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error)
+	GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error)
 	IsDryRun() bool
 }
 
@@ -414,6 +524,6 @@ func (flags *CommonConfImpl) IsDryRun() bool {
 	return flags.DryRun
 }
 
-func (flags *CommonConfImpl) GetJfrogHttpClient() (*rthttpclient.ArtifactoryHttpClient, error) {
-	return rthttpclient.ArtifactoryClientBuilder().SetServiceDetails(&flags.artDetails).Build()
+func (flags *CommonConfImpl) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
+	return jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&flags.artDetails).Build()
 }

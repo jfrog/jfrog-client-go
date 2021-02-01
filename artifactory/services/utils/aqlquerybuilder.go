@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"strconv"
 	"strings"
 
@@ -81,7 +82,7 @@ func handleArchiveSearch(triple RepoPathFile, archivePathFilePairs []RepoPathFil
 	return query
 }
 
-func createAqlBodyForBuild(buildName, buildNumber string) string {
+func createAqlBodyForBuildArtifacts(buildName, buildNumber string) string {
 	itemsPart :=
 		`{` +
 			`"artifact.module.build.name":"%s",` +
@@ -90,8 +91,22 @@ func createAqlBodyForBuild(buildName, buildNumber string) string {
 	return fmt.Sprintf(itemsPart, buildName, buildNumber)
 }
 
-func createAqlQueryForBuild(buildName, buildNumber, includeQueryPart string) string {
-	queryBody := createAqlBodyForBuild(buildName, buildNumber)
+func createAqlBodyForBuildDependencies(buildName, buildNumber string) string {
+	itemsPart :=
+		`{` +
+			`"dependency.module.build.name":"%s",` +
+			`"dependency.module.build.number":"%s"` +
+			`}`
+	return fmt.Sprintf(itemsPart, buildName, buildNumber)
+}
+
+func createAqlQueryForBuild(buildName, buildNumber, includeQueryPart string, artifactsQuery bool) string {
+	var queryBody string
+	if artifactsQuery {
+		queryBody = createAqlBodyForBuildArtifacts(buildName, buildNumber)
+	} else {
+		queryBody = createAqlBodyForBuildDependencies(buildName, buildNumber)
+	}
 	itemsPart := `items.find(%s)%s`
 	return fmt.Sprintf(itemsPart, queryBody, includeQueryPart)
 }
@@ -267,20 +282,11 @@ func includePropertiesInAqlForSpec(specFile *ArtifactoryCommonParams) bool {
 
 func appendMissingFields(fields []string, defaultFields []string) []string {
 	for _, field := range fields {
-		if !stringIsInSlice(field, defaultFields) {
+		if !fileutils.IsStringInSlice(field, defaultFields) {
 			defaultFields = append(defaultFields, field)
 		}
 	}
 	return defaultFields
-}
-
-func stringIsInSlice(string string, strings []string) bool {
-	for _, v := range strings {
-		if v == string {
-			return true
-		}
-	}
-	return false
 }
 
 func prepareFieldsForQuery(fields []string) []string {

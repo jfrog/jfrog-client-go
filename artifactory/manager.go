@@ -6,35 +6,37 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	_go "github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
 
-type ArtifactoryServicesManager struct {
-	client   *rthttpclient.ArtifactoryHttpClient
+type ArtifactoryServicesManagerImp struct {
+	client   *jfroghttpclient.JfrogHttpClient
 	config   config.Config
-	progress ioutils.Progress
+	progress ioutils.ProgressMgr
 }
 
-func New(artDetails *auth.ServiceDetails, config config.Config) (*ArtifactoryServicesManager, error) {
+func New(artDetails *auth.ServiceDetails, config config.Config) (ArtifactoryServicesManager, error) {
 	return NewWithProgress(artDetails, config, nil)
 }
 
-func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, progress ioutils.Progress) (*ArtifactoryServicesManager, error) {
+func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, progress ioutils.ProgressMgr) (ArtifactoryServicesManager, error) {
 	err := (*artDetails).InitSsh()
 	if err != nil {
 		return nil, err
 	}
-	manager := &ArtifactoryServicesManager{config: config, progress: progress}
-	manager.client, err = rthttpclient.ArtifactoryClientBuilder().
+	manager := &ArtifactoryServicesManagerImp{config: config, progress: progress}
+	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetServiceDetails(artDetails).
+		SetContext(config.GetContext()).
 		Build()
 	if err != nil {
 		return nil, err
@@ -42,110 +44,135 @@ func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, prog
 	return manager, err
 }
 
-func (sm *ArtifactoryServicesManager) CreateLocalRepository() *services.LocalRepositoryService {
+func (sm *ArtifactoryServicesManagerImp) CreateLocalRepository() *services.LocalRepositoryService {
 	repositoryService := services.NewLocalRepositoryService(sm.client, false)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService
 }
 
-func (sm *ArtifactoryServicesManager) CreateRemoteRepository() *services.RemoteRepositoryService {
+func (sm *ArtifactoryServicesManagerImp) CreateRemoteRepository() *services.RemoteRepositoryService {
 	repositoryService := services.NewRemoteRepositoryService(sm.client, false)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService
 }
 
-func (sm *ArtifactoryServicesManager) CreateVirtualRepository() *services.VirtualRepositoryService {
+func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepository() *services.VirtualRepositoryService {
 	repositoryService := services.NewVirtualRepositoryService(sm.client, false)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService
 }
 
-func (sm *ArtifactoryServicesManager) UpdateLocalRepository() *services.LocalRepositoryService {
+func (sm *ArtifactoryServicesManagerImp) UpdateLocalRepository() *services.LocalRepositoryService {
 	repositoryService := services.NewLocalRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService
 }
 
-func (sm *ArtifactoryServicesManager) UpdateRemoteRepository() *services.RemoteRepositoryService {
+func (sm *ArtifactoryServicesManagerImp) UpdateRemoteRepository() *services.RemoteRepositoryService {
 	repositoryService := services.NewRemoteRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService
 }
 
-func (sm *ArtifactoryServicesManager) UpdateVirtualRepository() *services.VirtualRepositoryService {
+func (sm *ArtifactoryServicesManagerImp) UpdateVirtualRepository() *services.VirtualRepositoryService {
 	repositoryService := services.NewVirtualRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService
 }
 
-func (sm *ArtifactoryServicesManager) DeleteRepository(repoKey string) error {
+func (sm *ArtifactoryServicesManagerImp) DeleteRepository(repoKey string) error {
 	deleteRepositoryService := services.NewDeleteRepositoryService(sm.client)
 	deleteRepositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return deleteRepositoryService.Delete(repoKey)
 }
 
-func (sm *ArtifactoryServicesManager) GetRepository(repoKey string) (*services.RepositoryDetails, error) {
+func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string) (*services.RepositoryDetails, error) {
 	getRepositoryService := services.NewGetRepositoryService(sm.client)
 	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return getRepositoryService.Get(repoKey)
 }
 
-func (sm *ArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo) error {
+func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
+	getRepositoryService := services.NewGetRepositoryService(sm.client)
+	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return getRepositoryService.GetAll()
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreatePermissionTarget(params services.PermissionTargetParams) error {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Create(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdatePermissionTarget(params services.PermissionTargetParams) error {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Update(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DeletePermissionTarget(permissionTargetName string) error {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Delete(permissionTargetName)
+}
+
+func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.BuildInfo, project string) error {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
+	buildInfoService.Project = project
 	buildInfoService.ArtDetails = sm.config.GetServiceDetails()
 	return buildInfoService.PublishBuildInfo(build)
 }
 
-func (sm *ArtifactoryServicesManager) DistributeBuild(params services.BuildDistributionParams) error {
+func (sm *ArtifactoryServicesManagerImp) DistributeBuild(params services.BuildDistributionParams) error {
 	distributionService := services.NewDistributionService(sm.client)
 	distributionService.DryRun = sm.config.IsDryRun()
 	distributionService.ArtDetails = sm.config.GetServiceDetails()
 	return distributionService.BuildDistribute(params)
 }
 
-func (sm *ArtifactoryServicesManager) PromoteBuild(params services.PromotionParams) error {
+func (sm *ArtifactoryServicesManagerImp) PromoteBuild(params services.PromotionParams) error {
 	promotionService := services.NewPromotionService(sm.client)
 	promotionService.DryRun = sm.config.IsDryRun()
 	promotionService.ArtDetails = sm.config.GetServiceDetails()
 	return promotionService.BuildPromote(params)
 }
 
-func (sm *ArtifactoryServicesManager) DiscardBuilds(params services.DiscardBuildsParams) error {
+func (sm *ArtifactoryServicesManagerImp) DiscardBuilds(params services.DiscardBuildsParams) error {
 	discardService := services.NewDiscardBuildsService(sm.client)
 	discardService.ArtDetails = sm.config.GetServiceDetails()
 	return discardService.DiscardBuilds(params)
 }
 
-func (sm *ArtifactoryServicesManager) XrayScanBuild(params services.XrayScanParams) ([]byte, error) {
+func (sm *ArtifactoryServicesManagerImp) XrayScanBuild(params services.XrayScanParams) ([]byte, error) {
 	xrayScanService := services.NewXrayScanService(sm.client)
 	xrayScanService.ArtDetails = sm.config.GetServiceDetails()
 	return xrayScanService.ScanBuild(params)
 }
 
-func (sm *ArtifactoryServicesManager) GetPathsToDelete(params services.DeleteParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManagerImp) GetPathsToDelete(params services.DeleteParams) (*content.ContentReader, error) {
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetServiceDetails()
 	return deleteService.GetPathsToDelete(params)
 }
 
-func (sm *ArtifactoryServicesManager) DeleteFiles(resultItems []utils.ResultItem) (int, error) {
+func (sm *ArtifactoryServicesManagerImp) DeleteFiles(reader *content.ContentReader) (int, error) {
 	deleteService := services.NewDeleteService(sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
 	deleteService.ArtDetails = sm.config.GetServiceDetails()
 	deleteService.Threads = sm.config.GetThreads()
-	return deleteService.DeleteFiles(resultItems)
+	return deleteService.DeleteFiles(reader)
 }
 
-func (sm *ArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCloser, error) {
+func (sm *ArtifactoryServicesManagerImp) ReadRemoteFile(readPath string) (io.ReadCloser, error) {
 	readFileService := services.NewReadFileService(sm.client)
 	readFileService.DryRun = sm.config.IsDryRun()
 	readFileService.ArtDetails = sm.config.GetServiceDetails()
 	return readFileService.ReadRemoteFile(readPath)
 }
 
-func (sm *ArtifactoryServicesManager) initDownloadService() *services.DownloadService {
+func (sm *ArtifactoryServicesManagerImp) initDownloadService() *services.DownloadService {
 	downloadService := services.NewDownloadService(sm.client)
 	downloadService.DryRun = sm.config.IsDryRun()
 	downloadService.ArtDetails = sm.config.GetServiceDetails()
@@ -154,188 +181,241 @@ func (sm *ArtifactoryServicesManager) initDownloadService() *services.DownloadSe
 	return downloadService
 }
 
-func (sm *ArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error) {
+func (sm *ArtifactoryServicesManagerImp) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error) {
 	downloadService := sm.initDownloadService()
 	return downloadService.DownloadFiles(params...)
 }
 
-func (sm *ArtifactoryServicesManager) DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error) {
+func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error) {
 	downloadService := sm.initDownloadService()
-	rw, err := content.NewContentWriter("results", true, false)
+	rw, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return
 	}
+	defer rw.Close()
 	downloadService.ResultWriter = rw
 	totalDownloaded, totalExpected, err = downloadService.DownloadFiles(params...)
 	if err != nil {
 		return
 	}
-	resultReader = content.NewContentReader(downloadService.ResultWriter.GetFilePath(), "results")
+	resultReader = content.NewContentReader(downloadService.ResultWriter.GetFilePath(), content.DefaultKey)
 	return
 }
 
-func (sm *ArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManagerImp) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error) {
 	gitLfsCleanService := services.NewGitLfsCleanService(sm.client)
 	gitLfsCleanService.DryRun = sm.config.IsDryRun()
 	gitLfsCleanService.ArtDetails = sm.config.GetServiceDetails()
 	return gitLfsCleanService.GetUnreferencedGitLfsFiles(params)
 }
 
-func (sm *ArtifactoryServicesManager) SearchFiles(params services.SearchParams) ([]utils.ResultItem, error) {
+func (sm *ArtifactoryServicesManagerImp) SearchFiles(params services.SearchParams) (*content.ContentReader, error) {
 	searchService := services.NewSearchService(sm.client)
 	searchService.ArtDetails = sm.config.GetServiceDetails()
 	return searchService.Search(params)
 }
 
-func (sm *ArtifactoryServicesManager) Aql(aql string) ([]byte, error) {
+func (sm *ArtifactoryServicesManagerImp) Aql(aql string) (io.ReadCloser, error) {
 	aqlService := services.NewAqlService(sm.client)
 	aqlService.ArtDetails = sm.config.GetServiceDetails()
 	return aqlService.ExecAql(aql)
 }
 
-func (sm *ArtifactoryServicesManager) SetProps(params services.PropsParams) (int, error) {
+func (sm *ArtifactoryServicesManagerImp) SetProps(params services.PropsParams) (int, error) {
 	setPropsService := services.NewPropsService(sm.client)
 	setPropsService.ArtDetails = sm.config.GetServiceDetails()
 	setPropsService.Threads = sm.config.GetThreads()
 	return setPropsService.SetProps(params)
 }
 
-func (sm *ArtifactoryServicesManager) DeleteProps(params services.PropsParams) (int, error) {
+func (sm *ArtifactoryServicesManagerImp) DeleteProps(params services.PropsParams) (int, error) {
 	setPropsService := services.NewPropsService(sm.client)
 	setPropsService.ArtDetails = sm.config.GetServiceDetails()
 	setPropsService.Threads = sm.config.GetThreads()
 	return setPropsService.DeleteProps(params)
 }
-
-func (sm *ArtifactoryServicesManager) UploadFiles(params ...services.UploadParams) (artifactsFileInfo []utils.FileInfo, totalUploaded, totalFailed int, err error) {
+func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadService {
 	uploadService := services.NewUploadService(sm.client)
 	uploadService.Threads = sm.config.GetThreads()
 	uploadService.ArtDetails = sm.config.GetServiceDetails()
 	uploadService.DryRun = sm.config.IsDryRun()
 	uploadService.Progress = sm.progress
+	return uploadService
+}
+
+func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
+	uploadService := sm.initUploadService()
 	return uploadService.UploadFiles(params...)
 }
 
-func (sm *ArtifactoryServicesManager) Copy(params services.MoveCopyParams) (successCount, failedCount int, err error) {
+func (sm *ArtifactoryServicesManagerImp) UploadFilesWithResultReader(params ...services.UploadParams) (resultReader *content.ContentReader, totalUploaded, totalFailed int, err error) {
+	uploadService := sm.initUploadService()
+	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return
+	}
+	defer resultWriter.Close()
+	uploadService.ResultWriter = resultWriter
+	totalUploaded, totalFailed, err = uploadService.UploadFiles(params...)
+	if err != nil {
+		return
+	}
+	resultReader = content.NewContentReader(uploadService.ResultWriter.GetFilePath(), content.DefaultKey)
+	return
+}
+
+func (sm *ArtifactoryServicesManagerImp) Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {
 	copyService := services.NewMoveCopyService(sm.client, services.COPY)
 	copyService.DryRun = sm.config.IsDryRun()
 	copyService.ArtDetails = sm.config.GetServiceDetails()
-	return copyService.MoveCopyServiceMoveFilesWrapper(params)
+	copyService.Threads = sm.config.GetThreads()
+	return copyService.MoveCopyServiceMoveFilesWrapper(params...)
 }
 
-func (sm *ArtifactoryServicesManager) Move(params services.MoveCopyParams) (successCount, failedCount int, err error) {
+func (sm *ArtifactoryServicesManagerImp) Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {
 	moveService := services.NewMoveCopyService(sm.client, services.MOVE)
 	moveService.DryRun = sm.config.IsDryRun()
 	moveService.ArtDetails = sm.config.GetServiceDetails()
-	return moveService.MoveCopyServiceMoveFilesWrapper(params)
+	moveService.Threads = sm.config.GetThreads()
+	return moveService.MoveCopyServiceMoveFilesWrapper(params...)
 }
 
-func (sm *ArtifactoryServicesManager) PublishGoProject(params _go.GoParams) error {
+func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) error {
 	goService := _go.NewGoService(sm.client)
 	goService.ArtDetails = sm.config.GetServiceDetails()
 	return goService.PublishPackage(params)
 }
 
-func (sm *ArtifactoryServicesManager) Ping() ([]byte, error) {
+func (sm *ArtifactoryServicesManagerImp) Ping() ([]byte, error) {
 	pingService := services.NewPingService(sm.client)
 	pingService.ArtDetails = sm.config.GetServiceDetails()
 	return pingService.Ping()
 }
 
-func (sm *ArtifactoryServicesManager) GetConfig() config.Config {
+func (sm *ArtifactoryServicesManagerImp) GetConfig() config.Config {
 	return sm.config
 }
 
-func (sm *ArtifactoryServicesManager) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.BuildInfo, error) {
+func (sm *ArtifactoryServicesManagerImp) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error) {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.ArtDetails = sm.config.GetServiceDetails()
 	return buildInfoService.GetBuildInfo(params)
 }
 
-func (sm *ArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
+func (sm *ArtifactoryServicesManagerImp) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
 	return securityService.CreateToken(params)
 }
 
-func (sm *ArtifactoryServicesManager) GetTokens() (services.GetTokensResponseData, error) {
+func (sm *ArtifactoryServicesManagerImp) GetTokens() (services.GetTokensResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
 	return securityService.GetTokens()
 }
 
-func (sm *ArtifactoryServicesManager) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
+func (sm *ArtifactoryServicesManagerImp) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
 	return securityService.RefreshToken(params)
 }
 
-func (sm *ArtifactoryServicesManager) RevokeToken(params services.RevokeTokenParams) (string, error) {
+func (sm *ArtifactoryServicesManagerImp) RevokeToken(params services.RevokeTokenParams) (string, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
 	return securityService.RevokeToken(params)
 }
 
-func (sm *ArtifactoryServicesManager) CreateReplication(params services.CreateReplicationParams) error {
+func (sm *ArtifactoryServicesManagerImp) CreateReplication(params services.CreateReplicationParams) error {
 	replicationService := services.NewCreateReplicationService(sm.client)
 	replicationService.ArtDetails = sm.config.GetServiceDetails()
 	return replicationService.CreateReplication(params)
 }
 
-func (sm *ArtifactoryServicesManager) UpdateReplication(params services.UpdateReplicationParams) error {
+func (sm *ArtifactoryServicesManagerImp) UpdateReplication(params services.UpdateReplicationParams) error {
 	replicationService := services.NewUpdateReplicationService(sm.client)
 	replicationService.ArtDetails = sm.config.GetServiceDetails()
 	return replicationService.UpdateReplication(params)
 }
 
-func (sm *ArtifactoryServicesManager) DeleteReplication(repoKey string) error {
+func (sm *ArtifactoryServicesManagerImp) DeleteReplication(repoKey string) error {
 	deleteReplicationService := services.NewDeleteReplicationService(sm.client)
 	deleteReplicationService.ArtDetails = sm.config.GetServiceDetails()
 	return deleteReplicationService.DeleteReplication(repoKey)
 }
 
-func (sm *ArtifactoryServicesManager) GetReplication(repoKey string) ([]utils.ReplicationParams, error) {
+func (sm *ArtifactoryServicesManagerImp) GetReplication(repoKey string) ([]utils.ReplicationParams, error) {
 	getPushReplicationService := services.NewGetReplicationService(sm.client)
 	getPushReplicationService.ArtDetails = sm.config.GetServiceDetails()
 	return getPushReplicationService.GetReplication(repoKey)
 }
 
-func (sm *ArtifactoryServicesManager) CreateMultipleReplication(params services.CreateMultipleReplicationParams) error {
-	createMultipleReplicationService := services.NewCreateMultipleReplicationService(sm.client)
-	createMultipleReplicationService.ArtDetails = sm.config.GetServiceDetails()
-	return createMultipleReplicationService.CreateMultipleReplication(params)
-}
-
-func (sm *ArtifactoryServicesManager) UpdateMultipleReplication(params services.UpdateMultipleReplicationParams) error {
-	updateMultipleReplicationService := services.NewUpdateMultipleReplicationService(sm.client)
-	updateMultipleReplicationService.ArtDetails = sm.config.GetServiceDetails()
-	return updateMultipleReplicationService.UpdateMultipleReplication(params)
-}
-
-func (sm *ArtifactoryServicesManager) GetMultipleReplication(repoKey string) ([]utils.MultipleReplicationParams, error) {
-	getMultipleReplicationService := services.NewGetMultipleReplicationService(sm.client)
-	getMultipleReplicationService.ArtDetails = sm.config.GetServiceDetails()
-	return getMultipleReplicationService.GetMultipleReplication(repoKey)
-}
-
-func (sm *ArtifactoryServicesManager) DeleteMultipleReplication(repoKey, repoUrl string) error {
-	delMultipleReplicationService := services.NewDeleteMultipleReplicationService(sm.client)
-	delMultipleReplicationService.ArtDetails = sm.config.GetServiceDetails()
-	return delMultipleReplicationService.DeleteMultipleReplication(repoKey, repoUrl)
-}
-
-func (sm *ArtifactoryServicesManager) GetVersion() (string, error) {
+func (sm *ArtifactoryServicesManagerImp) GetVersion() (string, error) {
 	systemService := services.NewSystemService(sm.client)
 	systemService.ArtDetails = sm.config.GetServiceDetails()
 	return systemService.GetVersion()
 }
 
-func (sm *ArtifactoryServicesManager) GetServiceId() (string, error) {
+func (sm *ArtifactoryServicesManagerImp) GetServiceId() (string, error) {
 	systemService := services.NewSystemService(sm.client)
 	systemService.ArtDetails = sm.config.GetServiceDetails()
 	return systemService.GetServiceId()
 }
 
-func (sm *ArtifactoryServicesManager) Client() *rthttpclient.ArtifactoryHttpClient {
+func (sm *ArtifactoryServicesManagerImp) GetGroup(params services.GroupParams) (*services.Group, error) {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.GetGroup(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreateGroup(params services.GroupParams) error {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.CreateGroup(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdateGroup(params services.GroupParams) error {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.UpdateGroup(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DeleteGroup(name string) error {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.DeleteGroup(name)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetUser(params services.UserParams) (*services.User, error) {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.GetUser(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreateUser(params services.UserParams) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.CreateUser(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdateUser(params services.UserParams) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.UpdateUser(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.DeleteUser(name)
+}
+
+func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPromoteParams) error {
+	systemService := services.NewDockerPromoteService(sm.client)
+	systemService.ArtDetails = sm.config.GetServiceDetails()
+	return systemService.PromoteDocker(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }

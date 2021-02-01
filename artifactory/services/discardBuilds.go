@@ -3,25 +3,27 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	rthttpclient "github.com/jfrog/jfrog-client-go/artifactory/httpclient"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/auth"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type DiscardBuildsService struct {
-	client     *rthttpclient.ArtifactoryHttpClient
+	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewDiscardBuildsService(client *rthttpclient.ArtifactoryHttpClient) *DiscardBuildsService {
+func NewDiscardBuildsService(client *jfroghttpclient.JfrogHttpClient) *DiscardBuildsService {
 	return &DiscardBuildsService{client: client}
 }
 
@@ -86,7 +88,7 @@ func calculateMinimumBuildDate(startingDate time.Time, maxDaysString string) (st
 	}
 
 	minimumBuildDate := startingDate.Add(-24 * time.Hour * (time.Duration(maxDays)))
-	minimumBuildDateString := minimumBuildDate.Format("2006-01-02T15:04:05.000-0700")
+	minimumBuildDateString := minimumBuildDate.Format(buildinfo.TimeFormat)
 
 	return minimumBuildDateString, nil
 }

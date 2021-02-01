@@ -42,8 +42,15 @@ func ParseProperties(propStr string, option PropertyParseOptions) (*Properties, 
 
 		switch option {
 		case SplitCommas:
-			for _, val := range strings.Split(values, ",") {
-				props.Properties = append(props.Properties, Property{key, val})
+			splitedValues := strings.Split(values, ",")
+			for i, val := range splitedValues {
+				// If "\" is found, then it means that the original string contains the "\," which indicate this "," is part of the value
+				// and not a sperator
+				if strings.HasSuffix(val, "\\") && i+1 < len(splitedValues) {
+					splitedValues[i+1] = val[:len(val)-1] + "," + splitedValues[i+1]
+				} else {
+					props.Properties = append(props.Properties, Property{key, val})
+				}
 			}
 		case JoinCommas:
 			props.Properties = append(props.Properties, Property{key, values})
@@ -73,13 +80,13 @@ func (props *Properties) ToHeadersMap() map[string]string {
 	return headers
 }
 
-// Convert properties from Slice to map that build promotion REST API requires
-func (props *Properties) ToBuildPromoteMap() map[string][]string {
-	buildPromote := map[string][]string{}
+// Convert properties from Slice to map
+func (props *Properties) ToMap() map[string][]string {
+	propertiesMap := map[string][]string{}
 	for _, prop := range props.Properties {
-		buildPromote[prop.Key] = []string{prop.Value}
+		propertiesMap[prop.Key] = append(propertiesMap[prop.Key], prop.Value)
 	}
-	return buildPromote
+	return propertiesMap
 }
 
 // Split properties string of format key=value to key value strings

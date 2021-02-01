@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -84,7 +85,7 @@ func (m *manager) readUrl() {
 	if matchedResult == "" {
 		return
 	}
-	m.url = MaskCredentials(originUrl, matchedResult)
+	m.url = RemoveCredentials(originUrl, matchedResult)
 }
 
 func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error) {
@@ -127,10 +128,25 @@ func (m *manager) readRevision() {
 		return
 	}
 
-	// Since the revision was not returned, then we'll fetch it, by using the ref:
-	dotGitPath := filepath.Join(m.path, ref)
-	file, err := os.Open(dotGitPath)
+	// Else, if found ref try getting revision using it.
+	refPath := filepath.Join(m.path, ref)
+	exists, err := fileutils.IsFileExists(refPath, false)
 	if err != nil {
+		m.err = err
+		return
+	}
+	if exists {
+		m.readRevisionFromRef(refPath)
+		return
+	}
+	// Otherwise, try to find .git/packed-refs and look for the HEAD there
+	m.readRevisionFromPackedRef(ref)
+}
+
+func (m *manager) readRevisionFromRef(refPath string) {
+	revision := ""
+	file, err := os.Open(refPath)
+	if errorutils.CheckError(err) != nil {
 		m.err = err
 		return
 	}
@@ -143,11 +159,49 @@ func (m *manager) readRevision() {
 		break
 	}
 	if err := scanner.Err(); err != nil {
-		errorutils.CheckError(err)
-		m.err = err
+		m.err = errorutils.CheckError(err)
 		return
 	}
 
 	m.revision = revision
+	return
+}
+
+func (m *manager) readRevisionFromPackedRef(ref string) {
+	packedRefPath := filepath.Join(m.path, "packed-refs")
+	exists, err := fileutils.IsFileExists(packedRefPath, false)
+	if err != nil {
+		m.err = err
+		return
+	}
+	if exists {
+		file, err := os.Open(packedRefPath)
+		if errorutils.CheckError(err) != nil {
+			m.err = err
+			return
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := scanner.Text()
+			// Expecting to find the revision (the full extended SHA-1, or a unique leading substring) followed by the ref.
+			if strings.HasSuffix(line, ref) {
+				split := strings.Split(line, " ")
+				if len(split) == 2 {
+					m.revision = split[0]
+				} else {
+					m.err = errorutils.CheckError(errors.New("failed fetching revision for ref :" + ref + " - Unexpected line structure in packed-refs file"))
+				}
+				return
+			}
+		}
+		if err = scanner.Err(); err != nil {
+			m.err = errorutils.CheckError(err)
+			return
+		}
+	}
+
+	m.err = errorutils.CheckError(errors.New("failed fetching revision from git config, from ref: " + ref))
 	return
 }

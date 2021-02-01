@@ -17,12 +17,12 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	InitArtifactoryServiceManager()
+	InitServiceManagers()
 	result := m.Run()
 	os.Exit(result)
 }
 
-func InitArtifactoryServiceManager() {
+func InitServiceManagers() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	createArtifactoryUploadManager()
@@ -42,8 +42,16 @@ func InitArtifactoryServiceManager() {
 	createArtifactoryReplicationUpdateManager()
 	createArtifactoryReplicationGetManager()
 	createArtifactoryReplicationDeleteManager()
+	createArtifactoryPermissionTargetManager()
+	createArtifactoryUserManager()
+	createArtifactoryGroupManager()
+
 	if *DistUrl != "" {
 		createDistributionManager()
+	}
+	if *XrayUrl != "" {
+		createXrayVersionManager()
+		createXrayWatchManager()
 	}
 	createReposIfNeeded()
 }

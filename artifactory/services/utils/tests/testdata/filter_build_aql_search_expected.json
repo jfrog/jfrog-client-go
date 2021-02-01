@@ -1,0 +1,67 @@
+{
+  "results": [
+    {
+      "repo": "repo1",
+      "path": "a",
+      "name": "no.in",
+      "actual_md5": "e53098d3d8ee1f5eb38c2ec3c783ef3d",
+      "actual_sha1": "a",
+      "size": 11,
+      "created": "2020-06-25T10:21:17.502+03:00",
+      "modified": "2020-06-25T10:21:17.510+03:00",
+      "properties": [
+        {
+          "Key": "c",
+          "Value": "1"
+        },
+        {
+          "Key": "build.name",
+          "Value": "myBuild"
+        },
+        {
+          "Key": "build.number",
+          "Value": "1"
+        }
+      ],
+      "type": "file"
+    },
+    {
+      "repo": "repo1",
+      "path": "a",
+      "name": "yes.in",
+      "actual_md5": "e53098d3d8ee1f5eb38c2ec3c783ef3d",
+      "actual_sha1": "b",
+      "size": 11,
+      "created": "2020-06-25T10:21:17.502+03:00",
+      "modified": "2020-06-25T10:21:17.510+03:00",
+      "properties": [
+        {
+          "Key": "css",
+          "Value": "1"
+        },
+        {
+          "Key": "build.name",
+          "Value": "myBuild"
+        }
+      ],
+      "type": "file"
+    },
+    {
+      "repo": "repo1",
+      "path": "a",
+      "name": "c1.in",
+      "actual_md5": "e53098d3d8ee1f5eb38c2ec3c783ef3d",
+      "actual_sha1": "c",
+      "size": 11,
+      "created": "2020-06-25T10:21:17.502+03:00",
+      "modified": "2020-06-25T10:21:17.510+03:00",
+      "properties": [
+        {
+          "Key": "c",
+          "Value": "1"
+        }
+      ],
+      "type": "file"
+    }
+  ]
+}

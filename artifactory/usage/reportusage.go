@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"net/http"
 
+	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	versionutil "github.com/jfrog/jfrog-client-go/utils/version"
-	"github.com/pkg/errors"
 )
 
 const minArtifactoryVersion = "6.9.0"
 const ReportUsagePrefix = "Usage Report: "
 
-func SendReportUsage(productId, commandName string, serviceManager *artifactory.ArtifactoryServicesManager) error {
+func SendReportUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager) error {
 	config := serviceManager.GetConfig()
 	if config == nil {
 		return errorutils.CheckError(errors.New(ReportUsagePrefix + "Expected full config, but no configuration exists."))
@@ -28,7 +28,7 @@ func SendReportUsage(productId, commandName string, serviceManager *artifactory.
 	}
 	url, err := utils.BuildArtifactoryUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
 	if err != nil {
-		return err
+		return errors.New(ReportUsagePrefix + err.Error())
 	}
 	clientDetails := rtDetails.CreateHttpClientDetails()
 	// Check Artifactory version

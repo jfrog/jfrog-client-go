@@ -36,6 +36,7 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualCondaTest", virtualCondaTest)
 	t.Run("virtualGenericTest", virtualGenericTest)
 	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
+	t.Run("getAllVirtualRepoDetailsTest", getAllVirtualRepoDetailsTest)
 }
 
 func virtualMavenTest(t *testing.T) {
@@ -84,7 +85,7 @@ func virtualGradleTest(t *testing.T) {
 
 	gvp.Description += " - Updated"
 	gvp.Notes = "Repo been updated"
-	gvp.RepoLayoutRef = "gradle-default"
+	gvp.RepoLayoutRef = "maven-2-default"
 	gvp.ForceMavenAuthentication = nil
 	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &trueValue
 	gvp.ExcludesPattern = "**/****"
@@ -691,4 +692,29 @@ func getVirtualRepoDetailsTest(t *testing.T) {
 	assert.Equal(t, data.Rclass, "virtual")
 	assert.Empty(t, data.Url)
 	assert.Equal(t, data.PackageType, "go")
+}
+
+func getAllVirtualRepoDetailsTest(t *testing.T) {
+	// Create Repo
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	gvp := services.NewGoVirtualRepositoryParams()
+	gvp.Key = repoKey
+	gvp.Description = "Repo for jfrog-client-go virtual-repository-test"
+	gvp.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
+
+	err := testsCreateVirtualRepositoryService.Go(gvp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	// Get repo details
+	data := getAllRepos(t)
+	assert.NotNil(t, data)
+	repo := &services.RepositoryDetails{}
+	for _, v := range *data {
+		if v.Key == repoKey {
+			repo = &v
+			break
+		}
+	}
+	// Validate
+	assert.NotNil(t, repo, "Repo "+repoKey+" not found")
 }

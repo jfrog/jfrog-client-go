@@ -19,6 +19,10 @@ type FileInfo struct {
 	InternalArtifactoryPath string `json:"internalArtifactoryPath,omitempty"`
 }
 
+type ResultBuildInfo struct {
+	FilesInfo []FileInfo `json:"results,omitempty"`
+}
+
 func (fileInfo *FileInfo) ToBuildArtifacts() buildinfo.Artifact {
 	artifact := buildinfo.Artifact{Checksum: &buildinfo.Checksum{}}
 	artifact.Sha1 = fileInfo.Sha1
