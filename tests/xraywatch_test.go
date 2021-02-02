@@ -1,18 +1,13 @@
 package tests
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
-	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
 
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 
@@ -34,12 +29,12 @@ func TestXrayWatch(t *testing.T) {
 
 func testXrayWatchAll(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1", time.Now().Unix())
-	err := createExamplePolicy(policy1Name)
+	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
 	policy2Name := fmt.Sprintf("%s-%d", "jfrog-policy2", time.Now().Unix())
-	err = createExamplePolicy(policy2Name)
+	err = createDummyPolicy(policy2Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy2Name)
 
@@ -128,7 +123,7 @@ func testXrayWatchAll(t *testing.T) {
 
 func testXrayWatchSelectedRepos(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1-pattern", time.Now().Unix())
-	err := createExamplePolicy(policy1Name)
+	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
@@ -140,12 +135,12 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	defer deleteRepo(t, repo2Name)
 
 	build1Name := fmt.Sprintf("%s-%d", "jfrog-build1", time.Now().Unix())
-	err = createBuild(build1Name)
+	err = createAndIndexBuild(t, build1Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build1Name)
 
 	build2Name := fmt.Sprintf("%s-%d", "jfrog-build2", time.Now().Unix())
-	err = createBuild(build2Name)
+	err = createAndIndexBuild(t, build2Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build2Name)
 
@@ -267,7 +262,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 func testXrayWatchBuildsByPattern(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1-pattern", time.Now().Unix())
-	err := createExamplePolicy(policy1Name)
+	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
@@ -362,131 +357,7 @@ func createRepoRemote(t *testing.T, repoKey string) {
 	assert.NoError(t, err, "Failed to create "+repoKey)
 }
 
-func createBuild(buildName string) error {
-	artDetails := GetRtDetails()
-	artHTTPDetails := artDetails.CreateHttpClientDetails()
-
-	artUtils.SetContentType("application/json", &artHTTPDetails.Headers)
-	artClient, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	xrayDetails := GetXrayDetails()
-	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
-
-	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
-	xrayClient, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	dataArtifactoryBuild := buildinfo.BuildInfo{
-		Name:    buildName,
-		Number:  "1.0.0",
-		Started: "2014-09-30T12:00:19.893+0300",
-		Modules: []buildinfo.Module{{
-			Id: "example-mdule",
-			Artifacts: []buildinfo.Artifact{
-				{
-					Type: "gz",
-					Name: "c.tar.gz",
-					Checksum: &buildinfo.Checksum{
-						Sha1: "9d4336ff7bc2d2348aee4e27ad55e42110df4a80",
-						Md5:  "b4918187cc9b3bf1b0772546d9398d7d",
-					},
-				},
-			},
-		}},
-	}
-	requestContentArtifactoryBuild, err := json.Marshal(dataArtifactoryBuild)
-	if err != nil {
-		return errors.New("failed marshalling build " + buildName)
-	}
-
-	resp, _, err := artClient.SendPut(artDetails.GetUrl()+"api/build", requestContentArtifactoryBuild, artHTTPDetails)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.New("failed to create build " + resp.Status)
-	}
-
-	// the build needs to be indexed before a watch can be associated with it.
-	dataIndexBuild := struct {
-		Names []string `json:"names"`
-	}{
-		Names: []string{buildName},
-	}
-
-	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
-
-	resp, _, err = xrayClient.SendPost(xrayDetails.GetUrl()+"api/v1/binMgr/builds", requestContentIndexBuild, artHTTPDetails)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("failed to create build index" + resp.Status)
-	}
-
-	return nil
-}
-
-func deleteBuildIndex(buildName string) error {
-	xrayDetails := GetXrayDetails()
-	artHTTPDetails := xrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &artHTTPDetails.Headers)
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	dataIndexBuild := struct {
-		Names []string `json:"indexed_builds"`
-	}{
-		Names: []string{},
-	}
-
-	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
-
-	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("failed to delete build index " + resp.Status)
-	}
-
-	return nil
-}
-
-func deleteBuild(buildName string) error {
-	err := deleteBuildIndex(buildName)
-	if err != nil {
-		return err
-	}
-
-	artDetails := GetRtDetails()
-	artHTTPDetails := artDetails.CreateHttpClientDetails()
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails)
-
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("failed to delete build " + resp.Status)
-	}
-
-	return nil
-}
-
-func createExamplePolicy(policyName string) error {
+func createDummyPolicy(policyName string) error {
 	params := utils.PolicyParams{
 		Name:        policyName,
 		Description: "example policy",
@@ -508,6 +379,13 @@ func createExamplePolicy(policyName string) error {
 			Priority: 1,
 		}},
 	}
-	testsXrayPolicyService.Create(params)
-	return nil
+	_, err := testsXrayPolicyService.Create(params)
+	return err
+}
+
+func createAndIndexBuild(t *testing.T, buildName string) error {
+	err := createDummyBuild(buildName)
+	assert.NoError(t, err)
+	_, err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
+	return err
 }

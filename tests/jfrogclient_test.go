@@ -45,6 +45,7 @@ func InitServiceManagers() {
 	createArtifactoryPermissionTargetManager()
 	createArtifactoryUserManager()
 	createArtifactoryGroupManager()
+	createArtifactoryBuildInfoManager()
 
 	if *DistUrl != "" {
 		createDistributionManager()
@@ -53,6 +54,7 @@ func InitServiceManagers() {
 		createXrayVersionManager()
 		createXrayWatchManager()
 		createXrayPolicyManager()
+		createXrayBinMgrManager()
 	}
 	createReposIfNeeded()
 }

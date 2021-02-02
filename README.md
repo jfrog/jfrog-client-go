@@ -119,6 +119,7 @@
       - [Creating a License Xray Policy](#creating-a-license-xray-policy)
       - [Update an Xray Policy](#update-an-xray-policy)
       - [Delete an Xray Policy](#delete-an-xray-policy)
+      - [Add builds to indexing configuration](#add-builds-to-indexing-configuration)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -1383,4 +1384,10 @@ resp, err := xrayManager.UpdatePolicy(*policy)
 #### Delete an Xray Policy
 ```go
 resp, err := xrayManager.DeletePolicy("example-policy")
+```
+
+#### Add builds to indexing configuration
+```go
+buildsToIndex := []string{"buildName1", "buildName2"}
+resp, err := xrayManager.AddBuildsToIndexing(buildsToIndex)
 ```

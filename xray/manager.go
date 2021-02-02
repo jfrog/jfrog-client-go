@@ -107,3 +107,10 @@ func (sm *XrayServicesManager) DeletePolicy(policyName string) (*http.Response, 
 	policyService.XrayDetails = sm.config.GetServiceDetails()
 	return policyService.Delete(policyName)
 }
+
+// AddBuildsToIndexing will add builds to Xray indexing configuration
+func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) (*http.Response, error) {
+	binMgrService := services.NewBinMgrService(sm.client)
+	binMgrService.XrayDetails = sm.config.GetServiceDetails()
+	return binMgrService.AddBuildsToIndexing(buildNames)
+}
