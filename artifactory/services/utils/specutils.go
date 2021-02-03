@@ -1,6 +1,7 @@
 package utils
 
 import (
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"strings"
 )
 
@@ -15,14 +16,6 @@ type SpecType string
 type Aql struct {
 	ItemsFind string `json:"items.find"`
 }
-
-const (
-	WildCardPattern PatternType = "wildcard"
-	RegExp          PatternType = "regexp"
-	AntPattern      PatternType = "ant"
-)
-
-type PatternType string
 
 type ArtifactoryCommonParams struct {
 	Aql     Aql
@@ -70,7 +63,7 @@ type FileGetter interface {
 	IsIncludeDirs() bool
 	GetArchiveEntries() string
 	SetArchiveEntries(archiveEntries string)
-	GetPatternType() PatternType
+	GetPatternType() clientutils.PatternType
 }
 
 func (params ArtifactoryCommonParams) GetArchiveEntries() string {
@@ -113,14 +106,14 @@ func (params *ArtifactoryCommonParams) IsRecursive() bool {
 	return params.Recursive
 }
 
-func (params *ArtifactoryCommonParams) GetPatternType() PatternType {
+func (params *ArtifactoryCommonParams) GetPatternType() clientutils.PatternType {
 	if params.Regexp {
-		return RegExp
+		return clientutils.RegExp
 	}
 	if params.Ant {
-		return AntPattern
+		return clientutils.AntPattern
 	}
-	return WildCardPattern
+	return clientutils.WildCardPattern
 }
 
 func (params *ArtifactoryCommonParams) GetAql() Aql {

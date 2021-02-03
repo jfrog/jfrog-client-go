@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,6 +20,14 @@ const (
 	Agent       = "jfrog-client-go"
 	Version     = "0.18.0"
 )
+
+const (
+	WildCardPattern PatternType = "wildcard"
+	RegExp          PatternType = "regexp"
+	AntPattern      PatternType = "ant"
+)
+
+type PatternType string
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
 var MaxBufferSize = 50000
@@ -46,7 +53,7 @@ func getDefaultUserAgent() string {
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
-func GetRootPath(path string, patternType utils.PatternType, parentheses ParenthesesSlice) string {
+func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSlice) string {
 	// The first step is to split the local path pattern into sections, by the file separator.
 	separator := "/"
 	sections := strings.Split(path, separator)
@@ -61,7 +68,7 @@ func GetRootPath(path string, patternType utils.PatternType, parentheses Parenth
 		if section == "" {
 			continue
 		}
-		if patternType == utils.RegExp {
+		if patternType == RegExp {
 			if strings.Index(section, "(") != -1 {
 				break
 			}
@@ -75,7 +82,7 @@ func GetRootPath(path string, patternType utils.PatternType, parentheses Parenth
 					break
 				}
 			}
-			if patternType == utils.AntPattern {
+			if patternType == AntPattern {
 				if strings.Index(section, "?") != -1 {
 					break
 				}
@@ -165,7 +172,7 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 	return
 }
 
-func PrepareLocalPathForUpload(localPath string, patternType utils.PatternType) string {
+func PrepareLocalPathForUpload(localPath string, patternType PatternType) string {
 	if localPath == "./" || localPath == ".\\" {
 		return "^.*$"
 	}
@@ -174,9 +181,9 @@ func PrepareLocalPathForUpload(localPath string, patternType utils.PatternType) 
 	} else if strings.HasPrefix(localPath, ".\\") {
 		localPath = localPath[3:]
 	}
-	if patternType == utils.AntPattern {
+	if patternType == AntPattern {
 		localPath = antPathToRegExp(localPath)
-	} else if patternType == utils.WildCardPattern {
+	} else if patternType == WildCardPattern {
 		localPath = wildcardPathToRegExp(cleanPath(localPath))
 	}
 
@@ -214,10 +221,11 @@ func antPathToRegExp(localPath string) string {
 		localPath = strings.Replace(localPath, char, "\\"+char, -1)
 	}
 	var wildcard = ".*"
+	var antAsteriskToRegExp = "([^/]*)"
 	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
-	localPath = strings.Replace(localPath, `**/`, "#", -1)
-	localPath = strings.Replace(localPath, `*`, "([^/]*)", -1)
-	localPath = strings.Replace(localPath, `#`, "(.*/)?", -1)
+	localPath = strings.Replace(localPath, `*`, antAsteriskToRegExp, -1)
+	localPath = strings.Replace(localPath, antAsteriskToRegExp+antAsteriskToRegExp+`/`, "(.*/)?", -1)
+	//localPath = strings.Replace(localPath, `#`, , -1)
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
 		localPath += wildcard
 	}

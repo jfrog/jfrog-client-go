@@ -134,7 +134,7 @@ func GetFileSymlinkPath(filePath string) (string, error) {
 // Get the local root path, from which to start collecting artifacts to be uploaded to Artifactory.
 // If path dose not exist error will be returned.
 
-func GetRootPath(pattern, target string, patternType serviceutils.PatternType, preserveSymLink bool) (string, error) {
+func GetRootPath(pattern, target string, patternType clientutils.PatternType, preserveSymLink bool) (string, error) {
 	placeholderParentheses := clientutils.NewParenthesesSlice(pattern, target)
 	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
