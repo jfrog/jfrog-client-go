@@ -65,6 +65,7 @@ type ArtifactoryServicesManager interface {
 	UpdateGroup(params services.GroupParams) error
 	DeleteGroup(name string) error
 	GetUser(params services.UserParams) (*services.User, error)
+	GetAllUsers() ([]*services.User, error)
 	CreateUser(params services.UserParams) error
 	UpdateUser(params services.UserParams) error
 	DeleteUser(name string) error
@@ -267,7 +268,12 @@ func (esm *EmptyArtifactoryServicesManager) Client() *jfroghttpclient.JfrogHttpC
 func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.RepositoryDetails, error) {
 	panic("Failed: Method is not implemented")
 }
+
 func (esm *EmptyArtifactoryServicesManager) GetUser(params services.UserParams) (*services.User, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetAllUsers() ([]*services.User, error) {
 	panic("Failed: Method is not implemented")
 }
 
