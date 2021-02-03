@@ -181,6 +181,8 @@ func TestAntPathToRegExp(t *testing.T) {
 		"dev/aa/b.zip",
 		"dev/aa/b.zip",
 		"dev/aa/bc.zip",
+		"dev/a1/a2/a3/b.txt",
+		"dev/a1/a2/b.txt",
 
 		"test/a/b.txt",
 		"test/a/bb.txt",
@@ -203,12 +205,12 @@ func TestAntPathToRegExp(t *testing.T) {
 		{"check '?' in directory's name", "dev/a?/b.txt", addRegExpPrefixAndSuffix("dev/a.{1}/b\\.txt"), fileSystemPaths, []string{"dev/aa/b.txt"}},
 		{"check '*' in file's name", "dev/a/b*.txt", addRegExpPrefixAndSuffix("dev/a/b([^/]*)\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/a/bb.txt", "dev/a/bc.txt"}},
 		{"check '*' in directory's name", "dev/*/b.txt", addRegExpPrefixAndSuffix("dev/([^/]*)/b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt"}},
-		{"check '**' in directory path", "**/b.txt", addRegExpPrefixAndSuffix("(.*/)?b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt", "test/a/b.txt", "test/aa/b.txt"}},
-		{"combine all signs", "**/b?.*", addRegExpPrefixAndSuffix("(.*/)?b.{1}\\.([^/]*)"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt", "dev/aa/bb.txt", "dev/aa/bc.txt", "dev/aa/bc.zip", "test/a/bb.txt", "test/a/bc.txt", "test/aa/bb.txt", "test/aa/bc.txt", "test/aa/bc.zip"}},
+		{"check '**' in directory path", "**/b.txt", addRegExpPrefixAndSuffix("(.*/)?b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt", "test/a/b.txt", "test/aa/b.txt", "dev/a1/a2/a3/b.txt", "dev/a1/a2/b.txt"}},
+		{"combine all signs", "**/b?.*", addRegExpPrefixAndSuffix("(.*/)?b.{1}\\.([^/]*)"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt", "dev/aa/bb.txt", "dev/aa/bc.txt", "dev/aa/bc.zip", "dev/a1/a2/a3/b.txt", "dev/a1/a2/b.txt", "test/a/bb.txt", "test/a/bc.txt", "test/aa/bb.txt", "test/aa/bc.txt", "test/aa/bc.zip"}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			regExpStr := antPathToRegExp(test.antPattern)
+			regExpStr := antPatternToRegExp(test.antPattern)
 			if test.expectedRegExp != regExpStr {
 				t.Error("Unmatched! for ant pattern `" + test.antPattern + "` : Expected `" + test.expectedRegExp + "` Got `" + regExpStr + "`")
 			}
@@ -219,7 +221,7 @@ func TestAntPathToRegExp(t *testing.T) {
 					matches = append(matches, checkedPath)
 				}
 			}
-			if !reflect.DeepEqual(matches, test.matchedPaths) {
+			if !equalSlicesIgnoreOrder(matches, test.matchedPaths) {
 				t.Error("Unmatched! : ant pattern `" + test.antPattern + "` matches urls:\n[" + strings.Join(test.matchedPaths, ",") + "]\nbut got:\n[" + strings.Join(matches, ",") + "]")
 			}
 		})
@@ -230,4 +232,24 @@ func TestAntPathToRegExp(t *testing.T) {
 
 func addRegExpPrefixAndSuffix(str string) string {
 	return "^" + str + "$"
+}
+
+func equalSlicesIgnoreOrder(s1, s2 []string) bool {
+
+	map1 := make(map[string]int)
+	map2 := make(map[string]int)
+
+	for _, elem1 := range s1 {
+		map1[elem1]++
+	}
+	for _, elem2 := range s2 {
+		map2[elem2]++
+	}
+
+	for key1, key2 := range map1 {
+		if map2[key1] != key2 {
+			return false
+		}
+	}
+	return true
 }

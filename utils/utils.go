@@ -182,7 +182,7 @@ func PrepareLocalPathForUpload(localPath string, patternType PatternType) string
 		localPath = localPath[3:]
 	}
 	if patternType == AntPattern {
-		localPath = antPathToRegExp(localPath)
+		localPath = antPatternToRegExp(localPath)
 	} else if patternType == WildCardPattern {
 		localPath = wildcardPathToRegExp(cleanPath(localPath))
 	}
@@ -215,7 +215,7 @@ func wildcardPathToRegExp(localPath string) string {
 	return "^" + localPath + "$"
 }
 
-func antPathToRegExp(localPath string) string {
+func antPatternToRegExp(localPath string) string {
 	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
 	for _, char := range SPECIAL_CHARS {
 		localPath = strings.Replace(localPath, char, "\\"+char, -1)
@@ -225,7 +225,6 @@ func antPathToRegExp(localPath string) string {
 	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
 	localPath = strings.Replace(localPath, `*`, antAsteriskToRegExp, -1)
 	localPath = strings.Replace(localPath, antAsteriskToRegExp+antAsteriskToRegExp+`/`, "(.*/)?", -1)
-	//localPath = strings.Replace(localPath, `#`, , -1)
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
 		localPath += wildcard
 	}
