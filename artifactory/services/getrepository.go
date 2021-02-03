@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -38,7 +39,12 @@ func (grs *GetRepositoryService) Get(repoKey string) (*RepositoryDetails, error)
 
 func (grs *GetRepositoryService) GetAll() (*[]RepositoryDetails, error) {
 	log.Info("Getting all repositories ...")
-	body, err := grs.sendGet(apiRepositories)
+	return grs.GetAllFromTypeAndPackage("", "")
+}
+
+func (grs *GetRepositoryService) GetAllFromTypeAndPackage(repoType, packageType string) (*[]RepositoryDetails, error) {
+	url := fmt.Sprintf("%s?type=%s&packageType=%s", apiRepositories, repoType, packageType)
+	body, err := grs.sendGet(url)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +72,17 @@ func (grs *GetRepositoryService) sendGet(api string) ([]byte, error) {
 type RepositoryDetails struct {
 	Key         string
 	Rclass      string
+	Type        string
 	Description string
 	Url         string
 	PackageType string
+}
+
+func (rd RepositoryDetails) getRepoType() string {
+	// When getting All repos from artifactory the REST returns with Type field,
+	// but when getting a specific repo it will return with the Rclass field.
+	if rd.Rclass != "" {
+		return rd.Rclass
+	}
+	return rd.Type
 }
