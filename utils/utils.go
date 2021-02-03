@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -45,7 +46,7 @@ func getDefaultUserAgent() string {
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
-func GetRootPath(path string, useRegExp bool, useAnt bool, parentheses ParenthesesSlice) string {
+func GetRootPath(path string, patternType utils.PatternType, parentheses ParenthesesSlice) string {
 	// The first step is to split the local path pattern into sections, by the file separator.
 	separator := "/"
 	sections := strings.Split(path, separator)
@@ -60,7 +61,7 @@ func GetRootPath(path string, useRegExp bool, useAnt bool, parentheses Parenthes
 		if section == "" {
 			continue
 		}
-		if useRegExp {
+		if patternType == utils.RegExp {
 			if strings.Index(section, "(") != -1 {
 				break
 			}
@@ -74,7 +75,7 @@ func GetRootPath(path string, useRegExp bool, useAnt bool, parentheses Parenthes
 					break
 				}
 			}
-			if useAnt {
+			if patternType == utils.AntPattern {
 				if strings.Index(section, "?") != -1 {
 					break
 				}
@@ -164,7 +165,7 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 	return
 }
 
-func PrepareLocalPathForUpload(localPath string, useRegExp bool, useAnt bool) string {
+func PrepareLocalPathForUpload(localPath string, patternType utils.PatternType) string {
 	if localPath == "./" || localPath == ".\\" {
 		return "^.*$"
 	}
@@ -173,13 +174,10 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool, useAnt bool) st
 	} else if strings.HasPrefix(localPath, ".\\") {
 		localPath = localPath[3:]
 	}
-	if !useRegExp {
-		if useAnt {
-			localPath = antPathToRegExp(localPath)
-
-		} else {
-			localPath = wildcardPathToRegExp(cleanPath(localPath))
-		}
+	if patternType == utils.AntPattern {
+		localPath = antPathToRegExp(localPath)
+	} else if patternType == utils.WildCardPattern {
+		localPath = wildcardPathToRegExp(cleanPath(localPath))
 	}
 
 	return localPath

@@ -16,6 +16,14 @@ type Aql struct {
 	ItemsFind string `json:"items.find"`
 }
 
+const (
+	WildCardPattern PatternType = "wildcard"
+	RegExp          PatternType = "regexp"
+	AntPattern      PatternType = "ant"
+)
+
+type PatternType string
+
 type ArtifactoryCommonParams struct {
 	Aql     Aql
 	Pattern string
@@ -58,12 +66,11 @@ type FileGetter interface {
 	GetBuild() string
 	GetBundle() string
 	GetSpecType() (specType SpecType)
-	IsRegexp() bool
-	IsAnt() bool
 	IsRecursive() bool
 	IsIncludeDirs() bool
 	GetArchiveEntries() string
 	SetArchiveEntries(archiveEntries string)
+	GetPatternType() PatternType
 }
 
 func (params ArtifactoryCommonParams) GetArchiveEntries() string {
@@ -106,12 +113,14 @@ func (params *ArtifactoryCommonParams) IsRecursive() bool {
 	return params.Recursive
 }
 
-func (params *ArtifactoryCommonParams) IsRegexp() bool {
-	return params.Regexp
-}
-
-func (params *ArtifactoryCommonParams) IsAnt() bool {
-	return params.Ant
+func (params *ArtifactoryCommonParams) GetPatternType() PatternType {
+	if params.Regexp {
+		return RegExp
+	}
+	if params.Ant {
+		return AntPattern
+	}
+	return WildCardPattern
 }
 
 func (params *ArtifactoryCommonParams) GetAql() Aql {
