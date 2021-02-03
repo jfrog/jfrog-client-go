@@ -203,8 +203,8 @@ func cleanPath(path string) string {
 }
 
 func wildcardPathToRegExp(localPath string) string {
-	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
-	for _, char := range SPECIAL_CHARS {
+	var specialChars = []string{".", "^", "$", "+"}
+	for _, char := range specialChars {
 		localPath = strings.Replace(localPath, char, "\\"+char, -1)
 	}
 	var wildcard = ".*"
@@ -216,8 +216,8 @@ func wildcardPathToRegExp(localPath string) string {
 }
 
 func antPatternToRegExp(localPath string) string {
-	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
-	for _, char := range SPECIAL_CHARS {
+	var specialChars = []string{".", "^", "$", "+"}
+	for _, char := range specialChars {
 		localPath = strings.Replace(localPath, char, "\\"+char, -1)
 	}
 	var wildcard = ".*"

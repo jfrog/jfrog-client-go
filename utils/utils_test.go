@@ -225,9 +225,7 @@ func TestAntPathToRegExp(t *testing.T) {
 				t.Error("Unmatched! : ant pattern `" + test.antPattern + "` matches urls:\n[" + strings.Join(test.matchedPaths, ",") + "]\nbut got:\n[" + strings.Join(matches, ",") + "]")
 			}
 		})
-
 	}
-
 }
 
 func addRegExpPrefixAndSuffix(str string) string {
