@@ -222,7 +222,7 @@ func TestAntPathToRegExp(t *testing.T) {
 				}
 			}
 			if !equalSlicesIgnoreOrder(matches, test.matchedPaths) {
-				t.Error("Unmatched! : ant pattern `" + test.antPattern + "` matches urls:\n[" + strings.Join(test.matchedPaths, ",") + "]\nbut got:\n[" + strings.Join(matches, ",") + "]")
+				t.Error("Unmatched! : ant pattern `" + test.antPattern + "` matches paths:\n[" + strings.Join(test.matchedPaths, ",") + "]\nbut got:\n[" + strings.Join(matches, ",") + "]")
 			}
 		})
 	}
