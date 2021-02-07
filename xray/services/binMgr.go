@@ -46,12 +46,12 @@ func (xbms *BinMgrService) getBinMgrURL() string {
 }
 
 // AddBuildsToIndexing will add builds to indexing configuration
-func (xbms *BinMgrService) AddBuildsToIndexing(buildNames []string) (*http.Response, error) {
+func (xbms *BinMgrService) AddBuildsToIndexing(buildNames []string) error {
 	payloadBody := addBuildsToIndexBody{BuildNames: buildNames}
 
 	content, err := json.Marshal(payloadBody)
 	if err != nil {
-		return nil, errorutils.CheckError(err)
+		return errorutils.CheckError(err)
 	}
 
 	httpClientsDetails := xbms.XrayDetails.CreateHttpClientDetails()
@@ -63,14 +63,14 @@ func (xbms *BinMgrService) AddBuildsToIndexing(buildNames []string) (*http.Respo
 	log.Info("Adding builds to indexing configuration...")
 	resp, respBody, err = xbms.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
-		return resp, err
+		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return resp, errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
+		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
 	}
 	log.Debug("Xray response:", resp.Status)
 	log.Info("Done adding builds to indexing configuration.")
-	return resp, nil
+	return nil
 }
 
 type addBuildsToIndexBody struct {

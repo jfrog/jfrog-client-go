@@ -78,7 +78,7 @@ func (sm *XrayServicesManager) DeleteWatch(watchName string) (*http.Response, er
 }
 
 // CreatePolicy will create a new Xray policy
-func (sm *XrayServicesManager) CreatePolicy(params utils.PolicyParams) (*http.Response, error) {
+func (sm *XrayServicesManager) CreatePolicy(params utils.PolicyParams) error {
 	policyService := services.NewPolicyService(sm.client)
 	policyService.XrayDetails = sm.config.GetServiceDetails()
 	return policyService.Create(params)
@@ -86,7 +86,7 @@ func (sm *XrayServicesManager) CreatePolicy(params utils.PolicyParams) (*http.Re
 
 // GetPolicy retrieves the details about an Xray policy by name
 // It will error if no policy can be found by that name.
-func (sm *XrayServicesManager) GetPolicy(policyName string) (*utils.PolicyParams, *http.Response, error) {
+func (sm *XrayServicesManager) GetPolicy(policyName string) (*utils.PolicyParams, error) {
 	policyService := services.NewPolicyService(sm.client)
 	policyService.XrayDetails = sm.config.GetServiceDetails()
 	return policyService.Get(policyName)
@@ -94,7 +94,7 @@ func (sm *XrayServicesManager) GetPolicy(policyName string) (*utils.PolicyParams
 
 // UpdatePolicy will update an existing Xray policy by name
 // It will error if no policy can be found by that name.
-func (sm *XrayServicesManager) UpdatePolicy(params utils.PolicyParams) (*http.Response, error) {
+func (sm *XrayServicesManager) UpdatePolicy(params utils.PolicyParams) error {
 	policyService := services.NewPolicyService(sm.client)
 	policyService.XrayDetails = sm.config.GetServiceDetails()
 	return policyService.Update(params)
@@ -102,14 +102,14 @@ func (sm *XrayServicesManager) UpdatePolicy(params utils.PolicyParams) (*http.Re
 
 // DeletePolicy will delete an existing policy by name
 // It will error if no policy can be found by that name.
-func (sm *XrayServicesManager) DeletePolicy(policyName string) (*http.Response, error) {
+func (sm *XrayServicesManager) DeletePolicy(policyName string) error {
 	policyService := services.NewPolicyService(sm.client)
 	policyService.XrayDetails = sm.config.GetServiceDetails()
 	return policyService.Delete(policyName)
 }
 
 // AddBuildsToIndexing will add builds to Xray indexing configuration
-func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) (*http.Response, error) {
+func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
 	binMgrService := services.NewBinMgrService(sm.client)
 	binMgrService.XrayDetails = sm.config.GetServiceDetails()
 	return binMgrService.AddBuildsToIndexing(buildNames)

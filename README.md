@@ -147,8 +147,8 @@ Optional flags:
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
 | `-rt.password`      | [Default: password] Artifactory password.                                                              |
-| `-rt.distUrl`       | [Optional] JFrog Distribution URL.                                                                     |
-| `-rt.xrayUrl`       | [Optional] JFrog Xray URL.                                                                     |
+| `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
+| `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
 | `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
 | `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
@@ -1344,7 +1344,7 @@ params.Rules = []utils.PolicyRule{
 		},
 	},
 }
-resp, err := xrayManager.CreatePolicy(params)
+err := xrayManager.CreatePolicy(params)
 ```
 
 #### Creating a License Xray Policy
@@ -1365,29 +1365,29 @@ params.Rules = []utils.PolicyRule{
 		Priority: 2,
 	},
 }
-resp, err := xrayManager.CreatePolicy(params)
+err := xrayManager.CreatePolicy(params)
 ```
 
 #### Get an Xray Policy
 ```go
-policy, resp, err := xrayManager.GetPolicy("example-policy")
+policy, err := xrayManager.GetPolicy("example-policy")
 ```
 
 #### Update an Xray Policy
 ```go
-policy, resp, err := xrayManager.GetPolicy("example-policy")
+policy, err := xrayManager.GetPolicy("example-policy")
 policy.Description = "Updated description"
 
-resp, err := xrayManager.UpdatePolicy(*policy)
+err := xrayManager.UpdatePolicy(*policy)
 ```
 
 #### Delete an Xray Policy
 ```go
-resp, err := xrayManager.DeletePolicy("example-policy")
+err := xrayManager.DeletePolicy("example-policy")
 ```
 
 #### Add builds to indexing configuration
 ```go
 buildsToIndex := []string{"buildName1", "buildName2"}
-resp, err := xrayManager.AddBuildsToIndexing(buildsToIndex)
+err := xrayManager.AddBuildsToIndexing(buildsToIndex)
 ```

@@ -379,13 +379,13 @@ func createDummyPolicy(policyName string) error {
 			Priority: 1,
 		}},
 	}
-	_, err := testsXrayPolicyService.Create(params)
+	err := testsXrayPolicyService.Create(params)
 	return err
 }
 
 func createAndIndexBuild(t *testing.T, buildName string) error {
 	err := createDummyBuild(buildName)
 	assert.NoError(t, err)
-	_, err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
+	err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
 	return err
 }

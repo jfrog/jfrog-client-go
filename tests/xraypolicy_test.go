@@ -27,7 +27,7 @@ func initXrayPolicyTest(t *testing.T, policyName string) string {
 }
 
 func deletePolicy(t *testing.T, policyName string) {
-	_, err := testsXrayPolicyService.Delete(policyName)
+	err := testsXrayPolicyService.Delete(policyName)
 	assert.NoError(t, err)
 }
 
@@ -146,7 +146,7 @@ func createPolicy(t *testing.T, policyName string, policyType utils.PolicyType, 
 		Description: "crate-policy-description",
 		Rules:       policyRules,
 	}
-	_, err := testsXrayPolicyService.Create(policyParams)
+	err := testsXrayPolicyService.Create(policyParams)
 	assert.NoError(t, err)
 	return &policyParams
 }
@@ -158,7 +158,7 @@ func updatePolicy(t *testing.T, policyName string, policyType utils.PolicyType, 
 		Description: "update-policy-description",
 		Rules:       policyRules,
 	}
-	_, err := testsXrayPolicyService.Update(policyParams)
+	err := testsXrayPolicyService.Update(policyParams)
 	assert.NoError(t, err)
 	return &policyParams
 }
@@ -172,7 +172,7 @@ func createAndCheckPolicy(t *testing.T, policyName string, create bool, policyTy
 	}
 
 	// Get policy
-	actual, _, err := testsXrayPolicyService.Get(policyName)
+	actual, err := testsXrayPolicyService.Get(policyName)
 	assert.NoError(t, err)
 
 	// Compare general policy details

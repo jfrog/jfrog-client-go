@@ -25,7 +25,7 @@ func addBuildsToIndexing(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Index build
-	_, err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
+	err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
 	assert.NoError(t, err)
 
 	// Assert build contained in the indexed build list
