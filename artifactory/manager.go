@@ -390,6 +390,12 @@ func (sm *ArtifactoryServicesManagerImp) GetUser(params services.UserParams) (*s
 	return userService.GetUser(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetAllUsers() ([]*services.User, error) {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.GetAllUsers()
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreateUser(params services.UserParams) error {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()

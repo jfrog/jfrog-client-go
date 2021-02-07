@@ -62,6 +62,7 @@
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
       - [Fetching Users Details](#fetching-users-details)
+      - [Fetching All Users Details](#fetching-all-users-details)
       - [Creating and Updating a User](#creating-and-updating-a-user)
       - [Deleting a User](#deleting-a-user)
       - [Fetching Group Details](#fetching-group-details)
@@ -773,6 +774,12 @@ params := services.NewUserParams()
 params.UserDetails.Name = "myUserName"
 
 user, err := serviceManager.GetUser(params)
+```
+
+#### Fetching All Users Details
+You can get all users from Artifactory:
+```go
+users, err := servicesManager.GetAllUsers()
 ```
 
 #### Creating and Updating a User
