@@ -85,7 +85,6 @@ func (us *UserService) GetAllUsers() ([]*User, error) {
 		return nil, errorutils.CheckError(err)
 	}
 	return users, nil
-
 }
 
 func (us *UserService) CreateUser(params UserParams) error {

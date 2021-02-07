@@ -779,7 +779,7 @@ user, err := serviceManager.GetUser(params)
 #### Fetching All Users Details
 You can get all users from Artifactory:
 ```go
-servicesManager.GetAllUsers()
+users, err := servicesManager.GetAllUsers()
 ```
 
 #### Creating and Updating a User
