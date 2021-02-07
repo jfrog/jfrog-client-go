@@ -1,8 +1,6 @@
 package xray
 
 import (
-	"net/http"
-
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -47,7 +45,7 @@ func (sm *XrayServicesManager) GetVersion() (string, error) {
 }
 
 // CreateWatch will create a new Xray watch
-func (sm *XrayServicesManager) CreateWatch(params utils.WatchParams) (*http.Response, error) {
+func (sm *XrayServicesManager) CreateWatch(params utils.WatchParams) error {
 	watchService := services.NewWatchService(sm.client)
 	watchService.XrayDetails = sm.config.GetServiceDetails()
 	return watchService.Create(params)
@@ -55,7 +53,7 @@ func (sm *XrayServicesManager) CreateWatch(params utils.WatchParams) (*http.Resp
 
 // GetWatch retrieves the details about an Xray watch by name
 // It will error if no watch can be found by that name.
-func (sm *XrayServicesManager) GetWatch(watchName string) (*utils.WatchParams, *http.Response, error) {
+func (sm *XrayServicesManager) GetWatch(watchName string) (*utils.WatchParams, error) {
 	watchService := services.NewWatchService(sm.client)
 	watchService.XrayDetails = sm.config.GetServiceDetails()
 	return watchService.Get(watchName)
@@ -63,7 +61,7 @@ func (sm *XrayServicesManager) GetWatch(watchName string) (*utils.WatchParams, *
 
 // UpdateWatch will update an existing Xray watch by name
 // It will error if no watch can be found by that name.
-func (sm *XrayServicesManager) UpdateWatch(params utils.WatchParams) (*http.Response, error) {
+func (sm *XrayServicesManager) UpdateWatch(params utils.WatchParams) error {
 	watchService := services.NewWatchService(sm.client)
 	watchService.XrayDetails = sm.config.GetServiceDetails()
 	return watchService.Update(params)
@@ -71,7 +69,7 @@ func (sm *XrayServicesManager) UpdateWatch(params utils.WatchParams) (*http.Resp
 
 // DeleteWatch will delete an existing watch by name
 // It will error if no watch can be found by that name.
-func (sm *XrayServicesManager) DeleteWatch(watchName string) (*http.Response, error) {
+func (sm *XrayServicesManager) DeleteWatch(watchName string) error {
 	watchService := services.NewWatchService(sm.client)
 	watchService.XrayDetails = sm.config.GetServiceDetails()
 	return watchService.Delete(watchName)
