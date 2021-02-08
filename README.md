@@ -409,10 +409,10 @@ Read more about [ContentReader](#using-contentReader).
 #### Publishing Build Info to Artifactory
 ```go
 buildInfo := &buildinfo.BuildInfo{}
-// Optional Artifactory project name
-project := "my-project"
+// Optional Artifactory project key
+projectKey := "my-project-key"
 ...
-rtManager.PublishBuildInfo(buildInfo, project)
+rtManager.PublishBuildInfo(buildInfo, projectKey)
 ```
 
 #### Fetching Build Info from Artifactory
@@ -420,6 +420,8 @@ rtManager.PublishBuildInfo(buildInfo, project)
 buildInfoParams := services.NewBuildInfoParams{}
 buildInfoParams.BuildName = "buildName"
 buildInfoParams.BuildNumber = "LATEST"
+// Optional Artifactory project key
+buildInfoParams.ProjectKey = "my-project-key"
 
 rtManager.GetBuildInfo(buildInfoParams)
 ```
