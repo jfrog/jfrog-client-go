@@ -64,7 +64,7 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinf
 	// Get build-info json from Artifactory.
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 
-	restApi := path.Join("api/build/"+bis.getProjectQueryParam(params.ProjectKey), name, number)
+	restApi := path.Join("api/build/", name, number) + bis.getProjectQueryParam(params.ProjectKey)
 	requestFullUrl, err := utils.BuildArtifactoryUrl(bis.GetArtifactoryDetails().GetUrl(), restApi, make(map[string]string))
 
 	log.Debug("Getting build-info from: ", requestFullUrl)
@@ -120,5 +120,5 @@ func (bis *BuildInfoService) getProjectQueryParam(projectKey string) string {
 	if projectKey == "" {
 		return ""
 	}
-	return "?buildRepo=" + utils.BuildRepoNameFromPrpjectKey(projectKey)
+	return "?buildRepo=" + utils.BuildRepoNameFromProjectKey(projectKey)
 }

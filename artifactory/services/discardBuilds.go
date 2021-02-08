@@ -38,6 +38,11 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 	}
 	requestFullUrl += "?async=" + strconv.FormatBool(params.IsAsync())
 
+	buildRepo := utils.BuildRepoNameFromProjectKey(params.ProjectKey)
+	if buildRepo != "" {
+		requestFullUrl += "&buildRepo=" + buildRepo
+	}
+
 	var excludeBuilds []string
 	if params.GetExcludeBuilds() != "" {
 		excludeBuilds = strings.Split(params.GetExcludeBuilds(), ",")
@@ -107,6 +112,7 @@ type DiscardBuildsBody struct {
 type DiscardBuildsParams struct {
 	DeleteArtifacts bool
 	BuildName       string
+	ProjectKey      string
 	MaxDays         string
 	MaxBuilds       string
 	ExcludeBuilds   string
@@ -115,6 +121,10 @@ type DiscardBuildsParams struct {
 
 func (bd *DiscardBuildsParams) GetBuildName() string {
 	return bd.BuildName
+}
+
+func (bd *DiscardBuildsParams) GetProjectKey() string {
+	return bd.ProjectKey
 }
 
 func (bd *DiscardBuildsParams) GetMaxDays() string {

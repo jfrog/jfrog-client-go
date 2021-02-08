@@ -437,8 +437,10 @@ params.Comment = "comment"
 params.Copy = true
 params.IncludeDependencies = false
 params.SourceRepo = "source-repo"
+// Optional Artifactory project key
+params.ProjectKey = "my-project-key"
 
-rtManager.DownloadFiles(params)
+rtManager.PromoteBuild(params)
 ```
 
 #### Promoting a Docker Image in Artifactory
@@ -491,6 +493,8 @@ params.MaxBuilds = "max-builds"
 params.ExcludeBuilds = "1,2"
 params.DeleteArtifacts = false
 params.Async = false
+// Optional Artifactory project key
+projectKey := "my-project-key"
 
 rtManager.DiscardBuilds(params)
 ```

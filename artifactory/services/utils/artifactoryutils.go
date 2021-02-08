@@ -98,7 +98,7 @@ func IsWildcardPattern(pattern string) bool {
 
 // Returns the name of the build-info repository, corresponding to the project key sent.
 // Returns an empty string, if the provided projectKey is empty.
-func BuildRepoNameFromPrpjectKey(projectKey string) string {
+func BuildRepoNameFromProjectKey(projectKey string) string {
 	if projectKey == "" {
 		return ""
 	}
