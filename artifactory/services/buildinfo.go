@@ -18,7 +18,6 @@ import (
 type BuildInfoService struct {
 	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
-	Project    string
 	DryRun     bool
 }
 
@@ -38,10 +37,6 @@ func (bis *BuildInfoService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpCli
 	return bis.client, nil
 }
 
-func (bis *BuildInfoService) GetProject() string {
-	return bis.Project
-}
-
 func (bis *BuildInfoService) IsDryRun() bool {
 	return bis.DryRun
 }
@@ -49,6 +44,7 @@ func (bis *BuildInfoService) IsDryRun() bool {
 type BuildInfoParams struct {
 	BuildName   string
 	BuildNumber string
+	ProjectKey  string
 }
 
 func NewBuildInfoParams() BuildInfoParams {
@@ -68,7 +64,7 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinf
 	// Get build-info json from Artifactory.
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 
-	restApi := path.Join("api/build/", name, number)
+	restApi := path.Join("api/build/", name, number) + bis.getProjectQueryParam(params.ProjectKey)
 	requestFullUrl, err := utils.BuildArtifactoryUrl(bis.GetArtifactoryDetails().GetUrl(), restApi, make(map[string]string))
 
 	log.Debug("Getting build-info from: ", requestFullUrl)
@@ -94,7 +90,7 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinf
 	return publishedBuildInfo, true, nil
 }
 
-func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error {
+func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
 	content, err := json.Marshal(build)
 	if errorutils.CheckError(err) != nil {
 		return err
@@ -107,7 +103,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error 
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
 	log.Info("Deploying build info...")
-	resp, body, err := bis.client.SendPut(bis.ArtDetails.GetUrl()+"api/build"+bis.getProjectQueryParam(), content, &httpClientsDetails)
+	resp, body, err := bis.client.SendPut(bis.ArtDetails.GetUrl()+"api/build"+bis.getProjectQueryParam(projectKey), content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
@@ -120,9 +116,9 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo) error 
 	return nil
 }
 
-func (bis *BuildInfoService) getProjectQueryParam() string {
-	if bis.Project == "" {
+func (bis *BuildInfoService) getProjectQueryParam(projectKey string) string {
+	if projectKey == "" {
 		return ""
 	}
-	return "?project=" + bis.Project
+	return "?buildRepo=" + utils.BuildRepoNameFromProjectKey(projectKey)
 }

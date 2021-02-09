@@ -409,10 +409,10 @@ Read more about [ContentReader](#using-contentReader).
 #### Publishing Build Info to Artifactory
 ```go
 buildInfo := &buildinfo.BuildInfo{}
-// Optional Artifactory project name
-project := "my-project"
+// Optional Artifactory project key
+projectKey := "my-project-key"
 ...
-rtManager.PublishBuildInfo(buildInfo, project)
+rtManager.PublishBuildInfo(buildInfo, projectKey)
 ```
 
 #### Fetching Build Info from Artifactory
@@ -420,6 +420,8 @@ rtManager.PublishBuildInfo(buildInfo, project)
 buildInfoParams := services.NewBuildInfoParams{}
 buildInfoParams.BuildName = "buildName"
 buildInfoParams.BuildNumber = "LATEST"
+// Optional Artifactory project key
+buildInfoParams.ProjectKey = "my-project-key"
 
 rtManager.GetBuildInfo(buildInfoParams)
 ```
@@ -435,8 +437,10 @@ params.Comment = "comment"
 params.Copy = true
 params.IncludeDependencies = false
 params.SourceRepo = "source-repo"
+// Optional Artifactory project key
+params.ProjectKey = "my-project-key"
 
-rtManager.DownloadFiles(params)
+rtManager.PromoteBuild(params)
 ```
 
 #### Promoting a Docker Image in Artifactory
@@ -489,6 +493,8 @@ params.MaxBuilds = "max-builds"
 params.ExcludeBuilds = "1,2"
 params.DeleteArtifacts = false
 params.Async = false
+// Optional Artifactory project key
+projectKey := "my-project-key"
 
 rtManager.DiscardBuilds(params)
 ```
