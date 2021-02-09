@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -134,9 +133,9 @@ func GetFileSymlinkPath(filePath string) (string, error) {
 
 // Get the local root path, from which to start collecting artifacts to be uploaded to Artifactory.
 // If path dose not exist error will be returned.
-func GetRootPath(uploadParams services.UploadParams, preserveSymLink bool) (string, error) {
-	placeholderParentheses := clientutils.NewParenthesesSlice(uploadParams.GetPattern(), uploadParams.GetTarget())
-	rootPath := utils.GetRootPath(uploadParams.GetPattern(), uploadParams.GetPatternType(), placeholderParentheses)
+func GetRootPath(pattern, target string, patternType clientutils.PatternType, preserveSymLink bool) (string, error) {
+	placeholderParentheses := clientutils.NewParenthesesSlice(pattern, target)
+	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
 		return "", errorutils.CheckError(errors.New("Path does not exist: " + rootPath))
 	}
