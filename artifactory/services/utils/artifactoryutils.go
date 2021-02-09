@@ -105,6 +105,13 @@ func BuildRepoNameFromProjectKey(projectKey string) string {
 	return fmt.Sprintf("%s-build-info", projectKey)
 }
 
+func GetProjectQueryParam(projectKey string) string {
+	if projectKey == "" {
+		return ""
+	}
+	return "?buildRepo=" + BuildRepoNameFromProjectKey(projectKey)
+}
+
 // paths - Sorted array.
 // index - Index of the current path which we want to check if it a prefix of any of the other previous paths.
 // separator - File separator.

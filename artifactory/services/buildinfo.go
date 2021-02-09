@@ -63,8 +63,7 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinf
 
 	// Get build-info json from Artifactory.
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
-
-	restApi := path.Join("api/build/", name, number) + bis.getProjectQueryParam(params.ProjectKey)
+	restApi := path.Join("api/build/", name, number) + utils.GetProjectQueryParam(params.ProjectKey)
 	requestFullUrl, err := utils.BuildArtifactoryUrl(bis.GetArtifactoryDetails().GetUrl(), restApi, make(map[string]string))
 
 	log.Debug("Getting build-info from: ", requestFullUrl)
@@ -103,7 +102,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
 	log.Info("Deploying build info...")
-	resp, body, err := bis.client.SendPut(bis.ArtDetails.GetUrl()+"api/build"+bis.getProjectQueryParam(projectKey), content, &httpClientsDetails)
+	resp, body, err := bis.client.SendPut(bis.ArtDetails.GetUrl()+"api/build"+utils.GetProjectQueryParam(projectKey), content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
@@ -114,11 +113,4 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Build info successfully deployed. Browse it in Artifactory under " + bis.GetArtifactoryDetails().GetUrl() + "webapp/builds/" + build.Name + "/" + build.Number)
 	return nil
-}
-
-func (bis *BuildInfoService) getProjectQueryParam(projectKey string) string {
-	if projectKey == "" {
-		return ""
-	}
-	return "?buildRepo=" + utils.BuildRepoNameFromProjectKey(projectKey)
 }

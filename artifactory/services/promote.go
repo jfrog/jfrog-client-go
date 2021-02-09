@@ -37,7 +37,8 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 
 	promoteUrl := ps.ArtDetails.GetUrl()
 	restApi := path.Join("api/build/promote/", promotionParams.GetBuildName(), promotionParams.GetBuildNumber()) +
-		"?buildRepo=" + utils.BuildRepoNameFromProjectKey(promotionParams.ProjectKey)
+		utils.GetProjectQueryParam(promotionParams.ProjectKey)
+
 	requestFullUrl, err := utils.BuildArtifactoryUrl(promoteUrl, restApi, make(map[string]string))
 	if err != nil {
 		return err
