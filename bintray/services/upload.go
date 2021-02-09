@@ -242,13 +242,7 @@ func getSingleFileToUpload(rootPath, targetPath string, flat bool) clientutils.A
 }
 
 func (up *UploadParams) GetPatternType() clientutils.PatternType {
-	if up.UseRegExp {
-		return clientutils.RegExp
-	}
-	if up.UseAnt {
-		return clientutils.AntPattern
-	}
-	return clientutils.WildCardPattern
+	return clientutils.GetPatternType(clientutils.PatternTypes{RegExp: up.UseRegExp, Ant: up.UseAnt})
 }
 
 func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]clientutils.Artifact, error) {

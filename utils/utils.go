@@ -21,14 +21,6 @@ const (
 	Version     = "0.18.0"
 )
 
-const (
-	WildCardPattern PatternType = "wildcard"
-	RegExp          PatternType = "regexp"
-	AntPattern      PatternType = "ant"
-)
-
-type PatternType string
-
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
 var MaxBufferSize = 50000
 
@@ -203,10 +195,7 @@ func cleanPath(path string) string {
 }
 
 func wildcardPathToRegExp(localPath string) string {
-	var specialChars = []string{".", "^", "$", "+"}
-	for _, char := range specialChars {
-		localPath = strings.Replace(localPath, char, "\\"+char, -1)
-	}
+	localPath = replaceSpecialChars(localPath)
 	var wildcard = ".*"
 	localPath = strings.Replace(localPath, "*", wildcard, -1)
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
@@ -216,19 +205,27 @@ func wildcardPathToRegExp(localPath string) string {
 }
 
 func antPatternToRegExp(localPath string) string {
-	var specialChars = []string{".", "^", "$", "+"}
-	for _, char := range specialChars {
-		localPath = strings.Replace(localPath, char, "\\"+char, -1)
-	}
+	localPath = replaceSpecialChars(localPath)
 	var wildcard = ".*"
 	var antAsteriskToRegExp = "([^/]*)"
+	// `?` => `.{1}` : `?` matches one character.
 	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
+	// `*` => `([^/]*)` : `*` matches zero or more characters except from `/`.
 	localPath = strings.Replace(localPath, `*`, antAsteriskToRegExp, -1)
+	// `**/` => `(.*/)?` : `**` matches zero or more 'directories' in a path.
 	localPath = strings.Replace(localPath, antAsteriskToRegExp+antAsteriskToRegExp+`/`, "(.*/)?", -1)
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
 		localPath += wildcard
 	}
 	return "^" + localPath + "$"
+}
+
+func replaceSpecialChars(path string) string {
+	var specialChars = []string{".", "^", "$", "+"}
+	for _, char := range specialChars {
+		path = strings.Replace(path, char, "\\"+char, -1)
+	}
+	return path
 }
 
 // Replaces matched regular expression from path to corresponding placeholder {i} at target.
@@ -393,4 +390,27 @@ type Artifact struct {
 	LocalPath  string
 	TargetPath string
 	Symlink    string
+}
+
+const (
+	WildCardPattern PatternType = "wildcard"
+	RegExp          PatternType = "regexp"
+	AntPattern      PatternType = "ant"
+)
+
+type PatternType string
+
+type PatternTypes struct {
+	RegExp bool
+	Ant    bool
+}
+
+func GetPatternType(patternTypes PatternTypes) PatternType {
+	if patternTypes.RegExp {
+		return RegExp
+	}
+	if patternTypes.Ant {
+		return AntPattern
+	}
+	return WildCardPattern
 }

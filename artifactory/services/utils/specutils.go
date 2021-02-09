@@ -107,13 +107,7 @@ func (params *ArtifactoryCommonParams) IsRecursive() bool {
 }
 
 func (params *ArtifactoryCommonParams) GetPatternType() clientutils.PatternType {
-	if params.Regexp {
-		return clientutils.RegExp
-	}
-	if params.Ant {
-		return clientutils.AntPattern
-	}
-	return clientutils.WildCardPattern
+	return clientutils.GetPatternType(clientutils.PatternTypes{RegExp: params.Regexp, Ant: params.Ant})
 }
 
 func (params *ArtifactoryCommonParams) GetAql() Aql {
