@@ -61,7 +61,7 @@ func (this *VcsCache) GetVcsDetails(path string) (revision, refUrl string, err e
 			break
 		}
 		// Begin directory search
-		revision, refUrl, err = tryGetGitDetails(subPath, this)
+		revision, refUrl, err = tryGetGitDetails(subPath)
 		if revision != "" || refUrl != "" {
 			vcsDetailsResult = &vcsDetails{revision: revision, url: refUrl}
 			this.vcsRootDir.Store(subPath, vcsDetailsResult)
@@ -89,12 +89,12 @@ func (this *VcsCache) clearCacheIfExceedsMax() {
 	}
 }
 
-func tryGetGitDetails(path string, this *VcsCache) (string, string, error) {
-	exists, err := fileutils.IsDirExists(filepath.Join(path, ".git"), false)
+func tryGetGitDetails(path string) (string, string, error) {
+	exists := fileutils.IsPathExists(filepath.Join(path, ".git"), false)
 	if exists {
 		return extractGitDetails(path)
 	}
-	return "", "", err
+	return "", "", nil
 }
 
 func extractGitDetails(path string) (string, string, error) {

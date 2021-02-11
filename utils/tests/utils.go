@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/stretchr/testify/assert"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"testing"
 )
 
 type HttpServerHandlers map[string]func(w http.ResponseWriter, r *http.Request)
@@ -101,4 +103,26 @@ func exitOnErr(err error) {
 		log.Error(err)
 		os.Exit(1)
 	}
+}
+
+func InitVcsSubmoduleTestDir(t *testing.T, srcPath string) (submodulePath, tmpDir string) {
+	var err error
+	tmpDir, err = fileutils.CreateTempDir()
+	assert.NoError(t, err)
+
+	err = fileutils.CopyDir(srcPath, tmpDir, true, nil)
+	assert.NoError(t, err)
+	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
+		assert.NoError(t, err)
+		err := fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git"))
+		assert.NoError(t, err)
+	}
+	submoduleDst := filepath.Join(tmpDir, "subDir", "subModule")
+	err = fileutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData"))
+	assert.NoError(t, err)
+	err = os.Rename(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git"))
+	assert.NoError(t, err)
+	submodulePath, err = filepath.Abs(submoduleDst)
+	assert.NoError(t, err)
+	return submodulePath, tmpDir
 }

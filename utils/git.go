@@ -5,9 +5,14 @@ import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+)
+
+const (
+	submoduleDotGitPrefix = "gitdir: "
 )
 
 type manager struct {
@@ -24,11 +29,59 @@ func NewGitManager(path string) *manager {
 
 func (m *manager) ReadConfig() error {
 	if m.path == "" {
-		return errorutils.CheckError(errors.New(".git path must be defined."))
+		return errorutils.CheckError(errors.New(".git path must be defined"))
 	}
+	if !fileutils.IsPathExists(m.path, false) {
+		return errorutils.CheckError(errors.New(".git path must exist in order to collect vcs details"))
+	}
+
+	m.handleSubmoduleIfNeeded()
 	m.readRevision()
 	m.readUrl()
 	return m.err
+}
+
+// If .git is a file and not a directory, assume it is a git submodule and extract the actual .git directory of the submodule.
+// The actual .git directory is under the parent project's .git/modules directory.
+func (m *manager) handleSubmoduleIfNeeded() {
+	exists, err := fileutils.IsFileExists(m.path, false)
+	if err != nil {
+		m.err = err
+		return
+	}
+	if !exists {
+		// .git is a directory, continue extracting vcs details.
+		return
+	}
+
+	content, err := ioutil.ReadFile(m.path)
+	if err != nil {
+		m.err = errorutils.CheckError(err)
+		return
+	}
+
+	line := string(content)
+	// Expecting git submodule to have exactly one line, with a prefix and the path to the actual submodule's git.
+	if !strings.HasPrefix(line, submoduleDotGitPrefix) {
+		m.err = errorutils.CheckError(errors.New("failed to parse .git path for submodule"))
+		return
+	}
+
+	// Extract path by removing prefix.
+	actualRelativePath := strings.TrimSpace(line[strings.Index(line, ":")+1:])
+	actualAbsPath := filepath.Join(filepath.Dir(m.path), actualRelativePath)
+	exists, err = fileutils.IsDirExists(actualAbsPath, false)
+	if err != nil {
+		m.err = err
+		return
+	}
+	if !exists {
+		m.err = errorutils.CheckError(errors.New("path found in .git file '" + m.path + "' does not exist: '" + actualAbsPath + "'"))
+		return
+	}
+
+	// Actual .git directory found.
+	m.path = actualAbsPath
 }
 
 func (m *manager) GetUrl() string {
