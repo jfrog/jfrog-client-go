@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
@@ -62,6 +63,9 @@ var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
 var testsReplicationDeleteService *services.DeleteReplicationService
 var testsPermissionTargetService *services.PermissionTargetService
+var testUserService *services.UserService
+var testGroupService *services.GroupService
+var testBuildInfoService *services.BuildInfoService
 
 // Distribution services
 var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
@@ -76,6 +80,8 @@ var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleServ
 // Xray Services
 var testsXrayVersionService *xrayServices.VersionService
 var testsXrayWatchService *xrayServices.WatchService
+var testsXrayPolicyService *xrayServices.PolicyService
+var testXrayBinMgrService *xrayServices.BinMgrService
 
 var timestamp = time.Now().Unix()
 var trueValue = true
@@ -91,8 +97,8 @@ const (
 
 func init() {
 	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory/", "Artifactory url")
-	DistUrl = flag.String("rt.distUrl", "", "Distribution url")
-	XrayUrl = flag.String("rt.xrayUrl", "", "Xray url")
+	DistUrl = flag.String("ds.url", "", "Distribution url")
+	XrayUrl = flag.String("xr.url", "", "Xray url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
@@ -134,6 +140,30 @@ func createArtifactoryUploadManager() {
 	testsUploadService = services.NewUploadService(client)
 	testsUploadService.ArtDetails = artDetails
 	testsUploadService.Threads = 3
+}
+
+func createArtifactoryUserManager() {
+	artDetails := GetRtDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testUserService = services.NewUserService(client)
+	testUserService.ArtDetails = artDetails
+}
+
+func createArtifactoryGroupManager() {
+	artDetails := GetRtDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testGroupService = services.NewGroupService(client)
+	testGroupService.ArtDetails = artDetails
+}
+
+func createArtifactoryBuildInfoManager() {
+	artDetails := GetRtDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&artDetails).Build()
+	failOnHttpClientCreation(err)
+	testBuildInfoService = services.NewBuildInfoService(client)
+	testBuildInfoService.ArtDetails = artDetails
 }
 
 func createArtifactoryDownloadManager() {
@@ -280,11 +310,27 @@ func createArtifactoryPermissionTargetManager() {
 }
 
 func createXrayWatchManager() {
+	xrayDetails := GetXrayDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&xrayDetails).Build()
+	failOnHttpClientCreation(err)
+	testsXrayWatchService = xrayServices.NewWatchService(client)
+	testsXrayWatchService.XrayDetails = xrayDetails
+}
+
+func createXrayPolicyManager() {
+	xrayDetails := GetXrayDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&xrayDetails).Build()
+	failOnHttpClientCreation(err)
+	testsXrayPolicyService = xrayServices.NewPolicyService(client)
+	testsXrayPolicyService.XrayDetails = xrayDetails
+}
+
+func createXrayBinMgrManager() {
 	XrayDetails := GetXrayDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&XrayDetails).Build()
 	failOnHttpClientCreation(err)
-	testsXrayWatchService = xrayServices.NewWatchService(client)
-	testsXrayWatchService.XrayDetails = XrayDetails
+	testXrayBinMgrService = xrayServices.NewBinMgrService(client)
+	testXrayBinMgrService.XrayDetails = XrayDetails
 }
 
 func failOnHttpClientCreation(err error) {
@@ -524,8 +570,8 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 
 func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	retryExecutor := &clientutils.RetryExecutor{
-		MaxRetries:       120,
-		RetriesInterval:  1,
+		MaxRetries:       12,
+		RetriesInterval:  10,
 		ErrorMessage:     "Waiting for Artifactory to evaluate repository operation...",
 		ExecutionHandler: createRepoConfigValidationFunc(repoKey, params),
 	}
@@ -553,4 +599,128 @@ func getAllRepos(t *testing.T) *[]services.RepositoryDetails {
 	data, err := testsGetRepositoryService.GetAll()
 	assert.NoError(t, err, "Failed to get all repositories details")
 	return data
+}
+
+func createDummyBuild(buildName string) error {
+	dataArtifactoryBuild := &buildinfo.BuildInfo{
+		Name:    buildName,
+		Number:  "1.0.0",
+		Started: "2014-09-30T12:00:19.893+0300",
+		Modules: []buildinfo.Module{{
+			Id: "example-module",
+			Artifacts: []buildinfo.Artifact{
+				{
+					Type: "gz",
+					Name: "c.tar.gz",
+					Checksum: &buildinfo.Checksum{
+						Sha1: "9d4336ff7bc2d2348aee4e27ad55e42110df4a80",
+						Md5:  "b4918187cc9b3bf1b0772546d9398d7d",
+					},
+				},
+			},
+		}},
+	}
+	return testBuildInfoService.PublishBuildInfo(dataArtifactoryBuild, "")
+}
+
+func deleteBuild(buildName string) error {
+	err := deleteBuildIndex(buildName)
+	if err != nil {
+		return err
+	}
+
+	artDetails := GetRtDetails()
+	artHTTPDetails := artDetails.CreateHttpClientDetails()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
+
+	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails)
+
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to delete build " + resp.Status)
+	}
+
+	return nil
+}
+
+func getIndexedBuilds() ([]string, error) {
+	xrayDetails := GetXrayDetails()
+	artHTTPDetails := xrayDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &artHTTPDetails.Headers)
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return []string{}, err
+	}
+
+	resp, body, _, err := client.SendGet(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", true, artHTTPDetails)
+	if err != nil {
+		return []string{}, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return []string{}, errors.New("failed to get build index " + resp.Status)
+	}
+
+	response := &indexedBuildsPayload{}
+	err = json.Unmarshal(body, response)
+	if err != nil {
+		return []string{}, err
+	}
+
+	return response.IndexedBuilds, nil
+}
+
+func deleteBuildIndex(buildName string) error {
+	// Prepare new indexed builds list
+	indexedBuilds, err := getIndexedBuilds()
+	if err != nil {
+		return err
+	}
+	buildIndex := indexOf(buildName, indexedBuilds)
+	if buildIndex == -1 {
+		// Build indexing does not exist
+		return nil
+	}
+	indexedBuilds = append(indexedBuilds[:buildIndex], indexedBuilds[buildIndex+1:]...)
+
+	// Delete build index
+	xrayDetails := GetXrayDetails()
+	artHTTPDetails := xrayDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &artHTTPDetails.Headers)
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return err
+	}
+
+	dataIndexBuild := indexedBuildsPayload{IndexedBuilds: indexedBuilds}
+	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
+
+	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to delete build index " + resp.Status)
+	}
+
+	return nil
+}
+
+func indexOf(element string, data []string) int {
+	for k, v := range data {
+		if element == v {
+			return k
+		}
+	}
+	return -1
+}
+
+type indexedBuildsPayload struct {
+	BinMgrId         string   `json:"bin_mgr_id,omitempty"`
+	IndexedBuilds    []string `json:"indexed_builds"`
+	NonIndexedBuilds []string `json:"non_indexed_builds,omitempty"`
 }

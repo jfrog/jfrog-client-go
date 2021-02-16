@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -93,6 +94,22 @@ func BuildArtifactoryUrl(baseUrl, path string, params map[string]string) (string
 
 func IsWildcardPattern(pattern string) bool {
 	return strings.Contains(pattern, "*") || strings.HasSuffix(pattern, "/") || !strings.Contains(pattern, "/")
+}
+
+// Returns the name of the build-info repository, corresponding to the project key sent.
+// Returns an empty string, if the provided projectKey is empty.
+func BuildRepoNameFromProjectKey(projectKey string) string {
+	if projectKey == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s-build-info", projectKey)
+}
+
+func GetProjectQueryParam(projectKey string) string {
+	if projectKey == "" {
+		return ""
+	}
+	return "?buildRepo=" + BuildRepoNameFromProjectKey(projectKey)
 }
 
 // paths - Sorted array.

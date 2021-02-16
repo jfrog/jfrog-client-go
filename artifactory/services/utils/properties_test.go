@@ -3,6 +3,8 @@ package utils
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestToEncodedString(t *testing.T) {
@@ -50,6 +52,29 @@ func TestParseProperties(t *testing.T) {
 			}
 			if !reflect.DeepEqual(test.expected.Properties, props.Properties) {
 				t.Error("Failed to parse property string.", props, "expected to be parsed to", test.expected)
+			}
+		})
+	}
+}
+
+func TestToMap(t *testing.T) {
+	tests := []struct {
+		props Properties
+	}{
+		{Properties{[]Property{}}},
+		{Properties{[]Property{{Key: "a", Value: "b"}}}},
+		{Properties{[]Property{{Key: "a", Value: "b"}, {Key: "c", Value: "d"}}}},
+		{Properties{[]Property{{Key: "a", Value: "b"}, {Key: "c", Value: "d"}, {Key: "c", Value: "e"}}}},
+	}
+	for _, test := range tests {
+		t.Run(test.props.ToEncodedString(), func(t *testing.T) {
+			expectedProps := test.props.Properties
+			propsMap := test.props.ToMap()
+			assert.LessOrEqual(t, len(propsMap), len(expectedProps))
+			for _, expectedProp := range expectedProps {
+				values := propsMap[expectedProp.Key]
+				assert.NotNil(t, values, "Key "+expectedProp.Key+" not found in map")
+				assert.Contains(t, values, expectedProp.Value)
 			}
 		})
 	}

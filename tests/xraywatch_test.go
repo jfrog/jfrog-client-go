@@ -1,18 +1,12 @@
 package tests
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
-	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
 
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 
@@ -34,14 +28,14 @@ func TestXrayWatch(t *testing.T) {
 
 func testXrayWatchAll(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1", time.Now().Unix())
-	err := createPolicy(policy1Name)
+	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
-	defer deletePolicy(policy1Name)
+	defer testsXrayPolicyService.Delete(policy1Name)
 
 	policy2Name := fmt.Sprintf("%s-%d", "jfrog-policy2", time.Now().Unix())
-	err = createPolicy(policy2Name)
+	err = createDummyPolicy(policy2Name)
 	assert.NoError(t, err)
-	defer deletePolicy(policy2Name)
+	defer testsXrayPolicyService.Delete(policy2Name)
 
 	AllWatchName := fmt.Sprintf("%s-%d", "jfrog-client-go-tests-watch-all-repos", time.Now().Unix())
 	paramsAllRepos := utils.NewWatchParams()
@@ -72,12 +66,12 @@ func testXrayWatchAll(t *testing.T) {
 		},
 	}
 
-	_, err = testsXrayWatchService.Create(paramsAllRepos)
+	err = testsXrayWatchService.Create(paramsAllRepos)
 	assert.NoError(t, err)
 	defer testsXrayWatchService.Delete(paramsAllRepos.Name)
 
 	validateWatchGeneralSettings(t, paramsAllRepos)
-	targetConfig, _, err := testsXrayWatchService.Get(paramsAllRepos.Name)
+	targetConfig, err := testsXrayWatchService.Get(paramsAllRepos.Name)
 	assert.NoError(t, err)
 
 	assert.Equal(t, []string{"excludePath1", "excludePath2"}, targetConfig.Repositories.ExcludePatterns)
@@ -110,11 +104,11 @@ func testXrayWatchAll(t *testing.T) {
 			Type: "security",
 		},
 	}
-	_, err = testsXrayWatchService.Update(*targetConfig)
+	err = testsXrayWatchService.Update(*targetConfig)
 	assert.NoError(t, err)
 
 	validateWatchGeneralSettings(t, *targetConfig)
-	updatedTargetConfig, _, err := testsXrayWatchService.Get(paramsAllRepos.Name)
+	updatedTargetConfig, err := testsXrayWatchService.Get(paramsAllRepos.Name)
 	assert.NoError(t, err)
 
 	assert.Equal(t, []string{"excludePath3", "excludePath4"}, updatedTargetConfig.Repositories.ExcludePatterns)
@@ -128,9 +122,9 @@ func testXrayWatchAll(t *testing.T) {
 
 func testXrayWatchSelectedRepos(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1-pattern", time.Now().Unix())
-	err := createPolicy(policy1Name)
+	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
-	defer deletePolicy(policy1Name)
+	defer testsXrayPolicyService.Delete(policy1Name)
 
 	repo1Name := fmt.Sprintf("%s-%d", "jfrog-repo1", time.Now().Unix())
 	createRepoLocal(t, repo1Name)
@@ -140,12 +134,12 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	defer deleteRepo(t, repo2Name)
 
 	build1Name := fmt.Sprintf("%s-%d", "jfrog-build1", time.Now().Unix())
-	err = createBuild(build1Name)
+	err = createAndIndexBuild(t, build1Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build1Name)
 
 	build2Name := fmt.Sprintf("%s-%d", "jfrog-build2", time.Now().Unix())
-	err = createBuild(build2Name)
+	err = createAndIndexBuild(t, build2Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build2Name)
 
@@ -190,12 +184,12 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 		Name:     build1Name,
 		BinMgrID: "default",
 	}
-	_, err = testsXrayWatchService.Create(paramsSelectedRepos)
+	err = testsXrayWatchService.Create(paramsSelectedRepos)
 	assert.NoError(t, err)
 	defer testsXrayWatchService.Delete(paramsSelectedRepos.Name)
 	validateWatchGeneralSettings(t, paramsSelectedRepos)
 
-	targetConfig, _, err := testsXrayWatchService.Get(paramsSelectedRepos.Name)
+	targetConfig, err := testsXrayWatchService.Get(paramsSelectedRepos.Name)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"selectedExcludePath1", "selectedExcludePath2"}, targetConfig.Repositories.ExcludePatterns)
 	assert.Equal(t, []string{"selectedIncludePath1", "selectedIncludePath2"}, targetConfig.Repositories.IncludePatterns)
@@ -245,11 +239,11 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 	targetConfig.Repositories.Repositories[repo1Name] = updatedRepo1
 
-	_, err = testsXrayWatchService.Update(*targetConfig)
+	err = testsXrayWatchService.Update(*targetConfig)
 	assert.NoError(t, err)
 
 	validateWatchGeneralSettings(t, *targetConfig)
-	updatedTargetConfig, _, err := testsXrayWatchService.Get(paramsSelectedRepos.Name)
+	updatedTargetConfig, err := testsXrayWatchService.Get(paramsSelectedRepos.Name)
 	assert.NoError(t, err)
 
 	assert.Equal(t, []string{"excludePath-2"}, updatedTargetConfig.Repositories.ExcludePatterns)
@@ -267,9 +261,9 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 
 func testXrayWatchBuildsByPattern(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%d", "jfrog-policy1-pattern", time.Now().Unix())
-	err := createPolicy(policy1Name)
+	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
-	defer deletePolicy(policy1Name)
+	defer testsXrayPolicyService.Delete(policy1Name)
 
 	paramsBuildsByPattern := utils.NewWatchParams()
 	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%d", "jfrog-client-go-tests-watch-builds-by-pattern", time.Now().Unix())
@@ -285,12 +279,12 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 		},
 	}
 
-	_, err = testsXrayWatchService.Create(paramsBuildsByPattern)
+	err = testsXrayWatchService.Create(paramsBuildsByPattern)
 	assert.NoError(t, err)
 	defer testsXrayWatchService.Delete(paramsBuildsByPattern.Name)
 	validateWatchGeneralSettings(t, paramsBuildsByPattern)
 
-	targetConfig, _, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
+	targetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
 	assert.NoError(t, err)
 	assert.Equal(t, utils.WatchBuildAll, targetConfig.Builds.Type)
 	assert.Equal(t, []string{"excludePath"}, targetConfig.Builds.All.ExcludePatterns)
@@ -299,11 +293,11 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 	targetConfig.Builds.All.ExcludePatterns = []string{"excludePath-2"}
 	targetConfig.Builds.All.IncludePatterns = []string{"includePath-2", "fake-2"}
 
-	_, err = testsXrayWatchService.Update(*targetConfig)
+	err = testsXrayWatchService.Update(*targetConfig)
 	assert.NoError(t, err)
 
 	validateWatchGeneralSettings(t, *targetConfig)
-	updatedTargetConfig, _, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
+	updatedTargetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
 	assert.NoError(t, err)
 
 	assert.Equal(t, []string{"excludePath-2"}, updatedTargetConfig.Builds.All.ExcludePatterns)
@@ -317,29 +311,27 @@ func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch.Builds.Type = utils.WatchBuildAll
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}
 
-	_, err := testsXrayWatchService.Update(paramsMissingWatch)
-	assert.Error(t, err)
+	err := testsXrayWatchService.Update(paramsMissingWatch)
+	assert.EqualError(t, err, "Xray response: 404 Not Found\n{\n  \"error\": \"Failed to update Watch: Watch was not found\"\n}")
 }
 
 func testXrayWatchDeleteMissingWatch(t *testing.T) {
-	resp, err := testsXrayWatchService.Delete("jfrog-client-go-tests-watch-builds-missing")
-	assert.Equal(t, resp.StatusCode, http.StatusNotFound)
-	assert.Error(t, err)
+	err := testsXrayWatchService.Delete("jfrog-client-go-tests-watch-builds-missing")
+	assert.EqualError(t, err, "Xray response: 404 Not Found\n{\n  \"error\": \"Failed to delete Watch: Watch was not found\"\n}")
 }
 
 func testXrayWatchGetMissingWatch(t *testing.T) {
-	_, resp, err := testsXrayWatchService.Get("jfrog-client-go-tests-watch-builds-missing")
-	assert.Equal(t, resp.StatusCode, http.StatusNotFound)
-	assert.Error(t, err)
+	_, err := testsXrayWatchService.Get("jfrog-client-go-tests-watch-builds-missing")
+	assert.EqualError(t, err, "Xray response: 404 Not Found\n{\n  \"error\": \"Watch was not found\"\n}")
 }
 
 func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {
-	targetConfig, _, err := testsXrayWatchService.Get(params.Name)
+	targetConfig, err := testsXrayWatchService.Get(params.Name)
 	assert.NoError(t, err)
 	assert.Equal(t, params.Name, targetConfig.Name)
 	assert.Equal(t, params.Description, targetConfig.Description)
 	assert.Equal(t, params.Active, targetConfig.Active)
-	assert.Equal(t, params.Policies, targetConfig.Policies)
+	assert.ElementsMatch(t, params.Policies, targetConfig.Policies)
 }
 
 func createRepoLocal(t *testing.T, repoKey string) {
@@ -362,175 +354,17 @@ func createRepoRemote(t *testing.T, repoKey string) {
 	assert.NoError(t, err, "Failed to create "+repoKey)
 }
 
-func createBuild(buildName string) error {
-	artDetails := GetRtDetails()
-	artHTTPDetails := artDetails.CreateHttpClientDetails()
-
-	artUtils.SetContentType("application/json", &artHTTPDetails.Headers)
-	artClient, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	xrayDetails := GetXrayDetails()
-	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
-
-	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
-	xrayClient, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	dataArtifactoryBuild := ArtifactoryBuild{
-		Name:       buildName,
-		Version:    "1.0.0",
-		Number:     "2",
-		Started:    "2014-09-30T12:00:19.893+0300",
-		Properties: map[string]interface{}{},
-		Modules: []ArtifactoryModule{
-			{
-				ID: "example-mdule",
-				Artifacts: []ArtifactoryArtifact{
-					{
-						Type: "gz",
-						Sha1: "9d4336ff7bc2d2348aee4e27ad55e42110df4a80",
-						Md5:  "b4918187cc9b3bf1b0772546d9398d7d",
-						Name: "c.tar.gz",
-					},
-				},
-			},
-		},
-	}
-	requestContentArtifactoryBuild, err := json.Marshal(dataArtifactoryBuild)
-	if err != nil {
-		return errors.New("failed marshalling build " + buildName)
-	}
-
-	resp, _, err := artClient.SendPut(artDetails.GetUrl()+"api/build", requestContentArtifactoryBuild, artHTTPDetails)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.New("failed to create build " + resp.Status)
-	}
-
-	// the build needs to be indexed before a watch can be associated with it.
-	dataIndexBuild := struct {
-		Names []string `json:"names"`
-	}{
-		Names: []string{buildName},
-	}
-
-	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
-
-	resp, _, err = xrayClient.SendPost(xrayDetails.GetUrl()+"api/v1/binMgr/builds", requestContentIndexBuild, artHTTPDetails)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("failed to create build index" + resp.Status)
-	}
-
-	return nil
-}
-
-func deleteBuildIndex(buildName string) error {
-	xrayDetails := GetXrayDetails()
-	artHTTPDetails := xrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &artHTTPDetails.Headers)
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	dataIndexBuild := struct {
-		Names []string `json:"indexed_builds"`
-	}{
-		Names: []string{},
-	}
-
-	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
-
-	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("failed to delete build index " + resp.Status)
-	}
-
-	return nil
-}
-
-func deleteBuild(buildName string) error {
-	err := deleteBuildIndex(buildName)
-	if err != nil {
-		return err
-	}
-
-	artDetails := GetRtDetails()
-	artHTTPDetails := artDetails.CreateHttpClientDetails()
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails)
-
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("failed to delete build " + resp.Status)
-	}
-
-	return nil
-}
-
-type ArtifactoryBuild struct {
-	Version    string              `json:"version"`
-	Name       string              `json:"name"`
-	Number     string              `json:"number"`
-	Started    string              `json:"started"`
-	Properties interface{}         `json:"properties"`
-	Modules    []ArtifactoryModule `json:"modules"`
-}
-
-type ArtifactoryModule struct {
-	ID        string                `json:"id"`
-	Artifacts []ArtifactoryArtifact `json:"artifacts"`
-}
-
-type ArtifactoryArtifact struct {
-	Type string `json:"type"`
-	Sha1 string `json:"sha1"`
-	Md5  string `json:"md5"`
-	Name string `json:"name"`
-}
-
-func createPolicy(policyName string) error {
-	xrayDetails := GetXrayDetails()
-	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
-
-	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-	data := ArtifactoryPolicy{
+func createDummyPolicy(policyName string) error {
+	params := utils.PolicyParams{
 		Name:        policyName,
 		Description: "example policy",
-		Type:        "security",
-		Rules: []ArtifactoryPolicyRules{{
+		Type:        utils.Security,
+		Rules: []utils.PolicyRule{{
 			Name:     "sec_rule",
-			Priority: 1,
-			Criteria: map[string]string{
-				"min_severity": "medium",
-			},
-			Actions: ArtifactoryPolicyActions{
+			Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
+			Actions: &utils.PolicyAction{
 				Webhooks: []string{},
-				BlockDownload: ArtifactoryPolicyActionsBlockDownload{
+				BlockDownload: utils.PolicyBlockDownload{
 					Active:    true,
 					Unscanned: false,
 				},
@@ -539,69 +373,16 @@ func createPolicy(policyName string) error {
 				NotifyDeployer:                 true,
 				NotifyWatchRecipients:          true,
 			},
+			Priority: 1,
 		}},
 	}
-
-	requestContent, err := json.Marshal(data)
-	if err != nil {
-		return errors.New("failed marshalling policy " + policyName)
-	}
-
-	resp, _, err := client.SendPost(xrayDetails.GetUrl()+"api/v2/policies", requestContent, xrayHTTPDetails)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return errors.New("Status is not Created - " + strconv.Itoa(resp.StatusCode))
-	}
-
-	return nil
+	err := testsXrayPolicyService.Create(params)
+	return err
 }
 
-func deletePolicy(policyName string) error {
-	xrayDetails := GetXrayDetails()
-	xrayHTTPDetails := xrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &xrayHTTPDetails.Headers)
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-
-	resp, _, err := client.SendDelete(xrayDetails.GetUrl()+"api/v2/policies/"+policyName, nil, xrayHTTPDetails)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("failed to delete policy " + resp.Status)
-	}
-	return nil
-}
-
-type ArtifactoryPolicy struct {
-	Name        string                   `json:"name"`
-	Description string                   `json:"description"`
-	Type        string                   `json:"type"`
-	Rules       []ArtifactoryPolicyRules `json:"rules"`
-}
-
-type ArtifactoryPolicyRules struct {
-	Name     string                   `json:"name"`
-	Priority int                      `json:"priority"`
-	Criteria map[string]string        `json:"criteria"`
-	Actions  ArtifactoryPolicyActions `json:"actions"`
-}
-
-type ArtifactoryPolicyActions struct {
-	Webhooks                       []string                              `json:"webhooks"`
-	BlockDownload                  ArtifactoryPolicyActionsBlockDownload `json:"block_download"`
-	BlockReleaseBundleDistribution bool                                  `json:"block_release_bundle_distribution"`
-	FailBuild                      bool                                  `json:"fail_build"`
-	NotifyDeployer                 bool                                  `json:"notify_deployer"`
-	NotifyWatchRecipients          bool                                  `json:"notify_watch_recipients"`
-}
-
-type ArtifactoryPolicyActionsBlockDownload struct {
-	Active    bool `json:"active"`
-	Unscanned bool `json:"unscanned"`
+func createAndIndexBuild(t *testing.T, buildName string) error {
+	err := createDummyBuild(buildName)
+	assert.NoError(t, err)
+	err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
+	return err
 }

@@ -18,7 +18,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "0.18.0"
+	Version     = "0.19.0"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -380,6 +380,13 @@ func SplitWithEscape(str string, separator rune) []string {
 	}
 	parts = append(parts, current.String())
 	return parts
+}
+
+func AddProps(oldProps, additionalProps string) string {
+	if len(oldProps) > 0 && !strings.HasSuffix(oldProps, ";") && len(additionalProps) > 0 {
+		oldProps += ";"
+	}
+	return oldProps + additionalProps
 }
 
 func IsWindows() bool {

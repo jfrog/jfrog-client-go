@@ -73,7 +73,7 @@ func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error 
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
-	
+
 	log.Debug("Artifactory response: ", resp.Status)
 	log.Info("Promoted image", params.SourceDockerImage, "to:", params.TargetRepo, "repository.")
 	return nil

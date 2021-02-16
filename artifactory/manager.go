@@ -114,12 +114,11 @@ func (sm *ArtifactoryServicesManagerImp) DeletePermissionTarget(permissionTarget
 	return permissionTargetService.Delete(permissionTargetName)
 }
 
-func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.BuildInfo, project string) error {
+func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
-	buildInfoService.Project = project
 	buildInfoService.ArtDetails = sm.config.GetServiceDetails()
-	return buildInfoService.PublishBuildInfo(build)
+	return buildInfoService.PublishBuildInfo(build, projectKey)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DistributeBuild(params services.BuildDistributionParams) error {
@@ -358,6 +357,60 @@ func (sm *ArtifactoryServicesManagerImp) GetServiceId() (string, error) {
 	systemService := services.NewSystemService(sm.client)
 	systemService.ArtDetails = sm.config.GetServiceDetails()
 	return systemService.GetServiceId()
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetGroup(params services.GroupParams) (*services.Group, error) {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.GetGroup(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreateGroup(params services.GroupParams) error {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.CreateGroup(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdateGroup(params services.GroupParams) error {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.UpdateGroup(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DeleteGroup(name string) error {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.DeleteGroup(name)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetUser(params services.UserParams) (*services.User, error) {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.GetUser(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetAllUsers() ([]*services.User, error) {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.GetAllUsers()
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreateUser(params services.UserParams) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.CreateUser(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdateUser(params services.UserParams) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.UpdateUser(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.DeleteUser(name)
 }
 
 func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPromoteParams) error {

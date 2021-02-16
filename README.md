@@ -61,6 +61,13 @@
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
+      - [Fetching Users Details](#fetching-users-details)
+      - [Fetching All Users Details](#fetching-all-users-details)
+      - [Creating and Updating a User](#creating-and-updating-a-user)
+      - [Deleting a User](#deleting-a-user)
+      - [Fetching Group Details](#fetching-group-details)
+      - [Creating and Updating a Group](#creating-and-updating-a-group)
+      - [Deleting a Group](#deleting-a-group)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -104,10 +111,16 @@
       - [Creating Xray Service Config](#creating-xray-service-config)
       - [Creating New Xray Service Manager](#creating-new-xray-service-manager)
     - [Using Xray Services](#using-xray-services)
+      - [Fetching Xray's Version](#fetching-xrays-version)
       - [Creating an Xray Watch](#creating-an-xray-watch)
       - [Get an Xray Watch](#get-an-xray-watch)
       - [Update an Xray Watch](#update-an-xray-watch)
       - [Delete an Xray Watch](#delete-an-xray-watch)
+      - [Creating a Security Xray Policy](#creating-a-security-xray-policy)
+      - [Creating a License Xray Policy](#creating-a-license-xray-policy)
+      - [Update an Xray Policy](#update-an-xray-policy)
+      - [Delete an Xray Policy](#delete-an-xray-policy)
+      - [Add builds to indexing configuration](#add-builds-to-indexing-configuration)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -135,8 +148,8 @@ Optional flags:
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
 | `-rt.password`      | [Default: password] Artifactory password.                                                              |
-| `-rt.distUrl`       | [Optional] JFrog Distribution URL.                                                                     |
-| `-rt.xrayUrl`       | [Optional] JFrog Xray URL.                                                                     |
+| `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
+| `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
 | `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
 | `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
@@ -202,7 +215,7 @@ params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
 // Attach properties to the uploaded files.
-params.Props = "key1=val1;key2=val2"
+params.TargetProps = "key1=val1;key2=val2"
 params.AddVcsProps = false
 params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
 params.Recursive = true
@@ -226,7 +239,7 @@ params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
 // Attach properties to the uploaded files.
-params.Props = "key1=val1;key2=val2"
+params.TargetProps = "key1=val1;key2=val2"
 params.AddVcsProps = false
 params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
 params.Recursive = true
@@ -396,10 +409,10 @@ Read more about [ContentReader](#using-contentReader).
 #### Publishing Build Info to Artifactory
 ```go
 buildInfo := &buildinfo.BuildInfo{}
-// Optional Artifactory project name
-project := "my-project"
+// Optional Artifactory project key
+projectKey := "my-project-key"
 ...
-rtManager.PublishBuildInfo(buildInfo, project)
+rtManager.PublishBuildInfo(buildInfo, projectKey)
 ```
 
 #### Fetching Build Info from Artifactory
@@ -407,6 +420,8 @@ rtManager.PublishBuildInfo(buildInfo, project)
 buildInfoParams := services.NewBuildInfoParams{}
 buildInfoParams.BuildName = "buildName"
 buildInfoParams.BuildNumber = "LATEST"
+// Optional Artifactory project key
+buildInfoParams.ProjectKey = "my-project-key"
 
 rtManager.GetBuildInfo(buildInfoParams)
 ```
@@ -422,8 +437,10 @@ params.Comment = "comment"
 params.Copy = true
 params.IncludeDependencies = false
 params.SourceRepo = "source-repo"
+// Optional Artifactory project key
+params.ProjectKey = "my-project-key"
 
-rtManager.DownloadFiles(params)
+rtManager.PromoteBuild(params)
 ```
 
 #### Promoting a Docker Image in Artifactory
@@ -476,6 +493,8 @@ params.MaxBuilds = "max-builds"
 params.ExcludeBuilds = "1,2"
 params.DeleteArtifacts = false
 params.Async = false
+// Optional Artifactory project key
+projectKey := "my-project-key"
 
 rtManager.DiscardBuilds(params)
 ```
@@ -755,6 +774,80 @@ version, err := servicesManager.GetVersion()
 serviceId, err := servicesManager.GetServiceId()
 ```
 
+#### Fetching Users Details
+```go
+params := services.NewUserParams()
+params.UserDetails.Name = "myUserName"
+
+user, err := serviceManager.GetUser(params)
+```
+
+#### Fetching All Users Details
+You can get all users from Artifactory:
+```go
+users, err := servicesManager.GetAllUsers()
+```
+
+#### Creating and Updating a User
+```go
+params := services.NewUserParams()
+params.UserDetails.Name = "myUserName"
+params.UserDetails.Email = "myUser@jfrog.com"
+params.UserDetails.Password = "Password1"
+params.UserDetails.Admin = false
+params.UserDetails.Realm= "internal"
+params.UserDetails.ProfileUpdatable = true
+params.UserDetails.DisableUIAccess = false
+params.UserDetails.InternalPasswordDisabled = false
+params.UserDetails.groups = [2]string{"GroupA", "GroupB"}
+// Set to true in order to replace exist user with the same name
+params.ReplaceIfExists = false
+err := serviceManager.CreateUser(params)
+
+params.UserDetails.groups = [3]string{"GroupA", "GroupB", "GroupC"}
+err := serviceManager.UpdateUser(params)
+```
+
+#### Deleting a User
+```go
+err := serviceManager.DeleteUser("myUserName")
+```
+
+#### Fetching Group Details
+```go
+params := services.NewGroupParams()
+params.GroupDetails.Name = "myGroupName"
+// Set this param to true to receive the user names associated with this group
+params.IncludeUsers = true
+
+group, err := serviceManager.GetGroup(params)
+```
+
+#### Creating and Updating a Group
+```go
+params := services.NewGroupParams()
+params.GroupDetails.Name = "myGroupName"
+params.GroupDetails.Description = "Description"
+params.GroupDetails.AutoJoin = false
+params.GroupDetails.AdminPrivileges = true
+params.GroupDetails.Realm = "internal"
+params.GroupDetails.UsersNames = [2]string{"UserA", "UserB"}
+// Set to true in order to replace exist group with the same name
+params.ReplaceIfExists = false
+err := serviceManager.CreateGroup(params)
+
+params.GroupDetails.Description = "Newer Description"
+// Will add UserC to the group (in addition to existing UserA and UserB)
+params.GroupDetails.UsersNames = [1]string{"UserC"}
+
+err := serviceManager.UpdateGroup(params)
+```
+
+#### Deleting a Group
+```go
+err := serviceManager.DeleteGroup("myGroupName")
+```
+
 ## Distribution APIs
 ### Creating Distribution Service Manager
 #### Creating Distribution Details
@@ -803,6 +896,19 @@ params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "Description"
 params.ReleaseNotes = "Release notes"
 params.ReleaseNotesSyntax = "plain_text"
+params.TargetProps = "key1=val1;key2=val2,val3"
+
+// Be default, artifacts that are distributed as part of a release bundle, have the same path in their destination server
+// (the edge node) as the path they had on the distributing Artifactory server.
+// You have however the option for modifying the target path on edge node. You do this by defining the Target property as shown below.
+// The Pattern property is a wildcard based pattern. Any wildcards enclosed in parenthesis in the pattern (source)
+// path can be matched with a corresponding placeholder in the target path, to determine the path and name
+// of the artifact, once distributed to the edge node.
+// In the following example, the path in the edge node is similar to the path in the source Artifactory server, except for the additional "dir" level at the root of the repository.
+// Pattern: my-repo/(*)/a.zip
+// Target: my-repo/dir/{1}/a.zip
+pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
+params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
 err := distManager.CreateReleaseBundle(params)
 ```
@@ -814,6 +920,12 @@ params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "New Description"
 params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"
+params.TargetProps = "key1=val1;key2=val2,val3"
+
+// The Target property defines the target path in the edge node, and can include replaceable in the form of {1}, {2}, ...
+// Read more about it in the above "Creating a Release Bundle" section.
+pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
+params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
 err := distManager.CreateReleaseBundle(params)
 ```
@@ -955,8 +1067,8 @@ params.Path, err = packages.CreatePath("subject/repo/pkg")
 
 params.Desc = "description"
 params.Labels = "labels"
-params.Licenses = "licences"
-params.CustomLicenses = "custum-licenses"
+params.Licenses = "licenses"
+params.CustomLicenses = "custom-licenses"
 params.VcsUrl = "https://github.com/jfrog/jfrog-cli-go"
 params.WebsiteUrl = "https://jfrog.com"
 params.IssueTrackerUrl = "https://github.com/bintray/bintray-client-java/issues"
@@ -1159,8 +1271,11 @@ xrayManager, err := xray.New(&xrayDetails, serviceConfig)
 ```
 
 ### Using Xray Services
+#### Fetching Xray's Version
+```go
+version, err := xrayManager.GetVersion()
+```
 #### Creating an Xray Watch
-
 This uses API version 2.
 
 You are able to configure repositories and builds on a watch.
@@ -1191,23 +1306,101 @@ params.Policies = []utils.AssignedPolicy{
   },
 }
 
-resp, err := xrayManager.CreateWatch(*params)
+err := xrayManager.CreateWatch(*params)
 ```
 
 #### Get an Xray Watch
 ```go
-watch, resp, err := xrayManager.GetWatch("example-watch-all")
+watch, err := xrayManager.GetWatch("example-watch-all")
 ```
 
 #### Update an Xray Watch
 ```go
-watch, resp, err := xrayManager.GetWatch("example-watch-all")
+watch, err := xrayManager.GetWatch("example-watch-all")
 watch.Description = "Updated description"
 
-resp, err := xrayManager.UpdateWatch(*watch)
+err := xrayManager.UpdateWatch(*watch)
 ```
 
 #### Delete an Xray Watch
 ```go
-resp, err := xrayManager.DeleteWatch("example-watch-all")
+err := xrayManager.DeleteWatch("example-watch-all")
+```
+
+#### Creating a Security Xray Policy
+```go
+params := utils.NewPolicyParams()
+params.Name = "example-security-policy"
+params.Type = utils.Security
+params.Description = "Security policy with 2 rules"
+params.Rules = []utils.PolicyRule{
+	{
+		Name:     "min-severity-rule",
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
+		Priority: 1,
+	},
+	{
+		Name:     "cvss-range-rule",
+		Criteria: *utils.CreateCvssRangePolicyCriteria(5.7, 8.9),
+		Priority: 2,
+		Actions: &utils.PolicyAction{
+			Webhooks: []string{"sec_webhook"},
+			BlockDownload: utils.PolicyBlockDownload{
+				Active:    true,
+				Unscanned: false,
+			},
+			BlockReleaseBundleDistribution: false,
+			FailBuild:                      true,
+			NotifyDeployer:                 false,
+			NotifyWatchRecipients:          true,
+			CustomSeverity:                 utils.Medium,
+		},
+	},
+}
+err := xrayManager.CreatePolicy(params)
+```
+
+#### Creating a License Xray Policy
+```go
+params := utils.NewPolicyParams()
+params.Name = "example-licence-policy"
+params.Type = utils.License
+params.Description = "License policy with 2 rules"
+params.Rules = []utils.PolicyRule{
+	{
+		Name:     "allowed-licenses",
+		Criteria: *utils.CreateLicensePolicyCriteria(true, true, false, "MIT", "Apache-2.0"),
+		Priority: 1,
+	},
+	{
+		Name:     "baned-licenses",
+		Criteria: *utils.CreateLicensePolicyCriteria(false, true, false, "GPL"),
+		Priority: 2,
+	},
+}
+err := xrayManager.CreatePolicy(params)
+```
+
+#### Get an Xray Policy
+```go
+policy, err := xrayManager.GetPolicy("example-policy")
+```
+
+#### Update an Xray Policy
+```go
+policy, err := xrayManager.GetPolicy("example-policy")
+policy.Description = "Updated description"
+
+err := xrayManager.UpdatePolicy(*policy)
+```
+
+#### Delete an Xray Policy
+```go
+err := xrayManager.DeletePolicy("example-policy")
+```
+
+#### Add builds to indexing configuration
+```go
+buildsToIndex := []string{"buildName1", "buildName2"}
+err := xrayManager.AddBuildsToIndexing(buildsToIndex)
 ```
