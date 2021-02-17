@@ -150,14 +150,15 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		if err != nil {
 			return err
 		}
+		buildProps := uploadParams.BuildProps
 		if uploadParams.IsAddVcsProps() {
 			vcsProps, err := getVcsProps(artifact.LocalPath, vcsCache)
 			if err != nil {
 				return err
 			}
-			uploadParams.BuildProps += vcsProps
+			buildProps += vcsProps
 		}
-		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: uploadParams.BuildProps}
+		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
 		task := artifactHandlerFunc(uploadData)
 		if progressMgr != nil {
 			progressMgr.IncGeneralProgressTotalBy(1)
@@ -257,14 +258,15 @@ func createUploadTask(taskData *uploadTaskData, vcsCache *clientutils.VcsCache) 
 	if err != nil {
 		return err
 	}
+	buildProps := taskData.uploadParams.BuildProps
 	if taskData.uploadParams.IsAddVcsProps() {
 		vcsProps, err := getVcsProps(taskData.path, vcsCache)
 		if err != nil {
 			return err
 		}
-		taskData.uploadParams.BuildProps += vcsProps
+		buildProps += vcsProps
 	}
-	uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: taskData.uploadParams.BuildProps}
+	uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
 	if taskData.isDir && taskData.uploadParams.IsIncludeDirs() && !taskData.isSymlinkFlow {
 		if taskData.path != "." && (taskData.index == 0 || !utils.IsSubPath(taskData.paths, taskData.index, fileutils.GetFileSeparator())) {
 			uploadData.IsDir = true
