@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -67,6 +68,37 @@ func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done getting repository details.")
 	return body, nil
+}
+
+func (rs *RepositoriesService) CreateRemoteRepository(params RemoteRepositoryBaseParams) error {
+	return rs.createRepo(params, params.Key)
+}
+
+func (rs *RepositoriesService) CreateVirtualRepository(params VirtualRepositoryBaseParams) error {
+	return rs.createRepo(params, params.Key)
+}
+
+func (rs *RepositoriesService) CreateLocalRepository(params LocalRepositoryBaseParams) error {
+	return rs.createRepo(params, params.Key)
+}
+
+func (rs *RepositoriesService) createRepo(params interface{}, repoName string) error {
+	content, err := json.Marshal(params)
+	if errorutils.CheckError(err) != nil {
+		return err
+	}
+	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	resp, body, err := rs.client.SendPut(rs.ArtDetails.GetUrl()+"api/repositories/"+repoName, content, &httpClientsDetails)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	}
+	log.Debug("Artifactory response:", resp.Status)
+	log.Info(fmt.Sprintf("Repository %q created.", repoName))
+	return nil
 }
 
 type RepositoryDetails struct {

@@ -75,6 +75,24 @@ func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepository() *services.Vir
 	return repositoryService
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateBasicLocalRepository(params services.LocalRepositoryBaseParams) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.CreateLocalRepository(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreateBasicRemoteRepository(params services.RemoteRepositoryBaseParams) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.CreateRemoteRepository(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreateBasicVirtualRepository(params services.VirtualRepositoryBaseParams) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.CreateVirtualRepository(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) UpdateLocalRepository() *services.LocalRepositoryService {
 	repositoryService := services.NewLocalRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
