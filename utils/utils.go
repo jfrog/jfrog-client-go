@@ -45,7 +45,7 @@ func getDefaultUserAgent() string {
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
-func GetRootPath(path string, useRegExp bool, parentheses ParenthesesSlice) string {
+func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSlice) string {
 	// The first step is to split the local path pattern into sections, by the file separator.
 	separator := "/"
 	sections := strings.Split(path, separator)
@@ -60,7 +60,7 @@ func GetRootPath(path string, useRegExp bool, parentheses ParenthesesSlice) stri
 		if section == "" {
 			continue
 		}
-		if useRegExp {
+		if patternType == RegExp {
 			if strings.Index(section, "(") != -1 {
 				break
 			}
@@ -71,6 +71,11 @@ func GetRootPath(path string, useRegExp bool, parentheses ParenthesesSlice) stri
 			if strings.Index(section, "(") != -1 {
 				temp := rootPath + section
 				if isWildcardParentheses(temp, parentheses) {
+					break
+				}
+			}
+			if patternType == AntPattern {
+				if strings.Index(section, "?") != -1 {
 					break
 				}
 			}
@@ -159,7 +164,7 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 	return
 }
 
-func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
+func PrepareLocalPathForUpload(localPath string, patternType PatternType) string {
 	if localPath == "./" || localPath == ".\\" {
 		return "^.*$"
 	}
@@ -168,9 +173,12 @@ func PrepareLocalPathForUpload(localPath string, useRegExp bool) string {
 	} else if strings.HasPrefix(localPath, ".\\") {
 		localPath = localPath[3:]
 	}
-	if !useRegExp {
-		localPath = PathToRegExp(cleanPath(localPath))
+	if patternType == AntPattern {
+		localPath = antPatternToRegExp(localPath)
+	} else if patternType == WildCardPattern {
+		localPath = wildcardPathToRegExp(cleanPath(localPath))
 	}
+
 	return localPath
 }
 
@@ -186,17 +194,38 @@ func cleanPath(path string) string {
 	return path
 }
 
-func PathToRegExp(localPath string) string {
-	var SPECIAL_CHARS = []string{".", "^", "$", "+"}
-	for _, char := range SPECIAL_CHARS {
-		localPath = strings.Replace(localPath, char, "\\"+char, -1)
-	}
+func wildcardPathToRegExp(localPath string) string {
+	localPath = replaceSpecialChars(localPath)
 	var wildcard = ".*"
 	localPath = strings.Replace(localPath, "*", wildcard, -1)
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
 		localPath += wildcard
 	}
 	return "^" + localPath + "$"
+}
+
+func antPatternToRegExp(localPath string) string {
+	localPath = replaceSpecialChars(localPath)
+	var wildcard = ".*"
+	var antAsteriskToRegExp = "([^/]*)"
+	// `?` => `.{1}` : `?` matches one character.
+	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
+	// `*` => `([^/]*)` : `*` matches zero or more characters except from `/`.
+	localPath = strings.Replace(localPath, `*`, antAsteriskToRegExp, -1)
+	// `**/` => `(.*/)?` : `**` matches zero or more 'directories' in a path.
+	localPath = strings.Replace(localPath, antAsteriskToRegExp+antAsteriskToRegExp+`/`, "(.*/)?", -1)
+	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
+		localPath += wildcard
+	}
+	return "^" + localPath + "$"
+}
+
+func replaceSpecialChars(path string) string {
+	var specialChars = []string{".", "^", "$", "+"}
+	for _, char := range specialChars {
+		path = strings.Replace(path, char, "\\"+char, -1)
+	}
+	return path
 }
 
 // Replaces matched regular expression from path to corresponding placeholder {i} at target.
@@ -216,7 +245,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 		path = removeRepoFromPath(path)
 	}
 	pattern = addEscapingParentheses(pattern, target)
-	pattern = PathToRegExp(pattern)
+	pattern = wildcardPathToRegExp(pattern)
 	if slashIndex < 0 {
 		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
 		// is only the repository name.
@@ -368,4 +397,27 @@ type Artifact struct {
 	LocalPath  string
 	TargetPath string
 	Symlink    string
+}
+
+const (
+	WildCardPattern PatternType = "wildcard"
+	RegExp          PatternType = "regexp"
+	AntPattern      PatternType = "ant"
+)
+
+type PatternType string
+
+type PatternTypes struct {
+	RegExp bool
+	Ant    bool
+}
+
+func GetPatternType(patternTypes PatternTypes) PatternType {
+	if patternTypes.RegExp {
+		return RegExp
+	}
+	if patternTypes.Ant {
+		return AntPattern
+	}
+	return WildCardPattern
 }

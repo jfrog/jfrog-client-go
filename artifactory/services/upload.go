@@ -130,7 +130,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	// Save parentheses index in pattern, witch have corresponding placeholder.
-	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.IsRegexp(), uploadParams.IsSymlink())
+	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.GetPatternType(), uploadParams.IsSymlink())
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		producer.AddTaskWithError(task, errorsQueue.AddError)
 		return err
 	}
-	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.IsRegexp()))
+	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.GetPatternType()))
 	err = collectPatternMatchingFiles(uploadParams, rootPath, producer, progressMgr, artifactHandlerFunc, errorsQueue, vcsCache)
 	return err
 }
