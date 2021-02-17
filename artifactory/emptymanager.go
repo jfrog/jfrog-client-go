@@ -22,6 +22,7 @@ type ArtifactoryServicesManager interface {
 	DeleteRepository(repoKey string) error
 	GetRepository(repoKey string) (*services.RepositoryDetails, error)
 	GetAllRepositories() (*[]services.RepositoryDetails, error)
+	GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error)
 	CreatePermissionTarget(params services.PermissionTargetParams) error
 	UpdatePermissionTarget(params services.PermissionTargetParams) error
 	DeletePermissionTarget(permissionTargetName string) error
@@ -277,6 +278,10 @@ func (esm *EmptyArtifactoryServicesManager) Client() *jfroghttpclient.JfrogHttpC
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.RepositoryDetails, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error) {
 	panic("Failed: Method is not implemented")
 }
 

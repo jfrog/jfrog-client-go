@@ -57,7 +57,7 @@ var testsUpdateLocalRepositoryService *services.LocalRepositoryService
 var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
-var testsGetRepositoryService *services.GetRepositoryService
+var testsRepositoriesService *services.RepositoriesService
 var testsCreateReplicationService *services.CreateReplicationService
 var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
@@ -269,8 +269,8 @@ func createArtifactoryGetRepositoryManager() {
 	artDetails := GetRtDetails()
 	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
-	testsGetRepositoryService = services.NewGetRepositoryService(client)
-	testsGetRepositoryService.ArtDetails = artDetails
+	testsRepositoriesService = services.NewRepositoriesService(client)
+	testsRepositoriesService.ArtDetails = artDetails
 }
 
 func createArtifactoryReplicationCreateManager() {
@@ -614,13 +614,13 @@ func GenerateRepoKeyForRepoServiceTest() string {
 }
 
 func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
-	data, err := testsGetRepositoryService.Get(repoKey)
+	data, err := testsRepositoriesService.Get(repoKey)
 	assert.NoError(t, err, "Failed to get "+repoKey+" details")
 	return data
 }
 
 func getAllRepos(t *testing.T) *[]services.RepositoryDetails {
-	data, err := testsGetRepositoryService.GetAll()
+	data, err := testsRepositoriesService.GetAll()
 	assert.NoError(t, err, "Failed to get all repositories details")
 	return data
 }

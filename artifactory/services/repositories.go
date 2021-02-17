@@ -15,18 +15,18 @@ import (
 
 const apiRepositories = "api/repositories"
 
-type GetRepositoryService struct {
+type RepositoriesService struct {
 	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewGetRepositoryService(client *jfroghttpclient.JfrogHttpClient) *GetRepositoryService {
-	return &GetRepositoryService{client: client}
+func NewRepositoriesService(client *jfroghttpclient.JfrogHttpClient) *RepositoriesService {
+	return &RepositoriesService{client: client}
 }
 
-func (grs *GetRepositoryService) Get(repoKey string) (*RepositoryDetails, error) {
+func (rs *RepositoriesService) Get(repoKey string) (*RepositoryDetails, error) {
 	log.Info("Getting repository '" + repoKey + "' details ...")
-	body, err := grs.sendGet(apiRepositories + "/" + repoKey)
+	body, err := rs.sendGet(apiRepositories + "/" + repoKey)
 	if err != nil {
 		return nil, err
 	}
@@ -37,14 +37,14 @@ func (grs *GetRepositoryService) Get(repoKey string) (*RepositoryDetails, error)
 	return repoDetails, nil
 }
 
-func (grs *GetRepositoryService) GetAll() (*[]RepositoryDetails, error) {
+func (rs *RepositoriesService) GetAll() (*[]RepositoryDetails, error) {
 	log.Info("Getting all repositories ...")
-	return grs.GetAllFromTypeAndPackage("", "")
+	return rs.GetAllFromTypeAndPackage(RepositoriesFilterParams{RepoType: "", PackageType: ""})
 }
 
-func (grs *GetRepositoryService) GetAllFromTypeAndPackage(repoType, packageType string) (*[]RepositoryDetails, error) {
-	url := fmt.Sprintf("%s?type=%s&packageType=%s", apiRepositories, repoType, packageType)
-	body, err := grs.sendGet(url)
+func (rs *RepositoriesService) GetAllFromTypeAndPackage(params RepositoriesFilterParams) (*[]RepositoryDetails, error) {
+	url := fmt.Sprintf("%s?type=%s&packageType=%s", apiRepositories, params.RepoType, params.PackageType)
+	body, err := rs.sendGet(url)
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +55,9 @@ func (grs *GetRepositoryService) GetAllFromTypeAndPackage(repoType, packageType 
 	return repoDetails, nil
 }
 
-func (grs *GetRepositoryService) sendGet(api string) ([]byte, error) {
-	httpClientsDetails := grs.ArtDetails.CreateHttpClientDetails()
-	resp, body, _, err := grs.client.SendGet(grs.ArtDetails.GetUrl()+api, true, &httpClientsDetails)
+func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
+	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
+	resp, body, _, err := rs.client.SendGet(rs.ArtDetails.GetUrl()+api, true, &httpClientsDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -85,4 +85,9 @@ func (rd RepositoryDetails) getRepoType() string {
 		return rd.Rclass
 	}
 	return rd.Type
+}
+
+type RepositoriesFilterParams struct {
+	RepoType    string
+	PackageType string
 }

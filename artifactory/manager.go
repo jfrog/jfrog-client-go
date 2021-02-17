@@ -100,15 +100,21 @@ func (sm *ArtifactoryServicesManagerImp) DeleteRepository(repoKey string) error 
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string) (*services.RepositoryDetails, error) {
-	getRepositoryService := services.NewGetRepositoryService(sm.client)
-	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return getRepositoryService.Get(repoKey)
+	repositoriesService := services.NewRepositoriesService(sm.client)
+	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoriesService.Get(repoKey)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
-	getRepositoryService := services.NewGetRepositoryService(sm.client)
-	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return getRepositoryService.GetAll()
+	repositoriesService := services.NewRepositoriesService(sm.client)
+	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoriesService.GetAll()
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error) {
+	repositoriesService := services.NewRepositoriesService(sm.client)
+	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoriesService.GetAllFromTypeAndPackage(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreatePermissionTarget(params services.PermissionTargetParams) error {
