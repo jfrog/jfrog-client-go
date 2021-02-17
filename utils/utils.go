@@ -176,7 +176,7 @@ func PrepareLocalPathForUpload(localPath string, patternType PatternType) string
 	if patternType == AntPattern {
 		localPath = antPatternToRegExp(localPath)
 	} else if patternType == WildCardPattern {
-		localPath = wildcardPathToRegExp(cleanPath(localPath))
+		localPath = WildcardPathToRegExp(cleanPath(localPath))
 	}
 
 	return localPath
@@ -194,7 +194,7 @@ func cleanPath(path string) string {
 	return path
 }
 
-func wildcardPathToRegExp(localPath string) string {
+func WildcardPathToRegExp(localPath string) string {
 	localPath = replaceSpecialChars(localPath)
 	var wildcard = ".*"
 	localPath = strings.Replace(localPath, "*", wildcard, -1)
@@ -245,7 +245,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, err
 		path = removeRepoFromPath(path)
 	}
 	pattern = addEscapingParentheses(pattern, target)
-	pattern = wildcardPathToRegExp(pattern)
+	pattern = WildcardPathToRegExp(pattern)
 	if slashIndex < 0 {
 		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
 		// is only the repository name.
