@@ -15,6 +15,7 @@ type manager struct {
 	err      error
 	revision string
 	url      string
+	branch   string
 }
 
 func NewGitManager(path string) *manager {
@@ -26,7 +27,7 @@ func (m *manager) ReadConfig() error {
 	if m.path == "" {
 		return errorutils.CheckError(errors.New(".git path must be defined."))
 	}
-	m.readRevision()
+	m.readRevisionAndBranch()
 	m.readUrl()
 	return m.err
 }
@@ -37,6 +38,10 @@ func (m *manager) GetUrl() string {
 
 func (m *manager) GetRevision() string {
 	return m.revision
+}
+
+func (m *manager) GetBranch() string {
+	return m.branch
 }
 
 func (m *manager) readUrl() {
@@ -88,7 +93,7 @@ func (m *manager) readUrl() {
 	m.url = RemoveCredentials(originUrl, matchedResult)
 }
 
-func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error) {
+func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
 	file, e := os.Open(dotGitPath)
 	if errorutils.CheckError(e) != nil {
@@ -112,15 +117,19 @@ func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error)
 	return
 }
 
-func (m *manager) readRevision() {
+func (m *manager) readRevisionAndBranch() {
 	if m.err != nil {
 		return
 	}
 	// This function will either return the revision or the branch ref:
-	revision, ref, err := m.getRevisionOrBranchPath()
+	revision, ref, err := m.getRevisionAndBranchPath()
 	if err != nil {
 		m.err = err
 		return
+	}
+	if ref != "" {
+		splitRefArr := strings.Split(ref, "/")
+		m.branch = splitRefArr[len(splitRefArr)-1]
 	}
 	// If the revision was returned, then we're done:
 	if revision != "" {
