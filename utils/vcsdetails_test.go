@@ -1,7 +1,7 @@
 package utils
 
 import (
-	tests2 "github.com/jfrog/jfrog-client-go/utils/tests"
+	testsutils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
@@ -16,16 +16,17 @@ func TestVcsDetails(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			var projectPath, tmpDir string
 			if test == "submodule" {
-				projectPath, tmpDir = tests2.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test))
+				projectPath, tmpDir = testsutils.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test))
 			} else {
 				projectPath, tmpDir = initVcsTestDir(t, filepath.Join("testdata", test))
 			}
 			defer fileutils.RemoveTempDir(tmpDir)
 			vcsDetails := NewVcsDetals()
-			revision, url, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
+			revision, url, branch, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
 			assert.NoError(t, err)
 			assert.Equal(t, "https://github.com/jfrog/jfrog-cli.git", url)
 			assert.Equal(t, "d63c5957ad6819f4c02a817abe757f210d35ff92", revision)
+			assert.Equal(t, "master", branch)
 		})
 	}
 }

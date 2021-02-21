@@ -130,7 +130,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	// Save parentheses index in pattern, witch have corresponding placeholder.
-	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.IsRegexp(), uploadParams.IsSymlink())
+	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.GetPatternType(), uploadParams.IsSymlink())
 	if err != nil {
 		return err
 	}
@@ -150,14 +150,15 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		if err != nil {
 			return err
 		}
+		buildProps := uploadParams.BuildProps
 		if uploadParams.IsAddVcsProps() {
 			vcsProps, err := getVcsProps(artifact.LocalPath, vcsCache)
 			if err != nil {
 				return err
 			}
-			uploadParams.BuildProps += vcsProps
+			buildProps += vcsProps
 		}
-		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: uploadParams.BuildProps}
+		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
 		task := artifactHandlerFunc(uploadData)
 		if progressMgr != nil {
 			progressMgr.IncGeneralProgressTotalBy(1)
@@ -165,7 +166,7 @@ func collectFilesForUpload(uploadParams UploadParams, producer parallel.Runner, 
 		producer.AddTaskWithError(task, errorsQueue.AddError)
 		return err
 	}
-	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.IsRegexp()))
+	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.GetPatternType()))
 	err = collectPatternMatchingFiles(uploadParams, rootPath, producer, progressMgr, artifactHandlerFunc, errorsQueue, vcsCache)
 	return err
 }
@@ -257,14 +258,15 @@ func createUploadTask(taskData *uploadTaskData, vcsCache *clientutils.VcsCache) 
 	if err != nil {
 		return err
 	}
+	buildProps := taskData.uploadParams.BuildProps
 	if taskData.uploadParams.IsAddVcsProps() {
 		vcsProps, err := getVcsProps(taskData.path, vcsCache)
 		if err != nil {
 			return err
 		}
-		taskData.uploadParams.BuildProps += vcsProps
+		buildProps += vcsProps
 	}
-	uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: taskData.uploadParams.BuildProps}
+	uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
 	if taskData.isDir && taskData.uploadParams.IsIncludeDirs() && !taskData.isSymlinkFlow {
 		if taskData.path != "." && (taskData.index == 0 || !utils.IsSubPath(taskData.paths, taskData.index, fileutils.GetFileSeparator())) {
 			uploadData.IsDir = true
@@ -548,7 +550,7 @@ func getVcsProps(path string, vcsCache *clientutils.VcsCache) (string, error) {
 		return "", errorutils.CheckError(err)
 	}
 	props := ""
-	revision, url, err := vcsCache.GetVcsDetails(filepath.Dir(path))
+	revision, url, branch, err := vcsCache.GetVcsDetails(filepath.Dir(path))
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
@@ -557,6 +559,9 @@ func getVcsProps(path string, vcsCache *clientutils.VcsCache) (string, error) {
 	}
 	if url != "" {
 		props += ";vcs.url=" + url
+	}
+	if branch != "" {
+		props += ";vcs.branch=" + branch
 	}
 	return props, nil
 }

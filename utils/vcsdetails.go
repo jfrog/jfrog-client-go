@@ -24,6 +24,7 @@ type (
 	vcsDetails struct {
 		url      string
 		revision string
+		branch   string
 	}
 )
 
@@ -46,7 +47,7 @@ func (this *VcsCache) getCacheSize() int32 {
 // 1. search for .git, and save the details for the current dir and all subpath
 // 2. .git not found, go to parent dir and repeat
 // 3. not found on the root directory, add all subpath to cache with nil as a value
-func (this *VcsCache) GetVcsDetails(path string) (revision, refUrl string, err error) {
+func (this *VcsCache) GetVcsDetails(path string) (revision, refUrl, branch string, err error) {
 	keys := strings.Split(path, string(os.PathSeparator))
 	var subPath string
 	var subPaths []string
@@ -56,14 +57,14 @@ func (this *VcsCache) GetVcsDetails(path string) (revision, refUrl string, err e
 		// Try to get from cache
 		if vcsDetails, found := this.searchCache(subPath); found {
 			if vcsDetails != nil {
-				revision, refUrl, vcsDetailsResult = vcsDetails.revision, vcsDetails.url, vcsDetails
+				revision, refUrl, branch, vcsDetailsResult = vcsDetails.revision, vcsDetails.url, vcsDetails.branch, vcsDetails
 			}
 			break
 		}
 		// Begin directory search
-		revision, refUrl, err = tryGetGitDetails(subPath)
-		if revision != "" || refUrl != "" {
-			vcsDetailsResult = &vcsDetails{revision: revision, url: refUrl}
+		revision, refUrl, branch, err = tryGetGitDetails(subPath)
+		if revision != "" || refUrl != "" || branch != "" {
+			vcsDetailsResult = &vcsDetails{revision: revision, url: refUrl, branch: branch}
 			this.vcsRootDir.Store(subPath, vcsDetailsResult)
 			break
 		}
@@ -89,20 +90,20 @@ func (this *VcsCache) clearCacheIfExceedsMax() {
 	}
 }
 
-func tryGetGitDetails(path string) (string, string, error) {
+func tryGetGitDetails(path string) (string, string, string, error) {
 	exists := fileutils.IsPathExists(filepath.Join(path, ".git"), false)
 	if exists {
 		return extractGitDetails(path)
 	}
-	return "", "", nil
+	return "", "", "", nil
 }
 
-func extractGitDetails(path string) (string, string, error) {
+func extractGitDetails(path string) (string, string, string, error) {
 	gitService := NewGitManager(path)
 	if err := gitService.ReadConfig(); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	return gitService.GetRevision(), gitService.GetUrl(), nil
+	return gitService.GetRevision(), gitService.GetUrl(), gitService.GetBranch(), nil
 }
 
 func (this *VcsCache) searchCache(path string) (*vcsDetails, bool) {

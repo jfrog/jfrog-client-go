@@ -182,6 +182,7 @@ type Env map[string]string
 type Vcs struct {
 	Url      string `json:"url,omitempty"`
 	Revision string `json:"revision,omitempty"`
+	Branch   string `json:"branch,omitempty"`
 }
 
 type Partials []*Partial
