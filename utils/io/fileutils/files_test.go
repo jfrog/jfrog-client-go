@@ -30,7 +30,7 @@ func TestIsSsh(t *testing.T) {
 	}
 }
 
-func TestGetFileOrDirPathFile(t *testing.T) {
+func TestFindUpstreamFile(t *testing.T) {
 	wd, err := os.Getwd()
 	if err != nil {
 		assert.Error(t, err)
@@ -54,13 +54,14 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	}
 
 	// Get the project root.
-	root, exists, err := FindUpstream("goDotMod.test", File)
-	if err != nil {
-		assert.Error(t, err)
+	if err = assertFindUpstreamExistsAndEqual(t, "goDotMod.test", projectRoot, File); err != nil {
 		return
 	}
-	assert.True(t, exists, "File goDotMod.test is missing.")
-	assert.Equal(t, projectRoot, root)
+
+	// Assert with Any too.
+	if err = assertFindUpstreamExistsAndEqual(t, "goDotMod.test", projectRoot, Any); err != nil {
+		return
+	}
 
 	// CD back to the original directory.
 	if err := os.Chdir(wd); err != nil {
@@ -76,15 +77,12 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 		assert.Error(t, err)
 		return
 	}
-	root, exists, err = FindUpstream("goDotMod.test", File)
-	if err != nil {
-		assert.Error(t, err)
+
+	if err = assertFindUpstreamExistsAndEqual(t, "goDotMod.test", projectRoot, File); err != nil {
 		return
 	}
-	assert.True(t, exists, "File goDotMod.test is missing.")
-	assert.Equal(t, projectRoot, root)
 
-	root, exists, err = FindUpstream("go-missing.mod", File)
+	root, exists, err := FindUpstream("go-missing.mod", File)
 	if err != nil {
 		assert.Error(t, err)
 		return
@@ -114,7 +112,7 @@ func TestGetFileOrDirPathFile(t *testing.T) {
 	assert.NotEqual(t, projectRoot, root)
 }
 
-func TestGetFileOrDirPathFolder(t *testing.T) {
+func TestFindUpstreamFolder(t *testing.T) {
 	wd, err := os.Getwd()
 	if err != nil {
 		assert.Error(t, err)
@@ -150,13 +148,25 @@ func TestGetFileOrDirPathFolder(t *testing.T) {
 	}
 
 	// Get the directory path.
-	root, exists, err := FindUpstream("noproject", Dir)
-	if err != nil {
-		assert.Error(t, err)
+	if err = assertFindUpstreamExistsAndEqual(t, "noproject", dirPath, Dir); err != nil {
 		return
 	}
-	assert.True(t, exists, "Dir noproject is missing.")
-	assert.Equal(t, dirPath, root)
+
+	// Assert with Any too.
+	if err = assertFindUpstreamExistsAndEqual(t, "noproject", dirPath, Any); err != nil {
+		return
+	}
+}
+
+func assertFindUpstreamExistsAndEqual(t *testing.T, path, expectedPath string, itemType ItemType) error {
+	foundPath, exists, err := FindUpstream(path, itemType)
+	if err != nil {
+		assert.Error(t, err)
+		return err
+	}
+	assert.True(t, exists)
+	assert.Equal(t, expectedPath, foundPath)
+	return nil
 }
 
 func TestIsEqualToLocalFile(t *testing.T) {

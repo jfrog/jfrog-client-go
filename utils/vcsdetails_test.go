@@ -1,6 +1,7 @@
 package utils
 
 import (
+	testsutils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
@@ -9,14 +10,25 @@ import (
 )
 
 func TestVcsDetails(t *testing.T) {
-	projectPath, tmpDir := initVcsTestDir(t, filepath.Join("testdata", "vcs"))
-	defer fileutils.RemoveTempDir(tmpDir)
-	vcsDetails := NewVcsDetals()
-	revision, url, branch, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
-	assert.NoError(t, err)
-	assert.Equal(t, "https://github.com/jfrog/jfrog-cli.git", url)
-	assert.Equal(t, "d63c5957ad6819f4c02a817abe757f210d35ff92", revision)
-	assert.Equal(t, "master", branch)
+	// Test the following .git types, on their corresponding paths in testdata.
+	tests := []string{"vcs", "packedVcs", "submodule"}
+	for _, test := range tests {
+		t.Run(test, func(t *testing.T) {
+			var projectPath, tmpDir string
+			if test == "submodule" {
+				projectPath, tmpDir = testsutils.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test))
+			} else {
+				projectPath, tmpDir = initVcsTestDir(t, filepath.Join("testdata", test))
+			}
+			defer fileutils.RemoveTempDir(tmpDir)
+			vcsDetails := NewVcsDetals()
+			revision, url, branch, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
+			assert.NoError(t, err)
+			assert.Equal(t, "https://github.com/jfrog/jfrog-cli.git", url)
+			assert.Equal(t, "d63c5957ad6819f4c02a817abe757f210d35ff92", revision)
+			assert.Equal(t, "master", branch)
+		})
+	}
 }
 
 func initVcsTestDir(t *testing.T, srcPath string) (projectPath, tmpDir string) {

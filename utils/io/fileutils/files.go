@@ -20,6 +20,7 @@ const (
 	SYMLINK_FILE_CONTENT          = ""
 	File                 ItemType = "file"
 	Dir                  ItemType = "dir"
+	Any                  ItemType = "any"
 )
 
 func GetFileSeparator() string {
@@ -474,9 +475,12 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	exists = false
 	for {
 		// If itemToFind is found in the current directory, return the path.
-		if itemType == File {
+		switch itemType {
+		case Any:
+			exists = IsPathExists(filepath.Join(wd, itemToFInd), false)
+		case File:
 			exists, err = IsFileExists(filepath.Join(wd, itemToFInd), false)
-		} else {
+		case Dir:
 			exists, err = IsDirExists(filepath.Join(wd, itemToFInd), false)
 		}
 		if err != nil || exists {
