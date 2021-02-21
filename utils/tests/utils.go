@@ -120,7 +120,7 @@ func InitVcsSubmoduleTestDir(t *testing.T, srcPath string) (submodulePath, tmpDi
 	submoduleDst := filepath.Join(tmpDir, "subDir", "subModule")
 	err = fileutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData"))
 	assert.NoError(t, err)
-	err = os.Rename(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git"))
+	err = fileutils.MoveFile(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git"))
 	assert.NoError(t, err)
 	submodulePath, err = filepath.Abs(submoduleDst)
 	assert.NoError(t, err)

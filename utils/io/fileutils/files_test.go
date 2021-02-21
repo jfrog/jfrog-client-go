@@ -54,12 +54,12 @@ func TestFindUpstreamFile(t *testing.T) {
 	}
 
 	// Get the project root.
-	if err = assertFindUpstreamExists(t, "goDotMod.test", projectRoot, File); err != nil {
+	if err = assertFindUpstreamExistsAndEqual(t, "goDotMod.test", projectRoot, File); err != nil {
 		return
 	}
 
 	// Assert with Any too.
-	if err = assertFindUpstreamExists(t, "goDotMod.test", projectRoot, Any); err != nil {
+	if err = assertFindUpstreamExistsAndEqual(t, "goDotMod.test", projectRoot, Any); err != nil {
 		return
 	}
 
@@ -78,7 +78,7 @@ func TestFindUpstreamFile(t *testing.T) {
 		return
 	}
 
-	if err = assertFindUpstreamExists(t, "goDotMod.test", projectRoot, File); err != nil {
+	if err = assertFindUpstreamExistsAndEqual(t, "goDotMod.test", projectRoot, File); err != nil {
 		return
 	}
 
@@ -148,17 +148,17 @@ func TestFindUpstreamFolder(t *testing.T) {
 	}
 
 	// Get the directory path.
-	if err = assertFindUpstreamExists(t, "noproject", dirPath, Dir); err != nil {
+	if err = assertFindUpstreamExistsAndEqual(t, "noproject", dirPath, Dir); err != nil {
 		return
 	}
 
 	// Assert with Any too.
-	if err = assertFindUpstreamExists(t, "noproject", dirPath, Any); err != nil {
+	if err = assertFindUpstreamExistsAndEqual(t, "noproject", dirPath, Any); err != nil {
 		return
 	}
 }
 
-func assertFindUpstreamExists(t *testing.T, path, expectedPath string, itemType ItemType) error {
+func assertFindUpstreamExistsAndEqual(t *testing.T, path, expectedPath string, itemType ItemType) error {
 	foundPath, exists, err := FindUpstream(path, itemType)
 	if err != nil {
 		assert.Error(t, err)
