@@ -11,7 +11,7 @@ import (
 
 func TestVcsDetails(t *testing.T) {
 	// Test the following .git types, on their corresponding paths in testdata.
-	tests := []string{"vcs", "packedVcs", "submodule"}
+	tests := []string{"vcs", "packedvcs", "submodule"}
 	for _, test := range tests {
 		t.Run(test, func(t *testing.T) {
 			var projectPath, tmpDir string
