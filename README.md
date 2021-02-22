@@ -761,7 +761,13 @@ err = servicesManager.UpdatePermissionTarget(params)
 #### Removing a Permission Target
 You can remove a permission target from Artifactory using its name:
 ```go
-servicesManager.DeletePermissionTarget("java-developers")
+err = servicesManager.DeletePermissionTarget("java-developers")
+```
+
+#### Fetching a Permission Target
+You can fetch a permission target from Artifactory using its name:
+```go
+permissionTargetParams, err = servicesManager.GetPermissionTarget("java-developers")
 ```
 
 #### Fetching Artifactory's Version
