@@ -208,7 +208,6 @@ func antPatternToRegExp(localPath string) string {
 	localPath = replaceSpecialChars(localPath)
 	var wildcard = ".*"
 	slash := getSlashAccordingToOS()
-	slash = getSlashAccordingToOS()
 	var antAsteriskToRegExp = "([^" + slash + "]*)"
 	// `?` => `.{1}` : `?` matches one character.
 	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
