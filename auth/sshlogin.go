@@ -135,7 +135,7 @@ func IsEncrypted(buffer []byte) (bool, error) {
 		}
 	}
 	// Key is not encrypted or an error occurred
-	return false, nil
+	return false, err
 }
 
 func parseUrl(url string) (protocol, host string, port int, err error) {
