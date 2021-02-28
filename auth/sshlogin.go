@@ -3,19 +3,17 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/xanzy/ssh-agent"
+	sshagent "github.com/xanzy/ssh-agent"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -129,11 +127,15 @@ func readSshKeyAndPassphrase(sshKeyPath, sshPassphrase string) ([]byte, []byte, 
 }
 
 func IsEncrypted(buffer []byte) (bool, error) {
-	block, _ := pem.Decode(buffer)
-	if block == nil {
-		return false, errors.New("SSH: no key found")
+	_, err := ssh.ParsePrivateKey(buffer)
+	if err != nil {
+		if _, ok := err.(*ssh.PassphraseMissingError); ok {
+			// Key is encrypted
+			return true, nil
+		}
 	}
-	return strings.Contains(block.Headers["Proc-Type"], "ENCRYPTED"), nil
+	// Key is not encrypted or an error occurred
+	return false, nil
 }
 
 func parseUrl(url string) (protocol, host string, port int, err error) {
