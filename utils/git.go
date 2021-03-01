@@ -5,9 +5,14 @@ import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+)
+
+const (
+	submoduleDotGitPrefix = "gitdir: "
 )
 
 type manager struct {
@@ -15,6 +20,7 @@ type manager struct {
 	err      error
 	revision string
 	url      string
+	branch   string
 }
 
 func NewGitManager(path string) *manager {
@@ -24,11 +30,59 @@ func NewGitManager(path string) *manager {
 
 func (m *manager) ReadConfig() error {
 	if m.path == "" {
-		return errorutils.CheckError(errors.New(".git path must be defined."))
+		return errorutils.CheckError(errors.New(".git path must be defined"))
 	}
-	m.readRevision()
+	if !fileutils.IsPathExists(m.path, false) {
+		return errorutils.CheckError(errors.New(".git path must exist in order to collect vcs details"))
+	}
+
+	m.handleSubmoduleIfNeeded()
+	m.readRevisionAndBranch()
 	m.readUrl()
 	return m.err
+}
+
+// If .git is a file and not a directory, assume it is a git submodule and extract the actual .git directory of the submodule.
+// The actual .git directory is under the parent project's .git/modules directory.
+func (m *manager) handleSubmoduleIfNeeded() {
+	exists, err := fileutils.IsFileExists(m.path, false)
+	if err != nil {
+		m.err = err
+		return
+	}
+	if !exists {
+		// .git is a directory, continue extracting vcs details.
+		return
+	}
+
+	content, err := ioutil.ReadFile(m.path)
+	if err != nil {
+		m.err = errorutils.CheckError(err)
+		return
+	}
+
+	line := string(content)
+	// Expecting git submodule to have exactly one line, with a prefix and the path to the actual submodule's git.
+	if !strings.HasPrefix(line, submoduleDotGitPrefix) {
+		m.err = errorutils.CheckError(errors.New("failed to parse .git path for submodule"))
+		return
+	}
+
+	// Extract path by removing prefix.
+	actualRelativePath := strings.TrimSpace(line[strings.Index(line, ":")+1:])
+	actualAbsPath := filepath.Join(filepath.Dir(m.path), actualRelativePath)
+	exists, err = fileutils.IsDirExists(actualAbsPath, false)
+	if err != nil {
+		m.err = err
+		return
+	}
+	if !exists {
+		m.err = errorutils.CheckError(errors.New("path found in .git file '" + m.path + "' does not exist: '" + actualAbsPath + "'"))
+		return
+	}
+
+	// Actual .git directory found.
+	m.path = actualAbsPath
 }
 
 func (m *manager) GetUrl() string {
@@ -37,6 +91,10 @@ func (m *manager) GetUrl() string {
 
 func (m *manager) GetRevision() string {
 	return m.revision
+}
+
+func (m *manager) GetBranch() string {
+	return m.branch
 }
 
 func (m *manager) readUrl() {
@@ -88,7 +146,7 @@ func (m *manager) readUrl() {
 	m.url = RemoveCredentials(originUrl, matchedResult)
 }
 
-func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error) {
+func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
 	file, e := os.Open(dotGitPath)
 	if errorutils.CheckError(e) != nil {
@@ -112,15 +170,19 @@ func (m *manager) getRevisionOrBranchPath() (revision, refUrl string, err error)
 	return
 }
 
-func (m *manager) readRevision() {
+func (m *manager) readRevisionAndBranch() {
 	if m.err != nil {
 		return
 	}
 	// This function will either return the revision or the branch ref:
-	revision, ref, err := m.getRevisionOrBranchPath()
+	revision, ref, err := m.getRevisionAndBranchPath()
 	if err != nil {
 		m.err = err
 		return
+	}
+	if ref != "" {
+		splitRefArr := strings.Split(ref, "/")
+		m.branch = splitRefArr[len(splitRefArr)-1]
 	}
 	// If the revision was returned, then we're done:
 	if revision != "" {

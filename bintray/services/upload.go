@@ -47,6 +47,7 @@ type UploadParams struct {
 	TargetPath string
 
 	UseRegExp          bool
+	UseAnt             bool
 	Flat               bool
 	Recursive          bool
 	Explode            bool
@@ -240,6 +241,10 @@ func getSingleFileToUpload(rootPath, targetPath string, flat bool) clientutils.A
 	return clientutils.Artifact{LocalPath: rootPathOrig, TargetPath: uploadPath}
 }
 
+func (up *UploadParams) GetPatternType() clientutils.PatternType {
+	return clientutils.GetPatternType(clientutils.PatternTypes{RegExp: up.UseRegExp, Ant: up.UseAnt})
+}
+
 func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]clientutils.Artifact, error) {
 	var debianDefaultPath string
 	if uploadDetails.TargetPath == "" && uploadDetails.Deb != "" {
@@ -248,7 +253,7 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 
 	// Save parentheses index in pattern, witch have corresponding placeholder.
 	placeholderParentheses := clientutils.NewParenthesesSlice(uploadDetails.Pattern, uploadDetails.TargetPath)
-	rootPath := clientutils.GetRootPath(uploadDetails.Pattern, uploadDetails.UseRegExp, placeholderParentheses)
+	rootPath := clientutils.GetRootPath(uploadDetails.Pattern, uploadDetails.GetPatternType(), placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, false) {
 		err := errorutils.CheckError(errors.New("Path does not exist: " + rootPath))
 		if err != nil {
@@ -256,7 +261,7 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 		}
 	}
 	localPath := clientutils.ReplaceTildeWithUserHome(uploadDetails.Pattern)
-	localPath = clientutils.PrepareLocalPathForUpload(localPath, uploadDetails.UseRegExp)
+	localPath = clientutils.PrepareLocalPathForUpload(localPath, uploadDetails.GetPatternType())
 
 	artifacts := []clientutils.Artifact{}
 	// If the path is a single file then return it

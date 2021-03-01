@@ -1,6 +1,7 @@
 package utils
 
 import (
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"strings"
 )
 
@@ -37,6 +38,7 @@ type ArtifactoryCommonParams struct {
 	Recursive        bool
 	IncludeDirs      bool
 	Regexp           bool
+	Ant              bool
 	ArchiveEntries   string
 	Archive          string
 }
@@ -59,11 +61,11 @@ type FileGetter interface {
 	GetBuild() string
 	GetBundle() string
 	GetSpecType() (specType SpecType)
-	IsRegexp() bool
 	IsRecursive() bool
 	IsIncludeDirs() bool
 	GetArchiveEntries() string
 	SetArchiveEntries(archiveEntries string)
+	GetPatternType() clientutils.PatternType
 }
 
 func (params ArtifactoryCommonParams) GetArchiveEntries() string {
@@ -110,8 +112,8 @@ func (params *ArtifactoryCommonParams) IsRecursive() bool {
 	return params.Recursive
 }
 
-func (params *ArtifactoryCommonParams) IsRegexp() bool {
-	return params.Regexp
+func (params *ArtifactoryCommonParams) GetPatternType() clientutils.PatternType {
+	return clientutils.GetPatternType(clientutils.PatternTypes{RegExp: params.Regexp, Ant: params.Ant})
 }
 
 func (params *ArtifactoryCommonParams) GetAql() Aql {

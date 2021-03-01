@@ -25,7 +25,7 @@ type ArtifactoryServicesManager interface {
 	CreatePermissionTarget(params services.PermissionTargetParams) error
 	UpdatePermissionTarget(params services.PermissionTargetParams) error
 	DeletePermissionTarget(permissionTargetName string) error
-	PublishBuildInfo(build *buildinfo.BuildInfo, project string) error
+	PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) error
 	DistributeBuild(params services.BuildDistributionParams) error
 	PromoteBuild(params services.PromotionParams) error
 	DiscardBuilds(params services.DiscardBuildsParams) error
@@ -60,6 +60,15 @@ type ArtifactoryServicesManager interface {
 	GetServiceId() (string, error)
 	PromoteDocker(params services.DockerPromoteParams) error
 	Client() *jfroghttpclient.JfrogHttpClient
+	GetGroup(params services.GroupParams) (*services.Group, error)
+	CreateGroup(params services.GroupParams) error
+	UpdateGroup(params services.GroupParams) error
+	DeleteGroup(name string) error
+	GetUser(params services.UserParams) (*services.User, error)
+	GetAllUsers() ([]*services.User, error)
+	CreateUser(params services.UserParams) error
+	UpdateUser(params services.UserParams) error
+	DeleteUser(name string) error
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -257,6 +266,42 @@ func (esm *EmptyArtifactoryServicesManager) Client() *jfroghttpclient.JfrogHttpC
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.RepositoryDetails, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetUser(params services.UserParams) (*services.User, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetAllUsers() ([]*services.User, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateUser(params services.UserParams) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) UpdateUser(params services.UserParams) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DeleteUser(name string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetGroup(params services.GroupParams) (*services.Group, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateGroup(params services.GroupParams) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) UpdateGroup(params services.GroupParams) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DeleteGroup(name string) error {
 	panic("Failed: Method is not implemented")
 }
 

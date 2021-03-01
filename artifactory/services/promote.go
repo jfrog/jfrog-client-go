@@ -36,7 +36,9 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	log.Info(message)
 
 	promoteUrl := ps.ArtDetails.GetUrl()
-	restApi := path.Join("api/build/promote/", promotionParams.GetBuildName(), promotionParams.GetBuildNumber())
+	restApi := path.Join("api/build/promote/", promotionParams.GetBuildName(), promotionParams.GetBuildNumber()) +
+		utils.GetProjectQueryParam(promotionParams.ProjectKey)
+
 	requestFullUrl, err := utils.BuildArtifactoryUrl(promoteUrl, restApi, make(map[string]string))
 	if err != nil {
 		return err
@@ -91,6 +93,7 @@ type BuildPromotionBody struct {
 type PromotionParams struct {
 	BuildName           string
 	BuildNumber         string
+	ProjectKey          string
 	TargetRepo          string
 	Status              string
 	Comment             string
@@ -106,6 +109,10 @@ func (bp *PromotionParams) GetBuildName() string {
 
 func (bp *PromotionParams) GetBuildNumber() string {
 	return bp.BuildNumber
+}
+
+func (bp *PromotionParams) GetProjectKey() string {
+	return bp.ProjectKey
 }
 
 func (bp *PromotionParams) GetTargetRepo() string {

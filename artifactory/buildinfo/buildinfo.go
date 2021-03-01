@@ -146,9 +146,10 @@ type Artifact struct {
 }
 
 type Dependency struct {
-	Id     string   `json:"id,omitempty"`
-	Type   string   `json:"type,omitempty"`
-	Scopes []string `json:"scopes,omitempty"`
+	Id          string     `json:"id,omitempty"`
+	Type        string     `json:"type,omitempty"`
+	Scopes      []string   `json:"scopes,omitempty"`
+	RequestedBy [][]string `json:"requestedBy,omitempty"`
 	*Checksum
 }
 
@@ -181,6 +182,7 @@ type Env map[string]string
 type Vcs struct {
 	Url      string `json:"url,omitempty"`
 	Revision string `json:"revision,omitempty"`
+	Branch   string `json:"branch,omitempty"`
 }
 
 type Partials []*Partial

@@ -1,0 +1,11 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+	worktree = ../../../../subdir/submodule
+[remote "origin"]
+	url = https://github.com/jfrog/jfrog-cli.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
