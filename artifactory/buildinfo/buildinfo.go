@@ -183,6 +183,7 @@ type Vcs struct {
 	Url      string `json:"url,omitempty"`
 	Revision string `json:"revision,omitempty"`
 	Branch   string `json:"branch,omitempty"`
+	Commit   string `json:"commit,omitempty"`
 }
 
 type Partials []*Partial

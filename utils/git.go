@@ -2,11 +2,13 @@ package utils
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -21,6 +23,7 @@ type manager struct {
 	revision string
 	url      string
 	branch   string
+	commit   string
 }
 
 func NewGitManager(path string) *manager {
@@ -35,10 +38,10 @@ func (m *manager) ReadConfig() error {
 	if !fileutils.IsPathExists(m.path, false) {
 		return errorutils.CheckError(errors.New(".git path must exist in order to collect vcs details"))
 	}
-
 	m.handleSubmoduleIfNeeded()
 	m.readRevisionAndBranch()
 	m.readUrl()
+	m.readCommitMesssage()
 	return m.err
 }
 
@@ -95,6 +98,23 @@ func (m *manager) GetRevision() string {
 
 func (m *manager) GetBranch() string {
 	return m.branch
+}
+
+func (m *manager) GetCommitMessage() string {
+	return m.commit
+}
+
+func (m *manager) execGit(args ...string) (string, string, error) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("git", args...)
+	cmd.Dir = m.path
+	cmd.Stdin = nil
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	errorutils.CheckError(err)
+	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
 func (m *manager) readUrl() {
@@ -265,5 +285,18 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 	}
 
 	m.err = errorutils.CheckError(errors.New("failed fetching revision from git config, from ref: " + ref))
+	return
+}
+
+func (m *manager) readCommitMesssage() {
+	if m.err != nil {
+		return
+	}
+	commit, _, err := m.execGit("log", "-1", "--pretty=%B")
+	if err != nil {
+		m.err = err
+		return
+	}
+	m.commit = commit
 	return
 }
