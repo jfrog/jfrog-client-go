@@ -346,24 +346,24 @@ func uploadDummyFile(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "test/"}
 	up.Flat = true
-	uploaded, failed, err := testsUploadService.UploadFiles(up)
-	if uploaded != 1 {
+	commandSummary, err := testsUploadService.UploadFiles(up)
+	if commandSummary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
-	if failed != 0 {
-		t.Error("Failed to upload", failed, "files.")
+	if commandSummary.TotalFailed != 0 {
+		t.Error("Failed to upload", commandSummary.TotalFailed, "files.")
 	}
 	if err != nil {
 		t.Error(err)
 	}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "b.in"}
 	up.Flat = true
-	uploaded, failed, err = testsUploadService.UploadFiles(up)
-	if uploaded != 1 {
+	commandSummary, err = testsUploadService.UploadFiles(up)
+	if commandSummary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
-	if failed != 0 {
-		t.Error("Failed to upload", failed, "files.")
+	if commandSummary.TotalFailed != 0 {
+		t.Error("Failed to upload", commandSummary.TotalFailed, "files.")
 	}
 	archivePath := filepath.Join(workingDir, "c.tar.gz")
 	err = archiver.Archive([]string{filepath.Join(workingDir, "out/a.in")}, archivePath)
@@ -372,12 +372,12 @@ func uploadDummyFile(t *testing.T) {
 	}
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: archivePath, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
-	uploaded, failed, err = testsUploadService.UploadFiles(up)
-	if uploaded != 1 {
+	commandSummary, err = testsUploadService.UploadFiles(up)
+	if commandSummary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
-	if failed != 0 {
-		t.Error("Failed to upload", failed, "files.")
+	if commandSummary.TotalFailed != 0 {
+		t.Error("Failed to upload", commandSummary.TotalFailed, "files.")
 	}
 	if err != nil {
 		t.Error(err)

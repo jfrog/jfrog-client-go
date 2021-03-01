@@ -35,7 +35,7 @@ func (pwh *publishWithHeader) PublishPackage(params GoParams, client *jfroghttpc
 	if err != nil {
 		return err
 	}
-	resp, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, GoUploadRetries, nil)
+	resp, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, GoUploadRetries, nil, "")
 	if err != nil {
 		return err
 	}

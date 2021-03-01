@@ -24,12 +24,14 @@ import (
 )
 
 type DownloadService struct {
-	client       *jfroghttpclient.JfrogHttpClient
-	Progress     clientio.ProgressMgr
-	ArtDetails   auth.ServiceDetails
-	DryRun       bool
-	Threads      int
-	ResultWriter *content.ContentWriter
+	client                 *jfroghttpclient.JfrogHttpClient
+	Progress               clientio.ProgressMgr
+	ArtDetails             auth.ServiceDetails
+	DryRun                 bool
+	Threads                int
+	saveSummary            bool
+	filesTransfersWriter   *content.ContentWriter
+	artifactsDetailsWriter *content.ContentWriter
 }
 
 func NewDownloadService(client *jfroghttpclient.JfrogHttpClient) *DownloadService {
@@ -68,19 +70,51 @@ func (ds *DownloadService) SetDryRun(isDryRun bool) {
 	ds.DryRun = isDryRun
 }
 
-func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (int, int, error) {
+func (ds *DownloadService) SetSaveSummary(saveSummary bool) {
+	ds.saveSummary = saveSummary
+}
+
+func (ds *DownloadService) getCommandSummary(totalSucceeded, totalFailed int) *utils.CommandSummary {
+	commandSummary := &utils.CommandSummary{
+		TotalSucceeded: totalSucceeded,
+		TotalFailed:    totalFailed,
+	}
+	if ds.saveSummary {
+		commandSummary.TransferDetailsReader = content.NewContentReader(ds.filesTransfersWriter.GetFilePath(), content.DefaultKey)
+		commandSummary.ArtifactsDetailsReader = content.NewContentReader(ds.artifactsDetailsWriter.GetFilePath(), content.DefaultKey)
+	}
+	return commandSummary
+}
+
+func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*utils.CommandSummary, error) {
+	var e error
 	producerConsumer := parallel.NewRunner(ds.GetThreads(), 20000, false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	expectedChan := make(chan int, 1)
 	successCounters := make([]int, ds.GetThreads())
+	if ds.saveSummary {
+		ds.filesTransfersWriter, e = content.NewContentWriter(content.DefaultKey, true, false)
+		if e != nil {
+			return nil, e
+		}
+		defer ds.filesTransfersWriter.Close()
+		ds.artifactsDetailsWriter, e = content.NewContentWriter(content.DefaultKey, true, false)
+		if e != nil {
+			return nil, e
+		}
+		defer ds.artifactsDetailsWriter.Close()
+	}
 	ds.prepareTasks(producerConsumer, expectedChan, successCounters, errorsQueue, downloadParams...)
 
-	err := ds.performTasks(producerConsumer, errorsQueue)
+	e = ds.performTasks(producerConsumer, errorsQueue)
+	if e != nil {
+		return nil, e
+	}
 	totalSuccess := 0
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
-	return totalSuccess, <-expectedChan, err
+	return ds.getCommandSummary(totalSuccess, <-expectedChan-totalSuccess), nil
 }
 
 func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan chan int, successCounters []int, errorsQueue *clientutils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
@@ -206,15 +240,31 @@ func (ds *DownloadService) performTasks(consumer parallel.Runner, errorsQueue *c
 	return errorsQueue.GetError()
 }
 
-func createDependencyFileInfo(resultItem utils.ResultItem, localPath, localFileName string) utils.FileInfo {
-	fileInfo := utils.FileInfo{
+func (ds *DownloadService) addToResults(resultItem *utils.ResultItem, localPath, localFileName string) {
+	if ds.saveSummary {
+		transferDetails := createDependencyTransferDetails(*resultItem, localPath, localFileName)
+		ds.filesTransfersWriter.Write(transferDetails)
+		artifactDetails := createDependencyArtifactDetails(*resultItem)
+		ds.artifactsDetailsWriter.Write(artifactDetails)
+	}
+}
+
+func createDependencyTransferDetails(resultItem utils.ResultItem, localPath, localFileName string) utils.FileTransferDetails {
+	fileInfo := utils.FileTransferDetails{
 		ArtifactoryPath: resultItem.GetItemRelativePath(),
-		FileHashes: &utils.FileHashes{
+		LocalPath:       filepath.Join(localPath, localFileName),
+	}
+	return fileInfo
+}
+
+func createDependencyArtifactDetails(resultItem utils.ResultItem) utils.ArtifactDetails {
+	fileInfo := utils.ArtifactDetails{
+		ArtifactoryPath: resultItem.GetItemRelativePath(),
+		Checksums: utils.Checksums{
 			Sha1: resultItem.Actual_Sha1,
 			Md5:  resultItem.Actual_Md5,
 		},
 	}
-	fileInfo.LocalPath = filepath.Join(localPath, localFileName)
 	return fileInfo
 }
 
@@ -364,6 +414,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 			}
 			log.Info(logMsgPrefix+"Downloading", downloadData.Dependency.GetItemRelativePath())
 			if ds.DryRun {
+				successCounters[threadId]++
 				return nil
 			}
 			target, e := clientutils.BuildTargetPath(downloadData.DownloadPath, downloadData.Dependency.GetItemRelativePath(), downloadData.Target, true)
@@ -379,20 +430,17 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				return e
 			}
 			if downloadParams.IsSymlink() {
-				if isSymlink, e := createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix, downloadData, successCounters, ds.ResultWriter, threadId, downloadParams); isSymlink {
+				if isSymlink, e := ds.createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix, downloadData, successCounters, threadId, downloadParams); isSymlink {
 					return e
 				}
 			}
-			dependency := createDependencyFileInfo(downloadData.Dependency, localPath, localFileName)
 			e = ds.downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix, downloadData, downloadParams)
 			if e != nil {
 				log.Error(logMsgPrefix, "Received an error: "+e.Error())
 				return e
 			}
 			successCounters[threadId]++
-			if ds.ResultWriter != nil {
-				ds.ResultWriter.Write(dependency)
-			}
+			ds.addToResults(&downloadData.Dependency, localPath, localFileName)
 			return nil
 		}
 	}
@@ -424,7 +472,7 @@ func createDir(localPath, localFileName, logMsgPrefix string) error {
 	return nil
 }
 
-func createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix string, downloadData DownloadData, successCounters []int, responseWriter *content.ContentWriter, threadId int, downloadParams DownloadParams) (bool, error) {
+func (ds *DownloadService) createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix string, downloadData DownloadData, successCounters []int, threadId int, downloadParams DownloadParams) (bool, error) {
 	symlinkArtifact := getArtifactSymlinkPath(downloadData.Dependency.Properties)
 	isSymlink := len(symlinkArtifact) > 0
 	if isSymlink {
@@ -432,11 +480,8 @@ func createSymlinkIfNeeded(localPath, localFileName, logMsgPrefix string, downlo
 		if e := createLocalSymlink(localPath, localFileName, symlinkArtifact, downloadParams.ValidateSymlinks(), symlinkChecksum, logMsgPrefix); e != nil {
 			return isSymlink, e
 		}
-		dependency := createDependencyFileInfo(downloadData.Dependency, localPath, localFileName)
 		successCounters[threadId]++
-		if responseWriter != nil {
-			responseWriter.Write(dependency)
-		}
+		ds.addToResults(&downloadData.Dependency, localPath, localFileName)
 		return isSymlink, nil
 	}
 	return isSymlink, nil

@@ -34,13 +34,13 @@ type ArtifactoryServicesManager interface {
 	DeleteFiles(reader *content.ContentReader) (int, error)
 	ReadRemoteFile(readPath string) (io.ReadCloser, error)
 	DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error)
-	DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error)
+	DownloadFilesWithCommandSummary(params ...services.DownloadParams) (commandSummary *utils.CommandSummary, err error)
 	GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error)
 	SearchFiles(params services.SearchParams) (*content.ContentReader, error)
 	Aql(aql string) (io.ReadCloser, error)
 	SetProps(params services.PropsParams) (int, error)
 	DeleteProps(params services.PropsParams) (int, error)
-	UploadFilesWithResultReader(params ...services.UploadParams) (resultReader *content.ContentReader, totalUploaded, totalFailed int, err error)
+	UploadFilesWithCommandSummary(params ...services.UploadParams) (commandSummary *utils.CommandSummary, err error)
 	UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
 	Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
@@ -152,7 +152,7 @@ func (esm *EmptyArtifactoryServicesManager) DownloadFiles(params ...services.Dow
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error) {
+func (esm *EmptyArtifactoryServicesManager) DownloadFilesWithCommandSummary(params ...services.DownloadParams) (commandSummary *utils.CommandSummary, err error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -180,7 +180,7 @@ func (esm *EmptyArtifactoryServicesManager) UploadFiles(params ...services.Uploa
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UploadFilesWithResultReader(params ...services.UploadParams) (resultReader *content.ContentReader, totalUploaded, totalFailed int, err error) {
+func (esm *EmptyArtifactoryServicesManager) UploadFilesWithCommandSummary(params ...services.UploadParams) (commandSummary *utils.CommandSummary, err error) {
 	panic("Failed: Method is not implemented")
 }
 

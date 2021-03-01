@@ -38,6 +38,7 @@ type ArtifactoryCommonParams struct {
 	IncludeDirs      bool
 	Regexp           bool
 	ArchiveEntries   string
+	Archive          string
 }
 
 type FileGetter interface {

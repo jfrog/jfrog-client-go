@@ -80,7 +80,7 @@ func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext,
 		return err
 	}
 	utils.AddChecksumHeaders(pwa.clientDetails.Headers, details)
-	resp, _, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil)
+	resp, _, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil, "")
 	if err != nil {
 		return err
 	}

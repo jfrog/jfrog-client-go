@@ -15,32 +15,39 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-// Open and read JSON file, find the array key inside it and load its value into the memory in small chunks.
+// Open and read JSON files, find the array key inside it and load its value into the memory in small chunks.
 // Currently, 'ContentReader' only support extracting a single value for a given key (arrayKey), other keys are ignored.
-// The value must of of type array.
-// Each array value can be fetched using 'GetRecord' (thread-safe).
+// The value must be of type array.
+// Each array value can be fetched using 'NextRecord' (thread-safe).
 // This technique solves the limit of memory size which may be too small to fit large JSON.
 type ContentReader struct {
-	// filePath - source data file path.
-	// arrayKey = Read the value of the specific object in JSON.
-	filePath, arrayKey string
+	// filesPaths - source data file paths.
+	filesPaths []string
+	// arrayKey - Read the value of the specific object in JSON.
+	arrayKey string
 	// The objects from the source data file are being pushed into the data channel.
 	dataChannel chan map[string]interface{}
 	errorsQueue *utils.ErrorsQueue
 	once        *sync.Once
-	// Number of element in the array (cache)
+	// Number of elements in the array (cache)
 	length int
 	empty  bool
 }
 
 func NewContentReader(filePath string, arrayKey string) *ContentReader {
+	self := NewCombinedContentReader([]string{filePath}, arrayKey)
+	self.empty = filePath == ""
+	return self
+}
+
+func NewCombinedContentReader(filePaths []string, arrayKey string) *ContentReader {
 	self := ContentReader{}
-	self.filePath = filePath
+	self.filesPaths = filePaths
 	self.arrayKey = arrayKey
 	self.dataChannel = make(chan map[string]interface{}, utils.MaxBufferSize)
 	self.errorsQueue = utils.NewErrorsQueue(utils.MaxBufferSize)
 	self.once = new(sync.Once)
-	self.empty = filePath == ""
+	self.empty = len(filePaths) == 0
 	return &self
 }
 
@@ -93,18 +100,25 @@ func (cr *ContentReader) Reset() {
 
 // Cleanup the reader data.
 func (cr *ContentReader) Close() error {
-	if cr.filePath != "" {
-		if err := errorutils.CheckError(os.Remove(cr.filePath)); err != nil {
-			log.Error(err)
-			return err
+	var failedPaths []string
+	for _, filePath := range cr.filesPaths {
+		if filePath == "" {
+			continue
 		}
-		cr.filePath = ""
+		if err := errorutils.CheckError(os.Remove(filePath)); err != nil {
+			log.Error(err)
+			failedPaths = append(failedPaths, filePath)
+		}
+	}
+	cr.filesPaths = failedPaths
+	if len(failedPaths) > 0 {
+		return errors.New("failed to remove one or more files")
 	}
 	return nil
 }
 
-func (cr *ContentReader) GetFilePath() string {
-	return cr.filePath
+func (cr *ContentReader) GetFilesPaths() []string {
+	return cr.filesPaths
 }
 
 // Number of element in the array.
@@ -123,10 +137,16 @@ func (cr *ContentReader) Length() (int, error) {
 	return cr.length, nil
 }
 
-// Open and read the file. Push each array element into the channel.
+// Open and read the files one by one. Push each array element into the channel.
 // The channel may block the thread, therefore should run async.
 func (cr *ContentReader) run() {
-	fd, err := os.Open(cr.filePath)
+	for _, filePath := range cr.filesPaths {
+		cr.readSingleFile(filePath)
+	}
+}
+
+func (cr *ContentReader) readSingleFile(filePath string) {
+	fd, err := os.Open(filePath)
 	if err != nil {
 		log.Error(err.Error())
 		cr.errorsQueue.AddError(errorutils.CheckError(err))
