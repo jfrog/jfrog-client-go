@@ -2,15 +2,15 @@ package utils
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/src-d/go-git.v4"
 )
 
 const (
@@ -38,6 +38,7 @@ func (m *manager) ReadConfig() error {
 	if !fileutils.IsPathExists(m.path, false) {
 		return errorutils.CheckError(errors.New(".git path must exist in order to collect vcs details"))
 	}
+
 	m.handleSubmoduleIfNeeded()
 	m.readRevisionAndBranch()
 	m.readUrl()
@@ -102,19 +103,6 @@ func (m *manager) GetBranch() string {
 
 func (m *manager) GetCommitMessage() string {
 	return m.commit
-}
-
-func (m *manager) execGit(args ...string) (string, string, error) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd := exec.Command("git", args...)
-	cmd.Dir = m.path
-	cmd.Stdin = nil
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	errorutils.CheckError(err)
-	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
 func (m *manager) readUrl() {
@@ -292,11 +280,22 @@ func (m *manager) readCommitMesssage() {
 	if m.err != nil {
 		return
 	}
-	commit, _, err := m.execGit("log", "-1", "--pretty=%B")
+	path := strings.TrimSuffix(m.path, filepath.Join("", ".git"))
+	r, err := git.PlainOpen(path)
 	if err != nil {
 		m.err = err
 		return
 	}
-	m.commit = commit
+	ref, err := r.Head()
+	if err != nil {
+		m.err = err
+		return
+	}
+	commit, err := r.CommitObject(ref.Hash())
+	if err != nil {
+		m.err = err
+		return
+	}
+	m.commit = commit.Message
 	return
 }
