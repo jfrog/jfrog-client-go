@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -160,4 +161,49 @@ func TestPrepareSourceSearchPattern(t *testing.T) {
 
 	newPattern = prepareSourceSearchPattern("/testdata/b/(/(.in", "/testdata", true)
 	assert.Equal(t, "/testdata/b/(/(.in", newPattern)
+}
+
+var aqlQueryForBuildDataProvider = []struct {
+	artifactsQuery bool
+	builds         []Build
+	expected       string
+}{
+	{true, []Build{{"buildName", "buildNumber"}},
+		`{"$and":[{"artifact.module.build.name":"buildName","artifact.module.build.number":"buildNumber"}]}`},
+	{true, []Build{{"buildName1", "buildNumber1"}, {"buildName2", "buildNumber2"}},
+		`{"$and":[{"artifact.module.build.name":"buildName1","artifact.module.build.number":"buildNumber1"}]},{"$and":[{"artifact.module.build.name":"buildName2","artifact.module.build.number":"buildNumber2"}]}`},
+	{false, []Build{{"buildName", "buildNumber"}},
+		`{"$and":[{"dependency.module.build.name":"buildName","dependency.module.build.number":"buildNumber"}]}`},
+	{false, []Build{{"buildName1", "buildNumber1"}, {"buildName2", "buildNumber2"}},
+		`{"$and":[{"dependency.module.build.name":"buildName1","dependency.module.build.number":"buildNumber1"}]},{"$and":[{"dependency.module.build.name":"buildName2","dependency.module.build.number":"buildNumber2"}]}`},
+}
+
+func TestCreateAqlQueryForBuild(t *testing.T) {
+	for _, sample := range aqlQueryForBuildDataProvider {
+		t.Run(fmt.Sprintf("%v, artifacts: %v", sample.builds, sample.artifactsQuery), func(t *testing.T) {
+			expected := `items.find({"$or":[` + sample.expected + "]})"
+			actual := createAqlQueryForBuild("", sample.artifactsQuery, sample.builds)
+			assert.Equal(t, expected, actual)
+		})
+	}
+}
+
+var ketValuePartsProvider = []struct {
+	key      string
+	values   []string
+	expected string
+}{
+	{"key1", []string{"value1"}, `{"@key1":"value1"}`},
+	{"key1", []string{"value1", "value2"}, `{"@key1":"value1"},{"@key1":"value2"}`},
+	{"key1", []string{"value1", "value2", "value3"}, `{"@key1":"value1"},{"@key1":"value2"},{"@key1":"value3"}`},
+}
+
+func TestBuildKeyValQueryPart(t *testing.T) {
+	for _, sample := range ketValuePartsProvider {
+		t.Run(sample.expected, func(t *testing.T) {
+			expected := `"$or":[` + sample.expected + "]"
+			actual := buildKeyValQueryPart(sample.key, sample.values)
+			assert.Equal(t, expected, actual)
+		})
+	}
 }

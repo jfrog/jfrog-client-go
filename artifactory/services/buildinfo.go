@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"path"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -55,38 +54,7 @@ func NewBuildInfoParams() BuildInfoParams {
 // If build info was not found (404), returns found=false (with error nil).
 // For any other response that isn't 200, an error is returned.
 func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinfo.PublishedBuildInfo, found bool, err error) {
-	// Resolve LATEST build number from Artifactory if required.
-	name, number, err := utils.GetBuildNameAndNumberFromArtifactory(params.BuildName, params.BuildNumber, bis)
-	if err != nil {
-		return nil, false, err
-	}
-
-	// Get build-info json from Artifactory.
-	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
-	restApi := path.Join("api/build/", name, number) + utils.GetProjectQueryParam(params.ProjectKey)
-	requestFullUrl, err := utils.BuildArtifactoryUrl(bis.GetArtifactoryDetails().GetUrl(), restApi, make(map[string]string))
-
-	log.Debug("Getting build-info from: ", requestFullUrl)
-	resp, body, _, err := bis.client.SendGet(requestFullUrl, true, &httpClientsDetails)
-	if err != nil {
-		return nil, false, err
-	}
-	if resp.StatusCode == http.StatusNotFound {
-		log.Debug("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
-		return nil, false, nil
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, false, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
-	}
-
-	// Build BuildInfo struct from json.
-	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
-	if err := json.Unmarshal(body, publishedBuildInfo); err != nil {
-		return nil, true, err
-	}
-
-	return publishedBuildInfo, true, nil
+	return utils.GetBuildInfo(params.BuildName, params.BuildNumber, params.ProjectKey, bis)
 }
 
 func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
