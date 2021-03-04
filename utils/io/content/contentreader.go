@@ -35,12 +35,12 @@ type ContentReader struct {
 }
 
 func NewContentReader(filePath string, arrayKey string) *ContentReader {
-	self := NewCombinedContentReader([]string{filePath}, arrayKey)
+	self := NewMultiSourceContentReader([]string{filePath}, arrayKey)
 	self.empty = filePath == ""
 	return self
 }
 
-func NewCombinedContentReader(filePaths []string, arrayKey string) *ContentReader {
+func NewMultiSourceContentReader(filePaths []string, arrayKey string) *ContentReader {
 	self := ContentReader{}
 	self.filesPaths = filePaths
 	self.arrayKey = arrayKey

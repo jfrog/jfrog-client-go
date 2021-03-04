@@ -62,17 +62,17 @@ func (us *UploadService) SetSaveSummary(saveSummary bool) {
 	us.saveSummary = saveSummary
 }
 
-func (us *UploadService) getCommandSummary(totalSucceeded, totalFailed int) *utils.CommandSummary {
+func (us *UploadService) getOperationSummary(totalSucceeded, totalFailed int) *utils.OperationSummary {
 	if !us.saveSummary {
-		return &utils.CommandSummary{
+		return &utils.OperationSummary{
 			TotalSucceeded: totalSucceeded,
 			TotalFailed:    totalFailed,
 		}
 	}
-	return us.resultsManager.getCommandSummary(totalSucceeded, totalFailed)
+	return us.resultsManager.getOperationSummary(totalSucceeded, totalFailed)
 }
 
-func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (*utils.CommandSummary, error) {
+func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (*utils.OperationSummary, error) {
 	// Uploading threads are using this struct to report upload results.
 	var e error
 	uploadSummary := utils.NewResult(us.Threads)
@@ -91,7 +91,7 @@ func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (*utils.Comma
 	if e != nil {
 		return nil, e
 	}
-	return us.getCommandSummary(totalUploaded, totalFailed), nil
+	return us.getOperationSummary(totalUploaded, totalFailed), nil
 }
 
 type archiveUploadData struct {
@@ -607,6 +607,7 @@ type UploadParams struct {
 	AddVcsProps       bool
 	Retries           int
 	MinChecksumDeploy int64
+	Archive           string
 }
 
 func (up *UploadParams) IsFlat() bool {
@@ -832,10 +833,19 @@ func getVcsProps(path string, vcsCache *clientutils.VcsCache) (string, error) {
 }
 
 type resultsManager struct {
+	// A ContentWriter of FileTransferDetails structs. Each struct written to this ContentWriter represents a successful file transfer.
 	singleFinalTransfersWriter *content.ContentWriter
-	notFinalTransfersWriters   map[string]*content.ContentWriter
-	finalTransfersFilesPaths   []string
-	artifactsDetailsWriter     *content.ContentWriter
+	// A map for saving file transfers that are not successful (these transfers might still be in progress).
+	// If the transfer is completed successfully, then the ContentWriter is closed and its file path is saved in finalTransfersFilesPaths.
+	// The key of each record is the target URL of the artifact.
+	// The value is a ContentWriter of FileTransferDetails structs, that all have the same target.
+	notFinalTransfersWriters map[string]*content.ContentWriter
+	// A slice of paths to files containing FileTransferDetails structs that represent successful file transfers.
+	// These paths are of files created by ContentWriters that were in notFinalTransfersWriters.
+	finalTransfersFilesPaths []string
+	// A ContentWriter of ArtifaceDetails structs. Each struct written to this ContentWriter represents an artifact in Artifactory
+	// that was successfully uploaded in the current operation.
+	artifactsDetailsWriter *content.ContentWriter
 }
 
 func newResultManager() (*resultsManager, error) {
@@ -854,6 +864,7 @@ func newResultManager() (*resultsManager, error) {
 	}, nil
 }
 
+// Write a result of a successful upload
 func (rm *resultsManager) addFinalResult(localPath, targetUrl string, checksums *fileutils.ChecksumDetails) {
 	fileTransferDetails := utils.FileTransferDetails{
 		LocalPath:       localPath,
@@ -871,6 +882,7 @@ func (rm *resultsManager) addFinalResult(localPath, targetUrl string, checksums 
 	rm.artifactsDetailsWriter.Write(artifactDetails)
 }
 
+// Write the details of a file transfer that is not completed yet
 func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 	if _, ok := rm.notFinalTransfersWriters[targetUrl]; !ok {
 		var e error
@@ -887,6 +899,7 @@ func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 	return nil
 }
 
+// Mark all of the transfers to a specific target as completed successfully
 func (rm *resultsManager) finalizeResult(targetPath string, checksums *fileutils.ChecksumDetails) error {
 	writer := rm.notFinalTransfersWriters[targetPath]
 	e := writer.Close()
@@ -907,13 +920,19 @@ func (rm *resultsManager) finalizeResult(targetPath string, checksums *fileutils
 	return nil
 }
 
+// Closes the ContentWriters that were opened by the resultManager
 func (rm *resultsManager) close() {
 	rm.singleFinalTransfersWriter.Close()
 	rm.artifactsDetailsWriter.Close()
+	for _, writer := range rm.notFinalTransfersWriters {
+		writer.Close()
+		writer.RemoveOutputFilePath()
+	}
 }
 
-func (rm *resultsManager) getCommandSummary(totalSucceeded, totalFailed int) *utils.CommandSummary {
-	return &utils.CommandSummary{
+// Creates an OperationSummary struct with the results. New results should not be written after this method is called.
+func (rm *resultsManager) getOperationSummary(totalSucceeded, totalFailed int) *utils.OperationSummary {
+	return &utils.OperationSummary{
 		TransferDetailsReader:  rm.getTransferDetailsReader(),
 		ArtifactsDetailsReader: content.NewContentReader(rm.artifactsDetailsWriter.GetFilePath(), content.DefaultKey),
 		TotalSucceeded:         totalSucceeded,
@@ -921,10 +940,11 @@ func (rm *resultsManager) getCommandSummary(totalSucceeded, totalFailed int) *ut
 	}
 }
 
+// Creates a ContentReader of FileTransferDetails structs. New results should not be written after this method is called.
 func (rm *resultsManager) getTransferDetailsReader() *content.ContentReader {
 	writersPaths := rm.finalTransfersFilesPaths
 	if !rm.singleFinalTransfersWriter.IsEmpty() {
 		writersPaths = append(writersPaths, rm.singleFinalTransfersWriter.GetFilePath())
 	}
-	return content.NewCombinedContentReader(writersPaths, content.DefaultKey)
+	return content.NewMultiSourceContentReader(writersPaths, content.DefaultKey)
 }

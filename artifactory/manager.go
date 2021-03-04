@@ -180,14 +180,14 @@ func (sm *ArtifactoryServicesManagerImp) initDownloadService() *services.Downloa
 
 func (sm *ArtifactoryServicesManagerImp) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error) {
 	downloadService := sm.initDownloadService()
-	commandSummary, e := downloadService.DownloadFiles(params...)
+	summary, e := downloadService.DownloadFiles(params...)
 	if e != nil {
 		return 0, 0, e
 	}
-	return commandSummary.TotalSucceeded, commandSummary.TotalFailed, nil
+	return summary.TotalSucceeded, summary.TotalFailed, nil
 }
 
-func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithCommandSummary(params ...services.DownloadParams) (commandSummary *utils.CommandSummary, err error) {
+func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithSummary(params ...services.DownloadParams) (operationSummary *utils.OperationSummary, err error) {
 	downloadService := sm.initDownloadService()
 	downloadService.SetSaveSummary(true)
 	return downloadService.DownloadFiles(params...)
@@ -236,14 +236,14 @@ func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadSer
 
 func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
 	uploadService := sm.initUploadService()
-	commandSummary, e := uploadService.UploadFiles(params...)
+	summary, e := uploadService.UploadFiles(params...)
 	if e != nil {
 		return 0, 0, e
 	}
-	return commandSummary.TotalSucceeded, commandSummary.TotalFailed, nil
+	return summary.TotalSucceeded, summary.TotalFailed, nil
 }
 
-func (sm *ArtifactoryServicesManagerImp) UploadFilesWithCommandSummary(params ...services.UploadParams) (commandSummary *utils.CommandSummary, err error) {
+func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
 	uploadService := sm.initUploadService()
 	uploadService.SetSaveSummary(true)
 	return uploadService.UploadFiles(params...)

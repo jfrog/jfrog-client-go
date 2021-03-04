@@ -29,12 +29,12 @@ func flatUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
-	commandSummary, err := testsUploadService.UploadFiles(up)
-	if commandSummary.TotalSucceeded != 1 {
+	summary, err := testsUploadService.UploadFiles(up)
+	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
-	if commandSummary.TotalFailed != 0 {
-		t.Error("Failed to upload", commandSummary.TotalFailed, "files.")
+	if summary.TotalFailed != 0 {
+		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	if err != nil {
 		t.Error(err)
@@ -69,12 +69,12 @@ func recursiveUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
-	commandSummary, err := testsUploadService.UploadFiles(up)
-	if commandSummary.TotalSucceeded != 1 {
+	summary, err := testsUploadService.UploadFiles(up)
+	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
-	if commandSummary.TotalFailed != 0 {
-		t.Error("Failed to upload", commandSummary.TotalFailed, "files.")
+	if summary.TotalFailed != 0 {
+		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	if err != nil {
 		t.Error(err)
@@ -112,12 +112,12 @@ func placeholderUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
 	up.Flat = true
-	commandSummary, err := testsUploadService.UploadFiles(up)
-	if commandSummary.TotalSucceeded != 1 {
+	summary, err := testsUploadService.UploadFiles(up)
+	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
-	if commandSummary.TotalFailed != 0 {
-		t.Error("Failed to upload", commandSummary.TotalFailed, "files.")
+	if summary.TotalFailed != 0 {
+		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	if err != nil {
 		t.Error(err)
@@ -155,12 +155,12 @@ func includeDirsUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
-	commandSummary, err := testsUploadService.UploadFiles(up)
-	if commandSummary.TotalSucceeded != 0 {
+	summary, err := testsUploadService.UploadFiles(up)
+	if summary.TotalSucceeded != 0 {
 		t.Error("Expected to upload 1 file.")
 	}
-	if commandSummary.TotalFailed != 0 {
-		t.Error("Failed to upload", commandSummary.TotalFailed, "files.")
+	if summary.TotalFailed != 0 {
+		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	if err != nil {
 		t.Error(err)
@@ -211,12 +211,12 @@ func explodeUpload(t *testing.T) {
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
 	up.ExplodeArchive = true
-	commandSummary, err := testsUploadService.UploadFiles(up)
-	if commandSummary.TotalSucceeded != 1 {
+	summary, err := testsUploadService.UploadFiles(up)
+	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
-	if commandSummary.TotalFailed != 0 {
-		t.Error("Failed to upload", commandSummary.TotalFailed, "files.")
+	if summary.TotalFailed != 0 {
+		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	if err != nil {
 		t.Error(err)
@@ -256,9 +256,9 @@ func propsUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Target: RtTargetRepo, TargetProps: "key1=val1"}
 	up.Flat = true
-	commandSummary, err := testsUploadService.UploadFiles(up)
-	assert.Equal(t, 1, commandSummary.TotalSucceeded)
-	assert.Equal(t, 0, commandSummary.TotalFailed)
+	summary, err := testsUploadService.UploadFiles(up)
+	assert.Equal(t, 1, summary.TotalSucceeded)
+	assert.Equal(t, 0, summary.TotalFailed)
 	assert.NoError(t, err)
 
 	// Search a.in with property key1=val1

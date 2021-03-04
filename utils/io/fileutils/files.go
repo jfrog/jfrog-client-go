@@ -345,6 +345,7 @@ func GetFileDetailsFromReader(reader io.Reader) (*FileDetails, error) {
 	details := new(FileDetails)
 
 	pr, pw := io.Pipe()
+	defer pr.Close()
 
 	go func() {
 		defer pw.Close()
@@ -352,11 +353,7 @@ func GetFileDetailsFromReader(reader io.Reader) (*FileDetails, error) {
 	}()
 
 	details.Checksum, err = calcChecksumDetailsFromReader(pr)
-	if err != nil {
-		return nil, err
-	}
-
-	return details, nil
+	return details, err
 }
 
 func calcChecksumDetailsFromReader(reader io.Reader) (ChecksumDetails, error) {

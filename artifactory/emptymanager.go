@@ -34,13 +34,13 @@ type ArtifactoryServicesManager interface {
 	DeleteFiles(reader *content.ContentReader) (int, error)
 	ReadRemoteFile(readPath string) (io.ReadCloser, error)
 	DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error)
-	DownloadFilesWithCommandSummary(params ...services.DownloadParams) (commandSummary *utils.CommandSummary, err error)
+	DownloadFilesWithSummary(params ...services.DownloadParams) (operationSummary *utils.OperationSummary, err error)
 	GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error)
 	SearchFiles(params services.SearchParams) (*content.ContentReader, error)
 	Aql(aql string) (io.ReadCloser, error)
 	SetProps(params services.PropsParams) (int, error)
 	DeleteProps(params services.PropsParams) (int, error)
-	UploadFilesWithCommandSummary(params ...services.UploadParams) (commandSummary *utils.CommandSummary, err error)
+	UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error)
 	UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
 	Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
@@ -161,7 +161,7 @@ func (esm *EmptyArtifactoryServicesManager) DownloadFiles(params ...services.Dow
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DownloadFilesWithCommandSummary(params ...services.DownloadParams) (commandSummary *utils.CommandSummary, err error) {
+func (esm *EmptyArtifactoryServicesManager) DownloadFilesWithSummary(params ...services.DownloadParams) (operationSummary *utils.OperationSummary, err error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -189,7 +189,7 @@ func (esm *EmptyArtifactoryServicesManager) UploadFiles(params ...services.Uploa
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UploadFilesWithCommandSummary(params ...services.UploadParams) (commandSummary *utils.CommandSummary, err error) {
+func (esm *EmptyArtifactoryServicesManager) UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
 	panic("Failed: Method is not implemented")
 }
 

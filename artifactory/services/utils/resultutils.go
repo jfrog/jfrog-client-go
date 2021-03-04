@@ -25,24 +25,30 @@ func SumIntArray(arr []int) int {
 	return sum
 }
 
-type CommandSummary struct {
-	TransferDetailsReader  *content.ContentReader
+type OperationSummary struct {
+	// A ContentReader of FileTransferDetails structs
+	TransferDetailsReader *content.ContentReader
+	// A ContentReader of ArtifactDetails structs
 	ArtifactsDetailsReader *content.ContentReader
 	TotalSucceeded         int
 	TotalFailed            int
 }
 
+///////////////////// Consider change to source and target
 type FileTransferDetails struct {
-	LocalPath       string `json:"localPath,omitempty"`
+	// Path of the file on the local machine. Can be full or relative (depending on the parameters given to the operation).
+	LocalPath string `json:"localPath,omitempty"`
+	// A full URL of the file in Artifactory
 	ArtifactoryPath string `json:"artifactoryPath,omitempty"`
 }
 
 type ArtifactDetails struct {
+	// Path of the artifact in Artifactory
 	ArtifactoryPath string    `json:"artifactoryPath,omitempty"`
 	Checksums       Checksums `json:"checksums,omitempty"`
 }
 
-func (cs *CommandSummary) Close() {
+func (cs *OperationSummary) Close() {
 	cs.TransferDetailsReader.Close()
 	cs.ArtifactsDetailsReader.Close()
 }

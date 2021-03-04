@@ -24,13 +24,15 @@ import (
 )
 
 type DownloadService struct {
-	client                 *jfroghttpclient.JfrogHttpClient
-	Progress               clientio.ProgressMgr
-	ArtDetails             auth.ServiceDetails
-	DryRun                 bool
-	Threads                int
-	saveSummary            bool
-	filesTransfersWriter   *content.ContentWriter
+	client      *jfroghttpclient.JfrogHttpClient
+	Progress    clientio.ProgressMgr
+	ArtDetails  auth.ServiceDetails
+	DryRun      bool
+	Threads     int
+	saveSummary bool
+	// A ContentWriter of FileTransferDetails structs. Used only if saveSummary is set to true.
+	filesTransfersWriter *content.ContentWriter
+	// A ContentWriter of ArtifactDetails structs. Used only if saveSummary is set to true.
 	artifactsDetailsWriter *content.ContentWriter
 }
 
@@ -74,19 +76,19 @@ func (ds *DownloadService) SetSaveSummary(saveSummary bool) {
 	ds.saveSummary = saveSummary
 }
 
-func (ds *DownloadService) getCommandSummary(totalSucceeded, totalFailed int) *utils.CommandSummary {
-	commandSummary := &utils.CommandSummary{
+func (ds *DownloadService) getOperationSummary(totalSucceeded, totalFailed int) *utils.OperationSummary {
+	operationSummary := &utils.OperationSummary{
 		TotalSucceeded: totalSucceeded,
 		TotalFailed:    totalFailed,
 	}
 	if ds.saveSummary {
-		commandSummary.TransferDetailsReader = content.NewContentReader(ds.filesTransfersWriter.GetFilePath(), content.DefaultKey)
-		commandSummary.ArtifactsDetailsReader = content.NewContentReader(ds.artifactsDetailsWriter.GetFilePath(), content.DefaultKey)
+		operationSummary.TransferDetailsReader = content.NewContentReader(ds.filesTransfersWriter.GetFilePath(), content.DefaultKey)
+		operationSummary.ArtifactsDetailsReader = content.NewContentReader(ds.artifactsDetailsWriter.GetFilePath(), content.DefaultKey)
 	}
-	return commandSummary
+	return operationSummary
 }
 
-func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*utils.CommandSummary, error) {
+func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*utils.OperationSummary, error) {
 	var e error
 	producerConsumer := parallel.NewRunner(ds.GetThreads(), 20000, false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
@@ -114,7 +116,7 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*uti
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
-	return ds.getCommandSummary(totalSuccess, <-expectedChan-totalSuccess), nil
+	return ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess), nil
 }
 
 func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan chan int, successCounters []int, errorsQueue *clientutils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
