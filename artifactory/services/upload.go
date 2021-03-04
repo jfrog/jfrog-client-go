@@ -870,8 +870,8 @@ func newResultManager() (*resultsManager, error) {
 // Write a result of a successful upload
 func (rm *resultsManager) addFinalResult(localPath, targetUrl string, checksums *fileutils.ChecksumDetails) {
 	fileTransferDetails := utils.FileTransferDetails{
-		LocalPath:       localPath,
-		ArtifactoryPath: targetUrl,
+		SourcePath: localPath,
+		TargetPath: targetUrl,
 	}
 	rm.singleFinalTransfersWriter.Write(fileTransferDetails)
 	artifactDetails := utils.ArtifactDetails{
@@ -895,8 +895,8 @@ func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 		}
 	}
 	fileTransferDetails := utils.FileTransferDetails{
-		LocalPath:       localPath,
-		ArtifactoryPath: targetUrl,
+		SourcePath: localPath,
+		TargetPath: targetUrl,
 	}
 	rm.notFinalTransfersWriters[targetUrl].Write(fileTransferDetails)
 	return nil
