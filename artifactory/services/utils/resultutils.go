@@ -34,7 +34,6 @@ type OperationSummary struct {
 	TotalFailed            int
 }
 
-///////////////////// Consider change to source and target
 type FileTransferDetails struct {
 	// Path of the file on the local machine. Can be full or relative (depending on the parameters given to the operation).
 	LocalPath string `json:"localPath,omitempty"`
