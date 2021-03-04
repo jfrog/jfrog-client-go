@@ -76,20 +76,20 @@ func (ad *ArtifactDetails) ToBuildInfoDependency() buildinfo.Dependency {
 	return dependency
 }
 
-func ConvertArtifactsDetailsToBuildInfoArtifacts(artifactsDetailsReader *content.ContentReader) []buildinfo.Artifact {
+func ConvertArtifactsDetailsToBuildInfoArtifacts(artifactsDetailsReader *content.ContentReader) ([]buildinfo.Artifact, error) {
 	var buildArtifacts []buildinfo.Artifact
 	for artifactDetails := new(ArtifactDetails); artifactsDetailsReader.NextRecord(artifactDetails) == nil; artifactDetails = new(ArtifactDetails) {
 		buildArtifacts = append(buildArtifacts, artifactDetails.ToBuildInfoArtifact())
 	}
-	return buildArtifacts
+	return buildArtifacts, artifactsDetailsReader.GetError()
 }
 
-func ConvertArtifactsDetailsToBuildInfoDependencies(artifactsDetailsReader *content.ContentReader) []buildinfo.Dependency {
+func ConvertArtifactsDetailsToBuildInfoDependencies(artifactsDetailsReader *content.ContentReader) ([]buildinfo.Dependency, error) {
 	var buildDependencies []buildinfo.Dependency
 	for artifactDetails := new(ArtifactDetails); artifactsDetailsReader.NextRecord(artifactDetails) == nil; artifactDetails = new(ArtifactDetails) {
 		buildDependencies = append(buildDependencies, artifactDetails.ToBuildInfoDependency())
 	}
-	return buildDependencies
+	return buildDependencies, artifactsDetailsReader.GetError()
 }
 
 type Checksums struct {

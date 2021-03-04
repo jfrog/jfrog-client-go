@@ -741,11 +741,11 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 	pr, pw := io.Pipe()
 
 	go func() {
+		var e error
 		zipWriter := zip.NewWriter(pw)
 		defer pw.Close()
 		defer zipWriter.Close()
 		for uploadData := new(UploadData); archiveDataReader.NextRecord(uploadData) == nil; uploadData = new(UploadData) {
-			var e error
 			if uploadData.Artifact.Symlink != "" {
 				e = us.addFileToZip(uploadData.Artifact.Symlink, progressPrefix, flat, zipWriter)
 			} else {
@@ -761,6 +761,9 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 					errorsQueue.AddError(e)
 				}
 			}
+		}
+		if e = archiveDataReader.GetError(); e != nil {
+			errorsQueue.AddError(e)
 		}
 	}()
 
