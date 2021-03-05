@@ -5,12 +5,12 @@ import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"gopkg.in/src-d/go-git.v4"
 )
 
 const (
@@ -23,7 +23,7 @@ type manager struct {
 	revision string
 	url      string
 	branch   string
-	commit   string
+	message  string
 }
 
 func NewGitManager(path string) *manager {
@@ -42,7 +42,7 @@ func (m *manager) ReadConfig() error {
 	m.handleSubmoduleIfNeeded()
 	m.readRevisionAndBranch()
 	m.readUrl()
-	m.readCommitMesssage()
+	m.readMessage()
 	return m.err
 }
 
@@ -101,8 +101,8 @@ func (m *manager) GetBranch() string {
 	return m.branch
 }
 
-func (m *manager) GetCommitMessage() string {
-	return m.commit
+func (m *manager) GetMessage() string {
+	return m.message
 }
 
 func (m *manager) readUrl() {
@@ -276,7 +276,7 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 	return
 }
 
-func (m *manager) readCommitMesssage() {
+func (m *manager) readMessage() {
 	if m.err != nil {
 		return
 	}
@@ -286,16 +286,16 @@ func (m *manager) readCommitMesssage() {
 		m.err = err
 		return
 	}
-	ref, err := r.Head()
+	h, err := r.ResolveRevision(plumbing.Revision(m.revision))
 	if err != nil {
 		m.err = err
 		return
 	}
-	commit, err := r.CommitObject(ref.Hash())
+	message, err := r.CommitObject(*h)
 	if err != nil {
 		m.err = err
 		return
 	}
-	m.commit = commit.Message
+	m.message = strings.TrimSpace(message.Message)
 	return
 }
