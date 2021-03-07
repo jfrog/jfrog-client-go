@@ -213,7 +213,7 @@ func TestAntPathToRegExp(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			regExpStr := antPatternToRegExp(test.antPattern)
+			regExpStr := antPatternToRegExp(cleanPath(test.antPattern))
 			if test.expectedRegExp != regExpStr {
 				t.Error("Unmatched! for ant pattern `" + test.antPattern + "\n` : Expected `" + test.expectedRegExp + "` Got `" + regExpStr + "`")
 			}
