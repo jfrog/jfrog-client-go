@@ -69,8 +69,8 @@ func TestReadConfig(t *testing.T) {
 
 func getDotGitPath(t *testing.T) string {
 	dotGitPath, err := os.Getwd()
-	dotGitPath = filepath.Dir(dotGitPath)
 	assert.NoError(t, err, "Failed to get current dir.")
+	dotGitPath = filepath.Dir(dotGitPath)
 	dotGitExists, err := fileutils.IsDirExists(filepath.Join(dotGitPath, ".git"), false)
 	assert.NoError(t, err)
 	assert.True(t, dotGitExists, "Can't find .git")

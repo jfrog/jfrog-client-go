@@ -18,12 +18,13 @@ const (
 )
 
 type manager struct {
-	path     string
-	err      error
-	revision string
-	url      string
-	branch   string
-	message  string
+	path                string
+	err                 error
+	revision            string
+	url                 string
+	branch              string
+	message             string
+	submoduleDotGitPath string
 }
 
 func NewGitManager(path string) *manager {
@@ -58,6 +59,9 @@ func (m *manager) handleSubmoduleIfNeeded() {
 		// .git is a directory, continue extracting vcs details.
 		return
 	}
+
+	// Saving .git file path
+	m.submoduleDotGitPath = m.path
 
 	content, err := ioutil.ReadFile(m.path)
 	if err != nil {
@@ -280,8 +284,9 @@ func (m *manager) readMessage() {
 	if m.err != nil {
 		return
 	}
-	path := strings.TrimSuffix(m.path, filepath.Join("", ".git"))
-	r, err := git.PlainOpen(path)
+	path := m.getPathHandleSubmodule()
+	path = strings.TrimSuffix(path, filepath.Join("", ".git"))
+	r, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{false})
 	if err != nil {
 		m.err = err
 		return
@@ -297,5 +302,14 @@ func (m *manager) readMessage() {
 		return
 	}
 	m.message = strings.TrimSpace(message.Message)
+	return
+}
+
+func (m *manager) getPathHandleSubmodule() (path string) {
+	if m.submoduleDotGitPath == "" {
+		path = m.path
+	} else {
+		path = m.submoduleDotGitPath
+	}
 	return
 }
