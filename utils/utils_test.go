@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"sort"
@@ -173,30 +174,29 @@ func TestIsWildcardParentheses(t *testing.T) {
 
 func TestAntPathToRegExp(t *testing.T) {
 	var fileSystemPaths []string = []string{
-		"dev/a/b.txt",
-		"dev/a/bb.txt",
-		"dev/a/bc.txt",
-		"dev/aa/b.txt",
-		"dev/aa/bb.txt",
-		"dev/aa/bc.txt",
-		"dev/aa/b.zip",
-		"dev/aa/b.zip",
-		"dev/aa/bc.zip",
-		"dev/a1/a2/a3/b.txt",
-		"dev/a1/a2/b.txt",
-		"dev/a1/a2/a3/bc.txt",
-		"dev/a1/a2/bc.txt",
+		filepath.Join("dev", "a", "b.txt"),
+		filepath.Join("dev", "a", "bb.txt"),
+		filepath.Join("dev", "a", "bc.txt"),
+		filepath.Join("dev", "aa", "b.txt"),
+		filepath.Join("dev", "aa", "bb.txt"),
+		filepath.Join("dev", "aa", "bc.txt"),
+		filepath.Join("dev", "aa", "b.zip"),
+		filepath.Join("dev", "aa", "bc.zip"),
+		filepath.Join("dev", "a1", "a2", "a3", "b.txt"),
+		filepath.Join("dev", "a1", "a2", "b.txt"),
+		filepath.Join("dev", "a1", "a2", "a3", "bc.txt"),
+		filepath.Join("dev", "a1", "a2", "bc.txt"),
 
-		"test/a/b.txt",
-		"test/a/bb.txt",
-		"test/a/bc.txt",
-		"test/aa/b.txt",
-		"test/aa/bb.txt",
-		"test/aa/bc.txt",
-		"test/aa/b.zip",
-		"test/aa/b.zip",
-		"test/aa/bc.zip",
+		filepath.Join("test", "a", "b.txt"),
+		filepath.Join("test", "a", "bb.txt"),
+		filepath.Join("test", "a", "bc.txt"),
+		filepath.Join("test", "aa", "b.txt"),
+		filepath.Join("test", "aa", "bb.txt"),
+		filepath.Join("test", "aa", "bc.txt"),
+		filepath.Join("test", "aa", "b.zip"),
+		filepath.Join("test", "aa", "bc.zip"),
 	}
+	separator := getFileSeparator()
 	tests := []struct {
 		name               string
 		antPattern         string
@@ -206,16 +206,16 @@ func TestAntPathToRegExp(t *testing.T) {
 	}{
 		{"check '?' in file's name", "dev/a/b?.txt", addRegExpPrefixAndSuffix("dev/a/b.{1}\\.txt"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt"}},
 		{"check '?' in directory's name", "dev/a?/b.txt", addRegExpPrefixAndSuffix("dev/a.{1}/b\\.txt"), fileSystemPaths, []string{"dev/aa/b.txt"}},
-		{"check '*' in file's name", "dev/a/b*.txt", addRegExpPrefixAndSuffix("dev/a/b([^/]*)\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/a/bb.txt", "dev/a/bc.txt"}},
-		{"check '*' in directory's name", "dev/*/b.txt", addRegExpPrefixAndSuffix("dev/([^/]*)/b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt"}},
-		{"check '**' in directory path", "**/b.txt", addRegExpPrefixAndSuffix("(.*/)?b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt", "test/a/b.txt", "test/aa/b.txt", "dev/a1/a2/a3/b.txt", "dev/a1/a2/b.txt"}},
-		{"combine all signs", "**/b?.*", addRegExpPrefixAndSuffix("(.*/)?b.{1}\\.([^/]*)"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt", "dev/aa/bb.txt", "dev/aa/bc.txt", "dev/aa/bc.zip", "dev/a1/a2/a3/bc.txt", "dev/a1/a2/bc.txt", "test/a/bb.txt", "test/a/bc.txt", "test/aa/bb.txt", "test/aa/bc.txt", "test/aa/bc.zip"}},
+		{"check '*' in file's name", "dev/a/b*.txt", addRegExpPrefixAndSuffix("dev/a/b([^" + separator + "]*)\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/a/bb.txt", "dev/a/bc.txt"}},
+		{"check '*' in directory's name", "dev/*/b.txt", addRegExpPrefixAndSuffix("dev/([^" + separator + "]*)/b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt"}},
+		{"check '**' in directory path", "**/b.txt", addRegExpPrefixAndSuffix("(.*" + separator + ")?b\\.txt"), fileSystemPaths, []string{"dev/a/b.txt", "dev/aa/b.txt", "test/a/b.txt", "test/aa/b.txt", "dev/a1/a2/a3/b.txt", "dev/a1/a2/b.txt"}},
+		{"combine all signs", "**/b?.*", addRegExpPrefixAndSuffix("(.*" + separator + ")?b.{1}\\.([^/]*)"), fileSystemPaths, []string{"dev/a/bb.txt", "dev/a/bc.txt", "dev/aa/bb.txt", "dev/aa/bc.txt", "dev/aa/bc.zip", "dev/a1/a2/a3/bc.txt", "dev/a1/a2/bc.txt", "test/a/bb.txt", "test/a/bc.txt", "test/aa/bb.txt", "test/aa/bc.txt", "test/aa/bc.zip"}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			regExpStr := antPatternToRegExp(test.antPattern)
 			if test.expectedRegExp != regExpStr {
-				t.Error("Unmatched! for ant pattern `" + test.antPattern + "` : Expected `" + test.expectedRegExp + "` Got `" + regExpStr + "`")
+				t.Error("Unmatched! for ant pattern `" + test.antPattern + "\n` : Expected `" + test.expectedRegExp + "` Got `" + regExpStr + "`")
 			}
 			var matches []string
 			for _, checkedPath := range fileSystemPaths {
