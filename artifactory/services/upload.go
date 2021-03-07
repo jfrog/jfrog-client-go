@@ -147,6 +147,8 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 	return
 }
 
+// Concatenates symlink props to the artifact's props. The function does not change the props in the Artifact struct itself.
+// The return value is the concatenated string.
 func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (string, error) {
 	artifactProps := ""
 	artifactSymlink := artifact.Symlink
@@ -211,7 +213,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
 	if uploadParams.Archive != "" && strings.HasSuffix(uploadParams.GetTarget(), "/") {
-		return errors.New("An archive's target cannot be a directory.")
+		return errorutils.CheckError(errors.New("an archive's target cannot be a directory"))
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	// Save parentheses index in pattern, witch have corresponding placeholder.
@@ -244,13 +246,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 			buildProps += vcsProps
 		}
 		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
-		if progressMgr != nil {
-			if uploadParams.Archive != "" {
-				progressMgr.IncGeneralProgressTotalBy(2)
-			} else {
-				progressMgr.IncGeneralProgressTotalBy(1)
-			}
-		}
+		incGeneralProgressTotal(progressMgr, uploadParams)
 		dataHandlerFunc(uploadData)
 		return err
 	}
@@ -297,17 +293,21 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 				paths: tempPaths, groups: matches, index: tempIndex, size: len(matches), uploadParams: uploadParams,
 				vcsCache: vcsCache,
 			}
-			if progressMgr != nil {
-				if uploadParams.Archive != "" {
-					progressMgr.IncGeneralProgressTotalBy(2)
-				} else {
-					progressMgr.IncGeneralProgressTotalBy(1)
-				}
-			}
+			incGeneralProgressTotal(progressMgr, uploadParams)
 			createUploadTask(taskData, dataHandlerFunc)
 		}
 	}
 	return nil
+}
+
+func incGeneralProgressTotal(progressMgr ioutils.ProgressMgr, uploadParams UploadParams) {
+	if progressMgr != nil {
+		if uploadParams.Archive != "" {
+			progressMgr.IncGeneralProgressTotalBy(2)
+		} else {
+			progressMgr.IncGeneralProgressTotalBy(1)
+		}
+	}
 }
 
 type uploadTaskData struct {
