@@ -46,7 +46,7 @@ func TestFilterBuildAqlSearchResults(t *testing.T) {
 	assert.NoError(t, err)
 	resultsToFilter := content.NewContentReader(filepath.Join(testDataPath, "filter_build_aql_search.json"), content.DefaultKey)
 	buildArtifactsSha := map[string]int{"a": 2, "b": 2, "c": 2}
-	resultReader, err := filterBuildAqlSearchResults(resultsToFilter, buildArtifactsSha, "myBuild", "1")
+	resultReader, err := filterBuildAqlSearchResults(resultsToFilter, buildArtifactsSha, []Build{{"myBuild", "1"}})
 	defer resultReader.Close()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(resultReader.GetFilesPaths()))
