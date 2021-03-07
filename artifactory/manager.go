@@ -180,23 +180,17 @@ func (sm *ArtifactoryServicesManagerImp) initDownloadService() *services.Downloa
 
 func (sm *ArtifactoryServicesManagerImp) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error) {
 	downloadService := sm.initDownloadService()
-	return downloadService.DownloadFiles(params...)
+	summary, e := downloadService.DownloadFiles(params...)
+	if e != nil {
+		return 0, 0, e
+	}
+	return summary.TotalSucceeded, summary.TotalFailed, nil
 }
 
-func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithResultReader(params ...services.DownloadParams) (resultReader *content.ContentReader, totalDownloaded, totalExpected int, err error) {
+func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithSummary(params ...services.DownloadParams) (operationSummary *utils.OperationSummary, err error) {
 	downloadService := sm.initDownloadService()
-	rw, err := content.NewContentWriter(content.DefaultKey, true, false)
-	if err != nil {
-		return
-	}
-	defer rw.Close()
-	downloadService.ResultWriter = rw
-	totalDownloaded, totalExpected, err = downloadService.DownloadFiles(params...)
-	if err != nil {
-		return
-	}
-	resultReader = content.NewContentReader(downloadService.ResultWriter.GetFilePath(), content.DefaultKey)
-	return
+	downloadService.SetSaveSummary(true)
+	return downloadService.DownloadFiles(params...)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error) {
@@ -242,23 +236,17 @@ func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadSer
 
 func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
 	uploadService := sm.initUploadService()
-	return uploadService.UploadFiles(params...)
+	summary, e := uploadService.UploadFiles(params...)
+	if e != nil {
+		return 0, 0, e
+	}
+	return summary.TotalSucceeded, summary.TotalFailed, nil
 }
 
-func (sm *ArtifactoryServicesManagerImp) UploadFilesWithResultReader(params ...services.UploadParams) (resultReader *content.ContentReader, totalUploaded, totalFailed int, err error) {
+func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
 	uploadService := sm.initUploadService()
-	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
-	if err != nil {
-		return
-	}
-	defer resultWriter.Close()
-	uploadService.ResultWriter = resultWriter
-	totalUploaded, totalFailed, err = uploadService.UploadFiles(params...)
-	if err != nil {
-		return
-	}
-	resultReader = content.NewContentReader(uploadService.ResultWriter.GetFilePath(), content.DefaultKey)
-	return
+	uploadService.SetSaveSummary(true)
+	return uploadService.UploadFiles(params...)
 }
 
 func (sm *ArtifactoryServicesManagerImp) Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {

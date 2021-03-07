@@ -85,13 +85,22 @@ func (rtc *JfrogHttpClient) Send(method string, url string, content []byte, foll
 	return rtc.httpClient.Send(method, url, content, followRedirect, closeBody, *httpClientsDetails)
 }
 
-func (rtc *JfrogHttpClient) UploadFile(localPath, url, logMsgPrefix string,
-	httpClientsDetails *httputils.HttpClientDetails, retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
+func (rtc *JfrogHttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails,
+	retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
 	return rtc.httpClient.UploadFile(localPath, url, logMsgPrefix, *httpClientsDetails, retries, progress)
+}
+
+func (rtc *JfrogHttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails *httputils.HttpClientDetails,
+	size int64) (resp *http.Response, body []byte, err error) {
+	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	if err != nil {
+		return
+	}
+	return rtc.httpClient.UploadFileFromReader(reader, url, *httpClientsDetails, size)
 }
 
 func (rtc *JfrogHttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails *httputils.HttpClientDetails) (ioReaderCloser io.ReadCloser, resp *http.Response, err error) {

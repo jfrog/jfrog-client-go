@@ -102,7 +102,8 @@ func TestFilterCandidateToBeDeleted(t *testing.T) {
 	assert.Len(t, sortedFiles, 3)
 	assert.NoError(t, err)
 	for i, val := range sortedFiles {
-		result, err := fileutils.FilesIdentical(val.GetFilePath(), filepath.Join(testPath, "buffer_file_ascending_order_"+strconv.Itoa(i+1)+".json"))
+		assert.Equal(t, 1, len(val.GetFilesPaths()))
+		result, err := fileutils.FilesIdentical(val.GetFilesPaths()[0], filepath.Join(testPath, "buffer_file_ascending_order_"+strconv.Itoa(i+1)+".json"))
 		assert.NoError(t, err)
 		assert.True(t, result)
 		assert.NoError(t, val.Close())
