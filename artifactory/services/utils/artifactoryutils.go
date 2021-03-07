@@ -31,7 +31,7 @@ const (
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
 	httpClientsDetails httputils.HttpClientDetails, client *jfroghttpclient.JfrogHttpClient, retries int,
-	progress clientio.ProgressMgr, progressExtraInfo string) (*http.Response, []byte, error) {
+	progress clientio.ProgressMgr) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
 		details, err = fileutils.GetFileDetails(localPath)
@@ -44,7 +44,7 @@ func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.Se
 	AddChecksumHeaders(requestClientDetails.Headers, details)
 	AddAuthHeaders(requestClientDetails.Headers, *artifactoryDetails)
 
-	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, retries, progress, progressExtraInfo)
+	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, retries, progress)
 }
 
 func UploadFileFromReader(reader io.Reader, url string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,

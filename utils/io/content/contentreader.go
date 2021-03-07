@@ -100,20 +100,15 @@ func (cr *ContentReader) Reset() {
 
 // Cleanup the reader data.
 func (cr *ContentReader) Close() error {
-	var failedPaths []string
 	for _, filePath := range cr.filesPaths {
 		if filePath == "" {
 			continue
 		}
 		if err := errorutils.CheckError(os.Remove(filePath)); err != nil {
-			log.Error(err)
-			failedPaths = append(failedPaths, filePath)
+			return err
 		}
 	}
-	cr.filesPaths = failedPaths
-	if len(failedPaths) > 0 {
-		return errors.New("failed to remove one or more files")
-	}
+	cr.filesPaths = nil
 	return nil
 }
 

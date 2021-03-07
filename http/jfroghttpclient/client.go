@@ -86,12 +86,12 @@ func (rtc *JfrogHttpClient) Send(method string, url string, content []byte, foll
 }
 
 func (rtc *JfrogHttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails,
-	retries int, progress ioutils.ProgressMgr, progressExtraInfo string) (resp *http.Response, body []byte, err error) {
+	retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
-	return rtc.httpClient.UploadFile(localPath, url, logMsgPrefix, *httpClientsDetails, retries, progress, progressExtraInfo)
+	return rtc.httpClient.UploadFile(localPath, url, logMsgPrefix, *httpClientsDetails, retries, progress)
 }
 
 func (rtc *JfrogHttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails *httputils.HttpClientDetails,

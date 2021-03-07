@@ -407,7 +407,7 @@ func prepareUploadData(localPath, baseTargetPath, props, buildProps string, uplo
 
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) uploadFile(localPath, targetPath, targetUrl, props, buildProps string, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
+func (us *UploadService) uploadFile(localPath, targetUrl, props, buildProps string, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
 	fileInfo, targetPathWithProps, err := prepareUploadData(localPath, targetUrl, props, buildProps, uploadParams, logMsgPrefix)
 	if err != nil {
 		return nil, false, err
@@ -424,7 +424,7 @@ func (us *UploadService) uploadFile(localPath, targetPath, targetUrl, props, bui
 	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileInfo) {
 		resp, details, body, err = us.uploadSymlink(targetPathWithProps, logMsgPrefix, httpClientsDetails, uploadParams)
 	} else {
-		resp, details, body, checksumDeployed, err = us.doUpload(localPath, targetPath, targetPathWithProps, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
+		resp, details, body, checksumDeployed, err = us.doUpload(localPath, targetPathWithProps, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
 	}
 	if err != nil {
 		return nil, false, err
@@ -436,7 +436,7 @@ func (us *UploadService) uploadFile(localPath, targetPath, targetUrl, props, bui
 // Reads a file from a Reader that is given from a function (getReaderFunc) and uploads it to the specified target path.
 // getReaderFunc is called only if checksum deploy was successful.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, error), targetPath, targetUrlWithProps string, uploadParams UploadParams, logMsgPrefix string, details *fileutils.FileDetails) (bool, error) {
+func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, error), targetUrlWithProps string, uploadParams UploadParams, logMsgPrefix string, details *fileutils.FileDetails) (bool, error) {
 	var resp *http.Response
 	var body []byte
 	var checksumDeployed = false
@@ -462,7 +462,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 					if e != nil {
 						return false, e
 					}
-					resp, details, body, e = us.doUploadFromReader(uploadZipReader, targetPath, targetUrlWithProps, httpClientsDetails, uploadParams, details)
+					resp, details, body, e = us.doUploadFromReader(uploadZipReader, targetUrlWithProps, httpClientsDetails, uploadParams, details)
 					if e != nil {
 						return true, e
 					}
@@ -496,11 +496,11 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries(), nil, "")
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries(), nil)
 	return
 }
 
-func (us *UploadService) doUpload(localPath, targetPath, targetUrlWithProps, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, fileInfo os.FileInfo, uploadParams UploadParams) (*http.Response, *fileutils.FileDetails, []byte, bool, error) {
+func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, fileInfo os.FileInfo, uploadParams UploadParams) (*http.Response, *fileutils.FileDetails, []byte, bool, error) {
 	var details *fileutils.FileDetails
 	var checksumDeployed bool
 	var resp *http.Response
@@ -521,7 +521,7 @@ func (us *UploadService) doUpload(localPath, targetPath, targetUrlWithProps, log
 		}
 		if !checksumDeployed {
 			resp, body, err = utils.UploadFile(localPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
-				httpClientsDetails, us.client, uploadParams.Retries, us.Progress, targetPath)
+				httpClientsDetails, us.client, uploadParams.Retries, us.Progress)
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
@@ -533,14 +533,14 @@ func (us *UploadService) doUpload(localPath, targetPath, targetUrlWithProps, log
 	return resp, details, body, checksumDeployed, err
 }
 
-func (us *UploadService) doUploadFromReader(fileReader io.Reader, targetPath, targetUrlWithProps string, httpClientsDetails httputils.HttpClientDetails, uploadParams UploadParams, details *fileutils.FileDetails) (*http.Response, *fileutils.FileDetails, []byte, error) {
+func (us *UploadService) doUploadFromReader(fileReader io.Reader, targetUrlWithProps string, httpClientsDetails httputils.HttpClientDetails, uploadParams UploadParams, details *fileutils.FileDetails) (*http.Response, *fileutils.FileDetails, []byte, error) {
 	var resp *http.Response
 	var body []byte
 	var err error
 	var reader io.Reader
 	addExplodeHeader(&httpClientsDetails, uploadParams.IsExplodeArchive())
 	if us.Progress != nil {
-		progressReader := us.Progress.NewProgressReader(details.Size, "Uploading", targetPath)
+		progressReader := us.Progress.NewProgressReader(details.Size, "Uploading", targetUrlWithProps)
 		reader = progressReader.ActionWithProgress(fileReader)
 		defer us.Progress.RemoveProgress(progressReader.GetId())
 	} else {
@@ -656,7 +656,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			if e != nil {
 				return
 			}
-			uploadFileDetails, uploaded, e := us.uploadFile(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, targetUrl, artifact.TargetProps, artifact.BuildProps, uploadParams, logMsgPrefix)
+			uploadFileDetails, uploaded, e := us.uploadFile(artifact.Artifact.LocalPath, targetUrl, artifact.TargetProps, artifact.BuildProps, uploadParams, logMsgPrefix)
 			if e != nil {
 				return
 			}
@@ -721,7 +721,7 @@ func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targe
 			archiveDataReader.Reset()
 			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat, nil, errorsQueue), nil
 		}
-		uploaded, e := us.uploadFileFromReader(getReaderFunc, targetPath, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, details)
+		uploaded, e := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, details)
 
 		if uploaded {
 			uploadResult.SuccessCount[threadId]++

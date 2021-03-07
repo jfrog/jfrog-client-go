@@ -155,14 +155,14 @@ func setRequestHeaders(httpClientsDetails httputils.HttpClientDetails, size int6
 
 // You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails,
-	retries int, progress ioutils.ProgressMgr, progressExtraInfo string) (resp *http.Response, body []byte, err error) {
+	retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      retries,
 		RetriesInterval: 0,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while uploading to %s", url),
 		LogMsgPrefix:    logMsgPrefix,
 		ExecutionHandler: func() (bool, error) {
-			resp, body, err = jc.doUploadFile(localPath, url, httpClientsDetails, progress, progressExtraInfo)
+			resp, body, err = jc.doUploadFile(localPath, url, httpClientsDetails, progress)
 			if err != nil {
 				return true, err
 			}
@@ -185,7 +185,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 }
 
 func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails httputils.HttpClientDetails,
-	progress ioutils.ProgressMgr, progressExtraInfo string) (*http.Response, []byte, error) {
+	progress ioutils.ProgressMgr) (*http.Response, []byte, error) {
 	var file *os.File
 	var err error
 	if localPath != "" {
@@ -204,7 +204,7 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	reqContent := fileutils.GetUploadRequestContent(file)
 	var reader io.Reader
 	if file != nil && progress != nil {
-		progressReader := progress.NewProgressReader(size, "Uploading", progressExtraInfo)
+		progressReader := progress.NewProgressReader(size, "Uploading", url)
 		reader = progressReader.ActionWithProgress(reqContent)
 		defer progress.RemoveProgress(progressReader.GetId())
 	} else {
