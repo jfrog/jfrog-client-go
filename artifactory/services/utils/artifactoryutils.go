@@ -471,7 +471,7 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 			buildArtifactsSha[resultItem.Actual_Sha1] = 0
 			continue
 		}
-		if isBuildContained(resultBuildName, "", builds) && buildArtifactsSha[resultItem.Actual_Sha1] != 0 {
+		if isBuildNameContained(resultBuildName, builds) && buildArtifactsSha[resultItem.Actual_Sha1] != 0 {
 			priorityArray[1].Write(*resultItem)
 			buildArtifactsSha[resultItem.Actual_Sha1] = 1
 			continue
@@ -510,11 +510,20 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 	return content.NewContentReader(resultCw.GetFilePath(), content.DefaultKey), nil
 }
 
-// Return true if the input buildName and buildNumber are contained in the builds array.
-// If the buildNumber is empty, compare only the build names.
+// Return true if the input buildName and buildNumber contained in the builds array.
 func isBuildContained(buildName, buildNumber string, builds []Build) bool {
 	for _, build := range builds {
-		if build.BuildName == buildName && (buildNumber == "" || build.BuildNumber == buildNumber) {
+		if build.BuildName == buildName && build.BuildNumber == buildNumber {
+			return true
+		}
+	}
+	return false
+}
+
+// Return true if the input buildName contained in the builds array.
+func isBuildNameContained(buildName string, builds []Build) bool {
+	for _, build := range builds {
+		if build.BuildName == buildName {
 			return true
 		}
 	}
