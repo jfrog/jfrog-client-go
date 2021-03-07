@@ -174,7 +174,7 @@ func PrepareLocalPathForUpload(localPath string, patternType PatternType) string
 		localPath = localPath[3:]
 	}
 	if patternType == AntPattern {
-		localPath = antPatternToRegExp(localPath)
+		localPath = antPatternToRegExp(cleanPath(localPath))
 	} else if patternType == WildCardPattern {
 		localPath = WildcardPathToRegExp(cleanPath(localPath))
 	}
