@@ -96,11 +96,11 @@ const (
 )
 
 func init() {
-	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory/", "Artifactory url")
+	RtUrl = flag.String("rt.url", "https://ecosysjfrog.jfrog.io/artifactory", "Artifactoryurl")
+	RtUser = flag.String("rt.user", "gail", "Artifactoryusername")
+	RtPassword = flag.String("rt.password", "Gg0546790011!", "Artifactorypassword")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
-	RtUser = flag.String("rt.user", "admin", "Artifactory username")
-	RtPassword = flag.String("rt.password", "password", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
