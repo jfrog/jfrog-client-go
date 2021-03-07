@@ -285,8 +285,7 @@ func (m *manager) readMessage() {
 		return
 	}
 	path := m.getPathHandleSubmodule()
-	path = strings.TrimSuffix(path, filepath.Join("", ".git"))
-	r, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{false})
+	r, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: false})
 	if err != nil {
 		m.err = err
 		return
@@ -311,5 +310,6 @@ func (m *manager) getPathHandleSubmodule() (path string) {
 	} else {
 		path = m.submoduleDotGitPath
 	}
+	path = strings.TrimSuffix(path, filepath.Join("", ".git"))
 	return
 }
