@@ -166,6 +166,7 @@ func getBuildNameAndNumberFromProps(properties []Property) (buildName string, bu
 
 // For builds (useLatestPolicy = true) - Parse build name and number. The build number can be LATEST if absent.
 // For release bundles - Parse bundle name and version.
+// For module - Parse module name and number.
 func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, string, error) {
 	const Delimiter = "/"
 	const EscapeChar = "\\"
@@ -178,7 +179,7 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + Latest)
 			return identifier, Latest, nil
 		} else {
-			return "", "", errorutils.CheckError(errors.New("No '" + Delimiter + "' is found in the bundle"))
+			return "", "", errorutils.CheckError(errors.New("No '" + Delimiter + "' is found in '" + identifier + "'"))
 		}
 	}
 	name, version := "", ""
@@ -203,7 +204,7 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			name = identifier
 			version = Latest
 		} else {
-			return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in the bundle"))
+			return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'"))
 		}
 	}
 	// Remove escape chars.
@@ -509,6 +510,8 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 	return content.NewContentReader(resultCw.GetFilePath(), content.DefaultKey), nil
 }
 
+// Return true if the input buildName and buildNumber are contained in the builds array.
+// If the buildNumber is empty, compare only the build names.
 func isBuildContained(buildName, buildNumber string, builds []Build) bool {
 	for _, build := range builds {
 		if build.BuildName == buildName && (buildNumber == "" || build.BuildNumber == buildNumber) {
@@ -589,8 +592,11 @@ func getAggregatedBuilds(buildName, buildNumber, projectKey string, flags Common
 	}}
 	for _, module := range buildInfo.BuildInfo.Modules {
 		if module.Type == buildinfo.Build {
-			buildSplit := strings.Split(module.Id, "/")
-			childAggregatedBuilds, err := getAggregatedBuilds(buildSplit[0], buildSplit[1], projectKey, flags)
+			name, version, err := parseNameAndVersion(module.Id, false)
+			if err != nil {
+				return []Build{}, err
+			}
+			childAggregatedBuilds, err := getAggregatedBuilds(name, version, projectKey, flags)
 			if err != nil {
 				return []Build{}, err
 			}

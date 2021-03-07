@@ -74,8 +74,7 @@ func TestBuildParsingBuildNumberWithOnlyEscapeChars(t *testing.T) {
 func TestBundleParsingNoBundleVersion(t *testing.T) {
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	_, _, err := parseNameAndVersion("CLI-Bundle-Name", false)
-	assert.EqualError(t, err, "No '/' is found in the bundle")
-
+	assert.EqualError(t, err, "No '/' is found in 'CLI-Bundle-Name'")
 }
 
 func TestBundleParsingBundleVersionProvided(t *testing.T) {
@@ -116,5 +115,5 @@ func TestBundleParsingBundleVersionWithEscapeCharsInTheBundleVersion(t *testing.
 
 func TestBundleParsingBundleVersionWithOnlyEscapeChars(t *testing.T) {
 	_, _, err := parseNameAndVersion("CLI-Bundle-Name\\/1\\/2\\/3\\/4", false)
-	assert.EqualError(t, err, "No delimiter char (/) without escaping char was found in the bundle")
+	assert.EqualError(t, err, "No delimiter char (/) without escaping char was found in 'CLI-Bundle-Name\\/1\\/2\\/3\\/4'")
 }
