@@ -22,11 +22,8 @@
       - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
     - [Using Artifactory Services](#using-artifactory-services)
       - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
-        - [Uploading Files:](#uploading-files)
-        - [Uploading Files with Results Reader:](#uploading-files-with-results-reader)
       - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
-        - [Downloading Files:](#downloading-files)
-        - [Downloading Files with Results Reader:](#downloading-files-with-results-reader)
+      - [Uploading and Downloading Files with Summary](#uploading-and-downloading-files-with-summary)
       - [Copying Files in Artifactory](#copying-files-in-artifactory)
       - [Moving Files in Artifactory](#moving-files-in-artifactory)
       - [Deleting Files from Artifactory](#deleting-files-from-artifactory)
@@ -208,7 +205,6 @@ rtManager, err := artifactory.New(&rtDetails, serviceConfig)
 
 ### Using Artifactory Services
 #### Uploading Files to Artifactory
-##### Uploading Files:
 Using the `UploadFiles()` function, we can upload files and get the general statistics of the action (The actual number of successful and failed uploads), and the error value if it occurred.
 ```go
 params := services.NewUploadParams()
@@ -232,34 +228,8 @@ params.MinChecksumDeploy = 15360
 
 totalUploaded, totalFailed, err := rtManager.UploadFiles(params)
 ```
-##### Uploading Files with Results Reader:
-Similar to `UploadFlies()`, but returns a reader, which allows iterating over the details of the uploaded files. Only files which were successfully uploaded are available by the reader.
-```go
-params := services.NewUploadParams()
-params.Pattern = "repo/*/*.zip"
-params.Target = "repo/path/"
-// Attach properties to the uploaded files.
-params.TargetProps = "key1=val1;key2=val2"
-params.AddVcsProps = false
-params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
-params.Recursive = true
-params.Regexp = false
-params.IncludeDirs = false
-params.Flat = true
-params.Explode = false
-params.Deb = ""
-params.Symlink = false
-// Retries default value: 3
-params.Retries = 5
-// MinChecksumDeploy default value: 10400
-params.MinChecksumDeploy = 15360
-
-reader, totalUploaded, totalFailed, err := rtManager.UploadFilesWithResultReader(params)
-```
-Read more about [ContentReader](#using-contentReader).
 
 #### Downloading Files from Artifactory
-##### Downloading Files:
 Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
 ```go
 params := services.NewDownloadParams()
@@ -283,25 +253,22 @@ params.MinSplitSize = 7168
 totalDownloaded, totalExpected, err := rtManager.DownloadFiles(params)
 ```
 
-##### Downloading Files with Results Reader:
-Similar to `DownloadFiles()`, but returns a reader, which allows iterating over the details of the downloaded files. Only files which were successfully downloaded are available by the reader.
-```go
-params := services.NewDownloadParams()
-params.Pattern = "repo/*/*.zip"
-params.Target = "target/path/"
-// Filter the downloaded files by properties.
-params.Props = "key1=val1;key2=val2"
-params.Recursive = true
-params.IncludeDirs = false
-params.Flat = false
-params.Explode = false
-params.Symlink = true
-params.ValidateSymlink = false
-params.Retries = 5
-params.SplitCount = 2
-params.MinSplitSize = 7168
+#### Uploading and Downloading Files with Summary
+The methods `UploadFilesWithSummary()` and `DownloadFilesWithSummary()` are similar to `UploadFlies()` and `DownloadFlies()`, but return an OperationSummary struct, which allows iterating over the details of the uploaded/downloaded files.<br>
+The OperationSummary struct contains:
+- TotalSucceeded - the number of successful uploads/downloads
+- TotalFailed - the number of failed uploads/downloads
+- TransferDetailsReader - a ContentReader of FileTransferDetails structs, with a struct for each successful transfer of file
+- ArtifactsDetailsReader - a ContentReader of ArtifactDetails structs, with a struct for each artifact in Artifactory that was uploaded/downloaded successfully
 
-reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
+The ContentReaders can be closed separately by calling `Close()` on each of them, or they both can be closed at once by calling `Close()` on the OperationSummary struct.
+```go
+params := services.NewUploadParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "repo/path/"
+
+summary, err := rtManager.UploadFilesWithSummary(params)
+defer summary.Close()
 ```
 Read more about [ContentReader](#using-contentReader).
 

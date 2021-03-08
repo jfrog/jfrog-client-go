@@ -337,7 +337,27 @@ func calcChecksumDetails(filePath string) (ChecksumDetails, error) {
 	if errorutils.CheckError(err) != nil {
 		return ChecksumDetails{}, err
 	}
-	checksumInfo, err := checksum.Calc(file)
+	return calcChecksumDetailsFromReader(file)
+}
+
+func GetFileDetailsFromReader(reader io.Reader) (*FileDetails, error) {
+	var err error
+	details := new(FileDetails)
+
+	pr, pw := io.Pipe()
+	defer pr.Close()
+
+	go func() {
+		defer pw.Close()
+		details.Size, err = io.Copy(pw, reader)
+	}()
+
+	details.Checksum, err = calcChecksumDetailsFromReader(pr)
+	return details, err
+}
+
+func calcChecksumDetailsFromReader(reader io.Reader) (ChecksumDetails, error) {
+	checksumInfo, err := checksum.Calc(reader)
 	if err != nil {
 		return ChecksumDetails{}, err
 	}

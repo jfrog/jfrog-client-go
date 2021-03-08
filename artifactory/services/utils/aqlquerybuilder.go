@@ -82,30 +82,30 @@ func handleArchiveSearch(triple RepoPathFile, archivePathFilePairs []RepoPathFil
 	return query
 }
 
-func createAqlBodyForBuildArtifacts(buildName, buildNumber string) string {
-	itemsPart :=
-		`{` +
-			`"artifact.module.build.name":"%s",` +
-			`"artifact.module.build.number":"%s"` +
-			`}`
-	return fmt.Sprintf(itemsPart, buildName, buildNumber)
+func createAqlBodyForBuildArtifacts(builds []Build) string {
+	buildArtifactsItem := `{"$and":[{"artifact.module.build.name":"%s","artifact.module.build.number":"%s"}]}`
+	var items []string
+	for _, build := range builds {
+		items = append(items, fmt.Sprintf(buildArtifactsItem, build.BuildName, build.BuildNumber))
+	}
+	return `{"$or":[` + strings.Join(items, ",") + "]}"
 }
 
-func createAqlBodyForBuildDependencies(buildName, buildNumber string) string {
-	itemsPart :=
-		`{` +
-			`"dependency.module.build.name":"%s",` +
-			`"dependency.module.build.number":"%s"` +
-			`}`
-	return fmt.Sprintf(itemsPart, buildName, buildNumber)
+func createAqlBodyForBuildDependencies(builds []Build) string {
+	buildDependenciesItem := `{"$and":[{"dependency.module.build.name":"%s","dependency.module.build.number":"%s"}]}`
+	var items []string
+	for _, build := range builds {
+		items = append(items, fmt.Sprintf(buildDependenciesItem, build.BuildName, build.BuildNumber))
+	}
+	return `{"$or":[` + strings.Join(items, ",") + "]}"
 }
 
-func createAqlQueryForBuild(buildName, buildNumber, includeQueryPart string, artifactsQuery bool) string {
+func createAqlQueryForBuild(includeQueryPart string, artifactsQuery bool, builds []Build) string {
 	var queryBody string
 	if artifactsQuery {
-		queryBody = createAqlBodyForBuildArtifacts(buildName, buildNumber)
+		queryBody = createAqlBodyForBuildArtifacts(builds)
 	} else {
-		queryBody = createAqlBodyForBuildDependencies(buildName, buildNumber)
+		queryBody = createAqlBodyForBuildDependencies(builds)
 	}
 	itemsPart := `items.find(%s)%s`
 	return fmt.Sprintf(itemsPart, queryBody, includeQueryPart)
@@ -150,7 +150,7 @@ func buildPropsQueryPart(props, excludeProps string) (string, error) {
 		return "", err
 	}
 	for _, v := range properties.Properties {
-		propsQuery += buildKeyValQueryPart(v.Key, v.Value) + `,`
+		propsQuery += buildKeyValQueryPart(v.Key, []string{v.Value}) + `,`
 	}
 
 	excludePropsQuery := ""
@@ -172,8 +172,12 @@ func buildPropsQueryPart(props, excludeProps string) (string, error) {
 	return propsQuery + excludePropsQuery, nil
 }
 
-func buildKeyValQueryPart(key string, value string) string {
-	return fmt.Sprintf(`"@%s":%s`, key, getAqlValue(value))
+func buildKeyValQueryPart(key string, propValues []string) string {
+	var items []string
+	for _, value := range propValues {
+		items = append(items, fmt.Sprintf(`{"@%s":%s}`, key, getAqlValue(value)))
+	}
+	return `"$or":[` + strings.Join(items, ",") + "]"
 }
 
 func buildExcludedKeyValQueryPart(key string, value string) string {
@@ -336,8 +340,8 @@ func buildSortQueryPart(sortFields []string, sortOrder string) string {
 	return fmt.Sprintf(`"$%s":[%s]`, sortOrder, strings.Join(prepareFieldsForQuery(sortFields), `,`))
 }
 
-func createPropsQuery(aqlBody, propKey, propVal string) string {
-	propKeyValQueryPart := buildKeyValQueryPart(propKey, propVal)
+func createPropsQuery(aqlBody, propKey string, propValues []string) string {
+	propKeyValQueryPart := buildKeyValQueryPart(propKey, propValues)
 	propsQuery :=
 		`items.find({` +
 			`"$and":[%s,{%s}]` +
