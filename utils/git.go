@@ -320,7 +320,7 @@ func (m *manager) getPathHandleSubmodule() (path string) {
 
 func stripSpaces(str string) string {
 	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
+		if unicode.IsSpace(r) && r != ' ' {
 			// if the character is a space, drop it
 			return -1
 		}
