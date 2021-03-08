@@ -36,10 +36,14 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	log.Info(message)
 
 	promoteUrl := ps.ArtDetails.GetUrl()
-	restApi := path.Join("api/build/promote/", promotionParams.GetBuildName(), promotionParams.GetBuildNumber()) +
-		utils.GetProjectQueryParam(promotionParams.ProjectKey)
+	restApi := path.Join("api/build/promote/", promotionParams.GetBuildName(), promotionParams.GetBuildNumber())
 
-	requestFullUrl, err := utils.BuildArtifactoryUrl(promoteUrl, restApi, make(map[string]string))
+	queryParams := make(map[string]string)
+	if promotionParams.ProjectKey != "" {
+		queryParams["project"] = promotionParams.ProjectKey
+	}
+
+	requestFullUrl, err := utils.BuildArtifactoryUrl(promoteUrl, restApi, queryParams)
 	if err != nil {
 		return err
 	}

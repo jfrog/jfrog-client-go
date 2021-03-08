@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -109,20 +108,11 @@ func IsWildcardPattern(pattern string) bool {
 	return strings.Contains(pattern, "*") || strings.HasSuffix(pattern, "/") || !strings.Contains(pattern, "/")
 }
 
-// Returns the name of the build-info repository, corresponding to the project key sent.
-// Returns an empty string, if the provided projectKey is empty.
-func BuildRepoNameFromProjectKey(projectKey string) string {
-	if projectKey == "" {
-		return ""
-	}
-	return fmt.Sprintf("%s-build-info", projectKey)
-}
-
 func GetProjectQueryParam(projectKey string) string {
 	if projectKey == "" {
 		return ""
 	}
-	return "?buildRepo=" + BuildRepoNameFromProjectKey(projectKey)
+	return "?project=" + projectKey
 }
 
 // paths - Sorted array.
@@ -567,8 +557,14 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 
 	// Get build-info json from Artifactory.
 	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
-	restApi := path.Join("api/build/", name, number) + GetProjectQueryParam(projectKey)
-	requestFullUrl, err := BuildArtifactoryUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, make(map[string]string))
+	restApi := path.Join("api/build/", name, number)
+
+	queryParams := make(map[string]string)
+	if projectKey != "" {
+		queryParams["project"] = projectKey
+	}
+
+	requestFullUrl, err := BuildArtifactoryUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, queryParams)
 
 	httpClient, err := flags.GetJfrogHttpClient()
 	if err != nil {
