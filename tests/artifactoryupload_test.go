@@ -19,6 +19,7 @@ func TestArtifactoryUpload(t *testing.T) {
 	t.Run("includeDirs", includeDirsUpload)
 	t.Run("explode", explodeUpload)
 	t.Run("props", propsUpload)
+	t.Run("summary", summaryUpload)
 }
 
 func flatUpload(t *testing.T) {
@@ -30,14 +31,14 @@ func flatUpload(t *testing.T) {
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
+	if err != nil {
+		t.Error(err)
+	}
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
 	if summary.TotalFailed != 0 {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
@@ -70,14 +71,14 @@ func recursiveUpload(t *testing.T) {
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
+	if err != nil {
+		t.Error(err)
+	}
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
 	if summary.TotalFailed != 0 {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
@@ -113,14 +114,14 @@ func placeholderUpload(t *testing.T) {
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
+	if err != nil {
+		t.Error(err)
+	}
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
 	if summary.TotalFailed != 0 {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
@@ -156,14 +157,14 @@ func includeDirsUpload(t *testing.T) {
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
+	if err != nil {
+		t.Error(err)
+	}
 	if summary.TotalSucceeded != 0 {
 		t.Error("Expected to upload 1 file.")
 	}
 	if summary.TotalFailed != 0 {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
@@ -212,14 +213,14 @@ func explodeUpload(t *testing.T) {
 	up.Flat = true
 	up.ExplodeArchive = true
 	summary, err := testsUploadService.UploadFiles(up)
+	if err != nil {
+		t.Error(err)
+	}
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
 	if summary.TotalFailed != 0 {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
@@ -257,9 +258,9 @@ func propsUpload(t *testing.T) {
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Target: RtTargetRepo, TargetProps: "key1=val1"}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, summary.TotalSucceeded)
 	assert.Equal(t, 0, summary.TotalFailed)
-	assert.NoError(t, err)
 
 	// Search a.in with property key1=val1
 	searchParams := services.NewSearchParams()
@@ -283,6 +284,43 @@ func propsUpload(t *testing.T) {
 	assert.Equal(t, "key1", item.Properties[0].Key)
 	assert.Equal(t, "val1", item.Properties[0].Value)
 
+	artifactoryCleanup(t)
+}
+
+func summaryUpload(t *testing.T) {
+	workingDir, _ := createWorkingDir(t)
+	defer os.RemoveAll(workingDir)
+
+	pattern := FixWinPath(filepath.Join(workingDir, "*"))
+	up := services.NewUploadParams()
+	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
+	up.Flat = true
+	testsUploadService.SetSaveSummary(true)
+	defer testsUploadService.SetSaveSummary(false)
+	summary, err := testsUploadService.UploadFiles(up)
+	if err != nil {
+		t.Error(err)
+	}
+	defer summary.Close()
+	if summary.TotalSucceeded != 1 {
+		t.Error("Expected to upload 1 file.")
+	}
+	if summary.TotalFailed != 0 {
+		t.Error("Failed to upload", summary.TotalFailed, "files.")
+	}
+	var transfers []utils.FileTransferDetails
+	for item := new(utils.FileTransferDetails); summary.TransferDetailsReader.NextRecord(item) == nil; item = new(utils.FileTransferDetails) {
+		transfers = append(transfers, *item)
+	}
+	assert.Len(t, transfers, 1)
+	assert.Equal(t, workingDir+"/out/a.in", transfers[0].SourcePath)
+	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+RtTargetRepo+"a.in", transfers[0].TargetPath)
+	var artifacts []utils.ArtifactDetails
+	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
+		artifacts = append(artifacts, *item)
+	}
+	assert.Len(t, artifacts, 1)
+	assert.Equal(t, RtTargetRepo+"a.in", artifacts[0].ArtifactoryPath)
 	artifactoryCleanup(t)
 }
 

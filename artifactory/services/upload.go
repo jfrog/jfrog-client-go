@@ -663,7 +663,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			if uploaded {
 				uploadResult.SuccessCount[threadId]++
 				if us.saveSummary {
-					us.resultsManager.addFinalResult(artifact.Artifact.LocalPath, targetUrl, &uploadFileDetails.Checksum)
+					us.resultsManager.addFinalResult(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, targetUrl, &uploadFileDetails.Checksum)
 				}
 			}
 			return
@@ -868,14 +868,14 @@ func newResultManager() (*resultsManager, error) {
 }
 
 // Write a result of a successful upload
-func (rm *resultsManager) addFinalResult(localPath, targetUrl string, checksums *fileutils.ChecksumDetails) {
+func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl string, checksums *fileutils.ChecksumDetails) {
 	fileTransferDetails := utils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
 	}
 	rm.singleFinalTransfersWriter.Write(fileTransferDetails)
 	artifactDetails := utils.ArtifactDetails{
-		ArtifactoryPath: targetUrl,
+		ArtifactoryPath: targetPath,
 		Checksums: utils.Checksums{
 			Sha256: checksums.Sha256,
 			Sha1:   checksums.Sha1,
