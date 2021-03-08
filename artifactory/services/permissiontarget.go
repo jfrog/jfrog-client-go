@@ -42,6 +42,25 @@ func (pts *PermissionTargetService) Delete(permissionTargetName string) error {
 	return nil
 }
 
+func (pts *PermissionTargetService) Get(permissionTargetName string) (*PermissionTargetParams, error) {
+	httpClientsDetails := pts.ArtDetails.CreateHttpClientDetails()
+	log.Info("Getting permission target...")
+	resp, body, _, err := pts.client.SendGet(pts.ArtDetails.GetUrl()+"api/v2/security/permissions/"+permissionTargetName, true, &httpClientsDetails)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	}
+
+	log.Debug("Artifactory response:", resp.Status)
+	permissionTarget := &PermissionTargetParams{}
+	if err := json.Unmarshal(body, permissionTarget); err != nil {
+		return nil, err
+	}
+	return permissionTarget, nil
+}
+
 func (pts *PermissionTargetService) Create(params PermissionTargetParams) error {
 	return pts.performRequest(params, false)
 }
@@ -85,18 +104,20 @@ func NewPermissionTargetParams() PermissionTargetParams {
 	return PermissionTargetParams{}
 }
 
+// Using struct pointers to keep the fields null if they are empty.
+// Artifactory evaluates inner struct typed fields if they are not null, which can lead to failures in the request.
 type PermissionTargetParams struct {
-	Name          string                  `json:"name"`
-	Repo          PermissionTargetSection `json:"repo,omitempty"`
-	Build         PermissionTargetSection `json:"build,omitempty"`
-	ReleaseBundle PermissionTargetSection `json:"releaseBundle,omitempty"`
+	Name          string                   `json:"name"`
+	Repo          *PermissionTargetSection `json:"repo,omitempty"`
+	Build         *PermissionTargetSection `json:"build,omitempty"`
+	ReleaseBundle *PermissionTargetSection `json:"releaseBundle,omitempty"`
 }
 
 type PermissionTargetSection struct {
 	IncludePatterns []string `json:"include-patterns,omitempty"`
 	ExcludePatterns []string `json:"exclude-patterns,omitempty"`
 	Repositories    []string `json:"repositories"`
-	Actions         Actions  `json:"actions,omitempty"`
+	Actions         *Actions `json:"actions,omitempty"`
 }
 
 type Actions struct {

@@ -1,12 +1,8 @@
 package tests
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	"net/http"
 	"testing"
 	"time"
 
@@ -20,12 +16,16 @@ const (
 func TestPermissionTarget(t *testing.T) {
 	params := services.NewPermissionTargetParams()
 	params.Name = fmt.Sprintf("%s-%d", PermissionTargetNamePrefix, time.Now().Unix())
+	params.Repo = &services.PermissionTargetSection{}
 	params.Repo.Repositories = []string{"ANY"}
 	params.Repo.ExcludePatterns = []string{"dir/*"}
+	params.Repo.Actions = &services.Actions{}
 	params.Repo.Actions.Users = map[string][]string{
 		"anonymous": {"read"},
 	}
+	params.Build = &services.PermissionTargetSection{}
 	params.Build.Repositories = []string{"artifactory-build-info"}
+	params.Build.Actions = &services.Actions{}
 	params.Build.Actions.Users = map[string][]string{
 		"anonymous": {"annotate"},
 	}
@@ -54,22 +54,30 @@ func validatePermissionTarget(t *testing.T, params services.PermissionTargetPara
 	assert.Equal(t, params.Name, targetConfig.Name)
 	assert.Equal(t, params.Repo, targetConfig.Repo)
 	assert.Equal(t, params.Build, targetConfig.Build)
-	return
+	assert.Equal(t, params.ReleaseBundle, targetConfig.ReleaseBundle)
 }
 
 func getPermissionTarget(targetName string) (targetParams *services.PermissionTargetParams, err error) {
-	artDetails := GetRtDetails()
-	artHttpDetails := artDetails.CreateHttpClientDetails()
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return
+	return testsPermissionTargetService.Get(targetName)
+}
+
+// Assert empty inner structs remain nil unless explicitly set.
+func TestPermissionTargetEmptyFields(t *testing.T) {
+	params := services.NewPermissionTargetParams()
+	params.Name = fmt.Sprintf("%s-%d", PermissionTargetNamePrefix, time.Now().Unix())
+
+	assert.Nil(t, params.Repo)
+	params.Repo = &services.PermissionTargetSection{}
+	params.Repo.Repositories = []string{"ANY"}
+	params.Repo.IncludePatterns = []string{"**"}
+	params.Repo.ExcludePatterns = []string{"dir/*"}
+	params.Repo.Actions = &services.Actions{}
+	params.Repo.Actions.Users = map[string][]string{
+		"anonymous": {"read"},
 	}
-	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/v2/security/permissions/"+targetName, false, artHttpDetails)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return
-	}
-	if err = json.Unmarshal(body, &targetParams); err != nil {
-		return nil, errors.New("failed unmarshalling permission target " + targetName)
-	}
-	return
+
+	assert.Nil(t, params.Build)
+	assert.Nil(t, params.ReleaseBundle)
+	assert.NoError(t, testsPermissionTargetService.Create(params))
+	validatePermissionTarget(t, params)
 }
