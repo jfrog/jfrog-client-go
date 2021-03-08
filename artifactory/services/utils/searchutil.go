@@ -36,6 +36,11 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	if err != nil {
 		return nil, err
 	}
+	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, "", flags)
+	if err != nil {
+		return nil, err
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(2)
 
@@ -45,7 +50,7 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	go func() {
 		defer wg.Done()
 		if !specFile.ExcludeArtifacts {
-			artifactsReader, artErr = getBuildArtifactsForBuildSearch(*specFile, flags, buildName, buildNumber)
+			artifactsReader, artErr = getBuildArtifactsForBuildSearch(*specFile, flags, aggregatedBuilds)
 		}
 	}()
 
@@ -55,7 +60,7 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	go func() {
 		defer wg.Done()
 		if specFile.IncludeDeps {
-			dependenciesReader, depErr = getBuildDependenciesForBuildSearch(*specFile, flags, buildName, buildNumber)
+			dependenciesReader, depErr = getBuildDependenciesForBuildSearch(*specFile, flags, aggregatedBuilds)
 		}
 	}()
 
@@ -73,17 +78,17 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 		return nil, err
 	}
 
-	return filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, buildName, buildNumber)
+	return filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, aggregatedBuilds)
 }
 
-func getBuildDependenciesForBuildSearch(specFile ArtifactoryCommonParams, flags CommonConf, buildName, buildNumber string) (*content.ContentReader, error) {
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependencies(buildName, buildNumber)}
+func getBuildDependenciesForBuildSearch(specFile ArtifactoryCommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependencies(builds)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
 }
 
-func getBuildArtifactsForBuildSearch(specFile ArtifactoryCommonParams, flags CommonConf, buildName, buildNumber string) (*content.ContentReader, error) {
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifacts(buildName, buildNumber)}
+func getBuildArtifactsForBuildSearch(specFile ArtifactoryCommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifacts(builds)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
 }
@@ -95,7 +100,7 @@ func getBuildArtifactsForBuildSearch(specFile ArtifactoryCommonParams, flags Com
 // 3. If we have more than one artifact with the same sha1:
 // 	3.1 Compare the build-name & build-number among all the artifact with the same sha1.
 // This will prevent unnecessary search upon all Artifactory:
-func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *ArtifactoryCommonParams, flags CommonConf, buildName, buildNumber string) (*content.ContentReader, error) {
+func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *ArtifactoryCommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
 	if includePropertiesInAqlForSpec(specFile) {
 		// Don't fetch artifacts' properties from Artifactory.
 		mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader)
@@ -107,11 +112,15 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 		if err != nil {
 			return nil, err
 		}
-		return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, buildName, buildNumber)
+		return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
 	}
 
 	// Artifacts' properties weren't fetched in previous aql, fetch now and add to results.
-	readerWithProps, err := searchProps(createAqlBodyForBuildArtifacts(buildName, buildNumber), "build.name", buildName, flags)
+	var buildNames []string
+	for _, build := range builds {
+		buildNames = append(buildNames, build.BuildName)
+	}
+	readerWithProps, err := searchProps(createAqlBodyForBuildArtifacts(builds), "build.name", buildNames, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +136,7 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 	}
 	defer mergedReader.Close()
 	buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
-	return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, buildName, buildNumber)
+	return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
 }
 
 func mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader *content.ContentReader) (*content.ContentReader, error) {
@@ -207,9 +216,9 @@ func fetchProps(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArt
 		var err error
 		switch requiredArtifactProps {
 		case ALL:
-			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", "*", flags)
+			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", []string{"*"}, flags)
 		case SYMLINK:
-			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "symlink.dest", "*", flags)
+			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "symlink.dest", []string{"*"}, flags)
 		}
 		if err != nil {
 			return nil, err
