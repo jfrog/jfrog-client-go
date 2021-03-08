@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -286,21 +287,24 @@ func (m *manager) readMessage() {
 	}
 	path := m.getPathHandleSubmodule()
 	r, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: false})
+	err = errorutils.CheckError(err)
 	if err != nil {
 		m.err = err
 		return
 	}
 	h, err := r.ResolveRevision(plumbing.Revision(m.revision))
+	err = errorutils.CheckError(err)
 	if err != nil {
 		m.err = err
 		return
 	}
 	message, err := r.CommitObject(*h)
+	err = errorutils.CheckError(err)
 	if err != nil {
 		m.err = err
 		return
 	}
-	m.message = strings.TrimSpace(message.Message)
+	m.message = stripSpaces(message.Message)
 	return
 }
 
@@ -312,4 +316,14 @@ func (m *manager) getPathHandleSubmodule() (path string) {
 	}
 	path = strings.TrimSuffix(path, filepath.Join("", ".git"))
 	return
+}
+
+func stripSpaces(str string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			// if the character is a space, drop it
+			return -1
+		}
+		return r
+	}, str)
 }
