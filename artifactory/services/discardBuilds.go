@@ -37,10 +37,8 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 		return err
 	}
 	requestFullUrl += "?async=" + strconv.FormatBool(params.IsAsync())
-
-	buildRepo := utils.BuildRepoNameFromProjectKey(params.ProjectKey)
-	if buildRepo != "" {
-		requestFullUrl += "&buildRepo=" + buildRepo
+	if params.ProjectKey != "" {
+		requestFullUrl += "&project=" + params.ProjectKey
 	}
 
 	var excludeBuilds []string
