@@ -114,6 +114,12 @@ func (sm *ArtifactoryServicesManagerImp) DeletePermissionTarget(permissionTarget
 	return permissionTargetService.Delete(permissionTargetName)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetPermissionTarget(permissionTargetName string) (*services.PermissionTargetParams, error) {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.Get(permissionTargetName)
+}
+
 func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
 	buildInfoService := services.NewBuildInfoService(sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
