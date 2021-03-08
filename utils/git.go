@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"unicode"
 )
 
 const (
@@ -304,7 +303,7 @@ func (m *manager) readMessage() {
 		m.err = err
 		return
 	}
-	m.message = stripSpaces(message.Message)
+	m.message = strings.TrimSpace(message.Message)
 	return
 }
 
@@ -316,14 +315,4 @@ func (m *manager) getPathHandleSubmodule() (path string) {
 	}
 	path = strings.TrimSuffix(path, filepath.Join("", ".git"))
 	return
-}
-
-func stripSpaces(str string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) && r != ' ' {
-			// if the character is a space, drop it
-			return -1
-		}
-		return r
-	}, str)
 }

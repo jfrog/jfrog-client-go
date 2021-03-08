@@ -55,6 +55,12 @@ func TestReadConfig(t *testing.T) {
 	err := gitManager.ReadConfig()
 
 	gitExecutor := GitExecutor(dotGitPath)
+	url, _, err := gitExecutor.GetUrl()
+	assert.NoError(t, err)
+	if !strings.HasSuffix(url, ".git") {
+		url += ".git"
+	}
+	assert.Equal(t, url, gitManager.GetUrl(), "Wrong url")
 	revision, _, err := gitExecutor.GetRevision()
 	assert.NoError(t, err)
 	assert.Equal(t, revision, gitManager.GetRevision(), "Wrong revision")
