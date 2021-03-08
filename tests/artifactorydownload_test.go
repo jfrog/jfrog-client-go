@@ -295,7 +295,7 @@ func summaryDownload(t *testing.T) {
 	}
 	assert.Len(t, transfers, 1)
 	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+RtTargetRepo+"c.tar.gz", transfers[0].SourcePath)
-	assert.Equal(t, workingDir+"/c.tar.gz", transfers[0].TargetPath)
+	assert.Equal(t, filepath.Join(workingDir, "c.tar.gz"), transfers[0].TargetPath)
 	var artifacts []utils.ArtifactDetails
 	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
 		artifacts = append(artifacts, *item)

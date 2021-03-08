@@ -313,7 +313,7 @@ func summaryUpload(t *testing.T) {
 		transfers = append(transfers, *item)
 	}
 	assert.Len(t, transfers, 1)
-	assert.Equal(t, workingDir+"/out/a.in", transfers[0].SourcePath)
+	assert.Equal(t, filepath.Join(workingDir, "out", "a.in"), transfers[0].SourcePath)
 	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+RtTargetRepo+"a.in", transfers[0].TargetPath)
 	var artifacts []utils.ArtifactDetails
 	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
