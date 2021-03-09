@@ -285,21 +285,18 @@ func (m *manager) readMessage() {
 		return
 	}
 	path := m.getPathHandleSubmodule()
-	r, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: false})
-	err = errorutils.CheckError(err)
-	if err != nil {
+	gitRepo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: false})
+	if errorutils.CheckError(err) != nil {
 		m.err = err
 		return
 	}
-	h, err := r.ResolveRevision(plumbing.Revision(m.revision))
-	err = errorutils.CheckError(err)
-	if err != nil {
+	hash, err := gitRepo.ResolveRevision(plumbing.Revision(m.revision))
+	if errorutils.CheckError(err) != nil {
 		m.err = err
 		return
 	}
-	message, err := r.CommitObject(*h)
-	err = errorutils.CheckError(err)
-	if err != nil {
+	message, err := gitRepo.CommitObject(*hash)
+	if errorutils.CheckError(err) != nil {
 		m.err = err
 		return
 	}

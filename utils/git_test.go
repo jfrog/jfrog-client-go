@@ -70,7 +70,6 @@ func TestReadConfig(t *testing.T) {
 	message, _, err := gitExecutor.GetMessage(revision)
 	assert.NoError(t, err)
 	assert.Equal(t, message, gitManager.GetMessage(), "Wrong message")
-
 }
 
 func getDotGitPath(t *testing.T) string {
