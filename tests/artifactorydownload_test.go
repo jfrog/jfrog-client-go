@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,6 +21,7 @@ func TestArtifactoryDownload(t *testing.T) {
 	t.Run("excludePatterns", excludePatternsDownload)
 	t.Run("exclusions", exclusionsDownload)
 	t.Run("explodeArchive", explodeArchiveDownload)
+	t.Run("summary", summaryDownload)
 	artifactoryCleanup(t)
 }
 
@@ -264,4 +266,41 @@ func explodeDownloadAndVerify(t *testing.T, downloadParams *services.DownloadPar
 	if !fileutils.IsPathExists(filepath.Join(workingDir, "a.in"), false) {
 		t.Error("Missing file a.in")
 	}
+}
+
+func summaryDownload(t *testing.T) {
+	workingDir, err := ioutil.TempDir("", "downloadTests")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(workingDir)
+	testsDownloadService.SetSaveSummary(true)
+	defer testsDownloadService.SetSaveSummary(false)
+	downloadPattern := RtTargetRepo + "*.tar.gz"
+	downloadTarget := workingDir + string(filepath.Separator)
+	summary, err := testsDownloadService.DownloadFiles(services.DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: true})
+	if err != nil {
+		t.Error(err)
+	}
+	defer summary.Close()
+	if summary.TotalSucceeded != 1 {
+		t.Error("Expected to download 1 files.")
+	}
+	if summary.TotalFailed != 0 {
+		t.Error("Failed to download", summary.TotalFailed, "files.")
+	}
+	var transfers []utils.FileTransferDetails
+	for item := new(utils.FileTransferDetails); summary.TransferDetailsReader.NextRecord(item) == nil; item = new(utils.FileTransferDetails) {
+		transfers = append(transfers, *item)
+	}
+	assert.Len(t, transfers, 1)
+	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+RtTargetRepo+"c.tar.gz", transfers[0].SourcePath)
+	assert.Equal(t, filepath.Join(workingDir, "c.tar.gz"), transfers[0].TargetPath)
+	var artifacts []utils.ArtifactDetails
+	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
+		artifacts = append(artifacts, *item)
+	}
+	assert.Len(t, artifacts, 1)
+	assert.Equal(t, RtTargetRepo+"c.tar.gz", artifacts[0].ArtifactoryPath)
+	artifactoryCleanup(t)
 }
