@@ -5,6 +5,8 @@ import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -16,11 +18,13 @@ const (
 )
 
 type manager struct {
-	path     string
-	err      error
-	revision string
-	url      string
-	branch   string
+	path                string
+	err                 error
+	revision            string
+	url                 string
+	branch              string
+	message             string
+	submoduleDotGitPath string
 }
 
 func NewGitManager(path string) *manager {
@@ -39,6 +43,7 @@ func (m *manager) ReadConfig() error {
 	m.handleSubmoduleIfNeeded()
 	m.readRevisionAndBranch()
 	m.readUrl()
+	m.readMessage()
 	return m.err
 }
 
@@ -54,6 +59,9 @@ func (m *manager) handleSubmoduleIfNeeded() {
 		// .git is a directory, continue extracting vcs details.
 		return
 	}
+
+	// Saving .git file path
+	m.submoduleDotGitPath = m.path
 
 	content, err := ioutil.ReadFile(m.path)
 	if err != nil {
@@ -95,6 +103,10 @@ func (m *manager) GetRevision() string {
 
 func (m *manager) GetBranch() string {
 	return m.branch
+}
+
+func (m *manager) GetMessage() string {
+	return m.message
 }
 
 func (m *manager) readUrl() {
@@ -265,5 +277,39 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 	}
 
 	m.err = errorutils.CheckError(errors.New("failed fetching revision from git config, from ref: " + ref))
+	return
+}
+
+func (m *manager) readMessage() {
+	if m.err != nil {
+		return
+	}
+	path := m.getPathHandleSubmodule()
+	gitRepo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: false})
+	if errorutils.CheckError(err) != nil {
+		m.err = err
+		return
+	}
+	hash, err := gitRepo.ResolveRevision(plumbing.Revision(m.revision))
+	if errorutils.CheckError(err) != nil {
+		m.err = err
+		return
+	}
+	message, err := gitRepo.CommitObject(*hash)
+	if errorutils.CheckError(err) != nil {
+		m.err = err
+		return
+	}
+	m.message = strings.TrimSpace(message.Message)
+	return
+}
+
+func (m *manager) getPathHandleSubmodule() (path string) {
+	if m.submoduleDotGitPath == "" {
+		path = m.path
+	} else {
+		path = m.submoduleDotGitPath
+	}
+	path = strings.TrimSuffix(path, filepath.Join("", ".git"))
 	return
 }
