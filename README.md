@@ -250,7 +250,7 @@ params.SplitCount = 2
 // MinSplitSize default value: 5120
 params.MinSplitSize = 7168
 
-totalDownloaded, totalExpected, err := rtManager.DownloadFiles(params)
+totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 ```
 
 #### Uploading and Downloading Files with Summary

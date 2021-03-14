@@ -184,7 +184,7 @@ func (sm *ArtifactoryServicesManagerImp) initDownloadService() *services.Downloa
 	return downloadService
 }
 
-func (sm *ArtifactoryServicesManagerImp) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error) {
+func (sm *ArtifactoryServicesManagerImp) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error) {
 	downloadService := sm.initDownloadService()
 	summary, e := downloadService.DownloadFiles(params...)
 	if e != nil {
