@@ -202,14 +202,16 @@ type CreateTokenResponseData struct {
 }
 
 type GetTokensResponseData struct {
-	Tokens []struct {
-		Issuer      string `json:"issuer,omitempty"`
-		Subject     string `json:"subject,omitempty"`
-		Refreshable bool   `json:"refreshable,omitempty"`
-		Expiry      int    `json:"expiry,omitempty"`
-		TokenId     string `json:"token_id,omitempty"`
-		IssuedAt    int    `json:"issued_at,omitempty"`
-	}
+	Tokens []Token
+}
+
+type Token struct {
+	Issuer      string `json:"issuer,omitempty"`
+	Subject     string `json:"subject,omitempty"`
+	Refreshable bool   `json:"refreshable,omitempty"`
+	Expiry      int    `json:"expiry,omitempty"`
+	TokenId     string `json:"token_id,omitempty"`
+	IssuedAt    int    `json:"issued_at,omitempty"`
 }
 
 type CreateTokenParams struct {
