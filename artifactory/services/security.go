@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -93,6 +94,20 @@ func (ss *SecurityService) GetTokens() (GetTokensResponseData, error) {
 		return tokens, errorutils.CheckError(err)
 	}
 	return tokens, err
+}
+
+func (ss *SecurityService) GetUserTokens(username string) ([]string, error) {
+	var tokens []string
+	tokenResponseData, err := ss.GetTokens()
+	if err != nil {
+		return nil, err
+	}
+	for _, token := range tokenResponseData.Tokens {
+		if strings.HasSuffix(token.Subject, "/"+username) {
+			tokens = append(tokens, token.TokenId)
+		}
+	}
+	return tokens, nil
 }
 
 func (ss *SecurityService) RefreshToken(params RefreshTokenParams) (CreateTokenResponseData, error) {
