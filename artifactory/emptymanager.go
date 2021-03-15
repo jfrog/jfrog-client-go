@@ -70,6 +70,7 @@ type ArtifactoryServicesManager interface {
 	CreateUser(params services.UserParams) error
 	UpdateUser(params services.UserParams) error
 	DeleteUser(name string) error
+	RegenerateAPIKey() (string, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -307,6 +308,10 @@ func (esm *EmptyArtifactoryServicesManager) UpdateGroup(params services.GroupPar
 }
 
 func (esm *EmptyArtifactoryServicesManager) DeleteGroup(name string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) RegenerateAPIKey() (string, error) {
 	panic("Failed: Method is not implemented")
 }
 
