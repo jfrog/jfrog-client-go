@@ -25,6 +25,14 @@ type WatchService struct {
 	XrayDetails auth.ServiceDetails
 }
 
+type WatchAlreadyExistsError struct {
+	InnerError error
+}
+
+func (*WatchAlreadyExistsError) Error() string {
+	return "xray: Watch already exists."
+}
+
 // NewWatchService creates a new Xray Watch Service
 func NewWatchService(client *jfroghttpclient.JfrogHttpClient) *WatchService {
 	return &WatchService{client: client}
@@ -88,7 +96,11 @@ func (xws *WatchService) Create(params utils.WatchParams) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
+		err := errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody))
+		if resp.StatusCode == http.StatusConflict {
+			return errorutils.CheckError(&WatchAlreadyExistsError{InnerError: err})
+		}
+		return errorutils.CheckError(err)
 	}
 	log.Debug("Xray response:", resp.Status)
 	log.Info("Done creating watch.")

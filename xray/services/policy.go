@@ -25,6 +25,14 @@ type PolicyService struct {
 	XrayDetails auth.ServiceDetails
 }
 
+type PolicyAlreadyExistsError struct {
+	InnerError error
+}
+
+func (*PolicyAlreadyExistsError) Error() string {
+	return "xray: Policy already exists."
+}
+
 // NewPolicyService creates a new Xray Policy Service
 func NewPolicyService(client *jfroghttpclient.JfrogHttpClient) *PolicyService {
 	return &PolicyService{client: client}
@@ -86,7 +94,11 @@ func (xps *PolicyService) Create(params utils.PolicyParams) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
+		err := errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody))
+		if resp.StatusCode == http.StatusConflict {
+			return errorutils.CheckError(&PolicyAlreadyExistsError{InnerError: err})
+		}
+		return errorutils.CheckError(err)
 	}
 	log.Debug("Xray response:", resp.Status)
 	log.Info("Done creating policy.")
