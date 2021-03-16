@@ -21,9 +21,13 @@ type Property struct {
 	Value string
 }
 
+func NewProperties() *Properties {
+	return &Properties{properties: make(map[string][]string)}
+}
+
 // Parsing properties string to Properties struct.
 func ParseProperties(propStr string) (*Properties, error) {
-	props := &Properties{properties: make(map[string][]string)}
+	props := NewProperties()
 	err := props.ParseAndAddProperties(propStr)
 	return props, err
 }
@@ -133,7 +137,7 @@ func removeDuplicates(stringSlice []string) []string {
 }
 
 func MergeProperties(properties []*Properties) *Properties {
-	mergedProps := &Properties{properties: make(map[string][]string)}
+	mergedProps := NewProperties()
 	for _, propsStruct := range properties {
 		if propsStruct != nil {
 			for key, values := range propsStruct.properties {

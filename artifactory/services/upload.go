@@ -150,7 +150,7 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 // Concatenates symlink props to the artifact's props. The function does not change the props in the Artifact struct itself.
 // The return value is the concatenated string.
 func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (*utils.Properties, error) {
-	artifactProps := &utils.Properties{}
+	artifactProps := utils.NewProperties()
 	artifactSymlink := artifact.Symlink
 	if uploadParams.IsSymlink() && len(artifactSymlink) > 0 {
 		fileInfo, err := os.Stat(artifact.LocalPath)
