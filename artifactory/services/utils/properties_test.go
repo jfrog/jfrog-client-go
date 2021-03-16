@@ -40,6 +40,7 @@ func TestParseProperties(t *testing.T) {
 		{"y=a,b\\,c\\,d", Properties{properties: map[string][]string{"y": {"a", "b,c,d"}}}},
 		{"y=a,b\\,c\\,d\\,e", Properties{properties: map[string][]string{"y": {"a", "b,c,d,e"}}}},
 		{"y=\\,a b", Properties{properties: map[string][]string{"y": {",a b"}}}},
+		{"y=a,b;x=i;y=a;x=j", Properties{properties: map[string][]string{"y": {"a", "b"}, "x": {"i", "j"}}}},
 	}
 	for _, test := range tests {
 		t.Run(test.propsString, func(t *testing.T) {
@@ -51,5 +52,15 @@ func TestParseProperties(t *testing.T) {
 				t.Error("Failed to parse property string.", props, "expected to be parsed to", test.expected)
 			}
 		})
+	}
+}
+
+func TestMergeProperties(t *testing.T) {
+	propsA := &Properties{properties: map[string][]string{"x": {"a", "b"}, "y": {"c"}}}
+	propsB := &Properties{properties: map[string][]string{"x": {"a", "d"}}}
+	mergedProps := MergeProperties([]*Properties{propsA, propsB})
+	expected := &Properties{properties: map[string][]string{"x": {"a", "b", "d"}, "y": {"c"}}}
+	if !reflect.DeepEqual(expected, mergedProps) {
+		t.Error("Failed to marge Properties. expected:", expected, "actual:", mergedProps)
 	}
 }
