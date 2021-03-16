@@ -25,7 +25,7 @@ type ArtifactoryCommonParams struct {
 	Exclusions       []string
 	Target           string
 	Props            string
-	TargetProps      string
+	TargetProps      *Properties
 	ExcludeProps     string
 	SortOrder        string
 	SortBy           []string
@@ -95,7 +95,7 @@ func (params *ArtifactoryCommonParams) GetProps() string {
 	return params.Props
 }
 
-func (params *ArtifactoryCommonParams) GetTargetProps() string {
+func (params *ArtifactoryCommonParams) GetTargetProps() *Properties {
 	return params.TargetProps
 }
 
@@ -135,7 +135,7 @@ func (params *ArtifactoryCommonParams) SetProps(props string) {
 	params.Props = props
 }
 
-func (params *ArtifactoryCommonParams) SetTargetProps(targetProps string) {
+func (params *ArtifactoryCommonParams) SetTargetProps(targetProps *Properties) {
 	params.TargetProps = targetProps
 }
 

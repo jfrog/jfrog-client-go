@@ -76,11 +76,11 @@ func (sp *PropsParams) GetProps() string {
 func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (int, error) {
 	var encodedParam string
 	if !isDelete {
-		props, err := utils.ParseProperties(propsParams.GetProps(), utils.JoinCommas)
+		props, err := utils.ParseProperties(propsParams.GetProps())
 		if err != nil {
 			return 0, err
 		}
-		encodedParam = props.ToEncodedString()
+		encodedParam = props.ToEncodedString(true)
 	} else {
 		propList := strings.Split(propsParams.GetProps(), ",")
 		for _, prop := range propList {

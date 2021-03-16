@@ -43,7 +43,7 @@ func (pwh *publishWithHeader) PublishPackage(params GoParams, client *jfroghttpc
 }
 
 func addPropertiesHeaders(props string, headers *map[string]string) error {
-	properties, err := utils.ParseProperties(props, utils.JoinCommas)
+	properties, err := utils.ParseProperties(props)
 	if err != nil {
 		return err
 	}

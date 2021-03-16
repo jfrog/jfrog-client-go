@@ -9,16 +9,11 @@ import (
 	"strings"
 )
 
-type PropertyParseOptions int
-
-const (
-	// Parsing properties
-	SplitCommas PropertyParseOptions = iota
-	JoinCommas
-)
+const PropsSeparator = ";"
+const ValuesSeparator = ","
 
 type Properties struct {
-	Properties []Property
+	properties map[string][]string
 }
 
 type Property struct {
@@ -27,74 +22,125 @@ type Property struct {
 }
 
 // Parsing properties string to Properties struct.
-func ParseProperties(propStr string, option PropertyParseOptions) (*Properties, error) {
-	props := &Properties{}
-	propList := strings.Split(propStr, ";")
+func ParseProperties(propStr string) (*Properties, error) {
+	props := &Properties{properties: make(map[string][]string)}
+	err := props.ParseAndAddProperties(propStr)
+	return props, err
+}
+
+func (props *Properties) ParseAndAddProperties(propStr string) error {
+	propList := strings.Split(propStr, PropsSeparator)
 	for _, prop := range propList {
 		if prop == "" {
 			continue
 		}
 
-		key, values, err := splitProp(prop)
-		if err != nil {
-			return props, err
+		parts := strings.Split(prop, "=")
+		if len(parts) != 2 {
+			return errorutils.CheckError(errors.New("Invalid property: " + prop))
 		}
 
-		switch option {
-		case SplitCommas:
-			splitedValues := strings.Split(values, ",")
-			for i, val := range splitedValues {
-				// If "\" is found, then it means that the original string contains the "\," which indicate this "," is part of the value
-				// and not a sperator
-				if strings.HasSuffix(val, "\\") && i+1 < len(splitedValues) {
-					splitedValues[i+1] = val[:len(val)-1] + "," + splitedValues[i+1]
-				} else {
-					props.Properties = append(props.Properties, Property{key, val})
-				}
+		key := parts[0]
+		values := strings.Split(parts[1], ValuesSeparator)
+		for i, val := range values {
+			// If "\" is found, then it means that the original string contains the "\," which indicate this "," is part of the value
+			// and not a separator
+			if strings.HasSuffix(val, "\\") && i+1 < len(values) {
+				values[i+1] = val[:len(val)-1] + ValuesSeparator + values[i+1]
+			} else {
+				props.properties[key] = append(props.properties[key], val)
 			}
-		case JoinCommas:
-			props.Properties = append(props.Properties, Property{key, values})
 		}
 	}
-	return props, nil
+	props.removeDuplicateValues()
+	return nil
 }
 
-func (props *Properties) ToEncodedString() string {
+func (props *Properties) AddProperty(key, value string) {
+	if _, exist := props.properties[key]; exist {
+		for _, existValue := range props.properties[key] {
+			if existValue == value {
+				return
+			}
+		}
+	}
+	props.properties[key] = append(props.properties[key], value)
+}
+
+func (props *Properties) ToEncodedString(concatValues bool) string {
 	encodedProps := ""
-	for _, v := range props.Properties {
-		jointProp := fmt.Sprintf("%s=%s", url.QueryEscape(v.Key), url.QueryEscape(v.Value))
-		encodedProps = fmt.Sprintf("%s;%s", encodedProps, jointProp)
+	for key, values := range props.properties {
+		var jointProp string
+
+		if concatValues {
+			jointProp = fmt.Sprintf("%s=", url.QueryEscape(key))
+		}
+		for _, value := range values {
+			if concatValues {
+				propValue := strings.Replace(value, ValuesSeparator, fmt.Sprintf("\\%s", ValuesSeparator), -1)
+				jointProp = fmt.Sprintf("%s%s%s", jointProp, url.QueryEscape(propValue), url.QueryEscape(ValuesSeparator))
+			} else {
+				jointProp = fmt.Sprintf("%s%s=%s%s", jointProp, url.QueryEscape(key), url.QueryEscape(value), PropsSeparator)
+			}
+		}
+		// Trim the last comma/semicolon
+		if concatValues {
+			jointProp = strings.TrimSuffix(jointProp, url.QueryEscape(ValuesSeparator))
+		} else {
+			jointProp = strings.TrimSuffix(jointProp, PropsSeparator)
+		}
+
+		encodedProps = fmt.Sprintf("%s%s%s", encodedProps, PropsSeparator, jointProp)
 	}
-	// Remove leading semicolon
-	if strings.HasPrefix(encodedProps, ";") {
-		return encodedProps[1:]
-	}
-	return encodedProps
+	// Remove leading semicolon and return
+	return strings.TrimPrefix(encodedProps, PropsSeparator)
 }
 
 func (props *Properties) ToHeadersMap() map[string]string {
 	headers := map[string]string{}
-	for _, v := range props.Properties {
-		headers[v.Key] = base64.StdEncoding.EncodeToString([]byte(v.Value))
+	for key, values := range props.properties {
+		headers[key] = base64.StdEncoding.EncodeToString([]byte(strings.Join(values, ValuesSeparator)))
 	}
 	return headers
 }
 
 // Convert properties from Slice to map
 func (props *Properties) ToMap() map[string][]string {
-	propertiesMap := map[string][]string{}
-	for _, prop := range props.Properties {
-		propertiesMap[prop.Key] = append(propertiesMap[prop.Key], prop.Value)
-	}
-	return propertiesMap
+	return props.properties
 }
 
-// Split properties string of format key=value to key value strings
-func splitProp(prop string) (string, string, error) {
-	splitIndex := strings.Index(prop, "=")
-	if splitIndex < 1 || len(prop[splitIndex+1:]) < 1 {
-		err := errorutils.CheckError(errors.New("Invalid property: " + prop))
-		return "", "", err
+func (props *Properties) KeysLen() int {
+	return len(props.properties)
+}
+
+func (props *Properties) removeDuplicateValues() {
+	for key, values := range props.properties {
+		props.properties[key] = removeDuplicates(values)
 	}
-	return prop[:splitIndex], prop[splitIndex+1:], nil
+}
+
+func removeDuplicates(stringSlice []string) []string {
+	keys := make(map[string]bool)
+	var list []string
+
+	for _, item := range stringSlice {
+		if _, exist := keys[item]; !exist {
+			keys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func MergeProperties(properties []*Properties) *Properties {
+	mergedProps := &Properties{properties: make(map[string][]string)}
+	for _, propsStruct := range properties {
+		if propsStruct != nil {
+			for key, values := range propsStruct.properties {
+				mergedProps.properties[key] = append(mergedProps.properties[key], values...)
+			}
+		}
+	}
+	mergedProps.removeDuplicateValues()
+	return mergedProps
 }

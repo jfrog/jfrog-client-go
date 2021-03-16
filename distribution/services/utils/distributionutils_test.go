@@ -29,8 +29,11 @@ func TestCreateBundleBody(t *testing.T) {
 }
 
 func TestCreateBundleBodyQuery(t *testing.T) {
+	targetProps, err := utils.ParseProperties("a=b;c=d;c=e")
+	assert.NoError(t, err)
+
 	releaseBundleParam := ReleaseBundleParams{
-		SpecFiles: []*utils.ArtifactoryCommonParams{{Pattern: "dist-repo/*", TargetProps: "a=b;c=d;c=e"}},
+		SpecFiles: []*utils.ArtifactoryCommonParams{{Pattern: "dist-repo/*", TargetProps: targetProps}},
 	}
 
 	releaseBundleBody, err := CreateBundleBody(releaseBundleParam, true)
