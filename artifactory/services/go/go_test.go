@@ -2,6 +2,7 @@ package _go
 
 import (
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"strings"
 	"testing"
@@ -25,9 +26,7 @@ func TestCreateUrlPath(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			CreateUrlPath(test.moduleId, test.version, test.props, test.extension, &test.url)
-			if !strings.EqualFold(test.url, test.expectedUrl) {
-				t.Error("Expected:", test.expectedUrl, "Got:", test.url)
-			}
+			assert.ElementsMatch(t, strings.Split(test.url, ";"), strings.Split(test.expectedUrl, ";"))
 		})
 	}
 }
