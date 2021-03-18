@@ -219,6 +219,7 @@ params.Regexp = false
 params.IncludeDirs = false
 params.Flat = true
 params.Explode = false
+params.Archive = "zip"
 params.Deb = ""
 params.Symlink = false
 // Retries default value: 3
