@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -90,7 +91,7 @@ func (xws *WatchService) Create(params utils.WatchParams) error {
 	var resp *http.Response
 	var respBody []byte
 
-	log.Info("Creating watch...")
+	log.Info(fmt.Sprintf("Creating a new Watch named %s on JFrog Xray....", params.Name))
 	resp, respBody, err = xws.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
