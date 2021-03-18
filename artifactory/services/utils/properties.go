@@ -9,8 +9,10 @@ import (
 	"strings"
 )
 
-const PropsSeparator = ";"
-const ValuesSeparator = ","
+const (
+	propsSeparator  = ";"
+	valuesSeparator = ","
+)
 
 type Properties struct {
 	properties map[string][]string
@@ -33,7 +35,7 @@ func ParseProperties(propStr string) (*Properties, error) {
 }
 
 func (props *Properties) ParseAndAddProperties(propStr string) error {
-	propList := strings.Split(propStr, PropsSeparator)
+	propList := strings.Split(propStr, propsSeparator)
 	for _, prop := range propList {
 		if prop == "" {
 			continue
@@ -41,16 +43,16 @@ func (props *Properties) ParseAndAddProperties(propStr string) error {
 
 		parts := strings.Split(prop, "=")
 		if len(parts) != 2 {
-			return errorutils.CheckError(errors.New("Invalid property: " + prop))
+			return errorutils.CheckError(errors.New(fmt.Sprintf("Invalid property format: %s - format should be key=val1,val2,...", prop)))
 		}
 
 		key := parts[0]
-		values := strings.Split(parts[1], ValuesSeparator)
+		values := strings.Split(parts[1], valuesSeparator)
 		for i, val := range values {
-			// If "\" is found, then it means that the original string contains the "\," which indicate this "," is part of the value
+			// If "\" is found, then it means that the original string contains the "\," which indicates this "," is part of the value
 			// and not a separator
 			if strings.HasSuffix(val, "\\") && i+1 < len(values) {
-				values[i+1] = val[:len(val)-1] + ValuesSeparator + values[i+1]
+				values[i+1] = val[:len(val)-1] + valuesSeparator + values[i+1]
 			} else {
 				props.properties[key] = append(props.properties[key], val)
 			}
@@ -71,6 +73,9 @@ func (props *Properties) AddProperty(key, value string) {
 	props.properties[key] = append(props.properties[key], value)
 }
 
+// Creates a string of the properties, ready to use in a URL.
+// If concatValues is true, then the values of each property are concatenated together separated by a comma. For example: key=val1,val2,...
+// Otherwise, each value of the property will be written with its key separately. For example: key=val1;key=val2;...
 func (props *Properties) ToEncodedString(concatValues bool) string {
 	encodedProps := ""
 	for key, values := range props.properties {
@@ -81,29 +86,29 @@ func (props *Properties) ToEncodedString(concatValues bool) string {
 		}
 		for _, value := range values {
 			if concatValues {
-				propValue := strings.Replace(value, ValuesSeparator, fmt.Sprintf("\\%s", ValuesSeparator), -1)
-				jointProp = fmt.Sprintf("%s%s%s", jointProp, url.QueryEscape(propValue), url.QueryEscape(ValuesSeparator))
+				propValue := strings.Replace(value, valuesSeparator, fmt.Sprintf("\\%s", valuesSeparator), -1)
+				jointProp = fmt.Sprintf("%s%s%s", jointProp, url.QueryEscape(propValue), url.QueryEscape(valuesSeparator))
 			} else {
-				jointProp = fmt.Sprintf("%s%s=%s%s", jointProp, url.QueryEscape(key), url.QueryEscape(value), PropsSeparator)
+				jointProp = fmt.Sprintf("%s%s=%s%s", jointProp, url.QueryEscape(key), url.QueryEscape(value), propsSeparator)
 			}
 		}
 		// Trim the last comma/semicolon
 		if concatValues {
-			jointProp = strings.TrimSuffix(jointProp, url.QueryEscape(ValuesSeparator))
+			jointProp = strings.TrimSuffix(jointProp, url.QueryEscape(valuesSeparator))
 		} else {
-			jointProp = strings.TrimSuffix(jointProp, PropsSeparator)
+			jointProp = strings.TrimSuffix(jointProp, propsSeparator)
 		}
 
-		encodedProps = fmt.Sprintf("%s%s%s", encodedProps, PropsSeparator, jointProp)
+		encodedProps = fmt.Sprintf("%s%s%s", encodedProps, propsSeparator, jointProp)
 	}
 	// Remove leading semicolon and return
-	return strings.TrimPrefix(encodedProps, PropsSeparator)
+	return strings.TrimPrefix(encodedProps, propsSeparator)
 }
 
 func (props *Properties) ToHeadersMap() map[string]string {
 	headers := map[string]string{}
 	for key, values := range props.properties {
-		headers[key] = base64.StdEncoding.EncodeToString([]byte(strings.Join(values, ValuesSeparator)))
+		headers[key] = base64.StdEncoding.EncodeToString([]byte(strings.Join(values, valuesSeparator)))
 	}
 	return headers
 }
@@ -136,6 +141,7 @@ func removeDuplicates(stringSlice []string) []string {
 	return list
 }
 
+// Merges multiple Properties structs into one and removes duplicate values
 func MergeProperties(properties []*Properties) *Properties {
 	mergedProps := NewProperties()
 	for _, propsStruct := range properties {
