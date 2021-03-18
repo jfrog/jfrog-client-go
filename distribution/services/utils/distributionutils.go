@@ -50,10 +50,7 @@ func CreateBundleBody(releaseBundleParams ReleaseBundleParams, dryRun bool) (*Re
 		pathMappings := createPathMappings(specFile)
 
 		// Create added properties
-		addedProps, err := createAddedProps(specFile)
-		if err != nil {
-			return nil, err
-		}
+		addedProps := createAddedProps(specFile)
 
 		// Append bundle query
 		bundleQueries = append(bundleQueries, BundleQuery{Aql: aql, PathMappings: pathMappings, AddedProps: addedProps})
@@ -112,17 +109,14 @@ func createPathMappings(specFile *rtUtils.ArtifactoryCommonParams) []PathMapping
 }
 
 // Create the AddedProps array from the input TargetProps string
-func createAddedProps(specFile *rtUtils.ArtifactoryCommonParams) ([]AddedProps, error) {
-	props, err := rtUtils.ParseProperties(specFile.TargetProps, rtUtils.SplitCommas)
-	if err != nil {
-		return nil, err
-	}
+func createAddedProps(specFile *rtUtils.ArtifactoryCommonParams) []AddedProps {
+	props := specFile.TargetProps
 
 	var addedProps []AddedProps
 	for key, values := range props.ToMap() {
 		addedProps = append(addedProps, AddedProps{key, values})
 	}
-	return addedProps, nil
+	return addedProps
 }
 
 func AddGpgPassphraseHeader(gpgPassphrase string, headers *map[string]string) {

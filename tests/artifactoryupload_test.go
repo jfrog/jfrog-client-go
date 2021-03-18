@@ -254,8 +254,10 @@ func propsUpload(t *testing.T) {
 
 	// Upload a.in with property key1=val1
 	pattern := FixWinPath(filepath.Join(workingDir, "out", "*"))
+	targetProps, err := utils.ParseProperties("key1=val1")
+	assert.NoError(t, err)
 	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Target: RtTargetRepo, TargetProps: "key1=val1"}
+	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Target: RtTargetRepo, TargetProps: targetProps}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	assert.NoError(t, err)
