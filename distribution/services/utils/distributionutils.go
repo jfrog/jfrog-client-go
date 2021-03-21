@@ -113,8 +113,10 @@ func createAddedProps(specFile *rtUtils.ArtifactoryCommonParams) []AddedProps {
 	props := specFile.TargetProps
 
 	var addedProps []AddedProps
-	for key, values := range props.ToMap() {
-		addedProps = append(addedProps, AddedProps{key, values})
+	if props != nil {
+		for key, values := range props.ToMap() {
+			addedProps = append(addedProps, AddedProps{key, values})
+		}
 	}
 	return addedProps
 }

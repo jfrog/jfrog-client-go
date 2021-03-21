@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"github.com/stretchr/testify/assert"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -19,10 +21,8 @@ func TestToEncodedString(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.expected, func(t *testing.T) {
-			test.props.ToEncodedString(true)
-			if test.expected != test.props.ToEncodedString(true) {
-				t.Error("Failed to encode properties. The properties", test.props.ToEncodedString(true), "expected to be encoded to", test.expected)
-			}
+			actual := test.props.ToEncodedString(true)
+			assert.ElementsMatch(t, strings.Split(test.expected, ";"), strings.Split(actual, ";"), "failed to encode properties")
 		})
 	}
 }
