@@ -34,7 +34,7 @@ type ArtifactoryServicesManager interface {
 	GetPathsToDelete(params services.DeleteParams) (*content.ContentReader, error)
 	DeleteFiles(reader *content.ContentReader) (int, error)
 	ReadRemoteFile(readPath string) (io.ReadCloser, error)
-	DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error)
+	DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error)
 	DownloadFilesWithSummary(params ...services.DownloadParams) (operationSummary *utils.OperationSummary, err error)
 	GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error)
 	SearchFiles(params services.SearchParams) (*content.ContentReader, error)
@@ -162,7 +162,7 @@ func (esm *EmptyArtifactoryServicesManager) initDownloadService() *services.Down
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalExpected int, err error) {
+func (esm *EmptyArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error) {
 	panic("Failed: Method is not implemented")
 }
 
