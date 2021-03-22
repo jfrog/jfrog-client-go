@@ -25,7 +25,7 @@ func TestVcsDetails(t *testing.T) {
 			revision, url, branch, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
 			assert.NoError(t, err)
 			assert.Equal(t, "https://github.com/jfrog/jfrog-cli.git", url)
-			assert.Equal(t, "d63c5957ad6819f4c02a817abe757f210d35ff92", revision)
+			assert.Equal(t, "6198a6294722fdc75a570aac505784d2ec0d1818", revision)
 			assert.Equal(t, "master", branch)
 		})
 	}

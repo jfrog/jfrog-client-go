@@ -147,36 +147,34 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 	return
 }
 
-// Concatenates symlink props to the artifact's props. The function does not change the props in the Artifact struct itself.
-// The return value is the concatenated string.
-func addSymlinkProps(artifact clientutils.Artifact, uploadParams UploadParams) (string, error) {
-	artifactProps := ""
+// Creates a new Properties struct with the artifact's props and the symlink props.
+func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) (*utils.Properties, error) {
+	artifactProps := utils.NewProperties()
 	artifactSymlink := artifact.Symlink
 	if uploadParams.IsSymlink() && len(artifactSymlink) > 0 {
-		sha1Property := ""
 		fileInfo, err := os.Stat(artifact.LocalPath)
 		if err != nil {
 			// If error occurred, but not due to nonexistence of Symlink target -> return empty
 			if !os.IsNotExist(err) {
-				return "", errorutils.CheckError(err)
+				return nil, errorutils.CheckError(err)
 			}
 			// If Symlink target exists -> get SHA1 if isn't a directory
 		} else if !fileInfo.IsDir() {
 			file, err := os.Open(artifact.LocalPath)
 			if err != nil {
-				return "", errorutils.CheckError(err)
+				return nil, errorutils.CheckError(err)
 			}
 			defer file.Close()
 			checksumInfo, err := checksum.Calc(file, checksum.SHA1)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 			sha1 := checksumInfo[checksum.SHA1]
-			sha1Property = ";" + utils.SYMLINK_SHA1 + "=" + sha1
+			artifactProps.AddProperty(utils.SYMLINK_SHA1, sha1)
 		}
-		artifactProps += utils.ARTIFACTORY_SYMLINK + "=" + artifactSymlink + sha1Property
+		artifactProps.AddProperty(utils.ARTIFACTORY_SYMLINK, artifactSymlink)
 	}
-	return clientutils.AddProps(uploadParams.GetTargetProps(), artifactProps), nil
+	return utils.MergeProperties([]*utils.Properties{uploadParams.GetTargetProps(), artifactProps}), nil
 }
 
 type uploadDataHandlerFunc func(data UploadData)
@@ -192,7 +190,7 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, up
 	return func(data UploadData) {
 		if _, ok := writersMap[data.Artifact.TargetPath]; !ok {
 			var err error
-			archiveData := archiveUploadData{uploadParams: uploadParams}
+			archiveData := archiveUploadData{uploadParams: deepCopyUploadParams(&uploadParams)}
 			archiveData.writer, err = content.NewContentWriter("archive", true, false)
 			if err != nil {
 				log.Error(err)
@@ -200,10 +198,10 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, up
 				return
 			}
 			writersMap[data.Artifact.TargetPath] = &archiveData
+		} else {
+			// Merge all of the props
+			writersMap[data.Artifact.TargetPath].uploadParams.TargetProps = utils.MergeProperties([]*utils.Properties{writersMap[data.Artifact.TargetPath].uploadParams.TargetProps, uploadParams.TargetProps})
 		}
-
-		// Merge all of the props
-		writersMap[data.Artifact.TargetPath].uploadParams.TargetProps = strings.Join([]string{writersMap[data.Artifact.TargetPath].uploadParams.TargetProps, uploadParams.TargetProps}, ";")
 		writersMap[data.Artifact.TargetPath].writer.Write(data)
 	}
 }
@@ -233,7 +231,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		if err != nil {
 			return err
 		}
-		props, err := addSymlinkProps(artifact, uploadParams)
+		props, err := createProperties(artifact, uploadParams)
 		if err != nil {
 			return err
 		}
@@ -343,7 +341,7 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 	}
 
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
-	props, err := addSymlinkProps(artifact, taskData.uploadParams)
+	props, err := createProperties(artifact, taskData.uploadParams)
 	if err != nil {
 		return err
 	}
@@ -380,21 +378,20 @@ func getUploadTarget(rootPath, target string, isFlat bool) string {
 	return target
 }
 
-func addPropsToTargetPath(targetPath, props, buildProps, debConfig string) (string, error) {
-	propsStr := strings.Join([]string{props, getDebianProps(debConfig)}, ";")
-	properties, err := utils.ParseProperties(propsStr, utils.SplitCommas)
+func addPropsToTargetPath(targetPath, buildProps, debConfig string, props *utils.Properties) (string, error) {
+	debianProps, err := utils.ParseProperties(getDebianProps(debConfig))
 	if err != nil {
 		return "", err
 	}
-	buildProperties, err := utils.ParseProperties(buildProps, utils.JoinCommas)
+	buildProperties, err := utils.ParseProperties(buildProps)
 	if err != nil {
 		return "", err
 	}
-	return strings.Join([]string{targetPath, properties.ToEncodedString(), buildProperties.ToEncodedString()}, ";"), nil
+	return strings.Join([]string{targetPath, props.ToEncodedString(false), debianProps.ToEncodedString(false), buildProperties.ToEncodedString(true)}, ";"), nil
 }
 
-func prepareUploadData(localPath, baseTargetPath, props, buildProps string, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, err error) {
-	targetPath, err = addPropsToTargetPath(baseTargetPath, props, buildProps, uploadParams.GetDebian())
+func prepareUploadData(localPath, baseTargetPath, buildProps string, props *utils.Properties, uploadParams UploadParams, logMsgPrefix string) (fileInfo os.FileInfo, targetPath string, err error) {
+	targetPath, err = addPropsToTargetPath(baseTargetPath, buildProps, uploadParams.GetDebian(), props)
 	if errorutils.CheckError(err) != nil {
 		return
 	}
@@ -407,8 +404,8 @@ func prepareUploadData(localPath, baseTargetPath, props, buildProps string, uplo
 
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) uploadFile(localPath, targetUrl, props, buildProps string, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
-	fileInfo, targetPathWithProps, err := prepareUploadData(localPath, targetUrl, props, buildProps, uploadParams, logMsgPrefix)
+func (us *UploadService) uploadFile(localPath, targetUrl, buildProps string, props *utils.Properties, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
+	fileInfo, targetPathWithProps, err := prepareUploadData(localPath, targetUrl, buildProps, props, uploadParams, logMsgPrefix)
 	if err != nil {
 		return nil, false, err
 	}
@@ -610,6 +607,17 @@ type UploadParams struct {
 	Archive           string
 }
 
+func NewUploadParams() UploadParams {
+	return UploadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinChecksumDeploy: 10240}
+}
+
+func deepCopyUploadParams(params *UploadParams) UploadParams {
+	paramsCopy := *params
+	paramsCopy.ArtifactoryCommonParams = new(utils.ArtifactoryCommonParams)
+	*paramsCopy.ArtifactoryCommonParams = *params.ArtifactoryCommonParams
+	return paramsCopy
+}
+
 func (up *UploadParams) IsFlat() bool {
 	return up.Flat
 }
@@ -636,7 +644,7 @@ func (up *UploadParams) GetRetries() int {
 
 type UploadData struct {
 	Artifact    clientutils.Artifact
-	TargetProps string
+	TargetProps *utils.Properties
 	BuildProps  string
 	IsDir       bool
 }
@@ -656,7 +664,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			if e != nil {
 				return
 			}
-			uploadFileDetails, uploaded, e := us.uploadFile(artifact.Artifact.LocalPath, targetUrl, artifact.TargetProps, artifact.BuildProps, uploadParams, logMsgPrefix)
+			uploadFileDetails, uploaded, e := us.uploadFile(artifact.Artifact.LocalPath, targetUrl, artifact.BuildProps, artifact.TargetProps, uploadParams, logMsgPrefix)
 			if e != nil {
 				return
 			}
@@ -710,8 +718,7 @@ func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targe
 		if e != nil {
 			return
 		}
-		targetUrlWithProps, e := addPropsToTargetPath(targetUrl, archiveData.uploadParams.TargetProps,
-			archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian())
+		targetUrlWithProps, e := addPropsToTargetPath(targetUrl, archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian(), archiveData.uploadParams.TargetProps)
 		if e != nil {
 			return
 		}
@@ -807,10 +814,6 @@ func (us *UploadService) addFileToZip(localPath, progressPrefix string, flat boo
 		return
 	}
 	return
-}
-
-func NewUploadParams() UploadParams {
-	return UploadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinChecksumDeploy: 10240}
 }
 
 func getVcsProps(path string, vcsCache *clientutils.VcsCache) (string, error) {

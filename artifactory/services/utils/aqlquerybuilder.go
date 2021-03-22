@@ -145,27 +145,26 @@ func prepareSearchPattern(pattern string, repositoryExists bool) string {
 
 func buildPropsQueryPart(props, excludeProps string) (string, error) {
 	propsQuery := ""
-	properties, err := ParseProperties(props, JoinCommas)
+	properties, err := ParseProperties(props)
 	if err != nil {
 		return "", err
 	}
-	for _, v := range properties.Properties {
-		propsQuery += buildKeyValQueryPart(v.Key, []string{v.Value}) + `,`
+	for key, values := range properties.ToMap() {
+		propsQuery += buildKeyAllValQueryPart(key, values) + `,`
 	}
 
 	excludePropsQuery := ""
-	excludeProperties, err := ParseProperties(excludeProps, JoinCommas)
+	excludeProperties, err := ParseProperties(excludeProps)
 	if err != nil {
 		return "", err
 	}
-	excludePropsLen := len(excludeProperties.Properties)
-	if excludePropsLen == 1 {
-		singleProp := &excludeProperties.Properties[0]
-		excludePropsQuery = buildExcludedKeyValQueryPart(singleProp.Key, singleProp.Value) + `,`
-	} else if excludePropsLen > 1 {
+	excludePropsLen := excludeProperties.KeysLen()
+	if excludePropsLen > 0 {
 		excludePropsQuery = `"$or":[`
-		for _, v := range excludeProperties.Properties {
-			excludePropsQuery += `{` + buildExcludedKeyValQueryPart(v.Key, v.Value) + `},`
+		for key, values := range excludeProperties.ToMap() {
+			for _, value := range values {
+				excludePropsQuery += `{` + buildExcludedKeyValQueryPart(key, value) + `},`
+			}
 		}
 		excludePropsQuery = strings.TrimSuffix(excludePropsQuery, ",") + `],`
 	}
@@ -178,6 +177,14 @@ func buildKeyValQueryPart(key string, propValues []string) string {
 		items = append(items, fmt.Sprintf(`{"@%s":%s}`, key, getAqlValue(value)))
 	}
 	return `"$or":[` + strings.Join(items, ",") + "]"
+}
+
+func buildKeyAllValQueryPart(key string, propValues []string) string {
+	var items []string
+	for _, value := range propValues {
+		items = append(items, fmt.Sprintf(`{"@%s":%s}`, key, getAqlValue(value)))
+	}
+	return `"$and":[` + strings.Join(items, ",") + "]"
 }
 
 func buildExcludedKeyValQueryPart(key string, value string) string {

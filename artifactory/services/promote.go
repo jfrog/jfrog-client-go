@@ -47,7 +47,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	if err != nil {
 		return err
 	}
-	props, err := utils.ParseProperties(promotionParams.GetProperties(), utils.JoinCommas)
+	props, err := utils.ParseProperties(promotionParams.GetProperties())
 	if err != nil {
 		return err
 	}

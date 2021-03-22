@@ -135,12 +135,14 @@ func createWithProps(t *testing.T) {
 	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create release bundle with properties
+	targetProps, err := utils.ParseProperties("key1=value1;key2=value2,value3")
+	assert.NoError(t, err)
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{
 		Pattern:     RtTargetRepo + "b.in",
-		TargetProps: "key1=value1;key2=value2,value3",
+		TargetProps: targetProps,
 	}}
-	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	err = testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 
 	// Check results
