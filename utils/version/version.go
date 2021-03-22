@@ -80,7 +80,7 @@ func compareTokens(ver1Token, ver2Token string) int {
 		return 1
 	case ver1TokenInt < ver2TokenInt:
 		return -1
-	case len(ver1Suffix) == 0:
+	case len(ver1Suffix) == 0: // Version with suffix is higher than the same version without suffix
 		return -1
 	case len(ver2Suffix) == 0:
 		return 1
