@@ -3,6 +3,8 @@ package utils
 import (
 	"bufio"
 	"errors"
+	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/version"
 	"io"
 	"net/http"
 	"os"
@@ -472,4 +474,13 @@ func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content
 	}
 	defer sortedFile.Close()
 	return resultsFilter(readerRecord, sortedFile)
+}
+
+func CheckIfVersionCompatible(params *ArtifactoryCommonParams, artifactoryVersion *version.Version) error {
+	transitiveSearchMinVersion := "7.17.0"
+	if params.Transitive && !artifactoryVersion.AtLeast(transitiveSearchMinVersion) {
+		return errors.New(fmt.Sprintf("transitive search is available on Artifactory version %s or higher. Installed Artifactory version: %s",
+			transitiveSearchMinVersion, artifactoryVersion.GetVersion()))
+	}
+	return nil
 }

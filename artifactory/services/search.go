@@ -2,12 +2,12 @@ package services
 
 import (
 	"errors"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/version"
 )
 
 type SearchService struct {
@@ -52,6 +52,15 @@ func NewSearchParams() SearchParams {
 }
 
 func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requiredArtifactProps utils.RequiredArtifactProps) (*content.ContentReader, error) {
+	artifactoryVersionStr, err := flags.GetArtifactoryDetails().GetVersion()
+	if err != nil {
+		return nil, err
+	}
+	artifactoryVersion := version.NewVersion(artifactoryVersionStr)
+	err = utils.CheckIfVersionCompatible(searchParams.ArtifactoryCommonParams, artifactoryVersion)
+	if err != nil {
+		return nil, err
+	}
 	switch searchParams.GetSpecType() {
 	case utils.WILDCARD:
 		return utils.SearchBySpecWithPattern(searchParams.GetFile(), flags, requiredArtifactProps)
