@@ -148,6 +148,7 @@ Optional flags:
 | `-rt.password`      | [Default: password] Artifactory password.                                                              |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
+| `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
 | `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
 | `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
@@ -545,9 +546,19 @@ params.TokenId = "<token id>"
 err := rtManager.RevokeToken(params)
 ```
 
+#### Create API Key
+```go
+apiKey, err := rtManager.CreateAPIKey()
+```
+
 #### Regenerate API Key
 ```go
 apiKey, err := rtManager.RegenerateAPIKey()
+```
+
+#### Get API Key
+```go
+apiKey, err := rtManager.GetAPIKey()
 ```
 
 #### Creating and Updating Local Repository

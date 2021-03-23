@@ -53,6 +53,9 @@ type ArtifactoryServicesManager interface {
 	Ping() ([]byte, error)
 	GetConfig() config.Config
 	GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error)
+	CreateAPIKey() (string, error)
+	RegenerateAPIKey() (string, error)
+	GetAPIKey() (string, error)
 	CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error)
 	GetTokens() (services.GetTokensResponseData, error)
 	GetUserTokens(username string) ([]string, error)
@@ -237,6 +240,18 @@ func (esm *EmptyArtifactoryServicesManager) GetConfig() config.Config {
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateAPIKey() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) RegenerateAPIKey() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetAPIKey() (string, error) {
 	panic("Failed: Method is not implemented")
 }
 

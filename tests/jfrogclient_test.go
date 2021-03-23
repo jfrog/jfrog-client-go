@@ -51,10 +51,13 @@ func InitServiceManagers() {
 		createDistributionManager()
 	}
 	if *XrayUrl != "" {
-		createXrayVersionManager()
 		createXrayWatchManager()
 		createXrayPolicyManager()
 		createXrayBinMgrManager()
+	}
+	if *PipelinesUrl != "" {
+		createPipelinesIntegrationsManager()
+		createPipelinesSourcesManager()
 	}
 	createReposIfNeeded()
 }
