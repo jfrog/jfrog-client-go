@@ -64,10 +64,22 @@ func (sm *PipelinesServicesManager) CreateArtifactoryIntegration(integrationName
 	return integrationsService.CreateArtifactoryIntegration(integrationName, url, user, apikey)
 }
 
-func (sm *PipelinesServicesManager) GetIntegration(integrationId int) (*services.Integration, error) {
+func (sm *PipelinesServicesManager) GetIntegrationById(integrationId int) (*services.Integration, error) {
 	integrationsService := services.NewIntegrationsService(sm.client)
 	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
-	return integrationsService.GetIntegration(integrationId)
+	return integrationsService.GetIntegrationById(integrationId)
+}
+
+func (sm *PipelinesServicesManager) GetIntegrationByName(integrationName string) (*services.Integration, error) {
+	integrationsService := services.NewIntegrationsService(sm.client)
+	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
+	return integrationsService.GetIntegrationByName(integrationName)
+}
+
+func (sm *PipelinesServicesManager) GetAllIntegrations() ([]services.Integration, error) {
+	integrationsService := services.NewIntegrationsService(sm.client)
+	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
+	return integrationsService.GetAllIntegrations()
 }
 
 func (sm *PipelinesServicesManager) DeleteIntegration(integrationId int) error {

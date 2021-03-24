@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type SourcesService struct {
@@ -24,6 +25,7 @@ func NewSourcesService(client *jfroghttpclient.JfrogHttpClient) *SourcesService 
 const (
 	DefaultPipelinesFileFilter = "pipelines.yml"
 	SourcesRestApi             = "api/v1/pipelinesources/"
+	checkIfSourceExistsMethod  = "checkIfPipelineSourceAlreadyExists"
 )
 
 func (ss *SourcesService) AddPipelineSource(projectIntegrationId int, repositoryFullName, branch, fileFilter string) (id int, err error) {
@@ -56,7 +58,11 @@ func (ss *SourcesService) addSource(source Source) (id int, err error) {
 		return -1, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return -1, errorutils.CheckError(errors.New("Pipelines response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		err := errors.New("Pipelines response: " + resp.Status + "\n" + utils.IndentJson(body))
+		if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), checkIfSourceExistsMethod) {
+			return -1, errorutils.CheckError(&SourceAlreadyExistsError{InnerError: err})
+		}
+		return -1, errorutils.CheckError(err)
 	}
 
 	created := &Source{}
@@ -109,4 +115,12 @@ type Source struct {
 	BranchIncludePattern string `json:"branchIncludePattern,omitempty"`
 
 	Id int `json:"id,omitempty"`
+}
+
+type SourceAlreadyExistsError struct {
+	InnerError error
+}
+
+func (*SourceAlreadyExistsError) Error() string {
+	return "Pipelines: Pipeline Source already exists."
 }

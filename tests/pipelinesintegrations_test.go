@@ -19,13 +19,16 @@ const (
 )
 
 func TestIntegrations(t *testing.T) {
-	t.Run(services.GithubName, testCreateGithubIntegration)
+	if *PipelinesUrl == "" {
+		t.Skip("Pipelines is not being tested, skipping...")
+	}
+	t.Run(services.GithubName, testCreateGithubIntegrationAndGetByName)
 	t.Run(services.BitbucketName, testCreateBitbucketIntegration)
 	t.Run(services.GitlabName, testCreateGitlabIntegration)
 	t.Run(services.ArtifactoryName, testCreateArtifactoryIntegration)
 }
 
-func testCreateGithubIntegration(t *testing.T) {
+func testCreateGithubIntegrationAndGetByName(t *testing.T) {
 	name := getUniqueIntegrationName(services.GithubName)
 	id, err := testsPipelinesIntegrationsService.CreateGithubIntegration(name, testsDummyToken)
 	if err != nil {
@@ -34,6 +37,15 @@ func testCreateGithubIntegration(t *testing.T) {
 	}
 	defer deleteIntegrationAndAssert(t, id)
 	getIntegrationAndAssert(t, id, name, services.GithubName)
+
+	// Test get by name.
+	integration, err := testsPipelinesIntegrationsService.GetIntegrationByName(name)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+	assert.Equal(t, name, integration.Name)
+	assert.Equal(t, id, integration.Id)
 }
 
 func testCreateBitbucketIntegration(t *testing.T) {
@@ -70,7 +82,7 @@ func testCreateArtifactoryIntegration(t *testing.T) {
 }
 
 func getIntegrationAndAssert(t *testing.T, id int, name, integrationType string) {
-	integration, err := testsPipelinesIntegrationsService.GetIntegration(id)
+	integration, err := testsPipelinesIntegrationsService.GetIntegrationById(id)
 	if err != nil {
 		assert.NoError(t, err)
 		return

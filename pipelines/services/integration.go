@@ -120,8 +120,12 @@ func (is *IntegrationsService) createIntegration(integration Integration) (id in
 	if err != nil {
 		return -1, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return -1, errorutils.CheckError(errors.New("Pipelines response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		err := errors.New("Pipelines response: " + resp.Status + "\n" + utils.IndentJson(body))
+		if resp.StatusCode == http.StatusConflict {
+			return -1, errorutils.CheckError(&IntegrationAlreadyExistsError{InnerError: err})
+		}
+		return -1, errorutils.CheckError(err)
 	}
 
 	created := &Integration{}
@@ -150,6 +154,7 @@ type jsonValues struct {
 }
 
 func (is *IntegrationsService) DeleteIntegration(integrationId int) error {
+	log.Debug("Deleting integration by id '" + strconv.Itoa(integrationId) + "'...")
 	httpDetails := is.ServiceDetails.CreateHttpClientDetails()
 	resp, body, err := is.client.SendDelete(is.ServiceDetails.GetUrl()+integrationsRestApi+strconv.Itoa(integrationId), nil, &httpDetails)
 	if err != nil {
@@ -161,7 +166,8 @@ func (is *IntegrationsService) DeleteIntegration(integrationId int) error {
 	return nil
 }
 
-func (is *IntegrationsService) GetIntegration(integrationId int) (*Integration, error) {
+func (is *IntegrationsService) GetIntegrationById(integrationId int) (*Integration, error) {
+	log.Debug("Getting integration by id '" + strconv.Itoa(integrationId) + "'...")
 	httpDetails := is.ServiceDetails.CreateHttpClientDetails()
 	url := is.ServiceDetails.GetUrl() + integrationsRestApi + strconv.Itoa(integrationId)
 	resp, body, _, err := is.client.SendGet(url, true, &httpDetails)
@@ -174,7 +180,48 @@ func (is *IntegrationsService) GetIntegration(integrationId int) (*Integration, 
 	integration := &Integration{}
 	err = json.Unmarshal(body, integration)
 	if err != nil {
-		return nil, err
+		return nil, errorutils.CheckError(err)
 	}
 	return integration, nil
+}
+
+func (is *IntegrationsService) GetIntegrationByName(name string) (*Integration, error) {
+	log.Debug("Getting integration by name '" + name + "'...")
+	integrations, err := is.GetAllIntegrations()
+	if err != nil {
+		return nil, err
+	}
+	for _, integration := range integrations {
+		if integration.Name == name {
+			return &integration, nil
+		}
+	}
+	return nil, errorutils.CheckError(errors.New("integration with provided name was not found in pipelines"))
+}
+
+func (is *IntegrationsService) GetAllIntegrations() ([]Integration, error) {
+	log.Debug("Fetching all integrations...")
+	httpDetails := is.ServiceDetails.CreateHttpClientDetails()
+	url := is.ServiceDetails.GetUrl() + integrationsRestApi
+	resp, body, _, err := is.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errorutils.CheckError(errors.New("Pipelines response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	}
+	integrations := &[]Integration{}
+	err = json.Unmarshal(body, integrations)
+	if err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	return *integrations, nil
+}
+
+type IntegrationAlreadyExistsError struct {
+	InnerError error
+}
+
+func (*IntegrationAlreadyExistsError) Error() string {
+	return "Pipelines: Integration already exists."
 }
