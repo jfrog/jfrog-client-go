@@ -28,6 +28,10 @@ func (version *Version) SetVersion(artifactoryVersion string) {
 func (version *Version) Compare(ver1 string) int {
 	if ver1 == version.version {
 		return 0
+	} else if ver1 == utils.Development {
+		return 1
+	} else if version.version == utils.Development {
+		return -1
 	}
 
 	ver1Tokens := strings.Split(ver1, ".")
@@ -58,7 +62,7 @@ func (version *Version) Compare(ver1 string) int {
 
 // Returns true if this version is larger or equals from the version sent as an argument.
 func (version *Version) AtLeast(minVersion string) bool {
-	if version.Compare(minVersion) > 0 && version.version != utils.Development {
+	if version.Compare(minVersion) > 0 {
 		return false
 	}
 	return true
