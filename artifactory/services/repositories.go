@@ -66,7 +66,7 @@ func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
 		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done getting repository details.")
+	log.Debug("Done getting repository details.")
 	return body, nil
 }
 
