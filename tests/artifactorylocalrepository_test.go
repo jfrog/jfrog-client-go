@@ -35,6 +35,7 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localGenericTest", localGenericTest)
 	t.Run("getLocalRepoDetailsTest", getLocalRepoDetailsTest)
 	t.Run("getAllLocalRepoDetailsTest", getAllLocalRepoDetailsTest)
+	t.Run("localCreateWithParamTest", localCreateWithParamTest)
 }
 
 func localMavenTest(t *testing.T) {
@@ -765,6 +766,16 @@ func localGenericTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
+}
+
+func localCreateWithParamTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	params := services.NewLocalRepositoryBaseParams()
+	params.Key = repoKey
+	err := testsRepositoriesService.CreateLocalRepository(params)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, params)
 }
 
 func getLocalRepoDetailsTest(t *testing.T) {

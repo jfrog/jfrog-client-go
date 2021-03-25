@@ -37,6 +37,7 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualGenericTest", virtualGenericTest)
 	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
 	t.Run("getAllVirtualRepoDetailsTest", getAllVirtualRepoDetailsTest)
+	t.Run("virtualCreateWithParamTest", virtualCreateWithParamTest)
 }
 
 func virtualMavenTest(t *testing.T) {
@@ -671,6 +672,16 @@ func virtualGenericTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Generic(gvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, gvp)
+}
+
+func virtualCreateWithParamTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	params := services.NewVirtualRepositoryBaseParams()
+	params.Key = repoKey
+	err := testsRepositoriesService.CreateVirtualRepository(params)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, params)
 }
 
 func getVirtualRepoDetailsTest(t *testing.T) {

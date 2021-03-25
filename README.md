@@ -589,6 +589,15 @@ params.DownloadRedirect = true
 err = servicesManager.CreateLocalRepository().Generic(params)
 ```
 
+You can also create a local repository with basic local params:
+```go
+params := services.NewLocalRepositoryBaseParams()
+params.Key = "generic-repo"
+params.PackageType = "generic"
+params.Description = "This is a public description for generic-repo"
+err := servicesManager.CreateLocalRepository(params)
+```
+
 Updating local Generic repository:
 ```go
 err = servicesManager.UpdateLocalRepository().Generic(params)
@@ -626,6 +635,14 @@ Updating remote Maven repository:
 err = servicesManager.UpdateRemoteRepository().Maven(params)
 ```
 
+You can also create a remote repository with basic remote params:
+```go
+params := services.NewRemoteRepositoryBaseParams()
+params.Key = "remote-repo"
+params.Url = "http://jcenter.bintray.com"
+err := servicesManager.CreateRemoteRepository(params)
+```
+
 #### Creating and Updating Virtual Repository
 You can create and update a virtual repository for the following package types:
 
@@ -649,7 +666,17 @@ params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = true
 err = servicesManager.CreateVirtualRepository().Go(params)
 ```
 
-Updating remote Maven repository:
+You can also create a virtual repository with basic virtual params:
+```go
+params := services.NewVirtualRepositoryBaseParams()
+params.Key = "generic-repo"
+params.PackageType = "generic"
+params.Description = "This is a public description for generic-repo"
+params.Repositories = string[]{"remote-repo","local-repo"}
+err := servicesManager.CreateVirtualRepository(params)
+```
+
+Updating virtual Go repository:
 ```go
 err = servicesManager.UpdateVirtualRepository().Go(params)
 ```

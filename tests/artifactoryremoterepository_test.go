@@ -39,6 +39,7 @@ func TestArtifactoryRemoteRepository(t *testing.T) {
 	t.Run("remoteGenericTest", remoteGenericTest)
 	t.Run("getRemoteRepoDetailsTest", getRemoteRepoDetailsTest)
 	t.Run("getAllRemoteRepoDetailsTest", getAllRemoteRepoDetailsTest)
+	t.Run("remoteCreateWithParamTest", remoteCreateWithParamTest)
 }
 
 func remoteMavenTest(t *testing.T) {
@@ -1001,6 +1002,16 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	assert.Equal(t, data.Rclass, "remote")
 	assert.Equal(t, data.Url, grp.Url)
 	assert.Equal(t, data.PackageType, "generic")
+}
+
+func remoteCreateWithParamTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	params := services.NewRemoteRepositoryBaseParams()
+	params.Key = repoKey
+	err := testsRepositoriesService.CreateRemoteRepository(params)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, params)
 }
 
 func getAllRemoteRepoDetailsTest(t *testing.T) {

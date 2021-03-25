@@ -14,7 +14,7 @@ import (
 
 type ArtifactoryServicesManager interface {
 	CreateLocalRepository() *services.LocalRepositoryService
-	CreateBasicLocalRepository(params services.LocalRepositoryBaseParams) error
+	CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error
 	CreateRemoteRepository() *services.RemoteRepositoryService
 	CreateBasicRemoteRepository(params services.RemoteRepositoryBaseParams) error
 	CreateVirtualRepository() *services.VirtualRepositoryService
@@ -91,7 +91,7 @@ func (esm *EmptyArtifactoryServicesManager) CreateLocalRepository() *services.Lo
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateBasicLocalRepository(params services.LocalRepositoryBaseParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error {
 	panic("Failed: Method is not implemented")
 }
 

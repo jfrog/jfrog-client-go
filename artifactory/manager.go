@@ -75,7 +75,7 @@ func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepository() *services.Vir
 	return repositoryService
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateBasicLocalRepository(params services.LocalRepositoryBaseParams) error {
+func (sm *ArtifactoryServicesManagerImp) CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService.CreateLocalRepository(params)
