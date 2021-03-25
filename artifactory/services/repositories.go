@@ -123,3 +123,7 @@ type RepositoriesFilterParams struct {
 	RepoType    string
 	PackageType string
 }
+
+func NewRepositoriesFilterParams() RepositoriesFilterParams {
+	return RepositoriesFilterParams{}
+}

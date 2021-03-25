@@ -638,8 +638,11 @@ func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
 	return data
 }
 
-func getAllRepos(t *testing.T) *[]services.RepositoryDetails {
-	data, err := testsRepositoriesService.GetAll()
+func getAllRepos(t *testing.T, repoType, packageType string) *[]services.RepositoryDetails {
+	params := services.NewRepositoriesFilterParams()
+	params.RepoType = repoType
+	params.PackageType = packageType
+	data, err := testsRepositoriesService.GetAllFromTypeAndPackage(params)
 	assert.NoError(t, err, "Failed to get all repositories details")
 	return data
 }

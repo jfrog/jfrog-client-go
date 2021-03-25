@@ -1017,7 +1017,7 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t)
+	data := getAllRepos(t, "remote", "")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {
