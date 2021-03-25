@@ -633,9 +633,10 @@ func GenerateRepoKeyForRepoServiceTest() string {
 }
 
 func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
-	data, err := testsRepositoriesService.Get(repoKey)
+	data := services.RepositoryDetails{}
+	err := testsRepositoriesService.Get(repoKey, &data)
 	assert.NoError(t, err, "Failed to get "+repoKey+" details")
-	return data
+	return &data
 }
 
 func getAllRepos(t *testing.T, repoType, packageType string) *[]services.RepositoryDetails {

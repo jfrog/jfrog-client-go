@@ -23,7 +23,7 @@ type ArtifactoryServicesManager interface {
 	UpdateRemoteRepository() *services.RemoteRepositoryService
 	UpdateVirtualRepository() *services.VirtualRepositoryService
 	DeleteRepository(repoKey string) error
-	GetRepository(repoKey string) (*services.RepositoryDetails, error)
+	GetRepository(repoKey string, repoDetails interface{}) error
 	GetAllRepositories() (*[]services.RepositoryDetails, error)
 	GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error)
 	CreatePermissionTarget(params services.PermissionTargetParams) error
@@ -127,7 +127,7 @@ func (esm *EmptyArtifactoryServicesManager) DeleteRepository(repoKey string) err
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetRepository(repoKey string) (*services.RepositoryDetails, error) {
+func (esm *EmptyArtifactoryServicesManager) GetRepository(repoKey string, repoDetails interface{}) error {
 	panic("Failed: Method is not implemented")
 }
 

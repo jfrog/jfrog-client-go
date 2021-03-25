@@ -117,10 +117,10 @@ func (sm *ArtifactoryServicesManagerImp) DeleteRepository(repoKey string) error 
 	return deleteRepositoryService.Delete(repoKey)
 }
 
-func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string) (*services.RepositoryDetails, error) {
+func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string, repoDetails interface{}) error {
 	repositoriesService := services.NewRepositoriesService(sm.client)
 	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoriesService.Get(repoKey)
+	return repositoriesService.Get(repoKey, repoDetails)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {

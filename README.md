@@ -688,10 +688,22 @@ servicesManager.DeleteRepository("generic-repo")
 ```
 
 #### Getting Repository Details
-You can get repository details from Artifactory using its key:
+You can get repository details from Artifactory using its key, and the desired params struct:
 ```go
-servicesManager.GetRepository("generic-repo")
+repoDetails = services.RepositoryDetails{}
+err := servicesManager.GetRepository("maven-repo",&repoDetails)
 ```
+
+```go
+localRepoDetails = services.LocalRepositoryBaseParams{}
+err := servicesManager.GetRepository("maven-repo",&repoDetails)
+```
+
+```go
+mavenLocalRepoDetails = services.MavenLocalRepositoryParams{}
+err := servicesManager.GetRepository("maven-repo",&repoDetails)
+```
+services.RepositoryDetails
 
 #### Getting All Repositories
 You can get all repositories from Artifactory:

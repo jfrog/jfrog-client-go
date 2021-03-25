@@ -25,17 +25,16 @@ func NewRepositoriesService(client *jfroghttpclient.JfrogHttpClient) *Repositori
 	return &RepositoriesService{client: client}
 }
 
-func (rs *RepositoriesService) Get(repoKey string) (*RepositoryDetails, error) {
+func (rs *RepositoriesService) Get(repoKey string, repoDetails interface{}) error {
 	log.Info("Getting repository '" + repoKey + "' details ...")
 	body, err := rs.sendGet(apiRepositories + "/" + repoKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	repoDetails := &RepositoryDetails{}
-	if err := json.Unmarshal(body, &repoDetails); err != nil {
-		return repoDetails, errorutils.CheckError(err)
+	if err := json.Unmarshal(body, repoDetails); err != nil {
+		return errorutils.CheckError(err)
 	}
-	return repoDetails, nil
+	return nil
 }
 
 func (rs *RepositoriesService) GetAll() (*[]RepositoryDetails, error) {
