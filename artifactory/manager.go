@@ -81,13 +81,13 @@ func (sm *ArtifactoryServicesManagerImp) CreateLocalRepositoryWithParams(params 
 	return repositoryService.CreateLocalRepository(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateBasicRemoteRepository(params services.RemoteRepositoryBaseParams) error {
+func (sm *ArtifactoryServicesManagerImp) CreateRemoteRepositoryWithParams(params services.RemoteRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService.CreateRemoteRepository(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateBasicVirtualRepository(params services.VirtualRepositoryBaseParams) error {
+func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService.CreateVirtualRepository(params)
