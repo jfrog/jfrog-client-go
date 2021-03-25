@@ -241,9 +241,9 @@ func PathHasPrefix(s, prefix string) bool {
 		// Use same backslash format for comparing
 		winS := strings.Replace(s, "\\\\", "\\", -1)
 		winPrefix := strings.Replace(prefix, "\\\\", "\\", -1)
-		return strings.HasSuffix(winS, winPrefix)
+		return strings.HasPrefix(winS, winPrefix)
 	}
-	return strings.HasSuffix(s, prefix)
+	return strings.HasPrefix(s, prefix)
 }
 
 // Replaces matched regular expression from path to corresponding placeholder {i} at target.
