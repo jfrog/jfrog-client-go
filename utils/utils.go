@@ -236,6 +236,16 @@ func replaceSpecialChars(path string) string {
 	return path
 }
 
+func PathHasPrefix(s, prefix string) bool {
+	if IsWindows() {
+		// Use same backslash format for comparing
+		winS := strings.Replace(s, "\\\\", "\\", -1)
+		winPrefix := strings.Replace(prefix, "\\\\", "\\", -1)
+		return strings.HasSuffix(winS, winPrefix)
+	}
+	return strings.HasSuffix(s, prefix)
+}
+
 // Replaces matched regular expression from path to corresponding placeholder {i} at target.
 // Example 1:
 //      pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
