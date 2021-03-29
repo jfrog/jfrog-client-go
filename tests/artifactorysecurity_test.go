@@ -52,7 +52,9 @@ func regenerateAPIKeyTest(t *testing.T) {
 
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetInsecureTls(true).
-		SetServiceDetails(&rtDetails).
+		SetClientCertPath(rtDetails.GetClientCertPath()).
+		SetClientCertKeyPath(rtDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(rtDetails.RunPreRequestFunctions).
 		Build()
 	if err != nil {
 		t.Fatalf("Failed to create Artifactory client: %v\n", err)

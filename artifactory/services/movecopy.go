@@ -27,28 +27,24 @@ type MoveCopyService struct {
 	moveType   MoveType
 	client     *jfroghttpclient.JfrogHttpClient
 	DryRun     bool
-	ArtDetails auth.ServiceDetails
+	artDetails *auth.ServiceDetails
 	Threads    int
 }
 
-func NewMoveCopyService(client *jfroghttpclient.JfrogHttpClient, moveType MoveType) *MoveCopyService {
-	return &MoveCopyService{moveType: moveType, client: client}
+func NewMoveCopyService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient, moveType MoveType) *MoveCopyService {
+	return &MoveCopyService{moveType: moveType, artDetails: &artDetails, client: client}
 }
 
 func (mc *MoveCopyService) GetArtifactoryDetails() auth.ServiceDetails {
-	return mc.ArtDetails
-}
-
-func (mc *MoveCopyService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	mc.ArtDetails = rt
+	return *mc.artDetails
 }
 
 func (mc *MoveCopyService) IsDryRun() bool {
 	return mc.DryRun
 }
 
-func (mc *MoveCopyService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return mc.client, nil
+func (mc *MoveCopyService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return mc.client
 }
 
 func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopyParams) (successCount, failedCount int, err error) {

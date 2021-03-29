@@ -12,27 +12,23 @@ import (
 
 type SearchService struct {
 	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	artDetails *auth.ServiceDetails
 }
 
-func NewSearchService(client *jfroghttpclient.JfrogHttpClient) *SearchService {
-	return &SearchService{client: client}
+func NewSearchService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *SearchService {
+	return &SearchService{artDetails: &artDetails, client: client}
 }
 
 func (s *SearchService) GetArtifactoryDetails() auth.ServiceDetails {
-	return s.ArtDetails
-}
-
-func (s *SearchService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	s.ArtDetails = rt
+	return *s.artDetails
 }
 
 func (s *SearchService) IsDryRun() bool {
 	return false
 }
 
-func (s *SearchService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return s.client, nil
+func (s *SearchService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return s.client
 }
 
 func (s *SearchService) Search(searchParams SearchParams) (*content.ContentReader, error) {

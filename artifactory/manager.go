@@ -7,7 +7,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	_go "github.com/jfrog/jfrog-client-go/artifactory/services/go"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
@@ -20,26 +19,42 @@ type ArtifactoryServicesManagerImp struct {
 	progress ioutils.ProgressMgr
 }
 
-func New(artDetails *auth.ServiceDetails, config config.Config) (ArtifactoryServicesManager, error) {
-	return NewWithProgress(artDetails, config, nil)
+func New(config config.Config) (ArtifactoryServicesManager, error) {
+	return NewWithProgress(config, nil)
 }
 
-func NewWithProgress(artDetails *auth.ServiceDetails, config config.Config, progress ioutils.ProgressMgr) (ArtifactoryServicesManager, error) {
-	err := (*artDetails).InitSsh()
+func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (ArtifactoryServicesManager, error) {
+	artDetails := config.GetServiceDetails()
+	err := artDetails.InitSsh()
 	if err != nil {
 		return nil, err
 	}
-	manager := &ArtifactoryServicesManagerImp{config: config, progress: progress}
-	manager.client, err = jfroghttpclient.JfrogClientBuilder().
+	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
-		SetServiceDetails(artDetails).
+		SetClientCertPath(artDetails.GetClientCertPath()).
+		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		Build()
 	if err != nil {
 		return nil, err
 	}
+	if artDetails.GetClient() == nil {
+		artDetails.SetClient(client)
+	}
+	manager, err := NewWithClient(config, client)
+	if err != nil {
+		return nil, err
+	}
+	manager.progress = progress
 	return manager, err
+}
+
+func NewWithClient(config config.Config, client *jfroghttpclient.JfrogHttpClient) (*ArtifactoryServicesManagerImp, error) {
+	manager := &ArtifactoryServicesManagerImp{config: config}
+	manager.client = client
+	return manager, nil
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateLocalRepository() *services.LocalRepositoryService {
@@ -121,9 +136,8 @@ func (sm *ArtifactoryServicesManagerImp) GetPermissionTarget(permissionTargetNam
 }
 
 func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
-	buildInfoService := services.NewBuildInfoService(sm.client)
+	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
-	buildInfoService.ArtDetails = sm.config.GetServiceDetails()
 	return buildInfoService.PublishBuildInfo(build, projectKey)
 }
 
@@ -154,31 +168,27 @@ func (sm *ArtifactoryServicesManagerImp) XrayScanBuild(params services.XrayScanP
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetPathsToDelete(params services.DeleteParams) (*content.ContentReader, error) {
-	deleteService := services.NewDeleteService(sm.client)
+	deleteService := services.NewDeleteService(sm.config.GetServiceDetails(), sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
-	deleteService.ArtDetails = sm.config.GetServiceDetails()
 	return deleteService.GetPathsToDelete(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DeleteFiles(reader *content.ContentReader) (int, error) {
-	deleteService := services.NewDeleteService(sm.client)
+	deleteService := services.NewDeleteService(sm.config.GetServiceDetails(), sm.client)
 	deleteService.DryRun = sm.config.IsDryRun()
-	deleteService.ArtDetails = sm.config.GetServiceDetails()
 	deleteService.Threads = sm.config.GetThreads()
 	return deleteService.DeleteFiles(reader)
 }
 
 func (sm *ArtifactoryServicesManagerImp) ReadRemoteFile(readPath string) (io.ReadCloser, error) {
-	readFileService := services.NewReadFileService(sm.client)
+	readFileService := services.NewReadFileService(sm.config.GetServiceDetails(), sm.client)
 	readFileService.DryRun = sm.config.IsDryRun()
-	readFileService.ArtDetails = sm.config.GetServiceDetails()
 	return readFileService.ReadRemoteFile(readPath)
 }
 
 func (sm *ArtifactoryServicesManagerImp) initDownloadService() *services.DownloadService {
-	downloadService := services.NewDownloadService(sm.client)
+	downloadService := services.NewDownloadService(sm.config.GetServiceDetails(), sm.client)
 	downloadService.DryRun = sm.config.IsDryRun()
-	downloadService.ArtDetails = sm.config.GetServiceDetails()
 	downloadService.Threads = sm.config.GetThreads()
 	downloadService.Progress = sm.progress
 	return downloadService
@@ -200,21 +210,18 @@ func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithSummary(params ...serv
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error) {
-	gitLfsCleanService := services.NewGitLfsCleanService(sm.client)
+	gitLfsCleanService := services.NewGitLfsCleanService(sm.config.GetServiceDetails(), sm.client)
 	gitLfsCleanService.DryRun = sm.config.IsDryRun()
-	gitLfsCleanService.ArtDetails = sm.config.GetServiceDetails()
 	return gitLfsCleanService.GetUnreferencedGitLfsFiles(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) SearchFiles(params services.SearchParams) (*content.ContentReader, error) {
-	searchService := services.NewSearchService(sm.client)
-	searchService.ArtDetails = sm.config.GetServiceDetails()
+	searchService := services.NewSearchService(sm.config.GetServiceDetails(), sm.client)
 	return searchService.Search(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) Aql(aql string) (io.ReadCloser, error) {
-	aqlService := services.NewAqlService(sm.client)
-	aqlService.ArtDetails = sm.config.GetServiceDetails()
+	aqlService := services.NewAqlService(sm.config.GetServiceDetails(), sm.client)
 	return aqlService.ExecAql(aql)
 }
 
@@ -256,17 +263,15 @@ func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(params ...servic
 }
 
 func (sm *ArtifactoryServicesManagerImp) Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {
-	copyService := services.NewMoveCopyService(sm.client, services.COPY)
+	copyService := services.NewMoveCopyService(sm.config.GetServiceDetails(), sm.client, services.COPY)
 	copyService.DryRun = sm.config.IsDryRun()
-	copyService.ArtDetails = sm.config.GetServiceDetails()
 	copyService.Threads = sm.config.GetThreads()
 	return copyService.MoveCopyServiceMoveFilesWrapper(params...)
 }
 
 func (sm *ArtifactoryServicesManagerImp) Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {
-	moveService := services.NewMoveCopyService(sm.client, services.MOVE)
+	moveService := services.NewMoveCopyService(sm.config.GetServiceDetails(), sm.client, services.MOVE)
 	moveService.DryRun = sm.config.IsDryRun()
-	moveService.ArtDetails = sm.config.GetServiceDetails()
 	moveService.Threads = sm.config.GetThreads()
 	return moveService.MoveCopyServiceMoveFilesWrapper(params...)
 }
@@ -278,8 +283,7 @@ func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) e
 }
 
 func (sm *ArtifactoryServicesManagerImp) Ping() ([]byte, error) {
-	pingService := services.NewPingService(sm.client)
-	pingService.ArtDetails = sm.config.GetServiceDetails()
+	pingService := services.NewPingService(sm.config.GetServiceDetails(), sm.client)
 	return pingService.Ping()
 }
 
@@ -288,8 +292,7 @@ func (sm *ArtifactoryServicesManagerImp) GetConfig() config.Config {
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error) {
-	buildInfoService := services.NewBuildInfoService(sm.client)
-	buildInfoService.ArtDetails = sm.config.GetServiceDetails()
+	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
 	return buildInfoService.GetBuildInfo(params)
 }
 
@@ -342,14 +345,12 @@ func (sm *ArtifactoryServicesManagerImp) GetReplication(repoKey string) ([]utils
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetVersion() (string, error) {
-	systemService := services.NewSystemService(sm.client)
-	systemService.ArtDetails = sm.config.GetServiceDetails()
+	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
 	return systemService.GetVersion()
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetServiceId() (string, error) {
-	systemService := services.NewSystemService(sm.client)
-	systemService.ArtDetails = sm.config.GetServiceDetails()
+	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
 	return systemService.GetServiceId()
 }
 
@@ -408,8 +409,7 @@ func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {
 }
 
 func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPromoteParams) error {
-	systemService := services.NewDockerPromoteService(sm.client)
-	systemService.ArtDetails = sm.config.GetServiceDetails()
+	systemService := services.NewDockerPromoteService(sm.config.GetServiceDetails(), sm.client)
 	return systemService.PromoteDocker(params)
 }
 

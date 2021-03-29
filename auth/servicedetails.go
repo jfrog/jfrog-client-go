@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"sync"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 var expiryHandleMutex sync.Mutex
 
 // Implement this function and append it to create an interceptor that will run pre request in the http client
-type PreRequestInterceptorFunc func(*CommonConfigFields, *httputils.HttpClientDetails) error
+type ServiceDetailsPreRequestFunc func(*CommonConfigFields, *httputils.HttpClientDetails) error
 
 type ServiceDetails interface {
 	GetUrl() string
@@ -20,13 +21,14 @@ type ServiceDetails interface {
 	GetPassword() string
 	GetApiKey() string
 	GetAccessToken() string
-	GetPreRequestInterceptor() []PreRequestInterceptorFunc
+	GetPreRequestFunctions() []ServiceDetailsPreRequestFunc
 	GetClientCertPath() string
 	GetClientCertKeyPath() string
 	GetSshUrl() string
 	GetSshKeyPath() string
 	GetSshPassphrase() string
 	GetSshAuthHeaders() map[string]string
+	GetClient() *jfroghttpclient.JfrogHttpClient
 	GetVersion() (string, error)
 
 	SetUrl(url string)
@@ -34,38 +36,40 @@ type ServiceDetails interface {
 	SetPassword(password string)
 	SetApiKey(apiKey string)
 	SetAccessToken(accessToken string)
-	AppendPreRequestInterceptor(PreRequestInterceptorFunc)
+	AppendPreRequestFunction(ServiceDetailsPreRequestFunc)
 	SetClientCertPath(certificatePath string)
 	SetClientCertKeyPath(certificatePath string)
 	SetSshUrl(url string)
 	SetSshKeyPath(sshKeyPath string)
 	SetSshPassphrase(sshPassphrase string)
 	SetSshAuthHeaders(sshAuthHeaders map[string]string)
+	SetClient(client *jfroghttpclient.JfrogHttpClient)
 
 	IsSshAuthHeaderSet() bool
 	IsSshAuthentication() bool
 	AuthenticateSsh(sshKey, sshPassphrase string) error
 	InitSsh() error
-	RunPreRequestInterceptors(httpClientDetails *httputils.HttpClientDetails) error
+	RunPreRequestFunctions(httpClientDetails *httputils.HttpClientDetails) error
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
 }
 
 type CommonConfigFields struct {
-	Url                    string                      `json:"-"`
-	User                   string                      `json:"-"`
-	Password               string                      `json:"-"`
-	ApiKey                 string                      `json:"-"`
-	AccessToken            string                      `json:"-"`
-	PreRequestInterceptors []PreRequestInterceptorFunc `json:"-"`
-	ClientCertPath         string                      `json:"-"`
-	ClientCertKeyPath      string                      `json:"-"`
-	Version                string                      `json:"-"`
-	SshUrl                 string                      `json:"-"`
-	SshKeyPath             string                      `json:"-"`
-	SshPassphrase          string                      `json:"-"`
-	SshAuthHeaders         map[string]string           `json:"-"`
+	Url                    string                         `json:"-"`
+	User                   string                         `json:"-"`
+	Password               string                         `json:"-"`
+	ApiKey                 string                         `json:"-"`
+	AccessToken            string                         `json:"-"`
+	PreRequestInterceptors []ServiceDetailsPreRequestFunc `json:"-"`
+	ClientCertPath         string                         `json:"-"`
+	ClientCertKeyPath      string                         `json:"-"`
+	Version                string                         `json:"-"`
+	SshUrl                 string                         `json:"-"`
+	SshKeyPath             string                         `json:"-"`
+	SshPassphrase          string                         `json:"-"`
+	SshAuthHeaders         map[string]string              `json:"-"`
 	TokenMutex             sync.Mutex
+	client                 *jfroghttpclient.JfrogHttpClient `json:"-"`
 }
 
 func (ccf *CommonConfigFields) GetUrl() string {
@@ -88,7 +92,7 @@ func (ccf *CommonConfigFields) GetAccessToken() string {
 	return ccf.AccessToken
 }
 
-func (ccf *CommonConfigFields) GetPreRequestInterceptor() []PreRequestInterceptorFunc {
+func (ccf *CommonConfigFields) GetPreRequestFunctions() []ServiceDetailsPreRequestFunc {
 	return ccf.PreRequestInterceptors
 }
 
@@ -116,6 +120,10 @@ func (ccf *CommonConfigFields) GetSshAuthHeaders() map[string]string {
 	return ccf.SshAuthHeaders
 }
 
+func (ccf *CommonConfigFields) GetClient() *jfroghttpclient.JfrogHttpClient {
+	return ccf.client
+}
+
 func (ccf *CommonConfigFields) SetUrl(url string) {
 	ccf.Url = url
 }
@@ -136,7 +144,7 @@ func (ccf *CommonConfigFields) SetAccessToken(accessToken string) {
 	ccf.AccessToken = accessToken
 }
 
-func (ccf *CommonConfigFields) AppendPreRequestInterceptor(interceptor PreRequestInterceptorFunc) {
+func (ccf *CommonConfigFields) AppendPreRequestFunction(interceptor ServiceDetailsPreRequestFunc) {
 	ccf.PreRequestInterceptors = append(ccf.PreRequestInterceptors, interceptor)
 }
 
@@ -162,6 +170,10 @@ func (ccf *CommonConfigFields) SetSshPassphrase(sshPassphrase string) {
 
 func (ccf *CommonConfigFields) SetSshAuthHeaders(sshAuthHeaders map[string]string) {
 	ccf.SshAuthHeaders = sshAuthHeaders
+}
+
+func (ccf *CommonConfigFields) SetClient(client *jfroghttpclient.JfrogHttpClient) {
+	ccf.client = client
 }
 
 func (ccf *CommonConfigFields) IsSshAuthHeaderSet() bool {
@@ -198,13 +210,13 @@ func (ccf *CommonConfigFields) InitSsh() error {
 				return err
 			}
 		}
-		ccf.AppendPreRequestInterceptor(SshTokenRefreshPreRequestInterceptor)
+		ccf.AppendPreRequestFunction(SshTokenRefreshPreRequestInterceptor)
 	}
 	return nil
 }
 
 // Runs an interceptor before sending a request via the http client
-func (ccf *CommonConfigFields) RunPreRequestInterceptors(httpClientDetails *httputils.HttpClientDetails) error {
+func (ccf *CommonConfigFields) RunPreRequestFunctions(httpClientDetails *httputils.HttpClientDetails) error {
 	for _, exec := range ccf.PreRequestInterceptors {
 		err := exec(ccf, httpClientDetails)
 		if err != nil {

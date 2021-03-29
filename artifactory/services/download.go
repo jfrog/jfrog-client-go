@@ -27,7 +27,7 @@ import (
 type DownloadService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	Progress    clientio.ProgressMgr
-	ArtDetails  auth.ServiceDetails
+	artDetails  *auth.ServiceDetails
 	DryRun      bool
 	Threads     int
 	saveSummary bool
@@ -37,24 +37,20 @@ type DownloadService struct {
 	artifactsDetailsWriter *content.ContentWriter
 }
 
-func NewDownloadService(client *jfroghttpclient.JfrogHttpClient) *DownloadService {
-	return &DownloadService{client: client}
+func NewDownloadService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *DownloadService {
+	return &DownloadService{artDetails: &artDetails, client: client}
 }
 
 func (ds *DownloadService) GetArtifactoryDetails() auth.ServiceDetails {
-	return ds.ArtDetails
-}
-
-func (ds *DownloadService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	ds.ArtDetails = rt
+	return *ds.artDetails
 }
 
 func (ds *DownloadService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *DownloadService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return ds.client, nil
+func (ds *DownloadService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return ds.client
 }
 
 func (ds *DownloadService) GetThreads() int {
@@ -63,10 +59,6 @@ func (ds *DownloadService) GetThreads() int {
 
 func (ds *DownloadService) SetThreads(threads int) {
 	ds.Threads = threads
-}
-
-func (ds *DownloadService) SetServiceDetails(artDetails auth.ServiceDetails) {
-	ds.ArtDetails = artDetails
 }
 
 func (ds *DownloadService) SetDryRun(isDryRun bool) {
@@ -125,7 +117,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		defer func() {
 			expectedChan <- totalTasks
 		}()
-		artifactoryVersionStr, err := ds.ArtDetails.GetVersion()
+		artifactoryVersionStr, err := ds.GetArtifactoryDetails().GetVersion()
 		if err != nil {
 			log.Error(err)
 			errorsQueue.AddError(err)
@@ -314,7 +306,7 @@ func createDownloadFileDetails(downloadPath, localPath, localFileName string, do
 }
 
 func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string, downloadParams DownloadParams) error {
-	httpClientsDetails := ds.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
 	bulkDownload := downloadParams.SplitCount == 0 || downloadParams.MinSplitSize < 0 || downloadParams.MinSplitSize*1000 > downloadFileDetails.Size
 	if !bulkDownload {
 		acceptRange, err := ds.isFileAcceptRange(downloadFileDetails)
@@ -354,7 +346,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 }
 
 func (ds *DownloadService) isFileAcceptRange(downloadFileDetails *httpclient.DownloadFileDetails) (bool, error) {
-	httpClientsDetails := ds.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
 	isAcceptRange, resp, err := ds.client.IsAcceptRanges(downloadFileDetails.DownloadPath, &httpClientsDetails)
 	if err != nil {
 		return false, err
@@ -441,7 +433,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 	return func(downloadData DownloadData) parallel.TaskFunc {
 		return func(threadId int) error {
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ds.DryRun)
-			downloadPath, e := utils.BuildArtifactoryUrl(ds.ArtDetails.GetUrl(), downloadData.Dependency.GetItemRelativePath(), make(map[string]string))
+			downloadPath, e := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), downloadData.Dependency.GetItemRelativePath(), make(map[string]string))
 			if e != nil {
 				return e
 			}

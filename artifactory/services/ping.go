@@ -13,23 +13,19 @@ import (
 
 type PingService struct {
 	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	artDetails *auth.ServiceDetails
 }
 
-func NewPingService(client *jfroghttpclient.JfrogHttpClient) *PingService {
-	return &PingService{client: client}
+func NewPingService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *PingService {
+	return &PingService{artDetails: &artDetails, client: client}
 }
 
 func (ps *PingService) GetArtifactoryDetails() auth.ServiceDetails {
-	return ps.ArtDetails
+	return *ps.artDetails
 }
 
-func (ps *PingService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	ps.ArtDetails = rt
-}
-
-func (ps *PingService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return ps.client, nil
+func (ps *PingService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return ps.client
 }
 
 func (ps *PingService) IsDryRun() bool {
@@ -37,11 +33,11 @@ func (ps *PingService) IsDryRun() bool {
 }
 
 func (ps *PingService) Ping() ([]byte, error) {
-	url, err := utils.BuildArtifactoryUrl(ps.ArtDetails.GetUrl(), "api/system/ping", nil)
+	url, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), "api/system/ping", nil)
 	if err != nil {
 		return nil, err
 	}
-	httpClientDetails := ps.ArtDetails.CreateHttpClientDetails()
+	httpClientDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, respBody, _, err := ps.client.SendGet(url, true, &httpClientDetails)
 	if err != nil {
 		return nil, err

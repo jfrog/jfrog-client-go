@@ -5,19 +5,21 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
 type JfrogHttpClient struct {
-	httpClient          *httpclient.HttpClient
-	JfrogServiceDetails *auth.ServiceDetails
+	httpClient             *httpclient.HttpClient
+	preRequestInterceptors []PreRequestInterceptorFunc
 }
 
+// Implement this function and append it to create an interceptor that will run before sending the request
+type PreRequestInterceptorFunc func(clientDetails *httputils.HttpClientDetails) error
+
 func (rtc *JfrogHttpClient) SendGet(url string, followRedirect bool, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -25,7 +27,7 @@ func (rtc *JfrogHttpClient) SendGet(url string, followRedirect bool, httpClients
 }
 
 func (rtc *JfrogHttpClient) SendPost(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -33,7 +35,7 @@ func (rtc *JfrogHttpClient) SendPost(url string, content []byte, httpClientsDeta
 }
 
 func (rtc *JfrogHttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (*http.Response, error) {
-	if err := (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails); err != nil {
+	if err := rtc.runPreRequestInterceptors(httpClientsDetails); err != nil {
 		return nil, err
 	}
 	return rtc.httpClient.SendPostLeaveBodyOpen(url, content, *httpClientsDetails)
@@ -45,7 +47,7 @@ func (rtc *JfrogHttpClient) SendPostForm(url string, data url.Values, httpClient
 }
 
 func (rtc *JfrogHttpClient) SendPatch(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -53,7 +55,7 @@ func (rtc *JfrogHttpClient) SendPatch(url string, content []byte, httpClientsDet
 }
 
 func (rtc *JfrogHttpClient) SendDelete(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -61,7 +63,7 @@ func (rtc *JfrogHttpClient) SendDelete(url string, content []byte, httpClientsDe
 }
 
 func (rtc *JfrogHttpClient) SendHead(url string, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -69,7 +71,7 @@ func (rtc *JfrogHttpClient) SendHead(url string, httpClientsDetails *httputils.H
 }
 
 func (rtc *JfrogHttpClient) SendPut(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -78,7 +80,7 @@ func (rtc *JfrogHttpClient) SendPut(url string, content []byte, httpClientsDetai
 
 func (rtc *JfrogHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool,
 	httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -87,7 +89,7 @@ func (rtc *JfrogHttpClient) Send(method string, url string, content []byte, foll
 
 func (rtc *JfrogHttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails,
 	retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -96,7 +98,7 @@ func (rtc *JfrogHttpClient) UploadFile(localPath, url, logMsgPrefix string, http
 
 func (rtc *JfrogHttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails *httputils.HttpClientDetails,
 	size int64) (resp *http.Response, body []byte, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -104,7 +106,7 @@ func (rtc *JfrogHttpClient) UploadFileFromReader(reader io.Reader, url string, h
 }
 
 func (rtc *JfrogHttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails *httputils.HttpClientDetails) (ioReaderCloser io.ReadCloser, resp *http.Response, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -113,7 +115,7 @@ func (rtc *JfrogHttpClient) ReadRemoteFile(downloadPath string, httpClientsDetai
 
 func (rtc *JfrogHttpClient) DownloadFileWithProgress(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
 	httpClientsDetails *httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -127,7 +129,7 @@ func (rtc *JfrogHttpClient) DownloadFile(downloadFileDetails *httpclient.Downloa
 
 func (rtc *JfrogHttpClient) DownloadFileConcurrently(flags httpclient.ConcurrentDownloadFlags,
 	logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails, progress ioutils.ProgressMgr) (resp *http.Response, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -135,9 +137,20 @@ func (rtc *JfrogHttpClient) DownloadFileConcurrently(flags httpclient.Concurrent
 }
 
 func (rtc *JfrogHttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetails *httputils.HttpClientDetails) (isAcceptRanges bool, resp *http.Response, err error) {
-	err = (*rtc.JfrogServiceDetails).RunPreRequestInterceptors(httpClientsDetails)
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
 	return rtc.httpClient.IsAcceptRanges(downloadUrl, *httpClientsDetails)
+}
+
+// Runs an interceptor before sending a request
+func (rtc *JfrogHttpClient) runPreRequestInterceptors(httpClientDetails *httputils.HttpClientDetails) error {
+	for _, exec := range rtc.preRequestInterceptors {
+		err := exec(httpClientDetails)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

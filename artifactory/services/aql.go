@@ -10,27 +10,23 @@ import (
 
 type AqlService struct {
 	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	artDetails *auth.ServiceDetails
 }
 
-func NewAqlService(client *jfroghttpclient.JfrogHttpClient) *AqlService {
-	return &AqlService{client: client}
+func NewAqlService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *AqlService {
+	return &AqlService{artDetails: &artDetails, client: client}
 }
 
 func (s *AqlService) GetArtifactoryDetails() auth.ServiceDetails {
-	return s.ArtDetails
-}
-
-func (s *AqlService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	s.ArtDetails = rt
+	return *s.artDetails
 }
 
 func (s *AqlService) IsDryRun() bool {
 	return false
 }
 
-func (s *AqlService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return s.client, nil
+func (s *AqlService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return s.client
 }
 
 func (s *AqlService) ExecAql(aql string) (io.ReadCloser, error) {
