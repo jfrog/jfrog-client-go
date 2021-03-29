@@ -26,10 +26,10 @@ func TestMain(m *testing.M) {
 func InitServiceManagers() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
-	log.Info(RtUrl)
-	log.Info(DistUrl)
-	log.Info(XrayUrl)
-	log.Info(PipelinesUrl)
+	log.Info(*RtUrl)
+	log.Info(*DistUrl)
+	log.Info(*XrayUrl)
+	log.Info(*PipelinesUrl)
 	if *TestArtifactory || *TestDistribution || *TestXray {
 		createArtifactoryUploadManager()
 		createArtifactorySearchManager()
