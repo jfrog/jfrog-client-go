@@ -167,6 +167,9 @@ func (is *IntegrationsService) createIntegration(integration IntegrationCreation
 		if resp.StatusCode == http.StatusConflict {
 			return -1, errorutils.CheckError(&IntegrationAlreadyExistsError{InnerError: err})
 		}
+		if resp.StatusCode == http.StatusUnauthorized {
+			return -1, errorutils.CheckError(&IntegrationUnauthorizedError{InnerError: err})
+		}
 		return -1, errorutils.CheckError(err)
 	}
 
@@ -270,4 +273,12 @@ type IntegrationAlreadyExistsError struct {
 
 func (*IntegrationAlreadyExistsError) Error() string {
 	return "Pipelines: Integration already exists."
+}
+
+type IntegrationUnauthorizedError struct {
+	InnerError error
+}
+
+func (*IntegrationUnauthorizedError) Error() string {
+	return "Pipelines: Integration failed, received 401 Unauthorized."
 }
