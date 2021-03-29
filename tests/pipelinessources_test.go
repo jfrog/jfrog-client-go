@@ -17,7 +17,7 @@ const (
 	testsDummyProjectIntegrationId = 123
 )
 
-func TestSources(t *testing.T) {
+func TestPipelinesSources(t *testing.T) {
 	initPipelinesTest(t)
 	t.Run("addPipelineSource", testAddPipelineSource)
 }

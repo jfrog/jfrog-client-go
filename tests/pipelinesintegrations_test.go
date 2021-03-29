@@ -18,7 +18,7 @@ const (
 	testsDummyApiKey       = "nonexistingkey"
 )
 
-func TestIntegrations(t *testing.T) {
+func TestPipelinesIntegrations(t *testing.T) {
 	initPipelinesTest(t)
 	t.Run(services.GithubName, testCreateGithubIntegrationAndGetByName)
 	t.Run(services.GithubEnterpriseName, testCreateGithubEnterpriseIntegration)
