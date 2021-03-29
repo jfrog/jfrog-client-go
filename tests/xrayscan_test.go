@@ -13,6 +13,7 @@ import (
 var testsXrayScanService *services.XrayScanService
 
 func TestNewXrayScanService(t *testing.T) {
+	initXrayTest(t)
 	xrayServerPort := xray.StartXrayMockServer()
 	artDetails := GetRtDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().

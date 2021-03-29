@@ -10,6 +10,7 @@ import (
 const ArtifactoryLocalFileCacheSuffix = " (local file cache)"
 
 func TestArtifactoryRemoteRepository(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("remoteMavenTest", remoteMavenTest)
 	t.Run("remoteGradleTest", remoteGradleTest)
 	t.Run("remoteIvyTest", remoteIvyTest)

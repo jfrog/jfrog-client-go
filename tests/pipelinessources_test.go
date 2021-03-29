@@ -18,9 +18,7 @@ const (
 )
 
 func TestSources(t *testing.T) {
-	if *PipelinesUrl == "" {
-		t.Skip("Pipelines is not being tested, skipping...")
-	}
+	initPipelinesTest(t)
 	t.Run("addPipelineSource", testAddPipelineSource)
 }
 

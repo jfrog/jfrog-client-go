@@ -20,6 +20,7 @@ const tokenRevokeSuccessResponse = "Token revoked"
 const tokenNotFoundResponse = "Token not found"
 
 func TestToken(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("CreateToken", createTokenTest)
 	t.Run("RevokeToken", revokeTokenTest)
 	t.Run("RevokeToken: token not found", revokeTokenNotFoundTest)
@@ -29,6 +30,7 @@ func TestToken(t *testing.T) {
 }
 
 func TestAPIKey(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("Create API Key", createAPIKeyTest)
 	t.Run("Regenerate API Key", regenerateAPIKeyTest)
 	t.Run("Get API Key", getAPIKeyTest)

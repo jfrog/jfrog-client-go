@@ -8,6 +8,7 @@ import (
 )
 
 func TestArtifactoryLocalRepository(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("localMavenTest", localMavenTest)
 	t.Run("localGradleTest", localGradleTest)
 	t.Run("localIvyTest", localIvyTest)

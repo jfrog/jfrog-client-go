@@ -140,23 +140,32 @@ We welcome pull requests from the community.
 To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
 Use the following command with the below options to run the tests.
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests
+go test -v github.com/jfrog/jfrog-client-go/tests [test-types] [flags]
 ```
 Optional flags:
 
 | Flag                | Description                                                                                            |
 | ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
-| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
-| `-rt.password`      | [Default: password] Artifactory password.                                                              |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
 | `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
+| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
+| `-rt.password`      | [Default: password] Artifactory password.                                                              |
 | `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
 | `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
 | `-rt.accessToken`   | [Optional] Artifactory access token.                                                                   |
-| `-log-level`        | [Default: INFO] Sets the log level.                                                                    |
+| `-pipe.accessToken` | [Optional] Pipelines access token.                                                                     |
+
+The types are:
+
+| Type                | Description        |
+| ---                 | ---                |
+| `-test.artifactory` | Artifactory tests  |
+| `-test.distribution`| Distribution tests |
+| `-test.xray`        | Xray tests         |
+| `-test.pipelines`   | Pipelines tests    |
 
 - The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
   Once the tests are completed, the content of this repository is deleted.
@@ -551,6 +560,7 @@ err := rtManager.RevokeToken(params)
 
 #### Create API Key
 ```go
+// Returns an error if API key already exists - use RegenerateAPIKey instead.
 apiKey, err := rtManager.CreateAPIKey()
 ```
 

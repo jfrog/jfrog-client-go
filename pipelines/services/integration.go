@@ -22,16 +22,20 @@ func NewIntegrationsService(client *jfroghttpclient.JfrogHttpClient) *Integratio
 }
 
 const (
-	ArtifactoryName     = "artifactory"
-	artifactoryId       = 98
-	GithubName          = "github"
-	githubId            = 20
-	githubDefaultUrl    = "https://api.github.com"
-	BitbucketName       = "bitbucket"
-	bitbucketId         = 16
-	bitbucketDefaultUrl = "https://api.bitbucket.org"
-	GitlabName          = "gitlab"
-	gitlabId            = 21
+	ArtifactoryName      = "artifactory"
+	artifactoryId        = 98
+	GithubName           = "github"
+	githubId             = 20
+	GithubEnterpriseName = "githubEnterprise"
+	githubEnterpriseId   = 15
+	githubDefaultUrl     = "https://api.github.com"
+	BitbucketName        = "bitbucket"
+	bitbucketId          = 16
+	bitbucketDefaultUrl  = "https://api.bitbucket.org"
+	BitbucketServerName  = "bitbucketServerBasic"
+	bitbucketServerId    = 90
+	GitlabName           = "gitlab"
+	gitlabId             = 21
 
 	defaultProjectId = 1
 
@@ -40,6 +44,7 @@ const (
 	userLabel     = "user"
 	usernameLabel = "username"
 	apikeyLabel   = "apikey"
+	passwordLabel = "password"
 
 	integrationsRestApi = "api/v1/projectIntegrations/"
 )
@@ -58,6 +63,20 @@ func (is *IntegrationsService) CreateGithubIntegration(integrationName, token st
 	return is.createIntegration(integration)
 }
 
+func (is *IntegrationsService) CreateGithubEnterpriseIntegration(integrationName, url, token string) (id int, err error) {
+	integration := Integration{
+		Name:                  integrationName,
+		MasterIntegrationId:   githubEnterpriseId,
+		MasterIntegrationName: GithubEnterpriseName,
+		ProjectId:             defaultProjectId,
+		FormJSONValues: []jsonValues{
+			{urlLabel, url},
+			{tokenLabel, token},
+		},
+	}
+	return is.createIntegration(integration)
+}
+
 func (is *IntegrationsService) CreateBitbucketIntegration(integrationName, username, token string) (id int, err error) {
 	integration := Integration{
 		Name:                  integrationName,
@@ -68,6 +87,21 @@ func (is *IntegrationsService) CreateBitbucketIntegration(integrationName, usern
 			{urlLabel, bitbucketDefaultUrl},
 			{usernameLabel, username},
 			{tokenLabel, token},
+		},
+	}
+	return is.createIntegration(integration)
+}
+
+func (is *IntegrationsService) CreateBitbucketServerIntegration(integrationName, url, username, passwordOrToken string) (id int, err error) {
+	integration := Integration{
+		Name:                  integrationName,
+		MasterIntegrationId:   bitbucketServerId,
+		MasterIntegrationName: BitbucketServerName,
+		ProjectId:             defaultProjectId,
+		FormJSONValues: []jsonValues{
+			{urlLabel, url},
+			{usernameLabel, username},
+			{passwordLabel, passwordOrToken},
 		},
 	}
 	return is.createIntegration(integration)

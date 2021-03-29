@@ -12,6 +12,7 @@ var trimmedRtTargetRepo = strings.TrimSuffix(RtTargetRepo, "/")
 var repos = []string{trimmedRtTargetRepo}
 
 func TestArtifactoryVirtualRepository(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("virtualMavenTest", virtualMavenTest)
 	t.Run("virtualGradleTest", virtualGradleTest)
 	t.Run("virtualIvyTest", virtualIvyTest)

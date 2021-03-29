@@ -2,6 +2,7 @@ package tests
 
 import (
 	"flag"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
@@ -25,41 +26,46 @@ func TestMain(m *testing.M) {
 func InitServiceManagers() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
-	createArtifactoryUploadManager()
-	createArtifactorySearchManager()
-	createArtifactoryDeleteManager()
-	createArtifactoryDownloadManager()
-	createArtifactorySecurityManager()
-	createArtifactoryCreateLocalRepositoryManager()
-	createArtifactoryUpdateLocalRepositoryManager()
-	createArtifactoryCreateRemoteRepositoryManager()
-	createArtifactoryUpdateRemoteRepositoryManager()
-	createArtifactoryCreateVirtualRepositoryManager()
-	createArtifactoryUpdateVirtualRepositoryManager()
-	createArtifactoryDeleteRepositoryManager()
-	createArtifactoryGetRepositoryManager()
-	createArtifactoryReplicationCreateManager()
-	createArtifactoryReplicationUpdateManager()
-	createArtifactoryReplicationGetManager()
-	createArtifactoryReplicationDeleteManager()
-	createArtifactoryPermissionTargetManager()
-	createArtifactoryUserManager()
-	createArtifactoryGroupManager()
-	createArtifactoryBuildInfoManager()
+	if *TestArtifactory {
+		createArtifactoryUploadManager()
+		createArtifactorySearchManager()
+		createArtifactoryDeleteManager()
+		createArtifactoryDownloadManager()
+		createArtifactorySecurityManager()
+		createArtifactoryCreateLocalRepositoryManager()
+		createArtifactoryUpdateLocalRepositoryManager()
+		createArtifactoryCreateRemoteRepositoryManager()
+		createArtifactoryUpdateRemoteRepositoryManager()
+		createArtifactoryCreateVirtualRepositoryManager()
+		createArtifactoryUpdateVirtualRepositoryManager()
+		createArtifactoryDeleteRepositoryManager()
+		createArtifactoryGetRepositoryManager()
+		createArtifactoryReplicationCreateManager()
+		createArtifactoryReplicationUpdateManager()
+		createArtifactoryReplicationGetManager()
+		createArtifactoryReplicationDeleteManager()
+		createArtifactoryPermissionTargetManager()
+		createArtifactoryUserManager()
+		createArtifactoryGroupManager()
+		createArtifactoryBuildInfoManager()
+	}
 
-	if *DistUrl != "" {
+	if *TestDistribution {
 		createDistributionManager()
 	}
-	if *XrayUrl != "" {
+	if *TestXray {
 		createXrayWatchManager()
 		createXrayPolicyManager()
 		createXrayBinMgrManager()
 	}
-	if *PipelinesUrl != "" {
+	if *TestPipelines {
 		createPipelinesIntegrationsManager()
 		createPipelinesSourcesManager()
 	}
-	createReposIfNeeded()
+	err := createReposIfNeeded()
+	if err != nil {
+		log.Error(err.Error())
+	}
 }
 
 func TestUnitTests(t *testing.T) {
@@ -72,7 +78,8 @@ func TestUnitTests(t *testing.T) {
 	setJfrogHome(homePath)
 	packages := tests.GetTestPackages("./../...")
 	packages = tests.ExcludeTestsPackage(packages, CliIntegrationTests)
-	tests.RunTests(packages, false)
+	err = tests.RunTests(packages, false)
+	assert.NoError(t, err)
 	cleanUnitTestsJfrogHome(homePath)
 }
 
@@ -84,7 +91,10 @@ func setJfrogHome(homePath string) {
 }
 
 func cleanUnitTestsJfrogHome(homePath string) {
-	os.RemoveAll(homePath)
+	err := os.RemoveAll(homePath)
+	if err != nil {
+		log.Error(err.Error())
+	}
 	if err := os.Unsetenv(JfrogHomeEnv); err != nil {
 		os.Exit(1)
 	}

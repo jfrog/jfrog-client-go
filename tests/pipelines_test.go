@@ -6,14 +6,17 @@ import (
 )
 
 func TestPipelinesVersion(t *testing.T) {
-	if *PipelinesUrl == "" {
-		t.Skip("Pipelines is not being tested, skipping...")
-	}
-
+	initPipelinesTest(t)
 	version, err := GetPipelinesDetails().GetVersion()
 	if err != nil {
 		assert.NoError(t, err)
 		return
 	}
 	assert.NotEmpty(t, version)
+}
+
+func initPipelinesTest(t *testing.T) {
+	if !*TestPipelines {
+		t.Skip("Skipping pipelines test. To run pipelines test add the '-test.pipelines=true' option.")
+	}
 }

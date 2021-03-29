@@ -36,6 +36,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var TestArtifactory *bool
+var TestDistribution *bool
+var TestXray *bool
+var TestPipelines *bool
 var RtUrl *string
 var DistUrl *string
 var XrayUrl *string
@@ -46,7 +50,7 @@ var RtApiKey *string
 var RtSshKeyPath *string
 var RtSshPassphrase *string
 var RtAccessToken *string
-var LogLevel *string
+var PipelinesAccessToken *string
 
 // Artifactory services
 var testsUploadService *services.UploadService
@@ -103,17 +107,21 @@ const (
 )
 
 func init() {
-	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory/", "Artifactory url")
+	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
+	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
+	TestXray = flag.Bool("test.xray", false, "Test xray")
+	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
+	RtUrl = flag.String("rt.url", "", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	RtUser = flag.String("rt.user", "admin", "Artifactory username")
-	RtPassword = flag.String("rt.password", "password", "Artifactory password")
+	RtUser = flag.String("rt.user", "", "Artifactory username")
+	RtPassword = flag.String("rt.password", "", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
 	RtAccessToken = flag.String("rt.accessToken", "", "Artifactory access token")
-	LogLevel = flag.String("log-level", "INFO", "Sets the log level")
+	PipelinesAccessToken = flag.String("pipe.accessToken", "", "Pipelines access token")
 }
 
 func createArtifactorySecurityManager() {
@@ -400,7 +408,7 @@ func GetXrayDetails() auth.ServiceDetails {
 func GetPipelinesDetails() auth.ServiceDetails {
 	pDetails := pipelinesAuth.NewPipelinesDetails()
 	pDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*PipelinesUrl))
-	setAuthenticationDetail(pDetails)
+	pDetails.SetAccessToken(*PipelinesAccessToken)
 	return pDetails
 }
 
@@ -498,6 +506,9 @@ func artifactoryCleanup(t *testing.T) {
 }
 
 func createReposIfNeeded() error {
+	if !(*TestArtifactory || *TestDistribution || *TestXray) {
+		return nil
+	}
 	var err error
 	var repoConfig string
 	repo := RtTargetRepo

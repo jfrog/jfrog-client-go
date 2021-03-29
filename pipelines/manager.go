@@ -46,10 +46,22 @@ func (sm *PipelinesServicesManager) CreateGithubIntegration(integrationName, tok
 	return integrationsService.CreateGithubIntegration(integrationName, token)
 }
 
+func (sm *PipelinesServicesManager) CreateGithubEnterpriseIntegration(integrationName, url, token string) (id int, err error) {
+	integrationsService := services.NewIntegrationsService(sm.client)
+	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
+	return integrationsService.CreateGithubEnterpriseIntegration(integrationName, url, token)
+}
+
 func (sm *PipelinesServicesManager) CreateBitbucketIntegration(integrationName, username, token string) (id int, err error) {
 	integrationsService := services.NewIntegrationsService(sm.client)
 	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
 	return integrationsService.CreateBitbucketIntegration(integrationName, username, token)
+}
+
+func (sm *PipelinesServicesManager) CreateBitbucketServerIntegration(integrationName, url, username, passwordOrToken string) (id int, err error) {
+	integrationsService := services.NewIntegrationsService(sm.client)
+	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
+	return integrationsService.CreateBitbucketServerIntegration(integrationName, url, username, passwordOrToken)
 }
 
 func (sm *PipelinesServicesManager) CreateGitlabIntegration(integrationName, username, token string) (id int, err error) {
