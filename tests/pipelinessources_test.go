@@ -1,20 +1,14 @@
 package tests
 
 import (
-	"fmt"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/pipelines/auth"
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
 const (
-	testsDummyRepo                 = "some-user/project-examples"
-	testsDummyBranch               = "master"
-	testsDummyProjectIntegrationId = 123
+	testsRepo   = "ecoswamp/repo-for-pipelines-tests"
+	testsBranch = "main"
 )
 
 func TestPipelinesSources(t *testing.T) {
@@ -23,49 +17,43 @@ func TestPipelinesSources(t *testing.T) {
 }
 
 func testAddPipelineSource(t *testing.T) {
-	expectedSourceId := 123
-	tls := createPipelinesTLSServer(t, http.MethodPost, expectedSourceId, http.StatusOK)
-	defer tls.Close()
-
-	sourcesService, err := createDummySourcesService(tls.URL)
+	if *PipelinesVcsToken == "" {
+		assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured")
+		return
+	}
+	// Create integration with provided token.
+	integrationName := getUniqueIntegrationName(services.GithubName)
+	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
 	if err != nil {
 		assert.NoError(t, err)
 		return
 	}
+	defer deleteIntegrationAndAssert(t, integrationId)
 
-	sourceId, err := sourcesService.AddPipelineSource(testsDummyProjectIntegrationId, testsDummyRepo, testsDummyBranch, services.DefaultPipelinesFileFilter)
+	// Create source with the above integration and assert.
+	sourceId, err := testsPipelinesSourcesService.AddPipelineSource(integrationId, testsRepo, testsBranch, services.DefaultPipelinesFileFilter)
 	if err != nil {
 		assert.NoError(t, err)
 		return
 	}
-	assert.Equal(t, expectedSourceId, sourceId)
+	defer deleteSourceAndAssert(t, sourceId)
+	getSourceAndAssert(t, sourceId, integrationId)
 }
 
-func createPipelinesTLSServer(t *testing.T, expectedRequest string, expectedSourceId, expectedStatusCode int) *httptest.Server {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, expectedRequest, r.Method)
-		assert.Equal(t, "/"+services.SourcesRestApi, r.URL.Path)
-		w.WriteHeader(expectedStatusCode)
-		_, err := w.Write([]byte(fmt.Sprintf(`{"id": %d}`, expectedSourceId)))
-		assert.NoError(t, err)
-	})
-	return httptest.NewTLSServer(handler)
-}
-
-func createDummySourcesService(tlsUrl string) (*services.SourcesService, error) {
-	details := auth.NewPipelinesDetails()
-	details.SetUrl(tlsUrl + "/")
-	details.SetAccessToken("fake-token")
-
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetInsecureTls(true).
-		SetServiceDetails(&details).
-		Build()
+func getSourceAndAssert(t *testing.T, sourceId, intId int) {
+	source, err := testsPipelinesSourcesService.GetSource(sourceId)
 	if err != nil {
-		return nil, err
+		assert.NoError(t, err)
+		return
 	}
+	assert.NotNil(t, source)
+	assert.Equal(t, intId, source.ProjectIntegrationId)
+	assert.Equal(t, testsRepo, source.RepositoryFullName)
+	assert.Equal(t, testsBranch, source.Branch)
+	assert.Equal(t, services.DefaultPipelinesFileFilter, source.FileFilter)
+}
 
-	sourcesService := services.NewSourcesService(client)
-	sourcesService.ServiceDetails = details
-	return sourcesService, nil
+func deleteSourceAndAssert(t *testing.T, id int) {
+	err := testsPipelinesSourcesService.DeleteSource(id)
+	assert.NoError(t, err)
 }
