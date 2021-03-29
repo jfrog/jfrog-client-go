@@ -69,7 +69,7 @@ type CommonConfigFields struct {
 	SshPassphrase          string                         `json:"-"`
 	SshAuthHeaders         map[string]string              `json:"-"`
 	TokenMutex             sync.Mutex
-	client                 *jfroghttpclient.JfrogHttpClient `json:"-"`
+	client                 *jfroghttpclient.JfrogHttpClient
 }
 
 func (ccf *CommonConfigFields) GetUrl() string {
