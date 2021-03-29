@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 func InitServiceManagers() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
-	if *TestArtifactory {
+	if *TestArtifactory || *TestDistribution || *TestXray {
 		createArtifactoryUploadManager()
 		createArtifactorySearchManager()
 		createArtifactoryDeleteManager()
