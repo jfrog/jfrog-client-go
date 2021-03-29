@@ -175,10 +175,7 @@ func (is *IntegrationsService) createIntegration(integration IntegrationCreation
 
 	created := &Integration{}
 	err = json.Unmarshal(body, created)
-	if err != nil {
-		return -1, err
-	}
-	return created.Id, nil
+	return created.Id, errorutils.CheckError(err)
 }
 
 type Integration struct {
@@ -228,10 +225,7 @@ func (is *IntegrationsService) GetIntegrationById(integrationId int) (*Integrati
 	}
 	integration := &Integration{}
 	err = json.Unmarshal(body, integration)
-	if err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	return integration, nil
+	return integration, errorutils.CheckError(err)
 }
 
 func (is *IntegrationsService) GetIntegrationByName(name string) (*Integration, error) {
@@ -261,10 +255,7 @@ func (is *IntegrationsService) GetAllIntegrations() ([]Integration, error) {
 	}
 	integrations := &[]Integration{}
 	err = json.Unmarshal(body, integrations)
-	if err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	return *integrations, nil
+	return *integrations, errorutils.CheckError(err)
 }
 
 type IntegrationAlreadyExistsError struct {

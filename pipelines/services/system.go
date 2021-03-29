@@ -33,10 +33,7 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 	}
 	var sysInfo PipelinesSystemInfo
 	err = json.Unmarshal(body, &sysInfo)
-	if err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	return &sysInfo, nil
+	return &sysInfo, errorutils.CheckError(err)
 }
 
 type PipelinesSystemInfo struct {

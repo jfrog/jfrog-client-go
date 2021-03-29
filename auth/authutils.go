@@ -30,10 +30,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 		return TokenPayload{}, errorutils.CheckError(errors.New("Failed extracting payload from the provided access-token." + err.Error()))
 	}
 	err = setAudienceManually(&tokenPayload, payload)
-	if err != nil {
-		return TokenPayload{}, err
-	}
-	return tokenPayload, nil
+	return tokenPayload, err
 }
 
 // Audience field was changed from string to string[]. This function extracts this field manually to allow backward compatibility.
@@ -41,7 +38,7 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 	allValuesMap := make(map[string]interface{})
 	err := json.Unmarshal(payload, &allValuesMap)
 	if err != nil {
-		return errorutils.CheckError(errors.New("Failed extracting audience from payload." + err.Error()))
+		return errorutils.CheckError(errors.New("Failed extracting audience from payload. " + err.Error()))
 	}
 	aud, exists := allValuesMap["aud"]
 	if !exists {

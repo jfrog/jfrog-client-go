@@ -31,28 +31,24 @@ func (rs *RepositoriesService) Get(repoKey string, repoDetails interface{}) erro
 	if err != nil {
 		return err
 	}
-	if err := json.Unmarshal(body, repoDetails); err != nil {
-		return errorutils.CheckError(err)
-	}
-	return nil
+	err = json.Unmarshal(body, repoDetails)
+	return errorutils.CheckError(err)
 }
 
 func (rs *RepositoriesService) GetAll() (*[]RepositoryDetails, error) {
 	log.Info("Getting all repositories ...")
-	return rs.GetAllFromTypeAndPackage(RepositoriesFilterParams{RepoType: "", PackageType: ""})
+	return rs.GetWithFilter(RepositoriesFilterParams{RepoType: "", PackageType: ""})
 }
 
-func (rs *RepositoriesService) GetAllFromTypeAndPackage(params RepositoriesFilterParams) (*[]RepositoryDetails, error) {
+func (rs *RepositoriesService) GetWithFilter(params RepositoriesFilterParams) (*[]RepositoryDetails, error) {
 	url := fmt.Sprintf("%s?type=%s&packageType=%s", apiRepositories, params.RepoType, params.PackageType)
 	body, err := rs.sendGet(url)
 	if err != nil {
 		return nil, err
 	}
 	repoDetails := &[]RepositoryDetails{}
-	if err := json.Unmarshal(body, &repoDetails); err != nil {
-		return repoDetails, errorutils.CheckError(err)
-	}
-	return repoDetails, nil
+	err = json.Unmarshal(body, &repoDetails)
+	return repoDetails, errorutils.CheckError(err)
 }
 
 func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
@@ -69,15 +65,15 @@ func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
 	return body, nil
 }
 
-func (rs *RepositoriesService) CreateRemoteRepository(params RemoteRepositoryBaseParams) error {
+func (rs *RepositoriesService) CreateRemote(params RemoteRepositoryBaseParams) error {
 	return rs.createRepo(params, params.Key)
 }
 
-func (rs *RepositoriesService) CreateVirtualRepository(params VirtualRepositoryBaseParams) error {
+func (rs *RepositoriesService) CreateVirtual(params VirtualRepositoryBaseParams) error {
 	return rs.createRepo(params, params.Key)
 }
 
-func (rs *RepositoriesService) CreateLocalRepository(params LocalRepositoryBaseParams) error {
+func (rs *RepositoriesService) CreateLocal(params LocalRepositoryBaseParams) error {
 	return rs.createRepo(params, params.Key)
 }
 

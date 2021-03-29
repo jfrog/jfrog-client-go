@@ -78,6 +78,7 @@ func getAPIKeyTest(t *testing.T) {
 	getAPIKeyTestCore(t, expectedApiKey)
 }
 
+// The GetAPIKey service returns empty string if an API Key wasn't generated.
 func getEmptyAPIKeyTest(t *testing.T) {
 	expectedApiKey := ""
 	getAPIKeyTestCore(t, expectedApiKey)

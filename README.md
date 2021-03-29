@@ -59,6 +59,7 @@
       - [Removing a Repository Replication](#removing-a-repository-replication)
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
+      - [Fetching a Permission Target](#fetching-a-permission-target)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
       - [Fetching Users Details](#fetching-users-details)
@@ -122,6 +123,24 @@
       - [Update an Xray Policy](#update-an-xray-policy)
       - [Delete an Xray Policy](#delete-an-xray-policy)
       - [Add builds to indexing configuration](#add-builds-to-indexing-configuration)
+  - [Pipelines APIs](#pipelines-apis)
+    - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
+      - [Creating Pipelines Details](#creating-pipelines-details)
+      - [Creating Pipelines Service Config](#creating-pipelines-service-config)
+      - [Creating New Pipelines Service Manager](#creating-new-pipelines-service-manager)
+    - [Using Pipelines Services](#using-pipelines-services)
+      - [Fetching Pipelines' System Info](#fetching-pipelines-system-info)
+      - [Creating Github Integration](#creating-github-integration)
+      - [Creating Github Enterprise Integration](#creating-github-enterprise-integration)
+      - [Creating Bitbucket Integration](#creating-bitbucket-integration)
+      - [Creating Bitbucket Server Integration](#creating-bitbucket-server-integration)
+      - [Creating Gitlab Integration](#creating-gitlab-integration)
+      - [Creating Artifactory Integration](#creating-artifactory-integration)
+      - [Get Integration by Id](#get-integration-by-id)
+      - [Get Integration by Name](#get-integration-by-name)
+      - [Get All Integrations](#get-all-integrations)
+      - [Get All Integrations](#get-all-integrations-1)
+      - [Get Add Pipeline Source](#get-add-pipeline-source)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -1464,4 +1483,93 @@ err := xrayManager.DeletePolicy("example-policy")
 ```go
 buildsToIndex := []string{"buildName1", "buildName2"}
 err := xrayManager.AddBuildsToIndexing(buildsToIndex)
+```
+
+## Pipelines APIs
+### Creating Pipelines Service Manager
+#### Creating Pipelines Details
+```go
+pipelinesDetails := auth.NewPipelinesDetails()
+pipelinesDetails.SetUrl("http://localhost:8081/pipelines")
+pipelinesDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+pipelinesDetails.SetClientCertPath("path/to/.cer")
+pipelinesDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Pipelines Service Config
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(pipelinesDetails).
+    SetCertificatesPath(pipelinesDetails.GetClientCertPath()).
+    Build()
+```
+
+#### Creating New Pipelines Service Manager
+```go
+pipelinesManager, err := pipelines.New(&pipelinesDetails, serviceConfig)
+```
+
+### Using Pipelines Services
+#### Fetching Pipelines' System Info
+```go
+systemInfo, err := pipelinesManager.GetSystemInfo()
+```
+
+#### Creating Github Integration
+```go
+id, err := pipelinesManager.CreateGithubIntegration("integrationName", "token")
+```
+
+#### Creating Github Enterprise Integration
+```go
+id, err := pipelinesManager.CreateGithubEnterpriseIntegration("integrationName", "url", "token")
+```
+
+#### Creating Bitbucket Integration
+```go
+id, err := pipelinesManager.CreateBitbucketIntegration("integrationName", "username", "token")
+```
+
+#### Creating Bitbucket Server Integration
+```go
+id, err := pipelinesManager.CreateBitbucketServerIntegration("integrationName", "url", "username", "passwordOrToken")
+```
+
+#### Creating Gitlab Integration
+```go
+id, err := pipelinesManager.CreateGitlabIntegration("integrationName", "url", "token")
+```
+
+#### Creating Artifactory Integration
+```go
+id, err := pipelinesManager.CreateArtifactoryIntegration("integrationName", "url", "username", "apikey")
+```
+
+#### Get Integration by Id
+```go
+integrationId := 1234
+integration, err := pipelinesManager.GetIntegrationById(integrationId)
+```
+
+#### Get Integration by Name
+```go
+integration, err := pipelinesManager.GetIntegrationByName("integrationName")
+```
+
+#### Get All Integrations
+```go
+integrations, err := pipelinesManager.GetAllIntegrations()
+```
+
+#### Get All Integrations
+```go
+integrationId := 1234
+err := pipelinesManager.DeleteIntegration(integrationId)
+```
+
+#### Get Add Pipeline Source
+```go
+projectIntegrationId := 1234
+err := pipelinesManager.AddSource(projectIntegrationId, "domain/repo", "master", "pipelines.yml")
 ```

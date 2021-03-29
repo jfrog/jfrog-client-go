@@ -656,7 +656,7 @@ func getAllRepos(t *testing.T, repoType, packageType string) *[]services.Reposit
 	params := services.NewRepositoriesFilterParams()
 	params.RepoType = repoType
 	params.PackageType = packageType
-	data, err := testsRepositoriesService.GetAllFromTypeAndPackage(params)
+	data, err := testsRepositoriesService.GetWithFilter(params)
 	assert.NoError(t, err, "Failed to get all repositories details")
 	return data
 }

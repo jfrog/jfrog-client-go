@@ -28,7 +28,7 @@ const (
 	checkIfSourceExistsMethod  = "checkIfPipelineSourceAlreadyExists"
 )
 
-func (ss *SourcesService) AddPipelineSource(projectIntegrationId int, repositoryFullName, branch, fileFilter string) (id int, err error) {
+func (ss *SourcesService) AddSource(projectIntegrationId int, repositoryFullName, branch, fileFilter string) (id int, err error) {
 	source := Source{
 		ProjectId:            defaultProjectId,
 		ProjectIntegrationId: projectIntegrationId,
@@ -36,10 +36,10 @@ func (ss *SourcesService) AddPipelineSource(projectIntegrationId int, repository
 		Branch:               branch,
 		FileFilter:           fileFilter,
 	}
-	return ss.addSource(source)
+	return ss.doAddSource(source)
 }
 
-func (ss *SourcesService) addSource(source Source) (id int, err error) {
+func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 	log.Debug("Adding Pipeline Source...")
 	content, err := json.Marshal(source)
 	if err != nil {
@@ -67,10 +67,7 @@ func (ss *SourcesService) addSource(source Source) (id int, err error) {
 
 	created := &Source{}
 	err = json.Unmarshal(body, created)
-	if err != nil {
-		return -1, err
-	}
-	return created.Id, nil
+	return created.Id, errorutils.CheckError(err)
 }
 
 func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
@@ -85,10 +82,7 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 	}
 	source := &Source{}
 	err = json.Unmarshal(body, source)
-	if err != nil {
-		return nil, err
-	}
-	return source, nil
+	return source, errorutils.CheckError(err)
 }
 
 func (ss *SourcesService) DeleteSource(sourceId int) error {

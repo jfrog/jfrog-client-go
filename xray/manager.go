@@ -16,10 +16,7 @@ type XrayServicesManager struct {
 
 // New creates a service manager to interact with Xray
 func New(details *auth.ServiceDetails, config config.Config) (*XrayServicesManager, error) {
-	err := (*details).InitSsh()
-	if err != nil {
-		return nil, err
-	}
+	var err error
 	manager := &XrayServicesManager{config: config}
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).

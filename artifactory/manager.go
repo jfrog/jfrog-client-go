@@ -78,19 +78,19 @@ func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepository() *services.Vir
 func (sm *ArtifactoryServicesManagerImp) CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoryService.CreateLocalRepository(params)
+	return repositoryService.CreateLocal(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateRemoteRepositoryWithParams(params services.RemoteRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoryService.CreateRemoteRepository(params)
+	return repositoryService.CreateRemote(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoryService.CreateVirtualRepository(params)
+	return repositoryService.CreateVirtual(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) UpdateLocalRepository() *services.LocalRepositoryService {
@@ -132,7 +132,7 @@ func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.Repos
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error) {
 	repositoriesService := services.NewRepositoriesService(sm.client)
 	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoriesService.GetAllFromTypeAndPackage(params)
+	return repositoriesService.GetWithFilter(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreatePermissionTarget(params services.PermissionTargetParams) error {

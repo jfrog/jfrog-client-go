@@ -78,7 +78,7 @@ func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err e
 func IsDirEmpty(path string) (bool, error) {
 	dir, err := os.Open(path)
 	if err != nil {
-		return false, err
+		return false, errorutils.CheckError(err)
 	}
 	defer dir.Close()
 
@@ -86,7 +86,7 @@ func IsDirEmpty(path string) (bool, error) {
 	if err == io.EOF {
 		return true, nil
 	}
-	return false, err
+	return false, errorutils.CheckError(err)
 }
 
 func IsPathSymlink(path string) bool {

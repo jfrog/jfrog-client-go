@@ -13,10 +13,7 @@ type PipelinesServicesManager struct {
 }
 
 func New(details *auth.ServiceDetails, config config.Config) (*PipelinesServicesManager, error) {
-	err := (*details).InitSsh()
-	if err != nil {
-		return nil, err
-	}
+	var err error
 	manager := &PipelinesServicesManager{config: config}
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
@@ -24,9 +21,6 @@ func New(details *auth.ServiceDetails, config config.Config) (*PipelinesServices
 		SetServiceDetails(details).
 		SetContext(config.GetContext()).
 		Build()
-	if err != nil {
-		return nil, err
-	}
 	return manager, err
 }
 
@@ -64,10 +58,10 @@ func (sm *PipelinesServicesManager) CreateBitbucketServerIntegration(integration
 	return integrationsService.CreateBitbucketServerIntegration(integrationName, url, username, passwordOrToken)
 }
 
-func (sm *PipelinesServicesManager) CreateGitlabIntegration(integrationName, username, token string) (id int, err error) {
+func (sm *PipelinesServicesManager) CreateGitlabIntegration(integrationName, url, token string) (id int, err error) {
 	integrationsService := services.NewIntegrationsService(sm.client)
 	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
-	return integrationsService.CreateGitlabIntegration(integrationName, username, token)
+	return integrationsService.CreateGitlabIntegration(integrationName, url, token)
 }
 
 func (sm *PipelinesServicesManager) CreateArtifactoryIntegration(integrationName, url, user, apikey string) (id int, err error) {
@@ -103,5 +97,5 @@ func (sm *PipelinesServicesManager) DeleteIntegration(integrationId int) error {
 func (sm *PipelinesServicesManager) AddPipelineSource(projectIntegrationId int, repositoryFullName, branch, fileFilter string) (id int, err error) {
 	sourcesService := services.NewSourcesService(sm.client)
 	sourcesService.ServiceDetails = sm.config.GetServiceDetails()
-	return sourcesService.AddPipelineSource(projectIntegrationId, repositoryFullName, branch, fileFilter)
+	return sourcesService.AddSource(projectIntegrationId, repositoryFullName, branch, fileFilter)
 }
