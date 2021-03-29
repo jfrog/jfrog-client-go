@@ -305,6 +305,12 @@ func (sm *ArtifactoryServicesManagerImp) GetTokens() (services.GetTokensResponse
 	return securityService.GetTokens()
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetUserTokens(username string) ([]string, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetServiceDetails()
+	return securityService.GetUserTokens(username)
+}
+
 func (sm *ArtifactoryServicesManagerImp) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
