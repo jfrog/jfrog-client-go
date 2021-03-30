@@ -52,6 +52,8 @@ var RtSshPassphrase *string
 var RtAccessToken *string
 var PipelinesAccessToken *string
 var PipelinesVcsToken *string
+var PipelinesVcsRepoFullPath *string
+var PipelinesVcsBranch *string
 
 // Artifactory services
 var testsUploadService *services.UploadService
@@ -124,6 +126,8 @@ func init() {
 	RtAccessToken = flag.String("rt.accessToken", "", "Artifactory access token")
 	PipelinesAccessToken = flag.String("pipe.accessToken", "", "Pipelines access token")
 	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
+	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
+	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
 }
 
 func createArtifactorySecurityManager() {

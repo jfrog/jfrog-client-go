@@ -6,11 +6,6 @@ import (
 	"testing"
 )
 
-const (
-	testsRepo   = "ecoswamp/repo-for-pipelines-tests"
-	testsBranch = "main"
-)
-
 func TestPipelinesSources(t *testing.T) {
 	initPipelinesTest(t)
 	t.Run("addPipelineSource", testAddPipelineSource)
@@ -31,7 +26,7 @@ func testAddPipelineSource(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, testsRepo, testsBranch, services.DefaultPipelinesFileFilter)
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
 	if err != nil {
 		assert.NoError(t, err)
 		return
@@ -48,8 +43,8 @@ func getSourceAndAssert(t *testing.T, sourceId, intId int) {
 	}
 	assert.NotNil(t, source)
 	assert.Equal(t, intId, source.ProjectIntegrationId)
-	assert.Equal(t, testsRepo, source.RepositoryFullName)
-	assert.Equal(t, testsBranch, source.Branch)
+	assert.Equal(t, *PipelinesVcsRepoFullPath, source.RepositoryFullName)
+	assert.Equal(t, *PipelinesVcsBranch, source.Branch)
 	assert.Equal(t, services.DefaultPipelinesFileFilter, source.FileFilter)
 }
 

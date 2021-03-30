@@ -176,6 +176,9 @@ Optional flags:
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
 | `-rt.accessToken`   | [Optional] Artifactory access token.                                                                   |
 | `-pipe.accessToken` | [Optional] Pipelines access token.                                                                     |
+| `-pipe.vcsToken`    | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
+| `-pipe.vcsRepo`     | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
+| `-pipe.vcsBranch`   | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
 
 The types are:
 
