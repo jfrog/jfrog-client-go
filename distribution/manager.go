@@ -23,9 +23,6 @@ func New(details *auth.ServiceDetails, config config.Config) (*DistributionServi
 		AppendPreRequestInterceptor((*details).RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		Build()
-	if err != nil {
-		return nil, err
-	}
 	return manager, err
 }
 

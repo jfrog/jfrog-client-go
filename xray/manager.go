@@ -25,9 +25,6 @@ func New(details *auth.ServiceDetails, config config.Config) (*XrayServicesManag
 		SetClientCertKeyPath((*details).GetClientCertKeyPath()).
 		AppendPreRequestInterceptor((*details).RunPreRequestFunctions).
 		Build()
-	if err != nil {
-		return nil, err
-	}
 	return manager, err
 }
 
