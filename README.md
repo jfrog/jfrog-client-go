@@ -139,8 +139,8 @@
       - [Get Integration by Id](#get-integration-by-id)
       - [Get Integration by Name](#get-integration-by-name)
       - [Get All Integrations](#get-all-integrations)
-      - [Get All Integrations](#get-all-integrations-1)
-      - [Get Add Pipeline Source](#get-add-pipeline-source)
+      - [Delete Integration](#delete-integration)
+      - [Add Pipeline Source](#add-pipeline-source)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -1565,13 +1565,13 @@ integration, err := pipelinesManager.GetIntegrationByName("integrationName")
 integrations, err := pipelinesManager.GetAllIntegrations()
 ```
 
-#### Get All Integrations
+#### Delete Integration
 ```go
 integrationId := 1234
 err := pipelinesManager.DeleteIntegration(integrationId)
 ```
 
-#### Get Add Pipeline Source
+#### Add Pipeline Source
 ```go
 projectIntegrationId := 1234
 err := pipelinesManager.AddSource(projectIntegrationId, "domain/repo", "master", "pipelines.yml")
