@@ -40,6 +40,7 @@ type ArtifactoryCommonParams struct {
 	Regexp           bool
 	Ant              bool
 	ArchiveEntries   string
+	Transitive       bool
 }
 
 type FileGetter interface {

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/version"
 	"path/filepath"
 	"testing"
 
@@ -140,5 +141,32 @@ func TestReduceBottomChainDirResult(t *testing.T) {
 			}
 		}
 		utils.MaxBufferSize = 2
+	}
+}
+
+func TestValidateTransitiveSearchAllowed(t *testing.T) {
+	tests := []struct {
+		params             *ArtifactoryCommonParams
+		artifactoryVersion *version.Version
+		expectedError      bool
+	}{
+		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.0.0"), true},
+		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.17.0"), false},
+		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.17.0-m029"), false},
+		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.19.0"), false},
+		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.0.0"), false},
+		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.17.0"), false},
+		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.17.0-m029"), false},
+		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.19.0"), false},
+	}
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("transitive:%t,version:%s", test.params.Transitive, test.artifactoryVersion.GetVersion()), func(t *testing.T) {
+			err := ValidateTransitiveSearchAllowed(test.params, test.artifactoryVersion)
+			if test.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
 }

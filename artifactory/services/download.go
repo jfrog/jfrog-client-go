@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/version"
 	"net/http"
 	"os"
 	"path"
@@ -26,7 +27,7 @@ import (
 type DownloadService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	Progress    clientio.ProgressMgr
-	ArtDetails  auth.ServiceDetails
+	artDetails  *auth.ServiceDetails
 	DryRun      bool
 	Threads     int
 	saveSummary bool
@@ -36,24 +37,20 @@ type DownloadService struct {
 	artifactsDetailsWriter *content.ContentWriter
 }
 
-func NewDownloadService(client *jfroghttpclient.JfrogHttpClient) *DownloadService {
-	return &DownloadService{client: client}
+func NewDownloadService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *DownloadService {
+	return &DownloadService{artDetails: &artDetails, client: client}
 }
 
 func (ds *DownloadService) GetArtifactoryDetails() auth.ServiceDetails {
-	return ds.ArtDetails
-}
-
-func (ds *DownloadService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	ds.ArtDetails = rt
+	return *ds.artDetails
 }
 
 func (ds *DownloadService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *DownloadService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return ds.client, nil
+func (ds *DownloadService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return ds.client
 }
 
 func (ds *DownloadService) GetThreads() int {
@@ -62,10 +59,6 @@ func (ds *DownloadService) GetThreads() int {
 
 func (ds *DownloadService) SetThreads(threads int) {
 	ds.Threads = threads
-}
-
-func (ds *DownloadService) SetServiceDetails(artDetails auth.ServiceDetails) {
-	ds.ArtDetails = artDetails
 }
 
 func (ds *DownloadService) SetDryRun(isDryRun bool) {
@@ -109,14 +102,11 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*uti
 	ds.prepareTasks(producerConsumer, expectedChan, successCounters, errorsQueue, downloadParams...)
 
 	e = ds.performTasks(producerConsumer, errorsQueue)
-	if e != nil {
-		return nil, e
-	}
 	totalSuccess := 0
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
-	return ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess), nil
+	return ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess), e
 }
 
 func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan chan int, successCounters []int, errorsQueue *clientutils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
@@ -124,10 +114,25 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		defer producer.Done()
 		defer close(expectedChan)
 		totalTasks := 0
+		defer func() {
+			expectedChan <- totalTasks
+		}()
+		artifactoryVersionStr, err := ds.GetArtifactoryDetails().GetVersion()
+		if err != nil {
+			log.Error(err)
+			errorsQueue.AddError(err)
+			return
+		}
+		artifactoryVersion := version.NewVersion(artifactoryVersionStr)
 		// Iterate over file-spec groups and produce download tasks.
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
-			var err error
+			err = utils.ValidateTransitiveSearchAllowed(downloadParams.ArtifactoryCommonParams, artifactoryVersion)
+			if err != nil {
+				log.Error(err)
+				errorsQueue.AddError(err)
+				continue
+			}
 			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
@@ -152,10 +157,9 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 				ds.Progress.IncGeneralProgressTotalBy(int64(total))
 			}
 			// Produce download tasks for the download consumers.
-			totalTasks += produceTasks(reader, downloadParams, producer, fileHandlerFunc, errorsQueue)
+			totalTasks += ds.produceTasks(reader, downloadParams, producer, fileHandlerFunc, errorsQueue)
 			reader.Close()
 		}
-		expectedChan <- totalTasks
 	}()
 }
 
@@ -163,7 +167,7 @@ func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams Downl
 	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
 }
 
-func produceTasks(reader *content.ContentReader, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
+func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
 	flat := downloadParams.IsFlat()
 	// Collect all folders path which might be needed to create.
 	// key = folder path, value = the necessary data for producing create folder task.
@@ -174,7 +178,31 @@ func produceTasks(reader *content.ContentReader, downloadParams DownloadParams, 
 	var directoriesDataKeys []string
 	// Task counter
 	var tasksCount int
-	for resultItem := new(utils.ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
+
+	// A function that gets a ResultItem from the reader and returns a key. The reader will be sorted according to the keys returned from this function.
+	// The key in our case is the local path.
+	getSortKeyFunc := func(result interface{}) (string, error) {
+		resultItem := new(utils.ResultItem)
+		err := content.ConvertToStruct(result, &resultItem)
+		if err != nil {
+			return "", err
+		}
+		target, err := clientutils.BuildTargetPath(downloadParams.GetPattern(), resultItem.GetItemRelativePath(), downloadParams.GetTarget(), true)
+		if err != nil {
+			return "", err
+		}
+		localPath, localFileName := fileutils.GetLocalPathAndFile(resultItem.Name, resultItem.Path, target, flat)
+		return filepath.Join(localPath, localFileName), nil
+	}
+	// The sort process omits results with local path that is identical to previous results.
+	// We do it to avoid downloading a file and then download another file to the same path and override it.
+	sortedReader, err := content.SortContentReaderByCalculatedKey(reader, getSortKeyFunc, true)
+	if err != nil {
+		errorsQueue.AddError(err)
+		return tasksCount
+	}
+
+	for resultItem := new(utils.ResultItem); sortedReader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		tempData := DownloadData{
 			Dependency:   *resultItem,
 			DownloadPath: downloadParams.GetPattern(),
@@ -192,11 +220,10 @@ func produceTasks(reader *content.ContentReader, downloadParams DownloadParams, 
 			directoriesData, directoriesDataKeys = collectDirPathsToCreate(*resultItem, directoriesData, tempData, directoriesDataKeys)
 		}
 	}
-	if err := reader.GetError(); err != nil {
+	if err = sortedReader.GetError(); err != nil {
 		errorsQueue.AddError(errorutils.CheckError(err))
 		return tasksCount
 	}
-	reader.Reset()
 	addCreateDirsTasks(directoriesDataKeys, alreadyCreatedDirs, producer, fileHandler, directoriesData, errorsQueue, flat)
 	return tasksCount
 }
@@ -283,7 +310,7 @@ func createDownloadFileDetails(downloadPath, localPath, localFileName string, do
 }
 
 func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string, downloadParams DownloadParams) error {
-	httpClientsDetails := ds.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
 	bulkDownload := downloadParams.SplitCount == 0 || downloadParams.MinSplitSize < 0 || downloadParams.MinSplitSize*1000 > downloadFileDetails.Size
 	if !bulkDownload {
 		acceptRange, err := ds.isFileAcceptRange(downloadFileDetails)
@@ -323,7 +350,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 }
 
 func (ds *DownloadService) isFileAcceptRange(downloadFileDetails *httpclient.DownloadFileDetails) (bool, error) {
-	httpClientsDetails := ds.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
 	isAcceptRange, resp, err := ds.client.IsAcceptRanges(downloadFileDetails.DownloadPath, &httpClientsDetails)
 	if err != nil {
 		return false, err
@@ -410,7 +437,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 	return func(downloadData DownloadData) parallel.TaskFunc {
 		return func(threadId int) error {
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ds.DryRun)
-			downloadPath, e := utils.BuildArtifactoryUrl(ds.ArtDetails.GetUrl(), downloadData.Dependency.GetItemRelativePath(), make(map[string]string))
+			downloadPath, e := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), downloadData.Dependency.GetItemRelativePath(), make(map[string]string))
 			if e != nil {
 				return e
 			}

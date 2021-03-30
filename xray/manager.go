@@ -24,7 +24,9 @@ func New(details *auth.ServiceDetails, config config.Config) (*XrayServicesManag
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
-		SetServiceDetails(details).
+		SetClientCertPath((*details).GetClientCertPath()).
+		SetClientCertKeyPath((*details).GetClientCertKeyPath()).
+		AppendPreRequestInterceptor((*details).RunPreRequestFunctions).
 		Build()
 	if err != nil {
 		return nil, err

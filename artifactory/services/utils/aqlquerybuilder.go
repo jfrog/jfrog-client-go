@@ -316,7 +316,9 @@ func BuildQueryFromSpecFile(specFile *ArtifactoryCommonParams, requiredArtifactP
 	query := fmt.Sprintf(`items.find(%s)%s`, aqlBody, buildIncludeQueryPart(getQueryReturnFields(specFile, requiredArtifactProps)))
 	query = appendSortQueryPart(specFile, query)
 	query = appendOffsetQueryPart(specFile, query)
-	return appendLimitQueryPart(specFile, query)
+	query = appendLimitQueryPart(specFile, query)
+	query = appendTransitiveQueryPart(specFile, query)
+	return query
 }
 
 func appendOffsetQueryPart(specFile *ArtifactoryCommonParams, query string) string {
@@ -336,6 +338,13 @@ func appendLimitQueryPart(specFile *ArtifactoryCommonParams, query string) strin
 func appendSortQueryPart(specFile *ArtifactoryCommonParams, query string) string {
 	if len(specFile.SortBy) > 0 {
 		query = fmt.Sprintf(`%s.sort({%s})`, query, buildSortQueryPart(specFile.SortBy, specFile.SortOrder))
+	}
+	return query
+}
+
+func appendTransitiveQueryPart(specFile *ArtifactoryCommonParams, query string) string {
+	if specFile.Transitive {
+		query = fmt.Sprintf(`%s.transitive()`, query)
 	}
 	return query
 }

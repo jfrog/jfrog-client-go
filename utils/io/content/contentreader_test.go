@@ -15,6 +15,8 @@ import (
 const (
 	searchResult      = "SearchResult.json"
 	emptySearchResult = "EmptySearchResult.json"
+	unsortedFile      = "UnsortedFile.json"
+	sortedFile        = "SortedFile.json"
 )
 
 type inputRecord struct {
@@ -142,6 +144,28 @@ func TestMergeDecreasingSortedFiles(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
 	assert.NoError(t, resultReader.Close())
+}
+
+func TestSortContentReaderByCalculatedKey(t *testing.T) {
+	testDataPath := getTestDataPath()
+	unsortedFilePath := filepath.Join(testDataPath, unsortedFile)
+	reader := NewContentReader(unsortedFilePath, DefaultKey)
+
+	getSortKeyFunc := func(result interface{}) (string, error) {
+		resultItem := new(ReaderTestItem)
+		err := ConvertToStruct(result, &resultItem)
+		if err != nil {
+			return "", err
+		}
+		return resultItem.Name, nil
+	}
+
+	sortedReader, err := SortContentReaderByCalculatedKey(reader, getSortKeyFunc, true)
+	assert.NoError(t, err)
+	isMatch, err := fileutils.FilesIdentical(sortedReader.GetFilesPaths()[0], filepath.Join(testDataPath, sortedFile))
+	assert.NoError(t, err)
+	assert.True(t, isMatch)
+	assert.NoError(t, sortedReader.Close())
 }
 
 type ReaderTestItem struct {

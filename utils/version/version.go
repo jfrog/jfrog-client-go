@@ -14,6 +14,10 @@ func NewVersion(version string) *Version {
 	return &Version{version: version}
 }
 
+func (version *Version) GetVersion() string {
+	return version.version
+}
+
 func (version *Version) SetVersion(artifactoryVersion string) {
 	version.version = artifactoryVersion
 }
@@ -24,6 +28,10 @@ func (version *Version) SetVersion(artifactoryVersion string) {
 func (version *Version) Compare(ver1 string) int {
 	if ver1 == version.version {
 		return 0
+	} else if ver1 == utils.Development {
+		return 1
+	} else if version.version == utils.Development {
+		return -1
 	}
 
 	ver1Tokens := strings.Split(ver1, ".")
@@ -54,35 +62,49 @@ func (version *Version) Compare(ver1 string) int {
 
 // Returns true if this version is larger or equals from the version sent as an argument.
 func (version *Version) AtLeast(minVersion string) bool {
-	if version.Compare(minVersion) > 0 && version.version != utils.Development {
+	if version.Compare(minVersion) > 0 {
 		return false
 	}
 	return true
 }
 
 func compareTokens(ver1Token, ver2Token string) int {
+	if ver1Token == ver2Token {
+		return 0
+	}
+
 	// Ignoring error because we strip all the non numeric values in advance.
-	ver1TokenInt, _ := strconv.Atoi(getFirstNumeral(ver1Token))
-	ver2TokenInt, _ := strconv.Atoi(getFirstNumeral(ver2Token))
+	ver1Number, ver1Suffix := splitNumberAndSuffix(ver1Token)
+	ver1TokenInt, _ := strconv.Atoi(ver1Number)
+	ver2Number, ver2Suffix := splitNumberAndSuffix(ver2Token)
+	ver2TokenInt, _ := strconv.Atoi(ver2Number)
 
 	switch {
 	case ver1TokenInt > ver2TokenInt:
 		return 1
 	case ver1TokenInt < ver2TokenInt:
 		return -1
+	case len(ver1Suffix) == 0: // Version with suffix is higher than the same version without suffix
+		return -1
+	case len(ver2Suffix) == 0:
+		return 1
 	default:
 		return strings.Compare(ver1Token, ver2Token)
 	}
 }
 
-func getFirstNumeral(token string) string {
+func splitNumberAndSuffix(token string) (string, string) {
 	numeric := ""
-	for i := 0; i < len(token); i++ {
+	var i int
+	for i = 0; i < len(token); i++ {
 		n := token[i : i+1]
 		if _, err := strconv.Atoi(n); err != nil {
-			return "999999"
+			break
 		}
 		numeric += n
 	}
-	return numeric
+	if len(numeric) == 0 {
+		return "0", token
+	}
+	return numeric, token[i:]
 }

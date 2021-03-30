@@ -13,23 +13,19 @@ import (
 
 type SystemService struct {
 	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	artDetails *auth.ServiceDetails
 }
 
-func NewSystemService(client *jfroghttpclient.JfrogHttpClient) *SystemService {
-	return &SystemService{client: client}
+func NewSystemService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *SystemService {
+	return &SystemService{artDetails: &artDetails, client: client}
 }
 
 func (ss *SystemService) GetArtifactoryDetails() auth.ServiceDetails {
-	return ss.ArtDetails
+	return *ss.artDetails
 }
 
-func (ss *SystemService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	ss.ArtDetails = rt
-}
-
-func (ss *SystemService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return ss.client, nil
+func (ss *SystemService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return ss.client
 }
 
 func (ss *SystemService) IsDryRun() bool {
@@ -37,8 +33,8 @@ func (ss *SystemService) IsDryRun() bool {
 }
 
 func (ss *SystemService) GetVersion() (string, error) {
-	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
-	resp, body, _, err := ss.client.SendGet(ss.ArtDetails.GetUrl()+"api/system/version", true, &httpDetails)
+	httpDetails := (*ss.artDetails).CreateHttpClientDetails()
+	resp, body, _, err := ss.client.SendGet((*ss.artDetails).GetUrl()+"api/system/version", true, &httpDetails)
 	if err != nil {
 		return "", err
 	}
@@ -55,8 +51,8 @@ func (ss *SystemService) GetVersion() (string, error) {
 }
 
 func (ss *SystemService) GetServiceId() (string, error) {
-	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
-	resp, body, _, err := ss.client.SendGet(ss.ArtDetails.GetUrl()+"api/system/service_id", true, &httpDetails)
+	httpDetails := (*ss.artDetails).CreateHttpClientDetails()
+	resp, body, _, err := ss.client.SendGet((*ss.artDetails).GetUrl()+"api/system/service_id", true, &httpDetails)
 	if err != nil {
 		return "", err
 	}

@@ -22,28 +22,24 @@ import (
 
 type GitLfsCleanService struct {
 	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	artDetails *auth.ServiceDetails
 	DryRun     bool
 }
 
-func NewGitLfsCleanService(client *jfroghttpclient.JfrogHttpClient) *GitLfsCleanService {
-	return &GitLfsCleanService{client: client}
+func NewGitLfsCleanService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *GitLfsCleanService {
+	return &GitLfsCleanService{artDetails: &artDetails, client: client}
 }
 
 func (glc *GitLfsCleanService) GetArtifactoryDetails() auth.ServiceDetails {
-	return glc.ArtDetails
-}
-
-func (glc *GitLfsCleanService) SetArtifactoryDetails(art auth.ServiceDetails) {
-	glc.ArtDetails = art
+	return *glc.artDetails
 }
 
 func (glc *GitLfsCleanService) IsDryRun() bool {
 	return glc.DryRun
 }
 
-func (glc *GitLfsCleanService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return glc.client, nil
+func (glc *GitLfsCleanService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return glc.client
 }
 
 func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitLfsCleanParams) (*content.ContentReader, error) {
@@ -57,7 +53,7 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 		}
 	}
 	if len(repo) <= 0 {
-		repo, err = detectRepo(gitPath, glc.ArtDetails.GetUrl())
+		repo, err = detectRepo(gitPath, glc.GetArtifactoryDetails().GetUrl())
 		if err != nil {
 			return nil, err
 		}

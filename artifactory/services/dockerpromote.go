@@ -16,23 +16,19 @@ import (
 
 type DockerPromoteService struct {
 	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	artDetails *auth.ServiceDetails
 }
 
-func NewDockerPromoteService(client *jfroghttpclient.JfrogHttpClient) *DockerPromoteService {
-	return &DockerPromoteService{client: client}
+func NewDockerPromoteService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *DockerPromoteService {
+	return &DockerPromoteService{artDetails: &artDetails, client: client}
 }
 
 func (ps *DockerPromoteService) GetArtifactoryDetails() auth.ServiceDetails {
-	return ps.ArtDetails
+	return *ps.artDetails
 }
 
-func (ps *DockerPromoteService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	ps.ArtDetails = rt
-}
-
-func (ps *DockerPromoteService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return ps.client, nil
+func (ps *DockerPromoteService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return ps.client
 }
 
 func (ps *DockerPromoteService) IsDryRun() bool {
@@ -42,7 +38,7 @@ func (ps *DockerPromoteService) IsDryRun() bool {
 func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error {
 	// Create URL
 	restApi := path.Join("api/docker", params.SourceRepo, "v2", "promote")
-	url, err := utils.BuildArtifactoryUrl(ps.ArtDetails.GetUrl(), restApi, nil)
+	url, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restApi, nil)
 	if err != nil {
 		return err
 	}

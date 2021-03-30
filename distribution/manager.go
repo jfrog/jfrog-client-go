@@ -21,7 +21,9 @@ func New(details *auth.ServiceDetails, config config.Config) (*DistributionServi
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
-		SetServiceDetails(details).
+		SetClientCertPath((*details).GetClientCertPath()).
+		SetClientCertKeyPath((*details).GetClientCertKeyPath()).
+		AppendPreRequestInterceptor((*details).RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		Build()
 	if err != nil {
