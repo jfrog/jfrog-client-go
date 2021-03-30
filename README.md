@@ -42,6 +42,7 @@
       - [Reading Files in Artifactory](#reading-files-in-artifactory)
       - [Creating an Access Token](#creating-an-access-token)
       - [Fetching Access Tokens](#fetching-access-tokens)
+      - [Fetching Access Tokens of a User](#fetching-access-tokens-of-a-user)
       - [Refreshing an Access Token](#refreshing-an-access-token)
       - [Revoking an Access Token](#revoking-an-access-token)
       - [Regenerate API Key](#regenerate-api-key)
@@ -506,6 +507,11 @@ results, err := rtManager.CreateToken(params)
 #### Fetching Access Tokens
 ```go
 results, err := rtManager.GetTokens()
+```
+
+#### Fetching Access Tokens of a User
+```g
+results, err := rtManager.GetUserTokens(username)
 ```
 
 #### Refreshing an Access Token
