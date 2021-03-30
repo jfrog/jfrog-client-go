@@ -231,6 +231,10 @@ func (esm *EmptyArtifactoryServicesManager) GetTokens() (services.GetTokensRespo
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) GetUserTokens(username string) ([]string, error) {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
