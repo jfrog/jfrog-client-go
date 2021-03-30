@@ -25,6 +25,9 @@ func NewRepositoriesService(client *jfroghttpclient.JfrogHttpClient) *Repositori
 	return &RepositoriesService{client: client}
 }
 
+// Get fetches repository details from Artifactory using given repokey (name) into the given params struct.
+// The function expect to get the repo key and a pointer to a param struct that will be filled up.
+// The param struct should contains the desired param's fields corresponded to the Artifactory REST API, such as RepositoryDetails, LocalRepositoryBaseParams, etc.
 func (rs *RepositoriesService) Get(repoKey string, repoDetails interface{}) error {
 	log.Info("Getting repository '" + repoKey + "' details ...")
 	body, err := rs.sendGet(apiRepositories + "/" + repoKey)
