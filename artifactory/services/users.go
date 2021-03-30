@@ -56,7 +56,7 @@ func (us *UserService) GetUser(params UserParams) (u *User, err error) {
 	if err != nil {
 		return nil, err
 	}
-	// The case the requseted user is not found
+	// The case the requested user is not found
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
@@ -95,7 +95,7 @@ func (us *UserService) CreateUser(params UserParams) error {
 			return err
 		}
 		if user != nil {
-			return fmt.Errorf("User %s already exists.", user.Name)
+			return errorutils.CheckError(fmt.Errorf("user '%s' already exists", user.Name))
 		}
 	}
 	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
