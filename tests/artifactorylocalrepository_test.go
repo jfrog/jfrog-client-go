@@ -798,7 +798,7 @@ func getLocalRepoDetailsTest(t *testing.T) {
 	// Validate
 	assert.Equal(t, data.Key, repoKey)
 	assert.Equal(t, data.Description, glp.Description)
-	assert.Equal(t, data.Rclass, "local")
+	assert.Equal(t, data.GetRepoType(), "local")
 	assert.Empty(t, data.Url)
 	assert.Equal(t, data.PackageType, "generic")
 }

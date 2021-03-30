@@ -1000,7 +1000,7 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	// Validate
 	assert.Equal(t, data.Key, repoKey)
 	assert.Equal(t, data.Description, grp.Description+" (local file cache)")
-	assert.Equal(t, data.Rclass, "remote")
+	assert.Equal(t, data.GetRepoType(), "remote")
 	assert.Equal(t, data.Url, grp.Url)
 	assert.Equal(t, data.PackageType, "generic")
 }

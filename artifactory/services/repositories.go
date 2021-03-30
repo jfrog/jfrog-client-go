@@ -105,7 +105,7 @@ type RepositoryDetails struct {
 	PackageType string
 }
 
-func (rd RepositoryDetails) getRepoType() string {
+func (rd RepositoryDetails) GetRepoType() string {
 	// When getting All repos from artifactory the REST returns with Type field,
 	// but when getting a specific repo it will return with the Rclass field.
 	if rd.Rclass != "" {

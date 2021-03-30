@@ -701,7 +701,7 @@ func getVirtualRepoDetailsTest(t *testing.T) {
 	// Validate
 	assert.Equal(t, data.Key, repoKey)
 	assert.Equal(t, data.Description, gvp.Description)
-	assert.Equal(t, data.Rclass, "virtual")
+	assert.Equal(t, data.GetRepoType(), "virtual")
 	assert.Empty(t, data.Url)
 	assert.Equal(t, data.PackageType, "go")
 }
