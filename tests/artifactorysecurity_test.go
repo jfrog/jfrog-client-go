@@ -148,6 +148,9 @@ func getUserTokenstest(t *testing.T) {
 	if tokens[0] != token.AccessToken {
 		t.Error("Retried user token doesn't match expected token value")
 	}
+
+	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
+
 	params := services.NewCreateTokenParams()
 	params.Username = "test-user"
 	params.Scope = "api:* member-of-groups:readers"
@@ -170,6 +173,8 @@ func getUserTokenstest(t *testing.T) {
 	if tokens[0] != token1.AccessToken || tokens[1] != token2.AccessToken {
 		t.Error("Retried user token doesn't match expected token value")
 	}
+	tokensToRevoke = append(tokensToRevoke, token1.RefreshToken)
+	tokensToRevoke = append(tokensToRevoke, token2.RefreshToken)
 }
 
 // Util function to revoke a token
