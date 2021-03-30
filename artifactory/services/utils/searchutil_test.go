@@ -144,7 +144,7 @@ func TestReduceBottomChainDirResult(t *testing.T) {
 	}
 }
 
-func TestCheckIfVersionCompatible(t *testing.T) {
+func TestValidateTransitiveSearchAllowed(t *testing.T) {
 	tests := []struct {
 		params             *ArtifactoryCommonParams
 		artifactoryVersion *version.Version
@@ -161,7 +161,7 @@ func TestCheckIfVersionCompatible(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("transitive:%t,version:%s", test.params.Transitive, test.artifactoryVersion.GetVersion()), func(t *testing.T) {
-			err := CheckIfVersionCompatible(test.params, test.artifactoryVersion)
+			err := ValidateTransitiveSearchAllowed(test.params, test.artifactoryVersion)
 			if test.expectedError {
 				assert.Error(t, err)
 			} else {

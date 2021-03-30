@@ -127,7 +127,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		// Iterate over file-spec groups and produce download tasks.
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
-			err = utils.CheckIfVersionCompatible(downloadParams.ArtifactoryCommonParams, artifactoryVersion)
+			err = utils.ValidateTransitiveSearchAllowed(downloadParams.ArtifactoryCommonParams, artifactoryVersion)
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
@@ -179,6 +179,8 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 	// Task counter
 	var tasksCount int
 
+	// A function that gets a ResultItem from the reader and returns a key. The reader will be sorted according to the keys returned from this function.
+	// The key in our case is the local path.
 	getSortKeyFunc := func(result interface{}) (string, error) {
 		resultItem := new(utils.ResultItem)
 		err := content.ConvertToStruct(result, &resultItem)
@@ -192,6 +194,8 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 		localPath, localFileName := fileutils.GetLocalPathAndFile(resultItem.Name, resultItem.Path, target, flat)
 		return filepath.Join(localPath, localFileName), nil
 	}
+	// The sort process omits results with local path that is identical to previous results.
+	// We do it to avoid downloading a file and then download another file to the same path and override it.
 	sortedReader, err := content.SortContentReaderByCalculatedKey(reader, getSortKeyFunc, true)
 	if err != nil {
 		errorsQueue.AddError(err)

@@ -473,11 +473,11 @@ func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content
 	return resultsFilter(readerRecord, sortedFile)
 }
 
-func CheckIfVersionCompatible(params *ArtifactoryCommonParams, artifactoryVersion *version.Version) error {
+func ValidateTransitiveSearchAllowed(params *ArtifactoryCommonParams, artifactoryVersion *version.Version) error {
 	transitiveSearchMinVersion := "7.17.0"
 	if params.Transitive && !artifactoryVersion.AtLeast(transitiveSearchMinVersion) {
-		return errors.New(fmt.Sprintf("transitive search is available on Artifactory version %s or higher. Installed Artifactory version: %s",
-			transitiveSearchMinVersion, artifactoryVersion.GetVersion()))
+		return errorutils.CheckError(errors.New(fmt.Sprintf("transitive search is available on Artifactory version %s or higher. Installed Artifactory version: %s",
+			transitiveSearchMinVersion, artifactoryVersion.GetVersion())))
 	}
 	return nil
 }

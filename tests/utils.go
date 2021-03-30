@@ -110,11 +110,7 @@ func init() {
 
 func createArtifactorySecurityManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsSecurityService = services.NewSecurityService(client)
 	testsSecurityService.ArtDetails = artDetails
@@ -122,22 +118,14 @@ func createArtifactorySecurityManager() {
 
 func createArtifactorySearchManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsSearchService = services.NewSearchService(artDetails, client)
 }
 
 func createArtifactoryDeleteManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsDeleteService = services.NewDeleteService(artDetails, client)
 	testsDeleteService.SetThreads(3)
@@ -145,11 +133,7 @@ func createArtifactoryDeleteManager() {
 
 func createArtifactoryUploadManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsUploadService = services.NewUploadService(client)
 	testsUploadService.ArtDetails = artDetails
@@ -158,11 +142,7 @@ func createArtifactoryUploadManager() {
 
 func createArtifactoryUserManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testUserService = services.NewUserService(client)
 	testUserService.ArtDetails = artDetails
@@ -170,11 +150,7 @@ func createArtifactoryUserManager() {
 
 func createArtifactoryGroupManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testGroupService = services.NewGroupService(client)
 	testGroupService.ArtDetails = artDetails
@@ -182,22 +158,14 @@ func createArtifactoryGroupManager() {
 
 func createArtifactoryBuildInfoManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testBuildInfoService = services.NewBuildInfoService(artDetails, client)
 }
 
 func createArtifactoryDownloadManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsDownloadService = services.NewDownloadService(artDetails, client)
 	testsDownloadService.SetThreads(3)
@@ -243,11 +211,7 @@ func createXrayVersionManager() {
 
 func createArtifactoryCreateLocalRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsCreateLocalRepositoryService = services.NewLocalRepositoryService(client, false)
 	testsCreateLocalRepositoryService.ArtDetails = artDetails
@@ -255,11 +219,7 @@ func createArtifactoryCreateLocalRepositoryManager() {
 
 func createArtifactoryUpdateLocalRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsUpdateLocalRepositoryService = services.NewLocalRepositoryService(client, true)
 	testsUpdateLocalRepositoryService.ArtDetails = artDetails
@@ -267,11 +227,7 @@ func createArtifactoryUpdateLocalRepositoryManager() {
 
 func createArtifactoryCreateRemoteRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsCreateRemoteRepositoryService = services.NewRemoteRepositoryService(client, false)
 	testsCreateRemoteRepositoryService.ArtDetails = artDetails
@@ -279,11 +235,7 @@ func createArtifactoryCreateRemoteRepositoryManager() {
 
 func createArtifactoryUpdateRemoteRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsUpdateRemoteRepositoryService = services.NewRemoteRepositoryService(client, true)
 	testsUpdateRemoteRepositoryService.ArtDetails = artDetails
@@ -291,11 +243,7 @@ func createArtifactoryUpdateRemoteRepositoryManager() {
 
 func createArtifactoryCreateVirtualRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsCreateVirtualRepositoryService = services.NewVirtualRepositoryService(client, false)
 	testsCreateVirtualRepositoryService.ArtDetails = artDetails
@@ -303,11 +251,7 @@ func createArtifactoryCreateVirtualRepositoryManager() {
 
 func createArtifactoryUpdateVirtualRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsUpdateVirtualRepositoryService = services.NewVirtualRepositoryService(client, true)
 	testsUpdateVirtualRepositoryService.ArtDetails = artDetails
@@ -315,11 +259,7 @@ func createArtifactoryUpdateVirtualRepositoryManager() {
 
 func createArtifactoryDeleteRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsDeleteRepositoryService = services.NewDeleteRepositoryService(client)
 	testsDeleteRepositoryService.ArtDetails = artDetails
@@ -327,11 +267,7 @@ func createArtifactoryDeleteRepositoryManager() {
 
 func createArtifactoryGetRepositoryManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsGetRepositoryService = services.NewGetRepositoryService(client)
 	testsGetRepositoryService.ArtDetails = artDetails
@@ -339,11 +275,7 @@ func createArtifactoryGetRepositoryManager() {
 
 func createArtifactoryReplicationCreateManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsCreateReplicationService = services.NewCreateReplicationService(client)
 	testsCreateReplicationService.ArtDetails = artDetails
@@ -351,11 +283,7 @@ func createArtifactoryReplicationCreateManager() {
 
 func createArtifactoryReplicationUpdateManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsUpdateReplicationService = services.NewUpdateReplicationService(client)
 	testsUpdateReplicationService.ArtDetails = artDetails
@@ -363,11 +291,7 @@ func createArtifactoryReplicationUpdateManager() {
 
 func createArtifactoryReplicationGetManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsReplicationGetService = services.NewGetReplicationService(client)
 	testsReplicationGetService.ArtDetails = artDetails
@@ -375,11 +299,7 @@ func createArtifactoryReplicationGetManager() {
 
 func createArtifactoryReplicationDeleteManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsReplicationDeleteService = services.NewDeleteReplicationService(client)
 	testsReplicationDeleteService.ArtDetails = artDetails
@@ -387,14 +307,18 @@ func createArtifactoryReplicationDeleteManager() {
 
 func createArtifactoryPermissionTargetManager() {
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		Build()
+	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsPermissionTargetService = services.NewPermissionTargetService(client)
 	testsPermissionTargetService.ArtDetails = artDetails
+}
+
+func createJfrogHttpClient(artDetails *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+	return jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath((*artDetails).GetClientCertPath()).
+		SetClientCertKeyPath((*artDetails).GetClientCertKeyPath()).
+		AppendPreRequestInterceptor((*artDetails).RunPreRequestFunctions).
+		Build()
 }
 
 func createXrayWatchManager() {

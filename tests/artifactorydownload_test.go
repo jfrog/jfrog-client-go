@@ -305,6 +305,7 @@ func summaryDownload(t *testing.T) {
 	assert.Equal(t, RtTargetRepo+"c.tar.gz", artifacts[0].ArtifactoryPath)
 }
 
+// Test downloading of two different files to the same path in the local machine. Only the first of them will be downloaded.
 func duplicateDownload(t *testing.T) {
 	workingDir, err := ioutil.TempDir("", "downloadTests")
 	if err != nil {
