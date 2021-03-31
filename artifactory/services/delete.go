@@ -17,21 +17,17 @@ import (
 
 type DeleteService struct {
 	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	artDetails *auth.ServiceDetails
 	DryRun     bool
 	Threads    int
 }
 
-func NewDeleteService(client *jfroghttpclient.JfrogHttpClient) *DeleteService {
-	return &DeleteService{client: client}
+func NewDeleteService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *DeleteService {
+	return &DeleteService{artDetails: &artDetails, client: client}
 }
 
 func (ds *DeleteService) GetArtifactoryDetails() auth.ServiceDetails {
-	return ds.ArtDetails
-}
-
-func (ds *DeleteService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	ds.ArtDetails = rt
+	return *ds.artDetails
 }
 
 func (ds *DeleteService) IsDryRun() bool {
@@ -46,8 +42,8 @@ func (ds *DeleteService) SetThreads(threads int) {
 	ds.Threads = threads
 }
 
-func (ds *DeleteService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return ds.client, nil
+func (ds *DeleteService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return ds.client
 }
 
 func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItems *content.ContentReader, err error) {

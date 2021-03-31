@@ -566,10 +566,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 
 	requestFullUrl, err := BuildArtifactoryUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, queryParams)
 
-	httpClient, err := flags.GetJfrogHttpClient()
-	if err != nil {
-		return nil, false, err
-	}
+	httpClient := flags.GetJfrogHttpClient()
 	log.Debug("Getting build-info from: ", requestFullUrl)
 	resp, body, _, err := httpClient.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
@@ -624,28 +621,31 @@ func getAggregatedBuilds(buildName, buildNumber, projectKey string, flags Common
 
 type CommonConf interface {
 	GetArtifactoryDetails() auth.ServiceDetails
-	SetArtifactoryDetails(rt auth.ServiceDetails)
-	GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error)
-	IsDryRun() bool
+	GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient
 }
 
 type CommonConfImpl struct {
-	artDetails auth.ServiceDetails
-	DryRun     bool
+	client     *jfroghttpclient.JfrogHttpClient
+	artDetails *auth.ServiceDetails
+	version    string
+}
+
+func NewCommonConfImpl(artDetails auth.ServiceDetails) (CommonConf, error) {
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(artDetails.GetClientCertPath()).
+		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
+		Build()
+	if err != nil {
+		return nil, err
+	}
+	return &CommonConfImpl{artDetails: &artDetails, client: client}, nil
 }
 
 func (flags *CommonConfImpl) GetArtifactoryDetails() auth.ServiceDetails {
-	return flags.artDetails
+	return *flags.artDetails
 }
 
-func (flags *CommonConfImpl) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	flags.artDetails = rt
-}
-
-func (flags *CommonConfImpl) IsDryRun() bool {
-	return flags.DryRun
-}
-
-func (flags *CommonConfImpl) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&flags.artDetails).Build()
+func (flags *CommonConfImpl) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return flags.client
 }

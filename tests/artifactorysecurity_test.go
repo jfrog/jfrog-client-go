@@ -52,7 +52,9 @@ func regenerateAPIKeyTest(t *testing.T) {
 
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetInsecureTls(true).
-		SetServiceDetails(&rtDetails).
+		SetClientCertPath(rtDetails.GetClientCertPath()).
+		SetClientCertKeyPath(rtDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(rtDetails.RunPreRequestFunctions).
 		Build()
 	if err != nil {
 		t.Fatalf("Failed to create Artifactory client: %v\n", err)
@@ -134,6 +136,47 @@ func getTokensTest(t *testing.T) {
 		}
 	}
 	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
+}
+
+func getUserTokenstest(t *testing.T) {
+	token, err := createToken()
+	if err != nil {
+		t.Error(err)
+	}
+	tokens, err := testsSecurityService.GetUserTokens("anonymous")
+	if len(tokens) != 1 {
+		t.Error("Failed to get tokens of anonymous user")
+	}
+	if tokens[0] != token.AccessToken {
+		t.Error("Retried user token doesn't match expected token value")
+	}
+
+	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
+
+	params := services.NewCreateTokenParams()
+	params.Username = "test-user"
+	params.Scope = "api:* member-of-groups:readers"
+	params.Refreshable = true  // We need to use the refresh token to revoke these tokens on teardown
+	params.Audience = "jfrt@*" // Allow token to be accepted by all instances of Artifactory.
+
+	token1, err := testsSecurityService.CreateToken(params)
+	if err != nil {
+		t.Error(err)
+	}
+
+	token2, err := testsSecurityService.CreateToken(params)
+	if err != nil {
+		t.Error(err)
+	}
+	tokens, err = testsSecurityService.GetUserTokens("test-user")
+	if len(tokens) != 2 {
+		t.Error("Failed to get tokens of test-user")
+	}
+	if tokens[0] != token1.AccessToken || tokens[1] != token2.AccessToken {
+		t.Error("Retried user token doesn't match expected token value")
+	}
+	tokensToRevoke = append(tokensToRevoke, token1.RefreshToken)
+	tokensToRevoke = append(tokensToRevoke, token2.RefreshToken)
 }
 
 // Util function to revoke a token

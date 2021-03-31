@@ -15,7 +15,11 @@ var testsXrayScanService *services.XrayScanService
 func TestNewXrayScanService(t *testing.T) {
 	xrayServerPort := xray.StartXrayMockServer()
 	artDetails := GetRtDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&artDetails).Build()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(artDetails.GetClientCertPath()).
+		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
+		Build()
 	if err != nil {
 		t.Error(err)
 	}

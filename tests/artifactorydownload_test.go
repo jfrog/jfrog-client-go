@@ -22,6 +22,7 @@ func TestArtifactoryDownload(t *testing.T) {
 	t.Run("exclusions", exclusionsDownload)
 	t.Run("explodeArchive", explodeArchiveDownload)
 	t.Run("summary", summaryDownload)
+	t.Run("duplicate", duplicateDownload)
 	artifactoryCleanup(t)
 }
 
@@ -302,5 +303,37 @@ func summaryDownload(t *testing.T) {
 	}
 	assert.Len(t, artifacts, 1)
 	assert.Equal(t, RtTargetRepo+"c.tar.gz", artifacts[0].ArtifactoryPath)
-	artifactoryCleanup(t)
+}
+
+// Test downloading of two different files to the same path in the local machine. Only the first of them will be downloaded.
+func duplicateDownload(t *testing.T) {
+	workingDir, err := ioutil.TempDir("", "downloadTests")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(workingDir)
+	downloadPattern := RtTargetRepo + "*.in"
+	downloadTarget := workingDir + string(filepath.Separator)
+	summary, err := testsDownloadService.DownloadFiles(services.DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: true})
+	if err != nil {
+		t.Error(err)
+	}
+	if summary.TotalSucceeded != 2 {
+		t.Error("Expected to download 2 files.")
+	}
+	if summary.TotalFailed != 0 {
+		t.Error("Failed to download", summary.TotalFailed, "files.")
+	}
+	downloadTarget2 := workingDir + string(filepath.Separator) + "file"
+	summary2, err := testsDownloadService.DownloadFiles(services.DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget2}, Flat: true})
+	if err != nil {
+		t.Error(err)
+	}
+	// Two files match the pattern, but both are planned to be downloaded to the same path, so only one of them is downloaded
+	if summary2.TotalSucceeded != 1 {
+		t.Error("Expected to download 1 files.")
+	}
+	if summary2.TotalFailed != 0 {
+		t.Error("Failed to download", summary2.TotalFailed, "files.")
+	}
 }

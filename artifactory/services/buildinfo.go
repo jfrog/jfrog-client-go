@@ -16,24 +16,20 @@ import (
 
 type BuildInfoService struct {
 	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	artDetails *auth.ServiceDetails
 	DryRun     bool
 }
 
-func NewBuildInfoService(client *jfroghttpclient.JfrogHttpClient) *BuildInfoService {
-	return &BuildInfoService{client: client}
+func NewBuildInfoService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *BuildInfoService {
+	return &BuildInfoService{artDetails: &artDetails, client: client}
 }
 
 func (bis *BuildInfoService) GetArtifactoryDetails() auth.ServiceDetails {
-	return bis.ArtDetails
+	return *bis.artDetails
 }
 
-func (bis *BuildInfoService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	bis.ArtDetails = rt
-}
-
-func (bis *BuildInfoService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return bis.client, nil
+func (bis *BuildInfoService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return bis.client
 }
 
 func (bis *BuildInfoService) IsDryRun() bool {
@@ -70,7 +66,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
 	log.Info("Deploying build info...")
-	resp, body, err := bis.client.SendPut(bis.ArtDetails.GetUrl()+"api/build"+utils.GetProjectQueryParam(projectKey), content, &httpClientsDetails)
+	resp, body, err := bis.client.SendPut(bis.GetArtifactoryDetails().GetUrl()+"api/build"+utils.GetProjectQueryParam(projectKey), content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}

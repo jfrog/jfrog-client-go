@@ -3,8 +3,6 @@ package jfroghttpclient
 import (
 	"context"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
-
-	"github.com/jfrog/jfrog-client-go/auth"
 )
 
 func JfrogClientBuilder() *jfrogHttpClientBuilder {
@@ -12,10 +10,12 @@ func JfrogClientBuilder() *jfrogHttpClientBuilder {
 }
 
 type jfrogHttpClientBuilder struct {
-	certificatesDirPath string
-	insecureTls         bool
-	ctx                 context.Context
-	ServiceDetails      *auth.ServiceDetails
+	certificatesDirPath    string
+	insecureTls            bool
+	ctx                    context.Context
+	preRequestInterceptors []PreRequestInterceptorFunc
+	clientCertPath         string
+	clientCertKeyPath      string
 }
 
 func (builder *jfrogHttpClientBuilder) SetCertificatesPath(certificatesPath string) *jfrogHttpClientBuilder {
@@ -28,8 +28,13 @@ func (builder *jfrogHttpClientBuilder) SetInsecureTls(insecureTls bool) *jfrogHt
 	return builder
 }
 
-func (builder *jfrogHttpClientBuilder) SetServiceDetails(rtDetails *auth.ServiceDetails) *jfrogHttpClientBuilder {
-	builder.ServiceDetails = rtDetails
+func (builder *jfrogHttpClientBuilder) SetClientCertPath(clientCertPath string) *jfrogHttpClientBuilder {
+	builder.clientCertPath = clientCertPath
+	return builder
+}
+
+func (builder *jfrogHttpClientBuilder) SetClientCertKeyPath(clientCertKeyPath string) *jfrogHttpClientBuilder {
+	builder.clientCertKeyPath = clientCertKeyPath
 	return builder
 }
 
@@ -38,13 +43,18 @@ func (builder *jfrogHttpClientBuilder) SetContext(ctx context.Context) *jfrogHtt
 	return builder
 }
 
+func (builder *jfrogHttpClientBuilder) AppendPreRequestInterceptor(interceptor PreRequestInterceptorFunc) *jfrogHttpClientBuilder {
+	builder.preRequestInterceptors = append(builder.preRequestInterceptors, interceptor)
+	return builder
+}
+
 func (builder *jfrogHttpClientBuilder) Build() (rtHttpClient *JfrogHttpClient, err error) {
-	rtHttpClient = &JfrogHttpClient{JfrogServiceDetails: builder.ServiceDetails}
+	rtHttpClient = &JfrogHttpClient{preRequestInterceptors: builder.preRequestInterceptors}
 	rtHttpClient.httpClient, err = httpclient.ClientBuilder().
 		SetCertificatesPath(builder.certificatesDirPath).
 		SetInsecureTls(builder.insecureTls).
-		SetClientCertPath((*rtHttpClient.JfrogServiceDetails).GetClientCertPath()).
-		SetClientCertKeyPath((*rtHttpClient.JfrogServiceDetails).GetClientCertKeyPath()).
+		SetClientCertPath(builder.clientCertPath).
+		SetClientCertKeyPath(builder.clientCertKeyPath).
 		SetContext(builder.ctx).
 		Build()
 	return

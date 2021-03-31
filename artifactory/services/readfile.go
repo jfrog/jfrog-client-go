@@ -12,34 +12,26 @@ import (
 
 type ReadFileService struct {
 	client       *jfroghttpclient.JfrogHttpClient
-	ArtDetails   auth.ServiceDetails
+	artDetails   *auth.ServiceDetails
 	DryRun       bool
 	MinSplitSize int64
 	SplitCount   int
 }
 
-func NewReadFileService(client *jfroghttpclient.JfrogHttpClient) *ReadFileService {
-	return &ReadFileService{client: client}
+func NewReadFileService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *ReadFileService {
+	return &ReadFileService{artDetails: &artDetails, client: client}
 }
 
 func (ds *ReadFileService) GetArtifactoryDetails() auth.ServiceDetails {
-	return ds.ArtDetails
-}
-
-func (ds *ReadFileService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	ds.ArtDetails = rt
+	return *ds.artDetails
 }
 
 func (ds *ReadFileService) IsDryRun() bool {
 	return ds.DryRun
 }
 
-func (ds *ReadFileService) GetJfrogHttpClient() (*jfroghttpclient.JfrogHttpClient, error) {
-	return ds.client, nil
-}
-
-func (ds *ReadFileService) SetServiceDetails(artDetails auth.ServiceDetails) {
-	ds.ArtDetails = artDetails
+func (ds *ReadFileService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
+	return ds.client
 }
 
 func (ds *ReadFileService) SetDryRun(isDryRun bool) {
@@ -51,11 +43,11 @@ func (ds *ReadFileService) setMinSplitSize(minSplitSize int64) {
 }
 
 func (ds *ReadFileService) ReadRemoteFile(downloadPath string) (io.ReadCloser, error) {
-	readPath, err := utils.BuildArtifactoryUrl(ds.ArtDetails.GetUrl(), downloadPath, make(map[string]string))
+	readPath, err := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), downloadPath, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
-	httpClientsDetails := ds.ArtDetails.CreateHttpClientDetails()
+	httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
 	ioReadCloser, resp, err := ds.client.ReadRemoteFile(readPath, &httpClientsDetails)
 	if err != nil {
 		return nil, err
