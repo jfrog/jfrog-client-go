@@ -199,7 +199,7 @@ serviceConfig, err := config.NewConfigBuilder().
     Build()
 ```
 
-#### Creating New Artifactory Services Manager
+#### Creating New Artifactory Service Manager
 ```go
 rtManager, err := artifactory.New(serviceConfig)
 ```
