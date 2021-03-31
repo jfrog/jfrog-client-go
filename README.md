@@ -271,6 +271,16 @@ params.Target = "repo/path/"
 
 summary, err := rtManager.UploadFilesWithSummary(params)
 defer summary.Close()
+reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
+
+// Iterate over each file
+for currentFileInfo := new(utils.FileInfo); reader.NextRecord(currentFileInfo) == nil; currentFileInfo = new(utils.FileInfo) {
+     fmt.Printf("File path: %s\n", currentFileInfo.LocalPath)
+}
+
+if err := reader.GetError(); err != nil {
+    return err
+}
 ```
 Read more about [ContentReader](#using-contentReader).
 
@@ -1203,7 +1213,7 @@ defer func() {
 
 // Iterate over the results.
 for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(ResultItem)  {
-    fmt.Printf("Found artifact: %s of type: %s\n", searchResult.Name, searchResult.Type)
+    fmt.Printf("Found artifact: %s of type: %s\n", currentResult.Name, currentResult.Type)
 }
 if err := resultReader.GetError(); err != nil {
     return err
