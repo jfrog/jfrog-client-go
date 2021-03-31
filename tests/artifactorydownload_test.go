@@ -13,6 +13,7 @@ import (
 )
 
 func TestArtifactoryDownload(t *testing.T) {
+	initArtifactoryTest(t)
 	uploadDummyFile(t)
 	t.Run("flat", flatDownload)
 	t.Run("recursive", recursiveDownload)

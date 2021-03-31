@@ -76,7 +76,8 @@ func (gs *GroupService) CreateGroup(params GroupParams) error {
 			return err
 		}
 		if group != nil {
-			return fmt.Errorf("Group %s already exists.", params.GroupDetails.Name)
+			err = errors.New("Group '" + params.GroupDetails.Name + "' already exists.")
+			return errorutils.CheckError(&GroupAlreadyExistsError{InnerError: err})
 		}
 	}
 	url, content, httpDetails, err := gs.createOrUpdateGroupRequest(params.GroupDetails)
@@ -91,6 +92,14 @@ func (gs *GroupService) CreateGroup(params GroupParams) error {
 		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 	return nil
+}
+
+type GroupAlreadyExistsError struct {
+	InnerError error
+}
+
+func (*GroupAlreadyExistsError) Error() string {
+	return "Artifactory: Group already exists."
 }
 
 func (gs *GroupService) UpdateGroup(params GroupParams) error {

@@ -14,14 +14,18 @@ import (
 
 type ArtifactoryServicesManager interface {
 	CreateLocalRepository() *services.LocalRepositoryService
+	CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error
 	CreateRemoteRepository() *services.RemoteRepositoryService
+	CreateRemoteRepositoryWithParams(params services.RemoteRepositoryBaseParams) error
 	CreateVirtualRepository() *services.VirtualRepositoryService
+	CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error
 	UpdateLocalRepository() *services.LocalRepositoryService
 	UpdateRemoteRepository() *services.RemoteRepositoryService
 	UpdateVirtualRepository() *services.VirtualRepositoryService
 	DeleteRepository(repoKey string) error
-	GetRepository(repoKey string) (*services.RepositoryDetails, error)
+	GetRepository(repoKey string, repoDetails interface{}) error
 	GetAllRepositories() (*[]services.RepositoryDetails, error)
+	GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error)
 	CreatePermissionTarget(params services.PermissionTargetParams) error
 	UpdatePermissionTarget(params services.PermissionTargetParams) error
 	DeletePermissionTarget(permissionTargetName string) error
@@ -49,6 +53,9 @@ type ArtifactoryServicesManager interface {
 	Ping() ([]byte, error)
 	GetConfig() config.Config
 	GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error)
+	CreateAPIKey() (string, error)
+	RegenerateAPIKey() (string, error)
+	GetAPIKey() (string, error)
 	CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error)
 	GetTokens() (services.GetTokensResponseData, error)
 	GetUserTokens(username string) ([]string, error)
@@ -71,7 +78,6 @@ type ArtifactoryServicesManager interface {
 	CreateUser(params services.UserParams) error
 	UpdateUser(params services.UserParams) error
 	DeleteUser(name string) error
-	RegenerateAPIKey() (string, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -84,11 +90,23 @@ func (esm *EmptyArtifactoryServicesManager) CreateLocalRepository() *services.Lo
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) CreateRemoteRepository() *services.RemoteRepositoryService {
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) CreateRemoteRepositoryWithParams(params services.RemoteRepositoryBaseParams) error {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) CreateVirtualRepository() *services.VirtualRepositoryService {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -108,7 +126,7 @@ func (esm *EmptyArtifactoryServicesManager) DeleteRepository(repoKey string) err
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetRepository(repoKey string) (*services.RepositoryDetails, error) {
+func (esm *EmptyArtifactoryServicesManager) GetRepository(repoKey string, repoDetails interface{}) error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -224,6 +242,18 @@ func (esm *EmptyArtifactoryServicesManager) GetBuildInfo(params services.BuildIn
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) CreateAPIKey() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) RegenerateAPIKey() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetAPIKey() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
@@ -280,6 +310,10 @@ func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.Re
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error) {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) GetUser(params services.UserParams) (*services.User, error) {
 	panic("Failed: Method is not implemented")
 }
@@ -313,10 +347,6 @@ func (esm *EmptyArtifactoryServicesManager) UpdateGroup(params services.GroupPar
 }
 
 func (esm *EmptyArtifactoryServicesManager) DeleteGroup(name string) error {
-	panic("Failed: Method is not implemented")
-}
-
-func (esm *EmptyArtifactoryServicesManager) RegenerateAPIKey() (string, error) {
 	panic("Failed: Method is not implemented")
 }
 

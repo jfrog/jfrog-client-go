@@ -12,6 +12,7 @@ var trimmedRtTargetRepo = strings.TrimSuffix(RtTargetRepo, "/")
 var repos = []string{trimmedRtTargetRepo}
 
 func TestArtifactoryVirtualRepository(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("virtualMavenTest", virtualMavenTest)
 	t.Run("virtualGradleTest", virtualGradleTest)
 	t.Run("virtualIvyTest", virtualIvyTest)
@@ -37,6 +38,7 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualGenericTest", virtualGenericTest)
 	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
 	t.Run("getAllVirtualRepoDetailsTest", getAllVirtualRepoDetailsTest)
+	t.Run("virtualCreateWithParamTest", virtualCreateWithParamTest)
 }
 
 func virtualMavenTest(t *testing.T) {
@@ -673,6 +675,16 @@ func virtualGenericTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, gvp)
 }
 
+func virtualCreateWithParamTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	params := services.NewVirtualRepositoryBaseParams()
+	params.Key = repoKey
+	err := testsRepositoriesService.CreateVirtual(params)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, params)
+}
+
 func getVirtualRepoDetailsTest(t *testing.T) {
 	// Create Repo
 	repoKey := GenerateRepoKeyForRepoServiceTest()
@@ -689,7 +701,7 @@ func getVirtualRepoDetailsTest(t *testing.T) {
 	// Validate
 	assert.Equal(t, data.Key, repoKey)
 	assert.Equal(t, data.Description, gvp.Description)
-	assert.Equal(t, data.Rclass, "virtual")
+	assert.Equal(t, data.GetRepoType(), "virtual")
 	assert.Empty(t, data.Url)
 	assert.Equal(t, data.PackageType, "go")
 }
@@ -706,7 +718,7 @@ func getAllVirtualRepoDetailsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t)
+	data := getAllRepos(t, "virtual", "")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {

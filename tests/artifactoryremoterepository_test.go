@@ -10,6 +10,7 @@ import (
 const ArtifactoryLocalFileCacheSuffix = " (local file cache)"
 
 func TestArtifactoryRemoteRepository(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("remoteMavenTest", remoteMavenTest)
 	t.Run("remoteGradleTest", remoteGradleTest)
 	t.Run("remoteIvyTest", remoteIvyTest)
@@ -39,6 +40,7 @@ func TestArtifactoryRemoteRepository(t *testing.T) {
 	t.Run("remoteGenericTest", remoteGenericTest)
 	t.Run("getRemoteRepoDetailsTest", getRemoteRepoDetailsTest)
 	t.Run("getAllRemoteRepoDetailsTest", getAllRemoteRepoDetailsTest)
+	t.Run("remoteCreateWithParamTest", remoteCreateWithParamTest)
 }
 
 func remoteMavenTest(t *testing.T) {
@@ -998,9 +1000,19 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	// Validate
 	assert.Equal(t, data.Key, repoKey)
 	assert.Equal(t, data.Description, grp.Description+" (local file cache)")
-	assert.Equal(t, data.Rclass, "remote")
+	assert.Equal(t, data.GetRepoType(), "remote")
 	assert.Equal(t, data.Url, grp.Url)
 	assert.Equal(t, data.PackageType, "generic")
+}
+
+func remoteCreateWithParamTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	params := services.NewRemoteRepositoryBaseParams()
+	params.Key = repoKey
+	err := testsRepositoriesService.CreateRemote(params)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, params)
 }
 
 func getAllRemoteRepoDetailsTest(t *testing.T) {
@@ -1017,7 +1029,7 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t)
+	data := getAllRepos(t, "remote", "")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {

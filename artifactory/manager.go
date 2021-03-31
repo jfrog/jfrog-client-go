@@ -75,6 +75,24 @@ func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepository() *services.Vir
 	return repositoryService
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.CreateLocal(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreateRemoteRepositoryWithParams(params services.RemoteRepositoryBaseParams) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.CreateRemote(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.CreateVirtual(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) UpdateLocalRepository() *services.LocalRepositoryService {
 	repositoryService := services.NewLocalRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
@@ -99,16 +117,22 @@ func (sm *ArtifactoryServicesManagerImp) DeleteRepository(repoKey string) error 
 	return deleteRepositoryService.Delete(repoKey)
 }
 
-func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string) (*services.RepositoryDetails, error) {
-	getRepositoryService := services.NewGetRepositoryService(sm.client)
-	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return getRepositoryService.Get(repoKey)
+func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string, repoDetails interface{}) error {
+	repositoriesService := services.NewRepositoriesService(sm.client)
+	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoriesService.Get(repoKey, repoDetails)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
-	getRepositoryService := services.NewGetRepositoryService(sm.client)
-	getRepositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return getRepositoryService.GetAll()
+	repositoriesService := services.NewRepositoriesService(sm.client)
+	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoriesService.GetAll()
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error) {
+	repositoriesService := services.NewRepositoriesService(sm.client)
+	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoriesService.GetWithFilter(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreatePermissionTarget(params services.PermissionTargetParams) error {
@@ -296,6 +320,24 @@ func (sm *ArtifactoryServicesManagerImp) GetBuildInfo(params services.BuildInfoP
 	return buildInfoService.GetBuildInfo(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateAPIKey() (string, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetServiceDetails()
+	return securityService.CreateAPIKey()
+}
+
+func (sm *ArtifactoryServicesManagerImp) RegenerateAPIKey() (string, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetServiceDetails()
+	return securityService.RegenerateAPIKey()
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetAPIKey() (string, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetServiceDetails()
+	return securityService.GetAPIKey()
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
@@ -421,10 +463,4 @@ func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPro
 
 func (sm *ArtifactoryServicesManagerImp) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
-}
-
-func (sm *ArtifactoryServicesManagerImp) RegenerateAPIKey() (string, error) {
-	securityService := services.NewSecurityService(sm.client)
-	securityService.ArtDetails = sm.config.GetServiceDetails()
-	return securityService.RegenerateAPIKey()
 }

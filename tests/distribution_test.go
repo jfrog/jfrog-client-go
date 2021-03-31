@@ -39,10 +39,8 @@ const (
 var httpClient *httpclient.HttpClient
 var distHttpDetails httputils.HttpClientDetails
 
-func TestDistribution(t *testing.T) {
-	if *DistUrl == "" {
-		t.Skip("Distribution is not being tested, skipping...")
-	}
+func TestDistributionServices(t *testing.T) {
+	initDistributionTest(t)
 	initClients(t)
 	sendGpgKeys(t)
 
@@ -61,6 +59,12 @@ func TestDistribution(t *testing.T) {
 	deleteGpgKeys(t)
 }
 
+func initDistributionTest(t *testing.T) {
+	if !*TestDistribution {
+		t.Skip("Skipping distribution test. To run distribution test add the '-test.distribution=true' option.")
+	}
+}
+
 func initClients(t *testing.T) {
 	var err error
 	distHttpDetails = GetDistDetails().CreateHttpClientDetails()
@@ -68,7 +72,7 @@ func initClients(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func initDistributionTest(t *testing.T, bundleName string) string {
+func setupDistributionTest(t *testing.T, bundleName string) string {
 	artifactoryCleanup(t)
 	uploadDummyFile(t)
 	return bundleName
@@ -76,13 +80,13 @@ func initDistributionTest(t *testing.T, bundleName string) string {
 
 func initLocalDistributionTest(t *testing.T, bundleName string) string {
 	deleteLocalBundle(t, bundleName, false)
-	return initDistributionTest(t, bundleName)
+	return setupDistributionTest(t, bundleName)
 }
 
 func initRemoteDistributionTest(t *testing.T, bundleName string) string {
 	testsBundleDistributeService.Sync = false
 	deleteRemoteAndLocalBundle(t, bundleName, false)
-	return initDistributionTest(t, bundleName)
+	return setupDistributionTest(t, bundleName)
 }
 
 func createDelete(t *testing.T) {

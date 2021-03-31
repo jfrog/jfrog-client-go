@@ -60,7 +60,7 @@ func (xbms *BinMgrService) AddBuildsToIndexing(buildNames []string) error {
 	var resp *http.Response
 	var respBody []byte
 
-	log.Info("Adding builds to indexing configuration...")
+	log.Info("Configuring Xray to index the build...")
 	resp, respBody, err = xbms.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (xbms *BinMgrService) AddBuildsToIndexing(buildNames []string) error {
 		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
 	}
 	log.Debug("Xray response:", resp.Status)
-	log.Info("Done adding builds to indexing configuration.")
+	log.Debug("Done adding builds to indexing configuration.")
 	return nil
 }
 

@@ -16,6 +16,7 @@ var (
 )
 
 func TestReplication(t *testing.T) {
+	initArtifactoryTest(t)
 	err := createReplication()
 	if err != nil {
 		t.Error(err)

@@ -10,6 +10,7 @@ import (
 )
 
 func TestGroups(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("create", testCreateGroup)
 	t.Run("update", testUpdateGroup)
 	t.Run("delete", testDeleteGroup)
