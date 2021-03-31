@@ -14,10 +14,7 @@ import (
 )
 
 func TestXrayWatch(t *testing.T) {
-	if *XrayUrl == "" {
-		t.Skip("Xray is not being tested, skipping...")
-	}
-
+	initXrayTest(t)
 	t.Run("testXrayWatchAll", testXrayWatchAll)
 	t.Run("testXrayWatchSelectedRepos", testXrayWatchSelectedRepos)
 	t.Run("testXrayWatchBuildsByPattern", testXrayWatchBuildsByPattern)

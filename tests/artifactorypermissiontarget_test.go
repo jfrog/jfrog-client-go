@@ -14,6 +14,7 @@ const (
 )
 
 func TestPermissionTarget(t *testing.T) {
+	initArtifactoryTest(t)
 	params := services.NewPermissionTargetParams()
 	params.Name = fmt.Sprintf("%s-%d", PermissionTargetNamePrefix, time.Now().Unix())
 	params.Repo = &services.PermissionTargetSection{}
@@ -63,6 +64,7 @@ func getPermissionTarget(targetName string) (targetParams *services.PermissionTa
 
 // Assert empty inner structs remain nil unless explicitly set.
 func TestPermissionTargetEmptyFields(t *testing.T) {
+	initArtifactoryTest(t)
 	params := services.NewPermissionTargetParams()
 	params.Name = fmt.Sprintf("%s-%d", PermissionTargetNamePrefix, time.Now().Unix())
 

@@ -13,6 +13,7 @@ import (
 )
 
 func TestArtifactoryUpload(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("flat", flatUpload)
 	t.Run("recursive", recursiveUpload)
 	t.Run("placeholder", placeholderUpload)

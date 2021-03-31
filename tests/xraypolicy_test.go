@@ -8,10 +8,7 @@ import (
 )
 
 func TestXrayPolicy(t *testing.T) {
-	if *XrayUrl == "" {
-		t.Skip("Xray is not being tested, skipping...")
-	}
-
+	initXrayTest(t)
 	t.Run("createMinSeverity", createMinSeverity)
 	t.Run("createRangeSeverity", createRangeSeverity)
 	t.Run("createLicenseAllowed", createLicenseAllowed)

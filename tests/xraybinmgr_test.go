@@ -9,10 +9,7 @@ import (
 )
 
 func TestXrayBinMgr(t *testing.T) {
-	if *XrayUrl == "" {
-		t.Skip("Xray is not being tested, skipping...")
-	}
-
+	initXrayTest(t)
 	t.Run("addBuildsToIndexing", addBuildsToIndexing)
 }
 

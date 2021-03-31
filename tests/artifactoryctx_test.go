@@ -13,6 +13,7 @@ import (
 )
 
 func TestCtx(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("ctx", testCtx)
 	t.Run("ctxWithTimeout", testCtxTimeout)
 }

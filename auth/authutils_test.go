@@ -11,6 +11,8 @@ var token2 = "eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJIcnU2VH
 
 var token3 = "eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJIcnU2VHctZk1yOTV3dy12TDNjV3ZBVjJ3Qm9FSHpHdGlwUEFwOE1JdDljIn0"
 
+var token4 = "eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJsS0NYXzFvaTBQbTZGdF9XRklkejZLZ1g4U0FULUdOY0lJWXRjTC1KM084In0.eyJzdWIiOiJqZmZlQDAwMFwvdXNlcnNcL3RlbXB1c2VyIiwic2NwIjoiYXBwbGllZC1wZXJtaXNzaW9uc1wvYWRtaW4gYXBpOioiLCJhdWQiOlsiamZydEAqIiwiamZtZEAqIiwiamZldnRAKiIsImpmYWNAKiJdLCJpc3MiOiJqZmZlQDAwMCIsImV4cCI6MTYxNjQ4OTU4NSwiaWF0IjoxNjE2NDg1OTg1LCJqdGkiOiI0OTBlYWEzOS1mMzYxLTQxYjAtOTA5Ni1kNjg5NmQ0ZWQ3YjEifQ.J5P8Pu5tqEjgnLFLEoCdh1LJHWiMmEHht95v0EFuixwO-osq7sfXua_UCGBkKbmqVSGKew9kl_LTcbq_uMe281_5q2yYxT74iqc2wQ1K0uovEUeIU6E65oi70JwUWUwcF3sNJ2gFatnvgSu-2Kv6m-DtSIW36WS3Mh8uMZQ19ob4fmueVmMFyQsp0EEG6xFYeOK6SB8OUd0gAd_XvXiSRuF0eLabhKmXM2pVBLYfd2KIMlkFckEOGGOzeglvA62xmP4Ik7UsF487NAo0LeS_Pd79owr0jtgTYkCTrLlFhUzUMDVmD_LsCMyf_S4CJxhwkCRhhy9SYSs1WPgknL3--w"
+
 func TestExtractSubjectFromAccessToken(t *testing.T) {
 	tests := []struct {
 		expectedSubject string
@@ -20,6 +22,7 @@ func TestExtractSubjectFromAccessToken(t *testing.T) {
 		{"admin", token1, false},
 		{"", token2, true},
 		{"", token3, true},
+		{"tempuser", token4, false},
 	}
 
 	for index, test := range tests {
