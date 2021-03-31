@@ -1,7 +1,6 @@
 package pipelines
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
@@ -12,13 +11,19 @@ type PipelinesServicesManager struct {
 	config config.Config
 }
 
-func New(details *auth.ServiceDetails, config config.Config) (*PipelinesServicesManager, error) {
-	var err error
+func New(config config.Config) (*PipelinesServicesManager, error) {
+	details := config.GetServiceDetails()
+	err := details.InitSsh()
+	if err != nil {
+		return nil, err
+	}
 	manager := &PipelinesServicesManager{config: config}
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
-		SetServiceDetails(details).
+		SetClientCertPath(details.GetClientCertPath()).
+		SetClientCertKeyPath(details.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		Build()
 	return manager, err

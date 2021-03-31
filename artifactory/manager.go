@@ -464,9 +464,3 @@ func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPro
 func (sm *ArtifactoryServicesManagerImp) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }
-
-func (sm *ArtifactoryServicesManagerImp) RegenerateAPIKey() (string, error) {
-	securityService := services.NewSecurityService(sm.client)
-	securityService.ArtDetails = sm.config.GetServiceDetails()
-	return securityService.RegenerateAPIKey()
-}

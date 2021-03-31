@@ -369,7 +369,11 @@ func createXrayBinMgrManager() {
 
 func createPipelinesIntegrationsManager() {
 	pipelinesDetails := GetPipelinesDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&pipelinesDetails).Build()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
 	failOnHttpClientCreation(err)
 	testsPipelinesIntegrationsService = pipelinesServices.NewIntegrationsService(client)
 	testsPipelinesIntegrationsService.ServiceDetails = pipelinesDetails
@@ -377,7 +381,11 @@ func createPipelinesIntegrationsManager() {
 
 func createPipelinesSourcesManager() {
 	pipelinesDetails := GetPipelinesDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().SetServiceDetails(&pipelinesDetails).Build()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
 	failOnHttpClientCreation(err)
 	testsPipelinesSourcesService = pipelinesServices.NewSourcesService(client)
 	testsPipelinesSourcesService.ServiceDetails = pipelinesDetails

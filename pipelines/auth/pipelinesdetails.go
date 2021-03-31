@@ -33,7 +33,7 @@ func (pd *pipelinesDetails) getPipelinesVersion() (string, error) {
 		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
-	sm, err := pipelines.New(&cd, serviceConfig)
+	sm, err := pipelines.New(serviceConfig)
 	if err != nil {
 		return "", err
 	}
