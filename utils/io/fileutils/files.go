@@ -85,6 +85,7 @@ func IsFileSymlink(file os.FileInfo) bool {
 }
 
 func GetFileAndDirFromPath(path string) (fileName, dir string) {
+	path = strings.Replace(path, "\\\\", "\\", -1)
 	index1 := strings.LastIndex(path, "/")
 	index2 := strings.LastIndex(path, "\\")
 	var index int
