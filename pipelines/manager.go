@@ -13,10 +13,7 @@ type PipelinesServicesManager struct {
 
 func New(config config.Config) (*PipelinesServicesManager, error) {
 	details := config.GetServiceDetails()
-	err := details.InitSsh()
-	if err != nil {
-		return nil, err
-	}
+	var err error
 	manager := &PipelinesServicesManager{config: config}
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
