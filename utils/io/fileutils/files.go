@@ -75,20 +75,6 @@ func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err e
 	return fileInfo, err
 }
 
-func IsDirEmpty(path string) (bool, error) {
-	dir, err := os.Open(path)
-	if err != nil {
-		return false, errorutils.CheckError(err)
-	}
-	defer dir.Close()
-
-	_, err = dir.Readdirnames(1)
-	if err == io.EOF {
-		return true, nil
-	}
-	return false, errorutils.CheckError(err)
-}
-
 func IsPathSymlink(path string) bool {
 	f, _ := os.Lstat(path)
 	return f != nil && IsFileSymlink(f)
@@ -101,18 +87,21 @@ func IsFileSymlink(file os.FileInfo) bool {
 func GetFileAndDirFromPath(path string) (fileName, dir string) {
 	index1 := strings.LastIndex(path, "/")
 	index2 := strings.LastIndex(path, "\\")
-	index3 := strings.LastIndex(path, "\\\\")
 	var index int
-	if index1 >= index2 && index1 >= index3 {
+	offset := 0
+	if index1 >= index2 {
 		index = index1
-	} else if index2 >= index1 && index2 >= index3 {
-		index = index2
 	} else {
-		index = index3
+		index = index2
+		// Check if the last separator is '\\\\' or '\\'
+		index3 := strings.LastIndex(path, "\\\\")
+		if index2-index3 == 1 {
+			offset = 1
+		}
 	}
 	if index != -1 {
 		fileName = path[index+1:]
-		dir = path[:index]
+		dir = path[:index-offset]
 		return
 	}
 	fileName = path
