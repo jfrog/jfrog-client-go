@@ -24,6 +24,7 @@ const (
 )
 
 func TestDockerPromote(t *testing.T) {
+	initArtifactoryTest(t)
 	// Create mock server
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check method

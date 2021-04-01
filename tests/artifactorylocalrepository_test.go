@@ -8,6 +8,7 @@ import (
 )
 
 func TestArtifactoryLocalRepository(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("localMavenTest", localMavenTest)
 	t.Run("localGradleTest", localGradleTest)
 	t.Run("localIvyTest", localIvyTest)
@@ -35,6 +36,7 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localGenericTest", localGenericTest)
 	t.Run("getLocalRepoDetailsTest", getLocalRepoDetailsTest)
 	t.Run("getAllLocalRepoDetailsTest", getAllLocalRepoDetailsTest)
+	t.Run("localCreateWithParamTest", localCreateWithParamTest)
 }
 
 func localMavenTest(t *testing.T) {
@@ -767,6 +769,16 @@ func localGenericTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, glp)
 }
 
+func localCreateWithParamTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	params := services.NewLocalRepositoryBaseParams()
+	params.Key = repoKey
+	err := testsRepositoriesService.CreateLocal(params)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, params)
+}
+
 func getLocalRepoDetailsTest(t *testing.T) {
 	// Create Repo
 	repoKey := GenerateRepoKeyForRepoServiceTest()
@@ -786,7 +798,7 @@ func getLocalRepoDetailsTest(t *testing.T) {
 	// Validate
 	assert.Equal(t, data.Key, repoKey)
 	assert.Equal(t, data.Description, glp.Description)
-	assert.Equal(t, data.Rclass, "local")
+	assert.Equal(t, data.GetRepoType(), "local")
 	assert.Empty(t, data.Url)
 	assert.Equal(t, data.PackageType, "generic")
 }
@@ -806,7 +818,7 @@ func getAllLocalRepoDetailsTest(t *testing.T) {
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t)
+	data := getAllRepos(t, "local", "")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {

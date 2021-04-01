@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -23,6 +24,14 @@ const (
 type PolicyService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
+}
+
+type PolicyAlreadyExistsError struct {
+	InnerError error
+}
+
+func (*PolicyAlreadyExistsError) Error() string {
+	return "xray: Policy already exists."
 }
 
 // NewPolicyService creates a new Xray Policy Service
@@ -80,13 +89,17 @@ func (xps *PolicyService) Create(params utils.PolicyParams) error {
 	var resp *http.Response
 	var respBody []byte
 
-	log.Info("Creating policy...")
+	log.Info(fmt.Sprintf("Creating a new Policy named %s on JFrog Xray....", params.Name))
 	resp, respBody, err = xps.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
+		err := errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody))
+		if resp.StatusCode == http.StatusConflict {
+			return errorutils.CheckError(&PolicyAlreadyExistsError{InnerError: err})
+		}
+		return errorutils.CheckError(err)
 	}
 	log.Debug("Xray response:", resp.Status)
 	log.Info("Done creating policy.")

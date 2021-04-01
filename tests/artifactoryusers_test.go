@@ -11,6 +11,7 @@ import (
 )
 
 func TestUsers(t *testing.T) {
+	initArtifactoryTest(t)
 	t.Run("create", testCreateUser)
 	t.Run("update", testUpdateUser)
 	t.Run("delete", testDeleteUser)

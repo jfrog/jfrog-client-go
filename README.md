@@ -45,7 +45,9 @@
       - [Fetching Access Tokens of a User](#fetching-access-tokens-of-a-user)
       - [Refreshing an Access Token](#refreshing-an-access-token)
       - [Revoking an Access Token](#revoking-an-access-token)
+      - [Create API Key](#create-api-key)
       - [Regenerate API Key](#regenerate-api-key)
+      - [Get API Key](#get-api-key)
       - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
       - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
       - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
@@ -57,6 +59,7 @@
       - [Removing a Repository Replication](#removing-a-repository-replication)
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
+      - [Fetching a Permission Target](#fetching-a-permission-target)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
       - [Fetching Users Details](#fetching-users-details)
@@ -116,9 +119,28 @@
       - [Delete an Xray Watch](#delete-an-xray-watch)
       - [Creating a Security Xray Policy](#creating-a-security-xray-policy)
       - [Creating a License Xray Policy](#creating-a-license-xray-policy)
+      - [Get an Xray Policy](#get-an-xray-policy)
       - [Update an Xray Policy](#update-an-xray-policy)
       - [Delete an Xray Policy](#delete-an-xray-policy)
       - [Add builds to indexing configuration](#add-builds-to-indexing-configuration)
+  - [Pipelines APIs](#pipelines-apis)
+    - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
+      - [Creating Pipelines Details](#creating-pipelines-details)
+      - [Creating Pipelines Service Config](#creating-pipelines-service-config)
+      - [Creating New Pipelines Service Manager](#creating-new-pipelines-service-manager)
+    - [Using Pipelines Services](#using-pipelines-services)
+      - [Fetching Pipelines' System Info](#fetching-pipelines-system-info)
+      - [Creating Github Integration](#creating-github-integration)
+      - [Creating Github Enterprise Integration](#creating-github-enterprise-integration)
+      - [Creating Bitbucket Integration](#creating-bitbucket-integration)
+      - [Creating Bitbucket Server Integration](#creating-bitbucket-server-integration)
+      - [Creating Gitlab Integration](#creating-gitlab-integration)
+      - [Creating Artifactory Integration](#creating-artifactory-integration)
+      - [Get Integration by Id](#get-integration-by-id)
+      - [Get Integration by Name](#get-integration-by-name)
+      - [Get All Integrations](#get-all-integrations)
+      - [Delete Integration](#delete-integration)
+      - [Add Pipeline Source](#add-pipeline-source)
 
 ## General
 _jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
@@ -137,22 +159,35 @@ We welcome pull requests from the community.
 To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
 Use the following command with the below options to run the tests.
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests
+go test -v github.com/jfrog/jfrog-client-go/tests [test-types] [flags]
 ```
 Optional flags:
 
 | Flag                | Description                                                                                            |
 | ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
-| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
-| `-rt.password`      | [Default: password] Artifactory password.                                                              |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
+| `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
+| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
+| `-rt.password`      | [Default: password] Artifactory password.                                                              |
 | `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
 | `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
 | `-rt.accessToken`   | [Optional] Artifactory access token.                                                                   |
-| `-log-level`        | [Default: INFO] Sets the log level.                                                                    |
+| `-pipe.accessToken` | [Optional] Pipelines access token.                                                                     |
+| `-pipe.vcsToken`    | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
+| `-pipe.vcsRepo`     | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
+| `-pipe.vcsBranch`   | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
+
+The types are:
+
+| Type                | Description        |
+| ---                 | ---                |
+| `-test.artifactory` | Artifactory tests  |
+| `-test.distribution`| Distribution tests |
+| `-test.xray`        | Xray tests         |
+| `-test.pipelines`   | Pipelines tests    |
 
 - The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
   Once the tests are completed, the content of this repository is deleted.
@@ -271,6 +306,16 @@ params.Target = "repo/path/"
 
 summary, err := rtManager.UploadFilesWithSummary(params)
 defer summary.Close()
+reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
+
+// Iterate over each file
+for currentFileInfo := new(utils.FileInfo); reader.NextRecord(currentFileInfo) == nil; currentFileInfo = new(utils.FileInfo) {
+     fmt.Printf("File path: %s\n", currentFileInfo.LocalPath)
+}
+
+if err := reader.GetError(); err != nil {
+    return err
+}
 ```
 Read more about [ContentReader](#using-contentReader).
 
@@ -535,9 +580,20 @@ params.TokenId = "<token id>"
 err := rtManager.RevokeToken(params)
 ```
 
+#### Create API Key
+```go
+// Returns an error if API key already exists - use RegenerateAPIKey instead.
+apiKey, err := rtManager.CreateAPIKey()
+```
+
 #### Regenerate API Key
 ```go
 apiKey, err := rtManager.RegenerateAPIKey()
+```
+
+#### Get API Key
+```go
+apiKey, err := rtManager.GetAPIKey()
 ```
 
 #### Creating and Updating Local Repository
@@ -563,6 +619,15 @@ params.ExcludesPattern = "excludedDir/*"
 params.DownloadRedirect = true
 
 err = servicesManager.CreateLocalRepository().Generic(params)
+```
+
+You can also create a local repository with basic local params:
+```go
+params := services.NewLocalRepositoryBaseParams()
+params.Key = "generic-repo"
+params.PackageType = "generic"
+params.Description = "This is a public description for generic-repo"
+err := servicesManager.CreateLocalRepository(params)
 ```
 
 Updating local Generic repository:
@@ -602,6 +667,14 @@ Updating remote Maven repository:
 err = servicesManager.UpdateRemoteRepository().Maven(params)
 ```
 
+You can also create a remote repository with basic remote params:
+```go
+params := services.NewRemoteRepositoryBaseParams()
+params.Key = "remote-repo"
+params.Url = "http://jcenter.bintray.com"
+err := servicesManager.CreateRemoteRepository(params)
+```
+
 #### Creating and Updating Virtual Repository
 You can create and update a virtual repository for the following package types:
 
@@ -625,7 +698,17 @@ params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = true
 err = servicesManager.CreateVirtualRepository().Go(params)
 ```
 
-Updating remote Maven repository:
+You can also create a virtual repository with basic virtual params:
+```go
+params := services.NewVirtualRepositoryBaseParams()
+params.Key = "generic-repo"
+params.PackageType = "generic"
+params.Description = "This is a public description for generic-repo"
+params.Repositories = string[]{"remote-repo","local-repo"}
+err := servicesManager.CreateVirtualRepository(params)
+```
+
+Updating virtual Go repository:
 ```go
 err = servicesManager.UpdateVirtualRepository().Go(params)
 ```
@@ -637,15 +720,37 @@ servicesManager.DeleteRepository("generic-repo")
 ```
 
 #### Getting Repository Details
-You can get repository details from Artifactory using its key:
+You can get repository details from Artifactory using its key, and the desired params struct.
+The function expects to get the repo key (name) and a pointer to a param struct that will be filled up.
+The param struct should contain the desired params fields corresponded to the Artifactory REST API: 
 ```go
-servicesManager.GetRepository("generic-repo")
+repoDetails = services.RepositoryDetails{}
+err := servicesManager.GetRepository("maven-repo", &repoDetails)
 ```
+
+```go
+repoDetails = services.LocalRepositoryBaseParams{}
+err := servicesManager.GetRepository("maven-repo", &repoDetails)
+```
+
+```go
+repoDetails = services.MavenLocalRepositoryParams{}
+err := servicesManager.GetRepository("maven-repo", &repoDetails)
+```
+services.RepositoryDetails
 
 #### Getting All Repositories
 You can get all repositories from Artifactory:
 ```go
 servicesManager.GetAllRepositories()
+```
+
+You can get all repositories from Artifactory filtered according to theirs type and/or theirs package type:
+```go
+params := services.NewRepositoriesFilterParams()
+params.RepoType = "remote"
+params.PackageType = "maven"
+err := servicesManager.GetAllRepositoriesFiltered(params)
 ```
 
 #### Creating and Updating Repository Replications
@@ -1203,7 +1308,7 @@ defer func() {
 
 // Iterate over the results.
 for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(ResultItem)  {
-    fmt.Printf("Found artifact: %s of type: %s\n", searchResult.Name, searchResult.Type)
+    fmt.Printf("Found artifact: %s of type: %s\n", currentResult.Name, currentResult.Type)
 }
 if err := resultReader.GetError(); err != nil {
     return err
@@ -1383,4 +1488,93 @@ err := xrayManager.DeletePolicy("example-policy")
 ```go
 buildsToIndex := []string{"buildName1", "buildName2"}
 err := xrayManager.AddBuildsToIndexing(buildsToIndex)
+```
+
+## Pipelines APIs
+### Creating Pipelines Service Manager
+#### Creating Pipelines Details
+```go
+pipelinesDetails := auth.NewPipelinesDetails()
+pipelinesDetails.SetUrl("http://localhost:8081/pipelines")
+pipelinesDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+pipelinesDetails.SetClientCertPath("path/to/.cer")
+pipelinesDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Pipelines Service Config
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(pipelinesDetails).
+    SetCertificatesPath(pipelinesDetails.GetClientCertPath()).
+    Build()
+```
+
+#### Creating New Pipelines Service Manager
+```go
+pipelinesManager, err := pipelines.New(&pipelinesDetails, serviceConfig)
+```
+
+### Using Pipelines Services
+#### Fetching Pipelines' System Info
+```go
+systemInfo, err := pipelinesManager.GetSystemInfo()
+```
+
+#### Creating Github Integration
+```go
+id, err := pipelinesManager.CreateGithubIntegration("integrationName", "token")
+```
+
+#### Creating Github Enterprise Integration
+```go
+id, err := pipelinesManager.CreateGithubEnterpriseIntegration("integrationName", "url", "token")
+```
+
+#### Creating Bitbucket Integration
+```go
+id, err := pipelinesManager.CreateBitbucketIntegration("integrationName", "username", "token")
+```
+
+#### Creating Bitbucket Server Integration
+```go
+id, err := pipelinesManager.CreateBitbucketServerIntegration("integrationName", "url", "username", "passwordOrToken")
+```
+
+#### Creating Gitlab Integration
+```go
+id, err := pipelinesManager.CreateGitlabIntegration("integrationName", "url", "token")
+```
+
+#### Creating Artifactory Integration
+```go
+id, err := pipelinesManager.CreateArtifactoryIntegration("integrationName", "url", "username", "apikey")
+```
+
+#### Get Integration by Id
+```go
+integrationId := 1234
+integration, err := pipelinesManager.GetIntegrationById(integrationId)
+```
+
+#### Get Integration by Name
+```go
+integration, err := pipelinesManager.GetIntegrationByName("integrationName")
+```
+
+#### Get All Integrations
+```go
+integrations, err := pipelinesManager.GetAllIntegrations()
+```
+
+#### Delete Integration
+```go
+integrationId := 1234
+err := pipelinesManager.DeleteIntegration(integrationId)
+```
+
+#### Add Pipeline Source
+```go
+projectIntegrationId := 1234
+err := pipelinesManager.AddSource(projectIntegrationId, "domain/repo", "master", "pipelines.yml")
 ```

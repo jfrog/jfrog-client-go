@@ -3,13 +3,14 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
 )
 
 type LocalRepositoryService struct {
@@ -174,6 +175,10 @@ type LocalRepositoryBaseParams struct {
 	OptionalIndexCompressionFormats []string `json:"optionalIndexCompressionFormats,omitempty"`
 	DownloadRedirect                *bool    `json:"downloadRedirect,omitempty"`
 	BlockPushingSchema1             *bool    `json:"blockPushingSchema1,omitempty"`
+}
+
+func NewLocalRepositoryBaseParams() LocalRepositoryBaseParams {
+	return LocalRepositoryBaseParams{Rclass: "local"}
 }
 
 type CommonMavenGradleLocalRepositoryParams struct {
