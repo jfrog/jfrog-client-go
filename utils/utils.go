@@ -429,3 +429,13 @@ func GetPatternType(patternTypes PatternTypes) PatternType {
 	}
 	return WildCardPattern
 }
+
+func PathHasPrefix(s, prefix string) bool {
+	if IsWindows() {
+		// Use same backslash format for comparing
+		winS := strings.Replace(s, "\\\\", "\\", -1)
+		winPrefix := strings.Replace(prefix, "\\\\", "\\", -1)
+		return strings.HasPrefix(winS, winPrefix)
+	}
+	return strings.HasPrefix(s, prefix)
+}
