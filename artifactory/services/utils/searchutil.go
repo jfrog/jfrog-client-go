@@ -476,7 +476,7 @@ func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content
 func DisableTransitiveSearchIfNotAllowed(params *ArtifactoryCommonParams, artifactoryVersion *version.Version) {
 	transitiveSearchMinVersion := "7.17.0"
 	if params.Transitive && !artifactoryVersion.AtLeast(transitiveSearchMinVersion) {
-		log.Warn(fmt.Sprintf("Transitive search is available on Artifactory version %s or higher. Installed Artifactory version: %s. Transitive option is ignored.",
+		log.Info(fmt.Sprintf("Transitive search is available on Artifactory version %s or higher. Installed Artifactory version: %s. Transitive option is ignored.",
 			transitiveSearchMinVersion, artifactoryVersion.GetVersion()))
 		params.Transitive = false
 	}
