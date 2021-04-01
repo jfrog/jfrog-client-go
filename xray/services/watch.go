@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -23,6 +24,14 @@ const (
 type WatchService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
+}
+
+type WatchAlreadyExistsError struct {
+	InnerError error
+}
+
+func (*WatchAlreadyExistsError) Error() string {
+	return "xray: Watch already exists."
 }
 
 // NewWatchService creates a new Xray Watch Service
@@ -82,13 +91,17 @@ func (xws *WatchService) Create(params utils.WatchParams) error {
 	var resp *http.Response
 	var respBody []byte
 
-	log.Info("Creating watch...")
+	log.Info(fmt.Sprintf("Creating a new Watch named %s on JFrog Xray....", params.Name))
 	resp, respBody, err = xws.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
+		err := errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody))
+		if resp.StatusCode == http.StatusConflict {
+			return errorutils.CheckError(&WatchAlreadyExistsError{InnerError: err})
+		}
+		return errorutils.CheckError(err)
 	}
 	log.Debug("Xray response:", resp.Status)
 	log.Info("Done creating watch.")

@@ -93,7 +93,11 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		err = errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+		if resp.StatusCode == http.StatusConflict {
+			return errorutils.CheckError(&PermissionTargetAlreadyExistsError{InnerError: err})
+		}
+		return errorutils.CheckError(err)
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done " + operationString + " permission target.")
@@ -123,4 +127,12 @@ type PermissionTargetSection struct {
 type Actions struct {
 	Users  map[string][]string `json:"users,omitempty"`
 	Groups map[string][]string `json:"groups,omitempty"`
+}
+
+type PermissionTargetAlreadyExistsError struct {
+	InnerError error
+}
+
+func (*PermissionTargetAlreadyExistsError) Error() string {
+	return "Artifactory: Permission target already exists."
 }

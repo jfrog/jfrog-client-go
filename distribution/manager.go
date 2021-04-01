@@ -13,10 +13,7 @@ type DistributionServicesManager struct {
 }
 
 func New(details *auth.ServiceDetails, config config.Config) (*DistributionServicesManager, error) {
-	err := (*details).InitSsh()
-	if err != nil {
-		return nil, err
-	}
+	var err error
 	manager := &DistributionServicesManager{config: config}
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
@@ -26,9 +23,6 @@ func New(details *auth.ServiceDetails, config config.Config) (*DistributionServi
 		AppendPreRequestInterceptor((*details).RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		Build()
-	if err != nil {
-		return nil, err
-	}
 	return manager, err
 }
 

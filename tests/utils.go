@@ -13,6 +13,9 @@ import (
 	"testing"
 	"time"
 
+	pipelinesAuth "github.com/jfrog/jfrog-client-go/pipelines/auth"
+	pipelinesServices "github.com/jfrog/jfrog-client-go/pipelines/services"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 
@@ -33,16 +36,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var TestArtifactory *bool
+var TestDistribution *bool
+var TestXray *bool
+var TestPipelines *bool
 var RtUrl *string
 var DistUrl *string
 var XrayUrl *string
+var PipelinesUrl *string
 var RtUser *string
 var RtPassword *string
 var RtApiKey *string
 var RtSshKeyPath *string
 var RtSshPassphrase *string
 var RtAccessToken *string
-var LogLevel *string
+var PipelinesAccessToken *string
+var PipelinesVcsToken *string
+var PipelinesVcsRepoFullPath *string
+var PipelinesVcsBranch *string
 
 // Artifactory services
 var testsUploadService *services.UploadService
@@ -57,7 +68,7 @@ var testsUpdateLocalRepositoryService *services.LocalRepositoryService
 var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
-var testsGetRepositoryService *services.GetRepositoryService
+var testsRepositoriesService *services.RepositoriesService
 var testsCreateReplicationService *services.CreateReplicationService
 var testsUpdateReplicationService *services.UpdateReplicationService
 var testsReplicationGetService *services.GetReplicationService
@@ -78,10 +89,13 @@ var testsBundleDeleteLocalService *distributionServices.DeleteLocalReleaseBundle
 var testsBundleDeleteRemoteService *distributionServices.DeleteReleaseBundleService
 
 // Xray Services
-var testsXrayVersionService *xrayServices.VersionService
 var testsXrayWatchService *xrayServices.WatchService
 var testsXrayPolicyService *xrayServices.PolicyService
 var testXrayBinMgrService *xrayServices.BinMgrService
+
+// Pipelines Services
+var testsPipelinesIntegrationsService *pipelinesServices.IntegrationsService
+var testsPipelinesSourcesService *pipelinesServices.SourcesService
 
 var timestamp = time.Now().Unix()
 var trueValue = true
@@ -96,16 +110,24 @@ const (
 )
 
 func init() {
-	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory/", "Artifactory url")
+	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
+	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
+	TestXray = flag.Bool("test.xray", false, "Test xray")
+	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
+	RtUrl = flag.String("rt.url", "", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
-	RtUser = flag.String("rt.user", "admin", "Artifactory username")
-	RtPassword = flag.String("rt.password", "password", "Artifactory password")
+	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
+	RtUser = flag.String("rt.user", "", "Artifactory username")
+	RtPassword = flag.String("rt.password", "", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
 	RtAccessToken = flag.String("rt.accessToken", "", "Artifactory access token")
-	LogLevel = flag.String("log-level", "INFO", "Sets the log level")
+	PipelinesAccessToken = flag.String("pipe.accessToken", "", "Pipelines access token")
+	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
+	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
+	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
 }
 
 func createArtifactorySecurityManager() {
@@ -197,18 +219,6 @@ func createDistributionManager() {
 	testsBundleDeleteRemoteService.DistDetails = distDetails
 }
 
-func createXrayVersionManager() {
-	xrayDetails := GetXrayDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(xrayDetails.GetClientCertPath()).
-		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
-		Build()
-	failOnHttpClientCreation(err)
-	testsXrayVersionService = xrayServices.NewVersionService(client)
-	testsXrayVersionService.XrayDetails = xrayDetails
-}
-
 func createArtifactoryCreateLocalRepositoryManager() {
 	artDetails := GetRtDetails()
 	client, err := createJfrogHttpClient(&artDetails)
@@ -269,8 +279,8 @@ func createArtifactoryGetRepositoryManager() {
 	artDetails := GetRtDetails()
 	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
-	testsGetRepositoryService = services.NewGetRepositoryService(client)
-	testsGetRepositoryService.ArtDetails = artDetails
+	testsRepositoriesService = services.NewRepositoriesService(client)
+	testsRepositoriesService.ArtDetails = artDetails
 }
 
 func createArtifactoryReplicationCreateManager() {
@@ -357,6 +367,30 @@ func createXrayBinMgrManager() {
 	testXrayBinMgrService.XrayDetails = xrayDetails
 }
 
+func createPipelinesIntegrationsManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testsPipelinesIntegrationsService = pipelinesServices.NewIntegrationsService(client)
+	testsPipelinesIntegrationsService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesSourcesManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testsPipelinesSourcesService = pipelinesServices.NewSourcesService(client)
+	testsPipelinesSourcesService.ServiceDetails = pipelinesDetails
+}
+
 func failOnHttpClientCreation(err error) {
 	if err != nil {
 		log.Error(fmt.Sprintf(HttpClientCreationFailureMessage, err.Error()))
@@ -383,6 +417,13 @@ func GetXrayDetails() auth.ServiceDetails {
 	xrayDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*XrayUrl))
 	setAuthenticationDetail(xrayDetails)
 	return xrayDetails
+}
+
+func GetPipelinesDetails() auth.ServiceDetails {
+	pDetails := pipelinesAuth.NewPipelinesDetails()
+	pDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*PipelinesUrl))
+	pDetails.SetAccessToken(*PipelinesAccessToken)
+	return pDetails
 }
 
 func setAuthenticationDetail(details auth.ServiceDetails) {
@@ -479,6 +520,9 @@ func artifactoryCleanup(t *testing.T) {
 }
 
 func createReposIfNeeded() error {
+	if !(*TestArtifactory || *TestDistribution || *TestXray) {
+		return nil
+	}
 	var err error
 	var repoConfig string
 	repo := RtTargetRepo
@@ -614,13 +658,17 @@ func GenerateRepoKeyForRepoServiceTest() string {
 }
 
 func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
-	data, err := testsGetRepositoryService.Get(repoKey)
+	data := services.RepositoryDetails{}
+	err := testsRepositoriesService.Get(repoKey, &data)
 	assert.NoError(t, err, "Failed to get "+repoKey+" details")
-	return data
+	return &data
 }
 
-func getAllRepos(t *testing.T) *[]services.RepositoryDetails {
-	data, err := testsGetRepositoryService.GetAll()
+func getAllRepos(t *testing.T, repoType, packageType string) *[]services.RepositoryDetails {
+	params := services.NewRepositoriesFilterParams()
+	params.RepoType = repoType
+	params.PackageType = packageType
+	data, err := testsRepositoriesService.GetWithFilter(params)
 	assert.NoError(t, err, "Failed to get all repositories details")
 	return data
 }

@@ -234,6 +234,10 @@ type MavenRemoteRepositoryParams struct {
 	CommonMavenGradleRemoteRepositoryParams
 }
 
+func NewRemoteRepositoryBaseParams() RemoteRepositoryBaseParams {
+	return RemoteRepositoryBaseParams{Rclass: "remote"}
+}
+
 func NewMavenRemoteRepositoryParams() MavenRemoteRepositoryParams {
 	return MavenRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "maven"}}
 }

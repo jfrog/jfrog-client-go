@@ -3,13 +3,14 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
 )
 
 type VirtualRepositoryService struct {
@@ -173,6 +174,10 @@ type CommonMavenGradleVirtualRepositoryParams struct {
 type MavenVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
 	CommonMavenGradleVirtualRepositoryParams
+}
+
+func NewVirtualRepositoryBaseParams() VirtualRepositoryBaseParams {
+	return VirtualRepositoryBaseParams{Rclass: "virtual"}
 }
 
 func NewMavenVirtualRepositoryParams() MavenVirtualRepositoryParams {
