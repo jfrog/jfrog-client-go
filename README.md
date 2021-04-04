@@ -236,7 +236,7 @@ serviceConfig, err := config.NewConfigBuilder().
 
 #### Creating New Artifactory Service Manager
 ```go
-rtManager, err := artifactory.New(&rtDetails, serviceConfig)
+rtManager, err := artifactory.New(serviceConfig)
 ```
 
 ### Using Artifactory Services
@@ -963,7 +963,7 @@ serviceConfig, err := config.NewConfigBuilder().
 
 #### Creating New Distribution Service Manager
 ```go
-distManager, err := distribution.New(&distDetails, serviceConfig)
+distManager, err := distribution.New(serviceConfig)
 ```
 
 ### Using Distribution Services
@@ -1352,7 +1352,7 @@ serviceConfig, err := config.NewConfigBuilder().
 
 #### Creating New Xray Service Manager
 ```go
-xrayManager, err := xray.New(&xrayDetails, serviceConfig)
+xrayManager, err := xray.New(serviceConfig)
 ```
 
 ### Using Xray Services
@@ -1512,7 +1512,7 @@ serviceConfig, err := config.NewConfigBuilder().
 
 #### Creating New Pipelines Service Manager
 ```go
-pipelinesManager, err := pipelines.New(&pipelinesDetails, serviceConfig)
+pipelinesManager, err := pipelines.New(serviceConfig)
 ```
 
 ### Using Pipelines Services

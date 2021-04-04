@@ -33,7 +33,7 @@ func (ds *distributionDetails) getDistributionVersion() (string, error) {
 		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
-	sm, err := distribution.New(&cd, serviceConfig)
+	sm, err := distribution.New(serviceConfig)
 	if err != nil {
 		return "", err
 	}
