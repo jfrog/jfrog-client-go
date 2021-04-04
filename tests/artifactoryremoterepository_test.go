@@ -1009,6 +1009,7 @@ func remoteCreateWithParamTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	params := services.NewRemoteRepositoryBaseParams()
 	params.Key = repoKey
+	params.Url = "https://github.com/"
 	err := testsRepositoriesService.CreateRemote(params)
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
