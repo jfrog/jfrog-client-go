@@ -91,17 +91,20 @@ func AddHeader(headerName, headerValue string, headers *map[string]string) {
 
 func BuildArtifactoryUrl(baseUrl, path string, params map[string]string) (string, error) {
 	u := url.URL{Path: path}
-	escapedUrl, err := url.Parse(baseUrl + u.String())
+	parsedUrl, err := url.Parse(baseUrl + u.String())
 	err = errorutils.CheckError(err)
 	if err != nil {
 		return "", err
 	}
-	q := escapedUrl.Query()
+	q := parsedUrl.Query()
 	for k, v := range params {
 		q.Set(k, v)
 	}
-	escapedUrl.RawQuery = q.Encode()
-	return escapedUrl.String(), nil
+	parsedUrl.RawQuery = q.Encode()
+
+	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
+	encodedUrl := strings.Replace(parsedUrl.String(), ";", "%3B", -1)
+	return encodedUrl, nil
 }
 
 func IsWildcardPattern(pattern string) bool {
