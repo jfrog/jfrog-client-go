@@ -128,7 +128,7 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 	targetFileName, targetDirPath := GetFileAndDirFromPath(targetPath)
 	localTargetPath = targetDirPath
 	if !flat {
-		localTargetPath = filepath.Join(targetDirPath, relativePath)
+		localTargetPath = JoinForUnixAndWindows(targetDirPath, relativePath)
 	}
 
 	fileName = originalFileName
@@ -137,6 +137,12 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 		fileName = targetFileName
 	}
 	return
+}
+
+// 'filepath.Join()' replace '\\\\' to '\\'.
+// To handle regexp in the windows path it should contain '\\\\' instead of '\\'.
+func JoinForUnixAndWindows(elem ...string) string {
+	return strings.Replace(filepath.Join(elem...), "\\", "\\\\", -1)
 }
 
 // Return the recursive list of files and directories in the specified path

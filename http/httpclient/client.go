@@ -18,7 +18,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
 )
@@ -412,7 +411,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 		if errorutils.CheckError(err) != nil {
 			return nil, err
 		}
-		flags.LocalFileName = filepath.Join(flags.LocalPath, flags.LocalFileName)
+		flags.LocalFileName = fileutils.JoinForUnixAndWindows(flags.LocalPath, flags.LocalFileName)
 	}
 
 	if fileutils.IsPathExists(flags.LocalFileName, false) {

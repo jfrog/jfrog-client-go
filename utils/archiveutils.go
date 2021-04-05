@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // localPath - The path of the downloaded archive file.
@@ -22,7 +23,7 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 		return err
 	}
 	var archivePath string
-	if !PathHasPrefix(localFileName, localPath) {
+	if !strings.HasPrefix(localFileName, localPath) {
 		archivePath = filepath.Join(localPath, localFileName)
 	} else {
 		archivePath = localFileName

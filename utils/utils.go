@@ -439,3 +439,25 @@ func PathHasPrefix(s, prefix string) bool {
 	}
 	return strings.HasPrefix(s, prefix)
 }
+
+/*
+// 'filepath.Join()' replace '\\\\' to '\\'.
+// To handle regexp in the windows path it should contain '\\\\' instead of '\\'.
+func JoinForUnixAndWindows(elem ...string) string {
+	if IsWindows() {
+		return joinForWindows(elem)
+	}
+	return filepath.Join(elem...)
+}
+
+func joinForWindows(elem []string) string {
+	for i, e := range elem {
+		if e != "" {
+			return filepath.Clean(strings.Join(elem[i:],"\\\\"))
+		}
+	}
+	return ""
+}
+
+
+*/
