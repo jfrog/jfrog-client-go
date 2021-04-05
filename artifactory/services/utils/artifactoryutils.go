@@ -89,6 +89,8 @@ func AddHeader(headerName, headerValue string, headers *map[string]string) {
 	(*headers)[headerName] = headerValue
 }
 
+// Builds a URL for Artifactory requests.
+// Pay attention: semicolons are escaped!
 func BuildArtifactoryUrl(baseUrl, path string, params map[string]string) (string, error) {
 	u := url.URL{Path: path}
 	parsedUrl, err := url.Parse(baseUrl + u.String())
@@ -103,7 +105,7 @@ func BuildArtifactoryUrl(baseUrl, path string, params map[string]string) (string
 	parsedUrl.RawQuery = q.Encode()
 
 	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
-	encodedUrl := strings.Replace(parsedUrl.String(), ";", "%3B", -1)
+	encodedUrl := strings.Replace(parsedUrl.String(), ";", url.QueryEscape(";"), -1)
 	return encodedUrl, nil
 }
 
