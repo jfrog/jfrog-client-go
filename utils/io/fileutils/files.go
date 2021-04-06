@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -141,10 +140,7 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 }
 
 func FixPathForWindows(path string) string {
-	if utils.IsWindows() {
-		return strings.Replace(path, "\\\\", "\\", -1)
-	}
-	return path
+	return strings.Replace(path, "\\\\", "\\", -1)
 }
 
 // Return the recursive list of files and directories in the specified path
