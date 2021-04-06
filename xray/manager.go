@@ -1,7 +1,6 @@
 package xray
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
@@ -15,15 +14,16 @@ type XrayServicesManager struct {
 }
 
 // New creates a service manager to interact with Xray
-func New(details *auth.ServiceDetails, config config.Config) (*XrayServicesManager, error) {
+func New(config config.Config) (*XrayServicesManager, error) {
+	details := config.GetServiceDetails()
 	var err error
 	manager := &XrayServicesManager{config: config}
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
-		SetClientCertPath((*details).GetClientCertPath()).
-		SetClientCertKeyPath((*details).GetClientCertKeyPath()).
-		AppendPreRequestInterceptor((*details).RunPreRequestFunctions).
+		SetClientCertPath(details.GetClientCertPath()).
+		SetClientCertKeyPath(details.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
 		Build()
 	return manager, err
 }

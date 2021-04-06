@@ -1,7 +1,6 @@
 package distribution
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/distribution/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -12,15 +11,16 @@ type DistributionServicesManager struct {
 	config config.Config
 }
 
-func New(details *auth.ServiceDetails, config config.Config) (*DistributionServicesManager, error) {
+func New(config config.Config) (*DistributionServicesManager, error) {
+	details := config.GetServiceDetails()
 	var err error
 	manager := &DistributionServicesManager{config: config}
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
-		SetClientCertPath((*details).GetClientCertPath()).
-		SetClientCertKeyPath((*details).GetClientCertKeyPath()).
-		AppendPreRequestInterceptor((*details).RunPreRequestFunctions).
+		SetClientCertPath(details.GetClientCertPath()).
+		SetClientCertKeyPath(details.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		Build()
 	return manager, err

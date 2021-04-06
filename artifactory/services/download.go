@@ -127,12 +127,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		// Iterate over file-spec groups and produce download tasks.
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
-			err = utils.ValidateTransitiveSearchAllowed(downloadParams.ArtifactoryCommonParams, artifactoryVersion)
-			if err != nil {
-				log.Error(err)
-				errorsQueue.AddError(err)
-				continue
-			}
+			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.ArtifactoryCommonParams, artifactoryVersion)
 			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
