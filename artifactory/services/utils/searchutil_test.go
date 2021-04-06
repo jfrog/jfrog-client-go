@@ -148,12 +148,12 @@ func TestValidateTransitiveSearchAllowed(t *testing.T) {
 	tests := []struct {
 		params             *ArtifactoryCommonParams
 		artifactoryVersion *version.Version
-		expectedError      bool
+		expectedTransitive bool
 	}{
-		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.0.0"), true},
-		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.17.0"), false},
-		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.17.0-m029"), false},
-		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.19.0"), false},
+		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.0.0"), false},
+		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.17.0"), true},
+		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.17.0-m029"), true},
+		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.19.0"), true},
 		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.0.0"), false},
 		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.17.0"), false},
 		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.17.0-m029"), false},
@@ -161,12 +161,8 @@ func TestValidateTransitiveSearchAllowed(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("transitive:%t,version:%s", test.params.Transitive, test.artifactoryVersion.GetVersion()), func(t *testing.T) {
-			err := ValidateTransitiveSearchAllowed(test.params, test.artifactoryVersion)
-			if test.expectedError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
+			DisableTransitiveSearchIfNotAllowed(test.params, test.artifactoryVersion)
+			assert.Equal(t, test.expectedTransitive, test.params.Transitive)
 		})
 	}
 }

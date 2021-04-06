@@ -53,10 +53,7 @@ func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requir
 		return nil, err
 	}
 	artifactoryVersion := version.NewVersion(artifactoryVersionStr)
-	err = utils.ValidateTransitiveSearchAllowed(searchParams.ArtifactoryCommonParams, artifactoryVersion)
-	if err != nil {
-		return nil, err
-	}
+	utils.DisableTransitiveSearchIfNotAllowed(searchParams.ArtifactoryCommonParams, artifactoryVersion)
 	switch searchParams.GetSpecType() {
 	case utils.WILDCARD:
 		return utils.SearchBySpecWithPattern(searchParams.GetFile(), flags, requiredArtifactProps)
