@@ -126,9 +126,9 @@ func GetFileAndDirFromPath(path string) (fileName, dir string) {
 // Get the local path and filename from original file name and path according to targetPath
 func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool) (localTargetPath, fileName string) {
 	targetFileName, targetDirPath := GetFileAndDirFromPath(targetPath)
-	localTargetPath = targetDirPath
+	localTargetPath = FixPathForWindows(targetDirPath)
 	if !flat {
-		localTargetPath = JoinForUnixAndWindows(targetDirPath, relativePath)
+		localTargetPath = filepath.Join(targetDirPath, relativePath)
 	}
 
 	fileName = originalFileName
@@ -139,10 +139,8 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 	return
 }
 
-// 'filepath.Join()' replace '\\\\' to '\\'.
-// To handle regexp in the windows path it should contain '\\\\' instead of '\\'.
-func JoinForUnixAndWindows(elem ...string) string {
-	return strings.Replace(filepath.Join(elem...), "\\", "\\\\", -1)
+func FixPathForWindows(path string) string {
+	return strings.Replace(path, "\\\\", "\\", -1)
 }
 
 // Return the recursive list of files and directories in the specified path
