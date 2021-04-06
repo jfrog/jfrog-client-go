@@ -110,7 +110,7 @@ func GetFileAndDirFromPath(path string) (fileName, dir string) {
 		index = index2
 		// Check if the last separator is '\\\\' or '\\'
 		index3 := strings.LastIndex(path, "\\\\")
-		if index2-index3 == 1 {
+		if index3 != -1 && index2-index3 == 1 {
 			offset = 1
 		}
 	}
