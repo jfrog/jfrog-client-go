@@ -115,6 +115,9 @@ func GetFileAndDirFromPath(path string) (fileName, dir string) {
 	}
 	if index != -1 {
 		fileName = path[index+1:]
+		// Variable "index" represents the index of the last separator instance.
+		// If the last separator is '\\\\' index will contain the index of the last '\\' ,
+		// to get the dir path without separator suffix we will use the value of offset.
 		dir = path[:index-offset]
 		return
 	}
