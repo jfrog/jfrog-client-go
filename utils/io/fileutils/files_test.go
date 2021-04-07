@@ -225,3 +225,27 @@ func TestListFilesByFilterFunc(t *testing.T) {
 	}
 	assert.ElementsMatch(t, expected, files)
 }
+
+func TestGetFileAndDirFromPath(t *testing.T) {
+	tests := []struct {
+		path         string
+		expectedFile string
+		expectedDir  string
+	}{
+		{"a\\\\b\\\\c.in", "c.in", "a\\\\b"},
+		{"a\\b\\c.in", "c.in", "a\\b"},
+		{"a/b/c.in", "c.in", "a/b"},
+		{"a\\\\b\\\\", "", "a\\\\b"},
+		{"", "", ""},
+		{"a\\\\b\\c.in", "c.in", "a\\\\b"},
+		{"a\\b\\\\c.in", "c.in", "a\\b"},
+		{"\\c.in", "c.in", ""},
+		{"\\\\c.in", "c.in", ""},
+	}
+	for _, test := range tests {
+		File, Dir := GetFileAndDirFromPath(test.path)
+		assert.Equal(t, test.expectedFile, File, "Wrong file name for path: "+test.path)
+		assert.Equal(t, test.expectedDir, Dir, "Wrong dir for path: "+test.path)
+	}
+
+}
