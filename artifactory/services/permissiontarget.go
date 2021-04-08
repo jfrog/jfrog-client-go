@@ -29,7 +29,7 @@ func (pts *PermissionTargetService) GetJfrogHttpClient() *jfroghttpclient.JfrogH
 func (pts *PermissionTargetService) Delete(permissionTargetName string) error {
 	httpClientsDetails := pts.ArtDetails.CreateHttpClientDetails()
 	log.Info("Deleting permission target...")
-	resp, body, err := pts.client.SendDelete(pts.ArtDetails.GetUrl()+"api/security/permissions/"+permissionTargetName, nil, &httpClientsDetails)
+	resp, body, err := pts.client.SendDelete(pts.ArtDetails.GetUrl()+"api/v2/security/permissions/"+permissionTargetName, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
