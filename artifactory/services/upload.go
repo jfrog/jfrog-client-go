@@ -439,16 +439,8 @@ func (us *UploadService) uploadFile(localPath, targetUrl, buildProps string, pro
 }
 
 type UploadResponseBody struct {
-	//Repo string `json:"repo,omitempty"`
-	//Path string `json:"path,omitempty"`
-	//Created string `json:"created,omitempty"`
-	//CreatedBy string `json:"createdBy,omitempty"`
-	//DownloadUri string `json:"downloadUri,omitempty"`
-	//MimeType string `json:"mimeType,omitempty"`
-	//Size string `json:"size,omitempty"`
 	Checksums fileutils.ChecksumDetails `json:"checksums,omitempty"`
-	//OriginalChecksums []string `json:"originalChecksums,omitempty"`
-	//Uri string `json:"uri,omitempty"`
+	//OriginalChecksums fileutils.ChecksumDetails `json:"originalChecksums,omitempty"`
 }
 
 // Reads a file from a Reader that is given from a function (getReaderFunc) and uploads it to the specified target path.
