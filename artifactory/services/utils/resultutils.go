@@ -39,6 +39,7 @@ type OperationSummary struct {
 type FileTransferDetails struct {
 	SourcePath string `json:"sourcePath,omitempty"`
 	TargetPath string `json:"targetPath,omitempty"`
+	Sha256     string `json:"sha256,omitempty"`
 }
 
 type ArtifactDetails struct {

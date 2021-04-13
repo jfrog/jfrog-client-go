@@ -2,6 +2,7 @@ package services
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -426,8 +427,28 @@ func (us *UploadService) uploadFile(localPath, targetUrl, buildProps string, pro
 	if err != nil {
 		return nil, false, err
 	}
+	// Extract sha256 of the uploaded file from the response's body.
+	responseBody := new(UploadResponseBody)
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		return nil, false, err
+	}
+	details.Checksum.Sha256 = responseBody.Checksums.Sha256
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
 	return details, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
+}
+
+type UploadResponseBody struct {
+	//Repo string `json:"repo,omitempty"`
+	//Path string `json:"path,omitempty"`
+	//Created string `json:"created,omitempty"`
+	//CreatedBy string `json:"createdBy,omitempty"`
+	//DownloadUri string `json:"downloadUri,omitempty"`
+	//MimeType string `json:"mimeType,omitempty"`
+	//Size string `json:"size,omitempty"`
+	Checksums fileutils.ChecksumDetails `json:"checksums,omitempty"`
+	//OriginalChecksums []string `json:"originalChecksums,omitempty"`
+	//Uri string `json:"uri,omitempty"`
 }
 
 // Reads a file from a Reader that is given from a function (getReaderFunc) and uploads it to the specified target path.
@@ -671,7 +692,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			if uploaded {
 				uploadResult.SuccessCount[threadId]++
 				if us.saveSummary {
-					us.resultsManager.addFinalResult(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, targetUrl, &uploadFileDetails.Checksum)
+					us.resultsManager.addFinalResult(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, targetUrl, uploadFileDetails.Checksum.Sha256, &uploadFileDetails.Checksum)
 				}
 			}
 			return
@@ -871,10 +892,11 @@ func newResultManager() (*resultsManager, error) {
 }
 
 // Write a result of a successful upload
-func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl string, checksums *fileutils.ChecksumDetails) {
+func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha256 string, checksums *fileutils.ChecksumDetails) {
 	fileTransferDetails := utils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
+		Sha256:     sha256,
 	}
 	rm.singleFinalTransfersWriter.Write(fileTransferDetails)
 	artifactDetails := utils.ArtifactDetails{
