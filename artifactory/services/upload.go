@@ -427,13 +427,14 @@ func (us *UploadService) uploadFile(localPath, targetUrl, buildProps string, pro
 	if err != nil {
 		return nil, false, err
 	}
-	// Extract sha256 of the uploaded file from the response's body.
+	// Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
 	responseBody := new(UploadResponseBody)
 	err = json.Unmarshal(body, &responseBody)
 	if err != nil {
 		return nil, false, err
 	}
 	details.Checksum.Sha256 = responseBody.Checksums.Sha256
+
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
 	return details, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
