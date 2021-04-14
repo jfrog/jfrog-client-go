@@ -440,7 +440,6 @@ func (us *UploadService) uploadFile(localPath, targetUrl, buildProps string, pro
 
 type UploadResponseBody struct {
 	Checksums fileutils.ChecksumDetails `json:"checksums,omitempty"`
-	//OriginalChecksums fileutils.ChecksumDetails `json:"originalChecksums,omitempty"`
 }
 
 // Reads a file from a Reader that is given from a function (getReaderFunc) and uploads it to the specified target path.
