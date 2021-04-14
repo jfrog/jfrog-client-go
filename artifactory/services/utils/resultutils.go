@@ -36,6 +36,7 @@ type OperationSummary struct {
 
 // Represents a file transfer from SourcePath to TargetPath.
 // Each of the paths can be on the local machine (full or relative) or in Artifactory (full URL).
+// File's Sha256 claculated by Artifactory and returned at the HTTP respons body.
 type FileTransferDetails struct {
 	SourcePath string `json:"sourcePath,omitempty"`
 	TargetPath string `json:"targetPath,omitempty"`
