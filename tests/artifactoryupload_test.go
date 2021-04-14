@@ -315,10 +315,11 @@ func summaryUpload(t *testing.T) {
 	for item := new(utils.FileTransferDetails); summary.TransferDetailsReader.NextRecord(item) == nil; item = new(utils.FileTransferDetails) {
 		transfers = append(transfers, *item)
 	}
+	expectedSha256, _ := calculateSha256(filepath.Join(workingDir, "out", "a.in"))
 	assert.Len(t, transfers, 1)
 	assert.Equal(t, filepath.Join(workingDir, "out", "a.in"), transfers[0].SourcePath)
 	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+RtTargetRepo+"a.in", transfers[0].TargetPath)
-	assert.Equal(t, "sha256", transfers[0].Sha256)
+	assert.Equal(t, expectedSha256, transfers[0].Sha256)
 	var artifacts []utils.ArtifactDetails
 	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
 		artifacts = append(artifacts, *item)

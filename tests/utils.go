@@ -1,10 +1,13 @@
 package tests
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -110,16 +113,16 @@ const (
 )
 
 func init() {
-	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
+	TestArtifactory = flag.Bool("test.artifactory", true, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
-	RtUrl = flag.String("rt.url", "", "Artifactory url")
+	RtUrl = flag.String("rt.url", "https://newgai.jfrog.io/artifactory", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	RtUser = flag.String("rt.user", "", "Artifactory username")
-	RtPassword = flag.String("rt.password", "", "Artifactory password")
+	RtUser = flag.String("rt.user", "gailazar300@gmail.com", "Artifactory username")
+	RtPassword = flag.String("rt.password", "Gg0546790011!", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
@@ -795,4 +798,18 @@ type indexedBuildsPayload struct {
 	BinMgrId         string   `json:"bin_mgr_id,omitempty"`
 	IndexedBuilds    []string `json:"indexed_builds"`
 	NonIndexedBuilds []string `json:"non_indexed_builds,omitempty"`
+}
+
+func calculateSha256(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
