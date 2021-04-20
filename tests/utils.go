@@ -1,13 +1,10 @@
 package tests
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -798,18 +795,4 @@ type indexedBuildsPayload struct {
 	BinMgrId         string   `json:"bin_mgr_id,omitempty"`
 	IndexedBuilds    []string `json:"indexed_builds"`
 	NonIndexedBuilds []string `json:"non_indexed_builds,omitempty"`
-}
-
-func calculateSha256(path string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(h.Sum(nil)), nil
 }
