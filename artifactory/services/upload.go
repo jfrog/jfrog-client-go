@@ -428,13 +428,16 @@ func (us *UploadService) uploadFile(localPath, targetUrl, buildProps string, pro
 		return nil, false, err
 	}
 	// Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
-	responseBody := new(UploadResponseBody)
-	err = json.Unmarshal(body, &responseBody)
-	if err != nil {
-		return nil, false, err
+	// In case of uploading archive with "--explode" the response body will be empty and sha256 won't be shown at
+	// the detailed summary.
+	if len(body) > 0 {
+		responseBody := new(UploadResponseBody)
+		err = json.Unmarshal(body, &responseBody)
+		if err != nil {
+			return nil, false, err
+		}
+		details.Checksum.Sha256 = responseBody.Checksums.Sha256
 	}
-	details.Checksum.Sha256 = responseBody.Checksums.Sha256
-
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
 	return details, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
