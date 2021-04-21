@@ -849,6 +849,8 @@ You can fetch a permission target from Artifactory using its name:
 permissionTargetParams, err = servicesManager.GetPermissionTarget("java-developers")
 ```
 
+If the requested permission target does not exist, a nil value is returned for the *permissionTargetParams* param, with a nil error value
+
 #### Fetching Artifactory's Version
 ```go
 version, err := servicesManager.GetVersion()
@@ -866,6 +868,8 @@ params.UserDetails.Name = "myUserName"
 
 user, err := serviceManager.GetUser(params)
 ```
+
+If the requested user does not exist, a nil value is returned for the *User* param, with a nil error value
 
 #### Fetching All Users Details
 You can get all users from Artifactory:
@@ -907,6 +911,8 @@ params.IncludeUsers = true
 
 group, err := serviceManager.GetGroup(params)
 ```
+
+If the requested group does not exist, a nil value is returned for the *Group* param, with a nil error value
 
 #### Creating and Updating a Group
 ```go
