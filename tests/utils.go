@@ -692,7 +692,8 @@ func createDummyBuild(buildName string) error {
 			},
 		}},
 	}
-	return testBuildInfoService.PublishBuildInfo(dataArtifactoryBuild, "")
+	_, err := testBuildInfoService.PublishBuildInfo(dataArtifactoryBuild, "")
+	return err
 }
 
 func deleteBuild(buildName string) error {
