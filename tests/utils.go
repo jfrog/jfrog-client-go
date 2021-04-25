@@ -201,7 +201,7 @@ func createDistributionManager() {
 		AppendPreRequestInterceptor(distDetails.RunPreRequestFunctions).
 		Build()
 	failOnHttpClientCreation(err)
-	testsBundleCreateService = distributionServices.NewCreateReleseBundleService(client)
+	testsBundleCreateService = distributionServices.NewCreateReleaseBundleService(client)
 	testsBundleUpdateService = distributionServices.NewUpdateReleaseBundleService(client)
 	testsBundleSignService = distributionServices.NewSignBundleService(client)
 	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleService(client)

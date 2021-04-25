@@ -7,7 +7,7 @@ import (
 
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	distrbutionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
+	distributionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -29,21 +29,28 @@ func (ur *UpdateReleaseBundleService) GetDistDetails() auth.ServiceDetails {
 }
 
 func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams UpdateReleaseBundleParams) error {
-	releaseBundleBody, err := distrbutionServiceUtils.CreateBundleBody(createBundleParams.ReleaseBundleParams, ur.DryRun)
+	releaseBundleBody, err := distributionServiceUtils.CreateBundleBody(createBundleParams.ReleaseBundleParams, ur.DryRun)
 	if err != nil {
 		return err
 	}
 	return ur.execUpdateReleaseBundle(createBundleParams.Name, createBundleParams.Version, createBundleParams.GpgPassphrase, releaseBundleBody)
 }
 
-func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpgPassphrase string, releaseBundle *distrbutionServiceUtils.ReleaseBundleBody) error {
+func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpgPassphrase string, releaseBundle *distributionServiceUtils.ReleaseBundleBody) error {
 	httpClientsDetails := ur.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
+
+	dryRunStr := ""
+	if releaseBundle.DryRun {
+		dryRunStr = "[Dry run] "
+	}
+	log.Info(dryRunStr + "Updating: " + name + "/" + version)
+
 	url := ur.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version
-	distrbutionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
+	distributionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := ur.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
@@ -58,12 +65,12 @@ func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpg
 }
 
 type UpdateReleaseBundleParams struct {
-	distrbutionServiceUtils.ReleaseBundleParams
+	distributionServiceUtils.ReleaseBundleParams
 }
 
 func NewUpdateReleaseBundleParams(name, version string) UpdateReleaseBundleParams {
 	return UpdateReleaseBundleParams{
-		distrbutionServiceUtils.ReleaseBundleParams{
+		distributionServiceUtils.ReleaseBundleParams{
 			Name:    name,
 			Version: version,
 		},

@@ -19,12 +19,11 @@ import (
 )
 
 type distributableDistributionStatus string
-type receivedDistributionStatus string
 
 const (
 	// Release bundle created and open for changes:
 	open distributableDistributionStatus = "OPEN"
-	// Relese bundle is signed, but not stored:
+	// Release bundle is signed, but not stored:
 	signed distributableDistributionStatus = "SIGNED"
 	// Release bundle is signed and stored, but not scanned by Xray:
 	stored distributableDistributionStatus = "STORED"
@@ -107,31 +106,71 @@ func createUpdate(t *testing.T) {
 	bundleName := initLocalDistributionTest(t, "client-test-bundle-2")
 	defer deleteLocalBundle(t, bundleName, true)
 
-	// Create unsigned release bundle
+	// Create release bundle params
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.Description = "Release bundle description 1"
 	createBundleParams.ReleaseNotes = "Release notes 1"
 	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
-	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	assert.NoError(t, err)
+
+	// Test DryRun first
+	err := createDryRun(createBundleParams)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+
+	// Create unsigned release bundle
+	err = testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
 	assert.Equal(t, createBundleParams.Description, distributionResponse.Description)
 	assert.Equal(t, createBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
 	spec := distributionResponse.BundleSpec
 
-	// Update release bundle
+	// Create update release bundle params
 	updateBundleParams := services.NewUpdateReleaseBundleParams(bundleName, bundleVersion)
 	updateBundleParams.Description = "Release bundle description 2"
 	updateBundleParams.ReleaseNotes = "Release notes 2"
 	updateBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "test/a.in"}}
+
+	// Test DryRun first
+	err = updateDryRun(updateBundleParams)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+
 	err = testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
-	assert.NoError(t, err)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
 	distributionResponse = getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
 	assert.Equal(t, updateBundleParams.Description, distributionResponse.Description)
 	assert.Equal(t, updateBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
 	assert.NotEqual(t, spec, distributionResponse.BundleSpec)
+}
+
+func createDryRun(createBundleParams services.CreateReleaseBundleParams) error {
+	defer setServicesToDryRunFalse()
+	testsBundleCreateService.DryRun = true
+	return testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+}
+
+func updateDryRun(updateBundleParams services.UpdateReleaseBundleParams) error {
+	defer setServicesToDryRunFalse()
+	testsBundleUpdateService.DryRun = true
+	return testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
+}
+
+func setServicesToDryRunFalse() {
+	testsBundleCreateService.DryRun = false
+	testsBundleUpdateService.DryRun = false
 }
 
 func createWithProps(t *testing.T) {
@@ -172,9 +211,13 @@ func createWithProps(t *testing.T) {
 	// Check prop1Values and prop2Values
 	assert.Len(t, prop1Values, 1)
 	assert.Len(t, prop2Values, 2)
-	assert.Equal(t, "value1", prop1Values[0])
-	assert.Equal(t, "value2", prop2Values[0])
-	assert.Equal(t, "value3", prop2Values[1])
+	if len(prop1Values) == 1 {
+		assert.Equal(t, "value1", prop1Values[0])
+	}
+	if len(prop2Values) == 2 {
+		assert.Equal(t, "value2", prop2Values[0])
+		assert.Equal(t, "value3", prop2Values[1])
+	}
 }
 
 func createSignDistributeDelete(t *testing.T) {
@@ -365,15 +408,6 @@ func getGpgKeyId(t *testing.T) string {
 
 func assertReleaseBundleSigned(t *testing.T, status distributableDistributionStatus) {
 	assert.Contains(t, []distributableDistributionStatus{signed, stored, readyForDistribution}, status)
-}
-
-type receivedResponse struct {
-	Id     string                     `json:"id,omitempty"`
-	Status receivedDistributionStatus `json:"status,omitempty"`
-}
-
-type receivedResponses struct {
-	receivedResponses []receivedResponse
 }
 
 // Wait for distribution of a release bundle
