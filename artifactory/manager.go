@@ -159,12 +159,7 @@ func (sm *ArtifactoryServicesManagerImp) GetPermissionTarget(permissionTargetNam
 	return permissionTargetService.Get(permissionTargetName)
 }
 
-func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
-	_, err := sm.PublishBuildInfoWithSummary(build, projectKey)
-	return err
-}
-
-func (sm *ArtifactoryServicesManagerImp) PublishBuildInfoWithSummary(build *buildinfo.BuildInfo, projectKey string) (*services.BuildPublishSummary, error) {
+func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*services.BuildPublishSummary, error) {
 	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
 	return buildInfoService.PublishBuildInfo(build, projectKey)

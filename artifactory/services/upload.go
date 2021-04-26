@@ -433,7 +433,7 @@ func (us *UploadService) uploadFile(localPath, targetUrl, buildProps string, pro
 	if len(body) > 0 {
 		responseBody := new(UploadResponseBody)
 		err = json.Unmarshal(body, &responseBody)
-		if err != nil {
+		if errorutils.CheckError(err) != nil {
 			return nil, false, err
 		}
 		details.Checksum.Sha256 = responseBody.Checksums.Sha256
