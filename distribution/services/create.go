@@ -66,7 +66,7 @@ func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase stri
 
 	log.Debug("Distribution response: ", resp.Status)
 	log.Debug(utils.IndentJson(body))
-	return errorutils.CheckError(err)
+	return nil
 }
 
 type createReleaseBundleBody struct {

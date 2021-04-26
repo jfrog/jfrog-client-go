@@ -61,7 +61,8 @@ func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpg
 	}
 
 	log.Debug("Distribution response: ", resp.Status)
-	return errorutils.CheckError(err)
+	log.Debug(utils.IndentJson(body))
+	return nil
 }
 
 type UpdateReleaseBundleParams struct {
