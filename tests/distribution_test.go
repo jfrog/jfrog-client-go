@@ -177,9 +177,16 @@ func updateDryRun(updateBundleParams services.UpdateReleaseBundleParams) error {
 	return testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
 }
 
+func distributeDryRun(distributionParams services.DistributionParams) error {
+	defer setServicesToDryRunFalse()
+	testsBundleDistributeService.DryRun = true
+	return testsBundleDistributeService.Distribute(distributionParams)
+}
+
 func setServicesToDryRunFalse() {
 	testsBundleCreateService.DryRun = false
 	testsBundleUpdateService.DryRun = false
+	testsBundleDistributeService.DryRun = false
 }
 
 func createWithProps(t *testing.T) {
@@ -248,19 +255,34 @@ func createSignDistributeDelete(t *testing.T) {
 	distributionResponse = getLocalBundle(t, bundleName, true)
 	assertReleaseBundleSigned(t, distributionResponse.State)
 
-	// Distribute release bundle
+	// Create distribute params.
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
+
+	// Create response params.
+	distributionStatusParams := services.DistributionStatusParams{
+		Name:    bundleName,
+		Version: bundleVersion,
+	}
+
+	// Test DryRun first.
+	err = distributeDryRun(distributeBundleParams)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+	// Assert release bundle not in distribution yet.
+	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
+	assert.NoError(t, err)
+	assert.Len(t, *response, 0)
+
+	// Distribute release bundle
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 	waitForDistribution(t, bundleName)
 
 	// Assert release bundle in "completed" status
-	distributionStatusParams := services.DistributionStatusParams{
-		Name:    bundleName,
-		Version: bundleVersion,
-	}
-	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
+	response, err = testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
 	assert.NoError(t, err)
 	assert.Equal(t, services.Completed, (*response)[0].Status)
 }

@@ -52,7 +52,7 @@ func (dr *DistributeReleaseBundleService) Distribute(distributeParams Distributi
 	}
 
 	trackerId, err := dr.execDistribute(distributeParams.Name, distributeParams.Version, distribution)
-	if err != nil || !dr.Sync {
+	if err != nil || !dr.Sync || dr.DryRun {
 		return err
 	}
 
@@ -66,6 +66,12 @@ func (dr *DistributeReleaseBundleService) execDistribute(name, version string, d
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
+	dryRunStr := ""
+	if distribution.DryRun {
+		dryRunStr = "[Dry run] "
+	}
+	log.Info(dryRunStr + "Distributing: " + name + "/" + version)
+
 	url := dr.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := dr.client.SendPost(url, content, &httpClientsDetails)
@@ -98,7 +104,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 	if dr.MaxWaitMinutes >= 1 {
 		maxWaitMinutes = dr.MaxWaitMinutes
 	}
-	distributingMessage := fmt.Sprintf("Distributing %s/%s...", distributeParams.Name, distributeParams.Version)
+	distributingMessage := fmt.Sprintf("Sync: Distributing %s/%s...", distributeParams.Name, distributeParams.Version)
 	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepInterval {
 		if timeElapsed%60 == 0 {
 			log.Info(distributingMessage)
@@ -116,6 +122,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 			return errorutils.CheckError(errors.New("Distribution failed: " + utils.IndentJson(bytes)))
 		}
 		if (*response)[0].Status == Completed {
+			log.Info("Distribution Completed!")
 			return nil
 		}
 		time.Sleep(time.Second * defaultSyncSleepInterval)
