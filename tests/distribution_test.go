@@ -19,12 +19,11 @@ import (
 )
 
 type distributableDistributionStatus string
-type receivedDistributionStatus string
 
 const (
 	// Release bundle created and open for changes:
 	open distributableDistributionStatus = "OPEN"
-	// Relese bundle is signed, but not stored:
+	// Release bundle is signed, but not stored:
 	signed distributableDistributionStatus = "SIGNED"
 	// Release bundle is signed and stored, but not scanned by Xray:
 	stored distributableDistributionStatus = "STORED"
@@ -107,31 +106,87 @@ func createUpdate(t *testing.T) {
 	bundleName := initLocalDistributionTest(t, "client-test-bundle-2")
 	defer deleteLocalBundle(t, bundleName, true)
 
-	// Create unsigned release bundle
+	// Create release bundle params
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.Description = "Release bundle description 1"
 	createBundleParams.ReleaseNotes = "Release notes 1"
 	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
-	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	assert.NoError(t, err)
-	distributionResponse := getLocalBundle(t, bundleName, true)
-	assert.Equal(t, open, distributionResponse.State)
-	assert.Equal(t, createBundleParams.Description, distributionResponse.Description)
-	assert.Equal(t, createBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
+
+	// Test DryRun first
+	err := createDryRun(createBundleParams)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+	// Verify was not created.
+	getLocalBundle(t, bundleName, false)
+
+	// Create unsigned release bundle
+	err = testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+	distributionResponse := assertCreatedLocalBundle(t, bundleName, createBundleParams)
 	spec := distributionResponse.BundleSpec
 
-	// Update release bundle
+	// Create update release bundle params
 	updateBundleParams := services.NewUpdateReleaseBundleParams(bundleName, bundleVersion)
 	updateBundleParams.Description = "Release bundle description 2"
 	updateBundleParams.ReleaseNotes = "Release notes 2"
 	updateBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "test/a.in"}}
+
+	// Test DryRun first
+	err = updateDryRun(updateBundleParams)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+	// Verify the release bundle was not updated.
+	assertCreatedLocalBundle(t, bundleName, createBundleParams)
+
 	err = testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
-	assert.NoError(t, err)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
 	distributionResponse = getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
 	assert.Equal(t, updateBundleParams.Description, distributionResponse.Description)
 	assert.Equal(t, updateBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
 	assert.NotEqual(t, spec, distributionResponse.BundleSpec)
+}
+
+func assertCreatedLocalBundle(t *testing.T, bundleName string, createBundleParams services.CreateReleaseBundleParams) *distributableResponse {
+	distributionResponse := getLocalBundle(t, bundleName, true)
+	assert.Equal(t, open, distributionResponse.State)
+	assert.Equal(t, createBundleParams.Description, distributionResponse.Description)
+	assert.Equal(t, createBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
+	return distributionResponse
+}
+
+func createDryRun(createBundleParams services.CreateReleaseBundleParams) error {
+	defer setServicesToDryRunFalse()
+	testsBundleCreateService.DryRun = true
+	return testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+}
+
+func updateDryRun(updateBundleParams services.UpdateReleaseBundleParams) error {
+	defer setServicesToDryRunFalse()
+	testsBundleUpdateService.DryRun = true
+	return testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
+}
+
+func distributeDryRun(distributionParams services.DistributionParams) error {
+	defer setServicesToDryRunFalse()
+	testsBundleDistributeService.DryRun = true
+	return testsBundleDistributeService.Distribute(distributionParams)
+}
+
+func setServicesToDryRunFalse() {
+	testsBundleCreateService.DryRun = false
+	testsBundleUpdateService.DryRun = false
+	testsBundleDistributeService.DryRun = false
 }
 
 func createWithProps(t *testing.T) {
@@ -172,9 +227,13 @@ func createWithProps(t *testing.T) {
 	// Check prop1Values and prop2Values
 	assert.Len(t, prop1Values, 1)
 	assert.Len(t, prop2Values, 2)
-	assert.Equal(t, "value1", prop1Values[0])
-	assert.Equal(t, "value2", prop2Values[0])
-	assert.Equal(t, "value3", prop2Values[1])
+	if len(prop1Values) == 1 {
+		assert.Equal(t, "value1", prop1Values[0])
+	}
+	if len(prop2Values) == 2 {
+		assert.Equal(t, "value2", prop2Values[0])
+		assert.Equal(t, "value3", prop2Values[1])
+	}
 }
 
 func createSignDistributeDelete(t *testing.T) {
@@ -196,19 +255,34 @@ func createSignDistributeDelete(t *testing.T) {
 	distributionResponse = getLocalBundle(t, bundleName, true)
 	assertReleaseBundleSigned(t, distributionResponse.State)
 
-	// Distribute release bundle
+	// Create distribute params.
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
+
+	// Create response params.
+	distributionStatusParams := services.DistributionStatusParams{
+		Name:    bundleName,
+		Version: bundleVersion,
+	}
+
+	// Test DryRun first.
+	err = distributeDryRun(distributeBundleParams)
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
+	// Assert release bundle not in distribution yet.
+	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
+	assert.NoError(t, err)
+	assert.Len(t, *response, 0)
+
+	// Distribute release bundle
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 	waitForDistribution(t, bundleName)
 
 	// Assert release bundle in "completed" status
-	distributionStatusParams := services.DistributionStatusParams{
-		Name:    bundleName,
-		Version: bundleVersion,
-	}
-	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
+	response, err = testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
 	assert.NoError(t, err)
 	assert.Equal(t, services.Completed, (*response)[0].Status)
 }
@@ -367,15 +441,6 @@ func assertReleaseBundleSigned(t *testing.T, status distributableDistributionSta
 	assert.Contains(t, []distributableDistributionStatus{signed, stored, readyForDistribution}, status)
 }
 
-type receivedResponse struct {
-	Id     string                     `json:"id,omitempty"`
-	Status receivedDistributionStatus `json:"status,omitempty"`
-}
-
-type receivedResponses struct {
-	receivedResponses []receivedResponse
-}
-
 // Wait for distribution of a release bundle
 func waitForDistribution(t *testing.T, bundleName string) {
 	distributionStatusParams := services.DistributionStatusParams{
@@ -440,7 +505,8 @@ type gpgKeyResponse struct {
 func getLocalBundle(t *testing.T, bundleName string, expectExist bool) *distributableResponse {
 	resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion, true, distHttpDetails)
 	assert.NoError(t, err)
-	if !expectExist && resp.StatusCode == http.StatusNotFound {
+	if !expectExist {
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 		return nil
 	}
 	if resp.StatusCode != http.StatusOK {
