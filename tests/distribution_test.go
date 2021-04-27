@@ -118,6 +118,8 @@ func createUpdate(t *testing.T) {
 		assert.NoError(t, err)
 		return
 	}
+	// Verify was not created.
+	getLocalBundle(t, bundleName, false)
 
 	// Create unsigned release bundle
 	err = testsBundleCreateService.CreateReleaseBundle(createBundleParams)
@@ -125,10 +127,7 @@ func createUpdate(t *testing.T) {
 		assert.NoError(t, err)
 		return
 	}
-	distributionResponse := getLocalBundle(t, bundleName, true)
-	assert.Equal(t, open, distributionResponse.State)
-	assert.Equal(t, createBundleParams.Description, distributionResponse.Description)
-	assert.Equal(t, createBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
+	distributionResponse := assertCreatedLocalBundle(t, bundleName, createBundleParams)
 	spec := distributionResponse.BundleSpec
 
 	// Create update release bundle params
@@ -143,6 +142,8 @@ func createUpdate(t *testing.T) {
 		assert.NoError(t, err)
 		return
 	}
+	// Verify the release bundle was not updated.
+	assertCreatedLocalBundle(t, bundleName, createBundleParams)
 
 	err = testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
 	if err != nil {
@@ -154,6 +155,14 @@ func createUpdate(t *testing.T) {
 	assert.Equal(t, updateBundleParams.Description, distributionResponse.Description)
 	assert.Equal(t, updateBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
 	assert.NotEqual(t, spec, distributionResponse.BundleSpec)
+}
+
+func assertCreatedLocalBundle(t *testing.T, bundleName string, createBundleParams services.CreateReleaseBundleParams) *distributableResponse {
+	distributionResponse := getLocalBundle(t, bundleName, true)
+	assert.Equal(t, open, distributionResponse.State)
+	assert.Equal(t, createBundleParams.Description, distributionResponse.Description)
+	assert.Equal(t, createBundleParams.ReleaseNotes, distributionResponse.ReleaseNotes.Content)
+	return distributionResponse
 }
 
 func createDryRun(createBundleParams services.CreateReleaseBundleParams) error {
@@ -474,7 +483,8 @@ type gpgKeyResponse struct {
 func getLocalBundle(t *testing.T, bundleName string, expectExist bool) *distributableResponse {
 	resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion, true, distHttpDetails)
 	assert.NoError(t, err)
-	if !expectExist && resp.StatusCode == http.StatusNotFound {
+	if !expectExist {
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 		return nil
 	}
 	if resp.StatusCode != http.StatusOK {
