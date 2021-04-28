@@ -79,7 +79,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	if bis.IsDryRun() {
 		log.Info("[Dry run] Logging Build info preview...")
 		log.Output(clientutils.IndentJson(content))
-		return nil, err
+		return summary, err
 	}
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
