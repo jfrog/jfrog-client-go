@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -53,7 +52,7 @@ func (dr *DistributeReleaseBundleService) Distribute(distributeParams Distributi
 	}
 
 	trackerId, err := dr.execDistribute(distributeParams.Name, distributeParams.Version, distribution)
-	if err != nil || !dr.Sync {
+	if err != nil || !dr.Sync || dr.DryRun {
 		return err
 	}
 
@@ -61,45 +60,51 @@ func (dr *DistributeReleaseBundleService) Distribute(distributeParams Distributi
 	return dr.waitForDistribution(&distributeParams, trackerId)
 }
 
-func (dr *DistributeReleaseBundleService) execDistribute(name, version string, distribution *DistributionBody) (int, error) {
+func (dr *DistributeReleaseBundleService) execDistribute(name, version string, distribution *DistributionBody) (json.Number, error) {
 	httpClientsDetails := dr.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(distribution)
 	if err != nil {
-		return 0, errorutils.CheckError(err)
+		return "", errorutils.CheckError(err)
 	}
+	dryRunStr := ""
+	if distribution.DryRun {
+		dryRunStr = "[Dry run] "
+	}
+	log.Info(dryRunStr + "Distributing: " + name + "/" + version)
+
 	url := dr.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := dr.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	if resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusOK {
-		return 0, errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return "", errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
 	response := distributionResponseBody{}
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return 0, err
+		return "", errorutils.CheckError(err)
 	}
 
 	log.Debug("Distribution response: ", resp.Status)
 	log.Debug(utils.IndentJson(body))
-	return response.TrackerId, errorutils.CheckError(err)
+	return response.TrackerId, nil
 }
 
-func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *DistributionParams, trackerId int) error {
+func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *DistributionParams, trackerId json.Number) error {
 	distributeBundleService := NewDistributionStatusService(dr.client)
 	distributeBundleService.DistDetails = dr.GetDistDetails()
 	distributionStatusParams := DistributionStatusParams{
 		Name:      distributeParams.Name,
 		Version:   distributeParams.Version,
-		TrackerId: strconv.Itoa(trackerId),
+		TrackerId: trackerId.String(),
 	}
 	maxWaitMinutes := defaultMaxWaitMinutes
 	if dr.MaxWaitMinutes >= 1 {
 		maxWaitMinutes = dr.MaxWaitMinutes
 	}
-	distributingMessage := fmt.Sprintf("Distributing %s/%s...", distributeParams.Name, distributeParams.Version)
+	distributingMessage := fmt.Sprintf("Sync: Distributing %s/%s...", distributeParams.Name, distributeParams.Version)
 	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepInterval {
 		if timeElapsed%60 == 0 {
 			log.Info(distributingMessage)
@@ -117,6 +122,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 			return errorutils.CheckError(errors.New("Distribution failed: " + utils.IndentJson(bytes)))
 		}
 		if (*response)[0].Status == Completed {
+			log.Info("Distribution Completed!")
 			return nil
 		}
 		time.Sleep(time.Second * defaultSyncSleepInterval)
@@ -136,7 +142,7 @@ type DistributionRulesBody struct {
 }
 
 type distributionResponseBody struct {
-	TrackerId int `json:"id"`
+	TrackerId json.Number `json:"id"`
 }
 
 type DistributionParams struct {
