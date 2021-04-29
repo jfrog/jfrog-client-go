@@ -91,7 +91,7 @@ type BuildPromotionBody struct {
 	Status              string              `json:"status,omitempty"`
 	IncludeDependencies bool                `json:"dependencies,omitempty"`
 	Copy                bool                `json:"copy,omitempty"`
-	FailFast            bool                `json:"failFast,omitempty"`
+	FailFast            bool                `json:"failFast"`
 	DryRun              bool                `json:"dryRun,omitempty"`
 	Properties          map[string][]string `json:"properties,omitempty"`
 }
