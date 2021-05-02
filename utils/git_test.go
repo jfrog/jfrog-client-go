@@ -55,7 +55,10 @@ func TestReadConfig(t *testing.T) {
 	testReadConfig(t)
 }
 
-// When adding information to the local/global git config
+// Open a git repo using 'go-git' package fails when:
+//	1. OS is Windows.
+//  2. using go-git v4.7.0.
+//  3. the .git/config file contain urls with backslashes.
 func TestReadConfigWithEditConfigFile(t *testing.T) {
 	dotGitPath := getDotGitPath(t)
 	gitExec := GitExecutor(dotGitPath)
