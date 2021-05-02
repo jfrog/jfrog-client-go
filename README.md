@@ -449,6 +449,7 @@ params.TargetRepo = "target-repo"
 params.Status = "status"
 params.Comment = "comment"
 params.Copy = true
+params.FailFast = true
 params.IncludeDependencies = false
 params.SourceRepo = "source-repo"
 // Optional Artifactory project key

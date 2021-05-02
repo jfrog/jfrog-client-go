@@ -82,4 +82,6 @@ func TestPermissionTargetEmptyFields(t *testing.T) {
 	assert.Nil(t, params.ReleaseBundle)
 	assert.NoError(t, testsPermissionTargetService.Create(params))
 	validatePermissionTarget(t, params)
+	err := testsPermissionTargetService.Delete(params.Name)
+	assert.NoError(t, err)
 }

@@ -43,6 +43,11 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 		return nil, err
 	}
 
+	// The specified build does not exist, so an empty reader is returned.
+	if len(aggregatedBuilds) == 0 {
+		return content.NewEmptyContentReader(content.DefaultKey), nil
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(2)
 
@@ -74,10 +79,10 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 		defer dependenciesReader.Close()
 	}
 	if artErr != nil {
-		return nil, err
+		return nil, artErr
 	}
 	if depErr != nil {
-		return nil, err
+		return nil, depErr
 	}
 
 	return filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, aggregatedBuilds)
@@ -473,11 +478,11 @@ func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content
 	return resultsFilter(readerRecord, sortedFile)
 }
 
-func ValidateTransitiveSearchAllowed(params *ArtifactoryCommonParams, artifactoryVersion *version.Version) error {
+func DisableTransitiveSearchIfNotAllowed(params *ArtifactoryCommonParams, artifactoryVersion *version.Version) {
 	transitiveSearchMinVersion := "7.17.0"
 	if params.Transitive && !artifactoryVersion.AtLeast(transitiveSearchMinVersion) {
-		return errorutils.CheckError(errors.New(fmt.Sprintf("transitive search is available on Artifactory version %s or higher. Installed Artifactory version: %s",
-			transitiveSearchMinVersion, artifactoryVersion.GetVersion())))
+		log.Info(fmt.Sprintf("Transitive search is available on Artifactory version %s or higher. Installed Artifactory version: %s. Transitive option is ignored.",
+			transitiveSearchMinVersion, artifactoryVersion.GetVersion()))
+		params.Transitive = false
 	}
-	return nil
 }

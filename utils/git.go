@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"io/ioutil"
@@ -284,24 +285,28 @@ func (m *manager) readMessage() {
 	if m.err != nil {
 		return
 	}
+	var err error
+	m.message, err = m.doReadMessage()
+	if err != nil {
+		log.Debug("Latest commit message was not extracted due to", err.Error())
+	}
+}
+
+func (m *manager) doReadMessage() (string, error) {
 	path := m.getPathHandleSubmodule()
 	gitRepo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: false})
 	if errorutils.CheckError(err) != nil {
-		m.err = err
-		return
+		return "", err
 	}
 	hash, err := gitRepo.ResolveRevision(plumbing.Revision(m.revision))
 	if errorutils.CheckError(err) != nil {
-		m.err = err
-		return
+		return "", err
 	}
 	message, err := gitRepo.CommitObject(*hash)
 	if errorutils.CheckError(err) != nil {
-		m.err = err
-		return
+		return "", err
 	}
-	m.message = strings.TrimSpace(message.Message)
-	return
+	return strings.TrimSpace(message.Message), nil
 }
 
 func (m *manager) getPathHandleSubmodule() (path string) {

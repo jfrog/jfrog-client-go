@@ -1,13 +1,12 @@
 package utils
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 // localPath - The path of the downloaded archive file.

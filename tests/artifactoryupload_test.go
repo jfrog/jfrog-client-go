@@ -1,15 +1,14 @@
 package tests
 
 import (
-	"os"
-	"path/filepath"
-	"testing"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
+	"os"
+	"path/filepath"
+	"testing"
 )
 
 func TestArtifactoryUpload(t *testing.T) {
@@ -291,10 +290,7 @@ func propsUpload(t *testing.T) {
 }
 
 func summaryUpload(t *testing.T) {
-	workingDir, _ := createWorkingDir(t)
-	defer os.RemoveAll(workingDir)
-
-	pattern := FixWinPath(filepath.Join(workingDir, "*"))
+	pattern := FixWinPath(filepath.Join("testdata", "a", "*"))
 	up := services.NewUploadParams()
 	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
@@ -315,9 +311,11 @@ func summaryUpload(t *testing.T) {
 	for item := new(utils.FileTransferDetails); summary.TransferDetailsReader.NextRecord(item) == nil; item = new(utils.FileTransferDetails) {
 		transfers = append(transfers, *item)
 	}
+	expectedSha256 := "4eb341b5d2762a853d79cc25e622aa8b978eb6e12c3259e2d99dc9dc60d82c5d"
 	assert.Len(t, transfers, 1)
-	assert.Equal(t, filepath.Join(workingDir, "out", "a.in"), transfers[0].SourcePath)
+	assert.Equal(t, filepath.Join("testdata", "a", "a.in"), transfers[0].SourcePath)
 	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+RtTargetRepo+"a.in", transfers[0].TargetPath)
+	assert.Equal(t, expectedSha256, transfers[0].Sha256)
 	var artifacts []utils.ArtifactDetails
 	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
 		artifacts = append(artifacts, *item)

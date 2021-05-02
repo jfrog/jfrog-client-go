@@ -33,7 +33,7 @@ func (sm *DistributionServicesManager) SetSigningKey(params services.SetSigningK
 }
 
 func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateReleaseBundleParams) error {
-	createBundleService := services.NewCreateReleseBundleService(sm.client)
+	createBundleService := services.NewCreateReleaseBundleService(sm.client)
 	createBundleService.DistDetails = sm.config.GetServiceDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()
 	return createBundleService.CreateReleaseBundle(params)

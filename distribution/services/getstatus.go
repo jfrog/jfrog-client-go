@@ -109,8 +109,8 @@ const (
 )
 
 type DistributionStatusResponse struct {
-	Id                int                      `json:"distribution_id"`
-	FriendlyId        int                      `json:"distribution_friendly_id,omitempty"`
+	Id                json.Number              `json:"distribution_id"`
+	FriendlyId        json.Number              `json:"distribution_friendly_id,omitempty"`
 	Type              DistributionType         `json:"type,omitempty"`
 	Name              string                   `json:"release_bundle_name,omitempty"`
 	Version           string                   `json:"release_bundle_version,omitempty"`
@@ -123,10 +123,10 @@ type DistributionSiteStatus struct {
 	Status            string            `json:"status,omitempty"`
 	Error             string            `json:"general_error,omitempty"`
 	TargetArtifactory TargetArtifactory `json:"target_artifactory,omitempty"`
-	TotalFiles        int               `json:"total_files,omitempty"`
-	TotalBytes        int               `json:"total_bytes,omitempty"`
-	DistributedBytes  int               `json:"distributed_bytes,omitempty"`
-	DistributedFiles  int               `json:"distributed_files,omitempty"`
+	TotalFiles        json.Number       `json:"total_files,omitempty"`
+	TotalBytes        json.Number       `json:"total_bytes,omitempty"`
+	DistributedBytes  json.Number       `json:"distributed_bytes,omitempty"`
+	DistributedFiles  json.Number       `json:"distributed_files,omitempty"`
 	FileErrors        []string          `json:"file_errors,omitempty"`
 	FilesInProgress   []string          `json:"files_in_progress,omitempty"`
 }
