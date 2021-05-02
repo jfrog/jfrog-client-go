@@ -8,8 +8,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 type gitManager struct {
@@ -50,6 +52,20 @@ func (m *gitManager) execGit(args ...string) (string, string, error) {
 }
 
 func TestReadConfig(t *testing.T) {
+	testReadConfig(t)
+}
+
+// When adding information to the local/global git config
+func TestReadConfigWithEditConfigFile(t *testing.T) {
+	dotGitPath := getDotGitPath(t)
+	gitExec := GitExecutor(dotGitPath)
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	gitExec.execGit("config", "--local", "--add", "http.https://github.com."+timestamp, dotGitPath)
+	defer gitExec.execGit("config", "--local", "--unset", "http.https://github.com."+timestamp)
+	testReadConfig(t)
+}
+
+func testReadConfig(t *testing.T) {
 	dotGitPath := getDotGitPath(t)
 	gitManager := NewGitManager(dotGitPath)
 	err := gitManager.ReadConfig()
