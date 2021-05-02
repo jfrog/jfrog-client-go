@@ -60,8 +60,8 @@ func TestReadConfigWithEditConfigFile(t *testing.T) {
 	dotGitPath := getDotGitPath(t)
 	gitExec := GitExecutor(dotGitPath)
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	gitExec.execGit("config", "--local", "--add", "http.https://github.com."+timestamp, dotGitPath)
-	defer gitExec.execGit("config", "--local", "--unset", "http.https://github.com."+timestamp)
+	gitExec.execGit("config", "--local", "--add", "http.https://github.com.sslCAInfo"+timestamp, dotGitPath)
+	defer gitExec.execGit("config", "--local", "--unset", "http.https://github.com.sslCAInfo"+timestamp)
 	testReadConfig(t)
 }
 
