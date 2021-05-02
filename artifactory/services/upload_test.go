@@ -33,12 +33,15 @@ func TestBuildUploadUrls(t *testing.T) {
 		buildProps                  string
 		expectedTargetPathWithProps string
 	}{
-		{"repo1/file1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file1;k1=v1;;k2=v2"},
-		{"repo1/file@1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file@1;k1=v1;;k2=v2"},
-		{"repo1/file;1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file%3B1;k1=v1;;k2=v2"},
-		{"repo1/file,1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file,1;k1=v1;;k2=v2"},
-		{"repo1/file^1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file%5E1;k1=v1;;k2=v2"},
-		{"repo1/file:1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file:1;k1=v1;;k2=v2"},
+		{"repo1/file1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file1;k1=v1;k2=v2"},
+		{"repo1/file@1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file@1;k1=v1;k2=v2"},
+		{"repo1/file;1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file%3B1;k1=v1;k2=v2"},
+		{"repo1/file,1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file,1;k1=v1;k2=v2"},
+		{"repo1/file^1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file%5E1;k1=v1;k2=v2"},
+		{"repo1/file:1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file:1;k1=v1;k2=v2"},
+		{"repo1/file1", "", "k2=v2", "http://localhost:8881/artifactory/repo1/file1;k2=v2"},
+		{"repo1/file1", "k1=v1", "", "http://localhost:8881/artifactory/repo1/file1;k1=v1"},
+		{"repo1/file1", "", "", "http://localhost:8881/artifactory/repo1/file1"},
 	}
 
 	for _, v := range testsParams {

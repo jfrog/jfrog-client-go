@@ -796,15 +796,32 @@ func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string
 }
 
 func addPropsToTargetPath(targetPath, buildProps, debConfig string, props *utils.Properties) (string, error) {
+	pathParts := []string{targetPath}
+
+	encodedTargetProps := props.ToEncodedString(false)
+	if len(encodedTargetProps) > 0 {
+		pathParts = append(pathParts, encodedTargetProps)
+	}
+
 	debianProps, err := utils.ParseProperties(getDebianProps(debConfig))
 	if err != nil {
 		return "", err
 	}
+	encodedDebProps := debianProps.ToEncodedString(false)
+	if len(encodedDebProps) > 0 {
+		pathParts = append(pathParts, encodedDebProps)
+	}
+
 	buildProperties, err := utils.ParseProperties(buildProps)
 	if err != nil {
 		return "", err
 	}
-	return strings.Join([]string{targetPath, props.ToEncodedString(false), debianProps.ToEncodedString(false), buildProperties.ToEncodedString(true)}, ";"), nil
+	encodedBuildProps := buildProperties.ToEncodedString(true)
+	if len(encodedBuildProps) > 0 {
+		pathParts = append(pathParts, encodedBuildProps)
+	}
+
+	return strings.Join(pathParts, ";"), nil
 }
 
 func getVcsProps(path string, vcsCache *clientutils.VcsCache) (string, error) {
