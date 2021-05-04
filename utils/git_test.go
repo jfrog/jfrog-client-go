@@ -59,7 +59,7 @@ func TestReadConfig(t *testing.T) {
 //	1. OS is Windows.
 //  2. using go-git v4.7.0.
 //  3. .git/config file contains path with backslashes.
-func TestReadConfigWithEditConfigFile(t *testing.T) {
+func TestReadConfigWithBackslashes(t *testing.T) {
 	dotGitPath := getDotGitPath(t)
 	gitExec := GitExecutor(dotGitPath)
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
