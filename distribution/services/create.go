@@ -10,6 +10,7 @@ import (
 	distributionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -26,10 +27,10 @@ func (cb *CreateReleaseBundleService) GetDistDetails() auth.ServiceDetails {
 	return cb.DistDetails
 }
 
-func (cb *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams CreateReleaseBundleParams) error {
+func (cb *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams CreateReleaseBundleParams) (*clientutils.Sha256Summary, error) {
 	releaseBundleBody, err := distributionServiceUtils.CreateBundleBody(createBundleParams.ReleaseBundleParams, cb.DryRun)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	body := &createReleaseBundleBody{
@@ -38,14 +39,19 @@ func (cb *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams Cre
 		ReleaseBundleBody: *releaseBundleBody,
 	}
 
-	return cb.execCreateReleaseBundle(createBundleParams.GpgPassphrase, body)
+	summary, err := cb.execCreateReleaseBundle(createBundleParams.GpgPassphrase, body)
+	if createBundleParams.SignImmediately {
+		return summary, err
+	}
+	return nil, err
 }
 
-func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase string, releaseBundle *createReleaseBundleBody) error {
+func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase string, releaseBundle *createReleaseBundleBody) (*clientutils.Sha256Summary, error) {
+	summary := clientutils.NewSha256Summary()
 	httpClientsDetails := cb.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return summary, errorutils.CheckError(err)
 	}
 	dryRunStr := ""
 	if releaseBundle.DryRun {
@@ -58,15 +64,17 @@ func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase stri
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := cb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
-		return err
+		return summary, err
 	}
 	if !(resp.StatusCode == http.StatusCreated || (resp.StatusCode == http.StatusOK && releaseBundle.DryRun)) {
-		return errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return summary, errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
+	summary.SetSucceeded(true)
+	summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
 
 	log.Debug("Distribution response: ", resp.Status)
 	log.Debug(utils.IndentJson(body))
-	return nil
+	return summary, nil
 }
 
 type createReleaseBundleBody struct {

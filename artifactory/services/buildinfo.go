@@ -46,23 +46,6 @@ func NewBuildInfoParams() BuildInfoParams {
 	return BuildInfoParams{}
 }
 
-type BuildPublishSummary struct {
-	sha256    string
-	succeeded bool
-}
-
-func NewBuildPublishSummary() *BuildPublishSummary {
-	return &BuildPublishSummary{}
-}
-
-func (bps *BuildPublishSummary) IsSucceeded() bool {
-	return bps.succeeded
-}
-
-func (bps *BuildPublishSummary) GetSha256() string {
-	return bps.sha256
-}
-
 // Returns the build info and its uri of the provided parameters.
 // If build info was not found (404), returns found=false (with error nil).
 // For any other response that isn't 200, an error is returned.
@@ -70,8 +53,8 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinf
 	return utils.GetBuildInfo(params.BuildName, params.BuildNumber, params.ProjectKey, bis)
 }
 
-func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*BuildPublishSummary, error) {
-	summary := NewBuildPublishSummary()
+func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error) {
+	summary := clientutils.NewSha256Summary()
 	content, err := json.Marshal(build)
 	if errorutils.CheckError(err) != nil {
 		return summary, err
@@ -91,8 +74,8 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		return summary, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
-	summary.succeeded = true
-	summary.sha256 = resp.Header.Get("X-Checksum-Sha256")
+	summary.SetSucceeded(true)
+	summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
 
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Build info successfully deployed. Browse it in Artifactory under " + bis.GetArtifactoryDetails().GetUrl() + "webapp/builds/" + build.Name + "/" + build.Number)

@@ -429,3 +429,30 @@ func GetPatternType(patternTypes PatternTypes) PatternType {
 	}
 	return WildCardPattern
 }
+
+type Sha256Summary struct {
+	sha256    string
+	succeeded bool
+}
+
+func NewSha256Summary() *Sha256Summary {
+	return &Sha256Summary{}
+}
+
+func (bps *Sha256Summary) IsSucceeded() bool {
+	return bps.succeeded
+}
+
+func (bps *Sha256Summary) SetSucceeded(succeeded bool) *Sha256Summary {
+	bps.succeeded = succeeded
+	return bps
+}
+
+func (bps *Sha256Summary) GetSha256() string {
+	return bps.sha256
+}
+
+func (bps *Sha256Summary) SetSha256(sha256 string) *Sha256Summary {
+	bps.sha256 = sha256
+	return bps
+}

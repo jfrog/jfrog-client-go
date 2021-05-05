@@ -114,12 +114,12 @@ func init() {
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
-	RtUrl = flag.String("rt.url", "", "Artifactory url")
-	DistUrl = flag.String("ds.url", "", "Distribution url")
+	RtUrl = flag.String("rt.url", "https://artifactory-dist-pipe2.jfrogdev.co/artifactory", "Artifactory url")
+	DistUrl = flag.String("ds.url", "https://artifactory-dist-pipe2.jfrogdev.co/distribution", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	RtUser = flag.String("rt.user", "", "Artifactory username")
-	RtPassword = flag.String("rt.password", "", "Artifactory password")
+	RtUser = flag.String("rt.user", "admin", "Artifactory username")
+	RtPassword = flag.String("rt.password", "password", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
@@ -796,4 +796,9 @@ type indexedBuildsPayload struct {
 	BinMgrId         string   `json:"bin_mgr_id,omitempty"`
 	IndexedBuilds    []string `json:"indexed_builds"`
 	NonIndexedBuilds []string `json:"non_indexed_builds,omitempty"`
+}
+
+// Verify sha256 is valid (a string size 256 characters) and not an empty string.
+func verifyValidSha256(t *testing.T, sha256 string) {
+	assert.Equal(t, 64, len(sha256), "Invalid sha256 : \""+sha256+"\"\nexpected length is 64 digit.")
 }
