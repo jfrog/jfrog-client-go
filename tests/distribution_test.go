@@ -129,7 +129,7 @@ func createUpdate(t *testing.T) {
 		assert.NoError(t, err)
 		return
 	}
-	assert.Equal(t, summary, nil)
+	assert.Nil(t, summary)
 	distributionResponse := assertCreatedLocalBundle(t, bundleName, createBundleParams)
 	spec := distributionResponse.BundleSpec
 
