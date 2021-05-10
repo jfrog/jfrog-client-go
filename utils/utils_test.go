@@ -196,27 +196,29 @@ func TestAntPathToRegExp(t *testing.T) {
 		filepath.Join("test", "aa", "b.zip"),
 		filepath.Join("test", "aa", "bc.zip"),
 	}
-	s := getFileSeparator()
 	tests := []struct {
 		name               string
 		antPattern         string
-		expectedRegExp     string
 		allFileSystemPaths []string
 		matchedPaths       []string
 	}{
-		{"check '?' in file's name", filepath.Join("dev", "a", "b?.txt"), addRegExpPrefixAndSuffix("dev" + s + "a" + s + "b.{1}\\.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt")}},
-		{"check '?' in directory's name", filepath.Join("dev", "a?", "b.txt"), addRegExpPrefixAndSuffix("dev" + s + "a.{1}" + s + "b\\.txt"), fileSystemPaths, []string{filepath.Join("dev", "aa", "b.txt")}},
-		{"check '*' in file's name", filepath.Join("dev", "a", "b*.txt"), addRegExpPrefixAndSuffix("dev" + s + "a" + s + "b([^" + s + "]*)\\.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "b.txt"), filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt")}},
-		{"check '*' in directory's name", filepath.Join("dev", "*", "b.txt"), addRegExpPrefixAndSuffix("dev" + s + "([^" + s + "]*)" + s + "b\\.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "b.txt"), filepath.Join("dev", "aa", "b.txt")}},
-		{"check '**' in directory path", filepath.Join("**", "b.txt"), addRegExpPrefixAndSuffix("(.*" + s + ")?b\\.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "b.txt"), filepath.Join("dev", "aa", "b.txt"), filepath.Join("test", "a", "b.txt"), filepath.Join("test", "aa", "b.txt"), filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt")}},
-		{"combine all signs", filepath.Join("**", "b?.*"), addRegExpPrefixAndSuffix("(.*" + s + ")?b.{1}\\.([^" + s + "]*)"), fileSystemPaths, []string{filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt"), filepath.Join("dev", "aa", "bb.txt"), filepath.Join("dev", "aa", "bc.txt"), filepath.Join("dev", "aa", "bc.zip"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt"), filepath.Join("test", "a", "bb.txt"), filepath.Join("test", "a", "bc.txt"), filepath.Join("test", "aa", "bb.txt"), filepath.Join("test", "aa", "bc.txt"), filepath.Join("test", "aa", "bc.zip")}},
+		{"check '?' in file's name", filepath.Join("dev", "a", "b?.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt")}},
+		{"check '?' in directory's name", filepath.Join("dev", "a?", "b.txt"), fileSystemPaths, []string{filepath.Join("dev", "aa", "b.txt")}},
+		{"check '*' in file's name", filepath.Join("dev", "a", "b*.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "b.txt"), filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt")}},
+		{"check '*' in directory's name", filepath.Join("dev", "*", "b.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "b.txt"), filepath.Join("dev", "aa", "b.txt")}},
+		{"check '*' in directory's name", filepath.Join("dev", "*", "a", "b.txt"), fileSystemPaths, nil},
+		{"check '**' in directory path", filepath.Join("**", "b.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "b.txt"), filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "aa", "b.txt"), filepath.Join("dev", "aa", "bb.txt"), filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("test", "a", "b.txt"), filepath.Join("test", "a", "bb.txt"), filepath.Join("test", "aa", "b.txt"), filepath.Join("test", "aa", "bb.txt")}},
+		{"check '**' in the beginning and the end of path", filepath.Join("**", "a2", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
+		{"check '**' in the beginning and the end of path", filepath.Join("**", "a2", "**", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
+		{"check '**' in the beginning and the end of path", filepath.Join("**", "b.zip", "**"), fileSystemPaths, []string{filepath.Join("dev", "aa", "b.zip"), filepath.Join("test", "aa", "b.zip")}},
+		{"combine '**' and '*'", filepath.Join("**", "a2", "*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
+		{"combine '**' and '*'", filepath.Join("**", "a2", "*", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
+		{"combine all signs", filepath.Join("**", "b?.*"), fileSystemPaths, []string{filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt"), filepath.Join("dev", "aa", "bb.txt"), filepath.Join("dev", "aa", "bc.txt"), filepath.Join("dev", "aa", "bc.zip"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt"), filepath.Join("test", "a", "bb.txt"), filepath.Join("test", "a", "bc.txt"), filepath.Join("test", "aa", "bb.txt"), filepath.Join("test", "aa", "bc.txt"), filepath.Join("test", "aa", "bc.zip")}},
+		{"'**' all files", filepath.Join("**"), fileSystemPaths, fileSystemPaths},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			regExpStr := antPatternToRegExp(cleanPath(test.antPattern))
-			if test.expectedRegExp != regExpStr {
-				t.Error("Unmatched! for ant pattern `" + test.antPattern + "\n` : Expected `" + test.expectedRegExp + "` Got `" + regExpStr + "`")
-			}
 			var matches []string
 			for _, checkedPath := range fileSystemPaths {
 				match, _ := regexp.MatchString(regExpStr, checkedPath)

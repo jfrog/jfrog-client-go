@@ -206,15 +206,23 @@ func WildcardPathToRegExp(localPath string) string {
 
 func antPatternToRegExp(localPath string) string {
 	localPath = replaceSpecialChars(localPath)
-	var wildcard = ".*"
 	separator := getFileSeparator()
-	var antAsteriskToRegExp = "([^" + separator + "]*)"
+	var wildcard = ".*"
+	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
+	var regAsterisk = "([^" + separator + "]*)"
+	// ant `**` ~ regexp `(.*)?` : `**` matches zero or more 'directories' in a path.
+	var doubleRegAsterisk = "(" + wildcard + ")?"
+
 	// `?` => `.{1}` : `?` matches one character.
 	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
-	// `*` => `([^/]*)` : `*` matches zero or more characters except from `/`.
-	localPath = strings.Replace(localPath, `*`, antAsteriskToRegExp, -1)
-	// `**/` => `(.*/)?` : `**` matches zero or more 'directories' in a path.
-	localPath = strings.Replace(localPath, antAsteriskToRegExp+antAsteriskToRegExp+separator, "(.*"+separator+")?", -1)
+	// `*` => `([^/]*)`
+	localPath = strings.Replace(localPath, `*`, regAsterisk, -1)
+	// `**` => `(.*)?`
+	localPath = strings.Replace(localPath, regAsterisk+regAsterisk, doubleRegAsterisk, -1)
+	// Remove slashes near `**`
+	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsterisk, -1)
+	localPath = strings.Replace(localPath, separator+doubleRegAsterisk, doubleRegAsterisk, -1)
+
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
 		localPath += wildcard
 	}
