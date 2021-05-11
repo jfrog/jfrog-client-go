@@ -34,15 +34,16 @@ func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams Upd
 	if err != nil {
 		return nil, err
 	}
-	summary, err := ur.execUpdateReleaseBundle(createBundleParams.Name, createBundleParams.Version, createBundleParams.GpgPassphrase, releaseBundleBody)
-	if createBundleParams.SignImmediately {
-		return summary, err
-	}
-	return nil, err
+	return ur.execUpdateReleaseBundle(createBundleParams.Name, createBundleParams.Version, createBundleParams.GpgPassphrase, releaseBundleBody)
 }
 
+// In case of an immediate sign- release bundle detailed summary (containing sha256) will be returned.
+// In other cases summary will be nil.
 func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpgPassphrase string, releaseBundle *distributionServiceUtils.ReleaseBundleBody) (*clientutils.Sha256Summary, error) {
-	summary := clientutils.NewSha256Summary()
+	var summary *clientutils.Sha256Summary = nil
+	if releaseBundle.SignImmediately {
+		summary = clientutils.NewSha256Summary()
+	}
 	httpClientsDetails := ur.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
@@ -65,8 +66,10 @@ func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpg
 	if resp.StatusCode != http.StatusOK {
 		return summary, errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
 	}
-	summary.SetSucceeded(true)
-	summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
+	if summary != nil {
+		summary.SetSucceeded(true)
+		summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
+	}
 
 	log.Debug("Distribution response: ", resp.Status)
 	log.Debug(utils.IndentJson(body))

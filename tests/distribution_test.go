@@ -260,6 +260,7 @@ func createSignDistributeDelete(t *testing.T) {
 	signBundleParams := services.NewSignBundleParams(bundleName, bundleVersion)
 	summary, err = testsBundleSignService.SignReleaseBundle(signBundleParams)
 	assert.NoError(t, err)
+	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 	distributionResponse = getLocalBundle(t, bundleName, true)
 	assertReleaseBundleSigned(t, distributionResponse.State)
@@ -313,6 +314,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	signBundleParams := services.NewSignBundleParams(bundleName, bundleVersion)
 	summary, err = testsBundleSignService.SignReleaseBundle(signBundleParams)
 	assert.NoError(t, err)
+	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 	distributionResponse = getLocalBundle(t, bundleName, true)
 	assertReleaseBundleSigned(t, distributionResponse.State)
@@ -344,6 +346,7 @@ func createDistributeMapping(t *testing.T) {
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
+	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 
 	// Distribute release bundle
@@ -374,6 +377,7 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
+	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 
 	// Distribute release bundle
