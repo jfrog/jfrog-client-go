@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type IntegrationsService struct {
@@ -136,7 +137,8 @@ func (is *IntegrationsService) CreateArtifactoryIntegration(integrationName, url
 			MasterIntegrationName: ArtifactoryName,
 			ProjectId:             defaultProjectId},
 		FormJSONValues: []jsonValues{
-			{urlLabel, url},
+			// Pipelines' "test connection" does not handle a trailing slash well: https://www.jfrog.com/jira/browse/PIPE-5876
+			{urlLabel, strings.TrimSuffix(url, "/")},
 			{userLabel, user},
 			{apikeyLabel, apikey},
 		},
