@@ -1009,12 +1009,12 @@ params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"
 params.TargetProps = "key1=val1;key2=val2,val3"
 
-// In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise summary is nil.
+// The Target property defines the target path in the edge node, and can include replaceable in the form of {1}, {2}, ...
+// Read more about it in the above "Creating a Release Bundle" section.
 pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
-// In case: params.SignImmediately == true
-// summary contain the release bundle details, otherwise summary is nil.
+// In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise summary is nil.
 summary, err := distManager.UpdateReleaseBundle(params)
 ```
 
