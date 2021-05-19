@@ -797,3 +797,8 @@ type indexedBuildsPayload struct {
 	IndexedBuilds    []string `json:"indexed_builds"`
 	NonIndexedBuilds []string `json:"non_indexed_builds,omitempty"`
 }
+
+// Verify sha256 is valid (a string size 256 characters) and not an empty string.
+func verifyValidSha256(t *testing.T, sha256 string) {
+	assert.Equal(t, 64, len(sha256), "Invalid sha256 : \""+sha256+"\"\nexpected length is 64 digit.")
+}

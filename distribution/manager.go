@@ -4,6 +4,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/distribution/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 )
 
 type DistributionServicesManager struct {
@@ -32,21 +33,21 @@ func (sm *DistributionServicesManager) SetSigningKey(params services.SetSigningK
 	return setSigningKeyService.SetSigningKey(params)
 }
 
-func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateReleaseBundleParams) error {
+func (sm *DistributionServicesManager) CreateReleaseBundle(params services.CreateReleaseBundleParams) (*clientutils.Sha256Summary, error) {
 	createBundleService := services.NewCreateReleaseBundleService(sm.client)
 	createBundleService.DistDetails = sm.config.GetServiceDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()
 	return createBundleService.CreateReleaseBundle(params)
 }
 
-func (sm *DistributionServicesManager) UpdateReleaseBundle(params services.UpdateReleaseBundleParams) error {
+func (sm *DistributionServicesManager) UpdateReleaseBundle(params services.UpdateReleaseBundleParams) (*clientutils.Sha256Summary, error) {
 	createBundleService := services.NewUpdateReleaseBundleService(sm.client)
 	createBundleService.DistDetails = sm.config.GetServiceDetails()
 	createBundleService.DryRun = sm.config.IsDryRun()
 	return createBundleService.UpdateReleaseBundle(params)
 }
 
-func (sm *DistributionServicesManager) SignReleaseBundle(params services.SignBundleParams) error {
+func (sm *DistributionServicesManager) SignReleaseBundle(params services.SignBundleParams) (*clientutils.Sha256Summary, error) {
 	signBundleService := services.NewSignBundleService(sm.client)
 	signBundleService.DistDetails = sm.config.GetServiceDetails()
 	return signBundleService.SignReleaseBundle(params)

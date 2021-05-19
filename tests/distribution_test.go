@@ -96,7 +96,9 @@ func createDelete(t *testing.T) {
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SignImmediately = true
 	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
-	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	assert.NotNil(t, summary)
+	verifyValidSha256(t, summary.GetSha256())
 	assert.NoError(t, err)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assertReleaseBundleSigned(t, distributionResponse.State)
@@ -122,11 +124,12 @@ func createUpdate(t *testing.T) {
 	getLocalBundle(t, bundleName, false)
 
 	// Create unsigned release bundle
-	err = testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	if err != nil {
 		assert.NoError(t, err)
 		return
 	}
+	assert.Nil(t, summary)
 	distributionResponse := assertCreatedLocalBundle(t, bundleName, createBundleParams)
 	spec := distributionResponse.BundleSpec
 
@@ -145,11 +148,12 @@ func createUpdate(t *testing.T) {
 	// Verify the release bundle was not updated.
 	assertCreatedLocalBundle(t, bundleName, createBundleParams)
 
-	err = testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
+	summary, err = testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
 	if err != nil {
 		assert.NoError(t, err)
 		return
 	}
+	assert.Nil(t, summary)
 	distributionResponse = getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
 	assert.Equal(t, updateBundleParams.Description, distributionResponse.Description)
@@ -168,13 +172,15 @@ func assertCreatedLocalBundle(t *testing.T, bundleName string, createBundleParam
 func createDryRun(createBundleParams services.CreateReleaseBundleParams) error {
 	defer setServicesToDryRunFalse()
 	testsBundleCreateService.DryRun = true
-	return testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	_, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	return err
 }
 
 func updateDryRun(updateBundleParams services.UpdateReleaseBundleParams) error {
 	defer setServicesToDryRunFalse()
 	testsBundleUpdateService.DryRun = true
-	return testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
+	_, err := testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
+	return err
 }
 
 func distributeDryRun(distributionParams services.DistributionParams) error {
@@ -201,7 +207,8 @@ func createWithProps(t *testing.T) {
 		Pattern:     RtTargetRepo + "b.in",
 		TargetProps: targetProps,
 	}}
-	err = testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	assert.Nil(t, summary)
 	assert.NoError(t, err)
 
 	// Check results
@@ -243,15 +250,18 @@ func createSignDistributeDelete(t *testing.T) {
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
-	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
+	assert.Nil(t, summary)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
 
 	// Sign release bundle
 	signBundleParams := services.NewSignBundleParams(bundleName, bundleVersion)
-	err = testsBundleSignService.SignReleaseBundle(signBundleParams)
+	summary, err = testsBundleSignService.SignReleaseBundle(signBundleParams)
 	assert.NoError(t, err)
+	assert.NotNil(t, summary)
+	verifyValidSha256(t, summary.GetSha256())
 	distributionResponse = getLocalBundle(t, bundleName, true)
 	assertReleaseBundleSigned(t, distributionResponse.State)
 
@@ -294,15 +304,18 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
-	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
+	assert.Nil(t, summary)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
 
 	// Sign release bundle
 	signBundleParams := services.NewSignBundleParams(bundleName, bundleVersion)
-	err = testsBundleSignService.SignReleaseBundle(signBundleParams)
+	summary, err = testsBundleSignService.SignReleaseBundle(signBundleParams)
 	assert.NoError(t, err)
+	assert.NotNil(t, summary)
+	verifyValidSha256(t, summary.GetSha256())
 	distributionResponse = getLocalBundle(t, bundleName, true)
 	assertReleaseBundleSigned(t, distributionResponse.State)
 
@@ -331,8 +344,10 @@ func createDistributeMapping(t *testing.T) {
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in", Target: RtTargetRepo + "b.out"}}
 	createBundleParams.SignImmediately = true
-	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
+	assert.NotNil(t, summary)
+	verifyValidSha256(t, summary.GetSha256())
 
 	// Distribute release bundle
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
@@ -360,8 +375,10 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "(" + RtTargetRepo + ")" + "(*).in", Target: "{1}{2}.out"}}
 	createBundleParams.SignImmediately = true
-	err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
+	assert.NotNil(t, summary)
+	verifyValidSha256(t, summary.GetSha256())
 
 	// Distribute release bundle
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
