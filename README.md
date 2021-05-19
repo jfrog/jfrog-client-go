@@ -996,7 +996,9 @@ params.TargetProps = "key1=val1;key2=val2,val3"
 pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
-err := distManager.CreateReleaseBundle(params)
+// In case: params.SignImmediately == true
+// summary contain the release bundle details, otherwise summary is nil.
+summary, err := distManager.CreateReleaseBundle(params)
 ```
 
 #### Updating a Release Bundle
@@ -1013,7 +1015,9 @@ params.TargetProps = "key1=val1;key2=val2,val3"
 pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
-err := distManager.CreateReleaseBundle(params)
+// In case: params.SignImmediately == true
+// summary contain the release bundle details, otherwise summary is nil.
+summary, err := distManager.UpdateReleaseBundle(params)
 ```
 
 #### Signing a Release Bundle
@@ -1021,7 +1025,7 @@ err := distManager.CreateReleaseBundle(params)
 params := services.NewSignBundleParams("bundle-name", "1")
 params.GpgPassphrase = "123456"
 
-err := distManager.SignReleaseBundle(params)
+summary, err := distManager.SignReleaseBundle(params)
 ```
 
 #### Async Distributing a Release Bundle
