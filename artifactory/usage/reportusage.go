@@ -8,7 +8,6 @@ import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	versionutil "github.com/jfrog/jfrog-client-go/utils/version"
@@ -46,12 +45,14 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
-	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
+	resp, _, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
-		return errors.New(ReportUsagePrefix + "Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+
+	err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted)
+	if err != nil {
+		return errorutils.CheckError(err)
 	}
 
 	log.Debug(ReportUsagePrefix+"Artifactory response:", resp.Status)
