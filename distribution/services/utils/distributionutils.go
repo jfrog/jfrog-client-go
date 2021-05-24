@@ -67,7 +67,7 @@ func CreateBundleBody(releaseBundleParams ReleaseBundleParams, dryRun bool) (*Re
 		},
 	}
 
-	// Add relese notes if needed
+	// Add release notes if needed
 	if releaseBundleParams.ReleaseNotes != "" {
 		releaseBundleBody.ReleaseNotes = &ReleaseNotes{
 			Syntax:  releaseBundleParams.ReleaseNotesSyntax,

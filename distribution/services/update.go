@@ -7,9 +7,10 @@ import (
 
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	distrbutionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
+	distributionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -28,42 +29,60 @@ func (ur *UpdateReleaseBundleService) GetDistDetails() auth.ServiceDetails {
 	return ur.DistDetails
 }
 
-func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams UpdateReleaseBundleParams) error {
-	releaseBundleBody, err := distrbutionServiceUtils.CreateBundleBody(createBundleParams.ReleaseBundleParams, ur.DryRun)
+func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams UpdateReleaseBundleParams) (*clientutils.Sha256Summary, error) {
+	releaseBundleBody, err := distributionServiceUtils.CreateBundleBody(createBundleParams.ReleaseBundleParams, ur.DryRun)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return ur.execUpdateReleaseBundle(createBundleParams.Name, createBundleParams.Version, createBundleParams.GpgPassphrase, releaseBundleBody)
 }
 
-func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpgPassphrase string, releaseBundle *distrbutionServiceUtils.ReleaseBundleBody) error {
+// In case of an immediate sign- release bundle detailed summary (containing sha256) will be returned.
+// In other cases summary will be nil.
+func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpgPassphrase string, releaseBundle *distributionServiceUtils.ReleaseBundleBody) (*clientutils.Sha256Summary, error) {
+	var summary *clientutils.Sha256Summary = nil
+	if releaseBundle.SignImmediately {
+		summary = clientutils.NewSha256Summary()
+	}
 	httpClientsDetails := ur.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return summary, errorutils.CheckError(err)
 	}
+
+	dryRunStr := ""
+	if releaseBundle.DryRun {
+		dryRunStr = "[Dry run] "
+	}
+	log.Info(dryRunStr + "Updating: " + name + "/" + version)
+
 	url := ur.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version
-	distrbutionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
+	distributionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := ur.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
-		return err
+		return summary, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return summary, errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	}
+	if summary != nil {
+		summary.SetSucceeded(true)
+		summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
 	}
 
 	log.Debug("Distribution response: ", resp.Status)
-	return errorutils.CheckError(err)
+	log.Debug(utils.IndentJson(body))
+	return summary, nil
 }
 
 type UpdateReleaseBundleParams struct {
-	distrbutionServiceUtils.ReleaseBundleParams
+	distributionServiceUtils.ReleaseBundleParams
 }
 
 func NewUpdateReleaseBundleParams(name, version string) UpdateReleaseBundleParams {
 	return UpdateReleaseBundleParams{
-		distrbutionServiceUtils.ReleaseBundleParams{
+		distributionServiceUtils.ReleaseBundleParams{
 			Name:    name,
 			Version: version,
 		},

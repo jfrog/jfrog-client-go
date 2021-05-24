@@ -196,7 +196,11 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 		errorsQueue.AddError(err)
 		return tasksCount
 	}
-
+	defer func() {
+		if err := sortedReader.Close(); err != nil {
+			log.Warn("Could not close sortedReader. Error: " + err.Error())
+		}
+	}()
 	for resultItem := new(utils.ResultItem); sortedReader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		tempData := DownloadData{
 			Dependency:   *resultItem,

@@ -201,7 +201,7 @@ func createDistributionManager() {
 		AppendPreRequestInterceptor(distDetails.RunPreRequestFunctions).
 		Build()
 	failOnHttpClientCreation(err)
-	testsBundleCreateService = distributionServices.NewCreateReleseBundleService(client)
+	testsBundleCreateService = distributionServices.NewCreateReleaseBundleService(client)
 	testsBundleUpdateService = distributionServices.NewUpdateReleaseBundleService(client)
 	testsBundleSignService = distributionServices.NewSignBundleService(client)
 	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleService(client)
@@ -692,7 +692,8 @@ func createDummyBuild(buildName string) error {
 			},
 		}},
 	}
-	return testBuildInfoService.PublishBuildInfo(dataArtifactoryBuild, "")
+	_, err := testBuildInfoService.PublishBuildInfo(dataArtifactoryBuild, "")
+	return err
 }
 
 func deleteBuild(buildName string) error {
@@ -795,4 +796,9 @@ type indexedBuildsPayload struct {
 	BinMgrId         string   `json:"bin_mgr_id,omitempty"`
 	IndexedBuilds    []string `json:"indexed_builds"`
 	NonIndexedBuilds []string `json:"non_indexed_builds,omitempty"`
+}
+
+// Verify sha256 is valid (a string size 256 characters) and not an empty string.
+func verifyValidSha256(t *testing.T, sha256 string) {
+	assert.Equal(t, 64, len(sha256), "Invalid sha256 : \""+sha256+"\"\nexpected length is 64 digit.")
 }

@@ -8,8 +8,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 type gitManager struct {
@@ -50,6 +52,23 @@ func (m *gitManager) execGit(args ...string) (string, string, error) {
 }
 
 func TestReadConfig(t *testing.T) {
+	testReadConfig(t)
+}
+
+// Open a git repo using 'go-git' package fails when:
+//	1. OS is Windows.
+//  2. using go-git v4.7.0.
+//  3. .git/config file contains path with backslashes.
+func TestReadConfigWithBackslashes(t *testing.T) {
+	dotGitPath := getDotGitPath(t)
+	gitExec := GitExecutor(dotGitPath)
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	gitExec.execGit("config", "--local", "--add", "http.https://github.com.sslCAInfo"+timestamp, dotGitPath)
+	defer gitExec.execGit("config", "--local", "--unset", "http.https://github.com.sslCAInfo"+timestamp)
+	testReadConfig(t)
+}
+
+func testReadConfig(t *testing.T) {
 	dotGitPath := getDotGitPath(t)
 	gitManager := NewGitManager(dotGitPath)
 	err := gitManager.ReadConfig()

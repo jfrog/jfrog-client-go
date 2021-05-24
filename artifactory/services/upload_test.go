@@ -1,6 +1,10 @@
 package services
 
-import "testing"
+import (
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestDebianProperties(t *testing.T) {
 	var debianPaths = []struct {
@@ -19,5 +23,32 @@ func TestDebianProperties(t *testing.T) {
 		if result != v.expected {
 			t.Errorf("getDebianProps(\"%s\") => '%s', want '%s'", v.in, result, v.expected)
 		}
+	}
+}
+
+func TestBuildUploadUrls(t *testing.T) {
+	var testsParams = []struct {
+		targetPath                  string
+		targetProps                 string
+		buildProps                  string
+		expectedTargetPathWithProps string
+	}{
+		{"repo1/file1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file1;k1=v1;k2=v2"},
+		{"repo1/file@1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file@1;k1=v1;k2=v2"},
+		{"repo1/file;1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file%3B1;k1=v1;k2=v2"},
+		{"repo1/file,1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file,1;k1=v1;k2=v2"},
+		{"repo1/file^1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file%5E1;k1=v1;k2=v2"},
+		{"repo1/file:1", "k1=v1", "k2=v2", "http://localhost:8881/artifactory/repo1/file:1;k1=v1;k2=v2"},
+		{"repo1/file1", "", "k2=v2", "http://localhost:8881/artifactory/repo1/file1;k2=v2"},
+		{"repo1/file1", "k1=v1", "", "http://localhost:8881/artifactory/repo1/file1;k1=v1"},
+		{"repo1/file1", "", "", "http://localhost:8881/artifactory/repo1/file1"},
+	}
+
+	for _, v := range testsParams {
+		targetProps, e := utils.ParseProperties(v.targetProps)
+		assert.NoError(t, e)
+		_, actualTargetPathWithProps, e := buildUploadUrls("http://localhost:8881/artifactory/", v.targetPath, v.buildProps, "", targetProps)
+		assert.NoError(t, e)
+		assert.Equal(t, v.expectedTargetPathWithProps, actualTargetPathWithProps)
 	}
 }
