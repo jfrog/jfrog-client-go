@@ -206,7 +206,7 @@ func WildcardPathToRegExp(localPath string) string {
 
 func antPatternToRegExp(localPath string) string {
 	localPath = replaceSpecialChars(localPath)
-	separator := getFileSeparator()
+	separator := GetFileSeparator()
 	var wildcard = ".*"
 	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
 	var regAsterisk = "([^" + separator + "]*)"
@@ -229,7 +229,7 @@ func antPatternToRegExp(localPath string) string {
 	return "^" + localPath + "$"
 }
 
-func getFileSeparator() string {
+func GetFileSeparator() string {
 	if IsWindows() {
 		return "\\\\"
 	}
