@@ -24,12 +24,16 @@ func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	itemTypeQuery := buildItemTypeQueryPart(params)
 	nePath := buildNePathPart(triplesSize == 0 || includeRoot)
 	excludeQuery := buildExcludeQueryPart(params, triplesSize == 0 || params.Recursive, params.Recursive)
+	buildQueryPart, err := buildBuildInfoQuery(params)
+	if err != nil {
+		return "", err
+	}
 	releaseBundle, err := buildReleaseBundleQuery(params)
 	if err != nil {
 		return "", err
 	}
 
-	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+releaseBundle)
+	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+buildQueryPart+releaseBundle)
 
 	// Get archive search parameters
 	archivePathFilePairs := createArchiveSearchParams(params)
@@ -260,6 +264,19 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) s
 		excludeQuery += fmt.Sprintf(`"$or":[{%s"path":{"$nmatch":"%s"},"name":{"$nmatch":"%s"}}],`, excludeRepoStr, excludePath, excludeTriple.file)
 	}
 	return excludeQuery
+}
+
+func buildBuildInfoQuery(params *CommonParams) (string, error) {
+	buildName, buildVersion, err := parseNameAndVersion(params.Build, false)
+	if buildName == "" || err != nil {
+		return "", err
+	}
+	itemsPart := `"$and":` +
+		`[{` +
+		`"artifact.module.build.name":%s,` +
+		`"artifact.module.build.number":%s` +
+		`}],`
+	return fmt.Sprintf(itemsPart, getAqlValue(buildName), getAqlValue(buildVersion)), nil
 }
 
 func buildReleaseBundleQuery(params *CommonParams) (string, error) {
