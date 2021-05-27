@@ -117,6 +117,7 @@ type BuildInfo struct {
 	Issues                   *Issues  `json:"issues,omitempty"`
 	ArtifactoryPluginVersion string   `json:"artifactoryPluginVersion,omitempty"`
 	VcsList                  []Vcs    `json:"vcs,omitempty"`
+	Statuses                 []Status `json:"statuses,omitempty"`
 }
 
 // Represents the object returned from Artifactory when getting a build info.
@@ -186,6 +187,15 @@ type Vcs struct {
 	Revision string `json:"revision,omitempty"`
 	Branch   string `json:"branch,omitempty"`
 	Message  string `json:"message,omitempty"`
+}
+
+type Status struct {
+	Status        string    `json:"status,omitempty"`
+	Comment       string    `json:"comment,omitempty"`
+	Timestamp     time.Time `json:"timestamp,omitempty"`
+	User          string    `json:"user,omitempty"`
+	CiUser        string    `json:"ciUser,omitempty"`
+	TimestampDate int64     `json:"timestampDate,omitempty"`
 }
 
 type Partials []*Partial
