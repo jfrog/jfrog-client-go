@@ -190,12 +190,12 @@ type Vcs struct {
 }
 
 type Status struct {
-	Status        string    `json:"status,omitempty"`
-	Comment       string    `json:"comment,omitempty"`
-	Timestamp     time.Time `json:"timestamp,omitempty"`
-	User          string    `json:"user,omitempty"`
-	CiUser        string    `json:"ciUser,omitempty"`
-	TimestampDate int64     `json:"timestampDate,omitempty"`
+	Status        string `json:"status,omitempty"`
+	Comment       string `json:"comment,omitempty"`
+	Timestamp     string `json:"timestamp,omitempty"`
+	User          string `json:"user,omitempty"`
+	CiUser        string `json:"ciUser,omitempty"`
+	TimestampDate int64  `json:"timestampDate,omitempty"`
 }
 
 type Partials []*Partial
