@@ -108,3 +108,17 @@ func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
 	binMgrService.XrayDetails = sm.config.GetServiceDetails()
 	return binMgrService.AddBuildsToIndexing(buildNames)
 }
+
+// ScanGraph will send xray the given graph for scan
+func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (string, error) {
+	scanService := services.NewScanService(sm.client)
+	scanService.XrayDetails = sm.config.GetServiceDetails()
+	return scanService.ScanGraph(params)
+}
+
+// GetScanGraphResults returns an xray scan output of the requested graph scan
+func (sm *XrayServicesManager) GetScanGraphResults(scanID string) (*services.ScanResponse, error) {
+	scanService := services.NewScanService(sm.client)
+	scanService.XrayDetails = sm.config.GetServiceDetails()
+	return scanService.GetScanGraphResults(scanID)
+}
