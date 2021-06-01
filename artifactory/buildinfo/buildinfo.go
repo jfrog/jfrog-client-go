@@ -189,7 +189,7 @@ type Vcs struct {
 	Message  string `json:"message,omitempty"`
 }
 
-type Status struct {
+type PromotionStatus struct {
 	Status        string `json:"status,omitempty"`
 	Comment       string `json:"comment,omitempty"`
 	Timestamp     string `json:"timestamp,omitempty"`
