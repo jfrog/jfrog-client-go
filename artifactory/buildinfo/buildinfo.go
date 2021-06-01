@@ -117,7 +117,7 @@ type BuildInfo struct {
 	Issues                   *Issues  `json:"issues,omitempty"`
 	ArtifactoryPluginVersion string   `json:"artifactoryPluginVersion,omitempty"`
 	VcsList                  []Vcs    `json:"vcs,omitempty"`
-	Statuses                 []Status `json:"statuses,omitempty"`
+	Statuses                 []PromotionStatus `json:"statuses,omitempty"`
 }
 
 // Represents the object returned from Artifactory when getting a build info.
