@@ -49,6 +49,18 @@ type ArtifactDetails struct {
 	Checksums       Checksums `json:"checksums,omitempty"`
 }
 
+// Represent deployed artifact's details returned from build-info project for maven and gradle.
+type DeployableArtifactDetails struct {
+	SourcePath      string `json:"sourcePath,omitempty"`
+	ArtifactDest    string `json:"artifactDest,omitempty"`
+	Sha256          string `json:"sha256,omitempty"`
+	DeploySucceeded bool   `json:"deploySucceeded,omitempty"`
+}
+
+func (detailes *DeployableArtifactDetails) CreateFileTransferDetails() FileTransferDetails {
+	return FileTransferDetails{SourcePath: detailes.SourcePath, TargetPath: detailes.ArtifactDest, Sha256: detailes.Sha256}
+}
+
 func (cs *OperationSummary) Close() {
 	cs.TransferDetailsReader.Close()
 	cs.ArtifactsDetailsReader.Close()
