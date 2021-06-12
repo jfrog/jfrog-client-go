@@ -168,12 +168,12 @@ func (rrs *RemoteRepositoryService) Generic(params GenericRemoteRepositoryParams
 }
 
 type ContentSynchronisation struct {
-	Enabled    bool `json:"enables,omitempty"`
+	Enabled    bool `json:"enabled,omitempty"`
 	Statistics struct {
-		Enabled bool `json:"enables,omitempty"`
+		Enabled bool `json:"enabled,omitempty"`
 	} `json:"statistics,omitempty"`
 	Properties struct {
-		Enabled bool `json:"enables,omitempty"`
+		Enabled bool `json:"enabled,omitempty"`
 	} `json:"properties,omitempty"`
 	Source struct {
 		OriginAbsenceDetection bool `json:"originAbsenceDetection,omitempty"`
