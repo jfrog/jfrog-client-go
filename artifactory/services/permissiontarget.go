@@ -49,6 +49,10 @@ func (pts *PermissionTargetService) Get(permissionTargetName string) (*Permissio
 	if err != nil {
 		return nil, err
 	}
+	// The case the requested permission target is not found
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
