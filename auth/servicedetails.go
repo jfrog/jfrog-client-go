@@ -181,6 +181,7 @@ func (ccf *CommonConfigFields) SetSshPassphrase(sshPassphrase string) {
 func (ccf *CommonConfigFields) SetSshAuthHeaders(sshAuthHeaders map[string]string) {
 	ccf.SshAuthHeaders = sshAuthHeaders
 }
+
 func (ccf *CommonConfigFields) SetHttpClient(httpClient *http.Client) {
 	ccf.HttpClient = httpClient
 }
