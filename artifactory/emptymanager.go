@@ -50,7 +50,7 @@ type ArtifactoryServicesManager interface {
 	UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
 	Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
-	PublishGoProject(params _go.GoParams) error
+	PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error)
 	Ping() ([]byte, error)
 	GetConfig() config.Config
 	GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error)
@@ -227,7 +227,7 @@ func (esm *EmptyArtifactoryServicesManager) Move(params ...services.MoveCopyPara
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) PublishGoProject(params _go.GoParams) error {
+func (esm *EmptyArtifactoryServicesManager) PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error) {
 	panic("Failed: Method is not implemented")
 }
 

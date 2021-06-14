@@ -8,7 +8,9 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/version"
@@ -34,29 +36,58 @@ func (pwa *publishZipAndModApi) isCompatible(artifactoryVersion string) bool {
 	return version.AtLeast(propertiesApi)
 }
 
-func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) error {
+func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	pwa.clientDetails = ArtDetails.CreateHttpClientDetails()
 	pwa.client = client
 	moduleId := strings.Split(params.GetModuleId(), ":")
+	successed, failed := 0, 0
+	filesDetails := []clientutils.FileTransferDetails{}
 	// Upload zip file
-	err = pwa.upload(params.GetZipPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".zip", url)
+	details, err := pwa.upload(params.GetZipPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".zip", url)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	if details != nil {
+		successed++
+		filesDetails = append(filesDetails, *details)
+	} else {
+		failed++
 	}
 	// Upload mod file
-	err = pwa.upload(params.GetModPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".mod", url)
+	details, err = pwa.upload(params.GetModPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".mod", url)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	if details != nil {
+		successed++
+		filesDetails = append(filesDetails, *details)
+	} else {
+		failed++
 	}
 	if version.NewVersion(pwa.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != "" {
 		// Upload info file. This supported from Artifactory version 6.10.0 and above
-		return pwa.upload(params.GetInfoPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".info", url)
+		details, err = pwa.upload(params.GetInfoPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".info", url)
+		if err != nil {
+			return nil, err
+		}
+		if details != nil {
+			successed++
+			filesDetails = append(filesDetails, *details)
+		} else {
+			failed++
+		}
 	}
-	return nil
+
+	tempFile, err := fileutils.CreateTempFile()
+	if err != nil {
+		return nil, err
+	}
+	err = clientutils.SaveResultInFile(tempFile.Name(), &filesDetails)
+	return &utils.OperationSummary{TotalSucceeded: successed, TotalFailed: failed, TransferDetailsReader: content.NewContentReader(tempFile.Name(), "files")}, nil
 }
 
 func addGoVersion(version string, urlPath *string) {
@@ -69,20 +100,20 @@ func addGoVersion(version string, urlPath *string) {
 // props - The properties to be assigned for each artifact
 // ext - The extension of the file: zip, mod, info. This extension will be joined with the version for the path. For example v1.2.3.info or v1.2.3.zip
 // urlPath - The url including the repository. For example: http://127.0.0.1/artifactory/api/go/go-local
-func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext, urlPath string) error {
+func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext, urlPath string) (*clientutils.FileTransferDetails, error) {
 	err := CreateUrlPath(moduleId, version, props, ext, &urlPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	addGoVersion(version, &urlPath)
 	details, err := fileutils.GetFileDetails(localPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	utils.AddChecksumHeaders(pwa.clientDetails.Headers, details)
-	resp, _, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil)
+	resp, _, uploadDetails, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusCreated)
+	return uploadDetails, errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }

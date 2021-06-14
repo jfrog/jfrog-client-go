@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"strings"
@@ -34,15 +35,6 @@ type OperationSummary struct {
 	TotalFailed            int
 }
 
-// Represents a file transfer from SourcePath to TargetPath.
-// Each of the paths can be on the local machine (full or relative) or in Artifactory (full URL).
-// File's Sha256 calculated by Artifactory during upload. we read sha256 from the HTTP's response body.
-type FileTransferDetails struct {
-	SourcePath string `json:"sourcePath,omitempty"`
-	TargetPath string `json:"targetPath,omitempty"`
-	Sha256     string `json:"sha256,omitempty"`
-}
-
 type ArtifactDetails struct {
 	// Path of the artifact in Artifactory
 	ArtifactoryPath string    `json:"artifactoryPath,omitempty"`
@@ -57,8 +49,8 @@ type DeployableArtifactDetails struct {
 	DeploySucceeded bool   `json:"deploySucceeded,omitempty"`
 }
 
-func (detailes *DeployableArtifactDetails) CreateFileTransferDetails() FileTransferDetails {
-	return FileTransferDetails{SourcePath: detailes.SourcePath, TargetPath: detailes.ArtifactDest, Sha256: detailes.Sha256}
+func (detailes *DeployableArtifactDetails) CreateFileTransferDetails() clientutils.FileTransferDetails {
+	return clientutils.FileTransferDetails{SourcePath: detailes.SourcePath, TargetPath: detailes.ArtifactDest, Sha256: detailes.Sha256}
 }
 
 func (cs *OperationSummary) Close() {

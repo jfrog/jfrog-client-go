@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -463,4 +464,41 @@ func (bps *Sha256Summary) GetSha256() string {
 func (bps *Sha256Summary) SetSha256(sha256 string) *Sha256Summary {
 	bps.sha256 = sha256
 	return bps
+}
+
+// Represents a file transfer from SourcePath to TargetPath.
+// Each of the paths can be on the local machine (full or relative) or in Artifactory (full URL).
+// File's Sha256 calculated by Artifactory during upload. we read sha256 from the HTTP's response body.
+type FileTransferDetails struct {
+	SourcePath string `json:"sourcePath,omitempty"`
+	TargetPath string `json:"targetPath,omitempty"`
+	Sha256     string `json:"sha256,omitempty"`
+}
+
+type Checksums struct {
+	Sha256 string `json:"sha256,omitempty"`
+	Sha1   string `json:"sha1,omitempty"`
+	Md5    string `json:"md5,omitempty"`
+}
+
+type UploadResponseBody struct {
+	Checksums ChecksumDetails `json:"checksums,omitempty"`
+}
+type ChecksumDetails struct {
+	Md5    string
+	Sha1   string
+	Sha256 string
+}
+
+func SaveResultInFile(filePath string, result *[]FileTransferDetails) error {
+	// Pahrs and save finall result back in the file.
+	finallResult := struct {
+		Files *[]FileTransferDetails `json:"files"`
+	}{}
+	finallResult.Files = result
+	files, err := json.Marshal(finallResult)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	return errorutils.CheckError(ioutil.WriteFile(filePath, files, 0700))
 }

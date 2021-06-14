@@ -45,7 +45,8 @@ func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.Se
 	AddChecksumHeaders(requestClientDetails.Headers, details)
 	AddAuthHeaders(requestClientDetails.Headers, *artifactoryDetails)
 
-	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, retries, progress)
+	resp, body, _, err := client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, retries, progress)
+	return resp, body, err
 }
 
 func UploadFileFromReader(reader io.Reader, url string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,

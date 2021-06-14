@@ -400,7 +400,7 @@ func (us *UploadService) uploadFile(localPath, targetPathWithProps string, fileI
 	// In case of uploading archive with "--explode" the response body will be empty and sha256 won't be shown at
 	// the detailed summary.
 	if len(body) > 0 {
-		responseBody := new(UploadResponseBody)
+		responseBody := new(clientutils.UploadResponseBody)
 		err = json.Unmarshal(body, &responseBody)
 		if errorutils.CheckError(err) != nil {
 			return nil, false, err
@@ -409,10 +409,6 @@ func (us *UploadService) uploadFile(localPath, targetPathWithProps string, fileI
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
 	return details, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
-}
-
-type UploadResponseBody struct {
-	Checksums fileutils.ChecksumDetails `json:"checksums,omitempty"`
 }
 
 // Reads a file from a Reader that is given from a function (getReaderFunc) and uploads it to the specified target path.
@@ -896,7 +892,7 @@ func newResultManager() (*resultsManager, error) {
 
 // Write a result of a successful upload
 func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha256 string, checksums *fileutils.ChecksumDetails) {
-	fileTransferDetails := utils.FileTransferDetails{
+	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
 		Sha256:     sha256,
@@ -922,7 +918,7 @@ func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 			return e
 		}
 	}
-	fileTransferDetails := utils.FileTransferDetails{
+	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
 	}

@@ -31,19 +31,19 @@ func (pwmp *publishWithMatrixParams) isCompatible(artifactoryVersion string) boo
 	return true
 }
 
-func (pwmp *publishWithMatrixParams) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) error {
+func (pwmp *publishWithMatrixParams) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 	addHeaders(params, &clientDetails)
 
 	err = CreateUrlPath(params.GetModuleId(), params.GetVersion(), params.GetProps(), ".zip", &url)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	resp, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, GoUploadRetries, nil)
+	resp, _, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, GoUploadRetries, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusCreated)
+	return nil, errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }
