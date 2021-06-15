@@ -1,6 +1,7 @@
 package _go
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -44,50 +45,46 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *jfroghtt
 	pwa.clientDetails = ArtDetails.CreateHttpClientDetails()
 	pwa.client = client
 	moduleId := strings.Split(params.GetModuleId(), ":")
-	successed, failed := 0, 0
-	filesDetails := []clientutils.FileTransferDetails{}
+	totalSucceed, totalFailed := 0, 0
+	var filesDetails []clientutils.FileTransferDetails
 	// Upload zip file
-	details, err := pwa.upload(params.GetZipPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".zip", url)
+	success, failed, err := uploadArchive(params, moduleId[0], ".zip", url, &filesDetails, pwa)
 	if err != nil {
 		return nil, err
 	}
-	if details != nil {
-		successed++
-		filesDetails = append(filesDetails, *details)
-	} else {
-		failed++
-	}
+	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	// Upload mod file
-	details, err = pwa.upload(params.GetModPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".mod", url)
+	success, failed, err = uploadArchive(params, moduleId[0], ".mod", url, &filesDetails, pwa)
 	if err != nil {
 		return nil, err
 	}
-	if details != nil {
-		successed++
-		filesDetails = append(filesDetails, *details)
-	} else {
-		failed++
-	}
+	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	if version.NewVersion(pwa.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != "" {
 		// Upload info file. This supported from Artifactory version 6.10.0 and above
-		details, err = pwa.upload(params.GetInfoPath(), moduleId[0], params.GetVersion(), params.GetProps(), ".info", url)
+		success, failed, err = uploadArchive(params, moduleId[0], ".info", url, &filesDetails, pwa)
+		totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 		if err != nil {
 			return nil, err
 		}
-		if details != nil {
-			successed++
-			filesDetails = append(filesDetails, *details)
-		} else {
-			failed++
-		}
 	}
-
-	tempFile, err := fileutils.CreateTempFile()
+	tempFile, err := clientutils.SaveFileTransferDetailsInTempFile(&filesDetails)
 	if err != nil {
 		return nil, err
 	}
-	err = clientutils.SaveResultInFile(tempFile.Name(), &filesDetails)
-	return &utils.OperationSummary{TotalSucceeded: successed, TotalFailed: failed, TransferDetailsReader: content.NewContentReader(tempFile.Name(), "files")}, nil
+	return &utils.OperationSummary{TotalSucceeded: totalSucceed, TotalFailed: totalFailed, TransferDetailsReader: content.NewContentReader(tempFile, "files")}, nil
+}
+
+func uploadArchive(params GoParams, moduleId, ext, url string, filesDetails *[]clientutils.FileTransferDetails, pwa *publishZipAndModApi) (success, failed int, err error) {
+	success, failed = 0, 1
+	details, err := pwa.upload(params.GetModPath(), moduleId, params.GetVersion(), params.GetProps(), ext, url)
+	if err != nil {
+		return
+	}
+	if details != nil {
+		success, failed = 1, 0
+		*filesDetails = append(*filesDetails, *details)
+	}
+	return
 }
 
 func addGoVersion(version string, urlPath *string) {
@@ -105,15 +102,21 @@ func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext,
 	if err != nil {
 		return nil, err
 	}
+	originalUrlPath := urlPath
 	addGoVersion(version, &urlPath)
 	details, err := fileutils.GetFileDetails(localPath)
 	if err != nil {
 		return nil, err
 	}
 	utils.AddChecksumHeaders(pwa.clientDetails.Headers, details)
-	resp, _, uploadDetails, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil)
+	resp, body, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil)
 	if err != nil {
 		return nil, err
 	}
-	return uploadDetails, errorutils.CheckResponseStatus(resp, http.StatusCreated)
+	sha256, err := clientutils.ExtractSha256FromResponseBody(body)
+	if err != nil {
+		log.Error("Failed to extract file's sha256 from response body.\nFile: " + localPath + "\nError message:" + err.Error())
+	}
+	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: originalUrlPath, Sha256: sha256}
+	return &filesDetails, errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }

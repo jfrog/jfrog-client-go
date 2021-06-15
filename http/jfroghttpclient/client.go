@@ -1,16 +1,13 @@
 package jfroghttpclient
 
 import (
-	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
+
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
 type JfrogHttpClient struct {
@@ -90,27 +87,13 @@ func (rtc *JfrogHttpClient) Send(method string, url string, content []byte, foll
 	return rtc.httpClient.Send(method, url, content, followRedirect, closeBody, *httpClientsDetails)
 }
 
-// main one -gai
 func (rtc *JfrogHttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails *httputils.HttpClientDetails,
-	retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, details *utils.FileTransferDetails, err error) {
+	retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
-	resp, body, err = rtc.httpClient.UploadFile(localPath, url, logMsgPrefix, *httpClientsDetails, retries, progress)
-	sha256 := ""
-	if len(body) > 0 {
-		responseBody := new(utils.UploadResponseBody)
-		err = json.Unmarshal(body, &responseBody)
-		if errorutils.CheckError(err) != nil {
-			return
-		}
-		sha256 = responseBody.Checksums.Sha256
-	}
-	// Remove go version from the end of the url.
-	urlArr := strings.Split(url, ";")
-	details = &utils.FileTransferDetails{SourcePath: localPath, TargetPath: urlArr[0], Sha256: sha256}
-	return
+	return rtc.httpClient.UploadFile(localPath, url, logMsgPrefix, *httpClientsDetails, retries, progress)
 }
 
 func (rtc *JfrogHttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails *httputils.HttpClientDetails,

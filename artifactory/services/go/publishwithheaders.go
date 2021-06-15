@@ -27,7 +27,7 @@ func (pwh *publishWithHeader) isCompatible(artifactoryVersion string) bool {
 	return false
 }
 
-func (pwh *publishWithHeader) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
+func (pwh *publishWithHeader) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (summary *utils.OperationSummary, err error) {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 	addHeaders(params, &clientDetails)
@@ -35,7 +35,7 @@ func (pwh *publishWithHeader) PublishPackage(params GoParams, client *jfroghttpc
 	if err != nil {
 		return nil, err
 	}
-	resp, _, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, GoUploadRetries, nil)
+	resp, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, GoUploadRetries, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,6 @@ package utils
 
 import (
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"strings"
@@ -39,18 +38,6 @@ type ArtifactDetails struct {
 	// Path of the artifact in Artifactory
 	ArtifactoryPath string    `json:"artifactoryPath,omitempty"`
 	Checksums       Checksums `json:"checksums,omitempty"`
-}
-
-// Represent deployed artifact's details returned from build-info project for maven and gradle.
-type DeployableArtifactDetails struct {
-	SourcePath      string `json:"sourcePath,omitempty"`
-	ArtifactDest    string `json:"artifactDest,omitempty"`
-	Sha256          string `json:"sha256,omitempty"`
-	DeploySucceeded bool   `json:"deploySucceeded,omitempty"`
-}
-
-func (detailes *DeployableArtifactDetails) CreateFileTransferDetails() clientutils.FileTransferDetails {
-	return clientutils.FileTransferDetails{SourcePath: detailes.SourcePath, TargetPath: detailes.ArtifactDest, Sha256: detailes.Sha256}
 }
 
 func (cs *OperationSummary) Close() {

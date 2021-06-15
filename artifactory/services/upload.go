@@ -2,7 +2,6 @@ package services
 
 import (
 	"archive/zip"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -396,16 +395,9 @@ func (us *UploadService) uploadFile(localPath, targetPathWithProps string, fileI
 	if err != nil {
 		return nil, false, err
 	}
-	// Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
-	// In case of uploading archive with "--explode" the response body will be empty and sha256 won't be shown at
-	// the detailed summary.
-	if len(body) > 0 {
-		responseBody := new(clientutils.UploadResponseBody)
-		err = json.Unmarshal(body, &responseBody)
-		if errorutils.CheckError(err) != nil {
-			return nil, false, err
-		}
-		details.Checksum.Sha256 = responseBody.Checksums.Sha256
+	details.Checksum.Sha256, err = clientutils.ExtractSha256FromResponseBody(body)
+	if err != nil {
+		return nil, false, err
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
 	return details, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil

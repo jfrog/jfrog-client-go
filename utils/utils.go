@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -475,10 +476,16 @@ type FileTransferDetails struct {
 	Sha256     string `json:"sha256,omitempty"`
 }
 
-type Checksums struct {
-	Sha256 string `json:"sha256,omitempty"`
-	Sha1   string `json:"sha1,omitempty"`
-	Md5    string `json:"md5,omitempty"`
+// Represent deployed artifact's details returned from build-info project for maven and gradle.
+type DeployableArtifactDetails struct {
+	SourcePath      string `json:"sourcePath,omitempty"`
+	ArtifactDest    string `json:"artifactDest,omitempty"`
+	Sha256          string `json:"sha256,omitempty"`
+	DeploySucceeded bool   `json:"deploySucceeded,omitempty"`
+}
+
+func (detailes *DeployableArtifactDetails) CreateFileTransferDetails() FileTransferDetails {
+	return FileTransferDetails{SourcePath: detailes.SourcePath, TargetPath: detailes.ArtifactDest, Sha256: detailes.Sha256}
 }
 
 type UploadResponseBody struct {
@@ -490,15 +497,40 @@ type ChecksumDetails struct {
 	Sha256 string
 }
 
-func SaveResultInFile(filePath string, result *[]FileTransferDetails) error {
-	// Pahrs and save finall result back in the file.
-	finallResult := struct {
+func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (string, error) {
+	tempFile, err := fileutils.CreateTempFile()
+	if err != nil {
+		return "", err
+	}
+	filePath := tempFile.Name()
+	return filePath, SaveFileTransferDetailsInFile(filePath, filesDetails)
+}
+
+func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetails) error {
+	// Marshal and save files details in a file.
+	// details will be saved in a json format in an array with key "files" for printing later
+	finalResult := struct {
 		Files *[]FileTransferDetails `json:"files"`
 	}{}
-	finallResult.Files = result
-	files, err := json.Marshal(finallResult)
+	finalResult.Files = details
+	files, err := json.Marshal(finalResult)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
 	return errorutils.CheckError(ioutil.WriteFile(filePath, files, 0700))
+}
+
+// Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
+// In case of uploading archive with "--explode" the response body will be empty and sha256 won't be shown at
+// the detailed summary.
+func ExtractSha256FromResponseBody(body []byte) (string, error) {
+	if len(body) > 0 {
+		responseBody := new(UploadResponseBody)
+		err := json.Unmarshal(body, &responseBody)
+		if errorutils.CheckError(err) != nil {
+			return "", err
+		}
+		return responseBody.Checksums.Sha256, nil
+	}
+	return "", nil
 }
