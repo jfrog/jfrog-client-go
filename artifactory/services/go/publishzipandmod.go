@@ -102,7 +102,6 @@ func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext,
 	if err != nil {
 		return nil, err
 	}
-	originalUrlPath := urlPath
 	addGoVersion(version, &urlPath)
 	details, err := fileutils.GetFileDetails(localPath)
 	if err != nil {
@@ -117,6 +116,8 @@ func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext,
 	if err != nil {
 		log.Error("Failed to extract file's sha256 from response body.\nFile: " + localPath + "\nError message:" + err.Error())
 	}
-	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: originalUrlPath, Sha256: sha256}
+	// Remove urls properties suffix
+	splitUrlPath := strings.Split(urlPath, ";")
+	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: splitUrlPath[0], Sha256: sha256}
 	return &filesDetails, errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }
