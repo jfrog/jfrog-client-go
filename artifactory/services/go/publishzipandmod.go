@@ -108,11 +108,11 @@ func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext,
 		return nil, err
 	}
 	utils.AddChecksumHeaders(pwa.clientDetails.Headers, details)
-	resp, body, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil)
+	resp, _, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, GoUploadRetries, nil)
 	if err != nil {
 		return nil, err
 	}
-	sha256, err := clientutils.ExtractSha256FromResponseBody(body)
+	sha256 := resp.Header.Get("X-Checksum-Sha256")
 	if err != nil {
 		log.Error("Failed to extract file's sha256 from response body.\nFile: " + localPath + "\nError message:" + err.Error())
 	}
