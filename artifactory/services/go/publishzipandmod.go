@@ -48,20 +48,20 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *jfroghtt
 	totalSucceed, totalFailed := 0, 0
 	var filesDetails []clientutils.FileTransferDetails
 	// Upload zip file
-	success, failed, err := uploadArchive(params, moduleId[0], ".zip", url, &filesDetails, pwa)
+	success, failed, err := uploadArchive(params, params.ZipPath, moduleId[0], ".zip", url, &filesDetails, pwa)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	// Upload mod file
-	success, failed, err = uploadArchive(params, moduleId[0], ".mod", url, &filesDetails, pwa)
+	success, failed, err = uploadArchive(params, params.ModPath, moduleId[0], ".mod", url, &filesDetails, pwa)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	if version.NewVersion(pwa.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != "" {
 		// Upload info file. This supported from Artifactory version 6.10.0 and above
-		success, failed, err = uploadArchive(params, moduleId[0], ".info", url, &filesDetails, pwa)
+		success, failed, err = uploadArchive(params, params.InfoPath, moduleId[0], ".info", url, &filesDetails, pwa)
 		totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 		if err != nil {
 			return nil, err
@@ -74,9 +74,9 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *jfroghtt
 	return &utils.OperationSummary{TotalSucceeded: totalSucceed, TotalFailed: totalFailed, TransferDetailsReader: content.NewContentReader(tempFile, "files")}, nil
 }
 
-func uploadArchive(params GoParams, moduleId, ext, url string, filesDetails *[]clientutils.FileTransferDetails, pwa *publishZipAndModApi) (success, failed int, err error) {
+func uploadArchive(params GoParams, archivePath string, moduleId, ext, url string, filesDetails *[]clientutils.FileTransferDetails, pwa *publishZipAndModApi) (success, failed int, err error) {
 	success, failed = 0, 1
-	details, err := pwa.upload(params.GetModPath(), moduleId, params.GetVersion(), params.GetProps(), ext, url)
+	details, err := pwa.upload(archivePath, moduleId, params.GetVersion(), params.GetProps(), ext, url)
 	if err != nil {
 		return
 	}
