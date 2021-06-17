@@ -60,7 +60,7 @@ func (pwa *publishZipAndModApi) PublishPackage(params GoParams, client *jfroghtt
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	if version.NewVersion(pwa.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != "" {
-		// Upload info file. This supported from Artifactory version 6.10.0 and above
+		// Upload info file. This is supported from Artifactory version 6.10.0 and above
 		success, failed, err = uploadArchive(params, params.InfoPath, moduleId[0], ".info", url, &filesDetails, pwa)
 		totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 		if err != nil {
@@ -80,10 +80,8 @@ func uploadArchive(params GoParams, archivePath string, moduleId, ext, url strin
 	if err != nil {
 		return
 	}
-	if details != nil {
-		success, failed = 1, 0
-		*filesDetails = append(*filesDetails, *details)
-	}
+	success, failed = 1, 0
+	*filesDetails = append(*filesDetails, *details)
 	return
 }
 
@@ -113,8 +111,8 @@ func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext,
 		return nil, err
 	}
 	sha256 := resp.Header.Get("X-Checksum-Sha256")
-	if err != nil {
-		log.Error("Failed to extract file's sha256 from response body.\nFile: " + localPath + "\nError message:" + err.Error())
+	if sha256 == "" {
+		log.Error("Failed to extract file's sha256 from response body.\nFile: " + localPath)
 	}
 	// Remove urls properties suffix
 	splitUrlPath := strings.Split(urlPath, ";")
