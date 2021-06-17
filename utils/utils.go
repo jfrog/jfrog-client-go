@@ -469,7 +469,7 @@ func (bps *Sha256Summary) SetSha256(sha256 string) *Sha256Summary {
 
 // Represents a file transfer from SourcePath to TargetPath.
 // Each of the paths can be on the local machine (full or relative) or in Artifactory (full URL).
-// File's Sha256 calculated by Artifactory during upload. we read sha256 from the HTTP's response body.
+// The file's Sha256 is calculated by Artifactory during the upload. we read the sha256 from the HTTP's response body.
 type FileTransferDetails struct {
 	SourcePath string `json:"sourcePath,omitempty"`
 	TargetPath string `json:"targetPath,omitempty"`
@@ -491,6 +491,7 @@ func (detailes *DeployableArtifactDetails) CreateFileTransferDetails() FileTrans
 type UploadResponseBody struct {
 	Checksums ChecksumDetails `json:"checksums,omitempty"`
 }
+
 type ChecksumDetails struct {
 	Md5    string
 	Sha1   string
@@ -507,8 +508,8 @@ func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (str
 }
 
 func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetails) error {
-	// Marshal and save files details in a file.
-	// details will be saved in a json format in an array with key "files" for printing later
+	// Marshal and save files details to a file.
+	// The details will be saved in a json format in an array with key "files" for printing later
 	finalResult := struct {
 		Files *[]FileTransferDetails `json:"files"`
 	}{}
