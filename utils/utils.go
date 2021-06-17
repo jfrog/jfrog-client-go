@@ -504,10 +504,10 @@ func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (str
 		return "", err
 	}
 	filePath := tempFile.Name()
-	return filePath, saveFileTransferDetailsInFile(filePath, filesDetails)
+	return filePath, SaveFileTransferDetailsInFile(filePath, filesDetails)
 }
 
-func saveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetails) error {
+func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetails) error {
 	// Marshal and save files details to a file.
 	// The details will be saved in a json format in an array with key "files" for printing later
 	finalResult := struct {
