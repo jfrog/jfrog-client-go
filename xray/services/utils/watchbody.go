@@ -115,7 +115,7 @@ type AssignedPolicy struct {
 	Type string `json:"type"`
 }
 
-// WatchBody is the top level payload to be sent to xray
+// WatchBody is the top level payload to be sent to Xray
 type WatchBody struct {
 	GeneralData      watchGeneralParams    `json:"general_data"`
 	ProjectResources watchProjectResources `json:"project_resources,omitempty"`

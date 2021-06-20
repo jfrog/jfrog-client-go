@@ -14,10 +14,10 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	gitconfig "gopkg.in/src-d/go-git.v4/plumbing/format/config"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	gitconfig "github.com/go-git/go-git/v5/plumbing/format/config"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 type GitLfsCleanService struct {

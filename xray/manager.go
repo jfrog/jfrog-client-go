@@ -33,6 +33,10 @@ func (sm *XrayServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }
 
+func (sm *XrayServicesManager) Config() config.Config {
+	return sm.config
+}
+
 // GetVersion will return the Xray version
 func (sm *XrayServicesManager) GetVersion() (string, error) {
 	versionService := services.NewVersionService(sm.client)
@@ -109,20 +113,16 @@ func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
 	return binMgrService.AddBuildsToIndexing(buildNames)
 }
 
-// ScanGraph will send xray the given graph for scan
+// ScanGraph will send Xray the given graph for scan
 func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (string, error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.ScanGraph(params)
 }
 
-// GetScanGraphResults returns an xray scan output of the requested graph scan
+// GetScanGraphResults returns an Xray scan output of the requested graph scan
 func (sm *XrayServicesManager) GetScanGraphResults(scanID string) (*services.ScanResponse, error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.GetScanGraphResults(scanID)
-}
-
-func (sm *XrayServicesManager) GetConfig() config.Config {
-	return sm.config
 }

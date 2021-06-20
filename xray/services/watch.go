@@ -20,7 +20,7 @@ const (
 	watchAPIURL = "api/v2/watches"
 )
 
-// WatchService defines the http client and xray details
+// WatchService defines the http client and Xray details
 type WatchService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
@@ -31,7 +31,7 @@ type WatchAlreadyExistsError struct {
 }
 
 func (*WatchAlreadyExistsError) Error() string {
-	return "xray: Watch already exists."
+	return "Xray: Watch already exists."
 }
 
 // NewWatchService creates a new Xray Watch Service
@@ -39,7 +39,7 @@ func NewWatchService(client *jfroghttpclient.JfrogHttpClient) *WatchService {
 	return &WatchService{client: client}
 }
 
-// GetXrayDetails returns the xray details
+// GetXrayDetails returns the Xray details
 func (vs *WatchService) GetXrayDetails() auth.ServiceDetails {
 	return vs.XrayDetails
 }
@@ -73,7 +73,7 @@ func (xws *WatchService) Delete(watchName string) error {
 	return nil
 }
 
-// Create will create a new xray watch
+// Create will create a new Xray watch
 func (xws *WatchService) Create(params utils.WatchParams) error {
 	payloadBody, err := utils.CreateBody(params)
 	if err != nil {

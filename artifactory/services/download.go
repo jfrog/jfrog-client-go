@@ -277,8 +277,8 @@ func (ds *DownloadService) addToResults(resultItem *utils.ResultItem, downloadPa
 	}
 }
 
-func createDependencyTransferDetails(downloadPath, localPath, localFileName string) utils.FileTransferDetails {
-	fileInfo := utils.FileTransferDetails{
+func createDependencyTransferDetails(downloadPath, localPath, localFileName string) clientutils.FileTransferDetails {
+	fileInfo := clientutils.FileTransferDetails{
 		SourcePath: downloadPath,
 		TargetPath: filepath.Join(localPath, localFileName),
 	}

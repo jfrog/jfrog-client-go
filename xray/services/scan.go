@@ -51,11 +51,13 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		return "", err
 	}
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 		return "", errorutils.CheckError(errors.New("Server Response: " + resp.Status))
 	}
 	scanResponse := RequestScanResponse{}
-	json.Unmarshal(body, &scanResponse)
+	if err = json.Unmarshal(body, &scanResponse); err != nil {
+		return "", errorutils.CheckError(err)
+	}
 	return scanResponse.ScanId, err
 }
 
@@ -89,7 +91,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string) (*ScanResponse, error)
 					resultChan <- nil
 					return
 				}
-				if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+				if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 					errChan <- errorutils.CheckError(errors.New("Server Response: " + resp.Status))
 					resultChan <- nil
 					return
@@ -116,7 +118,9 @@ func (ss *ScanService) GetScanGraphResults(scanId string) (*ScanResponse, error)
 		return nil, err
 	}
 	scanResponse := ScanResponse{}
-	json.Unmarshal(body, &scanResponse)
+	if err = json.Unmarshal(body, &scanResponse); err != nil {
+		return nil, errorutils.CheckError(err)
+	}
 	return &scanResponse, err
 }
 
@@ -130,14 +134,14 @@ type XrayGraphScanParams struct {
 
 type GraphNode struct {
 	// Component Id in the JFrog standard.
-	Id string `json:"id,omitempty"`
+	Id string `json:"component_id,omitempty"`
 	// Sha of the binary representing the component.
 	Sha256 string `json:"sha256,omitempty"`
 	Sha1   string `json:"sha1,omitempty"`
 	// For root file shall be the file name.
 	// For internal components shall be the internal path. (Relevant only for binary scan).
 	Path string `json:"path,omitempty"`
-	// List of license name
+	// List of license names
 	Licenses []string `json:"licenses,omitempty"`
 	// List of sub components.
 	Nodes []*GraphNode `json:"nodes,omitempty"`
@@ -188,6 +192,7 @@ type Component struct {
 	FixedVersions []string `json:"fixed_versions,omitempty"`
 	ImpactPaths   []string `json:"impact_paths,omitempty"`
 }
+
 type Cve struct {
 	Id           string `json:"cve,omitempty"`
 	CvssV2Score  string `json:"cvss_v2_score,omitempty"`
