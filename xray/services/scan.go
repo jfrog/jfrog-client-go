@@ -28,7 +28,7 @@ type ScanService struct {
 	MaxWaitMinutes time.Duration
 }
 
-// NewScanService creates a new service to scan Binaries and Sources.
+// NewScanService creates a new service to scan Binaries and VCS projects.
 func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 	return &ScanService{client: client}
 }
@@ -52,7 +52,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	}
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return "", errorutils.CheckError(errors.New("Server Response: " + resp.Status))
+		return "", errorutils.CheckError(errors.New("Server response: " + resp.Status))
 	}
 	scanResponse := RequestScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
@@ -69,8 +69,8 @@ func (ss *ScanService) GetScanGraphResults(scanId string) (*ScanResponse, error)
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	message := fmt.Sprintf("Sync: Get Scan Graph Results. Scan ID:%s...", scanId)
-	// The scan request may take time to be calculated, we expect to receive a 202 response until the compleation of the requested scan.
+	message := fmt.Sprintf("Sync: Get Scan Graph results. Scan ID:%s...", scanId)
+	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	ticker := time.NewTicker(defaultSyncSleepInterval)
 	timeout := make(chan bool)
 	errChan := make(chan error)
@@ -92,7 +92,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string) (*ScanResponse, error)
 					return
 				}
 				if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-					errChan <- errorutils.CheckError(errors.New("Server Response: " + resp.Status))
+					errChan <- errorutils.CheckError(errors.New("Server response: " + resp.Status))
 					resultChan <- nil
 					return
 				}
@@ -134,6 +134,9 @@ type XrayGraphScanParams struct {
 
 type GraphNode struct {
 	// Component Id in the JFrog standard.
+	// For instance, for maven: gav://<groupId>:<artifactId>:<version>
+	// For detailed format examples please see:
+	// https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-ComponentIdentifiers
 	Id string `json:"component_id,omitempty"`
 	// Sha of the binary representing the component.
 	Sha256 string `json:"sha256,omitempty"`
@@ -188,6 +191,7 @@ type License struct {
 	Custom     bool                 `json:"custom,omitempty"`
 	References []string             `json:"references,omitempty"`
 }
+
 type Component struct {
 	FixedVersions []string `json:"fixed_versions,omitempty"`
 	ImpactPaths   []string `json:"impact_paths,omitempty"`

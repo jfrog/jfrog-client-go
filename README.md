@@ -1513,6 +1513,7 @@ scanId, err := xrayManager.ScanGraph(graphScanParams)
 
 #### Retrieve the Graph Scan Results
 ```go
+// scanId should be received from xrayManager.ScanGraph(graphScanParams) request.
 scanResults, err := xrayManager.GetScanGraphResults(scanId)
 ```
 ## Pipelines APIs

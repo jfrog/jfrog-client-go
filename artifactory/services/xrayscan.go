@@ -116,7 +116,7 @@ func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Re
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = errorutils.CheckError(errors.New("Server Response: " + resp.Status))
+		err = errorutils.CheckError(errors.New("Server response: " + resp.Status))
 	}
 	return resp, err
 }

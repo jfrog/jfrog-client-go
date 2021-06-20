@@ -110,13 +110,15 @@ func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
 }
 
 // ScanGraph will send Xray the given graph for scan
-func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (string, error) {
+// Returns a string represents the scan ID.
+func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (scanId string, err error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.ScanGraph(params)
 }
 
-// GetScanGraphResults returns an Xray scan output of the requested graph scan
+// GetScanGraphResults returns an Xray scan output of the requested graph scan.
+// The scanId input should be received from ScanGraph request.
 func (sm *XrayServicesManager) GetScanGraphResults(scanID string) (*services.ScanResponse, error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
