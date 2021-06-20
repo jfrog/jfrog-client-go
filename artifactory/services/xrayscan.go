@@ -30,7 +30,7 @@ func NewXrayScanService(client *jfroghttpclient.JfrogHttpClient) *XrayScanServic
 	return &XrayScanService{client: client}
 }
 
-func (ps *XrayScanService) ScanBuild(scanParams XrayBuildScanParams) ([]byte, error) {
+func (ps *XrayScanService) ScanBuild(scanParams XrayScanParams) ([]byte, error) {
 	url := ps.ArtDetails.GetUrl()
 	requestFullUrl, err := utils.BuildArtifactoryUrl(url, SCAN_BUILD_API_URL, make(map[string]string))
 	if err != nil {
@@ -136,24 +136,24 @@ type XrayScanBody struct {
 	Context     string `json:"context,omitempty"`
 }
 
-type XrayBuildScanParams struct {
+type XrayScanParams struct {
 	BuildName   string
 	BuildNumber string
 	ProjectKey  string
 }
 
-func (bp *XrayBuildScanParams) GetBuildName() string {
+func (bp *XrayScanParams) GetBuildName() string {
 	return bp.BuildName
 }
 
-func (bp *XrayBuildScanParams) GetBuildNumber() string {
+func (bp *XrayScanParams) GetBuildNumber() string {
 	return bp.BuildNumber
 }
 
-func (bp *XrayBuildScanParams) GetProjectKey() string {
+func (bp *XrayScanParams) GetProjectKey() string {
 	return bp.ProjectKey
 }
 
-func NewXrayBuildScanParams() XrayBuildScanParams {
-	return XrayBuildScanParams{}
+func NewXrayScanParams() XrayScanParams {
+	return XrayScanParams{}
 }
