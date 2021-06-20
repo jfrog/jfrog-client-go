@@ -123,6 +123,8 @@
       - [Update an Xray Policy](#update-an-xray-policy)
       - [Delete an Xray Policy](#delete-an-xray-policy)
       - [Add builds to indexing configuration](#add-builds-to-indexing-configuration)
+      - [Request graph scan](#request-graph-scan)
+      - [Retrieve the graph scan results](#retrieve-the-graph-scan-results)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -1499,6 +1501,19 @@ buildsToIndex := []string{"buildName1", "buildName2"}
 err := xrayManager.AddBuildsToIndexing(buildsToIndex)
 ```
 
+#### Request graph scan
+```go
+graphScanParams := &XrayGraphScanParams{}
+// Dependency tree, each node must have a component Id in the JFrog standard (https://www.jfrog.com/confluence/display/JFROG/Xray+REST//+API#XrayRESTAPI-ComponentIdentifiers)
+graphScanParams.Graph = &GraphNode{Id: "gav://org.jfrog.buildinfo:build-info-extractor-gradle:4.24.5", Nodes: []*GraphNode{{Id: "gav://junit:junit:4.13.2"},
+	{Id: "gav://commons-lang:commons-lang:2.6"}}}
+scanId, err := xrayManager.ScanGraph(graphScanParams)
+```
+
+#### Retrieve the graph scan results
+```go
+scanResults, err := xrayManager.GetScanGraphResults(scanId)
+```
 ## Pipelines APIs
 ### Creating Pipelines Service Manager
 #### Creating Pipelines Details
