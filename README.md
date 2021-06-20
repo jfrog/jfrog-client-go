@@ -122,9 +122,9 @@
       - [Get an Xray Policy](#get-an-xray-policy)
       - [Update an Xray Policy](#update-an-xray-policy)
       - [Delete an Xray Policy](#delete-an-xray-policy)
-      - [Add builds to indexing configuration](#add-builds-to-indexing-configuration)
-      - [Request graph scan](#request-graph-scan)
-      - [Retrieve the graph scan results](#retrieve-the-graph-scan-results)
+      - [Add Builds to Indexing Configuration](#add-builds-to-indexing-configuration)
+      - [Request Graph Scan](#request-graph-scan)
+      - [Retrieve the Graph Scan Results](#retrieve-the-graph-scan-results)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -1495,22 +1495,23 @@ err := xrayManager.UpdatePolicy(*policy)
 err := xrayManager.DeletePolicy("example-policy")
 ```
 
-#### Add builds to indexing configuration
+#### Add Builds to Indexing Configuration
 ```go
 buildsToIndex := []string{"buildName1", "buildName2"}
 err := xrayManager.AddBuildsToIndexing(buildsToIndex)
 ```
 
-#### Request graph scan
+#### Request Graph Scan
 ```go
 graphScanParams := &XrayGraphScanParams{}
-// Dependency tree, each node must have a component Id in the JFrog standard (https://www.jfrog.com/confluence/display/JFROG/Xray+REST//+API#XrayRESTAPI-ComponentIdentifiers)
-graphScanParams.Graph = &GraphNode{Id: "gav://org.jfrog.buildinfo:build-info-extractor-gradle:4.24.5", Nodes: []*GraphNode{{Id: "gav://junit:junit:4.13.2"},
-	{Id: "gav://commons-lang:commons-lang:2.6"}}}
+// Dependency tree. Each node must have a component identifier, see https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-ComponentIdentifiers.
+graphScanParams.Graph = &GraphNode{
+  Id: "gav://org.jfrog.buildinfo:build-info-extractor-gradle:4.24.5", 
+  Nodes: []*GraphNode{{Id: "gav://junit:junit:4.13.2"}, {Id: "gav://commons-lang:commons-lang:2.6"}}}
 scanId, err := xrayManager.ScanGraph(graphScanParams)
 ```
 
-#### Retrieve the graph scan results
+#### Retrieve the Graph Scan Results
 ```go
 scanResults, err := xrayManager.GetScanGraphResults(scanId)
 ```
