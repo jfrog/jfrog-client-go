@@ -122,3 +122,7 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string) (*services.Sca
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.GetScanGraphResults(scanID)
 }
+
+func (sm *XrayServicesManager) GetConfig() config.Config {
+	return sm.config
+}
