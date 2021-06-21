@@ -610,10 +610,10 @@ Each package type has it's own parameters struct, can be created using the metho
 Example for creating remote Maven repository:
 ```go
 params := services.NewMavenRemoteRepositoryParams()
-params.Key = "jcenter-remote"
+params.Key = "maven-central-remote"
 params.Url = "https://repo.maven.apache.org"
 params.RepoLayoutRef = "maven-2-default"
-params.Description = "A caching proxy repository for a JFrog's jcenter"
+params.Description = "A caching proxy repository for Maven central"
 params.HandleSnapshot = false
 params.HandleReleases = true
 params.FetchJarsEagerly = true
