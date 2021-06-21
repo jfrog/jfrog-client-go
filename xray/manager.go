@@ -33,6 +33,10 @@ func (sm *XrayServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }
 
+func (sm *XrayServicesManager) Config() config.Config {
+	return sm.config
+}
+
 // GetVersion will return the Xray version
 func (sm *XrayServicesManager) GetVersion() (string, error) {
 	versionService := services.NewVersionService(sm.client)
