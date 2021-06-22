@@ -9,6 +9,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
@@ -291,8 +292,8 @@ func summaryDownload(t *testing.T) {
 	if summary.TotalFailed != 0 {
 		t.Error("Failed to download", summary.TotalFailed, "files.")
 	}
-	var transfers []utils.FileTransferDetails
-	for item := new(utils.FileTransferDetails); summary.TransferDetailsReader.NextRecord(item) == nil; item = new(utils.FileTransferDetails) {
+	var transfers []clientutils.FileTransferDetails
+	for item := new(clientutils.FileTransferDetails); summary.TransferDetailsReader.NextRecord(item) == nil; item = new(clientutils.FileTransferDetails) {
 		transfers = append(transfers, *item)
 	}
 	assert.Len(t, transfers, 1)

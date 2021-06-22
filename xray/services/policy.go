@@ -20,7 +20,7 @@ const (
 	policyAPIURL = "api/v2/policies"
 )
 
-// PolicyService defines the http client and xray details
+// PolicyService defines the http client and Xray details
 type PolicyService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
@@ -31,7 +31,7 @@ type PolicyAlreadyExistsError struct {
 }
 
 func (*PolicyAlreadyExistsError) Error() string {
-	return "xray: Policy already exists."
+	return "Xray: Policy already exists."
 }
 
 // NewPolicyService creates a new Xray Policy Service
@@ -39,7 +39,7 @@ func NewPolicyService(client *jfroghttpclient.JfrogHttpClient) *PolicyService {
 	return &PolicyService{client: client}
 }
 
-// GetXrayDetails returns the xray details
+// GetXrayDetails returns the Xray details
 func (xps *PolicyService) GetXrayDetails() auth.ServiceDetails {
 	return xps.XrayDetails
 }
@@ -75,7 +75,7 @@ func (xps *PolicyService) Delete(policyName string) error {
 	return nil
 }
 
-// Create will create a new xray policy
+// Create will create a new Xray policy
 func (xps *PolicyService) Create(params utils.PolicyParams) error {
 	body := utils.CreatePolicyBody(params)
 	content, err := json.Marshal(body)

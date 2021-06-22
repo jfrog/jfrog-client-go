@@ -3,6 +3,7 @@ package _go
 import (
 	"errors"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -26,16 +27,17 @@ func (gs *GoService) SetServiceDetails(artDetails auth.ServiceDetails) {
 	gs.ArtDetails = artDetails
 }
 
-func (gs *GoService) PublishPackage(params GoParams) error {
+func (gs *GoService) PublishPackage(params GoParams) (*utils.OperationSummary, error) {
 	artifactoryVersion, err := gs.ArtDetails.GetVersion()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	publisher := GetCompatiblePublisher(artifactoryVersion)
 	if publisher == nil {
-		return errorutils.CheckError(errors.New(fmt.Sprintf("Unsupported version of Artifactory: %s", artifactoryVersion)))
+		return nil, errorutils.CheckError(errors.New(fmt.Sprintf("Unsupported version of Artifactory: %s", artifactoryVersion)))
 	}
-
+	// publisher.PublishPackage returns OperationSummary only from Artifactory version "6.6.1" and above.
+	// For older versions OperationSummary will be nil.
 	return publisher.PublishPackage(params, gs.client, gs.ArtDetails)
 }
 

@@ -301,7 +301,7 @@ func (sm *ArtifactoryServicesManagerImp) Move(params ...services.MoveCopyParams)
 	return moveService.MoveCopyServiceMoveFilesWrapper(params...)
 }
 
-func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) error {
+func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error) {
 	goService := _go.NewGoService(sm.client)
 	goService.ArtDetails = sm.config.GetServiceDetails()
 	return goService.PublishPackage(params)
