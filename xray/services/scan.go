@@ -91,7 +91,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string) (*ScanResponse, error)
 					resultChan <- nil
 					return
 				}
-				if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+				if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
 					errChan <- errorutils.CheckError(errors.New("Server response: " + resp.Status))
 					resultChan <- nil
 					return
