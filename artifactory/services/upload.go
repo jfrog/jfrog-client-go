@@ -423,7 +423,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 
 		if !checksumDeployed {
 			retryExecutor := clientutils.RetryExecutor{
-				MaxRetries:      uploadParams.Retries,
+				MaxRetries:      us.client.GetHttpClient().GetRetries(),
 				RetriesInterval: 0,
 				ErrorMessage:    fmt.Sprintf("Failure occurred while uploading to %s", targetUrlWithProps),
 				LogMsgPrefix:    logMsgPrefix,
@@ -466,7 +466,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries(), nil)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, nil)
 	return
 }
 
@@ -491,7 +491,7 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 		}
 		if !checksumDeployed {
 			resp, body, err = utils.UploadFile(localPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
-				httpClientsDetails, us.client, uploadParams.Retries, us.Progress)
+				httpClientsDetails, us.client, us.Progress)
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
@@ -575,7 +575,6 @@ type UploadParams struct {
 	ExplodeArchive    bool
 	Flat              bool
 	AddVcsProps       bool
-	Retries           int
 	MinChecksumDeploy int64
 	Archive           string
 }
@@ -609,10 +608,6 @@ func (up *UploadParams) IsExplodeArchive() bool {
 
 func (up *UploadParams) GetDebian() string {
 	return up.Deb
-}
-
-func (up *UploadParams) GetRetries() int {
-	return up.Retries
 }
 
 type UploadData struct {

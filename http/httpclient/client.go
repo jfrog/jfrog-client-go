@@ -23,55 +23,60 @@ import (
 	"sync"
 )
 
-func (jc *HttpClient) sendGetLeaveBodyOpen(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	return jc.Send("GET", url, nil, followRedirect, false, httpClientsDetails)
-}
-
-func (jc *HttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, err error) {
-	resp, _, _, err = jc.Send("POST", url, content, true, false, httpClientsDetails)
-	return
-}
-
 type HttpClient struct {
-	Client *http.Client
-	ctx    context.Context
+	client  *http.Client
+	ctx     context.Context
+	retries int
 }
 
-func (jc *HttpClient) sendGetForFileDownload(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails, currentSplit int) (resp *http.Response, redirectUrl string, err error) {
-	resp, _, redirectUrl, err = jc.sendGetLeaveBodyOpen(url, followRedirect, httpClientsDetails)
+func (jc *HttpClient) GetRetries() int {
+	return jc.retries
+}
+
+func (jc *HttpClient) sendGetLeaveBodyOpen(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+	return jc.Send("GET", url, nil, followRedirect, false, httpClientsDetails, logMsgPrefix)
+}
+
+func (jc *HttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, err error) {
+	resp, _, _, err = jc.Send("POST", url, content, true, false, httpClientsDetails, logMsgPrefix)
 	return
 }
 
-func (jc *HttpClient) Stream(url string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, []byte, string, error) {
-	return jc.sendGetLeaveBodyOpen(url, true, httpClientsDetails)
-}
-
-func (jc *HttpClient) SendGet(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	return jc.Send("GET", url, nil, followRedirect, true, httpClientsDetails)
-}
-
-func (jc *HttpClient) SendPost(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("POST", url, content, true, true, httpClientsDetails)
+func (jc *HttpClient) sendGetForFileDownload(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, redirectUrl string, err error) {
+	resp, _, redirectUrl, err = jc.sendGetLeaveBodyOpen(url, followRedirect, httpClientsDetails, logMsgPrefix)
 	return
 }
 
-func (jc *HttpClient) SendPatch(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("PATCH", url, content, true, true, httpClientsDetails)
+func (jc *HttpClient) Stream(url string, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (*http.Response, []byte, string, error) {
+	return jc.sendGetLeaveBodyOpen(url, true, httpClientsDetails, logMsgPrefix)
+}
+
+func (jc *HttpClient) SendGet(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+	return jc.Send("GET", url, nil, followRedirect, true, httpClientsDetails, logMsgPrefix)
+}
+
+func (jc *HttpClient) SendPost(url string, content []byte, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, body []byte, err error) {
+	resp, body, _, err = jc.Send("POST", url, content, true, true, httpClientsDetails, logMsgPrefix)
 	return
 }
 
-func (jc *HttpClient) SendDelete(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("DELETE", url, content, true, true, httpClientsDetails)
+func (jc *HttpClient) SendPatch(url string, content []byte, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, body []byte, err error) {
+	resp, body, _, err = jc.Send("PATCH", url, content, true, true, httpClientsDetails, logMsgPrefix)
 	return
 }
 
-func (jc *HttpClient) SendHead(url string, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("HEAD", url, nil, true, true, httpClientsDetails)
+func (jc *HttpClient) SendDelete(url string, content []byte, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, body []byte, err error) {
+	resp, body, _, err = jc.Send("DELETE", url, content, true, true, httpClientsDetails, logMsgPrefix)
 	return
 }
 
-func (jc *HttpClient) SendPut(url string, content []byte, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
-	resp, body, _, err = jc.Send("PUT", url, content, true, true, httpClientsDetails)
+func (jc *HttpClient) SendHead(url string, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, body []byte, err error) {
+	resp, body, _, err = jc.Send("HEAD", url, nil, true, true, httpClientsDetails, logMsgPrefix)
+	return
+}
+
+func (jc *HttpClient) SendPut(url string, content []byte, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, body []byte, err error) {
+	resp, body, _, err = jc.Send("PUT", url, content, true, true, httpClientsDetails, logMsgPrefix)
 	return
 }
 
@@ -82,7 +87,7 @@ func (jc *HttpClient) newRequest(method, url string, body io.Reader) (*http.Requ
 	return http.NewRequest(method, url, body)
 }
 
-func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	var req *http.Request
 	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
 	if content != nil {
@@ -94,7 +99,32 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 		return nil, nil, "", err
 	}
 
-	return jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
+	retryExecutor := utils.RetryExecutor{
+		MaxRetries:      jc.retries,
+		RetriesInterval: 0,
+		LogMsgPrefix:    logMsgPrefix,
+		ErrorMessage:    fmt.Sprintf("Failure occurred while sendong %s request to %s", method, url),
+		ExecutionHandler: func() (bool, error) {
+			resp, respBody, redirectUrl, err = jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
+			if err != nil {
+				return true, err
+			}
+			// Response must not be nil
+			if resp == nil {
+				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from server", logMsgPrefix)))
+			}
+			// If response-code < 500, should not retry
+			if resp.StatusCode < 500 {
+				return false, nil
+			}
+			// Perform retry
+			log.Warn(fmt.Sprintf("%sThe server response: %s", logMsgPrefix, resp.Status))
+			return true, nil
+		},
+	}
+
+	err = retryExecutor.Execute()
+	return
 }
 
 func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
@@ -104,14 +134,14 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	copyHeaders(httpClientsDetails, req)
 
 	if !followRedirect || (followRedirect && req.Method == "POST") {
-		jc.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		jc.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			redirectUrl = req.URL.String()
 			return errors.New("redirect")
 		}
 	}
 
-	resp, err = jc.Client.Do(req)
-	jc.Client.CheckRedirect = nil
+	resp, err = jc.client.Do(req)
+	jc.client.CheckRedirect = nil
 
 	if err != nil && redirectUrl != "" {
 		if !followRedirect {
@@ -122,7 +152,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 		// for POST requests. We therefore implement the redirect on our own.
 		if req.Method == "POST" {
 			log.Debug("HTTP redirecting to ", redirectUrl)
-			resp, respBody, err = jc.SendPost(redirectUrl, content, httpClientsDetails)
+			resp, respBody, err = jc.SendPost(redirectUrl, content, httpClientsDetails, "")
 			redirectUrl = ""
 			return
 		}
@@ -155,9 +185,9 @@ func setRequestHeaders(httpClientsDetails httputils.HttpClientDetails, size int6
 
 // You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails,
-	retries int, progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
+	progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	retryExecutor := utils.RetryExecutor{
-		MaxRetries:      retries,
+		MaxRetries:      jc.retries,
 		RetriesInterval: 0,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while uploading to %s", url),
 		LogMsgPrefix:    logMsgPrefix,
@@ -227,7 +257,7 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	setAuthentication(req, httpClientsDetails)
 	addUserAgentHeader(req)
 
-	client := jc.Client
+	client := jc.client
 	resp, err = client.Do(req)
 	if errorutils.CheckError(err) != nil {
 		return nil, nil, err
@@ -243,7 +273,7 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 // Read remote file,
 // The caller is responsible to check if resp.StatusCode is StatusOK before reading, and to close io.ReadCloser after done reading.
 func (jc *HttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails httputils.HttpClientDetails) (io.ReadCloser, *http.Response, error) {
-	resp, _, err := jc.sendGetForFileDownload(downloadPath, true, httpClientsDetails, 0)
+	resp, _, err := jc.sendGetForFileDownload(downloadPath, true, httpClientsDetails, "")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -256,26 +286,26 @@ func (jc *HttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails htt
 // Bulk downloads a file.
 // You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) DownloadFileWithProgress(downloadFileDetails *DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.ProgressMgr) (*http.Response, error) {
-	resp, _, err := jc.downloadFile(downloadFileDetails, logMsgPrefix, true, httpClientsDetails, retries, isExplode, progress)
+	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.ProgressMgr) (*http.Response, error) {
+	resp, _, err := jc.downloadFile(downloadFileDetails, logMsgPrefix, true, httpClientsDetails, isExplode, progress)
 	return resp, err
 }
 
 // Bulk downloads a file.
 func (jc *HttpClient) DownloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool) (*http.Response, error) {
-	return jc.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, httpClientsDetails, retries, isExplode, nil)
+	httpClientsDetails httputils.HttpClientDetails, isExplode bool) (*http.Response, error) {
+	return jc.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, httpClientsDetails, isExplode, nil)
 }
 
-func (jc *HttpClient) DownloadFileNoRedirect(downloadPath, localPath, fileName string, httpClientsDetails httputils.HttpClientDetails, retries int) (*http.Response, string, error) {
+func (jc *HttpClient) DownloadFileNoRedirect(downloadPath, localPath, fileName string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, string, error) {
 	downloadFileDetails := &DownloadFileDetails{DownloadPath: downloadPath, LocalPath: localPath, FileName: fileName}
-	return jc.downloadFile(downloadFileDetails, "", false, httpClientsDetails, retries, false, nil)
+	return jc.downloadFile(downloadFileDetails, "", false, httpClientsDetails, false, nil)
 }
 
 func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string, followRedirect bool,
-	httpClientsDetails httputils.HttpClientDetails, retries int, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
+	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
 	retryExecutor := utils.RetryExecutor{
-		MaxRetries:      retries,
+		MaxRetries:      jc.retries,
 		RetriesInterval: 0,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while downloading %s", downloadFileDetails.DownloadPath),
 		LogMsgPrefix:    logMsgPrefix,
@@ -310,7 +340,7 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 
 func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string, followRedirect bool,
 	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
-	resp, redirectUrl, err = jc.sendGetForFileDownload(downloadFileDetails.DownloadPath, followRedirect, httpClientsDetails, 0)
+	resp, redirectUrl, err = jc.sendGetForFileDownload(downloadFileDetails.DownloadPath, followRedirect, httpClientsDetails, "")
 	if err != nil {
 		return
 	}
@@ -441,7 +471,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 // The caller is responsible to check that resp.StatusCode is http.StatusOK
 func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetails httputils.HttpClientDetails) (*fileutils.FileDetails, *http.Response, error) {
-	resp, _, err := jc.SendHead(downloadUrl, httpClientsDetails)
+	resp, _, err := jc.SendHead(downloadUrl, httpClientsDetails, "")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -499,7 +529,7 @@ func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags Con
 		}
 		requestClientDetails := httpClientsDetails.Clone()
 		go func(start, end int64, i int) {
-			chunksPaths[i], respList[i], errorsList[i] = jc.downloadFileRange(flags, start, end, i, logMsgPrefix, chunksDownloadPath, *requestClientDetails, flags.Retries, progress, progressId)
+			chunksPaths[i], respList[i], errorsList[i] = jc.downloadFileRange(flags, start, end, i, logMsgPrefix, chunksDownloadPath, *requestClientDetails, progress, progressId)
 			// Write to the global vars if the chunk wasn't downloaded successfully
 			if errorsList[i] != nil {
 				err = errorsList[i]
@@ -562,9 +592,9 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
 }
 
 func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
-	httpClientsDetails httputils.HttpClientDetails, retries int, progress ioutils.ProgressMgr, progressId int) (fileName string, resp *http.Response, err error) {
+	httpClientsDetails httputils.HttpClientDetails, progress ioutils.ProgressMgr, progressId int) (fileName string, resp *http.Response, err error) {
 	retryExecutor := utils.RetryExecutor{
-		MaxRetries:      retries,
+		MaxRetries:      jc.retries,
 		RetriesInterval: 0,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while downloading part %d of %s", currentSplit, flags.DownloadPath),
 		LogMsgPrefix:    fmt.Sprintf("%s[%s]: ", logMsgPrefix, strconv.Itoa(currentSplit)),
@@ -604,7 +634,7 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 		httpClientsDetails.Headers = make(map[string]string)
 	}
 	httpClientsDetails.Headers["Range"] = "bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end-1, 10)
-	resp, _, err = jc.sendGetForFileDownload(flags.DownloadPath, true, httpClientsDetails, currentSplit)
+	resp, _, err = jc.sendGetForFileDownload(flags.DownloadPath, true, httpClientsDetails, "")
 	if err != nil {
 		return "", nil, err
 	}
@@ -638,7 +668,7 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 
 // The caller is responsible to check if resp.StatusCode is StatusOK before relying on the bool value
 func (jc *HttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetails httputils.HttpClientDetails) (bool, *http.Response, error) {
-	resp, _, err := jc.SendHead(downloadUrl, httpClientsDetails)
+	resp, _, err := jc.SendHead(downloadUrl, httpClientsDetails, "")
 	if errorutils.CheckError(err) != nil {
 		return false, nil, err
 	}
@@ -695,5 +725,4 @@ type ConcurrentDownloadFlags struct {
 	FileSize      int64
 	SplitCount    int
 	Explode       bool
-	Retries       int
 }

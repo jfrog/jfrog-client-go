@@ -13,6 +13,7 @@ type jfrogHttpClientBuilder struct {
 	certificatesDirPath    string
 	insecureTls            bool
 	ctx                    context.Context
+	retries                int
 	preRequestInterceptors []PreRequestInterceptorFunc
 	clientCertPath         string
 	clientCertKeyPath      string
@@ -43,6 +44,11 @@ func (builder *jfrogHttpClientBuilder) SetContext(ctx context.Context) *jfrogHtt
 	return builder
 }
 
+func (builder *jfrogHttpClientBuilder) SetRetries(retries int) *jfrogHttpClientBuilder {
+	builder.retries = retries
+	return builder
+}
+
 func (builder *jfrogHttpClientBuilder) AppendPreRequestInterceptor(interceptor PreRequestInterceptorFunc) *jfrogHttpClientBuilder {
 	builder.preRequestInterceptors = append(builder.preRequestInterceptors, interceptor)
 	return builder
@@ -56,6 +62,7 @@ func (builder *jfrogHttpClientBuilder) Build() (rtHttpClient *JfrogHttpClient, e
 		SetClientCertPath(builder.clientCertPath).
 		SetClientCertKeyPath(builder.clientCertKeyPath).
 		SetContext(builder.ctx).
+		SetRetries(builder.retries).
 		Build()
 	return
 }

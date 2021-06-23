@@ -53,7 +53,7 @@ func (us *UrlService) SignVersion(params *Params) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendPost(signVersionUrl, content, httpClientsDetails)
+	resp, body, err := client.SendPost(signVersionUrl, content, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}

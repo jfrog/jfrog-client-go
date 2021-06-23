@@ -74,7 +74,7 @@ func (vs *VersionService) Update(params *Params) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendPatch(url, content, httpClientsDetails)
+	resp, body, err := client.SendPatch(url, content, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (vs *VersionService) Publish(versionPath *Path) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendPost(url, nil, httpClientsDetails)
+	resp, body, err := client.SendPost(url, nil, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (vs *VersionService) Delete(versionPath *Path) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendDelete(url, nil, httpClientsDetails)
+	resp, body, err := client.SendDelete(url, nil, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (vs *VersionService) Show(versionPath *Path) error {
 	if err != nil {
 		return err
 	}
-	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails)
+	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails, "")
 
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
@@ -173,7 +173,7 @@ func (vs *VersionService) IsVersionExists(versionPath *Path) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	resp, _, err := client.SendHead(url, httpClientsDetails)
+	resp, _, err := client.SendHead(url, httpClientsDetails, "")
 	if err != nil {
 		return false, err
 	}
@@ -202,7 +202,7 @@ func (vs *VersionService) doCreateVersion(params *Params) (*http.Response, []byt
 	if err != nil {
 		return nil, []byte{}, err
 	}
-	return client.SendPost(url, content, httpClientsDetails)
+	return client.SendPost(url, content, httpClientsDetails, "")
 }
 
 func createVersionContent(params *Params) ([]byte, error) {

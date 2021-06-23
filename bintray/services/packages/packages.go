@@ -80,7 +80,7 @@ func (ps *PackageService) Update(params *Params) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendPatch(url, []byte(content), httpClientsDetails)
+	resp, body, err := client.SendPatch(url, []byte(content), httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (ps *PackageService) Delete(packagePath *Path) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendDelete(url, nil, httpClientsDetails)
+	resp, body, err := client.SendDelete(url, nil, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (ps *PackageService) Show(packagePath *Path) error {
 	if err != nil {
 		return err
 	}
-	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails)
+	resp, body, _, _ := client.SendGet(url, true, httpClientsDetails, "")
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
@@ -149,7 +149,7 @@ func (ps *PackageService) IsPackageExists(packagePath *Path) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	resp, _, err := client.SendHead(url, httpClientsDetails)
+	resp, _, err := client.SendHead(url, httpClientsDetails, "")
 	if err != nil {
 		return false, err
 	}
@@ -178,7 +178,7 @@ func (ps *PackageService) doCreatePackage(params *Params) (*http.Response, []byt
 	if err != nil {
 		return nil, []byte{}, err
 	}
-	return client.SendPost(url, content, httpClientsDetails)
+	return client.SendPost(url, content, httpClientsDetails, "")
 }
 
 func createPackageContent(params *Params) ([]byte, error) {

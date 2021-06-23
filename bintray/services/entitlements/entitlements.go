@@ -46,7 +46,7 @@ func (es *EntitlementsService) ShowAll(path *versions.Path) error {
 	if err != nil {
 		return err
 	}
-	resp, body, _, err := client.SendGet(url, true, httpClientsDetails)
+	resp, body, _, err := client.SendGet(url, true, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (es *EntitlementsService) Show(id string, path *versions.Path) error {
 	if err != nil {
 		return err
 	}
-	resp, body, _, err := client.SendGet(url, true, httpClientsDetails)
+	resp, body, _, err := client.SendGet(url, true, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (es *EntitlementsService) Create(params *Params) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendPost(path, content, httpClientsDetails)
+	resp, body, err := client.SendPost(path, content, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (es *EntitlementsService) Delete(id string, path *versions.Path) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendDelete(url, nil, httpClientsDetails)
+	resp, body, err := client.SendDelete(url, nil, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (es *EntitlementsService) Update(params *Params) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendPatch(path, content, httpClientsDetails)
+	resp, body, err := client.SendPatch(path, content, httpClientsDetails, "")
 	if err != nil {
 		return err
 	}

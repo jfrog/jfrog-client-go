@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
-	"github.com/jfrog/jfrog-client-go/bintray/services/utils"
 	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -196,7 +195,7 @@ func uploadFile(artifact clientutils.Artifact, url, logMsgPrefix string, bintray
 	if err != nil {
 		return false, err
 	}
-	resp, body, err := client.UploadFile(artifact.LocalPath, url, logMsgPrefix, httpClientsDetails, utils.BintrayUploadRetries, nil)
+	resp, body, err := client.UploadFile(artifact.LocalPath, url, logMsgPrefix, httpClientsDetails, nil)
 	if err != nil {
 		return false, err
 	}
@@ -214,7 +213,7 @@ func SownInDownloadList(url string, bintrayDetails auth.BintrayDetails) (bool, e
 	if err != nil {
 		return false, err
 	}
-	resp, body, err := client.SendPut(url, []byte(`{"list_in_downloads":true}`), httpClientsDetails)
+	resp, body, err := client.SendPut(url, []byte(`{"list_in_downloads":true}`), httpClientsDetails, "")
 	if err != nil {
 		return false, err
 	}
