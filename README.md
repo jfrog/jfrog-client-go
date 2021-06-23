@@ -233,6 +233,8 @@ serviceConfig, err := config.NewConfigBuilder().
     SetDryRun(false).
     // Add [Context](https://golang.org/pkg/context/)
     SetContext(ctx).
+    // Optionally overwrite the default HTTP timeout, which is set to 30 seconds.
+    SetHttpTimeout(180 * time.Second).
     // Optionally overwrite the default HTTP retries, which is set to 3.
     SetHttpRetries(8).
     Build()

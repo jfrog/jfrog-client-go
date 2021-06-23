@@ -33,6 +33,8 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
+		SetContext(config.GetContext()).
+		SetTimeout(config.GetHttpTimeout()).
 		SetClientCertPath(artDetails.GetClientCertPath()).
 		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).

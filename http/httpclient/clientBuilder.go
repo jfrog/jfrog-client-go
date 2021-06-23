@@ -12,8 +12,12 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
+var DefaultHttpTimeout = 30 * time.Second
+
 func ClientBuilder() *httpClientBuilder {
-	return &httpClientBuilder{}
+	builder := &httpClientBuilder{}
+	builder.SetTimeout(DefaultHttpTimeout)
+	return builder
 }
 
 type httpClientBuilder struct {
@@ -22,6 +26,7 @@ type httpClientBuilder struct {
 	clientCertKeyPath   string
 	insecureTls         bool
 	ctx                 context.Context
+	timeout             time.Duration
 	retries             int
 }
 
@@ -50,6 +55,11 @@ func (builder *httpClientBuilder) SetContext(ctx context.Context) *httpClientBui
 	return builder
 }
 
+func (builder *httpClientBuilder) SetTimeout(timeout time.Duration) *httpClientBuilder {
+	builder.timeout = timeout
+	return builder
+}
+
 func (builder *httpClientBuilder) SetRetries(retries int) *httpClientBuilder {
 	builder.retries = retries
 	return builder
@@ -71,10 +81,10 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	var err error
 	var transport *http.Transport
 	if builder.certificatesDirPath == "" {
-		transport = createDefaultHttpTransport()
+		transport = builder.createDefaultHttpTransport()
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: builder.insecureTls}
 	} else {
-		transport, err = cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, createDefaultHttpTransport())
+		transport, err = cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, builder.createDefaultHttpTransport())
 		if err != nil {
 			return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
 		}
@@ -83,11 +93,11 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	return &HttpClient{client: &http.Client{Transport: transport}, ctx: builder.ctx, retries: builder.retries}, err
 }
 
-func createDefaultHttpTransport() *http.Transport {
+func (builder *httpClientBuilder) createDefaultHttpTransport() *http.Transport {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
+			Timeout:   builder.timeout,
 			KeepAlive: 20 * time.Second,
 			DualStack: true,
 		}).DialContext,

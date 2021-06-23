@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"time"
 )
 
 type Config interface {
@@ -14,6 +15,7 @@ type Config interface {
 	GetLogger() log.Log
 	IsInsecureTls() bool
 	GetContext() context.Context
+	GetHttpTimeout() time.Duration
 	GetHttpRetries() int
 }
 
@@ -25,6 +27,7 @@ type servicesConfig struct {
 	logger           log.Log
 	insecureTls      bool
 	ctx              context.Context
+	httpTimeout      time.Duration
 	httpRetries      int
 }
 
@@ -54,6 +57,10 @@ func (config *servicesConfig) IsInsecureTls() bool {
 
 func (config *servicesConfig) GetContext() context.Context {
 	return config.ctx
+}
+
+func (config *servicesConfig) GetHttpTimeout() time.Duration {
+	return config.httpTimeout
 }
 
 func (config *servicesConfig) GetHttpRetries() int {
