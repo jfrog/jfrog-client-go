@@ -37,6 +37,7 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
+		SetRetries(config.GetHttpRetries()).
 		Build()
 	if err != nil {
 		return nil, err

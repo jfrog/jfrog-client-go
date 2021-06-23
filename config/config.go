@@ -14,6 +14,7 @@ type Config interface {
 	GetLogger() log.Log
 	IsInsecureTls() bool
 	GetContext() context.Context
+	GetHttpRetries() int
 }
 
 type servicesConfig struct {
@@ -24,6 +25,7 @@ type servicesConfig struct {
 	logger           log.Log
 	insecureTls      bool
 	ctx              context.Context
+	httpRetries      int
 }
 
 func (config *servicesConfig) IsDryRun() bool {
@@ -52,4 +54,8 @@ func (config *servicesConfig) IsInsecureTls() bool {
 
 func (config *servicesConfig) GetContext() context.Context {
 	return config.ctx
+}
+
+func (config *servicesConfig) GetHttpRetries() int {
+	return config.httpRetries
 }

@@ -47,7 +47,7 @@ func (gs *GpgService) SignFile(pathDetails *utils.PathDetails, passphrase string
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendPost(url, []byte(data), httpClientsDetails)
+	resp, body, err := client.SendPost(url, []byte(data), httpClientsDetails, "")
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (gs *GpgService) SignVersion(versionPath *versions.Path, passphrase string)
 	if err != nil {
 		return err
 	}
-	resp, body, err := client.SendPost(url, []byte(data), httpClientsDetails)
+	resp, body, err := client.SendPost(url, []byte(data), httpClientsDetails, "")
 	if err != nil {
 		return err
 	}

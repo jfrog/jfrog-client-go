@@ -32,7 +32,7 @@ func (rs *RepositoryService) IsRepoExists(repositoryPath *Path) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	resp, _, err := client.SendHead(url, httpClientsDetails)
+	resp, _, err := client.SendHead(url, httpClientsDetails, "")
 	if err != nil {
 		return false, err
 	}

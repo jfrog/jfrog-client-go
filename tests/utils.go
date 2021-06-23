@@ -548,7 +548,7 @@ func isRepoExist(repoName string) bool {
 		log.Error(err)
 		os.Exit(1)
 	}
-	resp, _, _, err := client.SendGet(artDetails.GetUrl()+RepoDetailsUrl+repoName, true, artHttpDetails)
+	resp, _, _, err := client.SendGet(artDetails.GetUrl()+RepoDetailsUrl+repoName, true, artHttpDetails, "")
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
@@ -573,7 +573,7 @@ func execCreateRepoRest(repoConfig, repoName string) error {
 	if err != nil {
 		return err
 	}
-	resp, _, err := client.SendPut(artDetails.GetUrl()+"api/repositories/"+repoName, content, artHttpDetails)
+	resp, _, err := client.SendPut(artDetails.GetUrl()+"api/repositories/"+repoName, content, artHttpDetails, "")
 	if err != nil {
 		return err
 	}
@@ -601,7 +601,7 @@ func getRepoConfig(repoKey string) (body []byte, err error) {
 	if err != nil {
 		return
 	}
-	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/repositories/"+repoKey, false, artHttpDetails)
+	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/repositories/"+repoKey, false, artHttpDetails, "")
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return
 	}
@@ -709,7 +709,7 @@ func deleteBuild(buildName string) error {
 		return err
 	}
 
-	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails)
+	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails, "")
 
 	if err != nil {
 		return err
@@ -730,7 +730,7 @@ func getIndexedBuilds() ([]string, error) {
 		return []string{}, err
 	}
 
-	resp, body, _, err := client.SendGet(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", true, artHTTPDetails)
+	resp, body, _, err := client.SendGet(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", true, artHTTPDetails, "")
 	if err != nil {
 		return []string{}, err
 	}
@@ -772,7 +772,7 @@ func deleteBuildIndex(buildName string) error {
 	dataIndexBuild := indexedBuildsPayload{IndexedBuilds: indexedBuilds}
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
 
-	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails)
+	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails, "")
 	if err != nil {
 		return err
 	}

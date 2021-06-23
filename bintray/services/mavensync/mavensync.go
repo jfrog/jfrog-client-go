@@ -64,7 +64,7 @@ func (mcss *MavenCentralSyncService) Sync(p *Params, path *versions.Path) error 
 		return errorutils.CheckError(err)
 	}
 
-	resp, body, err := client.SendPost(url, requestContent, mcss.BintrayDetails.CreateHttpClientDetails())
+	resp, body, err := client.SendPost(url, requestContent, mcss.BintrayDetails.CreateHttpClientDetails(), "")
 	if err != nil {
 		return err
 	}

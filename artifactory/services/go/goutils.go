@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-const GoUploadRetries = 3
-
 func addHeaders(params GoParams, clientDetails *httputils.HttpClientDetails) {
 	utils.AddHeader("X-GO-MODULE-VERSION", params.GetVersion(), &clientDetails.Headers)
 	utils.AddHeader("X-GO-MODULE-CONTENT", base64.StdEncoding.EncodeToString(params.GetModContent()), &clientDetails.Headers)

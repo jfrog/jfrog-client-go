@@ -3,7 +3,6 @@ package logs
 import (
 	"errors"
 	"github.com/jfrog/jfrog-client-go/bintray/auth"
-	"github.com/jfrog/jfrog-client-go/bintray/services/utils"
 	"github.com/jfrog/jfrog-client-go/bintray/services/versions"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -34,7 +33,7 @@ func (ls *LogsService) List(versionPath *versions.Path) error {
 	if err != nil {
 		return err
 	}
-	resp, body, _, _ := client.SendGet(listUrl, true, httpClientsDetails)
+	resp, body, _, _ := client.SendGet(listUrl, true, httpClientsDetails, "")
 
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Bintray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
@@ -62,7 +61,7 @@ func (ls *LogsService) Download(versionPath *versions.Path, logName string) erro
 		DownloadPath:  downloadUrl,
 		LocalPath:     "",
 		LocalFileName: logName}
-	resp, err := client.DownloadFile(details, "", httpClientsDetails, utils.BintrayDownloadRetries, false)
+	resp, err := client.DownloadFile(details, "", httpClientsDetails, false)
 	if err != nil {
 		return err
 	}
