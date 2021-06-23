@@ -77,7 +77,7 @@ func (ds *DownloadService) DownloadVersion(downloadParams *DownloadVersionParams
 	if err != nil {
 		return
 	}
-	resp, body, _, _ := client.SendGet(versionPathUrl, true, httpClientsDetails)
+	resp, body, _, _ := client.SendGet(versionPathUrl, true, httpClientsDetails, "")
 	if resp.StatusCode != http.StatusOK {
 		err = errorutils.CheckError(errors.New(resp.Status + ". " + utils.ReadBintrayMessage(body)))
 		return
@@ -203,7 +203,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 			LocalPath:     localPath,
 			LocalFileName: localFileName}
 
-		resp, err := client.DownloadFile(downloadDetails, logMsgPrefix, httpClientsDetails, utils.BintrayDownloadRetries, false)
+		resp, err := client.DownloadFile(downloadDetails, logMsgPrefix, httpClientsDetails, false)
 		if err != nil {
 			return err
 		}
@@ -217,7 +217,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 		var resp *http.Response
 		var redirectUrl string
 		resp, redirectUrl, err =
-			client.DownloadFileNoRedirect(url, localPath, localFileName, httpClientsDetails, utils.BintrayDownloadRetries)
+			client.DownloadFileNoRedirect(url, localPath, localFileName, httpClientsDetails)
 		// There are two options now. Either the file has just been downloaded as one block, or
 		// we got a redirect to DSN download URL. In case of the later, we should download the file
 		// concurrently from the DSN URL.
@@ -230,8 +230,7 @@ func (ds *DownloadService) downloadBintrayFile(downloadParams *DownloadFileParam
 				LocalFileName: localFileName,
 				LocalPath:     localPath,
 				FileSize:      details.Size,
-				SplitCount:    downloadParams.SplitCount,
-				Retries:       utils.BintrayDownloadRetries}
+				SplitCount:    downloadParams.SplitCount}
 
 			resp, err = client.DownloadFileConcurrently(concurrentDownloadFlags, "", httpClientsDetails, nil)
 			if errorutils.CheckError(err) != nil {

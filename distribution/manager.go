@@ -24,6 +24,8 @@ func New(config config.Config) (*DistributionServicesManager, error) {
 		SetClientCertPath(details.GetClientCertPath()).
 		SetClientCertKeyPath(details.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
+		SetContext(config.GetContext()).
+		SetRetries(config.GetHttpRetries()).
 		Build()
 	return manager, err
 }

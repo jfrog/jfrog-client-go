@@ -277,8 +277,8 @@ func (ds *DownloadService) addToResults(resultItem *utils.ResultItem, downloadPa
 	}
 }
 
-func createDependencyTransferDetails(downloadPath, localPath, localFileName string) utils.FileTransferDetails {
-	fileInfo := utils.FileTransferDetails{
+func createDependencyTransferDetails(downloadPath, localPath, localFileName string) clientutils.FileTransferDetails {
+	fileInfo := clientutils.FileTransferDetails{
 		SourcePath: downloadPath,
 		TargetPath: filepath.Join(localPath, localFileName),
 	}
@@ -321,7 +321,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	if bulkDownload {
 		var resp *http.Response
 		resp, err := ds.client.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, &httpClientsDetails,
-			downloadParams.GetRetries(), downloadParams.IsExplode(), ds.Progress)
+			downloadParams.IsExplode(), ds.Progress)
 		if err != nil {
 			return err
 		}
@@ -338,8 +338,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		ExpectedSha1:  downloadFileDetails.ExpectedSha1,
 		FileSize:      downloadFileDetails.Size,
 		SplitCount:    downloadParams.SplitCount,
-		Explode:       downloadParams.IsExplode(),
-		Retries:       downloadParams.GetRetries()}
+		Explode:       downloadParams.IsExplode()}
 
 	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails, ds.Progress)
 	if err != nil {
@@ -530,7 +529,6 @@ type DownloadParams struct {
 	Explode         bool
 	MinSplitSize    int64
 	SplitCount      int
-	Retries         int
 }
 
 func (ds *DownloadParams) IsFlat() bool {
@@ -553,10 +551,6 @@ func (ds *DownloadParams) ValidateSymlinks() bool {
 	return ds.ValidateSymlink
 }
 
-func (ds *DownloadParams) GetRetries() int {
-	return ds.Retries
-}
-
 func NewDownloadParams() DownloadParams {
-	return DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinSplitSize: 5120, SplitCount: 3, Retries: 3}
+	return DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinSplitSize: 5120, SplitCount: 3}
 }

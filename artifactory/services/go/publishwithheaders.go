@@ -27,19 +27,19 @@ func (pwh *publishWithHeader) isCompatible(artifactoryVersion string) bool {
 	return false
 }
 
-func (pwh *publishWithHeader) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) error {
+func (pwh *publishWithHeader) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (summary *utils.OperationSummary, err error) {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	clientDetails := ArtDetails.CreateHttpClientDetails()
 	addHeaders(params, &clientDetails)
 	err = addPropertiesHeaders(params.GetProps(), &clientDetails.Headers)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, GoUploadRetries, nil)
+	resp, _, err := client.UploadFile(params.GetZipPath(), url, "", &clientDetails, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusCreated)
+	return nil, errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }
 
 func addPropertiesHeaders(props string, headers *map[string]string) error {

@@ -199,7 +199,7 @@ func execGet(port int, path string, c *testContext) (*http.Response, error) {
 		return nil, err
 	}
 	resp, _, _, err := client.Send("POST", "http://localhost:"+strconv.Itoa(port)+path,
-		[]byte(strconv.Itoa(c.tryNum)), true, false, httputils.HttpClientDetails{})
+		[]byte(strconv.Itoa(c.tryNum)), true, false, httputils.HttpClientDetails{}, "")
 	if err != nil {
 		return resp, err
 	}

@@ -2,7 +2,6 @@ package services
 
 import (
 	"archive/zip"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -396,23 +395,12 @@ func (us *UploadService) uploadFile(localPath, targetPathWithProps string, fileI
 	if err != nil {
 		return nil, false, err
 	}
-	// Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
-	// In case of uploading archive with "--explode" the response body will be empty and sha256 won't be shown at
-	// the detailed summary.
-	if len(body) > 0 {
-		responseBody := new(UploadResponseBody)
-		err = json.Unmarshal(body, &responseBody)
-		if errorutils.CheckError(err) != nil {
-			return nil, false, err
-		}
-		details.Checksum.Sha256 = responseBody.Checksums.Sha256
+	details.Checksum.Sha256, err = clientutils.ExtractSha256FromResponseBody(body)
+	if err != nil {
+		return nil, false, err
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
 	return details, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
-}
-
-type UploadResponseBody struct {
-	Checksums fileutils.ChecksumDetails `json:"checksums,omitempty"`
 }
 
 // Reads a file from a Reader that is given from a function (getReaderFunc) and uploads it to the specified target path.
@@ -435,7 +423,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 
 		if !checksumDeployed {
 			retryExecutor := clientutils.RetryExecutor{
-				MaxRetries:      uploadParams.Retries,
+				MaxRetries:      us.client.GetHttpClient().GetRetries(),
 				RetriesInterval: 0,
 				ErrorMessage:    fmt.Sprintf("Failure occurred while uploading to %s", targetUrlWithProps),
 				LogMsgPrefix:    logMsgPrefix,
@@ -478,7 +466,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries(), nil)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, nil)
 	return
 }
 
@@ -503,7 +491,7 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 		}
 		if !checksumDeployed {
 			resp, body, err = utils.UploadFile(localPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
-				httpClientsDetails, us.client, uploadParams.Retries, us.Progress)
+				httpClientsDetails, us.client, us.Progress)
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
@@ -587,7 +575,6 @@ type UploadParams struct {
 	ExplodeArchive    bool
 	Flat              bool
 	AddVcsProps       bool
-	Retries           int
 	MinChecksumDeploy int64
 	Archive           string
 }
@@ -621,10 +608,6 @@ func (up *UploadParams) IsExplodeArchive() bool {
 
 func (up *UploadParams) GetDebian() string {
 	return up.Deb
-}
-
-func (up *UploadParams) GetRetries() int {
-	return up.Retries
 }
 
 type UploadData struct {
@@ -896,7 +879,7 @@ func newResultManager() (*resultsManager, error) {
 
 // Write a result of a successful upload
 func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha256 string, checksums *fileutils.ChecksumDetails) {
-	fileTransferDetails := utils.FileTransferDetails{
+	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
 		Sha256:     sha256,
@@ -922,7 +905,7 @@ func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 			return e
 		}
 	}
-	fileTransferDetails := utils.FileTransferDetails{
+	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
 	}

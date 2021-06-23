@@ -16,6 +16,7 @@ type Config interface {
 	IsInsecureTls() bool
 	GetContext() context.Context
 	GetHttpTimeout() time.Duration
+	GetHttpRetries() int
 }
 
 type servicesConfig struct {
@@ -27,6 +28,7 @@ type servicesConfig struct {
 	insecureTls      bool
 	ctx              context.Context
 	httpTimeout      time.Duration
+	httpRetries      int
 }
 
 func (config *servicesConfig) IsDryRun() bool {
@@ -59,4 +61,8 @@ func (config *servicesConfig) GetContext() context.Context {
 
 func (config *servicesConfig) GetHttpTimeout() time.Duration {
 	return config.httpTimeout
+}
+
+func (config *servicesConfig) GetHttpRetries() int {
+	return config.httpRetries
 }
