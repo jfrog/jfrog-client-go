@@ -83,7 +83,7 @@ func (rtc *JfrogHttpClient) SendPut(url string, content []byte, httpClientsDetai
 }
 
 func (rtc *JfrogHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool,
-	httpClientsDetails *httputils.HttpClientDetails, retries int, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+	httpClientsDetails *httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
@@ -127,7 +127,7 @@ func (rtc *JfrogHttpClient) DownloadFileWithProgress(downloadFileDetails *httpcl
 }
 
 func (rtc *JfrogHttpClient) DownloadFile(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails *httputils.HttpClientDetails, retries int, isExplode bool) (resp *http.Response, err error) {
+	httpClientsDetails *httputils.HttpClientDetails, isExplode bool) (resp *http.Response, err error) {
 	return rtc.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, httpClientsDetails, isExplode, nil)
 }
 

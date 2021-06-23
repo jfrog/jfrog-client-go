@@ -110,7 +110,7 @@ func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Re
 	// as soon as Xray sends them.
 	utils.DisableAccelBuffering(&httpClientsDetails.Headers)
 
-	resp, _, _, err := ps.client.Send("POST", url, content, true, false, &httpClientsDetails, 0, "")
+	resp, _, _, err := ps.client.Send("POST", url, content, true, false, &httpClientsDetails, "")
 	if err != nil {
 		return resp, err
 	}

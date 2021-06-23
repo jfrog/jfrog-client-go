@@ -233,6 +233,8 @@ serviceConfig, err := config.NewConfigBuilder().
     SetDryRun(false).
     // Add [Context](https://golang.org/pkg/context/)
     SetContext(ctx).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(8).
     Build()
 ```
 
@@ -1356,6 +1358,8 @@ xrayDetails.SetClientCertKeyPath("path/to/.key")
 serviceConfig, err := config.NewConfigBuilder().
     SetServiceDetails(xrayDetails).
     SetCertificatesPath(certPath).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(8).
     Build()
 ```
 
@@ -1531,6 +1535,8 @@ pipelinesDetails.SetClientCertKeyPath("path/to/.key")
 serviceConfig, err := config.NewConfigBuilder().
     SetServiceDetails(pipelinesDetails).
     SetCertificatesPath(pipelinesDetails.GetClientCertPath()).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(8).
     Build()
 ```
 

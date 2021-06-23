@@ -103,7 +103,7 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 		MaxRetries:      jc.retries,
 		RetriesInterval: 0,
 		LogMsgPrefix:    logMsgPrefix,
-		ErrorMessage:    fmt.Sprintf("Failure occurred while sendong %s request to %s", method, url),
+		ErrorMessage:    fmt.Sprintf("Failure occurred while sending %s request to %s", method, url),
 		ExecutionHandler: func() (bool, error) {
 			resp, respBody, redirectUrl, err = jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
 			if err != nil {
