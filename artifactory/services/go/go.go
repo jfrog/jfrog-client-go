@@ -32,12 +32,11 @@ func (gs *GoService) PublishPackage(params GoParams) (*utils.OperationSummary, e
 	if err != nil {
 		return nil, err
 	}
-	publisher := GetCompatiblePublisher(artifactoryVersion)
-	if publisher == nil {
+	publisher := &GoPublishCommand{}
+	if !publisher.isCompatible(artifactoryVersion) {
+		// PublishPackage support Artifactory version "6.6.1" and above.
 		return nil, errorutils.CheckError(errors.New(fmt.Sprintf("Unsupported version of Artifactory: %s", artifactoryVersion)))
 	}
-	// publisher.PublishPackage returns OperationSummary only from Artifactory version "6.6.1" and above.
-	// For older versions OperationSummary will be nil.
 	return publisher.PublishPackage(params, gs.client, gs.ArtDetails)
 }
 
