@@ -193,8 +193,13 @@ type License struct {
 }
 
 type Component struct {
-	FixedVersions []string `json:"fixed_versions,omitempty"`
-	ImpactPaths   []string `json:"impact_paths,omitempty"`
+	FixedVersions []string           `json:"fixed_versions,omitempty"`
+	ImpactPaths   [][]ImpactPathNode `json:"impact_paths,omitempty"`
+}
+
+type ImpactPathNode struct {
+	ComponentId string `json:"component_id,omitempty"`
+	FullPath    string `json:"full_path,omitempty"`
 }
 
 type Cve struct {
