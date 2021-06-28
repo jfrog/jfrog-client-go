@@ -3,6 +3,7 @@ package httputils
 import (
 	"github.com/jfrog/jfrog-client-go/utils"
 	"net/http"
+	"time"
 )
 
 type HttpClientDetails struct {
@@ -12,6 +13,7 @@ type HttpClientDetails struct {
 	AccessToken string
 	Headers     map[string]string
 	Transport   *http.Transport
+	HttpTimeout time.Duration
 }
 
 func (httpClientDetails HttpClientDetails) Clone() *HttpClientDetails {

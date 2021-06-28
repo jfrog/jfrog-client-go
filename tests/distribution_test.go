@@ -411,7 +411,7 @@ func sendGpgKeys(t *testing.T) {
 
 	// Send public key to Artifactory
 	content := fmt.Sprintf(artifactoryGpgKeyCreatePattern, publicKey)
-	resp, body, err := httpClient.SendPost(GetRtDetails().GetUrl()+"api/security/keys/trusted", []byte(content), distHttpDetails)
+	resp, body, err := httpClient.SendPost(GetRtDetails().GetUrl()+"api/security/keys/trusted", []byte(content), distHttpDetails, "")
 	assert.NoError(t, err)
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusConflict {
 		t.Error(resp.Status)
@@ -426,7 +426,7 @@ func deleteGpgKeys(t *testing.T) {
 	if gpgKeyId == "" {
 		return
 	}
-	resp, body, err := httpClient.SendDelete(GetRtDetails().GetUrl()+"api/security/keys/trusted/"+gpgKeyId, nil, distHttpDetails)
+	resp, body, err := httpClient.SendDelete(GetRtDetails().GetUrl()+"api/security/keys/trusted/"+gpgKeyId, nil, distHttpDetails, "")
 	assert.NoError(t, err)
 	if resp.StatusCode != http.StatusNoContent {
 		t.Error(resp.Status)
@@ -436,7 +436,7 @@ func deleteGpgKeys(t *testing.T) {
 
 // Get GPG key ID created in the tests
 func getGpgKeyId(t *testing.T) string {
-	resp, body, _, err := httpClient.SendGet(GetRtDetails().GetUrl()+"api/security/keys/trusted", true, distHttpDetails)
+	resp, body, _, err := httpClient.SendGet(GetRtDetails().GetUrl()+"api/security/keys/trusted", true, distHttpDetails, "")
 	assert.NoError(t, err)
 	if resp.StatusCode != http.StatusOK {
 		t.Error(resp.Status)
@@ -487,7 +487,7 @@ func waitForDistribution(t *testing.T, bundleName string) {
 // Wait for deletion of a release bundle
 func waitForDeletion(t *testing.T, bundleName string) {
 	for i := 0; i < 120; i++ {
-		resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion+"/distribution", true, distHttpDetails)
+		resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion+"/distribution", true, distHttpDetails, "")
 		assert.NoError(t, err)
 		if resp.StatusCode == http.StatusNotFound {
 			return
@@ -520,7 +520,7 @@ type gpgKeyResponse struct {
 }
 
 func getLocalBundle(t *testing.T, bundleName string, expectExist bool) *distributableResponse {
-	resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion, true, distHttpDetails)
+	resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion, true, distHttpDetails, "")
 	assert.NoError(t, err)
 	if !expectExist {
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
