@@ -579,8 +579,7 @@ apiKey, err := rtManager.GetAPIKey()
 #### Creating and Updating Local Repository
 You can create and update a local repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
-Vagrant, Gitlfs, Go, Yum, Conan, Chef, Puppet and Generic.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant and Yum
 
 Each package type has it's own parameters struct, can be created using the method
 `New<packageType>LocalRepositoryParams()`.
@@ -691,6 +690,49 @@ err := servicesManager.CreateVirtualRepository(params)
 Updating virtual Go repository:
 ```go
 err = servicesManager.UpdateVirtualRepository().Go(params)
+```
+
+#### Creating and Updating Federated Repository
+You can create and update a federated repository for the following package types:
+
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant and Yum
+
+Each package type has it's own parameters struct, can be created using the method
+`New<packageType>FederatedRepositoryParams()`.
+
+Example for creating local Generic repository:
+```go
+params := services.NewGenericFederatedRepositoryParams()
+params.Key = "generic-repo"
+params.Description = "This is a public description for generic-repo"
+params.Notes = "These are internal notes for generic-repo"
+params.RepoLayoutRef = "simple-default"
+params.ArchiveBrowsingEnabled = true
+params.XrayIndex = true
+params.IncludesPattern = "**/*"
+params.ExcludesPattern = "excludedDir/*"
+params.DownloadRedirect = true
+params.Members = []services.FederatedRepositoryMemberParams{
+		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+	}
+err = servicesManager.CreateFederatedRepository().Generic(params)
+```
+
+You can also create a federated repository with basic federated params:
+```go
+params := services.NewFederatedRepositoryBaseParams()
+params.Key = "generic-repo"
+params.PackageType = "generic"
+params.Description = "This is a public description for generic-repo"
+params.Members = []services.FederatedRepositoryMemberParams{
+		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+	}
+err := servicesManager.CreateFederatedRepository(params)
+```
+
+Updating federated Generic repository:
+```go
+err = servicesManager.UpdateFederatedRepository().Generic(params)
 ```
 
 #### Removing a Repository

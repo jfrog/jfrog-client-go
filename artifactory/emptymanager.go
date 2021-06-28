@@ -20,9 +20,12 @@ type ArtifactoryServicesManager interface {
 	CreateRemoteRepositoryWithParams(params services.RemoteRepositoryBaseParams) error
 	CreateVirtualRepository() *services.VirtualRepositoryService
 	CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error
+	CreateFederatedRepository() *services.FederatedRepositoryService
+	CreateFederatedRepositoryWithParams(params services.FederatedRepositoryBaseParams) error
 	UpdateLocalRepository() *services.LocalRepositoryService
 	UpdateRemoteRepository() *services.RemoteRepositoryService
 	UpdateVirtualRepository() *services.VirtualRepositoryService
+	UpdateFederatedRepository() *services.FederatedRepositoryService
 	DeleteRepository(repoKey string) error
 	GetRepository(repoKey string, repoDetails interface{}) error
 	GetAllRepositories() (*[]services.RepositoryDetails, error)
@@ -111,6 +114,14 @@ func (esm *EmptyArtifactoryServicesManager) CreateVirtualRepositoryWithParams(pa
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) CreateFederatedRepository() *services.FederatedRepositoryService {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateFederatedRepositoryWithParams(params services.FederatedRepositoryBaseParams) error {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) UpdateLocalRepository() *services.LocalRepositoryService {
 	panic("Failed: Method is not implemented")
 }
@@ -120,6 +131,10 @@ func (esm *EmptyArtifactoryServicesManager) UpdateRemoteRepository() *services.R
 }
 
 func (esm *EmptyArtifactoryServicesManager) UpdateVirtualRepository() *services.VirtualRepositoryService {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) UpdateFederatedRepository() *services.FederatedRepositoryService {
 	panic("Failed: Method is not implemented")
 }
 

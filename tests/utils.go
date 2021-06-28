@@ -64,9 +64,11 @@ var testsSecurityService *services.SecurityService
 var testsCreateLocalRepositoryService *services.LocalRepositoryService
 var testsCreateRemoteRepositoryService *services.RemoteRepositoryService
 var testsCreateVirtualRepositoryService *services.VirtualRepositoryService
+var testsCreateFederatedRepositoryService *services.FederatedRepositoryService
 var testsUpdateLocalRepositoryService *services.LocalRepositoryService
 var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
+var testsUpdateFederatedRepositoryService *services.FederatedRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
 var testsRepositoriesService *services.RepositoriesService
 var testsCreateReplicationService *services.CreateReplicationService
@@ -265,6 +267,22 @@ func createArtifactoryUpdateVirtualRepositoryManager() {
 	failOnHttpClientCreation(err)
 	testsUpdateVirtualRepositoryService = services.NewVirtualRepositoryService(client, true)
 	testsUpdateVirtualRepositoryService.ArtDetails = artDetails
+}
+
+func createArtifactoryCreateFederatedRepositoryManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsCreateFederatedRepositoryService = services.NewFederatedRepositoryService(client, false)
+	testsCreateFederatedRepositoryService.ArtDetails = artDetails
+}
+
+func createArtifactoryUpdateFederatedRepositoryManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsUpdateFederatedRepositoryService = services.NewFederatedRepositoryService(client, true)
+	testsUpdateFederatedRepositoryService.ArtDetails = artDetails
 }
 
 func createArtifactoryDeleteRepositoryManager() {

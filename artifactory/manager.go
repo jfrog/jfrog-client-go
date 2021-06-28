@@ -79,6 +79,12 @@ func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepository() *services.Vir
 	return repositoryService
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateFederatedRepository() *services.FederatedRepositoryService {
+	repositoryService := services.NewFederatedRepositoryService(sm.client, false)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
@@ -97,6 +103,12 @@ func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepositoryWithParams(param
 	return repositoryService.CreateVirtual(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateFederatedRepositoryWithParams(params services.FederatedRepositoryBaseParams) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.CreateFederated(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) UpdateLocalRepository() *services.LocalRepositoryService {
 	repositoryService := services.NewLocalRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
@@ -111,6 +123,12 @@ func (sm *ArtifactoryServicesManagerImp) UpdateRemoteRepository() *services.Remo
 
 func (sm *ArtifactoryServicesManagerImp) UpdateVirtualRepository() *services.VirtualRepositoryService {
 	repositoryService := services.NewVirtualRepositoryService(sm.client, true)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdateFederatedRepository() *services.FederatedRepositoryService {
+	repositoryService := services.NewFederatedRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService
 }
