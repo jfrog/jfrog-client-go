@@ -32,22 +32,19 @@ func GetPaths(rootPath string, isRecursive, includeDirs, isSymlink bool) ([]stri
 
 // Transform to regexp and prepare Exclude patterns to be used
 func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
-	exclusions := params.GetExclusions()
 	excludePathPattern := ""
-	if len(exclusions) > 0 {
-		for _, singleExclusion := range exclusions {
-			if len(singleExclusion) > 0 {
-				singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
-				singleExclusion = utils.PrepareLocalPathForUpload(singleExclusion, params.GetPatternType())
-				if params.IsRecursive() && strings.HasSuffix(singleExclusion, fileutils.GetFileSeparator()) {
-					singleExclusion += "*"
-				}
-				excludePathPattern += fmt.Sprintf(`(%s)|`, singleExclusion)
+	for _, singleExclusion := range params.GetExclusions() {
+		if len(singleExclusion) > 0 {
+			singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
+			singleExclusion = utils.PrepareLocalPathForUpload(singleExclusion, params.GetPatternType())
+			if params.IsRecursive() && strings.HasSuffix(singleExclusion, fileutils.GetFileSeparator()) {
+				singleExclusion += "*"
 			}
+			excludePathPattern += fmt.Sprintf(`(%s)|`, singleExclusion)
 		}
-		if len(excludePathPattern) > 0 {
-			excludePathPattern = excludePathPattern[:len(excludePathPattern)-1]
-		}
+	}
+	if len(excludePathPattern) > 0 {
+		excludePathPattern = excludePathPattern[:len(excludePathPattern)-1]
 	}
 	return excludePathPattern
 }

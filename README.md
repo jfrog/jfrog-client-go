@@ -258,6 +258,7 @@ params.Explode = false
 params.Archive = "zip"
 params.Deb = ""
 params.Symlink = false
+params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
 // MinChecksumDeploy default value: 10400
@@ -280,6 +281,7 @@ params.Flat = false
 params.Explode = false
 params.Symlink = true
 params.ValidateSymlink = false
+params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
 // SplitCount default value: 3
