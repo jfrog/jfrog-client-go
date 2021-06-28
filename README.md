@@ -701,7 +701,7 @@ Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Doc
 Each package type has it's own parameters struct, can be created using the method
 `New<packageType>FederatedRepositoryParams()`.
 
-Example for creating local Generic repository:
+Example for creating federated Generic repository:
 ```go
 params := services.NewGenericFederatedRepositoryParams()
 params.Key = "generic-repo"
