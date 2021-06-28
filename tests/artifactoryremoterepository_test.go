@@ -8,6 +8,7 @@ import (
 )
 
 const ArtifactoryLocalFileCacheSuffix = " (local file cache)"
+const MavenCentralUrl = "https://repo.maven.apache.org"
 
 func TestArtifactoryRemoteRepository(t *testing.T) {
 	initArtifactoryTest(t)
@@ -48,7 +49,7 @@ func remoteMavenTest(t *testing.T) {
 	mrp := services.NewMavenRemoteRepositoryParams()
 	mrp.Key = repoKey
 	mrp.RepoLayoutRef = "maven-2-default"
-	mrp.Url = "https://jcenter.bintray.com"
+	mrp.Url = MavenCentralUrl
 	mrp.Description = "Maven Repo for jfrog-client-go remote-repository-test"
 	mrp.SuppressPomConsistencyChecks = &trueValue
 	mrp.HandleReleases = &trueValue
@@ -83,7 +84,7 @@ func remoteGradleTest(t *testing.T) {
 	grp := services.NewGradleRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "maven-2-default"
-	grp.Url = "https://jcenter.bintray.com"
+	grp.Url = MavenCentralUrl
 	grp.Description = "Gradle Repo for jfrog-client-go remote-repository-test"
 	grp.SuppressPomConsistencyChecks = &trueValue
 	grp.HandleReleases = &trueValue
@@ -119,7 +120,7 @@ func remoteIvyTest(t *testing.T) {
 	irp := services.NewIvyRemoteRepositoryParams()
 	irp.Key = repoKey
 	irp.RepoLayoutRef = "ivy-default"
-	irp.Url = "https://jcenter.bintray.com"
+	irp.Url = MavenCentralUrl
 	irp.Description = "Ivy Repo for jfrog-client-go remote-repository-test"
 	irp.AssumedOfflinePeriodSecs = 8080
 	irp.StoreArtifactsLocally = &trueValue
@@ -151,7 +152,7 @@ func remoteSbtTest(t *testing.T) {
 	srp := services.NewSbtRemoteRepositoryParams()
 	srp.Key = repoKey
 	srp.RepoLayoutRef = "sbt-default"
-	srp.Url = "https://jcenter.bintray.com"
+	srp.Url = MavenCentralUrl
 	srp.Description = "Sbt Repo for jfrog-client-go remote-repository-test"
 	srp.AssumedOfflinePeriodSecs = 9999
 	srp.StoreArtifactsLocally = &trueValue
@@ -649,7 +650,7 @@ func remoteConanTest(t *testing.T) {
 	crp := services.NewConanRemoteRepositoryParams()
 	crp.Key = repoKey
 	crp.RepoLayoutRef = "conan-default"
-	crp.Url = "https://conan.bintray.com"
+	crp.Url = MavenCentralUrl
 	crp.Description = "Conan Repo for jfrog-client-go remote-repository-test"
 	crp.AssumedOfflinePeriodSecs = 1800
 	crp.SynchronizeProperties = &trueValue
@@ -959,7 +960,7 @@ func remoteGenericTest(t *testing.T) {
 	grp := services.NewGenericRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "simple-default"
-	grp.Url = "https://jcenter.bintray.com"
+	grp.Url = MavenCentralUrl
 	grp.Description = "Generic Repo for jfrog-client-go remote-repository-test"
 	grp.AssumedOfflinePeriodSecs = 2345
 	grp.StoreArtifactsLocally = &falseValue
@@ -988,7 +989,7 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	grp := services.NewGenericRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "simple-default"
-	grp.Url = "https://jcenter.bintray.com"
+	grp.Url = MavenCentralUrl
 	grp.Description = "Generic Repo for jfrog-client-go remote-repository-test"
 	grp.XrayIndex = &trueValue
 
@@ -1022,7 +1023,7 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	grp := services.NewGenericRemoteRepositoryParams()
 	grp.Key = repoKey
 	grp.RepoLayoutRef = "simple-default"
-	grp.Url = "https://jcenter.bintray.com"
+	grp.Url = MavenCentralUrl
 	grp.Description = "Generic Repo for jfrog-client-go remote-repository-test"
 	grp.XrayIndex = &trueValue
 
