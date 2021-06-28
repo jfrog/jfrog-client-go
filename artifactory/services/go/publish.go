@@ -108,7 +108,7 @@ func (pwa *GoPublishCommand) upload(localPath, moduleId, version, props, ext, ur
 	}
 	sha256 := resp.Header.Get("X-Checksum-Sha256")
 	if sha256 == "" {
-		log.Error("Failed to extract file's sha256 from response body.\nFile: " + localPath)
+		log.Info("Failed to extract file's sha256 from response body.\nFile: " + localPath)
 	}
 	// Remove urls properties suffix
 	splitUrlPath := strings.Split(urlPath, ";")
