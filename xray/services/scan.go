@@ -182,6 +182,7 @@ type Vulnerability struct {
 	Severity             string               `json:"severity,omitempty"`
 	VulnerableComponents []string             `json:"vulnerable_components,omitempty"`
 	Components           map[string]Component `json:"components,omitempty"`
+	IssueId              string               `json:"issue_id,omitempty"`
 }
 
 type License struct {
