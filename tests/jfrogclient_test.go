@@ -13,7 +13,7 @@ import (
 
 const (
 	JfrogTestsHome      = ".jfrogTest"
-	JfrogHomeEnv        = "JFROG_CLI_HOME"
+	JfrogHomeEnv        = "JFROG_CLI_HOME_DIR"
 	CliIntegrationTests = "github.com/jfrog/jfrog-client-go/tests"
 )
 
