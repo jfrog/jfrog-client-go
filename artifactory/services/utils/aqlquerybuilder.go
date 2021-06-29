@@ -231,13 +231,8 @@ func buildExcludeQueryPart(params *ArtifactoryCommonParams, useLocalPath, recurs
 	excludeQuery := ""
 	var excludeTriples []RepoPathFile
 	if len(params.GetExclusions()) > 0 {
-		for _, excludePattern := range params.GetExclusions() {
-			excludeTriples = append(excludeTriples, createRepoPathFileTriples(prepareSearchPattern(excludePattern, true), recursive)...)
-		}
-	} else {
-		// Support legacy exclude patterns. 'Exclude patterns' are deprecated and replaced by 'exclusions'.
-		for _, excludePattern := range params.GetExcludePatterns() {
-			excludeTriples = append(excludeTriples, createPathFilePairs("", prepareSearchPattern(excludePattern, false), recursive)...)
+		for _, exclusion := range params.GetExclusions() {
+			excludeTriples = append(excludeTriples, createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)...)
 		}
 	}
 
