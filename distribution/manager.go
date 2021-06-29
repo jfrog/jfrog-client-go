@@ -19,10 +19,13 @@ func New(config config.Config) (*DistributionServicesManager, error) {
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
+		SetContext(config.GetContext()).
+		SetTimeout(config.GetHttpTimeout()).
 		SetClientCertPath(details.GetClientCertPath()).
 		SetClientCertKeyPath(details.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
+		SetRetries(config.GetHttpRetries()).
 		Build()
 	return manager, err
 }
