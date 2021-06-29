@@ -1,6 +1,8 @@
 package _go
 
 import (
+	"errors"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
@@ -26,38 +28,41 @@ type GoPublishCommand struct {
 	client             *jfroghttpclient.JfrogHttpClient
 }
 
-func (pwa *GoPublishCommand) isCompatible(artifactoryVersion string) bool {
+func (gpc *GoPublishCommand) verifyCompatibleVersion(artifactoryVersion string) error {
 	propertiesApi := "6.6.1"
 	version := version.NewVersion(artifactoryVersion)
-	pwa.artifactoryVersion = artifactoryVersion
-	return version.AtLeast(propertiesApi)
+	gpc.artifactoryVersion = artifactoryVersion
+	if !version.AtLeast(propertiesApi) {
+		return errorutils.CheckError(errors.New(fmt.Sprintf("Unsupported version of Artifactory: %s\nSupports Artifactory version %s and above", artifactoryVersion, propertiesApi)))
+	}
+	return nil
 }
 
-func (pwa *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
+func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
 	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
-	pwa.clientDetails = ArtDetails.CreateHttpClientDetails()
-	pwa.client = client
+	gpc.clientDetails = ArtDetails.CreateHttpClientDetails()
+	gpc.client = client
 	moduleId := strings.Split(params.GetModuleId(), ":")
 	totalSucceed, totalFailed := 0, 0
 	var filesDetails []clientutils.FileTransferDetails
 	// Upload zip file
-	success, failed, err := uploadFile(params, params.ZipPath, moduleId[0], ".zip", url, &filesDetails, pwa)
+	success, failed, err := gpc.uploadFile(params, params.ZipPath, moduleId[0], ".zip", url, &filesDetails, gpc)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	// Upload mod file
-	success, failed, err = uploadFile(params, params.ModPath, moduleId[0], ".mod", url, &filesDetails, pwa)
+	success, failed, err = gpc.uploadFile(params, params.ModPath, moduleId[0], ".mod", url, &filesDetails, gpc)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
-	if version.NewVersion(pwa.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != "" {
+	if version.NewVersion(gpc.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != "" {
 		// Upload info file. This is supported from Artifactory version 6.10.0 and above
-		success, failed, err = uploadFile(params, params.InfoPath, moduleId[0], ".info", url, &filesDetails, pwa)
+		success, failed, err = gpc.uploadFile(params, params.InfoPath, moduleId[0], ".info", url, &filesDetails, gpc)
 		totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 		if err != nil {
 			return nil, err
@@ -70,7 +75,7 @@ func (pwa *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpcl
 	return &utils.OperationSummary{TotalSucceeded: totalSucceed, TotalFailed: totalFailed, TransferDetailsReader: content.NewContentReader(tempFile, "files")}, nil
 }
 
-func uploadFile(params GoParams, filePath string, moduleId, ext, url string, filesDetails *[]clientutils.FileTransferDetails, pwa *GoPublishCommand) (success, failed int, err error) {
+func (gpc *GoPublishCommand) uploadFile(params GoParams, filePath string, moduleId, ext, url string, filesDetails *[]clientutils.FileTransferDetails, pwa *GoPublishCommand) (success, failed int, err error) {
 	success, failed = 0, 1
 	details, err := pwa.upload(filePath, moduleId, params.GetVersion(), params.GetProps(), ext, url)
 	if err != nil {
@@ -91,7 +96,7 @@ func addGoVersion(version string, urlPath *string) {
 // props - The properties to be assigned for each artifact
 // ext - The extension of the file: zip, mod, info. This extension will be joined with the version for the path. For example v1.2.3.info or v1.2.3.zip
 // urlPath - The url including the repository. For example: http://127.0.0.1/artifactory/api/go/go-local
-func (pwa *GoPublishCommand) upload(localPath, moduleId, version, props, ext, urlPath string) (*clientutils.FileTransferDetails, error) {
+func (gpc *GoPublishCommand) upload(localPath, moduleId, version, props, ext, urlPath string) (*clientutils.FileTransferDetails, error) {
 	err := CreateUrlPath(moduleId, version, props, ext, &urlPath)
 	if err != nil {
 		return nil, err
@@ -101,8 +106,8 @@ func (pwa *GoPublishCommand) upload(localPath, moduleId, version, props, ext, ur
 	if err != nil {
 		return nil, err
 	}
-	utils.AddChecksumHeaders(pwa.clientDetails.Headers, details)
-	resp, _, err := pwa.client.UploadFile(localPath, urlPath, "", &pwa.clientDetails, nil)
+	utils.AddChecksumHeaders(gpc.clientDetails.Headers, details)
+	resp, _, err := gpc.client.UploadFile(localPath, urlPath, "", &gpc.clientDetails, nil)
 	if err != nil {
 		return nil, err
 	}

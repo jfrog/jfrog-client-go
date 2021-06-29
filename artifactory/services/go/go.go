@@ -1,13 +1,10 @@
 package _go
 
 import (
-	"errors"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type GoService struct {
@@ -33,9 +30,10 @@ func (gs *GoService) PublishPackage(params GoParams) (*utils.OperationSummary, e
 		return nil, err
 	}
 	publisher := &GoPublishCommand{}
-	if !publisher.isCompatible(artifactoryVersion) {
-		// PublishPackage support Artifactory version "6.6.1" and above.
-		return nil, errorutils.CheckError(errors.New(fmt.Sprintf("Unsupported version of Artifactory: %s", artifactoryVersion)))
+	// PublishPackage supports Artifactory version "6.6.1" and above.
+	err = publisher.verifyCompatibleVersion(artifactoryVersion)
+	if err != nil {
+		return nil, err
 	}
 	return publisher.PublishPackage(params, gs.client, gs.ArtDetails)
 }
