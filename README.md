@@ -34,7 +34,6 @@
       - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
       - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
       - [Promoting a Docker Image in Artifactory](#promoting-a-docker-image-in-artifactory)
-      - [Distributing Published Builds to JFrog Bintray](#distributing-published-builds-to-jfrog-bintray)
       - [Triggering Build Scanning with JFrog Xray](#triggering-build-scanning-with-jfrog-xray)
       - [Discarding Old Builds](#discarding-old-builds)
       - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
@@ -84,27 +83,6 @@
       - [Getting Distribution Status](#getting-distribution-status)
       - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle)
       - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle)
-  - [Bintray APIs](#bintray-apis)
-    - [Creating Bintray Details](#creating-bintray-details)
-    - [Creating Bintray Service Manager](#creating-bintray-service-manager)
-    - [Using Bintray Services](#using-bintray-services)
-      - [Uploading a Single File to Bintray](#uploading-a-single-file-to-bintray)
-      - [Downloading a Single File from Bintray](#downloading-a-single-file-from-bintray)
-      - [Downloading Version Files from Bintray](#downloading-version-files-from-bintray)
-      - [Showing and Deleting a Bintray Package](#showing-and-deleting-a-bintray-package)
-      - [Creating and Updating a Bintray Package](#creating-and-updating-a-bintray-package)
-      - [Showing and Deleting a Bintray Version](#showing-and-deleting-a-bintray-version)
-      - [Creating and Updating a Bintray Version](#creating-and-updating-a-bintray-version)
-      - [Creating and Updating Entitlements](#creating-and-updating-entitlements)
-      - [Showing and Deleting Entitlements](#showing-and-deleting-entitlements)
-      - [Creating and Updating Access Keys](#creating-and-updating-access-keys)
-      - [Showing and Deleting Access Keys](#showing-and-deleting-access-keys)
-      - [Signing a URL](#signing-a-url)
-      - [GPG Signing a File](#gpg-signing-a-file)
-      - [GPG Signing Version Files](#gpg-signing-version-files)
-      - [Listing Logs](#listing-logs)
-      - [Downloading Logs](#downloading-logs)
-      - [Syncing Content To Maven Central](#syncing-content-to-maven-central)
   - [Using ContentReader](#using-contentreader)
   - [Xray APIs](#xray-apis)
     - [Creating Xray Service Manager](#creating-xray-service-manager)
@@ -145,7 +123,7 @@
       - [Add Pipeline Source](#add-pipeline-source)
 
 ## General
-_jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory or Bintray from your Go application.
+_jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory, Xray and Distribution from your Go application.
 The project is still relatively new, and its APIs may therefore change frequently between releases.
 The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you may look at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
 
@@ -264,6 +242,9 @@ params.Explode = false
 params.Archive = "zip"
 params.Deb = ""
 params.Symlink = false
+params.Exclusions = "(.*)a.zip"
+// Retries default value: 3
+params.Retries = 5
 // MinChecksumDeploy default value: 10400
 params.MinChecksumDeploy = 15360
 
@@ -284,6 +265,9 @@ params.Flat = false
 params.Explode = false
 params.Symlink = true
 params.ValidateSymlink = false
+params.Exclusions = "(.*)a.zip"
+// Retries default value: 3
+params.Retries = 5
 // SplitCount default value: 3
 params.SplitCount = 2
 // MinSplitSize default value: 5120
@@ -476,22 +460,6 @@ params.Copy = true
 rtManager.PromoteDocker(params)
 ```
 
-#### Distributing Published Builds to JFrog Bintray
-```go
-params := services.NewBuildDistributionParams()
-params.SourceRepos = "source-repo"
-params.TargetRepo = "target-repo"
-params.GpgPassphrase = "GpgPassphrase"
-params.Publish = false
-params.OverrideExistingFiles = false
-params.Async = true
-params.BuildName = "buildName"
-params.BuildNumber = "10"
-params.Pattern = "repo/*/*.zip"
-
-rtManager.DistributeBuild(params)
-```
-
 #### Triggering Build Scanning with JFrog Xray
 ```go
 params := services.NewXrayScanParams()
@@ -650,10 +618,10 @@ Each package type has it's own parameters struct, can be created using the metho
 Example for creating remote Maven repository:
 ```go
 params := services.NewMavenRemoteRepositoryParams()
-params.Key = "jcenter-remote"
-params.Url = "http://jcenter.bintray.com"
+params.Key = "maven-central-remote"
+params.Url = "https://repo.maven.apache.org"
 params.RepoLayoutRef = "maven-2-default"
-params.Description = "A caching proxy repository for a JFrog's jcenter"
+params.Description = "A caching proxy repository for Maven central"
 params.HandleSnapshot = false
 params.HandleReleases = true
 params.FetchJarsEagerly = true
@@ -674,7 +642,7 @@ You can also create a remote repository with basic remote params:
 ```go
 params := services.NewRemoteRepositoryBaseParams()
 params.Key = "remote-repo"
-params.Url = "http://jcenter.bintray.com"
+params.Url = "https://repo.maven.apache.org"
 err := servicesManager.CreateRemoteRepository(params)
 ```
 
@@ -1083,223 +1051,6 @@ err := distManager.DeleteReleaseBundle(params)
 params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
 
 err := distManager.DeleteLocalReleaseBundle(params)
-```
-
-## Bintray APIs
-### Creating Bintray Details
-```go
-btDetails := auth.NewBintrayDetails()
-btDetails.SetUser("user")
-btDetails.SetKey("key")
-btDetails.SetDefPackageLicense("Apache 2.0")
-```
-
-### Creating Bintray Service Manager
-```go
-serviceConfig := bintray.NewConfigBuilder().
-    SetBintrayDetails(btDetails).
-    SetDryRun(false).
-    SetThreads(threads).
-    Build()
-
-btManager, err := bintray.New(serviceConfig)
-```
-
-### Using Bintray Services
-#### Uploading a Single File to Bintray
-```go
-params := services.NewUploadParams()
-params.Pattern = "*/*.zip"
-params.Path = versions.CreatePath("subject/repo/pkg/version")
-params.TargetPath = "path/to/files"
-params.Deb = "distribution/component/architecture"
-params.Recursive = true
-params.Flat = true
-params.Publish = false
-params.Override = false
-params.Explode = false
-params.UseRegExp = false
-params.ShowInDownloadList = false
-
-btManager.UploadFiles(params)
-```
-
-#### Downloading a Single File from Bintray
-```go
-params := services.NewDownloadFileParams()
-params.Flat = false
-params.IncludeUnpublished = false
-params.PathDetails = "path/to/file"
-params.TargetPath = "target/path/"
-// SplitCount default value: 3
-params.SplitCount = 2
-// MinSplitSize default value: 5120
-params.MinSplitSize = 7168
-
-btManager.DownloadFile(params)
-```
-
-#### Downloading Version Files from Bintray
-```go
-params := services.NewDownloadVersionParams()
-params.Path, err = versions.CreatePath("subject/repo/pkg/version")
-
-params.IncludeUnpublished = false
-params.TargetPath = "target/path/"
-
-btManager.DownloadVersion(params)
-```
-
-#### Showing and Deleting a Bintray Package
-```go
-pkgPath, err := packages.CreatePath("subject/repo/pkg")
-
-btManager.ShowPackage(pkgPath)
-btManager.DeletePackage(pkgPath)
-```
-
-#### Creating and Updating a Bintray Package
-```go
-params := packages.NewPackageParams()
-params.Path, err = packages.CreatePath("subject/repo/pkg")
-
-params.Desc = "description"
-params.Labels = "labels"
-params.Licenses = "licenses"
-params.CustomLicenses = "custom-licenses"
-params.VcsUrl = "https://github.com/jfrog/jfrog-cli-go"
-params.WebsiteUrl = "https://jfrog.com"
-params.IssueTrackerUrl = "https://github.com/bintray/bintray-client-java/issues"
-params.GithubRepo = "bintray/bintray-client-java"
-params.GithubReleaseNotesFile = "RELEASE_1.2.3.txt" "github-rel-notes"
-params.PublicDownloadNumbers = "true"
-params.PublicStats = "true"
-
-btManager.CreatePackage(params)
-btManager.UpdatePackage(params)
-```
-
-#### Showing and Deleting a Bintray Version
-```go
-versionPath, err := versions.CreatePath("subject/repo/pkg/version")
-
-btManager.ShowVersion(versionPath)
-btManager.DeleteVersion(versionPath)
-```
-
-#### Creating and Updating a Bintray Version
-```go
-params := versions.NewVersionParams()
-params.Path, err = versions.CreatePath("subject/repo/pkg/version")
-
-params.Desc = "description"
-params.VcsTag = "1.1.5"
-params.Released = "true"
-params.GithubReleaseNotesFile = "RELEASE_1.2.3.txt"
-params.GithubUseTagReleaseNotes = "false"
-
-btManager.CreateVersion(params)
-btManager.UpdateVersion(params)
-```
-
-#### Creating and Updating Entitlements
-```go
-params := entitlements.NewEntitlementsParams()
-params.VersionPath, err = versions.CreatePath("subject/repo/pkg/version")
-
-params.Path = "a/b/c"
-params.Access = "rw"
-params.Keys = "keys"
-
-btManager.CreateEntitlement(params)
-
-params.Id = "entitlementID"
-btManager.UpdateEntitlement(params)
-```
-
-#### Showing and Deleting Entitlements
-```go
-versionPath, err := versions.CreatePath("subject/repo/pkg/version")
-
-btManager.ShowAllEntitlements(versionPath)
-btManager.ShowEntitlement("entitelmentID", versionPath)
-btManager.DeleteEntitlement("entitelmentID", versionPath)
-```
-
-#### Creating and Updating Access Keys
-```go
-params := accesskeys.NewAccessKeysParams()
-params.Password = "password"
-params.Org = "org"
-params.Expiry = time.Now() + time.Hour * 10
-params.ExistenceCheckUrl = "http://callbacks.myci.org/username=:username,password=:password"
-params.ExistenceCheckCache = 60
-params.WhiteCidrs = "127.0.0.1/22,193.5.0.1/92"
-params.BlackCidrs = "127.0.0.1/22,193.5.0.1/92"
-params.ApiOnly = true
-
-btManager.CreateAccessKey(params)
-
-params.Id = "KeyID"
-btManager.UpdateAccessKey(params)
-```
-
-#### Showing and Deleting Access Keys
-```go
-btManager.ShowAllAccessKeys("org")
-btManager.ShowAccessKey("org", "KeyID")
-btManager.DeleteAccessKey("org", "KeyID")
-```
-
-#### Signing a URL
-```go
-params := url.NewURLParams()
-params.PathDetails, err = utils.CreatePathDetails("subject/repository/file-path")
-// Check for errors
-params.Expiry = time.Now() + time.Hour * 10
-params.ValidFor = 60
-params.CallbackId = "callback-id"
-params.CallbackEmail = "callback-email"
-params.CallbackUrl = "callback-url"
-params.CallbackMethod = "callback-method"
-
-btManager.SignUrl(params)
-```
-
-#### GPG Signing a File
-```go
-path, err := utils.CreatePathDetails("subject/repository/file-path")
-
-btManager.GpgSignFile(path, "passphrase")
-```
-
-#### GPG Signing Version Files
-```go
-path, err := versions.CreatePath("subject/repo/pkg/version")
-
-btManager.GpgSignVersion(path, "passphrase")
-```
-
-#### Listing Logs
-```go
-path, err := versions.CreatePath("subject/repo/pkg/version")
-
-btManager.LogsList(versionPath)
-```
-
-#### Downloading Logs
-```go
-path, err := versions.CreatePath("subject/repo/pkg/version")
-
-btManager.DownloadLog(path, "logName")
-```
-
-#### Syncing Content To Maven Central
-```go
-params := mavensync.NewParams("user","password", false)
-path, err = versions.CreatePath("subject/repo/pkg/version")
-
-btManager.MavenCentralContentSync(params, path)
 ```
 
 ## Using ContentReader
