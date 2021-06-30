@@ -84,13 +84,7 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat, preserveSymLink bo
 	if !strings.HasSuffix(targetPath, "/") {
 		uploadPath = targetPath
 	} else {
-		var localPath string
-		// If not preserving symlinks and symlink target is valid, use symlink target for upload
-		if !preserveSymLink && symlinkPath != "" {
-			localPath = symlinkPath
-		} else {
-			localPath = rootPath
-		}
+		localPath := rootPath
 
 		if flat {
 			uploadPath, _ = fileutils.GetFileAndDirFromPath(localPath)
