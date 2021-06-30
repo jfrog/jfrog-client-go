@@ -167,7 +167,7 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 	return
 }
 
-func PrepareLocalPathForUpload(localPath string, patternType PatternType) string {
+func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) string {
 	if localPath == "./" || localPath == ".\\" {
 		return "^.*$"
 	}

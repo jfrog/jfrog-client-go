@@ -18,7 +18,7 @@ const (
 var fileSpecCaptureGroup = regexp.MustCompile("({\\d})")
 
 type ReleaseBundleParams struct {
-	SpecFiles          []*rtUtils.ArtifactoryCommonParams
+	SpecFiles          []*rtUtils.CommonParams
 	Name               string
 	Version            string
 	SignImmediately    bool
@@ -78,7 +78,7 @@ func CreateBundleBody(releaseBundleParams ReleaseBundleParams, dryRun bool) (*Re
 }
 
 // Create the AQL query from the input spec
-func createAql(specFile *rtUtils.ArtifactoryCommonParams) (string, error) {
+func createAql(specFile *rtUtils.CommonParams) (string, error) {
 	if specFile.GetSpecType() != rtUtils.AQL {
 		query, err := rtUtils.CreateAqlBodyForSpecWithPattern(specFile)
 		if err != nil {
@@ -90,7 +90,7 @@ func createAql(specFile *rtUtils.ArtifactoryCommonParams) (string, error) {
 }
 
 // Creat the path mapping from the input spec
-func createPathMappings(specFile *rtUtils.ArtifactoryCommonParams) []PathMapping {
+func createPathMappings(specFile *rtUtils.CommonParams) []PathMapping {
 	if len(specFile.Target) == 0 {
 		return []PathMapping{}
 	}
@@ -109,7 +109,7 @@ func createPathMappings(specFile *rtUtils.ArtifactoryCommonParams) []PathMapping
 }
 
 // Create the AddedProps array from the input TargetProps string
-func createAddedProps(specFile *rtUtils.ArtifactoryCommonParams) []AddedProps {
+func createAddedProps(specFile *rtUtils.CommonParams) []AddedProps {
 	props := specFile.TargetProps
 
 	var addedProps []AddedProps

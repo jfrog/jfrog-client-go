@@ -164,7 +164,7 @@ func getRefsRegex(refs string) string {
 }
 
 func (glc *GitLfsCleanService) searchLfsFilesInArtifactory(repo string) (*content.ContentReader, error) {
-	spec := &utils.ArtifactoryCommonParams{Pattern: repo, Target: "", Props: "", ExcludeProps: "", Build: "", Recursive: true, Regexp: false, IncludeDirs: false}
+	spec := &utils.CommonParams{Pattern: repo, Target: "", Props: "", ExcludeProps: "", Build: "", Recursive: true, Regexp: false, IncludeDirs: false}
 	return utils.SearchBySpecWithPattern(spec, glc, utils.NONE)
 }
 

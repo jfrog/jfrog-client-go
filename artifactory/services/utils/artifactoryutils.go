@@ -267,7 +267,7 @@ func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte
 	return
 }
 
-func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
+func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
 	var artifactsAqlSearchErr, dependenciesAqlSearchErr error
 	var readerWithProps *content.ContentReader
 	buildArtifactsSha1 := make(map[string]int)

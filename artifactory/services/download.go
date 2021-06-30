@@ -128,7 +128,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		// Iterate over file-spec groups and produce download tasks.
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
-			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.ArtifactoryCommonParams, artifactoryVersion)
+			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.CommonParams, artifactoryVersion)
 			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
@@ -214,7 +214,7 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 			// The second argument is an error handling func in case the taskFunc return an error.
 			tasksCount++
 			producer.AddTaskWithError(fileHandler(tempData), errorsQueue.AddError)
-			// We don't want to create directories which are created explicitly by download files when ArtifactoryCommonParams.IncludeDirs is used.
+			// We don't want to create directories which are created explicitly by download files when CommonParams.IncludeDirs is used.
 			alreadyCreatedDirs[resultItem.Path] = true
 		} else {
 			directoriesData, directoriesDataKeys = collectDirPathsToCreate(*resultItem, directoriesData, tempData, directoriesDataKeys)
@@ -523,7 +523,7 @@ type DownloadData struct {
 }
 
 type DownloadParams struct {
-	*utils.ArtifactoryCommonParams
+	*utils.CommonParams
 	Symlink         bool
 	ValidateSymlink bool
 	Flat            bool
@@ -540,8 +540,8 @@ func (ds *DownloadParams) IsExplode() bool {
 	return ds.Explode
 }
 
-func (ds *DownloadParams) GetFile() *utils.ArtifactoryCommonParams {
-	return ds.ArtifactoryCommonParams
+func (ds *DownloadParams) GetFile() *utils.CommonParams {
+	return ds.CommonParams
 }
 
 func (ds *DownloadParams) IsSymlink() bool {
@@ -553,5 +553,5 @@ func (ds *DownloadParams) ValidateSymlinks() bool {
 }
 
 func NewDownloadParams() DownloadParams {
-	return DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinSplitSize: 5120, SplitCount: 3}
+	return DownloadParams{CommonParams: &utils.CommonParams{}, MinSplitSize: 5120, SplitCount: 3}
 }
