@@ -74,7 +74,7 @@ func PrepareAndFilterPaths(path, excludePathPattern string, preserveSymlinks, in
 	return
 }
 
-func GetSingleFileToUpload(rootPath, targetPath string, flat, preserveSymLink bool) (utils.Artifact, error) {
+func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifact, error) {
 	symlinkPath, err := GetFileSymlinkPath(rootPath)
 	if err != nil {
 		return utils.Artifact{}, err
@@ -84,13 +84,7 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat, preserveSymLink bo
 	if !strings.HasSuffix(targetPath, "/") {
 		uploadPath = targetPath
 	} else {
-		var localPath string
-		// If not preserving symlinks and symlink target is valid, use symlink target for upload
-		if !preserveSymLink && symlinkPath != "" {
-			localPath = symlinkPath
-		} else {
-			localPath = rootPath
-		}
+		localPath := rootPath
 
 		if flat {
 			uploadPath, _ = fileutils.GetFileAndDirFromPath(localPath)

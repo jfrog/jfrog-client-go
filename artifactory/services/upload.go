@@ -227,7 +227,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 
 	// If the path is a single file (or a symlink while preserving symlinks) upload it and return
 	if !isDir || (fileutils.IsPathSymlink(rootPath) && uploadParams.IsSymlink()) {
-		artifact, err := fspatterns.GetSingleFileToUpload(rootPath, uploadParams.GetTarget(), uploadParams.IsFlat(), uploadParams.IsSymlink())
+		artifact, err := fspatterns.GetSingleFileToUpload(rootPath, uploadParams.GetTarget(), uploadParams.IsFlat())
 		if err != nil {
 			return err
 		}
