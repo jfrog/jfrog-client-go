@@ -19,9 +19,9 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/version"
 )
 
-const ArtifactoryMinSupportedVersionForInfoFile = "6.10.0"
+const ArtifactoryMinSupportedVersion = "6.10.0"
 
-// Support for Artifactory 6.6.1 and above API
+// Support for Artifactory 6.10.0 and above API
 type GoPublishCommand struct {
 	artifactoryVersion string
 	clientDetails      httputils.HttpClientDetails
@@ -29,7 +29,7 @@ type GoPublishCommand struct {
 }
 
 func (gpc *GoPublishCommand) verifyCompatibleVersion(artifactoryVersion string) error {
-	propertiesApi := "6.6.1"
+	propertiesApi := ArtifactoryMinSupportedVersion
 	version := version.NewVersion(artifactoryVersion)
 	gpc.artifactoryVersion = artifactoryVersion
 	if !version.AtLeast(propertiesApi) {
@@ -60,7 +60,7 @@ func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpcl
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
-	if version.NewVersion(gpc.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersionForInfoFile) && params.GetInfoPath() != "" {
+	if version.NewVersion(gpc.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersion) && params.GetInfoPath() != "" {
 		// Upload info file. This is supported from Artifactory version 6.10.0 and above
 		success, failed, err = gpc.uploadFile(params, params.InfoPath, moduleId[0], ".info", url, &filesDetails, gpc)
 		totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed

@@ -30,7 +30,7 @@ func (gs *GoService) PublishPackage(params GoParams) (*utils.OperationSummary, e
 		return nil, err
 	}
 	publisher := &GoPublishCommand{}
-	// PublishPackage supports Artifactory version "6.6.1" and above.
+	// PublishPackage supports Artifactory version "6.10.0" and above.
 	err = publisher.verifyCompatibleVersion(artifactoryVersion)
 	if err != nil {
 		return nil, err
