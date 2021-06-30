@@ -1,9 +1,7 @@
 package _go
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -28,30 +26,6 @@ func TestCreateUrlPath(t *testing.T) {
 			CreateUrlPath(test.moduleId, test.version, test.props, test.extension, &test.url)
 			// The props might have a different order each time, so we split the URLs and check if the lists are equal (ignoring the order)
 			assert.ElementsMatch(t, strings.Split(test.url, ";"), strings.Split(test.expectedUrl, ";"))
-		})
-	}
-}
-
-func TestShouldUseHeaders(t *testing.T) {
-	tests := []struct {
-		artifactoryVersion string
-		expectedResult     string
-	}{
-		{"6.5.0", "*_go.publishWithMatrixParams"},
-		{"6.2.0", "*_go.publishWithHeader"},
-		{"5.9.0", "*_go.publishWithHeader"},
-		{"6.0.0", "*_go.publishWithHeader"},
-		{"6.6.0", "*_go.publishWithMatrixParams"},
-		{"6.6.1", "*_go.publishZipAndModApi"},
-		{utils.Development, "*_go.publishZipAndModApi"},
-		{"6.10.2", "*_go.publishZipAndModApi"},
-	}
-	for _, test := range tests {
-		t.Run(test.artifactoryVersion, func(t *testing.T) {
-			result := GetCompatiblePublisher(test.artifactoryVersion)
-			if reflect.TypeOf(result).String() != test.expectedResult {
-				t.Error("Expected:", test.expectedResult, "Got:", reflect.TypeOf(result).String())
-			}
 		})
 	}
 }
