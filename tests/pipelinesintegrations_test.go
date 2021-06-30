@@ -15,7 +15,6 @@ const (
 	testsDummyVcsUrl       = "https://non-existing-vcs.com/"
 	testsDummyUser         = "nonexistinguser"
 	testsDummyToken        = "nonexistingtoken"
-	testsDummyApiKey       = "nonexistingkey"
 )
 
 func TestPipelinesIntegrations(t *testing.T) {
@@ -94,7 +93,7 @@ func testCreateGitlabIntegration(t *testing.T) {
 
 func testCreateArtifactoryIntegration(t *testing.T) {
 	name := getUniqueIntegrationName(services.ArtifactoryName)
-	id, err := testsPipelinesIntegrationsService.CreateArtifactoryIntegration(name, testsDummyRtUrl, testsDummyUser, testsDummyApiKey)
+	id, err := testsPipelinesIntegrationsService.CreateArtifactoryIntegration(name, testsDummyRtUrl, testsDummyUser)
 	if err != nil {
 		assert.NoError(t, err)
 		return

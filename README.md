@@ -44,9 +44,6 @@
       - [Fetching Access Tokens of a User](#fetching-access-tokens-of-a-user)
       - [Refreshing an Access Token](#refreshing-an-access-token)
       - [Revoking an Access Token](#revoking-an-access-token)
-      - [Create API Key](#create-api-key)
-      - [Regenerate API Key](#regenerate-api-key)
-      - [Get API Key](#get-api-key)
       - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
       - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
       - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
@@ -151,7 +148,6 @@ Optional flags:
 | `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
 | `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
 | `-rt.password`      | [Default: password] Artifactory password.                                                              |
-| `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
 | `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
 | `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
 | `-rt.accessToken`   | [Optional] Artifactory access token.                                                                   |
@@ -193,7 +189,6 @@ fileutils.SetTempDirBase(filepath.Join("my", "temp", "path"))
 rtDetails := auth.NewArtifactoryDetails()
 rtDetails.SetUrl("http://localhost:8081/artifactory")
 rtDetails.SetSshKeysPath("path/to/.ssh/")
-rtDetails.SetApiKey("apikey")
 rtDetails.SetUser("user")
 rtDetails.SetPassword("password")
 rtDetails.SetAccessToken("accesstoken")
@@ -551,22 +546,6 @@ params.TokenId = "<token id>"
 err := rtManager.RevokeToken(params)
 ```
 
-#### Create API Key
-```go
-// Returns an error if API key already exists - use RegenerateAPIKey instead.
-apiKey, err := rtManager.CreateAPIKey()
-```
-
-#### Regenerate API Key
-```go
-apiKey, err := rtManager.RegenerateAPIKey()
-```
-
-#### Get API Key
-```go
-apiKey, err := rtManager.GetAPIKey()
-```
-
 #### Creating and Updating Local Repository
 You can create and update a local repository for the following package types:
 
@@ -917,7 +896,6 @@ err := serviceManager.DeleteGroup("myGroupName")
 distDetails := auth.NewDistributionDetails()
 distDetails.SetUrl("http://localhost:8081/distribution")
 distDetails.SetSshKeysPath("path/to/.ssh/")
-distDetails.SetApiKey("apikey")
 distDetails.SetUser("user")
 distDetails.SetPassword("password")
 distDetails.SetAccessToken("accesstoken")
@@ -1097,7 +1075,6 @@ reader.Reset()
 xrayDetails := auth.NewXrayDetails()
 xrayDetails.SetUrl("http://localhost:8081/xray")
 xrayDetails.SetSshKeysPath("path/to/.ssh/")
-xrayDetails.SetApiKey("apikey")
 xrayDetails.SetUser("user")
 xrayDetails.SetPassword("password")
 xrayDetails.SetAccessToken("accesstoken")
@@ -1331,7 +1308,7 @@ id, err := pipelinesManager.CreateGitlabIntegration("integrationName", "url", "t
 
 #### Creating Artifactory Integration
 ```go
-id, err := pipelinesManager.CreateArtifactoryIntegration("integrationName", "url", "username", "apikey")
+id, err := pipelinesManager.CreateArtifactoryIntegration("integrationName", "url", "username")
 ```
 
 #### Get Integration by Id

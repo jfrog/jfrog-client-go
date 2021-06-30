@@ -46,7 +46,6 @@ var XrayUrl *string
 var PipelinesUrl *string
 var RtUser *string
 var RtPassword *string
-var RtApiKey *string
 var RtSshKeyPath *string
 var RtSshPassphrase *string
 var RtAccessToken *string
@@ -120,7 +119,6 @@ func init() {
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
 	RtUser = flag.String("rt.user", "", "Artifactory username")
 	RtPassword = flag.String("rt.password", "", "Artifactory password")
-	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
 	RtAccessToken = flag.String("rt.accessToken", "", "Artifactory access token")
@@ -428,9 +426,7 @@ func GetPipelinesDetails() auth.ServiceDetails {
 
 func setAuthenticationDetail(details auth.ServiceDetails) {
 	if !fileutils.IsSshUrl(details.GetUrl()) {
-		if *RtApiKey != "" {
-			details.SetApiKey(*RtApiKey)
-		} else if *RtAccessToken != "" {
+		if *RtAccessToken != "" {
 			details.SetAccessToken(*RtAccessToken)
 		} else {
 			details.SetUser(*RtUser)

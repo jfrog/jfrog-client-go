@@ -45,7 +45,6 @@ const (
 	tokenLabel    = "token"
 	userLabel     = "user"
 	usernameLabel = "username"
-	apikeyLabel   = "apikey"
 	passwordLabel = "password"
 
 	integrationsRestApi = "api/v1/projectIntegrations/"
@@ -130,7 +129,7 @@ func (is *IntegrationsService) CreateGitlabIntegration(integrationName, url, tok
 	return is.createIntegration(integration)
 }
 
-func (is *IntegrationsService) CreateArtifactoryIntegration(integrationName, url, user, apikey string) (id int, err error) {
+func (is *IntegrationsService) CreateArtifactoryIntegration(integrationName, url, user string) (id int, err error) {
 	integration := IntegrationCreation{
 		Integration: Integration{
 			Name:                  integrationName,
@@ -140,7 +139,6 @@ func (is *IntegrationsService) CreateArtifactoryIntegration(integrationName, url
 		FormJSONValues: []jsonValues{
 			{urlLabel, strings.TrimSuffix(url, "/")},
 			{userLabel, user},
-			{apikeyLabel, apikey},
 		},
 	}
 	return is.createIntegration(integration)

@@ -19,7 +19,6 @@ type ServiceDetails interface {
 	GetUrl() string
 	GetUser() string
 	GetPassword() string
-	GetApiKey() string
 	GetAccessToken() string
 	GetPreRequestFunctions() []ServiceDetailsPreRequestFunc
 	GetClientCertPath() string
@@ -34,7 +33,6 @@ type ServiceDetails interface {
 	SetUrl(url string)
 	SetUser(user string)
 	SetPassword(password string)
-	SetApiKey(apiKey string)
 	SetAccessToken(accessToken string)
 	AppendPreRequestFunction(ServiceDetailsPreRequestFunc)
 	SetClientCertPath(certificatePath string)
@@ -59,7 +57,6 @@ type CommonConfigFields struct {
 	Url                    string                         `json:"-"`
 	User                   string                         `json:"-"`
 	Password               string                         `json:"-"`
-	ApiKey                 string                         `json:"-"`
 	AccessToken            string                         `json:"-"`
 	PreRequestInterceptors []ServiceDetailsPreRequestFunc `json:"-"`
 	ClientCertPath         string                         `json:"-"`
@@ -84,10 +81,6 @@ func (ccf *CommonConfigFields) GetUser() string {
 
 func (ccf *CommonConfigFields) GetPassword() string {
 	return ccf.Password
-}
-
-func (ccf *CommonConfigFields) GetApiKey() string {
-	return ccf.ApiKey
 }
 
 func (ccf *CommonConfigFields) GetAccessToken() string {
@@ -136,10 +129,6 @@ func (ccf *CommonConfigFields) SetUser(user string) {
 
 func (ccf *CommonConfigFields) SetPassword(password string) {
 	ccf.Password = password
-}
-
-func (ccf *CommonConfigFields) SetApiKey(apiKey string) {
-	ccf.ApiKey = apiKey
 }
 
 func (ccf *CommonConfigFields) SetAccessToken(accessToken string) {
@@ -269,7 +258,6 @@ func (ccf *CommonConfigFields) CreateHttpClientDetails() httputils.HttpClientDet
 	return httputils.HttpClientDetails{
 		User:        ccf.User,
 		Password:    ccf.Password,
-		ApiKey:      ccf.ApiKey,
 		AccessToken: ccf.AccessToken,
 		Headers:     utils.CopyMap(ccf.GetSshAuthHeaders())}
 }

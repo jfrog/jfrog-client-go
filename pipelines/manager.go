@@ -67,10 +67,10 @@ func (sm *PipelinesServicesManager) CreateGitlabIntegration(integrationName, url
 	return integrationsService.CreateGitlabIntegration(integrationName, url, token)
 }
 
-func (sm *PipelinesServicesManager) CreateArtifactoryIntegration(integrationName, url, user, apikey string) (id int, err error) {
+func (sm *PipelinesServicesManager) CreateArtifactoryIntegration(integrationName, url, user string) (id int, err error) {
 	integrationsService := services.NewIntegrationsService(sm.client)
 	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
-	return integrationsService.CreateArtifactoryIntegration(integrationName, url, user, apikey)
+	return integrationsService.CreateArtifactoryIntegration(integrationName, url, user)
 }
 
 func (sm *PipelinesServicesManager) GetIntegrationById(integrationId int) (*services.Integration, error) {

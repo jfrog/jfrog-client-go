@@ -3,13 +3,11 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -17,7 +15,6 @@ import (
 )
 
 const tokenPath = "api/security/token"
-const APIKeyPath = "api/security/apiKey"
 
 type SecurityService struct {
 	client     *jfroghttpclient.JfrogHttpClient
@@ -30,80 +27,6 @@ func NewSecurityService(client *jfroghttpclient.JfrogHttpClient) *SecurityServic
 
 func (ss *SecurityService) getArtifactoryDetails() auth.ServiceDetails {
 	return ss.ArtDetails
-}
-
-// Create an API key for the current user. Returns an error if API key already exists - use regenerate API key instead.
-func (ss *SecurityService) CreateAPIKey() (string, error) {
-	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
-	if err != nil {
-		return "", err
-	}
-
-	resp, body, err := ss.client.SendPost(reqURL, nil, &httpClientDetails)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return "", errors.New("API key creation failed with status: " + resp.Status + "\n" + clientutils.IndentJson(body))
-	}
-
-	return getApiKeyFromBody(body)
-}
-
-// RegenerateAPIKey regenerates the API Key in Artifactory
-func (ss *SecurityService) RegenerateAPIKey() (string, error) {
-	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
-
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
-	if err != nil {
-		return "", err
-	}
-
-	resp, body, err := ss.client.SendPut(reqURL, nil, &httpClientDetails)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New("API key regeneration failed with status: " + resp.Status + "\n" + clientutils.IndentJson(body))
-	}
-
-	return getApiKeyFromBody(body)
-}
-
-// Returns empty string if API Key wasn't generated.
-func (ss *SecurityService) GetAPIKey() (string, error) {
-	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
-	if err != nil {
-		return "", err
-	}
-
-	resp, body, _, err := ss.client.SendGet(reqURL, true, &httpClientDetails)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
-	}
-
-	return getApiKeyFromBody(body)
-}
-
-func getApiKeyFromBody(body []byte) (string, error) {
-	var data = make(map[string]interface{})
-	if err := json.Unmarshal(body, &data); err != nil {
-		return "", errorutils.CheckError(fmt.Errorf("unable to decode json. Error: %w Upstream response: %s", err, string(body)))
-	}
-
-	if len(data) == 0 {
-		return "", nil
-	}
-	apiKey := data["apiKey"].(string)
-	return apiKey, nil
 }
 
 func (ss *SecurityService) CreateToken(params CreateTokenParams) (CreateTokenResponseData, error) {

@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -29,86 +28,10 @@ func TestToken(t *testing.T) {
 	teardown()
 }
 
-func TestAPIKey(t *testing.T) {
-	initArtifactoryTest(t)
-	t.Run("Create API Key", createAPIKeyTest)
-	t.Run("Regenerate API Key", regenerateAPIKeyTest)
-	t.Run("Get API Key", getAPIKeyTest)
-	t.Run("Get Empty API Key", getEmptyAPIKeyTest)
-}
-
-func createAPIKeyTest(t *testing.T) {
-	expectedApiKey := "new-api-key"
-	tls := createArtifactoryTLSServer(t, http.MethodPost, expectedApiKey, http.StatusCreated)
-	defer tls.Close()
-
-	apiKeyService, err := createDummySecurityService(tls.URL, true)
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
-	key, err := apiKeyService.CreateAPIKey()
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
-	assert.Equal(t, expectedApiKey, key)
-}
-
-func regenerateAPIKeyTest(t *testing.T) {
-	expectedApiKey := "new-api-key"
-	tls := createArtifactoryTLSServer(t, http.MethodPut, expectedApiKey, http.StatusOK)
-	defer tls.Close()
-
-	apiKeyService, err := createDummySecurityService(tls.URL, true)
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
-	key, err := apiKeyService.RegenerateAPIKey()
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
-	assert.Equal(t, expectedApiKey, key)
-}
-
-func getAPIKeyTest(t *testing.T) {
-	expectedApiKey := "new-api-key"
-	getAPIKeyTestCore(t, expectedApiKey)
-}
-
-// The GetAPIKey service returns empty string if an API Key wasn't generated.
-func getEmptyAPIKeyTest(t *testing.T) {
-	expectedApiKey := ""
-	getAPIKeyTestCore(t, expectedApiKey)
-}
-
-func getAPIKeyTestCore(t *testing.T, expectedApiKey string) {
-	tls := createArtifactoryTLSServer(t, http.MethodGet, expectedApiKey, http.StatusOK)
-	defer tls.Close()
-
-	apiKeyService, err := createDummySecurityService(tls.URL, true)
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
-	key, err := apiKeyService.GetAPIKey()
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
-	assert.Equal(t, expectedApiKey, key)
-}
-
-func createArtifactoryTLSServer(t *testing.T, expectedRequest, expectedApiKey string, expectedStatusCode int) *httptest.Server {
-	returnValue := fmt.Sprintf(`{"apiKey": "%s"}`, expectedApiKey)
-	if expectedApiKey == "" {
-		returnValue = `{}`
-	}
+func createArtifactoryTLSServer(t *testing.T, expectedRequest string, expectedStatusCode int) *httptest.Server {
+	returnValue := `{}`
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, expectedRequest, r.Method)
-		assert.Equal(t, "/"+services.APIKeyPath, r.URL.Path)
 		w.WriteHeader(expectedStatusCode)
 		_, err := w.Write([]byte(returnValue))
 		assert.NoError(t, err)
@@ -116,16 +39,11 @@ func createArtifactoryTLSServer(t *testing.T, expectedRequest, expectedApiKey st
 	return httptest.NewTLSServer(handler)
 }
 
-func createDummySecurityService(tlsUrl string, setApiKey bool) (*services.SecurityService, error) {
+func createDummySecurityService(tlsUrl string) (*services.SecurityService, error) {
 	rtDetails := auth.NewArtifactoryDetails()
 	rtDetails.SetUrl(tlsUrl + "/")
 	rtDetails.SetUser("fake-user")
-
-	if setApiKey {
-		rtDetails.SetApiKey("fake-api-key")
-	} else {
-		rtDetails.SetPassword("fake-pass")
-	}
+	rtDetails.SetPassword("fake-pass")
 
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetInsecureTls(true).

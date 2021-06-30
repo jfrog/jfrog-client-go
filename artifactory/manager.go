@@ -324,24 +324,6 @@ func (sm *ArtifactoryServicesManagerImp) GetBuildInfo(params services.BuildInfoP
 	return buildInfoService.GetBuildInfo(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateAPIKey() (string, error) {
-	securityService := services.NewSecurityService(sm.client)
-	securityService.ArtDetails = sm.config.GetServiceDetails()
-	return securityService.CreateAPIKey()
-}
-
-func (sm *ArtifactoryServicesManagerImp) RegenerateAPIKey() (string, error) {
-	securityService := services.NewSecurityService(sm.client)
-	securityService.ArtDetails = sm.config.GetServiceDetails()
-	return securityService.RegenerateAPIKey()
-}
-
-func (sm *ArtifactoryServicesManagerImp) GetAPIKey() (string, error) {
-	securityService := services.NewSecurityService(sm.client)
-	securityService.ArtDetails = sm.config.GetServiceDetails()
-	return securityService.GetAPIKey()
-}
-
 func (sm *ArtifactoryServicesManagerImp) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
