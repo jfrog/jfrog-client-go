@@ -322,22 +322,19 @@ type uploadTaskData struct {
 }
 
 func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandlerFunc) error {
-	for i := 1; i < taskData.size; i++ {
-		group := strings.Replace(taskData.groups[i], "\\", "/", -1)
-		taskData.target = strings.Replace(taskData.target, "{"+strconv.Itoa(i)+"}", group, -1)
-	}
+	var includePlaceholder bool
+	taskData.target, includePlaceholder = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
 
 	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
 	if err != nil {
 		return err
 	}
-
 	// If preserving symlinks or symlink target is empty, use root path name for upload (symlink itself / regular file)
 	if taskData.uploadParams.IsSymlink() || symlinkPath == "" {
-		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat())
+		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat(), includePlaceholder)
 	} else {
-		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat())
+		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat(), includePlaceholder)
 	}
 
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
@@ -366,9 +363,10 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 }
 
 // Construct the target path while taking `flat` flag into account.
-func getUploadTarget(rootPath, target string, isFlat bool) string {
+func getUploadTarget(rootPath, target string, isFlat, includePlaceholder bool) string {
 	if strings.HasSuffix(target, "/") {
-		if isFlat {
+		// Ignore flat if placeholders are used.
+		if isFlat || includePlaceholder {
 			fileName, _ := fileutils.GetFileAndDirFromPath(rootPath)
 			target += fileName
 		} else {
