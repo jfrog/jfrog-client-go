@@ -109,7 +109,7 @@ func (mc *MoveCopyService) getPathsToMove(moveSpec MoveCopyParams) (resultItems 
 			return
 		}
 		defer tempResultItems.Close()
-		resultItems, err = reduceMovePaths(utils.ResultItem{}, tempResultItems, moveSpec.IsFlat(), clientutils.ContainPlaceHolder(moveSpec.Pattern, moveSpec.Target))
+		resultItems, err = reduceMovePaths(utils.ResultItem{}, tempResultItems, moveSpec.IsFlat(), clientutils.PlaceholdersUserd(moveSpec.Pattern, moveSpec.Target))
 		if err != nil {
 			return
 		}
@@ -123,9 +123,9 @@ func (mc *MoveCopyService) getPathsToMove(moveSpec MoveCopyParams) (resultItems 
 	return
 }
 
-func reduceMovePaths(readerItem utils.SearchBasedContentItem, cr *content.ContentReader, flat, containPlaceholder bool) (*content.ContentReader, error) {
-	// Ignore flat if placeholders are used.
-	if flat || containPlaceholder {
+func reduceMovePaths(readerItem utils.SearchBasedContentItem, cr *content.ContentReader, flat, withPlaceholders bool) (*content.ContentReader, error) {
+	// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
+	if flat || withPlaceholders {
 		return utils.ReduceBottomChainDirResult(readerItem, cr)
 	}
 	return utils.ReduceTopChainDirResult(readerItem, cr)
@@ -197,15 +197,14 @@ func (mc *MoveCopyService) createMoveCopyFileHandlerFunc(result *utils.Result) f
 // Create the destination path of the move/copy.
 func getDestinationPath(specTarget, specPattern, sourceItemPath, sourceItemRelativePath string, isFlat bool) (string, error) {
 	// Apply placeholders.
-	destFile, includePlaceholder, err := clientutils.BuildTargetPath(specPattern, sourceItemRelativePath, specTarget, true)
+	destFile, placeholdersUsed, err := clientutils.BuildTargetPath(specPattern, sourceItemRelativePath, specTarget, true)
 	if err != nil {
-		log.Error(err)
 		return "", err
 	}
 
 	// Create raw destination path.
-	// Ignore flat if placeholders are used.
-	if !isFlat && !includePlaceholder {
+	// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
+	if !isFlat && !placeholdersUsed {
 		destPathLocal := specTarget
 		if strings.Contains(destPathLocal, "/") {
 			file, dir := fileutils.GetFileAndDirFromPath(destPathLocal)

@@ -322,8 +322,8 @@ type uploadTaskData struct {
 }
 
 func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandlerFunc) error {
-	var includePlaceholder bool
-	taskData.target, includePlaceholder = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
+	var placeholdersUsed bool
+	taskData.target, placeholdersUsed = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
 
 	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
@@ -332,9 +332,9 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 	}
 	// If preserving symlinks or symlink target is empty, use root path name for upload (symlink itself / regular file)
 	if taskData.uploadParams.IsSymlink() || symlinkPath == "" {
-		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat(), includePlaceholder)
+		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
 	} else {
-		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat(), includePlaceholder)
+		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
 	}
 
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
@@ -363,10 +363,10 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 }
 
 // Construct the target path while taking `flat` flag into account.
-func getUploadTarget(rootPath, target string, isFlat, includePlaceholder bool) string {
+func getUploadTarget(rootPath, target string, isFlat, placeholdersUsed bool) string {
 	if strings.HasSuffix(target, "/") {
-		// Ignore flat if placeholders are used.
-		if isFlat || includePlaceholder {
+		// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
+		if isFlat || placeholdersUsed {
 			fileName, _ := fileutils.GetFileAndDirFromPath(rootPath)
 			target += fileName
 		} else {

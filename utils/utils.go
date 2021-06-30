@@ -290,6 +290,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 
 // group - regular expression matched group to replace with placeholders
 // toReplace - target pattern to replace
+// Return - (parsed placeholders string, placeholders were  replaced)
 func ReplacePlaceHolders(groups []string, toReplace string) (string, bool) {
 	preReplaced := toReplace
 	for i := 1; i < len(groups); i++ {
