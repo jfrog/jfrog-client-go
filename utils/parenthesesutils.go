@@ -31,6 +31,12 @@ func (p *ParenthesesSlice) IsPresent(index int) bool {
 	return false
 }
 
+// Return true if at least one of the {i} in 'target' has corresponding parentheses in 'pattern'.
+func PlaceholdersUserd(pattern, target string) bool {
+	removedParenthesesTarget := RemovePlaceholderParentheses(pattern, target)
+	return removedParenthesesTarget != target
+}
+
 func RemovePlaceholderParentheses(pattern, target string) string {
 	parentheses := NewParenthesesSlice(pattern, target)
 	// Remove parentheses which have a corresponding placeholder.

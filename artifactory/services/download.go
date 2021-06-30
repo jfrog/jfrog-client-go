@@ -2,13 +2,14 @@ package services
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
+
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/version"
 
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -182,11 +183,11 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 		if err != nil {
 			return "", err
 		}
-		target, err := clientutils.BuildTargetPath(downloadParams.GetPattern(), resultItem.GetItemRelativePath(), downloadParams.GetTarget(), true)
+		target, placeholdersUsed, err := clientutils.BuildTargetPath(downloadParams.GetPattern(), resultItem.GetItemRelativePath(), downloadParams.GetTarget(), true)
 		if err != nil {
 			return "", err
 		}
-		localPath, localFileName := fileutils.GetLocalPathAndFile(resultItem.Name, resultItem.Path, target, flat)
+		localPath, localFileName := fileutils.GetLocalPathAndFile(resultItem.Name, resultItem.Path, target, flat, placeholdersUsed)
 		return filepath.Join(localPath, localFileName), nil
 	}
 	// The sort process omits results with local path that is identical to previous results.
@@ -444,11 +445,11 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				successCounters[threadId]++
 				return nil
 			}
-			target, e := clientutils.BuildTargetPath(downloadData.DownloadPath, downloadData.Dependency.GetItemRelativePath(), downloadData.Target, true)
+			target, placeholdersUsed, e := clientutils.BuildTargetPath(downloadData.DownloadPath, downloadData.Dependency.GetItemRelativePath(), downloadData.Target, true)
 			if e != nil {
 				return e
 			}
-			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat)
+			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat, placeholdersUsed)
 			if downloadData.Dependency.Type == "folder" {
 				return createDir(localPath, localFileName, logMsgPrefix)
 			}
