@@ -248,7 +248,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		dataHandlerFunc(uploadData)
 		return err
 	}
-	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.GetPatternType()))
+	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
 	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
 	return err
 }
@@ -566,7 +566,7 @@ func getDebianProps(debianPropsStr string) string {
 }
 
 type UploadParams struct {
-	*utils.ArtifactoryCommonParams
+	*utils.CommonParams
 	Deb               string
 	BuildProps        string
 	Symlink           bool
@@ -578,13 +578,13 @@ type UploadParams struct {
 }
 
 func NewUploadParams() UploadParams {
-	return UploadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinChecksumDeploy: 10240}
+	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: 10240}
 }
 
 func deepCopyUploadParams(params *UploadParams) UploadParams {
 	paramsCopy := *params
-	paramsCopy.ArtifactoryCommonParams = new(utils.ArtifactoryCommonParams)
-	*paramsCopy.ArtifactoryCommonParams = *params.ArtifactoryCommonParams
+	paramsCopy.CommonParams = new(utils.CommonParams)
+	*paramsCopy.CommonParams = *params.CommonParams
 	return paramsCopy
 }
 

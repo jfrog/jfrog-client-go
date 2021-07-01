@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
+	"regexp"
+	"strings"
+
 	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
-	"os"
-	"regexp"
-	"strings"
 )
 
 // Return all the existing paths of the provided root path
@@ -36,7 +37,7 @@ func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
 	for _, singleExclusion := range params.GetExclusions() {
 		if len(singleExclusion) > 0 {
 			singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
-			singleExclusion = utils.PrepareLocalPathForUpload(singleExclusion, params.GetPatternType())
+			singleExclusion = utils.ConvertLocalPatternToRegexp(singleExclusion, params.GetPatternType())
 			if params.IsRecursive() && strings.HasSuffix(singleExclusion, fileutils.GetFileSeparator()) {
 				singleExclusion += "*"
 			}

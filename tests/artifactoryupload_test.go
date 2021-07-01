@@ -1,15 +1,16 @@
 package tests
 
 import (
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"path/filepath"
-	"testing"
 )
 
 func TestArtifactoryUpload(t *testing.T) {
@@ -29,7 +30,7 @@ func flatUpload(t *testing.T) {
 
 	pattern := FixWinPath(filepath.Join(workingDir, "out", "*"))
 	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
@@ -42,7 +43,7 @@ func flatUpload(t *testing.T) {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	searchParams := services.NewSearchParams()
-	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
+	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
@@ -69,7 +70,7 @@ func recursiveUpload(t *testing.T) {
 
 	pattern := FixWinPath(filepath.Join(workingDir, "*"))
 	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
@@ -82,7 +83,7 @@ func recursiveUpload(t *testing.T) {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	searchParams := services.NewSearchParams()
-	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
+	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
@@ -112,7 +113,7 @@ func placeholderUpload(t *testing.T) {
 
 	pattern := FixWinPath(filepath.Join(workingDir, "(*).in"))
 	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
@@ -125,7 +126,7 @@ func placeholderUpload(t *testing.T) {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	searchParams := services.NewSearchParams()
-	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
+	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
@@ -155,7 +156,7 @@ func includeDirsUpload(t *testing.T) {
 
 	pattern := FixWinPath(filepath.Join(workingDir, "*"))
 	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
@@ -168,7 +169,7 @@ func includeDirsUpload(t *testing.T) {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	searchParams := services.NewSearchParams()
-	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
+	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	searchParams.IncludeDirs = true
 	reader, err := testsSearchService.Search(searchParams)
@@ -210,7 +211,7 @@ func explodeUpload(t *testing.T) {
 	}
 	pattern := FixWinPath(filepath.Join(workingDir, "*.zip"))
 	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
 	up.ExplodeArchive = true
 	summary, err := testsUploadService.UploadFiles(up)
@@ -224,7 +225,7 @@ func explodeUpload(t *testing.T) {
 		t.Error("Failed to upload", summary.TotalFailed, "files.")
 	}
 	searchParams := services.NewSearchParams()
-	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
+	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	searchParams.IncludeDirs = true
 	reader, err := testsSearchService.Search(searchParams)
@@ -258,7 +259,7 @@ func propsUpload(t *testing.T) {
 	targetProps, err := utils.ParseProperties("key1=val1")
 	assert.NoError(t, err)
 	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Target: RtTargetRepo, TargetProps: targetProps}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Target: RtTargetRepo, TargetProps: targetProps}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	assert.NoError(t, err)
@@ -267,7 +268,7 @@ func propsUpload(t *testing.T) {
 
 	// Search a.in with property key1=val1
 	searchParams := services.NewSearchParams()
-	searchParams.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{}
+	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = RtTargetRepo
 	searchParams.Props = "key1=val1"
 	reader, err := testsSearchService.Search(searchParams)
@@ -293,7 +294,7 @@ func propsUpload(t *testing.T) {
 func summaryUpload(t *testing.T) {
 	pattern := FixWinPath(filepath.Join("testdata", "a", "*"))
 	up := services.NewUploadParams()
-	up.ArtifactoryCommonParams = &utils.ArtifactoryCommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
 	testsUploadService.SetSaveSummary(true)
 	defer testsUploadService.SetSaveSummary(false)

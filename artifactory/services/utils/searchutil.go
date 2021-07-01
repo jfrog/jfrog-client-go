@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 	"io"
 	"net/http"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/jfrog/jfrog-client-go/utils/version"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -33,7 +34,7 @@ const (
 
 // Use this function when searching by build without pattern or aql.
 // Collect build artifacts and build dependencies separately, then merge the results into one reader.
-func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) (*content.ContentReader, error) {
+func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (*content.ContentReader, error) {
 	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
 	if err != nil {
 		return nil, err
@@ -88,13 +89,13 @@ func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) 
 	return filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, aggregatedBuilds)
 }
 
-func getBuildDependenciesForBuildSearch(specFile ArtifactoryCommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
+func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
 	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependencies(builds)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
 }
 
-func getBuildArtifactsForBuildSearch(specFile ArtifactoryCommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
+func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
 	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifacts(builds)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
@@ -107,7 +108,7 @@ func getBuildArtifactsForBuildSearch(specFile ArtifactoryCommonParams, flags Com
 // 3. If we have more than one artifact with the same sha1:
 // 	3.1 Compare the build-name & build-number among all the artifact with the same sha1.
 // This will prevent unnecessary search upon all Artifactory:
-func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *ArtifactoryCommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
+func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
 	if includePropertiesInAqlForSpec(specFile) {
 		// Don't fetch artifacts' properties from Artifactory.
 		mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader)
@@ -158,7 +159,7 @@ func mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader *c
 }
 
 // Perform search by pattern.
-func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
+func SearchBySpecWithPattern(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
 	// Create AQL according to spec fields.
 	query, err := CreateAqlBodyForSpecWithPattern(specFile)
 	if err != nil {
@@ -169,7 +170,7 @@ func SearchBySpecWithPattern(specFile *ArtifactoryCommonParams, flags CommonConf
 }
 
 // Use this function when running Aql with pattern
-func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
+func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
 	// Execute the search according to provided aql in specFile.
 	var fetchedProps *content.ContentReader
 	query := BuildQueryFromSpecFile(specFile, requiredArtifactProps)
@@ -199,7 +200,7 @@ func SearchBySpecWithAql(specFile *ArtifactoryCommonParams, flags CommonConf, re
 }
 
 // Filter the results by build, if no build found or items to filter, nil will be returned.
-func FilterResultsByBuild(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (*content.ContentReader, error) {
+func FilterResultsByBuild(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (*content.ContentReader, error) {
 	length, err := reader.Length()
 	if err != nil {
 		return nil, err
@@ -217,7 +218,7 @@ func FilterResultsByBuild(specFile *ArtifactoryCommonParams, flags CommonConf, r
 // AND
 // 2. Properties weren't fetched during 'build' filtering
 // Otherwise, nil will be returned
-func fetchProps(specFile *ArtifactoryCommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (*content.ContentReader, error) {
+func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (*content.ContentReader, error) {
 	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" && requiredArtifactProps != NONE {
 		var readerWithProps *content.ContentReader
 		var err error
@@ -478,7 +479,7 @@ func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content
 	return resultsFilter(readerRecord, sortedFile)
 }
 
-func DisableTransitiveSearchIfNotAllowed(params *ArtifactoryCommonParams, artifactoryVersion *version.Version) {
+func DisableTransitiveSearchIfNotAllowed(params *CommonParams, artifactoryVersion *version.Version) {
 	transitiveSearchMinVersion := "7.17.0"
 	if params.Transitive && !artifactoryVersion.AtLeast(transitiveSearchMinVersion) {
 		log.Info(fmt.Sprintf("Transitive search is available on Artifactory version %s or higher. Installed Artifactory version: %s. Transitive option is ignored.",

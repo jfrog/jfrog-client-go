@@ -2,15 +2,16 @@ package utils
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 )
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
-func CreateAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, error) {
+func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
 	repoPathFileTriples := createRepoPathFileTriples(searchPattern, params.Recursive)
 	includeRoot := strings.Count(searchPattern, "/") < 2
@@ -37,7 +38,7 @@ func CreateAqlBodyForSpecWithPattern(params *ArtifactoryCommonParams) (string, e
 	return json, nil
 }
 
-func createArchiveSearchParams(params *ArtifactoryCommonParams) []RepoPathFile {
+func createArchiveSearchParams(params *CommonParams) []RepoPathFile {
 	var archivePathFilePairs []RepoPathFile
 
 	if params.ArchiveEntries != "" {
@@ -191,7 +192,7 @@ func buildExcludedKeyValQueryPart(key string, value string) string {
 	return fmt.Sprintf(`"@%s":{"$ne":%s}`, key, getAqlValue(value))
 }
 
-func buildItemTypeQueryPart(params *ArtifactoryCommonParams) string {
+func buildItemTypeQueryPart(params *CommonParams) string {
 	if params.IncludeDirs {
 		return `"type":"any",`
 	}
@@ -227,7 +228,7 @@ func buildInnerArchiveQueryPart(triple RepoPathFile, archivePath, archiveName st
 	return fmt.Sprintf(innerQueryPattern, getAqlValue(triple.repo), getAqlValue(triple.path), getAqlValue(triple.file), getAqlValue(archivePath), getAqlValue(archiveName))
 }
 
-func buildExcludeQueryPart(params *ArtifactoryCommonParams, useLocalPath, recursive bool) string {
+func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) string {
 	excludeQuery := ""
 	var excludeTriples []RepoPathFile
 	if len(params.GetExclusions()) > 0 {
@@ -250,7 +251,7 @@ func buildExcludeQueryPart(params *ArtifactoryCommonParams, useLocalPath, recurs
 	return excludeQuery
 }
 
-func buildReleaseBundleQuery(params *ArtifactoryCommonParams) (string, error) {
+func buildReleaseBundleQuery(params *CommonParams) (string, error) {
 	bundleName, bundleVersion, err := parseNameAndVersion(params.Bundle, false)
 	if bundleName == "" || err != nil {
 		return "", err
@@ -266,7 +267,7 @@ func buildReleaseBundleQuery(params *ArtifactoryCommonParams) (string, error) {
 // Creates a list of basic required return fields. The list will include the sortBy field if needed.
 // If requiredArtifactProps is NONE or 'includePropertiesInAqlForSpec' return false,
 // "property" field won't be included due to a limitation in the AQL implementation in Artifactory.
-func getQueryReturnFields(specFile *ArtifactoryCommonParams, requiredArtifactProps RequiredArtifactProps) []string {
+func getQueryReturnFields(specFile *CommonParams, requiredArtifactProps RequiredArtifactProps) []string {
 	returnFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "size", "type", "modified", "created"}
 	if !includePropertiesInAqlForSpec(specFile) {
 		// Sort dose not work when property is in the include section. in this case we will append properties in later stage.
@@ -282,7 +283,7 @@ func getQueryReturnFields(specFile *ArtifactoryCommonParams, requiredArtifactPro
 // If specFile includes sortBy or limit, the produced AQL won't include property in the include section.
 // This due to an Artifactory limitation related to using these flags with props in an AQL statement.
 // Meaning - the result won't contain properties.
-func includePropertiesInAqlForSpec(specFile *ArtifactoryCommonParams) bool {
+func includePropertiesInAqlForSpec(specFile *CommonParams) bool {
 	return !(len(specFile.SortBy) > 0 || specFile.Limit > 0)
 }
 
@@ -306,7 +307,7 @@ func prepareFieldsForQuery(fields []string) []string {
 }
 
 // Creates an aql query from a spec file.
-func BuildQueryFromSpecFile(specFile *ArtifactoryCommonParams, requiredArtifactProps RequiredArtifactProps) string {
+func BuildQueryFromSpecFile(specFile *CommonParams, requiredArtifactProps RequiredArtifactProps) string {
 	aqlBody := specFile.Aql.ItemsFind
 	query := fmt.Sprintf(`items.find(%s)%s`, aqlBody, buildIncludeQueryPart(getQueryReturnFields(specFile, requiredArtifactProps)))
 	query = appendSortQueryPart(specFile, query)
@@ -316,28 +317,28 @@ func BuildQueryFromSpecFile(specFile *ArtifactoryCommonParams, requiredArtifactP
 	return query
 }
 
-func appendOffsetQueryPart(specFile *ArtifactoryCommonParams, query string) string {
+func appendOffsetQueryPart(specFile *CommonParams, query string) string {
 	if specFile.Offset > 0 {
 		query = fmt.Sprintf(`%s.offset(%s)`, query, strconv.Itoa(specFile.Offset))
 	}
 	return query
 }
 
-func appendLimitQueryPart(specFile *ArtifactoryCommonParams, query string) string {
+func appendLimitQueryPart(specFile *CommonParams, query string) string {
 	if specFile.Limit > 0 {
 		query = fmt.Sprintf(`%s.limit(%s)`, query, strconv.Itoa(specFile.Limit))
 	}
 	return query
 }
 
-func appendSortQueryPart(specFile *ArtifactoryCommonParams, query string) string {
+func appendSortQueryPart(specFile *CommonParams, query string) string {
 	if len(specFile.SortBy) > 0 {
 		query = fmt.Sprintf(`%s.sort({%s})`, query, buildSortQueryPart(specFile.SortBy, specFile.SortOrder))
 	}
 	return query
 }
 
-func appendTransitiveQueryPart(specFile *ArtifactoryCommonParams, query string) string {
+func appendTransitiveQueryPart(specFile *CommonParams, query string) string {
 	if specFile.Transitive {
 		query = fmt.Sprintf(`%s.transitive()`, query)
 	}
