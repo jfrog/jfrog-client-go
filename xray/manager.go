@@ -126,8 +126,8 @@ func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (s
 
 // GetScanGraphResults returns an Xray scan output of the requested graph scan.
 // The scanId input should be received from ScanGraph request.
-func (sm *XrayServicesManager) GetScanGraphResults(scanID string) (*services.ScanResponse, error) {
+func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*services.ScanResponse, error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
-	return scanService.GetScanGraphResults(scanID)
+	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses)
 }
