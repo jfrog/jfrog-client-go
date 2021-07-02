@@ -31,7 +31,7 @@ const (
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
-	httpClientsDetails httputils.HttpClientDetails, client *jfroghttpclient.JfrogHttpClient, retries int,
+	httpClientsDetails httputils.HttpClientDetails, client *jfroghttpclient.JfrogHttpClient,
 	progress clientio.ProgressMgr) (*http.Response, []byte, error) {
 	var err error
 	if details == nil {
@@ -45,7 +45,7 @@ func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.Se
 	AddChecksumHeaders(requestClientDetails.Headers, details)
 	AddAuthHeaders(requestClientDetails.Headers, *artifactoryDetails)
 
-	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, retries, progress)
+	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, progress)
 }
 
 func UploadFileFromReader(reader io.Reader, url string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -238,7 +238,7 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags Co
 	if err != nil {
 		return "", "", err
 	}
-	resp, body, err := client.SendPost(restUrl, body, httpClientsDetails)
+	resp, body, err := client.SendPost(restUrl, body, httpClientsDetails, "")
 	if err != nil {
 		return "", "", err
 	}
@@ -267,7 +267,7 @@ func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte
 	return
 }
 
-func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
+func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
 	var artifactsAqlSearchErr, dependenciesAqlSearchErr error
 	var readerWithProps *content.ContentReader
 	buildArtifactsSha1 := make(map[string]int)

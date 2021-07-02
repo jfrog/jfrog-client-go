@@ -2,13 +2,14 @@ package services
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
+
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/version"
 
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -127,7 +128,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		// Iterate over file-spec groups and produce download tasks.
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
-			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.ArtifactoryCommonParams, artifactoryVersion)
+			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.CommonParams, artifactoryVersion)
 			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
@@ -182,11 +183,11 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 		if err != nil {
 			return "", err
 		}
-		target, err := clientutils.BuildTargetPath(downloadParams.GetPattern(), resultItem.GetItemRelativePath(), downloadParams.GetTarget(), true)
+		target, placeholdersUsed, err := clientutils.BuildTargetPath(downloadParams.GetPattern(), resultItem.GetItemRelativePath(), downloadParams.GetTarget(), true)
 		if err != nil {
 			return "", err
 		}
-		localPath, localFileName := fileutils.GetLocalPathAndFile(resultItem.Name, resultItem.Path, target, flat)
+		localPath, localFileName := fileutils.GetLocalPathAndFile(resultItem.Name, resultItem.Path, target, flat, placeholdersUsed)
 		return filepath.Join(localPath, localFileName), nil
 	}
 	// The sort process omits results with local path that is identical to previous results.
@@ -213,7 +214,7 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 			// The second argument is an error handling func in case the taskFunc return an error.
 			tasksCount++
 			producer.AddTaskWithError(fileHandler(tempData), errorsQueue.AddError)
-			// We don't want to create directories which are created explicitly by download files when ArtifactoryCommonParams.IncludeDirs is used.
+			// We don't want to create directories which are created explicitly by download files when CommonParams.IncludeDirs is used.
 			alreadyCreatedDirs[resultItem.Path] = true
 		} else {
 			directoriesData, directoriesDataKeys = collectDirPathsToCreate(*resultItem, directoriesData, tempData, directoriesDataKeys)
@@ -277,8 +278,8 @@ func (ds *DownloadService) addToResults(resultItem *utils.ResultItem, downloadPa
 	}
 }
 
-func createDependencyTransferDetails(downloadPath, localPath, localFileName string) utils.FileTransferDetails {
-	fileInfo := utils.FileTransferDetails{
+func createDependencyTransferDetails(downloadPath, localPath, localFileName string) clientutils.FileTransferDetails {
+	fileInfo := clientutils.FileTransferDetails{
 		SourcePath: downloadPath,
 		TargetPath: filepath.Join(localPath, localFileName),
 	}
@@ -321,7 +322,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	if bulkDownload {
 		var resp *http.Response
 		resp, err := ds.client.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, &httpClientsDetails,
-			downloadParams.GetRetries(), downloadParams.IsExplode(), ds.Progress)
+			downloadParams.IsExplode(), ds.Progress)
 		if err != nil {
 			return err
 		}
@@ -338,8 +339,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		ExpectedSha1:  downloadFileDetails.ExpectedSha1,
 		FileSize:      downloadFileDetails.Size,
 		SplitCount:    downloadParams.SplitCount,
-		Explode:       downloadParams.IsExplode(),
-		Retries:       downloadParams.GetRetries()}
+		Explode:       downloadParams.IsExplode()}
 
 	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails, ds.Progress)
 	if err != nil {
@@ -445,11 +445,11 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				successCounters[threadId]++
 				return nil
 			}
-			target, e := clientutils.BuildTargetPath(downloadData.DownloadPath, downloadData.Dependency.GetItemRelativePath(), downloadData.Target, true)
+			target, placeholdersUsed, e := clientutils.BuildTargetPath(downloadData.DownloadPath, downloadData.Dependency.GetItemRelativePath(), downloadData.Target, true)
 			if e != nil {
 				return e
 			}
-			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat)
+			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat, placeholdersUsed)
 			if downloadData.Dependency.Type == "folder" {
 				return createDir(localPath, localFileName, logMsgPrefix)
 			}
@@ -523,14 +523,13 @@ type DownloadData struct {
 }
 
 type DownloadParams struct {
-	*utils.ArtifactoryCommonParams
+	*utils.CommonParams
 	Symlink         bool
 	ValidateSymlink bool
 	Flat            bool
 	Explode         bool
 	MinSplitSize    int64
 	SplitCount      int
-	Retries         int
 }
 
 func (ds *DownloadParams) IsFlat() bool {
@@ -541,8 +540,8 @@ func (ds *DownloadParams) IsExplode() bool {
 	return ds.Explode
 }
 
-func (ds *DownloadParams) GetFile() *utils.ArtifactoryCommonParams {
-	return ds.ArtifactoryCommonParams
+func (ds *DownloadParams) GetFile() *utils.CommonParams {
+	return ds.CommonParams
 }
 
 func (ds *DownloadParams) IsSymlink() bool {
@@ -553,10 +552,6 @@ func (ds *DownloadParams) ValidateSymlinks() bool {
 	return ds.ValidateSymlink
 }
 
-func (ds *DownloadParams) GetRetries() int {
-	return ds.Retries
-}
-
 func NewDownloadParams() DownloadParams {
-	return DownloadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinSplitSize: 5120, SplitCount: 3, Retries: 3}
+	return DownloadParams{CommonParams: &utils.CommonParams{}, MinSplitSize: 5120, SplitCount: 3}
 }

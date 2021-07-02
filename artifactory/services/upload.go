@@ -2,7 +2,6 @@ package services
 
 import (
 	"archive/zip"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -228,7 +227,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 
 	// If the path is a single file (or a symlink while preserving symlinks) upload it and return
 	if !isDir || (fileutils.IsPathSymlink(rootPath) && uploadParams.IsSymlink()) {
-		artifact, err := fspatterns.GetSingleFileToUpload(rootPath, uploadParams.GetTarget(), uploadParams.IsFlat(), uploadParams.IsSymlink())
+		artifact, err := fspatterns.GetSingleFileToUpload(rootPath, uploadParams.GetTarget(), uploadParams.IsFlat())
 		if err != nil {
 			return err
 		}
@@ -249,7 +248,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		dataHandlerFunc(uploadData)
 		return err
 	}
-	uploadParams.SetPattern(clientutils.PrepareLocalPathForUpload(uploadParams.GetPattern(), uploadParams.GetPatternType()))
+	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
 	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
 	return err
 }
@@ -323,22 +322,19 @@ type uploadTaskData struct {
 }
 
 func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandlerFunc) error {
-	for i := 1; i < taskData.size; i++ {
-		group := strings.Replace(taskData.groups[i], "\\", "/", -1)
-		taskData.target = strings.Replace(taskData.target, "{"+strconv.Itoa(i)+"}", group, -1)
-	}
+	var placeholdersUsed bool
+	taskData.target, placeholdersUsed = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
 
 	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
 	if err != nil {
 		return err
 	}
-
 	// If preserving symlinks or symlink target is empty, use root path name for upload (symlink itself / regular file)
 	if taskData.uploadParams.IsSymlink() || symlinkPath == "" {
-		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat())
+		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
 	} else {
-		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat())
+		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
 	}
 
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
@@ -367,9 +363,10 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 }
 
 // Construct the target path while taking `flat` flag into account.
-func getUploadTarget(rootPath, target string, isFlat bool) string {
+func getUploadTarget(rootPath, target string, isFlat, placeholdersUsed bool) string {
 	if strings.HasSuffix(target, "/") {
-		if isFlat {
+		// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
+		if isFlat || placeholdersUsed {
 			fileName, _ := fileutils.GetFileAndDirFromPath(rootPath)
 			target += fileName
 		} else {
@@ -396,23 +393,12 @@ func (us *UploadService) uploadFile(localPath, targetPathWithProps string, fileI
 	if err != nil {
 		return nil, false, err
 	}
-	// Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
-	// In case of uploading archive with "--explode" the response body will be empty and sha256 won't be shown at
-	// the detailed summary.
-	if len(body) > 0 {
-		responseBody := new(UploadResponseBody)
-		err = json.Unmarshal(body, &responseBody)
-		if errorutils.CheckError(err) != nil {
-			return nil, false, err
-		}
-		details.Checksum.Sha256 = responseBody.Checksums.Sha256
+	details.Checksum.Sha256, err = clientutils.ExtractSha256FromResponseBody(body)
+	if err != nil {
+		return nil, false, err
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
 	return details, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
-}
-
-type UploadResponseBody struct {
-	Checksums fileutils.ChecksumDetails `json:"checksums,omitempty"`
 }
 
 // Reads a file from a Reader that is given from a function (getReaderFunc) and uploads it to the specified target path.
@@ -435,7 +421,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 
 		if !checksumDeployed {
 			retryExecutor := clientutils.RetryExecutor{
-				MaxRetries:      uploadParams.Retries,
+				MaxRetries:      us.client.GetHttpClient().GetRetries(),
 				RetriesInterval: 0,
 				ErrorMessage:    fmt.Sprintf("Failure occurred while uploading to %s", targetUrlWithProps),
 				LogMsgPrefix:    logMsgPrefix,
@@ -478,7 +464,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.GetRetries(), nil)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, nil)
 	return
 }
 
@@ -503,7 +489,7 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 		}
 		if !checksumDeployed {
 			resp, body, err = utils.UploadFile(localPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
-				httpClientsDetails, us.client, uploadParams.Retries, us.Progress)
+				httpClientsDetails, us.client, us.Progress)
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
@@ -580,26 +566,25 @@ func getDebianProps(debianPropsStr string) string {
 }
 
 type UploadParams struct {
-	*utils.ArtifactoryCommonParams
+	*utils.CommonParams
 	Deb               string
 	BuildProps        string
 	Symlink           bool
 	ExplodeArchive    bool
 	Flat              bool
 	AddVcsProps       bool
-	Retries           int
 	MinChecksumDeploy int64
 	Archive           string
 }
 
 func NewUploadParams() UploadParams {
-	return UploadParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}, MinChecksumDeploy: 10240}
+	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: 10240}
 }
 
 func deepCopyUploadParams(params *UploadParams) UploadParams {
 	paramsCopy := *params
-	paramsCopy.ArtifactoryCommonParams = new(utils.ArtifactoryCommonParams)
-	*paramsCopy.ArtifactoryCommonParams = *params.ArtifactoryCommonParams
+	paramsCopy.CommonParams = new(utils.CommonParams)
+	*paramsCopy.CommonParams = *params.CommonParams
 	return paramsCopy
 }
 
@@ -621,10 +606,6 @@ func (up *UploadParams) IsExplodeArchive() bool {
 
 func (up *UploadParams) GetDebian() string {
 	return up.Deb
-}
-
-func (up *UploadParams) GetRetries() int {
-	return up.Retries
 }
 
 type UploadData struct {
@@ -896,7 +877,7 @@ func newResultManager() (*resultsManager, error) {
 
 // Write a result of a successful upload
 func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha256 string, checksums *fileutils.ChecksumDetails) {
-	fileTransferDetails := utils.FileTransferDetails{
+	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
 		Sha256:     sha256,
@@ -922,7 +903,7 @@ func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 			return e
 		}
 	}
-	fileTransferDetails := utils.FileTransferDetails{
+	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
 	}

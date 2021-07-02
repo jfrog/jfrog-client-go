@@ -34,15 +34,6 @@ type OperationSummary struct {
 	TotalFailed            int
 }
 
-// Represents a file transfer from SourcePath to TargetPath.
-// Each of the paths can be on the local machine (full or relative) or in Artifactory (full URL).
-// File's Sha256 calculated by Artifactory during upload. we read sha256 from the HTTP's response body.
-type FileTransferDetails struct {
-	SourcePath string `json:"sourcePath,omitempty"`
-	TargetPath string `json:"targetPath,omitempty"`
-	Sha256     string `json:"sha256,omitempty"`
-}
-
 type ArtifactDetails struct {
 	// Path of the artifact in Artifactory
 	ArtifactoryPath string    `json:"artifactoryPath,omitempty"`

@@ -3,19 +3,24 @@ package jfroghttpclient
 import (
 	"context"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"time"
 )
 
 func JfrogClientBuilder() *jfrogHttpClientBuilder {
-	return &jfrogHttpClientBuilder{}
+	builder := &jfrogHttpClientBuilder{}
+	builder.SetTimeout(httpclient.DefaultHttpTimeout)
+	return builder
 }
 
 type jfrogHttpClientBuilder struct {
 	certificatesDirPath    string
 	insecureTls            bool
 	ctx                    context.Context
+	retries                int
 	preRequestInterceptors []PreRequestInterceptorFunc
 	clientCertPath         string
 	clientCertKeyPath      string
+	timeout                time.Duration
 }
 
 func (builder *jfrogHttpClientBuilder) SetCertificatesPath(certificatesPath string) *jfrogHttpClientBuilder {
@@ -43,8 +48,18 @@ func (builder *jfrogHttpClientBuilder) SetContext(ctx context.Context) *jfrogHtt
 	return builder
 }
 
+func (builder *jfrogHttpClientBuilder) SetRetries(retries int) *jfrogHttpClientBuilder {
+	builder.retries = retries
+	return builder
+}
+
 func (builder *jfrogHttpClientBuilder) AppendPreRequestInterceptor(interceptor PreRequestInterceptorFunc) *jfrogHttpClientBuilder {
 	builder.preRequestInterceptors = append(builder.preRequestInterceptors, interceptor)
+	return builder
+}
+
+func (builder *jfrogHttpClientBuilder) SetTimeout(timeout time.Duration) *jfrogHttpClientBuilder {
+	builder.timeout = timeout
 	return builder
 }
 
@@ -56,6 +71,8 @@ func (builder *jfrogHttpClientBuilder) Build() (rtHttpClient *JfrogHttpClient, e
 		SetClientCertPath(builder.clientCertPath).
 		SetClientCertKeyPath(builder.clientCertKeyPath).
 		SetContext(builder.ctx).
+		SetTimeout(builder.timeout).
+		SetRetries(builder.retries).
 		Build()
 	return
 }

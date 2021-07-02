@@ -95,7 +95,7 @@ func createDelete(t *testing.T) {
 	// Create signed release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SignImmediately = true
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
@@ -112,7 +112,7 @@ func createUpdate(t *testing.T) {
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.Description = "Release bundle description 1"
 	createBundleParams.ReleaseNotes = "Release notes 1"
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
 
 	// Test DryRun first
 	err := createDryRun(createBundleParams)
@@ -137,7 +137,7 @@ func createUpdate(t *testing.T) {
 	updateBundleParams := services.NewUpdateReleaseBundleParams(bundleName, bundleVersion)
 	updateBundleParams.Description = "Release bundle description 2"
 	updateBundleParams.ReleaseNotes = "Release notes 2"
-	updateBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "test/a.in"}}
+	updateBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "test/a.in"}}
 
 	// Test DryRun first
 	err = updateDryRun(updateBundleParams)
@@ -203,7 +203,7 @@ func createWithProps(t *testing.T) {
 	targetProps, err := utils.ParseProperties("key1=value1;key2=value2,value3")
 	assert.NoError(t, err)
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{
+	createBundleParams.SpecFiles = []*utils.CommonParams{{
 		Pattern:     RtTargetRepo + "b.in",
 		TargetProps: targetProps,
 	}}
@@ -249,7 +249,7 @@ func createSignDistributeDelete(t *testing.T) {
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 	assert.Nil(t, summary)
@@ -303,7 +303,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 	assert.Nil(t, summary)
@@ -342,7 +342,7 @@ func createDistributeMapping(t *testing.T) {
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in", Target: RtTargetRepo + "b.out"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in", Target: RtTargetRepo + "b.out"}}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
@@ -373,7 +373,7 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "(" + RtTargetRepo + ")" + "(*).in", Target: "{1}{2}.out"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: "(" + RtTargetRepo + ")" + "(*).in", Target: "{1}{2}.out"}}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
@@ -411,7 +411,7 @@ func sendGpgKeys(t *testing.T) {
 
 	// Send public key to Artifactory
 	content := fmt.Sprintf(artifactoryGpgKeyCreatePattern, publicKey)
-	resp, body, err := httpClient.SendPost(GetRtDetails().GetUrl()+"api/security/keys/trusted", []byte(content), distHttpDetails)
+	resp, body, err := httpClient.SendPost(GetRtDetails().GetUrl()+"api/security/keys/trusted", []byte(content), distHttpDetails, "")
 	assert.NoError(t, err)
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusConflict {
 		t.Error(resp.Status)
@@ -426,7 +426,7 @@ func deleteGpgKeys(t *testing.T) {
 	if gpgKeyId == "" {
 		return
 	}
-	resp, body, err := httpClient.SendDelete(GetRtDetails().GetUrl()+"api/security/keys/trusted/"+gpgKeyId, nil, distHttpDetails)
+	resp, body, err := httpClient.SendDelete(GetRtDetails().GetUrl()+"api/security/keys/trusted/"+gpgKeyId, nil, distHttpDetails, "")
 	assert.NoError(t, err)
 	if resp.StatusCode != http.StatusNoContent {
 		t.Error(resp.Status)
@@ -436,7 +436,7 @@ func deleteGpgKeys(t *testing.T) {
 
 // Get GPG key ID created in the tests
 func getGpgKeyId(t *testing.T) string {
-	resp, body, _, err := httpClient.SendGet(GetRtDetails().GetUrl()+"api/security/keys/trusted", true, distHttpDetails)
+	resp, body, _, err := httpClient.SendGet(GetRtDetails().GetUrl()+"api/security/keys/trusted", true, distHttpDetails, "")
 	assert.NoError(t, err)
 	if resp.StatusCode != http.StatusOK {
 		t.Error(resp.Status)
@@ -487,7 +487,7 @@ func waitForDistribution(t *testing.T, bundleName string) {
 // Wait for deletion of a release bundle
 func waitForDeletion(t *testing.T, bundleName string) {
 	for i := 0; i < 120; i++ {
-		resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion+"/distribution", true, distHttpDetails)
+		resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion+"/distribution", true, distHttpDetails, "")
 		assert.NoError(t, err)
 		if resp.StatusCode == http.StatusNotFound {
 			return
@@ -520,7 +520,7 @@ type gpgKeyResponse struct {
 }
 
 func getLocalBundle(t *testing.T, bundleName string, expectExist bool) *distributableResponse {
-	resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion, true, distHttpDetails)
+	resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion, true, distHttpDetails, "")
 	assert.NoError(t, err)
 	if !expectExist {
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)

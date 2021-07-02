@@ -33,10 +33,13 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
+		SetContext(config.GetContext()).
+		SetTimeout(config.GetHttpTimeout()).
 		SetClientCertPath(artDetails.GetClientCertPath()).
 		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
+		SetRetries(config.GetHttpRetries()).
 		Build()
 	if err != nil {
 		return nil, err
@@ -301,7 +304,7 @@ func (sm *ArtifactoryServicesManagerImp) Move(params ...services.MoveCopyParams)
 	return moveService.MoveCopyServiceMoveFilesWrapper(params...)
 }
 
-func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) error {
+func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error) {
 	goService := _go.NewGoService(sm.client)
 	goService.ArtDetails = sm.config.GetServiceDetails()
 	return goService.PublishPackage(params)

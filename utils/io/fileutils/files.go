@@ -128,10 +128,11 @@ func GetFileAndDirFromPath(path string) (fileName, dir string) {
 }
 
 // Get the local path and filename from original file name and path according to targetPath
-func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool) (localTargetPath, fileName string) {
+func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool, placeholdersUsed bool) (localTargetPath, fileName string) {
 	targetFileName, targetDirPath := GetFileAndDirFromPath(targetPath)
 	localTargetPath = FixPathForWindows(targetDirPath)
-	if !flat {
+	// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
+	if !flat && !placeholdersUsed {
 		localTargetPath = filepath.Join(targetDirPath, relativePath)
 	}
 
