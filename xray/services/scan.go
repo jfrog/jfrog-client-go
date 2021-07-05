@@ -170,10 +170,13 @@ type RequestScanResponse struct {
 }
 
 type ScanResponse struct {
-	ScanId          string          `json:"scan_id,omitempty"`
-	Violations      []Violation     `json:"violations,omitempty"`
-	Vulnerabilities []Vulnerability `json:"vulnerabilities,omitempty"`
-	Licenses        []License       `json:"licenses,omitempty"`
+	ScanId             string          `json:"scan_id,omitempty"`
+	Violations         []Violation     `json:"violations,omitempty"`
+	Vulnerabilities    []Vulnerability `json:"vulnerabilities,omitempty"`
+	Licenses           []License       `json:"licenses,omitempty"`
+	ScannedComponentId string          `json:"component_id,omitempty"`
+	ScannedPackageType string          `json:"package_type,omitempty"`
+	ScannedStatus      string          `json:"status,omitempty"`
 }
 
 type Violation struct {
