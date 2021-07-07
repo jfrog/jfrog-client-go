@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -23,6 +24,7 @@ const (
 	watchesSeperator            = "&watch="
 	includeVulnerabilitiesParam = "?include_vulnerabilities=true"
 	includeLicensesParam        = "?include_licenses=true"
+	andIncludeLicensesParam     = "&include_licenses=true"
 	defaultMaxWaitMinutes       = 5 * time.Minute // 5 minutes
 	defaultSyncSleepInterval    = 5               // 5 seconds
 )
@@ -50,7 +52,8 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		url += projectQueryParam + scanParams.ProjectKey
 	} else if scanParams.RepoPath != "" {
 		url += repoPathQueryParam + scanParams.RepoPath
-	} else if len(scanParams.Watches) > 0 {
+	} else if len(scanParams.Watches) > 0 && scanParams.Watches[0] != "" {
+		println(scanParams.Watches)
 		watches := strings.Join(scanParams.Watches, watchesSeperator)
 		url += watchesQueryParam + watches
 	}
@@ -86,8 +89,10 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam
-	}
-	if includeLicenses {
+		if includeLicenses {
+			endPoint += andIncludeLicensesParam
+		}
+	} else if includeLicenses {
 		endPoint += includeLicensesParam
 	}
 	go func() {
