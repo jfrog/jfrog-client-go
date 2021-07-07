@@ -201,7 +201,7 @@ type Vulnerability struct {
 }
 
 type License struct {
-	Key        string               `json:"key,omitempty"`
+	Key        string               `json:"license_key,omitempty"`
 	Name       string               `json:"name,omitempty"`
 	Components map[string]Component `json:"components,omitempty"`
 	Custom     bool                 `json:"custom,omitempty"`
