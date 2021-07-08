@@ -464,7 +464,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, nil)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, nil)
 	return
 }
 
@@ -477,7 +477,7 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 	addExplodeHeader(&httpClientsDetails, uploadParams.IsExplodeArchive())
 	if !us.DryRun {
 		if fileInfo.Size() >= uploadParams.MinChecksumDeploy && !uploadParams.IsExplodeArchive() {
-			details, err = fileutils.GetFileDetails(localPath)
+			details, err = fileutils.GetFileDetails(localPath, uploadParams.ChecksumsCalcEnabled)
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
@@ -489,14 +489,14 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 		}
 		if !checksumDeployed {
 			resp, body, err = utils.UploadFile(localPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
-				httpClientsDetails, us.client, us.Progress)
+				httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, us.Progress)
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
 		}
 	}
 	if details == nil {
-		details, err = fileutils.GetFileDetails(localPath)
+		details, err = fileutils.GetFileDetails(localPath, uploadParams.ChecksumsCalcEnabled)
 	}
 	return resp, details, body, checksumDeployed, err
 }
@@ -567,18 +567,19 @@ func getDebianProps(debianPropsStr string) string {
 
 type UploadParams struct {
 	*utils.CommonParams
-	Deb               string
-	BuildProps        string
-	Symlink           bool
-	ExplodeArchive    bool
-	Flat              bool
-	AddVcsProps       bool
-	MinChecksumDeploy int64
-	Archive           string
+	Deb                  string
+	BuildProps           string
+	Symlink              bool
+	ExplodeArchive       bool
+	Flat                 bool
+	AddVcsProps          bool
+	MinChecksumDeploy    int64
+	ChecksumsCalcEnabled bool
+	Archive              string
 }
 
 func NewUploadParams() UploadParams {
-	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: 10240}
+	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: 10240, ChecksumsCalcEnabled: true}
 }
 
 func deepCopyUploadParams(params *UploadParams) UploadParams {
@@ -684,8 +685,8 @@ func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targe
 				return us.resultsManager.addNotFinalResult(localPath, targetUrl)
 			}
 		}
-		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating checksums", archiveData.uploadParams.Flat, saveFilesPathsFunc, errorsQueue)
-		details, e := fileutils.GetFileDetailsFromReader(checksumZipReader)
+		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums", archiveData.uploadParams.Flat, saveFilesPathsFunc, errorsQueue)
+		details, e := fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
 		if e != nil {
 			return
 		}
