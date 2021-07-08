@@ -23,6 +23,7 @@ const (
 	watchesSeperator            = "&watch="
 	includeVulnerabilitiesParam = "?include_vulnerabilities=true"
 	includeLicensesParam        = "?include_licenses=true"
+	andIncludeLicensesParam     = "&include_licenses=true"
 	defaultMaxWaitMinutes       = 5 * time.Minute // 5 minutes
 	defaultSyncSleepInterval    = 5               // 5 seconds
 )
@@ -86,8 +87,10 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam
-	}
-	if includeLicenses {
+		if includeLicenses {
+			endPoint += andIncludeLicensesParam
+		}
+	} else if includeLicenses {
 		endPoint += includeLicensesParam
 	}
 	go func() {
@@ -170,10 +173,13 @@ type RequestScanResponse struct {
 }
 
 type ScanResponse struct {
-	ScanId          string          `json:"scan_id,omitempty"`
-	Violations      []Violation     `json:"violations,omitempty"`
-	Vulnerabilities []Vulnerability `json:"vulnerabilities,omitempty"`
-	Licenses        []License       `json:"licenses,omitempty"`
+	ScanId             string          `json:"scan_id,omitempty"`
+	Violations         []Violation     `json:"violations,omitempty"`
+	Vulnerabilities    []Vulnerability `json:"vulnerabilities,omitempty"`
+	Licenses           []License       `json:"licenses,omitempty"`
+	ScannedComponentId string          `json:"component_id,omitempty"`
+	ScannedPackageType string          `json:"package_type,omitempty"`
+	ScannedStatus      string          `json:"status,omitempty"`
 }
 
 type Violation struct {
@@ -201,7 +207,7 @@ type Vulnerability struct {
 }
 
 type License struct {
-	Key        string               `json:"key,omitempty"`
+	Key        string               `json:"license_key,omitempty"`
 	Name       string               `json:"name,omitempty"`
 	Components map[string]Component `json:"components,omitempty"`
 	Custom     bool                 `json:"custom,omitempty"`
