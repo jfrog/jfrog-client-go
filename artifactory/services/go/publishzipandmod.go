@@ -112,10 +112,12 @@ func (pwa *publishZipAndModApi) upload(localPath, moduleId, version, props, ext,
 	}
 	sha256 := resp.Header.Get("X-Checksum-Sha256")
 	if sha256 == "" {
-		log.Error("Failed to extract file's sha256 from response body.\nFile: " + localPath)
+		log.Info("Failed to extract file's sha256 from response body.\nFile: " + localPath)
 	}
 	// Remove urls properties suffix
 	splitUrlPath := strings.Split(urlPath, ";")
-	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: splitUrlPath[0], Sha256: sha256}
+	// Remove "api/go/" substring from url to get the actual file's path in Artifactory
+	targetPath := strings.ReplaceAll(splitUrlPath[0], "api/go/", "")
+	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: targetPath, Sha256: sha256}
 	return &filesDetails, errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }
