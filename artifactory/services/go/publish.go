@@ -102,7 +102,7 @@ func (gpc *GoPublishCommand) upload(localPath, moduleId, version, props, ext, ur
 		return nil, err
 	}
 	addGoVersion(version, &urlPath)
-	details, err := fileutils.GetFileDetails(localPath)
+	details, err := fileutils.GetFileDetails(localPath, true)
 	if err != nil {
 		return nil, err
 	}

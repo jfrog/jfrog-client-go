@@ -245,8 +245,15 @@ params.Symlink = false
 params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
+// The min file size in bytes for "checksum deploy".
+// "Checksum deploy" is the action of calculating the file checksum locally, before 
+// the upload, and skipping the actual file transfer if the file already  
+// exists in Artifactory.
 // MinChecksumDeploy default value: 10400
 params.MinChecksumDeploy = 15360
+// Set to false to disable all checksum calculation, including "checksum deploy".
+// ChecksumsCalcEnabled default value: true
+params.ChecksumsCalcEnabled = false 
 
 totalUploaded, totalFailed, err := rtManager.UploadFiles(params)
 ```
