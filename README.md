@@ -246,7 +246,7 @@ params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
 // The min file size in bytes for "checksum deploy".
-// "checksum deploy" is the action of calculating the file checksum locally, before 
+// "Checksum deploy" is the action of calculating the file checksum locally, before 
 // the upload, and skipping the actual file transfer if the file already  
 // exists in Artifactory.
 // MinChecksumDeploy default value: 10400
