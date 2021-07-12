@@ -991,13 +991,12 @@ summary, err := distManager.CreateReleaseBundle(params)
 #### Updating a Release Bundle
 ```go
 params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
-params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "New Description"
 params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"
 targetProps := utils.NewProperties()
 targetProps.AddProperty("key1", "val1")
-params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip", TargetProps: targetProps}}
+params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip", TargetProps: targetProps}}
 
 // The Target property defines the target path in the edge node, and can include replaceable in the form of {1}, {2}, ...
 // Read more about it in the above "Creating a Release Bundle" section.
