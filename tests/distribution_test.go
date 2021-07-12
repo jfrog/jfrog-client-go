@@ -95,7 +95,7 @@ func createDelete(t *testing.T) {
 	// Create signed release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SignImmediately = true
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
@@ -112,7 +112,7 @@ func createUpdate(t *testing.T) {
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.Description = "Release bundle description 1"
 	createBundleParams.ReleaseNotes = "Release notes 1"
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
 
 	// Test DryRun first
 	err := createDryRun(createBundleParams)
@@ -137,7 +137,7 @@ func createUpdate(t *testing.T) {
 	updateBundleParams := services.NewUpdateReleaseBundleParams(bundleName, bundleVersion)
 	updateBundleParams.Description = "Release bundle description 2"
 	updateBundleParams.ReleaseNotes = "Release notes 2"
-	updateBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "test/a.in"}}
+	updateBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "test/a.in"}}
 
 	// Test DryRun first
 	err = updateDryRun(updateBundleParams)
@@ -203,7 +203,7 @@ func createWithProps(t *testing.T) {
 	targetProps, err := utils.ParseProperties("key1=value1;key2=value2,value3")
 	assert.NoError(t, err)
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{
+	createBundleParams.SpecFiles = []*utils.CommonParams{{
 		Pattern:     RtTargetRepo + "b.in",
 		TargetProps: targetProps,
 	}}
@@ -249,7 +249,7 @@ func createSignDistributeDelete(t *testing.T) {
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 	assert.Nil(t, summary)
@@ -303,7 +303,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 	assert.Nil(t, summary)
@@ -342,7 +342,7 @@ func createDistributeMapping(t *testing.T) {
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: RtTargetRepo + "b.in", Target: RtTargetRepo + "b.out"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in", Target: RtTargetRepo + "b.out"}}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
@@ -373,7 +373,7 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "(" + RtTargetRepo + ")" + "(*).in", Target: "{1}{2}.out"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: "(" + RtTargetRepo + ")" + "(*).in", Target: "{1}{2}.out"}}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)

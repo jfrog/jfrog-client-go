@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -36,15 +37,15 @@ func (s *SearchService) Search(searchParams SearchParams) (*content.ContentReade
 }
 
 type SearchParams struct {
-	*utils.ArtifactoryCommonParams
+	*utils.CommonParams
 }
 
-func (s *SearchParams) GetFile() *utils.ArtifactoryCommonParams {
-	return s.ArtifactoryCommonParams
+func (s *SearchParams) GetFile() *utils.CommonParams {
+	return s.CommonParams
 }
 
 func NewSearchParams() SearchParams {
-	return SearchParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
+	return SearchParams{CommonParams: &utils.CommonParams{}}
 }
 
 func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requiredArtifactProps utils.RequiredArtifactProps) (*content.ContentReader, error) {
@@ -53,7 +54,7 @@ func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requir
 		return nil, err
 	}
 	artifactoryVersion := version.NewVersion(artifactoryVersionStr)
-	utils.DisableTransitiveSearchIfNotAllowed(searchParams.ArtifactoryCommonParams, artifactoryVersion)
+	utils.DisableTransitiveSearchIfNotAllowed(searchParams.CommonParams, artifactoryVersion)
 	switch searchParams.GetSpecType() {
 	case utils.WILDCARD:
 		return utils.SearchBySpecWithPattern(searchParams.GetFile(), flags, requiredArtifactProps)

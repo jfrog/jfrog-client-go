@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -15,11 +16,16 @@ import (
 )
 
 const (
-	scanGraphAPI             = "api/v1/scan/graph"
-	repoPathQueryParam       = "?repo_path="
-	projectQueryParam        = "?project="
-	defaultMaxWaitMinutes    = 5 * time.Minute // 5 minutes
-	defaultSyncSleepInterval = 5               // 5 seconds
+	scanGraphAPI                = "api/v1/scan/graph"
+	repoPathQueryParam          = "?repo_path="
+	projectQueryParam           = "?project="
+	watchesQueryParam           = "?watch="
+	watchesSeperator            = "&watch="
+	includeVulnerabilitiesParam = "?include_vulnerabilities=true"
+	includeLicensesParam        = "?include_licenses=true"
+	andIncludeLicensesParam     = "&include_licenses=true"
+	defaultMaxWaitMinutes       = 5 * time.Minute // 5 minutes
+	defaultSyncSleepInterval    = 5               // 5 seconds
 )
 
 type ScanService struct {
@@ -45,6 +51,9 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		url += projectQueryParam + scanParams.ProjectKey
 	} else if scanParams.RepoPath != "" {
 		url += repoPathQueryParam + scanParams.RepoPath
+	} else if len(scanParams.Watches) > 0 {
+		watches := strings.Join(scanParams.Watches, watchesSeperator)
+		url += watchesQueryParam + watches
 	}
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
@@ -61,7 +70,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	return scanResponse.ScanId, err
 }
 
-func (ss *ScanService) GetScanGraphResults(scanId string) (*ScanResponse, error) {
+func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
 	maxWaitMinutes := defaultMaxWaitMinutes
 	if ss.MaxWaitMinutes > 0 {
 		maxWaitMinutes = ss.MaxWaitMinutes
@@ -76,6 +85,14 @@ func (ss *ScanService) GetScanGraphResults(scanId string) (*ScanResponse, error)
 	errChan := make(chan error)
 	resultChan := make(chan []byte)
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
+	if includeVulnerabilities {
+		endPoint += includeVulnerabilitiesParam
+		if includeLicenses {
+			endPoint += andIncludeLicensesParam
+		}
+	} else if includeLicenses {
+		endPoint += includeLicensesParam
+	}
 	go func() {
 		for {
 			select {
@@ -129,6 +146,7 @@ type XrayGraphScanParams struct {
 	// This will provide a way to extract the watches that should be applied on this graph
 	RepoPath   string
 	ProjectKey string
+	Watches    []string
 	Graph      *GraphNode
 }
 
@@ -155,10 +173,13 @@ type RequestScanResponse struct {
 }
 
 type ScanResponse struct {
-	ScanId          string          `json:"scan_id,omitempty"`
-	Violations      []Violation     `json:"violations,omitempty"`
-	Vulnerabilities []Vulnerability `json:"vulnerabilities,omitempty"`
-	Licenses        []License       `json:"licenses,omitempty"`
+	ScanId             string          `json:"scan_id,omitempty"`
+	Violations         []Violation     `json:"violations,omitempty"`
+	Vulnerabilities    []Vulnerability `json:"vulnerabilities,omitempty"`
+	Licenses           []License       `json:"licenses,omitempty"`
+	ScannedComponentId string          `json:"component_id,omitempty"`
+	ScannedPackageType string          `json:"package_type,omitempty"`
+	ScannedStatus      string          `json:"status,omitempty"`
 }
 
 type Violation struct {
@@ -186,7 +207,7 @@ type Vulnerability struct {
 }
 
 type License struct {
-	Key        string               `json:"key,omitempty"`
+	Key        string               `json:"license_key,omitempty"`
 	Name       string               `json:"name,omitempty"`
 	Components map[string]Component `json:"components,omitempty"`
 	Custom     bool                 `json:"custom,omitempty"`

@@ -102,7 +102,7 @@ func (gpc *GoPublishCommand) upload(localPath, moduleId, version, props, ext, ur
 		return nil, err
 	}
 	addGoVersion(version, &urlPath)
-	details, err := fileutils.GetFileDetails(localPath)
+	details, err := fileutils.GetFileDetails(localPath, true)
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +117,8 @@ func (gpc *GoPublishCommand) upload(localPath, moduleId, version, props, ext, ur
 	}
 	// Remove urls properties suffix
 	splitUrlPath := strings.Split(urlPath, ";")
-	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: splitUrlPath[0], Sha256: sha256}
+	// Remove "api/go/" substring from url to get the actual file's path in Artifactory
+	targetPath := strings.ReplaceAll(splitUrlPath[0], "api/go/", "")
+	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: targetPath, Sha256: sha256}
 	return &filesDetails, errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }

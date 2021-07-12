@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 	"path/filepath"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils/version"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
@@ -146,18 +147,18 @@ func TestReduceBottomChainDirResult(t *testing.T) {
 
 func TestValidateTransitiveSearchAllowed(t *testing.T) {
 	tests := []struct {
-		params             *ArtifactoryCommonParams
+		params             *CommonParams
 		artifactoryVersion *version.Version
 		expectedTransitive bool
 	}{
-		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.0.0"), false},
-		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.17.0"), true},
-		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.17.0-m029"), true},
-		{&ArtifactoryCommonParams{Transitive: true}, version.NewVersion("7.19.0"), true},
-		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.0.0"), false},
-		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.17.0"), false},
-		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.17.0-m029"), false},
-		{&ArtifactoryCommonParams{Transitive: false}, version.NewVersion("7.19.0"), false},
+		{&CommonParams{Transitive: true}, version.NewVersion("7.0.0"), false},
+		{&CommonParams{Transitive: true}, version.NewVersion("7.17.0"), true},
+		{&CommonParams{Transitive: true}, version.NewVersion("7.17.0-m029"), true},
+		{&CommonParams{Transitive: true}, version.NewVersion("7.19.0"), true},
+		{&CommonParams{Transitive: false}, version.NewVersion("7.0.0"), false},
+		{&CommonParams{Transitive: false}, version.NewVersion("7.17.0"), false},
+		{&CommonParams{Transitive: false}, version.NewVersion("7.17.0-m029"), false},
+		{&CommonParams{Transitive: false}, version.NewVersion("7.19.0"), false},
 	}
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("transitive:%t,version:%s", test.params.Transitive, test.artifactoryVersion.GetVersion()), func(t *testing.T) {

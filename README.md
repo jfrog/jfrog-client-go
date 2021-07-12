@@ -243,8 +243,15 @@ params.Symlink = false
 params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
+// The min file size in bytes for "checksum deploy".
+// "Checksum deploy" is the action of calculating the file checksum locally, before 
+// the upload, and skipping the actual file transfer if the file already  
+// exists in Artifactory.
 // MinChecksumDeploy default value: 10400
 params.MinChecksumDeploy = 15360
+// Set to false to disable all checksum calculation, including "checksum deploy".
+// ChecksumsCalcEnabled default value: true
+params.ChecksumsCalcEnabled = false 
 // Attach properties to the uploaded files
 targetProps := utils.NewProperties()
 targetProps.AddProperty("key1", "val1")
@@ -693,10 +700,9 @@ servicesManager.DeleteRepository("generic-repo")
 ```
 
 #### Getting Repository Details
-
-You can get repository details from Artifactory using its key, and the desired params struct. The function expects to
-get the repo key (name) and a pointer to a param struct that will be filled up. The param struct should contain the
-desired params fields corresponded to the Artifactory REST API:
+You can get repository details from Artifactory using its key, and the desired params struct.
+The function expects to get the repo key (name) and a pointer to a param struct that will be filled up.
+The param struct should contain the desired params fields corresponded to the Artifactory REST API: 
 ```go
 repoDetails = services.RepositoryDetails{}
 err := servicesManager.GetRepository("maven-repo", &repoDetails)
@@ -957,7 +963,6 @@ err := distManager.SetSigningKey(params)
 ```
 
 #### Creating a Release Bundle
-
 ```go
 params := services.NewCreateReleaseBundleParams("bundle-name", "1")
 params.Description = "Description"
@@ -965,7 +970,7 @@ params.ReleaseNotes = "Release notes"
 params.ReleaseNotesSyntax = "plain_text"
 targetProps := utils.NewProperties()
 targetProps.AddProperty("key1", "val1")
-params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip", TargetProps: targetProps}}
+params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip", TargetProps: targetProps}}
 
 // Be default, artifacts that are distributed as part of a release bundle, have the same path in their destination server
 // (the edge node) as the path they had on the distributing Artifactory server.
@@ -976,7 +981,7 @@ params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip", Ta
 // In the following example, the path in the edge node is similar to the path in the source Artifactory server, except for the additional "dir" level at the root of the repository.
 // Pattern: my-repo/(*)/a.zip
 // Target: my-repo/dir/{1}/a.zip
-pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
+pathMappingSpec := &utils.CommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
 // In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise summary is nil.
@@ -984,9 +989,9 @@ summary, err := distManager.CreateReleaseBundle(params)
 ```
 
 #### Updating a Release Bundle
-
 ```go
 params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
+params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip"}}
 params.Description = "New Description"
 params.ReleaseNotes = "New Release notes"
 params.ReleaseNotesSyntax = "plain_text"
@@ -996,7 +1001,7 @@ params.SpecFiles = []*utils.ArtifactoryCommonParams{{Pattern: "repo/*/*.zip", Ta
 
 // The Target property defines the target path in the edge node, and can include replaceable in the form of {1}, {2}, ...
 // Read more about it in the above "Creating a Release Bundle" section.
-pathMappingSpec := &utils.ArtifactoryCommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
+pathMappingSpec := &utils.CommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
 // In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise summary is nil.
