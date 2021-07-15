@@ -242,8 +242,8 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags Co
 	if err != nil {
 		return "", "", err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return "", "", errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return "", "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 	var responseBuild []Build
@@ -581,9 +581,8 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 		log.Debug("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body))
 		return nil, false, nil
 	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, false, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, false, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 
 	// Build BuildInfo struct from json.

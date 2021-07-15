@@ -66,10 +66,9 @@ func (xps *PolicyService) Delete(policyName string) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
-
 	log.Debug("Xray response:", resp.Status)
 	log.Info("Done deleting policy.")
 	return nil

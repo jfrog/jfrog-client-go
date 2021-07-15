@@ -8,7 +8,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
@@ -60,8 +60,8 @@ func (us *UserService) GetUser(params UserParams) (u *User, err error) {
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	var user User
 	if err := json.Unmarshal(body, &user); err != nil {
@@ -77,8 +77,8 @@ func (us *UserService) GetAllUsers() ([]*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	var users []*User
 	if err := json.Unmarshal(body, &users); err != nil {
@@ -106,8 +106,8 @@ func (us *UserService) CreateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	return nil
 }
@@ -121,8 +121,8 @@ func (us *UserService) UpdateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	return nil
 }

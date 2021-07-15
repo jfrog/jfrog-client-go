@@ -2,16 +2,16 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
+	"net/http"
+	"path"
+	"strings"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"path"
-	"strings"
 )
 
 type DistributeService struct {
@@ -72,8 +72,8 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Artifactory response:", resp.Status)

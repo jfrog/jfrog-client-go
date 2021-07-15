@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -42,8 +41,8 @@ func (rs *CreateReplicationService) performRequest(params *utils.ReplicationBody
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done " + operationString + " repository.")

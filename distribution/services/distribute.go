@@ -78,8 +78,8 @@ func (dr *DistributeReleaseBundleService) execDistribute(name, version string, d
 	if err != nil {
 		return "", err
 	}
-	if resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusOK {
-		return "", errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
+		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	response := distributionResponseBody{}
 	err = json.Unmarshal(body, &response)

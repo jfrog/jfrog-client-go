@@ -8,7 +8,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
@@ -57,9 +57,8 @@ func (gs *GroupService) GetGroup(params GroupParams) (g *Group, err error) {
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if resp.StatusCode != http.StatusOK {
-		// Other errors from the server
-		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	var group Group
 	if err := json.Unmarshal(body, &group); err != nil {
@@ -88,8 +87,8 @@ func (gs *GroupService) CreateGroup(params GroupParams) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	return nil
 }
@@ -111,8 +110,8 @@ func (gs *GroupService) UpdateGroup(params GroupParams) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	return nil
 }

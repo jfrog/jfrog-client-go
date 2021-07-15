@@ -86,8 +86,8 @@ func (ss *SecurityService) GetAPIKey() (string, error) {
 		return "", err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	return getApiKeyFromBody(body)
