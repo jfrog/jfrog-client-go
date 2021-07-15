@@ -110,7 +110,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 					return
 				}
 				if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
-					errChan <- errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutis.IndentJson(body)))
+					errChan <- errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 					resultChan <- nil
 					return
 				}
