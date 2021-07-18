@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -108,12 +107,11 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 				log.Error(err)
 				return err
 			}
-			if resp.StatusCode != http.StatusNoContent {
-				err = errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+			if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
+				err = errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body))
 				log.Error(errorutils.CheckError(err))
 				return err
 			}
-
 			result.SuccessCount[threadId]++
 			return nil
 		}

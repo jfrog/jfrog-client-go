@@ -86,8 +86,8 @@ func (ss *SecurityService) GetAPIKey() (string, error) {
 		return "", err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	return getApiKeyFromBody(body)
@@ -115,9 +115,8 @@ func (ss *SecurityService) CreateToken(params CreateTokenParams) (CreateTokenRes
 	if err != nil {
 		return tokenInfo, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return tokenInfo, errorutils.CheckError(
-			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return tokenInfo, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
 		return tokenInfo, errorutils.CheckError(err)
@@ -133,9 +132,8 @@ func (ss *SecurityService) GetTokens() (GetTokensResponseData, error) {
 	if err != nil {
 		return tokens, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return tokens, errorutils.CheckError(
-			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return tokens, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	if err = json.Unmarshal(body, &tokens); err != nil {
 		return tokens, errorutils.CheckError(err)
@@ -166,9 +164,8 @@ func (ss *SecurityService) RefreshToken(params RefreshTokenParams) (CreateTokenR
 	if err != nil {
 		return tokenInfo, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return tokenInfo, errorutils.CheckError(
-			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return tokenInfo, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
 		return tokenInfo, errorutils.CheckError(err)
@@ -185,9 +182,8 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 	if err != nil {
 		return "", err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return "", errorutils.CheckError(
-			errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	return string(body), err
 }

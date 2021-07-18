@@ -1,12 +1,12 @@
 package services
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -42,8 +42,8 @@ func (ps *PingService) Ping() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return respBody, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return respBody, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(respBody)))
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 	return respBody, nil

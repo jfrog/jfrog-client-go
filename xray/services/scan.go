@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -61,7 +62,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	}
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return "", errorutils.CheckError(errors.New("Server response: " + resp.Status))
+		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	scanResponse := RequestScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
@@ -109,7 +110,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 					return
 				}
 				if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
-					errChan <- errorutils.CheckError(errors.New("Server response: " + resp.Status))
+					errChan <- errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 					resultChan <- nil
 					return
 				}

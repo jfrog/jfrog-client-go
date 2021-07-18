@@ -1,13 +1,12 @@
 package services
 
 import (
-	"errors"
 	"net/http"
 
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -42,8 +41,8 @@ func (dlr *DeleteLocalReleaseBundleService) execDeleteLocalDistribution(name, ve
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusNoContent {
-		return errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Distribution response: ", resp.Status)

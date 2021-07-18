@@ -2,9 +2,9 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"net/http"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -33,8 +33,8 @@ func (pts *PermissionTargetService) Delete(permissionTargetName string) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
@@ -53,8 +53,8 @@ func (pts *PermissionTargetService) Get(permissionTargetName string) (*Permissio
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
@@ -96,8 +96,9 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		err = errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		err = errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body))
 		if resp.StatusCode == http.StatusConflict {
 			return errorutils.CheckError(&PermissionTargetAlreadyExistsError{InnerError: err})
 		}

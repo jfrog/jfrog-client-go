@@ -2,13 +2,13 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
+	"net/http"
+	"strings"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
-	"strings"
 )
 
 type VersionService struct {
@@ -31,8 +31,8 @@ func (vs *VersionService) GetDistributionVersion() (string, error) {
 		return "", err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return "", errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	var version distributionVersion
 	err = json.Unmarshal(body, &version)
