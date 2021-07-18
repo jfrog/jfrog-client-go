@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -146,12 +145,12 @@ func (us *UserService) createOrUpdateUserRequest(user User) (url string, request
 func (us *UserService) DeleteUser(name string) error {
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), name)
-	resp, _, err := us.client.SendDelete(url, nil, &httpDetails)
+	resp, body, err := us.client.SendDelete(url, nil, &httpDetails)
 	if resp == nil {
 		return errorutils.CheckError(fmt.Errorf("no response provided (including status code)"))
 	}
-	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	return err
 }

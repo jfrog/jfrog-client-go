@@ -93,8 +93,9 @@ func (xps *PolicyService) Create(params utils.PolicyParams) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		err := errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody))
+
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		err = errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(respBody))
 		if resp.StatusCode == http.StatusConflict {
 			return errorutils.CheckError(&PolicyAlreadyExistsError{InnerError: err})
 		}
@@ -126,8 +127,8 @@ func (xps *PolicyService) Update(params utils.PolicyParams) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(respBody)))
 	}
 	log.Debug("Xray response:", resp.Status)
 	log.Info("Done updating policy.")
@@ -145,8 +146,8 @@ func (xps *PolicyService) Get(policyName string) (policyResp *utils.PolicyParams
 	if err != nil {
 		return &utils.PolicyParams{}, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return &utils.PolicyParams{}, errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return &utils.PolicyParams{}, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	err = json.Unmarshal(body, policy)
