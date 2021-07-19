@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -63,8 +62,8 @@ func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpg
 	if err != nil {
 		return summary, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return summary, errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return summary, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	if summary != nil {
 		summary.SetSucceeded(true)

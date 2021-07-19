@@ -401,6 +401,10 @@ func (us *UploadService) uploadFile(localPath, targetPathWithProps string, fileI
 	return details, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
 }
 
+func (us *UploadService) shouldTryChecksumDeploy(fileSize int64, uploadParams UploadParams) bool {
+	return uploadParams.ChecksumsCalcEnabled && fileSize >= uploadParams.MinChecksumDeploy && !uploadParams.IsExplodeArchive()
+}
+
 // Reads a file from a Reader that is given from a function (getReaderFunc) and uploads it to the specified target path.
 // getReaderFunc is called only if checksum deploy was successful.
 // Returns true if the file was successfully uploaded.
@@ -411,7 +415,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 	var e error
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
 	if !us.DryRun {
-		if details.Size >= uploadParams.MinChecksumDeploy && !uploadParams.IsExplodeArchive() {
+		if us.shouldTryChecksumDeploy(details.Size, uploadParams) {
 			resp, body, e = us.tryChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
 			if e != nil {
 				return false, e
@@ -476,7 +480,7 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 	var err error
 	addExplodeHeader(&httpClientsDetails, uploadParams.IsExplodeArchive())
 	if !us.DryRun {
-		if fileInfo.Size() >= uploadParams.MinChecksumDeploy && !uploadParams.IsExplodeArchive() {
+		if us.shouldTryChecksumDeploy(details.Size, uploadParams) {
 			details, err = fileutils.GetFileDetails(localPath, uploadParams.ChecksumsCalcEnabled)
 			if err != nil {
 				return resp, details, body, checksumDeployed, err

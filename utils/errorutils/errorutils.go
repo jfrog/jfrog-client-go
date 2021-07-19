@@ -22,5 +22,9 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 	}
 
 	errorBody, _ := ioutil.ReadAll(resp.Body)
-	return errors.New(resp.Status + " " + string(errorBody))
+	return GenerateResponseError(resp.Status, string(errorBody))
+}
+
+func GenerateResponseError(status, body string) error {
+	return errors.New("Server response: " + status + "\n" + body)
 }

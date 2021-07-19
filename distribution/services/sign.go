@@ -2,13 +2,13 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	distrbutionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -48,8 +48,8 @@ func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase 
 	if err != nil {
 		return summary, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return summary, errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return summary, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	summary.SetSucceeded(true)
 	summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
