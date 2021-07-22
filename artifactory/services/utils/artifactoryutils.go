@@ -12,7 +12,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -24,10 +23,11 @@ import (
 )
 
 const (
-	ARTIFACTORY_SYMLINK = "symlink.dest"
-	SYMLINK_SHA1        = "symlink.destsha1"
-	Latest              = "LATEST"
-	LastRelease         = "LAST_RELEASE"
+	ARTIFACTORY_SYMLINK           = "symlink.dest"
+	SYMLINK_SHA1                  = "symlink.destsha1"
+	Latest                        = "LATEST"
+	LastRelease                   = "LAST_RELEASE"
+	DefaultBuildRepositoriesValue = "artifactory-build-info"
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -225,39 +225,21 @@ type Build struct {
 }
 
 func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
-	restUrl := flags.GetArtifactoryDetails().GetUrl() + "api/build/patternArtifacts"
-	body, err := createBodyForLatestBuildRequest(buildName, buildNumber)
+	aqlBody := CreateAqlQueryForLatestCreated(DefaultBuildRepositoriesValue, buildName)
+	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
 		return "", "", err
 	}
-	log.Debug("Getting build name and number from Artifactory: " + buildName + ", " + buildNumber)
-	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
-	SetContentType("application/json", &httpClientsDetails.Headers)
-	log.Debug("Sending post request to: " + restUrl + ", with the following body: " + string(body))
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return "", "", err
+	defer reader.Close()
+	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+		if i := strings.LastIndex(resultItem.Name, "-"); i != -1 {
+			//remove timestamp and .json to get build number
+			buildNumber = resultItem.Name[:i]
+			return buildName, buildNumber, nil
+		}
 	}
-	resp, body, err := client.SendPost(restUrl, body, httpClientsDetails, "")
-	if err != nil {
-		return "", "", err
-	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return "", "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
-	}
-	log.Debug("Artifactory response: ", resp.Status)
-	var responseBuild []Build
-	err = json.Unmarshal(body, &responseBuild)
-	if errorutils.CheckError(err) != nil {
-		return "", "", err
-	}
-	if responseBuild[0].BuildNumber != "" {
-		log.Debug("Found build number: " + responseBuild[0].BuildNumber)
-	} else {
-		log.Debug("The build could not be found in Artifactory")
-	}
-
-	return buildName, responseBuild[0].BuildNumber, nil
+	log.Debug(buildName, ": Could not be found in Artifactory.")
+	return "", "", err
 }
 
 func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte, err error) {
