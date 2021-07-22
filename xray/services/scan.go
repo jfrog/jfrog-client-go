@@ -25,8 +25,8 @@ const (
 	includeVulnerabilitiesParam = "?include_vulnerabilities=true"
 	includeLicensesParam        = "?include_licenses=true"
 	andIncludeLicensesParam     = "&include_licenses=true"
-	defaultMaxWaitMinutes       = 5 * time.Minute // 5 minutes
-	defaultSyncSleepInterval    = 5               // 5 seconds
+	defaultMaxWaitMinutes       = 15 * time.Minute // 15 minutes
+	defaultSyncSleepInterval    = 5 * time.Second  // 5 seconds
 )
 
 type ScanService struct {

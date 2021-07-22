@@ -3,7 +3,7 @@ package jfrogclient
 import "fmt"
 
 var agentName = "jfrog-client-go"
-var agentVersion = "1.0.0"
+var agentVersion = "1.1.0"
 
 func GetVersion() string {
 	return agentVersion

@@ -480,7 +480,7 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 	var err error
 	addExplodeHeader(&httpClientsDetails, uploadParams.IsExplodeArchive())
 	if !us.DryRun {
-		if us.shouldTryChecksumDeploy(details.Size, uploadParams) {
+		if us.shouldTryChecksumDeploy(fileInfo.Size(), uploadParams) {
 			details, err = fileutils.GetFileDetails(localPath, uploadParams.ChecksumsCalcEnabled)
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
