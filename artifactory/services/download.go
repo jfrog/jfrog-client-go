@@ -423,11 +423,11 @@ func getArtifactPropertyByKey(properties []utils.Property, key string) string {
 }
 
 func getArtifactSymlinkPath(properties []utils.Property) string {
-	return getArtifactPropertyByKey(properties, utils.ARTIFACTORY_SYMLINK)
+	return getArtifactPropertyByKey(properties, utils.ArtifactorySymlink)
 }
 
 func getArtifactSymlinkChecksum(properties []utils.Property) string {
-	return getArtifactPropertyByKey(properties, utils.SYMLINK_SHA1)
+	return getArtifactPropertyByKey(properties, utils.SymlinkSha1)
 }
 
 type fileHandlerFunc func(DownloadData) parallel.TaskFunc

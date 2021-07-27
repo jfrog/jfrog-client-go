@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -23,11 +24,11 @@ import (
 )
 
 const (
-	ARTIFACTORY_SYMLINK           = "symlink.dest"
-	SYMLINK_SHA1                  = "symlink.destsha1"
-	Latest                        = "LATEST"
-	LastRelease                   = "LAST_RELEASE"
-	DefaultBuildRepositoriesValue = "artifactory-build-info"
+	ArtifactorySymlink            = "symlink.dest"
+	SymlinkSha1                   = "symlink.destsha1"
+	latest                        = "LATEST"
+	lastRelease                   = "LAST_RELEASE"
+	defaultBuildRepositoriesValue = "artifactory-build-info"
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -150,7 +151,7 @@ func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier string, flags Comm
 }
 
 func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
-	if buildNumber == Latest || buildNumber == LastRelease {
+	if buildNumber == latest || buildNumber == lastRelease {
 		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, flags)
 	}
 	return buildName, buildNumber, nil
@@ -182,8 +183,8 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 	}
 	if !strings.Contains(identifier, Delimiter) {
 		if useLatestPolicy {
-			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + Latest)
-			return identifier, Latest, nil
+			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + latest)
+			return identifier, latest, nil
 		} else {
 			return "", "", errorutils.CheckError(errors.New("No '" + Delimiter + "' is found in '" + identifier + "'"))
 		}
@@ -206,9 +207,9 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 	}
 	if name == "" {
 		if useLatestPolicy {
-			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + Latest)
+			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + latest)
 			name = identifier
-			version = Latest
+			version = latest
 		} else {
 			return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'"))
 		}
@@ -225,7 +226,7 @@ type Build struct {
 }
 
 func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
-	aqlBody := CreateAqlQueryForLatestCreated(DefaultBuildRepositoriesValue, buildName)
+	aqlBody := CreateAqlQueryForLatestCreated(defaultBuildRepositoriesValue, buildName)
 	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
 		return "", "", err
@@ -233,12 +234,12 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags Co
 	defer reader.Close()
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if i := strings.LastIndex(resultItem.Name, "-"); i != -1 {
-			//remove timestamp and .json to get build number
+			//Remove the timestamp and .json to get the build number
 			buildNumber = resultItem.Name[:i]
 			return buildName, buildNumber, nil
 		}
 	}
-	log.Debug(buildName, ": Could not be found in Artifactory.")
+	log.Debug(fmt.Sprintf("The %s/%s build run could not be found in Artifactory.", buildName, buildNumber))
 	return "", "", err
 }
 

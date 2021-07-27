@@ -170,9 +170,9 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 				return nil, err
 			}
 			sha1 := checksumInfo[checksum.SHA1]
-			artifactProps.AddProperty(utils.SYMLINK_SHA1, sha1)
+			artifactProps.AddProperty(utils.SymlinkSha1, sha1)
 		}
-		artifactProps.AddProperty(utils.ARTIFACTORY_SYMLINK, artifactSymlink)
+		artifactProps.AddProperty(utils.ArtifactorySymlink, artifactSymlink)
 	}
 	return utils.MergeProperties([]*utils.Properties{uploadParams.GetTargetProps(), artifactProps}), nil
 }

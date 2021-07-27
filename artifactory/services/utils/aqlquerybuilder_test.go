@@ -130,7 +130,6 @@ func TestCreateAqlQueryForLatestCreated(t *testing.T) {
 	if actual != expected {
 		t.Error("The function CreateAqlQueryForLatestCreated expected to return the string:\n'" + expected + "'.\nbut returned:\n'" + actual + "'.")
 	}
-
 }
 
 func TestPrepareSourceSearchPattern(t *testing.T) {
