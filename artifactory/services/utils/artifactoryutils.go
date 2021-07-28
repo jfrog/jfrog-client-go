@@ -234,7 +234,7 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags Co
 	defer reader.Close()
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if i := strings.LastIndex(resultItem.Name, "-"); i != -1 {
-			//Remove the timestamp and .json to get the build number
+			// Remove the timestamp and .json to get the build number
 			buildNumber = resultItem.Name[:i]
 			return buildName, buildNumber, nil
 		}
