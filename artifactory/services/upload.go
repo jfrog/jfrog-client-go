@@ -776,56 +776,25 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	if e != nil {
 		return
 	}
-	var fileToUpload *os.File
-	if symlink {
-		// Create a temporrary file wich it's content is the symlink target.
-		symlinkFile, err := createSymlinkToZipFile(artifact.Symlink, writer)
-		if err != nil {
-			e = err
-			return
-		}
-		// Write symlink's target to writer.
+
+	if artifact.Symlink != "" && symlink {
+		// Write symlink's target to writer - file's body for symlinks is the symlink target.
 		_, e = writer.Write([]byte(filepath.ToSlash(artifact.Symlink)))
-		if e != nil {
-			return
-		}
-		fileToUpload = symlinkFile
-	} else {
-		fileToUpload = file
+		return
 	}
 
 	if us.Progress != nil {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
-		reader = progressReader.ActionWithProgress(fileToUpload)
+		reader = progressReader.ActionWithProgress(file)
 		defer us.Progress.RemoveProgress(progressReader.GetId())
 	} else {
-		reader = fileToUpload
+		reader = file
 	}
 
 	_, e = io.Copy(writer, reader)
 	if e != nil {
 		return
 	}
-	return
-}
-
-// createSymlinkToZipFile creates a temporrary file wich it's content is the symlink target.
-func createSymlinkToZipFile(symlikTarget string, writer io.Writer) (tmpFilepath *os.File, e error) {
-	tmpFile, e := fileutils.CreateTempFile()
-	if e != nil {
-		return
-	}
-	defer func() {
-		err := os.Remove(tmpFile.Name())
-		if e == nil {
-			e = err
-		}
-	}()
-	_, e = tmpFile.Write([]byte(filepath.ToSlash(symlikTarget)))
-	if e != nil {
-		return
-	}
-	tmpFilepath = tmpFile
 	return
 }
 
