@@ -7,12 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -21,6 +15,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync"
+
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type HttpClient struct {
@@ -118,7 +119,7 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 				return false, nil
 			}
 			// Perform retry
-			log.Warn(fmt.Sprintf("%sThe server response: %s", logMsgPrefix, resp.Status))
+			log.Warn(fmt.Sprintf("%sThe server response: %s\n %s", logMsgPrefix, resp.Status, utils.IndentJson(respBody)))
 			return true, nil
 		},
 	}
@@ -205,7 +206,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 				return false, nil
 			}
 			// Perform retry
-			log.Warn(fmt.Sprintf("%sThe server response: %s", logMsgPrefix, resp.Status))
+			log.Warn(fmt.Sprintf("%sThe server response: %s\n %s", logMsgPrefix, resp.Status, utils.IndentJson(body)))
 			return true, nil
 		},
 	}
