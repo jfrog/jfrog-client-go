@@ -4,6 +4,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
 
+const VirtualRepositoryRepoType = "virtual"
+
 type VirtualRepositoryService struct {
 	RepositoryService
 }
@@ -11,7 +13,7 @@ type VirtualRepositoryService struct {
 func NewVirtualRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *VirtualRepositoryService {
 	return &VirtualRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: "Virtual",
+			repoType: VirtualRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
@@ -139,11 +141,11 @@ type CommonCacheVirtualRepositoryParams struct {
 }
 
 func NewVirtualRepositoryBaseParams() VirtualRepositoryBaseParams {
-	return VirtualRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "virtual"}}
+	return VirtualRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: VirtualRepositoryRepoType}}
 }
 
 func NewVirtualRepositoryPackageParams(packageType string) VirtualRepositoryBaseParams {
-	return VirtualRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "virtual", PackageType: packageType}}
+	return VirtualRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: VirtualRepositoryRepoType, PackageType: packageType}}
 }
 
 type AlpineVirtualRepositoryParams struct {

@@ -4,6 +4,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
 
+const FederatedRepositoryRepoType = "federated"
+
 type FederatedRepositoryService struct {
 	RepositoryService
 }
@@ -11,7 +13,7 @@ type FederatedRepositoryService struct {
 func NewFederatedRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *FederatedRepositoryService {
 	return &FederatedRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: "Federated",
+			repoType: FederatedRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
@@ -151,11 +153,11 @@ type FederatedRepositoryBaseParams struct {
 }
 
 func NewFederatedRepositoryBaseParams() FederatedRepositoryBaseParams {
-	return FederatedRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "federated"}}
+	return FederatedRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: FederatedRepositoryRepoType}}
 }
 
 func NewFederatedRepositoryPackageParams(packageType string) FederatedRepositoryBaseParams {
-	return FederatedRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "federated", PackageType: packageType}}
+	return FederatedRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: FederatedRepositoryRepoType, PackageType: packageType}}
 }
 
 type AlpineFederatedRepositoryParams struct {

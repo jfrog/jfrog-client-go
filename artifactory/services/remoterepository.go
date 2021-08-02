@@ -4,6 +4,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
 
+const RemoteRepositoryRepoType = "remote"
+
 type RemoteRepositoryService struct {
 	RepositoryService
 }
@@ -11,7 +13,7 @@ type RemoteRepositoryService struct {
 func NewRemoteRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *RemoteRepositoryService {
 	return &RemoteRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: "Remote",
+			repoType: RemoteRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
@@ -190,11 +192,11 @@ type RemoteRepositoryBaseParams struct {
 }
 
 func NewRemoteRepositoryBaseParams() RemoteRepositoryBaseParams {
-	return RemoteRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "remote"}}
+	return RemoteRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: RemoteRepositoryRepoType}}
 }
 
 func NewRemoteRepositoryPackageParams(packageType string) RemoteRepositoryBaseParams {
-	return RemoteRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "remote", PackageType: packageType}}
+	return RemoteRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: RemoteRepositoryRepoType, PackageType: packageType}}
 }
 
 type JavaPackageManagersRemoteRepositoryParams struct {

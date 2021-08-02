@@ -4,6 +4,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
 
+const LocalRepositoryRepoType = "local"
+
 type LocalRepositoryService struct {
 	RepositoryService
 }
@@ -11,7 +13,7 @@ type LocalRepositoryService struct {
 func NewLocalRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *LocalRepositoryService {
 	return &LocalRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: "Local",
+			repoType: LocalRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
@@ -145,11 +147,11 @@ type LocalRepositoryBaseParams struct {
 }
 
 func NewLocalRepositoryBaseParams() LocalRepositoryBaseParams {
-	return LocalRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "local"}}
+	return LocalRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: LocalRepositoryRepoType}}
 }
 
 func NewLocalRepositoryPackageParams(packageType string) LocalRepositoryBaseParams {
-	return LocalRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "local", PackageType: packageType}}
+	return LocalRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: LocalRepositoryRepoType, PackageType: packageType}}
 }
 
 type AlpineLocalRepositoryParams struct {

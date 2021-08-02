@@ -8,6 +8,7 @@ import (
 )
 
 const ArtifactoryLocalFileCacheSuffix = " (local file cache)"
+const MavenCentralUrl = "https://repo.maven.apache.org"
 
 func TestArtifactoryRemoteRepository(t *testing.T) {
 	initArtifactoryTest(t)
@@ -402,7 +403,7 @@ func remoteGenericTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGenericRemoteRepositoryParams()
 	grp.Key = repoKey
-	grp.Url = "https://jcenter.bintray.com"
+	grp.Url = MavenCentralUrl
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 	grp.ListRemoteFolderItems = &trueValue
 
@@ -469,7 +470,7 @@ func remoteGradleTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGradleRemoteRepositoryParams()
 	grp.Key = repoKey
-	grp.Url = "https://jcenter.bintray.com"
+	grp.Url = MavenCentralUrl
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 	setJavaPackageManagersRemoteRepositoryParams(&grp.JavaPackageManagersRemoteRepositoryParams, false)
 
@@ -515,7 +516,7 @@ func remoteIvyTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	irp := services.NewIvyRemoteRepositoryParams()
 	irp.Key = repoKey
-	irp.Url = "https://jcenter.bintray.com"
+	irp.Url = MavenCentralUrl
 	setRemoteRepositoryBaseParams(&irp.RemoteRepositoryBaseParams, false)
 	setJavaPackageManagersRemoteRepositoryParams(&irp.JavaPackageManagersRemoteRepositoryParams, false)
 
@@ -538,7 +539,7 @@ func remoteMavenTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	mrp := services.NewMavenRemoteRepositoryParams()
 	mrp.Key = repoKey
-	mrp.Url = "https://jcenter.bintray.com"
+	mrp.Url = MavenCentralUrl
 	setRemoteRepositoryBaseParams(&mrp.RemoteRepositoryBaseParams, false)
 	setJavaPackageManagersRemoteRepositoryParams(&mrp.JavaPackageManagersRemoteRepositoryParams, false)
 
@@ -722,7 +723,7 @@ func remoteSbtTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	srp := services.NewSbtRemoteRepositoryParams()
 	srp.Key = repoKey
-	srp.Url = "https://jcenter.bintray.com"
+	srp.Url = MavenCentralUrl
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, false)
 	setJavaPackageManagersRemoteRepositoryParams(&srp.JavaPackageManagersRemoteRepositoryParams, false)
 
@@ -880,7 +881,7 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGenericRemoteRepositoryParams()
 	grp.Key = repoKey
-	grp.Url = "https://jcenter.bintray.com"
+	grp.Url = MavenCentralUrl
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
@@ -901,7 +902,7 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	grp := services.NewGenericRemoteRepositoryParams()
 	grp.Key = repoKey
-	grp.Url = "https://jcenter.bintray.com"
+	grp.Url = MavenCentralUrl
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
