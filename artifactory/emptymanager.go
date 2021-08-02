@@ -82,6 +82,7 @@ type ArtifactoryServicesManager interface {
 	CreateUser(params services.UserParams) error
 	UpdateUser(params services.UserParams) error
 	DeleteUser(name string) error
+	ConvertLocalToFederated(repoKey string) error
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -363,6 +364,10 @@ func (esm *EmptyArtifactoryServicesManager) UpdateGroup(params services.GroupPar
 }
 
 func (esm *EmptyArtifactoryServicesManager) DeleteGroup(name string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) ConvertLocalToFederated(repoKey string) error {
 	panic("Failed: Method is not implemented")
 }
 

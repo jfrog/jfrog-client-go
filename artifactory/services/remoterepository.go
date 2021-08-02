@@ -1,25 +1,21 @@
 package services
 
 import (
-	"encoding/json"
-	"net/http"
-
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type RemoteRepositoryService struct {
-	isUpdate   bool
-	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	RepositoryService
 }
 
 func NewRemoteRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *RemoteRepositoryService {
-	return &RemoteRepositoryService{client: client, isUpdate: isUpdate}
+	return &RemoteRepositoryService{
+		RepositoryService: RepositoryService{
+			repoType: "Remote",
+			client:   client,
+			isUpdate: isUpdate,
+		},
+	}
 }
 
 func (rrs *RemoteRepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -27,82 +23,10 @@ func (rrs *RemoteRepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogH
 }
 
 func (rrs *RemoteRepositoryService) performRequest(params interface{}, repoKey string) error {
-	content, err := json.Marshal(params)
-	if errorutils.CheckError(err) != nil {
-		return err
-	}
-	httpClientsDetails := rrs.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/vnd.org.jfrog.artifactory.repositories.RemoteRepositoryConfiguration+json", &httpClientsDetails.Headers)
-	var url = rrs.ArtDetails.GetUrl() + "api/repositories/" + repoKey
-	var operationString string
-	var resp *http.Response
-	var body []byte
-	if rrs.isUpdate {
-		log.Info("Updating remote repository...")
-		operationString = "updating"
-		resp, body, err = rrs.client.SendPost(url, content, &httpClientsDetails)
-	} else {
-		log.Info("Creating remote repository...")
-		operationString = "creating"
-		resp, body, err = rrs.client.SendPut(url, content, &httpClientsDetails)
-	}
-	if err != nil {
-		return err
-	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-
-	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done " + operationString + " repository.")
-	return nil
+	return rrs.RepositoryService.performRequest(params, repoKey)
 }
 
-func (rrs *RemoteRepositoryService) Maven(params MavenRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Gradle(params GradleRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Ivy(params IvyRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Sbt(params SbtRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Helm(params HelmRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Cocoapods(params CocoapodsRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Opkg(params OpkgRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Rpm(params RpmRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Nuget(params NugetRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Cran(params CranRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Gems(params GemsRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Npm(params NpmRemoteRepositoryParams) error {
+func (rrs *RemoteRepositoryService) Alpine(params AlpineRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
 
@@ -110,35 +34,7 @@ func (rrs *RemoteRepositoryService) Bower(params BowerRemoteRepositoryParams) er
 	return rrs.performRequest(params, params.Key)
 }
 
-func (rrs *RemoteRepositoryService) Debian(params DebianRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Pypi(params PypiRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Docker(params DockerRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Yum(params YumRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Vcs(params VcsRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Composer(params ComposerRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) Go(params GoRemoteRepositoryParams) error {
-	return rrs.performRequest(params, params.Key)
-}
-
-func (rrs *RemoteRepositoryService) P2(params P2RemoteRepositoryParams) error {
+func (rrs *RemoteRepositoryService) Cargo(params CargoRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
 
@@ -146,11 +42,11 @@ func (rrs *RemoteRepositoryService) Chef(params ChefRemoteRepositoryParams) erro
 	return rrs.performRequest(params, params.Key)
 }
 
-func (rrs *RemoteRepositoryService) Puppet(params PuppetRemoteRepositoryParams) error {
+func (rrs *RemoteRepositoryService) Cocoapods(params CocoapodsRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
 
-func (rrs *RemoteRepositoryService) Conda(params CondaRemoteRepositoryParams) error {
+func (rrs *RemoteRepositoryService) Composer(params ComposerRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
 
@@ -158,7 +54,23 @@ func (rrs *RemoteRepositoryService) Conan(params ConanRemoteRepositoryParams) er
 	return rrs.performRequest(params, params.Key)
 }
 
-func (rrs *RemoteRepositoryService) Gitlfs(params GitlfsRemoteRepositoryParams) error {
+func (rrs *RemoteRepositoryService) Conda(params CondaRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Cran(params CranRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Debian(params DebianRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Docker(params DockerRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Gems(params GemsRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
 
@@ -166,115 +78,320 @@ func (rrs *RemoteRepositoryService) Generic(params GenericRemoteRepositoryParams
 	return rrs.performRequest(params, params.Key)
 }
 
+func (rrs *RemoteRepositoryService) Gitlfs(params GitlfsRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Go(params GoRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Gradle(params GradleRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Helm(params HelmRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Ivy(params IvyRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Maven(params MavenRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Npm(params NpmRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Nuget(params NugetRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Opkg(params OpkgRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) P2(params P2RemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Puppet(params PuppetRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Pypi(params PypiRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Rpm(params RpmRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Sbt(params SbtRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Vcs(params VcsRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Yum(params YumRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+type ContentSynchronisationStatistics struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
+type ContentSynchronisationProperties struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
+type ContentSynchronisationSource struct {
+	OriginAbsenceDetection *bool `json:"originAbsenceDetection,omitempty"`
+}
+
 type ContentSynchronisation struct {
-	Enabled    bool `json:"enabled,omitempty"`
-	Statistics struct {
-		Enabled bool `json:"enabled,omitempty"`
-	} `json:"statistics,omitempty"`
-	Properties struct {
-		Enabled bool `json:"enabled,omitempty"`
-	} `json:"properties,omitempty"`
-	Source struct {
-		OriginAbsenceDetection bool `json:"originAbsenceDetection,omitempty"`
-	} `json:"source,omitempty"`
+	Enabled    *bool                             `json:"enabled,omitempty"`
+	Statistics *ContentSynchronisationStatistics `json:"statistics,omitempty"`
+	Properties *ContentSynchronisationProperties `json:"properties,omitempty"`
+	Source     *ContentSynchronisationSource     `json:"source,omitempty"`
 }
 
 type RemoteRepositoryBaseParams struct {
-	Key                               string                  `json:"key,omitempty"`
-	Rclass                            string                  `json:"rclass"`
-	PackageType                       string                  `json:"packageType,omitempty"`
+	RepositoryBaseParams
+	AdditionalRepositoryBaseParams
 	Url                               string                  `json:"url"`
 	Username                          string                  `json:"username,omitempty"`
 	Password                          string                  `json:"password,omitempty"`
 	Proxy                             string                  `json:"proxy,omitempty"`
-	Description                       string                  `json:"description,omitempty"`
-	Notes                             string                  `json:"notes,omitempty"`
-	IncludesPattern                   string                  `json:"includesPattern,omitempty"`
-	ExcludesPattern                   string                  `json:"excludesPattern,omitempty"`
-	RepoLayoutRef                     string                  `json:"repoLayoutRef,omitempty"`
 	HardFail                          *bool                   `json:"hardFail,omitempty"`
 	Offline                           *bool                   `json:"offline,omitempty"`
-	BlackedOut                        *bool                   `json:"blackedOut,omitempty"`
-	XrayIndex                         *bool                   `json:"xrayIndex,omitempty"`
 	StoreArtifactsLocally             *bool                   `json:"storeArtifactsLocally,omitempty"`
 	SocketTimeoutMillis               int                     `json:"socketTimeoutMillis,omitempty"`
 	LocalAddress                      string                  `json:"localAddress,omitempty"`
 	RetrievalCachePeriodSecs          int                     `json:"retrievalCachePeriodSecs,omitempty"`
-	FailedRetrievalCachePeriodSecs    int                     `json:"failedRetrievalCachePeriodSecs,omitempty"`
+	MetadataRetrievalTimeoutSecs      int                     `json:"metadataRetrievalTimeoutSecs,omitempty"`
 	MissedRetrievalCachePeriodSecs    int                     `json:"missedRetrievalCachePeriodSecs,omitempty"`
-	UnusedArtifactsCleanupEnabled     *bool                   `json:"unusedArtifactsCleanupEnabled,omitempty"`
 	UnusedArtifactsCleanupPeriodHours int                     `json:"unusedArtifactsCleanupPeriodHours,omitempty"`
 	AssumedOfflinePeriodSecs          int                     `json:"assumedOfflinePeriodSecs,omitempty"`
 	ShareConfiguration                *bool                   `json:"shareConfiguration,omitempty"`
 	SynchronizeProperties             *bool                   `json:"synchronizeProperties,omitempty"`
 	BlockMismatchingMimeTypes         *bool                   `json:"blockMismatchingMimeTypes,omitempty"`
-	PropertySets                      []string                `json:"propertySets,omitempty"`
+	MismatchingMimeTypesOverrideList  string                  `json:"mismatchingMimeTypesOverrideList,omitempty"`
 	AllowAnyHostAuth                  *bool                   `json:"allowAnyHostAuth,omitempty"`
 	EnableCookieManagement            *bool                   `json:"enableCookieManagement,omitempty"`
 	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
 	ClientTlsCertificate              string                  `json:"clientTlsCertificate,omitempty"`
-	BlockPushingSchema1               *bool                   `json:"blockPushingSchema1,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
 }
 
-type CommonMavenGradleRemoteRepositoryParams struct {
-	FetchJarsEagerly             *bool  `json:"fetchJarsEagerly,omitempty"`
-	FetchSourcesEagerly          *bool  `json:"fetchSourcesEagerly,omitempty"`
+func NewRemoteRepositoryBaseParams() RemoteRepositoryBaseParams {
+	return RemoteRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "remote"}}
+}
+
+func NewRemoteRepositoryPackageParams(packageType string) RemoteRepositoryBaseParams {
+	return RemoteRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "remote", PackageType: packageType}}
+}
+
+type JavaPackageManagersRemoteRepositoryParams struct {
 	RemoteRepoChecksumPolicyType string `json:"remoteRepoChecksumPolicyType,omitempty"`
-	ListRemoteFolderItems        *bool  `json:"listRemoteFolderItems,omitempty"`
+	MaxUniqueSnapshots           int    `json:"maxUniqueSnapshots,omitempty"`
+	FetchJarsEagerly             *bool  `json:"fetchJarsEagerly,omitempty"`
+	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
+	FetchSourcesEagerly          *bool  `json:"fetchSourcesEagerly,omitempty"`
 	HandleReleases               *bool  `json:"handleReleases,omitempty"`
 	HandleSnapshots              *bool  `json:"handleSnapshots,omitempty"`
-	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
 	RejectInvalidJars            *bool  `json:"rejectInvalidJars,omitempty"`
 }
 
-type MavenRemoteRepositoryParams struct {
+type VcsGitRemoteRepositoryParams struct {
+	VcsType           string `json:"vcsType,omitempty"`
+	VcsGitProvider    string `json:"vcsGitProvider,omitempty"`
+	VcsGitDownloadUrl string `json:"vcsGitDownloadUrl,omitempty"`
+}
+
+type AlpineRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	CommonMavenGradleRemoteRepositoryParams
 }
 
-func NewRemoteRepositoryBaseParams() RemoteRepositoryBaseParams {
-	return RemoteRepositoryBaseParams{Rclass: "remote"}
+func NewAlpineRemoteRepositoryParams() AlpineRemoteRepositoryParams {
+	return AlpineRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("alpine")}
 }
 
-func NewMavenRemoteRepositoryParams() MavenRemoteRepositoryParams {
-	return MavenRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "maven"}}
-}
-
-type GradleRemoteRepositoryParams struct {
+type BowerRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	CommonMavenGradleRemoteRepositoryParams
+	VcsGitRemoteRepositoryParams
+	BowerRegistryUrl string `json:"bowerRegistryUrl,omitempty"`
 }
 
-func NewGradleRemoteRepositoryParams() GradleRemoteRepositoryParams {
-	return GradleRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "gradle"}}
+func NewBowerRemoteRepositoryParams() BowerRemoteRepositoryParams {
+	return BowerRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("bower")}
+}
+
+type CargoRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	CargoRepositoryParams
+	GitRegistryUrl string `json:"gitRegistryUrl,omitempty"`
+}
+
+func NewCargoRemoteRepositoryParams() CargoRemoteRepositoryParams {
+	return CargoRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("cargo")}
+}
+
+type ChefRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewChefRemoteRepositoryParams() ChefRemoteRepositoryParams {
+	return ChefRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("chef")}
 }
 
 type CocoapodsRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
+	VcsGitRemoteRepositoryParams
 	PodsSpecsRepoUrl string `json:"podsSpecsRepoUrl,omitempty"`
 }
 
 func NewCocoapodsRemoteRepositoryParams() CocoapodsRemoteRepositoryParams {
-	return CocoapodsRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "cocoapods"}}
+	return CocoapodsRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("cocoapods")}
 }
 
-type OpkgRemoteRepositoryParams struct {
+type ComposerRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	VcsGitRemoteRepositoryParams
+	ComposerRegistryUrl string `json:"composerRegistryUrl,omitempty"`
+}
+
+func NewComposerRemoteRepositoryParams() ComposerRemoteRepositoryParams {
+	return ComposerRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("composer")}
+}
+
+type ConanRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewConanRemoteRepositoryParams() ConanRemoteRepositoryParams {
+	return ConanRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("conan")}
+}
+
+type CondaRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewCondaRemoteRepositoryParams() CondaRemoteRepositoryParams {
+	return CondaRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("conda")}
+}
+
+type CranRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewCranRemoteRepositoryParams() CranRemoteRepositoryParams {
+	return CranRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("cran")}
+}
+
+type DebianRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
 	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
-func NewOpkgRemoteRepositoryParams() OpkgRemoteRepositoryParams {
-	return OpkgRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "opkg"}}
+func NewDebianRemoteRepositoryParams() DebianRemoteRepositoryParams {
+	return DebianRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("debian")}
 }
 
-type RpmRemoteRepositoryParams struct {
+type DockerRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	ExternalDependenciesEnabled  *bool    `json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
+	EnableTokenAuthentication    *bool    `json:"enableTokenAuthentication,omitempty"`
+	BlockPullingSchema1          *bool    `json:"blockPushingSchema1,omitempty"`
+}
+
+func NewDockerRemoteRepositoryParams() DockerRemoteRepositoryParams {
+	return DockerRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("docker")}
+}
+
+type GemsRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
 	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
-func NewRpmRemoteRepositoryParams() RpmRemoteRepositoryParams {
-	return RpmRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "rpm"}}
+func NewGemsRemoteRepositoryParams() GemsRemoteRepositoryParams {
+	return GemsRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("gems")}
+}
+
+type GenericRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
+}
+
+func NewGenericRemoteRepositoryParams() GenericRemoteRepositoryParams {
+	return GenericRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("generic")}
+}
+
+type GitlfsRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewGitlfsRemoteRepositoryParams() GitlfsRemoteRepositoryParams {
+	return GitlfsRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("gitlfs")}
+}
+
+type GoRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	VcsGitProvider string `json:"vcsGitProvider,omitempty"`
+}
+
+func NewGoRemoteRepositoryParams() GoRemoteRepositoryParams {
+	return GoRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("go")}
+}
+
+type GradleRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	JavaPackageManagersRemoteRepositoryParams
+}
+
+func NewGradleRemoteRepositoryParams() GradleRemoteRepositoryParams {
+	return GradleRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("gradle")}
+}
+
+type HelmRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	ChartsBaseUrl string `json:"chartsBaseUrl,omitempty"`
+}
+
+func NewHelmRemoteRepositoryParams() HelmRemoteRepositoryParams {
+	return HelmRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("helm")}
+}
+
+type IvyRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	JavaPackageManagersRemoteRepositoryParams
+}
+
+func NewIvyRemoteRepositoryParams() IvyRemoteRepositoryParams {
+	return IvyRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("ivy")}
+}
+
+type MavenRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	JavaPackageManagersRemoteRepositoryParams
+}
+
+func NewMavenRemoteRepositoryParams() MavenRemoteRepositoryParams {
+	return MavenRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("maven")}
+}
+
+type NpmRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewNpmRemoteRepositoryParams() NpmRemoteRepositoryParams {
+	return NpmRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("npm")}
 }
 
 type NugetRemoteRepositoryParams struct {
@@ -286,168 +403,24 @@ type NugetRemoteRepositoryParams struct {
 }
 
 func NewNugetRemoteRepositoryParams() NugetRemoteRepositoryParams {
-	return NugetRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "nuget"}}
+	return NugetRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("nuget")}
 }
 
-type GemsRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
-}
-
-func NewGemsRemoteRepositoryParams() GemsRemoteRepositoryParams {
-	return GemsRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "gems"}}
-}
-
-type NpmRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
-}
-
-func NewNpmRemoteRepositoryParams() NpmRemoteRepositoryParams {
-	return NpmRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "npm"}}
-}
-
-type BowerRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	BowerRegistryUrl string `json:"bowerRegistryUrl,omitempty"`
-}
-
-func NewBowerRemoteRepositoryParams() BowerRemoteRepositoryParams {
-	return BowerRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "bower"}}
-}
-
-type DebianRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
-}
-
-func NewDebianRemoteRepositoryParams() DebianRemoteRepositoryParams {
-	return DebianRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "debian"}}
-}
-
-type ComposerRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	ComposerRegistryUrl string `json:"composerRegistryUrl,omitempty"`
-}
-
-func NewComposerRemoteRepositoryParams() ComposerRemoteRepositoryParams {
-	return ComposerRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "composer"}}
-}
-
-type PypiRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	ListRemoteFolderItems *bool  `json:"listRemoteFolderItems,omitempty"`
-	PypiRegistryUrl       string `json:"pypiRegistryUrl,omitempty"`
-}
-
-func NewPypiRemoteRepositoryParams() PypiRemoteRepositoryParams {
-	return PypiRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "pypi"}}
-}
-
-type DockerRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	ExternalDependenciesEnabled  *bool    `json:"externalDependenciesEnabled,omitempty"`
-	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
-	EnableTokenAuthentication    *bool    `json:"enableTokenAuthentication,omitempty"`
-}
-
-func NewDockerRemoteRepositoryParams() DockerRemoteRepositoryParams {
-	return DockerRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "docker"}}
-}
-
-type GitlfsRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
-}
-
-func NewGitlfsRemoteRepositoryParams() GitlfsRemoteRepositoryParams {
-	return GitlfsRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "gitlfs"}}
-}
-
-type VcsRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	VcsGitProvider        string `json:"vcsGitProvider,omitempty"`
-	VcsType               string `json:"vcsType,omitempty"`
-	MaxUniqueSnapshots    int    `json:"maxUniqueSnapshots,omitempty"`
-	VcsGitDownloadUrl     string `json:"vcsGitDownloadUrl,omitempty"`
-	ListRemoteFolderItems *bool  `json:"listRemoteFolderItems,omitempty"`
-}
-
-func NewVcsRemoteRepositoryParams() VcsRemoteRepositoryParams {
-	return VcsRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "vcs"}}
-}
-
-type GenericRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
-}
-
-func NewGenericRemoteRepositoryParams() GenericRemoteRepositoryParams {
-	return GenericRemoteRepositoryParams{RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "generic"}}
-}
-
-type IvyRemoteRepositoryParams struct {
+type OpkgRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
 }
 
-func NewIvyRemoteRepositoryParams() IvyRemoteRepositoryParams {
-	return IvyRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "ivy"}}
-}
-
-type SbtRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-}
-
-func NewSbtRemoteRepositoryParams() SbtRemoteRepositoryParams {
-	return SbtRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "sbt"}}
-}
-
-type HelmRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-}
-
-func NewHelmRemoteRepositoryParams() HelmRemoteRepositoryParams {
-	return HelmRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "helm"}}
-}
-
-type CranRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-}
-
-func NewCranRemoteRepositoryParams() CranRemoteRepositoryParams {
-	return CranRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "cran"}}
-}
-
-type GoRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-}
-
-func NewGoRemoteRepositoryParams() GoRemoteRepositoryParams {
-	return GoRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "go"}}
-}
-
-type YumRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-}
-
-func NewYumRemoteRepositoryParams() YumRemoteRepositoryParams {
-	return YumRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "yum"}}
+func NewOpkgRemoteRepositoryParams() OpkgRemoteRepositoryParams {
+	return OpkgRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("opkg")}
 }
 
 type P2RemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
 func NewP2RemoteRepositoryParams() P2RemoteRepositoryParams {
-	return P2RemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "p2"}}
-}
-
-type ChefRemoteRepositoryParams struct {
-	RemoteRepositoryBaseParams
-}
-
-func NewChefRemoteRepositoryParams() ChefRemoteRepositoryParams {
-	return ChefRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "chef"}}
+	return P2RemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("p2")}
 }
 
 type PuppetRemoteRepositoryParams struct {
@@ -455,21 +428,52 @@ type PuppetRemoteRepositoryParams struct {
 }
 
 func NewPuppetRemoteRepositoryParams() PuppetRemoteRepositoryParams {
-	return PuppetRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "puppet"}}
+	return PuppetRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("puppet")}
 }
 
-type CondaRemoteRepositoryParams struct {
+type PypiRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
+	PypiRegistryUrl      string `json:"pyPIRegistryUrl,omitempty"`
+	PypiRepositorySuffix string `json:"pyPIRepositorySuffix,omitempty"`
 }
 
-func NewCondaRemoteRepositoryParams() CondaRemoteRepositoryParams {
-	return CondaRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "conda"}}
+func NewPypiRemoteRepositoryParams() PypiRemoteRepositoryParams {
+	return PypiRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("pypi")}
 }
 
-type ConanRemoteRepositoryParams struct {
+type RpmRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
 }
 
-func NewConanRemoteRepositoryParams() ConanRemoteRepositoryParams {
-	return ConanRemoteRepositoryParams{RemoteRepositoryBaseParams{Rclass: "remote", PackageType: "conan"}}
+func NewRpmRemoteRepositoryParams() RpmRemoteRepositoryParams {
+	return RpmRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("rpm")}
+}
+
+type SbtRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	JavaPackageManagersRemoteRepositoryParams
+}
+
+func NewSbtRemoteRepositoryParams() SbtRemoteRepositoryParams {
+	return SbtRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("sbt")}
+}
+
+type VcsRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	VcsGitRemoteRepositoryParams
+	MaxUniqueSnapshots int `json:"maxUniqueSnapshots,omitempty"`
+}
+
+func NewVcsRemoteRepositoryParams() VcsRemoteRepositoryParams {
+	return VcsRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("vcs")}
+}
+
+type YumRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	ListRemoteFolderItems *bool `json:"listRemoteFolderItems,omitempty"`
+}
+
+func NewYumRemoteRepositoryParams() YumRemoteRepositoryParams {
+	return YumRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("yum")}
 }

@@ -579,8 +579,7 @@ apiKey, err := rtManager.GetAPIKey()
 #### Creating and Updating Local Repository
 You can create and update a local repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
-Vagrant, Gitlfs, Go, Yum, Conan, Chef, Puppet and Generic.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant, and Yum.
 
 Each package type has it's own parameters struct, can be created using the method
 `New<packageType>LocalRepositoryParams()`.
@@ -618,8 +617,7 @@ err = servicesManager.UpdateLocalRepository().Generic(params)
 #### Creating and Updating Remote Repository
 You can create and update a remote repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
-Gitlfs, Go, Yum, Conan, Chef, Puppet, Conda, P2, Vcs and Generic.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Vcs, and Yum.
 
 Each package type has it's own parameters struct, can be created using the method
 `New<packageType>RemoteRepositoryParams()`.
@@ -658,8 +656,7 @@ err := servicesManager.CreateRemoteRepository(params)
 #### Creating and Updating Virtual Repository
 You can create and update a virtual repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Pypi, Docker, Gitlfs, Go, Yum, Conan,
-Chef, Puppet, Conda, P2 and Generic
+Alpine, Bower, Cran, Chef, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, P2, Puppet, Pypi, Rpm, Sbt, and Yum.
 
 Each package type has it's own parameters struct, can be created using the method
 `New<packageType>VirtualRepositoryParams()`.
@@ -824,6 +821,12 @@ replicationConfiguration, err := servicesManager.GetReplication("my-repository")
 You can remove a repository replication configuration from Artifactory using its key:
 ```go
 err := servicesManager.DeleteReplication("my-repository")
+```
+
+#### Converting a Local Repository to a Federated Repository
+You can convert a local repository to a federated repository using its key:
+```go
+err := servicesManager.ConvertLocalToFederated("my-repository")
 ```
 
 #### Creating and Updating Permission Targets

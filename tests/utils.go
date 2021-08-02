@@ -79,6 +79,7 @@ var testsPermissionTargetService *services.PermissionTargetService
 var testUserService *services.UserService
 var testGroupService *services.GroupService
 var testBuildInfoService *services.BuildInfoService
+var testsFederationService *services.FederationService
 
 // Distribution services
 var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
@@ -339,6 +340,14 @@ func createArtifactoryPermissionTargetManager() {
 	failOnHttpClientCreation(err)
 	testsPermissionTargetService = services.NewPermissionTargetService(client)
 	testsPermissionTargetService.ArtDetails = artDetails
+}
+
+func createArtifactoryFederationManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsFederationService = services.NewFederationService(client)
+	testsFederationService.ArtDetails = artDetails
 }
 
 func createJfrogHttpClient(artDetails *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
@@ -612,6 +621,116 @@ func FixWinPath(filePath string) string {
 	return fixedPath
 }
 
+func setRepositoryBaseParams(params *services.RepositoryBaseParams, isUpdate bool) {
+	if !isUpdate {
+		params.ProjectKey = ""
+		params.Environments = nil
+		params.Description = strings.ToTitle(params.PackageType) + " Repo for jfrog-client-go local-repository-test"
+		params.Notes = "Repo has been created"
+		params.IncludesPattern = "dir1/*"
+		params.ExcludesPattern = "dir2/*"
+		params.RepoLayoutRef = "simple-default"
+	} else {
+		params.ProjectKey = ""
+		params.Environments = nil
+		params.Description += " - Updated"
+		params.Notes = "Repo has been updated"
+		params.IncludesPattern = ""
+		params.ExcludesPattern = ""
+		params.RepoLayoutRef = "build-default"
+	}
+}
+
+func setAdditionalRepositoryBaseParams(params *services.AdditionalRepositoryBaseParams, isUpdate bool) {
+	if !isUpdate {
+		params.BlackedOut = &trueValue
+		params.XrayIndex = &trueValue
+		params.PropertySets = []string{"artifactory"}
+		params.DownloadRedirect = &trueValue
+		params.PriorityResolution = &trueValue
+	} else {
+		params.BlackedOut = &falseValue
+		params.XrayIndex = &falseValue
+		params.PropertySets = nil
+		params.DownloadRedirect = &falseValue
+		params.PriorityResolution = &falseValue
+	}
+}
+
+func setCargoRepositoryParams(params *services.CargoRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.CargoAnonymousAccess = &trueValue
+	} else {
+		params.CargoAnonymousAccess = &falseValue
+	}
+}
+
+func setDebianRepositoryParams(params *services.DebianRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.DebianTrivialLayout = &trueValue
+		params.OptionalIndexCompressionFormats = []string{"bz2", "lzma"}
+	} else {
+		params.DebianTrivialLayout = &falseValue
+		params.OptionalIndexCompressionFormats = nil
+	}
+}
+
+func setDockerRepositoryParams(params *services.DockerRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.DockerApiVersion = "V1"
+		params.MaxUniqueTags = 18
+		params.BlockPushingSchema1 = &falseValue
+		params.DockerTagRetention = 10
+	} else {
+		params.DockerApiVersion = "V2"
+		params.MaxUniqueTags = 36
+		params.BlockPushingSchema1 = &trueValue
+		params.DockerTagRetention = 0
+	}
+}
+
+func setJavaPackageManagersRepositoryParams(params *services.JavaPackageManagersRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.MaxUniqueSnapshots = 18
+		params.HandleReleases = &trueValue
+		params.HandleSnapshots = &trueValue
+		params.SuppressPomConsistencyChecks = &trueValue
+		params.SnapshotVersionBehavior = "non-unique"
+		params.ChecksumPolicyType = "server-generated-checksums"
+	} else {
+		params.MaxUniqueSnapshots = 36
+		params.HandleReleases = &falseValue
+		params.HandleSnapshots = &falseValue
+		params.SuppressPomConsistencyChecks = &falseValue
+		params.SnapshotVersionBehavior = "unique"
+		params.ChecksumPolicyType = "client-checksums"
+	}
+}
+
+func setNugetRepositoryParams(params *services.NugetRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.ForceNugetAuthentication = &trueValue
+		params.MaxUniqueSnapshots = 24
+	} else {
+		params.ForceNugetAuthentication = &falseValue
+		params.MaxUniqueSnapshots = 18
+	}
+}
+
+func setRpmRepositoryParams(params *services.RpmRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.YumRootDepth = 6
+		params.CalculateYumMetadata = &trueValue
+		params.EnableFileListsIndexing = &trueValue
+		params.YumGroupFileNames = "filename"
+	} else {
+		params.YumRootDepth = 18
+		params.CalculateYumMetadata = &falseValue
+		params.EnableFileListsIndexing = &falseValue
+		params.YumGroupFileNames = ""
+	}
+}
+
 func getRepoConfig(repoKey string) (body []byte, err error) {
 	artDetails := GetRtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
@@ -644,10 +763,13 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 			return false, errors.New("failed unmarshalling expected config for " + repoKey)
 		}
 		for key, expectedValue := range expectedConfigMap {
+			// The password field may be encrypted and won't match the value set, need to handle this during validation
+			if key == "password" && len(fmt.Sprintf("%s", expectedValue)) > 0 && len(fmt.Sprintf("%s", confMap[key])) > 0 {
+				continue
+			}
 			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
 				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual: %s", repoKey, key, expectedValue, confMap[key])
 				return true, errors.New(errMsg)
-
 			}
 		}
 		return false, nil

@@ -1,26 +1,21 @@
 package services
 
 import (
-	"encoding/json"
-	"errors"
-	"net/http"
-
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type FederatedRepositoryService struct {
-	isUpdate   bool
-	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	RepositoryService
 }
 
 func NewFederatedRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *FederatedRepositoryService {
-	return &FederatedRepositoryService{client: client, isUpdate: isUpdate}
+	return &FederatedRepositoryService{
+		RepositoryService: RepositoryService{
+			repoType: "Federated",
+			client:   client,
+			isUpdate: isUpdate,
+		},
+	}
 }
 
 func (frs *FederatedRepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -28,35 +23,7 @@ func (frs *FederatedRepositoryService) GetJfrogHttpClient() *jfroghttpclient.Jfr
 }
 
 func (frs *FederatedRepositoryService) performRequest(params interface{}, repoKey string) error {
-	content, err := json.Marshal(params)
-	if errorutils.CheckError(err) != nil {
-		return err
-	}
-	httpClientsDetails := frs.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/vnd.org.jfrog.artifactory.repositories.FederatedRepositoryConfiguration+json", &httpClientsDetails.Headers)
-	var url = frs.ArtDetails.GetUrl() + "api/repositories/" + repoKey
-	var operationString string
-	var resp *http.Response
-	var body []byte
-	if frs.isUpdate {
-		log.Info("Updating federated repository...")
-		operationString = "updating"
-		resp, body, err = frs.client.SendPost(url, content, &httpClientsDetails)
-	} else {
-		log.Info("Creating federated repository...")
-		operationString = "creating"
-		resp, body, err = frs.client.SendPut(url, content, &httpClientsDetails)
-	}
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
-	}
-
-	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done " + operationString + " repository.")
-	return nil
+	return frs.RepositoryService.performRequest(params, repoKey)
 }
 
 func (frs *FederatedRepositoryService) Alpine(params AlpineFederatedRepositoryParams) error {
@@ -64,10 +31,6 @@ func (frs *FederatedRepositoryService) Alpine(params AlpineFederatedRepositoryPa
 }
 
 func (frs *FederatedRepositoryService) Bower(params BowerFederatedRepositoryParams) error {
-	return frs.performRequest(params, params.Key)
-}
-
-func (frs *FederatedRepositoryService) Cran(params CranFederatedRepositoryParams) error {
 	return frs.performRequest(params, params.Key)
 }
 
@@ -92,6 +55,10 @@ func (frs *FederatedRepositoryService) Conan(params ConanFederatedRepositoryPara
 }
 
 func (frs *FederatedRepositoryService) Conda(params CondaFederatedRepositoryParams) error {
+	return frs.performRequest(params, params.Key)
+}
+
+func (frs *FederatedRepositoryService) Cran(params CranFederatedRepositoryParams) error {
 	return frs.performRequest(params, params.Key)
 }
 
@@ -171,31 +138,24 @@ func (frs *FederatedRepositoryService) Yum(params YumFederatedRepositoryParams) 
 	return frs.performRequest(params, params.Key)
 }
 
-type FederatedRepositoryMemberParams struct {
+type FederatedRepositoryMember struct {
 	Url     string `json:"url"`
 	Enabled *bool  `json:"enabled,omitempty"`
 }
 
 type FederatedRepositoryBaseParams struct {
-	Key                    string                            `json:"key,omitempty"`
-	Rclass                 string                            `json:"rclass"`
-	PackageType            string                            `json:"packageType,omitempty"`
-	Description            string                            `json:"description,omitempty"`
-	Notes                  string                            `json:"notes,omitempty"`
-	IncludesPattern        string                            `json:"includesPattern,omitempty"`
-	ExcludesPattern        string                            `json:"excludesPattern,omitempty"`
-	RepoLayoutRef          string                            `json:"repoLayoutRef,omitempty"`
-	BlackedOut             *bool                             `json:"blackedOut,omitempty"`
-	XrayIndex              *bool                             `json:"xrayIndex,omitempty"`
-	PropertySets           []string                          `json:"propertySets,omitempty"`
-	ArchiveBrowsingEnabled *bool                             `json:"archiveBrowsingEnabled,omitempty"`
-	DownloadRedirect       *bool                             `json:"downloadRedirect,omitempty"`
-	PriorityResolution     *bool                             `json:"priorityResolution,omitempty"`
-	Members                []FederatedRepositoryMemberParams `json:"members,omitempty"`
+	RepositoryBaseParams
+	AdditionalRepositoryBaseParams
+	ArchiveBrowsingEnabled *bool                       `json:"archiveBrowsingEnabled,omitempty"`
+	Members                []FederatedRepositoryMember `json:"members,omitempty"`
 }
 
 func NewFederatedRepositoryBaseParams() FederatedRepositoryBaseParams {
-	return FederatedRepositoryBaseParams{Rclass: "federated"}
+	return FederatedRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "federated"}}
+}
+
+func NewFederatedRepositoryPackageParams(packageType string) FederatedRepositoryBaseParams {
+	return FederatedRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: "federated", PackageType: packageType}}
 }
 
 type AlpineFederatedRepositoryParams struct {
@@ -203,7 +163,7 @@ type AlpineFederatedRepositoryParams struct {
 }
 
 func NewAlpineFederatedRepositoryParams() AlpineFederatedRepositoryParams {
-	return AlpineFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "alpine"}}
+	return AlpineFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("alpine")}
 }
 
 type BowerFederatedRepositoryParams struct {
@@ -211,24 +171,16 @@ type BowerFederatedRepositoryParams struct {
 }
 
 func NewBowerFederatedRepositoryParams() BowerFederatedRepositoryParams {
-	return BowerFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "bower"}}
-}
-
-type CranFederatedRepositoryParams struct {
-	FederatedRepositoryBaseParams
-}
-
-func NewCranFederatedRepositoryParams() CranFederatedRepositoryParams {
-	return CranFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "cran"}}
+	return BowerFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("bower")}
 }
 
 type CargoFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
-	CargoAnonymousAccess *bool `json:"cargoAnonymousAccess,omitempty"`
+	CargoRepositoryParams
 }
 
 func NewCargoFederatedRepositoryParams() CargoFederatedRepositoryParams {
-	return CargoFederatedRepositoryParams{FederatedRepositoryBaseParams: FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "cargo"}}
+	return CargoFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("cargo")}
 }
 
 type ChefFederatedRepositoryParams struct {
@@ -236,7 +188,7 @@ type ChefFederatedRepositoryParams struct {
 }
 
 func NewChefFederatedRepositoryParams() ChefFederatedRepositoryParams {
-	return ChefFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "chef"}}
+	return ChefFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("chef")}
 }
 
 type CocoapodsFederatedRepositoryParams struct {
@@ -244,7 +196,7 @@ type CocoapodsFederatedRepositoryParams struct {
 }
 
 func NewCocoapodsFederatedRepositoryParams() CocoapodsFederatedRepositoryParams {
-	return CocoapodsFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "cocoapods"}}
+	return CocoapodsFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("cocoapods")}
 }
 
 type ComposerFederatedRepositoryParams struct {
@@ -252,7 +204,7 @@ type ComposerFederatedRepositoryParams struct {
 }
 
 func NewComposerFederatedRepositoryParams() ComposerFederatedRepositoryParams {
-	return ComposerFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "composer"}}
+	return ComposerFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("composer")}
 }
 
 type ConanFederatedRepositoryParams struct {
@@ -260,7 +212,7 @@ type ConanFederatedRepositoryParams struct {
 }
 
 func NewConanFederatedRepositoryParams() ConanFederatedRepositoryParams {
-	return ConanFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "conan"}}
+	return ConanFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("conan")}
 }
 
 type CondaFederatedRepositoryParams struct {
@@ -268,29 +220,33 @@ type CondaFederatedRepositoryParams struct {
 }
 
 func NewCondaFederatedRepositoryParams() CondaFederatedRepositoryParams {
-	return CondaFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "conda"}}
+	return CondaFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("conda")}
+}
+
+type CranFederatedRepositoryParams struct {
+	FederatedRepositoryBaseParams
+}
+
+func NewCranFederatedRepositoryParams() CranFederatedRepositoryParams {
+	return CranFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("cran")}
 }
 
 type DebianFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
-	DebianTrivialLayout             *bool    `json:"debianTrivialLayout,omitempty"`
-	OptionalIndexCompressionFormats []string `json:"optionalIndexCompressionFormats,omitempty"`
+	DebianRepositoryParams
 }
 
 func NewDebianFederatedRepositoryParams() DebianFederatedRepositoryParams {
-	return DebianFederatedRepositoryParams{FederatedRepositoryBaseParams: FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "debian"}}
+	return DebianFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("debian")}
 }
 
 type DockerFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
-	MaxUniqueTags       int    `json:"maxUniqueTags,omitempty"`
-	DockerApiVersion    string `json:"dockerApiVersion,omitempty"`
-	BlockPushingSchema1 *bool  `json:"blockPushingSchema1,omitempty"`
-	DockerTagRetention  int    `json:"dockerTagRetention,omitempty"`
+	DockerRepositoryParams
 }
 
 func NewDockerFederatedRepositoryParams() DockerFederatedRepositoryParams {
-	return DockerFederatedRepositoryParams{FederatedRepositoryBaseParams: FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "docker"}}
+	return DockerFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("docker")}
 }
 
 type GemsFederatedRepositoryParams struct {
@@ -298,7 +254,7 @@ type GemsFederatedRepositoryParams struct {
 }
 
 func NewGemsFederatedRepositoryParams() GemsFederatedRepositoryParams {
-	return GemsFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "gems"}}
+	return GemsFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("gems")}
 }
 
 type GenericFederatedRepositoryParams struct {
@@ -306,7 +262,7 @@ type GenericFederatedRepositoryParams struct {
 }
 
 func NewGenericFederatedRepositoryParams() GenericFederatedRepositoryParams {
-	return GenericFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "generic"}}
+	return GenericFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("generic")}
 }
 
 type GitlfsFederatedRepositoryParams struct {
@@ -314,7 +270,7 @@ type GitlfsFederatedRepositoryParams struct {
 }
 
 func NewGitlfsFederatedRepositoryParams() GitlfsFederatedRepositoryParams {
-	return GitlfsFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "gitlfs"}}
+	return GitlfsFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("gitlfs")}
 }
 
 type GoFederatedRepositoryParams struct {
@@ -322,16 +278,16 @@ type GoFederatedRepositoryParams struct {
 }
 
 func NewGoFederatedRepositoryParams() GoFederatedRepositoryParams {
-	return GoFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "go"}}
+	return GoFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("go")}
 }
 
 type GradleFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
-	CommonMavenGradleFederatedRepositoryParams
+	JavaPackageManagersRepositoryParams
 }
 
 func NewGradleFederatedRepositoryParams() GradleFederatedRepositoryParams {
-	return GradleFederatedRepositoryParams{FederatedRepositoryBaseParams: FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "gradle"}}
+	return GradleFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("gradle")}
 }
 
 type HelmFederatedRepositoryParams struct {
@@ -339,34 +295,25 @@ type HelmFederatedRepositoryParams struct {
 }
 
 func NewHelmFederatedRepositoryParams() HelmFederatedRepositoryParams {
-	return HelmFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "helm"}}
+	return HelmFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("helm")}
 }
 
 type IvyFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
-	CommonMavenGradleFederatedRepositoryParams
+	JavaPackageManagersRepositoryParams
 }
 
 func NewIvyFederatedRepositoryParams() IvyFederatedRepositoryParams {
-	return IvyFederatedRepositoryParams{FederatedRepositoryBaseParams: FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "ivy"}}
-}
-
-type CommonMavenGradleFederatedRepositoryParams struct {
-	MaxUniqueSnapshots           int    `json:"maxUniqueSnapshots,omitempty"`
-	HandleReleases               *bool  `json:"handleReleases,omitempty"`
-	HandleSnapshots              *bool  `json:"handleSnapshots,omitempty"`
-	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
-	SnapshotVersionBehavior      string `json:"snapshotVersionBehavior,omitempty"`
-	ChecksumPolicyType           string `json:"checksumPolicyType,omitempty"`
+	return IvyFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("ivy")}
 }
 
 type MavenFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
-	CommonMavenGradleFederatedRepositoryParams
+	JavaPackageManagersRepositoryParams
 }
 
 func NewMavenFederatedRepositoryParams() MavenFederatedRepositoryParams {
-	return MavenFederatedRepositoryParams{FederatedRepositoryBaseParams: FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "maven"}}
+	return MavenFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("maven")}
 }
 
 type NpmFederatedRepositoryParams struct {
@@ -374,17 +321,16 @@ type NpmFederatedRepositoryParams struct {
 }
 
 func NewNpmFederatedRepositoryParams() NpmFederatedRepositoryParams {
-	return NpmFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "npm"}}
+	return NpmFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("npm")}
 }
 
 type NugetFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
-	MaxUniqueSnapshots       int   `json:"maxUniqueSnapshots,omitempty"`
-	ForceNugetAuthentication *bool `json:"forceNugetAuthentication,omitempty"`
+	NugetRepositoryParams
 }
 
 func NewNugetFederatedRepositoryParams() NugetFederatedRepositoryParams {
-	return NugetFederatedRepositoryParams{FederatedRepositoryBaseParams: FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "nuget"}}
+	return NugetFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("nuget")}
 }
 
 type OpkgFederatedRepositoryParams struct {
@@ -392,7 +338,7 @@ type OpkgFederatedRepositoryParams struct {
 }
 
 func NewOpkgFederatedRepositoryParams() OpkgFederatedRepositoryParams {
-	return OpkgFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "opkg"}}
+	return OpkgFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("opkg")}
 }
 
 type PuppetFederatedRepositoryParams struct {
@@ -400,7 +346,7 @@ type PuppetFederatedRepositoryParams struct {
 }
 
 func NewPuppetFederatedRepositoryParams() PuppetFederatedRepositoryParams {
-	return PuppetFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "puppet"}}
+	return PuppetFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("puppet")}
 }
 
 type PypiFederatedRepositoryParams struct {
@@ -408,27 +354,25 @@ type PypiFederatedRepositoryParams struct {
 }
 
 func NewPypiFederatedRepositoryParams() PypiFederatedRepositoryParams {
-	return PypiFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "pypi"}}
+	return PypiFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("pypi")}
 }
 
 type RpmFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
-	YumRootDepth            int   `json:"yumRootDepth,omitempty"`
-	CalculateYumMetadata    *bool `json:"calculateYumMetadata,omitempty"`
-	EnableFileListsIndexing *bool `json:"enableFileListsIndexing,omitempty"`
+	RpmRepositoryParams
 }
 
 func NewRpmFederatedRepositoryParams() RpmFederatedRepositoryParams {
-	return RpmFederatedRepositoryParams{FederatedRepositoryBaseParams: FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "rpm"}}
+	return RpmFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("rpm")}
 }
 
 type SbtFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
-	CommonMavenGradleFederatedRepositoryParams
+	JavaPackageManagersRepositoryParams
 }
 
 func NewSbtFederatedRepositoryParams() SbtFederatedRepositoryParams {
-	return SbtFederatedRepositoryParams{FederatedRepositoryBaseParams: FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "sbt"}}
+	return SbtFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("sbt")}
 }
 
 type VagrantFederatedRepositoryParams struct {
@@ -436,13 +380,14 @@ type VagrantFederatedRepositoryParams struct {
 }
 
 func NewVagrantFederatedRepositoryParams() VagrantFederatedRepositoryParams {
-	return VagrantFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "vagrant"}}
+	return VagrantFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("vagrant")}
 }
 
 type YumFederatedRepositoryParams struct {
 	FederatedRepositoryBaseParams
+	RpmRepositoryParams
 }
 
 func NewYumFederatedRepositoryParams() YumFederatedRepositoryParams {
-	return YumFederatedRepositoryParams{FederatedRepositoryBaseParams{Rclass: "federated", PackageType: "yum"}}
+	return YumFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("yum")}
 }

@@ -51,6 +51,7 @@ func InitServiceManagers() {
 		createArtifactoryUserManager()
 		createArtifactoryGroupManager()
 		createArtifactoryBuildInfoManager()
+		createArtifactoryFederationManager()
 	}
 
 	if *TestDistribution {
