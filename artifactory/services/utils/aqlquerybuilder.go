@@ -135,6 +135,17 @@ func CreateAqlQueryForPypi(repo, file string) string {
 	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1"}))
 }
 
+func CreateAqlQueryForLatestCreated(repo, path string) string {
+	itemsPart :=
+		`items.find({` +
+			`"repo": "%s",` +
+			`"path": {"$match": "%s"}` +
+			`})` +
+			`.sort({%s})` +
+			`.limit(1)`
+	return fmt.Sprintf(itemsPart, repo, path, buildSortQueryPart([]string{"created"}, "desc"))
+}
+
 func prepareSearchPattern(pattern string, repositoryExists bool) string {
 	addWildcardIfNeeded(&pattern, repositoryExists)
 	// Remove parenthesis
