@@ -240,8 +240,8 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 		return false, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		log.Error(logMsgPrefix + "Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		log.Error(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	log.Debug(logMsgPrefix+"Artifactory response:", resp.Status)
@@ -270,8 +270,8 @@ func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string
 		return false, err
 	}
 
-	if resp.StatusCode != http.StatusCreated {
-		log.Error(logMsgPrefix + "Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated); err != nil {
+		log.Error(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	log.Debug(logMsgPrefix+"Artifactory response:", resp.Status)

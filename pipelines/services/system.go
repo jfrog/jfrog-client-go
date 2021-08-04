@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -28,9 +27,8 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	if resp.StatusCode != http.StatusOK {
-		err := errors.New("Pipelines response: " + resp.Status + "\n" + utils.IndentJson(body))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		err := errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body))
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, errorutils.CheckError(&PipelinesNotAvailableError{InnerError: err})
 		}

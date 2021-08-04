@@ -309,17 +309,17 @@ func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}
 
 	err := testsXrayWatchService.Update(paramsMissingWatch)
-	assert.EqualError(t, err, "Xray response: 404 Not Found\n{\n  \"error\": \"Failed to update Watch: Watch was not found\"\n}")
+	assert.EqualError(t, err, "Server response: 404 Not Found\n{\n  \"error\": \"Failed to update Watch: Watch was not found\"\n}")
 }
 
 func testXrayWatchDeleteMissingWatch(t *testing.T) {
 	err := testsXrayWatchService.Delete("jfrog-client-go-tests-watch-builds-missing")
-	assert.EqualError(t, err, "Xray response: 404 Not Found\n{\n  \"error\": \"Failed to delete Watch: Watch was not found\"\n}")
+	assert.EqualError(t, err, "Server response: 404 Not Found\n{\n  \"error\": \"Failed to delete Watch: Watch was not found\"\n}")
 }
 
 func testXrayWatchGetMissingWatch(t *testing.T) {
 	_, err := testsXrayWatchService.Get("jfrog-client-go-tests-watch-builds-missing")
-	assert.EqualError(t, err, "Xray response: 404 Not Found\n{\n  \"error\": \"Watch was not found\"\n}")
+	assert.EqualError(t, err, "Server response: 404 Not Found\n{\n  \"error\": \"Watch was not found\"\n}")
 }
 
 func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {

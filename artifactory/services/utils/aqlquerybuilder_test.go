@@ -119,6 +119,19 @@ func assertSortBody(actual, expected string, t *testing.T) {
 	}
 }
 
+func TestCreateAqlQueryForLatestCreated(t *testing.T) {
+	actual := CreateAqlQueryForLatestCreated("repo", "name")
+	expected := `items.find({` +
+		`"repo": "repo",` +
+		`"path": {"$match": "name"}` +
+		`})` +
+		`.sort({"$desc":["created"]})` +
+		`.limit(1)`
+	if actual != expected {
+		t.Error("The function CreateAqlQueryForLatestCreated expected to return the string:\n'" + expected + "'.\nbut returned:\n'" + actual + "'.")
+	}
+}
+
 func TestPrepareSourceSearchPattern(t *testing.T) {
 	newPattern := prepareSourceSearchPattern("/testdata/b/b1/b.in", "/testdata", true)
 	assert.Equal(t, "/testdata/b/b1/b.in", newPattern)

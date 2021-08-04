@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -24,8 +25,8 @@ const (
 	includeVulnerabilitiesParam = "?include_vulnerabilities=true"
 	includeLicensesParam        = "?include_licenses=true"
 	andIncludeLicensesParam     = "&include_licenses=true"
-	defaultMaxWaitMinutes       = 5 * time.Minute // 5 minutes
-	defaultSyncSleepInterval    = 5               // 5 seconds
+	defaultMaxWaitMinutes       = 15 * time.Minute // 15 minutes
+	defaultSyncSleepInterval    = 5 * time.Second  // 5 seconds
 )
 
 type ScanService struct {
@@ -61,7 +62,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	}
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return "", errorutils.CheckError(errors.New("Server response: " + resp.Status))
+		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	scanResponse := RequestScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
@@ -109,7 +110,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 					return
 				}
 				if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
-					errChan <- errorutils.CheckError(errors.New("Server response: " + resp.Status))
+					errChan <- errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 					resultChan <- nil
 					return
 				}

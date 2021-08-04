@@ -64,8 +64,8 @@ func (xws *WatchService) Delete(watchName string) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 
 	log.Debug("Xray response:", resp.Status)
@@ -96,8 +96,8 @@ func (xws *WatchService) Create(params utils.WatchParams) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		err := errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		err := errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(respBody))
 		if resp.StatusCode == http.StatusConflict {
 			return errorutils.CheckError(&WatchAlreadyExistsError{InnerError: err})
 		}
@@ -142,8 +142,8 @@ func (xws *WatchService) Update(params utils.WatchParams) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(respBody)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(respBody)))
 	}
 	log.Debug("Xray response:", resp.Status)
 	log.Info("Done updating watch.")
@@ -161,10 +161,9 @@ func (xws *WatchService) Get(watchName string) (watchResp *utils.WatchParams, er
 	if err != nil {
 		return &utils.WatchParams{}, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return &utils.WatchParams{}, errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return &utils.WatchParams{}, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
-
 	err = json.Unmarshal(body, &watch)
 
 	if err != nil {
