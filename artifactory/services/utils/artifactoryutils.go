@@ -24,11 +24,12 @@ import (
 )
 
 const (
-	ArtifactorySymlink            = "symlink.dest"
-	SymlinkSha1                   = "symlink.destsha1"
-	latest                        = "LATEST"
-	lastRelease                   = "LAST_RELEASE"
-	defaultBuildRepositoriesValue = "artifactory-build-info"
+	ArtifactorySymlink           = "symlink.dest"
+	SymlinkSha1                  = "symlink.destsha1"
+	latest                       = "LATEST"
+	lastRelease                  = "LAST_RELEASE"
+	buildRepositoriesSuffix      = "-build-info"
+	defaultBuildRepositoriesName = "artifactory"
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -142,17 +143,17 @@ func IsSubPath(paths []string, index int, separator string) bool {
 // If no buildNumber provided LATEST will be downloaded.
 // If buildName or buildNumber contains "/" (slash) it should be escaped by "\" (backslash).
 // Result examples of parsing: "aaa/123" > "aaa"-"123", "aaa" > "aaa"-"LATEST", "aaa\\/aaa" > "aaa/aaa"-"LATEST",  "aaa/12\\/3" > "aaa"-"12/3".
-func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier string, flags CommonConf) (string, string, error) {
+func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier, projectKey string, flags CommonConf) (string, string, error) {
 	buildName, buildNumber, err := parseNameAndVersion(buildIdentifier, true)
 	if err != nil {
 		return "", "", err
 	}
-	return GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, flags)
+	return GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 }
 
-func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
+func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
 	if buildNumber == latest || buildNumber == lastRelease {
-		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, flags)
+		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 	}
 	return buildName, buildNumber, nil
 }
@@ -225,8 +226,13 @@ type Build struct {
 	BuildNumber string `json:"buildNumber"`
 }
 
-func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
-	aqlBody := CreateAqlQueryForLatestCreated(defaultBuildRepositoriesValue, buildName)
+func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
+	buildRepo := defaultBuildRepositoriesName
+	if projectKey != "" {
+		buildRepo = projectKey
+	}
+	buildRepo += buildRepositoriesSuffix
+	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, buildName)
 	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
 		return "", "", err
@@ -258,12 +264,12 @@ func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.Conte
 	var wg sync.WaitGroup
 	wg.Add(2)
 	// If 'build-number' is missing in spec file, we fetch the latest from artifactory.
-	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
+	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err
 	}
 
-	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, "", flags)
+	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -538,7 +544,7 @@ func createPrioritiesFiles() ([]*content.ContentWriter, error) {
 
 func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (pbi *buildinfo.PublishedBuildInfo, found bool, err error) {
 	// Resolve LATEST build number from Artifactory if required.
-	name, number, err := GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, flags)
+	name, number, err := GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 	if err != nil {
 		return nil, false, err
 	}

@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
+	accessServices "github.com/jfrog/jfrog-client-go/access/services"
 	pipelinesAuth "github.com/jfrog/jfrog-client-go/pipelines/auth"
 	pipelinesServices "github.com/jfrog/jfrog-client-go/pipelines/services"
 
@@ -40,6 +42,7 @@ var TestArtifactory *bool
 var TestDistribution *bool
 var TestXray *bool
 var TestPipelines *bool
+var TestAccess *bool
 var RtUrl *string
 var DistUrl *string
 var XrayUrl *string
@@ -54,6 +57,7 @@ var PipelinesAccessToken *string
 var PipelinesVcsToken *string
 var PipelinesVcsRepoFullPath *string
 var PipelinesVcsBranch *string
+var AccessUrl *string
 
 // Artifactory services
 var testsUploadService *services.UploadService
@@ -97,6 +101,9 @@ var testXrayBinMgrService *xrayServices.BinMgrService
 var testsPipelinesIntegrationsService *pipelinesServices.IntegrationsService
 var testsPipelinesSourcesService *pipelinesServices.SourcesService
 
+// Access Services
+var testsAccessProjectService *accessServices.ProjectService
+
 var timestamp = time.Now().Unix()
 var trueValue = true
 var falseValue = false
@@ -107,6 +114,7 @@ const (
 	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
 	RepoKeyPrefixForRepoServiceTest  = "jf-client-go-test"
+	AllAccessTokenConst              = "eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJ2MUFpWkIySDFMakllYXY2aHRoRXZST1NHYktpM2N3b3IwbEgtX0h4ZnBnIn0.eyJzdWIiOiJqZmZlQDAwMFwvdXNlcnNcL21pY2hhZWxzdiIsInNjcCI6ImFwcGxpZWQtcGVybWlzc2lvbnNcL2FkbWluIGFwaToqIiwiYXVkIjoiKkAqIiwiaXNzIjoiamZmZUAwMDAiLCJpYXQiOjE2Mjc4MjMwMDAsImp0aSI6ImQ4YjBmZTU0LTI3YTctNDhmNi05ZDAxLTBiODk1MDBlMDY2ZiJ9.EsEtuWdhyKbBaW_RisXJ6VvfqxI0bET5EwMCfls-mzlxGwIYBcZ886SUizQcQWHt-G7lIQ4FKcbS3UhJ2U-Y9jKRaV-ALdWVuufZtQPg6USvjjvGlDkj-n1is549zy8JlMt17tEUjG3_BkGem-AweMHpNNIxJwrBIutkwj9yqLjDw-gwAkcfN9YxYXEA4IhYdPHM4RND5Ugmt--wy-ZWTMguo8A6BhfqdfFWISY1B4oVSbFVA8X7Vse-IAnfkjKtWzkIlFr6gPE0ICmYotzGixsd_0skJAG-r2WbqXogBopZIkpiIJv0G3W1Vqav9L8RGaqEbnsWd5fXgGTHtCA0bg"
 )
 
 func init() {
@@ -114,6 +122,7 @@ func init() {
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
+	TestAccess = flag.Bool("test.access", false, "Test access")
 	RtUrl = flag.String("rt.url", "", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
@@ -128,6 +137,7 @@ func init() {
 	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
 	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
+	AccessUrl = flag.String("access.url", "", "Access url")
 }
 
 func createArtifactorySecurityManager() {
@@ -801,4 +811,19 @@ type indexedBuildsPayload struct {
 // Verify sha256 is valid (a string size 256 characters) and not an empty string.
 func verifyValidSha256(t *testing.T, sha256 string) {
 	assert.Equal(t, 64, len(sha256), "Invalid sha256 : \""+sha256+"\"\nexpected length is 64 digit.")
+}
+
+func GetAccessDetails() auth.ServiceDetails {
+	accessDetails := accessAuth.NewAccessDetails()
+	accessDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*AccessUrl))
+	accessDetails.SetAccessToken(*RtAccessToken)
+	return accessDetails
+}
+
+func createAccessProjectManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessProjectService = accessServices.NewProjectService(client)
+	testsAccessProjectService.ServiceDetails = accessDetails
 }
