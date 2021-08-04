@@ -114,7 +114,6 @@ const (
 	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
 	RepoKeyPrefixForRepoServiceTest  = "jf-client-go-test"
-	AllAccessTokenConst              = "eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJ2MUFpWkIySDFMakllYXY2aHRoRXZST1NHYktpM2N3b3IwbEgtX0h4ZnBnIn0.eyJzdWIiOiJqZmZlQDAwMFwvdXNlcnNcL21pY2hhZWxzdiIsInNjcCI6ImFwcGxpZWQtcGVybWlzc2lvbnNcL2FkbWluIGFwaToqIiwiYXVkIjoiKkAqIiwiaXNzIjoiamZmZUAwMDAiLCJpYXQiOjE2Mjc4MjMwMDAsImp0aSI6ImQ4YjBmZTU0LTI3YTctNDhmNi05ZDAxLTBiODk1MDBlMDY2ZiJ9.EsEtuWdhyKbBaW_RisXJ6VvfqxI0bET5EwMCfls-mzlxGwIYBcZ886SUizQcQWHt-G7lIQ4FKcbS3UhJ2U-Y9jKRaV-ALdWVuufZtQPg6USvjjvGlDkj-n1is549zy8JlMt17tEUjG3_BkGem-AweMHpNNIxJwrBIutkwj9yqLjDw-gwAkcfN9YxYXEA4IhYdPHM4RND5Ugmt--wy-ZWTMguo8A6BhfqdfFWISY1B4oVSbFVA8X7Vse-IAnfkjKtWzkIlFr6gPE0ICmYotzGixsd_0skJAG-r2WbqXogBopZIkpiIJv0G3W1Vqav9L8RGaqEbnsWd5fXgGTHtCA0bg"
 )
 
 func init() {
