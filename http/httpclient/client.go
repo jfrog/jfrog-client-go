@@ -81,11 +81,13 @@ func (jc *HttpClient) SendPut(url string, content []byte, httpClientsDetails htt
 	return
 }
 
-func (jc *HttpClient) newRequest(method, url string, body io.Reader) (*http.Request, error) {
+func (jc *HttpClient) newRequest(method, url string, body io.Reader) (req *http.Request, err error) {
 	if jc.ctx != nil {
-		return http.NewRequestWithContext(jc.ctx, method, url, body)
+		req, err = http.NewRequestWithContext(jc.ctx, method, url, body)
+	} else {
+		req, err = http.NewRequest(method, url, body)
 	}
-	return http.NewRequest(method, url, body)
+	return req, errorutils.CheckError(err)
 }
 
 func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
@@ -130,8 +132,7 @@ func (jc *HttpClient) createReq(method, url string, content []byte) (req *http.R
 	if content != nil {
 		return jc.newRequest(method, url, bytes.NewBuffer(content))
 	}
-	req, err = jc.newRequest(method, url, nil)
-	return req, errorutils.CheckError(err)
+	return jc.newRequest(method, url, nil)
 }
 
 func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
@@ -254,7 +255,7 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails httputils.HttpClientDetails,
 	size int64) (resp *http.Response, body []byte, err error) {
 	req, err := jc.newRequest("PUT", url, reader)
-	if errorutils.CheckError(err) != nil {
+	if err != nil {
 		return nil, nil, err
 	}
 	req.ContentLength = size
