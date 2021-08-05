@@ -143,22 +143,24 @@ go test -v github.com/jfrog/jfrog-client-go/tests [test-types] [flags]
 ```
 Optional flags:
 
-| Flag                | Description                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------ |
-| `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
-| `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
-| `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
-| `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
-| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
-| `-rt.password`      | [Default: password] Artifactory password.                                                              |
-| `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
-| `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
-| `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
-| `-rt.accessToken`   | [Optional] Artifactory access token.                                                                   |
-| `-pipe.accessToken` | [Optional] Pipelines access token.                                                                     |
-| `-pipe.vcsToken`    | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
-| `-pipe.vcsRepo`     | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
-| `-pipe.vcsBranch`   | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
+| Flag                 | Description                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `-rt.url`            | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
+| `-ds.url`            | [Optional] JFrog Distribution URL.                                                                     |
+| `-xr.url`            | [Optional] JFrog Xray URL.                                                                             |
+| `-pipe.url`          | [Optional] JFrog Pipelines URL.                                                                        |
+| `-rt.user`           | [Default: admin] Artifactory username.                                                                 |
+| `-rt.password`       | [Default: password] Artifactory password.                                                              |
+| `-rt.apikey`         | [Optional] Artifactory API key.                                                                        |
+| `-rt.sshKeyPath`     | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
+| `-rt.sshPassphrase`  | [Optional] Ssh key passphrase.                                                                         |
+| `-rt.accessToken`    | [Optional] Artifactory access token.                                                                   |
+| `-pipe.accessToken`  | [Optional] Pipelines access token.                                                                     |
+| `-pipe.vcsToken`     | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
+| `-pipe.vcsRepo`      | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
+| `-pipe.vcsBranch`    | [Optional] Vcs branch for Pipelines tests (ex: "main").
+| `-access.url`        | [Optional] JFrog Access URL.                                                                           |
+| `-access.accessToken`| [Optional] Access access token.                                                                        |
 
 The types are:
 
@@ -168,6 +170,7 @@ The types are:
 | `-test.distribution`| Distribution tests |
 | `-test.xray`        | Xray tests         |
 | `-test.pipelines`   | Pipelines tests    |
+| `-test.access`      | Access tests       |
 
 - The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
   Once the tests are completed, the content of this repository is deleted.
