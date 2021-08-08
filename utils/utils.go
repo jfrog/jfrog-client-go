@@ -412,9 +412,9 @@ func IsWindows() bool {
 }
 
 type Artifact struct {
-	LocalPath  string
-	TargetPath string
-	Symlink    string
+	LocalPath         string
+	TargetPath        string
+	SymlinkTargetPath string
 }
 
 const (

@@ -150,7 +150,7 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 // Creates a new Properties struct with the artifact's props and the symlink props.
 func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) (*utils.Properties, error) {
 	artifactProps := utils.NewProperties()
-	artifactSymlink := artifact.Symlink
+	artifactSymlink := artifact.SymlinkTargetPath
 	if uploadParams.IsSymlink() && len(artifactSymlink) > 0 {
 		fileInfo, err := os.Stat(artifact.LocalPath)
 		if err != nil {
@@ -340,7 +340,7 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat())
 	}
 
-	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
+	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, SymlinkTargetPath: symlinkPath}
 	props, err := createProperties(artifact, taskData.uploadParams)
 	if err != nil {
 		return err
@@ -747,8 +747,8 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	// In case of a symlink there are 2 options:
 	// 1. symlink == true : symlink will be added to zip as a symlink file.
 	// 2. symlink == false : the symlink's target will be added to zip.
-	if artifact.Symlink != "" && !symlink {
-		localPath = artifact.Symlink
+	if artifact.SymlinkTargetPath != "" && !symlink {
+		localPath = artifact.SymlinkTargetPath
 	}
 	file, e := os.Open(localPath)
 	if e != nil {
@@ -761,11 +761,11 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		}
 	}()
 	info, e := os.Lstat(file.Name())
-	if e != nil {
+	if errorutils.CheckError(e) != nil {
 		return
 	}
 	header, e := zip.FileInfoHeader(info)
-	if e != nil {
+	if errorutils.CheckError(e) != nil {
 		return
 	}
 	if !flat {
@@ -773,13 +773,13 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	}
 	header.Method = zip.Deflate
 	writer, e := zipWriter.CreateHeader(header)
-	if e != nil {
+	if errorutils.CheckError(e) != nil {
 		return
 	}
 
-	if artifact.Symlink != "" && symlink {
+	if artifact.SymlinkTargetPath != "" && symlink {
 		// Write symlink's target to writer - file's body for symlinks is the symlink target.
-		_, e = writer.Write([]byte(filepath.ToSlash(artifact.Symlink)))
+		_, e = writer.Write([]byte(filepath.ToSlash(artifact.SymlinkTargetPath)))
 		return
 	}
 
@@ -792,7 +792,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	}
 
 	_, e = io.Copy(writer, reader)
-	if e != nil {
+	if errorutils.CheckError(e) != nil {
 		return
 	}
 	return

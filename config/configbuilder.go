@@ -78,4 +78,3 @@ func (builder *servicesConfigBuilder) Build() (Config, error) {
 	c.httpRetries = builder.httpRetries
 	return c, nil
 }
-
