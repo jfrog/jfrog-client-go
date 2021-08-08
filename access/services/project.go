@@ -46,22 +46,18 @@ func NewProjectService(client *jfroghttpclient.JfrogHttpClient) *ProjectService 
 	return &ProjectService{client: client}
 }
 
-func (us *ProjectService) SetArtifactoryDetails(rt auth.ServiceDetails) {
-	us.ServiceDetails = rt
+func (ps *ProjectService) getProjectsBaseUrl() string {
+	return fmt.Sprintf("%s%s", ps.ServiceDetails.GetUrl(), projectsApi)
 }
 
-func (us *ProjectService) getProjectsBaseUrl() string {
-	return fmt.Sprintf("%s%s", us.ServiceDetails.GetUrl(), projectsApi)
-}
-
-func (us *ProjectService) GetProject(projectKey string) (u *Project, err error) {
-	httpDetails := us.ServiceDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%s/%s", us.getProjectsBaseUrl(), projectKey)
-	resp, body, _, err := us.client.SendGet(url, true, &httpDetails)
+func (ps *ProjectService) Get(projectKey string) (u *Project, err error) {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s/%s", ps.getProjectsBaseUrl(), projectKey)
+	resp, body, _, err := ps.client.SendGet(url, true, &httpDetails)
 	if err != nil {
 		return nil, err
 	}
-	// The case the requested user is not found
+	// In case the requested project is not found
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
@@ -69,41 +65,23 @@ func (us *ProjectService) GetProject(projectKey string) (u *Project, err error) 
 		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	var project Project
-	if err := json.Unmarshal(body, &project); err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	return &project, nil
+	err = json.Unmarshal(body, &project)
+	return &project, errorutils.CheckError(err)
 }
 
-func (us *ProjectService) CreateProject(params ProjectParams) error {
-	project, err := us.GetProject(params.ProjectDetails.ProjectKey)
+func (ps *ProjectService) Create(params ProjectParams) error {
+	project, err := ps.Get(params.ProjectDetails.ProjectKey)
 	if err != nil {
 		return err
 	}
 	if project != nil {
 		return errorutils.CheckError(fmt.Errorf("project '%s' already exists", project.ProjectKey))
 	}
-	content, httpDetails, err := us.createOrUpdateProjectRequest(params.ProjectDetails)
+	content, httpDetails, err := ps.createOrUpdateRequest(params.ProjectDetails)
 	if err != nil {
 		return err
 	}
-	resp, body, err := us.client.SendPost(us.getProjectsBaseUrl(), content, &httpDetails)
-	if err != nil {
-		return err
-	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
-}
-
-func (us *ProjectService) UpdateProject(params ProjectParams) error {
-	content, httpDetails, err := us.createOrUpdateProjectRequest(params.ProjectDetails)
-	if err != nil {
-		return err
-	}
-	url := fmt.Sprintf("%s/%s", us.getProjectsBaseUrl(), params.ProjectDetails.ProjectKey)
-	resp, body, err := us.client.SendPut(url, content, &httpDetails)
+	resp, body, err := ps.client.SendPost(ps.getProjectsBaseUrl(), content, &httpDetails)
 	if err != nil {
 		return err
 	}
@@ -113,8 +91,24 @@ func (us *ProjectService) UpdateProject(params ProjectParams) error {
 	return nil
 }
 
-func (us *ProjectService) createOrUpdateProjectRequest(project Project) (requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
-	httpDetails = us.ServiceDetails.CreateHttpClientDetails()
+func (ps *ProjectService) Update(params ProjectParams) error {
+	content, httpDetails, err := ps.createOrUpdateRequest(params.ProjectDetails)
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("%s/%s", ps.getProjectsBaseUrl(), params.ProjectDetails.ProjectKey)
+	resp, body, err := ps.client.SendPut(url, content, &httpDetails)
+	if err != nil {
+		return err
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	return nil
+}
+
+func (ps *ProjectService) createOrUpdateRequest(project Project) (requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
+	httpDetails = ps.ServiceDetails.CreateHttpClientDetails()
 	requestContent, err = json.Marshal(project)
 	if errorutils.CheckError(err) != nil {
 		return
@@ -126,10 +120,10 @@ func (us *ProjectService) createOrUpdateProjectRequest(project Project) (request
 	return
 }
 
-func (us *ProjectService) DeleteProject(projectKey string) error {
-	httpDetails := us.ServiceDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%s/%s", us.getProjectsBaseUrl(), projectKey)
-	resp, body, err := us.client.SendDelete(url, nil, &httpDetails)
+func (ps *ProjectService) Delete(projectKey string) error {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s/%s", ps.getProjectsBaseUrl(), projectKey)
+	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
 	if resp == nil {
 		return errorutils.CheckError(fmt.Errorf("no response provided (including status code)"))
 	}
@@ -139,10 +133,10 @@ func (us *ProjectService) DeleteProject(projectKey string) error {
 	return err
 }
 
-func (us *ProjectService) AssignRepoToProject(repoName, projectKey string, isForce bool) error {
-	httpDetails := us.ServiceDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%s/_/attach/repositories/%s/%s?force=%b", us.getProjectsBaseUrl(), repoName, projectKey, isForce)
-	resp, body, err := us.client.SendPut(url, nil, &httpDetails)
+func (ps *ProjectService) AssignRepo(repoName, projectKey string, isForce bool) error {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s/_/attach/repositories/%s/%s?force=%b", ps.getProjectsBaseUrl(), repoName, projectKey, isForce)
+	resp, body, err := ps.client.SendPut(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
@@ -151,10 +145,11 @@ func (us *ProjectService) AssignRepoToProject(repoName, projectKey string, isFor
 	}
 	return nil
 }
-func (us *ProjectService) UnassignRepoFromProject(repoName string) error {
-	httpDetails := us.ServiceDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%s/_/attach/repositories/%s", us.getProjectsBaseUrl(), repoName)
-	resp, body, err := us.client.SendDelete(url, nil, &httpDetails)
+
+func (ps *ProjectService) UnassignRepo(repoName string) error {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s/_/attach/repositories/%s", ps.getProjectsBaseUrl(), repoName)
+	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}

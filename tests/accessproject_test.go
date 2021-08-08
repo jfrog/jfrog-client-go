@@ -14,14 +14,14 @@ func TestAccessProject(t *testing.T) {
 
 func testAccessProjectCreateUpdateDelete(t *testing.T) {
 	projectParams := getTestProjectParams()
-	err := testsAccessProjectService.CreateProject(projectParams)
+	err := testsAccessProjectService.Create(projectParams)
 	defer deleteProjectAndAssert(t, projectParams.ProjectDetails.ProjectKey)
 	assert.NoError(t, err)
 	projectParams.ProjectDetails.Description += "123"
 	projectParams.ProjectDetails.StorageQuotaBytes += 123
-	err = testsAccessProjectService.UpdateProject(projectParams)
+	err = testsAccessProjectService.Update(projectParams)
 	assert.NoError(t, err)
-	updatedProject, err := testsAccessProjectService.GetProject(projectParams.ProjectDetails.ProjectKey)
+	updatedProject, err := testsAccessProjectService.Get(projectParams.ProjectDetails.ProjectKey)
 	assert.NoError(t, err)
 	if !reflect.DeepEqual(projectParams.ProjectDetails, *updatedProject) {
 		t.Error("Unexpected project details built. Expected: `", projectParams.ProjectDetails, "` Got `", *updatedProject, "`")
@@ -29,7 +29,7 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 }
 
 func deleteProjectAndAssert(t *testing.T, projectKey string) {
-	err := testsAccessProjectService.DeleteProject(projectKey)
+	err := testsAccessProjectService.Delete(projectKey)
 	assert.NoError(t, err)
 }
 
