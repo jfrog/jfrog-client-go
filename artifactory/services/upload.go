@@ -447,7 +447,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 						return false, nil
 					}
 					// Perform retry
-					log.Warn(fmt.Sprintf("%sThe server response: %s", logMsgPrefix, resp.Status))
+					log.Warn(fmt.Sprintf("%sThe server response: %s\n %s", logMsgPrefix, resp.Status, clientutils.IndentJson(body)))
 					return true, nil
 				},
 			}
