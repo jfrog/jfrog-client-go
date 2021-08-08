@@ -497,8 +497,8 @@ type DeployableArtifactDetails struct {
 	TargetRepository string `json:"targetRepository,omitempty"`
 }
 
-func (detailes *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl string) FileTransferDetails {
-	targetPath := rtUrl + detailes.TargetRepository + detailes.ArtifactDest
+func (detailes *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) FileTransferDetails {
+	targetPath := rtUrl + targetRepository + "/" + detailes.ArtifactDest
 	return FileTransferDetails{SourcePath: detailes.SourcePath, TargetPath: targetPath, Sha256: detailes.Sha256}
 }
 
