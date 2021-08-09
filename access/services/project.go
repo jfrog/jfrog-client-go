@@ -47,7 +47,7 @@ func NewProjectService(client *jfroghttpclient.JfrogHttpClient) *ProjectService 
 }
 
 func (ps *ProjectService) getProjectsBaseUrl() string {
-	return fmt.Sprintf("%s%s", ps.ServiceDetails.GetUrl(), projectsApi)
+	return fmt.Sprintf("%sapi/%s", ps.ServiceDetails.GetUrl(), projectsApi)
 }
 
 func (ps *ProjectService) Get(projectKey string) (u *Project, err error) {

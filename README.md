@@ -927,7 +927,7 @@ err := serviceManager.DeleteGroup("myGroupName")
 #### Creating Access Details
 ```go
 accessDetails := accessAuth.NewAccessDetails()
-accessDetails.SetUrl("http://localhost:8081/access/api")
+accessDetails.SetUrl("http://localhost:8081/access/")
 accessDetails.SetSshKeyPath("path/to/.ssh/")
 accessDetails.SetApiKey("apikey")
 accessDetails.SetUser("user")
