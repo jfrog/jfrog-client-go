@@ -70,6 +70,7 @@ func (targetBuildInfo *BuildInfo) Append(buildInfo *BuildInfo) {
 // Merge the first module into the second module.
 func mergeModules(merge *Module, into *Module) {
 	mergeArtifacts(&merge.Artifacts, &into.Artifacts)
+	mergeArtifacts(&merge.ExcludedArtifacts, &into.ExcludedArtifacts)
 	mergeDependencies(&merge.Dependencies, &into.Dependencies)
 }
 
@@ -130,11 +131,12 @@ type Agent struct {
 }
 
 type Module struct {
-	Type         ModuleType   `json:"type,omitempty"`
-	Properties   interface{}  `json:"properties,omitempty"`
-	Id           string       `json:"id,omitempty"`
-	Artifacts    []Artifact   `json:"artifacts,omitempty"`
-	Dependencies []Dependency `json:"dependencies,omitempty"`
+	Type              ModuleType   `json:"type,omitempty"`
+	Properties        interface{}  `json:"properties,omitempty"`
+	Id                string       `json:"id,omitempty"`
+	Artifacts         []Artifact   `json:"artifacts,omitempty"`
+	ExcludedArtifacts []Artifact   `json:"excludedArtifacts,omitempty"`
+	Dependencies      []Dependency `json:"dependencies,omitempty"`
 	*Checksum
 }
 
