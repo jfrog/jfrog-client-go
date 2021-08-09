@@ -1013,7 +1013,6 @@ err = accessManager.AssignRepoToProject("repoName")
 ## Distribution APIs
 ### Creating Distribution Service Manager
 #### Creating Distribution Details
-
 ```go
 distDetails := auth.NewDistributionDetails()
 distDetails.SetUrl("http://localhost:8081/distribution")
