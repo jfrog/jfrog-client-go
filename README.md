@@ -68,6 +68,17 @@
       - [Fetching Group Details](#fetching-group-details)
       - [Creating and Updating a Group](#creating-and-updating-a-group)
       - [Deleting a Group](#deleting-a-group)
+  - [Access APIs](#access-apis)
+    - [Creating Access Service Manager](#creating-access-service-manager)
+      - [Creating Access Details](#creating-access-details)
+      - [Creating Access Service Config](#creating-access-service-config)
+      - [Creating New Access Service Manager](#creating-new-access-service-manager)
+    - [Using Access Services](#using-access-services)
+      - [Creating a New Project](#creating-a-new-project)
+      - [Updating a Project](#updating-a-project)
+      - [Deleting a Project](#deleting-a-project)
+      - [Assigning Repository To Project](#assigning-repository-to-project)
+      - [Unassigning Repository From Project](#unassigning-repository-from-project)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -939,6 +950,7 @@ accessDetails.SetClientCertKeyPath("path/to/.key")
 ```
 
 #### Creating Access Service Config
+
 ```go
 serviceConfig, err := clientConfig.NewConfigBuilder().
 SetServiceDetails(accessAuth).
@@ -954,7 +966,9 @@ accessManager, err := access.New(serviceConfig)
 ```
 
 ### Using Access Services
-#### Creating new project
+
+#### Creating a new project
+
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
 ManageMembers:   true,
