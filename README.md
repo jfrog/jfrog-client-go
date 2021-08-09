@@ -975,6 +975,7 @@ err = accessManager.CreateProject(projectParams)
 ```
 
 #### Updating a project
+
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
 ManageMembers:   true,
