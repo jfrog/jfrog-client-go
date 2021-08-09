@@ -318,7 +318,7 @@ func (us *UploadService) getFilesToUpload(uploadDetails *UploadParams) ([]client
 				}
 			}
 
-			artifacts = append(artifacts, clientutils.Artifact{LocalPath: filePath, TargetPath: target, Symlink: ""})
+			artifacts = append(artifacts, clientutils.Artifact{LocalPath: filePath, TargetPath: target, SymlinkTargetPath: ""})
 		}
 	}
 	return artifacts, nil
