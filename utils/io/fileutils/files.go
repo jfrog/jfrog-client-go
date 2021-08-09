@@ -636,6 +636,10 @@ func MoveFile(sourcePath, destPath string) (err error) {
 			}
 		}
 	}()
+	inputFileInfo, err := inputFile.Stat()
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
 
 	var outputFile *os.File
 	outputFile, err = os.Create(destPath)
@@ -651,6 +655,10 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	}()
 
 	_, err = io.Copy(outputFile, inputFile)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	err = outputFile.Chmod(inputFileInfo.Mode())
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
