@@ -12,7 +12,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
-const projectsApi = "v1/projects"
+const projectsApi = "api/v1/projects"
 
 type ProjectParams struct {
 	ProjectDetails Project
@@ -47,7 +47,7 @@ func NewProjectService(client *jfroghttpclient.JfrogHttpClient) *ProjectService 
 }
 
 func (ps *ProjectService) getProjectsBaseUrl() string {
-	return fmt.Sprintf("%sapi/%s", ps.ServiceDetails.GetUrl(), projectsApi)
+	return fmt.Sprintf("%s%s", ps.ServiceDetails.GetUrl(), projectsApi)
 }
 
 func (ps *ProjectService) Get(projectKey string) (u *Project, err error) {
