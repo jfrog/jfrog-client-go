@@ -51,8 +51,8 @@ environment:
       TEST_SUIT:
         go test -v github.com\jfrog\jfrog-client-go\tests --timeout 0 --test.pipelines=true --pipe.url="%JFROG_CLI_PIPE_URL%" --pipe.accessToken="%JFROG_CLI_PIPE_TOKEN%" --pipe.vcsToken="%JFROG_CLI_PIPE_VCS_TOKEN%" --pipe.vcsRepo="%JFROG_CLI_PIPE_VCS_REPO%" --pipe.vcsBranch="%JFROG_CLI_PIPE_VCS_BRANCH%"
     - ACCESS_TESTS:
-        TEST_SUIT:
-          go test -v github.com\jfrog\jfrog-client-go\tests --timeout 0 --test.access=true --access.url="%JFROG_CLI_ACCESS_URL%" --access.accessToken="%JFROG_CLI_ACCESS_TOKEN%"
+      TEST_SUIT:
+        go test -v github.com\jfrog\jfrog-client-go\tests --timeout 0 --test.access=true --access.url="%JFROG_CLI_ACCESS_URL%" --access.accessToken="%JFROG_CLI_ACCESS_TOKEN%"
 
 test_script:
   - "%TEST_SUIT%"
