@@ -135,7 +135,7 @@ func (ps *ProjectService) Delete(projectKey string) error {
 
 func (ps *ProjectService) AssignRepo(repoName, projectKey string, isForce bool) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%s/_/attach/repositories/%s/%s?force=%b", ps.getProjectsBaseUrl(), repoName, projectKey, isForce)
+	url := fmt.Sprintf("%s/_/attach/repositories/%s/%s?force=%t", ps.getProjectsBaseUrl(), repoName, projectKey, isForce)
 	resp, body, err := ps.client.SendPut(url, nil, &httpDetails)
 	if err != nil {
 		return err
