@@ -229,7 +229,11 @@ rtDetails.SetApiKey("apikey")
 rtDetails.SetUser("user")
 rtDetails.SetPassword("password")
 rtDetails.SetAccessToken("accesstoken")
-rtDetails.SetHttpClient(myCustomClient)
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(rtDetails).
+    SetDryRun(false).
+    SetHttpClient(myCustomClient).
+    Build()
 ```
 
 #### Creating Artifactory Service Config
