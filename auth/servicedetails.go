@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"net/http"
 	"sync"
 	"time"
 
@@ -30,6 +31,7 @@ type ServiceDetails interface {
 	GetSshAuthHeaders() map[string]string
 	GetClient() *jfroghttpclient.JfrogHttpClient
 	GetVersion() (string, error)
+	GetHttpClient() *http.Client
 
 	SetUrl(url string)
 	SetUser(user string)
@@ -45,6 +47,7 @@ type ServiceDetails interface {
 	SetSshAuthHeaders(sshAuthHeaders map[string]string)
 	SetClient(client *jfroghttpclient.JfrogHttpClient)
 	SetHttpTimeout(httpTimeout time.Duration)
+	SetHttpClient(httpClient *http.Client)
 
 	IsSshAuthHeaderSet() bool
 	IsSshAuthentication() bool
@@ -72,6 +75,7 @@ type CommonConfigFields struct {
 	TokenMutex             sync.Mutex
 	client                 *jfroghttpclient.JfrogHttpClient
 	httpTimeout            time.Duration
+	HttpClient             *http.Client `json:"-"`
 }
 
 func (ccf *CommonConfigFields) GetUrl() string {
@@ -126,6 +130,10 @@ func (ccf *CommonConfigFields) GetClient() *jfroghttpclient.JfrogHttpClient {
 	return ccf.client
 }
 
+func (ccf *CommonConfigFields) GetHttpClient() *http.Client {
+	return ccf.HttpClient
+}
+
 func (ccf *CommonConfigFields) SetUrl(url string) {
 	ccf.Url = url
 }
@@ -172,6 +180,9 @@ func (ccf *CommonConfigFields) SetSshPassphrase(sshPassphrase string) {
 
 func (ccf *CommonConfigFields) SetSshAuthHeaders(sshAuthHeaders map[string]string) {
 	ccf.SshAuthHeaders = sshAuthHeaders
+}
+func (ccf *CommonConfigFields) SetHttpClient(httpClient *http.Client) {
+	ccf.HttpClient = httpClient
 }
 
 func (ccf *CommonConfigFields) SetClient(client *jfroghttpclient.JfrogHttpClient) {

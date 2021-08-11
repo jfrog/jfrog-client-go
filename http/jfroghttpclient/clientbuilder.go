@@ -73,6 +73,7 @@ func (builder *jfrogHttpClientBuilder) Build() (rtHttpClient *JfrogHttpClient, e
 		SetContext(builder.ctx).
 		SetTimeout(builder.timeout).
 		SetRetries(builder.retries).
+		SetHttpClient((*rtHttpClient.JfrogServiceDetails).GetHttpClient()).
 		Build()
 	return
 }
