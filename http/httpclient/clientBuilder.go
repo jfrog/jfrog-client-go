@@ -88,7 +88,7 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	var transport *http.Transport
 
 	if builder.httpClient != nil {
-		//using a custom http.Client, pass-though.
+		// Using a custom http.Client, pass-though.
 		return &HttpClient{client: builder.httpClient, ctx: builder.ctx, retries: builder.retries}, nil
 	}
 
