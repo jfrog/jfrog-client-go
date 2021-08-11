@@ -3,6 +3,7 @@ package jfroghttpclient
 import (
 	"context"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"net/http"
 	"time"
 )
 
@@ -21,6 +22,7 @@ type jfrogHttpClientBuilder struct {
 	clientCertPath         string
 	clientCertKeyPath      string
 	timeout                time.Duration
+	httpClient             *http.Client
 }
 
 func (builder *jfrogHttpClientBuilder) SetCertificatesPath(certificatesPath string) *jfrogHttpClientBuilder {
@@ -63,6 +65,11 @@ func (builder *jfrogHttpClientBuilder) SetTimeout(timeout time.Duration) *jfrogH
 	return builder
 }
 
+func (builder *jfrogHttpClientBuilder) SetHttpClient(httpClient *http.Client) *jfrogHttpClientBuilder {
+	builder.httpClient = httpClient
+	return builder
+}
+
 func (builder *jfrogHttpClientBuilder) Build() (rtHttpClient *JfrogHttpClient, err error) {
 	rtHttpClient = &JfrogHttpClient{preRequestInterceptors: builder.preRequestInterceptors}
 	rtHttpClient.httpClient, err = httpclient.ClientBuilder().
@@ -73,7 +80,7 @@ func (builder *jfrogHttpClientBuilder) Build() (rtHttpClient *JfrogHttpClient, e
 		SetContext(builder.ctx).
 		SetTimeout(builder.timeout).
 		SetRetries(builder.retries).
-		SetHttpClient((*rtHttpClient.JfrogServiceDetails).GetHttpClient()).
+		SetHttpClient(builder.httpClient).
 		Build()
 	return
 }
