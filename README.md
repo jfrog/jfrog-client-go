@@ -829,6 +829,18 @@ You can convert a local repository to a federated repository using its key:
 err := servicesManager.ConvertLocalToFederated("my-repository")
 ```
 
+#### Triggering a Full Federated Repository Synchronisation for All Members
+You can trigger a full federated repository synchronisation for all members using its key:
+```go
+err := servicesManager.TriggerFederatedFullSyncAll("my-repository")
+```
+
+#### Triggering a Full Federated Repository Synchronisation for a Specific Member
+You can trigger a full federated repository synchronisation for a specific member using its key and the members URL
+```go
+err := servicesManager.TriggerFederatedFullSyncMirror("my-repository", "http://localhost:8081/artifactory/my-repository")
+```
+
 #### Creating and Updating Permission Targets
 You can create or update a permission target in Artifactory.
 Permissions are set according to the following conventions:

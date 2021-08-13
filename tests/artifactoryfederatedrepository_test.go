@@ -53,7 +53,7 @@ func TestArtifactoryFederatedRepository(t *testing.T) {
 func setFederatedRepositoryBaseParams(params *services.FederatedRepositoryBaseParams, isUpdate bool) {
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
-	memberUrl := testsCreateFederatedRepositoryService.ArtDetails.GetUrl() + "artifactory/" + params.Key
+	memberUrl := testsCreateFederatedRepositoryService.ArtDetails.GetUrl() + params.Key
 	if !isUpdate {
 		params.ArchiveBrowsingEnabled = &trueValue
 		params.Members = []services.FederatedRepositoryMember{

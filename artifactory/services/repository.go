@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -35,7 +36,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 	}
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.repositories."+strings.ToTitle(rs.repoType)+"RepositoryConfiguration+json", &httpClientsDetails.Headers)
-	var url = rs.ArtDetails.GetUrl() + "api/repositories/" + repoKey
+	var url = rs.ArtDetails.GetUrl() + "api/repositories/" + url.PathEscape(repoKey)
 	var operationString string
 	var resp *http.Response
 	var body []byte

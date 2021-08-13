@@ -19,6 +19,8 @@ func TestArtifactoryFederation(t *testing.T) {
 	}
 	t.Run("localConvertLocalToFederatedTest", localConvertLocalToFederatedTest)
 	t.Run("localConvertNonExistentLocalToFederatedTest", localConvertNonExistentLocalToFederatedTest)
+	t.Run("localTriggerFederatedFullSyncAllTest", localTriggerFederatedFullSyncAllTest)
+	t.Run("localTriggerFederatedFullSyncMirrorTest", localTriggerFederatedFullSyncMirrorTest)
 }
 
 func localConvertLocalToFederatedTest(t *testing.T) {
@@ -43,4 +45,35 @@ func localConvertNonExistentLocalToFederatedTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	err := testsFederationService.ConvertLocalToFederated(repoKey)
 	assert.Error(t, err, "Failed to not convert "+repoKey)
+}
+
+func localTriggerFederatedFullSyncAllTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	gfp := services.NewGenericFederatedRepositoryParams()
+	gfp.Key = repoKey
+	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
+
+	err := testsCreateFederatedRepositoryService.Generic(gfp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, gfp)
+
+	err = testsFederationService.TriggerFederatedFullSyncAll(repoKey)
+	assert.NoError(t, err, "Failed to trigger full synchonisation "+repoKey)
+}
+
+func localTriggerFederatedFullSyncMirrorTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	gfp := services.NewGenericFederatedRepositoryParams()
+	gfp.Key = repoKey
+	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
+
+	err := testsCreateFederatedRepositoryService.Generic(gfp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, gfp)
+
+	mirror := gfp.Members[0].Url
+	err = testsFederationService.TriggerFederatedFullSyncMirror(repoKey, mirror)
+	assert.NoError(t, err, "Failed to trigger synchonisation "+repoKey+" for "+mirror)
 }

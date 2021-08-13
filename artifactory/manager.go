@@ -420,6 +420,18 @@ func (sm *ArtifactoryServicesManagerImp) ConvertLocalToFederated(repoKey string)
 	return getFederationService.ConvertLocalToFederated(repoKey)
 }
 
+func (sm *ArtifactoryServicesManagerImp) TriggerFederatedFullSyncAll(repoKey string) error {
+	getFederationService := services.NewFederationService(sm.client)
+	getFederationService.ArtDetails = sm.config.GetServiceDetails()
+	return getFederationService.TriggerFederatedFullSyncAll(repoKey)
+}
+
+func (sm *ArtifactoryServicesManagerImp) TriggerFederatedFullSyncMirror(repoKey string, mirrorUrl string) error {
+	getFederationService := services.NewFederationService(sm.client)
+	getFederationService.ArtDetails = sm.config.GetServiceDetails()
+	return getFederationService.TriggerFederatedFullSyncMirror(repoKey, mirrorUrl)
+}
+
 func (sm *ArtifactoryServicesManagerImp) GetVersion() (string, error) {
 	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
 	return systemService.GetVersion()
