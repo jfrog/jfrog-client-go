@@ -668,7 +668,7 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	err = outputFile.Chmod(inputFileInfo.Mode())
+	err = os.Chmod(destPath, inputFileInfo.Mode())
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
