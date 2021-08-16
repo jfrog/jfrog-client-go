@@ -776,9 +776,15 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	if errorutils.CheckError(e) != nil {
 		return
 	}
+	// Check if symlink
 	if artifact.SymlinkTargetPath != "" && symlink {
 		// Write symlink's target to writer - file's body for symlinks is the symlink target.
 		_, e = writer.Write([]byte(filepath.ToSlash(artifact.SymlinkTargetPath)))
+		return
+	}
+	// Check if directory
+	if info.IsDir() {
+		_, e = writer.Write([]byte(filepath.ToSlash(localPath + "/")))
 		return
 	}
 
