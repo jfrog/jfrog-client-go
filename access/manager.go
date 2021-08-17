@@ -42,7 +42,6 @@ func (sm *AccessServicesManager) UpdateProject(params services.ProjectParams) er
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()
 	return projectService.Update(params)
-
 }
 
 func (sm *AccessServicesManager) DeleteProject(projectKey string) error {
