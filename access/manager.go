@@ -35,29 +35,30 @@ func (sm *AccessServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 func (sm *AccessServicesManager) CreateProject(params services.ProjectParams) error {
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()
-	return projectService.CreateProject(params)
+	return projectService.Create(params)
 }
 
 func (sm *AccessServicesManager) UpdateProject(params services.ProjectParams) error {
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()
-	return projectService.UpdateProject(params)
+	return projectService.Update(params)
+
 }
 
 func (sm *AccessServicesManager) DeleteProject(projectKey string) error {
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()
-	return projectService.DeleteProject(projectKey)
+	return projectService.Delete(projectKey)
 }
 
 func (sm *AccessServicesManager) AssignRepoToProject(repoName, projectKey string, isForce bool) error {
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()
-	return projectService.AssignRepoToProject(repoName, projectKey, isForce)
+	return projectService.AssignRepo(repoName, projectKey, isForce)
 }
 
 func (sm *AccessServicesManager) UnassignRepoFromProject(repoName string) error {
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()
-	return projectService.UnassignRepoFromProject(repoName)
+	return projectService.UnassignRepo(repoName)
 }

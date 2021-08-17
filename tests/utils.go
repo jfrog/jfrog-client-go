@@ -58,6 +58,7 @@ var PipelinesVcsToken *string
 var PipelinesVcsRepoFullPath *string
 var PipelinesVcsBranch *string
 var AccessUrl *string
+var AccessToken *string
 
 // Artifactory services
 var testsUploadService *services.UploadService
@@ -137,6 +138,7 @@ func init() {
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
 	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
 	AccessUrl = flag.String("access.url", "", "Access url")
+	AccessToken = flag.String("access.token", "", "Access token")
 }
 
 func createArtifactorySecurityManager() {
@@ -815,7 +817,7 @@ func verifyValidSha256(t *testing.T, sha256 string) {
 func GetAccessDetails() auth.ServiceDetails {
 	accessDetails := accessAuth.NewAccessDetails()
 	accessDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*AccessUrl))
-	accessDetails.SetAccessToken(*RtAccessToken)
+	accessDetails.SetAccessToken(*AccessToken)
 	return accessDetails
 }
 
