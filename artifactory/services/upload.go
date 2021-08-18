@@ -150,7 +150,7 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 // Creates a new Properties struct with the artifact's props and the symlink props.
 func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) (*utils.Properties, error) {
 	artifactProps := utils.NewProperties()
-	artifactSymlink := artifact.Symlink
+	artifactSymlink := artifact.SymlinkTargetPath
 	if uploadParams.IsSymlink() && len(artifactSymlink) > 0 {
 		fileInfo, err := os.Stat(artifact.LocalPath)
 		if err != nil {
@@ -337,7 +337,7 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
 	}
 
-	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, Symlink: symlinkPath}
+	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, SymlinkTargetPath: symlinkPath}
 	props, err := createProperties(artifact, taskData.uploadParams)
 	if err != nil {
 		return err
@@ -447,7 +447,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 						return false, nil
 					}
 					// Perform retry
-					log.Warn(fmt.Sprintf("%sThe server response: %s", logMsgPrefix, resp.Status))
+					log.Warn(fmt.Sprintf("%sThe server response: %s\n %s", logMsgPrefix, resp.Status, clientutils.IndentJson(body)))
 					return true, nil
 				},
 			}
@@ -689,7 +689,7 @@ func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targe
 				return us.resultsManager.addNotFinalResult(localPath, targetUrl)
 			}
 		}
-		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums", archiveData.uploadParams.Flat, saveFilesPathsFunc, errorsQueue)
+		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums", archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue)
 		details, e := fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
 		if e != nil {
 			return
@@ -698,7 +698,7 @@ func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targe
 
 		getReaderFunc := func() (io.Reader, error) {
 			archiveDataReader.Reset()
-			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat, nil, errorsQueue), nil
+			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, nil, errorsQueue), nil
 		}
 		uploaded, e := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, details)
 
@@ -715,7 +715,7 @@ func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targe
 // Reads files and streams them as a ZIP to a Reader.
 // archiveDataReader is a ContentReader of UploadData items containing the details of the files to stream.
 // saveFilesPathsFunc (optional) is a func that is called for each file that is written into the ZIP, and gets the file's local path as a parameter.
-func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader, progressPrefix string, flat bool,
+func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader, progressPrefix string, flat, symlink bool,
 	saveFilesPathsFunc func(sourcePath string) error, errorsQueue *clientutils.ErrorsQueue) io.Reader {
 	pr, pw := io.Pipe()
 
@@ -725,12 +725,7 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 		defer pw.Close()
 		defer zipWriter.Close()
 		for uploadData := new(UploadData); archiveDataReader.NextRecord(uploadData) == nil; uploadData = new(UploadData) {
-			if uploadData.Artifact.Symlink != "" {
-				e = us.addFileToZip(uploadData.Artifact.Symlink, progressPrefix, flat, zipWriter)
-			} else {
-				e = us.addFileToZip(uploadData.Artifact.LocalPath, progressPrefix, flat, zipWriter)
-			}
-
+			e = us.addFileToZip(&uploadData.Artifact, progressPrefix, flat, symlink, zipWriter)
 			if e != nil {
 				errorsQueue.AddError(e)
 			}
@@ -749,19 +744,21 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 	return pr
 }
 
-func (us *UploadService) addFileToZip(localPath, progressPrefix string, flat bool, zipWriter *zip.Writer) (e error) {
+func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPrefix string, flat, symlink bool, zipWriter *zip.Writer) (e error) {
 	var reader io.Reader
-	file, e := os.Open(localPath)
-	defer file.Close()
-	if e != nil {
-		return
+	localPath := artifact.LocalPath
+	// In case of a symlink there are 2 options:
+	// 1. symlink == true : symlink will be added to zip as a symlink file.
+	// 2. symlink == false : the symlink's target will be added to zip.
+	if artifact.SymlinkTargetPath != "" && !symlink {
+		localPath = artifact.SymlinkTargetPath
 	}
-	info, e := file.Stat()
-	if e != nil {
+	info, e := os.Lstat(localPath)
+	if errorutils.CheckError(e) != nil {
 		return
 	}
 	header, e := zip.FileInfoHeader(info)
-	if e != nil {
+	if errorutils.CheckError(e) != nil {
 		return
 	}
 	if !flat {
@@ -769,10 +766,26 @@ func (us *UploadService) addFileToZip(localPath, progressPrefix string, flat boo
 	}
 	header.Method = zip.Deflate
 	writer, e := zipWriter.CreateHeader(header)
-	if e != nil {
+	if errorutils.CheckError(e) != nil {
+		return
+	}
+	// Symlink will be written to zip as a symlink and not the symlink target file.
+	if artifact.SymlinkTargetPath != "" && symlink {
+		// Write symlink's target to writer - file's body for symlinks is the symlink target.
+		_, e = writer.Write([]byte(filepath.ToSlash(artifact.SymlinkTargetPath)))
 		return
 	}
 
+	file, e := os.Open(localPath)
+	if e != nil {
+		return e
+	}
+	defer func() {
+		err := file.Close()
+		if e == nil {
+			e = err
+		}
+	}()
 	if us.Progress != nil {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)
@@ -782,7 +795,7 @@ func (us *UploadService) addFileToZip(localPath, progressPrefix string, flat boo
 	}
 
 	_, e = io.Copy(writer, reader)
-	if e != nil {
+	if errorutils.CheckError(e) != nil {
 		return
 	}
 	return
