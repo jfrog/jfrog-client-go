@@ -750,17 +750,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	if artifact.SymlinkTargetPath != "" && !symlink {
 		localPath = artifact.SymlinkTargetPath
 	}
-	file, e := os.Open(localPath)
-	if e != nil {
-		return
-	}
-	defer func() {
-		err := file.Close()
-		if e == nil {
-			e = err
-		}
-	}()
-	info, e := os.Lstat(file.Name())
+	info, e := os.Lstat(localPath)
 	if errorutils.CheckError(e) != nil {
 		return
 	}
@@ -776,13 +766,22 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	if errorutils.CheckError(e) != nil {
 		return
 	}
-
+	// Symlink will be written to zip as a symlink and not the symlink target file.
 	if artifact.SymlinkTargetPath != "" && symlink {
 		// Write symlink's target to writer - file's body for symlinks is the symlink target.
 		_, e = writer.Write([]byte(filepath.ToSlash(artifact.SymlinkTargetPath)))
 		return
 	}
-
+	file, e := os.Open(localPath)
+	if e != nil {
+		return
+	}
+	defer func() {
+		err := file.Close()
+		if e == nil {
+			e = err
+		}
+	}()
 	if us.Progress != nil {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)
