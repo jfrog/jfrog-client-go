@@ -50,12 +50,16 @@
       - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
       - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
       - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
+      - [Creating and Updating Federated Repository](#creating-and-updating-federated-repository)
       - [Removing a Repository](#removing-a-repository)
       - [Getting Repository Details](#getting-repository-details)
       - [Getting All Repositories](#getting-all-repositories)
       - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
       - [Getting a Repository Replication](#getting-a-repository-replication)
       - [Removing a Repository Replication](#removing-a-repository-replication)
+      - [Converting a Local Repository to a Federated Repository](#converting-a-local-repository-to-a-federated-repository)
+      - [Triggering a Full Federated Repository Synchronisation for All Members](#triggering-a-full-federated-repository-synchronisation-for-all-members)
+      - [Triggering a Full Federated Repository Synchronisation for a Specific Member](#triggering-a-full-federated-repository-synchronisation-for-a-specific-member)
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
@@ -826,7 +830,7 @@ err := servicesManager.DeleteReplication("my-repository")
 #### Converting a Local Repository to a Federated Repository
 You can convert a local repository to a federated repository using its key:
 ```go
-err := servicesManager.ConvertLocalToFederated("my-repository")
+err := servicesManager.ConvertLocalToFederatedRepository("my-repository")
 ```
 
 #### Triggering a Full Federated Repository Synchronisation for All Members
