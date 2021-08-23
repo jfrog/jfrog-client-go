@@ -369,7 +369,7 @@ func (esm *EmptyArtifactoryServicesManager) DeleteGroup(name string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) ConvertLocalToFederated(repoKey string) error {
+func (esm *EmptyArtifactoryServicesManager) ConvertLocalToFederatedRepository(repoKey string) error {
 	panic("Failed: Method is not implemented")
 }
 

@@ -414,7 +414,7 @@ func (sm *ArtifactoryServicesManagerImp) GetReplication(repoKey string) ([]utils
 	return getPushReplicationService.GetReplication(repoKey)
 }
 
-func (sm *ArtifactoryServicesManagerImp) ConvertLocalToFederated(repoKey string) error {
+func (sm *ArtifactoryServicesManagerImp) ConvertLocalToFederatedRepository(repoKey string) error {
 	getFederationService := services.NewFederationService(sm.client)
 	getFederationService.ArtDetails = sm.config.GetServiceDetails()
 	return getFederationService.ConvertLocalToFederated(repoKey)
