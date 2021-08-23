@@ -373,11 +373,11 @@ func (esm *EmptyArtifactoryServicesManager) ConvertLocalToFederatedRepository(re
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) TriggerFederatedFullSyncAll(repoKey string) error {
+func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncAll(repoKey string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) TriggerFederatedFullSyncMirror(repoKey string, mirrorUrl string) error {
+func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error {
 	panic("Failed: Method is not implemented")
 }
 
