@@ -82,9 +82,9 @@ type ArtifactoryServicesManager interface {
 	CreateUser(params services.UserParams) error
 	UpdateUser(params services.UserParams) error
 	DeleteUser(name string) error
-	ConvertLocalToFederated(repoKey string) error
-	TriggerFederatedFullSyncAll(repoKey string) error
-	TriggerFederatedFullSyncMirror(repoKey string, mirrorUrl string) error
+	ConvertLocalToFederatedRepository(repoKey string) error
+	TriggerFederatedRepositoryFullSyncAll(repoKey string) error
+	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
