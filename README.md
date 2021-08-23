@@ -58,8 +58,7 @@
       - [Getting a Repository Replication](#getting-a-repository-replication)
       - [Removing a Repository Replication](#removing-a-repository-replication)
       - [Converting a Local Repository to a Federated Repository](#converting-a-local-repository-to-a-federated-repository)
-      - [Triggering a Full Federated Repository Synchronisation for All Members](#triggering-a-full-federated-repository-synchronisation-for-all-members)
-      - [Triggering a Full Federated Repository Synchronisation for a Specific Member](#triggering-a-full-federated-repository-synchronisation-for-a-specific-member)
+      - [Triggering a Full Federated Repository Synchronisation](#triggering-a-full-federated-repository-synchronisation)
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
@@ -833,14 +832,13 @@ You can convert a local repository to a federated repository using its key:
 err := servicesManager.ConvertLocalToFederatedRepository("my-repository")
 ```
 
-#### Triggering a Full Federated Repository Synchronisation for All Members
+#### Triggering a Full Federated Repository Synchronisation
 You can trigger a full federated repository synchronisation for all members using its key:
 ```go
 err := servicesManager.TriggerFederatedFullSyncAll("my-repository")
 ```
 
-#### Triggering a Full Federated Repository Synchronisation for a Specific Member
-You can trigger a full federated repository synchronisation for a specific member using its key and the members URL
+You can also trigger a full federated repository synchronisation for a specific member using its key and the members URL
 ```go
 err := servicesManager.TriggerFederatedFullSyncMirror("my-repository", "http://localhost:8081/artifactory/my-repository")
 ```
