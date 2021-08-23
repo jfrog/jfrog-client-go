@@ -764,7 +764,7 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 		}
 		for key, expectedValue := range expectedConfigMap {
 			// The password field may be encrypted and won't match the value set, need to handle this during validation
-			if key == "password" && len(fmt.Sprintf("%s", expectedValue)) > 0 && len(fmt.Sprintf("%s", confMap[key])) > 0 {
+			if key == "password" {
 				continue
 			}
 			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
