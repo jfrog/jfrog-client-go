@@ -2,10 +2,11 @@ package tests
 
 import (
 	"flag"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/utils/tests"
@@ -38,6 +39,8 @@ func InitServiceManagers() {
 		createArtifactoryUpdateRemoteRepositoryManager()
 		createArtifactoryCreateVirtualRepositoryManager()
 		createArtifactoryUpdateVirtualRepositoryManager()
+		createArtifactoryCreateFederatedRepositoryManager()
+		createArtifactoryUpdateFederatedRepositoryManager()
 		createArtifactoryDeleteRepositoryManager()
 		createArtifactoryGetRepositoryManager()
 		createArtifactoryReplicationCreateManager()
@@ -48,6 +51,7 @@ func InitServiceManagers() {
 		createArtifactoryUserManager()
 		createArtifactoryGroupManager()
 		createArtifactoryBuildInfoManager()
+		createArtifactoryFederationManager()
 	}
 
 	if *TestDistribution {

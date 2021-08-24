@@ -50,12 +50,15 @@
       - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
       - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
       - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
+      - [Creating and Updating Federated Repository](#creating-and-updating-federated-repository)
       - [Removing a Repository](#removing-a-repository)
       - [Getting Repository Details](#getting-repository-details)
       - [Getting All Repositories](#getting-all-repositories)
       - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
       - [Getting a Repository Replication](#getting-a-repository-replication)
       - [Removing a Repository Replication](#removing-a-repository-replication)
+      - [Converting a Local Repository to a Federated Repository](#converting-a-local-repository-to-a-federated-repository)
+      - [Triggering a Full Federated Repository Synchronisation](#triggering-a-full-federated-repository-synchronisation)
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
@@ -593,10 +596,9 @@ apiKey, err := rtManager.GetAPIKey()
 #### Creating and Updating Local Repository
 You can create and update a local repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
-Vagrant, Gitlfs, Go, Yum, Conan, Chef, Puppet and Generic.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant, and Yum.
 
-Each package type has it's own parameters struct, can be created using the method
+Each package type has its own parameters struct, can be created using the method
 `New<packageType>LocalRepositoryParams()`.
 
 Example for creating local Generic repository:
@@ -632,10 +634,9 @@ err = servicesManager.UpdateLocalRepository().Generic(params)
 #### Creating and Updating Remote Repository
 You can create and update a remote repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
-Gitlfs, Go, Yum, Conan, Chef, Puppet, Conda, P2, Vcs and Generic.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Vcs, and Yum.
 
-Each package type has it's own parameters struct, can be created using the method
+Each package type has its own parameters struct, can be created using the method
 `New<packageType>RemoteRepositoryParams()`.
 
 Example for creating remote Maven repository:
@@ -672,10 +673,9 @@ err := servicesManager.CreateRemoteRepository(params)
 #### Creating and Updating Virtual Repository
 You can create and update a virtual repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Pypi, Docker, Gitlfs, Go, Yum, Conan,
-Chef, Puppet, Conda, P2 and Generic
+Alpine, Bower, Cran, Chef, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, P2, Puppet, Pypi, Rpm, Sbt, and Yum.
 
-Each package type has it's own parameters struct, can be created using the method
+Each package type has its own parameters struct, can be created using the method
 `New<packageType>VirtualRepositoryParams()`.
 
 Example for creating virtual Go repository:
@@ -705,6 +705,49 @@ err := servicesManager.CreateVirtualRepository(params)
 Updating virtual Go repository:
 ```go
 err = servicesManager.UpdateVirtualRepository().Go(params)
+```
+
+#### Creating and Updating Federated Repository
+You can create and update a federated repository for the following package types:
+
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant and Yum
+
+Each package type has its own parameters struct, can be created using the method
+`New<packageType>FederatedRepositoryParams()`.
+
+Example for creating federated Generic repository:
+```go
+params := services.NewGenericFederatedRepositoryParams()
+params.Key = "generic-repo"
+params.Description = "This is a public description for generic-repo"
+params.Notes = "These are internal notes for generic-repo"
+params.RepoLayoutRef = "simple-default"
+params.ArchiveBrowsingEnabled = true
+params.XrayIndex = true
+params.IncludesPattern = "**/*"
+params.ExcludesPattern = "excludedDir/*"
+params.DownloadRedirect = true
+params.Members = []services.FederatedRepositoryMemberParams{
+		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+	}
+err = servicesManager.CreateFederatedRepository().Generic(params)
+```
+
+You can also create a federated repository with basic federated params:
+```go
+params := services.NewFederatedRepositoryBaseParams()
+params.Key = "generic-repo"
+params.PackageType = "generic"
+params.Description = "This is a public description for generic-repo"
+params.Members = []services.FederatedRepositoryMemberParams{
+		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+	}
+err := servicesManager.CreateFederatedRepository(params)
+```
+
+Updating federated Generic repository:
+```go
+err = servicesManager.UpdateFederatedRepository().Generic(params)
 ```
 
 #### Removing a Repository
@@ -795,6 +838,23 @@ replicationConfiguration, err := servicesManager.GetReplication("my-repository")
 You can remove a repository replication configuration from Artifactory using its key:
 ```go
 err := servicesManager.DeleteReplication("my-repository")
+```
+
+#### Converting a Local Repository to a Federated Repository
+You can convert a local repository to a federated repository using its key:
+```go
+err := servicesManager.ConvertLocalToFederatedRepository("my-repository")
+```
+
+#### Triggering a Full Federated Repository Synchronisation
+You can trigger a full federated repository synchronisation for all members using its key:
+```go
+err := servicesManager.TriggerFederatedRepositoryFullSyncAll("my-repository")
+```
+
+You can also trigger a full federated repository synchronisation for a specific member using its key and the members URL
+```go
+err := servicesManager.TriggerFederatedRepositoryFullSyncMirror("my-repository", "http://localhost:8081/artifactory/my-repository")
 ```
 
 #### Creating and Updating Permission Targets
