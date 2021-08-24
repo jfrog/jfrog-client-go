@@ -9,6 +9,33 @@ import (
 	"testing"
 )
 
+func TestGetArtifactoryVersionWithCustomHttpClient(t *testing.T) {
+	initArtifactoryTest(t)
+	rtDetails := GetRtDetails()
+
+	client := http.DefaultClient
+
+	serviceConfig, err := config.NewConfigBuilder().
+		SetServiceDetails(rtDetails).
+		SetDryRun(false).
+		SetHttpClient(client).
+		Build()
+	if err != nil {
+		t.Error(err)
+	}
+
+	rtManager, err := artifactory.New(serviceConfig)
+	if err != nil {
+		t.Error(err)
+	}
+
+	version, err := rtManager.GetVersion()
+	assert.NoError(t, err, "Should not fail")
+	if version == "" {
+		t.Error("Expected a version, got empty string")
+	}
+}
+
 func TestGetArtifactoryVersionWithProxyShouldFail(t *testing.T) {
 	initArtifactoryTest(t)
 	rtDetails := GetRtDetails()

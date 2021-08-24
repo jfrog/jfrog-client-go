@@ -84,13 +84,13 @@ func (builder *httpClientBuilder) AddClientCertToTransport(transport *http.Trans
 }
 
 func (builder *httpClientBuilder) Build() (*HttpClient, error) {
-	var err error
-	var transport *http.Transport
-
 	if builder.httpClient != nil {
 		// Using a custom http.Client, pass-though.
 		return &HttpClient{client: builder.httpClient, ctx: builder.ctx, retries: builder.retries}, nil
 	}
+
+	var err error
+	var transport *http.Transport
 
 	if builder.certificatesDirPath == "" {
 		transport = builder.createDefaultHttpTransport()
