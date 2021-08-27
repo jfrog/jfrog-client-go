@@ -1,7 +1,7 @@
 module github.com/jfrog/jfrog-client-go
 
 require (
-	github.com/buger/jsonparser v0.0.0-20180910192245-6acdf747ae99
+	github.com/buger/jsonparser v1.1.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gookit/color v1.4.2
 	github.com/jfrog/gofrog v1.0.6
