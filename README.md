@@ -18,6 +18,7 @@
   - [Artifactory APIs](#artifactory-apis)
     - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
       - [Creating Artifactory Details](#creating-artifactory-details)
+      - [Create Artifactory Details with Custom HTTP Client](#creating-artifactory-details-with-custom-http-client)
       - [Creating Artifactory Service Config](#creating-artifactory-service-config)
       - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
     - [Using Artifactory Services](#using-artifactory-services)
@@ -217,6 +218,25 @@ rtDetails.SetAccessToken("accesstoken")
 // if client certificates are required
 rtDetails.SetClientCertPath("path/to/.cer")
 rtDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Create Artifactory Details with Custom HTTP Client
+```go
+proxyUrl, err := url.Parse("http://proxyIp:proxyPort")
+myCustomClient := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
+
+rtDetails := auth.NewArtifactoryDetails()
+rtDetails.SetUrl("http://localhost:8081/artifactory")
+rtDetails.SetSshKeysPath("path/to/.ssh/")
+rtDetails.SetApiKey("apikey")
+rtDetails.SetUser("user")
+rtDetails.SetPassword("password")
+rtDetails.SetAccessToken("accesstoken")
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(rtDetails).
+    SetDryRun(false).
+    SetHttpClient(myCustomClient).
+    Build()
 ```
 
 #### Creating Artifactory Service Config

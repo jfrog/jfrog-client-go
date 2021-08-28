@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"net/http"
 	"time"
 )
 
@@ -24,6 +25,7 @@ type servicesConfigBuilder struct {
 	ctx              context.Context
 	httpTimeout      time.Duration
 	httpRetries      int
+	httpClient       *http.Client
 }
 
 func (builder *servicesConfigBuilder) SetServiceDetails(artDetails auth.ServiceDetails) *servicesConfigBuilder {
@@ -66,6 +68,11 @@ func (builder *servicesConfigBuilder) SetHttpRetries(httpRetries int) *servicesC
 	return builder
 }
 
+func (builder *servicesConfigBuilder) SetHttpClient(httpClient *http.Client) *servicesConfigBuilder {
+	builder.httpClient = httpClient
+	return builder
+}
+
 func (builder *servicesConfigBuilder) Build() (Config, error) {
 	c := &servicesConfig{}
 	c.ServiceDetails = builder.ServiceDetails
@@ -76,5 +83,6 @@ func (builder *servicesConfigBuilder) Build() (Config, error) {
 	c.ctx = builder.ctx
 	c.httpTimeout = builder.httpTimeout
 	c.httpRetries = builder.httpRetries
+	c.httpClient = builder.httpClient
 	return c, nil
 }
