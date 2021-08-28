@@ -28,6 +28,7 @@ type httpClientBuilder struct {
 	ctx                 context.Context
 	timeout             time.Duration
 	retries             int
+	httpClient          *http.Client
 }
 
 func (builder *httpClientBuilder) SetCertificatesPath(certificatesPath string) *httpClientBuilder {
@@ -47,6 +48,11 @@ func (builder *httpClientBuilder) SetClientCertKeyPath(certificatePath string) *
 
 func (builder *httpClientBuilder) SetInsecureTls(insecureTls bool) *httpClientBuilder {
 	builder.insecureTls = insecureTls
+	return builder
+}
+
+func (builder *httpClientBuilder) SetHttpClient(httpClient *http.Client) *httpClientBuilder {
+	builder.httpClient = httpClient
 	return builder
 }
 
@@ -78,8 +84,14 @@ func (builder *httpClientBuilder) AddClientCertToTransport(transport *http.Trans
 }
 
 func (builder *httpClientBuilder) Build() (*HttpClient, error) {
+	if builder.httpClient != nil {
+		// Using a custom http.Client, pass-though.
+		return &HttpClient{client: builder.httpClient, ctx: builder.ctx, retries: builder.retries}, nil
+	}
+
 	var err error
 	var transport *http.Transport
+
 	if builder.certificatesDirPath == "" {
 		transport = builder.createDefaultHttpTransport()
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: builder.insecureTls}

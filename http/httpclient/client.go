@@ -7,12 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -21,6 +15,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync"
+
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type HttpClient struct {
@@ -80,31 +81,30 @@ func (jc *HttpClient) SendPut(url string, content []byte, httpClientsDetails htt
 	return
 }
 
-func (jc *HttpClient) newRequest(method, url string, body io.Reader) (*http.Request, error) {
+func (jc *HttpClient) newRequest(method, url string, body io.Reader) (req *http.Request, err error) {
 	if jc.ctx != nil {
-		return http.NewRequestWithContext(jc.ctx, method, url, body)
+		req, err = http.NewRequestWithContext(jc.ctx, method, url, body)
+	} else {
+		req, err = http.NewRequest(method, url, body)
 	}
-	return http.NewRequest(method, url, body)
+	return req, errorutils.CheckError(err)
 }
 
 func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	var req *http.Request
-	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
-	if content != nil {
-		req, err = jc.newRequest(method, url, bytes.NewBuffer(content))
-	} else {
-		req, err = jc.newRequest(method, url, nil)
-	}
-	if errorutils.CheckError(err) != nil {
+	req, err := jc.createReq(method, url, content)
+	if err != nil {
 		return nil, nil, "", err
 	}
-
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      jc.retries,
 		RetriesInterval: 0,
 		LogMsgPrefix:    logMsgPrefix,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while sending %s request to %s", method, url),
 		ExecutionHandler: func() (bool, error) {
+			req, err = jc.createReq(method, url, content)
+			if err != nil {
+				return true, err
+			}
 			resp, respBody, redirectUrl, err = jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
 			if err != nil {
 				return true, err
@@ -118,13 +118,21 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 				return false, nil
 			}
 			// Perform retry
-			log.Warn(fmt.Sprintf("%sThe server response: %s", logMsgPrefix, resp.Status))
+			log.Warn(fmt.Sprintf("%sThe server response: %s\n %s", logMsgPrefix, resp.Status, utils.IndentJson(respBody)))
 			return true, nil
 		},
 	}
 
 	err = retryExecutor.Execute()
 	return
+}
+
+func (jc *HttpClient) createReq(method, url string, content []byte) (req *http.Request, err error) {
+	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
+	if content != nil {
+		return jc.newRequest(method, url, bytes.NewBuffer(content))
+	}
+	return jc.newRequest(method, url, nil)
 }
 
 func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
@@ -205,7 +213,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 				return false, nil
 			}
 			// Perform retry
-			log.Warn(fmt.Sprintf("%sThe server response: %s", logMsgPrefix, resp.Status))
+			log.Warn(fmt.Sprintf("%sThe server response: %s\n %s", logMsgPrefix, resp.Status, utils.IndentJson(body)))
 			return true, nil
 		},
 	}
@@ -247,7 +255,7 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails httputils.HttpClientDetails,
 	size int64) (resp *http.Response, body []byte, err error) {
 	req, err := jc.newRequest("PUT", url, reader)
-	if errorutils.CheckError(err) != nil {
+	if err != nil {
 		return nil, nil, err
 	}
 	req.ContentLength = size

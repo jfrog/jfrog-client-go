@@ -424,9 +424,9 @@ func IsWindows() bool {
 }
 
 type Artifact struct {
-	LocalPath  string
-	TargetPath string
-	Symlink    string
+	LocalPath         string
+	TargetPath        string
+	SymlinkTargetPath string
 }
 
 const (
@@ -490,17 +490,18 @@ type FileTransferDetails struct {
 
 // Represent deployed artifact's details returned from build-info project for maven and gradle.
 type DeployableArtifactDetails struct {
-	SourcePath      	string `json:"sourcePath,omitempty"`
-	ArtifactDest    	string `json:"artifactDest,omitempty"`
-	Sha256          	string `json:"sha256,omitempty"`
-	DeploySucceeded 	bool   `json:"deploySucceeded,omitempty"`
-	TargetRepository	string `json:"targetRepository,omitempty"`
+	SourcePath       string `json:"sourcePath,omitempty"`
+	ArtifactDest     string `json:"artifactDest,omitempty"`
+	Sha256           string `json:"sha256,omitempty"`
+	DeploySucceeded  bool   `json:"deploySucceeded,omitempty"`
+	TargetRepository string `json:"targetRepository,omitempty"`
 }
 
-func (detailes *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl string) FileTransferDetails {
-	targetPath := rtUrl + detailes.TargetRepository + detailes.ArtifactDest
+func (detailes *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) FileTransferDetails {
+	targetPath := rtUrl + targetRepository + "/" + detailes.ArtifactDest
 	return FileTransferDetails{SourcePath: detailes.SourcePath, TargetPath: targetPath, Sha256: detailes.Sha256}
 }
+
 type UploadResponseBody struct {
 	Checksums ChecksumDetails `json:"checksums,omitempty"`
 }

@@ -18,6 +18,7 @@
   - [Artifactory APIs](#artifactory-apis)
     - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
       - [Creating Artifactory Details](#creating-artifactory-details)
+      - [Create Artifactory Details with Custom HTTP Client](#creating-artifactory-details-with-custom-http-client)
       - [Creating Artifactory Service Config](#creating-artifactory-service-config)
       - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
     - [Using Artifactory Services](#using-artifactory-services)
@@ -50,12 +51,15 @@
       - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
       - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
       - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
+      - [Creating and Updating Federated Repository](#creating-and-updating-federated-repository)
       - [Removing a Repository](#removing-a-repository)
       - [Getting Repository Details](#getting-repository-details)
       - [Getting All Repositories](#getting-all-repositories)
       - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
       - [Getting a Repository Replication](#getting-a-repository-replication)
       - [Removing a Repository Replication](#removing-a-repository-replication)
+      - [Converting a Local Repository to a Federated Repository](#converting-a-local-repository-to-a-federated-repository)
+      - [Triggering a Full Federated Repository Synchronisation](#triggering-a-full-federated-repository-synchronisation)
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
@@ -68,6 +72,17 @@
       - [Fetching Group Details](#fetching-group-details)
       - [Creating and Updating a Group](#creating-and-updating-a-group)
       - [Deleting a Group](#deleting-a-group)
+  - [Access APIs](#access-apis)
+    - [Creating Access Service Manager](#creating-access-service-manager)
+      - [Creating Access Details](#creating-access-details)
+      - [Creating Access Service Config](#creating-access-service-config)
+      - [Creating New Access Service Manager](#creating-new-access-service-manager)
+    - [Using Access Services](#using-access-services)
+      - [Creating a New Project](#creating-a-new-project)
+      - [Updating a Project](#updating-a-project)
+      - [Deleting a Project](#deleting-a-project)
+      - [Assigning Repository To Project](#assigning-repository-to-project)
+      - [Unassigning Repository From Project](#unassigning-repository-from-project)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -143,22 +158,24 @@ go test -v github.com/jfrog/jfrog-client-go/tests [test-types] [flags]
 ```
 Optional flags:
 
-| Flag                | Description                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------ |
-| `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
-| `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
-| `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
-| `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
-| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
-| `-rt.password`      | [Default: password] Artifactory password.                                                              |
-| `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
-| `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
-| `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
-| `-rt.accessToken`   | [Optional] Artifactory access token.                                                                   |
-| `-pipe.accessToken` | [Optional] Pipelines access token.                                                                     |
-| `-pipe.vcsToken`    | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
-| `-pipe.vcsRepo`     | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
-| `-pipe.vcsBranch`   | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
+| Flag                 | Description                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `-rt.url`            | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
+| `-ds.url`            | [Optional] JFrog Distribution URL.                                                                     |
+| `-xr.url`            | [Optional] JFrog Xray URL.                                                                             |
+| `-pipe.url`          | [Optional] JFrog Pipelines URL.                                                                        |
+| `-rt.user`           | [Default: admin] Artifactory username.                                                                 |
+| `-rt.password`       | [Default: password] Artifactory password.                                                              |
+| `-rt.apikey`         | [Optional] Artifactory API key.                                                                        |
+| `-rt.sshKeyPath`     | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
+| `-rt.sshPassphrase`  | [Optional] Ssh key passphrase.                                                                         |
+| `-rt.accessToken`    | [Optional] Artifactory access token.                                                                   |
+| `-pipe.accessToken`  | [Optional] Pipelines access token.                                                                     |
+| `-pipe.vcsToken`     | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
+| `-pipe.vcsRepo`      | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
+| `-pipe.vcsBranch`    | [Optional] Vcs branch for Pipelines tests (ex: "main").
+| `-access.url`        | [Optional] JFrog Access URL.                                                                           |
+| `-access.accessToken`| [Optional] Access access token.                                                                        |
 
 The types are:
 
@@ -168,6 +185,7 @@ The types are:
 | `-test.distribution`| Distribution tests |
 | `-test.xray`        | Xray tests         |
 | `-test.pipelines`   | Pipelines tests    |
+| `-test.access`      | Access tests       |
 
 - The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
   Once the tests are completed, the content of this repository is deleted.
@@ -200,6 +218,25 @@ rtDetails.SetAccessToken("accesstoken")
 // if client certificates are required
 rtDetails.SetClientCertPath("path/to/.cer")
 rtDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Create Artifactory Details with Custom HTTP Client
+```go
+proxyUrl, err := url.Parse("http://proxyIp:proxyPort")
+myCustomClient := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
+
+rtDetails := auth.NewArtifactoryDetails()
+rtDetails.SetUrl("http://localhost:8081/artifactory")
+rtDetails.SetSshKeysPath("path/to/.ssh/")
+rtDetails.SetApiKey("apikey")
+rtDetails.SetUser("user")
+rtDetails.SetPassword("password")
+rtDetails.SetAccessToken("accesstoken")
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(rtDetails).
+    SetDryRun(false).
+    SetHttpClient(myCustomClient).
+    Build()
 ```
 
 #### Creating Artifactory Service Config
@@ -579,10 +616,9 @@ apiKey, err := rtManager.GetAPIKey()
 #### Creating and Updating Local Repository
 You can create and update a local repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
-Vagrant, Gitlfs, Go, Yum, Conan, Chef, Puppet and Generic.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant, and Yum.
 
-Each package type has it's own parameters struct, can be created using the method
+Each package type has its own parameters struct, can be created using the method
 `New<packageType>LocalRepositoryParams()`.
 
 Example for creating local Generic repository:
@@ -618,10 +654,9 @@ err = servicesManager.UpdateLocalRepository().Generic(params)
 #### Creating and Updating Remote Repository
 You can create and update a remote repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
-Gitlfs, Go, Yum, Conan, Chef, Puppet, Conda, P2, Vcs and Generic.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Vcs, and Yum.
 
-Each package type has it's own parameters struct, can be created using the method
+Each package type has its own parameters struct, can be created using the method
 `New<packageType>RemoteRepositoryParams()`.
 
 Example for creating remote Maven repository:
@@ -658,10 +693,9 @@ err := servicesManager.CreateRemoteRepository(params)
 #### Creating and Updating Virtual Repository
 You can create and update a virtual repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Pypi, Docker, Gitlfs, Go, Yum, Conan,
-Chef, Puppet, Conda, P2 and Generic
+Alpine, Bower, Cran, Chef, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, P2, Puppet, Pypi, Rpm, Sbt, and Yum.
 
-Each package type has it's own parameters struct, can be created using the method
+Each package type has its own parameters struct, can be created using the method
 `New<packageType>VirtualRepositoryParams()`.
 
 Example for creating virtual Go repository:
@@ -691,6 +725,49 @@ err := servicesManager.CreateVirtualRepository(params)
 Updating virtual Go repository:
 ```go
 err = servicesManager.UpdateVirtualRepository().Go(params)
+```
+
+#### Creating and Updating Federated Repository
+You can create and update a federated repository for the following package types:
+
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant and Yum
+
+Each package type has its own parameters struct, can be created using the method
+`New<packageType>FederatedRepositoryParams()`.
+
+Example for creating federated Generic repository:
+```go
+params := services.NewGenericFederatedRepositoryParams()
+params.Key = "generic-repo"
+params.Description = "This is a public description for generic-repo"
+params.Notes = "These are internal notes for generic-repo"
+params.RepoLayoutRef = "simple-default"
+params.ArchiveBrowsingEnabled = true
+params.XrayIndex = true
+params.IncludesPattern = "**/*"
+params.ExcludesPattern = "excludedDir/*"
+params.DownloadRedirect = true
+params.Members = []services.FederatedRepositoryMemberParams{
+		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+	}
+err = servicesManager.CreateFederatedRepository().Generic(params)
+```
+
+You can also create a federated repository with basic federated params:
+```go
+params := services.NewFederatedRepositoryBaseParams()
+params.Key = "generic-repo"
+params.PackageType = "generic"
+params.Description = "This is a public description for generic-repo"
+params.Members = []services.FederatedRepositoryMemberParams{
+		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+	}
+err := servicesManager.CreateFederatedRepository(params)
+```
+
+Updating federated Generic repository:
+```go
+err = servicesManager.UpdateFederatedRepository().Generic(params)
 ```
 
 #### Removing a Repository
@@ -781,6 +858,23 @@ replicationConfiguration, err := servicesManager.GetReplication("my-repository")
 You can remove a repository replication configuration from Artifactory using its key:
 ```go
 err := servicesManager.DeleteReplication("my-repository")
+```
+
+#### Converting a Local Repository to a Federated Repository
+You can convert a local repository to a federated repository using its key:
+```go
+err := servicesManager.ConvertLocalToFederatedRepository("my-repository")
+```
+
+#### Triggering a Full Federated Repository Synchronisation
+You can trigger a full federated repository synchronisation for all members using its key:
+```go
+err := servicesManager.TriggerFederatedRepositoryFullSyncAll("my-repository")
+```
+
+You can also trigger a full federated repository synchronisation for a specific member using its key and the members URL
+```go
+err := servicesManager.TriggerFederatedRepositoryFullSyncMirror("my-repository", "http://localhost:8081/artifactory/my-repository")
 ```
 
 #### Creating and Updating Permission Targets
@@ -917,6 +1011,98 @@ err := serviceManager.UpdateGroup(params)
 #### Deleting a Group
 ```go
 err := serviceManager.DeleteGroup("myGroupName")
+```
+
+## Access APIs
+### Creating Access Service Manager
+#### Creating Access Details
+```go
+accessDetails := accessAuth.NewAccessDetails()
+accessDetails.SetUrl("http://localhost:8081/access/")
+accessDetails.SetSshKeyPath("path/to/.ssh/")
+accessDetails.SetApiKey("apikey")
+accessDetails.SetUser("user")
+accessDetails.SetPassword("password")
+accessDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+accessDetails.SetClientCertPath("path/to/.cer")
+accessDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Access Service Config
+
+```go
+serviceConfig, err := clientConfig.NewConfigBuilder().
+SetServiceDetails(accessAuth).
+SetCertificatesPath(certsPath).
+SetInsecureTls(accessDetails.InsecureTls).
+SetDryRun(isDryRun).
+Build()
+```
+
+#### Creating New Access Service Manager
+```go
+accessManager, err := access.New(serviceConfig)
+```
+
+### Using Access Services
+
+#### Creating a new project
+
+```go
+adminPriviligies := accessServices.AdminPrivileges{
+	ManageMembers:   true,
+	ManageResources: true,
+	IndexResources:  true,
+}
+projectDetails := accessServices.Project{
+	DisplayName:       "testProject",
+	Description:       "My Test Project",
+	AdminPrivileges:   &adminPriviligies,
+	SoftLimit:         false,
+	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+	ProjectKey:        "tstprj",
+}
+projectParams = accessServices.NewProjectParams()
+projectParams.ProjectDetails = projectDetails
+err = accessManager.CreateProject(projectParams) 
+```
+
+#### Updating a project
+
+```go
+adminPriviligies := accessServices.AdminPrivileges{
+	ManageMembers:   true,
+	ManageResources: true,
+	IndexResources:  true,
+}
+projectDetails := accessServices.Project{
+	DisplayName:       "testProject",
+	Description:       "My Test Project",
+	AdminPrivileges:   &adminPriviligies,
+	SoftLimit:         false,
+	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+	ProjectKey:        "tstprj",
+}
+projectParams = accessServices.NewProjectParams()
+projectParams.ProjectDetails = projectDetails
+err = accessManager.UpdateProject(projectParams) 
+```
+
+#### Deleting a Project
+```go
+err = accessManager.DeleteProject("tstprj")
+```
+
+#### Assigning repository to project
+```go
+// Params: (repositoryName, projectKey string, isForce bool)
+err = accessManager.AssignRepoToProject("repoName", "tstprj", true)
+```
+
+#### Unassigning repository from project
+```go
+err = accessManager.AssignRepoToProject("repoName")
 ```
 
 ## Distribution APIs

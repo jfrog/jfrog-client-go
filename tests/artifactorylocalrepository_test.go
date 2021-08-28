@@ -9,464 +9,301 @@ import (
 
 func TestArtifactoryLocalRepository(t *testing.T) {
 	initArtifactoryTest(t)
-	t.Run("localMavenTest", localMavenTest)
-	t.Run("localGradleTest", localGradleTest)
-	t.Run("localIvyTest", localIvyTest)
-	t.Run("localSbtTest", localSbtTest)
-	t.Run("localHelmTest", localHelmTest)
-	t.Run("localRpmTest", localRpmTest)
-	t.Run("localNugetTest", localNugetTest)
-	t.Run("localCranTest", localCranTest)
-	t.Run("localGemsTest", localGemsTest)
-	t.Run("localNpmTest", localNpmTest)
+	t.Run("localAlpineTest", localAlpineTest)
 	t.Run("localBowerTest", localBowerTest)
+	t.Run("localCargoTest", localCargoTest)
+	t.Run("localChefTest", localChefTest)
+	t.Run("localCocoapodsTest", localCocoapodsTest)
+	t.Run("localComposerTest", localComposerTest)
+	t.Run("localConanTest", localConanTest)
+	t.Run("localCondaTest", localCondaTest)
+	t.Run("localCranTest", localCranTest)
 	t.Run("localDebianTest", localDebianTest)
-	t.Run("localPypiTest", localPypiTest)
 	t.Run("localDockerTest", localDockerTest)
+	t.Run("localGemsTest", localGemsTest)
+	t.Run("localGenericTest", localGenericTest)
 	t.Run("localGitlfsTest", localGitlfsTest)
 	t.Run("localGoTest", localGoTest)
-	t.Run("localYumTest", localYumTest)
-	t.Run("localConanTest", localConanTest)
-	t.Run("localChefTest", localChefTest)
-	t.Run("localPuppetTest", localPuppetTest)
-	t.Run("localCocoapodsTest", localCocoapodsTest)
+	t.Run("localGradleTest", localGradleTest)
+	t.Run("localHelmTest", localHelmTest)
+	t.Run("localIvyTest", localIvyTest)
+	t.Run("localMavenTest", localMavenTest)
+	t.Run("localNpmTest", localNpmTest)
+	t.Run("localNugetTest", localNugetTest)
 	t.Run("localOkgTest", localOpkgTest)
-	t.Run("localComposerTest", localComposerTest)
-	t.Run("localvagrantTest", localVagrantTest)
-	t.Run("localGenericTest", localGenericTest)
+	t.Run("localPuppetTest", localPuppetTest)
+	t.Run("localPypiTest", localPypiTest)
+	t.Run("localRpmTest", localRpmTest)
+	t.Run("localSbtTest", localSbtTest)
+	t.Run("localVagrantTest", localVagrantTest)
+	t.Run("localYumTest", localYumTest)
+	t.Run("localCreateWithParamTest", localCreateWithParamTest)
 	t.Run("getLocalRepoDetailsTest", getLocalRepoDetailsTest)
 	t.Run("getAllLocalRepoDetailsTest", getAllLocalRepoDetailsTest)
-	t.Run("localCreateWithParamTest", localCreateWithParamTest)
 }
 
-func localMavenTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	mlp := services.NewMavenLocalRepositoryParams()
-	mlp.Key = repoKey
-	mlp.RepoLayoutRef = "maven-2-default"
-	mlp.Description = "Maven Repo for jfrog-client-go local-repository-test"
-	mlp.SuppressPomConsistencyChecks = &trueValue
-	mlp.HandleReleases = &trueValue
-	mlp.HandleSnapshots = &falseValue
-	mlp.XrayIndex = &trueValue
-	mlp.MaxUniqueSnapshots = 18
-	mlp.ChecksumPolicyType = "server-generated-checksums"
-	mlp.DownloadRedirect = &falseValue
-
-	err := testsCreateLocalRepositoryService.Maven(mlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, mlp)
-
-	mlp.Description += " - Updated"
-	mlp.MaxUniqueSnapshots = 36
-	mlp.HandleReleases = nil
-	mlp.HandleSnapshots = &trueValue
-	mlp.ChecksumPolicyType = "client-checksums"
-	mlp.Notes = "Repo been updated"
-	mlp.ArchiveBrowsingEnabled = &trueValue
-
-	err = testsUpdateLocalRepositoryService.Maven(mlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, mlp)
+func setLocalRepositoryBaseParams(params *services.LocalRepositoryBaseParams, isUpdate bool) {
+	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
+	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
+	if !isUpdate {
+		params.ArchiveBrowsingEnabled = &trueValue
+	} else {
+		params.ArchiveBrowsingEnabled = &falseValue
+	}
 }
 
-func localGradleTest(t *testing.T) {
+func localAlpineTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
-	glp := services.NewGradleLocalRepositoryParams()
-	glp.Key = repoKey
-	glp.RepoLayoutRef = "maven-2-default"
-	glp.Description = "Gradle Repo for jfrog-client-go local-repository-test"
-	glp.SuppressPomConsistencyChecks = &trueValue
-	glp.HandleReleases = &trueValue
-	glp.HandleSnapshots = &falseValue
-	glp.XrayIndex = &trueValue
-	glp.MaxUniqueSnapshots = 18
-	glp.ChecksumPolicyType = "server-generated-checksums"
-	glp.DownloadRedirect = &falseValue
+	alp := services.NewAlpineLocalRepositoryParams()
+	alp.Key = repoKey
+	setLocalRepositoryBaseParams(&alp.LocalRepositoryBaseParams, false)
 
-	err := testsCreateLocalRepositoryService.Gradle(glp)
+	err := testsCreateLocalRepositoryService.Alpine(alp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, glp)
+	validateRepoConfig(t, repoKey, alp)
 
-	glp.Description += " - Updated"
-	glp.MaxUniqueSnapshots = 36
-	glp.HandleReleases = nil
-	glp.HandleSnapshots = &trueValue
-	glp.ChecksumPolicyType = "client-checksums"
-	glp.Notes = "Repo been updated"
-	glp.ArchiveBrowsingEnabled = &trueValue
+	setLocalRepositoryBaseParams(&alp.LocalRepositoryBaseParams, true)
 
-	err = testsUpdateLocalRepositoryService.Gradle(glp)
+	err = testsUpdateLocalRepositoryService.Alpine(alp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, glp)
-}
-
-func localIvyTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	ilp := services.NewIvyLocalRepositoryParams()
-	ilp.Key = repoKey
-	ilp.RepoLayoutRef = "ivy-default"
-	ilp.Description = "Ivy Repo for jfrog-client-go local-repository-test"
-	ilp.IncludesPattern = "dir1/*,dir3/*"
-	ilp.ExcludesPattern = "dir3/*"
-	ilp.BlackedOut = &falseValue
-	ilp.XrayIndex = &trueValue
-
-	err := testsCreateLocalRepositoryService.Ivy(ilp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, ilp)
-
-	ilp.Description += " - Updated"
-	ilp.Notes = "Repo been updated"
-	ilp.ArchiveBrowsingEnabled = &falseValue
-	ilp.ExcludesPattern = ""
-	ilp.BlackedOut = &trueValue
-	ilp.XrayIndex = &falseValue
-
-	err = testsUpdateLocalRepositoryService.Ivy(ilp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, ilp)
-}
-
-func localSbtTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	slp := services.NewSbtLocalRepositoryParams()
-	slp.Key = repoKey
-	slp.RepoLayoutRef = "sbt-default"
-	slp.Description = "Sbt Repo for jfrog-client-go local-repository-test"
-	slp.IncludesPattern = "dir1/*,dir2/*"
-	slp.ExcludesPattern = "dir3/*"
-	slp.BlackedOut = &falseValue
-
-	err := testsCreateLocalRepositoryService.Sbt(slp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, slp)
-
-	slp.Description += " - Updated"
-	slp.Notes = "Repo been updated"
-	slp.ArchiveBrowsingEnabled = &trueValue
-	slp.BlackedOut = &trueValue
-	slp.XrayIndex = &trueValue
-
-	err = testsUpdateLocalRepositoryService.Sbt(slp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, slp)
-}
-
-func localHelmTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	hlp := services.NewHelmLocalRepositoryParams()
-	hlp.Key = repoKey
-	hlp.RepoLayoutRef = "simple-default"
-	hlp.Description = "Helm Repo for jfrog-client-go local-repository-test"
-	hlp.IncludesPattern = "*/**"
-	hlp.BlackedOut = &falseValue
-
-	err := testsCreateLocalRepositoryService.Helm(hlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, hlp)
-
-	hlp.Description += " - Updated"
-	hlp.Notes = "Repo been updated"
-	hlp.ArchiveBrowsingEnabled = &trueValue
-	hlp.ArchiveBrowsingEnabled = &trueValue
-	hlp.BlackedOut = &trueValue
-	hlp.XrayIndex = &trueValue
-	hlp.IncludesPattern = "dir1/*,dir3/*"
-	hlp.ExcludesPattern = "dir2/*"
-
-	err = testsUpdateLocalRepositoryService.Helm(hlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, hlp)
-}
-
-func localRpmTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	rlp := services.NewRpmLocalRepositoryParams()
-	rlp.Key = repoKey
-	rlp.RepoLayoutRef = "simple-default"
-	rlp.Description = "Rpm Repo for jfrog-client-go local-repository-test"
-	rlp.XrayIndex = &trueValue
-	rlp.DownloadRedirect = &falseValue
-	rlp.YumRootDepth = 6
-	rlp.CalculateYumMetadata = &falseValue
-
-	err := testsCreateLocalRepositoryService.Rpm(rlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, rlp)
-
-	rlp.Description += " - Updated"
-	rlp.Notes = "Repo been updated"
-	rlp.ArchiveBrowsingEnabled = &trueValue
-	rlp.YumRootDepth = 18
-	rlp.CalculateYumMetadata = &trueValue
-	rlp.EnableFileListsIndexing = &falseValue
-
-	err = testsUpdateLocalRepositoryService.Rpm(rlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, rlp)
-}
-
-func localNugetTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	nlp := services.NewNugetLocalRepositoryParams()
-	nlp.Key = repoKey
-	nlp.RepoLayoutRef = "nuget-default"
-	nlp.Description = "Nuget Repo for jfrog-client-go local-repository-test"
-	nlp.IncludesPattern = "dir1/*"
-	nlp.ExcludesPattern = "dir2/*"
-	nlp.XrayIndex = &trueValue
-	nlp.ForceNugetAuthentication = &falseValue
-	nlp.MaxUniqueSnapshots = 24
-
-	err := testsCreateLocalRepositoryService.Nuget(nlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, nlp)
-
-	nlp.Description += " - Updated"
-	nlp.Notes = "Repo been updated"
-	nlp.ArchiveBrowsingEnabled = &falseValue
-	nlp.IncludesPattern = "dir3/*"
-	nlp.ExcludesPattern = "dir4/*,dir5/*"
-	nlp.BlackedOut = &trueValue
-	nlp.ForceNugetAuthentication = &trueValue
-	nlp.MaxUniqueSnapshots = 18
-
-	err = testsUpdateLocalRepositoryService.Nuget(nlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nlp)
-}
-
-func localCranTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	clp := services.NewCranLocalRepositoryParams()
-	clp.Key = repoKey
-	clp.RepoLayoutRef = "simple-default"
-	clp.Description = "Cran Repo for jfrog-client-go local-repository-test"
-	clp.IncludesPattern = "dir1/*"
-	clp.ExcludesPattern = "dir2/*"
-	clp.BlackedOut = &falseValue
-	clp.XrayIndex = &trueValue
-
-	err := testsCreateLocalRepositoryService.Cran(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, clp)
-
-	clp.Description += " - Updated"
-	clp.Notes = "Repo been updated"
-	clp.ArchiveBrowsingEnabled = &falseValue
-	clp.ExcludesPattern = ""
-	clp.BlackedOut = &trueValue
-	clp.XrayIndex = &falseValue
-
-	err = testsUpdateLocalRepositoryService.Cran(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
-}
-
-func localGemsTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	glp := services.NewGemsLocalRepositoryParams()
-	glp.Key = repoKey
-	glp.RepoLayoutRef = "simple-default"
-	glp.Description = "Gems Repo for jfrog-client-go local-repository-test"
-	glp.IncludesPattern = "*/**"
-	glp.ExcludesPattern = "dirEx/*"
-	glp.BlackedOut = &trueValue
-	glp.ArchiveBrowsingEnabled = &trueValue
-	glp.XrayIndex = &trueValue
-
-	err := testsCreateLocalRepositoryService.Gems(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, glp)
-
-	glp.Description += " - Updated"
-	glp.Notes = "Repo been updated"
-	glp.ArchiveBrowsingEnabled = &falseValue
-	glp.ExcludesPattern = ""
-	glp.BlackedOut = &falseValue
-	glp.XrayIndex = &falseValue
-
-	err = testsUpdateLocalRepositoryService.Gems(glp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, glp)
-}
-
-func localNpmTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	nlp := services.NewNpmLocalRepositoryParams()
-	nlp.Key = repoKey
-	nlp.RepoLayoutRef = "npm-default"
-	nlp.Description = "Npm Repo for jfrog-client-go local-repository-test"
-	nlp.IncludesPattern = "dir1/*"
-	nlp.ExcludesPattern = "dir2/*"
-	nlp.XrayIndex = &trueValue
-
-	err := testsCreateLocalRepositoryService.Npm(nlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, nlp)
-
-	nlp.Description += " - Updated"
-	nlp.Notes = "Repo been updated"
-	nlp.ArchiveBrowsingEnabled = &falseValue
-	nlp.IncludesPattern = "dir3/*"
-	nlp.ExcludesPattern = "dir4/*,dir5/*"
-	nlp.BlackedOut = &trueValue
-
-	err = testsUpdateLocalRepositoryService.Npm(nlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nlp)
+	validateRepoConfig(t, repoKey, alp)
 }
 
 func localBowerTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	blp := services.NewBowerLocalRepositoryParams()
 	blp.Key = repoKey
-	blp.RepoLayoutRef = "bower-default"
-	blp.Description = "Boer Repo for jfrog-client-go local-repository-test"
-	blp.BlackedOut = &trueValue
-	blp.XrayIndex = &falseValue
+	setLocalRepositoryBaseParams(&blp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Bower(blp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, blp)
 
-	blp.Description += " - Updated"
-	blp.Notes = "Repo been updated"
-	blp.ArchiveBrowsingEnabled = &falseValue
-	blp.IncludesPattern = "dir1/*"
-	blp.ExcludesPattern = "dir2/*"
-	blp.BlackedOut = &falseValue
-	blp.XrayIndex = &trueValue
+	setLocalRepositoryBaseParams(&blp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Bower(blp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, blp)
 }
 
+func localCargoTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	clp := services.NewCargoLocalRepositoryParams()
+	clp.Key = repoKey
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
+	setCargoRepositoryParams(&clp.CargoRepositoryParams, false)
+
+	err := testsCreateLocalRepositoryService.Cargo(clp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, clp)
+
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
+	setCargoRepositoryParams(&clp.CargoRepositoryParams, true)
+
+	err = testsUpdateLocalRepositoryService.Cargo(clp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, clp)
+}
+
+func localChefTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	clp := services.NewChefLocalRepositoryParams()
+	clp.Key = repoKey
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Chef(clp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, clp)
+
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Chef(clp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, clp)
+}
+
+func localCocoapodsTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	clp := services.NewCocoapodsLocalRepositoryParams()
+	clp.Key = repoKey
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Cocoapods(clp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, clp)
+
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Cocoapods(clp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, clp)
+}
+
+func localComposerTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	clp := services.NewComposerLocalRepositoryParams()
+	clp.Key = repoKey
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Composer(clp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, clp)
+
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Composer(clp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, clp)
+}
+
+func localConanTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	clp := services.NewConanLocalRepositoryParams()
+	clp.Key = repoKey
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Conan(clp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, clp)
+
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Conan(clp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, clp)
+}
+
+func localCondaTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	clp := services.NewCondaLocalRepositoryParams()
+	clp.Key = repoKey
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Conda(clp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, clp)
+
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Conda(clp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, clp)
+}
+
+func localCranTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	clp := services.NewCranLocalRepositoryParams()
+	clp.Key = repoKey
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Cran(clp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, clp)
+
+	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Cran(clp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, clp)
+}
+
 func localDebianTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	dlp := services.NewDebianLocalRepositoryParams()
 	dlp.Key = repoKey
-	dlp.RepoLayoutRef = "simple-default"
-	dlp.Description = "Debian Repo for jfrog-client-go local-repository-test"
-	dlp.IncludesPattern = "Debian1/*,dir3/*"
-	dlp.ExcludesPattern = "dir3/*"
-	dlp.DebianTrivialLayout = &trueValue
-	dlp.BlackedOut = &falseValue
-	dlp.XrayIndex = &trueValue
+	setLocalRepositoryBaseParams(&dlp.LocalRepositoryBaseParams, false)
+	setDebianRepositoryParams(&dlp.DebianRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Debian(dlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 
-	dlp.Description += " - Updated"
-	dlp.Notes = "Repo been updated"
-	dlp.ArchiveBrowsingEnabled = &falseValue
-	dlp.IncludesPattern = "*/**"
-	dlp.ExcludesPattern = ""
-	dlp.DebianTrivialLayout = &falseValue
-	dlp.BlackedOut = &trueValue
-	dlp.XrayIndex = &falseValue
+	setLocalRepositoryBaseParams(&dlp.LocalRepositoryBaseParams, true)
+	setDebianRepositoryParams(&dlp.DebianRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Debian(dlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 }
 
-func localPypiTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	plp := services.NewPypiLocalRepositoryParams()
-	plp.Key = repoKey
-	plp.RepoLayoutRef = "simple-default"
-	plp.Description = "Pypi Repo for jfrog-client-go local-repository-test"
-
-	plp.BlackedOut = &falseValue
-	plp.XrayIndex = &falseValue
-
-	err := testsCreateLocalRepositoryService.Pypi(plp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, plp)
-	plp.Description += " - Updated"
-	plp.Notes = "Repo been updated"
-	plp.ArchiveBrowsingEnabled = &falseValue
-	plp.IncludesPattern = "dir1/*"
-	plp.ExcludesPattern = "dir2/*"
-	plp.BlackedOut = &trueValue
-	plp.XrayIndex = &trueValue
-
-	err = testsUpdateLocalRepositoryService.Pypi(plp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, plp)
-}
-
 func localDockerTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	dlp := services.NewDockerLocalRepositoryParams()
 	dlp.Key = repoKey
-	dlp.RepoLayoutRef = "simple-default"
-	dlp.Description = "Docker Repo for jfrog-client-go local-repository-test"
-	dlp.IncludesPattern = "*/**"
-	dlp.BlackedOut = &falseValue
-	dlp.DockerApiVersion = "V1"
-	dlp.MaxUniqueTags = 18
+	setLocalRepositoryBaseParams(&dlp.LocalRepositoryBaseParams, false)
+	setDockerRepositoryParams(&dlp.DockerRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Docker(dlp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 
-	dlp.Description += " - Updated"
-	dlp.Notes = "Repo been updated"
-	dlp.ArchiveBrowsingEnabled = &trueValue
-	dlp.ArchiveBrowsingEnabled = &trueValue
-	dlp.BlackedOut = &trueValue
-	dlp.XrayIndex = &trueValue
-	dlp.IncludesPattern = "dir1/*,dir3/*"
-	dlp.ExcludesPattern = "dir2/*"
-	dlp.DockerApiVersion = "V2"
-	dlp.MaxUniqueTags = 36
+	setLocalRepositoryBaseParams(&dlp.LocalRepositoryBaseParams, true)
+	setDockerRepositoryParams(&dlp.DockerRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Docker(dlp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, dlp)
 }
 
+func localGemsTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	glp := services.NewGemsLocalRepositoryParams()
+	glp.Key = repoKey
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Gems(glp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, glp)
+
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Gems(glp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, glp)
+}
+
+func localGenericTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	glp := services.NewGenericLocalRepositoryParams()
+	glp.Key = repoKey
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Generic(glp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, glp)
+
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Generic(glp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, glp)
+}
+
 func localGitlfsTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGitlfsLocalRepositoryParams()
 	glp.Key = repoKey
-	glp.RepoLayoutRef = "simple-default"
-	glp.Description = "Gitlfs Repo for jfrog-client-go local-repository-test"
-	glp.IncludesPattern = "dir1/*,dir3/*"
-	glp.ExcludesPattern = "dir3/*"
-	glp.BlackedOut = &falseValue
-	glp.XrayIndex = &trueValue
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Gitlfs(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	glp.Description += " - Updated"
-	glp.Notes = "Repo been updated"
-	glp.ArchiveBrowsingEnabled = &falseValue
-	glp.ExcludesPattern = ""
-	glp.BlackedOut = &trueValue
-	glp.XrayIndex = &falseValue
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Gitlfs(glp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
@@ -477,38 +314,257 @@ func localGoTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGoLocalRepositoryParams()
 	glp.Key = repoKey
-	glp.RepoLayoutRef = "go-default"
-	glp.Description = "Go Repo for jfrog-client-go local-repository-test"
-	glp.XrayIndex = &trueValue
-	glp.DownloadRedirect = &falseValue
-	glp.PropertySets = []string{"artifactory"}
-	glp.ArchiveBrowsingEnabled = &trueValue
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Go(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, glp)
 
-	glp.Description += " - Updated"
-	glp.Notes = "Repo been updated"
-	glp.ArchiveBrowsingEnabled = &falseValue
-	glp.PropertySets = []string{}
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Go(glp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, glp)
 }
 
+func localGradleTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	glp := services.NewGradleLocalRepositoryParams()
+	glp.Key = repoKey
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
+	setJavaPackageManagersRepositoryParams(&glp.JavaPackageManagersRepositoryParams, false)
+
+	err := testsCreateLocalRepositoryService.Gradle(glp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, glp)
+
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
+	setJavaPackageManagersRepositoryParams(&glp.JavaPackageManagersRepositoryParams, true)
+
+	err = testsUpdateLocalRepositoryService.Gradle(glp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, glp)
+}
+
+func localHelmTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	hlp := services.NewHelmLocalRepositoryParams()
+	hlp.Key = repoKey
+	setLocalRepositoryBaseParams(&hlp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Helm(hlp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, hlp)
+
+	setLocalRepositoryBaseParams(&hlp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Helm(hlp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, hlp)
+}
+
+func localIvyTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	ilp := services.NewIvyLocalRepositoryParams()
+	ilp.Key = repoKey
+	setLocalRepositoryBaseParams(&ilp.LocalRepositoryBaseParams, false)
+	setJavaPackageManagersRepositoryParams(&ilp.JavaPackageManagersRepositoryParams, false)
+
+	err := testsCreateLocalRepositoryService.Ivy(ilp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, ilp)
+
+	setLocalRepositoryBaseParams(&ilp.LocalRepositoryBaseParams, true)
+	setJavaPackageManagersRepositoryParams(&ilp.JavaPackageManagersRepositoryParams, true)
+
+	err = testsUpdateLocalRepositoryService.Ivy(ilp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, ilp)
+}
+
+func localMavenTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	mlp := services.NewMavenLocalRepositoryParams()
+	mlp.Key = repoKey
+	setLocalRepositoryBaseParams(&mlp.LocalRepositoryBaseParams, false)
+	setJavaPackageManagersRepositoryParams(&mlp.JavaPackageManagersRepositoryParams, false)
+
+	err := testsCreateLocalRepositoryService.Maven(mlp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, mlp)
+
+	setLocalRepositoryBaseParams(&mlp.LocalRepositoryBaseParams, true)
+	setJavaPackageManagersRepositoryParams(&mlp.JavaPackageManagersRepositoryParams, true)
+
+	err = testsUpdateLocalRepositoryService.Maven(mlp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, mlp)
+}
+
+func localNpmTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	nlp := services.NewNpmLocalRepositoryParams()
+	nlp.Key = repoKey
+	setLocalRepositoryBaseParams(&nlp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Npm(nlp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, nlp)
+
+	setLocalRepositoryBaseParams(&nlp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Npm(nlp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, nlp)
+}
+
+func localNugetTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	nlp := services.NewNugetLocalRepositoryParams()
+	nlp.Key = repoKey
+	setLocalRepositoryBaseParams(&nlp.LocalRepositoryBaseParams, false)
+	setNugetRepositoryParams(&nlp.NugetRepositoryParams, false)
+
+	err := testsCreateLocalRepositoryService.Nuget(nlp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, nlp)
+
+	setLocalRepositoryBaseParams(&nlp.LocalRepositoryBaseParams, true)
+	setNugetRepositoryParams(&nlp.NugetRepositoryParams, true)
+
+	err = testsUpdateLocalRepositoryService.Nuget(nlp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, nlp)
+}
+
+func localOpkgTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	olp := services.NewOpkgLocalRepositoryParams()
+	olp.Key = repoKey
+	setLocalRepositoryBaseParams(&olp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Opkg(olp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, olp)
+
+	setLocalRepositoryBaseParams(&olp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Opkg(olp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, olp)
+}
+
+func localPuppetTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	plp := services.NewPuppetLocalRepositoryParams()
+	plp.Key = repoKey
+	setLocalRepositoryBaseParams(&plp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Puppet(plp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, plp)
+
+	setLocalRepositoryBaseParams(&plp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Puppet(plp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, plp)
+}
+
+func localPypiTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	plp := services.NewPypiLocalRepositoryParams()
+	plp.Key = repoKey
+	setLocalRepositoryBaseParams(&plp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Pypi(plp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, plp)
+
+	setLocalRepositoryBaseParams(&plp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Pypi(plp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, plp)
+}
+
+func localRpmTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	rlp := services.NewRpmLocalRepositoryParams()
+	rlp.Key = repoKey
+	setLocalRepositoryBaseParams(&rlp.LocalRepositoryBaseParams, false)
+	setRpmRepositoryParams(&rlp.RpmRepositoryParams, false)
+
+	err := testsCreateLocalRepositoryService.Rpm(rlp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, rlp)
+
+	setLocalRepositoryBaseParams(&rlp.LocalRepositoryBaseParams, true)
+	setRpmRepositoryParams(&rlp.RpmRepositoryParams, true)
+
+	err = testsUpdateLocalRepositoryService.Rpm(rlp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, rlp)
+}
+
+func localSbtTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	slp := services.NewSbtLocalRepositoryParams()
+	slp.Key = repoKey
+	setLocalRepositoryBaseParams(&slp.LocalRepositoryBaseParams, false)
+	setJavaPackageManagersRepositoryParams(&slp.JavaPackageManagersRepositoryParams, false)
+
+	err := testsCreateLocalRepositoryService.Sbt(slp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, slp)
+
+	setLocalRepositoryBaseParams(&slp.LocalRepositoryBaseParams, true)
+	setJavaPackageManagersRepositoryParams(&slp.JavaPackageManagersRepositoryParams, true)
+
+	err = testsUpdateLocalRepositoryService.Sbt(slp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, slp)
+}
+
+func localVagrantTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	vlp := services.NewVagrantLocalRepositoryParams()
+	vlp.Key = repoKey
+	setLocalRepositoryBaseParams(&vlp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Vagrant(vlp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, vlp)
+
+	setLocalRepositoryBaseParams(&vlp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Vagrant(vlp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, vlp)
+}
+
 func localYumTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	ylp := services.NewYumLocalRepositoryParams()
 	ylp.Key = repoKey
-	ylp.RepoLayoutRef = "simple-default"
-	ylp.Description = "Yum Repo for jfrog-client-go local-repository-test"
-	ylp.IncludesPattern = "dir1/*"
-	ylp.ExcludesPattern = "dir2/*"
-	ylp.BlackedOut = &falseValue
-	ylp.XrayIndex = &trueValue
+	setLocalRepositoryBaseParams(&ylp.LocalRepositoryBaseParams, false)
+	ylp.YumRootDepth = 6
+	ylp.CalculateYumMetadata = &trueValue
+	ylp.EnableFileListsIndexing = &trueValue
+	ylp.YumGroupFileNames = "filename"
 
 	err := testsCreateLocalRepositoryService.Yum(ylp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -517,240 +573,15 @@ func localYumTest(t *testing.T) {
 	ylp.PackageType = "rpm"
 	validateRepoConfig(t, repoKey, ylp)
 
-	ylp.Description += " - Updated"
-	ylp.Notes = "Repo been updated"
-	ylp.ArchiveBrowsingEnabled = &falseValue
-	ylp.ExcludesPattern = ""
-	ylp.BlackedOut = &trueValue
-	ylp.XrayIndex = &falseValue
+	setLocalRepositoryBaseParams(&ylp.LocalRepositoryBaseParams, true)
+	ylp.YumRootDepth = 18
+	ylp.CalculateYumMetadata = &falseValue
+	ylp.EnableFileListsIndexing = &falseValue
+	ylp.YumGroupFileNames = ""
 
 	err = testsUpdateLocalRepositoryService.Yum(ylp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, ylp)
-}
-
-func localConanTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	clp := services.NewConanLocalRepositoryParams()
-	clp.Key = repoKey
-	clp.RepoLayoutRef = "conan-default"
-	clp.Description = "Conan Repo for jfrog-client-go local-repository-test"
-	clp.IncludesPattern = "*/**"
-	clp.ExcludesPattern = "ConanEx/*"
-	clp.ArchiveBrowsingEnabled = &trueValue
-	clp.XrayIndex = &trueValue
-
-	err := testsCreateLocalRepositoryService.Conan(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, clp)
-
-	clp.Description += " - Updated"
-	clp.Notes = "Repo been updated"
-	clp.ArchiveBrowsingEnabled = &falseValue
-	clp.ExcludesPattern = ""
-	clp.BlackedOut = &trueValue
-	clp.XrayIndex = &falseValue
-
-	err = testsUpdateLocalRepositoryService.Conan(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
-}
-
-func localChefTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	clp := services.NewChefLocalRepositoryParams()
-	clp.Key = repoKey
-	clp.RepoLayoutRef = "simple-default"
-	clp.Description = "Chef Repo for jfrog-client-go local-repository-test"
-	clp.DownloadRedirect = &falseValue
-	clp.BlackedOut = &trueValue
-	clp.XrayIndex = &falseValue
-
-	err := testsCreateLocalRepositoryService.Chef(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, clp)
-
-	clp.Description += " - Updated"
-	clp.Notes = "Repo been updated"
-	clp.ArchiveBrowsingEnabled = &falseValue
-	clp.IncludesPattern = "dir1/*"
-	clp.ExcludesPattern = "dir2/*"
-	clp.BlackedOut = &falseValue
-	clp.XrayIndex = &trueValue
-
-	err = testsUpdateLocalRepositoryService.Chef(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
-}
-
-func localPuppetTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	plp := services.NewPuppetLocalRepositoryParams()
-	plp.Key = repoKey
-	plp.RepoLayoutRef = "puppet-default"
-	plp.Description = "puppet Repo for jfrog-client-go local-repository-test"
-
-	plp.BlackedOut = &falseValue
-	plp.XrayIndex = &falseValue
-
-	err := testsCreateLocalRepositoryService.Puppet(plp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, plp)
-	plp.Description += " - Updated"
-	plp.Notes = "Repo been updated"
-	plp.ArchiveBrowsingEnabled = &falseValue
-	plp.IncludesPattern = "dir1/*"
-	plp.ExcludesPattern = "dir2/*"
-	plp.BlackedOut = &trueValue
-	plp.XrayIndex = &trueValue
-
-	err = testsUpdateLocalRepositoryService.Puppet(plp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, plp)
-}
-
-func localCocoapodsTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	clp := services.NewCocoapodsLocalRepositoryParams()
-	clp.Key = repoKey
-	clp.RepoLayoutRef = "simple-default"
-	clp.Description = "Cocoapods Repo for jfrog-client-go local-repository-test"
-	clp.IncludesPattern = "*/**"
-	clp.ExcludesPattern = "dir1/*"
-	clp.BlackedOut = &falseValue
-
-	err := testsCreateLocalRepositoryService.Cocoapods(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, clp)
-
-	clp.Description += " - Updated"
-	clp.Notes = "Repo been updated"
-	clp.ArchiveBrowsingEnabled = &trueValue
-	clp.ArchiveBrowsingEnabled = &trueValue
-	clp.BlackedOut = &trueValue
-	clp.XrayIndex = &trueValue
-	clp.DownloadRedirect = &falseValue
-	clp.ExcludesPattern = "dir1/*,dir2/dir4/*,"
-
-	err = testsUpdateLocalRepositoryService.Cocoapods(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
-}
-
-func localOpkgTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	olp := services.NewOpkgLocalRepositoryParams()
-	olp.Key = repoKey
-	olp.RepoLayoutRef = "simple-default"
-	olp.Description = "Opkg Repo for jfrog-client-go local-repository-test"
-	olp.DownloadRedirect = &falseValue
-	olp.BlackedOut = &trueValue
-	olp.XrayIndex = &trueValue
-
-	err := testsCreateLocalRepositoryService.Opkg(olp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, olp)
-
-	olp.Description += " - Updated"
-	olp.Notes = "Repo been updated"
-	olp.ArchiveBrowsingEnabled = &trueValue
-	olp.ArchiveBrowsingEnabled = &trueValue
-	olp.BlackedOut = &falseValue
-	olp.XrayIndex = &falseValue
-	olp.IncludesPattern = "dir1/*,"
-	olp.ExcludesPattern = "dir3/*"
-
-	err = testsUpdateLocalRepositoryService.Opkg(olp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, olp)
-}
-
-func localComposerTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	clp := services.NewComposerLocalRepositoryParams()
-	clp.Key = repoKey
-	clp.RepoLayoutRef = "composer-default"
-	clp.Description = "Composer Repo for jfrog-client-go local-repository-test"
-	clp.DownloadRedirect = &falseValue
-	clp.BlackedOut = &trueValue
-	clp.XrayIndex = &trueValue
-	clp.IncludesPattern = "dir1/*,"
-
-	err := testsCreateLocalRepositoryService.Composer(clp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, clp)
-
-	clp.Description += " - Updated"
-	clp.Notes = "Repo been updated"
-	clp.ArchiveBrowsingEnabled = &trueValue
-	clp.ArchiveBrowsingEnabled = &trueValue
-	clp.BlackedOut = &falseValue
-	clp.XrayIndex = &falseValue
-	clp.IncludesPattern = "*/**,"
-
-	err = testsUpdateLocalRepositoryService.Composer(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
-}
-
-func localVagrantTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	vlp := services.NewVagrantLocalRepositoryParams()
-	vlp.Key = repoKey
-	vlp.RepoLayoutRef = "simple-default"
-	vlp.Description = "Vagrant Repo for jfrog-client-go local-repository-test"
-	vlp.DownloadRedirect = &falseValue
-	vlp.BlackedOut = &trueValue
-
-	err := testsCreateLocalRepositoryService.Vagrant(vlp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, vlp)
-
-	vlp.Description += " - Updated"
-	vlp.Notes = "Repo been updated"
-	vlp.ArchiveBrowsingEnabled = &trueValue
-	vlp.ArchiveBrowsingEnabled = &trueValue
-	vlp.BlackedOut = &falseValue
-	vlp.XrayIndex = &trueValue
-	vlp.IncludesPattern = "dir3/*,"
-	vlp.ExcludesPattern = "dir1/*,dir2/*"
-
-	err = testsUpdateLocalRepositoryService.Vagrant(vlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, vlp)
-}
-
-func localGenericTest(t *testing.T) {
-	repoKey := GenerateRepoKeyForRepoServiceTest()
-	glp := services.NewGenericLocalRepositoryParams()
-	glp.Key = repoKey
-	glp.RepoLayoutRef = "simple-default"
-	glp.Description = "Generic Repo for jfrog-client-go local-repository-test"
-	glp.XrayIndex = &trueValue
-	glp.DownloadRedirect = &falseValue
-	glp.ArchiveBrowsingEnabled = &falseValue
-
-	err := testsCreateLocalRepositoryService.Generic(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
-	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, glp)
-
-	glp.Description += " - Updated"
-	glp.Notes = "Repo been updated"
-	glp.ArchiveBrowsingEnabled = &trueValue
-	glp.ArchiveBrowsingEnabled = &falseValue
-	glp.BlockPushingSchema1 = nil
-
-	err = testsUpdateLocalRepositoryService.Generic(glp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, glp)
 }
 
 func localCreateWithParamTest(t *testing.T) {
@@ -768,11 +599,7 @@ func getLocalRepoDetailsTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
-	glp.RepoLayoutRef = "simple-default"
-	glp.Description = "Generic Repo for jfrog-client-go local-repository-test"
-	glp.XrayIndex = &trueValue
-	glp.DownloadRedirect = &falseValue
-	glp.ArchiveBrowsingEnabled = &falseValue
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -792,11 +619,7 @@ func getAllLocalRepoDetailsTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	glp := services.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
-	glp.RepoLayoutRef = "simple-default"
-	glp.Description = "Generic Repo for jfrog-client-go local-repository-test"
-	glp.XrayIndex = &trueValue
-	glp.DownloadRedirect = &falseValue
-	glp.ArchiveBrowsingEnabled = &falseValue
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)

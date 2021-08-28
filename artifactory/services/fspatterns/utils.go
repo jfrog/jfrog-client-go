@@ -96,7 +96,7 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifa
 		}
 	}
 
-	return utils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, Symlink: symlinkPath}, nil
+	return utils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, SymlinkTargetPath: symlinkPath}, nil
 }
 
 func IsPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {

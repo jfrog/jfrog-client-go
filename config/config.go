@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type Config interface {
 	GetContext() context.Context
 	GetHttpTimeout() time.Duration
 	GetHttpRetries() int
+	GetHttpClient() *http.Client
 }
 
 type servicesConfig struct {
@@ -29,6 +31,7 @@ type servicesConfig struct {
 	ctx              context.Context
 	httpTimeout      time.Duration
 	httpRetries      int
+	httpClient       *http.Client
 }
 
 func (config *servicesConfig) IsDryRun() bool {
@@ -65,4 +68,8 @@ func (config *servicesConfig) GetHttpTimeout() time.Duration {
 
 func (config *servicesConfig) GetHttpRetries() int {
 	return config.httpRetries
+}
+
+func (config *servicesConfig) GetHttpClient() *http.Client {
+	return config.httpClient
 }

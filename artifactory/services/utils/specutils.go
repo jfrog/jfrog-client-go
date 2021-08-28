@@ -31,6 +31,7 @@ type CommonParams struct {
 	Offset           int
 	Limit            int
 	Build            string
+	Project          string
 	ExcludeArtifacts bool
 	IncludeDeps      bool
 	Bundle           string
@@ -56,6 +57,7 @@ type FileGetter interface {
 	GetOffset() int
 	GetLimit() int
 	GetBuild() string
+	GetProject() string
 	GetBundle() string
 	GetSpecType() (specType SpecType)
 	IsRecursive() bool
@@ -119,6 +121,10 @@ func (params *CommonParams) GetAql() Aql {
 
 func (params *CommonParams) GetBuild() string {
 	return params.Build
+}
+
+func (params *CommonParams) GetProject() string {
+	return params.Project
 }
 
 func (params *CommonParams) GetBundle() string {
