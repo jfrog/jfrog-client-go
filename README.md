@@ -154,10 +154,24 @@ We welcome pull requests from the community.
 To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
 Use the following command with the below options to run the tests.
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests [test-types] [flags]
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 [test-types] [flags]
 ```
-Optional flags:
+If you'd like to run a specific test, add the test function name using the ```-run``` flag. For example:
+```sh
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifactoryVersionWithCustomHttpClient [test-types] [flags]
+```
+**Note:** The tests create an Artifactory repository named _jfrog-client-tests-repo1_. Once the tests are completed, the content of this repository is deleted.
 
+### Test Types
+| Type                | Description        |
+| ---                 | ---                |
+| `-test.artifactory` | Artifactory tests  |
+| `-test.distribution`| Distribution tests |
+| `-test.xray`        | Xray tests         |
+| `-test.pipelines`   | Pipelines tests    |
+| `-test.access`      | Access tests       |
+
+### Flags
 | Flag                 | Description                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`            | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
@@ -176,19 +190,6 @@ Optional flags:
 | `-pipe.vcsBranch`    | [Optional] Vcs branch for Pipelines tests (ex: "main").
 | `-access.url`        | [Optional] JFrog Access URL.                                                                           |
 | `-access.accessToken`| [Optional] Access access token.                                                                        |
-
-The types are:
-
-| Type                | Description        |
-| ---                 | ---                |
-| `-test.artifactory` | Artifactory tests  |
-| `-test.distribution`| Distribution tests |
-| `-test.xray`        | Xray tests         |
-| `-test.pipelines`   | Pipelines tests    |
-| `-test.access`      | Access tests       |
-
-- The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
-  Once the tests are completed, the content of this repository is deleted.
 
 ## General APIs
 ### Setting the Logger
