@@ -23,9 +23,9 @@ func NewSourcesService(client *jfroghttpclient.JfrogHttpClient) *SourcesService 
 }
 
 const (
-	DefaultPipelinesFileFilter = "pipelines.yml"
-	SourcesRestApi             = "api/v1/pipelinesources/"
-	checkIfSourceExistsMethod  = "source already exists"
+	DefaultPipelinesFileFilter         = "pipelines.yml"
+	SourcesRestApi                     = "api/v1/pipelinesources/"
+	sourceAlreadyExistsResponseString  = "source already exists"
 )
 
 func (ss *SourcesService) AddSource(projectIntegrationId int, repositoryFullName, branch, fileFilter string) (id int, err error) {
@@ -59,7 +59,7 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		err := errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body))
-		if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), checkIfSourceExistsMethod) {
+		if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), sourceAlreadyExistsResponseString) {
 			return -1, errorutils.CheckError(&SourceAlreadyExistsError{InnerError: err})
 		}
 		return -1, errorutils.CheckError(err)
