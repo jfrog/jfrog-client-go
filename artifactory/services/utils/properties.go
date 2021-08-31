@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	propsSeparator  = ";"
-	valuesSeparator = ","
+	propsSeparator     = ";"
+	keyValuesSeparator = "="
+	valuesSeparator    = ","
 )
 
 type Properties struct {
@@ -35,31 +36,42 @@ func ParseProperties(propStr string) (*Properties, error) {
 }
 
 func (props *Properties) ParseAndAddProperties(propStr string) error {
-	propList := strings.Split(propStr, propsSeparator)
+	propList := splitAndConsiderBackslashes(propStr, propsSeparator)
 	for _, prop := range propList {
 		if prop == "" {
 			continue
 		}
 
-		parts := strings.Split(prop, "=")
+		parts := splitAndConsiderBackslashes(prop, keyValuesSeparator)
 		if len(parts) != 2 {
 			return errorutils.CheckError(errors.New(fmt.Sprintf("Invalid property format: %s - format should be key=val1,val2,...", prop)))
 		}
 
 		key := parts[0]
-		values := strings.Split(parts[1], valuesSeparator)
-		for i, val := range values {
-			// If "\" is found, then it means that the original string contains the "\," which indicates this "," is part of the value
-			// and not a separator
-			if strings.HasSuffix(val, "\\") && i+1 < len(values) {
-				values[i+1] = val[:len(val)-1] + valuesSeparator + values[i+1]
-			} else {
-				props.properties[key] = append(props.properties[key], val)
-			}
+		values := splitAndConsiderBackslashes(parts[1], valuesSeparator)
+		for _, val := range values {
+			props.properties[key] = append(props.properties[key], val)
 		}
 	}
 	props.removeDuplicateValues()
 	return nil
+}
+
+// Split slices s into all substrings separated by sep and returns a slice of the substrings between those separators,
+// ignoring separators with a '\' prefix, which indicates that the separator is a part of the value.
+func splitAndConsiderBackslashes(str, separator string) (splitArray []string) {
+	values := strings.Split(str, separator)
+	for i, val := range values {
+		// Let's use separator=',' for example:
+		// If "\" is found, then it means that the original string contains the "\," which indicates this "," is part
+		// of the value and not a separator.
+		if strings.HasSuffix(val, "\\") && i+1 < len(values) {
+			values[i+1] = val[:len(val)-1] + separator + values[i+1]
+		} else {
+			splitArray = append(splitArray, val)
+		}
+	}
+	return
 }
 
 func (props *Properties) AddProperty(key, value string) {
