@@ -36,19 +36,19 @@ func ParseProperties(propStr string) (*Properties, error) {
 }
 
 func (props *Properties) ParseAndAddProperties(propStr string) error {
-	propList := splitAndConsiderBackslashes(propStr, propsSeparator)
+	propList := splitWhileIgnoringBackslashPrefixSeparators(propStr, propsSeparator)
 	for _, prop := range propList {
 		if prop == "" {
 			continue
 		}
 
-		parts := splitAndConsiderBackslashes(prop, keyValuesSeparator)
+		parts := splitWhileIgnoringBackslashPrefixSeparators(prop, keyValuesSeparator)
 		if len(parts) != 2 {
 			return errorutils.CheckError(errors.New(fmt.Sprintf("Invalid property format: %s - format should be key=val1,val2,...", prop)))
 		}
 
 		key := parts[0]
-		values := splitAndConsiderBackslashes(parts[1], valuesSeparator)
+		values := splitWhileIgnoringBackslashPrefixSeparators(parts[1], valuesSeparator)
 		for _, val := range values {
 			props.properties[key] = append(props.properties[key], val)
 		}
@@ -59,7 +59,7 @@ func (props *Properties) ParseAndAddProperties(propStr string) error {
 
 // Split slices s into all substrings separated by sep and returns a slice of the substrings between those separators,
 // ignoring separators with a '\' prefix, which indicates that the separator is a part of the value.
-func splitAndConsiderBackslashes(str, separator string) (splitArray []string) {
+func splitWhileIgnoringBackslashPrefixSeparators(str, separator string) (splitArray []string) {
 	values := strings.Split(str, separator)
 	for i, val := range values {
 		// Let's use separator=',' for example:
