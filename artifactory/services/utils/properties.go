@@ -42,19 +42,31 @@ func (props *Properties) ParseAndAddProperties(propStr string) error {
 			continue
 		}
 
-		parts := splitWhileIgnoringBackslashPrefixSeparators(prop, keyValuesSeparator)
-		if len(parts) != 2 {
-			return errorutils.CheckError(errors.New(fmt.Sprintf("Invalid property format: %s - format should be key=val1,val2,...", prop)))
+		key, value, err := splitPropToKeyAndValue(prop)
+		if err != nil {
+			return err
 		}
 
-		key := parts[0]
-		values := splitWhileIgnoringBackslashPrefixSeparators(parts[1], valuesSeparator)
-		for _, val := range values {
+		splitValues := splitWhileIgnoringBackslashPrefixSeparators(value, valuesSeparator)
+		for _, val := range splitValues {
 			props.properties[key] = append(props.properties[key], val)
 		}
 	}
 	props.removeDuplicateValues()
 	return nil
+}
+
+// Searches for the first "=" instance, and split str into 2 substrings.
+// Returns error for invalid property format.
+func splitPropToKeyAndValue(str string) (key, value string, err error) {
+	index := strings.Index(str, keyValuesSeparator)
+	if index == -1 || index-1 < 0 || index+1 >= len(str) {
+		return "", "", errorutils.CheckError(errors.New(fmt.Sprintf("Invalid property format: %s - format should be key=val1,val2,...", str)))
+	}
+	key = str[0:index]
+	value = str[index+1:]
+	err = nil
+	return
 }
 
 // Split slices s into all substrings separated by sep and returns a slice of the substrings between those separators,
