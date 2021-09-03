@@ -20,9 +20,12 @@ type ArtifactoryServicesManager interface {
 	CreateRemoteRepositoryWithParams(params services.RemoteRepositoryBaseParams) error
 	CreateVirtualRepository() *services.VirtualRepositoryService
 	CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error
+	CreateFederatedRepository() *services.FederatedRepositoryService
+	CreateFederatedRepositoryWithParams(params services.FederatedRepositoryBaseParams) error
 	UpdateLocalRepository() *services.LocalRepositoryService
 	UpdateRemoteRepository() *services.RemoteRepositoryService
 	UpdateVirtualRepository() *services.VirtualRepositoryService
+	UpdateFederatedRepository() *services.FederatedRepositoryService
 	DeleteRepository(repoKey string) error
 	GetRepository(repoKey string, repoDetails interface{}) error
 	GetAllRepositories() (*[]services.RepositoryDetails, error)
@@ -50,7 +53,7 @@ type ArtifactoryServicesManager interface {
 	UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
 	Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
-	PublishGoProject(params _go.GoParams) error
+	PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error)
 	Ping() ([]byte, error)
 	GetConfig() config.Config
 	GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error)
@@ -79,6 +82,9 @@ type ArtifactoryServicesManager interface {
 	CreateUser(params services.UserParams) error
 	UpdateUser(params services.UserParams) error
 	DeleteUser(name string) error
+	ConvertLocalToFederatedRepository(repoKey string) error
+	TriggerFederatedRepositoryFullSyncAll(repoKey string) error
+	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -111,6 +117,14 @@ func (esm *EmptyArtifactoryServicesManager) CreateVirtualRepositoryWithParams(pa
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) CreateFederatedRepository() *services.FederatedRepositoryService {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateFederatedRepositoryWithParams(params services.FederatedRepositoryBaseParams) error {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) UpdateLocalRepository() *services.LocalRepositoryService {
 	panic("Failed: Method is not implemented")
 }
@@ -120,6 +134,10 @@ func (esm *EmptyArtifactoryServicesManager) UpdateRemoteRepository() *services.R
 }
 
 func (esm *EmptyArtifactoryServicesManager) UpdateVirtualRepository() *services.VirtualRepositoryService {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) UpdateFederatedRepository() *services.FederatedRepositoryService {
 	panic("Failed: Method is not implemented")
 }
 
@@ -227,7 +245,7 @@ func (esm *EmptyArtifactoryServicesManager) Move(params ...services.MoveCopyPara
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) PublishGoProject(params _go.GoParams) error {
+func (esm *EmptyArtifactoryServicesManager) PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -348,6 +366,18 @@ func (esm *EmptyArtifactoryServicesManager) UpdateGroup(params services.GroupPar
 }
 
 func (esm *EmptyArtifactoryServicesManager) DeleteGroup(name string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) ConvertLocalToFederatedRepository(repoKey string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncAll(repoKey string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error {
 	panic("Failed: Method is not implemented")
 }
 

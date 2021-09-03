@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -108,12 +107,11 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 				log.Error(err)
 				return err
 			}
-			if resp.StatusCode != http.StatusNoContent {
-				err = errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
+			if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
+				err = errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body))
 				log.Error(errorutils.CheckError(err))
 				return err
 			}
-
 			result.SuccessCount[threadId]++
 			return nil
 		}
@@ -165,11 +163,11 @@ func (conf *DeleteConfiguration) IsDryRun() bool {
 }
 
 type DeleteParams struct {
-	*utils.ArtifactoryCommonParams
+	*utils.CommonParams
 }
 
-func (ds *DeleteParams) GetFile() *utils.ArtifactoryCommonParams {
-	return ds.ArtifactoryCommonParams
+func (ds *DeleteParams) GetFile() *utils.CommonParams {
+	return ds.CommonParams
 }
 
 func (ds *DeleteParams) SetIncludeDirs(includeDirs bool) {
@@ -177,7 +175,7 @@ func (ds *DeleteParams) SetIncludeDirs(includeDirs bool) {
 }
 
 func NewDeleteParams() DeleteParams {
-	return DeleteParams{ArtifactoryCommonParams: &utils.ArtifactoryCommonParams{}}
+	return DeleteParams{CommonParams: &utils.CommonParams{}}
 }
 
 // This function receives as an argument a reader within the list of files and dirs to be deleted from Artifactory.
@@ -185,7 +183,7 @@ func NewDeleteParams() DeleteParams {
 // These directories must be removed, because they include files, which should not be deleted, because of the excludeProps params.
 // These directories must not be deleted from Artifactory.
 // In case of no excludeProps filed in the file spec, nil will be return so all deleteCandidates will get deleted.
-func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (*content.ContentReader, error) {
+func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (*content.ContentReader, error) {
 	length, err := deleteCandidates.Length()
 	if err != nil || specFile.ExcludeProps == "" || length == 0 {
 		return nil, err
@@ -223,7 +221,7 @@ func removeNotToBeDeletedDirs(specFile *utils.ArtifactoryCommonParams, ds *Delet
 	return content.NewContentReader(resultWriter.GetFilePath(), content.DefaultKey), err
 }
 
-func getSortedArtifactsToNotDelete(specFile *utils.ArtifactoryCommonParams, ds *DeleteService) (*content.ContentReader, error) {
+func getSortedArtifactsToNotDelete(specFile *utils.CommonParams, ds *DeleteService) (*content.ContentReader, error) {
 	specFile.Props = specFile.ExcludeProps
 	specFile.ExcludeProps = ""
 	tempResults, err := utils.SearchBySpecWithPattern(specFile, ds, utils.NONE)

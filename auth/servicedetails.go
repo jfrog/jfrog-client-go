@@ -44,6 +44,7 @@ type ServiceDetails interface {
 	SetSshPassphrase(sshPassphrase string)
 	SetSshAuthHeaders(sshAuthHeaders map[string]string)
 	SetClient(client *jfroghttpclient.JfrogHttpClient)
+	SetHttpTimeout(httpTimeout time.Duration)
 
 	IsSshAuthHeaderSet() bool
 	IsSshAuthentication() bool
@@ -70,6 +71,7 @@ type CommonConfigFields struct {
 	SshAuthHeaders         map[string]string              `json:"-"`
 	TokenMutex             sync.Mutex
 	client                 *jfroghttpclient.JfrogHttpClient
+	httpTimeout            time.Duration
 }
 
 func (ccf *CommonConfigFields) GetUrl() string {
@@ -174,6 +176,10 @@ func (ccf *CommonConfigFields) SetSshAuthHeaders(sshAuthHeaders map[string]strin
 
 func (ccf *CommonConfigFields) SetClient(client *jfroghttpclient.JfrogHttpClient) {
 	ccf.client = client
+}
+
+func (ccf *CommonConfigFields) SetHttpTimeout(httpTimeout time.Duration) {
+	ccf.httpTimeout = httpTimeout
 }
 
 func (ccf *CommonConfigFields) IsSshAuthHeaderSet() bool {

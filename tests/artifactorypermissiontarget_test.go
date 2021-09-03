@@ -2,9 +2,10 @@ package tests
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"testing"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -47,6 +48,9 @@ func TestPermissionTarget(t *testing.T) {
 	assert.NoError(t, err)
 	err = testsPermissionTargetService.Delete(params.Name)
 	assert.NoError(t, err)
+	targetParams, err := getPermissionTarget(params.Name)
+	assert.NoError(t, err)
+	assert.Nil(t, targetParams)
 }
 
 func validatePermissionTarget(t *testing.T, params services.PermissionTargetParams) {

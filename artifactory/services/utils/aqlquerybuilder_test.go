@@ -35,7 +35,7 @@ var buildAqlSearchQueryDataProvider = []struct {
 func TestBuildAqlSearchQuery(t *testing.T) {
 	for _, sample := range buildAqlSearchQueryDataProvider {
 		t.Run(sample.pattern+"_recursive_"+strconv.FormatBool(sample.recursive), func(t *testing.T) {
-			params := ArtifactoryCommonParams{Pattern: sample.pattern, Recursive: sample.recursive, Regexp: false, IncludeDirs: false}
+			params := CommonParams{Pattern: sample.pattern, Recursive: sample.recursive, Regexp: false, IncludeDirs: false}
 			aqlResult, err := CreateAqlBodyForSpecWithPattern(&params)
 			assert.NoError(t, err)
 			if aqlResult != sample.expectedAql {
@@ -45,8 +45,8 @@ func TestBuildAqlSearchQuery(t *testing.T) {
 	}
 }
 
-func TestArtifactoryCommonParams(t *testing.T) {
-	artifactoryParams := ArtifactoryCommonParams{}
+func TestCommonParams(t *testing.T) {
+	artifactoryParams := CommonParams{}
 	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), false, t)
 
 	artifactoryParams.SortBy = []string{"Vava", "Bubu"}
@@ -73,7 +73,7 @@ func assertIsSortLimitSpecBool(actual, expected bool, t *testing.T) {
 }
 
 func TestGetQueryReturnFields(t *testing.T) {
-	artifactoryParams := ArtifactoryCommonParams{}
+	artifactoryParams := CommonParams{}
 	minimalFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "size", "type", "created", "modified"}
 
 	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "property"), t)
@@ -116,6 +116,19 @@ func TestBuildSortBody(t *testing.T) {
 func assertSortBody(actual, expected string, t *testing.T) {
 	if actual != expected {
 		t.Error("The function buildSortQueryPart expected to return the string:\n'" + expected + "'.\nbut returned:\n'" + actual + "'.")
+	}
+}
+
+func TestCreateAqlQueryForLatestCreated(t *testing.T) {
+	actual := CreateAqlQueryForLatestCreated("repo", "name")
+	expected := `items.find({` +
+		`"repo": "repo",` +
+		`"path": {"$match": "name"}` +
+		`})` +
+		`.sort({"$desc":["created"]})` +
+		`.limit(1)`
+	if actual != expected {
+		t.Error("The function CreateAqlQueryForLatestCreated expected to return the string:\n'" + expected + "'.\nbut returned:\n'" + actual + "'.")
 	}
 }
 

@@ -45,7 +45,7 @@ func TestBuildTargetPath(t *testing.T) {
 }
 
 func assertBuildTargetPath(regexp, source, dest, expected string, ignoreRepo bool, t *testing.T) {
-	result, err := BuildTargetPath(regexp, source, dest, ignoreRepo)
+	result, _, err := BuildTargetPath(regexp, source, dest, ignoreRepo)
 	if err != nil {
 		t.Error(err.Error())
 	}

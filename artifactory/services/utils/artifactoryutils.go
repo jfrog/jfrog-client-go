@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -24,28 +24,30 @@ import (
 )
 
 const (
-	ARTIFACTORY_SYMLINK = "symlink.dest"
-	SYMLINK_SHA1        = "symlink.destsha1"
-	Latest              = "LATEST"
-	LastRelease         = "LAST_RELEASE"
+	ArtifactorySymlink           = "symlink.dest"
+	SymlinkSha1                  = "symlink.destsha1"
+	latest                       = "LATEST"
+	lastRelease                  = "LAST_RELEASE"
+	buildRepositoriesSuffix      = "-build-info"
+	defaultBuildRepositoriesName = "artifactory"
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
-	httpClientsDetails httputils.HttpClientDetails, client *jfroghttpclient.JfrogHttpClient, retries int,
+	httpClientsDetails httputils.HttpClientDetails, client *jfroghttpclient.JfrogHttpClient, includeChecksums bool,
 	progress clientio.ProgressMgr) (*http.Response, []byte, error) {
 	var err error
-	if details == nil {
-		details, err = fileutils.GetFileDetails(localPath)
-	}
-	if err != nil {
-		return nil, nil, err
-	}
-
 	requestClientDetails := httpClientsDetails.Clone()
-	AddChecksumHeaders(requestClientDetails.Headers, details)
+	if includeChecksums {
+		if details == nil {
+			details, err = fileutils.GetFileDetails(localPath, includeChecksums)
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		AddChecksumHeaders(requestClientDetails.Headers, details)
+	}
 	AddAuthHeaders(requestClientDetails.Headers, *artifactoryDetails)
-
-	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, retries, progress)
+	return client.UploadFile(localPath, url, logMsgPrefix, requestClientDetails, progress)
 }
 
 func UploadFileFromReader(reader io.Reader, url string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -141,17 +143,17 @@ func IsSubPath(paths []string, index int, separator string) bool {
 // If no buildNumber provided LATEST will be downloaded.
 // If buildName or buildNumber contains "/" (slash) it should be escaped by "\" (backslash).
 // Result examples of parsing: "aaa/123" > "aaa"-"123", "aaa" > "aaa"-"LATEST", "aaa\\/aaa" > "aaa/aaa"-"LATEST",  "aaa/12\\/3" > "aaa"-"12/3".
-func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier string, flags CommonConf) (string, string, error) {
+func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier, projectKey string, flags CommonConf) (string, string, error) {
 	buildName, buildNumber, err := parseNameAndVersion(buildIdentifier, true)
 	if err != nil {
 		return "", "", err
 	}
-	return GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, flags)
+	return GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 }
 
-func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
-	if buildNumber == Latest || buildNumber == LastRelease {
-		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, flags)
+func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
+	if buildNumber == latest || buildNumber == lastRelease {
+		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 	}
 	return buildName, buildNumber, nil
 }
@@ -182,8 +184,8 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 	}
 	if !strings.Contains(identifier, Delimiter) {
 		if useLatestPolicy {
-			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + Latest)
-			return identifier, Latest, nil
+			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + latest)
+			return identifier, latest, nil
 		} else {
 			return "", "", errorutils.CheckError(errors.New("No '" + Delimiter + "' is found in '" + identifier + "'"))
 		}
@@ -206,9 +208,9 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 	}
 	if name == "" {
 		if useLatestPolicy {
-			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + Latest)
+			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + latest)
 			name = identifier
-			version = Latest
+			version = latest
 		} else {
 			return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'"))
 		}
@@ -224,40 +226,27 @@ type Build struct {
 	BuildNumber string `json:"buildNumber"`
 }
 
-func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
-	restUrl := flags.GetArtifactoryDetails().GetUrl() + "api/build/patternArtifacts"
-	body, err := createBodyForLatestBuildRequest(buildName, buildNumber)
+func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
+	buildRepo := defaultBuildRepositoriesName
+	if projectKey != "" {
+		buildRepo = projectKey
+	}
+	buildRepo += buildRepositoriesSuffix
+	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, buildName)
+	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
 		return "", "", err
 	}
-	log.Debug("Getting build name and number from Artifactory: " + buildName + ", " + buildNumber)
-	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
-	SetContentType("application/json", &httpClientsDetails.Headers)
-	log.Debug("Sending post request to: " + restUrl + ", with the following body: " + string(body))
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return "", "", err
+	defer reader.Close()
+	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+		if i := strings.LastIndex(resultItem.Name, "-"); i != -1 {
+			// Remove the timestamp and .json to get the build number
+			buildNumber = resultItem.Name[:i]
+			return buildName, buildNumber, nil
+		}
 	}
-	resp, body, err := client.SendPost(restUrl, body, httpClientsDetails)
-	if err != nil {
-		return "", "", err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return "", "", errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
-	}
-	log.Debug("Artifactory response: ", resp.Status)
-	var responseBuild []Build
-	err = json.Unmarshal(body, &responseBuild)
-	if errorutils.CheckError(err) != nil {
-		return "", "", err
-	}
-	if responseBuild[0].BuildNumber != "" {
-		log.Debug("Found build number: " + responseBuild[0].BuildNumber)
-	} else {
-		log.Debug("The build could not be found in Artifactory")
-	}
-
-	return buildName, responseBuild[0].BuildNumber, nil
+	log.Debug(fmt.Sprintf("The %s/%s build run could not be found in Artifactory.", buildName, buildNumber))
+	return "", "", err
 }
 
 func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte, err error) {
@@ -267,7 +256,7 @@ func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte
 	return
 }
 
-func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
+func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
 	var artifactsAqlSearchErr, dependenciesAqlSearchErr error
 	var readerWithProps *content.ContentReader
 	buildArtifactsSha1 := make(map[string]int)
@@ -275,12 +264,12 @@ func filterAqlSearchResultsByBuild(specFile *ArtifactoryCommonParams, reader *co
 	var wg sync.WaitGroup
 	wg.Add(2)
 	// If 'build-number' is missing in spec file, we fetch the latest from artifactory.
-	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
+	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err
 	}
 
-	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, "", flags)
+	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -555,7 +544,7 @@ func createPrioritiesFiles() ([]*content.ContentWriter, error) {
 
 func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (pbi *buildinfo.PublishedBuildInfo, found bool, err error) {
 	// Resolve LATEST build number from Artifactory if required.
-	name, number, err := GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, flags)
+	name, number, err := GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 	if err != nil {
 		return nil, false, err
 	}
@@ -581,9 +570,8 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 		log.Debug("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body))
 		return nil, false, nil
 	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, false, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, false, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 
 	// Build BuildInfo struct from json.

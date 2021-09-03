@@ -2,8 +2,8 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -71,13 +71,13 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	if err != nil {
 		return summary, err
 	}
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
-		return summary, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated, http.StatusNoContent); err != nil {
+		return summary, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	summary.SetSucceeded(true)
 	summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
 
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Build info successfully deployed. Browse it in Artifactory under " + bis.GetArtifactoryDetails().GetUrl() + "webapp/builds/" + build.Name + "/" + build.Number)
+	log.Info("Build info successfully deployed. Browse it in Artifactory under " + bis.GetArtifactoryDetails().GetUrl() + "webapp/builds/" + url.QueryEscape(build.Name) + "/" + url.QueryEscape(build.Number))
 	return summary, nil
 }

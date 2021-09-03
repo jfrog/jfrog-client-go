@@ -128,10 +128,12 @@ func GetFileAndDirFromPath(path string) (fileName, dir string) {
 }
 
 // Get the local path and filename from original file name and path according to targetPath
-func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool) (localTargetPath, fileName string) {
+func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool, placeholdersUsed bool) (localTargetPath, fileName string) {
 	targetFileName, targetDirPath := GetFileAndDirFromPath(targetPath)
-	localTargetPath = FixPathForWindows(targetDirPath)
-	if !flat {
+	// Remove double slashes and double backslashes that may appear in the path
+	localTargetPath = filepath.Join(targetDirPath)
+	// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
+	if !flat && !placeholdersUsed {
 		localTargetPath = filepath.Join(targetDirPath, relativePath)
 	}
 
@@ -141,10 +143,6 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 		fileName = targetFileName
 	}
 	return
-}
-
-func FixPathForWindows(path string) string {
-	return strings.Replace(path, "\\\\", "\\", -1)
 }
 
 // Return the recursive list of files and directories in the specified path
@@ -341,10 +339,17 @@ func ReadFile(filePath string) ([]byte, error) {
 	return content, err
 }
 
-func GetFileDetails(filePath string) (*FileDetails, error) {
+func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error) {
 	var err error
 	details := new(FileDetails)
-	details.Checksum, err = calcChecksumDetails(filePath)
+	if includeChecksums {
+		details.Checksum, err = calcChecksumDetails(filePath)
+		if err != nil {
+			return details, err
+		}
+	} else {
+		details.Checksum = ChecksumDetails{}
+	}
 
 	file, err := os.Open(filePath)
 	defer file.Close()
@@ -368,7 +373,7 @@ func calcChecksumDetails(filePath string) (ChecksumDetails, error) {
 	return calcChecksumDetailsFromReader(file)
 }
 
-func GetFileDetailsFromReader(reader io.Reader) (*FileDetails, error) {
+func GetFileDetailsFromReader(reader io.Reader, includeChecksusms bool) (*FileDetails, error) {
 	var err error
 	details := new(FileDetails)
 
@@ -380,7 +385,9 @@ func GetFileDetailsFromReader(reader io.Reader) (*FileDetails, error) {
 		details.Size, err = io.Copy(pw, reader)
 	}()
 
-	details.Checksum, err = calcChecksumDetailsFromReader(pr)
+	if includeChecksusms {
+		details.Checksum, err = calcChecksumDetailsFromReader(pr)
+	}
 	return details, err
 }
 
@@ -559,11 +566,11 @@ type ItemType string
 
 // Returns true if the two files have the same MD5 checksum.
 func FilesIdentical(file1 string, file2 string) (bool, error) {
-	srcDetails, err := GetFileDetails(file1)
+	srcDetails, err := GetFileDetails(file1, true)
 	if err != nil {
 		return false, err
 	}
-	toCompareDetails, err := GetFileDetails(file2)
+	toCompareDetails, err := GetFileDetails(file2, true)
 	if err != nil {
 		return false, err
 	}
@@ -579,7 +586,7 @@ func IsEqualToLocalFile(localFilePath, md5, sha1 string) (bool, error) {
 	if !exists {
 		return false, nil
 	}
-	localFileDetails, err := GetFileDetails(localFilePath)
+	localFileDetails, err := GetFileDetails(localFilePath, true)
 	if err != nil {
 		return false, err
 	}
@@ -639,6 +646,10 @@ func MoveFile(sourcePath, destPath string) (err error) {
 			}
 		}
 	}()
+	inputFileInfo, err := inputFile.Stat()
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
 
 	var outputFile *os.File
 	outputFile, err = os.Create(destPath)
@@ -654,6 +665,10 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	}()
 
 	_, err = io.Copy(outputFile, inputFile)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	err = os.Chmod(destPath, inputFileInfo.Mode())
 	if err != nil {
 		return errorutils.CheckError(err)
 	}

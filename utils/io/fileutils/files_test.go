@@ -173,7 +173,7 @@ func TestIsEqualToLocalFile(t *testing.T) {
 	localFilePath := filepath.Join("testdata", "files", "comparisonFile")
 
 	// Get file actual details.
-	localFileDetails, err := GetFileDetails(localFilePath)
+	localFileDetails, err := GetFileDetails(localFilePath, true)
 	if err != nil {
 		assert.NoError(t, err)
 		return

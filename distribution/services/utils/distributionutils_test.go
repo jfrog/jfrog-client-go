@@ -33,7 +33,7 @@ func TestCreateBundleBodyQuery(t *testing.T) {
 	assert.NoError(t, err)
 
 	releaseBundleParam := ReleaseBundleParams{
-		SpecFiles: []*utils.ArtifactoryCommonParams{{Pattern: "dist-repo/*", TargetProps: targetProps}},
+		SpecFiles: []*utils.CommonParams{{Pattern: "dist-repo/*", TargetProps: targetProps}},
 	}
 
 	releaseBundleBody, err := CreateBundleBody(releaseBundleParam, true)
@@ -76,7 +76,7 @@ func TestCreatePathMappings(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.specPattern, func(t *testing.T) {
-			specFile := &utils.ArtifactoryCommonParams{Pattern: test.specPattern, Target: test.specTarget}
+			specFile := &utils.CommonParams{Pattern: test.specPattern, Target: test.specTarget}
 			pathMappings := createPathMappings(specFile)
 			if test.expectedMappingInput == "" {
 				assert.Empty(t, pathMappings)

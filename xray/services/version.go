@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-// VersionService returns the https client and xray details
+// VersionService returns the https client and Xray details
 type VersionService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
@@ -23,21 +22,20 @@ func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService 
 	return &VersionService{client: client}
 }
 
-// GetXrayDetails returns the xray details
+// GetXrayDetails returns the Xray details
 func (vs *VersionService) GetXrayDetails() auth.ServiceDetails {
 	return vs.XrayDetails
 }
 
-// GetVersion returns the version of xray
+// GetVersion returns the version of Xray
 func (vs *VersionService) GetVersion() (string, error) {
 	httpDetails := vs.XrayDetails.CreateHttpClientDetails()
 	resp, body, _, err := vs.client.SendGet(vs.XrayDetails.GetUrl()+"api/v1/system/version", true, &httpDetails)
 	if err != nil {
 		return "", err
 	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", errorutils.CheckError(errors.New("Xray response: " + resp.Status + "\n" + utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	var version xrayVersion
 	err = json.Unmarshal(body, &version)
