@@ -107,6 +107,11 @@ type JavaPackageManagersRepositoryParams struct {
 	ChecksumPolicyType           string `json:"checksumPolicyType,omitempty"`
 }
 
+type KeyPairRefsRepositoryParams struct {
+	PrimaryKeyPairRef   string `json:"primaryKeyPairRef,omitempty"`
+	SecondaryKeyPairRef string `json:"secondaryKeyPairRef,omitempty"`
+}
+
 type NugetRepositoryParams struct {
 	MaxUniqueSnapshots       int   `json:"maxUniqueSnapshots,omitempty"`
 	ForceNugetAuthentication *bool `json:"forceNugetAuthentication,omitempty"`
