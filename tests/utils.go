@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
+	accessServices "github.com/jfrog/jfrog-client-go/access/services"
 	pipelinesAuth "github.com/jfrog/jfrog-client-go/pipelines/auth"
 	pipelinesServices "github.com/jfrog/jfrog-client-go/pipelines/services"
 
@@ -40,6 +42,7 @@ var TestArtifactory *bool
 var TestDistribution *bool
 var TestXray *bool
 var TestPipelines *bool
+var TestAccess *bool
 var RtUrl *string
 var DistUrl *string
 var XrayUrl *string
@@ -54,6 +57,8 @@ var PipelinesAccessToken *string
 var PipelinesVcsToken *string
 var PipelinesVcsRepoFullPath *string
 var PipelinesVcsBranch *string
+var AccessUrl *string
+var AccessToken *string
 
 // Artifactory services
 var testsUploadService *services.UploadService
@@ -64,9 +69,11 @@ var testsSecurityService *services.SecurityService
 var testsCreateLocalRepositoryService *services.LocalRepositoryService
 var testsCreateRemoteRepositoryService *services.RemoteRepositoryService
 var testsCreateVirtualRepositoryService *services.VirtualRepositoryService
+var testsCreateFederatedRepositoryService *services.FederatedRepositoryService
 var testsUpdateLocalRepositoryService *services.LocalRepositoryService
 var testsUpdateRemoteRepositoryService *services.RemoteRepositoryService
 var testsUpdateVirtualRepositoryService *services.VirtualRepositoryService
+var testsUpdateFederatedRepositoryService *services.FederatedRepositoryService
 var testsDeleteRepositoryService *services.DeleteRepositoryService
 var testsRepositoriesService *services.RepositoriesService
 var testsCreateReplicationService *services.CreateReplicationService
@@ -77,6 +84,7 @@ var testsPermissionTargetService *services.PermissionTargetService
 var testUserService *services.UserService
 var testGroupService *services.GroupService
 var testBuildInfoService *services.BuildInfoService
+var testsFederationService *services.FederationService
 
 // Distribution services
 var testsBundleSetSigningKeyService *distributionServices.SetSigningKeyService
@@ -97,6 +105,9 @@ var testXrayBinMgrService *xrayServices.BinMgrService
 var testsPipelinesIntegrationsService *pipelinesServices.IntegrationsService
 var testsPipelinesSourcesService *pipelinesServices.SourcesService
 
+// Access Services
+var testsAccessProjectService *accessServices.ProjectService
+
 var timestamp = time.Now().Unix()
 var trueValue = true
 var falseValue = false
@@ -114,6 +125,7 @@ func init() {
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
+	TestAccess = flag.Bool("test.access", false, "Test access")
 	RtUrl = flag.String("rt.url", "", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
@@ -128,6 +140,8 @@ func init() {
 	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
 	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
+	AccessUrl = flag.String("access.url", "", "Access url")
+	AccessToken = flag.String("access.token", "", "Access token")
 }
 
 func createArtifactorySecurityManager() {
@@ -267,6 +281,22 @@ func createArtifactoryUpdateVirtualRepositoryManager() {
 	testsUpdateVirtualRepositoryService.ArtDetails = artDetails
 }
 
+func createArtifactoryCreateFederatedRepositoryManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsCreateFederatedRepositoryService = services.NewFederatedRepositoryService(client, false)
+	testsCreateFederatedRepositoryService.ArtDetails = artDetails
+}
+
+func createArtifactoryUpdateFederatedRepositoryManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsUpdateFederatedRepositoryService = services.NewFederatedRepositoryService(client, true)
+	testsUpdateFederatedRepositoryService.ArtDetails = artDetails
+}
+
 func createArtifactoryDeleteRepositoryManager() {
 	artDetails := GetRtDetails()
 	client, err := createJfrogHttpClient(&artDetails)
@@ -321,6 +351,14 @@ func createArtifactoryPermissionTargetManager() {
 	failOnHttpClientCreation(err)
 	testsPermissionTargetService = services.NewPermissionTargetService(client)
 	testsPermissionTargetService.ArtDetails = artDetails
+}
+
+func createArtifactoryFederationManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsFederationService = services.NewFederationService(client)
+	testsFederationService.ArtDetails = artDetails
 }
 
 func createJfrogHttpClient(artDetails *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
@@ -594,6 +632,116 @@ func FixWinPath(filePath string) string {
 	return fixedPath
 }
 
+func setRepositoryBaseParams(params *services.RepositoryBaseParams, isUpdate bool) {
+	if !isUpdate {
+		params.ProjectKey = ""
+		params.Environments = nil
+		params.Description = strings.ToTitle(params.PackageType) + " Repo for jfrog-client-go local-repository-test"
+		params.Notes = "Repo has been created"
+		params.IncludesPattern = "dir1/*"
+		params.ExcludesPattern = "dir2/*"
+		params.RepoLayoutRef = "simple-default"
+	} else {
+		params.ProjectKey = ""
+		params.Environments = nil
+		params.Description += " - Updated"
+		params.Notes = "Repo has been updated"
+		params.IncludesPattern = ""
+		params.ExcludesPattern = ""
+		params.RepoLayoutRef = "build-default"
+	}
+}
+
+func setAdditionalRepositoryBaseParams(params *services.AdditionalRepositoryBaseParams, isUpdate bool) {
+	if !isUpdate {
+		params.BlackedOut = &trueValue
+		params.XrayIndex = &trueValue
+		params.PropertySets = []string{"artifactory"}
+		params.DownloadRedirect = &trueValue
+		params.PriorityResolution = &trueValue
+	} else {
+		params.BlackedOut = &falseValue
+		params.XrayIndex = &falseValue
+		params.PropertySets = nil
+		params.DownloadRedirect = &falseValue
+		params.PriorityResolution = &falseValue
+	}
+}
+
+func setCargoRepositoryParams(params *services.CargoRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.CargoAnonymousAccess = &trueValue
+	} else {
+		params.CargoAnonymousAccess = &falseValue
+	}
+}
+
+func setDebianRepositoryParams(params *services.DebianRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.DebianTrivialLayout = &trueValue
+		params.OptionalIndexCompressionFormats = []string{"bz2", "lzma"}
+	} else {
+		params.DebianTrivialLayout = &falseValue
+		params.OptionalIndexCompressionFormats = nil
+	}
+}
+
+func setDockerRepositoryParams(params *services.DockerRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.DockerApiVersion = "V1"
+		params.MaxUniqueTags = 18
+		params.BlockPushingSchema1 = &falseValue
+		params.DockerTagRetention = 10
+	} else {
+		params.DockerApiVersion = "V2"
+		params.MaxUniqueTags = 36
+		params.BlockPushingSchema1 = &trueValue
+		params.DockerTagRetention = 0
+	}
+}
+
+func setJavaPackageManagersRepositoryParams(params *services.JavaPackageManagersRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.MaxUniqueSnapshots = 18
+		params.HandleReleases = &trueValue
+		params.HandleSnapshots = &trueValue
+		params.SuppressPomConsistencyChecks = &trueValue
+		params.SnapshotVersionBehavior = "non-unique"
+		params.ChecksumPolicyType = "server-generated-checksums"
+	} else {
+		params.MaxUniqueSnapshots = 36
+		params.HandleReleases = &falseValue
+		params.HandleSnapshots = &falseValue
+		params.SuppressPomConsistencyChecks = &falseValue
+		params.SnapshotVersionBehavior = "unique"
+		params.ChecksumPolicyType = "client-checksums"
+	}
+}
+
+func setNugetRepositoryParams(params *services.NugetRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.ForceNugetAuthentication = &trueValue
+		params.MaxUniqueSnapshots = 24
+	} else {
+		params.ForceNugetAuthentication = &falseValue
+		params.MaxUniqueSnapshots = 18
+	}
+}
+
+func setRpmRepositoryParams(params *services.RpmRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.YumRootDepth = 6
+		params.CalculateYumMetadata = &trueValue
+		params.EnableFileListsIndexing = &trueValue
+		params.YumGroupFileNames = "filename"
+	} else {
+		params.YumRootDepth = 18
+		params.CalculateYumMetadata = &falseValue
+		params.EnableFileListsIndexing = &falseValue
+		params.YumGroupFileNames = ""
+	}
+}
+
 func getRepoConfig(repoKey string) (body []byte, err error) {
 	artDetails := GetRtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
@@ -626,10 +774,13 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 			return false, errors.New("failed unmarshalling expected config for " + repoKey)
 		}
 		for key, expectedValue := range expectedConfigMap {
+			// The password field may be encrypted and won't match the value set, need to handle this during validation
+			if key == "password" {
+				continue
+			}
 			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
 				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual: %s", repoKey, key, expectedValue, confMap[key])
 				return true, errors.New(errMsg)
-
 			}
 		}
 		return false, nil
@@ -801,4 +952,19 @@ type indexedBuildsPayload struct {
 // Verify sha256 is valid (a string size 256 characters) and not an empty string.
 func verifyValidSha256(t *testing.T, sha256 string) {
 	assert.Equal(t, 64, len(sha256), "Invalid sha256 : \""+sha256+"\"\nexpected length is 64 digit.")
+}
+
+func GetAccessDetails() auth.ServiceDetails {
+	accessDetails := accessAuth.NewAccessDetails()
+	accessDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*AccessUrl))
+	accessDetails.SetAccessToken(*AccessToken)
+	return accessDetails
+}
+
+func createAccessProjectManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessProjectService = accessServices.NewProjectService(client)
+	testsAccessProjectService.ServiceDetails = accessDetails
 }

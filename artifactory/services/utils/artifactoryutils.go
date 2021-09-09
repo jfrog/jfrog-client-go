@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -23,11 +24,12 @@ import (
 )
 
 const (
-	ARTIFACTORY_SYMLINK           = "symlink.dest"
-	SYMLINK_SHA1                  = "symlink.destsha1"
-	Latest                        = "LATEST"
-	LastRelease                   = "LAST_RELEASE"
-	DefaultBuildRepositoriesValue = "artifactory-build-info"
+	ArtifactorySymlink           = "symlink.dest"
+	SymlinkSha1                  = "symlink.destsha1"
+	latest                       = "LATEST"
+	lastRelease                  = "LAST_RELEASE"
+	buildRepositoriesSuffix      = "-build-info"
+	defaultBuildRepositoriesName = "artifactory"
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -141,17 +143,17 @@ func IsSubPath(paths []string, index int, separator string) bool {
 // If no buildNumber provided LATEST will be downloaded.
 // If buildName or buildNumber contains "/" (slash) it should be escaped by "\" (backslash).
 // Result examples of parsing: "aaa/123" > "aaa"-"123", "aaa" > "aaa"-"LATEST", "aaa\\/aaa" > "aaa/aaa"-"LATEST",  "aaa/12\\/3" > "aaa"-"12/3".
-func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier string, flags CommonConf) (string, string, error) {
+func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier, projectKey string, flags CommonConf) (string, string, error) {
 	buildName, buildNumber, err := parseNameAndVersion(buildIdentifier, true)
 	if err != nil {
 		return "", "", err
 	}
-	return GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, flags)
+	return GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 }
 
-func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
-	if buildNumber == Latest || buildNumber == LastRelease {
-		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, flags)
+func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
+	if buildNumber == latest || buildNumber == lastRelease {
+		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 	}
 	return buildName, buildNumber, nil
 }
@@ -182,8 +184,8 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 	}
 	if !strings.Contains(identifier, Delimiter) {
 		if useLatestPolicy {
-			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + Latest)
-			return identifier, Latest, nil
+			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + latest)
+			return identifier, latest, nil
 		} else {
 			return "", "", errorutils.CheckError(errors.New("No '" + Delimiter + "' is found in '" + identifier + "'"))
 		}
@@ -206,9 +208,9 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 	}
 	if name == "" {
 		if useLatestPolicy {
-			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + Latest)
+			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + latest)
 			name = identifier
-			version = Latest
+			version = latest
 		} else {
 			return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'"))
 		}
@@ -224,9 +226,13 @@ type Build struct {
 	BuildNumber string `json:"buildNumber"`
 }
 
-func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags CommonConf) (string, string, error) {
-
-	aqlBody := CreateAqlQueryForLatestCreated(DefaultBuildRepositoriesValue, buildName)
+func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
+	buildRepo := defaultBuildRepositoriesName
+	if projectKey != "" {
+		buildRepo = projectKey
+	}
+	buildRepo += buildRepositoriesSuffix
+	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, buildName)
 	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
 		return "", "", err
@@ -234,12 +240,12 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber string, flags Co
 	defer reader.Close()
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if i := strings.LastIndex(resultItem.Name, "-"); i != -1 {
-			//remove timestamp and .json to get build number
+			// Remove the timestamp and .json to get the build number
 			buildNumber = resultItem.Name[:i]
 			return buildName, buildNumber, nil
 		}
 	}
-	log.Debug(buildName, ": Could not be found in Artifactory.")
+	log.Debug(fmt.Sprintf("The %s/%s build run could not be found in Artifactory.", buildName, buildNumber))
 	return "", "", err
 }
 
@@ -258,12 +264,12 @@ func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.Conte
 	var wg sync.WaitGroup
 	wg.Add(2)
 	// If 'build-number' is missing in spec file, we fetch the latest from artifactory.
-	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
+	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err
 	}
 
-	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, "", flags)
+	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -538,7 +544,7 @@ func createPrioritiesFiles() ([]*content.ContentWriter, error) {
 
 func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (pbi *buildinfo.PublishedBuildInfo, found bool, err error) {
 	// Resolve LATEST build number from Artifactory if required.
-	name, number, err := GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, flags)
+	name, number, err := GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 	if err != nil {
 		return nil, false, err
 	}

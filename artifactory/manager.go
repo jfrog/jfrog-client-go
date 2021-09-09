@@ -40,6 +40,7 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		SetRetries(config.GetHttpRetries()).
+		SetHttpClient(config.GetHttpClient()).
 		Build()
 	if err != nil {
 		return nil, err
@@ -79,6 +80,12 @@ func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepository() *services.Vir
 	return repositoryService
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateFederatedRepository() *services.FederatedRepositoryService {
+	repositoryService := services.NewFederatedRepositoryService(sm.client, false)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
@@ -97,6 +104,12 @@ func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepositoryWithParams(param
 	return repositoryService.CreateVirtual(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateFederatedRepositoryWithParams(params services.FederatedRepositoryBaseParams) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.CreateFederated(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) UpdateLocalRepository() *services.LocalRepositoryService {
 	repositoryService := services.NewLocalRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
@@ -111,6 +124,12 @@ func (sm *ArtifactoryServicesManagerImp) UpdateRemoteRepository() *services.Remo
 
 func (sm *ArtifactoryServicesManagerImp) UpdateVirtualRepository() *services.VirtualRepositoryService {
 	repositoryService := services.NewVirtualRepositoryService(sm.client, true)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdateFederatedRepository() *services.FederatedRepositoryService {
+	repositoryService := services.NewFederatedRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService
 }
@@ -394,6 +413,24 @@ func (sm *ArtifactoryServicesManagerImp) GetReplication(repoKey string) ([]utils
 	getPushReplicationService := services.NewGetReplicationService(sm.client)
 	getPushReplicationService.ArtDetails = sm.config.GetServiceDetails()
 	return getPushReplicationService.GetReplication(repoKey)
+}
+
+func (sm *ArtifactoryServicesManagerImp) ConvertLocalToFederatedRepository(repoKey string) error {
+	getFederationService := services.NewFederationService(sm.client)
+	getFederationService.ArtDetails = sm.config.GetServiceDetails()
+	return getFederationService.ConvertLocalToFederated(repoKey)
+}
+
+func (sm *ArtifactoryServicesManagerImp) TriggerFederatedRepositoryFullSyncAll(repoKey string) error {
+	getFederationService := services.NewFederationService(sm.client)
+	getFederationService.ArtDetails = sm.config.GetServiceDetails()
+	return getFederationService.TriggerFederatedFullSyncAll(repoKey)
+}
+
+func (sm *ArtifactoryServicesManagerImp) TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error {
+	getFederationService := services.NewFederationService(sm.client)
+	getFederationService.ArtDetails = sm.config.GetServiceDetails()
+	return getFederationService.TriggerFederatedFullSyncMirror(repoKey, mirrorUrl)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetVersion() (string, error) {

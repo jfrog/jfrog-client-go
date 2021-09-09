@@ -130,7 +130,8 @@ func GetFileAndDirFromPath(path string) (fileName, dir string) {
 // Get the local path and filename from original file name and path according to targetPath
 func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool, placeholdersUsed bool) (localTargetPath, fileName string) {
 	targetFileName, targetDirPath := GetFileAndDirFromPath(targetPath)
-	localTargetPath = FixPathForWindows(targetDirPath)
+	// Remove double slashes and double backslashes that may appear in the path
+	localTargetPath = filepath.Join(targetDirPath)
 	// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
 	if !flat && !placeholdersUsed {
 		localTargetPath = filepath.Join(targetDirPath, relativePath)
@@ -142,10 +143,6 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 		fileName = targetFileName
 	}
 	return
-}
-
-func FixPathForWindows(path string) string {
-	return strings.Replace(path, "\\\\", "\\", -1)
 }
 
 // Return the recursive list of files and directories in the specified path
@@ -649,6 +646,10 @@ func MoveFile(sourcePath, destPath string) (err error) {
 			}
 		}
 	}()
+	inputFileInfo, err := inputFile.Stat()
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
 
 	var outputFile *os.File
 	outputFile, err = os.Create(destPath)
@@ -664,6 +665,10 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	}()
 
 	_, err = io.Copy(outputFile, inputFile)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	err = os.Chmod(destPath, inputFileInfo.Mode())
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
