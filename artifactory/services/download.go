@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -36,6 +37,7 @@ type DownloadService struct {
 	filesTransfersWriter *content.ContentWriter
 	// A ContentWriter of ArtifactDetails structs. Used only if saveSummary is set to true.
 	artifactsDetailsWriter *content.ContentWriter
+	rbGPGValidation *utils.RbGPGValidation
 }
 
 func NewDownloadService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *DownloadService {
@@ -110,6 +112,17 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*uti
 	return ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess), e
 }
 
+func (ds *DownloadService) rbGPGValidate(bundleParam, publicKeyFilePath string) error {
+	// GPG validation
+	gpgValidation, err := utils.NewRbGPGValidation()
+	bundleName, bundleVersion, err := utils.ParseNameAndVersion(bundleParam, false)
+	if bundleName == "" || err != nil {
+		return err
+	}
+	ds.rbGPGValidation = gpgValidation.SetRbName(bundleName).SetRbVersion(bundleVersion).SetClient(ds.client).SetAtrifactoryDetails(ds.artDetails).SetPublicKey(publicKeyFilePath)
+	return ds.rbGPGValidation.Validate()
+}
+
 func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan chan int, successCounters []int, errorsQueue *clientutils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
 	go func() {
 		defer producer.Done()
@@ -129,6 +142,8 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
 			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.CommonParams, artifactoryVersion)
+			// TODO: remove path
+			err = ds.rbGPGValidate(downloadParams.GetBundle(),"/Users/gail/dev/v2/jfrog-cli/testdata/distribution/private.key")
 			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
@@ -210,6 +225,13 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 			Flat:         flat,
 		}
 		if resultItem.Type != "folder" {
+			if ds.rbGPGValidation != nil {
+				artifactPath := resultItem.Repo+"/"+resultItem.Path+"/"+resultItem.Name
+				if !ds.rbGPGValidation.VerifySpecificArtifact(artifactPath, resultItem.Sha256) {
+					errorsQueue.AddError(errorutils.CheckError(errors.New(fmt.Sprintf("GPG validation failed: artifact in not signed with the provided key - %s ", artifactPath))))
+					return tasksCount
+				}
+			}
 			// Add a task. A task is a function of type TaskFunc which later on will be executed by other go routine, the communication is done using channels.
 			// The second argument is an error handling func in case the taskFunc return an error.
 			tasksCount++
