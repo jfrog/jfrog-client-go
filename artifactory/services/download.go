@@ -143,7 +143,11 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		for _, downloadParams := range downloadParamsSlice {
 			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.CommonParams, artifactoryVersion)
 			// TODO: remove path
-			err = ds.rbGPGValidate(downloadParams.GetBundle(),"/Users/gail/dev/v2/jfrog-cli/testdata/distribution/private.key")
+			err = ds.rbGPGValidate(downloadParams.GetBundle(), downloadParams.GetGpgKey())
+			if err != nil {
+				errorsQueue.AddError(err)
+				return
+			}
 			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
@@ -552,6 +556,7 @@ type DownloadParams struct {
 	Explode         bool
 	MinSplitSize    int64
 	SplitCount      int
+	GpgKey 			string
 }
 
 func (ds *DownloadParams) IsFlat() bool {
@@ -572,6 +577,10 @@ func (ds *DownloadParams) IsSymlink() bool {
 
 func (ds *DownloadParams) ValidateSymlinks() bool {
 	return ds.ValidateSymlink
+}
+
+func (ds *DownloadParams) GetGpgKey() string {
+	return ds.GpgKey
 }
 
 func NewDownloadParams() DownloadParams {
