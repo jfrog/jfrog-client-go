@@ -61,9 +61,10 @@ func GetTestResourcesPath() string {
 	return filepath.ToSlash(dir + "/testdata/")
 }
 
-// Validate gets a signed release bundle from artifactory, validate the signuture wuth the public gpg key and save the release bundle's artifacts in a map
+// Validate gets a signed release bundle from artifactory, validate the signature with the public gpg key and save the release bundle's artifacts in a map
 func (r *RbGPGValidation) Validate() error {
 	httpClientsDetails := (*r.artDetails).CreateHttpClientDetails()
+	// Release bundle's details return in a JWS format, so we can validate the signature of the signed release bundle with the provided public key.
 	request := (*r.artDetails).GetUrl() + "api/release/bundles/" + r.rbName + "/" + r.rbVersion + "?format=jws"
 	_, body, _, err := r.client.SendGet(request, true, &httpClientsDetails)
 	if err != nil {
@@ -73,6 +74,7 @@ func (r *RbGPGValidation) Validate() error {
 	if err != nil {
 		return err
 	}
+	// Save all release bundle's artifacts in a map.
 	elementMap := make(map[string]string)
 	for _, artifact := range verifiedRB.Artifacts {
 		elementMap[artifact.RepoPath] = artifact.Checksum
@@ -91,7 +93,6 @@ func (r *RbGPGValidation) VerifySpecificArtifact(artifactPath, sha256 string) bo
 func VerifyJwtToken(bundleTokenStr, publicKeyPath string) (*ReleaseBundleModel, error) {
 	model := &ReleaseBundleModel{}
 	token, err := jwt.ParseWithClaims(bundleTokenStr, model, func(token *jwt.Token) (interface{}, error) {
-		//key, err := ioutil.ReadFile(filepath.Join("/Users/gail/dev/v2/jfrog-cli/testdata/distribution/private.key"))
 		key, err := ioutil.ReadFile(filepath.Join(publicKeyPath))
 		if err != nil {
 			return nil, errorutils.CheckError(err)
