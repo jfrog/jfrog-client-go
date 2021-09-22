@@ -142,11 +142,12 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
 			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.CommonParams, artifactoryVersion)
-			// TODO: remove path
-			err = ds.rbGPGValidate(downloadParams.GetBundle(), downloadParams.GetGpgKey())
-			if err != nil {
-				errorsQueue.AddError(err)
-				return
+			if downloadParams.IsGPGValidation() {
+				err = ds.rbGPGValidate(downloadParams.GetBundle(), downloadParams.GetGpgKey())
+				if err != nil {
+					errorsQueue.AddError(err)
+					return
+				}
 			}
 			var reader *content.ContentReader
 			// Create handler function for the current group.
@@ -581,6 +582,10 @@ func (ds *DownloadParams) ValidateSymlinks() bool {
 
 func (ds *DownloadParams) GetGpgKey() string {
 	return ds.GpgKey
+}
+
+func (ds *DownloadParams) IsGPGValidation() bool {
+	return ds.GpgKey != ""
 }
 
 func NewDownloadParams() DownloadParams {
