@@ -166,7 +166,8 @@ type GraphNode struct {
 	// List of license names
 	Licenses []string `json:"licenses,omitempty"`
 	// List of sub components.
-	Nodes []*GraphNode `json:"nodes,omitempty"`
+	Nodes  []*GraphNode `json:"nodes,omitempty"`
+	Parent *GraphNode   `json:"-"`
 }
 
 type RequestScanResponse struct {
@@ -239,4 +240,15 @@ func (gp *XrayGraphScanParams) GetProjectKey() string {
 
 func NewXrayGraphScanParams() XrayGraphScanParams {
 	return XrayGraphScanParams{}
+}
+
+func (currNode *GraphNode) NodeHasLoop() bool {
+	parent := currNode.Parent
+	for parent != nil {
+		if currNode.Id == parent.Id {
+			return true
+		}
+		parent = parent.Parent
+	}
+	return false
 }
