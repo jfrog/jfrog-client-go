@@ -18,7 +18,7 @@
   - [Artifactory APIs](#artifactory-apis)
     - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
       - [Creating Artifactory Details](#creating-artifactory-details)
-      - [Create Artifactory Details with Custom HTTP Client](#creating-artifactory-details-with-custom-http-client)
+      - [Creating Artifactory Details with Custom HTTP Client](#creating-artifactory-details-with-custom-http-client)
       - [Creating Artifactory Service Config](#creating-artifactory-service-config)
       - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
     - [Using Artifactory Services](#using-artifactory-services)
@@ -151,19 +151,35 @@ We welcome pull requests from the community.
 - Please use gofmt for formatting the code before submitting the pull request.
 
 ## Tests
-To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
+To run the tests on the source code, you'll need a running JFrog instance. See the *Prerequisites* column in the *Test Types* section below for more information. 
+
 Use the following command with the below options to run the tests.
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests [test-types] [flags]
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 [test-types] [flags]
 ```
-Optional flags:
+If you'd like to run a specific test, add the test function name using the ```-run``` flag. For example:
+```sh
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifactoryVersionWithCustomHttpClient -test.artifactory -rt.url=http://127.0.0.1:8081/artifactory -rt.user=admin -rt.password=password
+```
+**Note:** The tests create an Artifactory repository named _jfrog-client-tests-repo1_. Once the tests are completed, the content of this repository is deleted.
+### Flags
+#### Test Types
+| Type                | Description        | Prerequisites
+| ------------------- | ------------------ | ------------------------------| 
+| `-test.artifactory` | Artifactory tests  | Artifactory Pro               |
+| `-test.distribution`| Distribution tests | Artifactory with Distribution |
+| `-test.xray`        | Xray tests         | Artifactory with Xray         |
+| `-test.pipelines`   | Pipelines tests    | JFrog Pipelines               |
+| `-test.access`      | Access tests       | Artifactory Pro               |
 
+#### Connection Details
 | Flag                 | Description                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`            | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-ds.url`            | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`            | [Optional] JFrog Xray URL.                                                                             |
 | `-pipe.url`          | [Optional] JFrog Pipelines URL.                                                                        |
+| `-access.url`        | [Optional] JFrog Access URL.                                                                           |
 | `-rt.user`           | [Default: admin] Artifactory username.                                                                 |
 | `-rt.password`       | [Default: password] Artifactory password.                                                              |
 | `-rt.apikey`         | [Optional] Artifactory API key.                                                                        |
@@ -173,22 +189,8 @@ Optional flags:
 | `-pipe.accessToken`  | [Optional] Pipelines access token.                                                                     |
 | `-pipe.vcsToken`     | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
 | `-pipe.vcsRepo`      | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
-| `-pipe.vcsBranch`    | [Optional] Vcs branch for Pipelines tests (ex: "main").
-| `-access.url`        | [Optional] JFrog Access URL.                                                                           |
+| `-pipe.vcsBranch`    | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
 | `-access.accessToken`| [Optional] Access access token.                                                                        |
-
-The types are:
-
-| Type                | Description        |
-| ---                 | ---                |
-| `-test.artifactory` | Artifactory tests  |
-| `-test.distribution`| Distribution tests |
-| `-test.xray`        | Xray tests         |
-| `-test.pipelines`   | Pipelines tests    |
-| `-test.access`      | Access tests       |
-
-- The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
-  Once the tests are completed, the content of this repository is deleted.
 
 ## General APIs
 ### Setting the Logger
@@ -220,7 +222,7 @@ rtDetails.SetClientCertPath("path/to/.cer")
 rtDetails.SetClientCertKeyPath("path/to/.key")
 ```
 
-#### Create Artifactory Details with Custom HTTP Client
+#### Creating Artifactory Details with Custom HTTP Client
 ```go
 proxyUrl, err := url.Parse("http://proxyIp:proxyPort")
 myCustomClient := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
