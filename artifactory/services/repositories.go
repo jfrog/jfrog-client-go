@@ -79,6 +79,10 @@ func (rs *RepositoriesService) CreateLocal(params LocalRepositoryBaseParams) err
 	return rs.createRepo(params, params.Key)
 }
 
+func (rs *RepositoriesService) CreateFederated(params FederatedRepositoryBaseParams) error {
+	return rs.createRepo(params, params.Key)
+}
+
 func (rs *RepositoriesService) createRepo(params interface{}, repoName string) error {
 	content, err := json.Marshal(params)
 	if errorutils.CheckError(err) != nil {

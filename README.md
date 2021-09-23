@@ -18,6 +18,7 @@
   - [Artifactory APIs](#artifactory-apis)
     - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
       - [Creating Artifactory Details](#creating-artifactory-details)
+      - [Creating Artifactory Details with Custom HTTP Client](#creating-artifactory-details-with-custom-http-client)
       - [Creating Artifactory Service Config](#creating-artifactory-service-config)
       - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
     - [Using Artifactory Services](#using-artifactory-services)
@@ -50,12 +51,15 @@
       - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
       - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
       - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
+      - [Creating and Updating Federated Repository](#creating-and-updating-federated-repository)
       - [Removing a Repository](#removing-a-repository)
       - [Getting Repository Details](#getting-repository-details)
       - [Getting All Repositories](#getting-all-repositories)
       - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
       - [Getting a Repository Replication](#getting-a-repository-replication)
       - [Removing a Repository Replication](#removing-a-repository-replication)
+      - [Converting a Local Repository to a Federated Repository](#converting-a-local-repository-to-a-federated-repository)
+      - [Triggering a Full Federated Repository Synchronisation](#triggering-a-full-federated-repository-synchronisation)
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
@@ -147,19 +151,35 @@ We welcome pull requests from the community.
 - Please use gofmt for formatting the code before submitting the pull request.
 
 ## Tests
-To run tests on the source code, you'll need a running JFrog Artifactory Pro instance.
+To run the tests on the source code, you'll need a running JFrog instance. See the *Prerequisites* column in the *Test Types* section below for more information. 
+
 Use the following command with the below options to run the tests.
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests [test-types] [flags]
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 [test-types] [flags]
 ```
-Optional flags:
+If you'd like to run a specific test, add the test function name using the ```-run``` flag. For example:
+```sh
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifactoryVersionWithCustomHttpClient -test.artifactory -rt.url=http://127.0.0.1:8081/artifactory -rt.user=admin -rt.password=password
+```
+**Note:** The tests create an Artifactory repository named _jfrog-client-tests-repo1_. Once the tests are completed, the content of this repository is deleted.
+### Flags
+#### Test Types
+| Type                | Description        | Prerequisites
+| ------------------- | ------------------ | ------------------------------| 
+| `-test.artifactory` | Artifactory tests  | Artifactory Pro               |
+| `-test.distribution`| Distribution tests | Artifactory with Distribution |
+| `-test.xray`        | Xray tests         | Artifactory with Xray         |
+| `-test.pipelines`   | Pipelines tests    | JFrog Pipelines               |
+| `-test.access`      | Access tests       | Artifactory Pro               |
 
+#### Connection Details
 | Flag                 | Description                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`            | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-ds.url`            | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`            | [Optional] JFrog Xray URL.                                                                             |
 | `-pipe.url`          | [Optional] JFrog Pipelines URL.                                                                        |
+| `-access.url`        | [Optional] JFrog Access URL.                                                                           |
 | `-rt.user`           | [Default: admin] Artifactory username.                                                                 |
 | `-rt.password`       | [Default: password] Artifactory password.                                                              |
 | `-rt.apikey`         | [Optional] Artifactory API key.                                                                        |
@@ -169,22 +189,8 @@ Optional flags:
 | `-pipe.accessToken`  | [Optional] Pipelines access token.                                                                     |
 | `-pipe.vcsToken`     | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
 | `-pipe.vcsRepo`      | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
-| `-pipe.vcsBranch`    | [Optional] Vcs branch for Pipelines tests (ex: "main").
-| `-access.url`        | [Optional] JFrog Access URL.                                                                           |
+| `-pipe.vcsBranch`    | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
 | `-access.accessToken`| [Optional] Access access token.                                                                        |
-
-The types are:
-
-| Type                | Description        |
-| ---                 | ---                |
-| `-test.artifactory` | Artifactory tests  |
-| `-test.distribution`| Distribution tests |
-| `-test.xray`        | Xray tests         |
-| `-test.pipelines`   | Pipelines tests    |
-| `-test.access`      | Access tests       |
-
-- The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
-  Once the tests are completed, the content of this repository is deleted.
 
 ## General APIs
 ### Setting the Logger
@@ -214,6 +220,25 @@ rtDetails.SetAccessToken("accesstoken")
 // if client certificates are required
 rtDetails.SetClientCertPath("path/to/.cer")
 rtDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Artifactory Details with Custom HTTP Client
+```go
+proxyUrl, err := url.Parse("http://proxyIp:proxyPort")
+myCustomClient := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
+
+rtDetails := auth.NewArtifactoryDetails()
+rtDetails.SetUrl("http://localhost:8081/artifactory")
+rtDetails.SetSshKeysPath("path/to/.ssh/")
+rtDetails.SetApiKey("apikey")
+rtDetails.SetUser("user")
+rtDetails.SetPassword("password")
+rtDetails.SetAccessToken("accesstoken")
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(rtDetails).
+    SetDryRun(false).
+    SetHttpClient(myCustomClient).
+    Build()
 ```
 
 #### Creating Artifactory Service Config
@@ -593,10 +618,9 @@ apiKey, err := rtManager.GetAPIKey()
 #### Creating and Updating Local Repository
 You can create and update a local repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
-Vagrant, Gitlfs, Go, Yum, Conan, Chef, Puppet and Generic.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant, and Yum.
 
-Each package type has it's own parameters struct, can be created using the method
+Each package type has its own parameters struct, can be created using the method
 `New<packageType>LocalRepositoryParams()`.
 
 Example for creating local Generic repository:
@@ -632,10 +656,9 @@ err = servicesManager.UpdateLocalRepository().Generic(params)
 #### Creating and Updating Remote Repository
 You can create and update a remote repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Cocoapods, Opkg, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Composer, Pypi, Docker,
-Gitlfs, Go, Yum, Conan, Chef, Puppet, Conda, P2, Vcs and Generic.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Vcs, and Yum.
 
-Each package type has it's own parameters struct, can be created using the method
+Each package type has its own parameters struct, can be created using the method
 `New<packageType>RemoteRepositoryParams()`.
 
 Example for creating remote Maven repository:
@@ -672,10 +695,9 @@ err := servicesManager.CreateRemoteRepository(params)
 #### Creating and Updating Virtual Repository
 You can create and update a virtual repository for the following package types:
 
-Maven, Gradle, Ivy, Sbt, Helm, Rpm, Nuget, Cran, Gems, Npm, Bower, Debian, Pypi, Docker, Gitlfs, Go, Yum, Conan,
-Chef, Puppet, Conda, P2 and Generic
+Alpine, Bower, Cran, Chef, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, P2, Puppet, Pypi, Rpm, Sbt, and Yum.
 
-Each package type has it's own parameters struct, can be created using the method
+Each package type has its own parameters struct, can be created using the method
 `New<packageType>VirtualRepositoryParams()`.
 
 Example for creating virtual Go repository:
@@ -705,6 +727,49 @@ err := servicesManager.CreateVirtualRepository(params)
 Updating virtual Go repository:
 ```go
 err = servicesManager.UpdateVirtualRepository().Go(params)
+```
+
+#### Creating and Updating Federated Repository
+You can create and update a federated repository for the following package types:
+
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant and Yum
+
+Each package type has its own parameters struct, can be created using the method
+`New<packageType>FederatedRepositoryParams()`.
+
+Example for creating federated Generic repository:
+```go
+params := services.NewGenericFederatedRepositoryParams()
+params.Key = "generic-repo"
+params.Description = "This is a public description for generic-repo"
+params.Notes = "These are internal notes for generic-repo"
+params.RepoLayoutRef = "simple-default"
+params.ArchiveBrowsingEnabled = true
+params.XrayIndex = true
+params.IncludesPattern = "**/*"
+params.ExcludesPattern = "excludedDir/*"
+params.DownloadRedirect = true
+params.Members = []services.FederatedRepositoryMemberParams{
+		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+	}
+err = servicesManager.CreateFederatedRepository().Generic(params)
+```
+
+You can also create a federated repository with basic federated params:
+```go
+params := services.NewFederatedRepositoryBaseParams()
+params.Key = "generic-repo"
+params.PackageType = "generic"
+params.Description = "This is a public description for generic-repo"
+params.Members = []services.FederatedRepositoryMemberParams{
+		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+	}
+err := servicesManager.CreateFederatedRepository(params)
+```
+
+Updating federated Generic repository:
+```go
+err = servicesManager.UpdateFederatedRepository().Generic(params)
 ```
 
 #### Removing a Repository
@@ -795,6 +860,23 @@ replicationConfiguration, err := servicesManager.GetReplication("my-repository")
 You can remove a repository replication configuration from Artifactory using its key:
 ```go
 err := servicesManager.DeleteReplication("my-repository")
+```
+
+#### Converting a Local Repository to a Federated Repository
+You can convert a local repository to a federated repository using its key:
+```go
+err := servicesManager.ConvertLocalToFederatedRepository("my-repository")
+```
+
+#### Triggering a Full Federated Repository Synchronisation
+You can trigger a full federated repository synchronisation for all members using its key:
+```go
+err := servicesManager.TriggerFederatedRepositoryFullSyncAll("my-repository")
+```
+
+You can also trigger a full federated repository synchronisation for a specific member using its key and the members URL
+```go
+err := servicesManager.TriggerFederatedRepositoryFullSyncMirror("my-repository", "http://localhost:8081/artifactory/my-repository")
 ```
 
 #### Creating and Updating Permission Targets

@@ -1,25 +1,23 @@
 package services
 
 import (
-	"encoding/json"
-	"net/http"
-
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
+const VirtualRepositoryRepoType = "virtual"
+
 type VirtualRepositoryService struct {
-	isUpdate   bool
-	client     *jfroghttpclient.JfrogHttpClient
-	ArtDetails auth.ServiceDetails
+	RepositoryService
 }
 
 func NewVirtualRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *VirtualRepositoryService {
-	return &VirtualRepositoryService{client: client, isUpdate: isUpdate}
+	return &VirtualRepositoryService{
+		RepositoryService: RepositoryService{
+			repoType: VirtualRepositoryRepoType,
+			client:   client,
+			isUpdate: isUpdate,
+		},
+	}
 }
 
 func (vrs *VirtualRepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -27,74 +25,10 @@ func (vrs *VirtualRepositoryService) GetJfrogHttpClient() *jfroghttpclient.Jfrog
 }
 
 func (vrs *VirtualRepositoryService) performRequest(params interface{}, repoKey string) error {
-	content, err := json.Marshal(params)
-	if errorutils.CheckError(err) != nil {
-		return err
-	}
-	httpClientsDetails := vrs.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/vnd.org.jfrog.artifactory.repositories.VirtualRepositoryConfiguration+json", &httpClientsDetails.Headers)
-	var url = vrs.ArtDetails.GetUrl() + "api/repositories/" + repoKey
-	var operationString string
-	var resp *http.Response
-	var body []byte
-	if vrs.isUpdate {
-		log.Info("Updating virtual repository...")
-		operationString = "updating"
-		resp, body, err = vrs.client.SendPost(url, content, &httpClientsDetails)
-	} else {
-		log.Info("Creating virtual repository...")
-		operationString = "creating"
-		resp, body, err = vrs.client.SendPut(url, content, &httpClientsDetails)
-	}
-	if err != nil {
-		return err
-	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-
-	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done " + operationString + " repository.")
-	return nil
+	return vrs.RepositoryService.performRequest(params, repoKey)
 }
 
-func (vrs *VirtualRepositoryService) Maven(params MavenVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Gradle(params GradleVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Ivy(params IvyVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Sbt(params SbtVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Helm(params HelmVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Rpm(params RpmVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Nuget(params NugetVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Cran(params CranVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Gems(params GemsVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Npm(params NpmVirtualRepositoryParams) error {
+func (vrs *VirtualRepositoryService) Alpine(params AlpineVirtualRepositoryParams) error {
 	return vrs.performRequest(params, params.Key)
 }
 
@@ -102,39 +36,7 @@ func (vrs *VirtualRepositoryService) Bower(params BowerVirtualRepositoryParams) 
 	return vrs.performRequest(params, params.Key)
 }
 
-func (vrs *VirtualRepositoryService) Debian(params DebianVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Pypi(params PypiVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Docker(params DockerVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Yum(params YumVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Go(params GoVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) P2(params P2VirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
 func (vrs *VirtualRepositoryService) Chef(params ChefVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Puppet(params PuppetVirtualRepositoryParams) error {
-	return vrs.performRequest(params, params.Key)
-}
-
-func (vrs *VirtualRepositoryService) Conda(params CondaVirtualRepositoryParams) error {
 	return vrs.performRequest(params, params.Key)
 }
 
@@ -142,7 +44,23 @@ func (vrs *VirtualRepositoryService) Conan(params ConanVirtualRepositoryParams) 
 	return vrs.performRequest(params, params.Key)
 }
 
-func (vrs *VirtualRepositoryService) Gitlfs(params GitlfsVirtualRepositoryParams) error {
+func (vrs *VirtualRepositoryService) Conda(params CondaVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Cran(params CranVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Debian(params DebianVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Docker(params DockerVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Gems(params GemsVirtualRepositoryParams) error {
 	return vrs.performRequest(params, params.Key)
 }
 
@@ -150,67 +68,93 @@ func (vrs *VirtualRepositoryService) Generic(params GenericVirtualRepositoryPara
 	return vrs.performRequest(params, params.Key)
 }
 
+func (vrs *VirtualRepositoryService) Gitlfs(params GitlfsVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Go(params GoVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Gradle(params GradleVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Helm(params HelmVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Ivy(params IvyVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Maven(params MavenVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Npm(params NpmVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Nuget(params NugetVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) P2(params P2VirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Puppet(params PuppetVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Pypi(params PypiVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Rpm(params RpmVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Sbt(params SbtVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Yum(params YumVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
 type VirtualRepositoryBaseParams struct {
-	Key                                           string   `json:"key,omitempty"`
-	Rclass                                        string   `json:"rclass"`
-	PackageType                                   string   `json:"packageType,omitempty"`
-	Description                                   string   `json:"description,omitempty"`
-	Notes                                         string   `json:"notes,omitempty"`
-	IncludesPattern                               string   `json:"includesPattern,omitempty"`
-	ExcludesPattern                               string   `json:"excludesPattern,omitempty"`
-	RepoLayoutRef                                 string   `json:"repoLayoutRef,omitempty"`
+	RepositoryBaseParams
 	Repositories                                  []string `json:"repositories,omitempty"`
 	ArtifactoryRequestsCanRetrieveRemoteArtifacts *bool    `json:"artifactoryRequestsCanRetrieveRemoteArtifacts,omitempty"`
 	DefaultDeploymentRepo                         string   `json:"defaultDeploymentRepo,omitempty"`
 }
 
-type CommonMavenGradleVirtualRepositoryParams struct {
-	ForceMavenAuthentication             *bool  `json:"forceMavenAuthentication,omitempty"`
+type CommonJavaVirtualRepositoryParams struct {
 	PomRepositoryReferencesCleanupPolicy string `json:"pomRepositoryReferencesCleanupPolicy,omitempty"`
 	KeyPair                              string `json:"keyPair,omitempty"`
 }
 
-type MavenVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
-	CommonMavenGradleVirtualRepositoryParams
+type CommonCacheVirtualRepositoryParams struct {
+	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
 }
 
 func NewVirtualRepositoryBaseParams() VirtualRepositoryBaseParams {
-	return VirtualRepositoryBaseParams{Rclass: "virtual"}
+	return VirtualRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: VirtualRepositoryRepoType}}
 }
 
-func NewMavenVirtualRepositoryParams() MavenVirtualRepositoryParams {
-	return MavenVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "maven"}}
+func NewVirtualRepositoryPackageParams(packageType string) VirtualRepositoryBaseParams {
+	return VirtualRepositoryBaseParams{RepositoryBaseParams: RepositoryBaseParams{Rclass: VirtualRepositoryRepoType, PackageType: packageType}}
 }
 
-type GradleVirtualRepositoryParams struct {
+type AlpineVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	CommonMavenGradleVirtualRepositoryParams
+	CommonCacheVirtualRepositoryParams
 }
 
-func NewGradleVirtualRepositoryParams() GradleVirtualRepositoryParams {
-	return GradleVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "gradle"}}
-}
-
-type NugetVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
-	ForceNugetAuthentication *bool `json:"forceNugetAuthentication,omitempty"`
-}
-
-func NewNugetVirtualRepositoryParams() NugetVirtualRepositoryParams {
-	return NugetVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "nuget"}}
-}
-
-type NpmVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
-	ExternalDependenciesEnabled     *bool    `json:"externalDependenciesEnabled,omitempty"`
-	ExternalDependenciesPatterns    []string `json:"externalDependenciesPatterns,omitempty"`
-	ExternalDependenciesRemoteRepo  string   `json:"externalDependenciesRemoteRepo,omitempty"`
-	VirtualRetrievalCachePeriodSecs int      `json:"virtualRetrievalCachePeriodSecs,omitempty"`
-}
-
-func NewNpmVirtualRepositoryParams() NpmVirtualRepositoryParams {
-	return NpmVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "npm"}}
+func NewAlpineVirtualRepositoryParams() AlpineVirtualRepositoryParams {
+	return AlpineVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("alpine")}
 }
 
 type BowerVirtualRepositoryParams struct {
@@ -221,16 +165,87 @@ type BowerVirtualRepositoryParams struct {
 }
 
 func NewBowerVirtualRepositoryParams() BowerVirtualRepositoryParams {
-	return BowerVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "bower"}}
+	return BowerVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("bower")}
+}
+
+type ChefVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
+}
+
+func NewChefVirtualRepositoryParams() ChefVirtualRepositoryParams {
+	return ChefVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("chef")}
+}
+
+type ConanVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
+}
+
+func NewConanVirtualRepositoryParams() ConanVirtualRepositoryParams {
+	return ConanVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("conan")}
+}
+
+type CondaVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
+}
+
+func NewCondaVirtualRepositoryParams() CondaVirtualRepositoryParams {
+	return CondaVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("conda")}
+}
+
+type CranVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
+}
+
+func NewCranVirtualRepositoryParams() CranVirtualRepositoryParams {
+	return CranVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("cran")}
 }
 
 type DebianVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	DebianTrivialLayout *bool `json:"debianTrivialLayout,omitempty"`
+	CommonCacheVirtualRepositoryParams
+	DebianDefaultArchitectures      string   `json:"debianDefaultArchitectures,omitempty"`
+	OptionalIndexCompressionFormats []string `json:"optionalIndexCompressionFormats,omitempty"`
 }
 
 func NewDebianVirtualRepositoryParams() DebianVirtualRepositoryParams {
-	return DebianVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "debian"}}
+	return DebianVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("debian")}
+}
+
+type DockerVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	ResolveDockerTagsByTimestamp *bool `json:"resolveDockerTagsByTimestamp,omitempty"`
+}
+
+func NewDockerVirtualRepositoryParams() DockerVirtualRepositoryParams {
+	return DockerVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("docker")}
+}
+
+type GemsVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+}
+
+func NewGemsVirtualRepositoryParams() GemsVirtualRepositoryParams {
+	return GemsVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("gems")}
+}
+
+type GenericVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+}
+
+func NewGenericVirtualRepositoryParams() GenericVirtualRepositoryParams {
+	return GenericVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("generic")}
+}
+
+type GitlfsVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+}
+
+func NewGitlfsVirtualRepositoryParams() GitlfsVirtualRepositoryParams {
+	return GitlfsVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("gitlfs")}
 }
 
 type GoVirtualRepositoryParams struct {
@@ -240,92 +255,74 @@ type GoVirtualRepositoryParams struct {
 }
 
 func NewGoVirtualRepositoryParams() GoVirtualRepositoryParams {
-	return GoVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "go"}}
+	return GoVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("go")}
 }
 
-type ConanVirtualRepositoryParams struct {
+type GradleVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
+	CommonJavaVirtualRepositoryParams
 }
 
-func NewConanVirtualRepositoryParams() ConanVirtualRepositoryParams {
-	return ConanVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "conan"}}
+func NewGradleVirtualRepositoryParams() GradleVirtualRepositoryParams {
+	return GradleVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("gradle")}
 }
 
 type HelmVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
+	CommonCacheVirtualRepositoryParams
 }
 
 func NewHelmVirtualRepositoryParams() HelmVirtualRepositoryParams {
-	return HelmVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "helm"}}
+	return HelmVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("helm")}
 }
 
-type RpmVirtualRepositoryParams struct {
+type IvyVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
+	CommonJavaVirtualRepositoryParams
 }
 
-func NewRpmVirtualRepositoryParams() RpmVirtualRepositoryParams {
-	return RpmVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "rpm"}}
+func NewIvyVirtualRepositoryParams() IvyVirtualRepositoryParams {
+	return IvyVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("ivy")}
 }
 
-type CranVirtualRepositoryParams struct {
+type MavenVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
+	CommonJavaVirtualRepositoryParams
+	ForceMavenAuthentication *bool `json:"forceMavenAuthentication,omitempty"`
 }
 
-func NewCranVirtualRepositoryParams() CranVirtualRepositoryParams {
-	return CranVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "cran"}}
+func NewMavenVirtualRepositoryParams() MavenVirtualRepositoryParams {
+	return MavenVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("maven")}
 }
 
-type ChefVirtualRepositoryParams struct {
+type NpmVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs,omitempty"`
+	CommonCacheVirtualRepositoryParams
+	ExternalDependenciesEnabled    *bool    `json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns   []string `json:"externalDependenciesPatterns,omitempty"`
+	ExternalDependenciesRemoteRepo string   `json:"externalDependenciesRemoteRepo,omitempty"`
 }
 
-func NewChefVirtualRepositoryParams() ChefVirtualRepositoryParams {
-	return ChefVirtualRepositoryParams{VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "chef"}}
+func NewNpmVirtualRepositoryParams() NpmVirtualRepositoryParams {
+	return NpmVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("npm")}
 }
 
-type CondaVirtualRepositoryParams struct {
+type NugetVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
+	ForceNugetAuthentication *bool `json:"forceNugetAuthentication,omitempty"`
 }
 
-func NewCondaVirtualRepositoryParams() CondaVirtualRepositoryParams {
-	return CondaVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "conda"}}
-}
-
-type GitlfsVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
-}
-
-func NewGitlfsVirtualRepositoryParams() GitlfsVirtualRepositoryParams {
-	return GitlfsVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "gitlfs"}}
+func NewNugetVirtualRepositoryParams() NugetVirtualRepositoryParams {
+	return NugetVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("nuget")}
 }
 
 type P2VirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
+	P2Urls []string `json:"p2Urls,omitempty"`
 }
 
 func NewP2VirtualRepositoryParams() P2VirtualRepositoryParams {
-	return P2VirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "p2"}}
-}
-
-type GemsVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
-}
-
-func NewGemsVirtualRepositoryParams() GemsVirtualRepositoryParams {
-	return GemsVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "gems"}}
-}
-
-type PypiVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
-}
-
-func NewPypiVirtualRepositoryParams() PypiVirtualRepositoryParams {
-	return PypiVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "pypi"}}
+	return P2VirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("p2")}
 }
 
 type PuppetVirtualRepositoryParams struct {
@@ -333,45 +330,40 @@ type PuppetVirtualRepositoryParams struct {
 }
 
 func NewPuppetVirtualRepositoryParams() PuppetVirtualRepositoryParams {
-	return PuppetVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "puppet"}}
+	return PuppetVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("puppet")}
 }
 
-type IvyVirtualRepositoryParams struct {
+type PypiVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
 }
 
-func NewIvyVirtualRepositoryParams() IvyVirtualRepositoryParams {
-	return IvyVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "ivy"}}
+func NewPypiVirtualRepositoryParams() PypiVirtualRepositoryParams {
+	return PypiVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("pypi")}
+}
+
+type RpmVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
+}
+
+func NewRpmVirtualRepositoryParams() RpmVirtualRepositoryParams {
+	return RpmVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("rpm")}
 }
 
 type SbtVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
+	CommonJavaVirtualRepositoryParams
 }
 
 func NewSbtVirtualRepositoryParams() SbtVirtualRepositoryParams {
-	return SbtVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "sbt"}}
-}
-
-type DockerVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
-}
-
-func NewDockerVirtualRepositoryParams() DockerVirtualRepositoryParams {
-	return DockerVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "docker"}}
+	return SbtVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("sbt")}
 }
 
 type YumVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
 }
 
 func NewYumVirtualRepositoryParams() YumVirtualRepositoryParams {
-	return YumVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "yum"}}
-}
-
-type GenericVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
-}
-
-func NewGenericVirtualRepositoryParams() GenericVirtualRepositoryParams {
-	return GenericVirtualRepositoryParams{VirtualRepositoryBaseParams{Rclass: "virtual", PackageType: "generic"}}
+	return YumVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("yum")}
 }
