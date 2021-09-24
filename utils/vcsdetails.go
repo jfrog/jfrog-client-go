@@ -13,10 +13,10 @@ import (
 type (
 	VcsCache struct {
 		// Key - Path to the .git directory.
-		// Value - Reference to a struct, storing the URL and revision.
+		// Id - Reference to a struct, storing the URL and revision.
 		vcsRootDir sync.Map
 		// Key - Path to a directory.
-		// Value - Reference to a struct, storing the URL and revision from the upstream .git. Can also include nil, if there's no upstream .git.
+		// Id - Reference to a struct, storing the URL and revision from the upstream .git. Can also include nil, if there's no upstream .git.
 		vcsDir sync.Map
 		// The current size of vcsDir
 		vcsDirSize *int32 // Size of vcs folders entries
