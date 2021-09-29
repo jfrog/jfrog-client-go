@@ -777,7 +777,8 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	}
 	// If this is a directory, add it to the writer with a trailing slash.
 	if info.IsDir() {
-		_, e = writer.Write([]byte(filepath.ToSlash(localPath + fileutils.GetFileSeparator())))
+		_, e = writer.Write([]byte(localPath + fileutils.GetFileSeparator()))
+		header.Method = zip.Store
 		return
 	}
 
