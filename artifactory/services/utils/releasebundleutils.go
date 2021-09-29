@@ -14,46 +14,50 @@ import (
 	"strings"
 )
 
-type RbGPGValidation struct {
+type RbGpgValidator struct {
 	client            *jfroghttpclient.JfrogHttpClient
 	artDetails        *auth.ServiceDetails
 	rbName            string
 	rbVersion         string
 	publicKeyFilePath string
-	artifactsMap      map[string]string
+	// Map containing the artifacts which associated to a specific release bundle.
+	// While downloading a release bundle we use this map to make sure that there were no security issues (e.g. "Man in the middle" attack)
+	// by verifying that each downloaded artifact matches the Rb's list of sign and verified artifacts.
+	// The key is the path of the artifact in Artifactory and the value is it's sha256.
+	artifactsMap map[string]string
 }
 
-func (r *RbGPGValidation) ArtifactsMap() map[string]string {
+func (r *RbGpgValidator) ArtifactsMap() map[string]string {
 	return r.artifactsMap
 }
 
-func (r *RbGPGValidation) SetRbName(rbName string) *RbGPGValidation {
+func (r *RbGpgValidator) SetRbName(rbName string) *RbGpgValidator {
 	r.rbName = rbName
 	return r
 }
 
-func (r *RbGPGValidation) SetRbVersion(rbVersion string) *RbGPGValidation {
+func (r *RbGpgValidator) SetRbVersion(rbVersion string) *RbGpgValidator {
 	r.rbVersion = rbVersion
 	return r
 }
 
-func (r *RbGPGValidation) SetPublicKey(path string) *RbGPGValidation {
+func (r *RbGpgValidator) SetPublicKey(path string) *RbGpgValidator {
 	r.publicKeyFilePath = path
 	return r
 }
 
-func (r *RbGPGValidation) SetClient(client *jfroghttpclient.JfrogHttpClient) *RbGPGValidation {
+func (r *RbGpgValidator) SetClient(client *jfroghttpclient.JfrogHttpClient) *RbGpgValidator {
 	r.client = client
 	return r
 }
 
-func (r *RbGPGValidation) SetAtrifactoryDetails(artDetails *auth.ServiceDetails) *RbGPGValidation {
+func (r *RbGpgValidator) SetAtrifactoryDetails(artDetails *auth.ServiceDetails) *RbGpgValidator {
 	r.artDetails = artDetails
 	return r
 }
 
-func NewRbGPGValidation() (*RbGPGValidation, error) {
-	return &RbGPGValidation{}, nil
+func NewRbGpgValidator() *RbGpgValidator {
+	return &RbGpgValidator{}
 }
 
 func GetTestResourcesPath() string {
@@ -61,8 +65,8 @@ func GetTestResourcesPath() string {
 	return filepath.ToSlash(dir + "/testdata/")
 }
 
-// Validate gets a signed release bundle from artifactory, validate the signature with the public gpg key and save the release bundle's artifacts in a map
-func (r *RbGPGValidation) Validate() error {
+// Validate gets a signed release bundle from artifactory, validates the signature with the public gpg key and saves the release bundle's artifacts in a map
+func (r *RbGpgValidator) Validate() error {
 	httpClientsDetails := (*r.artDetails).CreateHttpClientDetails()
 	// Release bundle's details return in a JWS format, so we can validate the signature of the signed release bundle with the provided public key.
 	request := (*r.artDetails).GetUrl() + "api/release/bundles/" + r.rbName + "/" + r.rbVersion + "?format=jws"
@@ -70,7 +74,7 @@ func (r *RbGPGValidation) Validate() error {
 	if err != nil {
 		return err
 	}
-	verifiedRB, err := VerifyJwtToken(string(body), r.publicKeyFilePath)
+	verifiedRB, err := r.verifyJwtToken(string(body))
 	if err != nil {
 		return err
 	}
@@ -83,17 +87,17 @@ func (r *RbGPGValidation) Validate() error {
 	return nil
 }
 
-func (r *RbGPGValidation) VerifySpecificArtifact(artifactPath, sha256 string) bool {
+func (r *RbGpgValidator) VerifyArtifact(artifactPath, sha256 string) error {
 	if r.artifactsMap[artifactPath] == sha256 {
-		return true
+		return nil
 	}
-	return false
+	return errorutils.CheckError(errors.New(fmt.Sprintf("GPG validation failed: artifact in not signed with the provided key - %s ", artifactPath)))
 }
 
-func VerifyJwtToken(bundleTokenStr, publicKeyPath string) (*ReleaseBundleModel, error) {
+func (r *RbGpgValidator) verifyJwtToken(bundleTokenStr string) (*ReleaseBundleModel, error) {
 	model := &ReleaseBundleModel{}
 	token, err := jwt.ParseWithClaims(bundleTokenStr, model, func(token *jwt.Token) (interface{}, error) {
-		key, err := ioutil.ReadFile(filepath.Join(publicKeyPath))
+		key, err := ioutil.ReadFile(filepath.Join(r.publicKeyFilePath))
 		if err != nil {
 			return nil, errorutils.CheckError(err)
 		}
@@ -104,7 +108,7 @@ func VerifyJwtToken(bundleTokenStr, publicKeyPath string) (*ReleaseBundleModel, 
 		}
 		return entities[0].PrimaryKey.PublicKey, nil
 	})
-	if err != nil {
+	if errorutils.CheckError(err) != nil {
 		return nil, err
 	}
 	if !token.Valid {
@@ -113,7 +117,7 @@ func VerifyJwtToken(bundleTokenStr, publicKeyPath string) (*ReleaseBundleModel, 
 	if claims, ok := token.Claims.(*ReleaseBundleModel); ok {
 		return claims, nil
 	}
-	return nil, errorutils.CheckError(errors.New("token payload could not be cast to release bundle model"))
+	return nil, errorutils.CheckError(errors.New("failed casting the token payload to the release bundle model"))
 }
 
 type ReleaseBundleModel struct {
@@ -136,7 +140,7 @@ func (rbm *ReleaseBundleModel) GetOrCalculateId() string {
 	if rbm.Id != "" {
 		return rbm.Id
 	}
-	// in practice Id doesn't seem to be in use, so we calculate one
+	// in practice, Id doesn't seem to be in use, so we calculate one
 	return fmt.Sprintf("%s:%s", rbm.Name, rbm.Version)
 }
 

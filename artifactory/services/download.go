@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -37,11 +36,12 @@ type DownloadService struct {
 	filesTransfersWriter *content.ContentWriter
 	// A ContentWriter of ArtifactDetails structs. Used only if saveSummary is set to true.
 	artifactsDetailsWriter *content.ContentWriter
-	rbGPGValidation *utils.RbGPGValidation
+	rbGpgValidationMap     map[string]*utils.RbGpgValidator
 }
 
 func NewDownloadService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *DownloadService {
-	return &DownloadService{artDetails: &artDetails, client: client}
+	rbGpgValidationMap := make(map[string]*utils.RbGpgValidator)
+	return &DownloadService{artDetails: &artDetails, client: client, rbGpgValidationMap: rbGpgValidationMap}
 }
 
 func (ds *DownloadService) GetArtifactoryDetails() auth.ServiceDetails {
@@ -112,15 +112,24 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*uti
 	return ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess), e
 }
 
-func (ds *DownloadService) rbGPGValidate(bundleParam, publicKeyFilePath string) error {
-	// GPG validation
-	gpgValidation, err := utils.NewRbGPGValidation()
+func (ds *DownloadService) gpgValidateReleaseBundle(bundleParam, publicKeyFilePath string) error {
+	// Check if rb has already been validated.
+	if ds.rbGpgValidationMap[bundleParam] != nil {
+		return nil
+	}
 	bundleName, bundleVersion, err := utils.ParseNameAndVersion(bundleParam, false)
 	if bundleName == "" || err != nil {
 		return err
 	}
-	ds.rbGPGValidation = gpgValidation.SetRbName(bundleName).SetRbVersion(bundleVersion).SetClient(ds.client).SetAtrifactoryDetails(ds.artDetails).SetPublicKey(publicKeyFilePath)
-	return ds.rbGPGValidation.Validate()
+	gpgValidator := utils.NewRbGpgValidator()
+	gpgValidator.SetRbName(bundleName).SetRbVersion(bundleVersion).SetClient(ds.client).SetAtrifactoryDetails(ds.artDetails).SetPublicKey(publicKeyFilePath)
+	err = gpgValidator.Validate()
+	if err != nil {
+		return err
+	}
+	// Add validated rb to map.
+	ds.rbGpgValidationMap[bundleParam] = gpgValidator
+	return nil
 }
 
 func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan chan int, successCounters []int, errorsQueue *clientutils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
@@ -142,8 +151,8 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
 			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.CommonParams, artifactoryVersion)
-			if downloadParams.IsGPGValidation() {
-				err = ds.rbGPGValidate(downloadParams.GetBundle(), downloadParams.GetGpgKey())
+			if downloadParams.PublicGpgKey != "" {
+				err = ds.gpgValidateReleaseBundle(downloadParams.GetBundle(), downloadParams.GetPublicGpgKey())
 				if err != nil {
 					errorsQueue.AddError(err)
 					return
@@ -230,10 +239,12 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 			Flat:         flat,
 		}
 		if resultItem.Type != "folder" {
-			if ds.rbGPGValidation != nil {
-				artifactPath := resultItem.Repo+"/"+resultItem.Path+"/"+resultItem.Name
-				if !ds.rbGPGValidation.VerifySpecificArtifact(artifactPath, resultItem.Sha256) {
-					errorsQueue.AddError(errorutils.CheckError(errors.New(fmt.Sprintf("GPG validation failed: artifact in not signed with the provided key - %s ", artifactPath))))
+			if len(ds.rbGpgValidationMap) != 0 {
+				artifactPath := resultItem.Repo + "/" + resultItem.Path + "/" + resultItem.Name
+				// Gpg validation to the downloaded artifact
+				err = ds.rbGpgValidationMap[downloadParams.GetBundle()].VerifyArtifact(artifactPath, resultItem.Sha256)
+				if err != nil {
+					errorsQueue.AddError(err)
 					return tasksCount
 				}
 			}
@@ -557,7 +568,7 @@ type DownloadParams struct {
 	Explode         bool
 	MinSplitSize    int64
 	SplitCount      int
-	GpgKey 			string
+	PublicGpgKey    string
 }
 
 func (ds *DownloadParams) IsFlat() bool {
@@ -580,12 +591,8 @@ func (ds *DownloadParams) ValidateSymlinks() bool {
 	return ds.ValidateSymlink
 }
 
-func (ds *DownloadParams) GetGpgKey() string {
-	return ds.GpgKey
-}
-
-func (ds *DownloadParams) IsGPGValidation() bool {
-	return ds.GpgKey != ""
+func (ds *DownloadParams) GetPublicGpgKey() string {
+	return ds.PublicGpgKey
 }
 
 func NewDownloadParams() DownloadParams {
