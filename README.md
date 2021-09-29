@@ -328,7 +328,7 @@ totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 #### Downloading Release Bundles from Artifactory
 Using the `DownloadFiles()` function, we can download release bundles and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
 
-It's possible to validate the downloaded release bundle's artifacts by providing a local path to a GPG public key file (which used to sign the release bundle). 
+It is possible to validate the downloaded release bundle's files by providing a local path to a GPG public key file (which used to sign the release bundle). 
 
 
 
