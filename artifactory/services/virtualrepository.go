@@ -126,6 +126,7 @@ func (vrs *VirtualRepositoryService) Yum(params YumVirtualRepositoryParams) erro
 
 type VirtualRepositoryBaseParams struct {
 	RepositoryBaseParams
+	KeyPairRefsRepositoryParams
 	Repositories                                  []string `json:"repositories,omitempty"`
 	ArtifactoryRequestsCanRetrieveRemoteArtifacts *bool    `json:"artifactoryRequestsCanRetrieveRemoteArtifacts,omitempty"`
 	DefaultDeploymentRepo                         string   `json:"defaultDeploymentRepo,omitempty"`
