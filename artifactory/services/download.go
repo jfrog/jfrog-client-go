@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -36,7 +37,9 @@ type DownloadService struct {
 	filesTransfersWriter *content.ContentWriter
 	// A ContentWriter of ArtifactDetails structs. Used only if saveSummary is set to true.
 	artifactsDetailsWriter *content.ContentWriter
-	rbGpgValidationMap     map[string]*utils.RbGpgValidator
+	// This map is used for validating that a downloaded release bundle is signed with a given GPG public key. This is done for security reasons.
+	// The key is the release bundle name and version separated by "/" and the value is it's RbGpgValidator.
+	rbGpgValidationMap map[string]*utils.RbGpgValidator
 }
 
 func NewDownloadService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *DownloadService {
@@ -113,7 +116,7 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*uti
 }
 
 func (ds *DownloadService) gpgValidateReleaseBundle(bundleParam, publicKeyFilePath string) error {
-	// Check if rb has already been validated.
+	// Check if the release bundle has already been validated.
 	if ds.rbGpgValidationMap[bundleParam] != nil {
 		return nil
 	}
@@ -127,7 +130,7 @@ func (ds *DownloadService) gpgValidateReleaseBundle(bundleParam, publicKeyFilePa
 	if err != nil {
 		return err
 	}
-	// Add validated rb to map.
+	// Add the validated release bundle to the map.
 	ds.rbGpgValidationMap[bundleParam] = gpgValidator
 	return nil
 }
@@ -240,9 +243,8 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 		}
 		if resultItem.Type != "folder" {
 			if len(ds.rbGpgValidationMap) != 0 {
-				artifactPath := resultItem.Repo + "/" + resultItem.Path + "/" + resultItem.Name
 				// Gpg validation to the downloaded artifact
-				err = ds.rbGpgValidationMap[downloadParams.GetBundle()].VerifyArtifact(artifactPath, resultItem.Sha256)
+				err = rbGpgValidate(ds.rbGpgValidationMap, downloadParams.GetBundle(), resultItem)
 				if err != nil {
 					errorsQueue.AddError(err)
 					return tasksCount
@@ -264,6 +266,19 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 	}
 	addCreateDirsTasks(directoriesDataKeys, alreadyCreatedDirs, producer, fileHandler, directoriesData, errorsQueue, flat)
 	return tasksCount
+}
+
+func rbGpgValidate(rbGpgValidationMap map[string]*utils.RbGpgValidator, bundle string, resultItem *utils.ResultItem) error {
+	artifactPath := path.Join(resultItem.Repo, resultItem.Path, resultItem.Name)
+	rbGpgValidator := rbGpgValidationMap[bundle]
+	if rbGpgValidator == nil {
+		return errorutils.CheckError(fmt.Errorf("release bundle validator for '%s' was not found unexpectedly. This may be caused by a bug", artifactPath))
+	}
+	err := rbGpgValidator.VerifyArtifact(artifactPath, resultItem.Sha256)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Extract for the aqlResultItem the directory path, store the path the directoriesDataKeys and in the directoriesData map.

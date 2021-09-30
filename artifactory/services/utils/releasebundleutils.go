@@ -20,9 +20,8 @@ type RbGpgValidator struct {
 	rbName            string
 	rbVersion         string
 	publicKeyFilePath string
-	// Map containing the artifacts which associated to a specific release bundle.
-	// While downloading a release bundle we use this map to make sure that there were no security issues (e.g. "Man in the middle" attack)
-	// by verifying that each downloaded artifact matches the Rb's list of sign and verified artifacts.
+	// Map containing the artifacts which are associated with a specific release bundle.
+	// This map is used for validating that the downloaded files have the same checksum as in the release bundle manifest. This is done for security reasons.
 	// The key is the path of the artifact in Artifactory and the value is it's sha256.
 	artifactsMap map[string]string
 }
@@ -65,7 +64,7 @@ func GetTestResourcesPath() string {
 	return filepath.ToSlash(dir + "/testdata/")
 }
 
-// Validate gets a signed release bundle from artifactory, validates the signature with the public gpg key and saves the release bundle's artifacts in a map
+// Validate gets a signed release bundle from Artifactory, validates the signature with the public gpg key and saves the release bundle's artifacts in a map
 func (r *RbGpgValidator) Validate() error {
 	httpClientsDetails := (*r.artDetails).CreateHttpClientDetails()
 	// Release bundle's details return in a JWS format, so we can validate the signature of the signed release bundle with the provided public key.
