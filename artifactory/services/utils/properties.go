@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	propsSeparator     = ";"
-	keyValuesSeparator = "="
-	valuesSeparator    = ","
+	propsSeparator       = ";"
+	keyValuesSeparator   = "="
+	multiValuesSeparator = ","
 )
 
 type Properties struct {
@@ -47,7 +47,7 @@ func (props *Properties) ParseAndAddProperties(propStr string) error {
 			return err
 		}
 
-		splitValues := splitWhileIgnoringBackslashPrefixSeparators(value, valuesSeparator)
+		splitValues := splitWhileIgnoringBackslashPrefixSeparators(value, multiValuesSeparator)
 		for _, val := range splitValues {
 			props.properties[key] = append(props.properties[key], val)
 		}
@@ -69,14 +69,11 @@ func splitPropToKeyAndValue(str string) (key, value string, err error) {
 	return
 }
 
-// Split slices s into all substrings separated by sep and returns a slice of the substrings between those separators,
-// ignoring separators with a '\' prefix, which indicates that the separator is a part of the value.
+// Returns a slice created by splitting the sent string s into substrings, using the sent separator.
+// A backslash prefix escapes the separator.
 func splitWhileIgnoringBackslashPrefixSeparators(str, separator string) (splitArray []string) {
 	values := strings.Split(str, separator)
 	for i, val := range values {
-		// Let's use separator=',' for example:
-		// If "\" is found, then it means that the original string contains the "\," which indicates this "," is part
-		// of the value and not a separator.
 		if strings.HasSuffix(val, "\\") && i+1 < len(values) {
 			values[i+1] = val[:len(val)-1] + separator + values[i+1]
 		} else {
@@ -110,15 +107,15 @@ func (props *Properties) ToEncodedString(concatValues bool) string {
 		}
 		for _, value := range values {
 			if concatValues {
-				propValue := strings.Replace(value, valuesSeparator, fmt.Sprintf("\\%s", valuesSeparator), -1)
-				jointProp = fmt.Sprintf("%s%s%s", jointProp, url.QueryEscape(propValue), url.QueryEscape(valuesSeparator))
+				propValue := strings.Replace(value, multiValuesSeparator, fmt.Sprintf("\\%s", multiValuesSeparator), -1)
+				jointProp = fmt.Sprintf("%s%s%s", jointProp, url.QueryEscape(propValue), url.QueryEscape(multiValuesSeparator))
 			} else {
 				jointProp = fmt.Sprintf("%s%s=%s%s", jointProp, url.QueryEscape(key), url.QueryEscape(value), propsSeparator)
 			}
 		}
 		// Trim the last comma/semicolon
 		if concatValues {
-			jointProp = strings.TrimSuffix(jointProp, url.QueryEscape(valuesSeparator))
+			jointProp = strings.TrimSuffix(jointProp, url.QueryEscape(multiValuesSeparator))
 		} else {
 			jointProp = strings.TrimSuffix(jointProp, propsSeparator)
 		}
@@ -132,7 +129,7 @@ func (props *Properties) ToEncodedString(concatValues bool) string {
 func (props *Properties) ToHeadersMap() map[string]string {
 	headers := map[string]string{}
 	for key, values := range props.properties {
-		headers[key] = base64.StdEncoding.EncodeToString([]byte(strings.Join(values, valuesSeparator)))
+		headers[key] = base64.StdEncoding.EncodeToString([]byte(strings.Join(values, multiValuesSeparator)))
 	}
 	return headers
 }
