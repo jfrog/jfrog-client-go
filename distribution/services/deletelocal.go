@@ -44,6 +44,9 @@ func (dlr *DeleteLocalReleaseBundleService) execDeleteLocalDistribution(name, ve
 	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
+	if dlr.Sync {
+		dlr.waitForDeletion(name, version)
+	}
 
 	log.Debug("Distribution response: ", resp.Status)
 	return errorutils.CheckError(err)

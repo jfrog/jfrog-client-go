@@ -484,25 +484,6 @@ func waitForDistribution(t *testing.T, bundleName string) {
 	t.Error("Timeout for release bundle distribution " + bundleName + "/" + bundleVersion)
 }
 
-// Wait for deletion of a release bundle
-func waitForDeletion(t *testing.T, bundleName string) {
-	for i := 0; i < 120; i++ {
-		resp, body, _, err := httpClient.SendGet(GetDistDetails().GetUrl()+"api/v1/release_bundle/"+bundleName+"/"+bundleVersion+"/distribution", true, distHttpDetails, "")
-		assert.NoError(t, err)
-		if resp.StatusCode == http.StatusNotFound {
-			return
-		}
-		if resp.StatusCode != http.StatusOK {
-			t.Error(resp.Status)
-			t.Error(string(body))
-			return
-		}
-		t.Log("Waiting for distribution deletion " + bundleName + "/" + bundleVersion + "...")
-		time.Sleep(time.Second)
-	}
-	t.Error("Timeout for release bundle deletion " + bundleName + "/" + bundleVersion)
-}
-
 type distributableResponse struct {
 	distributionServicesUtils.ReleaseBundleBody
 	Name    string                          `json:"name,omitempty"`
@@ -539,6 +520,7 @@ func getLocalBundle(t *testing.T, bundleName string, expectExist bool) *distribu
 
 func deleteLocalBundle(t *testing.T, bundleName string, assertDeletion bool) {
 	deleteLocalBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
+	deleteLocalBundleParams.Sync = true
 	err := testsBundleDeleteLocalService.DeleteDistribution(deleteLocalBundleParams)
 	if !assertDeletion {
 		return
@@ -553,10 +535,10 @@ func deleteRemoteAndLocalBundle(t *testing.T, bundleName string, assertDeletion 
 	// Delete also local release bundle
 	deleteBundleParams.DeleteFromDistribution = true
 	deleteBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
+	deleteBundleParams.Sync = true
 	err := testsBundleDeleteRemoteService.DeleteDistribution(deleteBundleParams)
 	if !assertDeletion {
 		return
 	}
 	assert.NoError(t, err)
-	waitForDeletion(t, bundleName)
 }

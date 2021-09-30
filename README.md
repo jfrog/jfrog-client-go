@@ -1260,7 +1260,10 @@ params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
 params.DeleteFromDistribution = true
 distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
 params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
-
+// Set to true to enable sync deletion (the command execution will end when the deletion process ends).
+param.Sync = true
+// Max minutes to wait for sync deletion.
+param.MaxWaitMinutes = 10
 err := distManager.DeleteReleaseBundle(params)
 ```
 
