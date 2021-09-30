@@ -24,6 +24,7 @@
     - [Using Artifactory Services](#using-artifactory-services)
       - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
       - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
+      - [Downloading Release Bundles from Artifactory](#downloading-release-bundles-from-artifactory)
       - [Uploading and Downloading Files with Summary](#uploading-and-downloading-files-with-summary)
       - [Copying Files in Artifactory](#copying-files-in-artifactory)
       - [Moving Files in Artifactory](#moving-files-in-artifactory)
@@ -300,7 +301,7 @@ totalUploaded, totalFailed, err := rtManager.UploadFiles(params)
 ```
 
 #### Downloading Files from Artifactory
-Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download), and the error value if it occurred.
+Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download). In addition, we get the error value if it occurred.
 ```go
 params := services.NewDownloadParams()
 params.Pattern = "repo/*/*.zip"
@@ -323,6 +324,24 @@ params.MinSplitSize = 7168
 
 totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 ```
+
+#### Downloading Release Bundles from Artifactory
+Using the `DownloadFiles()` function, we can download release bundles and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download). In addition, we get the error value if it occurred.
+
+It is possible to validate the downloaded release bundle's files by providing a local path to a GPG public key file (the public GPG key should of course correspond to the private GPG key which was used to sign the release bundle). 
+
+```go
+params := services.NewDownloadParams()
+// Path on the local file system to which the files should be downloaded.
+params.Target = "target/path/"
+// Bundle's name and version should be separated with "/".
+params.Bundle = "bundleName/10"
+// Optional GPG validation
+params.PublicGpgKey = "public/key/file/path"
+totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
+```
+Read more about GPG signing release bundles [here](https://www.jfrog.com/confluence/display/JFROG/GPG+Signing).
+
 
 #### Uploading and Downloading Files with Summary
 The methods `UploadFilesWithSummary()` and `DownloadFilesWithSummary()` are similar to `UploadFlies()` and `DownloadFlies()`, but return an OperationSummary struct, which allows iterating over the details of the uploaded/downloaded files.<br>
@@ -1241,7 +1260,10 @@ params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
 params.DeleteFromDistribution = true
 distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
 params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
-
+// Set to true to enable sync deletion (the command execution will end when the deletion process ends).
+param.Sync = true
+// Max minutes to wait for sync deletion.
+param.MaxWaitMinutes = 10
 err := distManager.DeleteReleaseBundle(params)
 ```
 

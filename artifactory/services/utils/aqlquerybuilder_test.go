@@ -74,7 +74,7 @@ func assertIsSortLimitSpecBool(actual, expected bool, t *testing.T) {
 
 func TestGetQueryReturnFields(t *testing.T) {
 	artifactoryParams := CommonParams{}
-	minimalFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "size", "type", "created", "modified"}
+	minimalFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "created", "modified"}
 
 	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "property"), t)
 	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, SYMLINK), append(minimalFields, "property"), t)

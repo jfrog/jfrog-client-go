@@ -41,6 +41,9 @@ func TestParseProperties(t *testing.T) {
 		{"y=a,b\\,c\\,d\\,e", Properties{properties: map[string][]string{"y": {"a", "b,c,d,e"}}}},
 		{"y=\\,a b", Properties{properties: map[string][]string{"y": {",a b"}}}},
 		{"y=a,b;x=i;y=a;x=j", Properties{properties: map[string][]string{"y": {"a", "b"}, "x": {"i", "j"}}}},
+		{"y=a=a,b;x=i;y=a=a;x=j=", Properties{properties: map[string][]string{"y": {"a=a", "b"}, "x": {"i", "j="}}}},
+		{"y=a,b;x=i\\;;y=a;x=j\\;\\;", Properties{properties: map[string][]string{"y": {"a", "b"}, "x": {"i;", "j;;"}}}},
+		{"y=a,b;x=\\i;y=a\\;;x=j\\;=\\,", Properties{properties: map[string][]string{"y": {"a", "b", "a;"}, "x": {"\\i", "j;=,"}}}},
 	}
 	for _, test := range tests {
 		t.Run(test.propsString, func(t *testing.T) {
