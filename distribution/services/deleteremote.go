@@ -109,10 +109,9 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 	if dr.MaxWaitMinutes >= 1 {
 		maxWaitMinutes = dr.MaxWaitMinutes
 	}
-	deleteMessage := fmt.Sprintf("Performing sync deletion of release bundle %s/%s...", name, version)
 	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepIntervalSeconds {
 		if timeElapsed%60 == 0 {
-			log.Info(deleteMessage)
+			log.Info(fmt.Sprintf("Performing sync deletion of release bundle %s/%s...", name, version))
 		}
 		resp, _, _, err := dr.client.SendGet(dr.DistDetails.GetUrl()+"api/v1/release_bundle/"+name+"/"+version+"/distribution", true, &httpClientsDetails)
 		if err != nil {
@@ -125,10 +124,9 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 		if resp.StatusCode != http.StatusOK {
 			return errorutils.CheckError(errors.New("Error while waiting to deletion: status code " + string(resp.StatusCode) + "."))
 		}
-		log.Info("Waiting for distribution deletion " + name + "/" + version + "...")
 		time.Sleep(time.Second * defaultSyncSleepIntervalSeconds)
 	}
-	return errorutils.CheckError(errors.New("Timeout for sync deletion"))
+	return errorutils.CheckError(errors.New("Timeout for sync deletion. "))
 }
 
 type DeleteRemoteDistributionBody struct {
