@@ -91,6 +91,8 @@ func (sm *DistributionServicesManager) DeleteLocalReleaseBundle(params services.
 	deleteLocalBundleService := services.NewDeleteLocalDistributionService(sm.client)
 	deleteLocalBundleService.DistDetails = sm.config.GetServiceDetails()
 	deleteLocalBundleService.DryRun = sm.config.IsDryRun()
+	deleteLocalBundleService.Sync = params.Sync
+	deleteLocalBundleService.MaxWaitMinutes = params.MaxWaitMinutes
 	return deleteLocalBundleService.DeleteDistribution(params)
 }
 
