@@ -109,8 +109,8 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 	if dr.MaxWaitMinutes >= 1 {
 		maxWaitMinutes = dr.MaxWaitMinutes
 	}
-	deleteMessage := fmt.Sprintf("Sync: Deletion %s/%s...", name, version)
-	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepInterval {
+	deleteMessage := fmt.Sprintf("Performing sync deletion of release bundle %s/%s...", name, version)
+	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepIntervalSeconds {
 		if timeElapsed%60 == 0 {
 			log.Info(deleteMessage)
 		}
@@ -126,8 +126,7 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 			return errorutils.CheckError(errors.New("Error while waiting to deletion: status code " + string(resp.StatusCode) + "."))
 		}
 		log.Info("Waiting for distribution deletion " + name + "/" + version + "...")
-		time.Sleep(time.Second)
-
+		time.Sleep(time.Second * defaultSyncSleepIntervalSeconds)
 	}
 	return errorutils.CheckError(errors.New("Timeout for sync deletion"))
 }
