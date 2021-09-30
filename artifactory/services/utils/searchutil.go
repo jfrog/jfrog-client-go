@@ -317,6 +317,7 @@ type ResultItem struct {
 	Name        string     `json:"name,omitempty"`
 	Actual_Md5  string     `json:"actual_md5,omitempty"`
 	Actual_Sha1 string     `json:"actual_sha1,omitempty"`
+	Sha256      string     `json:"sha256,omitempty"`
 	Size        int64      `json:"size,omitempty"`
 	Created     string     `json:"created,omitempty"`
 	Modified    string     `json:"modified,omitempty"`

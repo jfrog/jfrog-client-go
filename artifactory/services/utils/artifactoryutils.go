@@ -144,7 +144,7 @@ func IsSubPath(paths []string, index int, separator string) bool {
 // If buildName or buildNumber contains "/" (slash) it should be escaped by "\" (backslash).
 // Result examples of parsing: "aaa/123" > "aaa"-"123", "aaa" > "aaa"-"LATEST", "aaa\\/aaa" > "aaa/aaa"-"LATEST",  "aaa/12\\/3" > "aaa"-"12/3".
 func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier, projectKey string, flags CommonConf) (string, string, error) {
-	buildName, buildNumber, err := parseNameAndVersion(buildIdentifier, true)
+	buildName, buildNumber, err := ParseNameAndVersion(buildIdentifier, true)
 	if err != nil {
 		return "", "", err
 	}
@@ -175,7 +175,7 @@ func getBuildNameAndNumberFromProps(properties []Property) (buildName string, bu
 // For builds (useLatestPolicy = true) - Parse build name and number. The build number can be LATEST if absent.
 // For release bundles - Parse bundle name and version.
 // For module - Parse module name and number.
-func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, string, error) {
+func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, string, error) {
 	const Delimiter = "/"
 	const EscapeChar = "\\"
 
@@ -598,7 +598,7 @@ func getAggregatedBuilds(buildName, buildNumber, projectKey string, flags Common
 	}}
 	for _, module := range buildInfo.BuildInfo.Modules {
 		if module.Type == buildinfo.Build {
-			name, version, err := parseNameAndVersion(module.Id, false)
+			name, version, err := ParseNameAndVersion(module.Id, false)
 			if err != nil {
 				return []Build{}, err
 			}
