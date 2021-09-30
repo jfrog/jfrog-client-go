@@ -119,6 +119,7 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 			return err
 		}
 		if resp.StatusCode == http.StatusNotFound {
+			log.Info("Deletion Completed!")
 			return nil
 		}
 		if resp.StatusCode != http.StatusOK {
