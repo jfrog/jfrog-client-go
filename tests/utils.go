@@ -113,7 +113,7 @@ var trueValue = true
 var falseValue = false
 
 const (
-	RtTargetRepo                     = "jfrog-client-tests-repo1/"
+	RtTargetRepo                     = "jf-client-tests-repo1/"
 	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
 	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
