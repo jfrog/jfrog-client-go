@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -777,6 +778,9 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	}
 	// If this is a directory, add it to the writer with a trailing slash.
 	if info.IsDir() {
+		if flat {
+			localPath = path.Base(localPath)
+		}
 		header.Name = localPath + "/"
 		return
 	}
