@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -766,6 +765,13 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		header.Name = clientutils.TrimPath(localPath)
 	}
 	header.Method = zip.Deflate
+
+	// If this is a directory, add it to the writer with a trailing slash.
+	if info.IsDir() {
+		header.Name = header.Name + "/"
+		_, e = zipWriter.CreateHeader(header)
+		return
+	}
 	writer, e := zipWriter.CreateHeader(header)
 	if errorutils.CheckError(e) != nil {
 		return
@@ -776,15 +782,6 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		_, e = writer.Write([]byte(filepath.ToSlash(artifact.SymlinkTargetPath)))
 		return
 	}
-	// If this is a directory, add it to the writer with a trailing slash.
-	if info.IsDir() {
-		if flat {
-			localPath = path.Base(localPath)
-		}
-		header.Name = localPath + "/"
-		return
-	}
-
 	file, e := os.Open(localPath)
 	if e != nil {
 		return e
