@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/jfrog/jfrog-client-go/access/services"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
