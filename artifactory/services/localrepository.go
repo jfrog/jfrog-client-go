@@ -143,6 +143,7 @@ func (lrs *LocalRepositoryService) Yum(params YumLocalRepositoryParams) error {
 type LocalRepositoryBaseParams struct {
 	RepositoryBaseParams
 	AdditionalRepositoryBaseParams
+	KeyPairRefsRepositoryParams
 	ArchiveBrowsingEnabled *bool `json:"archiveBrowsingEnabled,omitempty"`
 }
 
