@@ -34,11 +34,11 @@ const (
 // Use this function when searching by build without pattern or aql.
 // Collect build artifacts and build dependencies separately, then merge the results into one reader.
 func SearchBySpecWithBuild(specFile *ArtifactoryCommonParams, flags CommonConf) (*content.ContentReader, error) {
-	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, flags)
+	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err
 	}
-	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, "", flags)
+	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
 	if err != nil {
 		return nil, err
 	}
