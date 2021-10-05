@@ -16,8 +16,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-const defaultMaxWaitMinutes = 60    // 1 hour
-const defaultSyncSleepInterval = 10 // 10 seconds
+const defaultMaxWaitMinutes = 60           // 1 hour
+const defaultSyncSleepIntervalSeconds = 10 // 10 seconds
 
 type DistributeReleaseBundleService struct {
 	client      *jfroghttpclient.JfrogHttpClient
@@ -105,7 +105,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 		maxWaitMinutes = dr.MaxWaitMinutes
 	}
 	distributingMessage := fmt.Sprintf("Sync: Distributing %s/%s...", distributeParams.Name, distributeParams.Version)
-	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepInterval {
+	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepIntervalSeconds {
 		if timeElapsed%60 == 0 {
 			log.Info(distributingMessage)
 		}
@@ -125,7 +125,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 			log.Info("Distribution Completed!")
 			return nil
 		}
-		time.Sleep(time.Second * defaultSyncSleepInterval)
+		time.Sleep(time.Second * defaultSyncSleepIntervalSeconds)
 	}
 	return errorutils.CheckError(errors.New("Timeout for sync distribution"))
 }
