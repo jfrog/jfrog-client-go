@@ -23,8 +23,6 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 	assert.NoError(t, err)
 	updatedProject, err := testsAccessProjectService.Get(projectParams.ProjectDetails.ProjectKey)
 	assert.NoError(t, err)
-	log.Error(updatedProject)
-	log.Error(updatedProject.ProjectKey)
 	assert.NotNil(t, updatedProject)
 	if !reflect.DeepEqual(projectParams.ProjectDetails, *updatedProject) {
 		t.Error("Unexpected project details built. Expected: `", projectParams.ProjectDetails, "` Got `", *updatedProject, "`")
