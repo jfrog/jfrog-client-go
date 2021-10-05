@@ -17,13 +17,13 @@ const (
 	vulnerabilitiesAPI = reportsAPI + "/vulnerabilities"
 )
 
-// ReportService defines the Http client and XRay details
+// ReportService defines the Http client and Xray details
 type ReportService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
 }
 
-// ReportDetails defines the detail response for an XRay report
+// ReportDetails defines the detail response for an Xray report
 type ReportDetails struct {
 	Id                 int    `json:"id,omitempty"`
 	Name               string `json:"name,omitempty"`
@@ -105,12 +105,12 @@ type ReportResponse struct {
 	Status   string `json:"status"`
 }
 
-// NewReportService creates a new XRay Report Service
+// NewReportService creates a new Xray Report Service
 func NewReportService(client *jfroghttpclient.JfrogHttpClient) *ReportService {
 	return &ReportService{client: client}
 }
 
-// Vulnerabilities requests a new XRay scan for vulnerabilities
+// Vulnerabilities requests a new Xray scan for vulnerabilities
 func (rs *ReportService) Vulnerabilities(req ReportRequestParams) (*ReportResponse, error) {
 	retVal := ReportResponse{}
 	httpClientsDetails := rs.XrayDetails.CreateHttpClientDetails()

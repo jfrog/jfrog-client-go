@@ -118,6 +118,10 @@
       - [Add Builds to Indexing Configuration](#add-builds-to-indexing-configuration)
       - [Request Graph Scan](#request-graph-scan)
       - [Retrieve the Graph Scan Results](#retrieve-the-graph-scan-results)
+      - [Generate Vulnerabilities Report](#generate-vulnerabilities-report)
+      - [Get Vulnerabilities Report Details](#get-vulnerabilities-report-details)
+      - [Get Vulnerabilities Report Content](#get-vulnerabilities-report-content)
+      - [Delete Vulnerabilities Report](#delete-vulnerabilities-report)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -1470,6 +1474,51 @@ scanId, err := xrayManager.ScanGraph(graphScanParams)
 // scanId should be received from xrayManager.ScanGraph(graphScanParams) request.
 scanResults, err := xrayManager.GetScanGraphResults(scanId)
 ```
+
+#### Generate Vulnerabilities Report
+```go
+reportRequest := services.ReportRequestParams{
+  Name: "example-report",
+  Filters: services.Filter{
+    HasRemediation: true,
+    Severity:       []string{ "High" },
+  },
+  Resources: services.Resource{
+    IncludePathPatterns: []string{ "/example-sub-dir/**" },
+    Repositories: []services.Repository{
+      {
+        Name: "example-repository",
+      },
+    },
+  },
+}
+
+// The reportRequestResponse will contain the report id to use in subsequent requests
+reportRequestResponse, err := xrayManager.GenerateVulnerabilitiesReport(reportRequest)
+```
+
+#### Get Vulnerabilities Report Details
+```go
+reportDetails, err := xrayManager.ReportDetails(reportId)
+```
+
+#### Get Vulnerabilities Report Content
+```go
+reportContentRequest := services.ReportContentRequestParams{
+  ReportId:  "example-report-id",
+  Direction: "asc",
+  PageNum:   0,
+  NumRows:   0,
+  OrderBy:   "severity",
+}
+reportContent, err := xrayManager.ReportContent(reportContentRequest)
+```
+
+#### Delete Vulnerabilities Report
+```go
+err := xrayManager.DeleteReport(reportId)
+```
+
 ## Pipelines APIs
 ### Creating Pipelines Service Manager
 #### Creating Pipelines Details

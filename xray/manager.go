@@ -153,7 +153,7 @@ func (sm *XrayServicesManager) ReportContent(params services.ReportContentReques
 	return reportService.Content(params)
 }
 
-// DeleteReport deletes a XRay report
+// DeleteReport deletes a Xray report
 func (sm *XrayServicesManager) DeleteReport(reportId string) error {
 	reportService := services.NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
