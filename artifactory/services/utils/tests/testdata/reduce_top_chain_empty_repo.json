@@ -1,7 +1,7 @@
 {
     "results": [
         {
-            "repo": "jfrog-cli-tests-repo1-1592224175",
+            "repo": "jf-cli-tests-repo1-1592224175",
             "path": ".",
             "name": ".",
             "type": "folder",

@@ -23,6 +23,7 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 	assert.NoError(t, err)
 	updatedProject, err := testsAccessProjectService.Get(projectParams.ProjectDetails.ProjectKey)
 	assert.NoError(t, err)
+	assert.NotNil(t, updatedProject)
 	if !reflect.DeepEqual(projectParams.ProjectDetails, *updatedProject) {
 		t.Error("Unexpected project details built. Expected: `", projectParams.ProjectDetails, "` Got `", *updatedProject, "`")
 	}
@@ -34,7 +35,7 @@ func deleteProjectAndAssert(t *testing.T, projectKey string) {
 }
 
 func getTestProjectParams() services.ProjectParams {
-	adminPriviligies := services.AdminPrivileges{
+	adminPrivileges := services.AdminPrivileges{
 		ManageMembers:   true,
 		ManageResources: true,
 		IndexResources:  true,
@@ -42,7 +43,7 @@ func getTestProjectParams() services.ProjectParams {
 	projectDetails := services.Project{
 		DisplayName:       "testProject",
 		Description:       "My Test Project",
-		AdminPrivileges:   &adminPriviligies,
+		AdminPrivileges:   &adminPrivileges,
 		SoftLimit:         false,
 		StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
 		ProjectKey:        "tstprj",

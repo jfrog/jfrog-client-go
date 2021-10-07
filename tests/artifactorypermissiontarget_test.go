@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	PermissionTargetNamePrefix = "jfrog-client-go-tests-target"
+	PermissionTargetNamePrefix = JfrogRepoPrefix + "-client-go-tests-target"
 )
 
 func TestPermissionTarget(t *testing.T) {

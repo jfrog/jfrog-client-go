@@ -23,9 +23,9 @@ func NewSourcesService(client *jfroghttpclient.JfrogHttpClient) *SourcesService 
 }
 
 const (
-	DefaultPipelinesFileFilter         = "pipelines.yml"
-	SourcesRestApi                     = "api/v1/pipelinesources/"
-	sourceAlreadyExistsResponseString  = "source already exists"
+	DefaultPipelinesFileFilter        = "pipelines.yml"
+	SourcesRestApi                    = "api/v1/pipelinesources/"
+	sourceAlreadyExistsResponseString = "source already exists"
 )
 
 func (ss *SourcesService) AddSource(projectIntegrationId int, repositoryFullName, branch, fileFilter string) (id int, err error) {
