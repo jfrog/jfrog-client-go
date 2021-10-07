@@ -60,6 +60,7 @@ type Row struct {
 	Cvsv3MaxScore            float64  `json:"cvss3_max_score,omitempty"`
 	Summary                  string   `json:"summary,omitempty"`
 	Severity                 string   `json:"severity,omitempty"`
+	SeveritySource           string   `json:"severity_source,omitempty"`
 	VulnerableComponent      string   `json:"vulnerable_component,omitempty"`
 	ImpactedArtifact         string   `json:"impacted_artifact,omitempty"`
 	ImpactPath               []string `json:"impact_path,omitempty"`
