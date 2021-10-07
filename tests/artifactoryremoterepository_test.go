@@ -370,7 +370,8 @@ func remoteDockerTest(t *testing.T) {
 	drp.ExternalDependenciesPatterns = nil
 	drp.EnableTokenAuthentication = &falseValue
 	drp.BlockPullingSchema1 = &falseValue
-
+	// Docker prerequisite - artifacts must be stored locally in cache
+	drp.StoreArtifactsLocally = &trueValue
 	err = testsUpdateRemoteRepositoryService.Docker(drp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, drp)
