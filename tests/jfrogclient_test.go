@@ -19,12 +19,13 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	InitServiceManagers()
+	setupIntegrationTests()
 	result := m.Run()
+	teardownIntegrationTests()
 	os.Exit(result)
 }
 
-func InitServiceManagers() {
+func setupIntegrationTests() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	if *TestArtifactory || *TestDistribution || *TestXray {
@@ -69,9 +70,9 @@ func InitServiceManagers() {
 	if *TestAccess {
 		createAccessProjectManager()
 	}
-	err := createReposIfNeeded()
-	if err != nil {
+	if err := createRepo(); err != nil {
 		log.Error(err.Error())
+		os.Exit(1)
 	}
 }
 

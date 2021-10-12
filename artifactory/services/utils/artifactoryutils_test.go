@@ -22,7 +22,7 @@ func TestLoadMissingProperties(t *testing.T) {
 		defer reader.Close()
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(reader.GetFilesPaths()))
-		isMatch, err := fileutils.FilesIdentical(reader.GetFilesPaths()[0], filepath.Join(testDataPath, "load_missing_props_expected_results.json"))
+		isMatch, err := fileutils.JsonEqual(reader.GetFilesPaths()[0], filepath.Join(testDataPath, "load_missing_props_expected_results.json"))
 		assert.NoError(t, err)
 		assert.True(t, isMatch)
 		utils.MaxBufferSize = 3
@@ -35,7 +35,7 @@ func TestLoadMissingProperties(t *testing.T) {
 	defer reader.Close()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(reader.GetFilesPaths()))
-	isMatch, err := fileutils.FilesIdentical(reader.GetFilesPaths()[0], filepath.Join(testDataPath, "load_missing_props_by_created_expected_results.json"))
+	isMatch, err := fileutils.JsonEqual(reader.GetFilesPaths()[0], filepath.Join(testDataPath, "load_missing_props_by_created_expected_results.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
 	utils.MaxBufferSize = 3
@@ -50,7 +50,7 @@ func TestFilterBuildAqlSearchResults(t *testing.T) {
 	defer resultReader.Close()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(resultReader.GetFilesPaths()))
-	isMatch, err := fileutils.FilesIdentical(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "filter_build_aql_search_expected.json"))
+	isMatch, err := fileutils.JsonEqual(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "filter_build_aql_search_expected.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
 }

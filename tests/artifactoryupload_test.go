@@ -28,7 +28,7 @@ func flatUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
 
-	pattern := FixWinPath(filepath.Join(workingDir, "out", "*"))
+	pattern := filepath.Join(workingDir, "out", "*")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
@@ -68,7 +68,7 @@ func recursiveUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
 
-	pattern := FixWinPath(filepath.Join(workingDir, "*"))
+	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
@@ -111,7 +111,7 @@ func placeholderUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
 
-	pattern := FixWinPath(filepath.Join(workingDir, "(*).in"))
+	pattern := filepath.Join(workingDir, "(*).in")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
 	up.Flat = true
@@ -154,7 +154,7 @@ func includeDirsUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
 	defer os.RemoveAll(workingDir)
 
-	pattern := FixWinPath(filepath.Join(workingDir, "*"))
+	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
@@ -209,7 +209,7 @@ func explodeUpload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pattern := FixWinPath(filepath.Join(workingDir, "*.zip"))
+	pattern := filepath.Join(workingDir, "*.zip")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
 	up.Flat = true
@@ -255,7 +255,7 @@ func propsUpload(t *testing.T) {
 	defer os.RemoveAll(workingDir)
 
 	// Upload a.in with property key1=val1
-	pattern := FixWinPath(filepath.Join(workingDir, "out", "*"))
+	pattern := filepath.Join(workingDir, "out", "*")
 	targetProps, err := utils.ParseProperties("key1=val1")
 	assert.NoError(t, err)
 	up := services.NewUploadParams()
@@ -292,7 +292,7 @@ func propsUpload(t *testing.T) {
 }
 
 func summaryUpload(t *testing.T) {
-	pattern := FixWinPath(filepath.Join("testdata", "a", "*"))
+	pattern := filepath.Join("testdata", "a", "*")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
 	up.Flat = true
