@@ -1,9 +1,11 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/pipelines/services"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/pipelines/services"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPipelinesSources(t *testing.T) {
@@ -15,6 +17,10 @@ func testAddPipelineSource(t *testing.T) {
 	if *PipelinesVcsToken == "" {
 		assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured")
 		return
+	}
+	if !utils.IsWindows() {
+		// The following test modify a single Pipelines resource. Therefore, we limit the parallelism by running on windows (tests run on all OS parallel).
+		t.Skip("Not running on Windows, skipping...")
 	}
 	// Create integration with provided token.
 	integrationName := getUniqueIntegrationName(services.GithubName)

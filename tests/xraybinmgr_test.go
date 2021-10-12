@@ -3,7 +3,6 @@ package tests
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +13,7 @@ func TestXrayBinMgr(t *testing.T) {
 }
 
 func addBuildsToIndexing(t *testing.T) {
-	buildName := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "build1", time.Now().Unix())
+	buildName := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build1", randomRunNumber)
 	defer deleteBuild(buildName)
 
 	// Create a build

@@ -19,12 +19,19 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	InitServiceManagers()
+	exitCode := setupIntegrationTests()
+	if exitCode != 0 {
+		os.Exit(exitCode)
+	}
 	result := m.Run()
+	exitCode = teardownIntegrationTests()
+	if result == 0 {
+		os.Exit(exitCode)
+	}
 	os.Exit(result)
 }
 
-func InitServiceManagers() {
+func setupIntegrationTests() int {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	if *TestArtifactory || *TestDistribution || *TestXray {
@@ -69,10 +76,11 @@ func InitServiceManagers() {
 	if *TestAccess {
 		createAccessProjectManager()
 	}
-	err := createReposIfNeeded()
-	if err != nil {
+	if err := createRepo(); err != nil {
 		log.Error(err.Error())
+		return 1
 	}
+	return 0
 }
 
 func TestUnitTests(t *testing.T) {

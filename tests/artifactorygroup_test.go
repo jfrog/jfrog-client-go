@@ -2,7 +2,6 @@ package tests
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -65,7 +64,7 @@ func testDeleteGroup(t *testing.T) {
 
 func getTestGroupParams(includeUsers bool) services.GroupParams {
 	groupDetails := services.Group{
-		Name:            fmt.Sprintf("test%d", rand.Int()),
+		Name:            fmt.Sprintf("test-%s", randomRunNumber),
 		Description:     "hello",
 		AutoJoin:        false,
 		AdminPrivileges: true,

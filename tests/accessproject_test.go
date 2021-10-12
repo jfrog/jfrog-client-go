@@ -1,10 +1,11 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/access/services"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/access/services"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAccessProject(t *testing.T) {
@@ -40,13 +41,14 @@ func getTestProjectParams() services.ProjectParams {
 		ManageResources: true,
 		IndexResources:  true,
 	}
+	runNumberSuffix := randomRunNumber[len(randomRunNumber)-3 : len(randomRunNumber)]
 	projectDetails := services.Project{
-		DisplayName:       "testProject",
+		DisplayName:       "testProject" + runNumberSuffix,
 		Description:       "My Test Project",
 		AdminPrivileges:   &adminPrivileges,
 		SoftLimit:         false,
 		StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
-		ProjectKey:        "tstprj",
+		ProjectKey:        "tstprj" + runNumberSuffix,
 	}
 	return services.ProjectParams{
 		ProjectDetails: projectDetails,

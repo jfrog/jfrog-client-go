@@ -2,8 +2,8 @@
 
 | Branch |                                                                                        Status                                                                                         |
 | :----: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| master | [![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/master?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/master) |
-|  dev   |    [![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/dev?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/dev)    |
+| master | [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions) |
+|  dev   |    [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions) |
 
 ## Table of Contents
 - [jfrog-client-go](#jfrog-client-go)
@@ -156,7 +156,7 @@ We welcome pull requests from the community.
 - Please use gofmt for formatting the code before submitting the pull request.
 
 ## Tests
-To run the tests on the source code, you'll need a running JFrog instance. See the *Prerequisites* column in the *Test Types* section below for more information. 
+To run the tests on the source code, you'll need a running JFrog instance. See the *Prerequisites* column in the *Test Types* section below for more information.
 
 Use the following command with the below options to run the tests.
 ```sh
@@ -170,7 +170,7 @@ go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifac
 ### Flags
 #### Test Types
 | Type                | Description        | Prerequisites
-| ------------------- | ------------------ | ------------------------------| 
+| ------------------- | ------------------ | ------------------------------|
 | `-test.artifactory` | Artifactory tests  | Artifactory Pro               |
 | `-test.distribution`| Distribution tests | Artifactory with Distribution |
 | `-test.xray`        | Xray tests         | Artifactory with Xray         |
@@ -288,14 +288,14 @@ params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
 // The min file size in bytes for "checksum deploy".
-// "Checksum deploy" is the action of calculating the file checksum locally, before 
-// the upload, and skipping the actual file transfer if the file already  
+// "Checksum deploy" is the action of calculating the file checksum locally, before
+// the upload, and skipping the actual file transfer if the file already
 // exists in Artifactory.
 // MinChecksumDeploy default value: 10400
 params.MinChecksumDeploy = 15360
 // Set to false to disable all checksum calculation, including "checksum deploy".
 // ChecksumsCalcEnabled default value: true
-params.ChecksumsCalcEnabled = false 
+params.ChecksumsCalcEnabled = false
 // Attach properties to the uploaded files
 targetProps := utils.NewProperties()
 targetProps.AddProperty("key1", "val1")
@@ -332,7 +332,7 @@ totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 #### Downloading Release Bundles from Artifactory
 Using the `DownloadFiles()` function, we can download release bundles and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download). In addition, we get the error value if it occurred.
 
-It is possible to validate the downloaded release bundle's files by providing a local path to a GPG public key file (the public GPG key should of course correspond to the private GPG key which was used to sign the release bundle). 
+It is possible to validate the downloaded release bundle's files by providing a local path to a GPG public key file (the public GPG key should of course correspond to the private GPG key which was used to sign the release bundle).
 
 ```go
 params := services.NewDownloadParams()
@@ -804,7 +804,7 @@ servicesManager.DeleteRepository("generic-repo")
 #### Getting Repository Details
 You can get repository details from Artifactory using its key, and the desired params struct.
 The function expects to get the repo key (name) and a pointer to a param struct that will be filled up.
-The param struct should contain the desired params fields corresponded to the Artifactory REST API: 
+The param struct should contain the desired params fields corresponded to the Artifactory REST API:
 ```go
 repoDetails = services.RepositoryDetails{}
 err := servicesManager.GetRepository("maven-repo", &repoDetails)
@@ -1090,7 +1090,7 @@ projectDetails := accessServices.Project{
 }
 projectParams = accessServices.NewProjectParams()
 projectParams.ProjectDetails = projectDetails
-err = accessManager.CreateProject(projectParams) 
+err = accessManager.CreateProject(projectParams)
 ```
 
 #### Updating a project
@@ -1111,7 +1111,7 @@ projectDetails := accessServices.Project{
 }
 projectParams = accessServices.NewProjectParams()
 projectParams.ProjectDetails = projectDetails
-err = accessManager.UpdateProject(projectParams) 
+err = accessManager.UpdateProject(projectParams)
 ```
 
 #### Deleting a Project
@@ -1486,7 +1486,7 @@ err := xrayManager.AddBuildsToIndexing(buildsToIndex)
 graphScanParams := &XrayGraphScanParams{}
 // Dependency tree. Each node must have a component identifier, see https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-ComponentIdentifiers.
 graphScanParams.Graph = &GraphNode{
-  Id: "gav://org.jfrog.buildinfo:build-info-extractor-gradle:4.24.5", 
+  Id: "gav://org.jfrog.buildinfo:build-info-extractor-gradle:4.24.5",
   Nodes: []*GraphNode{{Id: "gav://junit:junit:4.13.2"}, {Id: "gav://commons-lang:commons-lang:2.6"}}}
 scanId, err := xrayManager.ScanGraph(graphScanParams)
 ```

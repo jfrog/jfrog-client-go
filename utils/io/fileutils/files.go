@@ -3,6 +3,7 @@ package fileutils
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -575,6 +577,30 @@ func FilesIdentical(file1 string, file2 string) (bool, error) {
 		return false, err
 	}
 	return srcDetails.Checksum.Md5 == toCompareDetails.Checksum.Md5, nil
+}
+
+// JSONEqual compares the JSON from two files.
+func JsonEqual(filePath1, filePath2 string) (bool, error) {
+	reader1, err := os.Open(filePath1)
+	if err != nil {
+		return false, err
+	}
+	defer reader1.Close()
+	reader2, err := os.Open(filePath2)
+	if err != nil {
+		return false, err
+	}
+	defer reader2.Close()
+	var j, j2 interface{}
+	d := json.NewDecoder(reader1)
+	if err := d.Decode(&j); err != nil {
+		return false, err
+	}
+	d = json.NewDecoder(reader2)
+	if err := d.Decode(&j2); err != nil {
+		return false, err
+	}
+	return reflect.DeepEqual(j2, j), nil
 }
 
 // Compares provided Md5 and Sha1 to those of a local file.

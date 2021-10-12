@@ -18,18 +18,13 @@ func TestXrayPolicy(t *testing.T) {
 	t.Run("createUpdatePolicy", createUpdatePolicy)
 }
 
-func initXrayPolicyTest(t *testing.T, policyName string) string {
-	testsXrayPolicyService.Delete(policyName)
-	return policyName
-}
-
 func deletePolicy(t *testing.T, policyName string) {
 	err := testsXrayPolicyService.Delete(policyName)
 	assert.NoError(t, err)
 }
 
 func createMinSeverity(t *testing.T) {
-	policyName := initXrayPolicyTest(t, "create-min-severity")
+	policyName := "create-min-severity" + randomRunNumber
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -41,7 +36,7 @@ func createMinSeverity(t *testing.T) {
 }
 
 func createRangeSeverity(t *testing.T) {
-	policyName := initXrayPolicyTest(t, "create-range-severity")
+	policyName := "create-range-severity" + randomRunNumber
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -53,7 +48,7 @@ func createRangeSeverity(t *testing.T) {
 }
 
 func createLicenseAllowed(t *testing.T) {
-	policyName := initXrayPolicyTest(t, "create-allowed-licenses")
+	policyName := "create-allowed-licenses" + randomRunNumber
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -65,7 +60,7 @@ func createLicenseAllowed(t *testing.T) {
 }
 
 func createLicenseBanned(t *testing.T) {
-	policyName := initXrayPolicyTest(t, "create-banned-licenses")
+	policyName := "create-banned-licenses" + randomRunNumber
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -77,7 +72,7 @@ func createLicenseBanned(t *testing.T) {
 }
 
 func create2Priorities(t *testing.T) {
-	policyName := initXrayPolicyTest(t, "create-2-priorties")
+	policyName := "create-2-priorties" + randomRunNumber
 	defer deletePolicy(t, policyName)
 
 	policyRule1 := utils.PolicyRule{
@@ -94,7 +89,7 @@ func create2Priorities(t *testing.T) {
 }
 
 func createPolicyActions(t *testing.T) {
-	policyName := initXrayPolicyTest(t, "create-policy-actions")
+	policyName := "create-policy-actions" + randomRunNumber
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -117,7 +112,7 @@ func createPolicyActions(t *testing.T) {
 }
 
 func createUpdatePolicy(t *testing.T) {
-	policyName := initXrayPolicyTest(t, "update-policy")
+	policyName := "update-policy" + randomRunNumber
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{

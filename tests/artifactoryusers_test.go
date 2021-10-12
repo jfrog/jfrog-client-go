@@ -2,7 +2,6 @@ package tests
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 	"testing"
 
@@ -67,7 +66,7 @@ func testDeleteUser(t *testing.T) {
 
 func getTestUserParams(replaceIfExists bool) services.UserParams {
 	userDetails := services.User{
-		Name:                     fmt.Sprintf("test%d", rand.Int()),
+		Name:                     fmt.Sprintf("test%s", randomRunNumber),
 		Email:                    "christianb@jfrog.com",
 		Password:                 "Password1",
 		Admin:                    false,

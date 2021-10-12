@@ -3,7 +3,6 @@ package tests
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -24,17 +23,17 @@ func TestXrayWatch(t *testing.T) {
 }
 
 func testXrayWatchAll(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "policy1", time.Now().Unix())
+	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1", randomRunNumber)
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
-	policy2Name := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "policy2", time.Now().Unix())
+	policy2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy2", randomRunNumber)
 	err = createDummyPolicy(policy2Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy2Name)
 
-	AllWatchName := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "client-go-tests-watch-all-repos", time.Now().Unix())
+	AllWatchName := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-all-repos", randomRunNumber)
 	paramsAllRepos := utils.NewWatchParams()
 	paramsAllRepos.Name = AllWatchName
 	paramsAllRepos.Description = "All Repos"
@@ -118,30 +117,30 @@ func testXrayWatchAll(t *testing.T) {
 }
 
 func testXrayWatchSelectedRepos(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "policy1-pattern", time.Now().Unix())
+	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1-pattern", randomRunNumber)
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
-	repo1Name := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "repo1", time.Now().Unix())
+	repo1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "repo1", randomRunNumber)
 	createRepoLocal(t, repo1Name)
 	defer deleteRepo(t, repo1Name)
-	repo2Name := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "repo2", time.Now().Unix())
+	repo2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "repo2", randomRunNumber)
 	createRepoRemote(t, repo2Name)
 	defer deleteRepo(t, repo2Name)
 
-	build1Name := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "build1", time.Now().Unix())
+	build1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build1", randomRunNumber)
 	err = createAndIndexBuild(t, build1Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build1Name)
 
-	build2Name := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "build2", time.Now().Unix())
+	build2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build2", randomRunNumber)
 	err = createAndIndexBuild(t, build2Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build2Name)
 
 	paramsSelectedRepos := utils.NewWatchParams()
-	paramsSelectedRepos.Name = fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "client-go-tests-watch-selected-repos", time.Now().Unix())
+	paramsSelectedRepos.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-selected-repos", randomRunNumber)
 	paramsSelectedRepos.Description = "Selected Repos"
 	paramsSelectedRepos.Active = true
 	paramsSelectedRepos.Policies = []utils.AssignedPolicy{
@@ -257,13 +256,13 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 }
 
 func testXrayWatchBuildsByPattern(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "policy1-pattern", time.Now().Unix())
+	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1-pattern", randomRunNumber)
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
 	paramsBuildsByPattern := utils.NewWatchParams()
-	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "client-go-tests-watch-builds-by-pattern", time.Now().Unix())
+	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-builds-by-pattern", randomRunNumber)
 	paramsBuildsByPattern.Description = "Builds By Pattern"
 	paramsBuildsByPattern.Builds.Type = utils.WatchBuildAll
 	paramsBuildsByPattern.Builds.All.ExcludePatterns = []string{"excludePath"}
@@ -303,7 +302,7 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 
 func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch := utils.NewWatchParams()
-	paramsMissingWatch.Name = fmt.Sprintf("%s-%s-%d", JfrogRepoPrefix, "client-go-tests-watch-missing", time.Now().Unix())
+	paramsMissingWatch.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-missing", randomRunNumber)
 	paramsMissingWatch.Description = "Missing Watch"
 	paramsMissingWatch.Builds.Type = utils.WatchBuildAll
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}

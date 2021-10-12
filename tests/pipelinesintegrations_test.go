@@ -1,12 +1,11 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/pipelines/services"
-	"github.com/stretchr/testify/assert"
-	"strconv"
 	"strings"
 	"testing"
-	"time"
+
+	"github.com/jfrog/jfrog-client-go/pipelines/services"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -115,7 +114,7 @@ func getIntegrationAndAssert(t *testing.T, id int, name, integrationType string)
 }
 
 func getUniqueIntegrationName(integrationType string) string {
-	return strings.Join([]string{integrationNamesPrefix, integrationType, strconv.FormatInt(time.Now().Unix(), 10)}, "_")
+	return strings.Join([]string{integrationNamesPrefix, integrationType, randomRunNumber}, "_")
 }
 
 func deleteIntegrationAndAssert(t *testing.T, id int) {
