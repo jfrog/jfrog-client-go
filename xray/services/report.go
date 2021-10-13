@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -174,10 +173,7 @@ func (rs *ReportService) Content(request ReportContentRequestParams) (*ReportCon
 	}
 
 	err = json.Unmarshal(body, &retVal)
-	if err != nil {
-		return &retVal, errors.New("failed unmarshalling content for report " + request.ReportId)
-	}
-	return &retVal, nil
+	return &retVal, errorutils.CheckError(err)
 }
 
 // Delete deletes the report that has an id matching reportId
