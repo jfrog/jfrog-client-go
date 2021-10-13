@@ -25,6 +25,8 @@ func (dlr *DeleteLocalReleaseBundleService) GetDistDetails() auth.ServiceDetails
 }
 
 func (dlr *DeleteLocalReleaseBundleService) DeleteDistribution(deleteDistributionParams DeleteDistributionParams) error {
+	dlr.Sync = deleteDistributionParams.Sync
+	dlr.MaxWaitMinutes = deleteDistributionParams.MaxWaitMinutes
 	return dlr.execDeleteLocalDistribution(deleteDistributionParams.Name, deleteDistributionParams.Version)
 }
 

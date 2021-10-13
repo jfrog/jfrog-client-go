@@ -68,7 +68,8 @@ func (dr *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParam
 		},
 		OnSuccess: onSuccess,
 	}
-
+	dr.Sync = deleteDistributionParams.Sync
+	dr.MaxWaitMinutes = deleteDistributionParams.MaxWaitMinutes
 	return dr.execDeleteDistribute(deleteDistributionParams.Name, deleteDistributionParams.Version, deleteDistribution)
 }
 
