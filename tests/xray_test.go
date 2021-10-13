@@ -16,7 +16,7 @@ func TestXrayVersion(t *testing.T) {
 }
 
 func initXrayTest(t *testing.T) {
-	// if !*TestXray {
-	// 	t.Skip("Skipping xray test. To run xray test add the '-test.xray=true' option.")
-	// }
+	if !*TestXray {
+		t.Skip("Skipping xray test. To run xray test add the '-test.xray=true' option.")
+	}
 }
