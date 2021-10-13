@@ -1493,17 +1493,19 @@ reportRequest := services.ReportRequestParams{
   },
 }
 
-// The reportRequestResponse will contain the report id to use in subsequent requests
+// The reportRequestResponse will contain the report ID to use in subsequent requests
 reportRequestResponse, err := xrayManager.GenerateVulnerabilitiesReport(reportRequest)
 ```
 
 #### Get Vulnerabilities Report Details
 ```go
+// The reportId argument value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
 reportDetails, err := xrayManager.ReportDetails(reportId)
 ```
 
 #### Get Vulnerabilities Report Content
 ```go
+// The ReportId value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
 reportContentRequest := services.ReportContentRequestParams{
   ReportId:  "example-report-id",
   Direction: "asc",
@@ -1516,6 +1518,7 @@ reportContent, err := xrayManager.ReportContent(reportContentRequest)
 
 #### Delete Vulnerabilities Report
 ```go
+// The reportId argument value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
 err := xrayManager.DeleteReport(reportId)
 ```
 

@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	reportsAPI         = "api/v1/reports"
-	vulnerabilitiesAPI = reportsAPI + "/vulnerabilities"
+	// ReportsAPI refer to: https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-REPORTS
+	ReportsAPI         = "api/v1/reports"
+	VulnerabilitiesAPI = ReportsAPI + "/vulnerabilities"
 )
 
 // ReportService defines the Http client and Xray details
@@ -98,6 +99,7 @@ type Resource struct {
 	IncludePathPatterns []string     `json:"include_path_patterns,omitempty"`
 	Repositories        []Repository `json:"repositories,omitempty"`
 }
+
 type Repository struct {
 	Name string `json:"name,omitempty"`
 }
@@ -119,7 +121,7 @@ func (rs *ReportService) Vulnerabilities(req ReportRequestParams) (*ReportRespon
 	httpClientsDetails := rs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	url := fmt.Sprintf("%s/%s", rs.XrayDetails.GetUrl(), vulnerabilitiesAPI)
+	url := fmt.Sprintf("%s/%s", rs.XrayDetails.GetUrl(), VulnerabilitiesAPI)
 	content, err := json.Marshal(req)
 	if err != nil {
 		return &retVal, errorutils.CheckError(err)
@@ -132,7 +134,7 @@ func (rs *ReportService) Vulnerabilities(req ReportRequestParams) (*ReportRespon
 
 	err = json.Unmarshal(body, &retVal)
 	if err != nil {
-		return &retVal, errors.New("failed unmarshalling report response")
+		return &retVal, errorutils.CheckError(err)
 	}
 
 	return &retVal, nil
@@ -144,7 +146,7 @@ func (rs *ReportService) Details(reportId string) (*ReportDetails, error) {
 	httpClientsDetails := rs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), reportsAPI, reportId)
+	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI, reportId)
 	resp, body, _, err := rs.client.SendGet(url, true, &httpClientsDetails)
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return &retVal, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
@@ -152,7 +154,7 @@ func (rs *ReportService) Details(reportId string) (*ReportDetails, error) {
 
 	err = json.Unmarshal(body, &retVal)
 	if err != nil {
-		return &retVal, errors.New("failed unmarshalling report details " + reportId)
+		return &retVal, errorutils.CheckError(err)
 	}
 
 	return &retVal, nil
@@ -165,7 +167,7 @@ func (rs *ReportService) Content(request ReportContentRequestParams) (*ReportCon
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	url := fmt.Sprintf("%s/%s/%s?direction=%s&page_num=%d&num_of_rows=%d&order_by=%s",
-		rs.XrayDetails.GetUrl(), vulnerabilitiesAPI, request.ReportId, request.Direction, request.PageNum, request.NumRows, request.OrderBy)
+		rs.XrayDetails.GetUrl(), VulnerabilitiesAPI, request.ReportId, request.Direction, request.PageNum, request.NumRows, request.OrderBy)
 	resp, body, err := rs.client.SendPost(url, nil, &httpClientsDetails)
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return &retVal, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
@@ -183,7 +185,7 @@ func (rs *ReportService) Delete(reportId string) error {
 	httpClientsDetails := rs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), reportsAPI, reportId)
+	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI, reportId)
 	resp, body, err := rs.client.SendDelete(url, nil, &httpClientsDetails)
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
