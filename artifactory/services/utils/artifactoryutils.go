@@ -232,7 +232,7 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey stri
 		buildRepo = projectKey
 	}
 	buildRepo += buildRepositoriesSuffix
-	buildNameTrimDelimiter := strings.Trim(buildName, "/")          // "buildname/" >> "buildname" (remove trailing '/' if exist and there is no build name)
+	buildNameTrimDelimiter := strings.TrimSuffix(buildName, "/")    // "buildname/" >> "buildname" (remove trailing '/' if exist and there is no build name)
 	buildNameQueryEscape := url.QueryEscape(buildNameTrimDelimiter) // "build/name" >> "build%2Fname" (Escape special characters with url encoding escaping)
 
 	// The next line is temporary(!) fix for AQl escaping % issue.
