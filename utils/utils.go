@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -497,9 +499,12 @@ type DeployableArtifactDetails struct {
 	TargetRepository string `json:"targetRepository,omitempty"`
 }
 
-func (detailes *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) FileTransferDetails {
-	targetPath := rtUrl + targetRepository + "/" + detailes.ArtifactDest
-	return FileTransferDetails{SourcePath: detailes.SourcePath, TargetPath: targetPath, Sha256: detailes.Sha256}
+func (details *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) (FileTransferDetails, error) {
+	url, err := url.Parse(rtUrl + targetRepository)
+	url.Path = path.Join(url.Path, details.ArtifactDest)
+	targetPath := url.String()
+
+	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetPath, Sha256: details.Sha256}, err
 }
 
 type UploadResponseBody struct {
