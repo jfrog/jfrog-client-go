@@ -278,6 +278,7 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 			return
 		}
 	}
+	log.Debug("No packed-refs file was found. Assuming git repository is empty")
 	return
 }
 
