@@ -206,7 +206,7 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			break
 		}
 	}
-	if name == "" {
+	if name == "" || version == "" {
 		if useLatestPolicy {
 			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + latest)
 			name = identifier
@@ -232,7 +232,20 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey stri
 		buildRepo = projectKey
 	}
 	buildRepo += buildRepositoriesSuffix
-	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, buildName)
+	buildNameTrimDelimiter := strings.Trim(buildName, "/")          // "buildname/" >> "buildname" (remove trailing '/' if exist and there is no build name)
+	buildNameQueryEscape := url.QueryEscape(buildNameTrimDelimiter) // "build/name" >> "build%2Fname" (Escape special characters with url encoding escaping)
+
+	// The next line is temporary(!) fix for AQl escaping % issue.
+	// That line should be removed when artifactory team will fix it (https://www.jfrog.com/jira/browse/RTFACT-25808).
+	// In some cases that fix can get wrong response.
+	// For example:
+	// 		1. Build name: "build\name"
+	// 		2. The build name after url escaping: "build%2Fname"
+	//		3. After "%" character replaced with "?" : "build?2Fname"
+	// 		4. build names that can be retrieved using that query : "build\name"(desired) , but also "buildX2Fname", "buildY2Fname"
+	buildNameWithEscapedChars := strings.Replace(buildNameQueryEscape, "%", "?", -1)
+
+	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, buildNameWithEscapedChars)
 	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
 		return "", "", err
@@ -376,7 +389,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 
 // Load the properties from readerWithProps into buffer's ResultItem and write its values into the resultWriter.
 // buffer - Search result buffer Key -> relative path, value -> ResultItem. We use this to load the props into the item by matching the uniqueness of relevant path.
-// crWithProps - File containing all the results with proprties.
+// crWithProps - File containing all the results with properties.
 // writeOrder - List of sorted buffer's searchResults(Map is an unordered collection).
 // resultWriter - Search results (sorted) with props.
 func updateProps(readerWithProps *content.ContentReader, resultWriter *content.ContentWriter, buffer map[string]*ResultItem, writeOrder []*ResultItem) error {
