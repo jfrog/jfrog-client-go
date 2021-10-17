@@ -584,7 +584,7 @@ func createRepo() error {
 }
 
 func teardownIntegrationTests() int {
-	if RtUrl == nil || *RtUrl == "" {
+	if !(*TestArtifactory || *TestDistribution || *TestXray) {
 		return 0
 	}
 	repo := RtTargetRepoKey
