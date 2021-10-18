@@ -232,8 +232,12 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey stri
 		buildRepo = projectKey
 	}
 	buildRepo += buildRepositoriesSuffix
-	buildNameTrimDelimiter := strings.TrimSuffix(buildName, "/")    // "buildname/" >> "buildname" (remove trailing '/' if exist and there is no build name)
-	buildNameQueryEscape := url.QueryEscape(buildNameTrimDelimiter) // "build/name" >> "build%2Fname" (Escape special characters with url encoding escaping)
+
+	// "buildname/" >> "buildname" (remove trailing '/' if received a build name without build version)
+	buildNameTrimDelimiter := strings.TrimSuffix(buildName, "/")
+
+	// "build/name" >> "build%2Fname" (Escape special characters with url encoding escaping)
+	buildNameQueryEscape := url.QueryEscape(buildNameTrimDelimiter)
 
 	// The next line is temporary(!) fix for AQl escaping % issue.
 	// That line should be removed when artifactory team will fix it (https://www.jfrog.com/jira/browse/RTFACT-25808).
