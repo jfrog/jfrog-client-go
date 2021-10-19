@@ -765,6 +765,13 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		header.Name = clientutils.TrimPath(localPath)
 	}
 	header.Method = zip.Deflate
+
+	// If this is a directory, add it to the writer with a trailing slash.
+	if info.IsDir() {
+		header.Name += "/"
+		_, e = zipWriter.CreateHeader(header)
+		return
+	}
 	writer, e := zipWriter.CreateHeader(header)
 	if errorutils.CheckError(e) != nil {
 		return
@@ -775,12 +782,6 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		_, e = writer.Write([]byte(filepath.ToSlash(artifact.SymlinkTargetPath)))
 		return
 	}
-	// If this is a directory, add it to the writer with a trailing slash.
-	if info.IsDir() {
-		_, e = writer.Write([]byte(filepath.ToSlash(localPath + fileutils.GetFileSeparator())))
-		return
-	}
-
 	file, e := os.Open(localPath)
 	if e != nil {
 		return e

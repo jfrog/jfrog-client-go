@@ -57,7 +57,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done " + operationString + " repository.")
+	log.Info("Done", operationString, "repository", "'"+repoKey+"'.")
 	return nil
 }
 
