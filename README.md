@@ -69,6 +69,17 @@
       - [Fetching Group Details](#fetching-group-details)
       - [Creating and Updating a Group](#creating-and-updating-a-group)
       - [Deleting a Group](#deleting-a-group)
+  - [Access APIs](#access-apis)
+    - [Creating Access Service Manager](#creating-access-service-manager)
+      - [Creating Access Details](#creating-access-details)
+      - [Creating Access Service Config](#creating-access-service-config)
+      - [Creating New Access Service Manager](#creating-new-access-service-manager)
+    - [Using Access Services](#using-access-services)
+      - [Creating a New Project](#creating-a-new-project)
+      - [Updating a Project](#updating-a-project)
+      - [Deleting a Project](#deleting-a-project)
+      - [Assigning Repository To Project](#assigning-repository-to-project)
+      - [Unassigning Repository From Project](#unassigning-repository-from-project)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -165,22 +176,24 @@ go test -v github.com/jfrog/jfrog-client-go/tests [test-types] [flags]
 ```
 Optional flags:
 
-| Flag                | Description                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------ |
-| `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
-| `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
-| `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
-| `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
-| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
-| `-rt.password`      | [Default: password] Artifactory password.                                                              |
-| `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
-| `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
-| `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
-| `-rt.accessToken`   | [Optional] Artifactory access token.                                                                   |
-| `-pipe.accessToken` | [Optional] Pipelines access token.                                                                     |
-| `-pipe.vcsToken`    | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
-| `-pipe.vcsRepo`     | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
-| `-pipe.vcsBranch`   | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
+| Flag                 | Description                                                                                            |
+| -------------------  | ------------------------------------------------------------------------------------------------------ |
+| `-rt.url`            | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
+| `-ds.url`            | [Optional] JFrog Distribution URL.                                                                     |
+| `-xr.url`            | [Optional] JFrog Xray URL.                                                                             |
+| `-pipe.url`          | [Optional] JFrog Pipelines URL.                                                                        |
+| `-rt.user`           | [Default: admin] Artifactory username.                                                                 |
+| `-rt.password`       | [Default: password] Artifactory password.                                                              |
+| `-rt.apikey`         | [Optional] Artifactory API key.                                                                        |
+| `-rt.sshKeyPath`     | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
+| `-rt.sshPassphrase`  | [Optional] Ssh key passphrase.                                                                         |
+| `-rt.accessToken`    | [Optional] Artifactory access token.                                                                   |
+| `-pipe.accessToken`  | [Optional] Pipelines access token.                                                                     |
+| `-pipe.vcsToken`     | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
+| `-pipe.vcsRepo`      | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
+| `-pipe.vcsBranch`    | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
+| `-access.url`        | [Optional] JFrog Access URL.                                                                           |
+| `-access.accessToken`| [Optional] Access access token.                                                                        |
 
 The types are:
 
@@ -190,6 +203,7 @@ The types are:
 | `-test.distribution`| Distribution tests |
 | `-test.xray`        | Xray tests         |
 | `-test.pipelines`   | Pipelines tests    |
+| `-test.access`      | Access tests       |
 
 - The tests create an Artifactory repository named _jfrog-client-tests-repo1_.<br/>
   Once the tests are completed, the content of this repository is deleted.
@@ -942,6 +956,98 @@ err := serviceManager.UpdateGroup(params)
 #### Deleting a Group
 ```go
 err := serviceManager.DeleteGroup("myGroupName")
+```
+
+## Access APIs
+### Creating Access Service Manager
+#### Creating Access Details
+```go
+accessDetails := accessAuth.NewAccessDetails()
+accessDetails.SetUrl("http://localhost:8081/access/")
+accessDetails.SetSshKeyPath("path/to/.ssh/")
+accessDetails.SetApiKey("apikey")
+accessDetails.SetUser("user")
+accessDetails.SetPassword("password")
+accessDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+accessDetails.SetClientCertPath("path/to/.cer")
+accessDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Access Service Config
+
+```go
+serviceConfig, err := clientConfig.NewConfigBuilder().
+SetServiceDetails(accessAuth).
+SetCertificatesPath(certsPath).
+SetInsecureTls(accessDetails.InsecureTls).
+SetDryRun(isDryRun).
+Build()
+```
+
+#### Creating New Access Service Manager
+```go
+accessManager, err := access.New(serviceConfig)
+```
+
+### Using Access Services
+
+#### Creating a new project
+
+```go
+adminPriviligies := accessServices.AdminPrivileges{
+	ManageMembers:   true,
+	ManageResources: true,
+	IndexResources:  true,
+}
+projectDetails := accessServices.Project{
+	DisplayName:       "testProject",
+	Description:       "My Test Project",
+	AdminPrivileges:   &adminPriviligies,
+	SoftLimit:         false,
+	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+	ProjectKey:        "tstprj",
+}
+projectParams = accessServices.NewProjectParams()
+projectParams.ProjectDetails = projectDetails
+err = accessManager.CreateProject(projectParams) 
+```
+
+#### Updating a project
+
+```go
+adminPriviligies := accessServices.AdminPrivileges{
+	ManageMembers:   true,
+	ManageResources: true,
+	IndexResources:  true,
+}
+projectDetails := accessServices.Project{
+	DisplayName:       "testProject",
+	Description:       "My Test Project",
+	AdminPrivileges:   &adminPriviligies,
+	SoftLimit:         false,
+	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+	ProjectKey:        "tstprj",
+}
+projectParams = accessServices.NewProjectParams()
+projectParams.ProjectDetails = projectDetails
+err = accessManager.UpdateProject(projectParams) 
+```
+
+#### Deleting a Project
+```go
+err = accessManager.DeleteProject("tstprj")
+```
+
+#### Assigning repository to project
+```go
+// Params: (repositoryName, projectKey string, isForce bool)
+err = accessManager.AssignRepoToProject("repoName", "tstprj", true)
+```
+
+#### Unassigning repository from project
+```go
+err = accessManager.AssignRepoToProject("repoName")
 ```
 
 ## Distribution APIs

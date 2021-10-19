@@ -62,6 +62,9 @@ func InitServiceManagers() {
 		createPipelinesIntegrationsManager()
 		createPipelinesSourcesManager()
 	}
+	if *TestAccess {
+		createAccessProjectManager()
+	}
 	err := createReposIfNeeded()
 	if err != nil {
 		log.Error(err.Error())
