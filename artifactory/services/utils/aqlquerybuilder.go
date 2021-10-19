@@ -248,14 +248,12 @@ func buildInnerArchiveQueryPart(triple RepoPathFile, archivePath, archiveName st
 func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (string, error) {
 	excludeQuery := ""
 	var excludeTriples []RepoPathFile
-	if len(params.GetExclusions()) > 0 {
-		for _, exclusion := range params.GetExclusions() {
-			repoPathFileTriples, err := createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)
-			if err != nil {
-				return "", err
-			}
-			excludeTriples = append(excludeTriples, repoPathFileTriples...)
+	for _, exclusion := range params.GetExclusions() {
+		repoPathFileTriples, err := createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)
+		if err != nil {
+			return "", err
 		}
+		excludeTriples = append(excludeTriples, repoPathFileTriples...)
 	}
 
 	for _, excludeTriple := range excludeTriples {
