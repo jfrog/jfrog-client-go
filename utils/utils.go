@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -497,9 +499,18 @@ type DeployableArtifactDetails struct {
 	TargetRepository string `json:"targetRepository,omitempty"`
 }
 
-func (detailes *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) FileTransferDetails {
-	targetPath := rtUrl + targetRepository + "/" + detailes.ArtifactDest
-	return FileTransferDetails{SourcePath: detailes.SourcePath, TargetPath: targetPath, Sha256: detailes.Sha256}
+func (details *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) (FileTransferDetails, error) {
+	// The function path.Join expects a path, not a URL.
+	// Therefore we first parse the URL to get a path.
+	url, err := url.Parse(rtUrl + targetRepository)
+	if err != nil {
+		return FileTransferDetails{}, err
+	}
+	// The path.join will always use a single slash (forward) to separate between the two vars.
+	url.Path = path.Join(url.Path, details.ArtifactDest)
+	targetPath := url.String()
+
+	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetPath, Sha256: details.Sha256}, nil
 }
 
 type UploadResponseBody struct {
