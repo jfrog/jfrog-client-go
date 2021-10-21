@@ -31,7 +31,7 @@ const (
 // Creates a new logger with a given LogLevel.
 // All logs are written to Stderr by default (output to Stdout).
 // If logToWriter != nil, logging is done to the provided writer instead.
-func NewLogger(logLevel LevelType, logToWriter io.Writer) Log {
+func NewLogger(logLevel LevelType, logToWriter io.Writer) *jfrogLogger {
 	logger := new(jfrogLogger)
 	logger.SetLogLevel(logLevel)
 	logger.SetOutputWriter(os.Stdout)
@@ -77,10 +77,6 @@ func (logger *jfrogLogger) SetLogsWriter(writer io.Writer) {
 	logger.InfoLog = log.New(writer, "[Info] ", 0)
 	logger.WarnLog = log.New(writer, "[Warn] ", 0)
 	logger.ErrorLog = log.New(writer, "[Error] ", 0)
-}
-
-func GetLogLevel() LevelType {
-	return Logger.GetLogLevel()
 }
 
 func validateLogInit() {
@@ -147,10 +143,6 @@ func (logger jfrogLogger) Output(a ...interface{}) {
 }
 
 type Log interface {
-	GetLogLevel() LevelType
-	SetLogLevel(LevelType)
-	SetOutputWriter(writer io.Writer)
-	SetLogsWriter(writer io.Writer)
 	Debug(a ...interface{})
 	Info(a ...interface{})
 	Warn(a ...interface{})
