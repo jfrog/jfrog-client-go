@@ -5,7 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	buildinfo "github.com/asafgabai/build-info-go/entities"
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io/ioutil"
 	"net/http"
 	"os"

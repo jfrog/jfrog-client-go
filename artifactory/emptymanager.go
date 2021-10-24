@@ -1,7 +1,7 @@
 package artifactory
 
 import (
-	buildinfo "github.com/asafgabai/build-info-go/entities"
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"

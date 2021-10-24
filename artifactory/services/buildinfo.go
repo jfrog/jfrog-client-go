@@ -2,7 +2,7 @@ package services
 
 import (
 	"encoding/json"
-	buildinfo "github.com/asafgabai/build-info-go/entities"
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
