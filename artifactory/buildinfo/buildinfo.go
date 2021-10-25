@@ -21,6 +21,7 @@ const (
 	Nuget   ModuleType = "nuget"
 	Go      ModuleType = "go"
 	Pip     ModuleType = "pip"
+	Pipenv  ModuleType = "pipenv"
 )
 
 func New() *BuildInfo {
