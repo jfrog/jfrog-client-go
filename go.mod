@@ -19,6 +19,6 @@ exclude (
 	golang.org/x/text v0.3.4
 )
 
-//replace github.com/jfrog/build-info-go => ../build-info-go
+replace github.com/jfrog/build-info-go => github.com/asafgabai/build-info-go v0.0.0-20211025064455-683349a9f33f
 
 go 1.13
