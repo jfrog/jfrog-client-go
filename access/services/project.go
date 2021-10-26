@@ -42,6 +42,15 @@ type ProjectService struct {
 	ServiceDetails auth.ServiceDetails
 }
 
+type ProjectGroup struct {
+	Name  string   `json:"name"`
+	Roles []string `json:"roles"`
+}
+
+type ProjectGroups struct {
+	Members []ProjectGroup `json:"members"`
+}
+
 func NewProjectService(client *jfroghttpclient.JfrogHttpClient) *ProjectService {
 	return &ProjectService{client: client}
 }
@@ -154,6 +163,78 @@ func (ps *ProjectService) UnassignRepo(repoName string) error {
 		return err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusNoContent); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	return nil
+}
+
+func (ps *ProjectService) GetGroups(projectKey string) (*[]ProjectGroup, error) {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s/%s/groups", ps.getProjectsBaseUrl(), projectKey)
+	resp, body, _, err := ps.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	// In case the requested project is not found
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	var projectGroups ProjectGroups
+	err = json.Unmarshal(body, &projectGroups)
+	return &projectGroups.Members, errorutils.CheckError(err)
+}
+
+func (ps *ProjectService) GetGroup(projectKey string, groupName string) (*ProjectGroup, error) {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s/%s/groups/%s", ps.getProjectsBaseUrl(), projectKey, groupName)
+	resp, body, _, err := ps.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	// In case the requested project or group in project is not found
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	var projectGroup ProjectGroup
+	err = json.Unmarshal(body, &projectGroup)
+	return &projectGroup, errorutils.CheckError(err)
+}
+
+func (ps *ProjectService) UpdateGroup(projectKey string, groupName string, group ProjectGroup) error {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s/%s/groups/%s", ps.getProjectsBaseUrl(), projectKey, groupName)
+	requestContent, err := json.Marshal(group)
+	if errorutils.CheckError(err) != nil {
+		return err
+	}
+	httpDetails.Headers = map[string]string{
+		"Content-Type": "application/json",
+		"Accept":       "application/json",
+	}
+	resp, body, err := ps.client.SendPut(url, requestContent, &httpDetails)
+	if err != nil {
+		return err
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	return nil
+}
+
+func (ps *ProjectService) DeleteExistingGroup(projectKey string, groupName string) error {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%s/%s/groups/%s", ps.getProjectsBaseUrl(), projectKey, groupName)
+	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
+	if err != nil {
+		return err
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	return nil
