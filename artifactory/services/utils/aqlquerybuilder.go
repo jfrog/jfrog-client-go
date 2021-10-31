@@ -118,7 +118,7 @@ func CreateAqlQueryForNpm(npmName, npmVersion string) string {
 		`items.find({` +
 			`"@npm.name":"%s",` +
 			`"$or": [` +
-				// sometimes the npm.version in the repository is written with "v" suffix, so we search both syntaxes
+				// sometimes the npm.version in the repository is written with "v" prefix, so we search both syntaxes
 				`{"@npm.version":"%[2]s"},` +
 				`{"@npm.version":"v%[2]s"}` +
 			`]` +
