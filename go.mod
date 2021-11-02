@@ -19,5 +19,3 @@ exclude (
 	golang.org/x/text v0.3.3
 	golang.org/x/text v0.3.4
 )
-
-go 1.13
