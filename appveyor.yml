@@ -58,13 +58,13 @@ environment:
     - ACCESS_TESTS:
       TEST_SUIT:
         go test -v github.com\jfrog\jfrog-client-go\tests --timeout 0 --test.access=true --access.url="%JFROG_CLI_ACCESS_URL%" --access.token="%JFROG_CLI_ACCESS_TOKEN%"
-  
+
 install:
   - rmdir c:\go /s /q
   - appveyor DownloadFile https://storage.googleapis.com/golang/go%GOVERSION%.windows-amd64.msi
   - msiexec /i go%GOVERSION%.windows-amd64.msi /q
   - set PATH=%GOPATH%\bin;c:\Program Files\Go\bin;%PATH%
   - go version
-  
- test_script:
+
+test_script:
   - "%TEST_SUIT%"
