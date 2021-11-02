@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/gofrog/stringutils"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -181,7 +182,7 @@ func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) stri
 	if patternType == AntPattern {
 		localPath = antPatternToRegExp(cleanPath(localPath))
 	} else if patternType == WildCardPattern {
-		localPath = WildcardPathToRegExp(cleanPath(localPath))
+		localPath = stringutils.WildcardPatternToRegExp(cleanPath(localPath))
 	}
 
 	return localPath
@@ -197,16 +198,6 @@ func cleanPath(path string) string {
 	// Since filepath.Clean replaces \\ with \, we revert this action.
 	path = strings.Replace(path, `\`, `\\`, -1)
 	return path
-}
-
-func WildcardPathToRegExp(localPath string) string {
-	localPath = replaceSpecialChars(localPath)
-	var wildcard = ".*"
-	localPath = strings.Replace(localPath, "*", wildcard, -1)
-	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
-		localPath += wildcard
-	}
-	return "^" + localPath + "$"
 }
 
 func antPatternToRegExp(localPath string) string {
@@ -267,7 +258,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 		path = removeRepoFromPath(path)
 	}
 	pattern = addEscapingParentheses(pattern, target)
-	pattern = WildcardPathToRegExp(pattern)
+	pattern = stringutils.WildcardPatternToRegExp(pattern)
 	if slashIndex < 0 {
 		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
 		// is only the repository name.
