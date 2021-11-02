@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -142,7 +142,9 @@ func inspectArchive(archive interface{}, localArchivePath, destinationDir string
 			return err
 		}
 		if !isEntryInDestination(destinationDir, header.EntryPath) {
-			return errorutils.CheckError(errors.New("illegal path in archive: " + header.EntryPath))
+			return errorutils.CheckError(fmt.Errorf(
+				"illegal path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
+				header.EntryPath, destinationDir))
 		}
 
 		if (archiveEntry.Mode() & os.ModeSymlink) != 0 {
@@ -166,18 +168,25 @@ func checkSymlinkEntry(header *archiveHeader, archiveEntry archiver.File, destin
 	}
 
 	if !isEntryInDestination(destinationDir, targetLinkPath) {
-		return errorutils.CheckError(errors.New("illegal link path in archive: " + targetLinkPath))
+		return errorutils.CheckError(fmt.Errorf(
+			"illegal link path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
+			targetLinkPath, destinationDir))
 	}
 	return nil
 }
 
 // Make sure the extraction path of the archive entry is under the destination dir
 func isEntryInDestination(destinationDir, pathInArchive string) bool {
-	// Since the entry in archive should be always represented as Unix path, the "path" module is used and not "filepath"
-	pathInArchive = path.Clean(pathInArchive)
-	if !path.IsAbs(pathInArchive) {
+	// If pathInArchive starts with '/' and we are on Windows, the path is illegal
+	pathInArchive = strings.TrimSpace(pathInArchive)
+	if os.IsPathSeparator('\\') && strings.HasPrefix(pathInArchive, "/") {
+		return false
+	}
+
+	pathInArchive = filepath.Clean(pathInArchive)
+	if !filepath.IsAbs(pathInArchive) {
 		// If path is relative, concatenate it to the destination dir
-		pathInArchive = path.Join(destinationDir, pathInArchive)
+		pathInArchive = filepath.Join(destinationDir, pathInArchive)
 	}
 	return strings.HasPrefix(pathInArchive, destinationDir)
 }

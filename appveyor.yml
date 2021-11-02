@@ -3,7 +3,7 @@ image:
 
 build: off
 skip_tags: true
-stack: go 1.11
+stack: go 1.17
 clone_folder: c:\gopath\src\github.com\jfrog\jfrog-client-go
 environment:
   GOPATH: c:\gopath

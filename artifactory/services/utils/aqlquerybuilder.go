@@ -117,7 +117,11 @@ func CreateAqlQueryForNpm(npmName, npmVersion string) string {
 	itemsPart :=
 		`items.find({` +
 			`"@npm.name":"%s",` +
-			`"@npm.version":"%s"` +
+			`"$or": [` +
+				// sometimes the npm.version in the repository is written with "v" prefix, so we search both syntaxes
+				`{"@npm.version":"%[2]s"},` +
+				`{"@npm.version":"v%[2]s"}` +
+			`]` +
 			`})%s`
 	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
 }

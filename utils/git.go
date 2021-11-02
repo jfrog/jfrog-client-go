@@ -44,7 +44,9 @@ func (m *manager) ReadConfig() error {
 	m.handleSubmoduleIfNeeded()
 	m.readRevisionAndBranch()
 	m.readUrl()
-	m.readMessage()
+	if m.revision != "" {
+		m.readMessage()
+	}
 	return m.err
 }
 
@@ -276,8 +278,7 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 			return
 		}
 	}
-
-	m.err = errorutils.CheckError(errors.New("failed fetching revision from git config, from ref: " + ref))
+	log.Debug("No packed-refs file was found. Assuming git repository is empty")
 	return
 }
 
