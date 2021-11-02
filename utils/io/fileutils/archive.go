@@ -182,7 +182,7 @@ func isEntryInDestination(destinationDir, pathInArchive string) bool {
 	if os.IsPathSeparator('\\') && strings.HasPrefix(pathInArchive, "/") {
 		return false
 	}
-	// Since the entry in archive should be always represented as Unix path, the "path" module is used and not "filepath"
+
 	pathInArchive = filepath.Clean(pathInArchive)
 	if !filepath.IsAbs(pathInArchive) {
 		// If path is relative, concatenate it to the destination dir
