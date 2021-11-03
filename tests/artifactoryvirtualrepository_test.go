@@ -11,6 +11,8 @@ import (
 var trimmedRtTargetRepo = strings.TrimSuffix(RtTargetRepo, "/")
 var repos = []string{trimmedRtTargetRepo}
 
+// Temporarily disabled
+
 // func TestArtifactoryVirtualRepository(t *testing.T) {
 // 	initArtifactoryTest(t)
 // 	t.Run("virtualAlpineTest", virtualAlpineTest)

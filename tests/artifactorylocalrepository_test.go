@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Temporarily disabled
+
 // func TestArtifactoryLocalRepository(t *testing.T) {
 // 	initArtifactoryTest(t)
 // 	t.Run("localAlpineTest", localAlpineTest)

@@ -10,6 +10,8 @@ import (
 const ArtifactoryLocalFileCacheSuffix = " (local file cache)"
 const MavenCentralUrl = "https://repo.maven.apache.org"
 
+// Temporarily disabled
+
 // func TestArtifactoryRemoteRepository(t *testing.T) {
 // 	initArtifactoryTest(t)
 // 	t.Run("remoteAlpineTest", remoteAlpineTest)
