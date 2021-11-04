@@ -7,7 +7,12 @@ stack: go 1.17
 clone_folder: c:\gopath\src\github.com\jfrog\jfrog-client-go
 environment:
   GOPATH: c:\gopath
+  GOVERSION: 1.17
+  GOROOT: c:\Program Files\Go
+  # Added in order to prevent fetching the outdated dependencies versions from go cache.
+  GOPROXY: direct
   GO111MODULE: on
+  CGO_ENABLED: 0
 
   JFROG_CLI_RT_URL:
     secure: RIh0gGFDn2JAnLUEEqLsQnZ5H3XFWg1s+Qq8Z4i+Xu+FtQf6Tsu2AnfY4/6AaXJ8
@@ -53,6 +58,13 @@ environment:
     - ACCESS_TESTS:
       TEST_SUIT:
         go test -v github.com\jfrog\jfrog-client-go\tests --timeout 0 --test.access=true --access.url="%JFROG_CLI_ACCESS_URL%" --access.token="%JFROG_CLI_ACCESS_TOKEN%"
+
+install:
+  - rmdir c:\go /s /q
+  - appveyor DownloadFile https://storage.googleapis.com/golang/go%GOVERSION%.windows-amd64.msi
+  - msiexec /i go%GOVERSION%.windows-amd64.msi /q
+  - set PATH=%GOPATH%\bin;c:\Program Files\Go\bin;%PATH%
+  - go version
 
 test_script:
   - "%TEST_SUIT%"
