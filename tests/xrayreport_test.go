@@ -49,12 +49,12 @@ func reportAll(t *testing.T) {
 	}
 	report, err := testXrayReportService.Vulnerabilities(request)
 	assert.NoError(t, err)
-	jsonCompactCompare(t, xray.VulnerabilityRequestResponse, report)
+	validateResponse(t, xray.VulnerabilityRequestResponse, report)
 
 	var reportId = strconv.Itoa(report.ReportId)
 	details, err := testXrayReportService.Details(reportId)
 	assert.NoError(t, err)
-	jsonCompactCompare(t, xray.VulnerabilityReportStatusResponse, details)
+	validateResponse(t, xray.VulnerabilityReportStatusResponse, details)
 
 	reportReqCont := services.ReportContentRequestParams{
 		ReportId:  reportId,
@@ -65,13 +65,13 @@ func reportAll(t *testing.T) {
 	}
 	content, err := testXrayReportService.Content(reportReqCont)
 	assert.NoError(t, err)
-	jsonCompactCompare(t, xray.VulnerabilityReportDetailsResponse, content)
+	validateResponse(t, xray.VulnerabilityReportDetailsResponse, content)
 
 	err = testXrayReportService.Delete(reportId)
 	assert.NoError(t, err)
 }
 
-func jsonCompactCompare(t *testing.T, expects string, payload interface{}) {
+func validateResponse(t *testing.T, expects string, payload interface{}) {
 	compactExpects := new(bytes.Buffer)
 	err := json.Compact(compactExpects, []byte(expects))
 	if err != nil {
