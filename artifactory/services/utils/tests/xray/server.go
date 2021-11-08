@@ -5,18 +5,22 @@ import (
 	"github.com/buger/jsonparser"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	clienttests "github.com/jfrog/jfrog-client-go/utils/tests"
+	"github.com/jfrog/jfrog-client-go/xray/services"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 )
 
 const (
-	CleanScanBuildName  = "cleanBuildName"
-	FatalScanBuildName  = "fatalBuildName"
-	VulnerableBuildName = "vulnerableBuildName"
+	CleanScanBuildName      = "cleanBuildName"
+	FatalScanBuildName      = "fatalBuildName"
+	VulnerableBuildName     = "vulnerableBuildName"
+	VulnerabilitiesEndpoint = "vulnerabilities"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func scanBuildHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -43,9 +47,53 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
+func reportHandler(w http.ResponseWriter, r *http.Request) {
+	reportsPathSegmentsCnt := len(strings.Split(services.ReportsAPI, "/"))
+	pathSegments := strings.Split(strings.TrimPrefix(strings.TrimSuffix(r.URL.Path, "/"), "/"), "/")
+	addlSegments := pathSegments[reportsPathSegmentsCnt:]
+	numSegments := len(addlSegments)
+
+	switch r.Method {
+	case http.MethodGet:
+		if numSegments == 1 {
+			_, err := strconv.Atoi(addlSegments[0])
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			_, _ = fmt.Fprint(w, VulnerabilityReportStatusResponse)
+			return
+		}
+	case http.MethodPost:
+		if numSegments == 1 {
+			if addlSegments[0] == VulnerabilitiesEndpoint {
+				_, _ = fmt.Fprint(w, VulnerabilityRequestResponse)
+				return
+			}
+		} else if numSegments == 2 {
+			_, err := strconv.Atoi(addlSegments[1])
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if addlSegments[0] == VulnerabilitiesEndpoint {
+				_, _ = fmt.Fprint(w, VulnerabilityReportDetailsResponse)
+				return
+			}
+		}
+	case http.MethodDelete:
+		if numSegments == 0 {
+			_, _ = fmt.Fprint(w, VulnerabilityReportDeleteResponse)
+			return
+		}
+	}
+	http.Error(w, "Invalid reports request", http.StatusBadRequest)
+}
+
 func StartXrayMockServer() int {
 	handlers := clienttests.HttpServerHandlers{}
-	handlers["/api/xray/scanBuild"] = handler
+	handlers["/api/xray/scanBuild"] = scanBuildHandler
+	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	handlers["/"] = http.NotFound
 
 	port, err := clienttests.StartHttpServer(handlers)
