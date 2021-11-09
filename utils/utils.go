@@ -201,7 +201,7 @@ func cleanPath(path string) string {
 }
 
 func antPatternToRegExp(localPath string) string {
-	localPath = replaceSpecialChars(localPath)
+	localPath = stringutils.EscapeSpecialChars(localPath)
 	separator := getFileSeparator()
 	var wildcard = ".*"
 	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
@@ -230,14 +230,6 @@ func getFileSeparator() string {
 		return "\\\\"
 	}
 	return "/"
-}
-
-func replaceSpecialChars(path string) string {
-	var specialChars = []string{".", "^", "$", "+"}
-	for _, char := range specialChars {
-		path = strings.Replace(path, char, "\\"+char, -1)
-	}
-	return path
 }
 
 // Replaces matched regular expression from path to corresponding placeholder {i} at target.

@@ -21,4 +21,4 @@ exclude (
 
 replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v0.0.0-20211108124451-f5ad09ddfe92
 
-replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.0.7-0.20211107071406-54da7fb08599
+replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.0.7-0.20211109140605-15e312b86c9f
