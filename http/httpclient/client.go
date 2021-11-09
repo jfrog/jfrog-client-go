@@ -91,17 +91,13 @@ func (jc *HttpClient) newRequest(method, url string, body io.Reader) (req *http.
 }
 
 func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	req, err := jc.createReq(method, url, content)
-	if err != nil {
-		return nil, nil, "", err
-	}
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      jc.retries,
 		RetriesInterval: 0,
 		LogMsgPrefix:    logMsgPrefix,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while sending %s request to %s", method, url),
 		ExecutionHandler: func() (bool, error) {
-			req, err = jc.createReq(method, url, content)
+			req, err := jc.createReq(method, url, content)
 			if err != nil {
 				return true, err
 			}
@@ -128,7 +124,6 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 }
 
 func (jc *HttpClient) createReq(method, url string, content []byte) (req *http.Request, err error) {
-	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
 	if content != nil {
 		return jc.newRequest(method, url, bytes.NewBuffer(content))
 	}
@@ -136,6 +131,7 @@ func (jc *HttpClient) createReq(method, url string, content []byte) (req *http.R
 }
 
 func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", req.Method, req.URL))
 	req.Close = true
 	setAuthentication(req, httpClientsDetails)
 	addUserAgentHeader(req)

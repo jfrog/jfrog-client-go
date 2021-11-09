@@ -1104,3 +1104,119 @@ const VulnerableXrayScanResponse = `{
   ]
 }
 `
+
+const VulnerabilityRequestResponse = `
+{
+  "report_id": 777,
+  "status": "pending"
+}
+`
+
+const VulnerabilityReportStatusResponse = `
+{
+  "id": 301,
+  "name": "test-generic",
+  "report_type": "vulnerability",
+  "status": "completed",
+  "total_artifacts": 4,
+  "num_of_processed_artifacts": 4,
+  "progress": 100,
+  "number_of_rows": 64,
+  "start_time": "2021-09-03T21:17:41Z",
+  "end_time": "2021-09-03T21:17:42Z",
+  "author": "test"
+}
+`
+
+const VulnerabilityReportDeleteResponse = `
+{
+  "info": "report deleted successfully"
+}
+`
+
+const VulnerabilityReportDetailsResponse = `
+{
+  "total_rows": 70,
+  "rows": [
+    {
+      "cves": [
+        {
+          "cve": "CVE-2021-37136"
+        },
+        {
+          "cvss_v2_score": "7.1",
+          "cvss_v2_vector": "CVSS:2.0/AV:N/AC:M/Au:N/C:N/I:N/A:C",
+          "cvss_v3_score": "7.5",
+          "cvss_v3_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "cvss2_max_score": 7.1,
+      "cvss3_max_score": 7.5,
+      "summary": "Netty Bzip2Decoder Class Missing Decompressed Data Allocation Limitation Memory Exhaustion Remote DoS",
+      "severity": "High",
+      "severity_source": "CVSS V3 from RBS",
+      "vulnerable_component": "gav://io.netty:netty-codec:4.1.66.Final",
+      "impacted_artifact": "docker://elasticsearch/7.15.0-test2:latest",
+      "impact_path": [
+        "docker://elasticsearch/7.15.0-test2:latest",
+        "generic://sha256:a53372ba228046f81171efd357179b7b02a95acccee17925e3d0295829cb42ea/sha256__a53372ba228046f81171efd357179b7b02a95acccee17925e3d0295829cb42ea.tar.gz",
+        "generic://sha256:e1a7a6f8262f89cad679f309ec7875c9a995099ee0fee1a1380ee71692657a4c/elasticsearch-sql-cli-7.15.0.jar",
+        "gav://io.netty:netty-codec:4.1.66.Final"
+      ],
+      "path": "forks-release-local/elasticsearch/7.15.0-test2/latest/",
+      "fixed_versions": [
+        "4.1.68.Final"
+      ],
+      "published": "2021-09-12T14:10:55Z",
+      "issue_id": "XRAY-184735",
+      "package_type": "maven",
+      "provider": "JFrog",
+      "description": "Netty contains a flaw in the Bzip2Decoder class that is triggered as memory allocations for decompressed data can't be properly limited. This may allow a remote attacker to exhaust available memory resources and cause a denial of service.",
+      "references": [
+        "https://github.com/netty/netty/commit/41d3d61a61608f2223bb364955ab2045dd5e4020",
+        "https://github.com/netty/netty/security/advisories/GHSA-grg4-wf29-r9vv",
+        "http://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-37136"
+      ]
+    },
+    {
+      "cves": [
+        {
+          "cve": "CVE-2021-37136"
+        },
+        {
+          "cvss_v2_score": "7.1",
+          "cvss_v2_vector": "CVSS:2.0/AV:N/AC:M/Au:N/C:N/I:N/A:C",
+          "cvss_v3_score": "7.5",
+          "cvss_v3_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "cvss2_max_score": 7.1,
+      "cvss3_max_score": 7.5,
+      "summary": "Netty Bzip2Decoder Class Missing Decompressed Data Allocation Limitation Memory Exhaustion Remote DoS",
+      "severity": "High",
+      "severity_source": "CVSS V3 from RBS",
+      "vulnerable_component": "gav://io.netty:netty-codec:4.1.66.Final",
+      "impacted_artifact": "docker://elasticsearch/7.15.0-test2:latest",
+      "impact_path": [
+        "docker://elasticsearch/7.15.0-test2:latest",
+        "generic://sha256:a53372ba228046f81171efd357179b7b02a95acccee17925e3d0295829cb42ea/sha256__a53372ba228046f81171efd357179b7b02a95acccee17925e3d0295829cb42ea.tar.gz",
+        "gav://io.netty:netty-codec:4.1.66.Final"
+      ],
+      "path": "forks-release-local/elasticsearch/7.15.0-test2/latest/",
+      "fixed_versions": [
+        "4.1.68.Final"
+      ],
+      "published": "2021-09-12T14:10:55Z",
+      "issue_id": "XRAY-184735",
+      "package_type": "maven",
+      "provider": "JFrog",
+      "description": "Netty contains a flaw in the Bzip2Decoder class that is triggered as memory allocations for decompressed data can't be properly limited. This may allow a remote attacker to exhaust available memory resources and cause a denial of service.",
+      "references": [
+        "https://github.com/netty/netty/commit/41d3d61a61608f2223bb364955ab2045dd5e4020",
+        "https://github.com/netty/netty/security/advisories/GHSA-grg4-wf29-r9vv",
+        "http://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-37136"
+      ]
+    }
+  ]
+}
+`

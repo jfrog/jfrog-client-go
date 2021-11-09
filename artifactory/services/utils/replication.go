@@ -21,14 +21,15 @@ type ReplicationParams struct {
 	Url      string
 	CronExp  string
 	// Source replication repository.
-	RepoKey                string
-	EnableEventReplication bool
-	SocketTimeoutMillis    int
-	Enabled                bool
-	SyncDeletes            bool
-	SyncProperties         bool
-	SyncStatistics         bool
-	PathPrefix             string
+	RepoKey                  string
+	EnableEventReplication   bool
+	SocketTimeoutMillis      int
+	Enabled                  bool
+	SyncDeletes              bool
+	SyncProperties           bool
+	SyncStatistics           bool
+	PathPrefix               string
+	IncludePathPrefixPattern string
 }
 
 func CreateReplicationBody(params ReplicationParams) *ReplicationBody {
