@@ -54,6 +54,8 @@ github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c
 github.com/jfrog/build-info-go v0.0.0-20211108124451-f5ad09ddfe92 h1:xOIpv7xr/1suUU8H/2i1lwiRb5RGR04wl3Zv6llXI9s=
 github.com/jfrog/build-info-go v0.0.0-20211108124451-f5ad09ddfe92/go.mod h1:iaYeUFwBMmn5xSLCz85kEQV08LLwjRwpXkkxU4KZzO8=
 github.com/jfrog/gocmd v0.5.0/go.mod h1:tUaS63h475D+kY5zm/lAWcGALY4HLD3BSnqg2N9O9g8=
+github.com/jfrog/gofrog v1.0.7-0.20211107071406-54da7fb08599 h1:HxE3qC39i2ZAiwd+pngtYyJrAUowisbxmvXEUmjNSjQ=
+github.com/jfrog/gofrog v1.0.7-0.20211107071406-54da7fb08599/go.mod h1:9YN5v4LlsCfLIXpwQnzSf1wVtgjdHM20FzuIu58RMI4=
 github.com/jfrog/jfrog-client-go v1.5.0/go.mod h1:pGUSXVw0AiC7nwkl2WWSzHQjYEuv2IMyhH847qXStjE=
 github.com/jfrog/jfrog-client-go v1.5.1/go.mod h1:tzcQZUy/WxNfJNzKzFp9xQpEkzbFuYzF3tsMgxhyf1U=
 github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 h1:DowS9hvgyYSX4TO5NpyC606/Z4SxnNYbT+WX27or6Ck=
