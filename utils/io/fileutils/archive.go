@@ -2,7 +2,6 @@ package fileutils
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -36,7 +35,7 @@ func Unarchive(localArchivePath, originArchiveName, destinationPath string) erro
 	}
 	u, ok := archive.(archiver.Unarchiver)
 	if !ok {
-		return errorutils.CheckError(errors.New("format specified by source filename is not an archive format: " + originArchiveName))
+		return errorutils.CheckErrorf("format specified by source filename is not an archive format: " + originArchiveName)
 	}
 	if err = inspectArchive(archive, localArchivePath, destinationPath); err != nil {
 		return err
@@ -134,7 +133,7 @@ var extCheckers = []archiver.ExtensionChecker{
 func inspectArchive(archive interface{}, localArchivePath, destinationDir string) error {
 	walker, ok := archive.(archiver.Walker)
 	if !ok {
-		return errorutils.CheckError(errors.New("couldn't inspect archive: " + localArchivePath))
+		return errorutils.CheckErrorf("couldn't inspect archive: " + localArchivePath)
 	}
 	return walker.Walk(localArchivePath, func(archiveEntry archiver.File) error {
 		header, err := extractArchiveEntryHeader(archiveEntry)
@@ -142,9 +141,9 @@ func inspectArchive(archive interface{}, localArchivePath, destinationDir string
 			return err
 		}
 		if !isEntryInDestination(destinationDir, header.EntryPath) {
-			return errorutils.CheckError(fmt.Errorf(
+			return errorutils.CheckErrorf(
 				"illegal path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
-				header.EntryPath, destinationDir))
+				header.EntryPath, destinationDir)
 		}
 
 		if (archiveEntry.Mode() & os.ModeSymlink) != 0 {
@@ -168,9 +167,9 @@ func checkSymlinkEntry(header *archiveHeader, archiveEntry archiver.File, destin
 	}
 
 	if !isEntryInDestination(destinationDir, targetLinkPath) {
-		return errorutils.CheckError(fmt.Errorf(
+		return errorutils.CheckErrorf(
 			"illegal link path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
-			targetLinkPath, destinationDir))
+			targetLinkPath, destinationDir)
 	}
 	return nil
 }

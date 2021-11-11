@@ -2,6 +2,7 @@ package errorutils
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -11,6 +12,10 @@ type OnErrorHandler func(error) error
 
 var CheckError = func(err error) error {
 	return err
+}
+
+func CheckErrorf(format string, a ...interface{}) error {
+	return CheckError(fmt.Errorf(format, a))
 }
 
 // Check expected status codes and return error if needed

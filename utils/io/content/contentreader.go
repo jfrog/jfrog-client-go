@@ -3,7 +3,6 @@ package content
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"io"
 	"os"
 	"reflect"
@@ -65,7 +64,7 @@ func (cr *ContentReader) IsEmpty() bool {
 // 'io.EOF' will be returned if no data is left.
 func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 	if cr.empty {
-		return errorutils.CheckError(errors.New("Empty"))
+		return errorutils.CheckErrorf("Empty")
 	}
 	cr.once.Do(func() {
 		go func() {
@@ -149,7 +148,7 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
 	if err != nil {
 		if err == io.EOF {
-			cr.errorsQueue.AddError(errorutils.CheckError(errors.New(cr.arrayKey + " not found")))
+			cr.errorsQueue.AddError(errorutils.CheckErrorf(cr.arrayKey + " not found"))
 			return
 		}
 		cr.errorsQueue.AddError(err)
@@ -236,7 +235,7 @@ func SortContentReader(readerRecord SortableContentItem, reader *ContentReader, 
 		}
 		contentItem, ok := recordItem.(SortableContentItem)
 		if !ok {
-			return "", errorutils.CheckError(errors.New("attempting to sort a content-reader with unsortable items"))
+			return "", errorutils.CheckErrorf("attempting to sort a content-reader with unsortable items")
 		}
 		return contentItem.GetSortKey(), nil
 	}
@@ -404,7 +403,7 @@ func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*Conte
 				// Expect to receive 'SortableContentItem'.
 				contentItem, ok := (temp).(SortableContentItem)
 				if !ok {
-					return nil, errorutils.CheckError(errors.New("Attempting to sort a content-reader with unsortable items."))
+					return nil, errorutils.CheckErrorf("Attempting to sort a content-reader with unsortable items.")
 				}
 				currentContentItem[i] = &contentItem
 			}
