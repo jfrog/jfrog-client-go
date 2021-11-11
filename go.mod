@@ -10,7 +10,6 @@ require (
 	github.com/jfrog/build-info-go v0.1.0
 	github.com/jfrog/gofrog v1.1.0
 	github.com/mholt/archiver/v3 v3.5.1-0.20210618180617-81fac4ba96e4
-	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xanzy/ssh-agent v0.3.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
@@ -43,6 +42,7 @@ require (
 	golang.org/x/net v0.0.0-20210326060303-6b1517762897 // indirect
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
