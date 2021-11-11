@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/gofrog/stringutils"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -23,7 +24,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.5.2"
+	Version     = "1.6.0"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -181,7 +182,7 @@ func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) stri
 	if patternType == AntPattern {
 		localPath = antPatternToRegExp(cleanPath(localPath))
 	} else if patternType == WildCardPattern {
-		localPath = WildcardPathToRegExp(cleanPath(localPath))
+		localPath = stringutils.WildcardPatternToRegExp(cleanPath(localPath))
 	}
 
 	return localPath
@@ -199,18 +200,8 @@ func cleanPath(path string) string {
 	return path
 }
 
-func WildcardPathToRegExp(localPath string) string {
-	localPath = replaceSpecialChars(localPath)
-	var wildcard = ".*"
-	localPath = strings.Replace(localPath, "*", wildcard, -1)
-	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
-		localPath += wildcard
-	}
-	return "^" + localPath + "$"
-}
-
 func antPatternToRegExp(localPath string) string {
-	localPath = replaceSpecialChars(localPath)
+	localPath = stringutils.EscapeSpecialChars(localPath)
 	separator := getFileSeparator()
 	var wildcard = ".*"
 	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
@@ -241,14 +232,6 @@ func getFileSeparator() string {
 	return "/"
 }
 
-func replaceSpecialChars(path string) string {
-	var specialChars = []string{".", "^", "$", "+"}
-	for _, char := range specialChars {
-		path = strings.Replace(path, char, "\\"+char, -1)
-	}
-	return path
-}
-
 // Replaces matched regular expression from path to corresponding placeholder {i} at target.
 // Example 1:
 //      pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
@@ -267,7 +250,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 		path = removeRepoFromPath(path)
 	}
 	pattern = addEscapingParentheses(pattern, target)
-	pattern = WildcardPathToRegExp(pattern)
+	pattern = stringutils.WildcardPatternToRegExp(pattern)
 	if slashIndex < 0 {
 		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
 		// is only the repository name.

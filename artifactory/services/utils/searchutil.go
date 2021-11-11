@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"fmt"
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io"
 	"net/http"
 	"os"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/utils/version"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
