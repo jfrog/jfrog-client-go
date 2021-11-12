@@ -66,7 +66,7 @@ func testDeleteUser(t *testing.T) {
 
 func getTestUserParams(replaceIfExists bool) services.UserParams {
 	userDetails := services.User{
-		Name:                     fmt.Sprintf("test%s", randomRunNumber),
+		Name:                     fmt.Sprintf("test%s", runUid),
 		Email:                    "christianb@jfrog.com",
 		Password:                 "Password1",
 		Admin:                    false,

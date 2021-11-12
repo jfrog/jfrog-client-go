@@ -23,17 +23,17 @@ func TestXrayWatch(t *testing.T) {
 }
 
 func testXrayWatchAll(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1", randomRunNumber)
+	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1", runUid)
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
-	policy2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy2", randomRunNumber)
+	policy2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy2", runUid)
 	err = createDummyPolicy(policy2Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy2Name)
 
-	AllWatchName := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-all-repos", randomRunNumber)
+	AllWatchName := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-all-repos", runUid)
 	paramsAllRepos := utils.NewWatchParams()
 	paramsAllRepos.Name = AllWatchName
 	paramsAllRepos.Description = "All Repos"
@@ -117,30 +117,30 @@ func testXrayWatchAll(t *testing.T) {
 }
 
 func testXrayWatchSelectedRepos(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1-pattern", randomRunNumber)
+	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1-pattern", runUid)
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
-	repo1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "repo1", randomRunNumber)
+	repo1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "repo1", runUid)
 	createRepoLocal(t, repo1Name)
 	defer deleteRepo(t, repo1Name)
-	repo2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "repo2", randomRunNumber)
+	repo2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "repo2", runUid)
 	createRepoRemote(t, repo2Name)
 	defer deleteRepo(t, repo2Name)
 
-	build1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build1", randomRunNumber)
+	build1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build1", runUid)
 	err = createAndIndexBuild(t, build1Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build1Name)
 
-	build2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build2", randomRunNumber)
+	build2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build2", runUid)
 	err = createAndIndexBuild(t, build2Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build2Name)
 
 	paramsSelectedRepos := utils.NewWatchParams()
-	paramsSelectedRepos.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-selected-repos", randomRunNumber)
+	paramsSelectedRepos.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-selected-repos", runUid)
 	paramsSelectedRepos.Description = "Selected Repos"
 	paramsSelectedRepos.Active = true
 	paramsSelectedRepos.Policies = []utils.AssignedPolicy{
@@ -256,13 +256,13 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 }
 
 func testXrayWatchBuildsByPattern(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1-pattern", randomRunNumber)
+	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1-pattern", runUid)
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
 	paramsBuildsByPattern := utils.NewWatchParams()
-	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-builds-by-pattern", randomRunNumber)
+	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-builds-by-pattern", runUid)
 	paramsBuildsByPattern.Description = "Builds By Pattern"
 	paramsBuildsByPattern.Builds.Type = utils.WatchBuildAll
 	paramsBuildsByPattern.Builds.All.ExcludePatterns = []string{"excludePath"}
@@ -302,7 +302,7 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 
 func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch := utils.NewWatchParams()
-	paramsMissingWatch.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-missing", randomRunNumber)
+	paramsMissingWatch.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-missing", runUid)
 	paramsMissingWatch.Description = "Missing Watch"
 	paramsMissingWatch.Builds.Type = utils.WatchBuildAll
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}

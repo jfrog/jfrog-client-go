@@ -64,7 +64,7 @@ func testDeleteGroup(t *testing.T) {
 
 func getTestGroupParams(includeUsers bool) services.GroupParams {
 	groupDetails := services.Group{
-		Name:            fmt.Sprintf("test-%s", randomRunNumber),
+		Name:            fmt.Sprintf("test-%s", runUid),
 		Description:     "hello",
 		AutoJoin:        false,
 		AdminPrivileges: true,

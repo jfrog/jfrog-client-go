@@ -114,7 +114,7 @@ func getIntegrationAndAssert(t *testing.T, id int, name, integrationType string)
 }
 
 func getUniqueIntegrationName(integrationType string) string {
-	return strings.Join([]string{integrationNamesPrefix, integrationType, randomRunNumber}, "_")
+	return strings.Join([]string{integrationNamesPrefix, integrationType, runUid}, "_")
 }
 
 func deleteIntegrationAndAssert(t *testing.T, id int) {

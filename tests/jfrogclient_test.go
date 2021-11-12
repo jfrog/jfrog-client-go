@@ -19,19 +19,13 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	exitCode := setupIntegrationTests()
-	if exitCode != 0 {
-		os.Exit(exitCode)
-	}
+	setupIntegrationTests()
 	result := m.Run()
-	exitCode = teardownIntegrationTests()
-	if result == 0 {
-		os.Exit(exitCode)
-	}
+	teardownIntegrationTests()
 	os.Exit(result)
 }
 
-func setupIntegrationTests() int {
+func setupIntegrationTests() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
 	if *TestArtifactory || *TestDistribution || *TestXray {
@@ -78,9 +72,8 @@ func setupIntegrationTests() int {
 	}
 	if err := createRepo(); err != nil {
 		log.Error(err.Error())
-		return 1
+		os.Exit(1)
 	}
-	return 0
 }
 
 func TestUnitTests(t *testing.T) {

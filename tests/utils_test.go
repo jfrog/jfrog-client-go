@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	buildinfo "github.com/jfrog/build-info-go/entities"
 
 	"github.com/google/uuid"
 	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
@@ -110,10 +111,10 @@ var (
 	// Access Services
 	testsAccessProjectService *accessServices.ProjectService
 
-	timestamp       = time.Now().Unix()
-	trueValue       = true
-	falseValue      = false
-	randomRunNumber = strings.Replace(uuid.NewString(), "-", "", -1)
+	timestamp  = time.Now().Unix()
+	trueValue  = true
+	falseValue = false
+	runUid     = strings.Replace(uuid.NewString(), "-", "", -1)
 
 	// Tests configuration
 	RtTargetRepo    = JfrogRepoPrefix + "-client"
@@ -128,7 +129,7 @@ const (
 )
 
 func init() {
-	RtTargetRepoKey = RtTargetRepo + "-" + randomRunNumber
+	RtTargetRepoKey = RtTargetRepo + "-" + runUid
 	RtTargetRepo = RtTargetRepoKey + "/"
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
@@ -583,17 +584,16 @@ func createRepo() error {
 	return nil
 }
 
-func teardownIntegrationTests() int {
+func teardownIntegrationTests() {
 	if !(*TestArtifactory || *TestDistribution || *TestXray) {
-		return 0
+		return
 	}
 	repo := RtTargetRepoKey
 	err := testsDeleteRepositoryService.Delete(repo)
 	if err != nil {
 		fmt.Printf("teardownIntegrationTests failed for:" + err.Error())
-		return 1
+		os.Exit(1)
 	}
-	return 0
 }
 
 func isRepoExist(repoName string) bool {
