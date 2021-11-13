@@ -24,7 +24,7 @@ func deletePolicy(t *testing.T, policyName string) {
 }
 
 func createMinSeverity(t *testing.T) {
-	policyName := "create-min-severity" + runUid
+	policyName := "create-min-severity" + runTimestamp
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -36,7 +36,7 @@ func createMinSeverity(t *testing.T) {
 }
 
 func createRangeSeverity(t *testing.T) {
-	policyName := "create-range-severity" + runUid
+	policyName := "create-range-severity" + runTimestamp
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -48,7 +48,7 @@ func createRangeSeverity(t *testing.T) {
 }
 
 func createLicenseAllowed(t *testing.T) {
-	policyName := "create-allowed-licenses" + runUid
+	policyName := "create-allowed-licenses" + runTimestamp
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -60,7 +60,7 @@ func createLicenseAllowed(t *testing.T) {
 }
 
 func createLicenseBanned(t *testing.T) {
-	policyName := "create-banned-licenses" + runUid
+	policyName := "create-banned-licenses" + runTimestamp
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -72,7 +72,7 @@ func createLicenseBanned(t *testing.T) {
 }
 
 func create2Priorities(t *testing.T) {
-	policyName := "create-2-priorties" + runUid
+	policyName := "create-2-priorties" + runTimestamp
 	defer deletePolicy(t, policyName)
 
 	policyRule1 := utils.PolicyRule{
@@ -89,7 +89,7 @@ func create2Priorities(t *testing.T) {
 }
 
 func createPolicyActions(t *testing.T) {
-	policyName := "create-policy-actions" + runUid
+	policyName := "create-policy-actions" + runTimestamp
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
@@ -112,7 +112,7 @@ func createPolicyActions(t *testing.T) {
 }
 
 func createUpdatePolicy(t *testing.T) {
-	policyName := "update-policy" + runUid
+	policyName := "update-policy" + runTimestamp
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{

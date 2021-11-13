@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
-	"github.com/google/uuid"
 	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
 	accessServices "github.com/jfrog/jfrog-client-go/access/services"
 	pipelinesAuth "github.com/jfrog/jfrog-client-go/pipelines/auth"
@@ -111,10 +111,10 @@ var (
 	// Access Services
 	testsAccessProjectService *accessServices.ProjectService
 
-	timestamp  = time.Now().Unix()
-	trueValue  = true
-	falseValue = false
-	runUid     = strings.Replace(uuid.NewString(), "-", "", -1)
+	timestamp    = time.Now().Unix()
+	trueValue    = true
+	falseValue   = false
+	runTimestamp = strconv.FormatInt(int64(timestamp), 10)
 
 	// Tests configuration
 	RtTargetRepo    = JfrogRepoPrefix + "-client"
@@ -129,7 +129,7 @@ const (
 )
 
 func init() {
-	RtTargetRepoKey = RtTargetRepo + "-" + runUid
+	RtTargetRepoKey = RtTargetRepo + "-" + runTimestamp
 	RtTargetRepo = RtTargetRepoKey + "/"
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")

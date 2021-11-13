@@ -18,9 +18,9 @@ func testAddPipelineSource(t *testing.T) {
 		assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured")
 		return
 	}
-	if !utils.IsWindows() {
-		// The following test modify a single Pipelines resource. Therefore, we limit the parallelism by running on windows (tests run on all OS parallel).
-		t.Skip("Not running on Windows, skipping...")
+	if utils.IsMacOS() {
+		// The following test modify a single Pipelines resource. Therefore, we limit the parallelism by running on MacOS (tests run on all OS parallel).
+		t.Skip("Not running on MacOS, skipping...")
 	}
 	// Create integration with provided token.
 	integrationName := getUniqueIntegrationName(services.GithubName)

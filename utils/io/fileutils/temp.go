@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -34,9 +33,8 @@ func CreateTempDir() (string, error) {
 	if tempDirBase == "" {
 		return "", errorutils.CheckError(errors.New("Temp dir cannot be created in an empty base dir."))
 	}
-	randomNumber := uuid.NewString()
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	path, err := ioutil.TempDir(tempDirBase, tempPrefix+randomNumber+"-"+timestamp+"-")
+	path, err := ioutil.TempDir(tempDirBase, tempPrefix+"-"+timestamp+"-")
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
@@ -64,9 +62,8 @@ func CreateTempFile() (*os.File, error) {
 	if tempDirBase == "" {
 		return nil, errorutils.CheckError(errors.New("Temp File cannot be created in an empty base dir."))
 	}
-	randomNumber := uuid.NewString()
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	fd, err := ioutil.TempFile(tempDirBase, tempPrefix+randomNumber+"-"+timestamp+"-")
+	fd, err := ioutil.TempFile(tempDirBase, tempPrefix+"-"+timestamp+"-")
 	return fd, err
 }
 

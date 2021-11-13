@@ -41,7 +41,7 @@ func getTestProjectParams() services.ProjectParams {
 		ManageResources: true,
 		IndexResources:  true,
 	}
-	runNumberSuffix := runUid[len(runUid)-3 : len(runUid)]
+	runNumberSuffix := runTimestamp[len(runTimestamp)-3 : len(runTimestamp)]
 	projectDetails := services.Project{
 		DisplayName:       "testProject" + runNumberSuffix,
 		Description:       "My Test Project",

@@ -87,7 +87,7 @@ func initRemoteDistributionTest(t *testing.T, bundleName string) string {
 }
 
 func createDelete(t *testing.T) {
-	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+runUid)
+	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+runTimestamp)
 	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create signed release bundle
@@ -103,7 +103,7 @@ func createDelete(t *testing.T) {
 }
 
 func createUpdate(t *testing.T) {
-	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+runUid)
+	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+runTimestamp)
 	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create release bundle params
@@ -194,7 +194,7 @@ func setServicesToDryRunFalse() {
 }
 
 func createWithProps(t *testing.T) {
-	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+runUid)
+	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+runTimestamp)
 	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create release bundle with properties
@@ -242,7 +242,7 @@ func createWithProps(t *testing.T) {
 }
 
 func createSignDistributeDelete(t *testing.T) {
-	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+runUid)
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+runTimestamp)
 	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create unsigned release bundle
@@ -296,7 +296,7 @@ func createSignDistributeDelete(t *testing.T) {
 }
 
 func createSignSyncDistributeDelete(t *testing.T) {
-	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+runUid)
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+runTimestamp)
 	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create unsigned release bundle
@@ -335,7 +335,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 }
 
 func createDistributeMapping(t *testing.T) {
-	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+runUid)
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+runTimestamp)
 	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
@@ -366,7 +366,7 @@ func createDistributeMapping(t *testing.T) {
 }
 
 func createDistributeMappingPlaceholder(t *testing.T) {
-	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+runUid)
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+runTimestamp)
 	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
@@ -533,7 +533,7 @@ func deleteRemoteAndLocalBundle(t *testing.T, bundleName string, assertDeletion 
 	// Delete also local release bundle
 	deleteBundleParams.DeleteFromDistribution = true
 	deleteBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
-	testsBundleDeleteRemoteService.Sync = true
+	deleteBundleParams.Sync = true
 	err := testsBundleDeleteRemoteService.DeleteDistribution(deleteBundleParams)
 	artifactoryCleanup(t)
 	if !assertDeletion {
