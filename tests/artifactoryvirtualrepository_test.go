@@ -10,7 +10,7 @@ import (
 // Temporarily disabled
 
 // func TestArtifactoryVirtualRepository(t *testing.T) {
-// 	initArtifactoryTest(t)
+// 	initRepositoryTest(t)
 // 	t.Run("virtualAlpineTest", virtualAlpineTest)
 // 	t.Run("virtualBowerTest", virtualBowerTest)
 // 	t.Run("virtualChefTest", virtualChefTest)

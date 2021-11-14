@@ -46,6 +46,7 @@ var (
 	TestXray                 *bool
 	TestPipelines            *bool
 	TestAccess               *bool
+	TestRepository           *bool
 	RtUrl                    *string
 	DistUrl                  *string
 	XrayUrl                  *string
@@ -136,6 +137,7 @@ func init() {
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
+	TestRepository = flag.Bool("test.repository", false, "Test repositories in Artifactory")
 	RtUrl = flag.String("rt.url", "", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")

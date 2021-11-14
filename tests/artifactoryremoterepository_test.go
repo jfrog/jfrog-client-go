@@ -13,7 +13,7 @@ const MavenCentralUrl = "https://repo.maven.apache.org"
 // Temporarily disabled
 
 // func TestArtifactoryRemoteRepository(t *testing.T) {
-// 	initArtifactoryTest(t)
+// 	initRepositoryTest(t)
 // 	t.Run("remoteAlpineTest", remoteAlpineTest)
 // 	t.Run("remoteBowerTest", remoteBowerTest)
 // 	t.Run("remoteCargoTest", remoteCargoTest)
