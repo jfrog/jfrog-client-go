@@ -821,7 +821,7 @@ func deleteRepo(t *testing.T, repoKey string) {
 
 func GenerateRepoKeyForRepoServiceTest() string {
 	timestamp++
-	return fmt.Sprintf("%s-%d", RtTargetRepoKey, timestamp)
+	return fmt.Sprintf("%s-%d", RtTargetRepoKey[:10], timestamp)
 }
 
 func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
