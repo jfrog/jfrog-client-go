@@ -13,15 +13,15 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-const (
+var (
 	tempPrefix = "jfrog.cli.temp."
+
+	// Max temp file age in hours
+	maxFileAge = 24.0
+
+	// Path to the root temp dir
+	tempDirBase string
 )
-
-// Max temp file age in hours
-var maxFileAge = 24.0
-
-// Path to the root temp dir
-var tempDirBase string
 
 func init() {
 	tempDirBase = os.TempDir()
@@ -38,7 +38,6 @@ func CreateTempDir() (string, error) {
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
-
 	return path, nil
 }
 
