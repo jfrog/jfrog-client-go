@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
 	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
@@ -130,7 +131,7 @@ const (
 )
 
 func init() {
-	RtTargetRepoKey = RtTargetRepo + "-" + runTimestamp
+	RtTargetRepoKey = RtTargetRepo + strings.Replace(uuid.New().String(), "-", "", -1)[:5] + "-" + runTimestamp
 	RtTargetRepo = RtTargetRepoKey + "/"
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
