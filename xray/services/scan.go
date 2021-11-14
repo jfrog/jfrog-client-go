@@ -53,7 +53,6 @@ func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 	return &ScanService{client: client}
 }
 
-// NewScanService creates a new service to scan Binaries and VCS projects.
 func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	var params []string
 	if scanParams.ProjectKey != "" {
@@ -62,7 +61,9 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		params = append(params, repoPathQueryParam+scanParams.RepoPath)
 	} else if len(scanParams.Watches) > 0 {
 		for _, watch := range scanParams.Watches {
-			params = append(params, watchesQueryParam+watch)
+			if watch != "" {
+				params = append(params, watchesQueryParam+watch)
+			}
 		}
 	}
 
