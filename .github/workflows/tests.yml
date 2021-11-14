@@ -1,5 +1,11 @@
 name: JFrog Client Go Tests
-on: [push, pull_request_target]
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request_target:
+    types: [labeled]
 jobs:
   JFrog-Client-Go-Tests:
     name: ${{ matrix.product }} (${{ matrix.os }})
