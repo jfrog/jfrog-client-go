@@ -4,7 +4,7 @@
 | :----: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | master | [![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/master?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/master) |
 |  dev   |    [![Build status](https://ci.appveyor.com/api/projects/status/2wkemson2sj4skyh/branch/dev?svg=true)](https://ci.appveyor.com/project/jfrog-ecosystem/jfrog-client-go/branch/dev)    |
-
+Hack
 ## Table of Contents
 - [jfrog-client-go](#jfrog-client-go)
   - [Table of Contents](#table-of-contents)
