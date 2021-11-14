@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 func setupIntegrationTests() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
-	if *TestArtifactory || *TestDistribution || *TestXray {
+	if *TestArtifactory || *TestDistribution || *TestXray || *TestRepository {
 		createArtifactoryUploadManager()
 		createArtifactorySearchManager()
 		createArtifactoryDeleteManager()
