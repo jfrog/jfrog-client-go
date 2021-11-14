@@ -6,7 +6,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        product: [artifactory, distribution, xray, access]
+        product: [distribution, xray, access]
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -37,3 +37,20 @@ jobs:
       uses: actions/checkout@v2
     - name: pipelines tests
       run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines=true --rt.url=${{ secrets.CLI_RT_URL }} --pipe.url=${{ secrets.CLI_PIPE_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --pipe.accessToken=${{ secrets.CLI_PIPE_ACCESS_TOKE }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }}
+  JFrog-Client-Go-Artifactory-Tests:
+    name: artifactory (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.x
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: artifactory tests
+      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.artifactory=true --rt.url=${{ secrets.CLI_RT_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --access.token=${{ secrets.CLI_ACCESS_TOKEN }}
