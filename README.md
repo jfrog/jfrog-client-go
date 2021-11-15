@@ -197,7 +197,7 @@ go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifac
 | `-pipe.vcsRepo`      | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
 | `-pipe.vcsBranch`    | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
 | `-access.accessToken`| [Optional] Access access token.                                                                        |
-| `-test.ciRunId`      | [Default: Timestamp] A uniq id for all the tests.                                                      |
+| `-ci.runId`          | [Default: Timestamp] A unique run ID used as a suffix to create repositories tests.                    |
 
 ## General APIs
 ### Setting the Logger
