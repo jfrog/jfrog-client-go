@@ -13,7 +13,7 @@ func TestXrayBinMgr(t *testing.T) {
 }
 
 func addBuildsToIndexing(t *testing.T) {
-	buildName := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build1", runTimestamp)
+	buildName := fmt.Sprintf("%s-%s", "build1", getRunId())
 	defer deleteBuild(buildName)
 
 	// Create a build

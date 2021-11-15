@@ -33,14 +33,14 @@ func createReplication() error {
 	params.Password = "password"
 	params.Url = "http://www.jfrog.com"
 	params.CronExp = "0 0 14 * * ?"
-	params.RepoKey = RtTargetRepoKey
+	params.RepoKey = getRtTargetRepoKey()
 	params.Enabled = true
 	params.SocketTimeoutMillis = 100
 	return testsCreateReplicationService.CreateReplication(params)
 }
 
 func getPushReplication(t *testing.T, expected []utils.ReplicationParams) error {
-	replicationConf, err := testsReplicationGetService.GetReplication(RtTargetRepoKey)
+	replicationConf, err := testsReplicationGetService.GetReplication(getRtTargetRepoKey())
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func getPushReplication(t *testing.T, expected []utils.ReplicationParams) error 
 }
 
 func deleteReplication(t *testing.T) error {
-	err := testsReplicationDeleteService.DeleteReplication(RtTargetRepoKey)
+	err := testsReplicationDeleteService.DeleteReplication(getRtTargetRepoKey())
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func GetReplicationConfig() []utils.ReplicationParams {
 			Username:               "anonymous",
 			Password:               "password",
 			CronExp:                "0 0 14 * * ?",
-			RepoKey:                RtTargetRepoKey,
+			RepoKey:                getRtTargetRepoKey(),
 			EnableEventReplication: false,
 			SocketTimeoutMillis:    100,
 			Enabled:                true,

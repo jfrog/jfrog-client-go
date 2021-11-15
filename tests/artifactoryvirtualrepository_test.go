@@ -43,9 +43,9 @@ import (
 func setVirtualRepositoryBaseParams(params *services.VirtualRepositoryBaseParams, isUpdate bool) {
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	if !isUpdate {
-		params.Repositories = []string{RtTargetRepoKey}
+		params.Repositories = []string{getRtTargetRepoKey()}
 		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &trueValue
-		params.DefaultDeploymentRepo = RtTargetRepoKey
+		params.DefaultDeploymentRepo = getRtTargetRepoKey()
 	} else {
 		params.Repositories = nil
 		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue

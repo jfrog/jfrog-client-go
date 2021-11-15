@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
 	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
@@ -64,6 +63,7 @@ var (
 	PipelinesVcsBranch       *string
 	AccessUrl                *string
 	AccessToken              *string
+	ciRunId                  *string
 
 	// Artifactory services
 	testsUploadService                    *services.UploadService
@@ -114,25 +114,23 @@ var (
 	testsAccessProjectService *accessServices.ProjectService
 
 	timestamp    = time.Now().Unix()
+	timestampStr = strconv.FormatInt(int64(timestamp), 10)
 	trueValue    = true
 	falseValue   = false
-	runTimestamp = strconv.FormatInt(int64(timestamp), 10)
 
 	// Tests configuration
-	RtTargetRepo    = JfrogRepoPrefix + "-client"
+	RtTargetRepo    = "client-tests"
 	RtTargetRepoKey = RtTargetRepo
 )
 
 const (
-	JfrogRepoPrefix                  = "jf"
 	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
 	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
 )
 
 func init() {
-	RtTargetRepoKey = RtTargetRepo + strings.Replace(uuid.New().String(), "-", "", -1)[:5] + "-" + runTimestamp
-	RtTargetRepo = RtTargetRepoKey + "/"
+	ciRunId = flag.String("test.ciRunId", "", "CI Run ID")
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
@@ -155,6 +153,21 @@ func init() {
 	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
 	AccessUrl = flag.String("access.url", "", "Access url")
 	AccessToken = flag.String("access.token", "", "Access token")
+}
+
+func getRtTargetRepoKey() string {
+	return RtTargetRepo + "-" + getRunId()
+}
+
+func getRtTargetRepo() string {
+	return getRtTargetRepoKey() + "/"
+}
+
+func getRunId() string {
+	if ciRunId != nil && *ciRunId != "" {
+		return *ciRunId
+	}
+	return timestampStr
 }
 
 func createArtifactorySecurityManager() {
@@ -506,7 +519,7 @@ func uploadDummyFile(t *testing.T) {
 	defer os.RemoveAll(workingDir)
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "test/"}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/"}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if summary.TotalSucceeded != 1 {
@@ -518,7 +531,7 @@ func uploadDummyFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "b.in"}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "b.in"}
 	up.Flat = true
 	summary, err = testsUploadService.UploadFiles(up)
 	if summary.TotalSucceeded != 1 {
@@ -532,7 +545,7 @@ func uploadDummyFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	up.CommonParams = &utils.CommonParams{Pattern: archivePath, Recursive: true, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: archivePath, Recursive: true, Target: getRtTargetRepo()}
 	up.Flat = true
 	summary, err = testsUploadService.UploadFiles(up)
 	if summary.TotalSucceeded != 1 {
@@ -547,7 +560,7 @@ func uploadDummyFile(t *testing.T) {
 }
 
 func artifactoryCleanup(t *testing.T) {
-	params := &utils.CommonParams{Pattern: RtTargetRepo}
+	params := &utils.CommonParams{Pattern: getRtTargetRepo()}
 	toDelete, err := testsDeleteService.GetPathsToDelete(services.DeleteParams{CommonParams: params})
 	if err != nil {
 		t.Error(err)
@@ -575,7 +588,7 @@ func createRepo() error {
 		return nil
 	}
 	var err error
-	repoKey := RtTargetRepoKey
+	repoKey := getRtTargetRepoKey()
 	glp := services.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
@@ -591,7 +604,7 @@ func teardownIntegrationTests() {
 	if !(*TestArtifactory || *TestDistribution || *TestXray) {
 		return
 	}
-	repo := RtTargetRepoKey
+	repo := getRtTargetRepoKey()
 	err := testsDeleteRepositoryService.Delete(repo)
 	if err != nil {
 		fmt.Printf("teardownIntegrationTests failed for:" + err.Error())
@@ -821,7 +834,7 @@ func deleteRepo(t *testing.T, repoKey string) {
 
 func GenerateRepoKeyForRepoServiceTest() string {
 	timestamp++
-	return fmt.Sprintf("%s-%d", RtTargetRepoKey[:10], timestamp)
+	return fmt.Sprintf("%s-%d", getRtTargetRepoKey()[:10], timestamp)
 }
 
 func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {

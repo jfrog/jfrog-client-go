@@ -4,11 +4,12 @@ on:
     branches:
       - master
       - dev
+    # Triggers the workflow on labeled PR only.
   pull_request_target:
     types: [labeled]
 jobs:
   JFrog-Client-Go-Tests:
-    name: ${{ matrix.product }} (${{ matrix.os }})
+    name: ${{ matrix.product }}(${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
@@ -25,7 +26,7 @@ jobs:
     - name: Lint
       run: go vet -v ./...
     - name: ${{ matrix.product }} tests
-      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.product }}=true --rt.url=${{ secrets.CLI_RT_URL }} --ds.url=${{ secrets.CLI_DIST_URL }} --xr.url=${{ secrets.CLI_XRAY_URL }} --access.url=${{ secrets.CLI_ACCESS_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --access.token=${{ secrets.CLI_ACCESS_TOKEN }}
+      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.product }}=true --rt.url=${{ secrets.CLI_RT_URL }} --ds.url=${{ secrets.CLI_DIST_URL }} --xr.url=${{ secrets.CLI_XRAY_URL }} --access.url=${{ secrets.CLI_ACCESS_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --access.token=${{ secrets.CLI_ACCESS_TOKEN }} --test.ciRunId=${{ github.run_number }}${{ matrix.product }}${{ matrix.os }}
   JFrog-Client-Go-Pipelines-Tests:
     name: pipelines (${{ matrix.os }})
     strategy:
@@ -42,7 +43,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: pipelines tests
-      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines=true --rt.url=${{ secrets.CLI_RT_URL }} --pipe.url=${{ secrets.CLI_PIPE_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --pipe.accessToken=${{ secrets.CLI_PIPE_ACCESS_TOKE }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }}
+      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines=true --rt.url=${{ secrets.CLI_RT_URL }} --pipe.url=${{ secrets.CLI_PIPE_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --pipe.accessToken=${{ secrets.CLI_PIPE_ACCESS_TOKE }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }} --test.ciRunId=${{ github.run_number }}${{ matrix.product }}${{ matrix.os }}
   JFrog-Client-Go-Repository-Tests:
     name: repository (${{ matrix.os }})
     strategy:
@@ -59,4 +60,4 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: repository tests
-      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repository=true --rt.url=${{ secrets.CLI_RT_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --access.token=${{ secrets.CLI_ACCESS_TOKEN }}
+      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repository=true --rt.url=${{ secrets.CLI_RT_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --access.token=${{ secrets.CLI_ACCESS_TOKEN }} --test.ciRunId=${{ github.run_number }}${{ matrix.product }}${{ matrix.os }}
