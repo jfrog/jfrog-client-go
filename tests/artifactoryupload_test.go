@@ -30,7 +30,7 @@ func flatUpload(t *testing.T) {
 
 	pattern := filepath.Join(workingDir, "out", "*")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo()}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
@@ -44,7 +44,7 @@ func flatUpload(t *testing.T) {
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.CommonParams = &utils.CommonParams{}
-	searchParams.Pattern = RtTargetRepo
+	searchParams.Pattern = getRtTargetRepo()
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
 	if err != nil {
@@ -70,7 +70,7 @@ func recursiveUpload(t *testing.T) {
 
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo()}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
@@ -84,7 +84,7 @@ func recursiveUpload(t *testing.T) {
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.CommonParams = &utils.CommonParams{}
-	searchParams.Pattern = RtTargetRepo
+	searchParams.Pattern = getRtTargetRepo()
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
 	if err != nil {
@@ -113,7 +113,7 @@ func placeholderUpload(t *testing.T) {
 
 	pattern := filepath.Join(workingDir, "(*).in")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo + "{1}"}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "{1}"}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
@@ -127,7 +127,7 @@ func placeholderUpload(t *testing.T) {
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.CommonParams = &utils.CommonParams{}
-	searchParams.Pattern = RtTargetRepo
+	searchParams.Pattern = getRtTargetRepo()
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
 	if err != nil {
@@ -156,7 +156,7 @@ func includeDirsUpload(t *testing.T) {
 
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: getRtTargetRepo()}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
@@ -170,7 +170,7 @@ func includeDirsUpload(t *testing.T) {
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.CommonParams = &utils.CommonParams{}
-	searchParams.Pattern = RtTargetRepo
+	searchParams.Pattern = getRtTargetRepo()
 	searchParams.IncludeDirs = true
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
@@ -211,7 +211,7 @@ func explodeUpload(t *testing.T) {
 	}
 	pattern := filepath.Join(workingDir, "*.zip")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: getRtTargetRepo()}
 	up.Flat = true
 	up.ExplodeArchive = true
 	summary, err := testsUploadService.UploadFiles(up)
@@ -226,7 +226,7 @@ func explodeUpload(t *testing.T) {
 	}
 	searchParams := services.NewSearchParams()
 	searchParams.CommonParams = &utils.CommonParams{}
-	searchParams.Pattern = RtTargetRepo
+	searchParams.Pattern = getRtTargetRepo()
 	searchParams.IncludeDirs = true
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
@@ -259,7 +259,7 @@ func propsUpload(t *testing.T) {
 	targetProps, err := utils.ParseProperties("key1=val1")
 	assert.NoError(t, err)
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Target: RtTargetRepo, TargetProps: targetProps}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Target: getRtTargetRepo(), TargetProps: targetProps}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	assert.NoError(t, err)
@@ -269,7 +269,7 @@ func propsUpload(t *testing.T) {
 	// Search a.in with property key1=val1
 	searchParams := services.NewSearchParams()
 	searchParams.CommonParams = &utils.CommonParams{}
-	searchParams.Pattern = RtTargetRepo
+	searchParams.Pattern = getRtTargetRepo()
 	searchParams.Props = "key1=val1"
 	reader, err := testsSearchService.Search(searchParams)
 	defer reader.Close()
@@ -294,7 +294,7 @@ func propsUpload(t *testing.T) {
 func summaryUpload(t *testing.T) {
 	pattern := filepath.Join("testdata", "a", "*")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: RtTargetRepo}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo()}
 	up.Flat = true
 	testsUploadService.SetSaveSummary(true)
 	defer testsUploadService.SetSaveSummary(false)
@@ -316,14 +316,14 @@ func summaryUpload(t *testing.T) {
 	expectedSha256 := "4eb341b5d2762a853d79cc25e622aa8b978eb6e12c3259e2d99dc9dc60d82c5d"
 	assert.Len(t, transfers, 1)
 	assert.Equal(t, filepath.Join("testdata", "a", "a.in"), transfers[0].SourcePath)
-	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+RtTargetRepo+"a.in", transfers[0].TargetPath)
+	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+getRtTargetRepo()+"a.in", transfers[0].TargetPath)
 	assert.Equal(t, expectedSha256, transfers[0].Sha256)
 	var artifacts []utils.ArtifactDetails
 	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
 		artifacts = append(artifacts, *item)
 	}
 	assert.Len(t, artifacts, 1)
-	assert.Equal(t, RtTargetRepo+"a.in", artifacts[0].ArtifactoryPath)
+	assert.Equal(t, getRtTargetRepo()+"a.in", artifacts[0].ArtifactoryPath)
 	artifactoryCleanup(t)
 }
 

@@ -23,17 +23,17 @@ func TestXrayWatch(t *testing.T) {
 }
 
 func testXrayWatchAll(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1", runTimestamp)
+	policy1Name := fmt.Sprintf("%s-%s", "policy1", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
-	policy2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy2", runTimestamp)
+	policy2Name := fmt.Sprintf("%s-%s", "policy2", getRunId())
 	err = createDummyPolicy(policy2Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy2Name)
 
-	AllWatchName := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-all-repos", runTimestamp)
+	AllWatchName := fmt.Sprintf("%s-%s", "client-go-tests-watch-all-repos", getRunId())
 	paramsAllRepos := utils.NewWatchParams()
 	paramsAllRepos.Name = AllWatchName
 	paramsAllRepos.Description = "All Repos"
@@ -117,30 +117,30 @@ func testXrayWatchAll(t *testing.T) {
 }
 
 func testXrayWatchSelectedRepos(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1-pattern", runTimestamp)
+	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
-	repo1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "repo1", runTimestamp)
+	repo1Name := fmt.Sprintf("%s-%s", "repo1", getRunId())
 	createRepoLocal(t, repo1Name)
 	defer deleteRepo(t, repo1Name)
-	repo2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "repo2", runTimestamp)
+	repo2Name := fmt.Sprintf("%s-%s", "repo2", getRunId())
 	createRepoRemote(t, repo2Name)
 	defer deleteRepo(t, repo2Name)
 
-	build1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build1", runTimestamp)
+	build1Name := fmt.Sprintf("%s-%s", "build1", getRunId())
 	err = createAndIndexBuild(t, build1Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build1Name)
 
-	build2Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "build2", runTimestamp)
+	build2Name := fmt.Sprintf("%s-%s", "build2", getRunId())
 	err = createAndIndexBuild(t, build2Name)
 	assert.NoError(t, err)
 	defer deleteBuild(build2Name)
 
 	paramsSelectedRepos := utils.NewWatchParams()
-	paramsSelectedRepos.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-selected-repos", runTimestamp)
+	paramsSelectedRepos.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-selected-repos", getRunId())
 	paramsSelectedRepos.Description = "Selected Repos"
 	paramsSelectedRepos.Active = true
 	paramsSelectedRepos.Policies = []utils.AssignedPolicy{
@@ -256,13 +256,13 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 }
 
 func testXrayWatchBuildsByPattern(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "policy1-pattern", runTimestamp)
+	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
 
 	paramsBuildsByPattern := utils.NewWatchParams()
-	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-builds-by-pattern", runTimestamp)
+	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-builds-by-pattern", getRunId())
 	paramsBuildsByPattern.Description = "Builds By Pattern"
 	paramsBuildsByPattern.Builds.Type = utils.WatchBuildAll
 	paramsBuildsByPattern.Builds.All.ExcludePatterns = []string{"excludePath"}
@@ -302,7 +302,7 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 
 func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch := utils.NewWatchParams()
-	paramsMissingWatch.Name = fmt.Sprintf("%s-%s-%s", JfrogRepoPrefix, "client-go-tests-watch-missing", runTimestamp)
+	paramsMissingWatch.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-missing", getRunId())
 	paramsMissingWatch.Description = "Missing Watch"
 	paramsMissingWatch.Builds.Type = utils.WatchBuildAll
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}
@@ -312,12 +312,12 @@ func testXrayWatchUpdateMissingWatch(t *testing.T) {
 }
 
 func testXrayWatchDeleteMissingWatch(t *testing.T) {
-	err := testsXrayWatchService.Delete(JfrogRepoPrefix + "-client-go-tests-watch-builds-missing")
+	err := testsXrayWatchService.Delete("client-go-tests-watch-builds-missing")
 	assert.EqualError(t, err, "Server response: 404 Not Found\n{\n  \"error\": \"Failed to delete Watch: Watch was not found\"\n}")
 }
 
 func testXrayWatchGetMissingWatch(t *testing.T) {
-	_, err := testsXrayWatchService.Get(JfrogRepoPrefix + "-client-go-tests-watch-builds-missing")
+	_, err := testsXrayWatchService.Get("client-go-tests-watch-builds-missing")
 	assert.EqualError(t, err, "Server response: 404 Not Found\n{\n  \"error\": \"Watch was not found\"\n}")
 }
 
