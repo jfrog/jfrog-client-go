@@ -119,7 +119,7 @@ var (
 	falseValue   = false
 
 	// Tests configuration
-	RtTargetRepo    = "client-tests"
+	RtTargetRepo    = "client-go"
 	RtTargetRepoKey = RtTargetRepo
 )
 
@@ -834,7 +834,7 @@ func deleteRepo(t *testing.T, repoKey string) {
 
 func GenerateRepoKeyForRepoServiceTest() string {
 	timestamp++
-	return fmt.Sprintf("%s-%d", getRtTargetRepoKey()[:10], timestamp)
+	return fmt.Sprintf("%s-%d", getRtTargetRepoKey(), timestamp)
 }
 
 func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
