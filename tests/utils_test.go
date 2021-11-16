@@ -130,7 +130,7 @@ const (
 )
 
 func init() {
-	ciRunId = flag.String("ci.runId", "", "A unique run ID used as a suffix to create repositories tests")
+	ciRunId = flag.String("ci.runId", "", "A unique identifier used as a suffix to create repositories in the tests")
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
@@ -165,7 +165,7 @@ func getRtTargetRepo() string {
 
 func getRunId() string {
 	if ciRunId != nil && *ciRunId != "" {
-		return *ciRunId
+		return *ciRunId + "-" + timestampStr
 	}
 	return timestampStr
 }
