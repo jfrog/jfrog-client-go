@@ -48,8 +48,7 @@ jobs:
     - name: pipelines tests
       env:
         OS: ${{ matrix.os }}
-        SUITE: ${{ matrix.suite }}
-      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines=true --rt.url=${{ secrets.CLI_RT_URL }} --pipe.url=${{ secrets.CLI_PIPE_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --pipe.accessToken=${{ secrets.CLI_PIPE_ACCESS_TOKE }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }} --ci.runId=${SUITE:0:2}-${OS:0:1}
+      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines=true --rt.url=${{ secrets.CLI_RT_URL }} --pipe.url=${{ secrets.CLI_PIPE_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --pipe.accessToken=${{ secrets.CLI_PIPE_ACCESS_TOKE }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }} --ci.runId=pi-${OS:0:1}
   JFrog-Client-Go-Repository-Tests:
     name: repository ubuntu-latest
     runs-on: ubuntu-latest
