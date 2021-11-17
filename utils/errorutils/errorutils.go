@@ -16,7 +16,7 @@ var CheckError = func(err error) error {
 
 func CheckErrorf(format string, a ...interface{}) error {
 	if a != nil && len(a) > 0 {
-		return CheckError(fmt.Errorf(format, a))
+		return CheckError(fmt.Errorf(format, a...))
 	}
 	return CheckError(errors.New(format))
 }
