@@ -37,15 +37,14 @@ const (
 	Dependency ScanType = "dependency"
 	Binary     ScanType = "binary"
 
-	XrayScanStatusFailed = "failed"
+	xrayScanStatusFailed = "failed"
 )
 
 type ScanType string
 
 type ScanService struct {
-	client         *jfroghttpclient.JfrogHttpClient
-	XrayDetails    auth.ServiceDetails
-	MaxWaitMinutes time.Duration
+	client      *jfroghttpclient.JfrogHttpClient
+	XrayDetails auth.ServiceDetails
 }
 
 // NewScanService creates a new service to scan Binaries and VCS projects.
@@ -102,38 +101,35 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 }
 
 func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
-	maxWaitMinutes := defaultMaxWaitMinutes
-	if ss.MaxWaitMinutes > 0 {
-		maxWaitMinutes = ss.MaxWaitMinutes
+	requestUrl := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
+	if includeVulnerabilities {
+		requestUrl += includeVulnerabilitiesParam
+		if includeLicenses {
+			requestUrl += andIncludeLicensesParam
+		}
+	} else if includeLicenses {
+		requestUrl += includeLicensesParam
 	}
+	syncMessage := fmt.Sprintf("Sync: Get Scan Graph results. Scan ID:%s...", scanId)
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	message := fmt.Sprintf("Sync: Get Scan Graph results. Scan ID:%s...", scanId)
 	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	ticker := time.NewTicker(defaultSyncSleepInterval)
 	timeout := make(chan bool)
 	errChan := make(chan error)
 	resultChan := make(chan []byte)
-	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
-	if includeVulnerabilities {
-		endPoint += includeVulnerabilitiesParam
-		if includeLicenses {
-			endPoint += andIncludeLicensesParam
-		}
-	} else if includeLicenses {
-		endPoint += includeLicensesParam
-	}
+
 	go func() {
 		for {
 			select {
 			case <-timeout:
-				errChan <- errorutils.CheckErrorf("Timeout for sync get scan graph results.")
+				errChan <- errorutils.CheckErrorf("Timeout for sync get scan results.")
 				resultChan <- nil
 				return
 			case _ = <-ticker.C:
-				log.Debug(message)
-				resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
+				log.Debug(syncMessage)
+				resp, body, _, err := ss.client.SendGet(requestUrl, true, &httpClientsDetails)
 				if err != nil {
 					errChan <- err
 					resultChan <- nil
@@ -155,7 +151,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}()
 	// Make sure we don't wait forever
 	go func() {
-		time.Sleep(maxWaitMinutes)
+		time.Sleep(defaultMaxWaitMinutes)
 		timeout <- true
 	}()
 	// Wait for result or error
@@ -169,7 +165,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	if &scanResponse == nil || scanResponse.ScannedStatus == XrayScanStatusFailed {
+	if &scanResponse == nil || scanResponse.ScannedStatus == xrayScanStatusFailed {
 		return nil, errorutils.CheckErrorf("Xray scan failed")
 	}
 	return &scanResponse, err
@@ -270,10 +266,6 @@ type Cve struct {
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
 	return gp.ProjectKey
-}
-
-func NewXrayGraphScanParams() XrayGraphScanParams {
-	return XrayGraphScanParams{}
 }
 
 func (currNode *GraphNode) NodeHasLoop() bool {
