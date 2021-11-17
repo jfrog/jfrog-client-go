@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
+	"time"
 )
 
 func CreateFileWithContent(fileName, relativePath string) (string, string, error) {
@@ -27,6 +29,6 @@ func CreateFileWithContent(fileName, relativePath string) (string, string, error
 		return tempDirPath, "", err
 	}
 	defer file.Close()
-	_, err = file.Write([]byte(fullPath))
+	_, err = file.Write([]byte(strconv.FormatInt(int64(time.Now().Unix()), 10)))
 	return tempDirPath, fullPath, err
 }
