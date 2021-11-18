@@ -3,8 +3,6 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"regexp"
@@ -39,7 +37,7 @@ func SshAuthentication(url, sshKeyPath, sshPassphrase string) (sshAuthHeaders ma
 		// Check if key specified
 		if len(sshKeyPath) <= 0 {
 			log.Error("Authentication via SSH key failed.")
-			return nil, "", errorutils.CheckError(fmt.Errorf("SSH key not specified."))
+			return nil, "", errorutils.CheckErrorf("SSH key not specified.")
 		}
 
 		// Read key and passphrase
@@ -119,7 +117,7 @@ func readSshKeyAndPassphrase(sshKeyPath, sshPassphrase string) ([]byte, []byte, 
 		}
 		// If key is encrypted but no passphrase specified
 		if encryptedKey {
-			return nil, nil, errorutils.CheckError(errors.New("SSH Key is encrypted but no passphrase was specified."))
+			return nil, nil, errorutils.CheckErrorf("SSH Key is encrypted but no passphrase was specified.")
 		}
 	}
 
@@ -153,7 +151,7 @@ func parseUrl(url string) (protocol, host string, port int, err error) {
 		host = groups[2]
 		port, err = strconv.Atoi(groups[3])
 		if err != nil {
-			err = errorutils.CheckError(errors.New("URL: " + url + " is invalid. Expecting ssh://<host>:<port> or http(s)://..."))
+			err = errorutils.CheckErrorf("URL: " + url + " is invalid. Expecting ssh://<host>:<port> or http(s)://...")
 		}
 		return
 	}

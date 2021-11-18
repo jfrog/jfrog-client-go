@@ -1,8 +1,6 @@
 package services
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -272,7 +270,7 @@ func rbGpgValidate(rbGpgValidationMap map[string]*utils.RbGpgValidator, bundle s
 	artifactPath := path.Join(resultItem.Repo, resultItem.Path, resultItem.Name)
 	rbGpgValidator := rbGpgValidationMap[bundle]
 	if rbGpgValidator == nil {
-		return errorutils.CheckError(fmt.Errorf("release bundle validator for '%s' was not found unexpectedly. This may be caused by a bug", artifactPath))
+		return errorutils.CheckErrorf("release bundle validator for '%s' was not found unexpectedly. This may be caused by a bug", artifactPath)
 	}
 	err := rbGpgValidator.VerifyArtifact(artifactPath, resultItem.Sha256)
 	if err != nil {
@@ -426,7 +424,7 @@ func removeIfSymlink(localSymlinkPath string) error {
 func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) error {
 	if symlinkChecksum && symlinkContentChecksum != "" {
 		if !fileutils.IsPathExists(symlinkArtifact, false) {
-			return errorutils.CheckError(errors.New("Symlink validation failed, target doesn't exist: " + symlinkArtifact))
+			return errorutils.CheckErrorf("Symlink validation failed, target doesn't exist: " + symlinkArtifact)
 		}
 		file, err := os.Open(symlinkArtifact)
 		if err = errorutils.CheckError(err); err != nil {
@@ -439,7 +437,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		}
 		sha1 := checksumInfo[checksum.SHA1]
 		if sha1 != symlinkContentChecksum {
-			return errorutils.CheckError(errors.New("Symlink validation failed for target: " + symlinkArtifact))
+			return errorutils.CheckErrorf("Symlink validation failed for target: " + symlinkArtifact)
 		}
 	}
 	localSymlinkPath := filepath.Join(localPath, localFileName)

@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bufio"
-	"errors"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -35,10 +34,10 @@ func NewGitManager(path string) *manager {
 
 func (m *manager) ReadConfig() error {
 	if m.path == "" {
-		return errorutils.CheckError(errors.New(".git path must be defined"))
+		return errorutils.CheckErrorf(".git path must be defined")
 	}
 	if !fileutils.IsPathExists(m.path, false) {
-		return errorutils.CheckError(errors.New(".git path must exist in order to collect vcs details"))
+		return errorutils.CheckErrorf(".git path must exist in order to collect vcs details")
 	}
 
 	m.handleSubmoduleIfNeeded()
@@ -75,7 +74,7 @@ func (m *manager) handleSubmoduleIfNeeded() {
 	line := string(content)
 	// Expecting git submodule to have exactly one line, with a prefix and the path to the actual submodule's git.
 	if !strings.HasPrefix(line, submoduleDotGitPrefix) {
-		m.err = errorutils.CheckError(errors.New("failed to parse .git path for submodule"))
+		m.err = errorutils.CheckErrorf("failed to parse .git path for submodule")
 		return
 	}
 
@@ -88,7 +87,7 @@ func (m *manager) handleSubmoduleIfNeeded() {
 		return
 	}
 	if !exists {
-		m.err = errorutils.CheckError(errors.New("path found in .git file '" + m.path + "' does not exist: '" + actualAbsPath + "'"))
+		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + actualAbsPath + "'")
 		return
 	}
 
@@ -268,7 +267,7 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 				if len(split) == 2 {
 					m.revision = split[0]
 				} else {
-					m.err = errorutils.CheckError(errors.New("failed fetching revision for ref :" + ref + " - Unexpected line structure in packed-refs file"))
+					m.err = errorutils.CheckErrorf("failed fetching revision for ref :" + ref + " - Unexpected line structure in packed-refs file")
 				}
 				return
 			}

@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"net/http"
 	"net/url"
 
@@ -36,7 +35,7 @@ func (fs *FederationService) ConvertLocalToFederated(repoKey string) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.CheckErrorf("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
@@ -54,7 +53,7 @@ func (fs *FederationService) TriggerFederatedFullSyncAll(repoKey string) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.CheckErrorf("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
@@ -72,7 +71,7 @@ func (fs *FederationService) TriggerFederatedFullSyncMirror(repoKey string, mirr
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
+		return errorutils.CheckErrorf("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 
 	log.Debug("Artifactory response:", resp.Status)

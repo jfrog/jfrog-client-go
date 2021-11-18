@@ -2,7 +2,6 @@ package fspatterns
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -128,7 +127,7 @@ func GetRootPath(pattern, target string, patternType clientutils.PatternType, pr
 	placeholderParentheses := clientutils.NewParenthesesSlice(pattern, target)
 	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
-		return "", errorutils.CheckError(errors.New("Path does not exist: " + rootPath))
+		return "", errorutils.CheckErrorf("Path does not exist: " + rootPath)
 	}
 
 	return rootPath, nil

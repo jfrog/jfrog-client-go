@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -17,27 +16,64 @@ import (
 )
 
 const (
-	scanGraphAPI                = "api/v1/scan/graph"
-	repoPathQueryParam          = "?repo_path="
-	projectQueryParam           = "?project="
-	watchesQueryParam           = "?watch="
-	watchesSeperator            = "&watch="
+	scanGraphAPI = "api/v1/scan/graph"
+
+	// Graph scan query params
+	repoPathQueryParam = "repo_path="
+	projectQueryParam  = "project="
+	watchesQueryParam  = "watch="
+	scanTypeQueryParam = "scan_type="
+
+	// Get scan results query params
 	includeVulnerabilitiesParam = "?include_vulnerabilities=true"
 	includeLicensesParam        = "?include_licenses=true"
 	andIncludeLicensesParam     = "&include_licenses=true"
-	defaultMaxWaitMinutes       = 15 * time.Minute // 15 minutes
-	defaultSyncSleepInterval    = 5 * time.Second  // 5 seconds
+
+	// Get scan results timeouts
+	defaultMaxWaitMinutes    = 15 * time.Minute // 15 minutes
+	defaultSyncSleepInterval = 5 * time.Second  // 5 seconds
+
+	// ScanType values
+	Dependency ScanType = "dependency"
+	Binary     ScanType = "binary"
+
+	xrayScanStatusFailed = "failed"
 )
+
+type ScanType string
 
 type ScanService struct {
 	client         *jfroghttpclient.JfrogHttpClient
 	XrayDetails    auth.ServiceDetails
-	MaxWaitMinutes time.Duration
 }
 
 // NewScanService creates a new service to scan Binaries and VCS projects.
 func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 	return &ScanService{client: client}
+}
+
+func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
+	var params []string
+	if scanParams.ProjectKey != "" {
+		params = append(params, projectQueryParam+scanParams.ProjectKey)
+	} else if scanParams.RepoPath != "" {
+		params = append(params, repoPathQueryParam+scanParams.RepoPath)
+	} else if len(scanParams.Watches) > 0 {
+		for _, watch := range scanParams.Watches {
+			if watch != "" {
+				params = append(params, watchesQueryParam+watch)
+			}
+		}
+	}
+
+	if scanParams.ScanType != "" {
+		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
+	}
+
+	if params == nil || len(params) == 0 {
+		return ""
+	}
+	return "?" + strings.Join(params, "&")
 }
 
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
@@ -48,14 +84,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		return "", errorutils.CheckError(err)
 	}
 	url := ss.XrayDetails.GetUrl() + scanGraphAPI
-	if scanParams.ProjectKey != "" {
-		url += projectQueryParam + scanParams.ProjectKey
-	} else if scanParams.RepoPath != "" {
-		url += repoPathQueryParam + scanParams.RepoPath
-	} else if len(scanParams.Watches) > 0 {
-		watches := strings.Join(scanParams.Watches, watchesSeperator)
-		url += watchesQueryParam + watches
-	}
+	url += createScanGraphQueryParams(scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err
@@ -72,10 +101,6 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 }
 
 func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
-	maxWaitMinutes := defaultMaxWaitMinutes
-	if ss.MaxWaitMinutes > 0 {
-		maxWaitMinutes = ss.MaxWaitMinutes
-	}
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
@@ -98,7 +123,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		for {
 			select {
 			case <-timeout:
-				errChan <- errorutils.CheckError(errors.New("Timeout for sync get scan graph results."))
+				errChan <- errorutils.CheckErrorf("Timeout for sync get scan graph results.")
 				resultChan <- nil
 				return
 			case _ = <-ticker.C:
@@ -125,7 +150,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}()
 	// Make sure we don't wait forever
 	go func() {
-		time.Sleep(maxWaitMinutes)
+		time.Sleep(defaultMaxWaitMinutes)
 		timeout <- true
 	}()
 	// Wait for result or error
@@ -139,6 +164,9 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
+	if &scanResponse == nil || scanResponse.ScannedStatus == xrayScanStatusFailed {
+		return nil, errorutils.CheckErrorf("Xray scan failed")
+	}
 	return &scanResponse, err
 }
 
@@ -149,6 +177,7 @@ type XrayGraphScanParams struct {
 	ProjectKey string
 	Watches    []string
 	Graph      *GraphNode
+	ScanType   ScanType
 }
 
 type GraphNode struct {
