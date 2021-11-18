@@ -101,25 +101,24 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 }
 
 func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
-	requestUrl := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
-	if includeVulnerabilities {
-		requestUrl += includeVulnerabilitiesParam
-		if includeLicenses {
-			requestUrl += andIncludeLicensesParam
-		}
-	} else if includeLicenses {
-		requestUrl += includeLicensesParam
-	}
-	syncMessage := fmt.Sprintf("Sync: Get Scan Graph results. Scan ID:%s...", scanId)
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
+	message := fmt.Sprintf("Sync: Get Scan Graph results. Scan ID:%s...", scanId)
 	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	ticker := time.NewTicker(defaultSyncSleepInterval)
 	timeout := make(chan bool)
 	errChan := make(chan error)
 	resultChan := make(chan []byte)
-
+	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
+	if includeVulnerabilities {
+		endPoint += includeVulnerabilitiesParam
+		if includeLicenses {
+			endPoint += andIncludeLicensesParam
+		}
+	} else if includeLicenses {
+		endPoint += includeLicensesParam
+	}
 	go func() {
 		for {
 			select {
@@ -128,8 +127,8 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 				resultChan <- nil
 				return
 			case _ = <-ticker.C:
-				log.Debug(syncMessage)
-				resp, body, _, err := ss.client.SendGet(requestUrl, true, &httpClientsDetails)
+				log.Debug(message)
+				resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 				if err != nil {
 					errChan <- err
 					resultChan <- nil
