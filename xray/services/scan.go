@@ -37,7 +37,7 @@ const (
 	Dependency ScanType = "dependency"
 	Binary     ScanType = "binary"
 
-	XrayScanStatusFailed = "failed"
+	xrayScanStatusFailed = "failed"
 )
 
 type ScanType string
@@ -45,7 +45,6 @@ type ScanType string
 type ScanService struct {
 	client         *jfroghttpclient.JfrogHttpClient
 	XrayDetails    auth.ServiceDetails
-	MaxWaitMinutes time.Duration
 }
 
 // NewScanService creates a new service to scan Binaries and VCS projects.
@@ -102,10 +101,6 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 }
 
 func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
-	maxWaitMinutes := defaultMaxWaitMinutes
-	if ss.MaxWaitMinutes > 0 {
-		maxWaitMinutes = ss.MaxWaitMinutes
-	}
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
@@ -155,7 +150,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}()
 	// Make sure we don't wait forever
 	go func() {
-		time.Sleep(maxWaitMinutes)
+		time.Sleep(defaultMaxWaitMinutes)
 		timeout <- true
 	}()
 	// Wait for result or error
@@ -169,7 +164,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	if &scanResponse == nil || scanResponse.ScannedStatus == XrayScanStatusFailed {
+	if &scanResponse == nil || scanResponse.ScannedStatus == xrayScanStatusFailed {
 		return nil, errorutils.CheckErrorf("Xray scan failed")
 	}
 	return &scanResponse, err
