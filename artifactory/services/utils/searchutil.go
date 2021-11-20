@@ -2,8 +2,8 @@ package utils
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io"
 	"net/http"
 	"os"
@@ -15,7 +15,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/utils/version"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -317,6 +316,7 @@ type ResultItem struct {
 	Name        string     `json:"name,omitempty"`
 	Actual_Md5  string     `json:"actual_md5,omitempty"`
 	Actual_Sha1 string     `json:"actual_sha1,omitempty"`
+	Sha256      string     `json:"sha256,omitempty"`
 	Size        int64      `json:"size,omitempty"`
 	Created     string     `json:"created,omitempty"`
 	Modified    string     `json:"modified,omitempty"`
@@ -399,7 +399,7 @@ func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *conte
 	for newRecord := (reflect.New(recordType)).Interface(); reader.NextRecord(newRecord) == nil; newRecord = (reflect.New(recordType)).Interface() {
 		resultItem, ok := newRecord.(SearchBasedContentItem)
 		if !ok {
-			return nil, errorutils.CheckError(errors.New("Reader record is not search-based."))
+			return nil, errorutils.CheckErrorf("Reader record is not search-based.")
 		}
 
 		if resultItem.GetName() == "." {
@@ -437,7 +437,7 @@ func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.
 	for newRecord := (reflect.New(recordType)).Interface(); reader.NextRecord(newRecord) == nil; newRecord = (reflect.New(recordType)).Interface() {
 		resultItem, ok := newRecord.(SearchBasedContentItem)
 		if !ok {
-			return nil, errorutils.CheckError(errors.New("Reader record is not search-based."))
+			return nil, errorutils.CheckErrorf("Reader record is not search-based.")
 		}
 
 		if resultItem.GetName() == "." {

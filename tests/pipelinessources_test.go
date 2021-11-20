@@ -1,9 +1,10 @@
 package tests
 
 import (
+	"testing"
+
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestPipelinesSources(t *testing.T) {

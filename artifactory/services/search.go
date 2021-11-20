@@ -1,8 +1,6 @@
 package services
 
 import (
-	"errors"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -63,6 +61,6 @@ func SearchBySpecFiles(searchParams SearchParams, flags utils.CommonConf, requir
 	case utils.AQL:
 		return utils.SearchBySpecWithAql(searchParams.GetFile(), flags, requiredArtifactProps)
 	default:
-		return nil, errorutils.CheckError(errors.New("Error at SearchBySpecFiles: Unknown spec type"))
+		return nil, errorutils.CheckErrorf("Error at SearchBySpecFiles: Unknown spec type")
 	}
 }

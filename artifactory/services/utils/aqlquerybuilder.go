@@ -117,7 +117,11 @@ func CreateAqlQueryForNpm(npmName, npmVersion string) string {
 	itemsPart :=
 		`items.find({` +
 			`"@npm.name":"%s",` +
-			`"@npm.version":"%s"` +
+			`"$or": [` +
+				// sometimes the npm.version in the repository is written with "v" prefix, so we search both syntaxes
+				`{"@npm.version":"%[2]s"},` +
+				`{"@npm.version":"v%[2]s"}` +
+			`]` +
 			`})%s`
 	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
 }
@@ -263,7 +267,7 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) s
 }
 
 func buildReleaseBundleQuery(params *CommonParams) (string, error) {
-	bundleName, bundleVersion, err := parseNameAndVersion(params.Bundle, false)
+	bundleName, bundleVersion, err := ParseNameAndVersion(params.Bundle, false)
 	if bundleName == "" || err != nil {
 		return "", err
 	}
@@ -279,7 +283,7 @@ func buildReleaseBundleQuery(params *CommonParams) (string, error) {
 // If requiredArtifactProps is NONE or 'includePropertiesInAqlForSpec' return false,
 // "property" field won't be included due to a limitation in the AQL implementation in Artifactory.
 func getQueryReturnFields(specFile *CommonParams, requiredArtifactProps RequiredArtifactProps) []string {
-	returnFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "size", "type", "modified", "created"}
+	returnFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "modified", "created"}
 	if !includePropertiesInAqlForSpec(specFile) {
 		// Sort dose not work when property is in the include section. in this case we will append properties in later stage.
 		return appendMissingFields(specFile.SortBy, returnFields)

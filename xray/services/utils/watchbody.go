@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"sort"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -222,7 +221,7 @@ func configureRepositories(payloadBody *WatchBody, params WatchParams) error {
 	case "":
 		// Empty is fine
 	default:
-		return errorutils.CheckError(errors.New("Invalid Repository Type. Must be " + string(WatchRepositoriesAll) + " or " + string(WatchRepositoriesByName)))
+		return errorutils.CheckErrorf("Invalid Repository Type. Must be " + string(WatchRepositoriesAll) + " or " + string(WatchRepositoriesByName))
 	}
 
 	return nil
@@ -324,7 +323,7 @@ func configureBuilds(payloadBody *WatchBody, params WatchParams) error {
 	case "":
 		// Empty is fine
 	default:
-		return errorutils.CheckError(errors.New("Invalid Build Type. Must be " + string(WatchBuildAll) + " or " + string(WatchBuildByName)))
+		return errorutils.CheckErrorf("Invalid Build Type. Must be " + string(WatchBuildAll) + " or " + string(WatchBuildByName))
 	}
 
 	return nil

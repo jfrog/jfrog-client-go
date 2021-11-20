@@ -32,7 +32,7 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(extractionPath, 0777)
+	err = os.MkdirAll(extractionPath, 0755)
 	if errorutils.CheckError(err) != nil {
 		return err
 	}

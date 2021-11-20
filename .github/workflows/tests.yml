@@ -1,0 +1,70 @@
+name: JFrog Client Go Tests
+on:
+  push:
+    branches:
+      - master
+      - dev
+  # Triggers the workflow on labeled PRs only.
+  pull_request_target:
+    types: [labeled]
+jobs:
+  JFrog-Client-Go-Tests:
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test') || github.event_name == 'push'
+    name: ${{ matrix.suite }} ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        suite: [artifactory, distribution, xray, access]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.x
+    - name: Lint
+      run: go vet -v ./...
+    - name: ${{ matrix.suite }} tests
+      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }}=true --rt.url=${{ secrets.CLI_RT_URL }} --ds.url=${{ secrets.CLI_DIST_URL }} --xr.url=${{ secrets.CLI_XRAY_URL }} --access.url=${{ secrets.CLI_ACCESS_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --access.token=${{ secrets.CLI_ACCESS_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+  JFrog-Client-Go-Pipelines-Tests:
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test') || github.event_name == 'push'
+    name: pipelines ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.x
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: pipelines tests
+      env:
+        OS: ${{ matrix.os }}
+      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines=true --rt.url=${{ secrets.CLI_RT_URL }} --pipe.url=${{ secrets.CLI_PIPE_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --pipe.accessToken=${{ secrets.CLI_PIPE_ACCESS_TOKE }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }} --ci.runId=pi-${{ runner.os }}
+  JFrog-Client-Go-Repository-Tests:
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test') || github.event_name == 'push'
+    name: repository ubuntu-latest
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.x
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: repository tests
+      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repository=true --rt.url=${{ secrets.CLI_RT_URL }} --rt.user=${{ secrets.CLI_RT_USER }} --rt.password=${{ secrets.CLI_RT_PASSWORD }} --access.token=${{ secrets.CLI_ACCESS_TOKEN }}

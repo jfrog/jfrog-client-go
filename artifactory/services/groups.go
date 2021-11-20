@@ -136,7 +136,7 @@ func (gs *GroupService) DeleteGroup(name string) error {
 	url := fmt.Sprintf("%sapi/security/groups/%s", gs.ArtDetails.GetUrl(), name)
 	resp, body, err := gs.client.SendDelete(url, nil, &httpDetails)
 	if resp == nil {
-		return errorutils.CheckError(fmt.Errorf("no response provided (including status code)"))
+		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))

@@ -148,6 +148,7 @@ type FederatedRepositoryMember struct {
 type FederatedRepositoryBaseParams struct {
 	RepositoryBaseParams
 	AdditionalRepositoryBaseParams
+	KeyPairRefsRepositoryParams
 	ArchiveBrowsingEnabled *bool                       `json:"archiveBrowsingEnabled,omitempty"`
 	Members                []FederatedRepositoryMember `json:"members,omitempty"`
 }
