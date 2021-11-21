@@ -94,7 +94,7 @@ func (us *UserService) CreateUser(params UserParams) error {
 			return err
 		}
 		if user != nil {
-			return errorutils.CheckError(fmt.Errorf("user '%s' already exists", user.Name))
+			return errorutils.CheckErrorf("user '%s' already exists", user.Name)
 		}
 	}
 	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
@@ -147,7 +147,7 @@ func (us *UserService) DeleteUser(name string) error {
 	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), name)
 	resp, body, err := us.client.SendDelete(url, nil, &httpDetails)
 	if resp == nil {
-		return errorutils.CheckError(fmt.Errorf("no response provided (including status code)"))
+		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))

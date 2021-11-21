@@ -3,7 +3,6 @@ package httpclient
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -75,7 +74,7 @@ func (builder *httpClientBuilder) AddClientCertToTransport(transport *http.Trans
 	if builder.clientCertPath != "" {
 		cert, err := tls.LoadX509KeyPair(builder.clientCertPath, builder.clientCertKeyPath)
 		if err != nil {
-			return errorutils.CheckError(errors.New("Failed loading client certificate: " + err.Error()))
+			return errorutils.CheckErrorf("Failed loading client certificate: " + err.Error())
 		}
 		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
 	}
@@ -98,7 +97,7 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	} else {
 		transport, err = cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, builder.createDefaultHttpTransport())
 		if err != nil {
-			return nil, errorutils.CheckError(errors.New("Failed creating HttpClient: " + err.Error()))
+			return nil, errorutils.CheckErrorf("Failed creating HttpClient: " + err.Error())
 		}
 	}
 	err = builder.AddClientCertToTransport(transport)

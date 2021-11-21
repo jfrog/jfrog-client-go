@@ -1,10 +1,9 @@
 package services
 
 import (
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"testing"
 	"time"
-
-	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 )
 
 func TestCalculateMinimumBuildDate(t *testing.T) {

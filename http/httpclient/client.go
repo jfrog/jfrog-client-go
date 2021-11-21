@@ -91,17 +91,13 @@ func (jc *HttpClient) newRequest(method, url string, body io.Reader) (req *http.
 }
 
 func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
-	req, err := jc.createReq(method, url, content)
-	if err != nil {
-		return nil, nil, "", err
-	}
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      jc.retries,
 		RetriesInterval: 0,
 		LogMsgPrefix:    logMsgPrefix,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while sending %s request to %s", method, url),
 		ExecutionHandler: func() (bool, error) {
-			req, err = jc.createReq(method, url, content)
+			req, err := jc.createReq(method, url, content)
 			if err != nil {
 				return true, err
 			}
@@ -111,7 +107,7 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 			}
 			// Response must not be nil
 			if resp == nil {
-				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from server", logMsgPrefix)))
+				return false, errorutils.CheckErrorf("%sReceived empty response from server", logMsgPrefix)
 			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {
@@ -128,7 +124,6 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 }
 
 func (jc *HttpClient) createReq(method, url string, content []byte) (req *http.Request, err error) {
-	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", method, url))
 	if content != nil {
 		return jc.newRequest(method, url, bytes.NewBuffer(content))
 	}
@@ -136,6 +131,7 @@ func (jc *HttpClient) createReq(method, url string, content []byte) (req *http.R
 }
 
 func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
+	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", req.Method, req.URL))
 	req.Close = true
 	setAuthentication(req, httpClientsDetails)
 	addUserAgentHeader(req)
@@ -206,7 +202,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 			}
 			// Response must not be nil
 			if resp == nil {
-				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from file upload", logMsgPrefix)))
+				return false, errorutils.CheckErrorf("%sReceived empty response from file upload", logMsgPrefix)
 			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {
@@ -330,7 +326,7 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 			}
 			// Response must not be nil
 			if resp == nil {
-				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from file download", logMsgPrefix)))
+				return false, errorutils.CheckErrorf("%sReceived empty response from file download", logMsgPrefix)
 			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {
@@ -613,7 +609,7 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 			}
 			// Response must not be nil
 			if resp == nil {
-				return false, errorutils.CheckError(errors.New(fmt.Sprintf("%s[%s]: Received empty response from file download", logMsgPrefix, strconv.Itoa(currentSplit))))
+				return false, errorutils.CheckErrorf("%s[%s]: Received empty response from file download", logMsgPrefix, strconv.Itoa(currentSplit))
 			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {

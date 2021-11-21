@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/url"
@@ -61,7 +60,7 @@ func (props *Properties) ParseAndAddProperties(propStr string) error {
 func splitPropToKeyAndValue(str string) (key, value string, err error) {
 	index := strings.Index(str, keyValuesSeparator)
 	if index == -1 || index-1 < 0 || index+1 >= len(str) {
-		return "", "", errorutils.CheckError(errors.New(fmt.Sprintf("Invalid property format: %s - format should be key=val1,val2,...", str)))
+		return "", "", errorutils.CheckErrorf("Invalid property format: %s - format should be key=val1,val2,...", str)
 	}
 	key = str[0:index]
 	value = str[index+1:]

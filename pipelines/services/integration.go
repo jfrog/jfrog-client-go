@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -241,7 +240,7 @@ func (is *IntegrationsService) GetIntegrationByName(name string) (*Integration, 
 			return &integration, nil
 		}
 	}
-	return nil, errorutils.CheckError(errors.New("integration with provided name was not found in pipelines"))
+	return nil, errorutils.CheckErrorf("integration with provided name was not found in pipelines")
 }
 
 func (is *IntegrationsService) GetAllIntegrations() ([]Integration, error) {
