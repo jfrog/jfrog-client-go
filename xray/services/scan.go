@@ -43,8 +43,8 @@ const (
 type ScanType string
 
 type ScanService struct {
-	client         *jfroghttpclient.JfrogHttpClient
-	XrayDetails    auth.ServiceDetails
+	client      *jfroghttpclient.JfrogHttpClient
+	XrayDetails auth.ServiceDetails
 }
 
 // NewScanService creates a new service to scan Binaries and VCS projects.
@@ -265,10 +265,6 @@ type Cve struct {
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
 	return gp.ProjectKey
-}
-
-func NewXrayGraphScanParams() XrayGraphScanParams {
-	return XrayGraphScanParams{}
 }
 
 func (currNode *GraphNode) NodeHasLoop() bool {

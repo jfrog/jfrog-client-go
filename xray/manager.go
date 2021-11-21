@@ -132,6 +132,36 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses)
 }
 
+// BuildScanV2 will send Xray the given build for scan
+// Returns a string represents the scan ID.
+func (sm *XrayServicesManager) BuildScanV2(params services.XrayBuildParams) error {
+	buildScanV2Service := services.NewBuildScanV2Service(sm.client)
+	buildScanV2Service.XrayDetails = sm.config.GetServiceDetails()
+	return buildScanV2Service.BuildScanV2(params)
+}
+
+// GetBuildScanResults returns an Xray scan output of the requested build scan.
+// The scanId input should be received from BuildScanV2 request.
+func (sm *XrayServicesManager) GetBuildScanResults(params services.XrayBuildParams) (*services.BuildScanResponse, error) {
+	buildScanV2Service := services.NewBuildScanV2Service(sm.client)
+	buildScanV2Service.XrayDetails = sm.config.GetServiceDetails()
+	return buildScanV2Service.GetBuildScanV2Results(params)
+}
+
+// BuildSummary will get the build summary from Xray
+func (sm *XrayServicesManager) BuildSummary(params services.XrayBuildParams) (*services.SummaryResponse, error) {
+	buildSummary := services.NewSummaryService(sm.client)
+	buildSummary.XrayDetails = sm.config.GetServiceDetails()
+	return buildSummary.GetBuildSummary(params)
+}
+
+// ArtifactSummary will get the artifact summary from Xray
+func (sm *XrayServicesManager) ArtifactSummary(artifactSummaryRequest services.ArtifactSummaryRequest) (*services.SummaryResponse, error) {
+	buildSummary := services.NewSummaryService(sm.client)
+	buildSummary.XrayDetails = sm.config.GetServiceDetails()
+	return buildSummary.GetArtifactSummary(artifactSummaryRequest)
+}
+
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
 func (sm *XrayServicesManager) GenerateVulnerabilitiesReport(params services.ReportRequestParams) (resp *services.ReportResponse, err error) {
 	reportService := services.NewReportService(sm.client)
