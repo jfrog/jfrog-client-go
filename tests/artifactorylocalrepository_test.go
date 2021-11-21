@@ -10,7 +10,7 @@ import (
 // Temporarily disabled
 
 // func TestArtifactoryLocalRepository(t *testing.T) {
-// 	initArtifactoryTest(t)
+// 	initRepositoryTest(t)
 // 	t.Run("localAlpineTest", localAlpineTest)
 // 	t.Run("localBowerTest", localBowerTest)
 // 	t.Run("localCargoTest", localCargoTest)

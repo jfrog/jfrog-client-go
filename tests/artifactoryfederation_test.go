@@ -9,7 +9,7 @@ import (
 )
 
 func TestArtifactoryFederation(t *testing.T) {
-	initArtifactoryTest(t)
+	initRepositoryTest(t)
 	rtVersion, err := GetRtDetails().GetVersion()
 	if err != nil {
 		t.Error(err)

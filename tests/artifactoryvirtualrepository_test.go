@@ -1,20 +1,16 @@
 package tests
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
 )
 
-var trimmedRtTargetRepo = strings.TrimSuffix(RtTargetRepo, "/")
-var repos = []string{trimmedRtTargetRepo}
-
 // Temporarily disabled
 
 // func TestArtifactoryVirtualRepository(t *testing.T) {
-// 	initArtifactoryTest(t)
+// 	initRepositoryTest(t)
 // 	t.Run("virtualAlpineTest", virtualAlpineTest)
 // 	t.Run("virtualBowerTest", virtualBowerTest)
 // 	t.Run("virtualChefTest", virtualChefTest)
@@ -47,9 +43,9 @@ var repos = []string{trimmedRtTargetRepo}
 func setVirtualRepositoryBaseParams(params *services.VirtualRepositoryBaseParams, isUpdate bool) {
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	if !isUpdate {
-		params.Repositories = repos
+		params.Repositories = []string{getRtTargetRepoKey()}
 		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &trueValue
-		params.DefaultDeploymentRepo = trimmedRtTargetRepo
+		params.DefaultDeploymentRepo = getRtTargetRepoKey()
 	} else {
 		params.Repositories = nil
 		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue

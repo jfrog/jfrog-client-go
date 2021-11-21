@@ -123,7 +123,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		for {
 			select {
 			case <-timeout:
-				errChan <- errorutils.CheckErrorf("Timeout for sync get scan results.")
+				errChan <- errorutils.CheckErrorf("Timeout for sync get scan graph results.")
 				resultChan <- nil
 				return
 			case _ = <-ticker.C:
