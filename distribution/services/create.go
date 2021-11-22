@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -68,7 +67,7 @@ func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase stri
 		return summary, err
 	}
 	if !(resp.StatusCode == http.StatusCreated || (resp.StatusCode == http.StatusOK && releaseBundle.DryRun)) {
-		return summary, errorutils.CheckError(errors.New("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body)))
+		return summary, errorutils.CheckErrorf("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body))
 	}
 	if summary != nil {
 		summary.SetSucceeded(true)

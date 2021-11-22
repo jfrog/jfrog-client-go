@@ -1,8 +1,12 @@
 package fileutils
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/mholt/archiver/v3"
@@ -18,17 +22,23 @@ func IsSupportedArchive(filePath string) bool {
 }
 
 // The 'archiver' dependency includes an API called 'Unarchive' to extract archive files. This API uses the archive file
-// extension to determine the archive type.// the local file path to extract the archive.
+// extension to determine the archive type.
 // We therefore need to use the file name as it was in Artifactory, and not the file name which was downloaded. To achieve this,
 // we added a new implementation of the 'Unarchive' func and use it instead of the default one.
+// localArchivePath - The local file path to extract the archive
+// originArchiveName - The archive file name
+// destinationPath - The extraction destination directory
 func Unarchive(localArchivePath, originArchiveName, destinationPath string) error {
-	uaIface, err := byExtension(originArchiveName)
+	archive, err := byExtension(originArchiveName)
 	if err != nil {
 		return err
 	}
-	u, ok := uaIface.(archiver.Unarchiver)
+	u, ok := archive.(archiver.Unarchiver)
 	if !ok {
-		return errorutils.CheckError(errors.New("format specified by source filename is not an archive format: " + originArchiveName))
+		return errorutils.CheckErrorf("format specified by source filename is not an archive format: " + originArchiveName)
+	}
+	if err = inspectArchive(archive, localArchivePath, destinationPath); err != nil {
+		return err
 	}
 	return u.Unarchive(localArchivePath, destinationPath)
 }
@@ -117,4 +127,81 @@ var extCheckers = []archiver.ExtensionChecker{
 	&archiver.Snappy{},
 	&archiver.Xz{},
 	&archiver.Zstd{},
+}
+
+// Make sure the archive is free from Zip Slip and Zip symlinks attacks
+func inspectArchive(archive interface{}, localArchivePath, destinationDir string) error {
+	walker, ok := archive.(archiver.Walker)
+	if !ok {
+		return errorutils.CheckErrorf("couldn't inspect archive: " + localArchivePath)
+	}
+	return walker.Walk(localArchivePath, func(archiveEntry archiver.File) error {
+		header, err := extractArchiveEntryHeader(archiveEntry)
+		if err != nil {
+			return err
+		}
+		if !isEntryInDestination(destinationDir, header.EntryPath) {
+			return errorutils.CheckErrorf(
+				"illegal path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
+				header.EntryPath, destinationDir)
+		}
+
+		if (archiveEntry.Mode() & os.ModeSymlink) != 0 {
+			err = checkSymlinkEntry(header, archiveEntry, destinationDir)
+		}
+		return err
+	})
+}
+
+// Make sure the extraction path of the symlink entry target is under the destination dir
+func checkSymlinkEntry(header *archiveHeader, archiveEntry archiver.File, destinationDir string) error {
+	targetLinkPath := header.TargetLink
+	if targetLinkPath == "" {
+		// The link destination path is not always in the archive header
+		// In that case, we will look at the link content to get the link destination path
+		content, err := ioutil.ReadAll(archiveEntry.ReadCloser)
+		if err != nil {
+			return errorutils.CheckError(err)
+		}
+		targetLinkPath = string(content)
+	}
+
+	if !isEntryInDestination(destinationDir, targetLinkPath) {
+		return errorutils.CheckErrorf(
+			"illegal link path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
+			targetLinkPath, destinationDir)
+	}
+	return nil
+}
+
+// Make sure the extraction path of the archive entry is under the destination dir
+func isEntryInDestination(destinationDir, pathInArchive string) bool {
+	// If pathInArchive starts with '/' and we are on Windows, the path is illegal
+	pathInArchive = strings.TrimSpace(pathInArchive)
+	if os.IsPathSeparator('\\') && strings.HasPrefix(pathInArchive, "/") {
+		return false
+	}
+
+	pathInArchive = filepath.Clean(pathInArchive)
+	if !filepath.IsAbs(pathInArchive) {
+		// If path is relative, concatenate it to the destination dir
+		pathInArchive = filepath.Join(destinationDir, pathInArchive)
+	}
+	return strings.HasPrefix(pathInArchive, destinationDir)
+}
+
+// Extract the header of the archive entry
+func extractArchiveEntryHeader(f archiver.File) (*archiveHeader, error) {
+	headerBytes, err := json.Marshal(f.Header)
+	if err != nil {
+		return nil, err
+	}
+	archiveHeader := &archiveHeader{}
+	err = json.Unmarshal(headerBytes, archiveHeader)
+	return archiveHeader, err
+}
+
+type archiveHeader struct {
+	EntryPath  string `json:"Name,omitempty"`
+	TargetLink string `json:"Linkname,omitempty"`
 }

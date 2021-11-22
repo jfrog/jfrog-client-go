@@ -2,8 +2,8 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io"
 	"net/http"
 	"net/url"
@@ -11,7 +11,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -144,7 +143,7 @@ func IsSubPath(paths []string, index int, separator string) bool {
 // If buildName or buildNumber contains "/" (slash) it should be escaped by "\" (backslash).
 // Result examples of parsing: "aaa/123" > "aaa"-"123", "aaa" > "aaa"-"LATEST", "aaa\\/aaa" > "aaa/aaa"-"LATEST",  "aaa/12\\/3" > "aaa"-"12/3".
 func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier, projectKey string, flags CommonConf) (string, string, error) {
-	buildName, buildNumber, err := parseNameAndVersion(buildIdentifier, true)
+	buildName, buildNumber, err := ParseNameAndVersion(buildIdentifier, true)
 	if err != nil {
 		return "", "", err
 	}
@@ -175,7 +174,7 @@ func getBuildNameAndNumberFromProps(properties []Property) (buildName string, bu
 // For builds (useLatestPolicy = true) - Parse build name and number. The build number can be LATEST if absent.
 // For release bundles - Parse bundle name and version.
 // For module - Parse module name and number.
-func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, string, error) {
+func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, string, error) {
 	const Delimiter = "/"
 	const EscapeChar = "\\"
 
@@ -187,7 +186,7 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + latest)
 			return identifier, latest, nil
 		} else {
-			return "", "", errorutils.CheckError(errors.New("No '" + Delimiter + "' is found in '" + identifier + "'"))
+			return "", "", errorutils.CheckErrorf("No '" + Delimiter + "' is found in '" + identifier + "'")
 		}
 	}
 	name, version := "", ""
@@ -212,7 +211,7 @@ func parseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			name = identifier
 			version = latest
 		} else {
-			return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'"))
+			return "", "", errorutils.CheckErrorf("No delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'")
 		}
 	}
 	// Remove escape chars.
@@ -598,7 +597,7 @@ func getAggregatedBuilds(buildName, buildNumber, projectKey string, flags Common
 	}}
 	for _, module := range buildInfo.BuildInfo.Modules {
 		if module.Type == buildinfo.Build {
-			name, version, err := parseNameAndVersion(module.Id, false)
+			name, version, err := ParseNameAndVersion(module.Id, false)
 			if err != nil {
 				return []Build{}, err
 			}

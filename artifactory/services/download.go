@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"net/http"
 	"os"
 	"path"
@@ -36,10 +35,14 @@ type DownloadService struct {
 	filesTransfersWriter *content.ContentWriter
 	// A ContentWriter of ArtifactDetails structs. Used only if saveSummary is set to true.
 	artifactsDetailsWriter *content.ContentWriter
+	// This map is used for validating that a downloaded release bundle is signed with a given GPG public key. This is done for security reasons.
+	// The key is the release bundle name and version separated by "/" and the value is it's RbGpgValidator.
+	rbGpgValidationMap map[string]*utils.RbGpgValidator
 }
 
 func NewDownloadService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *DownloadService {
-	return &DownloadService{artDetails: &artDetails, client: client}
+	rbGpgValidationMap := make(map[string]*utils.RbGpgValidator)
+	return &DownloadService{artDetails: &artDetails, client: client, rbGpgValidationMap: rbGpgValidationMap}
 }
 
 func (ds *DownloadService) GetArtifactoryDetails() auth.ServiceDetails {
@@ -110,6 +113,26 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*uti
 	return ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess), e
 }
 
+func (ds *DownloadService) gpgValidateReleaseBundle(bundleParam, publicKeyFilePath string) error {
+	// Check if the release bundle has already been validated.
+	if ds.rbGpgValidationMap[bundleParam] != nil {
+		return nil
+	}
+	bundleName, bundleVersion, err := utils.ParseNameAndVersion(bundleParam, false)
+	if bundleName == "" || err != nil {
+		return err
+	}
+	gpgValidator := utils.NewRbGpgValidator()
+	gpgValidator.SetRbName(bundleName).SetRbVersion(bundleVersion).SetClient(ds.client).SetAtrifactoryDetails(ds.artDetails).SetPublicKey(publicKeyFilePath)
+	err = gpgValidator.Validate()
+	if err != nil {
+		return err
+	}
+	// Add the validated release bundle to the map.
+	ds.rbGpgValidationMap[bundleParam] = gpgValidator
+	return nil
+}
+
 func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan chan int, successCounters []int, errorsQueue *clientutils.ErrorsQueue, downloadParamsSlice ...DownloadParams) {
 	go func() {
 		defer producer.Done()
@@ -129,6 +152,13 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		// When encountering an error, log and move to next group.
 		for _, downloadParams := range downloadParamsSlice {
 			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.CommonParams, artifactoryVersion)
+			if downloadParams.PublicGpgKey != "" {
+				err = ds.gpgValidateReleaseBundle(downloadParams.GetBundle(), downloadParams.GetPublicGpgKey())
+				if err != nil {
+					errorsQueue.AddError(err)
+					return
+				}
+			}
 			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
@@ -210,6 +240,14 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 			Flat:         flat,
 		}
 		if resultItem.Type != "folder" {
+			if len(ds.rbGpgValidationMap) != 0 {
+				// Gpg validation to the downloaded artifact
+				err = rbGpgValidate(ds.rbGpgValidationMap, downloadParams.GetBundle(), resultItem)
+				if err != nil {
+					errorsQueue.AddError(err)
+					return tasksCount
+				}
+			}
 			// Add a task. A task is a function of type TaskFunc which later on will be executed by other go routine, the communication is done using channels.
 			// The second argument is an error handling func in case the taskFunc return an error.
 			tasksCount++
@@ -226,6 +264,19 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 	}
 	addCreateDirsTasks(directoriesDataKeys, alreadyCreatedDirs, producer, fileHandler, directoriesData, errorsQueue, flat)
 	return tasksCount
+}
+
+func rbGpgValidate(rbGpgValidationMap map[string]*utils.RbGpgValidator, bundle string, resultItem *utils.ResultItem) error {
+	artifactPath := path.Join(resultItem.Repo, resultItem.Path, resultItem.Name)
+	rbGpgValidator := rbGpgValidationMap[bundle]
+	if rbGpgValidator == nil {
+		return errorutils.CheckErrorf("release bundle validator for '%s' was not found unexpectedly. This may be caused by a bug", artifactPath)
+	}
+	err := rbGpgValidator.VerifyArtifact(artifactPath, resultItem.Sha256)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Extract for the aqlResultItem the directory path, store the path the directoriesDataKeys and in the directoriesData map.
@@ -373,7 +424,7 @@ func removeIfSymlink(localSymlinkPath string) error {
 func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) error {
 	if symlinkChecksum && symlinkContentChecksum != "" {
 		if !fileutils.IsPathExists(symlinkArtifact, false) {
-			return errorutils.CheckError(errors.New("Symlink validation failed, target doesn't exist: " + symlinkArtifact))
+			return errorutils.CheckErrorf("Symlink validation failed, target doesn't exist: " + symlinkArtifact)
 		}
 		file, err := os.Open(symlinkArtifact)
 		if err = errorutils.CheckError(err); err != nil {
@@ -386,7 +437,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		}
 		sha1 := checksumInfo[checksum.SHA1]
 		if sha1 != symlinkContentChecksum {
-			return errorutils.CheckError(errors.New("Symlink validation failed for target: " + symlinkArtifact))
+			return errorutils.CheckErrorf("Symlink validation failed for target: " + symlinkArtifact)
 		}
 	}
 	localSymlinkPath := filepath.Join(localPath, localFileName)
@@ -530,6 +581,7 @@ type DownloadParams struct {
 	Explode         bool
 	MinSplitSize    int64
 	SplitCount      int
+	PublicGpgKey    string
 }
 
 func (ds *DownloadParams) IsFlat() bool {
@@ -550,6 +602,10 @@ func (ds *DownloadParams) IsSymlink() bool {
 
 func (ds *DownloadParams) ValidateSymlinks() bool {
 	return ds.ValidateSymlink
+}
+
+func (ds *DownloadParams) GetPublicGpgKey() string {
+	return ds.PublicGpgKey
 }
 
 func NewDownloadParams() DownloadParams {

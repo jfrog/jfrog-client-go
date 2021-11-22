@@ -1,10 +1,10 @@
 package utils
 
 import (
+	"github.com/jfrog/gofrog/stringutils"
 	"regexp"
 
 	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/utils"
 )
 
 type ReleaseNotesSyntax string
@@ -98,7 +98,7 @@ func createPathMappings(specFile *rtUtils.CommonParams) []PathMapping {
 	// Convert the file spec pattern and target to match the path mapping input and output specifications, respectfully.
 	return []PathMapping{{
 		// The file spec pattern is wildcard based. Convert it to Regex:
-		Input: utils.WildcardPathToRegExp(specFile.Pattern),
+		Input: stringutils.WildcardPatternToRegExp(specFile.Pattern),
 		// The file spec target contain placeholders-style matching groups, like {1}.
 		// Convert it to REST API's matching groups style, like $1.
 		Output: fileSpecCaptureGroup.ReplaceAllStringFunc(specFile.Target, func(s string) string {

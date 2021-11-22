@@ -1,7 +1,6 @@
 package fileutils
 
 import (
-	"errors"
 	"io/ioutil"
 	"os"
 	"path"
@@ -13,15 +12,15 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-const (
+var (
 	tempPrefix = "jfrog.cli.temp."
+
+	// Max temp file age in hours
+	maxFileAge = 24.0
+
+	// Path to the root temp dir
+	tempDirBase string
 )
-
-// Max temp file age in hours
-var maxFileAge = 24.0
-
-// Path to the root temp dir
-var tempDirBase string
 
 func init() {
 	tempDirBase = os.TempDir()
@@ -31,14 +30,13 @@ func init() {
 // Set tempDirPath to the created directory path.
 func CreateTempDir() (string, error) {
 	if tempDirBase == "" {
-		return "", errorutils.CheckError(errors.New("Temp dir cannot be created in an empty base dir."))
+		return "", errorutils.CheckErrorf("Temp dir cannot be created in an empty base dir.")
 	}
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	path, err := ioutil.TempDir(tempDirBase, tempPrefix+"-"+timestamp+"-")
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
-
 	return path, nil
 }
 
@@ -61,7 +59,7 @@ func RemoveTempDir(dirPath string) error {
 // Create a new temp file named "tempPrefix+timeStamp".
 func CreateTempFile() (*os.File, error) {
 	if tempDirBase == "" {
-		return nil, errorutils.CheckError(errors.New("Temp File cannot be created in an empty base dir."))
+		return nil, errorutils.CheckErrorf("Temp File cannot be created in an empty base dir.")
 	}
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	fd, err := ioutil.TempFile(tempDirBase, tempPrefix+"-"+timestamp+"-")

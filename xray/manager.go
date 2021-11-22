@@ -131,3 +131,31 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses)
 }
+
+// GenerateVulnerabilitiesReport returns a Xray report response of the requested report
+func (sm *XrayServicesManager) GenerateVulnerabilitiesReport(params services.ReportRequestParams) (resp *services.ReportResponse, err error) {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Vulnerabilities(params)
+}
+
+// ReportDetails returns a Xray details response for the requested report
+func (sm *XrayServicesManager) ReportDetails(reportId string) (details *services.ReportDetails, err error) {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Details(reportId)
+}
+
+// ReportContent returns a Xray report content response for the requested report
+func (sm *XrayServicesManager) ReportContent(params services.ReportContentRequestParams) (content *services.ReportContent, err error) {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Content(params)
+}
+
+// DeleteReport deletes a Xray report
+func (sm *XrayServicesManager) DeleteReport(reportId string) error {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Delete(reportId)
+}

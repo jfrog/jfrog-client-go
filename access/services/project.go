@@ -75,7 +75,7 @@ func (ps *ProjectService) Create(params ProjectParams) error {
 		return err
 	}
 	if project != nil {
-		return errorutils.CheckError(fmt.Errorf("project '%s' already exists", project.ProjectKey))
+		return errorutils.CheckErrorf("project '%s' already exists", project.ProjectKey)
 	}
 	content, httpDetails, err := ps.createOrUpdateRequest(params.ProjectDetails)
 	if err != nil {
@@ -125,7 +125,7 @@ func (ps *ProjectService) Delete(projectKey string) error {
 	url := fmt.Sprintf("%s/%s", ps.getProjectsBaseUrl(), projectKey)
 	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
 	if resp == nil {
-		return errorutils.CheckError(fmt.Errorf("no response provided (including status code)"))
+		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))

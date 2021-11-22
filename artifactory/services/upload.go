@@ -2,7 +2,6 @@ package services
 
 import (
 	"archive/zip"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -211,7 +210,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
 	if uploadParams.Archive != "" && strings.HasSuffix(uploadParams.GetTarget(), "/") {
-		return errorutils.CheckError(errors.New("an archive's target cannot be a directory"))
+		return errorutils.CheckErrorf("an archive's target cannot be a directory")
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	// Save parentheses index in pattern, witch have corresponding placeholder.
@@ -440,7 +439,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 					}
 					// Response must not be nil
 					if resp == nil {
-						return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from file upload", logMsgPrefix)))
+						return false, errorutils.CheckErrorf("%sReceived empty response from file upload", logMsgPrefix)
 					}
 					// If response-code < 500, should not retry
 					if resp.StatusCode < 500 {
@@ -765,6 +764,13 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		header.Name = clientutils.TrimPath(localPath)
 	}
 	header.Method = zip.Deflate
+
+	// If this is a directory, add it to the writer with a trailing slash.
+	if info.IsDir() {
+		header.Name += "/"
+		_, e = zipWriter.CreateHeader(header)
+		return
+	}
 	writer, e := zipWriter.CreateHeader(header)
 	if errorutils.CheckError(e) != nil {
 		return
@@ -775,12 +781,6 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		_, e = writer.Write([]byte(filepath.ToSlash(artifact.SymlinkTargetPath)))
 		return
 	}
-	// If this is a directory, add it to the writer with a trailing slash.
-	if info.IsDir() {
-		_, e = writer.Write([]byte(filepath.ToSlash(localPath + fileutils.GetFileSeparator())))
-		return
-	}
-
 	file, e := os.Open(localPath)
 	if e != nil {
 		return e

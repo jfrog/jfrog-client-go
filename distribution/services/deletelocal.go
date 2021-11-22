@@ -25,6 +25,8 @@ func (dlr *DeleteLocalReleaseBundleService) GetDistDetails() auth.ServiceDetails
 }
 
 func (dlr *DeleteLocalReleaseBundleService) DeleteDistribution(deleteDistributionParams DeleteDistributionParams) error {
+	dlr.Sync = deleteDistributionParams.Sync
+	dlr.MaxWaitMinutes = deleteDistributionParams.MaxWaitMinutes
 	return dlr.execDeleteLocalDistribution(deleteDistributionParams.Name, deleteDistributionParams.Version)
 }
 
@@ -43,6 +45,9 @@ func (dlr *DeleteLocalReleaseBundleService) execDeleteLocalDistribution(name, ve
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	if dlr.Sync {
+		dlr.waitForDeletion(name, version)
 	}
 
 	log.Debug("Distribution response: ", resp.Status)

@@ -20,3 +20,9 @@ func initArtifactoryTest(t *testing.T) {
 		t.Skip("Skipping artifactory test. To run artifactory test add the '-test.artifactory=true' option.")
 	}
 }
+
+func initRepositoryTest(t *testing.T) {
+	if !*TestRepository {
+		t.Skip("Skipping repository test. To run repository test add the '-test.repository=true' option.")
+	}
+}

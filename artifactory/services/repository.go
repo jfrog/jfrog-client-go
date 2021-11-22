@@ -57,7 +57,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done " + operationString + " repository.")
+	log.Info("Done", operationString, "repository", "'"+repoKey+"'.")
 	return nil
 }
 
@@ -105,6 +105,11 @@ type JavaPackageManagersRepositoryParams struct {
 	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
 	SnapshotVersionBehavior      string `json:"snapshotVersionBehavior,omitempty"`
 	ChecksumPolicyType           string `json:"checksumPolicyType,omitempty"`
+}
+
+type KeyPairRefsRepositoryParams struct {
+	PrimaryKeyPairRef   string `json:"primaryKeyPairRef,omitempty"`
+	SecondaryKeyPairRef string `json:"secondaryKeyPairRef,omitempty"`
 }
 
 type NugetRepositoryParams struct {
