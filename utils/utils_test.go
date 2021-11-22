@@ -224,8 +224,9 @@ func TestAntPathToRegExp(t *testing.T) {
 		{"combine all signs", filepath.Join("**", "b?.*"), fileSystemPaths, []string{filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt"), filepath.Join("dev", "aa", "bb.txt"), filepath.Join("dev", "aa", "bc.txt"), filepath.Join("dev", "aa", "bc.zip"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt"), filepath.Join("test", "a", "bb.txt"), filepath.Join("test", "a", "bc.txt"), filepath.Join("test", "aa", "bb.txt"), filepath.Join("test", "aa", "bc.txt"), filepath.Join("test", "aa", "bc.zip")}},
 		{"'**' all files", filepath.Join("**"), fileSystemPaths, fileSystemPaths},
 		{"test2/**/b/**", filepath.Join("test2", "**", "b", "**"), fileSystemPaths, []string{filepath.Join("test2", "a", "b", "c.zip")}},
-		{"'**' in the middle and end", filepath.Join("*", "b.zip"), fileSystemPaths, []string{filepath.Join("test2", "b.zip")}},
-		{"**/dev/**/a3/**", filepath.Join("dev", "**", "a3", "*c*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "bc.txt")}},
+		{"*/b.zip", filepath.Join("*", "b.zip"), fileSystemPaths, []string{filepath.Join("test2", "b.zip")}},
+		{"**/dev/**/a3/*c*", filepath.Join("dev", "**", "a3", "*c*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "bc.txt")}},
+		{"**/dev/**/a3/**", filepath.Join("dev", "**", "a3", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "a3", "b.txt")}},
 		{"exclude 'temp/foo5/a'", filepath.Join("**", "foo", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a")}},
 	}
 	for _, test := range tests {
