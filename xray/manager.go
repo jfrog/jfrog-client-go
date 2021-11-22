@@ -140,7 +140,7 @@ func (sm *XrayServicesManager) BuildScanV2(params services.XrayBuildParams) (str
 	return buildScanV2Service.BuildScanV2(params)
 }
 
-// GetBuildScanResults returns an Xray scan output of the requested build scan.
+// GetBuildScanResults returns an Xray build scan output of the requested build scan.
 // The scanId input should be received from BuildScanV2 request.
 func (sm *XrayServicesManager) GetBuildScanV2Results(params services.XrayBuildParams) (*services.BuildScanResponse, error) {
 	buildScanV2Service := services.NewBuildScanV2Service(sm.client)
