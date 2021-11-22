@@ -174,19 +174,19 @@ func createAndCheckPolicy(t *testing.T, policyName string, create bool, policyTy
 
 	// Compare rules
 	assert.Len(t, actual.Rules, len(expected.Rules))
-	assert.True(t, Equal(expected.Rules, actual.Rules))
+	assert.True(t, policyRulesAreEqual(expected.Rules, actual.Rules))
 }
 
-// Equal tells whether both PolicyRule slices contain the same elements, regardless of the order.
-func Equal(expected, actual []utils.PolicyRule) bool {
-	if len(expected) != len(actual) {
+// policyRulesAreEqual tells whether both PolicyRule slices contain the same elements, regardless of the order.
+func policyRulesAreEqual(expectedRules, actualRules []utils.PolicyRule) bool {
+	if len(expectedRules) != len(actualRules) {
 		return false
 	}
-	for _, v := range expected {
-		for _, u := range actual {
-			if v.Name == u.Name && v.Priority == u.Priority && assert.ObjectsAreEqual(v.Criteria, u.Criteria) {
-				if v.Actions != nil {
-					return assert.ObjectsAreEqual(v.Actions, u.Actions)
+	for _, expectedRule := range expectedRules {
+		for _, actualRule := range actualRules {
+			if expectedRule.Name == actualRule.Name && expectedRule.Priority == actualRule.Priority && assert.ObjectsAreEqual(expectedRule.Criteria, actualRule.Criteria) {
+				if expectedRule.Actions != nil {
+					return assert.ObjectsAreEqual(expectedRule.Actions, actualRule.Actions)
 				}
 				return true
 			}
