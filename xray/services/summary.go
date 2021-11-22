@@ -36,7 +36,7 @@ func (ss *SummaryService) GetXrayDetails() auth.ServiceDetails {
 
 func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryResponse, error) {
 	httpDetails := ss.XrayDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%s/build?build_name=%s&build_number=%s", ss.getSummeryUrl(), params.BuildName, params.BuildNumber)
+	url := fmt.Sprintf("%sbuild?build_name=%s&build_number=%s", ss.getSummeryUrl(), params.BuildName, params.BuildNumber)
 	if params.Project != "" {
 		url += "&" + projectKeyQueryParam + params.Project
 	}
@@ -53,7 +53,7 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 		return nil, errorutils.CheckError(err)
 	}
 	if summaryResponse.Errors != nil && len(summaryResponse.Errors) > 0 {
-		return nil, errorutils.CheckErrorf("Getting Build Summery for Build: %s failed with error: %s", summaryResponse.Errors[0].Identifier, summaryResponse.Errors[0].Error)
+		return nil, errorutils.CheckErrorf("Getting build-summery for build: %s failed with error: %s", summaryResponse.Errors[0].Identifier, summaryResponse.Errors[0].Error)
 	}
 	return &summaryResponse, nil
 }

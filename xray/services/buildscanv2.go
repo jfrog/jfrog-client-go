@@ -18,6 +18,7 @@ import (
 const (
 	buildScanAPI                        = "api/v2/ci/build"
 	xrayScanBuildNotSelectedForIndexing = "is not selected for indexing"
+	XrayScanBuildNoFailBuildPolicy      = "No Xray “Fail build in case of a violation” policy rule has been defined on this build"
 	projectKeyQueryParam                = "projectKey="
 )
 
@@ -31,32 +32,33 @@ func NewBuildScanV2Service(client *jfroghttpclient.JfrogHttpClient) *BuildScanV2
 	return &BuildScanV2Service{client: client}
 }
 
-func (bs *BuildScanV2Service) BuildScanV2(params XrayBuildParams) error {
+func (bs *BuildScanV2Service) BuildScanV2(params XrayBuildParams) (string, error) {
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(params)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return "", errorutils.CheckError(err)
 	}
 	url := bs.XrayDetails.GetUrl() + buildScanAPI
 
 	resp, body, err := bs.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
-	requestBuildScanResponse := RequestBuildScanResponse{}
-	if err = json.Unmarshal(body, &requestBuildScanResponse); err != nil {
-		return errorutils.CheckError(err)
+	buildScanResponse := RequestBuildScanResponse{}
+	if err = json.Unmarshal(body, &buildScanResponse); err != nil {
+		return "", errorutils.CheckError(err)
 	}
-	if strings.Contains(requestBuildScanResponse.Info, xrayScanBuildNotSelectedForIndexing) {
-		return errorutils.CheckErrorf(requestBuildScanResponse.Info)
+	buildScanInfo := buildScanResponse.Info
+	if strings.Contains(buildScanInfo, xrayScanBuildNotSelectedForIndexing) {
+		return "", errorutils.CheckErrorf(buildScanResponse.Info)
 	}
-	log.Info(requestBuildScanResponse.Info)
-	return nil
+	log.Info(buildScanInfo)
+	return buildScanInfo, nil
 }
 
 func (bs *BuildScanV2Service) GetBuildScanV2Results(params XrayBuildParams) (*BuildScanResponse, error) {
@@ -140,4 +142,5 @@ type BuildScanResponse struct {
 	MoreDetailsUrl string      `json:"more_details_url,omitempty"`
 	FailBuild      bool        `json:"fail_build,omitempty"`
 	Violations     []Violation `json:"violations,omitempty"`
+	Info           string      `json:"info,omitempty"`
 }

@@ -134,7 +134,7 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 
 // BuildScanV2 will send Xray the given build for scan
 // Returns a string represents the scan ID.
-func (sm *XrayServicesManager) BuildScanV2(params services.XrayBuildParams) error {
+func (sm *XrayServicesManager) BuildScanV2(params services.XrayBuildParams) (string, error) {
 	buildScanV2Service := services.NewBuildScanV2Service(sm.client)
 	buildScanV2Service.XrayDetails = sm.config.GetServiceDetails()
 	return buildScanV2Service.BuildScanV2(params)
