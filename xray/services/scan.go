@@ -194,9 +194,12 @@ type GraphNode struct {
 	Path string `json:"path,omitempty"`
 	// List of license names
 	Licenses []string `json:"licenses,omitempty"`
+	// Component properties
+	Properties map[string]string `json:"properties,omitempty"`
 	// List of sub components.
-	Nodes  []*GraphNode `json:"nodes,omitempty"`
-	Parent *GraphNode   `json:"-"`
+	Nodes []*GraphNode `json:"nodes,omitempty"`
+	// Node parent (for internal use)
+	Parent *GraphNode `json:"-"`
 }
 
 type RequestScanResponse struct {
