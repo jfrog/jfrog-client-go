@@ -35,6 +35,7 @@ func NewXrayScanService(client *jfroghttpclient.JfrogHttpClient) *XrayScanServic
 	return &XrayScanService{client: client}
 }
 
+// Deprecated legacy scan build
 func (ps *XrayScanService) ScanBuild(scanParams XrayScanParams) ([]byte, error) {
 	url := ps.ArtDetails.GetUrl()
 	requestFullUrl, err := utils.BuildArtifactoryUrl(url, apiUri, make(map[string]string))

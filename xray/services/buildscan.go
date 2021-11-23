@@ -22,17 +22,17 @@ const (
 	projectKeyQueryParam                = "projectKey="
 )
 
-type BuildScanV2Service struct {
+type BuildScanService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
 }
 
-// NewBuildScanV2Service creates a new service to scan Binaries and VCS projects.
-func NewBuildScanV2Service(client *jfroghttpclient.JfrogHttpClient) *BuildScanV2Service {
-	return &BuildScanV2Service{client: client}
+// NewBuildScanService creates a new service to scan Binaries and VCS projects.
+func NewBuildScanService(client *jfroghttpclient.JfrogHttpClient) *BuildScanService {
+	return &BuildScanService{client: client}
 }
 
-func (bs *BuildScanV2Service) BuildScanV2(params XrayBuildParams) (string, error) {
+func (bs *BuildScanService) BuildScan(params XrayBuildParams) (string, error) {
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(params)
@@ -61,7 +61,7 @@ func (bs *BuildScanV2Service) BuildScanV2(params XrayBuildParams) (string, error
 	return buildScanInfo, nil
 }
 
-func (bs *BuildScanV2Service) GetBuildScanV2Results(params XrayBuildParams) (*BuildScanResponse, error) {
+func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams) (*BuildScanResponse, error) {
 	requestUrl := fmt.Sprintf("%s%s/%s/%s", bs.XrayDetails.GetUrl(), buildScanAPI, params.BuildName, params.BuildNumber)
 	if params.Project != "" {
 		requestUrl += projectKeyQueryParam + params.Project
