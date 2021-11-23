@@ -208,7 +208,7 @@ func antPatternToRegExp(localPath string) string {
 	var regAsterisk = "([^" + separator + "]*)"
 	// ant `**` ~ regexp `(.*)?` : `**` matches zero or more 'directories' in a path.
 	var doubleRegAsterisk = "(" + wildcard + ")?"
-	var doubleRegAsteriskWithSeperator = "(" + wildcard + separator + ")?"
+	var doubleRegAsteriskWithSeperatorPrefix = "(" + wildcard + separator + ")?"
 	var doubleRegAsteriskWithSeperatorSuffix = "(" + separator + wildcard + ")?"
 
 	// `?` => `.{1}` : `?` matches one character.
@@ -218,7 +218,7 @@ func antPatternToRegExp(localPath string) string {
 	// `**` => `(.*)?`
 	localPath = strings.Replace(localPath, regAsterisk+regAsterisk, doubleRegAsterisk, -1)
 	// `(.*)?/` => `(.*/)?`
-	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeperator, -1)
+	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeperatorPrefix, -1)
 	// Convert the last '/**' in the expression if exist : `/(.*)?` => `(/.*)?`
 	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
 		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeperatorSuffix
