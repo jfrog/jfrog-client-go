@@ -43,8 +43,8 @@ const (
 type ScanType string
 
 type ScanService struct {
-	client         *jfroghttpclient.JfrogHttpClient
-	XrayDetails    auth.ServiceDetails
+	client      *jfroghttpclient.JfrogHttpClient
+	XrayDetails auth.ServiceDetails
 }
 
 // NewScanService creates a new service to scan Binaries and VCS projects.
@@ -66,9 +66,9 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		}
 	}
 
-	if scanParams.ScanType != "" {
-		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
-	}
+	//if scanParams.ScanType != "" {
+	//	params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
+	//}
 
 	if params == nil || len(params) == 0 {
 		return ""
@@ -194,9 +194,12 @@ type GraphNode struct {
 	Path string `json:"path,omitempty"`
 	// List of license names
 	Licenses []string `json:"licenses,omitempty"`
+	// Component properties
+	Properties map[string]string `json:"properties,omitempty"`
 	// List of sub components.
-	Nodes  []*GraphNode `json:"nodes,omitempty"`
-	Parent *GraphNode   `json:"-"`
+	Nodes []*GraphNode `json:"nodes,omitempty"`
+	// Node parent (for internal use)
+	Parent *GraphNode `json:"-"`
 }
 
 type RequestScanResponse struct {
@@ -265,10 +268,6 @@ type Cve struct {
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
 	return gp.ProjectKey
-}
-
-func NewXrayGraphScanParams() XrayGraphScanParams {
-	return XrayGraphScanParams{}
 }
 
 func (currNode *GraphNode) NodeHasLoop() bool {
