@@ -129,7 +129,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		return false, nil, nil
 	}
 	pollingExecutor := &httputils.PollingExecutor{
-		Timout:          defaultMaxWaitMinutes,
+		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
 	}

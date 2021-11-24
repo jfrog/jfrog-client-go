@@ -10,7 +10,7 @@ type PollingAction func() (shouldStop bool, responseBody []byte, err error)
 
 type PollingExecutor struct {
 	// The amount of max wait time.
-	Timout time.Duration
+	Timeout time.Duration
 	// Number of seconds to sleep between polling attempts.
 	PollingInterval time.Duration
 	// Prefix to add at the beginning of each info/error message.
@@ -20,7 +20,6 @@ type PollingExecutor struct {
 }
 
 func (runner *PollingExecutor) Execute() ([]byte, error) {
-	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	ticker := time.NewTicker(runner.PollingInterval)
 	timeout := make(chan bool)
 	errChan := make(chan error)
@@ -29,7 +28,7 @@ func (runner *PollingExecutor) Execute() ([]byte, error) {
 		for {
 			select {
 			case <-timeout:
-				errChan <- errorutils.CheckErrorf("%s Polling executer timeouted after %d secondes", runner.MsgPrefix, runner.Timout.Seconds())
+				errChan <- errorutils.CheckErrorf("%s Polling executer timeouted after %d secondes", runner.MsgPrefix, runner.Timeout.Seconds())
 				resultChan <- nil
 				return
 			case _ = <-ticker.C:
@@ -50,7 +49,7 @@ func (runner *PollingExecutor) Execute() ([]byte, error) {
 	}()
 	// Make sure we don't wait forever
 	go func() {
-		time.Sleep(runner.Timout)
+		time.Sleep(runner.Timeout)
 		timeout <- true
 	}()
 	// Wait for result or error
