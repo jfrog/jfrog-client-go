@@ -22,7 +22,6 @@ const (
 	repoPathQueryParam = "repo_path="
 	projectQueryParam  = "project="
 	watchesQueryParam  = "watch="
-	scanTypeQueryParam = "scan_type="
 
 	// Get scan results query params
 	includeVulnerabilitiesParam = "?include_vulnerabilities=true"
@@ -64,10 +63,6 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 				params = append(params, watchesQueryParam+watch)
 			}
 		}
-	}
-
-	if scanParams.ScanType != "" {
-		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
 	if params == nil || len(params) == 0 {
