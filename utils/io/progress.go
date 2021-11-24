@@ -18,6 +18,12 @@ type ProgressMgr interface {
 	Quit()
 	// Increments the general progress total count by given n.
 	IncGeneralProgressTotalBy(n int64)
+	// Replace the headline progress indicator message with new one.
+	SetHeadlineMsg(msg string)
+	// Terminate the progress indicator
+	ClearHeadlineMsg()
+	// Init the specific progress indicators for files readers progresses
+	InitProgressReaders()
 }
 
 type Progress interface {
