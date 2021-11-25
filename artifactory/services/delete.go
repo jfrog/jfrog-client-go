@@ -65,7 +65,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		if err != nil {
 			return
 		}
-		// The 'removeNotToBeDeletedDirs' should filter out any folders that should not be deleted, if no action is needed, nil will be return.
+		// The 'removeNotToBeDeletedDirs' should filter out any folders that should not be deleted, if no action is needed, nil will be returned.
 		// As a result, we should keep the flow with tempResultItems reader instead.
 		if toBeDeletedDirs == nil {
 			toBeDeletedDirs = tempResultItems

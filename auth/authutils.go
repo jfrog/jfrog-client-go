@@ -3,8 +3,6 @@ package auth
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"strings"
 	"time"
@@ -16,7 +14,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 
 	// Decode the payload.
 	if len(tokenParts) != 3 {
-		return TokenPayload{}, errorutils.CheckError(errors.New("received invalid access-token"))
+		return TokenPayload{}, errorutils.CheckErrorf("received invalid access-token")
 	}
 	payload, err := base64.RawStdEncoding.DecodeString(tokenParts[1])
 	if err != nil {
@@ -27,7 +25,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	var tokenPayload TokenPayload
 	err = json.Unmarshal(payload, &tokenPayload)
 	if err != nil {
-		return TokenPayload{}, errorutils.CheckError(errors.New("Failed extracting payload from the provided access-token." + err.Error()))
+		return TokenPayload{}, errorutils.CheckErrorf("Failed extracting payload from the provided access-token." + err.Error())
 	}
 	err = setAudienceManually(&tokenPayload, payload)
 	return tokenPayload, err
@@ -38,7 +36,7 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 	allValuesMap := make(map[string]interface{})
 	err := json.Unmarshal(payload, &allValuesMap)
 	if err != nil {
-		return errorutils.CheckError(errors.New("Failed extracting audience from payload. " + err.Error()))
+		return errorutils.CheckErrorf("Failed extracting audience from payload. " + err.Error())
 	}
 	aud, exists := allValuesMap["aud"]
 	if !exists {
@@ -56,7 +54,7 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 		}
 		return nil
 	}
-	return errorutils.CheckError(errors.New("failed extracting audience from payload. Audience is of unexpected type"))
+	return errorutils.CheckErrorf("failed extracting audience from payload. Audience is of unexpected type")
 }
 
 func ExtractUsernameFromAccessToken(token string) (string, error) {
@@ -66,13 +64,13 @@ func ExtractUsernameFromAccessToken(token string) (string, error) {
 	}
 	// Extract subject.
 	if tokenPayload.Subject == "" {
-		return "", errorutils.CheckError(errors.New("could not extract subject from the provided access-token"))
+		return "", errorutils.CheckErrorf("could not extract subject from the provided access-token")
 	}
 
 	// Extract username from subject.
 	usernameStartIndex := strings.LastIndex(tokenPayload.Subject, "/")
 	if usernameStartIndex < 0 {
-		return "", errorutils.CheckError(errors.New(fmt.Sprintf("Could not extract username from access-token's subject: %s", tokenPayload.Subject)))
+		return "", errorutils.CheckErrorf("Could not extract username from access-token's subject: %s", tokenPayload.Subject)
 	}
 	username := tokenPayload.Subject[usernameStartIndex+1:]
 

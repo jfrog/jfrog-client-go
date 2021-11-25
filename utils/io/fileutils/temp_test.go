@@ -8,6 +8,10 @@ import (
 )
 
 func TestCleanOldDirs(t *testing.T) {
+	defer func(originTempPrefix string) {
+		tempPrefix = originTempPrefix
+	}(tempPrefix)
+	tempPrefix = "test." + tempPrefix
 	tempDir, err := CreateTempDir()
 	assert.NoError(t, err)
 	tempFile, err := CreateTempFile()

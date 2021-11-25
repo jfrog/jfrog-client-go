@@ -2,8 +2,8 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io"
 	"net/http"
 	"net/url"
@@ -11,7 +11,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -187,7 +186,7 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + latest)
 			return identifier, latest, nil
 		} else {
-			return "", "", errorutils.CheckError(errors.New("No '" + Delimiter + "' is found in '" + identifier + "'"))
+			return "", "", errorutils.CheckErrorf("No '" + Delimiter + "' is found in '" + identifier + "'")
 		}
 	}
 	name, version := "", ""
@@ -212,7 +211,7 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			name = identifier
 			version = latest
 		} else {
-			return "", "", errorutils.CheckError(errors.New("No delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'"))
+			return "", "", errorutils.CheckErrorf("No delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'")
 		}
 	}
 	// Remove escape chars.

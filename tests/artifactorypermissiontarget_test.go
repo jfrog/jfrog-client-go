@@ -3,7 +3,6 @@ package tests
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 
@@ -11,13 +10,13 @@ import (
 )
 
 const (
-	PermissionTargetNamePrefix = JfrogRepoPrefix + "-client-go-tests-target"
+	PermissionTargetNamePrefix = "client-go-tests-target"
 )
 
 func TestPermissionTarget(t *testing.T) {
 	initArtifactoryTest(t)
 	params := services.NewPermissionTargetParams()
-	params.Name = fmt.Sprintf("%s-%d", PermissionTargetNamePrefix, time.Now().Unix())
+	params.Name = fmt.Sprintf("%s-%s", PermissionTargetNamePrefix, getRunId())
 	params.Repo = &services.PermissionTargetSection{}
 	params.Repo.Repositories = []string{"ANY"}
 	params.Repo.ExcludePatterns = []string{"dir/*"}
@@ -70,7 +69,7 @@ func getPermissionTarget(targetName string) (targetParams *services.PermissionTa
 func TestPermissionTargetEmptyFields(t *testing.T) {
 	initArtifactoryTest(t)
 	params := services.NewPermissionTargetParams()
-	params.Name = fmt.Sprintf("%s-%d", PermissionTargetNamePrefix, time.Now().Unix())
+	params.Name = fmt.Sprintf("%s-%s", PermissionTargetNamePrefix, getRunId())
 
 	assert.Nil(t, params.Repo)
 	params.Repo = &services.PermissionTargetSection{}

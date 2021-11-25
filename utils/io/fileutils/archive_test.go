@@ -37,10 +37,10 @@ func TestUnarchiveZipSlip(t *testing.T) {
 		archives    []string
 		errorSuffix string
 	}{
-		{"rel", []string{"zip", "tar", "tar.gz"}, "illegal path in archive: ../file"},
-		{"abs", []string{"tar", "tar.gz"}, "illegal path in archive: /tmp/bla/file"},
-		{"softlink-abs", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: /tmp/bla/file"},
-		{"softlink-rel", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: ../file"},
+		{"rel", []string{"zip", "tar", "tar.gz"}, "illegal path in archive: '../file'"},
+		{"abs", []string{"tar", "tar.gz"}, "illegal path in archive: '/tmp/bla/file'"},
+		{"softlink-abs", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: '/tmp/bla/file'"},
+		{"softlink-rel", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: '../file'"},
 	}
 	for _, test := range tests {
 		t.Run(test.testType, func(t *testing.T) {

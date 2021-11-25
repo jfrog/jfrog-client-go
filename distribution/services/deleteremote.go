@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -123,11 +122,11 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 			return nil
 		}
 		if resp.StatusCode != http.StatusOK {
-			return errorutils.CheckError(errors.New("Error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + "."))
+			return errorutils.CheckErrorf("Error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + ".")
 		}
 		time.Sleep(time.Second * defaultSyncSleepIntervalSeconds)
 	}
-	return errorutils.CheckError(errors.New("Timeout for sync deletion. "))
+	return errorutils.CheckErrorf("Timeout for sync deletion. ")
 }
 
 type DeleteRemoteDistributionBody struct {

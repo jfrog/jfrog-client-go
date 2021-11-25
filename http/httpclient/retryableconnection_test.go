@@ -206,7 +206,7 @@ func execGet(port int, path string, c *testContext) (*http.Response, error) {
 	c.tryNum++
 
 	if resp.StatusCode != http.StatusOK {
-		err = errorutils.CheckError(errors.New("Response: " + resp.Status))
+		err = errorutils.CheckErrorf("Response: " + resp.Status)
 	}
 
 	return resp, err

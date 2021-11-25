@@ -1,8 +1,6 @@
 package _go
 
 import (
-	"errors"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
@@ -33,7 +31,7 @@ func (gpc *GoPublishCommand) verifyCompatibleVersion(artifactoryVersion string) 
 	version := version.NewVersion(artifactoryVersion)
 	gpc.artifactoryVersion = artifactoryVersion
 	if !version.AtLeast(propertiesApi) {
-		return errorutils.CheckError(errors.New(fmt.Sprintf("Unsupported version of Artifactory: %s\nSupports Artifactory version %s and above", artifactoryVersion, propertiesApi)))
+		return errorutils.CheckErrorf("Unsupported version of Artifactory: %s\nSupports Artifactory version %s and above", artifactoryVersion, propertiesApi)
 	}
 	return nil
 }
