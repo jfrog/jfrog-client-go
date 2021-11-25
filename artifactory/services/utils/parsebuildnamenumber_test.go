@@ -14,7 +14,7 @@ func init() {
 func TestBuildParsingNoBuildNumber(t *testing.T) {
 	buildName, buildNumber, err := ParseNameAndVersion("CLI-Build-Name", true)
 	assert.NoError(t, err)
-	expectedBuildName, expectedBuildNumber := "CLI-Build-Name", "LATEST"
+	expectedBuildName, expectedBuildNumber := "CLI-Build-Name", LatestBuildNumberKey
 	if buildName != expectedBuildName {
 		t.Error("Unexpected result from 'ParseNameAndVersion' method. \nExpected build name: 	" + expectedBuildName + " \nGot:     		 		" + buildName)
 	}
@@ -62,7 +62,7 @@ func TestBuildParsingBuildNumberWithEscapeCharsInTheBuildNumber(t *testing.T) {
 func TestBuildParsingBuildNumberWithOnlyEscapeChars(t *testing.T) {
 	buildName, buildNumber, err := ParseNameAndVersion("CLI-Build-Name\\/1\\/2\\/3\\/4", true)
 	assert.NoError(t, err)
-	expectedBuildName, expectedBuildNumber := "CLI-Build-Name/1/2/3/4", "LATEST"
+	expectedBuildName, expectedBuildNumber := "CLI-Build-Name/1/2/3/4", LatestBuildNumberKey
 	if buildName != expectedBuildName {
 		t.Error("Unexpected result from 'ParseNameAndVersion' method. \nExpected build name: 	" + expectedBuildName + " \nGot:     		 		" + buildName)
 	}
