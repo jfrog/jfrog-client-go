@@ -42,6 +42,7 @@ require (
 	golang.org/x/net v0.0.0-20210326060303-6b1517762897 // indirect
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
@@ -51,6 +52,6 @@ exclude (
 	golang.org/x/text v0.3.4
 )
 
-replace github.com/jfrog/build-info-go => github.com/asafgabai/build-info-go v0.0.0-20211125132407-ed8ab76c82ef
+replace github.com/jfrog/build-info-go => github.com/asafgabai/build-info-go v0.0.0-20211128131014-731a651df220
 
 replace github.com/jfrog/gofrog => github.com/asafgabai/gofrog v1.0.7-0.20211124142550-392f9a68eb53

@@ -1,6 +1,7 @@
 package services
 
 import (
+	biutils "github.com/jfrog/build-info-go/utils"
 	"net/http"
 	"os"
 	"path"
@@ -20,7 +21,6 @@ import (
 	clientio "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -431,11 +431,11 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 			return err
 		}
 		defer file.Close()
-		checksumInfo, err := checksum.Calc(file, checksum.SHA1)
-		if err != nil {
+		checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
+		if err = errorutils.CheckError(err); err != nil {
 			return err
 		}
-		sha1 := checksumInfo[checksum.SHA1]
+		sha1 := checksumInfo[biutils.SHA1]
 		if sha1 != symlinkContentChecksum {
 			return errorutils.CheckErrorf("Symlink validation failed for target: " + symlinkArtifact)
 		}
