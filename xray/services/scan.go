@@ -22,7 +22,6 @@ const (
 	repoPathQueryParam = "repo_path="
 	projectQueryParam  = "project="
 	watchesQueryParam  = "watch="
-	scanTypeQueryParam = "scan_type="
 
 	// Get scan results query params
 	includeVulnerabilitiesParam = "?include_vulnerabilities=true"
@@ -32,10 +31,6 @@ const (
 	// Get scan results timeouts
 	defaultMaxWaitMinutes    = 15 * time.Minute // 15 minutes
 	defaultSyncSleepInterval = 5 * time.Second  // 5 seconds
-
-	// ScanType values
-	Dependency ScanType = "dependency"
-	Binary     ScanType = "binary"
 
 	xrayScanStatusFailed = "failed"
 )
@@ -64,10 +59,6 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 				params = append(params, watchesQueryParam+watch)
 			}
 		}
-	}
-
-	if scanParams.ScanType != "" {
-		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
 	if params == nil || len(params) == 0 {
@@ -177,7 +168,6 @@ type XrayGraphScanParams struct {
 	ProjectKey string
 	Watches    []string
 	Graph      *GraphNode
-	ScanType   ScanType
 }
 
 type GraphNode struct {
