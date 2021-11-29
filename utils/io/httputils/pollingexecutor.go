@@ -9,7 +9,7 @@ import (
 type PollingAction func() (shouldStop bool, responseBody []byte, err error)
 
 type PollingExecutor struct {
-	// The amount of max wait time.
+	// Maximum wait time in seconds.
 	Timeout time.Duration
 	// Number of seconds to sleep between polling attempts.
 	PollingInterval time.Duration
@@ -28,7 +28,7 @@ func (runner *PollingExecutor) Execute() ([]byte, error) {
 		for {
 			select {
 			case <-timeout:
-				errChan <- errorutils.CheckErrorf("%s Polling executer timeouted after %d secondes", runner.MsgPrefix, runner.Timeout.Seconds())
+				errChan <- errorutils.CheckErrorf("%s Polling executor timeout after %v secondes", runner.MsgPrefix, runner.Timeout.Seconds())
 				resultChan <- nil
 				return
 			case _ = <-ticker.C:
