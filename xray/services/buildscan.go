@@ -27,12 +27,12 @@ type BuildScanService struct {
 	XrayDetails auth.ServiceDetails
 }
 
-// NewBuildScanService creates a new service to scan Binaries and VCS projects.
+// NewBuildScanService creates a new service to scan build dependencies.
 func NewBuildScanService(client *jfroghttpclient.JfrogHttpClient) *BuildScanService {
 	return &BuildScanService{client: client}
 }
 
-func (bs *BuildScanService) BuildScan(params XrayBuildParams) (string, error) {
+func (bs *BuildScanService) Scan(params XrayBuildParams) (string, error) {
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(params)

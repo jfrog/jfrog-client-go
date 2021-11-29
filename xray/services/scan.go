@@ -47,7 +47,7 @@ type ScanService struct {
 	XrayDetails auth.ServiceDetails
 }
 
-// NewScanService creates a new service to scan Binaries and VCS projects.
+// NewScanService creates a new service to scan binaries and audit code projects' dependencies.
 func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 	return &ScanService{client: client}
 }
@@ -105,7 +105,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	message := fmt.Sprintf("Sync: Get Scan Graph results. Scan ID:%s...", scanId)
-	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
+	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	ticker := time.NewTicker(defaultSyncSleepInterval)
 	timeout := make(chan bool)
 	errChan := make(chan error)

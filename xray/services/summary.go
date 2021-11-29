@@ -29,11 +29,6 @@ func NewSummaryService(client *jfroghttpclient.JfrogHttpClient) *SummaryService 
 	return &SummaryService{client: client}
 }
 
-// GetXrayDetails returns the Xray details
-func (ss *SummaryService) GetXrayDetails() auth.ServiceDetails {
-	return ss.XrayDetails
-}
-
 func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryResponse, error) {
 	httpDetails := ss.XrayDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sbuild?build_name=%s&build_number=%s", ss.getSummeryUrl(), params.BuildName, params.BuildNumber)
@@ -56,24 +51,6 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 		return nil, errorutils.CheckErrorf("Getting build-summery for build: %s failed with error: %s", summaryResponse.Errors[0].Identifier, summaryResponse.Errors[0].Error)
 	}
 	return &summaryResponse, nil
-}
-
-func (ss *SummaryService) GetArtifactSummary(artifactSummaryRequest ArtifactSummaryRequest) (*SummaryResponse, error) {
-	httpDetails := ss.XrayDetails.CreateHttpClientDetails()
-	requestContent, err := json.Marshal(artifactSummaryRequest)
-	resp, body, err := ss.client.SendPost(ss.getSummeryUrl()+"artifact", requestContent, &httpDetails)
-	if err != nil {
-		return nil, err
-	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
-	}
-	var buildSummaryResponse SummaryResponse
-	err = json.Unmarshal(body, &buildSummaryResponse)
-	if err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	return &buildSummaryResponse, nil
 }
 
 type SummaryResponse struct {
@@ -108,9 +85,4 @@ type SummeryCve struct {
 type SummeryComponent struct {
 	ComponentId   string   `json:"component_id,omitempty"`
 	FixedVersions []string `json:"fixed_versions,omitempty"`
-}
-
-type ArtifactSummaryRequest struct {
-	Checksums []string `json:"checksums,omitempty"`
-	Paths     []string `json:"paths,omitempty"`
 }
