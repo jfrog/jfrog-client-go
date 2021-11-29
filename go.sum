@@ -50,12 +50,12 @@ github.com/imdario/mergo v0.3.12/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c2EWnYs/m4=
-github.com/jfrog/build-info-go v0.1.1-0.20211116095320-767c1e8a864f h1:C/yddTf+RlYSxFGF5EkSkbPdkCeIRMasyRjbixHDhK8=
-github.com/jfrog/build-info-go v0.1.1-0.20211116095320-767c1e8a864f/go.mod h1:P89ESdsP7o2fqp8GGvHZjm+UgYKbkK6vk247VeCraKk=
-github.com/jfrog/gocmd v0.5.3/go.mod h1:5q+DvcECGiJmLgut8KRYBzQaLNwl/W6kC/vwMffGm7g=
+github.com/jfrog/build-info-go v0.1.3-0.20211128101310-46a0b11306a1 h1:bsiv0oy2M93AnbSO2whDrytdMvzcmk/sQ3KpYmDIJ80=
+github.com/jfrog/build-info-go v0.1.3-0.20211128101310-46a0b11306a1/go.mod h1:kHbLmrBx5KguWsLzHPpNhqdsPMJXsLU1YTqOKuiwFzQ=
+github.com/jfrog/gocmd v0.5.5/go.mod h1:4+ngOdyQlhP0i1/JuHqOC6hwjYWnCEp6ZJEExwyo9U4=
 github.com/jfrog/gofrog v1.1.0 h1:nhbfSVUYWRxKHeU0RsPAUQeo1suc4oAcEttIKQRvWhs=
 github.com/jfrog/gofrog v1.1.0/go.mod h1:9YN5v4LlsCfLIXpwQnzSf1wVtgjdHM20FzuIu58RMI4=
-github.com/jfrog/jfrog-client-go v1.6.0/go.mod h1:efgBi75f56LWDw/ILsyoKnPYVbqu9na4pmuZeJ9V0vQ=
+github.com/jfrog/jfrog-client-go v1.6.1/go.mod h1:oR5emUgDSN+T8jNXqimKy9VxszQQuWumv1bst8od3vU=
 github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 h1:DowS9hvgyYSX4TO5NpyC606/Z4SxnNYbT+WX27or6Ck=
 github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/klauspost/compress v1.4.1/go.mod h1:RyIbtBH6LamlWaDj8nUwkbUhJ87Yi3uG0guNDohfE1A=
