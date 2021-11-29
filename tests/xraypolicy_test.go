@@ -28,7 +28,7 @@ func createMinSeverity(t *testing.T) {
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "min-severity",
+		Name:     "min-severity" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
 		Priority: 1,
 	}
@@ -40,7 +40,7 @@ func createRangeSeverity(t *testing.T) {
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "range-severity",
+		Name:     "range-severity" + getRunId(),
 		Criteria: *utils.CreateCvssRangePolicyCriteria(3.4, 5.6),
 		Priority: 1,
 	}
@@ -52,7 +52,7 @@ func createLicenseAllowed(t *testing.T) {
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "allowed-licenses",
+		Name:     "allowed-licenses" + getRunId(),
 		Criteria: *utils.CreateLicensePolicyCriteria(true, true, true, "MIT", "Apache-2.0"),
 		Priority: 1,
 	}
@@ -64,7 +64,7 @@ func createLicenseBanned(t *testing.T) {
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "banned-licenses",
+		Name:     "banned-licenses" + getRunId(),
 		Criteria: *utils.CreateLicensePolicyCriteria(false, true, true, "MIT", "Apache-2.0"),
 		Priority: 1,
 	}
@@ -76,12 +76,12 @@ func create2Priorities(t *testing.T) {
 	defer deletePolicy(t, policyName)
 
 	policyRule1 := utils.PolicyRule{
-		Name:     "priority-1",
+		Name:     "priority-1" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
 		Priority: 1,
 	}
 	policyRule2 := utils.PolicyRule{
-		Name:     "priority-2",
+		Name:     "priority-2" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
 		Priority: 2,
 	}
@@ -93,7 +93,7 @@ func createPolicyActions(t *testing.T) {
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "policy-actions",
+		Name:     "policy-actions" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.High),
 		Priority: 1,
 		Actions: &utils.PolicyAction{
@@ -116,14 +116,14 @@ func createUpdatePolicy(t *testing.T) {
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "low-severity",
+		Name:     "low-severity" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
 		Priority: 1,
 	}
 	createAndCheckPolicy(t, policyName, true, utils.Security, policyRule)
 
 	policyRule = utils.PolicyRule{
-		Name:     "medium-severity",
+		Name:     "medium-severity" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
 		Priority: 1,
 	}
@@ -174,14 +174,23 @@ func createAndCheckPolicy(t *testing.T, policyName string, create bool, policyTy
 
 	// Compare rules
 	assert.Len(t, actual.Rules, len(expected.Rules))
-	for i, expectedRule := range expected.Rules {
-		actualRule := actual.Rules[i]
-		assert.Equal(t, expectedRule.Name, actualRule.Name)
-		assert.Equal(t, expectedRule.Priority, actualRule.Priority)
-		assert.Equal(t, expectedRule.Criteria, actualRule.Criteria)
-		if expectedRule.Actions != nil {
-			assert.Equal(t, expectedRule.Actions, actualRule.Actions)
+	assert.True(t, policyRulesAreEqual(expected.Rules, actual.Rules))
+}
+
+// policyRulesAreEqual tells whether both PolicyRule slices contain the same elements, regardless of the order.
+func policyRulesAreEqual(expectedRules, actualRules []utils.PolicyRule) bool {
+	if len(expectedRules) != len(actualRules) {
+		return false
+	}
+	for _, expectedRule := range expectedRules {
+		for _, actualRule := range actualRules {
+			if expectedRule.Name == actualRule.Name && expectedRule.Priority == actualRule.Priority && assert.ObjectsAreEqual(expectedRule.Criteria, actualRule.Criteria) {
+				if expectedRule.Actions != nil {
+					return assert.ObjectsAreEqual(expectedRule.Actions, actualRule.Actions)
+				}
+				return true
+			}
 		}
 	}
-
+	return false
 }
