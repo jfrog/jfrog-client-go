@@ -33,10 +33,6 @@ const (
 	defaultMaxWaitMinutes    = 15 * time.Minute // 15 minutes
 	defaultSyncSleepInterval = 5 * time.Second  // 5 seconds
 
-	// ScanType values
-	Dependency ScanType = "dependency"
-	Binary     ScanType = "binary"
-
 	xrayScanStatusFailed = "failed"
 )
 
@@ -47,7 +43,7 @@ type ScanService struct {
 	XrayDetails auth.ServiceDetails
 }
 
-// NewScanService creates a new service to scan Binaries and VCS projects.
+// NewScanService creates a new service to scan binaries and audit code projects' dependencies.
 func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 	return &ScanService{client: client}
 }
@@ -155,7 +151,6 @@ type XrayGraphScanParams struct {
 	ProjectKey string
 	Watches    []string
 	Graph      *GraphNode
-	ScanType   ScanType
 }
 
 type GraphNode struct {
@@ -172,9 +167,12 @@ type GraphNode struct {
 	Path string `json:"path,omitempty"`
 	// List of license names
 	Licenses []string `json:"licenses,omitempty"`
+	// Component properties
+	Properties map[string]string `json:"properties,omitempty"`
 	// List of sub components.
-	Nodes  []*GraphNode `json:"nodes,omitempty"`
-	Parent *GraphNode   `json:"-"`
+	Nodes []*GraphNode `json:"nodes,omitempty"`
+	// Node parent (for internal use)
+	Parent *GraphNode `json:"-"`
 }
 
 type RequestScanResponse struct {
@@ -243,10 +241,6 @@ type Cve struct {
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
 	return gp.ProjectKey
-}
-
-func NewXrayGraphScanParams() XrayGraphScanParams {
-	return XrayGraphScanParams{}
 }
 
 func (currNode *GraphNode) NodeHasLoop() bool {
