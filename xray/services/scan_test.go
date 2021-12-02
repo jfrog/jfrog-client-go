@@ -11,25 +11,21 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 		projectKey    string
 		repoPath      string
 		watches       []string
-		scanType      ScanType
 		expectedQuery string
 	}{
-		{"with_project_key", "p1", "", nil, Binary,
-			fmt.Sprintf("?%s%s&%s%s", projectQueryParam, "p1", scanTypeQueryParam, Binary)},
+		{"with_project_key", "p1", "", nil,
+			fmt.Sprintf("?%s%s", projectQueryParam, "p1")},
 
-		{"with_repo_path", "", "r1", nil, Binary,
-			fmt.Sprintf("?%s%s&%s%s", repoPathQueryParam, "r1", scanTypeQueryParam, Binary)},
+		{"with_repo_path", "", "r1", nil,
+			fmt.Sprintf("?%s%s", repoPathQueryParam, "r1")},
 
-		{"with_watches", "", "", []string{"w1", "w2"}, Binary,
-			fmt.Sprintf("?%s%s&%s%s&%s%s", watchesQueryParam, "w1", watchesQueryParam, "w2", scanTypeQueryParam, Binary)},
+		{"with_watches", "", "", []string{"w1", "w2"},
+			fmt.Sprintf("?%s%s&%s%s", watchesQueryParam, "w1", watchesQueryParam, "w2")},
 
-		{"with_empty_watch_string", "", "", []string{""}, "",
+		{"with_empty_watch_string", "", "", []string{""},
 			""},
 
-		{"without_context", "", "", nil, Dependency,
-			fmt.Sprintf("?%s%s", scanTypeQueryParam, Dependency)},
-
-		{"without_scan_type", "", "", []string{"w1", "w2"}, "",
+		{"without_scan_type", "", "", []string{"w1", "w2"},
 			fmt.Sprintf("?%s%s&%s%s", watchesQueryParam, "w1", watchesQueryParam, "w2")},
 	}
 	for _, test := range tests {
@@ -38,7 +34,6 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 				RepoPath:   test.repoPath,
 				Watches:    test.watches,
 				ProjectKey: test.projectKey,
-				ScanType:   test.scanType,
 			}
 			actualQuery := createScanGraphQueryParams(params)
 			if actualQuery != test.expectedQuery {
