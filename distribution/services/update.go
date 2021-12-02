@@ -40,7 +40,7 @@ func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams Upd
 // In other cases summary will be nil.
 func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpgPassphrase string, releaseBundle *distributionServiceUtils.ReleaseBundleBody) (*clientutils.Sha256Summary, error) {
 	var summary *clientutils.Sha256Summary = nil
-	if releaseBundle.SignImmediately {
+	if *releaseBundle.SignImmediately {
 		summary = clientutils.NewSha256Summary()
 	}
 	httpClientsDetails := ur.DistDetails.CreateHttpClientDetails()

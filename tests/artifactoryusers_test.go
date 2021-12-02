@@ -69,11 +69,11 @@ func getTestUserParams(replaceIfExists bool) services.UserParams {
 		Name:                     fmt.Sprintf("test%s", timestampStr),
 		Email:                    "christianb@jfrog.com",
 		Password:                 "Password1",
-		Admin:                    false,
+		Admin:                    &falseValue,
 		Realm:                    "internal",
-		ProfileUpdatable:         true,
-		DisableUIAccess:          false,
-		InternalPasswordDisabled: false,
+		ProfileUpdatable:         &trueValue,
+		DisableUIAccess:          &falseValue,
+		InternalPasswordDisabled: &falseValue,
 	}
 	return services.UserParams{
 		UserDetails:     userDetails,

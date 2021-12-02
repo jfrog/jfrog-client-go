@@ -17,7 +17,7 @@ import (
 type DistributeService struct {
 	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
-	DryRun     bool
+	DryRun     *bool
 }
 
 func NewDistributionService(client *jfroghttpclient.JfrogHttpClient) *DistributeService {
@@ -28,13 +28,13 @@ func (ds *DistributeService) getArtifactoryDetails() auth.ServiceDetails {
 	return ds.ArtDetails
 }
 
-func (ds *DistributeService) isDryRun() bool {
+func (ds *DistributeService) isDryRun() *bool {
 	return ds.DryRun
 }
 
 func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) error {
 	dryRun := ""
-	if ds.DryRun == true {
+	if *ds.DryRun == true {
 		dryRun = "[Dry run] "
 	}
 	message := "Distributing build..."
@@ -59,7 +59,8 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 		OverrideExistingFiles: params.IsOverrideExistingFiles(),
 		GpgPassphrase:         params.GetGpgPassphrase(),
 		Async:                 params.IsAsync(),
-		DryRun:                ds.isDryRun()}
+		DryRun:                ds.isDryRun(),
+	}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -77,7 +78,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
-	if params.IsAsync() && !ds.isDryRun() {
+	if *params.IsAsync() && !*ds.isDryRun() {
 		log.Info("Asynchronously distributed build", params.GetBuildName()+"/"+params.GetBuildNumber(), "to:", params.GetTargetRepo(), "repository, logs are available in Artifactory.")
 		return nil
 	}
@@ -91,8 +92,8 @@ type BuildDistributionParams struct {
 	TargetRepo            string
 	GpgPassphrase         string
 	Publish               bool
-	OverrideExistingFiles bool
-	Async                 bool
+	OverrideExistingFiles *bool
+	Async                 *bool
 	BuildName             string
 	BuildNumber           string
 }
@@ -109,7 +110,7 @@ func (bd *BuildDistributionParams) GetGpgPassphrase() string {
 	return bd.GpgPassphrase
 }
 
-func (bd *BuildDistributionParams) IsAsync() bool {
+func (bd *BuildDistributionParams) IsAsync() *bool {
 	return bd.Async
 }
 
@@ -117,7 +118,7 @@ func (bd *BuildDistributionParams) IsPublish() bool {
 	return bd.Publish
 }
 
-func (bd *BuildDistributionParams) IsOverrideExistingFiles() bool {
+func (bd *BuildDistributionParams) IsOverrideExistingFiles() *bool {
 	return bd.OverrideExistingFiles
 }
 
@@ -134,9 +135,9 @@ type BuildDistributionBody struct {
 	TargetRepo            string   `json:"targetRepo,omitempty"`
 	GpgPassphrase         string   `json:"gpgPassphrase,omitempty"`
 	Publish               bool     `json:"publish"`
-	OverrideExistingFiles bool     `json:"overrideExistingFiles,omitempty"`
-	Async                 bool     `json:"async,omitempty"`
-	DryRun                bool     `json:"dryRun,omitempty"`
+	OverrideExistingFiles *bool    `json:"overrideExistingFiles,omitempty"`
+	Async                 *bool    `json:"async,omitempty"`
+	DryRun                *bool    `json:"dryRun,omitempty"`
 }
 
 func NewBuildDistributionParams() BuildDistributionParams {

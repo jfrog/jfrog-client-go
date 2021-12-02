@@ -37,16 +37,16 @@ func deleteProjectAndAssert(t *testing.T, projectKey string) {
 
 func getTestProjectParams() services.ProjectParams {
 	adminPrivileges := services.AdminPrivileges{
-		ManageMembers:   true,
-		ManageResources: true,
-		IndexResources:  true,
+		ManageMembers:   &trueValue,
+		ManageResources: &trueValue,
+		IndexResources:  &trueValue,
 	}
 	runNumberSuffix := getRunId()[len(getRunId())-3 : len(getRunId())]
 	projectDetails := services.Project{
 		DisplayName:       "testProject" + runNumberSuffix,
 		Description:       "My Test Project",
 		AdminPrivileges:   &adminPrivileges,
-		SoftLimit:         false,
+		SoftLimit:         &falseValue,
 		StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
 		ProjectKey:        "tstprj" + runNumberSuffix,
 	}

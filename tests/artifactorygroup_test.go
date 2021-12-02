@@ -66,8 +66,8 @@ func getTestGroupParams(includeUsers bool) services.GroupParams {
 	groupDetails := services.Group{
 		Name:            fmt.Sprintf("test-%s", getRunId()),
 		Description:     "hello",
-		AutoJoin:        false,
-		AdminPrivileges: true,
+		AutoJoin:        &falseValue,
+		AdminPrivileges: &trueValue,
 		Realm:           "internal",
 		RealmAttributes: "",
 	}

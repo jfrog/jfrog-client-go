@@ -20,7 +20,7 @@ func TestCreateBundleBody(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, releaseBundleBody)
 	assert.Equal(t, true, releaseBundleBody.DryRun)
-	assert.Equal(t, true, releaseBundleBody.SignImmediately)
+	assert.Equal(t, true, *releaseBundleBody.SignImmediately)
 	assert.Equal(t, "storing-repo", releaseBundleBody.StoringRepository)
 	assert.Equal(t, "Release bundle description", releaseBundleBody.Description)
 	assert.Equal(t, "Release notes", releaseBundleBody.ReleaseNotes.Content)

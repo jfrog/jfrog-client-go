@@ -3,7 +3,7 @@ package utils
 // REST body for create and update a release bundle
 type ReleaseBundleBody struct {
 	DryRun            bool          `json:"dry_run"`
-	SignImmediately   bool          `json:"sign_immediately,omitempty"`
+	SignImmediately   *bool         `json:"sign_immediately,omitempty"`
 	StoringRepository string        `json:"storing_repository,omitempty"`
 	Description       string        `json:"description,omitempty"`
 	ReleaseNotes      *ReleaseNotes `json:"release_notes,omitempty"`
