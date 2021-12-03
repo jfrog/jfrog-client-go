@@ -17,7 +17,7 @@ import (
 type DistributeService struct {
 	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
-	DryRun     *bool
+	DryRun     bool
 }
 
 func NewDistributionService(client *jfroghttpclient.JfrogHttpClient) *DistributeService {
@@ -29,12 +29,12 @@ func (ds *DistributeService) getArtifactoryDetails() auth.ServiceDetails {
 }
 
 func (ds *DistributeService) isDryRun() *bool {
-	return ds.DryRun
+	return &ds.DryRun
 }
 
 func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) error {
 	dryRun := ""
-	if *ds.DryRun == true {
+	if ds.DryRun == true {
 		dryRun = "[Dry run] "
 	}
 	message := "Distributing build..."
