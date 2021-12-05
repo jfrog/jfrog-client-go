@@ -3,13 +3,14 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
 	"sync"
+
+	buildinfo "github.com/jfrog/build-info-go/entities"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -25,7 +26,7 @@ import (
 const (
 	ArtifactorySymlink           = "symlink.dest"
 	SymlinkSha1                  = "symlink.destsha1"
-	latest                       = "LATEST"
+	LatestBuildNumberKey         = "LATEST"
 	lastRelease                  = "LAST_RELEASE"
 	buildRepositoriesSuffix      = "-build-info"
 	defaultBuildRepositoriesName = "artifactory"
@@ -151,7 +152,7 @@ func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier, projectKey string
 }
 
 func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
-	if buildNumber == latest || buildNumber == lastRelease {
+	if buildNumber == LatestBuildNumberKey || buildNumber == lastRelease {
 		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
 	}
 	return buildName, buildNumber, nil
@@ -183,8 +184,8 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 	}
 	if !strings.Contains(identifier, Delimiter) {
 		if useLatestPolicy {
-			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + latest)
-			return identifier, latest, nil
+			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + LatestBuildNumberKey)
+			return identifier, LatestBuildNumberKey, nil
 		} else {
 			return "", "", errorutils.CheckErrorf("No '" + Delimiter + "' is found in '" + identifier + "'")
 		}
@@ -207,9 +208,9 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 	}
 	if name == "" {
 		if useLatestPolicy {
-			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + latest)
+			log.Debug("No delimiter char (" + Delimiter + ") without escaping char was found in the build, build number is set to " + LatestBuildNumberKey)
 			name = identifier
-			version = latest
+			version = LatestBuildNumberKey
 		} else {
 			return "", "", errorutils.CheckErrorf("No delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'")
 		}

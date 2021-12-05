@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
+	"strings"
 )
 
 // XrayServicesManager defines the http client and general configuration
@@ -130,6 +131,38 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses)
+}
+
+// BuildScan scans a published build-info with Xray.
+// Returns a string represents the scan ID.
+func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams) (*services.BuildScanResponse, error) {
+	buildScanService := services.NewBuildScanService(sm.client)
+	buildScanService.XrayDetails = sm.config.GetServiceDetails()
+	buildScanInfo, err := buildScanService.Scan(params)
+	if err != nil {
+		return nil, err
+	}
+	if strings.Contains(buildScanInfo, services.XrayScanBuildNoFailBuildPolicy) {
+		// No Xray “Fail build in case of a violation” policy rule has been defined on this build,
+		// so no need to get results or print
+		return nil, nil
+	}
+	return buildScanService.GetBuildScanResults(params)
+}
+
+// GetBuildScanResults returns an Xray build scan output of the requested build scan.
+// The scanId input should be received from BuildScan request.
+func (sm *XrayServicesManager) GetBuildScanResults(params services.XrayBuildParams) (*services.BuildScanResponse, error) {
+	buildScanService := services.NewBuildScanService(sm.client)
+	buildScanService.XrayDetails = sm.config.GetServiceDetails()
+	return buildScanService.GetBuildScanResults(params)
+}
+
+// BuildSummary returns the summary of build scan which had been previously performed.
+func (sm *XrayServicesManager) BuildSummary(params services.XrayBuildParams) (*services.SummaryResponse, error) {
+	buildSummary := services.NewSummaryService(sm.client)
+	buildSummary.XrayDetails = sm.config.GetServiceDetails()
+	return buildSummary.GetBuildSummary(params)
 }
 
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
