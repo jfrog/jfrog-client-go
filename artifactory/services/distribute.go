@@ -28,8 +28,8 @@ func (ds *DistributeService) getArtifactoryDetails() auth.ServiceDetails {
 	return ds.ArtDetails
 }
 
-func (ds *DistributeService) isDryRun() *bool {
-	return &ds.DryRun
+func (ds *DistributeService) isDryRun() bool {
+	return ds.DryRun
 }
 
 func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) error {
@@ -52,14 +52,18 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 		sourceRepos = strings.Split(params.GetSourceRepos(), ",")
 	}
 
+	isDryRun := ds.isDryRun()
+	overrideExistingFiles := params.IsOverrideExistingFiles()
+	isAsync := params.IsAsync()
+
 	data := BuildDistributionBody{
 		SourceRepos:           sourceRepos,
 		TargetRepo:            params.GetTargetRepo(),
 		Publish:               params.IsPublish(),
-		OverrideExistingFiles: params.IsOverrideExistingFiles(),
+		OverrideExistingFiles: &overrideExistingFiles,
 		GpgPassphrase:         params.GetGpgPassphrase(),
-		Async:                 params.IsAsync(),
-		DryRun:                ds.isDryRun(),
+		Async:                 &isAsync,
+		DryRun:                &isDryRun,
 	}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
@@ -78,7 +82,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
-	if *params.IsAsync() && !*ds.isDryRun() {
+	if params.IsAsync() && !ds.isDryRun() {
 		log.Info("Asynchronously distributed build", params.GetBuildName()+"/"+params.GetBuildNumber(), "to:", params.GetTargetRepo(), "repository, logs are available in Artifactory.")
 		return nil
 	}
@@ -92,8 +96,8 @@ type BuildDistributionParams struct {
 	TargetRepo            string
 	GpgPassphrase         string
 	Publish               bool
-	OverrideExistingFiles *bool
-	Async                 *bool
+	OverrideExistingFiles bool
+	Async                 bool
 	BuildName             string
 	BuildNumber           string
 }
@@ -110,7 +114,7 @@ func (bd *BuildDistributionParams) GetGpgPassphrase() string {
 	return bd.GpgPassphrase
 }
 
-func (bd *BuildDistributionParams) IsAsync() *bool {
+func (bd *BuildDistributionParams) IsAsync() bool {
 	return bd.Async
 }
 
@@ -118,7 +122,7 @@ func (bd *BuildDistributionParams) IsPublish() bool {
 	return bd.Publish
 }
 
-func (bd *BuildDistributionParams) IsOverrideExistingFiles() *bool {
+func (bd *BuildDistributionParams) IsOverrideExistingFiles() bool {
 	return bd.OverrideExistingFiles
 }
 
