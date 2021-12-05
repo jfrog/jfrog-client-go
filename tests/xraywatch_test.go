@@ -27,6 +27,7 @@ func testXrayWatchAll(t *testing.T) {
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer testsXrayPolicyService.Delete(policy1Name)
+
 	policy2Name := fmt.Sprintf("%s-%s", "policy2", getRunId())
 	err = createDummyPolicy(policy2Name)
 	assert.NoError(t, err)
