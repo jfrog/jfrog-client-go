@@ -172,7 +172,6 @@ func includeDirsDownload(t *testing.T) {
 	if !fileutils.IsPathExists(filepath.Join(workingDir, "test"), false) {
 		t.Error("Missing test folder")
 	}
-
 	if !fileutils.IsPathExists(filepath.Join(workingDir, "b.in"), false) {
 		t.Error("Missing file b.in")
 	}
