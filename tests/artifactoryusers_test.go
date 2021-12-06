@@ -40,6 +40,10 @@ func testUpdateUser(t *testing.T) {
 	assert.NoError(t, err)
 
 	UserParams.UserDetails.Email = "changed@mail.com"
+	UserParams.UserDetails.Admin = &falseValue
+	UserParams.UserDetails.ProfileUpdatable = &falseValue
+	UserParams.UserDetails.DisableUIAccess = &trueValue
+	UserParams.UserDetails.InternalPasswordDisabled = &trueValue
 	err = testUserService.UpdateUser(UserParams)
 	assert.NoError(t, err)
 	user, err := testUserService.GetUser(UserParams)
@@ -69,7 +73,7 @@ func getTestUserParams(replaceIfExists bool) services.UserParams {
 		Name:                     fmt.Sprintf("test%s", timestampStr),
 		Email:                    "christianb@jfrog.com",
 		Password:                 "Password1",
-		Admin:                    &falseValue,
+		Admin:                    &trueValue,
 		Realm:                    "internal",
 		ProfileUpdatable:         &trueValue,
 		DisableUIAccess:          &falseValue,

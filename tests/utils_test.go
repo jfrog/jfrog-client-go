@@ -131,18 +131,18 @@ const (
 
 func init() {
 	ciRunId = flag.String("ci.runId", "", "A unique identifier used as a suffix to create repositories in the tests")
-	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
+	TestArtifactory = flag.Bool("test.artifactory", true, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
 	TestRepository = flag.Bool("test.repository", false, "Test repositories in Artifactory")
-	RtUrl = flag.String("rt.url", "", "Artifactory url")
+	RtUrl = flag.String("rt.url", "https://ecosysjfrog.jfrog.io/artifactory/", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	RtUser = flag.String("rt.user", "", "Artifactory username")
-	RtPassword = flag.String("rt.password", "", "Artifactory password")
+	RtUser = flag.String("rt.user", "michaelsv", "Artifactory username")
+	RtPassword = flag.String("rt.password", "Jfrog-12", "Artifactory password")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
@@ -516,7 +516,9 @@ func uploadDummyFile(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer os.RemoveAll(workingDir)
+	defer func() {
+		assert.NoError(t, os.RemoveAll(workingDir))
+	}()
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/"}
@@ -566,7 +568,9 @@ func artifactoryCleanup(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer toDelete.Close()
+	defer func() {
+		assert.NoError(t, toDelete.Close())
+	}()
 	NumberOfItemToDelete, err := toDelete.Length()
 	if err != nil {
 		t.Error(err)

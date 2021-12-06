@@ -82,8 +82,9 @@ type UpdateReleaseBundleParams struct {
 func NewUpdateReleaseBundleParams(name, version string) UpdateReleaseBundleParams {
 	return UpdateReleaseBundleParams{
 		distributionServiceUtils.ReleaseBundleParams{
-			Name:    name,
-			Version: version,
+			Name:            name,
+			Version:         version,
+			SignImmediately: true,
 		},
 	}
 }
