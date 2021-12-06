@@ -15,7 +15,7 @@ func TestCleanOldDirs(t *testing.T) {
 	tempDir, err := CreateTempDir()
 	assert.NoError(t, err)
 	tempFile, err := CreateTempFile()
-	tempFile.Close()
+	assert.NoError(t, tempFile.Close())
 	assert.NoError(t, err)
 
 	// Check file exists.
