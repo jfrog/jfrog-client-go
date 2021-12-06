@@ -26,7 +26,7 @@ func TestRetryExecutorSuccess(t *testing.T) {
 		},
 	}
 
-	assert.Error(t, executor.Execute())
+	assert.NoError(t, executor.Execute())
 	if runCount != breakRetriesAt {
 		t.Error(fmt.Errorf("expected, %d, got: %d", breakRetriesAt, runCount))
 	}
@@ -46,7 +46,7 @@ func TestRetryExecutorFail(t *testing.T) {
 		},
 	}
 
-	assert.Error(t, executor.Execute())
+	assert.NoError(t, executor.Execute())
 	if runCount != retriesToPerform+1 {
 		t.Error(fmt.Errorf("expected, %d, got: %d", retriesToPerform, runCount))
 	}

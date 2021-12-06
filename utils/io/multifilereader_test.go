@@ -40,8 +40,10 @@ func TestNewMultiFileReaderAt(t *testing.T) {
 					t.Error(err)
 				}
 				files = append(files, f.Name())
-				assert.Error(t, f.Close())
-				defer assert.Error(t, os.Remove(f.Name()))
+				assert.NoError(t, f.Close())
+				defer func() {
+					assert.NoError(t, os.Remove(f.Name()))
+				}()
 			}
 
 			// Create multiFileReaderAt
