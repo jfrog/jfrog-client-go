@@ -173,7 +173,7 @@ func TestIsWildcardParentheses(t *testing.T) {
 }
 
 func TestAntPathToRegExp(t *testing.T) {
-	var fileSystemPaths []string = []string{
+	var fileSystemPaths = []string{
 		filepath.Join("dev", "a", "b.txt"),
 		filepath.Join("dev", "a", "bb.txt"),
 		filepath.Join("dev", "a", "bc.txt"),

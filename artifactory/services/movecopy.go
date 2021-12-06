@@ -50,7 +50,10 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	moveReaders := []*ReaderSpecTuple{}
 	defer func() {
 		for _, readerSpec := range moveReaders {
-			readerSpec.Reader.Close()
+			e := readerSpec.Reader.Close()
+			if err == nil && e != nil {
+				err = e
+			}
 		}
 	}()
 	for i, moveSpec := range moveSpecs {
@@ -68,8 +71,12 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	if err != nil {
 		return
 	}
-	defer tempAggregatedReader.Close()
-
+	defer func() {
+		e := tempAggregatedReader.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	aggregatedReader := tempAggregatedReader
 	if mc.moveType == MOVE {
 		// If move command, reduce top dir chain results.
@@ -78,8 +85,12 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 			return
 		}
 	}
-
-	defer aggregatedReader.Close()
+	defer func() {
+		e := aggregatedReader.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	successCount, failedCount, err = mc.moveFiles(aggregatedReader, moveSpecs)
 	if err != nil {
 		return
@@ -107,7 +118,13 @@ func (mc *MoveCopyService) getPathsToMove(moveSpec MoveCopyParams) (resultItems 
 		if err != nil {
 			return
 		}
-		defer tempResultItems.Close()
+		defer func() {
+			e := tempResultItems.Close()
+			if err == nil {
+				err = e
+			}
+		}()
+
 		resultItems, err = reduceMovePaths(utils.ResultItem{}, tempResultItems, moveSpec.IsFlat(), clientutils.PlaceholdersUserd(moveSpec.Pattern, moveSpec.Target))
 		if err != nil {
 			return
@@ -175,7 +192,10 @@ func (mc *MoveCopyService) createMoveCopyFileHandlerFunc(result *utils.Result) f
 				if resultItem.Type != "folder" {
 					destFile += resultItem.Name
 				} else {
-					mc.createPathForMoveAction(destFile, logMsgPrefix)
+					_, err = mc.createPathForMoveAction(destFile, logMsgPrefix)
+					if err != nil {
+						return err
+					}
 				}
 			}
 

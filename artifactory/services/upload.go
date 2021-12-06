@@ -123,7 +123,11 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		}
 
 		for targetPath, archiveData := range toArchive {
-			archiveData.writer.Close()
+			err := archiveData.writer.Close()
+			if err != nil {
+				log.Error(err)
+				errorsQueue.AddError(err)
+			}
 			if us.Progress != nil {
 				us.Progress.IncGeneralProgressTotalBy(1)
 			}
@@ -291,7 +295,10 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 				vcsCache: vcsCache,
 			}
 			incGeneralProgressTotal(progressMgr, uploadParams)
-			createUploadTask(taskData, dataHandlerFunc)
+			err = createUploadTask(taskData, dataHandlerFunc)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -625,8 +632,10 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 	return func(artifact UploadData) parallel.TaskFunc {
 		return func(threadId int) (e error) {
 			if artifact.IsDir {
-				us.createFolderInArtifactory(artifact)
-				return
+				e = us.createFolderInArtifactory(artifact)
+				if e != nil {
+					return
+				}
 			}
 			uploadResult.TotalCount[threadId]++
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
@@ -677,7 +686,12 @@ func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targe
 		logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
 
 		archiveDataReader := content.NewContentReader(archiveData.writer.GetFilePath(), archiveData.writer.GetArrayKey())
-		defer archiveDataReader.Close()
+		defer func() {
+			err := archiveDataReader.Close()
+			if e == nil {
+				e = err
+			}
+		}()
 		targetUrl, targetUrlWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), targetPath, archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian(), archiveData.uploadParams.TargetProps)
 		if e != nil {
 			return
