@@ -14,8 +14,9 @@ func TestUnarchive(t *testing.T) {
 			// Create temp directory
 			tmpDir, err := CreateTempDir()
 			assert.NoError(t, err)
-			defer assert.NoError(t, RemoveTempDir(tmpDir))
-
+			defer func() {
+				assert.NoError(t, RemoveTempDir(tmpDir))
+			}()
 			// Run unarchive on archive created on Unix
 			err = runUnarchive(t, "unix."+extension, "archives", filepath.Join(tmpDir, "unix"))
 			assert.NoError(t, err)
@@ -47,8 +48,9 @@ func TestUnarchiveZipSlip(t *testing.T) {
 			// Create temp directory
 			tmpDir, err := CreateTempDir()
 			assert.NoError(t, err)
-			defer assert.NoError(t, RemoveTempDir(tmpDir))
-
+			defer func() {
+				assert.NoError(t, RemoveTempDir(tmpDir))
+			}()
 			for _, archive := range test.archives {
 				// Unarchive and make sure an error returns
 				err = runUnarchive(t, test.testType+"."+archive, "zipslip", tmpDir)

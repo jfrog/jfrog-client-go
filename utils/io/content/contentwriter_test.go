@@ -89,7 +89,9 @@ func TestContentReaderAfterWriter(t *testing.T) {
 	assert.NoError(t, err)
 	writeTestRecords(t, writer)
 	reader := NewContentReader(writer.GetFilePath(), DefaultKey)
-	defer assert.NoError(t, reader.Close())
+	defer func() {
+		assert.NoError(t, reader.Close())
+	}()
 	recordCount := 0
 	for item := new(outputRecord); reader.NextRecord(item) == nil; item = new(outputRecord) {
 		assert.Contains(t, records, *item, "record %s missing", item.StrKey)
