@@ -516,7 +516,7 @@ func uploadDummyFile(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer os.RemoveAll(workingDir)
+	defer assert.NoError(t, os.RemoveAll(workingDir))
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/"}
@@ -566,7 +566,7 @@ func artifactoryCleanup(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer toDelete.Close()
+	defer assert.NoError(t, toDelete.Close())
 	NumberOfItemToDelete, err := toDelete.Length()
 	if err != nil {
 		t.Error(err)

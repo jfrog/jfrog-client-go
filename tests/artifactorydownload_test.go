@@ -34,7 +34,7 @@ func flatDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir)
+	defer assert.NoError(t, os.RemoveAll(workingDir))
 	downloadPattern := getRtTargetRepo() + "*"
 	downloadTarget := workingDir + string(filepath.Separator)
 	// Download all from TargetRepo with flat = true
@@ -57,7 +57,7 @@ func flatDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir2)
+	defer assert.NoError(t, os.RemoveAll(workingDir2))
 	// Download all from TargetRepo with flat = false
 	_, err = testsDownloadService.DownloadFiles(services.DownloadParams{CommonParams: &utils.CommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: false})
 	if err != nil {
@@ -81,7 +81,7 @@ func recursiveDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir)
+	defer assert.NoError(t, os.RemoveAll(workingDir))
 	downloadPattern := getRtTargetRepo() + "*"
 	downloadTarget := workingDir + string(filepath.Separator)
 	_, err = testsDownloadService.DownloadFiles(services.DownloadParams{CommonParams: &utils.CommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: true})
@@ -103,7 +103,7 @@ func recursiveDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir2)
+	defer assert.NoError(t, os.RemoveAll(workingDir2))
 	downloadTarget = workingDir2 + string(filepath.Separator)
 	_, err = testsDownloadService.DownloadFiles(services.DownloadParams{CommonParams: &utils.CommonParams{Pattern: downloadPattern, Recursive: false, Target: downloadTarget}, Flat: true})
 	if err != nil {
@@ -128,7 +128,7 @@ func placeholderDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir)
+	defer assert.NoError(t, os.RemoveAll(workingDir))
 	downloadPattern := getRtTargetRepo() + "(*).in"
 	downloadTarget := workingDir + string(filepath.Separator) + "{1}" + string(filepath.Separator)
 	_, err = testsDownloadService.DownloadFiles(services.DownloadParams{CommonParams: &utils.CommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: true})
@@ -150,7 +150,7 @@ func includeDirsDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir)
+	defer assert.NoError(t, os.RemoveAll(workingDir))
 	downloadPattern := getRtTargetRepo() + "*"
 	downloadTarget := workingDir + string(filepath.Separator)
 	_, err = testsDownloadService.DownloadFiles(services.DownloadParams{CommonParams: &utils.CommonParams{Pattern: downloadPattern, IncludeDirs: true, Recursive: false, Target: downloadTarget}, Flat: false})
@@ -174,7 +174,7 @@ func exclusionsDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir)
+	defer assert.NoError(t, os.RemoveAll(workingDir))
 	downloadPattern := getRtTargetRepo() + "*"
 	downloadTarget := workingDir + string(filepath.Separator)
 	exclusions := []string{"*b.in", "*.tar.gz"}
@@ -199,7 +199,7 @@ func explodeArchiveDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir)
+	defer assert.NoError(t, os.RemoveAll(workingDir))
 	downloadPattern := getRtTargetRepo() + "*.tar.gz"
 	downloadTarget := workingDir + string(filepath.Separator)
 	downloadParams := services.DownloadParams{CommonParams: &utils.CommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: true, Explode: false}
@@ -251,7 +251,7 @@ func summaryDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir)
+	defer assert.NoError(t, os.RemoveAll(workingDir))
 	testsDownloadService.SetSaveSummary(true)
 	defer testsDownloadService.SetSaveSummary(false)
 	downloadPattern := getRtTargetRepo() + "*.tar.gz"
@@ -288,7 +288,7 @@ func duplicateDownload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer os.RemoveAll(workingDir)
+	defer assert.NoError(t, os.RemoveAll(workingDir))
 	downloadPattern := getRtTargetRepo() + "*.in"
 	downloadTarget := workingDir + string(filepath.Separator)
 	summary, err := testsDownloadService.DownloadFiles(services.DownloadParams{CommonParams: &utils.CommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}, Flat: true})
