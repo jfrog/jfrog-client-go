@@ -55,6 +55,10 @@ func TestPermissionTarget(t *testing.T) {
 func validatePermissionTarget(t *testing.T, params services.PermissionTargetParams) {
 	targetConfig, err := getPermissionTarget(params.Name)
 	assert.NoError(t, err)
+	assert.NotNil(t, targetConfig)
+	if targetConfig == nil {
+		return
+	}
 	assert.Equal(t, params.Name, targetConfig.Name)
 	assert.Equal(t, params.Repo, targetConfig.Repo)
 	assert.Equal(t, params.Build, targetConfig.Build)
