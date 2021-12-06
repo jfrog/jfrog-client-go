@@ -500,8 +500,7 @@ func RenamePath(oldPath, newPath string) error {
 	if err != nil {
 		return errors.New("Error copying directory: " + oldPath + "to" + newPath + err.Error())
 	}
-	RemovePath(oldPath)
-	return nil
+	return RemovePath(oldPath)
 }
 
 // Returns the path to the directory in which itemToFind is located.
@@ -515,8 +514,12 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	if err != nil {
 		return
 	}
-	defer os.Chdir(wd)
-
+	defer func() {
+		e := os.Chdir(wd)
+		if err == nil {
+			err = e
+		}
+	}()
 	// Get the OS root.
 	osRoot := os.Getenv("SYSTEMDRIVE")
 	if osRoot != "" {
@@ -553,7 +556,10 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 		visitedPaths[wd] = true
 		// CD to the parent directory.
 		wd = filepath.Dir(wd)
-		os.Chdir(wd)
+		err = os.Chdir(wd)
+		if err != nil {
+			return
+		}
 
 		// If we already visited this directory, it means that there's a loop and we can stop.
 		if visitedPaths[wd] {

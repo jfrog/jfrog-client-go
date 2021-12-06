@@ -302,7 +302,7 @@ func summaryUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer summary.Close()
+	defer assert.NoError(t, summary.Close())
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
