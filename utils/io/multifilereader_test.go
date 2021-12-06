@@ -1,6 +1,7 @@
 package io
 
 import (
+	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"reflect"
@@ -39,8 +40,8 @@ func TestNewMultiFileReaderAt(t *testing.T) {
 					t.Error(err)
 				}
 				files = append(files, f.Name())
-				f.Close()
-				defer os.Remove(f.Name())
+				assert.Error(t, f.Close())
+				defer assert.Error(t, os.Remove(f.Name()))
 			}
 
 			// Create multiFileReaderAt

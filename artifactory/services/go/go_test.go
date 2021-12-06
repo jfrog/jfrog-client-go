@@ -23,7 +23,7 @@ func TestCreateUrlPath(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			CreateUrlPath(test.moduleId, test.version, test.props, test.extension, &test.url)
+			assert.NoError(t, CreateUrlPath(test.moduleId, test.version, test.props, test.extension, &test.url))
 			// The props might have a different order each time, so we split the URLs and check if the lists are equal (ignoring the order)
 			assert.ElementsMatch(t, strings.Split(test.url, ";"), strings.Split(test.expectedUrl, ";"))
 		})

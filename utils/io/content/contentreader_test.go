@@ -88,7 +88,7 @@ func TestCloseReader(t *testing.T) {
 	// Create a file.
 	fd, err := fileutils.CreateTempFile()
 	assert.NoError(t, err)
-	fd.Close()
+	assert.NoError(t, fd.Close())
 	filePathToBeDeleted := fd.Name()
 
 	// Load file to reader

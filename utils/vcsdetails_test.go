@@ -20,7 +20,7 @@ func TestVcsDetails(t *testing.T) {
 			} else {
 				projectPath, tmpDir = initVcsTestDir(t, filepath.Join("testdata", test))
 			}
-			defer fileutils.RemoveTempDir(tmpDir)
+			defer assert.NoError(t, fileutils.RemoveTempDir(tmpDir))
 			vcsDetails := NewVcsDetals()
 			revision, url, branch, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
 			assert.NoError(t, err)

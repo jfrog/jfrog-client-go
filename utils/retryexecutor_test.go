@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -25,7 +26,7 @@ func TestRetryExecutorSuccess(t *testing.T) {
 		},
 	}
 
-	executor.Execute()
+	assert.Error(t, executor.Execute())
 	if runCount != breakRetriesAt {
 		t.Error(fmt.Errorf("expected, %d, got: %d", breakRetriesAt, runCount))
 	}
@@ -45,7 +46,7 @@ func TestRetryExecutorFail(t *testing.T) {
 		},
 	}
 
-	executor.Execute()
+	assert.Error(t, executor.Execute())
 	if runCount != retriesToPerform+1 {
 		t.Error(fmt.Errorf("expected, %d, got: %d", retriesToPerform, runCount))
 	}
