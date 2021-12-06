@@ -142,7 +142,13 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 		cr.errorsQueue.AddError(errorutils.CheckError(err))
 		return
 	}
-	defer fd.Close()
+	defer func() {
+		err = fd.Close()
+		if err != nil {
+			log.Error(err.Error())
+			cr.errorsQueue.AddError(errorutils.CheckError(err))
+		}
+	}()
 	br := bufio.NewReaderSize(fd, 65536)
 	dec := json.NewDecoder(br)
 	err = findDecoderTargetPosition(dec, cr.arrayKey, true)

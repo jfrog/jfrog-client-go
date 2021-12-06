@@ -667,9 +667,9 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 	if err != nil {
 		return err
 	}
-	content := make([]byte, 0)
+	emptyContent := make([]byte, 0)
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
-	resp, body, err := us.client.SendPut(url, content, &httpClientsDetails)
+	resp, body, err := us.client.SendPut(url, emptyContent, &httpClientsDetails)
 	if err != nil {
 		log.Debug(resp)
 		return err

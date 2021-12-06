@@ -63,9 +63,9 @@ func TestContentReaderNextRecord(t *testing.T) {
 		assert.Equal(t, false, rSlice[1].BoolKey)
 		assert.Empty(t, rSlice[1].ArrayKey)
 		// Length validation
-		len, err := reader.Length()
+		length, err := reader.Length()
 		assert.NoError(t, err)
-		assert.Equal(t, 2, len)
+		assert.Equal(t, 2, length)
 		reader.Reset()
 	}
 }
@@ -107,13 +107,13 @@ func TestCloseReader(t *testing.T) {
 func TestLengthCount(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
 	reader := NewContentReader(searchResultPath, DefaultKey)
-	len, err := reader.Length()
+	length, err := reader.Length()
 	assert.NoError(t, err)
-	assert.Equal(t, len, 2)
+	assert.Equal(t, length, 2)
 	// Check cache works with no Reset() being called.
-	len, err = reader.Length()
+	length, err = reader.Length()
 	assert.NoError(t, err)
-	assert.Equal(t, len, 2)
+	assert.Equal(t, length, 2)
 }
 
 func TestMergeIncreasingSortedFiles(t *testing.T) {

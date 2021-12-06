@@ -33,11 +33,11 @@ func CreateTempDir() (string, error) {
 		return "", errorutils.CheckErrorf("Temp dir cannot be created in an empty base dir.")
 	}
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	path, err := ioutil.TempDir(tempDirBase, tempPrefix+"-"+timestamp+"-")
+	dirPath, err := ioutil.TempDir(tempDirBase, tempPrefix+"-"+timestamp+"-")
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
-	return path, nil
+	return dirPath, nil
 }
 
 // Change the containing directory of temp dir.

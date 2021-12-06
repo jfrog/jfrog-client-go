@@ -320,9 +320,9 @@ func GetHomeDir() string {
 	if home != "" {
 		return home
 	}
-	user, err := user.Current()
+	currentUser, err := user.Current()
 	if err == nil {
-		return user.HomeDir
+		return currentUser.HomeDir
 	}
 	return ""
 }
