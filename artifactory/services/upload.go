@@ -633,9 +633,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 		return func(threadId int) (e error) {
 			if artifact.IsDir {
 				e = us.createFolderInArtifactory(artifact)
-				if e != nil {
-					return
-				}
+				return
 			}
 			uploadResult.TotalCount[threadId]++
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
