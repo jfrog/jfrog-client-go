@@ -5,7 +5,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
-	"strings"
 )
 
 // XrayServicesManager defines the http client and general configuration
@@ -138,23 +137,10 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams) (*services.BuildScanResponse, error) {
 	buildScanService := services.NewBuildScanService(sm.client)
 	buildScanService.XrayDetails = sm.config.GetServiceDetails()
-	buildScanInfo, err := buildScanService.Scan(params)
+	err := buildScanService.Scan(params)
 	if err != nil {
 		return nil, err
 	}
-	if strings.Contains(buildScanInfo, services.XrayScanBuildNoFailBuildPolicy) {
-		// No Xray “Fail build in case of a violation” policy rule has been defined on this build,
-		// so no need to get results or print
-		return nil, nil
-	}
-	return buildScanService.GetBuildScanResults(params)
-}
-
-// GetBuildScanResults returns an Xray build scan output of the requested build scan.
-// The scanId input should be received from BuildScan request.
-func (sm *XrayServicesManager) GetBuildScanResults(params services.XrayBuildParams) (*services.BuildScanResponse, error) {
-	buildScanService := services.NewBuildScanService(sm.client)
-	buildScanService.XrayDetails = sm.config.GetServiceDetails()
 	return buildScanService.GetBuildScanResults(params)
 }
 
