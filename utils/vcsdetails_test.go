@@ -11,8 +11,8 @@ import (
 
 func TestVcsDetails(t *testing.T) {
 	// Test the following .git types, on their corresponding paths in testdata.
-	tests := []string{"vcs", "packedvcs", "submodule"}
-	for _, test := range tests {
+	testRuns := []string{"vcs", "packedvcs", "submodule"}
+	for _, test := range testRuns {
 		t.Run(test, func(t *testing.T) {
 			var projectPath, tmpDir string
 			if test == "submodule" {
@@ -20,10 +20,8 @@ func TestVcsDetails(t *testing.T) {
 			} else {
 				projectPath, tmpDir = initVcsTestDir(t, filepath.Join("testdata", test))
 			}
-			defer func() {
-				assert.NoError(t, fileutils.RemoveTempDir(tmpDir))
-			}()
-			vcsDetails := NewVcsDetals()
+			defer testsutils.RemoveTempDirAndAssert(t, tmpDir)
+			vcsDetails := NewVcsDetails()
 			revision, url, branch, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
 			assert.NoError(t, err)
 			assert.Equal(t, "https://github.com/jfrog/jfrog-cli.git", url)
