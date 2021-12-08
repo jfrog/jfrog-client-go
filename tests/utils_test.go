@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -114,7 +115,7 @@ var (
 	testsAccessProjectService *accessServices.ProjectService
 
 	timestamp    = time.Now().Unix()
-	timestampStr = strconv.FormatInt(int64(timestamp), 10)
+	timestampStr = strconv.FormatInt(timestamp, 10)
 	trueValue    = true
 	falseValue   = false
 
@@ -516,9 +517,7 @@ func uploadDummyFile(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer func() {
-		assert.NoError(t, os.RemoveAll(workingDir))
-	}()
+	defer clientTestUtils.RemoveAllAndAssert(t, workingDir)
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/"}

@@ -20,7 +20,7 @@ const (
 	SHA256
 )
 
-var algorithmFunc = map[Algorithm](func() hash.Hash){
+var algorithmFunc = map[Algorithm]func() hash.Hash{
 	MD5:  md5.New,
 	SHA1: sha1.New,
 	// TODO - Uncomment `Sha256` population when Artifactory support Sha256 checksum validation

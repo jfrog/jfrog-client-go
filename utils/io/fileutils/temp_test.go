@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"os"
 	"testing"
 
@@ -19,17 +20,13 @@ func TestCleanOldDirs(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check file exists.
-	_, err = os.Stat(tempDir)
-	assert.NoError(t, err)
-	_, err = os.Stat(tempFile.Name())
-	assert.NoError(t, err)
+	tests.CheckIfFileExistsAndAssert(t, tempDir)
+	tests.CheckIfFileExistsAndAssert(t, tempFile.Name())
 
 	// Don't delete valid files.
 	assert.NoError(t, CleanOldDirs())
-	_, err = os.Stat(tempDir)
-	assert.NoError(t, err)
-	_, err = os.Stat(tempFile.Name())
-	assert.NoError(t, err)
+	tests.CheckIfFileExistsAndAssert(t, tempDir)
+	tests.CheckIfFileExistsAndAssert(t, tempFile.Name())
 
 	// Delete expired files.
 	oldMaxFileAge := maxFileAge

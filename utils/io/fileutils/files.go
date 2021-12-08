@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	SYMLINK_FILE_CONTENT          = ""
-	File                 ItemType = "file"
-	Dir                  ItemType = "dir"
-	Any                  ItemType = "any"
+	SymlinkFileContent          = ""
+	File               ItemType = "file"
+	Dir                ItemType = "dir"
+	Any                ItemType = "any"
 )
 
 func GetFileSeparator() string {
@@ -235,7 +235,7 @@ func ListFiles(path string, includeDirs bool) ([]string, error) {
 
 func GetUploadRequestContent(file *os.File) io.Reader {
 	if file == nil {
-		return bytes.NewBuffer([]byte(SYMLINK_FILE_CONTENT))
+		return bytes.NewBuffer([]byte(SymlinkFileContent))
 	}
 	return bufio.NewReader(file)
 }
