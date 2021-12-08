@@ -3,6 +3,7 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -15,7 +16,6 @@ import (
 	distributionServicesUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -360,7 +360,7 @@ func createDistributeMapping(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo() + "b.out"
 	reader, err := testsSearchService.Search(searchParams)
 	assert.NoError(t, err)
-	tests.ReaderCloseAndAssert(t, reader)
+	content.ReaderCloseAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, length)
@@ -391,7 +391,7 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo() + "b.out"
 	reader, err := testsSearchService.Search(searchParams)
 	assert.NoError(t, err)
-	tests.ReaderCloseAndAssert(t, reader)
+	content.ReaderCloseAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, length)

@@ -2,7 +2,6 @@ package tests
 
 import (
 	"bufio"
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
@@ -70,8 +69,8 @@ func RunTests(testsPackages []string, hideUnitTestsLog bool) error {
 	cmd := exec.Command("go", testsPackages...)
 
 	if hideUnitTestsLog {
-		tempDirPath, err := getTestsLogsDir()
-		exitOnErr(err)
+		tempDirPath := filepath.Join(os.TempDir(), "jfrog_tests_logs")
+		exitOnErr(fileutils.CreateDirIfNotExist(tempDirPath))
 
 		f, err := os.Create(filepath.Join(tempDirPath, "unit_tests.log"))
 		exitOnErr(err)
@@ -92,11 +91,6 @@ func RunTests(testsPackages []string, hideUnitTestsLog bool) error {
 	}
 
 	return nil
-}
-
-func getTestsLogsDir() (string, error) {
-	tempDirPath := filepath.Join(os.TempDir(), "jfrog_tests_logs")
-	return tempDirPath, fileutils.CreateDirIfNotExist(tempDirPath)
 }
 
 func exitOnErr(err error) {
@@ -126,14 +120,6 @@ func InitVcsSubmoduleTestDir(t *testing.T, srcPath string) (submodulePath, tmpDi
 	submodulePath, err = filepath.Abs(submoduleDst)
 	assert.NoError(t, err)
 	return submodulePath, tmpDir
-}
-
-func ReaderCloseAndAssert(t *testing.T, reader *content.ContentReader) {
-	assert.NoError(t, reader.Close(), "Couldn't close reader")
-}
-
-func ReaderGetErrorAndAssert(t *testing.T, reader *content.ContentReader) {
-	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
 }
 
 func ChangeDirAndAssert(t *testing.T, dirPath string) {

@@ -3,11 +3,13 @@ package content
 import (
 	"bufio"
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"reflect"
 	"sort"
 	"sync"
+	"testing"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -463,4 +465,12 @@ func ConvertToStruct(record, recordOutput interface{}) error {
 	}
 	err = errorutils.CheckError(json.Unmarshal(data, recordOutput))
 	return err
+}
+
+func ReaderCloseAndAssert(t *testing.T, reader *ContentReader) {
+	assert.NoError(t, reader.Close(), "Couldn't close reader")
+}
+
+func ReaderGetErrorAndAssert(t *testing.T, reader *ContentReader) {
+	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
 }
