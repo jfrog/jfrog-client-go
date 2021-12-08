@@ -2,7 +2,6 @@ package content
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"os"
 	"path"
 	"path/filepath"
@@ -52,7 +51,7 @@ func TestContentReaderNextRecord(t *testing.T) {
 		for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 			rSlice = append(rSlice, *item)
 		}
-		tests.ReaderGetErrorAndAssert(t, reader)
+		assert.NoError(t, reader.GetError())
 		// First element
 		assert.Equal(t, 1, rSlice[0].IntKey)
 		assert.Equal(t, "A", rSlice[0].StrKey)
@@ -77,7 +76,7 @@ func TestContentReaderEmptyResult(t *testing.T) {
 	for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 		t.Error("Can't loop over empty file")
 	}
-	tests.ReaderGetErrorAndAssert(t, reader)
+	assert.NoError(t, reader.GetError())
 }
 
 func getTestDataPath() string {
@@ -96,10 +95,11 @@ func TestCloseReader(t *testing.T) {
 	reader := NewContentReader(filePathToBeDeleted, DefaultKey)
 
 	// Check file exists
-	tests.CheckIfFileExistsAndAssert(t, filePathToBeDeleted)
+	_, err = os.Stat(filePathToBeDeleted)
+	assert.NoError(t, err)
 
 	// Check if the file got deleted
-	ReaderCloseAndAssert(t, reader)
+	assert.NoError(t, reader.Close())
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
 }
@@ -128,7 +128,7 @@ func TestMergeIncreasingSortedFiles(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "merged_buffer_ascending_order.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	tests.ReaderCloseAndAssert(t, resultReader)
+	assert.NoError(t, resultReader.Close())
 }
 
 func TestMergeDecreasingSortedFiles(t *testing.T) {
@@ -143,7 +143,7 @@ func TestMergeDecreasingSortedFiles(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "merged_buffer_descending_order.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	tests.ReaderCloseAndAssert(t, resultReader)
+	assert.NoError(t, resultReader.Close())
 }
 
 func TestSortContentReaderByCalculatedKey(t *testing.T) {
@@ -165,7 +165,7 @@ func TestSortContentReaderByCalculatedKey(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(sortedReader.GetFilesPaths()[0], filepath.Join(testDataPath, sortedFile))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	tests.ReaderCloseAndAssert(t, sortedReader)
+	assert.NoError(t, sortedReader.Close())
 }
 
 type ReaderTestItem struct {
@@ -177,8 +177,4 @@ type ReaderTestItem struct {
 
 func (rti ReaderTestItem) GetSortKey() string {
 	return path.Join(rti.Repo, rti.Path, rti.Name)
-}
-
-func ReaderCloseAndAssert(t *testing.T, reader *ContentReader) {
-	assert.NoError(t, reader.Close(), "Couldn't close reader")
 }

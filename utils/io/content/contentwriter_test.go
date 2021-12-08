@@ -2,7 +2,6 @@ package content
 
 import (
 	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -90,12 +89,14 @@ func TestContentReaderAfterWriter(t *testing.T) {
 	assert.NoError(t, err)
 	writeTestRecords(t, writer)
 	reader := NewContentReader(writer.GetFilePath(), DefaultKey)
-	defer tests.ReaderCloseAndAssert(t, reader)
+	defer func() {
+		assert.NoError(t, reader.Close(), "Couldn't close reader")
+	}()
 	recordCount := 0
 	for item := new(outputRecord); reader.NextRecord(item) == nil; item = new(outputRecord) {
 		assert.Contains(t, records, *item, "record %s missing", item.StrKey)
 		recordCount++
 	}
-	tests.ReaderGetErrorAndAssert(t, reader)
+	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
 	assert.Equal(t, len(records), recordCount, "The amount of records were read (%d) is different then expected", recordCount)
 }

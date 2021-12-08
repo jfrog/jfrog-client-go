@@ -1,7 +1,6 @@
 package fileutils
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -37,7 +36,9 @@ func TestFindUpstreamFile(t *testing.T) {
 		assert.Error(t, err)
 		return
 	}
-	defer tests.ChangeDirAndAssert(t, wd)
+	defer func() {
+		assert.NoError(t, os.Chdir(wd))
+	}()
 
 	// CD into a directory with a goDotMod.test file.
 	projectRoot := filepath.Join("testdata", "project")
@@ -71,7 +72,7 @@ func TestFindUpstreamFile(t *testing.T) {
 	}
 
 	// CD into a subdirectory in the same project, and expect to get the same project root.
-	tests.ChangeDirAndAssert(t, wd)
+	assert.NoError(t, os.Chdir(wd))
 	projectSubDirectory := filepath.Join("testdata", "project", "dir")
 	err = os.Chdir(projectSubDirectory)
 	if err != nil {
@@ -119,7 +120,9 @@ func TestFindUpstreamFolder(t *testing.T) {
 		assert.Error(t, err)
 		return
 	}
-	defer tests.ChangeDirAndAssert(t, wd)
+	defer func() {
+		assert.NoError(t, os.Chdir(wd))
+	}()
 
 	// Create path to directory to find.
 	dirPath := filepath.Join("testdata")

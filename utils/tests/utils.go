@@ -153,8 +153,3 @@ func GetwdAndAssert(t *testing.T) string {
 	assert.NoError(t, err, "Failed to get current dir")
 	return wd
 }
-
-func CheckIfFileExistsAndAssert(t *testing.T, name string) {
-	_, err := os.Stat(name)
-	assert.NoError(t, err)
-}
