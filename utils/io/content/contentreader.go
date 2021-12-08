@@ -61,7 +61,7 @@ func (cr *ContentReader) IsEmpty() bool {
 	return cr.empty
 }
 
-// Each call to 'NextRecord()' will returns a single element from the channel.
+// Each call to 'NextRecord()' will return a single element from the channel.
 // Only the first call invokes a goroutine to read data from the file and push it into the channel.
 // 'io.EOF' will be returned if no data is left.
 func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
@@ -231,7 +231,7 @@ func MergeReaders(arr []*ContentReader, arrayKey string) (*ContentReader, error)
 // Sort a content-reader in the required order (ascending or descending).
 // Performs a merge-sort on the reader, splitting the reader to multiple readers of size 'utils.MaxBufferSize'.
 // Sort each of the split readers, and merge them into a single sorted reader.
-// In case of multiple items with the same key - all of the items will appear in the sorted reader, but their order is not guaranteed to be preserved.
+// In case of multiple items with the same key - all the items will appear in the sorted reader, but their order is not guaranteed to be preserved.
 func SortContentReader(readerRecord SortableContentItem, reader *ContentReader, ascendingOrder bool) (*ContentReader, error) {
 	getSortKeyFunc := func(record interface{}) (string, error) {
 		// Get the expected record type from the reader.

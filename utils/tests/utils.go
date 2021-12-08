@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net"
 	"net/http"
 	"os"
@@ -124,6 +125,16 @@ func InitVcsSubmoduleTestDir(t *testing.T, srcPath string) (submodulePath, tmpDi
 
 func ChangeDirAndAssert(t *testing.T, dirPath string) {
 	assert.NoError(t, os.Chdir(dirPath), "Couldn't change dir to "+dirPath)
+}
+
+// ChangeDirWithCallback changes working directory to the given path and return function that change working directory back to the original path.
+func ChangeDirWithCallback(t *testing.T, dirPath string) func() {
+	pwd, err := os.Getwd()
+	require.NoError(t, err)
+	ChangeDirAndAssert(t, dirPath)
+	return func() {
+		ChangeDirAndAssert(t, pwd)
+	}
 }
 
 func RemoveAndAssert(t *testing.T, path string) {
