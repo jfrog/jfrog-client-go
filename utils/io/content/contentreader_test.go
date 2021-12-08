@@ -99,7 +99,7 @@ func TestCloseReader(t *testing.T) {
 	tests.CheckIfFileExistsAndAssert(t, filePathToBeDeleted)
 
 	// Check if the file got deleted
-	tests.ReaderCloseAndAssert(t, reader)
+	ReaderCloseAndAssert(t, reader)
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
 }
@@ -177,4 +177,8 @@ type ReaderTestItem struct {
 
 func (rti ReaderTestItem) GetSortKey() string {
 	return path.Join(rti.Repo, rti.Path, rti.Name)
+}
+
+func ReaderCloseAndAssert(t *testing.T, reader *ContentReader) {
+	assert.NoError(t, reader.Close(), "Couldn't close reader")
 }

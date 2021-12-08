@@ -6,7 +6,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net"
 	"net/http"
 	"os"
@@ -129,58 +128,24 @@ func InitVcsSubmoduleTestDir(t *testing.T, srcPath string) (submodulePath, tmpDi
 	return submodulePath, tmpDir
 }
 
-func executeAndAssert(t *testing.T, function func(string) error, param string) {
-	err := function(param)
-	assert.NoError(t, err)
-}
-
 func ReaderCloseAndAssert(t *testing.T, reader *content.ContentReader) {
 	assert.NoError(t, reader.Close(), "Couldn't close reader")
 }
 
 func ReaderGetErrorAndAssert(t *testing.T, reader *content.ContentReader) {
-	assert.NoError(t, reader.GetError())
-}
-
-func CreateTempDirWithCallbackAndAssert(t *testing.T) (string, func()) {
-	tempDirPath, err := fileutils.CreateTempDir()
-	assert.NoError(t, err, "Couldn't create temp dir")
-	return tempDirPath, func() {
-		RemoveTempDirAndAssert(t, tempDirPath)
-	}
-}
-
-func RemoveTempDirAndAssert(t *testing.T, dirPath string) {
-	executeAndAssert(t, fileutils.RemoveTempDir, dirPath)
+	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
 }
 
 func ChangeDirAndAssert(t *testing.T, dirPath string) {
-	executeAndAssert(t, os.Chdir, dirPath)
+	assert.NoError(t, os.Chdir(dirPath), "Couldn't change dir to "+dirPath)
 }
 
 func RemoveAndAssert(t *testing.T, path string) {
-	executeAndAssert(t, os.Remove, path)
+	assert.NoError(t, os.Remove(path), "Couldn't remove: "+path)
 }
 
 func RemoveAllAndAssert(t *testing.T, path string) {
-	executeAndAssert(t, os.RemoveAll, path)
-}
-
-func SetEnvAndAssert(t *testing.T, key, value string) {
-	err := os.Setenv(key, value)
-	assert.NoError(t, err, "Failed to set env")
-}
-
-func SetEnvWithCallbackAndAssert(t *testing.T, key, value string) func() {
-	err := os.Setenv(key, value)
-	assert.NoError(t, err, "Failed to set env")
-	return func() {
-		UnSetEnvAndAssert(t, key)
-	}
-}
-
-func UnSetEnvAndAssert(t *testing.T, key string) {
-	executeAndAssert(t, os.Unsetenv, key)
+	assert.NoError(t, os.RemoveAll(path), "Couldn't removeAll: "+path)
 }
 
 func GetwdAndAssert(t *testing.T) string {
@@ -192,14 +157,4 @@ func GetwdAndAssert(t *testing.T) string {
 func CheckIfFileExistsAndAssert(t *testing.T, name string) {
 	_, err := os.Stat(name)
 	assert.NoError(t, err)
-}
-
-// ChangeDirWithCallback changes working directory to the given path and return function that change working directory back to the original path.
-func ChangeDirWithCallback(t *testing.T, dirPath string) func() {
-	pwd, err := os.Getwd()
-	require.NoError(t, err)
-	ChangeDirAndAssert(t, dirPath)
-	return func() {
-		ChangeDirAndAssert(t, pwd)
-	}
 }
