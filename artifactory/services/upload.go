@@ -3,6 +3,7 @@ package services
 import (
 	"archive/zip"
 	"fmt"
+	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
 	"net/http"
 	"os"
@@ -22,7 +23,6 @@ import (
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -164,11 +164,11 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 				return nil, errorutils.CheckError(err)
 			}
 			defer file.Close()
-			checksumInfo, err := checksum.Calc(file, checksum.SHA1)
+			checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
 			if err != nil {
-				return nil, err
+				return nil, errorutils.CheckError(err)
 			}
-			sha1 := checksumInfo[checksum.SHA1]
+			sha1 := checksumInfo[biutils.SHA1]
 			artifactProps.AddProperty(utils.SymlinkSha1, sha1)
 		}
 		artifactProps.AddProperty(utils.ArtifactorySymlink, artifactSymlink)
