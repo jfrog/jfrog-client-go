@@ -12,8 +12,6 @@ github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/asafgabai/build-info-go v0.0.0-20211208072901-4ee382d0dc25 h1:Et4YTskc1kc+TFn2puwrYmE+ezkceJSP9lGx/hYBceA=
-github.com/asafgabai/build-info-go v0.0.0-20211208072901-4ee382d0dc25/go.mod h1:zP8ZaXsofjGRIVnStLHqAI0doqEZC6I/IjRJWeL60lE=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=
 github.com/buger/jsonparser v1.1.1/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
@@ -52,6 +50,8 @@ github.com/imdario/mergo v0.3.12/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c2EWnYs/m4=
+github.com/jfrog/build-info-go v0.1.5-0.20211209071650-c5f4d2e581c3 h1:QtPavjNqJeDX/PQpL8ZYh+Jz9PHA7xBwB4QHrT9Z3MQ=
+github.com/jfrog/build-info-go v0.1.5-0.20211209071650-c5f4d2e581c3/go.mod h1:zP8ZaXsofjGRIVnStLHqAI0doqEZC6I/IjRJWeL60lE=
 github.com/jfrog/gofrog v1.0.7-0.20211128152632-e218c460d703 h1:xig3nr0zrZHgpK9G50aJgmMTDUnJWEiVf7WwDm5V+oo=
 github.com/jfrog/gofrog v1.0.7-0.20211128152632-e218c460d703/go.mod h1:9YN5v4LlsCfLIXpwQnzSf1wVtgjdHM20FzuIu58RMI4=
 github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 h1:DowS9hvgyYSX4TO5NpyC606/Z4SxnNYbT+WX27or6Ck=
