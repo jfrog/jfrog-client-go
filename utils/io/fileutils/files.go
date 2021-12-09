@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -15,7 +16,6 @@ import (
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 )
 
 const (
@@ -394,11 +394,11 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksusms bool) (*FileDe
 }
 
 func calcChecksumDetailsFromReader(reader io.Reader) (ChecksumDetails, error) {
-	checksumInfo, err := checksum.Calc(reader)
+	checksumInfo, err := biutils.CalcChecksums(reader)
 	if err != nil {
-		return ChecksumDetails{}, err
+		return ChecksumDetails{}, errorutils.CheckError(err)
 	}
-	return ChecksumDetails{Md5: checksumInfo[checksum.MD5], Sha1: checksumInfo[checksum.SHA1], Sha256: checksumInfo[checksum.SHA256]}, nil
+	return ChecksumDetails{Md5: checksumInfo[biutils.MD5], Sha1: checksumInfo[biutils.SHA1], Sha256: checksumInfo[biutils.SHA256]}, nil
 }
 
 type FileDetails struct {
