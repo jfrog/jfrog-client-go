@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 )
@@ -90,7 +91,9 @@ func TestCreatePathFilePairs(t *testing.T) {
 func TestCreateRepoPathFileTriples(t *testing.T) {
 	for _, sample := range repoPathFilesDataProvider {
 		t.Run(sample.pattern+"_recursive_"+strconv.FormatBool(sample.recursive), func(t *testing.T) {
-			validateRepoPathFile(createRepoPathFileTriples(sample.pattern, sample.recursive), sample.expected, sample.pattern, t)
+			repoPathFileTriples, err := createRepoPathFileTriples(sample.pattern, sample.recursive)
+			assert.NoError(t, err)
+			validateRepoPathFile(repoPathFileTriples, sample.expected, sample.pattern, t)
 		})
 	}
 }

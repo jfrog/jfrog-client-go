@@ -2,6 +2,8 @@ package utils
 
 import (
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/pkg/errors"
 	"regexp"
 	"strings"
 )
@@ -23,8 +25,12 @@ type RepoPathFile struct {
 
 var asteriskRegexp = regexp.MustCompile(`\*`)
 
-func createRepoPathFileTriples(pattern string, recursive bool) []RepoPathFile {
+func createRepoPathFileTriples(pattern string, recursive bool) ([]RepoPathFile, error) {
 	firstSlashIndex := strings.Index(pattern, "/")
+	if firstSlashIndex == 0 {
+		return nil, errorutils.CheckError(errors.New("a pattern of a path in Artifactory must start with a repository name or an asterisk (*)"))
+	}
+
 	asteriskIndices := asteriskRegexp.FindAllStringIndex(pattern, -1)
 
 	if asteriskIndices != nil && !utils.IsSlashPrecedeAsterisk(asteriskIndices[0][0], firstSlashIndex) {
@@ -61,15 +67,15 @@ func createRepoPathFileTriples(pattern string, recursive bool) []RepoPathFile {
 			// Handle characters after last asterisk "a*handle-it"
 			triples = append(triples, createPathFilePairs(pattern, "*", recursive)...)
 		}
-		return triples
+		return triples, nil
 	}
 
 	if firstSlashIndex < 0 {
-		return createPathFilePairs(pattern, "*", recursive)
+		return createPathFilePairs(pattern, "*", recursive), nil
 	}
 	repo := pattern[:firstSlashIndex]
 	pattern = pattern[firstSlashIndex+1:]
-	return createPathFilePairs(repo, pattern, recursive)
+	return createPathFilePairs(repo, pattern, recursive), nil
 }
 
 func createPathFilePairs(repo, pattern string, recursive bool) []RepoPathFile {
