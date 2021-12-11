@@ -131,7 +131,7 @@ const (
 
 func init() {
 	ciRunId = flag.String("ci.runId", "", "A unique identifier used as a suffix to create repositories in the tests")
-	TestArtifactory = flag.Bool("test.artifactory", true, "Test Artifactory")
+	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
