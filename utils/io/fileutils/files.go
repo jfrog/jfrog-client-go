@@ -510,16 +510,12 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	// Create a map to store all paths visited, to avoid running in circles.
 	visitedPaths := make(map[string]bool)
 	// Get the current directory.
-	pwd, err := os.Getwd()
+	wd, err = os.Getwd()
 	if err != nil {
 		return
 	}
-	defer func() {
-		e := os.Chdir(pwd)
-		if err == nil {
-			err = e
-		}
-	}()
+	os.Chdir(wd)
+
 	// Get the OS root.
 	osRoot := os.Getenv("SYSTEMDRIVE")
 	if osRoot != "" {
