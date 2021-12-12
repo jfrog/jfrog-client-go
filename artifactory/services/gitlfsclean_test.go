@@ -1,7 +1,8 @@
 package services
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/tests"
+	"github.com/stretchr/testify/assert"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -11,7 +12,8 @@ import (
 )
 
 func TestExtractRepo(t *testing.T) {
-	pwd := tests.GetwdAndAssert(t)
+	pwd, err := os.Getwd()
+	assert.NoError(t, err, "Failed to get current dir")
 	testPath := filepath.Join(pwd, "testdata", "gitlfs")
 	repo, err := extractRepo(testPath, "lfsConfigExample", "https://localhost:8080/artifactory", lfsConfigUrlExtractor)
 	if err != nil {
@@ -46,7 +48,8 @@ func TestGetLfsFilesFromGit(t *testing.T) {
 }
 
 func getCliDotGitPath(t *testing.T) string {
-	workingDir := tests.GetwdAndAssert(t)
+	workingDir, err := os.Getwd()
+	assert.NoError(t, err, "Failed to get current dir")
 	dotGitPath := filepath.Join(workingDir, "..", "..")
 	dotGitExists, err := fileutils.IsDirExists(filepath.Join(dotGitPath, ".git"), false)
 	if err != nil {

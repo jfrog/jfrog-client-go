@@ -1,7 +1,8 @@
 package utils
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/tests"
+	"github.com/stretchr/testify/assert"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -13,8 +14,9 @@ func init() {
 }
 
 func getBaseTestDir(t *testing.T) string {
-	pwd := tests.GetwdAndAssert(t)
-	if pwd == "" {
+	pwd, err := os.Getwd()
+	assert.NoError(t, err, "Failed to get current dir")
+	if err != nil {
 		return ""
 	}
 	return filepath.Join(pwd, "tests", "testdata")

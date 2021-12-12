@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -96,7 +96,8 @@ func testReadConfig(t *testing.T) {
 }
 
 func getDotGitPath(t *testing.T) string {
-	dotGitPath := tests.GetwdAndAssert(t)
+	dotGitPath, err := os.Getwd()
+	assert.NoError(t, err, "Failed to get current dir")
 	dotGitPath = filepath.Dir(dotGitPath)
 	dotGitExists, err := fileutils.IsDirExists(filepath.Join(dotGitPath, ".git"), false)
 	assert.NoError(t, err)

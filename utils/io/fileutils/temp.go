@@ -119,5 +119,5 @@ func CreateTempDirWithCallbackAndAssert(t *testing.T) (string, func()) {
 }
 
 func RemoveTempDirAndAssert(t *testing.T, dirPath string) {
-	assert.NoError(t, RemoveTempDir(dirPath), "Couldn't create temp dir")
+	assert.NoError(t, RemoveTempDir(dirPath), "Couldn't remove temp dir")
 }

@@ -5,7 +5,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net"
 	"net/http"
 	"os"
@@ -125,19 +124,11 @@ func ChangeDirAndAssert(t *testing.T, dirPath string) {
 }
 
 // ChangeDirWithCallback changes working directory to the given path and return function that change working directory back to the original path.
-func ChangeDirWithCallback(t *testing.T, dirPath string) func() {
-	pwd, err := os.Getwd()
-	require.NoError(t, err)
+func ChangeDirWithCallback(t *testing.T, wd, dirPath string) func() {
 	ChangeDirAndAssert(t, dirPath)
 	return func() {
-		ChangeDirAndAssert(t, pwd)
+		ChangeDirAndAssert(t, wd)
 	}
-}
-
-func GetwdAndAssert(t *testing.T) string {
-	wd, err := os.Getwd()
-	assert.NoError(t, err, "Failed to get current dir")
-	return wd
 }
 
 func RemoveAndAssert(t *testing.T, path string) {
