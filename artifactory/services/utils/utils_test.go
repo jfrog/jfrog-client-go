@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
@@ -20,4 +21,8 @@ func getBaseTestDir(t *testing.T) string {
 		return ""
 	}
 	return filepath.Join(pwd, "tests", "testdata")
+}
+
+func readerCloseAndAssert(t *testing.T, reader *content.ContentReader) {
+	assert.NoError(t, reader.Close(), "Couldn't close reader")
 }

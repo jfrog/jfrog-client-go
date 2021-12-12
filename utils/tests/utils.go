@@ -2,7 +2,6 @@ package tests
 
 import (
 	"bufio"
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
@@ -103,18 +102,14 @@ func exitOnErr(err error) {
 
 func InitVcsSubmoduleTestDir(t *testing.T, srcPath, tmpDir string) (submodulePath string) {
 	var err error
-	err = fileutils.CopyDir(srcPath, tmpDir, true, nil)
-	assert.NoError(t, err)
+	assert.NoError(t, fileutils.CopyDir(srcPath, tmpDir, true, nil))
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
 		assert.NoError(t, err)
-		err := fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git"))
-		assert.NoError(t, err)
+		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git")))
 	}
 	submoduleDst := filepath.Join(tmpDir, "subdir", "submodule")
-	err = fileutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData"))
-	assert.NoError(t, err)
-	err = fileutils.MoveFile(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git"))
-	assert.NoError(t, err)
+	assert.NoError(t, fileutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData")))
+	assert.NoError(t, fileutils.MoveFile(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git")))
 	submodulePath, err = filepath.Abs(submoduleDst)
 	assert.NoError(t, err)
 	return submodulePath
@@ -153,12 +148,4 @@ func SetEnvWithCallbackAndAssert(t *testing.T, key, value string) func() {
 
 func UnSetEnvAndAssert(t *testing.T, key string) {
 	assert.NoError(t, os.Unsetenv(key), "Failed to unset env: "+key)
-}
-
-func ReaderCloseAndAssert(t *testing.T, reader *content.ContentReader) {
-	assert.NoError(t, reader.Close(), "Couldn't close reader")
-}
-
-func ReaderGetErrorAndAssert(t *testing.T, reader *content.ContentReader) {
-	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
 }
