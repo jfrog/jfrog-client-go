@@ -50,10 +50,16 @@ func RemoveTempDir(dirPath string) error {
 	if err != nil {
 		return err
 	}
-	if exists {
-		return os.RemoveAll(dirPath)
+	if !exists {
+		return nil
 	}
-	return nil
+	err = os.RemoveAll(dirPath)
+	if err == nil {
+		return nil
+	}
+	// Sometimes removing the directory fails (usually in Windows in GitHub Actions) because it's locked by another process.
+	// In this case, we'll only remove the contents of the directory, and let CleanOldDirs() remove the directory itself at a later time.
+	return RemoveDirContents(dirPath)
 }
 
 // Create a new temp file named "tempPrefix+timeStamp".
