@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bufio"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
@@ -152,4 +153,12 @@ func SetEnvWithCallbackAndAssert(t *testing.T, key, value string) func() {
 
 func UnSetEnvAndAssert(t *testing.T, key string) {
 	assert.NoError(t, os.Unsetenv(key), "Failed to unset env: "+key)
+}
+
+func ReaderCloseAndAssert(t *testing.T, reader *content.ContentReader) {
+	assert.NoError(t, reader.Close(), "Couldn't close reader")
+}
+
+func ReaderGetErrorAndAssert(t *testing.T, reader *content.ContentReader) {
+	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
 }

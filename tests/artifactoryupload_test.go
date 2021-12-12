@@ -47,7 +47,7 @@ func flatUpload(t *testing.T) {
 	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = getRtTargetRepo()
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.CloseAndAssert(t)
+	defer testutils.ReaderCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,7 +56,7 @@ func flatUpload(t *testing.T) {
 			t.Error("Expected path to be root due to using the flat flag.", "Got:", item.Path)
 		}
 	}
-	reader.GetErrorAndAssert(t)
+	testutils.ReaderGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length > 1 {
@@ -87,7 +87,7 @@ func recursiveUpload(t *testing.T) {
 	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = getRtTargetRepo()
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.CloseAndAssert(t)
+	defer testutils.ReaderCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -99,7 +99,7 @@ func recursiveUpload(t *testing.T) {
 			t.Error("Missing File a.in")
 		}
 	}
-	reader.GetErrorAndAssert(t)
+	testutils.ReaderGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length > 1 {
@@ -130,7 +130,7 @@ func placeholderUpload(t *testing.T) {
 	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = getRtTargetRepo()
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.CloseAndAssert(t)
+	defer testutils.ReaderCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -142,7 +142,7 @@ func placeholderUpload(t *testing.T) {
 			t.Error("Missing File a")
 		}
 	}
-	reader.GetErrorAndAssert(t)
+	testutils.ReaderGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length > 1 {
@@ -174,7 +174,7 @@ func includeDirsUpload(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo()
 	searchParams.IncludeDirs = true
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.CloseAndAssert(t)
+	defer testutils.ReaderCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -189,7 +189,7 @@ func includeDirsUpload(t *testing.T) {
 			t.Error("Missing directory out.")
 		}
 	}
-	reader.GetErrorAndAssert(t)
+	testutils.ReaderGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length < 2 {
@@ -230,7 +230,7 @@ func explodeUpload(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo()
 	searchParams.IncludeDirs = true
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.CloseAndAssert(t)
+	defer testutils.ReaderCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -242,7 +242,7 @@ func explodeUpload(t *testing.T) {
 			t.Error("Missing file a.in")
 		}
 	}
-	reader.GetErrorAndAssert(t)
+	testutils.ReaderGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length < 2 {
@@ -273,7 +273,7 @@ func propsUpload(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo()
 	searchParams.Props = "key1=val1"
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.CloseAndAssert(t)
+	defer testutils.ReaderCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}

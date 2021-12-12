@@ -3,17 +3,14 @@ package content
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 	"os"
 	"reflect"
 	"sort"
 	"sync"
-	"testing"
-
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 // Open and read JSON files, find the array key inside it and load its value into the memory in small chunks.
@@ -491,12 +488,4 @@ func ConvertToStruct(record, recordOutput interface{}) error {
 	}
 	err = errorutils.CheckError(json.Unmarshal(data, recordOutput))
 	return err
-}
-
-func (cr *ContentReader) CloseAndAssert(t *testing.T) {
-	assert.NoError(t, cr.Close(), "Couldn't close reader")
-}
-
-func (cr *ContentReader) GetErrorAndAssert(t *testing.T) {
-	assert.NoError(t, cr.GetError(), "Couldn't get reader error")
 }

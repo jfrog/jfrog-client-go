@@ -51,7 +51,7 @@ func TestContentReaderNextRecord(t *testing.T) {
 		for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 			rSlice = append(rSlice, *item)
 		}
-		reader.GetErrorAndAssert(t)
+		getErrorAndAssert(t, reader)
 		// First element
 		assert.Equal(t, 1, rSlice[0].IntKey)
 		assert.Equal(t, "A", rSlice[0].StrKey)
@@ -76,7 +76,7 @@ func TestContentReaderEmptyResult(t *testing.T) {
 	for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 		t.Error("Can't loop over empty file")
 	}
-	reader.GetErrorAndAssert(t)
+	getErrorAndAssert(t, reader)
 }
 
 func getTestDataPath() string {
@@ -99,7 +99,7 @@ func TestCloseReader(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check if the file got deleted
-	reader.CloseAndAssert(t)
+	closeAndAssert(t, reader)
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
 }
@@ -128,7 +128,7 @@ func TestMergeIncreasingSortedFiles(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "merged_buffer_ascending_order.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	resultReader.CloseAndAssert(t)
+	closeAndAssert(t, resultReader)
 }
 
 func TestMergeDecreasingSortedFiles(t *testing.T) {
@@ -143,7 +143,7 @@ func TestMergeDecreasingSortedFiles(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "merged_buffer_descending_order.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	resultReader.CloseAndAssert(t)
+	closeAndAssert(t, resultReader)
 }
 
 func TestSortContentReaderByCalculatedKey(t *testing.T) {
@@ -165,7 +165,7 @@ func TestSortContentReaderByCalculatedKey(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(sortedReader.GetFilesPaths()[0], filepath.Join(testDataPath, sortedFile))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	sortedReader.CloseAndAssert(t)
+	closeAndAssert(t, sortedReader)
 }
 
 type ReaderTestItem struct {
@@ -177,4 +177,12 @@ type ReaderTestItem struct {
 
 func (rti ReaderTestItem) GetSortKey() string {
 	return path.Join(rti.Repo, rti.Path, rti.Name)
+}
+
+func closeAndAssert(t *testing.T, reader *ContentReader) {
+	assert.NoError(t, reader.Close(), "Couldn't close reader")
+}
+
+func getErrorAndAssert(t *testing.T, reader *ContentReader) {
+	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
 }
