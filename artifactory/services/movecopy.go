@@ -51,7 +51,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	defer func() {
 		for _, readerSpec := range moveReaders {
 			e := readerSpec.Reader.Close()
-			if err == nil {
+			if err == nil && e != nil {
 				err = e
 			}
 		}
@@ -299,12 +299,17 @@ func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string
 
 // Receives multiple 'ReaderSpecTuple' items and merge them into a single 'ContentReader' of 'MoveResultItem'.
 // Each item in the reader, keeps the index of its corresponding MoveSpec.
-func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (*content.ContentReader, error) {
+func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (contentReader *content.ContentReader, err error) {
 	cw, err := content.NewContentWriter(arrayKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer cw.Close()
+	defer func() {
+		e := cw.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	for _, tuple := range arr {
 		cr := tuple.Reader
 		for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
@@ -315,7 +320,8 @@ func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (*content.ContentRead
 			return nil, err
 		}
 	}
-	return content.NewContentReader(cw.GetFilePath(), arrayKey), nil
+	contentReader = content.NewContentReader(cw.GetFilePath(), arrayKey)
+	return contentReader, nil
 }
 
 func promptMoveCopyMessage(reader *content.ContentReader, moveType MoveType) {
