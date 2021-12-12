@@ -31,7 +31,7 @@ const (
 	andIncludeLicensesParam     = "&include_licenses=true"
 
 	// Get scan results timeouts
-	defaultMaxWaitMinutes    = 15 * time.Minute // 15 minutes
+	defaultMaxWaitMinutes    = 45 * time.Minute // 45 minutes
 	defaultSyncSleepInterval = 5 * time.Second  // 5 seconds
 
 	// ScanType values
