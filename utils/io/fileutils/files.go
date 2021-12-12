@@ -552,10 +552,7 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 		visitedPaths[wd] = true
 		// CD to the parent directory.
 		wd = filepath.Dir(wd)
-		err = os.Chdir(wd)
-		if err != nil {
-			return
-		}
+		os.Chdir(wd)
 
 		// If we already visited this directory, it means that there's a loop and we can stop.
 		if visitedPaths[wd] {
