@@ -510,12 +510,12 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	// Create a map to store all paths visited, to avoid running in circles.
 	visitedPaths := make(map[string]bool)
 	// Get the current directory.
-	wd, err = os.Getwd()
+	pwd, err := os.Getwd()
 	if err != nil {
 		return
 	}
 	defer func() {
-		e := os.Chdir(wd)
+		e := os.Chdir(pwd)
 		if err == nil {
 			err = e
 		}
