@@ -134,18 +134,18 @@ func ChangeDirWithCallback(t *testing.T, dirPath string) func() {
 	}
 }
 
+func GetwdAndAssert(t *testing.T) string {
+	wd, err := os.Getwd()
+	assert.NoError(t, err, "Failed to get current dir")
+	return wd
+}
+
 func RemoveAndAssert(t *testing.T, path string) {
 	assert.NoError(t, os.Remove(path), "Couldn't remove: "+path)
 }
 
 func RemoveAllAndAssert(t *testing.T, path string) {
 	assert.NoError(t, os.RemoveAll(path), "Couldn't removeAll: "+path)
-}
-
-func GetwdAndAssert(t *testing.T) string {
-	wd, err := os.Getwd()
-	assert.NoError(t, err, "Failed to get current dir")
-	return wd
 }
 
 func SetEnvAndAssert(t *testing.T, key, value string) {

@@ -99,15 +99,15 @@ func CleanOldDirs() error {
 func extractTimestamp(item string) (time.Time, error) {
 	// Get timestamp from file/dir.
 	endTimestampIdx := strings.LastIndex(item, "-")
-	beginingTimestampIdx := strings.LastIndex(item[:endTimestampIdx], "-")
-	timestampStr := item[beginingTimestampIdx+1 : endTimestampIdx]
+	beginningTimestampIdx := strings.LastIndex(item[:endTimestampIdx], "-")
+	timestampStr := item[beginningTimestampIdx+1 : endTimestampIdx]
 	// Convert to int.
-	timeStampint, err := strconv.ParseInt(timestampStr, 10, 64)
+	timeStampInt, err := strconv.ParseInt(timestampStr, 10, 64)
 	if err != nil {
 		return time.Time{}, errorutils.CheckError(err)
 	}
 	// Convert to time type.
-	return time.Unix(timeStampint, 0), nil
+	return time.Unix(timeStampInt, 0), nil
 }
 
 func CreateTempDirWithCallbackAndAssert(t *testing.T) (string, func()) {

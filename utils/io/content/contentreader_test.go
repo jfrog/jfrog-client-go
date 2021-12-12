@@ -51,7 +51,7 @@ func TestContentReaderNextRecord(t *testing.T) {
 		for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 			rSlice = append(rSlice, *item)
 		}
-		ReaderGetErrorAndAssert(t, reader)
+		reader.GetErrorAndAssert(t)
 		// First element
 		assert.Equal(t, 1, rSlice[0].IntKey)
 		assert.Equal(t, "A", rSlice[0].StrKey)
@@ -76,7 +76,7 @@ func TestContentReaderEmptyResult(t *testing.T) {
 	for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 		t.Error("Can't loop over empty file")
 	}
-	ReaderGetErrorAndAssert(t, reader)
+	reader.GetErrorAndAssert(t)
 }
 
 func getTestDataPath() string {
@@ -99,7 +99,7 @@ func TestCloseReader(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check if the file got deleted
-	ReaderCloseAndAssert(t, reader)
+	reader.CloseAndAssert(t)
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
 }
@@ -128,7 +128,7 @@ func TestMergeIncreasingSortedFiles(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "merged_buffer_ascending_order.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	ReaderCloseAndAssert(t, resultReader)
+	resultReader.CloseAndAssert(t)
 }
 
 func TestMergeDecreasingSortedFiles(t *testing.T) {
@@ -143,7 +143,7 @@ func TestMergeDecreasingSortedFiles(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "merged_buffer_descending_order.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	ReaderCloseAndAssert(t, resultReader)
+	resultReader.CloseAndAssert(t)
 }
 
 func TestSortContentReaderByCalculatedKey(t *testing.T) {
@@ -165,7 +165,7 @@ func TestSortContentReaderByCalculatedKey(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(sortedReader.GetFilesPaths()[0], filepath.Join(testDataPath, sortedFile))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	ReaderCloseAndAssert(t, sortedReader)
+	sortedReader.CloseAndAssert(t)
 }
 
 type ReaderTestItem struct {
