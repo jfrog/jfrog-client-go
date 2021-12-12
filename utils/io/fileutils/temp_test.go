@@ -19,13 +19,13 @@ func TestCleanOldDirs(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check file exists.
-	CheckIfFileExistsAndAssert(t, tempDir)
-	CheckIfFileExistsAndAssert(t, tempFile.Name())
+	AssertFileExists(t, tempDir)
+	AssertFileExists(t, tempFile.Name())
 
 	// Don't delete valid files.
 	assert.NoError(t, CleanOldDirs())
-	CheckIfFileExistsAndAssert(t, tempDir)
-	CheckIfFileExistsAndAssert(t, tempFile.Name())
+	AssertFileExists(t, tempDir)
+	AssertFileExists(t, tempFile.Name())
 
 	// Delete expired files.
 	oldMaxFileAge := maxFileAge
@@ -54,7 +54,7 @@ func TestExtractTimestamp(t *testing.T) {
 	assert.Equal(t, int64(8652489), timeStamp.Unix())
 }
 
-func CheckIfFileExistsAndAssert(t *testing.T, name string) {
+func AssertFileExists(t *testing.T, name string) {
 	_, err := os.Stat(name)
 	assert.NoError(t, err)
 }

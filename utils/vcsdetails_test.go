@@ -15,14 +15,15 @@ func TestVcsDetails(t *testing.T) {
 	for _, test := range testRuns {
 		t.Run(test, func(t *testing.T) {
 			var projectPath, tmpDir string
+			// Create temp folder.
+			tmpDir, createTempDirCallback := fileutils.CreateTempDirWithCallbackAndAssert(t)
+			defer createTempDirCallback()
+
 			if test == "submodule" {
-				projectPath, tmpDir = testsutils.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test))
+				projectPath = testsutils.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test), tmpDir)
 			} else {
-				projectPath, tmpDir = initVcsTestDir(t, filepath.Join("testdata", test))
+				projectPath = initVcsTestDir(t, filepath.Join("testdata", test), tmpDir)
 			}
-			defer func() {
-				assert.NoError(t, fileutils.RemoveTempDir(tmpDir), "Couldn't create temp dir")
-			}()
 			vcsDetails := NewVcsDetails()
 			revision, url, branch, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
 			assert.NoError(t, err)
@@ -33,10 +34,8 @@ func TestVcsDetails(t *testing.T) {
 	}
 }
 
-func initVcsTestDir(t *testing.T, srcPath string) (projectPath, tmpDir string) {
+func initVcsTestDir(t *testing.T, srcPath, tmpDir string) (projectPath string) {
 	var err error
-	tmpDir, err = fileutils.CreateTempDir()
-	assert.NoError(t, err)
 
 	err = fileutils.CopyDir(srcPath, tmpDir, true, nil)
 	assert.NoError(t, err)
@@ -52,5 +51,5 @@ func initVcsTestDir(t *testing.T, srcPath string) (projectPath, tmpDir string) {
 	}
 	projectPath, err = filepath.Abs(tmpDir)
 	assert.NoError(t, err)
-	return projectPath, tmpDir
+	return projectPath
 }

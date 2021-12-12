@@ -51,7 +51,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	defer func() {
 		for _, readerSpec := range moveReaders {
 			e := readerSpec.Reader.Close()
-			if err == nil && e != nil {
+			if err == nil {
 				err = e
 			}
 		}

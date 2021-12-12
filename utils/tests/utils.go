@@ -101,11 +101,8 @@ func exitOnErr(err error) {
 	}
 }
 
-func InitVcsSubmoduleTestDir(t *testing.T, srcPath string) (submodulePath, tmpDir string) {
+func InitVcsSubmoduleTestDir(t *testing.T, srcPath, tmpDir string) (submodulePath string) {
 	var err error
-	tmpDir, err = fileutils.CreateTempDir()
-	assert.NoError(t, err)
-
 	err = fileutils.CopyDir(srcPath, tmpDir, true, nil)
 	assert.NoError(t, err)
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
@@ -120,7 +117,7 @@ func InitVcsSubmoduleTestDir(t *testing.T, srcPath string) (submodulePath, tmpDi
 	assert.NoError(t, err)
 	submodulePath, err = filepath.Abs(submoduleDst)
 	assert.NoError(t, err)
-	return submodulePath, tmpDir
+	return submodulePath
 }
 
 func ChangeDirAndAssert(t *testing.T, dirPath string) {
@@ -149,4 +146,19 @@ func GetwdAndAssert(t *testing.T) string {
 	wd, err := os.Getwd()
 	assert.NoError(t, err, "Failed to get current dir")
 	return wd
+}
+
+func SetEnvAndAssert(t *testing.T, key, value string) {
+	assert.NoError(t, os.Setenv(key, value), "Failed to set env: "+key)
+}
+
+func SetEnvWithCallbackAndAssert(t *testing.T, key, value string) func() {
+	assert.NoError(t, os.Setenv(key, value), "Failed to set env: "+key)
+	return func() {
+		UnSetEnvAndAssert(t, key)
+	}
+}
+
+func UnSetEnvAndAssert(t *testing.T, key string) {
+	assert.NoError(t, os.Unsetenv(key), "Failed to unset env: "+key)
 }
