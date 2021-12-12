@@ -514,7 +514,7 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	if err != nil {
 		return
 	}
-	os.Chdir(wd)
+	defer os.Chdir(wd)
 
 	// Get the OS root.
 	osRoot := os.Getenv("SYSTEMDRIVE")
