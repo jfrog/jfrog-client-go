@@ -12,7 +12,7 @@ func TestUnarchive(t *testing.T) {
 	for _, extension := range tests {
 		t.Run(extension, func(t *testing.T) {
 			// Create temp directory
-			tmpDir, createTempDirCallback := CreateTempDirWithCallbackAndAssert(t)
+			tmpDir, createTempDirCallback := createTempDirWithCallbackAndAssert(t)
 			defer createTempDirCallback()
 			// Run unarchive on archive created on Unix
 			err := runUnarchive("unix."+extension, "archives", filepath.Join(tmpDir, "unix"))
@@ -43,7 +43,7 @@ func TestUnarchiveZipSlip(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.testType, func(t *testing.T) {
 			// Create temp directory
-			tmpDir, createTempDirCallback := CreateTempDirWithCallbackAndAssert(t)
+			tmpDir, createTempDirCallback := createTempDirWithCallbackAndAssert(t)
 			defer createTempDirCallback()
 			for _, archive := range test.archives {
 				// Unarchive and make sure an error returns
@@ -57,4 +57,12 @@ func TestUnarchiveZipSlip(t *testing.T) {
 
 func runUnarchive(archiveFileName, sourceDir, targetDir string) error {
 	return Unarchive(filepath.Join("testdata", sourceDir, archiveFileName), archiveFileName, targetDir)
+}
+
+func createTempDirWithCallbackAndAssert(t *testing.T) (string, func()) {
+	tempDirPath, err := CreateTempDir()
+	assert.NoError(t, err, "Couldn't create temp dir")
+	return tempDirPath, func() {
+		assert.NoError(t, RemoveTempDir(tempDirPath), "Couldn't remove temp dir")
+	}
 }

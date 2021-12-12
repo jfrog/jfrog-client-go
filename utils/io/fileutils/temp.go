@@ -1,13 +1,11 @@
 package fileutils
 
 import (
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -108,16 +106,4 @@ func extractTimestamp(item string) (time.Time, error) {
 	}
 	// Convert to time type.
 	return time.Unix(timeStampInt, 0), nil
-}
-
-func CreateTempDirWithCallbackAndAssert(t *testing.T) (string, func()) {
-	tempDirPath, err := CreateTempDir()
-	assert.NoError(t, err, "Couldn't create temp dir")
-	return tempDirPath, func() {
-		RemoveTempDirAndAssert(t, tempDirPath)
-	}
-}
-
-func RemoveTempDirAndAssert(t *testing.T, dirPath string) {
-	assert.NoError(t, RemoveTempDir(dirPath), "Couldn't remove temp dir")
 }

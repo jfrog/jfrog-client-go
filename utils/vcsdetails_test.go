@@ -16,8 +16,11 @@ func TestVcsDetails(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			var projectPath, tmpDir string
 			// Create temp folder.
-			tmpDir, createTempDirCallback := fileutils.CreateTempDirWithCallbackAndAssert(t)
-			defer createTempDirCallback()
+			tmpDir, err := fileutils.CreateTempDir()
+			assert.NoError(t, err, "Couldn't create temp dir")
+			defer func() {
+				assert.NoError(t, fileutils.RemoveTempDir(tmpDir), "Couldn't remove temp dir")
+			}()
 
 			if test == "submodule" {
 				projectPath = testsutils.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test), tmpDir)
