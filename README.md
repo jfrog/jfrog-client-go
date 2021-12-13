@@ -1196,17 +1196,17 @@ accessManager, err := access.New(serviceConfig)
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
-ManageMembers:   &trueValue,
-ManageResources: &trueValue,
-IndexResources:  &trueValue,
+	ManageMembers:   &trueValue,
+	ManageResources: &trueValue,
+	IndexResources:  &trueValue,
 }
 projectDetails := accessServices.Project{
-DisplayName:       "testProject",
-Description:       "My Test Project",
-AdminPrivileges:   &adminPriviligies,
-SoftLimit:         &falseValue,
-StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
-ProjectKey:        "tstprj",
+	DisplayName:       "testProject",
+	Description:       "My Test Project",
+	AdminPrivileges:   &adminPriviligies,
+	SoftLimit:         &falseValue,
+	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+	ProjectKey:        "tstprj",
 }
 projectParams = accessServices.NewProjectParams()
 projectParams.ProjectDetails = projectDetails
@@ -1217,17 +1217,17 @@ err = accessManager.CreateProject(projectParams)
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
-ManageMembers:   true,
-ManageResources: true,
-IndexResources:  true,
+	ManageMembers:   true,
+	ManageResources: true,
+	IndexResources:  true,
 }
 projectDetails := accessServices.Project{
-DisplayName:       "testProject",
-Description:       "My Test Project",
-AdminPrivileges:   &adminPriviligies,
-SoftLimit:         &falseValue,
-StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
-ProjectKey:        "tstprj",
+	DisplayName:       "testProject",
+	Description:       "My Test Project",
+	AdminPrivileges:   &adminPriviligies,
+	SoftLimit:         &falseValue,
+	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+	ProjectKey:        "tstprj",
 }
 projectParams = accessServices.NewProjectParams()
 projectParams.ProjectDetails = projectDetails
