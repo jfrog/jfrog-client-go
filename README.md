@@ -1562,28 +1562,29 @@ params.Name = "example-security-policy"
 params.Type = utils.Security
 params.Description = "Security policy with 2 rules"
 params.Rules = []utils.PolicyRule{
-{
-Name:     "min-severity-rule",
-Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
-Priority: 1,
-},
-{
-Name:     "cvss-range-rule",
-Criteria: *utils.CreateCvssRangePolicyCriteria(5.7, 8.9),
-Priority: 2,
-Actions: &utils.PolicyAction{
-Webhooks: []string{"sec_webhook"},
-BlockDownload: utils.PolicyBlockDownload{
-Active:    &trueValue,
-Unscanned: &falseValue,
-},
-BlockReleaseBundleDistribution: &falseValue,
-FailBuild:                      &trueValue,
-NotifyDeployer:                 &falseValue,
-NotifyWatchRecipients:          &trueValue,
-CustomSeverity:                 utils.Medium,
-},
-},
+params.Rules = []utils.PolicyRule{
+	{
+		Name:     "min-severity-rule",
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
+		Priority: 1,
+	},
+	{
+		Name:     "cvss-range-rule",
+		Criteria: *utils.CreateCvssRangePolicyCriteria(5.7, 8.9),
+		Priority: 2,
+		Actions: &utils.PolicyAction{
+			Webhooks: []string{"sec_webhook"},
+			BlockDownload: utils.PolicyBlockDownload{
+				Active:    &trueValue,
+				Unscanned: &falseValue,
+			},
+			BlockReleaseBundleDistribution: &falseValue,
+			FailBuild:                      &trueValue,
+			NotifyDeployer:                 &falseValue,
+			NotifyWatchRecipients:          &trueValue,
+			CustomSeverity:                 utils.Medium,
+		},
+	},
 }
 err := xrayManager.CreatePolicy(params)
 ```
@@ -1660,19 +1661,19 @@ scanResults, err := xrayManager.GetScanGraphResults(scanId)
 
 ```go
 reportRequest := services.ReportRequestParams{
-Name: "example-report",
-Filters: services.Filter{
-HasRemediation: &trueValue,
-Severity:       []string{ "High" },
-},
-Resources: services.Resource{
-IncludePathPatterns: []string{ "/example-sub-dir/**" },
-Repositories: []services.Repository{
-{
-Name: "example-repository",
-},
-},
-},
+  Name: "example-report",
+  Filters: services.Filter{
+    HasRemediation: &trueValue,
+    Severity:       []string{ "High" },
+  },
+  Resources: services.Resource{
+    IncludePathPatterns: []string{ "/example-sub-dir/**" },
+    Repositories: []services.Repository{
+      {
+        Name: "example-repository",
+      },
+    },
+  },
 }
 
 // The reportRequestResponse will contain the report ID to use in subsequent requests
