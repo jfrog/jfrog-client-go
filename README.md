@@ -553,9 +553,9 @@ params.BuildNumber = "10"
 params.TargetRepo = "target-repo"
 params.Status = "status"
 params.Comment = "comment"
-params.Copy = true
+params.Copy = &trueValue
 params.FailFast = true
-params.IncludeDependencies = false
+params.IncludeDependencies = &falseValue
 params.SourceRepo = "source-repo"
 // Optional Artifactory project key
 params.ProjectKey = "my-project-key"
@@ -1094,11 +1094,11 @@ params := services.NewUserParams()
 params.UserDetails.Name = "myUserName"
 params.UserDetails.Email = "myUser@jfrog.com"
 params.UserDetails.Password = "Password1"
-params.UserDetails.Admin = false
-params.UserDetails.Realm= "internal"
-params.UserDetails.ProfileUpdatable = true
-params.UserDetails.DisableUIAccess = false
-params.UserDetails.InternalPasswordDisabled = false
+params.UserDetails.Admin = &falseValue
+params.UserDetails.Realm = "internal"
+params.UserDetails.ProfileUpdatable = &trueValue
+params.UserDetails.DisableUIAccess = &falseValue
+params.UserDetails.InternalPasswordDisabled = &falseValue
 params.UserDetails.groups = [2]string{"GroupA", "GroupB"}
 // Set to true in order to replace exist user with the same name
 params.ReplaceIfExists = false
@@ -1133,8 +1133,8 @@ If the requested group does not exist, a nil value is returned for the _Group_ p
 params := services.NewGroupParams()
 params.GroupDetails.Name = "myGroupName"
 params.GroupDetails.Description = "Description"
-params.GroupDetails.AutoJoin = false
-params.GroupDetails.AdminPrivileges = true
+params.GroupDetails.AutoJoin = &falseValue
+params.GroupDetails.AdminPrivileges = &trueValue
 params.GroupDetails.Realm = "internal"
 params.GroupDetails.UsersNames = [2]string{"UserA", "UserB"}
 // Set to true in order to replace exist group with the same name
@@ -1196,17 +1196,17 @@ accessManager, err := access.New(serviceConfig)
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
-	ManageMembers:   true,
-	ManageResources: true,
-	IndexResources:  true,
+ManageMembers:   &trueValue,
+ManageResources: &trueValue,
+IndexResources:  &trueValue,
 }
 projectDetails := accessServices.Project{
-	DisplayName:       "testProject",
-	Description:       "My Test Project",
-	AdminPrivileges:   &adminPriviligies,
-	SoftLimit:         false,
-	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
-	ProjectKey:        "tstprj",
+DisplayName:       "testProject",
+Description:       "My Test Project",
+AdminPrivileges:   &adminPriviligies,
+SoftLimit:         &falseValue,
+StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+ProjectKey:        "tstprj",
 }
 projectParams = accessServices.NewProjectParams()
 projectParams.ProjectDetails = projectDetails
@@ -1217,17 +1217,17 @@ err = accessManager.CreateProject(projectParams)
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
-	ManageMembers:   true,
-	ManageResources: true,
-	IndexResources:  true,
+ManageMembers:   true,
+ManageResources: true,
+IndexResources:  true,
 }
 projectDetails := accessServices.Project{
-	DisplayName:       "testProject",
-	Description:       "My Test Project",
-	AdminPrivileges:   &adminPriviligies,
-	SoftLimit:         false,
-	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
-	ProjectKey:        "tstprj",
+DisplayName:       "testProject",
+Description:       "My Test Project",
+AdminPrivileges:   &adminPriviligies,
+SoftLimit:         &falseValue,
+StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+ProjectKey:        "tstprj",
 }
 projectParams = accessServices.NewProjectParams()
 projectParams.ProjectDetails = projectDetails
@@ -1562,28 +1562,28 @@ params.Name = "example-security-policy"
 params.Type = utils.Security
 params.Description = "Security policy with 2 rules"
 params.Rules = []utils.PolicyRule{
-	{
-		Name:     "min-severity-rule",
-		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
-		Priority: 1,
-	},
-	{
-		Name:     "cvss-range-rule",
-		Criteria: *utils.CreateCvssRangePolicyCriteria(5.7, 8.9),
-		Priority: 2,
-		Actions: &utils.PolicyAction{
-			Webhooks: []string{"sec_webhook"},
-			BlockDownload: utils.PolicyBlockDownload{
-				Active:    true,
-				Unscanned: false,
-			},
-			BlockReleaseBundleDistribution: false,
-			FailBuild:                      true,
-			NotifyDeployer:                 false,
-			NotifyWatchRecipients:          true,
-			CustomSeverity:                 utils.Medium,
-		},
-	},
+{
+Name:     "min-severity-rule",
+Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
+Priority: 1,
+},
+{
+Name:     "cvss-range-rule",
+Criteria: *utils.CreateCvssRangePolicyCriteria(5.7, 8.9),
+Priority: 2,
+Actions: &utils.PolicyAction{
+Webhooks: []string{"sec_webhook"},
+BlockDownload: utils.PolicyBlockDownload{
+Active:    &trueValue,
+Unscanned: &falseValue,
+},
+BlockReleaseBundleDistribution: &falseValue,
+FailBuild:                      &trueValue,
+NotifyDeployer:                 &falseValue,
+NotifyWatchRecipients:          &trueValue,
+CustomSeverity:                 utils.Medium,
+},
+},
 }
 err := xrayManager.CreatePolicy(params)
 ```
@@ -1660,19 +1660,19 @@ scanResults, err := xrayManager.GetScanGraphResults(scanId)
 
 ```go
 reportRequest := services.ReportRequestParams{
-  Name: "example-report",
-  Filters: services.Filter{
-    HasRemediation: true,
-    Severity:       []string{ "High" },
-  },
-  Resources: services.Resource{
-    IncludePathPatterns: []string{ "/example-sub-dir/**" },
-    Repositories: []services.Repository{
-      {
-        Name: "example-repository",
-      },
-    },
-  },
+Name: "example-report",
+Filters: services.Filter{
+HasRemediation: &trueValue,
+Severity:       []string{ "High" },
+},
+Resources: services.Resource{
+IncludePathPatterns: []string{ "/example-sub-dir/**" },
+Repositories: []services.Repository{
+{
+Name: "example-repository",
+},
+},
+},
 }
 
 // The reportRequestResponse will contain the report ID to use in subsequent requests
