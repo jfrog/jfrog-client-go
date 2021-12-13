@@ -131,3 +131,50 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses)
 }
+
+// BuildScan scans a published build-info with Xray.
+// Returns a string represents the scan ID.
+func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams) (*services.BuildScanResponse, error) {
+	buildScanService := services.NewBuildScanService(sm.client)
+	buildScanService.XrayDetails = sm.config.GetServiceDetails()
+	err := buildScanService.Scan(params)
+	if err != nil {
+		return nil, err
+	}
+	return buildScanService.GetBuildScanResults(params)
+}
+
+// BuildSummary returns the summary of build scan which had been previously performed.
+func (sm *XrayServicesManager) BuildSummary(params services.XrayBuildParams) (*services.SummaryResponse, error) {
+	buildSummary := services.NewSummaryService(sm.client)
+	buildSummary.XrayDetails = sm.config.GetServiceDetails()
+	return buildSummary.GetBuildSummary(params)
+}
+
+// GenerateVulnerabilitiesReport returns a Xray report response of the requested report
+func (sm *XrayServicesManager) GenerateVulnerabilitiesReport(params services.ReportRequestParams) (resp *services.ReportResponse, err error) {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Vulnerabilities(params)
+}
+
+// ReportDetails returns a Xray details response for the requested report
+func (sm *XrayServicesManager) ReportDetails(reportId string) (details *services.ReportDetails, err error) {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Details(reportId)
+}
+
+// ReportContent returns a Xray report content response for the requested report
+func (sm *XrayServicesManager) ReportContent(params services.ReportContentRequestParams) (content *services.ReportContent, err error) {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Content(params)
+}
+
+// DeleteReport deletes a Xray report
+func (sm *XrayServicesManager) DeleteReport(reportId string) error {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Delete(reportId)
+}

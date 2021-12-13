@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"net/http"
 	"path"
 	"strconv"
@@ -88,7 +87,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 
 	log.Debug(moveMsgs[mc.moveType].MovedMsg, strconv.Itoa(successCount), "artifacts.")
 	if failedCount > 0 {
-		err = errorutils.CheckError(errors.New("Failed " + moveMsgs[mc.moveType].MovingMsg + " " + strconv.Itoa(failedCount) + " artifacts."))
+		err = errorutils.CheckErrorf("Failed " + moveMsgs[mc.moveType].MovingMsg + " " + strconv.Itoa(failedCount) + " artifacts.")
 	}
 
 	return

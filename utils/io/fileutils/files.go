@@ -3,17 +3,19 @@ package fileutils
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
+	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 )
 
 const (
@@ -392,11 +394,11 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksusms bool) (*FileDe
 }
 
 func calcChecksumDetailsFromReader(reader io.Reader) (ChecksumDetails, error) {
-	checksumInfo, err := checksum.Calc(reader)
+	checksumInfo, err := biutils.CalcChecksums(reader)
 	if err != nil {
-		return ChecksumDetails{}, err
+		return ChecksumDetails{}, errorutils.CheckError(err)
 	}
-	return ChecksumDetails{Md5: checksumInfo[checksum.MD5], Sha1: checksumInfo[checksum.SHA1], Sha256: checksumInfo[checksum.SHA256]}, nil
+	return ChecksumDetails{Md5: checksumInfo[biutils.MD5], Sha1: checksumInfo[biutils.SHA1], Sha256: checksumInfo[biutils.SHA256]}, nil
 }
 
 type FileDetails struct {
@@ -575,6 +577,30 @@ func FilesIdentical(file1 string, file2 string) (bool, error) {
 		return false, err
 	}
 	return srcDetails.Checksum.Md5 == toCompareDetails.Checksum.Md5, nil
+}
+
+// JSONEqual compares the JSON from two files.
+func JsonEqual(filePath1, filePath2 string) (bool, error) {
+	reader1, err := os.Open(filePath1)
+	if err != nil {
+		return false, err
+	}
+	defer reader1.Close()
+	reader2, err := os.Open(filePath2)
+	if err != nil {
+		return false, err
+	}
+	defer reader2.Close()
+	var j, j2 interface{}
+	d := json.NewDecoder(reader1)
+	if err := d.Decode(&j); err != nil {
+		return false, err
+	}
+	d = json.NewDecoder(reader2)
+	if err := d.Decode(&j2); err != nil {
+		return false, err
+	}
+	return reflect.DeepEqual(j2, j), nil
 }
 
 // Compares provided Md5 and Sha1 to those of a local file.

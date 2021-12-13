@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -96,7 +95,7 @@ func (ss *SecurityService) GetAPIKey() (string, error) {
 func getApiKeyFromBody(body []byte) (string, error) {
 	var data = make(map[string]interface{})
 	if err := json.Unmarshal(body, &data); err != nil {
-		return "", errorutils.CheckError(fmt.Errorf("unable to decode json. Error: %w Upstream response: %s", err, string(body)))
+		return "", errorutils.CheckErrorf("unable to decode json. Error: %w Upstream response: %s", err, string(body))
 	}
 
 	if len(data) == 0 {

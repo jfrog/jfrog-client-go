@@ -2,11 +2,10 @@ package fileutils
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -36,7 +35,7 @@ func Unarchive(localArchivePath, originArchiveName, destinationPath string) erro
 	}
 	u, ok := archive.(archiver.Unarchiver)
 	if !ok {
-		return errorutils.CheckError(errors.New("format specified by source filename is not an archive format: " + originArchiveName))
+		return errorutils.CheckErrorf("format specified by source filename is not an archive format: " + originArchiveName)
 	}
 	if err = inspectArchive(archive, localArchivePath, destinationPath); err != nil {
 		return err
@@ -134,7 +133,7 @@ var extCheckers = []archiver.ExtensionChecker{
 func inspectArchive(archive interface{}, localArchivePath, destinationDir string) error {
 	walker, ok := archive.(archiver.Walker)
 	if !ok {
-		return errorutils.CheckError(errors.New("couldn't inspect archive: " + localArchivePath))
+		return errorutils.CheckErrorf("couldn't inspect archive: " + localArchivePath)
 	}
 	return walker.Walk(localArchivePath, func(archiveEntry archiver.File) error {
 		header, err := extractArchiveEntryHeader(archiveEntry)
@@ -142,7 +141,9 @@ func inspectArchive(archive interface{}, localArchivePath, destinationDir string
 			return err
 		}
 		if !isEntryInDestination(destinationDir, header.EntryPath) {
-			return errorutils.CheckError(errors.New("illegal path in archive: " + header.EntryPath))
+			return errorutils.CheckErrorf(
+				"illegal path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
+				header.EntryPath, destinationDir)
 		}
 
 		if (archiveEntry.Mode() & os.ModeSymlink) != 0 {
@@ -166,18 +167,25 @@ func checkSymlinkEntry(header *archiveHeader, archiveEntry archiver.File, destin
 	}
 
 	if !isEntryInDestination(destinationDir, targetLinkPath) {
-		return errorutils.CheckError(errors.New("illegal link path in archive: " + targetLinkPath))
+		return errorutils.CheckErrorf(
+			"illegal link path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
+			targetLinkPath, destinationDir)
 	}
 	return nil
 }
 
 // Make sure the extraction path of the archive entry is under the destination dir
 func isEntryInDestination(destinationDir, pathInArchive string) bool {
-	// Since the entry in archive should be always represented as Unix path, the "path" module is used and not "filepath"
-	pathInArchive = path.Clean(pathInArchive)
-	if !path.IsAbs(pathInArchive) {
+	// If pathInArchive starts with '/' and we are on Windows, the path is illegal
+	pathInArchive = strings.TrimSpace(pathInArchive)
+	if os.IsPathSeparator('\\') && strings.HasPrefix(pathInArchive, "/") {
+		return false
+	}
+
+	pathInArchive = filepath.Clean(pathInArchive)
+	if !filepath.IsAbs(pathInArchive) {
 		// If path is relative, concatenate it to the destination dir
-		pathInArchive = path.Join(destinationDir, pathInArchive)
+		pathInArchive = filepath.Join(destinationDir, pathInArchive)
 	}
 	return strings.HasPrefix(pathInArchive, destinationDir)
 }

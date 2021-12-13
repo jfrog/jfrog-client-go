@@ -6,7 +6,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/openpgp"
 	"io/ioutil"
 	"os"
@@ -90,7 +89,7 @@ func (r *RbGpgValidator) VerifyArtifact(artifactPath, sha256 string) error {
 	if r.artifactsMap[artifactPath] == sha256 {
 		return nil
 	}
-	return errorutils.CheckError(errors.New(fmt.Sprintf("GPG validation failed: artifact in not signed with the provided key - %s ", artifactPath)))
+	return errorutils.CheckErrorf("GPG validation failed: artifact in not signed with the provided key - %s ", artifactPath)
 }
 
 func (r *RbGpgValidator) verifyJwtToken(bundleTokenStr string) (*ReleaseBundleModel, error) {
@@ -111,12 +110,12 @@ func (r *RbGpgValidator) verifyJwtToken(bundleTokenStr string) (*ReleaseBundleMo
 		return nil, err
 	}
 	if !token.Valid {
-		return nil, errorutils.CheckError(errors.New("release bundle token is invalid"))
+		return nil, errorutils.CheckErrorf("release bundle token is invalid")
 	}
 	if claims, ok := token.Claims.(*ReleaseBundleModel); ok {
 		return claims, nil
 	}
-	return nil, errorutils.CheckError(errors.New("failed casting the token payload to the release bundle model"))
+	return nil, errorutils.CheckErrorf("failed casting the token payload to the release bundle model")
 }
 
 type ReleaseBundleModel struct {

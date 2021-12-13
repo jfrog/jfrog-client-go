@@ -78,24 +78,22 @@ func setupDistributionTest(t *testing.T, bundleName string) string {
 }
 
 func initLocalDistributionTest(t *testing.T, bundleName string) string {
-	deleteLocalBundle(t, bundleName, false)
 	return setupDistributionTest(t, bundleName)
 }
 
 func initRemoteDistributionTest(t *testing.T, bundleName string) string {
 	testsBundleDistributeService.Sync = false
-	deleteRemoteAndLocalBundle(t, bundleName, false)
 	return setupDistributionTest(t, bundleName)
 }
 
 func createDelete(t *testing.T) {
-	bundleName := initLocalDistributionTest(t, "client-test-bundle-1")
+	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+getRunId())
 	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create signed release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SignImmediately = true
-	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
@@ -105,14 +103,14 @@ func createDelete(t *testing.T) {
 }
 
 func createUpdate(t *testing.T) {
-	bundleName := initLocalDistributionTest(t, "client-test-bundle-2")
+	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+getRunId())
 	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create release bundle params
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.Description = "Release bundle description 1"
 	createBundleParams.ReleaseNotes = "Release notes 1"
-	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 
 	// Test DryRun first
 	err := createDryRun(createBundleParams)
@@ -137,7 +135,7 @@ func createUpdate(t *testing.T) {
 	updateBundleParams := services.NewUpdateReleaseBundleParams(bundleName, bundleVersion)
 	updateBundleParams.Description = "Release bundle description 2"
 	updateBundleParams.ReleaseNotes = "Release notes 2"
-	updateBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "test/a.in"}}
+	updateBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "test/a.in"}}
 
 	// Test DryRun first
 	err = updateDryRun(updateBundleParams)
@@ -196,7 +194,7 @@ func setServicesToDryRunFalse() {
 }
 
 func createWithProps(t *testing.T) {
-	bundleName := initLocalDistributionTest(t, "client-test-bundle-3")
+	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+getRunId())
 	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create release bundle with properties
@@ -204,7 +202,7 @@ func createWithProps(t *testing.T) {
 	assert.NoError(t, err)
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.CommonParams{{
-		Pattern:     RtTargetRepo + "b.in",
+		Pattern:     getRtTargetRepo() + "b.in",
 		TargetProps: targetProps,
 	}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
@@ -244,12 +242,12 @@ func createWithProps(t *testing.T) {
 }
 
 func createSignDistributeDelete(t *testing.T) {
-	bundleName := initRemoteDistributionTest(t, "client-test-bundle-4")
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
 	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 	assert.Nil(t, summary)
@@ -298,12 +296,12 @@ func createSignDistributeDelete(t *testing.T) {
 }
 
 func createSignSyncDistributeDelete(t *testing.T) {
-	bundleName := initRemoteDistributionTest(t, "client-test-bundle-5")
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
 	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
 	assert.Nil(t, summary)
@@ -337,12 +335,12 @@ func createSignSyncDistributeDelete(t *testing.T) {
 }
 
 func createDistributeMapping(t *testing.T) {
-	bundleName := initRemoteDistributionTest(t, "client-test-bundle-6")
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
 	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: RtTargetRepo + "b.in", Target: RtTargetRepo + "b.out"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in", Target: getRtTargetRepo() + "b.out"}}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
@@ -358,7 +356,7 @@ func createDistributeMapping(t *testing.T) {
 
 	// Make sure <RtTargetRepo>/b.out does exist in Artifactory
 	searchParams := artifactoryServices.NewSearchParams()
-	searchParams.Pattern = RtTargetRepo + "b.out"
+	searchParams.Pattern = getRtTargetRepo() + "b.out"
 	reader, err := testsSearchService.Search(searchParams)
 	assert.NoError(t, err)
 	assert.NoError(t, reader.Close())
@@ -368,12 +366,12 @@ func createDistributeMapping(t *testing.T) {
 }
 
 func createDistributeMappingPlaceholder(t *testing.T) {
-	bundleName := initRemoteDistributionTest(t, "client-test-bundle-7")
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
 	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: "(" + RtTargetRepo + ")" + "(*).in", Target: "{1}{2}.out"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: "(" + getRtTargetRepo() + ")" + "(*).in", Target: "{1}{2}.out"}}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	assert.NoError(t, err)
@@ -389,7 +387,7 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 
 	// Make sure <RtTargetRepo>/b.out does exist in Artifactory
 	searchParams := artifactoryServices.NewSearchParams()
-	searchParams.Pattern = RtTargetRepo + "b.out"
+	searchParams.Pattern = getRtTargetRepo() + "b.out"
 	reader, err := testsSearchService.Search(searchParams)
 	assert.NoError(t, err)
 	assert.NoError(t, reader.Close())
@@ -520,7 +518,7 @@ func getLocalBundle(t *testing.T, bundleName string, expectExist bool) *distribu
 
 func deleteLocalBundle(t *testing.T, bundleName string, assertDeletion bool) {
 	deleteLocalBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
-	deleteLocalBundleParams.Sync = true
+	testsBundleDeleteLocalService.Sync = true
 	err := testsBundleDeleteLocalService.DeleteDistribution(deleteLocalBundleParams)
 	if !assertDeletion {
 		return
@@ -537,6 +535,7 @@ func deleteRemoteAndLocalBundle(t *testing.T, bundleName string, assertDeletion 
 	deleteBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	deleteBundleParams.Sync = true
 	err := testsBundleDeleteRemoteService.DeleteDistribution(deleteBundleParams)
+	artifactoryCleanup(t)
 	if !assertDeletion {
 		return
 	}

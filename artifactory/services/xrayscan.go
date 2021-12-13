@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"time"
 
@@ -36,6 +35,7 @@ func NewXrayScanService(client *jfroghttpclient.JfrogHttpClient) *XrayScanServic
 	return &XrayScanService{client: client}
 }
 
+// Deprecated legacy scan build. The new build scan command is in "/xray/commands/scan/buildscan"
 func (ps *XrayScanService) ScanBuild(scanParams XrayScanParams) ([]byte, error) {
 	url := ps.ArtDetails.GetUrl()
 	requestFullUrl, err := utils.BuildArtifactoryUrl(url, apiUri, make(map[string]string))
@@ -101,7 +101,7 @@ func checkForXrayResponseError(content []byte, ignoreFatalError bool) error {
 		// fatal error should be interpreted as no errors so no more retries will accrue
 		return nil
 	}
-	return errorutils.CheckError(errors.New("Server response: " + string(content)))
+	return errorutils.CheckErrorf("Server response: " + string(content))
 }
 
 func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Response, error) {
@@ -122,7 +122,7 @@ func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Re
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = errorutils.CheckError(errors.New("Server response: " + resp.Status))
+		err = errorutils.CheckErrorf("Server response: " + resp.Status)
 	}
 	return resp, err
 }

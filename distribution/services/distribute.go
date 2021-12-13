@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -119,7 +118,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 			if err != nil {
 				return errorutils.CheckError(err)
 			}
-			return errorutils.CheckError(errors.New("Distribution failed: " + utils.IndentJson(bytes)))
+			return errorutils.CheckErrorf("Distribution failed: " + utils.IndentJson(bytes))
 		}
 		if (*response)[0].Status == Completed {
 			log.Info("Distribution Completed!")
@@ -127,7 +126,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 		}
 		time.Sleep(time.Second * defaultSyncSleepIntervalSeconds)
 	}
-	return errorutils.CheckError(errors.New("Timeout for sync distribution"))
+	return errorutils.CheckErrorf("Timeout for sync distribution")
 }
 
 type DistributionBody struct {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/gofrog/stringutils"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -23,7 +24,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.0.0"
+	Version     = "1.6.5"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -181,7 +182,7 @@ func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) stri
 	if patternType == AntPattern {
 		localPath = antPatternToRegExp(cleanPath(localPath))
 	} else if patternType == WildCardPattern {
-		localPath = WildcardPathToRegExp(cleanPath(localPath))
+		localPath = stringutils.WildcardPatternToRegExp(cleanPath(localPath))
 	}
 
 	return localPath
@@ -199,24 +200,16 @@ func cleanPath(path string) string {
 	return path
 }
 
-func WildcardPathToRegExp(localPath string) string {
-	localPath = replaceSpecialChars(localPath)
-	var wildcard = ".*"
-	localPath = strings.Replace(localPath, "*", wildcard, -1)
-	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
-		localPath += wildcard
-	}
-	return "^" + localPath + "$"
-}
-
 func antPatternToRegExp(localPath string) string {
-	localPath = replaceSpecialChars(localPath)
+	localPath = stringutils.EscapeSpecialChars(localPath)
 	separator := getFileSeparator()
 	var wildcard = ".*"
 	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
 	var regAsterisk = "([^" + separator + "]*)"
 	// ant `**` ~ regexp `(.*)?` : `**` matches zero or more 'directories' in a path.
 	var doubleRegAsterisk = "(" + wildcard + ")?"
+	var doubleRegAsteriskWithSeperatorPrefix = "(" + wildcard + separator + ")?"
+	var doubleRegAsteriskWithSeperatorSuffix = "(" + separator + wildcard + ")?"
 
 	// `?` => `.{1}` : `?` matches one character.
 	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
@@ -224,9 +217,12 @@ func antPatternToRegExp(localPath string) string {
 	localPath = strings.Replace(localPath, `*`, regAsterisk, -1)
 	// `**` => `(.*)?`
 	localPath = strings.Replace(localPath, regAsterisk+regAsterisk, doubleRegAsterisk, -1)
-	// Remove slashes near `**`
-	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsterisk, -1)
-	localPath = strings.Replace(localPath, separator+doubleRegAsterisk, doubleRegAsterisk, -1)
+	// `(.*)?/` => `(.*/)?`
+	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeperatorPrefix, -1)
+	// Convert the last '/**' in the expression if exist : `/(.*)?` => `(/.*)?`
+	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
+		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeperatorSuffix
+	}
 
 	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
 		localPath += wildcard
@@ -239,14 +235,6 @@ func getFileSeparator() string {
 		return "\\\\"
 	}
 	return "/"
-}
-
-func replaceSpecialChars(path string) string {
-	var specialChars = []string{".", "^", "$", "+"}
-	for _, char := range specialChars {
-		path = strings.Replace(path, char, "\\"+char, -1)
-	}
-	return path
 }
 
 // Replaces matched regular expression from path to corresponding placeholder {i} at target.
@@ -267,7 +255,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 		path = removeRepoFromPath(path)
 	}
 	pattern = addEscapingParentheses(pattern, target)
-	pattern = WildcardPathToRegExp(pattern)
+	pattern = stringutils.WildcardPatternToRegExp(pattern)
 	if slashIndex < 0 {
 		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
 		// is only the repository name.
@@ -423,6 +411,10 @@ func AddProps(oldProps, additionalProps string) string {
 
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
+}
+
+func IsMacOS() bool {
+	return runtime.GOOS == "darwin"
 }
 
 type Artifact struct {

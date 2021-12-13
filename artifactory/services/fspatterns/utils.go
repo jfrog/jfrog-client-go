@@ -2,8 +2,8 @@ package fspatterns
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	biutils "github.com/jfrog/build-info-go/utils"
 	"os"
 	"regexp"
 	"strings"
@@ -13,7 +13,6 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 )
 
 // Return all the existing paths of the provided root path
@@ -128,7 +127,7 @@ func GetRootPath(pattern, target string, patternType clientutils.PatternType, pr
 	placeholderParentheses := clientutils.NewParenthesesSlice(pattern, target)
 	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
-		return "", errorutils.CheckError(errors.New("Path does not exist: " + rootPath))
+		return "", errorutils.CheckErrorf("Path does not exist: " + rootPath)
 	}
 
 	return rootPath, nil
@@ -136,15 +135,15 @@ func GetRootPath(pattern, target string, patternType clientutils.PatternType, pr
 
 // When handling symlink we want to simulate the creation of empty file
 func CreateSymlinkFileDetails() (*fileutils.FileDetails, error) {
-	checksumInfo, err := checksum.Calc(bytes.NewBuffer([]byte(fileutils.SYMLINK_FILE_CONTENT)))
+	checksumInfo, err := biutils.CalcChecksums(bytes.NewBuffer([]byte(fileutils.SYMLINK_FILE_CONTENT)))
 	if err != nil {
-		return nil, err
+		return nil, errorutils.CheckError(err)
 	}
 
 	details := new(fileutils.FileDetails)
-	details.Checksum.Md5 = checksumInfo[checksum.MD5]
-	details.Checksum.Sha1 = checksumInfo[checksum.SHA1]
-	details.Checksum.Sha256 = checksumInfo[checksum.SHA256]
+	details.Checksum.Md5 = checksumInfo[biutils.MD5]
+	details.Checksum.Sha1 = checksumInfo[biutils.SHA1]
+	details.Checksum.Sha256 = checksumInfo[biutils.SHA256]
 	details.Size = int64(0)
 	return details, nil
 }

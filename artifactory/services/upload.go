@@ -2,8 +2,8 @@ package services
 
 import (
 	"archive/zip"
-	"errors"
 	"fmt"
+	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
 	"net/http"
 	"os"
@@ -23,7 +23,6 @@ import (
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -165,11 +164,11 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 				return nil, errorutils.CheckError(err)
 			}
 			defer file.Close()
-			checksumInfo, err := checksum.Calc(file, checksum.SHA1)
+			checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
 			if err != nil {
-				return nil, err
+				return nil, errorutils.CheckError(err)
 			}
-			sha1 := checksumInfo[checksum.SHA1]
+			sha1 := checksumInfo[biutils.SHA1]
 			artifactProps.AddProperty(utils.SymlinkSha1, sha1)
 		}
 		artifactProps.AddProperty(utils.ArtifactorySymlink, artifactSymlink)
@@ -211,7 +210,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
 	if uploadParams.Archive != "" && strings.HasSuffix(uploadParams.GetTarget(), "/") {
-		return errorutils.CheckError(errors.New("an archive's target cannot be a directory"))
+		return errorutils.CheckErrorf("an archive's target cannot be a directory")
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	// Save parentheses index in pattern, witch have corresponding placeholder.
@@ -440,7 +439,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 					}
 					// Response must not be nil
 					if resp == nil {
-						return false, errorutils.CheckError(errors.New(fmt.Sprintf("%sReceived empty response from file upload", logMsgPrefix)))
+						return false, errorutils.CheckErrorf("%sReceived empty response from file upload", logMsgPrefix)
 					}
 					// If response-code < 500, should not retry
 					if resp.StatusCode < 500 {
