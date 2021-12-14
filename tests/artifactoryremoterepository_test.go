@@ -47,6 +47,7 @@ const MavenCentralUrl = "https://repo.maven.apache.org"
 // 	t.Run("remoteCreateWithParamTest", remoteCreateWithParamTest)
 // 	t.Run("getRemoteRepoDetailsTest", getRemoteRepoDetailsTest)
 // 	t.Run("getAllRemoteRepoDetailsTest", getAllRemoteRepoDetailsTest)
+// 	t.Run("isRemoteRepoExistsTest", isRemoteRepoExistsTest)
 // }
 
 func setRemoteRepositoryBaseParams(params *services.RemoteRepositoryBaseParams, isUpdate bool) {
@@ -926,4 +927,25 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	assert.Equal(t, grp.Description+" (local file cache)", repo.Description)
 	assert.Equal(t, "Generic", repo.PackageType)
 	assert.Equal(t, grp.Url, repo.Url)
+}
+
+func isRemoteRepoExistsTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+
+	// Validate repo doesn't exist
+	exists := isRepoExists(t, repoKey)
+	assert.False(t, exists)
+
+	// Create Repo
+	grp := services.NewGenericRemoteRepositoryParams()
+	grp.Key = repoKey
+	grp.Url = MavenCentralUrl
+	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
+	err := testsCreateRemoteRepositoryService.Generic(grp)
+	assert.NoError(t, err)
+	defer deleteRepo(t, repoKey)
+
+	// Validate repo exists
+	exists = isRepoExists(t, repoKey)
+	assert.True(t, exists)
 }

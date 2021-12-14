@@ -13,6 +13,9 @@
   - [Pull Requests](#pull-requests)
     - [Guidelines](#guidelines)
   - [Tests](#tests)
+    - [Flags](#flags)
+      - [Test Types](#test-types)
+      - [Connection Details](#connection-details)
   - [General APIs](#general-apis)
     - [Setting the Logger](#setting-the-logger)
     - [Setting the Temp Dir](#setting-the-temp-dir)
@@ -57,6 +60,7 @@
       - [Removing a Repository](#removing-a-repository)
       - [Getting Repository Details](#getting-repository-details)
       - [Getting All Repositories](#getting-all-repositories)
+      - [Check if Repository Exists](#check-if-repository-exists)
       - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
       - [Getting a Repository Replication](#getting-a-repository-replication)
       - [Removing a Repository Replication](#removing-a-repository-replication)
@@ -80,11 +84,11 @@
       - [Creating Access Service Config](#creating-access-service-config)
       - [Creating New Access Service Manager](#creating-new-access-service-manager)
     - [Using Access Services](#using-access-services)
-      - [Creating a New Project](#creating-a-new-project)
-      - [Updating a Project](#updating-a-project)
+      - [Creating a new project](#creating-a-new-project)
+      - [Updating a project](#updating-a-project)
       - [Deleting a Project](#deleting-a-project)
-      - [Assigning Repository To Project](#assigning-repository-to-project)
-      - [Unassigning Repository From Project](#unassigning-repository-from-project)
+      - [Assigning repository to project](#assigning-repository-to-project)
+      - [Unassigning repository from project](#unassigning-repository-from-project)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -919,6 +923,14 @@ params := services.NewRepositoriesFilterParams()
 params.RepoType = "remote"
 params.PackageType = "maven"
 err := servicesManager.GetAllRepositoriesFiltered(params)
+```
+
+#### Check if Repository Exists
+
+You can check if a repository is exist in Artifactory:
+
+```go
+exists, err := servicesManager.IsRepoExists()
 ```
 
 #### Creating and Updating Repository Replications

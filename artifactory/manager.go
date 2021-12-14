@@ -1,8 +1,9 @@
 package artifactory
 
 import (
-	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io"
+
+	buildinfo "github.com/jfrog/build-info-go/entities"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	_go "github.com/jfrog/jfrog-client-go/artifactory/services/go"
@@ -157,6 +158,12 @@ func (sm *ArtifactoryServicesManagerImp) GetAllRepositoriesFiltered(params servi
 	repositoriesService := services.NewRepositoriesService(sm.client)
 	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoriesService.GetWithFilter(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) IsRepoExists(repoKey string) (bool, error) {
+	repositoriesService := services.NewRepositoriesService(sm.client)
+	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoriesService.IsExists(repoKey)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreatePermissionTarget(params services.PermissionTargetParams) error {

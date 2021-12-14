@@ -857,6 +857,12 @@ func getAllRepos(t *testing.T, repoType, packageType string) *[]services.Reposit
 	return data
 }
 
+func isRepoExists(t *testing.T, repoKey string) bool {
+	exists, err := testsRepositoriesService.IsExists(repoKey)
+	assert.NoError(t, err, "Failed to check if "+repoKey+" exists")
+	return exists
+}
+
 func createDummyBuild(buildName string) error {
 	dataArtifactoryBuild := &buildinfo.BuildInfo{
 		Name:    buildName,
