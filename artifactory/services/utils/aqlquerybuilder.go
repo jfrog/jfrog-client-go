@@ -13,7 +13,10 @@ import (
 // Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
-	repoPathFileTriples := createRepoPathFileTriples(searchPattern, params.Recursive)
+	repoPathFileTriples, err := createRepoPathFileTriples(searchPattern, params.Recursive)
+	if err != nil {
+		return "", err
+	}
 	includeRoot := strings.Count(searchPattern, "/") < 2
 	triplesSize := len(repoPathFileTriples)
 
@@ -23,7 +26,10 @@ func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	}
 	itemTypeQuery := buildItemTypeQueryPart(params)
 	nePath := buildNePathPart(triplesSize == 0 || includeRoot)
-	excludeQuery := buildExcludeQueryPart(params, triplesSize == 0 || params.Recursive, params.Recursive)
+	excludeQuery, err := buildExcludeQueryPart(params, triplesSize == 0 || params.Recursive, params.Recursive)
+	if err != nil {
+		return "", err
+	}
 	releaseBundle, err := buildReleaseBundleQuery(params)
 	if err != nil {
 		return "", err
@@ -243,13 +249,15 @@ func buildInnerArchiveQueryPart(triple RepoPathFile, archivePath, archiveName st
 	return fmt.Sprintf(innerQueryPattern, getAqlValue(triple.repo), getAqlValue(triple.path), getAqlValue(triple.file), getAqlValue(archivePath), getAqlValue(archiveName))
 }
 
-func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) string {
+func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (string, error) {
 	excludeQuery := ""
 	var excludeTriples []RepoPathFile
-	if len(params.GetExclusions()) > 0 {
-		for _, exclusion := range params.GetExclusions() {
-			excludeTriples = append(excludeTriples, createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)...)
+	for _, exclusion := range params.GetExclusions() {
+		repoPathFileTriples, err := createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)
+		if err != nil {
+			return "", err
 		}
+		excludeTriples = append(excludeTriples, repoPathFileTriples...)
 	}
 
 	for _, excludeTriple := range excludeTriples {
@@ -258,12 +266,14 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) s
 			excludePath = "*"
 		}
 		excludeRepoStr := ""
-		if excludeTriple.repo != "" {
+
+		// repo="*" may cause an error to be returned from Artifactory in transitive search.
+		if excludeTriple.repo != "" && excludeTriple.repo != "*" {
 			excludeRepoStr = fmt.Sprintf(`"repo":{"$nmatch":"%s"},`, excludeTriple.repo)
 		}
 		excludeQuery += fmt.Sprintf(`"$or":[{%s"path":{"$nmatch":"%s"},"name":{"$nmatch":"%s"}}],`, excludeRepoStr, excludePath, excludeTriple.file)
 	}
-	return excludeQuery
+	return excludeQuery, nil
 }
 
 func buildReleaseBundleQuery(params *CommonParams) (string, error) {
