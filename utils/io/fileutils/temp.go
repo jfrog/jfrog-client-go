@@ -1,7 +1,6 @@
 package fileutils
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
