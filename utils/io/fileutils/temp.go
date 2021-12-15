@@ -55,7 +55,8 @@ func RemoveTempDir(dirPath string) error {
 		start := time.Now()
 		for {
 			err = os.RemoveAll(dirPath)
-			if err != nil {
+			if err == nil {
+				// Successfully removed temp dir
 				return nil
 			}
 
