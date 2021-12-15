@@ -7,8 +7,8 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/gookit/color v1.4.2
-	github.com/jfrog/build-info-go v0.1.3
-	github.com/jfrog/gofrog v1.1.0
+	github.com/jfrog/build-info-go v0.1.5
+	github.com/jfrog/gofrog v1.1.1
 	github.com/mholt/archiver/v3 v3.5.1-0.20210618180617-81fac4ba96e4
 	github.com/stretchr/testify v1.7.0
 	github.com/xanzy/ssh-agent v0.3.0
@@ -42,6 +42,7 @@ require (
 	golang.org/x/net v0.0.0-20210326060303-6b1517762897 // indirect
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
@@ -51,7 +52,6 @@ exclude (
 	golang.org/x/text v0.3.4
 )
 
+//replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v0.1.5-0.20211209071650-c5f4d2e581c3
 
-replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v0.1.3-0.20211129180705-41006d666a16
-
-// replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.0.7-0.20211109140605-15e312b86c9f
+//replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.0.7-0.20211128152632-e218c460d703
