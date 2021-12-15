@@ -65,10 +65,10 @@ func RemoveTempDir(dirPath string) error {
 			// due to antivirus scans?). It's probably worth a little extra latency
 			// on exit to avoid filling up the user's temporary directory with leaked
 			// files. (See golang.org/issue/30789.)
-			if runtime.GOOS != "windows" || time.Since(start) >= 1000*time.Millisecond {
+			if runtime.GOOS != "windows" || time.Since(start) >= 5000*time.Millisecond {
 				return errorutils.CheckErrorf("Failed to remove temp dir with error: %s", err.Error())
 			}
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 		}
 	}
 	return nil
