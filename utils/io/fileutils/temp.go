@@ -1,9 +1,11 @@
 package fileutils
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -51,7 +53,23 @@ func RemoveTempDir(dirPath string) error {
 		return err
 	}
 	if exists {
-		return os.RemoveAll(dirPath)
+		start := time.Now()
+		for {
+			err = os.RemoveAll(dirPath)
+			if err != nil {
+				return nil
+			}
+
+			// On some configurations of Windows, directories containing executable
+			// files may be locked for a while after the executable exits (perhaps
+			// due to antivirus scans?). It's probably worth a little extra latency
+			// on exit to avoid filling up the user's temporary directory with leaked
+			// files. (See golang.org/issue/30789.)
+			if runtime.GOOS != "windows" || time.Since(start) >= 500*time.Millisecond {
+				return errorutils.CheckErrorf("Failed to remove temp dir %s : %s", tempDirBase, err.Error())
+			}
+			time.Sleep(5 * time.Millisecond)
+		}
 	}
 	return nil
 }
