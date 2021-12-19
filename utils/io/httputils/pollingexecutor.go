@@ -28,7 +28,7 @@ func (runner *PollingExecutor) Execute() ([]byte, error) {
 		for {
 			select {
 			case <-timeout:
-				errChan <- errorutils.CheckErrorf("%s Polling executor timeout after %v secondes", runner.MsgPrefix, runner.Timeout.Seconds())
+				errChan <- errorutils.CheckErrorf("%s Polling executor timeout after %v seconds", runner.MsgPrefix, runner.Timeout.Seconds())
 				resultChan <- nil
 				return
 			case _ = <-ticker.C:
