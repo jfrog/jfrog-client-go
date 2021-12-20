@@ -1,10 +1,10 @@
 package tests
 
 import (
+	"github.com/jfrog/gofrog/version"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -2,6 +2,7 @@ package services
 
 import (
 	biutils "github.com/jfrog/build-info-go/utils"
+	"github.com/jfrog/gofrog/version"
 	"net/http"
 	"os"
 	"path"
@@ -9,7 +10,6 @@ import (
 	"sort"
 
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
