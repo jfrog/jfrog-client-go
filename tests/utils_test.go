@@ -115,7 +115,7 @@ var (
 	testsAccessProjectService *accessServices.ProjectService
 
 	timestamp    = time.Now().Unix()
-	timestampStr = strconv.FormatInt(timestamp, 10)
+	timestampStr = strconv.FormatInt(int64(timestamp), 10)
 	trueValue    = true
 	falseValue   = false
 

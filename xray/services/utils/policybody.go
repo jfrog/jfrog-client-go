@@ -62,8 +62,8 @@ type PolicyCriteria struct {
 	// License
 	AllowedLicenses        []string `json:"allowed_licenses,omitempty"`
 	BannedLicenses         []string `json:"banned_licenses,omitempty"`
-	AllowUnknown           bool     `json:"allow_unknown,omitempty"`
-	MultiLicensePermissive bool     `json:"multi_license_permissive,omitempty"`
+	AllowUnknown           *bool    `json:"allow_unknown,omitempty"`
+	MultiLicensePermissive *bool    `json:"multi_license_permissive,omitempty"`
 }
 
 type PolicyCvssRange struct {
@@ -74,16 +74,16 @@ type PolicyCvssRange struct {
 type PolicyAction struct {
 	Webhooks                       []string            `json:"webhooks,omitempty"`
 	BlockDownload                  PolicyBlockDownload `json:"block_download,omitempty"`
-	BlockReleaseBundleDistribution bool                `json:"block_release_bundle_distribution,omitempty"`
-	FailBuild                      bool                `json:"fail_build,omitempty"`
-	NotifyDeployer                 bool                `json:"notify_deployer,omitempty"`
-	NotifyWatchRecipients          bool                `json:"notify_watch_recipients,omitempty"`
+	BlockReleaseBundleDistribution *bool               `json:"block_release_bundle_distribution,omitempty"`
+	FailBuild                      *bool               `json:"fail_build,omitempty"`
+	NotifyDeployer                 *bool               `json:"notify_deployer,omitempty"`
+	NotifyWatchRecipients          *bool               `json:"notify_watch_recipients,omitempty"`
 	CustomSeverity                 Severity            `json:"custom_severity,omitempty"`
 }
 
 type PolicyBlockDownload struct {
-	Active    bool `json:"active,omitempty"`
-	Unscanned bool `json:"unscanned,omitempty"`
+	Active    *bool `json:"active,omitempty"`
+	Unscanned *bool `json:"unscanned,omitempty"`
 }
 
 // Create security policy criteria with min severity
@@ -112,8 +112,8 @@ func CreateCvssRangePolicyCriteria(from float64, to float64) *PolicyCriteria {
 // licenses - the target licenses
 func CreateLicensePolicyCriteria(allowedLicenses, allowUnknown, multiLicensePermissive bool, licenses ...string) *PolicyCriteria {
 	policyCriteria := &PolicyCriteria{
-		AllowUnknown:           allowUnknown,
-		MultiLicensePermissive: multiLicensePermissive,
+		AllowUnknown:           &allowUnknown,
+		MultiLicensePermissive: &multiLicensePermissive,
 	}
 	if allowedLicenses {
 		policyCriteria.AllowedLicenses = licenses
