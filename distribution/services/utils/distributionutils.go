@@ -59,7 +59,7 @@ func CreateBundleBody(releaseBundleParams ReleaseBundleParams, dryRun bool) (*Re
 	// Create release bundle struct
 	releaseBundleBody := &ReleaseBundleBody{
 		DryRun:            dryRun,
-		SignImmediately:   releaseBundleParams.SignImmediately,
+		SignImmediately:   &releaseBundleParams.SignImmediately,
 		StoringRepository: releaseBundleParams.StoringRepository,
 		Description:       releaseBundleParams.Description,
 		BundleSpec: BundleSpec{

@@ -84,7 +84,7 @@ type ReportRequestParams struct {
 }
 
 type Filter struct {
-	HasRemediation bool      `json:"has_remediation,omitempty"`
+	HasRemediation *bool     `json:"has_remediation,omitempty"`
 	CvssScore      CvssScore `json:"cvss_score,omitempty"`
 	Severity       []string  `json:"severities,omitempty"`
 }

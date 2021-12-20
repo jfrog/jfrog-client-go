@@ -31,6 +31,8 @@ func testUpdateGroup(t *testing.T) {
 	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
 	groupParams.GroupDetails.Description = "Changed description"
+	groupParams.GroupDetails.AutoJoin = &trueValue
+	groupParams.GroupDetails.AdminPrivileges = &falseValue
 	err = testGroupService.UpdateGroup(groupParams)
 	assert.NoError(t, err)
 	group, err := testGroupService.GetGroup(groupParams)
@@ -66,8 +68,8 @@ func getTestGroupParams(includeUsers bool) services.GroupParams {
 	groupDetails := services.Group{
 		Name:            fmt.Sprintf("test-%s", getRunId()),
 		Description:     "hello",
-		AutoJoin:        false,
-		AdminPrivileges: true,
+		AutoJoin:        &falseValue,
+		AdminPrivileges: &trueValue,
 		Realm:           "internal",
 		RealmAttributes: "",
 	}

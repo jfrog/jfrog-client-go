@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/gofrog/stringutils"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -15,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jfrog/gofrog/stringutils"
+
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -24,7 +25,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.6.5"
+	Version     = "1.6.6"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
