@@ -27,6 +27,7 @@ func New(config config.Config) (*XrayServicesManager, error) {
 		SetClientCertKeyPath(details.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
 		SetRetries(config.GetHttpRetries()).
+		SetRetryWaitTime(config.GetHttpRetryWaitTime()).
 		Build()
 	return manager, err
 }

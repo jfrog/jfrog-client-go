@@ -27,6 +27,7 @@ type httpClientBuilder struct {
 	ctx                 context.Context
 	timeout             time.Duration
 	retries             int
+	retryWaitTime       int
 	httpClient          *http.Client
 }
 
@@ -70,6 +71,11 @@ func (builder *httpClientBuilder) SetRetries(retries int) *httpClientBuilder {
 	return builder
 }
 
+func (builder *httpClientBuilder) SetRetryWaitTime(retryWaitTime int) *httpClientBuilder {
+	builder.retryWaitTime = retryWaitTime
+	return builder
+}
+
 func (builder *httpClientBuilder) AddClientCertToTransport(transport *http.Transport) error {
 	if builder.clientCertPath != "" {
 		cert, err := tls.LoadX509KeyPair(builder.clientCertPath, builder.clientCertKeyPath)
@@ -85,7 +91,7 @@ func (builder *httpClientBuilder) AddClientCertToTransport(transport *http.Trans
 func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	if builder.httpClient != nil {
 		// Using a custom http.Client, pass-though.
-		return &HttpClient{client: builder.httpClient, ctx: builder.ctx, retries: builder.retries}, nil
+		return &HttpClient{client: builder.httpClient, ctx: builder.ctx, retries: builder.retries, retryWaitTime: builder.retryWaitTime}, nil
 	}
 
 	var err error
@@ -101,7 +107,7 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 		}
 	}
 	err = builder.AddClientCertToTransport(transport)
-	return &HttpClient{client: &http.Client{Transport: transport}, ctx: builder.ctx, retries: builder.retries}, err
+	return &HttpClient{client: &http.Client{Transport: transport}, ctx: builder.ctx, retries: builder.retries, retryWaitTime: builder.retryWaitTime}, err
 }
 
 func (builder *httpClientBuilder) createDefaultHttpTransport() *http.Transport {

@@ -25,13 +25,18 @@ import (
 )
 
 type HttpClient struct {
-	client  *http.Client
-	ctx     context.Context
-	retries int
+	client        *http.Client
+	ctx           context.Context
+	retries       int
+	retryWaitTime int
 }
 
 func (jc *HttpClient) GetRetries() int {
 	return jc.retries
+}
+
+func (jc *HttpClient) GetRetryWaitTime() int {
+	return jc.retryWaitTime
 }
 
 func (jc *HttpClient) sendGetLeaveBodyOpen(url string, followRedirect bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
@@ -93,7 +98,7 @@ func (jc *HttpClient) newRequest(method, url string, body io.Reader) (req *http.
 func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      jc.retries,
-		RetriesInterval: 0,
+		RetriesInterval: jc.retryWaitTime,
 		LogMsgPrefix:    logMsgPrefix,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while sending %s request to %s", method, url),
 		ExecutionHandler: func() (bool, error) {
@@ -192,7 +197,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 	progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      jc.retries,
-		RetriesInterval: 0,
+		RetriesInterval: jc.retryWaitTime,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while uploading to %s", url),
 		LogMsgPrefix:    logMsgPrefix,
 		ExecutionHandler: func() (bool, error) {
@@ -310,7 +315,7 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      jc.retries,
-		RetriesInterval: 0,
+		RetriesInterval: jc.retryWaitTime,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while downloading %s", downloadFileDetails.DownloadPath),
 		LogMsgPrefix:    logMsgPrefix,
 		ExecutionHandler: func() (bool, error) {
@@ -599,7 +604,7 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 	httpClientsDetails httputils.HttpClientDetails, progress ioutils.ProgressMgr, progressId int) (fileName string, resp *http.Response, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:      jc.retries,
-		RetriesInterval: 0,
+		RetriesInterval: jc.retryWaitTime,
 		ErrorMessage:    fmt.Sprintf("Failure occurred while downloading part %d of %s", currentSplit, flags.DownloadPath),
 		LogMsgPrefix:    fmt.Sprintf("%s[%s]: ", logMsgPrefix, strconv.Itoa(currentSplit)),
 		ExecutionHandler: func() (bool, error) {

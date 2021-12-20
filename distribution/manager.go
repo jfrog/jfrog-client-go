@@ -26,6 +26,7 @@ func New(config config.Config) (*DistributionServicesManager, error) {
 		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		SetRetries(config.GetHttpRetries()).
+		SetRetryWaitTime(config.GetHttpRetryWaitTime()).
 		Build()
 	return manager, err
 }

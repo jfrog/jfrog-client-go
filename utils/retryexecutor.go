@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"strconv"
 	"time"
 )
 
@@ -38,9 +39,10 @@ func (runner *RetryExecutor) Execute() error {
 		}
 
 		log.Warn(runner.getLogRetryMessage(i, err))
-		// Going to sleep for RetryInterval seconds
+		// Going to sleep for RetryInterval milliseconds
 		if runner.RetriesInterval > 0 && i < runner.MaxRetries {
-			time.Sleep(time.Second * time.Duration(runner.RetriesInterval))
+			log.Info("Waiting " + strconv.Itoa(runner.RetriesInterval) + "ms before trying again")
+			time.Sleep(time.Millisecond * time.Duration(runner.RetriesInterval))
 		}
 	}
 

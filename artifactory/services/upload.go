@@ -425,7 +425,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 		if !checksumDeployed {
 			retryExecutor := clientutils.RetryExecutor{
 				MaxRetries:      us.client.GetHttpClient().GetRetries(),
-				RetriesInterval: 0,
+				RetriesInterval: us.client.GetHttpClient().GetRetryWaitTime(),
 				ErrorMessage:    fmt.Sprintf("Failure occurred while uploading to %s", targetUrlWithProps),
 				LogMsgPrefix:    logMsgPrefix,
 				ExecutionHandler: func() (bool, error) {
