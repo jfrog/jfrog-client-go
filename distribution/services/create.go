@@ -45,7 +45,7 @@ func (cb *CreateReleaseBundleService) CreateReleaseBundle(createBundleParams Cre
 // In other cases summary will be nil.
 func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase string, releaseBundle *createReleaseBundleBody) (*clientutils.Sha256Summary, error) {
 	var summary *clientutils.Sha256Summary = nil
-	if releaseBundle.SignImmediately {
+	if *releaseBundle.SignImmediately {
 		summary = clientutils.NewSha256Summary()
 	}
 	httpClientsDetails := cb.DistDetails.CreateHttpClientDetails()

@@ -26,8 +26,8 @@ func NewGroupParams() GroupParams {
 type Group struct {
 	Name            string   `json:"name,omitempty"`
 	Description     string   `json:"description,omitempty"`
-	AutoJoin        bool     `json:"autoJoin,omitempty"`
-	AdminPrivileges bool     `json:"adminPrivileges,omitempty"`
+	AutoJoin        *bool    `json:"autoJoin,omitempty"`
+	AdminPrivileges *bool    `json:"adminPrivileges,omitempty"`
 	Realm           string   `json:"realm,omitempty"`
 	RealmAttributes string   `json:"realmAttributes,omitempty"`
 	UsersNames      []string `json:"userNames,omitempty"`

@@ -136,7 +136,7 @@ func createUpdate(t *testing.T) {
 	updateBundleParams.Description = "Release bundle description 2"
 	updateBundleParams.ReleaseNotes = "Release notes 2"
 	updateBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "test/a.in"}}
-
+	updateBundleParams.SignImmediately = false
 	// Test DryRun first
 	err = updateDryRun(updateBundleParams)
 	if err != nil {
