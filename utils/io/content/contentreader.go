@@ -273,7 +273,7 @@ func SortContentReaderByCalculatedKey(reader *ContentReader, getKeyFunc keyCalcu
 	defer func() {
 		for _, r := range sortedReaders {
 			e := r.Close()
-			if err == nil && e != nil {
+			if err == nil {
 				err = e
 			}
 		}
