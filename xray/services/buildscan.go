@@ -65,7 +65,7 @@ func (bs *BuildScanService) Scan(params XrayBuildParams) error {
 func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams) (*BuildScanResponse, error) {
 	endPoint := fmt.Sprintf("%s%s/%s/%s", bs.XrayDetails.GetUrl(), buildScanAPI, params.BuildName, params.BuildNumber)
 	if params.Project != "" {
-		endPoint += projectKeyQueryParam + params.Project
+		endPoint += "?" + projectKeyQueryParam + params.Project
 	}
 	syncMessage := fmt.Sprintf("Sync: Get Build Scan results. Build:%s/%s...", params.BuildName, params.BuildNumber)
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()

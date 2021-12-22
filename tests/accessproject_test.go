@@ -20,6 +20,10 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 	assert.NoError(t, err)
 	projectParams.ProjectDetails.Description += "123"
 	projectParams.ProjectDetails.StorageQuotaBytes += 123
+	projectParams.ProjectDetails.SoftLimit = &trueValue
+	projectParams.ProjectDetails.AdminPrivileges.ManageMembers = &falseValue
+	projectParams.ProjectDetails.AdminPrivileges.ManageResources = &trueValue
+	projectParams.ProjectDetails.AdminPrivileges.IndexResources = &falseValue
 	err = testsAccessProjectService.Update(projectParams)
 	assert.NoError(t, err)
 	updatedProject, err := testsAccessProjectService.Get(projectParams.ProjectDetails.ProjectKey)
@@ -37,16 +41,16 @@ func deleteProjectAndAssert(t *testing.T, projectKey string) {
 
 func getTestProjectParams() services.ProjectParams {
 	adminPrivileges := services.AdminPrivileges{
-		ManageMembers:   true,
-		ManageResources: true,
-		IndexResources:  true,
+		ManageMembers:   &trueValue,
+		ManageResources: &falseValue,
+		IndexResources:  &trueValue,
 	}
 	runNumberSuffix := getRunId()[len(getRunId())-3 : len(getRunId())]
 	projectDetails := services.Project{
 		DisplayName:       "testProject" + runNumberSuffix,
 		Description:       "My Test Project",
 		AdminPrivileges:   &adminPrivileges,
-		SoftLimit:         false,
+		SoftLimit:         &falseValue,
 		StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
 		ProjectKey:        "tstprj" + runNumberSuffix,
 	}

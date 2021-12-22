@@ -52,14 +52,19 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 		sourceRepos = strings.Split(params.GetSourceRepos(), ",")
 	}
 
+	isDryRun := ds.isDryRun()
+	overrideExistingFiles := params.IsOverrideExistingFiles()
+	isAsync := params.IsAsync()
+
 	data := BuildDistributionBody{
 		SourceRepos:           sourceRepos,
 		TargetRepo:            params.GetTargetRepo(),
 		Publish:               params.IsPublish(),
-		OverrideExistingFiles: params.IsOverrideExistingFiles(),
+		OverrideExistingFiles: &overrideExistingFiles,
 		GpgPassphrase:         params.GetGpgPassphrase(),
-		Async:                 params.IsAsync(),
-		DryRun:                ds.isDryRun()}
+		Async:                 &isAsync,
+		DryRun:                &isDryRun,
+	}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -134,9 +139,9 @@ type BuildDistributionBody struct {
 	TargetRepo            string   `json:"targetRepo,omitempty"`
 	GpgPassphrase         string   `json:"gpgPassphrase,omitempty"`
 	Publish               bool     `json:"publish"`
-	OverrideExistingFiles bool     `json:"overrideExistingFiles,omitempty"`
-	Async                 bool     `json:"async,omitempty"`
-	DryRun                bool     `json:"dryRun,omitempty"`
+	OverrideExistingFiles *bool    `json:"overrideExistingFiles,omitempty"`
+	Async                 *bool    `json:"async,omitempty"`
+	DryRun                *bool    `json:"dryRun,omitempty"`
 }
 
 func NewBuildDistributionParams() BuildDistributionParams {
