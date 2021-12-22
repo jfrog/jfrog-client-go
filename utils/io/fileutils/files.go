@@ -708,3 +708,29 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	err = os.Remove(sourcePath)
 	return errorutils.CheckError(err)
 }
+
+// RemoveDirContents removes the contents of the directory, without removing the directory itself.
+// If it encounters an error before removing all the files, it stops and returns that error.
+func RemoveDirContents(dirPath string) (err error) {
+	d, err := os.Open(dirPath)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	defer func() {
+		e := d.Close()
+		if err == nil {
+			err = e
+		}
+	}()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dirPath, name))
+		if err != nil {
+			return errorutils.CheckError(err)
+		}
+	}
+	return nil
+}
