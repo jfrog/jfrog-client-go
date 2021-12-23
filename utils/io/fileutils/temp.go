@@ -50,10 +50,17 @@ func RemoveTempDir(dirPath string) error {
 	if err != nil {
 		return err
 	}
-	if exists {
-		return os.RemoveAll(dirPath)
+	if !exists {
+		return nil
 	}
-	return nil
+	err = os.RemoveAll(dirPath)
+	if err == nil {
+		return nil
+	}
+	// Sometimes removing the directory fails (in Windows) because it's locked by another process.
+	// That's a known issue, but its cause is unknown (golang.org/issue/30789).
+	// In this case, we'll only remove the contents of the directory, and let CleanOldDirs() remove the directory itself at a later time.
+	return RemoveDirContents(dirPath)
 }
 
 // Create a new temp file named "tempPrefix+timeStamp".

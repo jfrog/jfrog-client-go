@@ -251,5 +251,29 @@ func TestGetFileAndDirFromPath(t *testing.T) {
 		assert.Equal(t, test.expectedFile, File, "Wrong file name for path: "+test.path)
 		assert.Equal(t, test.expectedDir, Dir, "Wrong dir for path: "+test.path)
 	}
+}
 
+func TestRemoveDirContents(t *testing.T) {
+	// Prepare the test environment in a temporary directory
+	tmpDirPath, err := CreateTempDir()
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, RemoveTempDir(tmpDirPath))
+	}()
+	err = CopyDir(filepath.Join("testdata", "removedircontents"), tmpDirPath, true, nil)
+	assert.NoError(t, err)
+
+	// Run the function
+	dirToEmptyPath := filepath.Join(tmpDirPath, "dirtoempty")
+	err = RemoveDirContents(dirToEmptyPath)
+	assert.NoError(t, err)
+
+	// Assert the directories contents: dirtoempty should be empty and dirtoremain should contain one file.
+	emptyDirFiles, err := os.ReadDir(dirToEmptyPath)
+	assert.NoError(t, err)
+	assert.Empty(t, emptyDirFiles)
+	remainedDirPath := filepath.Join(tmpDirPath, "dirtoremain")
+	remainedDirFiles, err := os.ReadDir(remainedDirPath)
+	assert.NoError(t, err)
+	assert.Len(t, remainedDirFiles, 1)
 }
