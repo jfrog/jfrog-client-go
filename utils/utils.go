@@ -495,13 +495,13 @@ type DeployableArtifactDetails struct {
 func (details *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) (FileTransferDetails, error) {
 	// The function path.Join expects a path, not a URL.
 	// Therefore we first parse the URL to get a path.
-	url, err := url.Parse(rtUrl + targetRepository)
+	targetUrl, err := url.Parse(rtUrl + targetRepository)
 	if err != nil {
 		return FileTransferDetails{}, err
 	}
 	// The path.join will always use a single slash (forward) to separate between the two vars.
-	url.Path = path.Join(url.Path, details.ArtifactDest)
-	targetPath := url.String()
+	targetUrl.Path = path.Join(targetUrl.Path, details.ArtifactDest)
+	targetPath := targetUrl.String()
 
 	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetPath, Sha256: details.Sha256}, nil
 }

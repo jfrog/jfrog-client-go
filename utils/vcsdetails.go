@@ -28,18 +28,18 @@ type (
 	}
 )
 
-const MAX_ENTRIES = 10000
+const MaxEntries = 10000
 
-func NewVcsDetals() *VcsCache {
+func NewVcsDetails() *VcsCache {
 	return &VcsCache{vcsRootDir: sync.Map{}, vcsDir: sync.Map{}, vcsDirSize: new(int32)}
 }
 
-func (this *VcsCache) incCacheSize(num int32) {
-	atomic.AddInt32(this.vcsDirSize, num)
+func (vc *VcsCache) incCacheSize(num int32) {
+	atomic.AddInt32(vc.vcsDirSize, num)
 }
 
-func (this *VcsCache) getCacheSize() int32 {
-	return atomic.LoadInt32(this.vcsDirSize)
+func (vc *VcsCache) getCacheSize() int32 {
+	return atomic.LoadInt32(vc.vcsDirSize)
 }
 
 // Search for '.git' directory inside 'path', incase there is one, extract the details and add a new entry to the cache(key:path in the file system ,value: git revision & url).
@@ -47,7 +47,7 @@ func (this *VcsCache) getCacheSize() int32 {
 // 1. search for .git, and save the details for the current dir and all subpath
 // 2. .git not found, go to parent dir and repeat
 // 3. not found on the root directory, add all subpath to cache with nil as a value
-func (this *VcsCache) GetVcsDetails(path string) (revision, refUrl, branch string, err error) {
+func (vc *VcsCache) GetVcsDetails(path string) (revision, refUrl, branch string, err error) {
 	keys := strings.Split(path, string(os.PathSeparator))
 	var subPath string
 	var subPaths []string
@@ -55,7 +55,7 @@ func (this *VcsCache) GetVcsDetails(path string) (revision, refUrl, branch strin
 	for i := len(keys); i > 0; i-- {
 		subPath = strings.Join(keys[:i], string(os.PathSeparator))
 		// Try to get from cache
-		if vcsDetails, found := this.searchCache(subPath); found {
+		if vcsDetails, found := vc.searchCache(subPath); found {
 			if vcsDetails != nil {
 				revision, refUrl, branch, vcsDetailsResult = vcsDetails.revision, vcsDetails.url, vcsDetails.branch, vcsDetails
 			}
@@ -65,7 +65,7 @@ func (this *VcsCache) GetVcsDetails(path string) (revision, refUrl, branch strin
 		revision, refUrl, branch, err = tryGetGitDetails(subPath)
 		if revision != "" || refUrl != "" || branch != "" {
 			vcsDetailsResult = &vcsDetails{revision: revision, url: refUrl, branch: branch}
-			this.vcsRootDir.Store(subPath, vcsDetailsResult)
+			vc.vcsRootDir.Store(subPath, vcsDetailsResult)
 			break
 		}
 		if err != nil {
@@ -74,19 +74,19 @@ func (this *VcsCache) GetVcsDetails(path string) (revision, refUrl, branch strin
 		subPaths = append(subPaths, subPath)
 	}
 	if size := len(subPaths); size > 0 {
-		this.clearCacheIfExceedsMax()
+		vc.clearCacheIfExceedsMax()
 		for _, v := range subPaths {
-			this.vcsDir.Store(v, vcsDetailsResult)
+			vc.vcsDir.Store(v, vcsDetailsResult)
 		}
-		this.incCacheSize(int32(size))
+		vc.incCacheSize(int32(size))
 	}
 	return
 }
 
-func (this *VcsCache) clearCacheIfExceedsMax() {
-	if this.getCacheSize() > MAX_ENTRIES {
-		this.vcsDir = sync.Map{}
-		this.vcsDirSize = new(int32)
+func (vc *VcsCache) clearCacheIfExceedsMax() {
+	if vc.getCacheSize() > MaxEntries {
+		vc.vcsDir = sync.Map{}
+		vc.vcsDirSize = new(int32)
 	}
 }
 
@@ -106,13 +106,13 @@ func extractGitDetails(path string) (string, string, string, error) {
 	return gitService.GetRevision(), gitService.GetUrl(), gitService.GetBranch(), nil
 }
 
-func (this *VcsCache) searchCache(path string) (*vcsDetails, bool) {
-	if data, found := this.vcsDir.Load(path); found {
+func (vc *VcsCache) searchCache(path string) (*vcsDetails, bool) {
+	if data, found := vc.vcsDir.Load(path); found {
 		if vcsDetails, ok := data.(*vcsDetails); ok {
 			return vcsDetails, ok
 		}
 	}
-	if data, found := this.vcsRootDir.Load(path); found {
+	if data, found := vc.vcsRootDir.Load(path); found {
 		if vcsDetails, ok := data.(*vcsDetails); ok {
 			return vcsDetails, ok
 		}

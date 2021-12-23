@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils"
 )
 
-// Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
+// Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
 	repoPathFileTriples, err := createRepoPathFileTriples(searchPattern, params.Recursive)
@@ -124,9 +124,9 @@ func CreateAqlQueryForNpm(npmName, npmVersion string) string {
 		`items.find({` +
 			`"@npm.name":"%s",` +
 			`"$or": [` +
-				// sometimes the npm.version in the repository is written with "v" prefix, so we search both syntaxes
-				`{"@npm.version":"%[2]s"},` +
-				`{"@npm.version":"v%[2]s"}` +
+			// sometimes the npm.version in the repository is written with "v" prefix, so we search both syntaxes
+			`{"@npm.version":"%[2]s"},` +
+			`{"@npm.version":"v%[2]s"}` +
 			`]` +
 			`})%s`
 	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))

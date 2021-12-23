@@ -69,8 +69,8 @@ func RunTests(testsPackages []string, hideUnitTestsLog bool) error {
 	cmd := exec.Command("go", testsPackages...)
 
 	if hideUnitTestsLog {
-		tempDirPath, err := getTestsLogsDir()
-		exitOnErr(err)
+		tempDirPath := filepath.Join(os.TempDir(), "jfrog_tests_logs")
+		exitOnErr(fileutils.CreateDirIfNotExist(tempDirPath))
 
 		f, err := os.Create(filepath.Join(tempDirPath, "unit_tests.log"))
 		exitOnErr(err)
@@ -93,11 +93,6 @@ func RunTests(testsPackages []string, hideUnitTestsLog bool) error {
 	return nil
 }
 
-func getTestsLogsDir() (string, error) {
-	tempDirPath := filepath.Join(os.TempDir(), "jfrog_tests_logs")
-	return tempDirPath, fileutils.CreateDirIfNotExist(tempDirPath)
-}
-
 func exitOnErr(err error) {
 	if err != nil {
 		log.Error(err)
@@ -105,24 +100,52 @@ func exitOnErr(err error) {
 	}
 }
 
-func InitVcsSubmoduleTestDir(t *testing.T, srcPath string) (submodulePath, tmpDir string) {
+func InitVcsSubmoduleTestDir(t *testing.T, srcPath, tmpDir string) (submodulePath string) {
 	var err error
-	tmpDir, err = fileutils.CreateTempDir()
-	assert.NoError(t, err)
-
-	err = fileutils.CopyDir(srcPath, tmpDir, true, nil)
-	assert.NoError(t, err)
+	assert.NoError(t, fileutils.CopyDir(srcPath, tmpDir, true, nil))
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
 		assert.NoError(t, err)
-		err := fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git"))
-		assert.NoError(t, err)
+		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git")))
 	}
 	submoduleDst := filepath.Join(tmpDir, "subdir", "submodule")
-	err = fileutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData"))
-	assert.NoError(t, err)
-	err = fileutils.MoveFile(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git"))
-	assert.NoError(t, err)
+	assert.NoError(t, fileutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData")))
+	assert.NoError(t, fileutils.MoveFile(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git")))
 	submodulePath, err = filepath.Abs(submoduleDst)
 	assert.NoError(t, err)
-	return submodulePath, tmpDir
+	return submodulePath
+}
+
+func ChangeDirAndAssert(t *testing.T, dirPath string) {
+	assert.NoError(t, os.Chdir(dirPath), "Couldn't change dir to "+dirPath)
+}
+
+// ChangeDirWithCallback changes working directory to the given path and return function that change working directory back to the original path.
+func ChangeDirWithCallback(t *testing.T, wd, dirPath string) func() {
+	ChangeDirAndAssert(t, dirPath)
+	return func() {
+		ChangeDirAndAssert(t, wd)
+	}
+}
+
+func RemoveAndAssert(t *testing.T, path string) {
+	assert.NoError(t, os.Remove(path), "Couldn't remove: "+path)
+}
+
+func RemoveAllAndAssert(t *testing.T, path string) {
+	assert.NoError(t, os.RemoveAll(path), "Couldn't removeAll: "+path)
+}
+
+func SetEnvAndAssert(t *testing.T, key, value string) {
+	assert.NoError(t, os.Setenv(key, value), "Failed to set env: "+key)
+}
+
+func SetEnvWithCallbackAndAssert(t *testing.T, key, value string) func() {
+	assert.NoError(t, os.Setenv(key, value), "Failed to set env: "+key)
+	return func() {
+		UnSetEnvAndAssert(t, key)
+	}
+}
+
+func UnSetEnvAndAssert(t *testing.T, key string) {
+	assert.NoError(t, os.Unsetenv(key), "Failed to unset env: "+key)
 }

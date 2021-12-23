@@ -63,8 +63,12 @@ func TestReadConfigWithBackslashes(t *testing.T) {
 	dotGitPath := getDotGitPath(t)
 	gitExec := GitExecutor(dotGitPath)
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	gitExec.execGit("config", "--local", "--add", "http.https://github.com.sslCAInfo"+timestamp, dotGitPath)
-	defer gitExec.execGit("config", "--local", "--unset", "http.https://github.com.sslCAInfo"+timestamp)
+	_, _, err := gitExec.execGit("config", "--local", "--add", "http.https://github.com.sslCAInfo"+timestamp, dotGitPath)
+	assert.NoError(t, err)
+	defer func() {
+		_, _, err = gitExec.execGit("config", "--local", "--unset", "http.https://github.com.sslCAInfo"+timestamp)
+		assert.NoError(t, err)
+	}()
 	testReadConfig(t)
 }
 
@@ -93,7 +97,7 @@ func testReadConfig(t *testing.T) {
 
 func getDotGitPath(t *testing.T) string {
 	dotGitPath, err := os.Getwd()
-	assert.NoError(t, err, "Failed to get current dir.")
+	assert.NoError(t, err, "Failed to get current dir")
 	dotGitPath = filepath.Dir(dotGitPath)
 	dotGitExists, err := fileutils.IsDirExists(filepath.Join(dotGitPath, ".git"), false)
 	assert.NoError(t, err)
