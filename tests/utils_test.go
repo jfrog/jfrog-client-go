@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -535,6 +534,7 @@ func uploadDummyFile(t *testing.T) {
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "b.in"}
 	up.Flat = true
 	summary, err = testsUploadService.UploadFiles(up)
+	assert.NoError(t, err)
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -613,50 +613,6 @@ func teardownIntegrationTests() {
 		fmt.Printf("teardownIntegrationTests failed for:" + err.Error())
 		os.Exit(1)
 	}
-}
-
-func isRepoExist(repoName string) bool {
-	artDetails := GetRtDetails()
-	artHttpDetails := artDetails.CreateHttpClientDetails()
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
-	resp, _, _, err := client.SendGet(artDetails.GetUrl()+RepoDetailsUrl+repoName, true, artHttpDetails, "")
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
-
-	if resp.StatusCode != http.StatusBadRequest {
-		return true
-	}
-	return false
-}
-
-func execCreateRepoRest(repoConfig, repoName string) error {
-	content, err := ioutil.ReadFile(repoConfig)
-	if err != nil {
-		return err
-	}
-	artDetails := GetRtDetails()
-	artHttpDetails := artDetails.CreateHttpClientDetails()
-
-	artHttpDetails.Headers = map[string]string{"Content-Type": "application/json"}
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-	resp, _, err := client.SendPut(artDetails.GetUrl()+"api/repositories/"+repoName, content, artHttpDetails, "")
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errors.New("Fail to create repository. Reason local repository with key: " + repoName + " already exist\n")
-	}
-	log.Info("Repository", repoName, "created.")
-	return nil
 }
 
 func getTestDataPath() string {

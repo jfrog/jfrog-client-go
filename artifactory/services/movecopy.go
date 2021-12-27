@@ -269,7 +269,7 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 
 // Create destPath in Artifactory
 func (mc *MoveCopyService) createPathForMoveAction(destPath, logMsgPrefix string) (bool, error) {
-	if mc.IsDryRun() == true {
+	if mc.IsDryRun() {
 		log.Info(logMsgPrefix+"[Dry run]", "Create path:", destPath)
 		return true, nil
 	}

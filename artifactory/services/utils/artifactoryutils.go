@@ -249,13 +249,6 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey stri
 	return "", "", err
 }
 
-func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte, err error) {
-	buildJsonArray := []Build{{buildName, buildNumber}}
-	body, err = json.Marshal(buildJsonArray)
-	err = errorutils.CheckError(err)
-	return
-}
-
 func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
 	var artifactsAqlSearchErr, dependenciesAqlSearchErr error
 	var readerWithProps *content.ContentReader
@@ -559,6 +552,9 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 	}
 
 	requestFullUrl, err := BuildArtifactoryUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, queryParams)
+	if err != nil {
+		return nil, false, err
+	}
 
 	httpClient := flags.GetJfrogHttpClient()
 	log.Debug("Getting build-info from: ", requestFullUrl)

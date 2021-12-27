@@ -1,13 +1,10 @@
 package tests
 
 import (
-	"testing"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/stretchr/testify/assert"
 )
 
-// Temporarily disabled
+// TODO Temporarily disabled
 
 // func TestArtifactoryLocalRepository(t *testing.T) {
 // 	initRepositoryTest(t)
@@ -54,6 +51,8 @@ func setLocalRepositoryBaseParams(params *services.LocalRepositoryBaseParams, is
 	}
 }
 
+/*
+// TODO Temporarily disabled
 func localAlpineTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	alp := services.NewAlpineLocalRepositoryParams()
@@ -641,3 +640,4 @@ func getAllLocalRepoDetailsTest(t *testing.T) {
 	assert.Equal(t, glp.Description, repo.Description)
 	assert.Equal(t, "Generic", repo.PackageType)
 }
+*/

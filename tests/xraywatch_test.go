@@ -2,14 +2,10 @@ package tests
 
 import (
 	"fmt"
-	"testing"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
-
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestXrayWatch(t *testing.T) {
@@ -342,7 +338,7 @@ func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {
 }
 
 func createRepoLocal(t *testing.T, repoKey string) {
-	glp := artifactoryServices.NewGenericLocalRepositoryParams()
+	glp := services.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
 	glp.XrayIndex = &trueValue
 

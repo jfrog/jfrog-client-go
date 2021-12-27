@@ -33,7 +33,9 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
-
+	if err != nil {
+		return "", err
+	}
 	var sm artifactory.ArtifactoryServicesManager
 	client := rt.GetClient()
 	if client != nil {

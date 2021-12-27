@@ -315,7 +315,6 @@ func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[str
 			}
 		}
 	}
-	return
 }
 
 func (ds *DownloadService) performTasks(consumer parallel.Runner, errorsQueue *clientutils.ErrorsQueue) error {

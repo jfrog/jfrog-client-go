@@ -130,14 +130,14 @@ func extractRepo(gitPath, configFile, rtUrl string, lfsUrlExtractor lfsUrlExtrac
 		return "", err
 	}
 	if artifactoryConfiguredUrl.Scheme != lfsUrl.Scheme || artifactoryConfiguredUrl.Host != lfsUrl.Host {
-		return "", fmt.Errorf("Configured Git LFS URL %q does not match provided URL %q", lfsUrl.String(), artifactoryConfiguredUrl.String())
+		return "", fmt.Errorf("configured Git LFS URL %q does not match provided URL %q", lfsUrl.String(), artifactoryConfiguredUrl.String())
 	}
 	artifactoryConfiguredUrlPath := path.Clean("/"+artifactoryConfiguredUrl.Path+"/api/lfs") + "/"
 	lfsUrlPath := path.Clean(lfsUrl.Path)
 	if strings.HasPrefix(lfsUrlPath, artifactoryConfiguredUrlPath) {
 		return lfsUrlPath[len(artifactoryConfiguredUrlPath):], nil
 	}
-	return "", fmt.Errorf("Configured Git LFS URL %q does not match provided URL %q", lfsUrl.String(), artifactoryConfiguredUrl.String())
+	return "", fmt.Errorf("configured Git LFS URL %q does not match provided URL %q", lfsUrl.String(), artifactoryConfiguredUrl.String())
 }
 
 type lfsUrlExtractorFunc func(conf *gitconfig.Config) (*url.URL, error)

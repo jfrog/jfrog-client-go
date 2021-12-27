@@ -76,6 +76,7 @@ func testReadConfig(t *testing.T) {
 	dotGitPath := getDotGitPath(t)
 	gitManager := NewGitManager(dotGitPath)
 	err := gitManager.ReadConfig()
+	assert.NoError(t, err)
 
 	gitExecutor := GitExecutor(dotGitPath)
 	url, _, err := gitExecutor.GetUrl()

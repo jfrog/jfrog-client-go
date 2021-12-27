@@ -354,10 +354,10 @@ func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error
 	}
 
 	file, err := os.Open(filePath)
-	defer file.Close()
 	if errorutils.CheckError(err) != nil {
 		return nil, err
 	}
+	defer file.Close()
 	fileInfo, err := file.Stat()
 	if errorutils.CheckError(err) != nil {
 		return nil, err

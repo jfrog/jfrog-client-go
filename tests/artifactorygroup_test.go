@@ -13,6 +13,7 @@ func TestGroups(t *testing.T) {
 	t.Run("create", testCreateGroup)
 	t.Run("update", testUpdateGroup)
 	t.Run("delete", testDeleteGroup)
+	t.Run("addUsers", testAddUsersToGroup)
 }
 
 func testCreateGroup(t *testing.T) {
@@ -21,6 +22,7 @@ func testCreateGroup(t *testing.T) {
 	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
 	createdGroup, err := testGroupService.GetGroup(groupParams)
+	assert.NoError(t, err)
 	assert.NotNil(t, createdGroup)
 	assert.Equal(t, groupParams.GroupDetails, *createdGroup)
 }

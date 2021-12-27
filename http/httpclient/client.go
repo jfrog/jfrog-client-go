@@ -224,6 +224,9 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	var err error
 	if localPath != "" {
 		file, err = os.Open(localPath)
+		if errorutils.CheckError(err) != nil {
+			return nil, nil, err
+		}
 		defer file.Close()
 		if errorutils.CheckError(err) != nil {
 			return nil, nil, err

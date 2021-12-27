@@ -3,7 +3,7 @@ package log
 import (
 	"fmt"
 	"github.com/gookit/color"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 	"io"
 	"log"
 	"os"
@@ -153,7 +153,7 @@ type Log interface {
 // Check if Stderr is a terminal
 func isTerminalMode() bool {
 	if terminalMode == nil {
-		t := terminal.IsTerminal(int(os.Stderr.Fd()))
+		t := term.IsTerminal(int(os.Stderr.Fd()))
 		terminalMode = &t
 	}
 	return *terminalMode

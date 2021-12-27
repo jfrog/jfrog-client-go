@@ -250,7 +250,6 @@ func (m *manager) readRevisionFromRef(refPath string) {
 	}
 
 	m.revision = revision
-	return
 }
 
 func (m *manager) readRevisionFromPackedRef(ref string) {
@@ -293,7 +292,6 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 		}
 	}
 	log.Debug("No packed-refs file was found. Assuming git repository is empty")
-	return
 }
 
 func (m *manager) readMessage() {

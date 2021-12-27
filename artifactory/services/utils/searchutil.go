@@ -143,6 +143,9 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 	}
 	defer mergedReader.Close()
 	buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
+	if err != nil {
+		return nil, err
+	}
 	return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
 }
 

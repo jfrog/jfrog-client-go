@@ -210,7 +210,7 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, up
 }
 
 func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc uploadDataHandlerFunc) error {
-	if strings.Index(uploadParams.GetTarget(), "/") < 0 {
+	if !strings.Contains(uploadParams.GetTarget(), "/") {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
 	if uploadParams.Archive != "" && strings.HasSuffix(uploadParams.GetTarget(), "/") {
@@ -278,7 +278,7 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 			return err
 		}
 
-		if matches != nil && len(matches) > 0 {
+		if len(matches) > 0 {
 			target := uploadParams.GetTarget()
 			tempPaths := paths
 			tempIndex := index

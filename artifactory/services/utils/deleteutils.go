@@ -12,7 +12,7 @@ import (
 
 func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 	if !strings.HasSuffix(deletePattern, "/") {
-		return "", errors.New("Delete pattern must end with \"/\"")
+		return "", errors.New("delete pattern must end with \"/\"")
 	}
 
 	regexpPattern := "^" + strings.Replace(deletePattern, "*", "([^/]*|.*)", -1)

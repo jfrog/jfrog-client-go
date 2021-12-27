@@ -45,7 +45,7 @@ func (multiFileReader *multiFileReaderAt) ReadAt(p []byte, off int64) (n int, er
 	i := sort.Search(len(multiFileReader.sizeIndex), func(i int) bool { return multiFileReader.sizeIndex[i] > off }) - 1
 
 	readBytes := 0
-	for true {
+	for {
 		var f *os.File
 		f, err = os.Open(multiFileReader.filesPaths[i])
 		if err != nil {
@@ -71,5 +71,4 @@ func (multiFileReader *multiFileReaderAt) ReadAt(p []byte, off int64) (n int, er
 		i++
 	}
 	// not suppose to get here
-	return
 }

@@ -71,7 +71,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
-	if params == nil || len(params) == 0 {
+	if len(params) == 0 {
 		return ""
 	}
 	return "?" + strings.Join(params, "&")
@@ -147,7 +147,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	if &scanResponse == nil || scanResponse.ScannedStatus == xrayScanStatusFailed {
+	if scanResponse.ScannedStatus == xrayScanStatusFailed {
 		return nil, errorutils.CheckErrorf("Xray scan failed")
 	}
 	return &scanResponse, err
