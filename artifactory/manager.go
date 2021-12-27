@@ -329,6 +329,14 @@ func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) (
 	return goService.PublishPackage(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) PublishTerraformModule(params services.TerraformParams) (*utils.OperationSummary, error) {
+	terraformService := services.NewTerraformService(sm.client)
+	terraformService.ArtDetails = sm.config.GetServiceDetails()
+	//TODO: chance/remove
+	return nil, nil
+	//return terraformService.PublishModule(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) Ping() ([]byte, error) {
 	pingService := services.NewPingService(sm.config.GetServiceDetails(), sm.client)
 	return pingService.Ping()

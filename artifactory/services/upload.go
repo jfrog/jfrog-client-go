@@ -191,6 +191,7 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, up
 			var err error
 			archiveData := archiveUploadData{uploadParams: deepCopyUploadParams(&uploadParams)}
 			archiveData.writer, err = content.NewContentWriter("archive", true, false)
+			archiveData.uploadParams.TargetProps = data.TargetProps
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
