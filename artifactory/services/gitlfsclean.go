@@ -142,13 +142,17 @@ func extractRepo(gitPath, configFile, rtUrl string, lfsUrlExtractor lfsUrlExtrac
 
 type lfsUrlExtractorFunc func(conf *gitconfig.Config) (*url.URL, error)
 
-func getLfsUrl(gitPath, configFile string, lfsUrlExtractor lfsUrlExtractorFunc) (*url.URL, error) {
-	var lfsUrl *url.URL
+func getLfsUrl(gitPath, configFile string, lfsUrlExtractor lfsUrlExtractorFunc) (lfsUrl *url.URL, err error) {
 	lfsConf, err := os.Open(path.Join(gitPath, configFile))
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	defer lfsConf.Close()
+	defer func() {
+		e := lfsConf.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 	conf := gitconfig.New()
 	err = gitconfig.NewDecoder(lfsConf).Decode(conf)
 	if err != nil {

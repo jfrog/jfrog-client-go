@@ -127,8 +127,7 @@ func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 func StringToBool(boolVal string, defaultValue bool) (bool, error) {
 	if len(boolVal) > 0 {
 		result, err := strconv.ParseBool(boolVal)
-		errorutils.CheckError(err)
-		return result, err
+		return result, errorutils.CheckError(err)
 	}
 	return defaultValue, nil
 }

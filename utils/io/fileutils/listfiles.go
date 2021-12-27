@@ -97,7 +97,10 @@ func readDirNames(dirname string) ([]string, error) {
 		return nil, err
 	}
 	names, err := f.Readdirnames(-1)
-	f.Close()
+	if err != nil {
+		return nil, err
+	}
+	err = f.Close()
 	if err != nil {
 		return nil, err
 	}

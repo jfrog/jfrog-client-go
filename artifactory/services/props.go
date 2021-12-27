@@ -127,7 +127,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				return nil
 			}
 
-			producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
+			_, _ = producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
 		}
 		defer producerConsumer.Done()
 		if err := reader.GetError(); err != nil {

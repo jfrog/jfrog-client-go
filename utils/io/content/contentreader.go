@@ -205,7 +205,7 @@ func MergeReaders(arr []*ContentReader, arrayKey string) (contentReader *Content
 	defer func() {
 		e := cw.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	for _, cr := range arr {
@@ -263,7 +263,7 @@ func SortContentReaderByCalculatedKey(reader *ContentReader, getKeyFunc keyCalcu
 		for _, r := range sortedReaders {
 			e := r.Close()
 			if err == nil {
-				err = e
+				err = errorutils.CheckError(e)
 			}
 		}
 	}()
@@ -334,7 +334,7 @@ func mergeSortedReadersByCalculatedKey(sortedReaders []*ContentReader, ascending
 	defer func() {
 		e := resultWriter.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	currentContentItem := make([]*SortRecord, len(sortedReaders))
@@ -391,7 +391,7 @@ func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*Conte
 	defer func() {
 		e := resultWriter.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 
@@ -455,7 +455,7 @@ func SortAndSaveBufferToFile(keysToContentItems map[string]SortableContentItem, 
 	defer func() {
 		e := writer.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	if increasingOrder {

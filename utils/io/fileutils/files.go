@@ -77,12 +77,17 @@ func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err e
 	return fileInfo, err
 }
 
-func IsDirEmpty(path string) (bool, error) {
+func IsDirEmpty(path string) (isEmpty bool, err error) {
 	dir, err := os.Open(path)
 	if err != nil {
 		return false, errorutils.CheckError(err)
 	}
-	defer dir.Close()
+	defer func() {
+		e := dir.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 
 	_, err = dir.Readdirnames(1)
 	if err == io.EOF {
@@ -274,16 +279,18 @@ func CreateDirIfNotExist(path string) error {
 
 // Reads the content of the file in the source path and appends it to
 // the file in the destination path.
-func AppendFile(srcPath string, destFile *os.File) error {
+func AppendFile(srcPath string, destFile *os.File) (err error) {
 	srcFile, err := os.Open(srcPath)
 	err = errorutils.CheckError(err)
 	if err != nil {
 		return err
 	}
 
-	defer func() error {
-		err := srcFile.Close()
-		return errorutils.CheckError(err)
+	defer func() {
+		e := srcFile.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
 	}()
 
 	reader := bufio.NewReader(srcFile)
@@ -341,9 +348,7 @@ func ReadFile(filePath string) ([]byte, error) {
 	return content, err
 }
 
-func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error) {
-	var err error
-	details := new(FileDetails)
+func GetFileDetails(filePath string, includeChecksums bool) (details *FileDetails, err error) {
 	if includeChecksums {
 		details.Checksum, err = calcChecksumDetails(filePath)
 		if err != nil {
@@ -357,7 +362,12 @@ func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error
 	if errorutils.CheckError(err) != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() {
+		e := file.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 	fileInfo, err := file.Stat()
 	if errorutils.CheckError(err) != nil {
 		return nil, err
@@ -366,31 +376,43 @@ func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error
 	return details, nil
 }
 
-func calcChecksumDetails(filePath string) (ChecksumDetails, error) {
+func calcChecksumDetails(filePath string) (details ChecksumDetails, err error) {
 	file, err := os.Open(filePath)
 	if errorutils.CheckError(err) != nil {
 		return ChecksumDetails{}, err
 	}
-	defer file.Close()
+	defer func() {
+		e := file.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 	if errorutils.CheckError(err) != nil {
 		return ChecksumDetails{}, err
 	}
 	return calcChecksumDetailsFromReader(file)
 }
 
-func GetFileDetailsFromReader(reader io.Reader, includeChecksusms bool) (*FileDetails, error) {
-	var err error
-	details := new(FileDetails)
-
+func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details *FileDetails, err error) {
 	pr, pw := io.Pipe()
-	defer pr.Close()
+	defer func() {
+		e := pr.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 
 	go func() {
-		defer pw.Close()
+		defer func() {
+			e := pw.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 		details.Size, err = io.Copy(pw, reader)
 	}()
 
-	if includeChecksusms {
+	if includeChecksums {
 		details.Checksum, err = calcChecksumDetailsFromReader(pr)
 	}
 	return details, err
@@ -415,12 +437,17 @@ type ChecksumDetails struct {
 	Sha256 string
 }
 
-func CopyFile(dst, src string) error {
+func CopyFile(dst, src string) (err error) {
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return err
 	}
-	defer srcFile.Close()
+	defer func() {
+		e := srcFile.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 	fileName, _ := GetFileAndDirFromPath(src)
 	dstPath, err := CreateFilePath(dst, fileName)
 	if err != nil {
@@ -430,9 +457,14 @@ func CopyFile(dst, src string) error {
 	if err != nil {
 		return err
 	}
-	defer dstFile.Close()
-	io.Copy(dstFile, srcFile)
-	return nil
+	defer func() {
+		e := dstFile.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
+	_, err = io.Copy(dstFile, srcFile)
+	return err
 }
 
 // Copy directory content from one path to another.
@@ -517,7 +549,12 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	if err != nil {
 		return
 	}
-	defer os.Chdir(wd)
+	defer func() {
+		e := os.Chdir(wd)
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 
 	// Get the OS root.
 	osRoot := os.Getenv("SYSTEMDRIVE")
@@ -555,7 +592,10 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 		visitedPaths[wd] = true
 		// CD to the parent directory.
 		wd = filepath.Dir(wd)
-		os.Chdir(wd)
+		err = os.Chdir(wd)
+		if err != nil {
+			return "", false, err
+		}
 
 		// If we already visited this directory, it means that there's a loop and we can stop.
 		if visitedPaths[wd] {
@@ -582,17 +622,27 @@ func FilesIdentical(file1 string, file2 string) (bool, error) {
 }
 
 // JSONEqual compares the JSON from two files.
-func JsonEqual(filePath1, filePath2 string) (bool, error) {
+func JsonEqual(filePath1, filePath2 string) (equal bool, err error) {
 	reader1, err := os.Open(filePath1)
 	if err != nil {
 		return false, err
 	}
-	defer reader1.Close()
+	defer func() {
+		e := reader1.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 	reader2, err := os.Open(filePath2)
 	if err != nil {
 		return false, err
 	}
-	defer reader2.Close()
+	defer func() {
+		e := reader2.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 	var j, j2 interface{}
 	d := json.NewDecoder(reader1)
 	if err := d.Decode(&j); err != nil {
@@ -669,8 +719,7 @@ func MoveFile(sourcePath, destPath string) (err error) {
 		if inputFileOpen {
 			e := inputFile.Close()
 			if err == nil {
-				err = e
-				errorutils.CheckError(err)
+				err = errorutils.CheckError(e)
 			}
 		}
 	}()
@@ -687,8 +736,7 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	defer func() {
 		e := outputFile.Close()
 		if err == nil {
-			err = e
-			errorutils.CheckError(err)
+			err = errorutils.CheckError(e)
 		}
 	}()
 
@@ -721,7 +769,7 @@ func RemoveDirContents(dirPath string) (err error) {
 	defer func() {
 		e := d.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	names, err := d.Readdirnames(-1)

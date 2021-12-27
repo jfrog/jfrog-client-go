@@ -131,7 +131,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 			if us.Progress != nil {
 				us.Progress.IncGeneralProgressTotalBy(1)
 			}
-			producer.AddTaskWithError(us.createUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
+			_, _ = producer.AddTaskWithError(us.createUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
 		}
 	}()
 }
@@ -151,7 +151,7 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 }
 
 // Creates a new Properties struct with the artifact's props and the symlink props.
-func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) (*utils.Properties, error) {
+func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) (props *utils.Properties, err error) {
 	artifactProps := utils.NewProperties()
 	artifactSymlink := artifact.SymlinkTargetPath
 	if uploadParams.IsSymlink() && len(artifactSymlink) > 0 {
@@ -167,7 +167,12 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 			if err != nil {
 				return nil, errorutils.CheckError(err)
 			}
-			defer file.Close()
+			defer func() {
+				e := file.Close()
+				if err == nil {
+					err = errorutils.CheckError(e)
+				}
+			}()
 			checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
 			if err != nil {
 				return nil, errorutils.CheckError(err)
@@ -185,7 +190,7 @@ type uploadDataHandlerFunc func(data UploadData)
 func getAddTaskToProducerFunc(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, artifactHandlerFunc artifactContext) uploadDataHandlerFunc {
 	return func(data UploadData) {
 		taskFunc := artifactHandlerFunc(data)
-		producer.AddTaskWithError(taskFunc, errorsQueue.AddError)
+		_, _ = producer.AddTaskWithError(taskFunc, errorsQueue.AddError)
 	}
 }
 
@@ -969,11 +974,23 @@ func (rm *resultsManager) finalizeResult(targetPath string, checksums *fileutils
 
 // Closes the ContentWriters that were opened by the resultManager
 func (rm *resultsManager) close() {
-	rm.singleFinalTransfersWriter.Close()
-	rm.artifactsDetailsWriter.Close()
+	err := rm.singleFinalTransfersWriter.Close()
+	if err != nil {
+		log.Error(err)
+	}
+	err = rm.artifactsDetailsWriter.Close()
+	if err != nil {
+		log.Error(err)
+	}
 	for _, writer := range rm.notFinalTransfersWriters {
-		writer.Close()
-		writer.RemoveOutputFilePath()
+		err = writer.Close()
+		if err != nil {
+			log.Error(err)
+		}
+		err = writer.RemoveOutputFilePath()
+		if err != nil {
+			log.Error(err)
+		}
 	}
 }
 

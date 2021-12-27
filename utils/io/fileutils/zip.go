@@ -78,8 +78,7 @@ func Unzip(at io.ReaderAt, size int64, dest string) error {
 func ZipFolderFiles(source, target string) (err error) {
 	zipFile, err := os.Create(target)
 	if err != nil {
-		errorutils.CheckError(err)
-		return
+		return errorutils.CheckError(err)
 	}
 	defer func() {
 		if cerr := zipFile.Close(); cerr != nil && err == nil {
@@ -105,21 +104,18 @@ func ZipFolderFiles(source, target string) (err error) {
 		}
 
 		header, currentErr := zip.FileInfoHeader(info)
-		if currentErr != nil {
-			errorutils.CheckError(currentErr)
+		if errorutils.CheckError(currentErr) != nil {
 			return
 		}
 
 		header.Method = zip.Deflate
 		writer, currentErr := archive.CreateHeader(header)
-		if currentErr != nil {
-			errorutils.CheckError(currentErr)
+		if errorutils.CheckError(currentErr) != nil {
 			return
 		}
 
 		file, currentErr := os.Open(path)
-		if currentErr != nil {
-			errorutils.CheckError(currentErr)
+		if errorutils.CheckError(currentErr) != nil {
 			return
 		}
 		defer func() {

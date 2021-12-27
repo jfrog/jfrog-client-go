@@ -121,7 +121,12 @@ func (m *manager) readUrl() {
 		m.err = err
 		return
 	}
-	defer file.Close()
+	defer func() {
+		e := file.Close()
+		if m.err == nil {
+			m.err = e
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	var IsNextLineUrl bool
@@ -140,8 +145,7 @@ func (m *manager) readUrl() {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		errorutils.CheckError(err)
-		m.err = err
+		m.err = errorutils.CheckError(err)
 		return
 	}
 	if !strings.HasSuffix(originUrl, ".git") {
@@ -172,7 +176,7 @@ func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error
 	defer func() {
 		e = file.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 
@@ -186,7 +190,7 @@ func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error
 		revision = text
 	}
 	if err = scanner.Err(); err != nil {
-		errorutils.CheckError(err)
+		err = errorutils.CheckError(err)
 	}
 	return
 }

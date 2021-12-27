@@ -281,14 +281,19 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReade
 
 // Save the reader output into a temp file.
 // return the file path.
-func streamToFile(reader io.Reader) (string, error) {
+func streamToFile(reader io.Reader) (name string, err error) {
 	var fd *os.File
 	bufioReader := bufio.NewReaderSize(reader, 65536)
-	fd, err := fileutils.CreateTempFile()
+	fd, err = fileutils.CreateTempFile()
 	if err != nil {
 		return "", err
 	}
-	defer fd.Close()
+	defer func() {
+		e := fd.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 	_, err = io.Copy(fd, bufioReader)
 	return fd.Name(), errorutils.CheckError(err)
 }

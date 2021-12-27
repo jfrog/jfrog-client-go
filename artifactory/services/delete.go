@@ -63,7 +63,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		defer func() {
 			e := tempResultItems.Close()
 			if err == nil {
-				err = e
+				err = errorutils.CheckError(e)
 			}
 		}()
 		toBeDeletedDirs, err = removeNotToBeDeletedDirs(deleteParams.GetFile(), ds, tempResultItems)
@@ -78,7 +78,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		defer func() {
 			e := toBeDeletedDirs.Close()
 			if err == nil {
-				err = e
+				err = errorutils.CheckError(e)
 			}
 		}()
 		resultItems, err = utils.ReduceTopChainDirResult(utils.ResultItem{}, toBeDeletedDirs)
@@ -136,7 +136,7 @@ func (ds *DeleteService) DeleteFiles(deleteItems *content.ContentReader) (int, e
 		defer producerConsumer.Done()
 		for deleteItem := new(utils.ResultItem); deleteItems.NextRecord(deleteItem) == nil; deleteItem = new(utils.ResultItem) {
 			fileDeleteHandlerFunc := ds.createFileHandlerFunc(&result)
-			producerConsumer.AddTaskWithError(fileDeleteHandlerFunc(*deleteItem), errorsQueue.AddError)
+			_, _ = producerConsumer.AddTaskWithError(fileDeleteHandlerFunc(*deleteItem), errorsQueue.AddError)
 		}
 		if err := deleteItems.GetError(); err != nil {
 			errorsQueue.AddError(err)
@@ -193,7 +193,7 @@ func NewDeleteParams() DeleteParams {
 // These directories must be removed, because they include files, which should not be deleted, because of the excludeProps params.
 // These directories must not be deleted from Artifactory.
 // In case of no excludeProps filed in the file spec, nil will be return so all deleteCandidates will get deleted.
-func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (*content.ContentReader, error) {
+func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (contentReader *content.ContentReader, err error) {
 	length, err := deleteCandidates.Length()
 	if err != nil || specFile.ExcludeProps == "" || length == 0 {
 		return nil, err
@@ -207,7 +207,10 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 	if len(bufferFiles) > 0 {
 		defer func() {
 			for _, file := range bufferFiles {
-				file.Close()
+				e := file.Close()
+				if err == nil {
+					err = errorutils.CheckError(e)
+				}
 			}
 		}()
 		if err != nil {
@@ -217,7 +220,12 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 		if err != nil {
 			return nil, err
 		}
-		defer artifactNotToBeDeleteReader.Close()
+		defer func() {
+			e := artifactNotToBeDeleteReader.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 		if err = utils.WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter); err != nil {
 			return nil, err
 		}

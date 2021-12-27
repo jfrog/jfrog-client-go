@@ -52,7 +52,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 		for _, readerSpec := range moveReaders {
 			e := readerSpec.Reader.Close()
 			if err == nil {
-				err = e
+				err = errorutils.CheckError(e)
 			}
 		}
 	}()
@@ -74,7 +74,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	defer func() {
 		e := tempAggregatedReader.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	aggregatedReader := tempAggregatedReader
@@ -88,7 +88,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	defer func() {
 		e := aggregatedReader.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	successCount, failedCount, err = mc.moveFiles(aggregatedReader, moveSpecs)
@@ -121,7 +121,7 @@ func (mc *MoveCopyService) getPathsToMove(moveSpec MoveCopyParams) (resultItems 
 		defer func() {
 			e := tempResultItems.Close()
 			if err == nil {
-				err = e
+				err = errorutils.CheckError(e)
 			}
 		}()
 
@@ -156,7 +156,7 @@ func (mc *MoveCopyService) moveFiles(reader *content.ContentReader, params []Mov
 		defer producerConsumer.Done()
 		for resultItem := new(MoveResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(MoveResultItem) {
 			fileMoveCopyHandlerFunc := mc.createMoveCopyFileHandlerFunc(&result)
-			producerConsumer.AddTaskWithError(fileMoveCopyHandlerFunc(resultItem.ResultItem, &params[resultItem.FileSpecId]),
+			_, _ = producerConsumer.AddTaskWithError(fileMoveCopyHandlerFunc(resultItem.ResultItem, &params[resultItem.FileSpecId]),
 				errorsQueue.AddError)
 		}
 		if err := reader.GetError(); err != nil {
@@ -307,7 +307,7 @@ func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (contentReader *conte
 	defer func() {
 		e := cw.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	for _, tuple := range arr {

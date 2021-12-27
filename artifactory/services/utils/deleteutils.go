@@ -17,7 +17,9 @@ func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 
 	regexpPattern := "^" + strings.Replace(deletePattern, "*", "([^/]*|.*)", -1)
 	r, err := regexp.Compile(regexpPattern)
-	errorutils.CheckError(err)
+	if errorutils.CheckError(err) != nil {
+		return "", err
+	}
 	if err != nil {
 		return "", err
 	}
@@ -48,7 +50,7 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 	defer func() {
 		e := dirsToBeDeletedReader.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	var candidateDirToBeDeletedPath string
