@@ -595,7 +595,12 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 		if err != nil {
 			return err
 		}
-		defer reader.Close()
+		defer func() {
+			e := reader.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 		_, err = io.Copy(writer, reader)
 		if err != nil {
 			return err
