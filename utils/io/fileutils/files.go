@@ -368,6 +368,9 @@ func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error
 
 func calcChecksumDetails(filePath string) (ChecksumDetails, error) {
 	file, err := os.Open(filePath)
+	if errorutils.CheckError(err) != nil {
+		return ChecksumDetails{}, err
+	}
 	defer file.Close()
 	if errorutils.CheckError(err) != nil {
 		return ChecksumDetails{}, err

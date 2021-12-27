@@ -192,6 +192,9 @@ func (rs *ReportService) Delete(reportId string) error {
 
 	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI, reportId)
 	resp, body, err := rs.client.SendDelete(url, nil, &httpClientsDetails)
+	if err != nil {
+		return err
+	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}

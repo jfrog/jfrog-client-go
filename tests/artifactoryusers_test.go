@@ -24,6 +24,7 @@ func testCreateUser(t *testing.T) {
 	assert.NoError(t, err)
 
 	user, err := testUserService.GetUser(UserParams)
+	assert.NoError(t, err)
 	// we don't know the default group when created, so just set it
 	UserParams.UserDetails.Groups = user.Groups
 	// password is not carried in reply

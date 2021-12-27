@@ -910,6 +910,9 @@ func deleteBuildIndex(buildName string) error {
 
 	dataIndexBuild := indexedBuildsPayload{IndexedBuilds: indexedBuilds}
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
+	if err != nil {
+		return err
+	}
 
 	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails, "")
 	if err != nil {

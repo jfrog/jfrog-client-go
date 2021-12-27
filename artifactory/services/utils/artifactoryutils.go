@@ -616,7 +616,6 @@ type CommonConf interface {
 type CommonConfImpl struct {
 	client     *jfroghttpclient.JfrogHttpClient
 	artDetails *auth.ServiceDetails
-	version    string
 }
 
 func NewCommonConfImpl(artDetails auth.ServiceDetails) (CommonConf, error) {
