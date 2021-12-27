@@ -31,7 +31,7 @@ func (runner *PollingExecutor) Execute() ([]byte, error) {
 				errChan <- errorutils.CheckErrorf("%s Polling executor timeout after %v seconds", runner.MsgPrefix, runner.Timeout.Seconds())
 				resultChan <- nil
 				return
-			case _ = <-ticker.C:
+			case <-ticker.C:
 				shouldStop, responseBody, err := runner.PollingAction()
 				if err != nil {
 					errChan <- err

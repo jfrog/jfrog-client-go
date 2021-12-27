@@ -15,7 +15,3 @@ type accessDetails struct {
 func (rt *accessDetails) GetVersion() (string, error) {
 	panic("Failed: Method is not implemented")
 }
-
-func (rt *accessDetails) getArtifactoryVersion() (string, error) {
-	panic("Failed: Method is not implemented")
-}

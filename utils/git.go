@@ -129,9 +129,11 @@ func (m *manager) readUrl() {
 	for scanner.Scan() {
 		if IsNextLineUrl {
 			text := scanner.Text()
-			strings.HasPrefix(text, "url")
-			originUrl = strings.TrimSpace(strings.SplitAfter(text, "=")[1])
-			break
+			text = strings.TrimSpace(text)
+			if strings.HasPrefix(text, "url") {
+				originUrl = strings.TrimSpace(strings.SplitAfter(text, "=")[1])
+				break
+			}
 		}
 		if scanner.Text() == "[remote \"origin\"]" {
 			IsNextLineUrl = true
