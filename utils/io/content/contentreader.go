@@ -3,6 +3,7 @@ package content
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -99,7 +100,7 @@ func (cr *ContentReader) Close() error {
 			continue
 		}
 		if err := errorutils.CheckError(os.Remove(filePath)); err != nil {
-			return err
+			return errors.New("Failed to close reader: " + err.Error())
 		}
 	}
 	cr.filesPaths = nil
