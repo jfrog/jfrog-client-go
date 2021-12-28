@@ -15,8 +15,6 @@ import (
 	"testing"
 	"time"
 
-	buildinfo "github.com/jfrog/build-info-go/entities"
-
 	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
 	accessServices "github.com/jfrog/jfrog-client-go/access/services"
 	pipelinesAuth "github.com/jfrog/jfrog-client-go/pipelines/auth"
