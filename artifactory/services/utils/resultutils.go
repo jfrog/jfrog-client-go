@@ -40,9 +40,12 @@ type ArtifactDetails struct {
 	Checksums       Checksums `json:"checksums,omitempty"`
 }
 
-func (cs *OperationSummary) Close() {
-	cs.TransferDetailsReader.Close()
-	cs.ArtifactsDetailsReader.Close()
+func (cs *OperationSummary) Close() error {
+	err := cs.TransferDetailsReader.Close()
+	if err != nil {
+		return err
+	}
+	return cs.ArtifactsDetailsReader.Close()
 }
 
 func (ad *ArtifactDetails) ToBuildInfoArtifact() buildinfo.Artifact {

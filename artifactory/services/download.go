@@ -184,7 +184,11 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			}
 			// Produce download tasks for the download consumers.
 			totalTasks += ds.produceTasks(reader, downloadParams, producer, fileHandlerFunc, errorsQueue)
-			reader.Close()
+			err = reader.Close()
+			if err != nil {
+				errorsQueue.AddError(err)
+				return
+			}
 		}
 	}()
 }

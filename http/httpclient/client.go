@@ -632,7 +632,12 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	if errorutils.CheckError(err) != nil {
 		return
 	}
-	defer tempFile.Close()
+	defer func() {
+		e := tempFile.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 
 	if httpClientsDetails.Headers == nil {
 		httpClientsDetails.Headers = make(map[string]string)
@@ -642,8 +647,12 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	if err != nil {
 		return "", nil, err
 	}
-	defer resp.Body.Close()
-
+	defer func() {
+		e := resp.Body.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	// Unexpected http response
 	if resp.StatusCode != http.StatusPartialContent {
 		return
