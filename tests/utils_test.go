@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	buildinfo "github.com/jfrog/build-info-go/entities"
 	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"io/ioutil"
 	"net/http"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	buildinfo "github.com/jfrog/build-info-go/entities"
 
 	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
 	accessServices "github.com/jfrog/jfrog-client-go/access/services"
