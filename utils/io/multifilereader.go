@@ -9,6 +9,7 @@ import (
 
 // Create new multi file ReaderAt
 func NewMultiFileReaderAt(filePaths []string) (readerAt *multiFileReaderAt, err error) {
+	readerAt = &multiFileReaderAt{}
 	for _, v := range filePaths {
 		f, err := os.Open(v)
 		if err != nil {

@@ -349,6 +349,7 @@ func ReadFile(filePath string) ([]byte, error) {
 }
 
 func GetFileDetails(filePath string, includeChecksums bool) (details *FileDetails, err error) {
+	details = new(FileDetails)
 	if includeChecksums {
 		details.Checksum, err = calcChecksumDetails(filePath)
 		if err != nil {
@@ -394,6 +395,7 @@ func calcChecksumDetails(filePath string) (details ChecksumDetails, err error) {
 }
 
 func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details *FileDetails, err error) {
+	details = new(FileDetails)
 	pr, pw := io.Pipe()
 	defer func() {
 		e := pr.Close()
