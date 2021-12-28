@@ -3,15 +3,15 @@ package content
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 	"os"
 	"reflect"
 	"sort"
 	"sync"
-
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 // Open and read JSON files, find the array key inside it and load its value into the memory in small chunks.
@@ -59,7 +59,7 @@ func (cr *ContentReader) IsEmpty() bool {
 	return cr.empty
 }
 
-// Each call to 'NextRecord()' will returns a single element from the channel.
+// Each call to 'NextRecord()' will return a single element from the channel.
 // Only the first call invokes a goroutine to read data from the file and push it into the channel.
 // 'io.EOF' will be returned if no data is left.
 func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
@@ -100,7 +100,7 @@ func (cr *ContentReader) Close() error {
 			continue
 		}
 		if err := errorutils.CheckError(os.Remove(filePath)); err != nil {
-			return err
+			return errors.New("Failed to close reader: " + err.Error())
 		}
 	}
 	cr.filesPaths = nil
@@ -142,7 +142,13 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 		cr.errorsQueue.AddError(errorutils.CheckError(err))
 		return
 	}
-	defer fd.Close()
+	defer func() {
+		err = fd.Close()
+		if err != nil {
+			log.Error(err.Error())
+			cr.errorsQueue.AddError(errorutils.CheckError(err))
+		}
+	}()
 	br := bufio.NewReaderSize(fd, 65536)
 	dec := json.NewDecoder(br)
 	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
@@ -203,12 +209,17 @@ func isEmptyArray(dec *json.Decoder, target string, isArray bool) (bool, error) 
 	return t == json.Delim('{'), nil
 }
 
-func MergeReaders(arr []*ContentReader, arrayKey string) (*ContentReader, error) {
+func MergeReaders(arr []*ContentReader, arrayKey string) (contentReader *ContentReader, err error) {
 	cw, err := NewContentWriter(arrayKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer cw.Close()
+	defer func() {
+		e := cw.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	for _, cr := range arr {
 		for item := new(interface{}); cr.NextRecord(item) == nil; item = new(interface{}) {
 			cw.Write(*item)
@@ -217,13 +228,14 @@ func MergeReaders(arr []*ContentReader, arrayKey string) (*ContentReader, error)
 			return nil, err
 		}
 	}
-	return NewContentReader(cw.GetFilePath(), arrayKey), nil
+	contentReader = NewContentReader(cw.GetFilePath(), arrayKey)
+	return contentReader, nil
 }
 
 // Sort a content-reader in the required order (ascending or descending).
 // Performs a merge-sort on the reader, splitting the reader to multiple readers of size 'utils.MaxBufferSize'.
 // Sort each of the split readers, and merge them into a single sorted reader.
-// In case of multiple items with the same key - all of the items will appear in the sorted reader, but their order is not guaranteed to be preserved.
+// In case of multiple items with the same key - all the items will appear in the sorted reader, but their order is not guaranteed to be preserved.
 func SortContentReader(readerRecord SortableContentItem, reader *ContentReader, ascendingOrder bool) (*ContentReader, error) {
 	getSortKeyFunc := func(record interface{}) (string, error) {
 		// Get the expected record type from the reader.
@@ -257,16 +269,18 @@ func (sr SortRecord) GetSortKey() string {
 // getKeyFunc gets an item from the reader and returns the key of the item.
 // Attention! In case of multiple items with the same key - only the first item in the original reader will appear in the sorted one! The other items will be removed.
 // Also pay attention that the order of the fields inside the objects might change.
-func SortContentReaderByCalculatedKey(reader *ContentReader, getKeyFunc keyCalculationFunc, ascendingOrder bool) (*ContentReader, error) {
+func SortContentReaderByCalculatedKey(reader *ContentReader, getKeyFunc keyCalculationFunc, ascendingOrder bool) (contentReader *ContentReader, err error) {
 	var sortedReaders []*ContentReader
 	defer func() {
 		for _, r := range sortedReaders {
-			r.Close()
+			e := r.Close()
+			if err == nil {
+				err = e
+			}
 		}
 	}()
 
 	// Split reader to multiple sorted readers of size 'utils.MaxBufferSize'.
-	var err error
 	sortedReaders, err = splitReaderToSortedBufferSizeReadersByCalculatedKey(reader, getKeyFunc, ascendingOrder)
 	if err != nil {
 		return nil, err
@@ -320,16 +334,21 @@ func splitReaderToSortedBufferSizeReadersByCalculatedKey(reader *ContentReader, 
 	return splitReaders, nil
 }
 
-func mergeSortedReadersByCalculatedKey(sortedReaders []*ContentReader, ascendingOrder bool) (*ContentReader, error) {
+func mergeSortedReadersByCalculatedKey(sortedReaders []*ContentReader, ascendingOrder bool) (contentReader *ContentReader, err error) {
 	if len(sortedReaders) == 0 {
-		return NewEmptyContentReader(DefaultKey), nil
+		contentReader = NewEmptyContentReader(DefaultKey)
+		return contentReader, nil
 	}
 	resultWriter, err := NewContentWriter(DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer resultWriter.Close()
-
+	defer func() {
+		e := resultWriter.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	currentContentItem := make([]*SortRecord, len(sortedReaders))
 	sortedFilesClone := make([]*ContentReader, len(sortedReaders))
 	copy(sortedFilesClone, sortedReaders)
@@ -368,11 +387,12 @@ func mergeSortedReadersByCalculatedKey(sortedReaders []*ContentReader, ascending
 		resultWriter.Write(candidateToWrite.Record)
 		currentContentItem[smallestIndex] = nil
 	}
-	return NewContentReader(resultWriter.GetFilePath(), resultWriter.GetArrayKey()), nil
+	contentReader = NewContentReader(resultWriter.GetFilePath(), resultWriter.GetArrayKey())
+	return contentReader, nil
 }
 
 // Merge a slice of sorted content-readers into a single sorted content-reader.
-func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*ContentReader, ascendingOrder bool) (*ContentReader, error) {
+func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*ContentReader, ascendingOrder bool) (contentReader *ContentReader, err error) {
 	if len(sortedReaders) == 0 {
 		return NewEmptyContentReader(DefaultKey), nil
 	}
@@ -380,7 +400,12 @@ func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*Conte
 	if err != nil {
 		return nil, err
 	}
-	defer resultWriter.Close()
+	defer func() {
+		e := resultWriter.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 
 	// Get the expected record type from the reader.
 	value := reflect.ValueOf(readerRecord)
@@ -420,7 +445,8 @@ func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*Conte
 		resultWriter.Write(*candidateToWrite)
 		currentContentItem[smallestIndex] = nil
 	}
-	return NewContentReader(resultWriter.GetFilePath(), resultWriter.GetArrayKey()), nil
+	contentReader = NewContentReader(resultWriter.GetFilePath(), resultWriter.GetArrayKey())
+	return contentReader, nil
 }
 
 func compareStrings(src, against string, ascendingOrder bool) bool {
@@ -430,7 +456,7 @@ func compareStrings(src, against string, ascendingOrder bool) bool {
 	return src < against
 }
 
-func SortAndSaveBufferToFile(keysToContentItems map[string]SortableContentItem, allKeys []string, increasingOrder bool) (*ContentReader, error) {
+func SortAndSaveBufferToFile(keysToContentItems map[string]SortableContentItem, allKeys []string, increasingOrder bool) (contentReader *ContentReader, err error) {
 	if len(allKeys) == 0 {
 		return nil, nil
 	}
@@ -438,7 +464,12 @@ func SortAndSaveBufferToFile(keysToContentItems map[string]SortableContentItem, 
 	if err != nil {
 		return nil, err
 	}
-	defer writer.Close()
+	defer func() {
+		e := writer.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	if increasingOrder {
 		sort.Strings(allKeys)
 	} else {
@@ -447,7 +478,8 @@ func SortAndSaveBufferToFile(keysToContentItems map[string]SortableContentItem, 
 	for _, v := range allKeys {
 		writer.Write(keysToContentItems[v])
 	}
-	return NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
+	contentReader = NewContentReader(writer.GetFilePath(), writer.GetArrayKey())
+	return contentReader, nil
 }
 
 func ConvertToStruct(record, recordOutput interface{}) error {

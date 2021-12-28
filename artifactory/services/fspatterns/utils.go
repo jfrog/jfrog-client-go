@@ -135,7 +135,7 @@ func GetRootPath(pattern, target string, patternType clientutils.PatternType, pr
 
 // When handling symlink we want to simulate the creation of empty file
 func CreateSymlinkFileDetails() (*fileutils.FileDetails, error) {
-	checksumInfo, err := biutils.CalcChecksums(bytes.NewBuffer([]byte(fileutils.SYMLINK_FILE_CONTENT)))
+	checksumInfo, err := biutils.CalcChecksums(bytes.NewBuffer([]byte(fileutils.SymlinkFileContent)))
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}

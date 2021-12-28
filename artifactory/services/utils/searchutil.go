@@ -279,13 +279,13 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReade
 // return the file path.
 func streamToFile(reader io.Reader) (string, error) {
 	var fd *os.File
-	bufio := bufio.NewReaderSize(reader, 65536)
+	bufioReader := bufio.NewReaderSize(reader, 65536)
 	fd, err := fileutils.CreateTempFile()
 	if err != nil {
 		return "", err
 	}
 	defer fd.Close()
-	_, err = io.Copy(fd, bufio)
+	_, err = io.Copy(fd, bufioReader)
 	return fd.Name(), errorutils.CheckError(err)
 }
 

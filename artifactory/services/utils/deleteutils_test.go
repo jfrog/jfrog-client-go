@@ -58,9 +58,8 @@ func assertDeletePatternErr(expected, actual string, t *testing.T) {
 }
 
 func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
-	testPath, err := getBaseTestDir()
+	testPath := getBaseTestDir(t)
 	{
-		assert.NoError(t, err)
 		var bufferFiles []*content.ContentReader
 		for i := 1; i <= 3; i++ {
 			bufferFiles = append(bufferFiles, content.NewContentReader(filepath.Join(testPath, "buffer_file_ascending_order_"+strconv.Itoa(i)+".json"), content.DefaultKey))
@@ -89,8 +88,7 @@ func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
 }
 
 func TestFilterCandidateToBeDeleted(t *testing.T) {
-	testPath, err := getBaseTestDir()
-	assert.NoError(t, err)
+	testPath := getBaseTestDir(t)
 	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 	assert.NoError(t, err)
 	deleteCandidates := content.NewContentReader(filepath.Join(testPath, "prebuffer_file.json"), content.DefaultKey)

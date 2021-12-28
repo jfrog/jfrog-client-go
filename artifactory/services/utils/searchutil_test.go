@@ -30,20 +30,19 @@ func assertUrl(repo, path, name, fullUrl string, t *testing.T) {
 }
 
 func TestReduceTopChainDirResult(t *testing.T) {
-	testDataPath, err := getBaseTestDir()
-	assert.NoError(t, err)
+	testDataPath := getBaseTestDir(t)
 	var reader, resultReader *content.ContentReader
 	var isMatch bool
 
 	// Single folder.
 	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step1.json"), content.DefaultKey)
-	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
+	resultReader, err := ReduceTopChainDirResult(ResultItem{}, reader)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(resultReader.GetFilesPaths()))
 	isMatch, err = fileutils.JsonEqual(filepath.Join(testDataPath, "reduce_top_chain_results_a.json"), resultReader.GetFilesPaths()[0])
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	assert.NoError(t, resultReader.Close())
+	readerCloseAndAssert(t, resultReader)
 
 	// Two different folders not sorted.
 	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step2.json"), content.DefaultKey)
@@ -53,7 +52,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	isMatch, err = fileutils.JsonEqual(filepath.Join(testDataPath, "reduce_top_chain_results_b.json"), resultReader.GetFilesPaths()[0])
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	assert.NoError(t, resultReader.Close())
+	readerCloseAndAssert(t, resultReader)
 
 	// One folder contains another, should reduce results.
 	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step3.json"), content.DefaultKey)
@@ -63,7 +62,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	isMatch, err = fileutils.JsonEqual(filepath.Join(testDataPath, "reduce_top_chain_results_b.json"), resultReader.GetFilesPaths()[0])
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	assert.NoError(t, resultReader.Close())
+	readerCloseAndAssert(t, resultReader)
 
 	oldMaxSize := utils.MaxBufferSize
 	defer func() { utils.MaxBufferSize = oldMaxSize }()
@@ -76,7 +75,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	isMatch, err = fileutils.JsonEqual(filepath.Join(testDataPath, "reduce_top_chain_results_c.json"), resultReader.GetFilesPaths()[0])
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	assert.NoError(t, resultReader.Close())
+	readerCloseAndAssert(t, resultReader)
 
 	//Two files in the same folder and one is a prefix to another.
 	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step5.json"), content.DefaultKey)
@@ -86,7 +85,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	isMatch, err = fileutils.JsonEqual(filepath.Join(testDataPath, "reduce_top_chain_results_d.json"), resultReader.GetFilesPaths()[0])
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	assert.NoError(t, resultReader.Close())
+	readerCloseAndAssert(t, resultReader)
 
 	//Two files in the same folder and one is a prefix to another and their folder.
 	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step6.json"), content.DefaultKey)
@@ -96,12 +95,11 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	isMatch, err = fileutils.JsonEqual(filepath.Join(testDataPath, "reduce_top_chain_results_e.json"), resultReader.GetFilesPaths()[0])
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	assert.NoError(t, resultReader.Close())
+	readerCloseAndAssert(t, resultReader)
 }
 
 func TestReduceTopChainDirResultNoResults(t *testing.T) {
-	testDataPath, err := getBaseTestDir()
-	assert.NoError(t, err)
+	testDataPath := getBaseTestDir(t)
 	reader := content.NewContentReader(filepath.Join(testDataPath, "no_results.json"), content.DefaultKey)
 	resultReader, err := ReduceTopChainDirResult(ResultItem{}, reader)
 	assert.NoError(t, err)
@@ -109,18 +107,16 @@ func TestReduceTopChainDirResultNoResults(t *testing.T) {
 }
 
 func TestReduceTopChainDirResultEmptyRepo(t *testing.T) {
-	testDataPath, err := getBaseTestDir()
-	assert.NoError(t, err)
+	testDataPath := getBaseTestDir(t)
 	reader := content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_empty_repo.json"), content.DefaultKey)
 	resultReader, err := ReduceTopChainDirResult(ResultItem{}, reader)
 	assert.NoError(t, err)
 	assert.True(t, resultReader.IsEmpty())
-	assert.NoError(t, resultReader.Close())
+	readerCloseAndAssert(t, resultReader)
 }
 
 func TestReduceBottomChainDirResult(t *testing.T) {
-	testDataPath, err := getBaseTestDir()
-	assert.NoError(t, err)
+	testDataPath := getBaseTestDir(t)
 	oldMaxSize := utils.MaxBufferSize
 	defer func() { utils.MaxBufferSize = oldMaxSize }()
 	for i := 0; i < 2; i++ {
@@ -137,7 +133,7 @@ func TestReduceBottomChainDirResult(t *testing.T) {
 				l, _ := resultReader.Length()
 				log.Debug(fmt.Sprintf("reduce_bottom_chain_step%v.json  length: %v name %v", i, l, resultReader.GetFilesPaths()))
 			} else {
-				assert.NoError(t, resultReader.Close())
+				readerCloseAndAssert(t, resultReader)
 			}
 		}
 		utils.MaxBufferSize = 2
@@ -145,7 +141,7 @@ func TestReduceBottomChainDirResult(t *testing.T) {
 }
 
 func TestValidateTransitiveSearchAllowed(t *testing.T) {
-	tests := []struct {
+	testRuns := []struct {
 		params             *CommonParams
 		artifactoryVersion *version.Version
 		expectedTransitive bool
@@ -159,7 +155,7 @@ func TestValidateTransitiveSearchAllowed(t *testing.T) {
 		{&CommonParams{Transitive: false}, version.NewVersion("7.17.0-m029"), false},
 		{&CommonParams{Transitive: false}, version.NewVersion("7.19.0"), false},
 	}
-	for _, test := range tests {
+	for _, test := range testRuns {
 		t.Run(fmt.Sprintf("transitive:%t,version:%s", test.params.Transitive, test.artifactoryVersion.GetVersion()), func(t *testing.T) {
 			DisableTransitiveSearchIfNotAllowed(test.params, test.artifactoryVersion)
 			assert.Equal(t, test.expectedTransitive, test.params.Transitive)

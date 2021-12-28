@@ -359,7 +359,7 @@ func createDistributeMapping(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo() + "b.out"
 	reader, err := testsSearchService.Search(searchParams)
 	assert.NoError(t, err)
-	assert.NoError(t, reader.Close())
+	readerCloseAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, length)
@@ -390,7 +390,7 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo() + "b.out"
 	reader, err := testsSearchService.Search(searchParams)
 	assert.NoError(t, err)
-	assert.NoError(t, reader.Close())
+	readerCloseAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, length)

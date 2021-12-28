@@ -103,7 +103,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		defer producer.Done()
 		// Iterate over file-spec groups and produce upload tasks.
 		// When encountering an error, log and move to next group.
-		vcsCache := clientutils.NewVcsDetals()
+		vcsCache := clientutils.NewVcsDetails()
 		toArchive := make(map[string]*archiveUploadData)
 		for _, uploadParams := range uploadParamsSlice {
 			var taskHandler uploadDataHandlerFunc
@@ -123,7 +123,11 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		}
 
 		for targetPath, archiveData := range toArchive {
-			archiveData.writer.Close()
+			err := archiveData.writer.Close()
+			if err != nil {
+				log.Error(err)
+				errorsQueue.AddError(err)
+			}
 			if us.Progress != nil {
 				us.Progress.IncGeneralProgressTotalBy(1)
 			}
@@ -198,7 +202,7 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, up
 			}
 			writersMap[data.Artifact.TargetPath] = &archiveData
 		} else {
-			// Merge all of the props
+			// Merge all the props
 			writersMap[data.Artifact.TargetPath].uploadParams.TargetProps = utils.MergeProperties([]*utils.Properties{writersMap[data.Artifact.TargetPath].uploadParams.TargetProps, uploadParams.TargetProps})
 		}
 		writersMap[data.Artifact.TargetPath].writer.Write(data)
@@ -291,7 +295,10 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 				vcsCache: vcsCache,
 			}
 			incGeneralProgressTotal(progressMgr, uploadParams)
-			createUploadTask(taskData, dataHandlerFunc)
+			err = createUploadTask(taskData, dataHandlerFunc)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -625,7 +632,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 	return func(artifact UploadData) parallel.TaskFunc {
 		return func(threadId int) (e error) {
 			if artifact.IsDir {
-				us.createFolderInArtifactory(artifact)
+				e = us.createFolderInArtifactory(artifact)
 				return
 			}
 			uploadResult.TotalCount[threadId]++
@@ -660,9 +667,9 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 	if err != nil {
 		return err
 	}
-	content := make([]byte, 0)
+	emptyContent := make([]byte, 0)
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
-	resp, body, err := us.client.SendPut(url, content, &httpClientsDetails)
+	resp, body, err := us.client.SendPut(url, emptyContent, &httpClientsDetails)
 	if err != nil {
 		log.Debug(resp)
 		return err
@@ -677,7 +684,12 @@ func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targe
 		logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
 
 		archiveDataReader := content.NewContentReader(archiveData.writer.GetFilePath(), archiveData.writer.GetArrayKey())
-		defer archiveDataReader.Close()
+		defer func() {
+			err := archiveDataReader.Close()
+			if e == nil {
+				e = err
+			}
+		}()
 		targetUrl, targetUrlWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), targetPath, archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian(), archiveData.uploadParams.TargetProps)
 		if e != nil {
 			return
@@ -877,7 +889,7 @@ type resultsManager struct {
 	// A slice of paths to files containing FileTransferDetails structs that represent successful file transfers.
 	// These paths are of files created by ContentWriters that were in notFinalTransfersWriters.
 	finalTransfersFilesPaths []string
-	// A ContentWriter of ArtifaceDetails structs. Each struct written to this ContentWriter represents an artifact in Artifactory
+	// A ContentWriter of ArtifactDetails structs. Each struct written to this ContentWriter represents an artifact in Artifactory
 	// that was successfully uploaded in the current operation.
 	artifactsDetailsWriter *content.ContentWriter
 }
@@ -934,7 +946,7 @@ func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 	return nil
 }
 
-// Mark all of the transfers to a specific target as completed successfully
+// Mark all the transfers to a specific target as completed successfully
 func (rm *resultsManager) finalizeResult(targetPath string, checksums *fileutils.ChecksumDetails) error {
 	writer := rm.notFinalTransfersWriters[targetPath]
 	e := writer.Close()

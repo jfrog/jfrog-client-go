@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	SYMLINK_FILE_CONTENT          = ""
-	File                 ItemType = "file"
-	Dir                  ItemType = "dir"
-	Any                  ItemType = "any"
+	SymlinkFileContent          = ""
+	File               ItemType = "file"
+	Dir                ItemType = "dir"
+	Any                ItemType = "any"
 )
 
 func GetFileSeparator() string {
@@ -235,7 +235,7 @@ func ListFiles(path string, includeDirs bool) ([]string, error) {
 
 func GetUploadRequestContent(file *os.File) io.Reader {
 	if file == nil {
-		return bytes.NewBuffer([]byte(SYMLINK_FILE_CONTENT))
+		return bytes.NewBuffer([]byte(SymlinkFileContent))
 	}
 	return bufio.NewReader(file)
 }
@@ -320,9 +320,9 @@ func GetHomeDir() string {
 	if home != "" {
 		return home
 	}
-	user, err := user.Current()
+	currentUser, err := user.Current()
 	if err == nil {
-		return user.HomeDir
+		return currentUser.HomeDir
 	}
 	return ""
 }
@@ -500,8 +500,7 @@ func RenamePath(oldPath, newPath string) error {
 	if err != nil {
 		return errors.New("Error copying directory: " + oldPath + "to" + newPath + err.Error())
 	}
-	RemovePath(oldPath)
-	return nil
+	return RemovePath(oldPath)
 }
 
 // Returns the path to the directory in which itemToFind is located.

@@ -28,16 +28,16 @@ type GoPublishCommand struct {
 
 func (gpc *GoPublishCommand) verifyCompatibleVersion(artifactoryVersion string) error {
 	propertiesApi := ArtifactoryMinSupportedVersion
-	version := version.NewVersion(artifactoryVersion)
+	ver := version.NewVersion(artifactoryVersion)
 	gpc.artifactoryVersion = artifactoryVersion
-	if !version.AtLeast(propertiesApi) {
+	if !ver.AtLeast(propertiesApi) {
 		return errorutils.CheckErrorf("Unsupported version of Artifactory: %s\nSupports Artifactory version %s and above", artifactoryVersion, propertiesApi)
 	}
 	return nil
 }
 
 func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
-	url, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
+	rtUrl, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
@@ -47,20 +47,20 @@ func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpcl
 	totalSucceed, totalFailed := 0, 0
 	var filesDetails []clientutils.FileTransferDetails
 	// Upload zip file
-	success, failed, err := gpc.uploadFile(params, params.ZipPath, moduleId[0], ".zip", url, &filesDetails, gpc)
+	success, failed, err := gpc.uploadFile(params, params.ZipPath, moduleId[0], ".zip", rtUrl, &filesDetails, gpc)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	// Upload mod file
-	success, failed, err = gpc.uploadFile(params, params.ModPath, moduleId[0], ".mod", url, &filesDetails, gpc)
+	success, failed, err = gpc.uploadFile(params, params.ModPath, moduleId[0], ".mod", rtUrl, &filesDetails, gpc)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	if version.NewVersion(gpc.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersion) && params.GetInfoPath() != "" {
 		// Upload info file. This is supported from Artifactory version 6.10.0 and above
-		success, failed, err = gpc.uploadFile(params, params.InfoPath, moduleId[0], ".info", url, &filesDetails, gpc)
+		success, failed, err = gpc.uploadFile(params, params.InfoPath, moduleId[0], ".info", rtUrl, &filesDetails, gpc)
 		totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 		if err != nil {
 			return nil, err

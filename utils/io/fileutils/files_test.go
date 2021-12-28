@@ -11,7 +11,7 @@ import (
 )
 
 func TestIsSsh(t *testing.T) {
-	tests := []struct {
+	testRuns := []struct {
 		url      string
 		expected bool
 	}{
@@ -23,7 +23,7 @@ func TestIsSsh(t *testing.T) {
 		{"sSh://some.url/some/api", true},
 		{"SSH://some.url/some/api", true},
 	}
-	for _, test := range tests {
+	for _, test := range testRuns {
 		t.Run(test.url, func(t *testing.T) {
 			assert.Equal(t, test.expected, IsSshUrl(test.url), "Wrong ssh for URL: "+test.url)
 		})
@@ -36,7 +36,9 @@ func TestFindUpstreamFile(t *testing.T) {
 		assert.Error(t, err)
 		return
 	}
-	defer os.Chdir(wd)
+	defer func() {
+		assert.NoError(t, os.Chdir(wd))
+	}()
 
 	// CD into a directory with a goDotMod.test file.
 	projectRoot := filepath.Join("testdata", "project")
@@ -69,8 +71,8 @@ func TestFindUpstreamFile(t *testing.T) {
 		return
 	}
 
-	// CD into a sub directory in the same project, and expect to get the same project root.
-	os.Chdir(wd)
+	// CD into a subdirectory in the same project, and expect to get the same project root.
+	assert.NoError(t, os.Chdir(wd))
 	projectSubDirectory := filepath.Join("testdata", "project", "dir")
 	err = os.Chdir(projectSubDirectory)
 	if err != nil {
@@ -118,7 +120,9 @@ func TestFindUpstreamFolder(t *testing.T) {
 		assert.Error(t, err)
 		return
 	}
-	defer os.Chdir(wd)
+	defer func() {
+		assert.NoError(t, os.Chdir(wd))
+	}()
 
 	// Create path to directory to find.
 	dirPath := filepath.Join("testdata")
@@ -227,7 +231,7 @@ func TestListFilesByFilterFunc(t *testing.T) {
 }
 
 func TestGetFileAndDirFromPath(t *testing.T) {
-	tests := []struct {
+	testRuns := []struct {
 		path         string
 		expectedFile string
 		expectedDir  string
@@ -242,7 +246,7 @@ func TestGetFileAndDirFromPath(t *testing.T) {
 		{"\\c.in", "c.in", ""},
 		{"\\\\c.in", "c.in", ""},
 	}
-	for _, test := range tests {
+	for _, test := range testRuns {
 		File, Dir := GetFileAndDirFromPath(test.path)
 		assert.Equal(t, test.expectedFile, File, "Wrong file name for path: "+test.path)
 		assert.Equal(t, test.expectedDir, Dir, "Wrong dir for path: "+test.path)
