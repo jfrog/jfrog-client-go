@@ -551,8 +551,10 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	if err != nil {
 		return
 	}
+	orgWd := wd
 	defer func() {
-		e := os.Chdir(wd)
+		// Change back to the original work dir.
+		e := os.Chdir(orgWd)
 		if err == nil {
 			err = errorutils.CheckError(e)
 		}
