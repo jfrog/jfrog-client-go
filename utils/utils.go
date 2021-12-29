@@ -553,3 +553,22 @@ func ExtractSha256FromResponseBody(body []byte) (string, error) {
 	}
 	return "", nil
 }
+
+func ChangeDirWithCallback(path string) (f func() error, err error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	err = os.Chdir(path)
+	if err != nil {
+		return
+	}
+	f = func() error {
+		e := os.Chdir(pwd)
+		if e != nil {
+			return e
+		}
+		return nil
+	}
+	return
+}
