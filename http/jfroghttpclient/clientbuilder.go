@@ -18,7 +18,7 @@ type jfrogHttpClientBuilder struct {
 	insecureTls            bool
 	ctx                    context.Context
 	retries                int
-	retryWaitTime          int
+	retryWaitTimMilliSecs  int
 	preRequestInterceptors []PreRequestInterceptorFunc
 	clientCertPath         string
 	clientCertKeyPath      string
@@ -56,8 +56,8 @@ func (builder *jfrogHttpClientBuilder) SetRetries(retries int) *jfrogHttpClientB
 	return builder
 }
 
-func (builder *jfrogHttpClientBuilder) SetRetryWaitTime(retryWaitTime int) *jfrogHttpClientBuilder {
-	builder.retryWaitTime = retryWaitTime
+func (builder *jfrogHttpClientBuilder) SetRetryWaitMilliSecs(retryWaitMilliSecs int) *jfrogHttpClientBuilder {
+	builder.retryWaitTimMilliSecs = retryWaitMilliSecs
 	return builder
 }
 
@@ -86,7 +86,7 @@ func (builder *jfrogHttpClientBuilder) Build() (rtHttpClient *JfrogHttpClient, e
 		SetContext(builder.ctx).
 		SetTimeout(builder.timeout).
 		SetRetries(builder.retries).
-		SetRetryWaitTime(builder.retryWaitTime).
+		SetRetryWaitMilliSecs(builder.retryWaitTimMilliSecs).
 		SetHttpClient(builder.httpClient).
 		Build()
 	return

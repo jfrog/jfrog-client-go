@@ -40,7 +40,7 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		SetRetries(config.GetHttpRetries()).
-		SetRetryWaitTime(config.GetHttpRetryWaitTime()).
+		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
 		SetHttpClient(config.GetHttpClient()).
 		Build()
 	if err != nil {

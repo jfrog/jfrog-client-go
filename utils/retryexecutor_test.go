@@ -13,9 +13,9 @@ func TestRetryExecutorSuccess(t *testing.T) {
 	runCount := 0
 
 	executor := RetryExecutor{
-		MaxRetries:      retriesToPerform,
-		RetriesInterval: 5000,
-		ErrorMessage:    "Testing RetryExecutor",
+		MaxRetries:               retriesToPerform,
+		RetriesIntervalMilliSecs: 10,
+		ErrorMessage:             "Testing RetryExecutor",
 		ExecutionHandler: func() (bool, error) {
 			runCount++
 			if runCount == breakRetriesAt {
@@ -37,9 +37,9 @@ func TestRetryExecutorFail(t *testing.T) {
 	runCount := 0
 
 	executor := RetryExecutor{
-		MaxRetries:      retriesToPerform,
-		RetriesInterval: 0,
-		ErrorMessage:    "Testing RetryExecutor",
+		MaxRetries:               retriesToPerform,
+		RetriesIntervalMilliSecs: 0,
+		ErrorMessage:             "Testing RetryExecutor",
 		ExecutionHandler: func() (bool, error) {
 			runCount++
 			return true, nil
