@@ -18,20 +18,22 @@ type Config interface {
 	GetContext() context.Context
 	GetHttpTimeout() time.Duration
 	GetHttpRetries() int
+	GetHttpRetryWaitMilliSecs() int
 	GetHttpClient() *http.Client
 }
 
 type servicesConfig struct {
 	auth.ServiceDetails
-	certificatesPath string
-	dryRun           bool
-	threads          int
-	logger           log.Log
-	insecureTls      bool
-	ctx              context.Context
-	httpTimeout      time.Duration
-	httpRetries      int
-	httpClient       *http.Client
+	certificatesPath       string
+	dryRun                 bool
+	threads                int
+	logger                 log.Log
+	insecureTls            bool
+	ctx                    context.Context
+	httpTimeout            time.Duration
+	httpRetries            int
+	httpRetryWaitMilliSecs int
+	httpClient             *http.Client
 }
 
 func (config *servicesConfig) IsDryRun() bool {
@@ -68,6 +70,10 @@ func (config *servicesConfig) GetHttpTimeout() time.Duration {
 
 func (config *servicesConfig) GetHttpRetries() int {
 	return config.httpRetries
+}
+
+func (config *servicesConfig) GetHttpRetryWaitMilliSecs() int {
+	return config.httpRetryWaitMilliSecs
 }
 
 func (config *servicesConfig) GetHttpClient() *http.Client {

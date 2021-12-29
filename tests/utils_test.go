@@ -821,10 +821,11 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 
 func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	retryExecutor := &clientutils.RetryExecutor{
-		MaxRetries:       12,
-		RetriesInterval:  10,
-		ErrorMessage:     "Waiting for Artifactory to evaluate repository operation...",
-		ExecutionHandler: createRepoConfigValidationFunc(repoKey, params),
+		MaxRetries: 12,
+		// RetriesIntervalMilliSecs in milliseconds
+		RetriesIntervalMilliSecs: 10 * 1000,
+		ErrorMessage:             "Waiting for Artifactory to evaluate repository operation...",
+		ExecutionHandler:         createRepoConfigValidationFunc(repoKey, params),
 	}
 	err := retryExecutor.Execute()
 	assert.NoError(t, err)
