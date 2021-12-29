@@ -40,8 +40,8 @@ func NewWatchService(client *jfroghttpclient.JfrogHttpClient) *WatchService {
 }
 
 // GetXrayDetails returns the Xray details
-func (vs *WatchService) GetXrayDetails() auth.ServiceDetails {
-	return vs.XrayDetails
+func (xws *WatchService) GetXrayDetails() auth.ServiceDetails {
+	return xws.XrayDetails
 }
 
 // GetJfrogHttpClient returns the http client

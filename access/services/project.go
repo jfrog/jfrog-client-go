@@ -26,15 +26,15 @@ type Project struct {
 	DisplayName       string           `json:"display_name,omitempty"`
 	Description       string           `json:"description,omitempty"`
 	AdminPrivileges   *AdminPrivileges `json:"admin_privileges,omitempty"`
-	SoftLimit         bool             `json:"soft_limit,omitempty"`
+	SoftLimit         *bool            `json:"soft_limit,omitempty"`
 	StorageQuotaBytes float64          `json:"storage_quota_bytes,omitempty"`
 	ProjectKey        string           `json:"project_key,omitempty"`
 }
 
 type AdminPrivileges struct {
-	ManageMembers   bool `json:"manage_members,omitempty"`
-	ManageResources bool `json:"manage_resources,omitempty"`
-	IndexResources  bool `json:"index_resources,omitempty"`
+	ManageMembers   *bool `json:"manage_members,omitempty"`
+	ManageResources *bool `json:"manage_resources,omitempty"`
+	IndexResources  *bool `json:"index_resources,omitempty"`
 }
 
 type ProjectService struct {

@@ -1,12 +1,12 @@
 package io
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	testUtils "github.com/jfrog/jfrog-client-go/utils/tests"
+	"github.com/stretchr/testify/assert"
 	"io"
-	"os"
 	"reflect"
 	"testing"
-
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
 func TestNewMultiFileReaderAt(t *testing.T) {
@@ -39,8 +39,8 @@ func TestNewMultiFileReaderAt(t *testing.T) {
 					t.Error(err)
 				}
 				files = append(files, f.Name())
-				f.Close()
-				defer os.Remove(f.Name())
+				assert.NoError(t, f.Close())
+				defer testUtils.RemoveAndAssert(t, f.Name())
 			}
 
 			// Create multiFileReaderAt

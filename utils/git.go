@@ -167,7 +167,12 @@ func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error
 		err = e
 		return
 	}
-	defer file.Close()
+	defer func() {
+		e = file.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -226,7 +231,12 @@ func (m *manager) readRevisionFromRef(refPath string) {
 		m.err = err
 		return
 	}
-	defer file.Close()
+	defer func() {
+		e := file.Close()
+		if m.err == nil {
+			m.err = e
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -256,7 +266,12 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 			m.err = err
 			return
 		}
-		defer file.Close()
+		defer func() {
+			e := file.Close()
+			if m.err == nil {
+				m.err = e
+			}
+		}()
 
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {

@@ -19,7 +19,10 @@ func Unzip(at io.ReaderAt, size int64, dest string) error {
 		return err
 	}
 
-	os.MkdirAll(dest, 0755)
+	err = os.MkdirAll(dest, 0755)
+	if err != nil {
+		return err
+	}
 	// Closure to address file descriptors issue with all the deferred .Close() methods
 	extractAndWriteFile := func(f *zip.File) error {
 		rc, err := f.Open()
@@ -35,9 +38,15 @@ func Unzip(at io.ReaderAt, size int64, dest string) error {
 		path := filepath.Join(dest, f.Name)
 
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(path, 0700)
+			err = os.MkdirAll(path, 0700)
+			if err != nil {
+				return err
+			}
 		} else {
-			os.MkdirAll(filepath.Dir(path), 0700)
+			err = os.MkdirAll(filepath.Dir(path), 0700)
+			if err != nil {
+				return err
+			}
 			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0700)
 			if err != nil {
 				return err
@@ -85,7 +94,7 @@ func ZipFolderFiles(source, target string) (err error) {
 		}
 	}()
 
-	filepath.Walk(source, func(path string, info os.FileInfo, err error) (currentErr error) {
+	return filepath.Walk(source, func(path string, info os.FileInfo, err error) (currentErr error) {
 		if info.IsDir() {
 			return
 		}
@@ -121,5 +130,4 @@ func ZipFolderFiles(source, target string) (err error) {
 		_, currentErr = io.Copy(writer, file)
 		return
 	})
-	return
 }

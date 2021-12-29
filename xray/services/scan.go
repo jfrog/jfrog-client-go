@@ -191,6 +191,7 @@ type RequestScanResponse struct {
 
 type ScanResponse struct {
 	ScanId             string          `json:"scan_id,omitempty"`
+	XrayDataUrl        string          `json:"xray_data_url,omitempty"`
 	Violations         []Violation     `json:"violations,omitempty"`
 	Vulnerabilities    []Vulnerability `json:"vulnerabilities,omitempty"`
 	Licenses           []License       `json:"licenses,omitempty"`

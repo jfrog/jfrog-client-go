@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils"
 )
 
-// Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
+// Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
 	repoPathFileTriples, err := createRepoPathFileTriples(searchPattern, params.Recursive)

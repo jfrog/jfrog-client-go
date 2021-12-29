@@ -12,18 +12,16 @@ func TestUnarchive(t *testing.T) {
 	for _, extension := range tests {
 		t.Run(extension, func(t *testing.T) {
 			// Create temp directory
-			tmpDir, err := CreateTempDir()
-			assert.NoError(t, err)
-			defer RemoveTempDir(tmpDir)
-
+			tmpDir, createTempDirCallback := createTempDirWithCallbackAndAssert(t)
+			defer createTempDirCallback()
 			// Run unarchive on archive created on Unix
-			err = runUnarchive(t, "unix."+extension, "archives", filepath.Join(tmpDir, "unix"))
+			err := runUnarchive("unix."+extension, "archives", filepath.Join(tmpDir, "unix"))
 			assert.NoError(t, err)
 			assert.FileExists(t, filepath.Join(tmpDir, "unix", "link"))
 			assert.FileExists(t, filepath.Join(tmpDir, "unix", "dir", "file"))
 
 			// Run unarchive on archive created on Windows
-			err = runUnarchive(t, "win."+extension, "archives", filepath.Join(tmpDir, "win"))
+			err = runUnarchive("win."+extension, "archives", filepath.Join(tmpDir, "win"))
 			assert.NoError(t, err)
 			assert.FileExists(t, filepath.Join(tmpDir, "win", "link.lnk"))
 			assert.FileExists(t, filepath.Join(tmpDir, "win", "dir", "file.txt"))
@@ -45,13 +43,11 @@ func TestUnarchiveZipSlip(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.testType, func(t *testing.T) {
 			// Create temp directory
-			tmpDir, err := CreateTempDir()
-			assert.NoError(t, err)
-			defer RemoveTempDir(tmpDir)
-
+			tmpDir, createTempDirCallback := createTempDirWithCallbackAndAssert(t)
+			defer createTempDirCallback()
 			for _, archive := range test.archives {
 				// Unarchive and make sure an error returns
-				err = runUnarchive(t, test.testType+"."+archive, "zipslip", tmpDir)
+				err := runUnarchive(test.testType+"."+archive, "zipslip", tmpDir)
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), test.errorSuffix)
 			}
@@ -59,6 +55,14 @@ func TestUnarchiveZipSlip(t *testing.T) {
 	}
 }
 
-func runUnarchive(t *testing.T, archiveFileName, sourceDir, targetDir string) error {
+func runUnarchive(archiveFileName, sourceDir, targetDir string) error {
 	return Unarchive(filepath.Join("testdata", sourceDir, archiveFileName), archiveFileName, targetDir)
+}
+
+func createTempDirWithCallbackAndAssert(t *testing.T) (string, func()) {
+	tempDirPath, err := CreateTempDir()
+	assert.NoError(t, err, "Couldn't create temp dir")
+	return tempDirPath, func() {
+		assert.NoError(t, RemoveTempDir(tempDirPath), "Couldn't remove temp dir")
+	}
 }

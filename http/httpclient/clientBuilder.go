@@ -78,11 +78,11 @@ func (builder *httpClientBuilder) SetRetryWaitMilliSecs(retryWaitMilliSecs int) 
 
 func (builder *httpClientBuilder) AddClientCertToTransport(transport *http.Transport) error {
 	if builder.clientCertPath != "" {
-		cert, err := tls.LoadX509KeyPair(builder.clientCertPath, builder.clientCertKeyPath)
+		certificate, err := tls.LoadX509KeyPair(builder.clientCertPath, builder.clientCertKeyPath)
 		if err != nil {
 			return errorutils.CheckErrorf("Failed loading client certificate: " + err.Error())
 		}
-		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
+		transport.TLSClientConfig.Certificates = []tls.Certificate{certificate}
 	}
 
 	return nil
