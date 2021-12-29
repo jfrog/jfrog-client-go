@@ -2,8 +2,7 @@ name: JFrog Client Go Tests
 on:
   push:
     branches:
-      - master
-      - dev
+      - '**'
   # Triggers the workflow on labeled PRs only.
   pull_request_target:
     types: [labeled]
