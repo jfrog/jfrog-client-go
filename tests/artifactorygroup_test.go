@@ -13,7 +13,6 @@ func TestGroups(t *testing.T) {
 	t.Run("create", testCreateGroup)
 	t.Run("update", testUpdateGroup)
 	t.Run("delete", testDeleteGroup)
-	t.Run("addUsers", testAddUsersToGroup)
 }
 
 func testCreateGroup(t *testing.T) {
@@ -35,19 +34,6 @@ func testUpdateGroup(t *testing.T) {
 	groupParams.GroupDetails.Description = "Changed description"
 	groupParams.GroupDetails.AutoJoin = &trueValue
 	groupParams.GroupDetails.AdminPrivileges = &falseValue
-	err = testGroupService.UpdateGroup(groupParams)
-	assert.NoError(t, err)
-	group, err := testGroupService.GetGroup(groupParams)
-	assert.NoError(t, err)
-	assert.Equal(t, groupParams.GroupDetails, *group)
-}
-
-func testAddUsersToGroup(t *testing.T) {
-	groupParams := getTestGroupParams(true)
-	err := testGroupService.CreateGroup(groupParams)
-	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
-	assert.NoError(t, err)
-	groupParams.GroupDetails.UsersNames = []string{"Alice", "Bob"}
 	err = testGroupService.UpdateGroup(groupParams)
 	assert.NoError(t, err)
 	group, err := testGroupService.GetGroup(groupParams)
