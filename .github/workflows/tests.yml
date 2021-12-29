@@ -1,6 +1,5 @@
 name: JFrog Client Go Tests
-on:
-  push
+on:  push
   # Triggers the workflow on labeled PRs only.
   pull_request_target:
     types: [labeled]
