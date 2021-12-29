@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-var errSkipDir = errors.New("skip this directory")
+var ErrSkipDir = errors.New("skip this directory")
 
 type WalkFunc func(path string, info os.FileInfo, err error) error
 type Stat func(path string) (info os.FileInfo, err error)
@@ -29,7 +29,7 @@ func walk(path string, info os.FileInfo, walkFn WalkFunc, visited map[string]boo
 	}
 	err = walkFn(path, info, nil)
 	if err != nil {
-		if info.IsDir() && err == errSkipDir {
+		if info.IsDir() && err == ErrSkipDir {
 			return nil
 		}
 		return err
@@ -62,13 +62,13 @@ func walk(path string, info os.FileInfo, walkFn WalkFunc, visited map[string]boo
 		}
 		fileInfo, err := fileHandler(filename)
 		if err != nil {
-			if err := walkFn(filename, fileInfo, err); err != nil && err != errSkipDir {
+			if err := walkFn(filename, fileInfo, err); err != nil && err != ErrSkipDir {
 				return err
 			}
 		} else {
 			err = walk(filename, fileInfo, walkFn, visited, walkIntoDirSymlink)
 			if err != nil {
-				if !fileInfo.IsDir() || err != errSkipDir {
+				if !fileInfo.IsDir() || err != ErrSkipDir {
 					return err
 				}
 			}
