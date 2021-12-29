@@ -11,7 +11,6 @@ func TestRetryExecutorSuccess(t *testing.T) {
 	retriesToPerform := 10
 	breakRetriesAt := 4
 	runCount := 0
-
 	executor := RetryExecutor{
 		MaxRetries:               retriesToPerform,
 		RetriesIntervalMilliSecs: 0,
