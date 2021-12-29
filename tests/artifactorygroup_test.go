@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -13,6 +14,7 @@ func TestGroups(t *testing.T) {
 	t.Run("create", testCreateGroup)
 	t.Run("update", testUpdateGroup)
 	t.Run("delete", testDeleteGroup)
+	t.Run("add users", testAddUsersToGroup)
 }
 
 func testCreateGroup(t *testing.T) {
@@ -38,6 +40,39 @@ func testUpdateGroup(t *testing.T) {
 	assert.NoError(t, err)
 	group, err := testGroupService.GetGroup(groupParams)
 	assert.NoError(t, err)
+	assert.Equal(t, groupParams.GroupDetails, *group)
+}
+
+func testAddUsersToGroup(t *testing.T) {
+	// Create group
+	groupParams := getTestGroupParams(true)
+	err := testGroupService.CreateGroup(groupParams)
+	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
+	assert.NoError(t, err)
+
+	// Create two new users
+	userNames := []string{"Alice", "Bob"}
+	users := []*services.User{}
+	for i, name := range userNames {
+		UserParams := getTestUserParams(false, name)
+		err = testUserService.CreateUser(UserParams)
+		defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
+		assert.NoError(t, err)
+		user, err := testUserService.GetUser(UserParams)
+		assert.NoError(t, err)
+		users = append(users, user)
+		userNames[i] = user.Name
+	}
+
+	// Add users to group
+	groupParams.GroupDetails.UsersNames = userNames
+	err = testGroupService.UpdateGroup(groupParams)
+	assert.NoError(t, err)
+	group, err := testGroupService.GetGroup(groupParams)
+	assert.NoError(t, err)
+	// Ignore usernames order
+	sort.Strings(groupParams.GroupDetails.UsersNames)
+	sort.Strings(group.UsersNames)
 	assert.Equal(t, groupParams.GroupDetails, *group)
 }
 

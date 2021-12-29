@@ -801,7 +801,7 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 	defer deleteRepo(t, repoKeyLocal)
 	validateRepoConfig(t, repoKeyLocal, glp)
 
-	UserParams := getTestUserParams(false)
+	UserParams := getTestUserParams(false, "")
 	UserParams.UserDetails.Admin = &trueValue
 	err = testUserService.CreateUser(UserParams)
 	defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
