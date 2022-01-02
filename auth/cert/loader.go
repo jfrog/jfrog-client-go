@@ -43,7 +43,7 @@ func GetTransportWithLoadedCert(certificatesDirPath string, insecureTls bool, tr
 	}
 	// Setup HTTPS client
 	// TODO verify the BuildNameToCertificate change
-	//#nosec G402 -- Skip insecure tls was requested by the user.
+	/* #nosec G402 -- Skip insecure tls was requested by the user. */
 	tlsConfig := &tls.Config{
 		RootCAs:            caCertPool,
 		ClientSessionCache: tls.NewLRUClientSessionCache(1),
