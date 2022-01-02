@@ -41,13 +41,12 @@ func GetTransportWithLoadedCert(certificatesDirPath string, insecureTls bool, tr
 	if err != nil {
 		return nil, err
 	}
-	// Setup HTTPS client
+	// Setup HTTPS client // TODO verify the BuildNameToCertificate change
 	tlsConfig := &tls.Config{
 		RootCAs:            caCertPool,
 		ClientSessionCache: tls.NewLRUClientSessionCache(1),
 		InsecureSkipVerify: insecureTls,
 	}
-	tlsConfig.BuildNameToCertificate()
 	transport.TLSClientConfig = tlsConfig
 
 	return transport, nil
