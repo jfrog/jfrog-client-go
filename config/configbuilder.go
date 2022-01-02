@@ -13,19 +13,21 @@ func NewConfigBuilder() *servicesConfigBuilder {
 	configBuilder.threads = 3
 	configBuilder.httpTimeout = httpclient.DefaultHttpTimeout
 	configBuilder.httpRetries = 3
+	configBuilder.httpRetryWaitMilliSecs = 0
 	return configBuilder
 }
 
 type servicesConfigBuilder struct {
 	auth.ServiceDetails
-	certificatesPath string
-	threads          int
-	isDryRun         bool
-	insecureTls      bool
-	ctx              context.Context
-	httpTimeout      time.Duration
-	httpRetries      int
-	httpClient       *http.Client
+	certificatesPath       string
+	threads                int
+	isDryRun               bool
+	insecureTls            bool
+	ctx                    context.Context
+	httpTimeout            time.Duration
+	httpRetries            int
+	httpRetryWaitMilliSecs int
+	httpClient             *http.Client
 }
 
 func (builder *servicesConfigBuilder) SetServiceDetails(artDetails auth.ServiceDetails) *servicesConfigBuilder {
@@ -68,6 +70,11 @@ func (builder *servicesConfigBuilder) SetHttpRetries(httpRetries int) *servicesC
 	return builder
 }
 
+func (builder *servicesConfigBuilder) SetHttpRetryWaitMilliSecs(httpRetryWaitMilliSecs int) *servicesConfigBuilder {
+	builder.httpRetryWaitMilliSecs = httpRetryWaitMilliSecs
+	return builder
+}
+
 func (builder *servicesConfigBuilder) SetHttpClient(httpClient *http.Client) *servicesConfigBuilder {
 	builder.httpClient = httpClient
 	return builder
@@ -83,6 +90,7 @@ func (builder *servicesConfigBuilder) Build() (Config, error) {
 	c.ctx = builder.ctx
 	c.httpTimeout = builder.httpTimeout
 	c.httpRetries = builder.httpRetries
+	c.httpRetryWaitMilliSecs = builder.httpRetryWaitMilliSecs
 	c.httpClient = builder.httpClient
 	return c, nil
 }
