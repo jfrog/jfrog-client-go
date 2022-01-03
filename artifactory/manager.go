@@ -329,12 +329,22 @@ func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) (
 	return goService.PublishPackage(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) PublishTerraformModule(params services.TerraformParams) (*utils.OperationSummary, error) {
-	terraformService := services.NewTerraformService(sm.client)
+func (sm *ArtifactoryServicesManagerImp) PublishTerraformModule(params services.TerraformParams) (totalUploaded, totalFailed int, err error) {
+	terraformService := sm.initTerraformService()
 	terraformService.ArtDetails = sm.config.GetServiceDetails()
-	//TODO: chance/remove
-	return nil, nil
-	//return terraformService.PublishModule(params)
+	totalUploaded, totalFailed, e := terraformService.TerraformPublish(&params)
+	if e != nil {
+		return 0, 0, e
+	}
+	return
+}
+
+func (sm *ArtifactoryServicesManagerImp) initTerraformService() *services.TerraformService {
+	terraformService := services.NewTerraformService(sm.client, sm.config.GetServiceDetails())
+	terraformService.Threads = sm.config.GetThreads()
+	terraformService.ArtDetails = sm.config.GetServiceDetails()
+	//terraformService.Progress = sm.progress
+	return terraformService
 }
 
 func (sm *ArtifactoryServicesManagerImp) Ping() ([]byte, error) {

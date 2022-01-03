@@ -54,7 +54,7 @@ type ArtifactoryServicesManager interface {
 	Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error)
-	PublishTerraformModule(params services.TerraformParams) (*utils.OperationSummary, error)
+	PublishTerraformModule(params services.TerraformParams) (int, int, error)
 	Ping() ([]byte, error)
 	GetConfig() config.Config
 	GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error)
@@ -250,7 +250,7 @@ func (esm *EmptyArtifactoryServicesManager) PublishGoProject(params _go.GoParams
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) PublishTerraformModule(params services.TerraformParams) (*utils.OperationSummary, error) {
+func (esm *EmptyArtifactoryServicesManager) PublishTerraformModule(params services.TerraformParams) (int, int, error) {
 	panic("Failed: Method is not implemented")
 }
 
