@@ -259,7 +259,7 @@ func GetFileSize(file *os.File) (int64, error) {
 
 func CreateFilePath(localPath, fileName string) (string, error) {
 	if localPath != "" {
-		err := os.MkdirAll(localPath, 0777)
+		err := os.MkdirAll(localPath, 0750)
 		if errorutils.CheckError(err) != nil {
 			return "", err
 		}

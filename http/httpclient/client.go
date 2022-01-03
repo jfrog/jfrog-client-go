@@ -451,7 +451,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 	}
 
 	if flags.LocalPath != "" {
-		err = os.MkdirAll(flags.LocalPath, 0777)
+		err = os.MkdirAll(flags.LocalPath, 0750)
 		if errorutils.CheckError(err) != nil {
 			return nil, err
 		}
@@ -678,7 +678,7 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	}
 	log.Info(fmt.Sprintf("%s[%s]: %s...", logMsgPrefix, strconv.Itoa(currentSplit), resp.Status))
 
-	err = os.MkdirAll(chunkDownloadPath, 0777)
+	err = os.MkdirAll(chunkDownloadPath, 0750)
 	if errorutils.CheckError(err) != nil {
 		return "", nil, err
 	}
