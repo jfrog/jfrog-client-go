@@ -43,10 +43,7 @@ func (rs *RepositoriesService) IsExists(repoKey string) (exists bool, err error)
 	if err != nil {
 		return false, errorutils.CheckError(err)
 	}
-	if resp.StatusCode != http.StatusBadRequest {
-		return true, nil
-	}
-	return false, nil
+	return resp.StatusCode == http.StatusOK, nil
 }
 
 func (rs *RepositoriesService) GetAll() (*[]RepositoryDetails, error) {
