@@ -572,7 +572,7 @@ func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags Con
 }
 
 func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error) {
-	destFile, err := os.OpenFile(flags.LocalFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	destFile, err := os.OpenFile(flags.LocalFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if errorutils.CheckError(err) != nil {
 		return err
 	}

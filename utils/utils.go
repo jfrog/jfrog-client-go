@@ -535,7 +535,7 @@ func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetai
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	return errorutils.CheckError(ioutil.WriteFile(filePath, files, 0700))
+	return errorutils.CheckError(ioutil.WriteFile(filePath, files, 0600))
 }
 
 // Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
