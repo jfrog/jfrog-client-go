@@ -632,7 +632,6 @@ func isLocalRepoExistsTest(t *testing.T) {
 	// Validate repo exists
 	exists = isRepoExists(t, repoKey)
 	assert.True(t, exists)
-
 }
 
 func getAllLocalRepoDetailsTest(t *testing.T) {
