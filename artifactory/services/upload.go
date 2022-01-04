@@ -227,7 +227,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	// Save parentheses index in pattern, witch have corresponding placeholder.
-	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.GetPatternType(), uploadParams.IsSymlink())
+	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive, uploadParams.GetPatternType(), uploadParams.IsSymlink())
 	if err != nil {
 		return err
 	}
@@ -255,6 +255,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 			}
 			buildProps += vcsProps
 		}
+
 		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
 		incGeneralProgressTotal(progressMgr, uploadParams)
 		dataHandlerFunc(uploadData)
@@ -365,6 +366,7 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 		}
 		buildProps += vcsProps
 	}
+	artifact.TargetPathInZipFile, placeholdersUsed = clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive)
 	uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
 	if taskData.isDir && taskData.uploadParams.IsIncludeDirs() && !taskData.isSymlinkFlow {
 		if taskData.path != "." && (taskData.index == 0 || !utils.IsSubPath(taskData.paths, taskData.index, fileutils.GetFileSeparator())) {
@@ -595,6 +597,7 @@ type UploadParams struct {
 	MinChecksumDeploy    int64
 	ChecksumsCalcEnabled bool
 	Archive              string
+	TargetPathInArchive  string
 }
 
 func NewUploadParams() UploadParams {
@@ -783,6 +786,9 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	}
 	if !flat {
 		header.Name = clientutils.TrimPath(localPath)
+	}
+	if artifact.TargetPathInZipFile != "" {
+		header.Name = artifact.TargetPathInZipFile
 	}
 	header.Method = zip.Deflate
 

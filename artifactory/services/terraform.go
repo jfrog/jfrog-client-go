@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 const ArtifactoryMinSupportedVersion = "6.10.0" // change version
@@ -124,12 +125,13 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 					errorsQueue.AddError(e)
 					return e
 				}
-				terraformParams.Pattern = path + string(os.PathSeparator)
+				terraformParams.Pattern = filepath.Join(strings.TrimSuffix(path, moduleName), "("+moduleName, "*)")
 				terraformParams.Target = target
 				//uploadData := UploadData{Artifact: artifact, TargetProps: utils.NewProperties()}
 				uploadParams := deepCopyTerraformToUploadParams(&terraformParams)
 				dataHandlerFunc := getSaveTaskInContentWriterFunc(toArchive, uploadParams, errorsQueue)
 
+				uploadParams.TargetPathInArchive = "{1}"
 				err := collectFilesForUpload(uploadParams, nil, nil, dataHandlerFunc)
 				if err != nil {
 					log.Error(err)
@@ -178,20 +180,13 @@ func deepCopyTerraformToUploadParams(params *TerraformParams) UploadParams {
 	uploadParams.Archive = "zip"
 	uploadParams.Recursive = true
 	uploadParams.Exclusions = []string{"*.git", "*.DS_Store"}
-	uploadParams.CommonParams = new(utils.CommonParams)
 	uploadParams.CommonParams.TargetProps = utils.NewProperties()
 	uploadParams.Target = params.Target
 	uploadParams.Pattern = params.Pattern
-	//uploadParams.CommonParams = params.CommonParams
 	return uploadParams
 }
 
 func getPublishTarget(moduleName string, terraformParams *TerraformParams) (string, error) {
-	return filepath.ToSlash(filepath.Join(terraformParams.TargetRepo, terraformParams.Namespace, terraformParams.Provider, moduleName, terraformParams.Tag+".zip")), nil
-}
-
-func getTargetPathInZipFile(moduleName string, terraformParams *TerraformParams) (string, error) {
-
 	return filepath.ToSlash(filepath.Join(terraformParams.TargetRepo, terraformParams.Namespace, terraformParams.Provider, moduleName, terraformParams.Tag+".zip")), nil
 }
 

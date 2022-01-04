@@ -76,7 +76,7 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 				break
 			}
 			if strings.Index(section, "(") != -1 {
-				temp := rootPath + section
+				temp := filepath.Join(rootPath, section)
 				if isWildcardParentheses(temp, parentheses) {
 					break
 				}
@@ -115,7 +115,7 @@ func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 		if idx == -1 {
 			break
 		}
-		if parentheses.IsPresent(idx) {
+		if parentheses.IsPresent(idx + 1) {
 			return true
 		}
 		currStart += idx + len(toFind)
