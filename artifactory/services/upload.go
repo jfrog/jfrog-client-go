@@ -45,12 +45,20 @@ func (us *UploadService) SetThreads(threads int) {
 	us.Threads = threads
 }
 
+func (us *UploadService) GetThreads() int {
+	return us.Threads
+}
+
 func (us *UploadService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return us.client
 }
 
 func (us *UploadService) SetServiceDetails(artDetails auth.ServiceDetails) {
 	us.ArtDetails = artDetails
+}
+
+func (us *UploadService) GetServiceDetails() auth.ServiceDetails {
+	return us.ArtDetails
 }
 
 func (us *UploadService) SetDryRun(isDryRun bool) {

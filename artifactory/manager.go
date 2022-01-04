@@ -331,7 +331,6 @@ func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) (
 
 func (sm *ArtifactoryServicesManagerImp) PublishTerraformModule(params services.TerraformParams) (totalUploaded, totalFailed int, err error) {
 	terraformService := sm.initTerraformService()
-	terraformService.ArtDetails = sm.config.GetServiceDetails()
 	totalUploaded, totalFailed, e := terraformService.TerraformPublish(&params)
 	if e != nil {
 		return 0, 0, e

@@ -2,18 +2,15 @@ package services
 
 import (
 	"github.com/jfrog/gofrog/parallel"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/utils/version"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -40,7 +37,7 @@ type TerraformService struct {
 }
 
 func NewTerraformService(client *jfroghttpclient.JfrogHttpClient, artDetails auth.ServiceDetails) *TerraformService {
-	return &TerraformService{client: client, ArtDetails: artDetails}
+	return &TerraformService{client: client, ArtDetails: artDetails, Threads: 3}
 }
 
 func (ts *TerraformService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -53,6 +50,10 @@ func (ts *TerraformService) SetServiceDetails(artDetails auth.ServiceDetails) {
 
 func (ts *TerraformService) GetServiceDetails() auth.ServiceDetails {
 	return ts.ArtDetails
+}
+
+func (ts *TerraformService) GetThreads() int {
+	return ts.Threads
 }
 
 func (ts *TerraformService) TerraformPublish(terraformParams *TerraformParams) (int, int, error) {
@@ -116,25 +117,31 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 					errorsQueue.AddError(e)
 					return e
 				}
-				artifact, e := fspatterns.GetSingleFileToUpload(path, target, false)
+				//artifact, e := fspatterns.GetSingleFileToUpload(path, target, false)
+				//artifact.TargetPathInZipFile =
 				if e != nil {
 					log.Error(e)
 					errorsQueue.AddError(e)
 					return e
 				}
-				terraformParams.Pattern = path
+				terraformParams.Pattern = path + string(os.PathSeparator)
 				terraformParams.Target = target
-				uploadData := UploadData{Artifact: artifact, TargetProps: utils.NewProperties()}
+				//uploadData := UploadData{Artifact: artifact, TargetProps: utils.NewProperties()}
 				uploadParams := deepCopyTerraformToUploadParams(&terraformParams)
 				dataHandlerFunc := getSaveTaskInContentWriterFunc(toArchive, uploadParams, errorsQueue)
 
+				err := collectFilesForUpload(uploadParams, nil, nil, dataHandlerFunc)
+				if err != nil {
+					log.Error(err)
+					errorsQueue.AddError(err)
+				}
 				//incGeneralProgressTotal(progressMgr, uploadParams)
-				dataHandlerFunc(uploadData)
+				//dataHandlerFunc(uploadData)
 				//return tpc.doDeploy(path, moduleName, tpc.serverDetails)
+
 			}
 			return nil
 		})
-
 		for targetPath, archiveData := range toArchive {
 			err := archiveData.writer.Close()
 			if err != nil {
@@ -144,48 +151,12 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 			//if us.Progress != nil {
 			//	us.Progress.IncGeneralProgressTotalBy(1)
 			//}
-			producer.AddTaskWithError(ts.createUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
+			uploadService := NewUploadService(ts.client)
+			uploadService.SetServiceDetails(ts.ArtDetails)
+			uploadService.SetThreads(ts.Threads)
+			producer.AddTaskWithError(uploadService.createUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
 		}
 	}()
-}
-
-func (ts *TerraformService) createUploadAsZipFunc(uploadResult *utils.Result, targetPath string, archiveData *archiveUploadData, errorsQueue *clientutils.ErrorsQueue) parallel.TaskFunc {
-	return func(threadId int) (e error) {
-		//uploadResult.TotalCount[threadId]++
-		logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, false)
-
-		archiveDataReader := content.NewContentReader(archiveData.writer.GetFilePath(), archiveData.writer.GetArrayKey())
-		defer func() {
-			err := archiveDataReader.Close()
-			if e == nil {
-				e = err
-			}
-		}()
-		_, targetUrlWithProps, e := buildUploadUrls(ts.GetServiceDetails().GetUrl(), targetPath, archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian(), archiveData.uploadParams.TargetProps)
-		if e != nil {
-			return
-		}
-		var saveFilesPathsFunc func(sourcePath string) error
-		us := UploadService{client: ts.client, ArtDetails: ts.ArtDetails, Threads: 3}
-		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums", archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue)
-		details, e := fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
-		if e != nil {
-			return
-		}
-		log.Info(logMsgPrefix+"Uploading artifact:", targetPath)
-
-		getReaderFunc := func() (io.Reader, error) {
-			archiveDataReader.Reset()
-			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, nil, errorsQueue), nil
-		}
-		uploaded, e := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, details)
-
-		if uploaded {
-			//uploadResult.SuccessCount[threadId]++
-
-		}
-		return
-	}
 }
 
 func (ts *TerraformService) performTerraformPublishTasks(consumer parallel.Runner, uploadSummary *utils.Result) (totalUploaded, totalFailed int) {
@@ -216,6 +187,11 @@ func deepCopyTerraformToUploadParams(params *TerraformParams) UploadParams {
 }
 
 func getPublishTarget(moduleName string, terraformParams *TerraformParams) (string, error) {
+	return filepath.ToSlash(filepath.Join(terraformParams.TargetRepo, terraformParams.Namespace, terraformParams.Provider, moduleName, terraformParams.Tag+".zip")), nil
+}
+
+func getTargetPathInZipFile(moduleName string, terraformParams *TerraformParams) (string, error) {
+
 	return filepath.ToSlash(filepath.Join(terraformParams.TargetRepo, terraformParams.Namespace, terraformParams.Provider, moduleName, terraformParams.Tag+".zip")), nil
 }
 
