@@ -1,8 +1,9 @@
 package artifactory
 
 import (
-	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io"
+
+	buildinfo "github.com/jfrog/build-info-go/entities"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	_go "github.com/jfrog/jfrog-client-go/artifactory/services/go"
@@ -30,6 +31,7 @@ type ArtifactoryServicesManager interface {
 	GetRepository(repoKey string, repoDetails interface{}) error
 	GetAllRepositories() (*[]services.RepositoryDetails, error)
 	GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error)
+	IsRepoExists(repoKey string) (bool, error)
 	CreatePermissionTarget(params services.PermissionTargetParams) error
 	UpdatePermissionTarget(params services.PermissionTargetParams) error
 	DeletePermissionTarget(permissionTargetName string) error
@@ -146,6 +148,10 @@ func (esm *EmptyArtifactoryServicesManager) DeleteRepository(repoKey string) err
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetRepository(repoKey string, repoDetails interface{}) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) IsRepoExists(repoKey string) (bool, error) {
 	panic("Failed: Method is not implemented")
 }
 

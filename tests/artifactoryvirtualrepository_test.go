@@ -38,6 +38,7 @@ import (
 // 	t.Run("virtualCreateWithParamTest", virtualCreateWithParamTest)
 // 	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
 // 	t.Run("getAllVirtualRepoDetailsTest", getAllVirtualRepoDetailsTest)
+//  t.Run("isVirtualRepoExistsTest", isVirtualRepoExistsTest)
 // }
 
 func setVirtualRepositoryBaseParams(params *services.VirtualRepositoryBaseParams, isUpdate bool) {
@@ -611,4 +612,24 @@ func getAllVirtualRepoDetailsTest(t *testing.T) {
 	}
 	// Validate
 	assert.NotNil(t, repo, "Repo "+repoKey+" not found")
+}
+
+func isVirtualRepoExistsTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+
+	// Validate repo doesn't exist
+	exists := isRepoExists(t, repoKey)
+	assert.False(t, exists)
+
+	// Create Repo
+	gvp := services.NewGenericVirtualRepositoryParams()
+	gvp.Key = repoKey
+	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
+	err := testsCreateVirtualRepositoryService.Generic(gvp)
+	assert.NoError(t, err)
+	defer deleteRepo(t, repoKey)
+
+	// Validate repo exists
+	exists = isRepoExists(t, repoKey)
+	assert.True(t, exists)
 }
