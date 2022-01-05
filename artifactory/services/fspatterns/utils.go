@@ -121,18 +121,36 @@ func GetFileSymlinkPath(filePath string) (string, error) {
 	return symlinkPath, nil
 }
 
+// Find parentheses in target and archive-target and merge the results to one slice with no duplication
+func getPlaceholderParentheses(pattern, target, archiveTarget string) clientutils.ParenthesesSlice {
+	targetParentheses := clientutils.CreateParenthesesSlice(pattern, target)
+	archiveTargetParentheses := clientutils.CreateParenthesesSlice(pattern, archiveTarget)
+	parenthesesMap := make(map[clientutils.Parentheses]bool)
+	var parenthesesSlice []clientutils.Parentheses
+	// Target parentheses
+	for _, v := range targetParentheses.Parentheses {
+		parenthesesSlice = append(parenthesesSlice, v)
+		parenthesesMap[v] = true
+	}
+	// Archive target parentheses
+	for _, v := range archiveTargetParentheses.Parentheses {
+		if parenthesesMap[v] {
+			continue
+		}
+		parenthesesSlice = append(parenthesesSlice, v)
+		parenthesesMap[v] = true
+	}
+	return clientutils.NewParenthesesSlice(parenthesesSlice)
+}
+
 // Get the local root path, from which to start collecting artifacts to be uploaded to Artifactory.
 // If path dose not exist error will be returned.
 func GetRootPath(pattern, target, archiveTarget string, patternType clientutils.PatternType, preserveSymLink bool) (string, error) {
-	placeholderParentheses := clientutils.NewParenthesesMap()
-	clientutils.FindParentheses(pattern, target, placeholderParentheses)
-	clientutils.FindParentheses(pattern, archiveTarget, placeholderParentheses)
-
+	placeholderParentheses := getPlaceholderParentheses(pattern, target, archiveTarget)
 	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
 		return "", errorutils.CheckErrorf("Path does not exist: " + rootPath)
 	}
-
 	return rootPath, nil
 }
 
