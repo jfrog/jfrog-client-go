@@ -86,7 +86,7 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 				return e
 			}
 			if isTerraformModule {
-				uploadParams, e := uploadParamsForTerraformPublish(&terraformParams, pathInfo.Name(), path)
+				uploadParams, e := terraformParams.uploadParamsForTerraformPublish(pathInfo.Name(), path)
 				if e != nil {
 					return e
 				}
@@ -99,13 +99,14 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 			log.Error(err)
 			errorsQueue.AddError(err)
 		}
+		// Upload modules
 		for targetPath, archiveData := range toArchive {
 			err := archiveData.writer.Close()
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
 			}
-			// Upload module
+			// Upload module using upload service
 			uploadService := NewUploadService(ts.client)
 			uploadService.SetServiceDetails(ts.ArtDetails)
 			uploadService.SetThreads(ts.Threads)
@@ -128,9 +129,9 @@ func (ts *TerraformService) performTerraformPublishTasks(consumer parallel.Runne
 	return
 }
 
-func uploadParamsForTerraformPublish(terraformParams *TerraformParams, moduleName, dirPath string) (*UploadParams, error) {
+func (tp *TerraformParams) uploadParamsForTerraformPublish(moduleName, dirPath string) (*UploadParams, error) {
 	uploadParams := NewUploadParams()
-	target, e := getPublishTarget(moduleName, terraformParams)
+	target, e := tp.getPublishTarget(moduleName)
 	if e != nil {
 		return nil, e
 	}
@@ -146,8 +147,10 @@ func uploadParamsForTerraformPublish(terraformParams *TerraformParams, moduleNam
 
 	return &uploadParams, nil
 }
-func getPublishTarget(moduleName string, terraformParams *TerraformParams) (string, error) {
-	return filepath.ToSlash(filepath.Join(terraformParams.TargetRepo, terraformParams.Namespace, terraformParams.Provider, moduleName, terraformParams.Tag+".zip")), nil
+
+// Module's path in terraform repo : namespace/provider/moduleName/tag.zip
+func (tp *TerraformParams) getPublishTarget(moduleName string) (string, error) {
+	return filepath.ToSlash(filepath.Join(tp.TargetRepo, tp.Namespace, tp.Provider, moduleName, tp.Tag+".zip")), nil
 }
 
 // We identify a Terraform module by the existing of a '.tf' file inside the module directory.
