@@ -16,7 +16,7 @@ require (
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 )
 
-require github.com/jfrog/jfrog-cli-core/v2 v2.8.0
+require golang.org/x/text v0.3.7 // indirect
 
 exclude (
 	golang.org/x/text v0.3.3
