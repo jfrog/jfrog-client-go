@@ -52,7 +52,7 @@ func getDefaultUserAgent() string {
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
-func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSlice) string {
+func GetRootPath(path string, patternType PatternType, parentheses ParenthesesMap) string {
 	// The first step is to split the local path pattern into sections, by the file separator.
 	separator := "/"
 	sections := strings.Split(path, separator)
@@ -107,7 +107,7 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 
 // Return true if the ‘str’ argument contains open parentasis, that is related to a placeholder.
 // The ‘parentheses’ argument contains all the indexes of placeholder parentheses.
-func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
+func isWildcardParentheses(str string, parentheses ParenthesesMap) bool {
 	toFind := "("
 	currStart := 0
 	for {

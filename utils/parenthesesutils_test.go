@@ -18,7 +18,7 @@ func TestSortNoDuplicates(t *testing.T) {
 func TestFindParentheses(t *testing.T) {
 	pattern := "(a/(b)"
 	target := "{1}"
-	got := findParentheses(pattern, target)
+	got := FindParentheses(pattern, target)
 	want := []Parentheses{{3, 5}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("sortNoDuplicates(%s, %s) == %v, want %v", pattern, target, got, want)
@@ -26,21 +26,21 @@ func TestFindParentheses(t *testing.T) {
 
 	pattern = "(a/(b"
 	target = "{1}"
-	got = findParentheses(pattern, target)
+	got = FindParentheses(pattern, target)
 	if len(got) != 0 {
 		t.Errorf("sortNoDuplicates(%s, %s) == %v, want []]", pattern, target, got)
 	}
 
 	pattern = "(a/(b)"
 	target = "{1"
-	got = findParentheses(pattern, target)
+	got = FindParentheses(pattern, target)
 	if len(got) != 0 {
 		t.Errorf("sortNoDuplicates(%s, %s) == %v, want []]", pattern, target, got)
 	}
 
 	pattern = "(a)/(b)"
 	target = "{1}/{2}"
-	got = findParentheses(pattern, target)
+	got = FindParentheses(pattern, target)
 	want = []Parentheses{{0, 2}, {4, 6}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("sortNoDuplicates(%s, %s) == %v, want %v", pattern, target, got, want)
@@ -48,7 +48,7 @@ func TestFindParentheses(t *testing.T) {
 
 	pattern = "(a)养只/(b)"
 	target = "{1}/{2}"
-	got = findParentheses(pattern, target)
+	got = FindParentheses(pattern, target)
 	want = []Parentheses{{0, 2}, {10, 12}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("sortNoDuplicates(%s, %s) == %v, want %v", pattern, target, got, want)

@@ -14,17 +14,17 @@ type Parentheses struct {
 	CloseIndex int
 }
 
-type ParenthesesSlice struct {
-	Parentheses []Parentheses
+type ParenthesesMap struct {
+	Parentheses map[Parentheses]bool
 }
 
-func NewParenthesesSlice(pattern, target string) ParenthesesSlice {
-	return ParenthesesSlice{findParentheses(pattern, target)}
+func NewParenthesesMap() ParenthesesMap {
+	return ParenthesesMap{make(map[Parentheses]bool)}
 }
 
-func (p *ParenthesesSlice) IsPresent(index int) bool {
-	for _, v := range p.Parentheses {
-		if v.OpenIndex == index || v.CloseIndex == index {
+func (p *ParenthesesMap) IsPresent(index int) bool {
+	for k, _ := range p.Parentheses {
+		if k.OpenIndex == index || k.CloseIndex == index {
 			return true
 		}
 	}
@@ -38,7 +38,8 @@ func PlaceholdersUserd(pattern, target string) bool {
 }
 
 func RemovePlaceholderParentheses(pattern, target string) string {
-	parentheses := NewParenthesesSlice(pattern, target)
+	parentheses := NewParenthesesMap()
+	FindParentheses(pattern, target, parentheses)
 	// Remove parentheses which have a corresponding placeholder.
 	var temp string
 	for i, c := range pattern {
@@ -53,7 +54,8 @@ func RemovePlaceholderParentheses(pattern, target string) string {
 
 // Escaping Parentheses with no corresponding placeholder.
 func addEscapingParentheses(pattern, target string) string {
-	parentheses := NewParenthesesSlice(pattern, target)
+	parentheses := NewParenthesesMap()
+	FindParentheses(pattern, target, parentheses)
 	var temp string
 	for i, c := range pattern {
 		if (c == '(' || c == ')') && !parentheses.IsPresent(i) {
@@ -80,7 +82,7 @@ func getPlaceHoldersValues(target string) []int {
 }
 
 // Find the list of Parentheses in the pattern, which correspond to placeholders defined in the target.
-func findParentheses(pattern, target string) []Parentheses {
+func FindParentheses(pattern, target string, parenthesesMap ParenthesesMap) {
 	// Save each parentheses index
 	var parentheses []Parentheses
 	for i, v := range pattern {
@@ -105,13 +107,12 @@ func findParentheses(pattern, target string) []Parentheses {
 		}
 	}
 	// Filter parentheses without placeholders
-	var result []Parentheses
 	for _, v := range getPlaceHoldersValues(target) {
 		if len(temp) > v-1 {
-			result = append(result, temp[v-1])
+			parenthesesMap.Parentheses[temp[v-1]] = true
 		}
 	}
-	return result
+	return
 }
 
 // Sort array and remove duplicates.
