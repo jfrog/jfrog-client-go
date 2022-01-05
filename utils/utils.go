@@ -76,7 +76,7 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 				break
 			}
 			if strings.Index(section, "(") != -1 {
-				temp := filepath.Join(rootPath, section)
+				temp := rootPath + separator + section
 				if isWildcardParentheses(temp, parentheses) {
 					break
 				}
@@ -422,7 +422,7 @@ type Artifact struct {
 	LocalPath           string
 	TargetPath          string
 	SymlinkTargetPath   string
-	TargetPathInZipFile string
+	TargetPathInArchive string
 }
 
 const (
@@ -553,23 +553,4 @@ func ExtractSha256FromResponseBody(body []byte) (string, error) {
 		return responseBody.Checksums.Sha256, nil
 	}
 	return "", nil
-}
-
-func ChangeDirWithCallback(path string) (f func() error, err error) {
-	pwd, err := os.Getwd()
-	if err != nil {
-		return
-	}
-	err = os.Chdir(path)
-	if err != nil {
-		return
-	}
-	f = func() error {
-		e := os.Chdir(pwd)
-		if e != nil {
-			return e
-		}
-		return nil
-	}
-	return
 }

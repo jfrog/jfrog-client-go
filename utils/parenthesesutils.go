@@ -19,7 +19,7 @@ type ParenthesesSlice struct {
 }
 
 func NewParenthesesSlice(slice []Parentheses) ParenthesesSlice {
-	return ParenthesesSlice{[]Parentheses{}}
+	return ParenthesesSlice{Parentheses: slice}
 }
 
 func CreateParenthesesSlice(pattern, target string) ParenthesesSlice {

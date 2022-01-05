@@ -347,10 +347,9 @@ func (sm *ArtifactoryServicesManagerImp) PublishTerraformModule(params services.
 }
 
 func (sm *ArtifactoryServicesManagerImp) initTerraformService() *services.TerraformService {
-	terraformService := services.NewTerraformService(sm.client, sm.config.GetServiceDetails())
+	terraformService := services.NewTerraformService(sm.client)
 	terraformService.Threads = sm.config.GetThreads()
 	terraformService.ArtDetails = sm.config.GetServiceDetails()
-	//terraformService.Progress = sm.progress
 	return terraformService
 }
 

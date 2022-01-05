@@ -45,20 +45,12 @@ func (us *UploadService) SetThreads(threads int) {
 	us.Threads = threads
 }
 
-func (us *UploadService) GetThreads() int {
-	return us.Threads
-}
-
 func (us *UploadService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return us.client
 }
 
 func (us *UploadService) SetServiceDetails(artDetails auth.ServiceDetails) {
 	us.ArtDetails = artDetails
-}
-
-func (us *UploadService) GetServiceDetails() auth.ServiceDetails {
-	return us.ArtDetails
 }
 
 func (us *UploadService) SetDryRun(isDryRun bool) {
@@ -203,7 +195,6 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, up
 			var err error
 			archiveData := archiveUploadData{uploadParams: deepCopyUploadParams(&uploadParams)}
 			archiveData.writer, err = content.NewContentWriter("archive", true, false)
-			//archiveData.uploadParams.TargetProps = data.TargetProps
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
@@ -255,7 +246,6 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 			}
 			buildProps += vcsProps
 		}
-
 		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
 		incGeneralProgressTotal(progressMgr, uploadParams)
 		dataHandlerFunc(uploadData)
@@ -352,8 +342,9 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 	} else {
 		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
 	}
+	targetPathInArchive, _ := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive)
 
-	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, SymlinkTargetPath: symlinkPath}
+	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, SymlinkTargetPath: symlinkPath, TargetPathInArchive: targetPathInArchive}
 	props, err := createProperties(artifact, taskData.uploadParams)
 	if err != nil {
 		return err
@@ -366,7 +357,6 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 		}
 		buildProps += vcsProps
 	}
-	artifact.TargetPathInZipFile, placeholdersUsed = clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive)
 	uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
 	if taskData.isDir && taskData.uploadParams.IsIncludeDirs() && !taskData.isSymlinkFlow {
 		if taskData.path != "." && (taskData.index == 0 || !utils.IsSubPath(taskData.paths, taskData.index, fileutils.GetFileSeparator())) {
@@ -597,7 +587,8 @@ type UploadParams struct {
 	MinChecksumDeploy    int64
 	ChecksumsCalcEnabled bool
 	Archive              string
-	TargetPathInArchive  string
+	// When using 'archive' option we can set the target path in the archive using placeholders.
+	TargetPathInArchive string
 }
 
 func NewUploadParams() UploadParams {
@@ -787,8 +778,8 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	if !flat {
 		header.Name = clientutils.TrimPath(localPath)
 	}
-	if artifact.TargetPathInZipFile != "" {
-		header.Name = artifact.TargetPathInZipFile
+	if artifact.TargetPathInArchive != "" {
+		header.Name = artifact.TargetPathInArchive
 	}
 	header.Method = zip.Deflate
 

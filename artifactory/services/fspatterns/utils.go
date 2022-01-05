@@ -121,7 +121,7 @@ func GetFileSymlinkPath(filePath string) (string, error) {
 	return symlinkPath, nil
 }
 
-// Find parentheses in target and archive-target and merge the results to one slice with no duplication
+// Find parentheses in 'target' and 'archive-target', merge the results to one slice with no duplication.
 func getPlaceholderParentheses(pattern, target, archiveTarget string) clientutils.ParenthesesSlice {
 	targetParentheses := clientutils.CreateParenthesesSlice(pattern, target)
 	archiveTargetParentheses := clientutils.CreateParenthesesSlice(pattern, archiveTarget)

@@ -6,26 +6,13 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 )
-
-const ArtifactoryMinSupportedVersion = "6.10.0" // change version
-
-// Support for Artifactory 6.10.0 and above API
-type TerraformPublishCommand struct {
-	artifactoryVersion string
-	clientDetails      httputils.HttpClientDetails
-	client             *jfroghttpclient.JfrogHttpClient
-}
 
 type TerraformService struct {
 	client     *jfroghttpclient.JfrogHttpClient
@@ -37,8 +24,8 @@ type TerraformService struct {
 	targetRepo string
 }
 
-func NewTerraformService(client *jfroghttpclient.JfrogHttpClient, artDetails auth.ServiceDetails) *TerraformService {
-	return &TerraformService{client: client, ArtDetails: artDetails, Threads: 3}
+func NewTerraformService(client *jfroghttpclient.JfrogHttpClient) *TerraformService {
+	return &TerraformService{client: client}
 }
 
 func (ts *TerraformService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -58,7 +45,6 @@ func (ts *TerraformService) GetThreads() int {
 }
 
 func (ts *TerraformService) TerraformPublish(terraformParams *TerraformParams) (int, int, error) {
-	// Uploading threads are using this struct to report upload results.
 	var e error
 	uploadSummary := utils.NewResult(ts.Threads)
 	producerConsumer := parallel.NewRunner(ts.Threads, 20000, false)
@@ -76,83 +62,50 @@ func (ts *TerraformService) TerraformPublish(terraformParams *TerraformParams) (
 func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, uploadSummary *utils.Result, terraformParams TerraformParams) {
 	go func() {
 		defer producer.Done()
-		// Iterate over file-spec groups and produce upload tasks.
-		// When encountering an error, log and move to next group.
-
-		//vcsCache := clientutils.NewVcsDetails()
 		toArchive := make(map[string]*archiveUploadData)
-
+		// Walk and upload directories which contain '.tf' files.
 		pwd, err := os.Getwd()
 		if err != nil {
 			log.Error(err)
 			errorsQueue.AddError(err)
 		}
-		filepath.WalkDir(pwd, func(path string, info fs.DirEntry, err error) error {
+		err = filepath.WalkDir(pwd, func(path string, info fs.DirEntry, err error) error {
 			if err != nil {
-				log.Error(err)
-				errorsQueue.AddError(err)
 				return err
 			}
-			pathIinfo, e := os.Lstat(path)
+			pathInfo, e := os.Lstat(path)
 			if e != nil {
-				log.Error(e)
-				errorsQueue.AddError(e)
 				return e
 			}
 			// Skip files and check only directories.
-			if !pathIinfo.IsDir() {
+			if !pathInfo.IsDir() {
 				return nil
 			}
-			terraformModule, e := isTerraformModule(path)
+			isTerraformModule, e := checkIfTerraformModule(path)
 			if e != nil {
-				log.Error(e)
-				errorsQueue.AddError(e)
 				return e
 			}
-
-			if terraformModule {
-				moduleName := info.Name()
-				target, e := getPublishTarget(moduleName, &terraformParams)
+			if isTerraformModule {
+				uploadParams, e := uploadParamsForTerraformPublish(&terraformParams, pathInfo.Name(), path)
 				if e != nil {
-					log.Error(e)
-					errorsQueue.AddError(e)
 					return e
 				}
-				//artifact, e := fspatterns.GetSingleFileToUpload(path, target, false)
-				//artifact.TargetPathInZipFile =
-				if e != nil {
-					log.Error(e)
-					errorsQueue.AddError(e)
-					return e
-				}
-				terraformParams.Pattern = filepath.Join(strings.TrimSuffix(path, moduleName), "("+moduleName, "*)")
-				terraformParams.Target = target
-				//uploadData := UploadData{Artifact: artifact, TargetProps: utils.NewProperties()}
-				uploadParams := deepCopyTerraformToUploadParams(&terraformParams)
-				dataHandlerFunc := getSaveTaskInContentWriterFunc(toArchive, uploadParams, errorsQueue)
-
-				uploadParams.TargetPathInArchive = "{1}"
-				err := collectFilesForUpload(uploadParams, nil, nil, dataHandlerFunc)
-				if err != nil {
-					log.Error(err)
-					errorsQueue.AddError(err)
-				}
-				//incGeneralProgressTotal(progressMgr, uploadParams)
-				//dataHandlerFunc(uploadData)
-				//return tpc.doDeploy(path, moduleName, tpc.serverDetails)
-
+				dataHandlerFunc := getSaveTaskInContentWriterFunc(toArchive, *uploadParams, errorsQueue)
+				return collectFilesForUpload(*uploadParams, nil, nil, dataHandlerFunc)
 			}
 			return nil
 		})
+		if err != nil {
+			log.Error(err)
+			errorsQueue.AddError(err)
+		}
 		for targetPath, archiveData := range toArchive {
 			err := archiveData.writer.Close()
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
 			}
-			//if us.Progress != nil {
-			//	us.Progress.IncGeneralProgressTotalBy(1)
-			//}
+			// Upload module
 			uploadService := NewUploadService(ts.client)
 			uploadService.SetServiceDetails(ts.ArtDetails)
 			uploadService.SetThreads(ts.Threads)
@@ -175,26 +128,32 @@ func (ts *TerraformService) performTerraformPublishTasks(consumer parallel.Runne
 	return
 }
 
-func deepCopyTerraformToUploadParams(params *TerraformParams) UploadParams {
+func uploadParamsForTerraformPublish(terraformParams *TerraformParams, moduleName, dirPath string) (*UploadParams, error) {
 	uploadParams := NewUploadParams()
+	target, e := getPublishTarget(moduleName, terraformParams)
+	if e != nil {
+		return nil, e
+	}
+	uploadParams.Target = target
+	// Add parenthesis across the module's name in the pattern: ".../moduleName" --> ".../(moduleName/*)".
+	// This pattern will match the placeholder '{1}' in "archive-target".
+	uploadParams.Pattern = filepath.Join(strings.TrimSuffix(dirPath, moduleName), "("+moduleName, "*)")
+	uploadParams.TargetPathInArchive = "{1}"
 	uploadParams.Archive = "zip"
 	uploadParams.Recursive = true
 	uploadParams.Exclusions = []string{"*.git", "*.DS_Store"}
 	uploadParams.CommonParams.TargetProps = utils.NewProperties()
-	uploadParams.Target = params.Target
-	uploadParams.Pattern = params.Pattern
-	return uploadParams
-}
 
+	return &uploadParams, nil
+}
 func getPublishTarget(moduleName string, terraformParams *TerraformParams) (string, error) {
 	return filepath.ToSlash(filepath.Join(terraformParams.TargetRepo, terraformParams.Namespace, terraformParams.Provider, moduleName, terraformParams.Tag+".zip")), nil
 }
 
-// We identify a terraform module by the existing of '.tf' files inside the directory.
-// isTerraformModule search for '.tf' file inside the directory and returns true it founds at least one.
-func isTerraformModule(path string) (bool, error) {
+// We identify a Terraform module by the existing of a '.tf' file inside the module directory.
+// isTerraformModule search for '.tf' file inside and returns true it founds at least one.
+func checkIfTerraformModule(path string) (bool, error) {
 	dirname := path + string(filepath.Separator)
-
 	d, err := os.Open(dirname)
 	if err != nil {
 		return false, err
@@ -261,24 +220,4 @@ func (tp *TerraformParams) SetTargetRepo(repo string) *TerraformParams {
 
 func NewTerraformParams(commonParams *utils.CommonParams) *TerraformParams {
 	return &TerraformParams{CommonParams: commonParams}
-}
-
-func (tpc *TerraformPublishCommand) verifyCompatibleVersion(artifactoryVersion string) error {
-	propertiesApi := ArtifactoryMinSupportedVersion
-	version := version.NewVersion(artifactoryVersion)
-	tpc.artifactoryVersion = artifactoryVersion
-	if !version.AtLeast(propertiesApi) {
-		return errorutils.CheckErrorf("Unsupported version of Artifactory: %s\nSupports Artifactory version %s and above", artifactoryVersion, propertiesApi)
-	}
-	return nil
-}
-
-// Creates an OperationSummary struct with the results. New results should not be written after this method is called.
-func (rm *resultsManager) getOperationSummaryTerraform(totalSucceeded, totalFailed int) *utils.OperationSummary {
-	return &utils.OperationSummary{
-		TransferDetailsReader:  rm.getTransferDetailsReader(),
-		ArtifactsDetailsReader: content.NewContentReader(rm.artifactsDetailsWriter.GetFilePath(), content.DefaultKey),
-		TotalSucceeded:         totalSucceeded,
-		TotalFailed:            totalFailed,
-	}
 }
