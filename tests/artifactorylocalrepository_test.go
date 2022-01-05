@@ -42,6 +42,7 @@ import (
 // 	t.Run("localCreateWithParamTest", localCreateWithParamTest)
 // 	t.Run("getLocalRepoDetailsTest", getLocalRepoDetailsTest)
 // 	t.Run("getAllLocalRepoDetailsTest", getAllLocalRepoDetailsTest)
+// 	t.Run("isLocalRepoExistsTest", isLocalRepoExistsTest)
 // }
 
 func setLocalRepositoryBaseParams(params *services.LocalRepositoryBaseParams, isUpdate bool) {
@@ -614,6 +615,23 @@ func getLocalRepoDetailsTest(t *testing.T) {
 	assert.Equal(t, data.GetRepoType(), "local")
 	assert.Empty(t, data.Url)
 	assert.Equal(t, data.PackageType, "generic")
+}
+
+func isLocalRepoExistsTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	// Validate repo doesn't exist
+	exists := isRepoExists(t, repoKey)
+	assert.False(t, exists)
+	// Create Repo
+	glp := services.NewGenericLocalRepositoryParams()
+	glp.Key = repoKey
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
+	err := testsCreateLocalRepositoryService.Generic(glp)
+	assert.NoError(t, err, "Failed to create "+repoKey)
+	defer deleteRepo(t, repoKey)
+	// Validate repo exists
+	exists = isRepoExists(t, repoKey)
+	assert.True(t, exists)
 }
 
 func getAllLocalRepoDetailsTest(t *testing.T) {

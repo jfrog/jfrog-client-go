@@ -821,10 +821,11 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 
 func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	retryExecutor := &clientutils.RetryExecutor{
-		MaxRetries:       12,
-		RetriesInterval:  10,
-		ErrorMessage:     "Waiting for Artifactory to evaluate repository operation...",
-		ExecutionHandler: createRepoConfigValidationFunc(repoKey, params),
+		MaxRetries: 12,
+		// RetriesIntervalMilliSecs in milliseconds
+		RetriesIntervalMilliSecs: 10 * 1000,
+		ErrorMessage:             "Waiting for Artifactory to evaluate repository operation...",
+		ExecutionHandler:         createRepoConfigValidationFunc(repoKey, params),
 	}
 	err := retryExecutor.Execute()
 	assert.NoError(t, err)
@@ -854,6 +855,12 @@ func getAllRepos(t *testing.T, repoType, packageType string) *[]services.Reposit
 	data, err := testsRepositoriesService.GetWithFilter(params)
 	assert.NoError(t, err, "Failed to get all repositories details")
 	return data
+}
+
+func isRepoExists(t *testing.T, repoKey string) bool {
+	exists, err := testsRepositoriesService.IsExists(repoKey)
+	assert.NoError(t, err, "Failed to check if "+repoKey+" exists")
+	return exists
 }
 
 func createDummyBuild(buildName string) error {
