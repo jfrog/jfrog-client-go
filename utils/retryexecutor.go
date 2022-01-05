@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -47,8 +46,8 @@ func (runner *RetryExecutor) Execute() error {
 			time.Sleep(time.Millisecond * time.Duration(runner.RetriesIntervalMilliSecs))
 		}
 	}
-
-	return errorutils.CheckErrorf("%s executor timeout after %v attempts (%v seconds)", runner.LogMsgPrefix, runner.MaxRetries, runner.MaxRetries*runner.RetriesIntervalMilliSecs/1000)
+	log.Info(fmt.Sprintf("%s executor timeout after %v attempts (%v seconds)", runner.LogMsgPrefix, runner.MaxRetries, runner.MaxRetries*runner.RetriesIntervalMilliSecs/1000))
+	return err
 }
 
 func (runner *RetryExecutor) getLogRetryMessage(attemptNumber int, err error) (message string) {
