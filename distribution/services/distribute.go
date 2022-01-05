@@ -111,7 +111,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 		ExecutionHandler: func() (bool, error) {
 			response, err := distributeBundleService.GetStatus(distributionStatusParams)
 			if err != nil {
-				return false, err
+				return false, errorutils.CheckError(err)
 			}
 			if (*response)[0].Status == Failed {
 				bytes, err := json.Marshal(response)
