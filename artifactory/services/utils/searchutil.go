@@ -326,6 +326,9 @@ type ResultItem struct {
 }
 
 func (item ResultItem) GetSortKey() string {
+	if item.Type == "folder" {
+		return appendFolderSuffix(item.GetItemRelativePath())
+	}
 	return item.GetItemRelativePath()
 }
 
@@ -345,8 +348,8 @@ func (item ResultItem) GetItemRelativePath() string {
 	url := item.Repo
 	url = addSeparator(url, "/", item.Path)
 	url = addSeparator(url, "/", item.Name)
-	if item.Type == "folder" && !strings.HasSuffix(url, "/") {
-		url = url + "/"
+	if item.Type == "folder" {
+		url = appendFolderSuffix(url)
 	}
 	return url
 }
@@ -487,4 +490,11 @@ func DisableTransitiveSearchIfNotAllowed(params *CommonParams, artifactoryVersio
 			transitiveSearchMinVersion, artifactoryVersion.GetVersion()))
 		params.Transitive = false
 	}
+}
+
+func appendFolderSuffix(folderPath string) string {
+	if !strings.HasSuffix(folderPath, "/") {
+		folderPath = folderPath + "/"
+	}
+	return folderPath
 }
