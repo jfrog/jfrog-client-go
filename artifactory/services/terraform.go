@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 )
 
 type TerraformService struct {
@@ -136,9 +135,7 @@ func (tp *TerraformParams) uploadParamsForTerraformPublish(moduleName, dirPath s
 		return nil, e
 	}
 	uploadParams.Target = target
-	// Add parenthesis across the module's name in the pattern: ".../moduleName" --> ".../(moduleName/*)".
-	// This pattern will match the placeholder '{1}' in "archive-target".
-	uploadParams.Pattern = filepath.Join(strings.TrimSuffix(dirPath, moduleName), "("+moduleName, "*)")
+	uploadParams.Pattern = dirPath + "/(*)"
 	uploadParams.TargetPathInArchive = "{1}"
 	uploadParams.Archive = "zip"
 	uploadParams.Recursive = true
