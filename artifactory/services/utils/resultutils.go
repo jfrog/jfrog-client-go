@@ -49,7 +49,7 @@ func (cs *OperationSummary) Close() error {
 }
 
 func (ad *ArtifactDetails) ToBuildInfoArtifact() buildinfo.Artifact {
-	artifact := buildinfo.Artifact{Checksum: &buildinfo.Checksum{}}
+	artifact := buildinfo.Artifact{Checksum: buildinfo.Checksum{}}
 	artifact.Sha1 = ad.Checksums.Sha1
 	artifact.Md5 = ad.Checksums.Md5
 	// Artifact name in build info as the name in artifactory
@@ -63,7 +63,7 @@ func (ad *ArtifactDetails) ToBuildInfoArtifact() buildinfo.Artifact {
 }
 
 func (ad *ArtifactDetails) ToBuildInfoDependency() buildinfo.Dependency {
-	dependency := buildinfo.Dependency{Checksum: &buildinfo.Checksum{}}
+	dependency := buildinfo.Dependency{Checksum: buildinfo.Checksum{}}
 	dependency.Sha1 = ad.Checksums.Sha1
 	dependency.Md5 = ad.Checksums.Md5
 	// Artifact name in build info as the name in artifactory
