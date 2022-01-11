@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/gookit/color v1.4.2
-	github.com/jfrog/build-info-go v0.1.6
+	github.com/jfrog/build-info-go v1.0.0
 	github.com/jfrog/gofrog v1.1.1
 	github.com/mholt/archiver/v3 v3.5.1-0.20210618180617-81fac4ba96e4
 	github.com/pkg/errors v0.9.1
@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/CycloneDX/cyclonedx-go v0.4.0 // indirect
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
@@ -31,7 +32,9 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
 	github.com/klauspost/compress v1.11.4 // indirect
+	github.com/klauspost/cpuid/v2 v2.0.6 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
+	github.com/minio/sha256-simd v1.0.1-0.20210617151322-99e45fae3395 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.2 // indirect

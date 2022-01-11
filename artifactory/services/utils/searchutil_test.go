@@ -2,10 +2,9 @@ package utils
 
 import (
 	"fmt"
+	"github.com/jfrog/gofrog/version"
 	"path/filepath"
 	"testing"
-
-	"github.com/jfrog/jfrog-client-go/utils/version"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
