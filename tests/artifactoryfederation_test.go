@@ -34,8 +34,7 @@ func localConvertLocalToFederatedTest(t *testing.T) {
 	glp.ArchiveBrowsingEnabled = &falseValue
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -57,8 +56,7 @@ func localTriggerFederatedFullSyncAllTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Generic(gfp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -75,8 +73,7 @@ func localTriggerFederatedFullSyncMirrorTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Generic(gfp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)

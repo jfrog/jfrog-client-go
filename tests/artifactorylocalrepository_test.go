@@ -60,8 +60,7 @@ func localAlpineTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&alp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Alpine(alp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -81,8 +80,7 @@ func localBowerTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&blp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Bower(blp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -103,8 +101,7 @@ func localCargoTest(t *testing.T) {
 	setCargoRepositoryParams(&clp.CargoRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Cargo(clp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -125,8 +122,7 @@ func localChefTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Chef(clp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -146,8 +142,7 @@ func localCocoapodsTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Cocoapods(clp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -167,8 +162,7 @@ func localComposerTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Composer(clp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -188,8 +182,7 @@ func localConanTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Conan(clp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -209,8 +202,7 @@ func localCondaTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Conda(clp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -230,8 +222,7 @@ func localCranTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Cran(clp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -252,8 +243,7 @@ func localDebianTest(t *testing.T) {
 	setDebianRepositoryParams(&dlp.DebianRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Debian(dlp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -275,8 +265,7 @@ func localDockerTest(t *testing.T) {
 	setDockerRepositoryParams(&dlp.DockerRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Docker(dlp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -297,8 +286,7 @@ func localGemsTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Gems(glp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -318,8 +306,7 @@ func localGenericTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -339,8 +326,7 @@ func localGitlfsTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Gitlfs(glp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -360,8 +346,7 @@ func localGoTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Go(glp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -382,8 +367,7 @@ func localGradleTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&glp.JavaPackageManagersRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Gradle(glp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -404,8 +388,7 @@ func localHelmTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&hlp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Helm(hlp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -426,8 +409,7 @@ func localIvyTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&ilp.JavaPackageManagersRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Ivy(ilp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -449,8 +431,7 @@ func localMavenTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&mlp.JavaPackageManagersRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Maven(mlp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -471,8 +452,7 @@ func localNpmTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&nlp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Npm(nlp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -493,8 +473,7 @@ func localNugetTest(t *testing.T) {
 	setNugetRepositoryParams(&nlp.NugetRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Nuget(nlp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -515,8 +494,7 @@ func localOpkgTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&olp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Opkg(olp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -536,8 +514,7 @@ func localPuppetTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&plp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Puppet(plp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -557,8 +534,7 @@ func localPypiTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&plp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Pypi(plp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -579,8 +555,7 @@ func localRpmTest(t *testing.T) {
 	setRpmRepositoryParams(&rlp.RpmRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Rpm(rlp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -602,8 +577,7 @@ func localSbtTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&slp.JavaPackageManagersRepositoryParams, false)
 
 	err := testsCreateLocalRepositoryService.Sbt(slp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -624,8 +598,7 @@ func localVagrantTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&vlp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Vagrant(vlp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -649,8 +622,7 @@ func localYumTest(t *testing.T) {
 	ylp.YumGroupFileNames = "filename"
 
 	err := testsCreateLocalRepositoryService.Yum(ylp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -674,8 +646,7 @@ func localCreateWithParamTest(t *testing.T) {
 	params := services.NewLocalRepositoryBaseParams()
 	params.Key = repoKey
 	err := testsRepositoriesService.CreateLocal(params)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -690,8 +661,7 @@ func getLocalRepoDetailsTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -715,8 +685,7 @@ func isLocalRepoExistsTest(t *testing.T) {
 	glp.Key = repoKey
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -733,8 +702,7 @@ func getAllLocalRepoDetailsTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)

@@ -132,8 +132,7 @@ func remoteAlpineTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Alpine(arp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -158,8 +157,7 @@ func remoteBowerTest(t *testing.T) {
 	brp.BowerRegistryUrl = "https://registry.bower.io"
 
 	err := testsCreateRemoteRepositoryService.Bower(brp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -185,8 +183,7 @@ func remoteCargoTest(t *testing.T) {
 	crp.CargoAnonymousAccess = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Cargo(crp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -210,8 +207,7 @@ func remoteChefTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Chef(crp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -236,8 +232,7 @@ func remoteCocoapodsTest(t *testing.T) {
 	crp.PodsSpecsRepoUrl = "https://github.com/CocoaPods/Specs"
 
 	err := testsCreateRemoteRepositoryService.Cocoapods(crp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -263,8 +258,7 @@ func remoteComposerTest(t *testing.T) {
 	crp.ComposerRegistryUrl = "https://composer.registry.com/"
 
 	err := testsCreateRemoteRepositoryService.Composer(crp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -288,8 +282,7 @@ func remoteConanTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Conan(crp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -312,8 +305,7 @@ func remoteCondaTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Conda(crp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -336,8 +328,7 @@ func remoteCranTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Cran(crp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -361,8 +352,7 @@ func remoteDebianTest(t *testing.T) {
 	drp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Debian(drp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -390,8 +380,7 @@ func remoteDockerTest(t *testing.T) {
 	drp.BlockPullingSchema1 = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Docker(drp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -420,8 +409,7 @@ func remoteGemsTest(t *testing.T) {
 	grp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Gems(grp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -446,8 +434,7 @@ func remoteGenericTest(t *testing.T) {
 	grp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -471,8 +458,7 @@ func remoteGitlfsTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Gitlfs(grp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -496,8 +482,7 @@ func remoteGoTest(t *testing.T) {
 	grp.VcsGitProvider = "ARTIFACTORY"
 
 	err := testsCreateRemoteRepositoryService.Go(grp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -522,8 +507,7 @@ func remoteGradleTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&grp.JavaPackageManagersRemoteRepositoryParams, false)
 
 	err := testsCreateRemoteRepositoryService.Gradle(grp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -548,8 +532,7 @@ func remoteHelmTest(t *testing.T) {
 	hrp.ChartsBaseUrl = "charts"
 
 	err := testsCreateRemoteRepositoryService.Helm(hrp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -574,8 +557,7 @@ func remoteIvyTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&irp.JavaPackageManagersRemoteRepositoryParams, false)
 
 	err := testsCreateRemoteRepositoryService.Ivy(irp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -600,8 +582,7 @@ func remoteMavenTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&mrp.JavaPackageManagersRemoteRepositoryParams, false)
 
 	err := testsCreateRemoteRepositoryService.Maven(mrp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -625,8 +606,7 @@ func remoteNpmTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&nrp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Npm(nrp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -653,8 +633,7 @@ func remoteNugetTest(t *testing.T) {
 	nrp.ForceNugetAuthentication = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Nuget(nrp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -681,8 +660,7 @@ func remoteOpkgTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&orp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Opkg(orp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -706,8 +684,7 @@ func remoteP2Test(t *testing.T) {
 	prp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.P2(prp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -731,8 +708,7 @@ func remotePuppetTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Puppet(prp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -757,8 +733,7 @@ func remotePypiTest(t *testing.T) {
 	prp.PypiRepositorySuffix = "simple"
 
 	err := testsCreateRemoteRepositoryService.Pypi(prp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -782,8 +757,7 @@ func remoteRpmTest(t *testing.T) {
 	rrp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Rpm(rrp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -808,8 +782,7 @@ func remoteSbtTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&srp.JavaPackageManagersRemoteRepositoryParams, false)
 
 	err := testsCreateRemoteRepositoryService.Sbt(srp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -835,8 +808,7 @@ func remoteVcsTest(t *testing.T) {
 	vrp.MaxUniqueSnapshots = 25
 
 	err := testsCreateRemoteRepositoryService.Vcs(vrp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -862,8 +834,7 @@ func remoteYumTest(t *testing.T) {
 	yrp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Yum(yrp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -960,8 +931,7 @@ func remoteCreateWithParamTest(t *testing.T) {
 	params.Key = repoKey
 	params.Url = "https://github.com/"
 	err := testsRepositoriesService.CreateRemote(params)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -977,8 +947,7 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
@@ -1001,8 +970,7 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
-	if err != nil {
-		assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
