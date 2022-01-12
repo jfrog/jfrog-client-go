@@ -3,7 +3,6 @@ package services
 import (
 	"archive/zip"
 	"fmt"
-	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
 	"net/http"
 	"os"
@@ -12,6 +11,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/build-info-go/entities"
+	biutils "github.com/jfrog/build-info-go/utils"
 
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
@@ -920,7 +922,7 @@ func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha25
 	rm.singleFinalTransfersWriter.Write(fileTransferDetails)
 	artifactDetails := utils.ArtifactDetails{
 		ArtifactoryPath: targetPath,
-		Checksums: utils.Checksums{
+		Checksums: entities.Checksum{
 			Sha256: checksums.Sha256,
 			Sha1:   checksums.Sha1,
 			Md5:    checksums.Md5,
@@ -957,7 +959,7 @@ func (rm *resultsManager) finalizeResult(targetPath string, checksums *fileutils
 	delete(rm.notFinalTransfersWriters, targetPath)
 	artifactDetails := utils.ArtifactDetails{
 		ArtifactoryPath: targetPath,
-		Checksums: utils.Checksums{
+		Checksums: entities.Checksum{
 			Sha256: checksums.Sha256,
 			Sha1:   checksums.Sha1,
 			Md5:    checksums.Md5,

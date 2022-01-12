@@ -1,10 +1,11 @@
 package utils
 
 import (
+	"strings"
+
 	buildinfo "github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"strings"
 )
 
 type Result struct {
@@ -36,8 +37,8 @@ type OperationSummary struct {
 
 type ArtifactDetails struct {
 	// Path of the artifact in Artifactory
-	ArtifactoryPath string    `json:"artifactoryPath,omitempty"`
-	Checksums       Checksums `json:"checksums,omitempty"`
+	ArtifactoryPath string             `json:"artifactoryPath,omitempty"`
+	Checksums       buildinfo.Checksum `json:"checksums,omitempty"`
 }
 
 func (cs *OperationSummary) Close() error {
@@ -86,10 +87,4 @@ func ConvertArtifactsDetailsToBuildInfoDependencies(artifactsDetailsReader *cont
 		buildDependencies = append(buildDependencies, artifactDetails.ToBuildInfoDependency())
 	}
 	return buildDependencies, artifactsDetailsReader.GetError()
-}
-
-type Checksums struct {
-	Sha256 string `json:"sha256,omitempty"`
-	Sha1   string `json:"sha1,omitempty"`
-	Md5    string `json:"md5,omitempty"`
 }
