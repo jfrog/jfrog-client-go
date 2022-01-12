@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -90,11 +91,16 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 					return e
 				}
 				dataHandlerFunc := getSaveTaskInContentWriterFunc(toArchive, *uploadParams, errorsQueue)
-				return collectFilesForUpload(*uploadParams, nil, nil, dataHandlerFunc)
+				e = collectFilesForUpload(*uploadParams, nil, nil, dataHandlerFunc)
+				if e != nil {
+					return e
+				}
+				// SkipDir will not stop the walk, but will jump to the next directory.
+				return filepath.SkipDir
 			}
 			return nil
 		})
-		if err != nil {
+		if err != nil && err != io.EOF {
 			log.Error(err)
 			errorsQueue.AddError(err)
 		}
