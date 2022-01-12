@@ -913,7 +913,7 @@ func newResultManager() (*resultsManager, error) {
 }
 
 // Write a result of a successful upload
-func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha256 string, checksums *fileutils.ChecksumDetails) {
+func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha256 string, checksums *entities.Checksum) {
 	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
@@ -949,7 +949,7 @@ func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 }
 
 // Mark all the transfers to a specific target as completed successfully
-func (rm *resultsManager) finalizeResult(targetPath string, checksums *fileutils.ChecksumDetails) error {
+func (rm *resultsManager) finalizeResult(targetPath string, checksums *entities.Checksum) error {
 	writer := rm.notFinalTransfersWriters[targetPath]
 	e := writer.Close()
 	if e != nil {
