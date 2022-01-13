@@ -3,7 +3,6 @@ package services
 import (
 	"archive/zip"
 	"fmt"
-	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
 	"net/http"
 	"os"
@@ -12,6 +11,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/build-info-go/entities"
+	biutils "github.com/jfrog/build-info-go/utils"
 
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
@@ -911,7 +913,7 @@ func newResultManager() (*resultsManager, error) {
 }
 
 // Write a result of a successful upload
-func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha256 string, checksums *fileutils.ChecksumDetails) {
+func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha256 string, checksums *entities.Checksum) {
 	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
@@ -920,7 +922,7 @@ func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha25
 	rm.singleFinalTransfersWriter.Write(fileTransferDetails)
 	artifactDetails := utils.ArtifactDetails{
 		ArtifactoryPath: targetPath,
-		Checksums: utils.Checksums{
+		Checksums: entities.Checksum{
 			Sha256: checksums.Sha256,
 			Sha1:   checksums.Sha1,
 			Md5:    checksums.Md5,
@@ -947,7 +949,7 @@ func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 }
 
 // Mark all the transfers to a specific target as completed successfully
-func (rm *resultsManager) finalizeResult(targetPath string, checksums *fileutils.ChecksumDetails) error {
+func (rm *resultsManager) finalizeResult(targetPath string, checksums *entities.Checksum) error {
 	writer := rm.notFinalTransfersWriters[targetPath]
 	e := writer.Close()
 	if e != nil {
@@ -957,7 +959,7 @@ func (rm *resultsManager) finalizeResult(targetPath string, checksums *fileutils
 	delete(rm.notFinalTransfersWriters, targetPath)
 	artifactDetails := utils.ArtifactDetails{
 		ArtifactoryPath: targetPath,
-		Checksums: utils.Checksums{
+		Checksums: entities.Checksum{
 			Sha256: checksums.Sha256,
 			Sha1:   checksums.Sha1,
 			Md5:    checksums.Md5,

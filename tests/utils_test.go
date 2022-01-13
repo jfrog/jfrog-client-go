@@ -874,7 +874,7 @@ func createDummyBuild(buildName string) error {
 				{
 					Type: "gz",
 					Name: "c.tar.gz",
-					Checksum: &buildinfo.Checksum{
+					Checksum: buildinfo.Checksum{
 						Sha1: "9d4336ff7bc2d2348aee4e27ad55e42110df4a80",
 						Md5:  "b4918187cc9b3bf1b0772546d9398d7d",
 					},
