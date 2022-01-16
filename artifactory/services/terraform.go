@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/jfrog/gofrog/parallel"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -12,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 type TerraformService struct {
@@ -86,14 +88,21 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 				return e
 			}
 			if isTerraformModule {
-				uploadParams, e := terraformParams.uploadParamsForTerraformPublish(pathInfo.Name(), path)
+				uploadParams, e := terraformParams.uploadParamsForTerraformPublish(pathInfo.Name(), strings.TrimPrefix(path, pwd+string(filepath.Separator)))
 				if e != nil {
 					return e
 				}
-				dataHandlerFunc := getSaveTaskInContentWriterFunc(toArchive, *uploadParams, errorsQueue)
-				e = collectFilesForUpload(*uploadParams, nil, nil, dataHandlerFunc)
+				excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
+				excludedPath, e := fspatterns.IsPathExcluded(strings.TrimPrefix(path, pwd), excludePathPattern)
 				if e != nil {
 					return e
+				}
+				if !excludedPath {
+					dataHandlerFunc := getSaveTaskInContentWriterFunc(toArchive, *uploadParams, errorsQueue)
+					e = collectFilesForUpload(*uploadParams, nil, nil, dataHandlerFunc)
+					if e != nil {
+						return e
+					}
 				}
 				// SkipDir will not stop the walk, but will jump to the next directory.
 				return filepath.SkipDir
@@ -145,8 +154,8 @@ func (tp *TerraformParams) uploadParamsForTerraformPublish(moduleName, dirPath s
 	uploadParams.TargetPathInArchive = "{1}"
 	uploadParams.Archive = "zip"
 	uploadParams.Recursive = true
-	uploadParams.Exclusions = []string{"*.git", "*.DS_Store"}
-	uploadParams.CommonParams.TargetProps = utils.NewProperties()
+	uploadParams.CommonParams.TargetProps = tp.TargetProps
+	uploadParams.CommonParams.Exclusions = append(tp.Exclusions, "*.git", "*.DS_Store")
 
 	return &uploadParams, nil
 }
