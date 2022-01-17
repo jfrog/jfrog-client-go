@@ -5,6 +5,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/buger/jsonparser"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"io/ioutil"
 	"net/http"
@@ -587,7 +589,7 @@ func artifactoryCleanup(t *testing.T) {
 }
 
 func createRepo() error {
-	if !(*TestArtifactory || *TestDistribution || *TestXray) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepository) {
 		return nil
 	}
 	var err error
@@ -774,18 +776,39 @@ func setRpmRepositoryParams(params *services.RpmRepositoryParams, isUpdate bool)
 	}
 }
 
-func getRepoConfig(repoKey string) (body []byte, err error) {
+func getRepoConfig(repoKey string) ([]byte, error) {
 	artDetails := GetRtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return
+		return nil, err
 	}
 	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/repositories/"+repoKey, false, artHttpDetails, "")
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return
+	if err != nil {
+		return nil, err
 	}
-	return
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	return body, nil
+}
+
+func isEnterprisePlus() (bool, error) {
+	artDetails := GetRtDetails()
+	artHttpDetails := artDetails.CreateHttpClientDetails()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
+	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/system/license", false, artHttpDetails, "")
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return false, err
+	}
+	value, err := jsonparser.GetString(body, "type")
+	if err != nil {
+		return false, err
+	}
+	return value == "Enterprise Plus", nil
 }
 
 func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) clientutils.ExecutionHandlerFunc {
@@ -809,6 +832,16 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 			// The password field may be encrypted and won't match the value set, need to handle this during validation
 			if key == "password" {
 				continue
+			}
+			// Download Redirect is only supported on Enterprise Plus. Expect false otherwise.
+			if key == "downloadRedirect" {
+				eplus, err := isEnterprisePlus()
+				if err != nil {
+					return false, err
+				}
+				if !eplus {
+					expectedValue = false
+				}
 			}
 			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
 				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual: %s", repoKey, key, expectedValue, confMap[key])

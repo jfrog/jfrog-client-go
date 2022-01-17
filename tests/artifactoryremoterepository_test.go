@@ -10,45 +10,43 @@ import (
 const ArtifactoryLocalFileCacheSuffix = " (local file cache)"
 const MavenCentralUrl = "https://repo.maven.apache.org"
 
-// Temporarily disabled
-
-// func TestArtifactoryRemoteRepository(t *testing.T) {
-// 	initRepositoryTest(t)
-// 	t.Run("remoteAlpineTest", remoteAlpineTest)
-// 	t.Run("remoteBowerTest", remoteBowerTest)
-// 	t.Run("remoteCargoTest", remoteCargoTest)
-// 	t.Run("remoteChefTest", remoteChefTest)
-// 	t.Run("remoteCocoapodsTest", remoteCocoapodsTest)
-// 	t.Run("remoteComposerTest", remoteComposerTest)
-// 	t.Run("remoteConanTest", remoteConanTest)
-// 	t.Run("remoteCondaTest", remoteCondaTest)
-// 	t.Run("remoteCranTest", remoteCranTest)
-// 	t.Run("remoteDebianTest", remoteDebianTest)
-// 	t.Run("remoteDockerTest", remoteDockerTest)
-// 	t.Run("remoteGemsTest", remoteGemsTest)
-// 	t.Run("remoteGenericTest", remoteGenericTest)
-// 	t.Run("remoteGitlfsTest", remoteGitlfsTest)
-// 	t.Run("remoteGoTest", remoteGoTest)
-// 	t.Run("remoteGradleTest", remoteGradleTest)
-// 	t.Run("remoteHelmTest", remoteHelmTest)
-// 	t.Run("remoteIvyTest", remoteIvyTest)
-// 	t.Run("remoteMavenTest", remoteMavenTest)
-// 	t.Run("remoteNpmTest", remoteNpmTest)
-// 	t.Run("remoteNugetTest", remoteNugetTest)
-// 	t.Run("remoteOkgTest", remoteOpkgTest)
-// 	t.Run("remoteP2Test", remoteP2Test)
-// 	t.Run("remotePuppetTest", remotePuppetTest)
-// 	t.Run("remotePypiTest", remotePypiTest)
-// 	t.Run("remoteRpmTest", remoteRpmTest)
-// 	t.Run("remoteSbtTest", remoteSbtTest)
-// 	t.Run("remoteVcsTest", remoteVcsTest)
-// 	t.Run("remoteYumTest", remoteYumTest)
-// 	t.Run("remoteGenericSmartRemoteTest", remoteGenericSmartRemoteTest)
-// 	t.Run("remoteCreateWithParamTest", remoteCreateWithParamTest)
-// 	t.Run("getRemoteRepoDetailsTest", getRemoteRepoDetailsTest)
-// 	t.Run("getAllRemoteRepoDetailsTest", getAllRemoteRepoDetailsTest)
-// 	t.Run("isRemoteRepoExistsTest", isRemoteRepoExistsTest)
-// }
+func TestArtifactoryRemoteRepository(t *testing.T) {
+	initRepositoryTest(t)
+	t.Run("remoteAlpineTest", remoteAlpineTest)
+	t.Run("remoteBowerTest", remoteBowerTest)
+	t.Run("remoteCargoTest", remoteCargoTest)
+	t.Run("remoteChefTest", remoteChefTest)
+	t.Run("remoteCocoapodsTest", remoteCocoapodsTest)
+	t.Run("remoteComposerTest", remoteComposerTest)
+	t.Run("remoteConanTest", remoteConanTest)
+	t.Run("remoteCondaTest", remoteCondaTest)
+	t.Run("remoteCranTest", remoteCranTest)
+	t.Run("remoteDebianTest", remoteDebianTest)
+	t.Run("remoteDockerTest", remoteDockerTest)
+	t.Run("remoteGemsTest", remoteGemsTest)
+	t.Run("remoteGenericTest", remoteGenericTest)
+	t.Run("remoteGitlfsTest", remoteGitlfsTest)
+	t.Run("remoteGoTest", remoteGoTest)
+	t.Run("remoteGradleTest", remoteGradleTest)
+	t.Run("remoteHelmTest", remoteHelmTest)
+	t.Run("remoteIvyTest", remoteIvyTest)
+	t.Run("remoteMavenTest", remoteMavenTest)
+	t.Run("remoteNpmTest", remoteNpmTest)
+	t.Run("remoteNugetTest", remoteNugetTest)
+	t.Run("remoteOkgTest", remoteOpkgTest)
+	t.Run("remoteP2Test", remoteP2Test)
+	t.Run("remotePuppetTest", remotePuppetTest)
+	t.Run("remotePypiTest", remotePypiTest)
+	t.Run("remoteRpmTest", remoteRpmTest)
+	t.Run("remoteSbtTest", remoteSbtTest)
+	t.Run("remoteVcsTest", remoteVcsTest)
+	t.Run("remoteYumTest", remoteYumTest)
+	t.Run("remoteGenericSmartRemoteTest", remoteGenericSmartRemoteTest)
+	t.Run("remoteCreateWithParamTest", remoteCreateWithParamTest)
+	t.Run("getRemoteRepoDetailsTest", getRemoteRepoDetailsTest)
+	t.Run("getAllRemoteRepoDetailsTest", getAllRemoteRepoDetailsTest)
+	t.Run("isRemoteRepoExistsTest", isRemoteRepoExistsTest)
+}
 
 func setRemoteRepositoryBaseParams(params *services.RemoteRepositoryBaseParams, isUpdate bool) {
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
@@ -134,7 +132,9 @@ func remoteAlpineTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Alpine(arp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	arp.Description += ArtifactoryLocalFileCacheSuffix
@@ -157,7 +157,9 @@ func remoteBowerTest(t *testing.T) {
 	brp.BowerRegistryUrl = "https://registry.bower.io"
 
 	err := testsCreateRemoteRepositoryService.Bower(brp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	brp.Description += ArtifactoryLocalFileCacheSuffix
@@ -181,7 +183,9 @@ func remoteCargoTest(t *testing.T) {
 	crp.CargoAnonymousAccess = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Cargo(crp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	crp.Description += ArtifactoryLocalFileCacheSuffix
@@ -203,7 +207,9 @@ func remoteChefTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Chef(crp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	crp.Description += ArtifactoryLocalFileCacheSuffix
@@ -226,7 +232,9 @@ func remoteCocoapodsTest(t *testing.T) {
 	crp.PodsSpecsRepoUrl = "https://github.com/CocoaPods/Specs"
 
 	err := testsCreateRemoteRepositoryService.Cocoapods(crp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	crp.Description += ArtifactoryLocalFileCacheSuffix
@@ -250,7 +258,9 @@ func remoteComposerTest(t *testing.T) {
 	crp.ComposerRegistryUrl = "https://composer.registry.com/"
 
 	err := testsCreateRemoteRepositoryService.Composer(crp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	crp.Description += ArtifactoryLocalFileCacheSuffix
@@ -272,7 +282,9 @@ func remoteConanTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Conan(crp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	crp.Description += ArtifactoryLocalFileCacheSuffix
@@ -293,7 +305,9 @@ func remoteCondaTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Conda(crp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	crp.Description += ArtifactoryLocalFileCacheSuffix
@@ -314,7 +328,9 @@ func remoteCranTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Cran(crp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	crp.Description += ArtifactoryLocalFileCacheSuffix
@@ -336,7 +352,9 @@ func remoteDebianTest(t *testing.T) {
 	drp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Debian(drp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	drp.Description += ArtifactoryLocalFileCacheSuffix
@@ -362,7 +380,9 @@ func remoteDockerTest(t *testing.T) {
 	drp.BlockPullingSchema1 = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Docker(drp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	drp.Description += ArtifactoryLocalFileCacheSuffix
@@ -389,7 +409,9 @@ func remoteGemsTest(t *testing.T) {
 	grp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Gems(grp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	grp.Description += ArtifactoryLocalFileCacheSuffix
@@ -412,7 +434,9 @@ func remoteGenericTest(t *testing.T) {
 	grp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	grp.Description += ArtifactoryLocalFileCacheSuffix
@@ -434,7 +458,9 @@ func remoteGitlfsTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Gitlfs(grp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	grp.Description += ArtifactoryLocalFileCacheSuffix
@@ -456,7 +482,9 @@ func remoteGoTest(t *testing.T) {
 	grp.VcsGitProvider = "ARTIFACTORY"
 
 	err := testsCreateRemoteRepositoryService.Go(grp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	grp.Description += ArtifactoryLocalFileCacheSuffix
@@ -479,7 +507,9 @@ func remoteGradleTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&grp.JavaPackageManagersRemoteRepositoryParams, false)
 
 	err := testsCreateRemoteRepositoryService.Gradle(grp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	grp.Description += ArtifactoryLocalFileCacheSuffix
@@ -502,7 +532,9 @@ func remoteHelmTest(t *testing.T) {
 	hrp.ChartsBaseUrl = "charts"
 
 	err := testsCreateRemoteRepositoryService.Helm(hrp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	hrp.Description += ArtifactoryLocalFileCacheSuffix
@@ -525,7 +557,9 @@ func remoteIvyTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&irp.JavaPackageManagersRemoteRepositoryParams, false)
 
 	err := testsCreateRemoteRepositoryService.Ivy(irp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	irp.Description += ArtifactoryLocalFileCacheSuffix
@@ -548,7 +582,9 @@ func remoteMavenTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&mrp.JavaPackageManagersRemoteRepositoryParams, false)
 
 	err := testsCreateRemoteRepositoryService.Maven(mrp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	mrp.Description += ArtifactoryLocalFileCacheSuffix
@@ -570,7 +606,9 @@ func remoteNpmTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&nrp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Npm(nrp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	nrp.Description += ArtifactoryLocalFileCacheSuffix
@@ -595,7 +633,9 @@ func remoteNugetTest(t *testing.T) {
 	nrp.ForceNugetAuthentication = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Nuget(nrp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	nrp.Description += ArtifactoryLocalFileCacheSuffix
@@ -620,7 +660,9 @@ func remoteOpkgTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&orp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Opkg(orp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	orp.Description += ArtifactoryLocalFileCacheSuffix
@@ -642,7 +684,9 @@ func remoteP2Test(t *testing.T) {
 	prp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.P2(prp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	prp.Description += ArtifactoryLocalFileCacheSuffix
@@ -664,7 +708,9 @@ func remotePuppetTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Puppet(prp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	prp.Description += ArtifactoryLocalFileCacheSuffix
@@ -687,7 +733,9 @@ func remotePypiTest(t *testing.T) {
 	prp.PypiRepositorySuffix = "simple"
 
 	err := testsCreateRemoteRepositoryService.Pypi(prp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	prp.Description += ArtifactoryLocalFileCacheSuffix
@@ -709,7 +757,9 @@ func remoteRpmTest(t *testing.T) {
 	rrp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Rpm(rrp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	rrp.Description += ArtifactoryLocalFileCacheSuffix
@@ -732,7 +782,9 @@ func remoteSbtTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&srp.JavaPackageManagersRemoteRepositoryParams, false)
 
 	err := testsCreateRemoteRepositoryService.Sbt(srp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	srp.Description += ArtifactoryLocalFileCacheSuffix
@@ -756,7 +808,9 @@ func remoteVcsTest(t *testing.T) {
 	vrp.MaxUniqueSnapshots = 25
 
 	err := testsCreateRemoteRepositoryService.Vcs(vrp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	vrp.Description += ArtifactoryLocalFileCacheSuffix
@@ -780,7 +834,9 @@ func remoteYumTest(t *testing.T) {
 	yrp.ListRemoteFolderItems = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Yum(yrp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	yrp.PackageType = "rpm"
@@ -875,7 +931,9 @@ func remoteCreateWithParamTest(t *testing.T) {
 	params.Key = repoKey
 	params.Url = "https://github.com/"
 	err := testsRepositoriesService.CreateRemote(params)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, params)
 }
@@ -889,7 +947,9 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
 	data := getRepo(t, repoKey)
@@ -910,7 +970,9 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
 	data := getAllRepos(t, "remote", "")
