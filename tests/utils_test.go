@@ -842,7 +842,6 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 				if !eplus {
 					expectedValue = false
 				}
-
 			}
 			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
 				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual: %s", repoKey, key, expectedValue, confMap[key])
