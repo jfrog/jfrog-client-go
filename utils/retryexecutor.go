@@ -46,7 +46,7 @@ func (runner *RetryExecutor) Execute() error {
 			time.Sleep(time.Millisecond * time.Duration(runner.RetriesIntervalMilliSecs))
 		}
 	}
-	log.Info(fmt.Sprintf("%s executor timeout after %v attempts (%v seconds)", runner.LogMsgPrefix, runner.MaxRetries, runner.MaxRetries*runner.RetriesIntervalMilliSecs/1000))
+	log.Info(fmt.Sprintf("%s executor timeout after %v attempts with %v milliseconds wait intervals", runner.LogMsgPrefix, runner.MaxRetries, runner.RetriesIntervalMilliSecs))
 	return err
 }
 
