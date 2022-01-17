@@ -2,7 +2,6 @@ package services
 
 import (
 	"github.com/jfrog/gofrog/parallel"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -65,12 +64,12 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 	go func() {
 		defer producer.Done()
 		toArchive := make(map[string]*archiveUploadData)
-		// Walk and upload directories which contain '.tf' files.
 		pwd, err := os.Getwd()
 		if err != nil {
 			log.Error(err)
 			errorsQueue.AddError(err)
 		}
+		// Walk and upload directories which contain '.tf' files.
 		err = filepath.WalkDir(pwd, func(path string, info fs.DirEntry, err error) error {
 			if err != nil {
 				return err
@@ -92,17 +91,10 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 				if e != nil {
 					return e
 				}
-				excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
-				excludedPath, e := fspatterns.IsPathExcluded(strings.TrimPrefix(path, pwd), excludePathPattern)
+				dataHandlerFunc := getSaveTaskInContentWriterFunc(toArchive, *uploadParams, errorsQueue)
+				e = collectFilesForUpload(*uploadParams, nil, nil, dataHandlerFunc)
 				if e != nil {
 					return e
-				}
-				if !excludedPath {
-					dataHandlerFunc := getSaveTaskInContentWriterFunc(toArchive, *uploadParams, errorsQueue)
-					e = collectFilesForUpload(*uploadParams, nil, nil, dataHandlerFunc)
-					if e != nil {
-						return e
-					}
 				}
 				// SkipDir will not stop the walk, but will jump to the next directory.
 				return filepath.SkipDir
@@ -113,6 +105,7 @@ func (ts *TerraformService) prepareTerraformPublishTasks(producer parallel.Runne
 			log.Error(err)
 			errorsQueue.AddError(err)
 		}
+
 		// Upload modules
 		for targetPath, archiveData := range toArchive {
 			err := archiveData.writer.Close()
@@ -160,7 +153,7 @@ func (tp *TerraformParams) uploadParamsForTerraformPublish(moduleName, dirPath s
 	return &uploadParams, nil
 }
 
-// Module's path in terraform repo : namespace/provider/moduleName/tag.zip
+// Module's path in terraform repository : namespace/provider/moduleName/tag.zip
 func (tp *TerraformParams) getPublishTarget(moduleName string) (string, error) {
 	return filepath.ToSlash(filepath.Join(tp.TargetRepo, tp.Namespace, tp.Provider, moduleName, tp.Tag+".zip")), nil
 }

@@ -151,6 +151,7 @@ func GetRootPath(pattern, target, archiveTarget string, patternType clientutils.
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
 		return "", errorutils.CheckErrorf("Path does not exist: " + rootPath)
 	}
+
 	return rootPath, nil
 }
 
