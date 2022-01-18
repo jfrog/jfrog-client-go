@@ -1,6 +1,7 @@
 package _go
 
 import (
+	"github.com/jfrog/gofrog/version"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
@@ -14,7 +15,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 )
 
 const ArtifactoryMinSupportedVersion = "6.10.0"

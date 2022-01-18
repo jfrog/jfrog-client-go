@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -14,6 +13,9 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	"github.com/jfrog/build-info-go/entities"
+	biutils "github.com/jfrog/build-info-go/utils"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
@@ -350,7 +352,7 @@ func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error
 			return details, err
 		}
 	} else {
-		details.Checksum = ChecksumDetails{}
+		details.Checksum = entities.Checksum{}
 	}
 
 	file, err := os.Open(filePath)
@@ -366,11 +368,11 @@ func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error
 	return details, nil
 }
 
-func calcChecksumDetails(filePath string) (ChecksumDetails, error) {
+func calcChecksumDetails(filePath string) (entities.Checksum, error) {
 	file, err := os.Open(filePath)
 	defer file.Close()
 	if errorutils.CheckError(err) != nil {
-		return ChecksumDetails{}, err
+		return entities.Checksum{}, err
 	}
 	return calcChecksumDetailsFromReader(file)
 }
@@ -393,23 +395,17 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksusms bool) (*FileDe
 	return details, err
 }
 
-func calcChecksumDetailsFromReader(reader io.Reader) (ChecksumDetails, error) {
+func calcChecksumDetailsFromReader(reader io.Reader) (entities.Checksum, error) {
 	checksumInfo, err := biutils.CalcChecksums(reader)
 	if err != nil {
-		return ChecksumDetails{}, errorutils.CheckError(err)
+		return entities.Checksum{}, errorutils.CheckError(err)
 	}
-	return ChecksumDetails{Md5: checksumInfo[biutils.MD5], Sha1: checksumInfo[biutils.SHA1], Sha256: checksumInfo[biutils.SHA256]}, nil
+	return entities.Checksum{Md5: checksumInfo[biutils.MD5], Sha1: checksumInfo[biutils.SHA1], Sha256: checksumInfo[biutils.SHA256]}, nil
 }
 
 type FileDetails struct {
-	Checksum ChecksumDetails
+	Checksum entities.Checksum
 	Size     int64
-}
-
-type ChecksumDetails struct {
-	Md5    string
-	Sha1   string
-	Sha256 string
 }
 
 func CopyFile(dst, src string) error {
