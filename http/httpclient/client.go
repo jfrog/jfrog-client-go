@@ -114,6 +114,10 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 			if resp == nil {
 				return false, errorutils.CheckErrorf("%sReceived empty response from server", logMsgPrefix)
 			}
+			///////////////////////// TODO: check this
+			if resp != nil && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+				return false, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status))
+			}
 			// If response-code < 500, should not retry
 			if resp.StatusCode < 500 {
 				return false, nil
