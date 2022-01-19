@@ -100,7 +100,7 @@ func Walk(root string, walkFn WalkFunc, walkIntoDirSymlink bool) error {
 
 // Gets a path of a file or a directory, and returns its real path (in case the path contains a symlink to a directory).
 // The difference between this function and filepath.EvalSymlinks is that if the path is of a symlink,
-// the function won't return the symlink's target, but the real path to the symlink.
+// this function won't return the symlink's target, but the real path to the symlink.
 func evalPathOfSymlink(path string) (string, error) {
 	dirPath := filepath.Dir(path)
 	evalDirPath, err := filepath.EvalSymlinks(dirPath)
