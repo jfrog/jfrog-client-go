@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"strconv"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type ExecutionHandlerFunc func() (bool, error)
@@ -45,7 +46,7 @@ func (runner *RetryExecutor) Execute() error {
 			time.Sleep(time.Millisecond * time.Duration(runner.RetriesIntervalMilliSecs))
 		}
 	}
-
+	log.Info(fmt.Sprintf("%s executor timeout after %v attempts with %v milliseconds wait intervals", runner.LogMsgPrefix, runner.MaxRetries, runner.RetriesIntervalMilliSecs))
 	return err
 }
 

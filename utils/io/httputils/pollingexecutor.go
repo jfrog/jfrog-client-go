@@ -3,7 +3,7 @@ package httputils
 import (
 	"time"
 
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils"
 )
 
 type PollingAction func() (shouldStop bool, responseBody []byte, err error)
@@ -20,41 +20,17 @@ type PollingExecutor struct {
 }
 
 func (runner *PollingExecutor) Execute() ([]byte, error) {
-	ticker := time.NewTicker(runner.PollingInterval)
-	timeout := make(chan bool)
-	errChan := make(chan error)
-	resultChan := make(chan []byte)
-	go func() {
-		for {
-			select {
-			case <-timeout:
-				errChan <- errorutils.CheckErrorf("%s Polling executor timeout after %v seconds", runner.MsgPrefix, runner.Timeout.Seconds())
-				resultChan <- nil
-				return
-			case _ = <-ticker.C:
-				shouldStop, responseBody, err := runner.PollingAction()
-				if err != nil {
-					errChan <- err
-					resultChan <- nil
-					return
-				}
-				// Got the full valid response.
-				if shouldStop {
-					errChan <- nil
-					resultChan <- responseBody
-					return
-				}
-			}
-		}
-	}()
-	// Make sure we don't wait forever
-	go func() {
-		time.Sleep(runner.Timeout)
-		timeout <- true
-	}()
-	// Wait for result or error
-	err := <-errChan
-	body := <-resultChan
-	ticker.Stop()
-	return body, err
+	var finalResponse []byte
+	retryExecutor := utils.RetryExecutor{
+		MaxRetries:               int(runner.Timeout.Seconds() / (runner.PollingInterval.Seconds())),
+		RetriesIntervalMilliSecs: int(runner.PollingInterval.Milliseconds()),
+		ErrorMessage:             "",
+		LogMsgPrefix:             runner.MsgPrefix,
+		ExecutionHandler: func() (bool, error) {
+			shouldStop, response, err := runner.PollingAction()
+			finalResponse = response
+			return !shouldStop, err
+		},
+	}
+	return finalResponse, retryExecutor.Execute()
 }

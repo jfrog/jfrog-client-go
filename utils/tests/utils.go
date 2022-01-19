@@ -140,7 +140,15 @@ func SetEnvAndAssert(t *testing.T, key, value string) {
 }
 
 func SetEnvWithCallbackAndAssert(t *testing.T, key, value string) func() {
-	assert.NoError(t, os.Setenv(key, value), "Failed to set env: "+key)
+	oldValue, exist := os.LookupEnv(key)
+	SetEnvAndAssert(t, key, value)
+
+	if exist {
+		return func() {
+			SetEnvAndAssert(t, key, oldValue)
+		}
+	}
+
 	return func() {
 		UnSetEnvAndAssert(t, key)
 	}
