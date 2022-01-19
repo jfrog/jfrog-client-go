@@ -13,6 +13,41 @@ func TestAccessProject(t *testing.T) {
 	t.Run("create-update-delete", testAccessProjectCreateUpdateDelete)
 }
 
+func TestAccessProjectGroups(t *testing.T) {
+	initAccessTest(t)
+}
+
+func testAccessProjectAddGetDeleteGroups(t *testing.T) {
+	projectParams := getTestProjectParams()
+	err := testsAccessProjectService.Create(projectParams)
+	defer deleteProjectAndAssert(t, projectParams.ProjectDetails.ProjectKey)
+	assert.NoError(t, err)
+
+	var testGroup = getTestProjectGroupParams("a-test-group")
+	err = testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup)
+	assert.NoError(t, err)
+
+	allGroups, err := testsAccessProjectService.GetGroups(projectParams.ProjectDetails.ProjectKey)
+	assert.NoError(t, err)
+	assert.Equal(t, len(*allGroups), 1, "Expected 1 group in the project but got %d", len(*allGroups))
+	assert.Contains(t, allGroups, testGroup)
+
+	testGroup.Roles = append(testGroup.Roles, "foobar")
+	err = testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup)
+	assert.NoError(t, err)
+
+	singleGroup, err := testsAccessProjectService.GetGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name)
+	assert.NoError(t, err)
+	assert.Equal(t, *singleGroup, testGroup, "Expected group %v but got %v", *singleGroup, testGroup)
+
+	err = testsAccessProjectService.DeleteExistingGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name)
+	assert.NoError(t, err)
+
+	noGroups, err := testsAccessProjectService.GetGroups(projectParams.ProjectDetails.ProjectKey)
+	assert.NoError(t, err)
+	assert.Empty(t, noGroups)
+}
+
 func testAccessProjectCreateUpdateDelete(t *testing.T) {
 	projectParams := getTestProjectParams()
 	err := testsAccessProjectService.Create(projectParams)
@@ -56,5 +91,12 @@ func getTestProjectParams() services.ProjectParams {
 	}
 	return services.ProjectParams{
 		ProjectDetails: projectDetails,
+	}
+}
+
+func getTestProjectGroupParams(groupName string) services.ProjectGroup {
+	return services.ProjectGroup{
+		Name:  groupName,
+		Roles: []string{"foo", "bar"},
 	}
 }
