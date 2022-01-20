@@ -91,6 +91,7 @@ func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams) (*BuildS
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
+		MsgPrefix:       "Get Build-Scan results... ",
 	}
 
 	body, err := pollingExecutor.Execute()
