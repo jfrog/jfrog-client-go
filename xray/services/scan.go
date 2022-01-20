@@ -133,7 +133,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
-		MsgPrefix:       "Get Scan Graph results... ",
+		MsgPrefix:       "Get Dependency Scan results... ",
 	}
 
 	body, err := pollingExecutor.Execute()
