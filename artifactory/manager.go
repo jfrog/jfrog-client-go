@@ -337,22 +337,6 @@ func (sm *ArtifactoryServicesManagerImp) PublishGoProject(params _go.GoParams) (
 	return goService.PublishPackage(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) PublishTerraformModule(params services.TerraformParams) (totalUploaded, totalFailed int, err error) {
-	terraformService := sm.initTerraformService()
-	totalUploaded, totalFailed, e := terraformService.TerraformPublish(&params)
-	if e != nil {
-		return 0, 0, e
-	}
-	return
-}
-
-func (sm *ArtifactoryServicesManagerImp) initTerraformService() *services.TerraformService {
-	terraformService := services.NewTerraformService(sm.client)
-	terraformService.Threads = sm.config.GetThreads()
-	terraformService.ArtDetails = sm.config.GetServiceDetails()
-	return terraformService
-}
-
 func (sm *ArtifactoryServicesManagerImp) Ping() ([]byte, error) {
 	pingService := services.NewPingService(sm.config.GetServiceDetails(), sm.client)
 	return pingService.Ping()

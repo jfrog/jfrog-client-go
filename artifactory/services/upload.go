@@ -95,9 +95,13 @@ func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (*utils.Opera
 	return us.getOperationSummary(totalUploaded, totalFailed), nil
 }
 
-type archiveUploadData struct {
+type ArchiveUploadData struct {
 	writer       *content.ContentWriter
 	uploadParams UploadParams
+}
+
+func (aud *ArchiveUploadData) GetWriter() *content.ContentWriter {
+	return aud.writer
 }
 
 func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, uploadSummary *utils.Result, uploadParamsSlice ...UploadParams) {
@@ -106,18 +110,18 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		// Iterate over file-spec groups and produce upload tasks.
 		// When encountering an error, log and move to next group.
 		vcsCache := clientutils.NewVcsDetails()
-		toArchive := make(map[string]*archiveUploadData)
+		toArchive := make(map[string]*ArchiveUploadData)
 		for _, uploadParams := range uploadParamsSlice {
 			var taskHandler uploadDataHandlerFunc
 
 			if uploadParams.Archive == "zip" {
-				taskHandler = getSaveTaskInContentWriterFunc(toArchive, uploadParams, errorsQueue)
+				taskHandler = GetSaveTaskInContentWriterFunc(toArchive, uploadParams, errorsQueue)
 			} else {
 				artifactHandlerFunc := us.createArtifactHandlerFunc(uploadSummary, uploadParams)
 				taskHandler = getAddTaskToProducerFunc(producer, errorsQueue, artifactHandlerFunc)
 			}
 
-			err := collectFilesForUpload(uploadParams, us.Progress, vcsCache, taskHandler)
+			err := CollectFilesForUpload(uploadParams, us.Progress, vcsCache, taskHandler)
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
@@ -133,7 +137,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 			if us.Progress != nil {
 				us.Progress.IncGeneralProgressTotalBy(1)
 			}
-			producer.AddTaskWithError(us.createUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
+			producer.AddTaskWithError(us.CreateUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
 		}
 	}()
 }
@@ -191,11 +195,11 @@ func getAddTaskToProducerFunc(producer parallel.Runner, errorsQueue *clientutils
 	}
 }
 
-func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, uploadParams UploadParams, errorsQueue *clientutils.ErrorsQueue) uploadDataHandlerFunc {
+func GetSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, uploadParams UploadParams, errorsQueue *clientutils.ErrorsQueue) uploadDataHandlerFunc {
 	return func(data UploadData) {
 		if _, ok := writersMap[data.Artifact.TargetPath]; !ok {
 			var err error
-			archiveData := archiveUploadData{uploadParams: deepCopyUploadParams(&uploadParams)}
+			archiveData := ArchiveUploadData{uploadParams: deepCopyUploadParams(&uploadParams)}
 			archiveData.writer, err = content.NewContentWriter("archive", true, false)
 			if err != nil {
 				log.Error(err)
@@ -211,7 +215,7 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, up
 	}
 }
 
-func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc uploadDataHandlerFunc) error {
+func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc uploadDataHandlerFunc) error {
 	if strings.Index(uploadParams.GetTarget(), "/") < 0 {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
@@ -683,7 +687,7 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 	return err
 }
 
-func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targetPath string, archiveData *archiveUploadData, errorsQueue *clientutils.ErrorsQueue) parallel.TaskFunc {
+func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targetPath string, archiveData *ArchiveUploadData, errorsQueue *clientutils.ErrorsQueue) parallel.TaskFunc {
 	return func(threadId int) (e error) {
 		uploadResult.TotalCount[threadId]++
 		logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
