@@ -348,6 +348,8 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 	} else {
 		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
 	}
+	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders.
+	// This operation replace the placeholders with the relevant value.
 	targetPathInArchive, _ := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive)
 
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, SymlinkTargetPath: symlinkPath, TargetPathInArchive: targetPathInArchive}
@@ -593,7 +595,7 @@ type UploadParams struct {
 	MinChecksumDeploy    int64
 	ChecksumsCalcEnabled bool
 	Archive              string
-	// When using 'archive' option we can set the target path in the archive using placeholders.
+	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
 	TargetPathInArchive string
 }
 

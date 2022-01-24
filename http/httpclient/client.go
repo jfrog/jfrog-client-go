@@ -272,7 +272,7 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 		return nil, nil, err
 	}
 	if resp != nil && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return nil, nil, errorutils.CheckError(errors.New("Artifactory response: " + resp.Status))
+		return nil, nil, errorutils.CheckError(errors.New("Server response: " + resp.Status))
 	}
 	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
