@@ -104,6 +104,16 @@ func (aud *ArchiveUploadData) GetWriter() *content.ContentWriter {
 	return aud.writer
 }
 
+func (aud *ArchiveUploadData) SetWriter(writer *content.ContentWriter) *ArchiveUploadData {
+	aud.writer = writer
+	return aud
+}
+
+func (aud *ArchiveUploadData) SetUploadParams(uploadParams UploadParams) *ArchiveUploadData {
+	aud.uploadParams = uploadParams
+	return aud
+}
+
 func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, uploadSummary *utils.Result, uploadParamsSlice ...UploadParams) {
 	go func() {
 		defer producer.Done()
@@ -112,7 +122,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		vcsCache := clientutils.NewVcsDetails()
 		toArchive := make(map[string]*ArchiveUploadData)
 		for _, uploadParams := range uploadParamsSlice {
-			var taskHandler uploadDataHandlerFunc
+			var taskHandler UploadDataHandlerFunc
 
 			if uploadParams.Archive == "zip" {
 				taskHandler = GetSaveTaskInContentWriterFunc(toArchive, uploadParams, errorsQueue)
@@ -186,20 +196,20 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 	return utils.MergeProperties([]*utils.Properties{uploadParams.GetTargetProps(), artifactProps}), nil
 }
 
-type uploadDataHandlerFunc func(data UploadData)
+type UploadDataHandlerFunc func(data UploadData)
 
-func getAddTaskToProducerFunc(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, artifactHandlerFunc artifactContext) uploadDataHandlerFunc {
+func getAddTaskToProducerFunc(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, artifactHandlerFunc artifactContext) UploadDataHandlerFunc {
 	return func(data UploadData) {
 		taskFunc := artifactHandlerFunc(data)
 		producer.AddTaskWithError(taskFunc, errorsQueue.AddError)
 	}
 }
 
-func GetSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, uploadParams UploadParams, errorsQueue *clientutils.ErrorsQueue) uploadDataHandlerFunc {
+func GetSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, uploadParams UploadParams, errorsQueue *clientutils.ErrorsQueue) UploadDataHandlerFunc {
 	return func(data UploadData) {
 		if _, ok := writersMap[data.Artifact.TargetPath]; !ok {
 			var err error
-			archiveData := ArchiveUploadData{uploadParams: deepCopyUploadParams(&uploadParams)}
+			archiveData := ArchiveUploadData{uploadParams: DeepCopyUploadParams(&uploadParams)}
 			archiveData.writer, err = content.NewContentWriter("archive", true, false)
 			if err != nil {
 				log.Error(err)
@@ -215,7 +225,7 @@ func GetSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, up
 	}
 }
 
-func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc uploadDataHandlerFunc) error {
+func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
 	if strings.Index(uploadParams.GetTarget(), "/") < 0 {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
@@ -262,7 +272,7 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 	return err
 }
 
-func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc uploadDataHandlerFunc) error {
+func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
 	if errorutils.CheckError(err) != nil {
@@ -333,7 +343,7 @@ type uploadTaskData struct {
 	vcsCache      *clientutils.VcsCache
 }
 
-func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandlerFunc) error {
+func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc) error {
 	var placeholdersUsed bool
 	taskData.target, placeholdersUsed = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
 
@@ -603,7 +613,7 @@ func NewUploadParams() UploadParams {
 	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: 10240, ChecksumsCalcEnabled: true}
 }
 
-func deepCopyUploadParams(params *UploadParams) UploadParams {
+func DeepCopyUploadParams(params *UploadParams) UploadParams {
 	paramsCopy := *params
 	paramsCopy.CommonParams = new(utils.CommonParams)
 	*paramsCopy.CommonParams = *params.CommonParams
