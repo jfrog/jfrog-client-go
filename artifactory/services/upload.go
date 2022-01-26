@@ -125,7 +125,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 			var taskHandler UploadDataHandlerFunc
 
 			if uploadParams.Archive == "zip" {
-				taskHandler = GetSaveTaskInContentWriterFunc(toArchive, uploadParams, errorsQueue)
+				taskHandler = getSaveTaskInContentWriterFunc(toArchive, uploadParams, errorsQueue)
 			} else {
 				artifactHandlerFunc := us.createArtifactHandlerFunc(uploadSummary, uploadParams)
 				taskHandler = getAddTaskToProducerFunc(producer, errorsQueue, artifactHandlerFunc)
@@ -205,7 +205,7 @@ func getAddTaskToProducerFunc(producer parallel.Runner, errorsQueue *clientutils
 	}
 }
 
-func GetSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, uploadParams UploadParams, errorsQueue *clientutils.ErrorsQueue) UploadDataHandlerFunc {
+func getSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, uploadParams UploadParams, errorsQueue *clientutils.ErrorsQueue) UploadDataHandlerFunc {
 	return func(data UploadData) {
 		if _, ok := writersMap[data.Artifact.TargetPath]; !ok {
 			var err error
