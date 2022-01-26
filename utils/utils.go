@@ -116,7 +116,7 @@ func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 		if idx == -1 {
 			break
 		}
-		if parentheses.IsPresent(idx + 1) {
+		if parentheses.IsPresent(idx) {
 			return true
 		}
 		currStart += idx + len(toFind)
