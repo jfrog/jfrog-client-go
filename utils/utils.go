@@ -420,9 +420,10 @@ func IsMacOS() bool {
 }
 
 type Artifact struct {
-	LocalPath         string
-	TargetPath        string
-	SymlinkTargetPath string
+	LocalPath           string
+	TargetPath          string
+	SymlinkTargetPath   string
+	TargetPathInArchive string
 }
 
 const (

@@ -95,9 +95,23 @@ func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (*utils.Opera
 	return us.getOperationSummary(totalUploaded, totalFailed), nil
 }
 
-type archiveUploadData struct {
+type ArchiveUploadData struct {
 	writer       *content.ContentWriter
 	uploadParams UploadParams
+}
+
+func (aud *ArchiveUploadData) GetWriter() *content.ContentWriter {
+	return aud.writer
+}
+
+func (aud *ArchiveUploadData) SetWriter(writer *content.ContentWriter) *ArchiveUploadData {
+	aud.writer = writer
+	return aud
+}
+
+func (aud *ArchiveUploadData) SetUploadParams(uploadParams UploadParams) *ArchiveUploadData {
+	aud.uploadParams = uploadParams
+	return aud
 }
 
 func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, uploadSummary *utils.Result, uploadParamsSlice ...UploadParams) {
@@ -106,9 +120,9 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 		// Iterate over file-spec groups and produce upload tasks.
 		// When encountering an error, log and move to next group.
 		vcsCache := clientutils.NewVcsDetails()
-		toArchive := make(map[string]*archiveUploadData)
+		toArchive := make(map[string]*ArchiveUploadData)
 		for _, uploadParams := range uploadParamsSlice {
-			var taskHandler uploadDataHandlerFunc
+			var taskHandler UploadDataHandlerFunc
 
 			if uploadParams.Archive == "zip" {
 				taskHandler = getSaveTaskInContentWriterFunc(toArchive, uploadParams, errorsQueue)
@@ -117,7 +131,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 				taskHandler = getAddTaskToProducerFunc(producer, errorsQueue, artifactHandlerFunc)
 			}
 
-			err := collectFilesForUpload(uploadParams, us.Progress, vcsCache, taskHandler)
+			err := CollectFilesForUpload(uploadParams, us.Progress, vcsCache, taskHandler)
 			if err != nil {
 				log.Error(err)
 				errorsQueue.AddError(err)
@@ -133,7 +147,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 			if us.Progress != nil {
 				us.Progress.IncGeneralProgressTotalBy(1)
 			}
-			producer.AddTaskWithError(us.createUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
+			producer.AddTaskWithError(us.CreateUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
 		}
 	}()
 }
@@ -182,20 +196,20 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 	return utils.MergeProperties([]*utils.Properties{uploadParams.GetTargetProps(), artifactProps}), nil
 }
 
-type uploadDataHandlerFunc func(data UploadData)
+type UploadDataHandlerFunc func(data UploadData)
 
-func getAddTaskToProducerFunc(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, artifactHandlerFunc artifactContext) uploadDataHandlerFunc {
+func getAddTaskToProducerFunc(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, artifactHandlerFunc artifactContext) UploadDataHandlerFunc {
 	return func(data UploadData) {
 		taskFunc := artifactHandlerFunc(data)
 		producer.AddTaskWithError(taskFunc, errorsQueue.AddError)
 	}
 }
 
-func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, uploadParams UploadParams, errorsQueue *clientutils.ErrorsQueue) uploadDataHandlerFunc {
+func getSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, uploadParams UploadParams, errorsQueue *clientutils.ErrorsQueue) UploadDataHandlerFunc {
 	return func(data UploadData) {
 		if _, ok := writersMap[data.Artifact.TargetPath]; !ok {
 			var err error
-			archiveData := archiveUploadData{uploadParams: deepCopyUploadParams(&uploadParams)}
+			archiveData := ArchiveUploadData{uploadParams: DeepCopyUploadParams(&uploadParams)}
 			archiveData.writer, err = content.NewContentWriter("archive", true, false)
 			if err != nil {
 				log.Error(err)
@@ -211,7 +225,7 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*archiveUploadData, up
 	}
 }
 
-func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc uploadDataHandlerFunc) error {
+func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
 	if strings.Index(uploadParams.GetTarget(), "/") < 0 {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
@@ -220,7 +234,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	// Save parentheses index in pattern, witch have corresponding placeholder.
-	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.GetPatternType(), uploadParams.IsSymlink())
+	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive, uploadParams.GetPatternType(), uploadParams.IsSymlink())
 	if err != nil {
 		return err
 	}
@@ -258,7 +272,7 @@ func collectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 	return err
 }
 
-func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc uploadDataHandlerFunc) error {
+func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
 	if errorutils.CheckError(err) != nil {
@@ -329,7 +343,7 @@ type uploadTaskData struct {
 	vcsCache      *clientutils.VcsCache
 }
 
-func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandlerFunc) error {
+func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc) error {
 	var placeholdersUsed bool
 	taskData.target, placeholdersUsed = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
 
@@ -344,8 +358,11 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc uploadDataHandle
 	} else {
 		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
 	}
+	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders.
+	// This operation replace the placeholders with the relevant value.
+	targetPathInArchive, _ := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive)
 
-	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, SymlinkTargetPath: symlinkPath}
+	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, SymlinkTargetPath: symlinkPath, TargetPathInArchive: targetPathInArchive}
 	props, err := createProperties(artifact, taskData.uploadParams)
 	if err != nil {
 		return err
@@ -588,13 +605,15 @@ type UploadParams struct {
 	MinChecksumDeploy    int64
 	ChecksumsCalcEnabled bool
 	Archive              string
+	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
+	TargetPathInArchive string
 }
 
 func NewUploadParams() UploadParams {
 	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: 10240, ChecksumsCalcEnabled: true}
 }
 
-func deepCopyUploadParams(params *UploadParams) UploadParams {
+func DeepCopyUploadParams(params *UploadParams) UploadParams {
 	paramsCopy := *params
 	paramsCopy.CommonParams = new(utils.CommonParams)
 	*paramsCopy.CommonParams = *params.CommonParams
@@ -680,7 +699,7 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 	return err
 }
 
-func (us *UploadService) createUploadAsZipFunc(uploadResult *utils.Result, targetPath string, archiveData *archiveUploadData, errorsQueue *clientutils.ErrorsQueue) parallel.TaskFunc {
+func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targetPath string, archiveData *ArchiveUploadData, errorsQueue *clientutils.ErrorsQueue) parallel.TaskFunc {
 	return func(threadId int) (e error) {
 		uploadResult.TotalCount[threadId]++
 		logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
@@ -776,6 +795,9 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	}
 	if !flat {
 		header.Name = clientutils.TrimPath(localPath)
+	}
+	if artifact.TargetPathInArchive != "" {
+		header.Name = artifact.TargetPathInArchive
 	}
 	header.Method = zip.Deflate
 
