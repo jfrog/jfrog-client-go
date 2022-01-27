@@ -3,9 +3,6 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
-	"net/url"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -13,6 +10,7 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
 )
 
 type BuildInfoService struct {
@@ -79,6 +77,5 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
 
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Build info successfully deployed. Browse it in Artifactory under " + bis.GetArtifactoryDetails().GetUrl() + "webapp/builds/" + url.QueryEscape(build.Name) + "/" + url.QueryEscape(build.Number))
 	return summary, nil
 }
