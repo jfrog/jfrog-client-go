@@ -31,12 +31,18 @@ const (
 // Creates a new logger with a given LogLevel.
 // All logs are written to Stderr by default (output to Stdout).
 // If logToWriter != nil, logging is done to the provided writer instead.
-func NewLogger(logLevel LevelType, logToWriter io.Writer) *jfrogLogger {
+// Log flags to modify the log prefix as described in https://pkg.go.dev/log#pkg-constants.
+func NewLoggerWithFlags(logLevel LevelType, logToWriter io.Writer, logFlags int) *jfrogLogger {
 	logger := new(jfrogLogger)
 	logger.SetLogLevel(logLevel)
 	logger.SetOutputWriter(os.Stdout)
-	logger.SetLogsWriter(logToWriter)
+	logger.SetLogsWriter(logToWriter, logFlags)
 	return logger
+}
+
+// Same as NewLoggerWithFlags, with log flags turned off.
+func NewLogger(logLevel LevelType, logToWriter io.Writer) *jfrogLogger {
+	return NewLoggerWithFlags(logLevel, logToWriter, 0)
 }
 
 type jfrogLogger struct {
@@ -60,23 +66,24 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 	logger.OutputLog = log.New(writer, "", 0)
 }
 
-// Set the logs writer to Stderr unless an alternative one is provided.
+// Set the logs' writer to Stderr unless an alternative one is provided.
 // In case the writer is set for file, colors will not be in use.
-func (logger *jfrogLogger) SetLogsWriter(writer io.Writer) {
+// Log flags to modify the log prefix as described in https://pkg.go.dev/log#pkg-constants.
+func (logger *jfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
 	if writer == nil {
 		writer = os.Stderr
 		if isTerminalMode() {
-			logger.DebugLog = log.New(writer, fmt.Sprintf("[%s] ", color.Cyan.Render("Debug")), 0)
-			logger.InfoLog = log.New(writer, fmt.Sprintf("[%s] ", color.Blue.Render("Info")), 0)
-			logger.WarnLog = log.New(writer, fmt.Sprintf("[%s] ", color.Yellow.Render("Warn")), 0)
-			logger.ErrorLog = log.New(writer, fmt.Sprintf("[%s] ", color.Red.Render("Error")), 0)
+			logger.DebugLog = log.New(writer, fmt.Sprintf("[%s] ", color.Cyan.Render("Debug")), logFlags)
+			logger.InfoLog = log.New(writer, fmt.Sprintf("[%s] ", color.Blue.Render("Info")), logFlags)
+			logger.WarnLog = log.New(writer, fmt.Sprintf("[%s] ", color.Yellow.Render("Warn")), logFlags)
+			logger.ErrorLog = log.New(writer, fmt.Sprintf("[%s] ", color.Red.Render("Error")), logFlags)
 			return
 		}
 	}
-	logger.DebugLog = log.New(writer, "[Debug] ", 0)
-	logger.InfoLog = log.New(writer, "[Info] ", 0)
-	logger.WarnLog = log.New(writer, "[Warn] ", 0)
-	logger.ErrorLog = log.New(writer, "[Error] ", 0)
+	logger.DebugLog = log.New(writer, "[Debug] ", logFlags)
+	logger.InfoLog = log.New(writer, "[Info] ", logFlags)
+	logger.WarnLog = log.New(writer, "[Warn] ", logFlags)
+	logger.ErrorLog = log.New(writer, "[Error] ", logFlags)
 }
 
 func validateLogInit() {
