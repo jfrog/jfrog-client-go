@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"strconv"
 	"strings"
 
@@ -13,9 +14,12 @@ import (
 // Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
-	repoPathFileTriples, err := createRepoPathFileTriples(searchPattern, params.Recursive)
+	repoPathFileTriples, singleRepo, err := createRepoPathFileTriples(searchPattern, params.Recursive)
 	if err != nil {
 		return "", err
+	}
+	if params.Transitive && !singleRepo {
+		return "", errorutils.CheckErrorf("When searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash.")
 	}
 	includeRoot := strings.Count(searchPattern, "/") < 2
 	triplesSize := len(repoPathFileTriples)
@@ -253,7 +257,7 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (
 	excludeQuery := ""
 	var excludeTriples []RepoPathFile
 	for _, exclusion := range params.GetExclusions() {
-		repoPathFileTriples, err := createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)
+		repoPathFileTriples, _, err := createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)
 		if err != nil {
 			return "", err
 		}
@@ -337,8 +341,8 @@ func BuildQueryFromSpecFile(specFile *CommonParams, requiredArtifactProps Requir
 	query := fmt.Sprintf(`items.find(%s)%s`, aqlBody, buildIncludeQueryPart(getQueryReturnFields(specFile, requiredArtifactProps)))
 	query = appendSortQueryPart(specFile, query)
 	query = appendOffsetQueryPart(specFile, query)
-	query = appendLimitQueryPart(specFile, query)
 	query = appendTransitiveQueryPart(specFile, query)
+	query = appendLimitQueryPart(specFile, query)
 	return query
 }
 

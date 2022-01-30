@@ -25,16 +25,16 @@ type RepoPathFile struct {
 
 var asteriskRegexp = regexp.MustCompile(`\*`)
 
-func createRepoPathFileTriples(pattern string, recursive bool) ([]RepoPathFile, error) {
+func createRepoPathFileTriples(pattern string, recursive bool) (triples []RepoPathFile, singleRepo bool, err error) {
 	firstSlashIndex := strings.Index(pattern, "/")
 	if firstSlashIndex == 0 {
-		return nil, errorutils.CheckError(errors.New("a pattern of a path in Artifactory must start with a repository name or an asterisk (*)"))
+		return nil, false, errorutils.CheckError(errors.New("a pattern of a path in Artifactory must start with a repository name or an asterisk (*)"))
 	}
 
 	asteriskIndices := asteriskRegexp.FindAllStringIndex(pattern, -1)
+	singleRepo = asteriskIndices == nil || utils.IsSlashPrecedeAsterisk(asteriskIndices[0][0], firstSlashIndex)
 
-	if asteriskIndices != nil && !utils.IsSlashPrecedeAsterisk(asteriskIndices[0][0], firstSlashIndex) {
-		var triples []RepoPathFile
+	if asteriskIndices != nil && !singleRepo {
 		var lastRepoAsteriskIndex int
 		for _, asteriskIndex := range asteriskIndices {
 			if utils.IsSlashPrecedeAsterisk(asteriskIndex[0], firstSlashIndex) {
@@ -67,15 +67,15 @@ func createRepoPathFileTriples(pattern string, recursive bool) ([]RepoPathFile, 
 			// Handle characters after last asterisk "a*handle-it"
 			triples = append(triples, createPathFilePairs(pattern, "*", recursive)...)
 		}
-		return triples, nil
+		return
 	}
 
 	if firstSlashIndex < 0 {
-		return createPathFilePairs(pattern, "*", recursive), nil
+		return createPathFilePairs(pattern, "*", recursive), singleRepo, nil
 	}
 	repo := pattern[:firstSlashIndex]
 	pattern = pattern[firstSlashIndex+1:]
-	return createPathFilePairs(repo, pattern, recursive), nil
+	return createPathFilePairs(repo, pattern, recursive), singleRepo, nil
 }
 
 func createPathFilePairs(repo, pattern string, recursive bool) []RepoPathFile {
