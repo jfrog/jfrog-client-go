@@ -84,7 +84,7 @@ jobs:
         GOPROXY: direct
 
     - name: repository tests
-      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repository=true  --rt.url='http://localhost:8081/artifactory/' --rt.user='admin' --rt.password='password'
+      run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories=true  --rt.url='http://localhost:8081/artifactory/' --rt.user='admin' --rt.password='password'
   JFrog-Client-Go-Artifactory-Tests:
     if: contains(github.event.pull_request.labels.*.name, 'safe to test') || github.event_name == 'push'
     name: ${{ matrix.suite }} ${{ matrix.os }}

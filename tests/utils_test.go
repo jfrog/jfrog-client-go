@@ -48,7 +48,7 @@ var (
 	TestXray                 *bool
 	TestPipelines            *bool
 	TestAccess               *bool
-	TestRepository           *bool
+	TestRepositories         *bool
 	RtUrl                    *string
 	DistUrl                  *string
 	XrayUrl                  *string
@@ -135,7 +135,7 @@ func init() {
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
-	TestRepository = flag.Bool("test.repository", false, "Test repositories in Artifactory")
+	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
 	RtUrl = flag.String("rt.url", "", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
@@ -585,7 +585,7 @@ func artifactoryCleanup(t *testing.T) {
 }
 
 func createRepo() error {
-	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepository) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories) {
 		return nil
 	}
 	var err error
@@ -602,7 +602,7 @@ func createRepo() error {
 }
 
 func teardownIntegrationTests() {
-	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepository) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories) {
 		return
 	}
 	repo := getRtTargetRepoKey()
