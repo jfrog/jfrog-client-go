@@ -77,7 +77,8 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 
 func deleteProjectAndGroupAndAssert(t *testing.T, projectKey string, groupName string) {
 	deleteProjectAndAssert(t, projectKey)
-	deleteGroupAndAssert(t, groupName)
+	err := testGroupService.DeleteGroup(groupName)
+	assert.NoError(t, err)
 }
 
 func deleteProjectAndAssert(t *testing.T, projectKey string) {
@@ -111,18 +112,3 @@ func getTestProjectGroupParams(groupName string) services.ProjectGroup {
 		Roles: []string{"foo", "bar"},
 	}
 }
-
-// func getTestGroupParams(groupName string) artservices.GroupParams {
-// 	groupDetails := artservices.Group{
-// 		Name:            groupName,
-// 		Description:     "test",
-// 		AutoJoin:        &falseValue,
-// 		AdminPrivileges: &trueValue,
-// 		Realm:           "internal",
-// 		RealmAttributes: "",
-// 	}
-// 	return artservices.GroupParams{
-// 		GroupDetails: groupDetails,
-// 		IncludeUsers: true,
-// 	}
-// }
