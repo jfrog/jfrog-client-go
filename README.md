@@ -219,11 +219,17 @@ go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifac
 ## General APIs
 
 ### Setting the Logger
-
+Default logger:
+```go
+log.SetLogger(log.NewLogger(log.INFO, nil))
+```
+You may also log to a file, and/or add log prefixes as shown below:
 ```go
 var file *os.File
+// Log flags as described in https://pkg.go.dev/log#pkg-constants.
+logFlags := Ldate | Ltime
 ...
-log.SetLogger(log.NewLogger(log.INFO, file))
+log.SetLogger(log.NewLoggerWithFlags(log.DEBUG, file, logFlags))
 ```
 
 ### Setting the Temp Dir
