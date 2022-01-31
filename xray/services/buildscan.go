@@ -75,12 +75,10 @@ func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams, includeV
 	if len(queryParams) > 0 {
 		endPoint += "?" + strings.Join(queryParams, "&")
 	}
-	syncMessage := fmt.Sprintf("Sync: Get Build Scan results. Build:%s/%s...", params.BuildName, params.BuildNumber)
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		log.Debug(syncMessage)
 		resp, body, _, err := bs.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
 			return true, nil, err
@@ -99,6 +97,7 @@ func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams, includeV
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
+		MsgPrefix:       fmt.Sprintf("Get Build Scan results for Build:%s/%s...", params.BuildName, params.BuildNumber),
 	}
 
 	body, err := pollingExecutor.Execute()

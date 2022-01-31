@@ -22,7 +22,7 @@ func initArtifactoryTest(t *testing.T) {
 }
 
 func initRepositoryTest(t *testing.T) {
-	if !*TestRepository {
-		t.Skip("Skipping repository test. To run repository test add the '-test.repository=true' option.")
+	if !*TestRepositories {
+		t.Skip("Skipping repositories test. To run repository test add the '-test.repositories=true' option.")
 	}
 }

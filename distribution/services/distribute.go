@@ -103,7 +103,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 		maxWaitMinutes = dr.MaxWaitMinutes
 	}
 	distributingMessage := fmt.Sprintf("Sync: Distributing %s/%s...", distributeParams.Name, distributeParams.Version)
-	retrayExecutor := &utils.RetryExecutor{
+	retryExecutor := &utils.RetryExecutor{
 		MaxRetries:               maxWaitMinutes * 60 / defaultMaxWaitMinutes,
 		RetriesIntervalMilliSecs: defaultSyncSleepIntervalSeconds * 1000,
 		ErrorMessage:             "",
@@ -129,7 +129,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 			return true, nil
 		},
 	}
-	return retrayExecutor.Execute()
+	return retryExecutor.Execute()
 }
 
 type DistributionBody struct {
