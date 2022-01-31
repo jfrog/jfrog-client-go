@@ -15,6 +15,7 @@ func TestAccessProject(t *testing.T) {
 
 func TestAccessProjectGroups(t *testing.T) {
 	initAccessTest(t)
+	initArtifactoryTest(t)
 	t.Run("groups-add-get-delete", testAccessProjectAddGetDeleteGroups)
 }
 
@@ -77,8 +78,7 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 
 func deleteProjectAndGroupAndAssert(t *testing.T, projectKey string, groupName string) {
 	deleteProjectAndAssert(t, projectKey)
-	err := testGroupService.DeleteGroup(groupName)
-	assert.NoError(t, err)
+	deleteGroupAndAssert(t, groupName)
 }
 
 func deleteProjectAndAssert(t *testing.T, projectKey string) {
