@@ -37,6 +37,15 @@ func (rs *RepositoriesService) Get(repoKey string, repoDetails interface{}) erro
 	return errorutils.CheckError(err)
 }
 
+func (rs *RepositoriesService) IsExists(repoKey string) (exists bool, err error) {
+	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
+	resp, _, _, err := rs.client.SendGet(rs.ArtDetails.GetUrl()+apiRepositories+"/"+repoKey, true, &httpClientsDetails)
+	if err != nil {
+		return false, errorutils.CheckError(err)
+	}
+	return resp.StatusCode == http.StatusOK, nil
+}
+
 func (rs *RepositoriesService) GetAll() (*[]RepositoryDetails, error) {
 	log.Info("Getting all repositories ...")
 	return rs.GetWithFilter(RepositoriesFilterParams{RepoType: "", PackageType: ""})

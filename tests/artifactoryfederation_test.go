@@ -1,10 +1,10 @@
 package tests
 
 import (
+	"github.com/jfrog/gofrog/version"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,7 +34,9 @@ func localConvertLocalToFederatedTest(t *testing.T) {
 	glp.ArchiveBrowsingEnabled = &falseValue
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 
 	err = testsFederationService.ConvertLocalToFederated(repoKey)
@@ -54,7 +56,9 @@ func localTriggerFederatedFullSyncAllTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Generic(gfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gfp)
 
@@ -69,7 +73,9 @@ func localTriggerFederatedFullSyncMirrorTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Generic(gfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gfp)
 

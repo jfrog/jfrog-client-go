@@ -3,6 +3,7 @@ package fileutils
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -276,4 +277,25 @@ func TestRemoveDirContents(t *testing.T) {
 	remainedDirFiles, err := os.ReadDir(remainedDirPath)
 	assert.NoError(t, err)
 	assert.Len(t, remainedDirFiles, 1)
+}
+
+func TestListFilesRecursiveWalkIntoDirSymlink(t *testing.T) {
+	expectedFileList := []string{
+		"testdata/dirsymlinks",
+		"testdata/dirsymlinks/d1",
+		"testdata/dirsymlinks/d1/File_F1",
+		"testdata/dirsymlinks/d1/linktoparent",
+		"testdata/dirsymlinks/d1/linktoparent/d1",
+		"testdata/dirsymlinks/d1/linktoparent/d1/File_F1",
+		"testdata/dirsymlinks/d1/linktoparent/d2",
+		"testdata/dirsymlinks/d1/linktoparent/d2/d1link",
+		"testdata/dirsymlinks/d1/linktoparent/d2/d1link/File_F1",
+		"testdata/dirsymlinks/d2",
+	}
+
+	// This directory and its subdirectories contain a symlink to a parent directory and a symlink to a sibling directory.
+	testDirPath := filepath.Join("testdata", "dirsymlinks")
+	filesList, err := ListFilesRecursiveWalkIntoDirSymlink(testDirPath, true)
+	assert.NoError(t, err)
+	reflect.DeepEqual(expectedFileList, filesList)
 }

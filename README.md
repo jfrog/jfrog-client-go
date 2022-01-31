@@ -13,6 +13,9 @@
   - [Pull Requests](#pull-requests)
     - [Guidelines](#guidelines)
   - [Tests](#tests)
+    - [Flags](#flags)
+      - [Test Types](#test-types)
+      - [Connection Details](#connection-details)
   - [General APIs](#general-apis)
     - [Setting the Logger](#setting-the-logger)
     - [Setting the Temp Dir](#setting-the-temp-dir)
@@ -57,6 +60,7 @@
       - [Removing a Repository](#removing-a-repository)
       - [Getting Repository Details](#getting-repository-details)
       - [Getting All Repositories](#getting-all-repositories)
+      - [Check if Repository Exists](#check-if-repository-exists)
       - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
       - [Getting a Repository Replication](#getting-a-repository-replication)
       - [Removing a Repository Replication](#removing-a-repository-replication)
@@ -925,6 +929,14 @@ params.PackageType = "maven"
 err := servicesManager.GetAllRepositoriesFiltered(params)
 ```
 
+#### Check if Repository Exists
+
+You can check whether a repository exists in Artifactory:
+
+```go
+exists, err := servicesManager.IsRepoExists()
+```
+
 #### Creating and Updating Repository Replications
 
 Example of creating a repository replication:
@@ -1196,7 +1208,7 @@ accessManager, err := access.New(serviceConfig)
 
 ### Using Access Services
 
-#### Creating a new project
+#### Creating a New Project
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
@@ -1217,7 +1229,7 @@ projectParams.ProjectDetails = projectDetails
 err = accessManager.CreateProject(projectParams)
 ```
 
-#### Updating a project
+#### Updating a Project
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
@@ -1244,14 +1256,14 @@ err = accessManager.UpdateProject(projectParams)
 err = accessManager.DeleteProject("tstprj")
 ```
 
-#### Assigning repository to project
+#### Assigning Repository to Project
 
 ```go
 // Params: (repositoryName, projectKey string, isForce bool)
 err = accessManager.AssignRepoToProject("repoName", "tstprj", true)
 ```
 
-#### Unassigning repository from project
+#### Unassigning Repository from Project
 
 ```go
 err = accessManager.AssignRepoToProject("repoName")
