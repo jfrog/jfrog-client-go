@@ -19,12 +19,17 @@ func TestAccessProjectGroups(t *testing.T) {
 }
 
 func testAccessProjectAddGetDeleteGroups(t *testing.T) {
+	var testGroup = getTestProjectGroupParams("a-test-group")
 	projectParams := getTestProjectParams()
 	err := testsAccessProjectService.Create(projectParams)
-	defer deleteProjectAndAssert(t, projectParams.ProjectDetails.ProjectKey)
+	defer deleteProjectAndGroupAndAssert(t, projectParams.ProjectDetails.ProjectKey, testGroup.Name)
 	assert.NoError(t, err)
 
-	var testGroup = getTestProjectGroupParams("a-test-group")
+	var toBeAddedGroup = getTestGroupParams(true)
+	toBeAddedGroup.GroupDetails.Name = testGroup.Name
+	err = testGroupService.CreateGroup(toBeAddedGroup)
+	assert.NoError(t, err)
+
 	err = testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup)
 	assert.NoError(t, err)
 
@@ -70,6 +75,11 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 	}
 }
 
+func deleteProjectAndGroupAndAssert(t *testing.T, projectKey string, groupName string) {
+	deleteProjectAndAssert(t, projectKey)
+	deleteGroupAndAssert(t, groupName)
+}
+
 func deleteProjectAndAssert(t *testing.T, projectKey string) {
 	err := testsAccessProjectService.Delete(projectKey)
 	assert.NoError(t, err)
@@ -101,3 +111,18 @@ func getTestProjectGroupParams(groupName string) services.ProjectGroup {
 		Roles: []string{"foo", "bar"},
 	}
 }
+
+// func getTestGroupParams(groupName string) artservices.GroupParams {
+// 	groupDetails := artservices.Group{
+// 		Name:            groupName,
+// 		Description:     "test",
+// 		AutoJoin:        &falseValue,
+// 		AdminPrivileges: &trueValue,
+// 		Realm:           "internal",
+// 		RealmAttributes: "",
+// 	}
+// 	return artservices.GroupParams{
+// 		GroupDetails: groupDetails,
+// 		IncludeUsers: true,
+// 	}
+// }
