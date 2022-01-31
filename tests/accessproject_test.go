@@ -15,7 +15,6 @@ func TestAccessProject(t *testing.T) {
 
 func TestAccessProjectGroups(t *testing.T) {
 	initAccessTest(t)
-	initArtifactoryTest(t)
 	t.Run("groups-add-get-delete", testAccessProjectAddGetDeleteGroups)
 }
 
