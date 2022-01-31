@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -13,7 +12,6 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -105,7 +103,6 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	message := fmt.Sprintf("Sync: Get Scan Graph results. Scan ID:%s...", scanId)
 	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
 	if includeVulnerabilities {
@@ -118,7 +115,6 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		log.Debug(message)
 		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
 			return true, nil, err
@@ -137,6 +133,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
+		MsgPrefix:       "Get Dependencies Scan results... ",
 	}
 
 	body, err := pollingExecutor.Execute()

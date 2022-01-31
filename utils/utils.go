@@ -26,7 +26,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.7.1"
+	Version     = "1.8.0"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -420,9 +420,10 @@ func IsMacOS() bool {
 }
 
 type Artifact struct {
-	LocalPath         string
-	TargetPath        string
-	SymlinkTargetPath string
+	LocalPath           string
+	TargetPath          string
+	SymlinkTargetPath   string
+	TargetPathInArchive string
 }
 
 const (

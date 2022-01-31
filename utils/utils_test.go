@@ -156,8 +156,8 @@ func TestCleanPath(t *testing.T) {
 func TestIsWildcardParentheses(t *testing.T) {
 	strA := "/tmp/cache/download/(github.com/)"
 	strB := "/tmp/cache/download/(github.com/*)"
-	parenthesesA := NewParenthesesSlice(strA, "")
-	parenthesesB := NewParenthesesSlice(strA, "{1}")
+	parenthesesA := CreateParenthesesSlice(strA, "")
+	parenthesesB := CreateParenthesesSlice(strA, "{1}")
 
 	got := isWildcardParentheses(strA, parenthesesA)
 	want := false
