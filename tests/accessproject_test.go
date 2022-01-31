@@ -15,6 +15,7 @@ func TestAccessProject(t *testing.T) {
 
 func TestAccessProjectGroups(t *testing.T) {
 	initAccessTest(t)
+	t.Run("groups-add-get-delete", testAccessProjectAddGetDeleteGroups)
 }
 
 func testAccessProjectAddGetDeleteGroups(t *testing.T) {
