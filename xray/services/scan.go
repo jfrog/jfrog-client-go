@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"strings"
 	"time"
@@ -113,7 +114,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	} else if includeLicenses {
 		endPoint += includeLicensesParam
 	}
-
+	log.Info("Waiting for scan to complete...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
