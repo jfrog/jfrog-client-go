@@ -136,13 +136,13 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 
 // BuildScan scans a published build-info with Xray.
 // 'scanResponse' - Xray scan output of the requested build scan.
-// 'noFailBuildPolicy' - indicated that Scan api got "No Xray Fail build...." error
+// 'noFailBuildPolicy' - Indicates that the Xray API returned a "No Xray Fail build...." error
 func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
 	buildScanService := services.NewBuildScanService(sm.client)
 	buildScanService.XrayDetails = sm.config.GetServiceDetails()
 	err = buildScanService.Scan(params)
 	if err != nil {
-		// if includeVulnerabilities flag is true and error is "No Xray Fail build...." continue to GetBuildScanResults to get vulnerabilities
+		// If the includeVulnerabilities flag is true and error is "No Xray Fail build...." continue to GetBuildScanResults to get vulnerabilities
 		if includeVulnerabilities && strings.Contains(err.Error(), services.XrayScanBuildNoFailBuildPolicy) {
 			noFailBuildPolicy = true
 		} else {
