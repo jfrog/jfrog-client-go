@@ -20,6 +20,7 @@ const (
 	xrayScanBuildNotSelectedForIndexing = "is not selected for indexing"
 	XrayScanBuildNoFailBuildPolicy      = "No Xray “Fail build in case of a violation” policy rule has been defined on this build"
 	projectKeyQueryParam                = "projectKey="
+	includeVulnerabilitiesQueryParam    = "include_vulnerabilities="
 )
 
 type BuildScanService struct {
@@ -62,14 +63,21 @@ func (bs *BuildScanService) Scan(params XrayBuildParams) error {
 	return nil
 }
 
-func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams) (*BuildScanResponse, error) {
+func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams, includeVulnerabilities bool) (*BuildScanResponse, error) {
 	endPoint := fmt.Sprintf("%s%s/%s/%s", bs.XrayDetails.GetUrl(), buildScanAPI, params.BuildName, params.BuildNumber)
+	var queryParams []string
 	if params.Project != "" {
-		endPoint += "?" + projectKeyQueryParam + params.Project
+		queryParams = append(queryParams, projectKeyQueryParam+params.Project)
+	}
+	if includeVulnerabilities {
+		queryParams = append(queryParams, includeVulnerabilitiesQueryParam+"true")
+	}
+	if len(queryParams) > 0 {
+		endPoint += "?" + strings.Join(queryParams, "&")
 	}
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-
+	log.Info("Waiting for Build Scan to complete...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := bs.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
@@ -117,9 +125,10 @@ type RequestBuildScanResponse struct {
 }
 
 type BuildScanResponse struct {
-	Status         string      `json:"status,omitempty"`
-	MoreDetailsUrl string      `json:"more_details_url,omitempty"`
-	FailBuild      bool        `json:"fail_build,omitempty"`
-	Violations     []Violation `json:"violations,omitempty"`
-	Info           string      `json:"info,omitempty"`
+	Status          string          `json:"status,omitempty"`
+	MoreDetailsUrl  string          `json:"more_details_url,omitempty"`
+	FailBuild       bool            `json:"fail_build,omitempty"`
+	Violations      []Violation     `json:"violations,omitempty"`
+	Vulnerabilities []Vulnerability `json:"vulnerabilities,omitempty"`
+	Info            string          `json:"info,omitempty"`
 }
