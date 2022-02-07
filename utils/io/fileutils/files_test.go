@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -280,6 +281,9 @@ func TestRemoveDirContents(t *testing.T) {
 }
 
 func TestListFilesRecursiveWalkIntoDirSymlink(t *testing.T) {
+	if utils.IsWindows() {
+		t.Skip("Running on windows, skipping...")
+	}
 	expectedFileList := []string{
 		"testdata/dirsymlinks",
 		"testdata/dirsymlinks/d1",
