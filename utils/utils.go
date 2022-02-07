@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -233,7 +233,7 @@ func antPatternToRegExp(localPath string) string {
 }
 
 func getFileSeparator() string {
-	if IsWindows() {
+	if io.IsWindows() {
 		return "\\\\"
 	}
 	return "/"
@@ -324,7 +324,7 @@ func ReplaceTildeWithUserHome(path string) string {
 }
 
 func GetUserHomeDir() string {
-	if IsWindows() {
+	if io.IsWindows() {
 		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 		if home == "" {
 			home = os.Getenv("USERPROFILE")
@@ -409,14 +409,6 @@ func AddProps(oldProps, additionalProps string) string {
 		oldProps += ";"
 	}
 	return oldProps + additionalProps
-}
-
-func IsWindows() bool {
-	return runtime.GOOS == "windows"
-}
-
-func IsMacOS() bool {
-	return runtime.GOOS == "darwin"
 }
 
 type Artifact struct {
