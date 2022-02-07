@@ -92,8 +92,7 @@ type BuildPromotionBody struct {
 	Status              string `json:"status,omitempty"`
 	IncludeDependencies *bool  `json:"dependencies,omitempty"`
 	Copy                *bool  `json:"copy,omitempty"`
-	// FailFast options default is true. We need to avoid omitempty, otherwise, it would be forced to false if omitted.
-	// Notice that when running 'JFrog CLI V1' FailFast's default is false.
+	// Notice that FailFast is boolean and therfore if not assigned, FailFast is false.
 	FailFast   bool                `json:"failFast"`
 	DryRun     *bool               `json:"dryRun,omitempty"`
 	Properties map[string][]string `json:"properties,omitempty"`
