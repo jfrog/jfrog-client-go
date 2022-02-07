@@ -78,8 +78,10 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	if resp.StatusCode != http.StatusOK {
 		return errorutils.CheckError(errors.New("Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body)))
 	}
-
 	log.Debug("Artifactory response:", resp.Status)
+	if !data.FailFast {
+		log.Info(string(body))
+	}
 	log.Info("Promoted build", promotionParams.GetBuildName()+"/"+promotionParams.GetBuildNumber(), "to:", promotionParams.GetTargetRepo(), "repository.")
 	return nil
 }
