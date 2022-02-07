@@ -297,5 +297,5 @@ func TestListFilesRecursiveWalkIntoDirSymlink(t *testing.T) {
 	testDirPath := filepath.Join("testdata", "dirsymlinks")
 	filesList, err := ListFilesRecursiveWalkIntoDirSymlink(testDirPath, true)
 	assert.NoError(t, err)
-	reflect.DeepEqual(expectedFileList, filesList)
+	assert.True(t, reflect.DeepEqual(expectedFileList, filesList))
 }
