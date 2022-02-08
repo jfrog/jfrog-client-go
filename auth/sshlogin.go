@@ -94,8 +94,10 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 		return nil, "", errorutils.CheckError(err)
 	}
 	var buf bytes.Buffer
-	io.Copy(&buf, stdout)
-
+	_, err = io.Copy(&buf, stdout)
+	if errorutils.CheckError(err) != nil {
+		return nil, "", err
+	}
 	var result SshAuthResult
 	if err = json.Unmarshal(buf.Bytes(), &result); errorutils.CheckError(err) != nil {
 		return nil, "", err

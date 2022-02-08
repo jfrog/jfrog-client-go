@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -75,7 +76,7 @@ func assertSplitWithEscape(str string, expected []string, t *testing.T) {
 }
 
 func TestCleanPath(t *testing.T) {
-	if IsWindows() {
+	if io.IsWindows() {
 		parameter := "\\\\foo\\\\baz\\\\..\\\\bar\\\\*"
 		got := cleanPath(parameter)
 		want := "\\\\foo\\\\bar\\\\*"
@@ -156,8 +157,8 @@ func TestCleanPath(t *testing.T) {
 func TestIsWildcardParentheses(t *testing.T) {
 	strA := "/tmp/cache/download/(github.com/)"
 	strB := "/tmp/cache/download/(github.com/*)"
-	parenthesesA := NewParenthesesSlice(strA, "")
-	parenthesesB := NewParenthesesSlice(strA, "{1}")
+	parenthesesA := CreateParenthesesSlice(strA, "")
+	parenthesesB := CreateParenthesesSlice(strA, "{1}")
 
 	got := isWildcardParentheses(strA, parenthesesA)
 	want := false
@@ -173,7 +174,7 @@ func TestIsWildcardParentheses(t *testing.T) {
 }
 
 func TestAntPathToRegExp(t *testing.T) {
-	var fileSystemPaths []string = []string{
+	var fileSystemPaths = []string{
 		filepath.Join("dev", "a", "b.txt"),
 		filepath.Join("dev", "a", "bb.txt"),
 		filepath.Join("dev", "a", "bc.txt"),

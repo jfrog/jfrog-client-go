@@ -51,7 +51,7 @@ func TestContentReaderNextRecord(t *testing.T) {
 		for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 			rSlice = append(rSlice, *item)
 		}
-		assert.NoError(t, reader.GetError())
+		getErrorAndAssert(t, reader)
 		// First element
 		assert.Equal(t, 1, rSlice[0].IntKey)
 		assert.Equal(t, "A", rSlice[0].StrKey)
@@ -63,9 +63,9 @@ func TestContentReaderNextRecord(t *testing.T) {
 		assert.Equal(t, false, rSlice[1].BoolKey)
 		assert.Empty(t, rSlice[1].ArrayKey)
 		// Length validation
-		len, err := reader.Length()
+		length, err := reader.Length()
 		assert.NoError(t, err)
-		assert.Equal(t, 2, len)
+		assert.Equal(t, 2, length)
 		reader.Reset()
 	}
 }
@@ -76,7 +76,7 @@ func TestContentReaderEmptyResult(t *testing.T) {
 	for item := new(inputRecord); reader.NextRecord(item) == nil; item = new(inputRecord) {
 		t.Error("Can't loop over empty file")
 	}
-	assert.NoError(t, reader.GetError())
+	getErrorAndAssert(t, reader)
 }
 
 func getTestDataPath() string {
@@ -88,7 +88,7 @@ func TestCloseReader(t *testing.T) {
 	// Create a file.
 	fd, err := fileutils.CreateTempFile()
 	assert.NoError(t, err)
-	fd.Close()
+	assert.NoError(t, fd.Close())
 	filePathToBeDeleted := fd.Name()
 
 	// Load file to reader
@@ -99,7 +99,7 @@ func TestCloseReader(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check if the file got deleted
-	assert.NoError(t, reader.Close())
+	closeAndAssert(t, reader)
 	_, err = os.Stat(filePathToBeDeleted)
 	assert.True(t, os.IsNotExist(err))
 }
@@ -107,13 +107,13 @@ func TestCloseReader(t *testing.T) {
 func TestLengthCount(t *testing.T) {
 	searchResultPath := filepath.Join(getTestDataPath(), searchResult)
 	reader := NewContentReader(searchResultPath, DefaultKey)
-	len, err := reader.Length()
+	length, err := reader.Length()
 	assert.NoError(t, err)
-	assert.Equal(t, len, 2)
+	assert.Equal(t, length, 2)
 	// Check cache works with no Reset() being called.
-	len, err = reader.Length()
+	length, err = reader.Length()
 	assert.NoError(t, err)
-	assert.Equal(t, len, 2)
+	assert.Equal(t, length, 2)
 }
 
 func TestMergeIncreasingSortedFiles(t *testing.T) {
@@ -128,7 +128,7 @@ func TestMergeIncreasingSortedFiles(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "merged_buffer_ascending_order.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	assert.NoError(t, resultReader.Close())
+	closeAndAssert(t, resultReader)
 }
 
 func TestMergeDecreasingSortedFiles(t *testing.T) {
@@ -143,7 +143,7 @@ func TestMergeDecreasingSortedFiles(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(resultReader.GetFilesPaths()[0], filepath.Join(testDataPath, "merged_buffer_descending_order.json"))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	assert.NoError(t, resultReader.Close())
+	closeAndAssert(t, resultReader)
 }
 
 func TestSortContentReaderByCalculatedKey(t *testing.T) {
@@ -165,7 +165,7 @@ func TestSortContentReaderByCalculatedKey(t *testing.T) {
 	isMatch, err := fileutils.JsonEqual(sortedReader.GetFilesPaths()[0], filepath.Join(testDataPath, sortedFile))
 	assert.NoError(t, err)
 	assert.True(t, isMatch)
-	assert.NoError(t, sortedReader.Close())
+	closeAndAssert(t, sortedReader)
 }
 
 type ReaderTestItem struct {
@@ -177,4 +177,12 @@ type ReaderTestItem struct {
 
 func (rti ReaderTestItem) GetSortKey() string {
 	return path.Join(rti.Repo, rti.Path, rti.Name)
+}
+
+func closeAndAssert(t *testing.T, reader *ContentReader) {
+	assert.NoError(t, reader.Close(), "Couldn't close reader")
+}
+
+func getErrorAndAssert(t *testing.T, reader *ContentReader) {
+	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
 }

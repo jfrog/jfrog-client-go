@@ -2,7 +2,7 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"strings"
 	"time"
@@ -13,7 +13,6 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -23,6 +22,7 @@ const (
 	repoPathQueryParam = "repo_path="
 	projectQueryParam  = "project="
 	watchesQueryParam  = "watch="
+	scanTypeQueryParam = "scan_type="
 
 	// Get scan results query params
 	includeVulnerabilitiesParam = "?include_vulnerabilities=true"
@@ -30,8 +30,12 @@ const (
 	andIncludeLicensesParam     = "&include_licenses=true"
 
 	// Get scan results timeouts
-	defaultMaxWaitMinutes    = 15 * time.Minute // 15 minutes
+	defaultMaxWaitMinutes    = 45 * time.Minute // 45 minutes
 	defaultSyncSleepInterval = 5 * time.Second  // 5 seconds
+
+	// ScanType values
+	Dependency ScanType = "dependency"
+	Binary     ScanType = "binary"
 
 	xrayScanStatusFailed = "failed"
 )
@@ -60,6 +64,10 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 				params = append(params, watchesQueryParam+watch)
 			}
 		}
+	}
+
+	if scanParams.ScanType != "" {
+		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
 	if params == nil || len(params) == 0 {
@@ -96,7 +104,6 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	message := fmt.Sprintf("Sync: Get Scan Graph results. Scan ID:%s...", scanId)
 	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
 	if includeVulnerabilities {
@@ -107,9 +114,8 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	} else if includeLicenses {
 		endPoint += includeLicensesParam
 	}
-
+	log.Info("Waiting for scan to complete...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		log.Debug(message)
 		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
 			return true, nil, err
@@ -128,6 +134,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
+		MsgPrefix:       "Get Dependencies Scan results... ",
 	}
 
 	body, err := pollingExecutor.Execute()
@@ -150,6 +157,7 @@ type XrayGraphScanParams struct {
 	RepoPath   string
 	ProjectKey string
 	Watches    []string
+	ScanType   ScanType
 	Graph      *GraphNode
 }
 
@@ -181,6 +189,7 @@ type RequestScanResponse struct {
 
 type ScanResponse struct {
 	ScanId             string          `json:"scan_id,omitempty"`
+	XrayDataUrl        string          `json:"xray_data_url,omitempty"`
 	Violations         []Violation     `json:"violations,omitempty"`
 	Vulnerabilities    []Vulnerability `json:"vulnerabilities,omitempty"`
 	Licenses           []License       `json:"licenses,omitempty"`

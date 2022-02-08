@@ -17,7 +17,7 @@ func TestUsers(t *testing.T) {
 }
 
 func testCreateUser(t *testing.T) {
-	UserParams := getTestUserParams(false)
+	UserParams := getTestUserParams(false, "")
 
 	err := testUserService.CreateUser(UserParams)
 	defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
@@ -33,13 +33,17 @@ func testCreateUser(t *testing.T) {
 }
 
 func testUpdateUser(t *testing.T) {
-	UserParams := getTestUserParams(true)
+	UserParams := getTestUserParams(true, "")
 
 	err := testUserService.CreateUser(UserParams)
 	defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
 	assert.NoError(t, err)
 
 	UserParams.UserDetails.Email = "changed@mail.com"
+	UserParams.UserDetails.Admin = &falseValue
+	UserParams.UserDetails.ProfileUpdatable = &falseValue
+	UserParams.UserDetails.DisableUIAccess = &trueValue
+	UserParams.UserDetails.InternalPasswordDisabled = &trueValue
 	err = testUserService.UpdateUser(UserParams)
 	assert.NoError(t, err)
 	user, err := testUserService.GetUser(UserParams)
@@ -54,7 +58,7 @@ func testUpdateUser(t *testing.T) {
 }
 
 func testDeleteUser(t *testing.T) {
-	UserParams := getTestUserParams(false)
+	UserParams := getTestUserParams(false, "")
 	err := testUserService.CreateUser(UserParams)
 	assert.NoError(t, err)
 	err = testUserService.DeleteUser(UserParams.UserDetails.Name)
@@ -64,16 +68,16 @@ func testDeleteUser(t *testing.T) {
 	assert.Nil(t, user)
 }
 
-func getTestUserParams(replaceIfExists bool) services.UserParams {
+func getTestUserParams(replaceIfExists bool, nameSuffix string) services.UserParams {
 	userDetails := services.User{
-		Name:                     fmt.Sprintf("test%s", timestampStr),
+		Name:                     fmt.Sprintf("test%s%s", nameSuffix, timestampStr),
 		Email:                    "christianb@jfrog.com",
 		Password:                 "Password1",
-		Admin:                    false,
+		Admin:                    &trueValue,
 		Realm:                    "internal",
-		ProfileUpdatable:         true,
-		DisableUIAccess:          false,
-		InternalPasswordDisabled: false,
+		ProfileUpdatable:         &trueValue,
+		DisableUIAccess:          &falseValue,
+		InternalPasswordDisabled: &falseValue,
 	}
 	return services.UserParams{
 		UserDetails:     userDetails,

@@ -3,7 +3,6 @@ package utils
 import (
 	"bufio"
 	"fmt"
-	buildinfo "github.com/jfrog/build-info-go/entities"
 	"io"
 	"net/http"
 	"os"
@@ -13,7 +12,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/jfrog/jfrog-client-go/utils/version"
+	buildinfo "github.com/jfrog/build-info-go/entities"
+	"github.com/jfrog/gofrog/version"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
@@ -280,13 +280,13 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReade
 // return the file path.
 func streamToFile(reader io.Reader) (string, error) {
 	var fd *os.File
-	bufio := bufio.NewReaderSize(reader, 65536)
+	bufioReader := bufio.NewReaderSize(reader, 65536)
 	fd, err := fileutils.CreateTempFile()
 	if err != nil {
 		return "", err
 	}
 	defer fd.Close()
-	_, err = io.Copy(fd, bufio)
+	_, err = io.Copy(fd, bufioReader)
 	return fd.Name(), errorutils.CheckError(err)
 }
 
@@ -325,6 +325,9 @@ type ResultItem struct {
 }
 
 func (item ResultItem) GetSortKey() string {
+	if item.Type == "folder" {
+		return appendFolderSuffix(item.GetItemRelativePath())
+	}
 	return item.GetItemRelativePath()
 }
 
@@ -344,8 +347,8 @@ func (item ResultItem) GetItemRelativePath() string {
 	url := item.Repo
 	url = addSeparator(url, "/", item.Path)
 	url = addSeparator(url, "/", item.Name)
-	if item.Type == "folder" && !strings.HasSuffix(url, "/") {
-		url = url + "/"
+	if item.Type == "folder" {
+		url = appendFolderSuffix(url)
 	}
 	return url
 }
@@ -367,11 +370,11 @@ func addSeparator(str1, separator, str2 string) string {
 }
 
 func (item *ResultItem) ToArtifact() buildinfo.Artifact {
-	return buildinfo.Artifact{Name: item.Name, Checksum: &buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}, Path: path.Join(item.Repo, item.Path, item.Name)}
+	return buildinfo.Artifact{Name: item.Name, Checksum: buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}, Path: path.Join(item.Path, item.Name)}
 }
 
 func (item *ResultItem) ToDependency() buildinfo.Dependency {
-	return buildinfo.Dependency{Id: item.Name, Checksum: &buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}}
+	return buildinfo.Dependency{Id: item.Name, Checksum: buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}}
 }
 
 type AqlSearchResultItemFilter func(SearchBasedContentItem, *content.ContentReader) (*content.ContentReader, error)
@@ -486,4 +489,11 @@ func DisableTransitiveSearchIfNotAllowed(params *CommonParams, artifactoryVersio
 			transitiveSearchMinVersion, artifactoryVersion.GetVersion()))
 		params.Transitive = false
 	}
+}
+
+func appendFolderSuffix(folderPath string) string {
+	if !strings.HasSuffix(folderPath, "/") {
+		folderPath = folderPath + "/"
+	}
+	return folderPath
 }

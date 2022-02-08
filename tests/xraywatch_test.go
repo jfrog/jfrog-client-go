@@ -26,13 +26,15 @@ func testXrayWatchAll(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%s", "policy1", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
-	defer testsXrayPolicyService.Delete(policy1Name)
-
+	defer func() {
+		assert.NoError(t, testsXrayPolicyService.Delete(policy1Name))
+	}()
 	policy2Name := fmt.Sprintf("%s-%s", "policy2", getRunId())
 	err = createDummyPolicy(policy2Name)
 	assert.NoError(t, err)
-	defer testsXrayPolicyService.Delete(policy2Name)
-
+	defer func() {
+		assert.NoError(t, testsXrayPolicyService.Delete(policy2Name))
+	}()
 	AllWatchName := fmt.Sprintf("%s-%s", "client-go-tests-watch-all-repos", getRunId())
 	paramsAllRepos := utils.NewWatchParams()
 	paramsAllRepos.Name = AllWatchName
@@ -64,8 +66,9 @@ func testXrayWatchAll(t *testing.T) {
 
 	err = testsXrayWatchService.Create(paramsAllRepos)
 	assert.NoError(t, err)
-	defer testsXrayWatchService.Delete(paramsAllRepos.Name)
-
+	defer func() {
+		assert.NoError(t, testsXrayWatchService.Delete(paramsAllRepos.Name))
+	}()
 	validateWatchGeneralSettings(t, paramsAllRepos)
 	targetConfig, err := testsXrayWatchService.Get(paramsAllRepos.Name)
 	assert.NoError(t, err)
@@ -120,8 +123,9 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
-	defer testsXrayPolicyService.Delete(policy1Name)
-
+	defer func() {
+		assert.NoError(t, testsXrayPolicyService.Delete(policy1Name))
+	}()
 	repo1Name := fmt.Sprintf("%s-%s", "repo1", getRunId())
 	createRepoLocal(t, repo1Name)
 	defer deleteRepo(t, repo1Name)
@@ -132,13 +136,15 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	build1Name := fmt.Sprintf("%s-%s", "build1", getRunId())
 	err = createAndIndexBuild(t, build1Name)
 	assert.NoError(t, err)
-	defer deleteBuild(build1Name)
-
+	defer func() {
+		assert.NoError(t, deleteBuild(build1Name))
+	}()
 	build2Name := fmt.Sprintf("%s-%s", "build2", getRunId())
 	err = createAndIndexBuild(t, build2Name)
 	assert.NoError(t, err)
-	defer deleteBuild(build2Name)
-
+	defer func() {
+		assert.NoError(t, deleteBuild(build2Name))
+	}()
 	paramsSelectedRepos := utils.NewWatchParams()
 	paramsSelectedRepos.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-selected-repos", getRunId())
 	paramsSelectedRepos.Description = "Selected Repos"
@@ -182,7 +188,9 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	}
 	err = testsXrayWatchService.Create(paramsSelectedRepos)
 	assert.NoError(t, err)
-	defer testsXrayWatchService.Delete(paramsSelectedRepos.Name)
+	defer func() {
+		assert.NoError(t, testsXrayWatchService.Delete(paramsSelectedRepos.Name))
+	}()
 	validateWatchGeneralSettings(t, paramsSelectedRepos)
 
 	targetConfig, err := testsXrayWatchService.Get(paramsSelectedRepos.Name)
@@ -259,8 +267,9 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
-	defer testsXrayPolicyService.Delete(policy1Name)
-
+	defer func() {
+		assert.NoError(t, testsXrayPolicyService.Delete(policy1Name))
+	}()
 	paramsBuildsByPattern := utils.NewWatchParams()
 	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-builds-by-pattern", getRunId())
 	paramsBuildsByPattern.Description = "Builds By Pattern"
@@ -277,7 +286,9 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 
 	err = testsXrayWatchService.Create(paramsBuildsByPattern)
 	assert.NoError(t, err)
-	defer testsXrayWatchService.Delete(paramsBuildsByPattern.Name)
+	defer func() {
+		assert.NoError(t, testsXrayWatchService.Delete(paramsBuildsByPattern.Name))
+	}()
 	validateWatchGeneralSettings(t, paramsBuildsByPattern)
 
 	targetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
@@ -361,13 +372,13 @@ func createDummyPolicy(policyName string) error {
 			Actions: &utils.PolicyAction{
 				Webhooks: []string{},
 				BlockDownload: utils.PolicyBlockDownload{
-					Active:    true,
-					Unscanned: false,
+					Active:    &trueValue,
+					Unscanned: &falseValue,
 				},
-				BlockReleaseBundleDistribution: true,
-				FailBuild:                      true,
-				NotifyDeployer:                 true,
-				NotifyWatchRecipients:          true,
+				BlockReleaseBundleDistribution: &trueValue,
+				FailBuild:                      &trueValue,
+				NotifyDeployer:                 &trueValue,
+				NotifyWatchRecipients:          &trueValue,
 			},
 			Priority: 1,
 		}},

@@ -5,7 +5,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"github.com/buger/jsonparser"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -46,7 +48,7 @@ var (
 	TestXray                 *bool
 	TestPipelines            *bool
 	TestAccess               *bool
-	TestRepository           *bool
+	TestRepositories         *bool
 	RtUrl                    *string
 	DistUrl                  *string
 	XrayUrl                  *string
@@ -114,18 +116,15 @@ var (
 	testsAccessProjectService *accessServices.ProjectService
 
 	timestamp    = time.Now().Unix()
-	timestampStr = strconv.FormatInt(int64(timestamp), 10)
+	timestampStr = strconv.FormatInt(timestamp, 10)
 	trueValue    = true
 	falseValue   = false
 
 	// Tests configuration
-	RtTargetRepo    = "client-go"
-	RtTargetRepoKey = RtTargetRepo
+	RtTargetRepo = "client-go"
 )
 
 const (
-	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
-	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
 )
 
@@ -136,7 +135,7 @@ func init() {
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
-	TestRepository = flag.Bool("test.repository", false, "Test repositories in Artifactory")
+	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
 	RtUrl = flag.String("rt.url", "", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
@@ -516,7 +515,7 @@ func uploadDummyFile(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer os.RemoveAll(workingDir)
+	defer clientTestUtils.RemoveAllAndAssert(t, workingDir)
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/"}
@@ -566,7 +565,9 @@ func artifactoryCleanup(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer toDelete.Close()
+	defer func() {
+		assert.NoError(t, toDelete.Close())
+	}()
 	NumberOfItemToDelete, err := toDelete.Length()
 	if err != nil {
 		t.Error(err)
@@ -584,7 +585,7 @@ func artifactoryCleanup(t *testing.T) {
 }
 
 func createRepo() error {
-	if !(*TestArtifactory || *TestDistribution || *TestXray) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories) {
 		return nil
 	}
 	var err error
@@ -601,7 +602,7 @@ func createRepo() error {
 }
 
 func teardownIntegrationTests() {
-	if !(*TestArtifactory || *TestDistribution || *TestXray) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories) {
 		return
 	}
 	repo := getRtTargetRepoKey()
@@ -610,50 +611,6 @@ func teardownIntegrationTests() {
 		fmt.Printf("teardownIntegrationTests failed for:" + err.Error())
 		os.Exit(1)
 	}
-}
-
-func isRepoExist(repoName string) bool {
-	artDetails := GetRtDetails()
-	artHttpDetails := artDetails.CreateHttpClientDetails()
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
-	resp, _, _, err := client.SendGet(artDetails.GetUrl()+RepoDetailsUrl+repoName, true, artHttpDetails, "")
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
-
-	if resp.StatusCode != http.StatusBadRequest {
-		return true
-	}
-	return false
-}
-
-func execCreateRepoRest(repoConfig, repoName string) error {
-	content, err := ioutil.ReadFile(repoConfig)
-	if err != nil {
-		return err
-	}
-	artDetails := GetRtDetails()
-	artHttpDetails := artDetails.CreateHttpClientDetails()
-
-	artHttpDetails.Headers = map[string]string{"Content-Type": "application/json"}
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-	resp, _, err := client.SendPut(artDetails.GetUrl()+"api/repositories/"+repoName, content, artHttpDetails, "")
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errors.New("Fail to create repository. Reason local repository with key: " + repoName + " already exist\n")
-	}
-	log.Info("Repository", repoName, "created.")
-	return nil
 }
 
 func getTestDataPath() string {
@@ -771,18 +728,39 @@ func setRpmRepositoryParams(params *services.RpmRepositoryParams, isUpdate bool)
 	}
 }
 
-func getRepoConfig(repoKey string) (body []byte, err error) {
+func getRepoConfig(repoKey string) ([]byte, error) {
 	artDetails := GetRtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return
+		return nil, err
 	}
 	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/repositories/"+repoKey, false, artHttpDetails, "")
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return
+	if err != nil {
+		return nil, err
 	}
-	return
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	return body, nil
+}
+
+func isEnterprisePlus() (bool, error) {
+	artDetails := GetRtDetails()
+	artHttpDetails := artDetails.CreateHttpClientDetails()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
+	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/system/license", false, artHttpDetails, "")
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return false, err
+	}
+	value, err := jsonparser.GetString(body, "type")
+	if err != nil {
+		return false, err
+	}
+	return value == "Enterprise Plus", nil
 }
 
 func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) clientutils.ExecutionHandlerFunc {
@@ -807,6 +785,16 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 			if key == "password" {
 				continue
 			}
+			// Download Redirect is only supported on Enterprise Plus. Expect false otherwise.
+			if key == "downloadRedirect" {
+				eplus, err := isEnterprisePlus()
+				if err != nil {
+					return false, err
+				}
+				if !eplus {
+					expectedValue = false
+				}
+			}
 			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
 				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual: %s", repoKey, key, expectedValue, confMap[key])
 				return true, errors.New(errMsg)
@@ -818,10 +806,11 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 
 func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	retryExecutor := &clientutils.RetryExecutor{
-		MaxRetries:       12,
-		RetriesInterval:  10,
-		ErrorMessage:     "Waiting for Artifactory to evaluate repository operation...",
-		ExecutionHandler: createRepoConfigValidationFunc(repoKey, params),
+		MaxRetries: 12,
+		// RetriesIntervalMilliSecs in milliseconds
+		RetriesIntervalMilliSecs: 10 * 1000,
+		ErrorMessage:             "Waiting for Artifactory to evaluate repository operation...",
+		ExecutionHandler:         createRepoConfigValidationFunc(repoKey, params),
 	}
 	err := retryExecutor.Execute()
 	assert.NoError(t, err)
@@ -853,6 +842,12 @@ func getAllRepos(t *testing.T, repoType, packageType string) *[]services.Reposit
 	return data
 }
 
+func isRepoExists(t *testing.T, repoKey string) bool {
+	exists, err := testsRepositoriesService.IsExists(repoKey)
+	assert.NoError(t, err, "Failed to check if "+repoKey+" exists")
+	return exists
+}
+
 func createDummyBuild(buildName string) error {
 	dataArtifactoryBuild := &buildinfo.BuildInfo{
 		Name:    buildName,
@@ -864,7 +859,7 @@ func createDummyBuild(buildName string) error {
 				{
 					Type: "gz",
 					Name: "c.tar.gz",
-					Checksum: &buildinfo.Checksum{
+					Checksum: buildinfo.Checksum{
 						Sha1: "9d4336ff7bc2d2348aee4e27ad55e42110df4a80",
 						Md5:  "b4918187cc9b3bf1b0772546d9398d7d",
 					},

@@ -12,8 +12,8 @@ type RetryExecutor struct {
 	// The amount of retries to perform.
 	MaxRetries int
 
-	// Number of seconds to sleep between retries.
-	RetriesInterval int
+	// Number of milliseconds to sleep between retries.
+	RetriesIntervalMilliSecs int
 
 	// Message to display when retrying.
 	ErrorMessage string
@@ -37,20 +37,31 @@ func (runner *RetryExecutor) Execute() error {
 			return err
 		}
 
-		log.Warn(runner.getLogRetryMessage(i, err))
-		// Going to sleep for RetryInterval seconds
-		if runner.RetriesInterval > 0 && i < runner.MaxRetries {
-			time.Sleep(time.Second * time.Duration(runner.RetriesInterval))
+		// Print retry log message
+		runner.LogRetry(i, err)
+
+		// Going to sleep for RetryInterval milliseconds
+		if runner.RetriesIntervalMilliSecs > 0 && i < runner.MaxRetries {
+			time.Sleep(time.Millisecond * time.Duration(runner.RetriesIntervalMilliSecs))
 		}
 	}
-
+	log.Info(fmt.Sprintf("%s executor timeout after %v attempts with %v milliseconds wait intervals", runner.LogMsgPrefix, runner.MaxRetries, runner.RetriesIntervalMilliSecs))
 	return err
 }
 
-func (runner *RetryExecutor) getLogRetryMessage(attemptNumber int, err error) (message string) {
-	message = fmt.Sprintf("%sAttempt %v - %s", runner.LogMsgPrefix, attemptNumber, runner.ErrorMessage)
-	if err != nil {
-		message = fmt.Sprintf("%s - %s", message, err.Error())
+func (runner *RetryExecutor) LogRetry(attemptNumber int, err error) {
+	message := fmt.Sprintf("%s(Attempt %v)", runner.LogMsgPrefix, attemptNumber+1)
+	if runner.ErrorMessage != "" {
+		message = fmt.Sprintf("%s - %s", message, runner.ErrorMessage)
 	}
-	return
+	if err != nil {
+		message = fmt.Sprintf("%s: %s", message, err.Error())
+	}
+
+	if err != nil || runner.ErrorMessage != "" {
+		log.Warn(message)
+	} else {
+		log.Debug(message)
+	}
+
 }

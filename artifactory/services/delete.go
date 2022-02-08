@@ -60,7 +60,12 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		if err != nil {
 			return
 		}
-		defer tempResultItems.Close()
+		defer func() {
+			e := tempResultItems.Close()
+			if err == nil {
+				err = e
+			}
+		}()
 		toBeDeletedDirs, err = removeNotToBeDeletedDirs(deleteParams.GetFile(), ds, tempResultItems)
 		if err != nil {
 			return
@@ -70,7 +75,12 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		if toBeDeletedDirs == nil {
 			toBeDeletedDirs = tempResultItems
 		}
-		defer toBeDeletedDirs.Close()
+		defer func() {
+			e := toBeDeletedDirs.Close()
+			if err == nil {
+				err = e
+			}
+		}()
 		resultItems, err = utils.ReduceTopChainDirResult(utils.ResultItem{}, toBeDeletedDirs)
 		if err != nil {
 			return

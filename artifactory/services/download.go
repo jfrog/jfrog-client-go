@@ -7,8 +7,12 @@ import (
 	"path/filepath"
 	"sort"
 
+	biutils "github.com/jfrog/build-info-go/utils"
+	"github.com/jfrog/gofrog/version"
+
+	"github.com/jfrog/build-info-go/entities"
+
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -20,7 +24,6 @@ import (
 	clientio "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -184,7 +187,11 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			}
 			// Produce download tasks for the download consumers.
 			totalTasks += ds.produceTasks(reader, downloadParams, producer, fileHandlerFunc, errorsQueue)
-			reader.Close()
+			err = reader.Close()
+			if err != nil {
+				errorsQueue.AddError(err)
+				return
+			}
 		}
 	}()
 }
@@ -340,7 +347,7 @@ func createDependencyTransferDetails(downloadPath, localPath, localFileName stri
 func createDependencyArtifactDetails(resultItem utils.ResultItem) utils.ArtifactDetails {
 	fileInfo := utils.ArtifactDetails{
 		ArtifactoryPath: resultItem.GetItemRelativePath(),
-		Checksums: utils.Checksums{
+		Checksums: entities.Checksum{
 			Sha1: resultItem.Actual_Sha1,
 			Md5:  resultItem.Actual_Md5,
 		},
@@ -431,11 +438,11 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 			return err
 		}
 		defer file.Close()
-		checksumInfo, err := checksum.Calc(file, checksum.SHA1)
-		if err != nil {
+		checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
+		if err = errorutils.CheckError(err); err != nil {
 			return err
 		}
-		sha1 := checksumInfo[checksum.SHA1]
+		sha1 := checksumInfo[biutils.SHA1]
 		if sha1 != symlinkContentChecksum {
 			return errorutils.CheckErrorf("Symlink validation failed for target: " + symlinkArtifact)
 		}

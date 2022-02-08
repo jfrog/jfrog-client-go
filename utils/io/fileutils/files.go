@@ -14,15 +14,17 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/jfrog/build-info-go/entities"
+	biutils "github.com/jfrog/build-info-go/utils"
+
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils/checksum"
 )
 
 const (
-	SYMLINK_FILE_CONTENT          = ""
-	File                 ItemType = "file"
-	Dir                  ItemType = "dir"
-	Any                  ItemType = "any"
+	SymlinkFileContent          = ""
+	File               ItemType = "file"
+	Dir                ItemType = "dir"
+	Any                ItemType = "any"
 )
 
 func GetFileSeparator() string {
@@ -235,7 +237,7 @@ func ListFiles(path string, includeDirs bool) ([]string, error) {
 
 func GetUploadRequestContent(file *os.File) io.Reader {
 	if file == nil {
-		return bytes.NewBuffer([]byte(SYMLINK_FILE_CONTENT))
+		return bytes.NewBuffer([]byte(SymlinkFileContent))
 	}
 	return bufio.NewReader(file)
 }
@@ -320,9 +322,9 @@ func GetHomeDir() string {
 	if home != "" {
 		return home
 	}
-	user, err := user.Current()
+	currentUser, err := user.Current()
 	if err == nil {
-		return user.HomeDir
+		return currentUser.HomeDir
 	}
 	return ""
 }
@@ -350,7 +352,7 @@ func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error
 			return details, err
 		}
 	} else {
-		details.Checksum = ChecksumDetails{}
+		details.Checksum = entities.Checksum{}
 	}
 
 	file, err := os.Open(filePath)
@@ -366,11 +368,11 @@ func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error
 	return details, nil
 }
 
-func calcChecksumDetails(filePath string) (ChecksumDetails, error) {
+func calcChecksumDetails(filePath string) (entities.Checksum, error) {
 	file, err := os.Open(filePath)
 	defer file.Close()
 	if errorutils.CheckError(err) != nil {
-		return ChecksumDetails{}, err
+		return entities.Checksum{}, err
 	}
 	return calcChecksumDetailsFromReader(file)
 }
@@ -393,23 +395,17 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksusms bool) (*FileDe
 	return details, err
 }
 
-func calcChecksumDetailsFromReader(reader io.Reader) (ChecksumDetails, error) {
-	checksumInfo, err := checksum.Calc(reader)
+func calcChecksumDetailsFromReader(reader io.Reader) (entities.Checksum, error) {
+	checksumInfo, err := biutils.CalcChecksums(reader)
 	if err != nil {
-		return ChecksumDetails{}, err
+		return entities.Checksum{}, errorutils.CheckError(err)
 	}
-	return ChecksumDetails{Md5: checksumInfo[checksum.MD5], Sha1: checksumInfo[checksum.SHA1], Sha256: checksumInfo[checksum.SHA256]}, nil
+	return entities.Checksum{Md5: checksumInfo[biutils.MD5], Sha1: checksumInfo[biutils.SHA1], Sha256: checksumInfo[biutils.SHA256]}, nil
 }
 
 type FileDetails struct {
-	Checksum ChecksumDetails
+	Checksum entities.Checksum
 	Size     int64
-}
-
-type ChecksumDetails struct {
-	Md5    string
-	Sha1   string
-	Sha256 string
 }
 
 func CopyFile(dst, src string) error {
@@ -500,8 +496,7 @@ func RenamePath(oldPath, newPath string) error {
 	if err != nil {
 		return errors.New("Error copying directory: " + oldPath + "to" + newPath + err.Error())
 	}
-	RemovePath(oldPath)
-	return nil
+	return RemovePath(oldPath)
 }
 
 // Returns the path to the directory in which itemToFind is located.
@@ -707,4 +702,30 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	inputFileOpen = false
 	err = os.Remove(sourcePath)
 	return errorutils.CheckError(err)
+}
+
+// RemoveDirContents removes the contents of the directory, without removing the directory itself.
+// If it encounters an error before removing all the files, it stops and returns that error.
+func RemoveDirContents(dirPath string) (err error) {
+	d, err := os.Open(dirPath)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	defer func() {
+		e := d.Close()
+		if err == nil {
+			err = e
+		}
+	}()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dirPath, name))
+		if err != nil {
+			return errorutils.CheckError(err)
+		}
+	}
+	return nil
 }

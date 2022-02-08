@@ -1144,9 +1144,9 @@ const VulnerabilityReportDetailsResponse = `
           "cve": "CVE-2021-37136"
         },
         {
-          "cvss_v2_score": "7.1",
+          "cvss_v2_score": 7.1,
           "cvss_v2_vector": "CVSS:2.0/AV:N/AC:M/Au:N/C:N/I:N/A:C",
-          "cvss_v3_score": "7.5",
+          "cvss_v3_score": 7.5,
           "cvss_v3_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
         }
       ],
@@ -1184,9 +1184,9 @@ const VulnerabilityReportDetailsResponse = `
           "cve": "CVE-2021-37136"
         },
         {
-          "cvss_v2_score": "7.1",
+          "cvss_v2_score": 7.1,
           "cvss_v2_vector": "CVSS:2.0/AV:N/AC:M/Au:N/C:N/I:N/A:C",
-          "cvss_v3_score": "7.5",
+          "cvss_v3_score": 7.5,
           "cvss_v3_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
         }
       ],

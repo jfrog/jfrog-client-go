@@ -4,16 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/gofrog/stringutils"
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/build-info-go/entities"
+	"github.com/jfrog/gofrog/stringutils"
 
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 
@@ -24,7 +26,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.6.4"
+	Version     = "1.8.0"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -231,7 +233,7 @@ func antPatternToRegExp(localPath string) string {
 }
 
 func getFileSeparator() string {
-	if IsWindows() {
+	if io.IsWindows() {
 		return "\\\\"
 	}
 	return "/"
@@ -322,7 +324,7 @@ func ReplaceTildeWithUserHome(path string) string {
 }
 
 func GetUserHomeDir() string {
-	if IsWindows() {
+	if io.IsWindows() {
 		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 		if home == "" {
 			home = os.Getenv("USERPROFILE")
@@ -409,18 +411,11 @@ func AddProps(oldProps, additionalProps string) string {
 	return oldProps + additionalProps
 }
 
-func IsWindows() bool {
-	return runtime.GOOS == "windows"
-}
-
-func IsMacOS() bool {
-	return runtime.GOOS == "darwin"
-}
-
 type Artifact struct {
-	LocalPath         string
-	TargetPath        string
-	SymlinkTargetPath string
+	LocalPath           string
+	TargetPath          string
+	SymlinkTargetPath   string
+	TargetPathInArchive string
 }
 
 const (
@@ -494,25 +489,19 @@ type DeployableArtifactDetails struct {
 func (details *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) (FileTransferDetails, error) {
 	// The function path.Join expects a path, not a URL.
 	// Therefore we first parse the URL to get a path.
-	url, err := url.Parse(rtUrl + targetRepository)
+	targetUrl, err := url.Parse(rtUrl + targetRepository)
 	if err != nil {
 		return FileTransferDetails{}, err
 	}
 	// The path.join will always use a single slash (forward) to separate between the two vars.
-	url.Path = path.Join(url.Path, details.ArtifactDest)
-	targetPath := url.String()
+	targetUrl.Path = path.Join(targetUrl.Path, details.ArtifactDest)
+	targetPath := targetUrl.String()
 
 	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetPath, Sha256: details.Sha256}, nil
 }
 
 type UploadResponseBody struct {
-	Checksums ChecksumDetails `json:"checksums,omitempty"`
-}
-
-type ChecksumDetails struct {
-	Md5    string
-	Sha1   string
-	Sha256 string
+	Checksums entities.Checksum `json:"checksums,omitempty"`
 }
 
 func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (string, error) {

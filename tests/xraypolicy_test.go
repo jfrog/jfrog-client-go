@@ -98,13 +98,13 @@ func createPolicyActions(t *testing.T) {
 		Priority: 1,
 		Actions: &utils.PolicyAction{
 			BlockDownload: utils.PolicyBlockDownload{
-				Active:    true,
-				Unscanned: true,
+				Active:    &trueValue,
+				Unscanned: &trueValue,
 			},
-			BlockReleaseBundleDistribution: true,
-			FailBuild:                      true,
-			NotifyDeployer:                 true,
-			NotifyWatchRecipients:          true,
+			BlockReleaseBundleDistribution: &trueValue,
+			FailBuild:                      &trueValue,
+			NotifyDeployer:                 &trueValue,
+			NotifyWatchRecipients:          &trueValue,
 			CustomSeverity:                 utils.Information,
 		},
 	}

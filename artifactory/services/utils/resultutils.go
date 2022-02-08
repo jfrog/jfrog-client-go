@@ -1,10 +1,11 @@
 package utils
 
 import (
+	"strings"
+
 	buildinfo "github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"strings"
 )
 
 type Result struct {
@@ -36,17 +37,20 @@ type OperationSummary struct {
 
 type ArtifactDetails struct {
 	// Path of the artifact in Artifactory
-	ArtifactoryPath string    `json:"artifactoryPath,omitempty"`
-	Checksums       Checksums `json:"checksums,omitempty"`
+	ArtifactoryPath string             `json:"artifactoryPath,omitempty"`
+	Checksums       buildinfo.Checksum `json:"checksums,omitempty"`
 }
 
-func (cs *OperationSummary) Close() {
-	cs.TransferDetailsReader.Close()
-	cs.ArtifactsDetailsReader.Close()
+func (cs *OperationSummary) Close() error {
+	err := cs.TransferDetailsReader.Close()
+	if err != nil {
+		return err
+	}
+	return cs.ArtifactsDetailsReader.Close()
 }
 
 func (ad *ArtifactDetails) ToBuildInfoArtifact() buildinfo.Artifact {
-	artifact := buildinfo.Artifact{Checksum: &buildinfo.Checksum{}}
+	artifact := buildinfo.Artifact{Checksum: buildinfo.Checksum{}}
 	artifact.Sha1 = ad.Checksums.Sha1
 	artifact.Md5 = ad.Checksums.Md5
 	// Artifact name in build info as the name in artifactory
@@ -60,7 +64,7 @@ func (ad *ArtifactDetails) ToBuildInfoArtifact() buildinfo.Artifact {
 }
 
 func (ad *ArtifactDetails) ToBuildInfoDependency() buildinfo.Dependency {
-	dependency := buildinfo.Dependency{Checksum: &buildinfo.Checksum{}}
+	dependency := buildinfo.Dependency{Checksum: buildinfo.Checksum{}}
 	dependency.Sha1 = ad.Checksums.Sha1
 	dependency.Md5 = ad.Checksums.Md5
 	// Artifact name in build info as the name in artifactory
@@ -83,10 +87,4 @@ func ConvertArtifactsDetailsToBuildInfoDependencies(artifactsDetailsReader *cont
 		buildDependencies = append(buildDependencies, artifactDetails.ToBuildInfoDependency())
 	}
 	return buildDependencies, artifactsDetailsReader.GetError()
-}
-
-type Checksums struct {
-	Sha256 string `json:"sha256,omitempty"`
-	Sha1   string `json:"sha1,omitempty"`
-	Md5    string `json:"md5,omitempty"`
 }

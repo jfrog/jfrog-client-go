@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -104,29 +103,33 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 		maxWaitMinutes = dr.MaxWaitMinutes
 	}
 	distributingMessage := fmt.Sprintf("Sync: Distributing %s/%s...", distributeParams.Name, distributeParams.Version)
-	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepIntervalSeconds {
-		if timeElapsed%60 == 0 {
-			log.Info(distributingMessage)
-		}
-		response, err := distributeBundleService.GetStatus(distributionStatusParams)
-		if err != nil {
-			return err
-		}
-
-		if (*response)[0].Status == Failed {
-			bytes, err := json.Marshal(response)
+	retryExecutor := &utils.RetryExecutor{
+		MaxRetries:               maxWaitMinutes * 60 / defaultMaxWaitMinutes,
+		RetriesIntervalMilliSecs: defaultSyncSleepIntervalSeconds * 1000,
+		ErrorMessage:             "",
+		LogMsgPrefix:             distributingMessage,
+		ExecutionHandler: func() (bool, error) {
+			response, err := distributeBundleService.GetStatus(distributionStatusParams)
 			if err != nil {
-				return errorutils.CheckError(err)
+				return false, errorutils.CheckError(err)
 			}
-			return errorutils.CheckErrorf("Distribution failed: " + utils.IndentJson(bytes))
-		}
-		if (*response)[0].Status == Completed {
-			log.Info("Distribution Completed!")
-			return nil
-		}
-		time.Sleep(time.Second * defaultSyncSleepIntervalSeconds)
+			if (*response)[0].Status == Failed {
+				bytes, err := json.Marshal(response)
+				if err != nil {
+					return false, errorutils.CheckError(err)
+				}
+				return false, errorutils.CheckErrorf("Distribution failed: " + utils.IndentJson(bytes))
+			}
+			if (*response)[0].Status == Completed {
+				log.Info("Distribution Completed!")
+				return false, nil
+			}
+			// Keep trying to get an answer
+			log.Info(distributingMessage)
+			return true, nil
+		},
 	}
-	return errorutils.CheckErrorf("Timeout for sync distribution")
+	return retryExecutor.Execute()
 }
 
 type DistributionBody struct {

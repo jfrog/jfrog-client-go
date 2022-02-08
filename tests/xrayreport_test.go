@@ -36,7 +36,7 @@ func reportAll(t *testing.T) {
 	request := services.ReportRequestParams{
 		Name: "test-report",
 		Filters: services.Filter{
-			HasRemediation: true,
+			HasRemediation: &trueValue,
 			Severity:       []string{"high"},
 		},
 		Resources: services.Resource{

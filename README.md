@@ -13,6 +13,9 @@
   - [Pull Requests](#pull-requests)
     - [Guidelines](#guidelines)
   - [Tests](#tests)
+    - [Flags](#flags)
+      - [Test Types](#test-types)
+      - [Connection Details](#connection-details)
   - [General APIs](#general-apis)
     - [Setting the Logger](#setting-the-logger)
     - [Setting the Temp Dir](#setting-the-temp-dir)
@@ -57,6 +60,7 @@
       - [Removing a Repository](#removing-a-repository)
       - [Getting Repository Details](#getting-repository-details)
       - [Getting All Repositories](#getting-all-repositories)
+      - [Check if Repository Exists](#check-if-repository-exists)
       - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
       - [Getting a Repository Replication](#getting-a-repository-replication)
       - [Removing a Repository Replication](#removing-a-repository-replication)
@@ -83,8 +87,8 @@
       - [Creating a New Project](#creating-a-new-project)
       - [Updating a Project](#updating-a-project)
       - [Deleting a Project](#deleting-a-project)
-      - [Assigning Repository To Project](#assigning-repository-to-project)
-      - [Unassigning Repository From Project](#unassigning-repository-from-project)
+      - [Assigning Repository to Project](#assigning-repository-to-project)
+      - [Unassigning Repository from Project](#unassigning-repository-from-project)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -188,7 +192,7 @@ go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifac
 | `-test.xray`         | Xray tests         | Artifactory with Xray         |
 | `-test.pipelines`    | Pipelines tests    | JFrog Pipelines               |
 | `-test.access`       | Access tests       | Artifactory Pro               |
-| `-test.repository`   | Access tests       | Artifactory Pro               |
+| `-test.repositories`   | Access tests       | Artifactory Pro               |
 
 #### Connection Details
 
@@ -215,11 +219,17 @@ go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifac
 ## General APIs
 
 ### Setting the Logger
-
+Default logger:
+```go
+log.SetLogger(log.NewLogger(log.INFO, nil))
+```
+You may also log to a file, and/or add log prefixes as shown below:
 ```go
 var file *os.File
+// Log flags as described in https://pkg.go.dev/log#pkg-constants.
+logFlags := Ldate | Ltime
 ...
-log.SetLogger(log.NewLogger(log.INFO, file))
+log.SetLogger(log.NewLoggerWithFlags(log.DEBUG, file, logFlags))
 ```
 
 ### Setting the Temp Dir
@@ -553,9 +563,9 @@ params.BuildNumber = "10"
 params.TargetRepo = "target-repo"
 params.Status = "status"
 params.Comment = "comment"
-params.Copy = true
+params.Copy = &trueValue
 params.FailFast = true
-params.IncludeDependencies = false
+params.IncludeDependencies = &falseValue
 params.SourceRepo = "source-repo"
 // Optional Artifactory project key
 params.ProjectKey = "my-project-key"
@@ -921,6 +931,14 @@ params.PackageType = "maven"
 err := servicesManager.GetAllRepositoriesFiltered(params)
 ```
 
+#### Check if Repository Exists
+
+You can check whether a repository exists in Artifactory:
+
+```go
+exists, err := servicesManager.IsRepoExists()
+```
+
 #### Creating and Updating Repository Replications
 
 Example of creating a repository replication:
@@ -1094,11 +1112,11 @@ params := services.NewUserParams()
 params.UserDetails.Name = "myUserName"
 params.UserDetails.Email = "myUser@jfrog.com"
 params.UserDetails.Password = "Password1"
-params.UserDetails.Admin = false
-params.UserDetails.Realm= "internal"
-params.UserDetails.ProfileUpdatable = true
-params.UserDetails.DisableUIAccess = false
-params.UserDetails.InternalPasswordDisabled = false
+params.UserDetails.Admin = &falseValue
+params.UserDetails.Realm = "internal"
+params.UserDetails.ProfileUpdatable = &trueValue
+params.UserDetails.DisableUIAccess = &falseValue
+params.UserDetails.InternalPasswordDisabled = &falseValue
 params.UserDetails.groups = [2]string{"GroupA", "GroupB"}
 // Set to true in order to replace exist user with the same name
 params.ReplaceIfExists = false
@@ -1133,8 +1151,8 @@ If the requested group does not exist, a nil value is returned for the _Group_ p
 params := services.NewGroupParams()
 params.GroupDetails.Name = "myGroupName"
 params.GroupDetails.Description = "Description"
-params.GroupDetails.AutoJoin = false
-params.GroupDetails.AdminPrivileges = true
+params.GroupDetails.AutoJoin = &falseValue
+params.GroupDetails.AdminPrivileges = &trueValue
 params.GroupDetails.Realm = "internal"
 params.GroupDetails.UsersNames = [2]string{"UserA", "UserB"}
 // Set to true in order to replace exist group with the same name
@@ -1192,19 +1210,19 @@ accessManager, err := access.New(serviceConfig)
 
 ### Using Access Services
 
-#### Creating a new project
+#### Creating a New Project
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
-	ManageMembers:   true,
-	ManageResources: true,
-	IndexResources:  true,
+	ManageMembers:   &trueValue,
+	ManageResources: &trueValue,
+	IndexResources:  &trueValue,
 }
 projectDetails := accessServices.Project{
 	DisplayName:       "testProject",
 	Description:       "My Test Project",
 	AdminPrivileges:   &adminPriviligies,
-	SoftLimit:         false,
+	SoftLimit:         &falseValue,
 	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
 	ProjectKey:        "tstprj",
 }
@@ -1213,7 +1231,7 @@ projectParams.ProjectDetails = projectDetails
 err = accessManager.CreateProject(projectParams)
 ```
 
-#### Updating a project
+#### Updating a Project
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
@@ -1225,7 +1243,7 @@ projectDetails := accessServices.Project{
 	DisplayName:       "testProject",
 	Description:       "My Test Project",
 	AdminPrivileges:   &adminPriviligies,
-	SoftLimit:         false,
+	SoftLimit:         &falseValue,
 	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
 	ProjectKey:        "tstprj",
 }
@@ -1240,14 +1258,14 @@ err = accessManager.UpdateProject(projectParams)
 err = accessManager.DeleteProject("tstprj")
 ```
 
-#### Assigning repository to project
+#### Assigning Repository to Project
 
 ```go
 // Params: (repositoryName, projectKey string, isForce bool)
 err = accessManager.AssignRepoToProject("repoName", "tstprj", true)
 ```
 
-#### Unassigning repository from project
+#### Unassigning Repository from Project
 
 ```go
 err = accessManager.AssignRepoToProject("repoName")
@@ -1562,6 +1580,7 @@ params.Name = "example-security-policy"
 params.Type = utils.Security
 params.Description = "Security policy with 2 rules"
 params.Rules = []utils.PolicyRule{
+params.Rules = []utils.PolicyRule{
 	{
 		Name:     "min-severity-rule",
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
@@ -1574,13 +1593,13 @@ params.Rules = []utils.PolicyRule{
 		Actions: &utils.PolicyAction{
 			Webhooks: []string{"sec_webhook"},
 			BlockDownload: utils.PolicyBlockDownload{
-				Active:    true,
-				Unscanned: false,
+				Active:    &trueValue,
+				Unscanned: &falseValue,
 			},
-			BlockReleaseBundleDistribution: false,
-			FailBuild:                      true,
-			NotifyDeployer:                 false,
-			NotifyWatchRecipients:          true,
+			BlockReleaseBundleDistribution: &falseValue,
+			FailBuild:                      &trueValue,
+			NotifyDeployer:                 &falseValue,
+			NotifyWatchRecipients:          &trueValue,
 			CustomSeverity:                 utils.Medium,
 		},
 	},
@@ -1662,7 +1681,7 @@ scanResults, err := xrayManager.GetScanGraphResults(scanId)
 reportRequest := services.ReportRequestParams{
   Name: "example-report",
   Filters: services.Filter{
-    HasRemediation: true,
+    HasRemediation: &trueValue,
     Severity:       []string{ "High" },
   },
   Resources: services.Resource{

@@ -11,17 +11,23 @@ import (
 
 func TestVcsDetails(t *testing.T) {
 	// Test the following .git types, on their corresponding paths in testdata.
-	tests := []string{"vcs", "packedvcs", "submodule"}
-	for _, test := range tests {
+	testRuns := []string{"vcs", "packedvcs", "submodule"}
+	for _, test := range testRuns {
 		t.Run(test, func(t *testing.T) {
 			var projectPath, tmpDir string
+			// Create temp folder.
+			tmpDir, err := fileutils.CreateTempDir()
+			assert.NoError(t, err, "Couldn't create temp dir")
+			defer func() {
+				assert.NoError(t, fileutils.RemoveTempDir(tmpDir), "Couldn't remove temp dir")
+			}()
+
 			if test == "submodule" {
-				projectPath, tmpDir = testsutils.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test))
+				projectPath = testsutils.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test), tmpDir)
 			} else {
-				projectPath, tmpDir = initVcsTestDir(t, filepath.Join("testdata", test))
+				projectPath = initVcsTestDir(t, filepath.Join("testdata", test), tmpDir)
 			}
-			defer fileutils.RemoveTempDir(tmpDir)
-			vcsDetails := NewVcsDetals()
+			vcsDetails := NewVcsDetails()
 			revision, url, branch, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
 			assert.NoError(t, err)
 			assert.Equal(t, "https://github.com/jfrog/jfrog-cli.git", url)
@@ -31,24 +37,18 @@ func TestVcsDetails(t *testing.T) {
 	}
 }
 
-func initVcsTestDir(t *testing.T, srcPath string) (projectPath, tmpDir string) {
+func initVcsTestDir(t *testing.T, srcPath, tmpDir string) (projectPath string) {
 	var err error
-	tmpDir, err = fileutils.CreateTempDir()
-	assert.NoError(t, err)
-
-	err = fileutils.CopyDir(srcPath, tmpDir, true, nil)
-	assert.NoError(t, err)
+	assert.NoError(t, fileutils.CopyDir(srcPath, tmpDir, true, nil))
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
 		assert.NoError(t, err)
-		err := fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git"))
-		assert.NoError(t, err)
+		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git")))
 	}
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "othergit", "gitdata"), false); found {
 		assert.NoError(t, err)
-		err := fileutils.RenamePath(filepath.Join(tmpDir, "othergit", "gitdata"), filepath.Join(tmpDir, "othergit", ".git"))
-		assert.NoError(t, err)
+		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "othergit", "gitdata"), filepath.Join(tmpDir, "othergit", ".git")))
 	}
 	projectPath, err = filepath.Abs(tmpDir)
 	assert.NoError(t, err)
-	return projectPath, tmpDir
+	return projectPath
 }
