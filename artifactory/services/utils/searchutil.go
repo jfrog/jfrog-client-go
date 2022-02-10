@@ -256,24 +256,29 @@ func ExecAql(aqlQuery string, flags CommonConf) (io.ReadCloser, error) {
 	return resp.Body, err
 }
 
-func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReader, error) {
-	body, err := ExecAql(aqlQuery, flags)
+func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (reader *content.ContentReader, err error) {
+	var body io.ReadCloser
+	body, err = ExecAql(aqlQuery, flags)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer func() {
-		err := body.Close()
-		if err != nil {
-			log.Warn("Could not close connection:" + err.Error() + ".")
+		if body != nil {
+			e := body.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
 		}
 	}()
 	log.Debug("Streaming data to file...")
-	filePath, err := streamToFile(body)
+	var filePath string
+	filePath, err = streamToFile(body)
 	if err != nil {
-		return nil, err
+		return
 	}
-	log.Debug("Finish streaming data successfully.")
-	return content.NewContentReader(filePath, content.DefaultKey), err
+	log.Debug("Finished streaming data successfully.")
+	reader = content.NewContentReader(filePath, content.DefaultKey)
+	return
 }
 
 // Save the reader output into a temp file.

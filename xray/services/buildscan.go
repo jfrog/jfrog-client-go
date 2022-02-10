@@ -77,7 +77,7 @@ func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams, includeV
 	}
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-
+	log.Info("Waiting for Build Scan to complete...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := bs.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {

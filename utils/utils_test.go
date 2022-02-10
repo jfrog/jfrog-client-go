@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -75,7 +76,7 @@ func assertSplitWithEscape(str string, expected []string, t *testing.T) {
 }
 
 func TestCleanPath(t *testing.T) {
-	if IsWindows() {
+	if io.IsWindows() {
 		parameter := "\\\\foo\\\\baz\\\\..\\\\bar\\\\*"
 		got := cleanPath(parameter)
 		want := "\\\\foo\\\\bar\\\\*"

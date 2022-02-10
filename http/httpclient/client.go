@@ -172,7 +172,14 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 		return
 	}
 	if closeBody {
-		defer resp.Body.Close()
+		defer func() {
+			if resp != nil && resp.Body != nil {
+				e := resp.Body.Close()
+				if err == nil {
+					err = errorutils.CheckError(e)
+				}
+			}
+		}()
 		respBody, _ = ioutil.ReadAll(resp.Body)
 	}
 	return
@@ -274,7 +281,14 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	if resp != nil && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		return nil, nil, errorutils.CheckError(errors.New("Server response: " + resp.Status))
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			e := resp.Body.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}
+	}()
 	body, err = ioutil.ReadAll(resp.Body)
 	if errorutils.CheckError(err) != nil {
 		return nil, nil, err
@@ -356,8 +370,14 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 	if err != nil {
 		return
 	}
-
-	defer resp.Body.Close()
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			e := resp.Body.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		return resp, redirectUrl, nil
 	}
@@ -656,9 +676,11 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 		return "", nil, err
 	}
 	defer func() {
-		e := resp.Body.Close()
-		if err == nil {
-			err = e
+		if resp != nil && resp.Body != nil {
+			e := resp.Body.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
 		}
 	}()
 	// Unexpected http response

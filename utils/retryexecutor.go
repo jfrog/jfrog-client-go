@@ -61,7 +61,7 @@ func (runner *RetryExecutor) LogRetry(attemptNumber int, err error) {
 	if err != nil || runner.ErrorMessage != "" {
 		log.Warn(message)
 	} else {
-		log.Info(message)
+		log.Debug(message)
 	}
 
 }
