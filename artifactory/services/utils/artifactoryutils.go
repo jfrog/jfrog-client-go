@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -245,8 +246,7 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey stri
 			return buildName, buildNumber, nil
 		}
 	}
-	log.Debug(fmt.Sprintf("The %s/%s build run could not be found in Artifactory.", buildName, buildNumber))
-	return "", "", err
+	return "", "", errors.New(fmt.Sprintf("The %s/%s build run could not be found in Artifactory.", buildName, buildNumber))
 }
 
 func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte, err error) {
