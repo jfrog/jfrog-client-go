@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -26,7 +26,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.7.1"
+	Version     = "1.8.0"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -233,7 +233,7 @@ func antPatternToRegExp(localPath string) string {
 }
 
 func getFileSeparator() string {
-	if IsWindows() {
+	if io.IsWindows() {
 		return "\\\\"
 	}
 	return "/"
@@ -324,7 +324,7 @@ func ReplaceTildeWithUserHome(path string) string {
 }
 
 func GetUserHomeDir() string {
-	if IsWindows() {
+	if io.IsWindows() {
 		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 		if home == "" {
 			home = os.Getenv("USERPROFILE")
@@ -411,18 +411,11 @@ func AddProps(oldProps, additionalProps string) string {
 	return oldProps + additionalProps
 }
 
-func IsWindows() bool {
-	return runtime.GOOS == "windows"
-}
-
-func IsMacOS() bool {
-	return runtime.GOOS == "darwin"
-}
-
 type Artifact struct {
-	LocalPath         string
-	TargetPath        string
-	SymlinkTargetPath string
+	LocalPath           string
+	TargetPath          string
+	SymlinkTargetPath   string
+	TargetPathInArchive string
 }
 
 const (

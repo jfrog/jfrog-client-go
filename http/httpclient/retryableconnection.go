@@ -98,13 +98,21 @@ type monitor struct {
 	lastRead       time.Time
 }
 
-func (m *monitor) start() ([]byte, bool, error) {
+func (m *monitor) start() (result []byte, stable bool, err error) {
 	if m.resp == nil || m.resp.Body == nil {
-		return []byte{}, false, errorutils.CheckError(missingRespBodyErr)
+		err = errorutils.CheckError(missingRespBodyErr)
+		return
 	}
-	defer m.resp.Body.Close()
+	defer func() {
+		if m.resp != nil && m.resp.Body != nil {
+			e := m.resp.Body.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}
+	}()
 
-	result := []byte{}
+	result = []byte{}
 	errChan := make(chan error, 1)
 	bodyReader := bufio.NewReader(m.resp.Body)
 	go func() {
@@ -138,14 +146,14 @@ func (m *monitor) start() ([]byte, bool, error) {
 	}()
 
 	// Receive error or nil for successful connection.
-	err := <-errChan
+	err = <-errChan
 
 	// Check whether connection time is longer the provided stableConnectionWindow duration.
 	// If so the connection was stable.
-	stable := false
 	if m.stableConnectionWindow > 0 && m.stableConnectionWindow < m.lastRead.Sub(m.connectionTime) {
 		stable = true
 	}
 	// receive the data or fail on timeout or error
-	return result, stable, errorutils.CheckError(err)
+	errorutils.CheckError(err)
+	return
 }

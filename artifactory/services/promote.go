@@ -77,8 +77,10 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
-
 	log.Debug("Artifactory response:", resp.Status)
+	if !data.FailFast {
+		log.Info(string(body))
+	}
 	log.Info("Promoted build", promotionParams.GetBuildName()+"/"+promotionParams.GetBuildNumber(), "to:", promotionParams.GetTargetRepo(), "repository.")
 	return nil
 }
@@ -90,7 +92,7 @@ type BuildPromotionBody struct {
 	Status              string `json:"status,omitempty"`
 	IncludeDependencies *bool  `json:"dependencies,omitempty"`
 	Copy                *bool  `json:"copy,omitempty"`
-	// FailFast options default is true. We need to avoid omitempty, otherwise, it would be forced to false if omitted.
+	// Notice that FailFast is boolean and therfore if not assigned, FailFast is false.
 	FailFast   bool                `json:"failFast"`
 	DryRun     *bool               `json:"dryRun,omitempty"`
 	Properties map[string][]string `json:"properties,omitempty"`
