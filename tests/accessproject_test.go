@@ -19,13 +19,13 @@ func TestAccessProjectGroups(t *testing.T) {
 }
 
 func testAccessProjectAddGetDeleteGroups(t *testing.T) {
-	var testGroup = getTestProjectGroupParams("a-test-group")
+	testGroup := getTestProjectGroupParams("a-test-group")
 	projectParams := getTestProjectParams()
 	err := testsAccessProjectService.Create(projectParams)
 	defer deleteProjectAndGroupAndAssert(t, projectParams.ProjectDetails.ProjectKey, testGroup.Name)
 	assert.NoError(t, err)
 
-	var toBeAddedGroup = getTestGroupParams(true)
+	toBeAddedGroup := getTestGroupParams(true)
 	toBeAddedGroup.GroupDetails.Name = testGroup.Name
 	err = testGroupService.CreateGroup(toBeAddedGroup)
 	assert.NoError(t, err)
@@ -36,9 +36,9 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 	allGroups, err := testsAccessProjectService.GetGroups(projectParams.ProjectDetails.ProjectKey)
 	assert.NoError(t, err)
 	assert.Equal(t, len(*allGroups), 1, "Expected 1 group in the project but got %d", len(*allGroups))
-	assert.Contains(t, allGroups, testGroup)
+	assert.Contains(t, *allGroups, testGroup)
 
-	testGroup.Roles = append(testGroup.Roles, "foobar")
+	testGroup.Roles = append(testGroup.Roles, "Contributor")
 	err = testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup)
 	assert.NoError(t, err)
 
@@ -108,6 +108,6 @@ func getTestProjectParams() services.ProjectParams {
 func getTestProjectGroupParams(groupName string) services.ProjectGroup {
 	return services.ProjectGroup{
 		Name:  groupName,
-		Roles: []string{"foo", "bar"},
+		Roles: []string{"Contributor", "Release Manager"},
 	}
 }

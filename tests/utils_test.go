@@ -1041,5 +1041,9 @@ func createAccessProjectManager() {
 	testsAccessProjectService = accessServices.NewProjectService(client)
 	testsAccessProjectService.ServiceDetails = accessDetails
 
-	testGroupService = services.NewGroupService(client)
+	artDetails := GetRtDetails()
+	rtclient, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testGroupService = services.NewGroupService(rtclient)
+	testGroupService.SetArtifactoryDetails(artDetails)
 }
