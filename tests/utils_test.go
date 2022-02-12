@@ -5,9 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/buger/jsonparser"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,6 +12,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/buger/jsonparser"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
@@ -991,4 +992,10 @@ func createAccessProjectManager() {
 	failOnHttpClientCreation(err)
 	testsAccessProjectService = accessServices.NewProjectService(client)
 	testsAccessProjectService.ServiceDetails = accessDetails
+
+	artDetails := GetRtDetails()
+	rtclient, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testGroupService = services.NewGroupService(rtclient)
+	testGroupService.SetArtifactoryDetails(artDetails)
 }
