@@ -245,7 +245,7 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey stri
 			return buildName, buildNumber, nil
 		}
 	}
-	log.Info(fmt.Sprintf("The build:'%s'/'%s' could not be found in Artifactory.", buildName, buildNumber))
+	log.Info(fmt.Sprintf("A build-name: <%s> with a build-number: <%s> could not be found in Artifactory.", buildName, buildNumber))
 	return "", "", nil
 }
 
