@@ -1,14 +1,11 @@
 package utils
 
-import "encoding/json"
-
-type ReplicationBody struct {
+type replicationBody struct {
 	Username               string `json:"username"`
 	Password               string `json:"password"`
 	URL                    string `json:"url"`
 	CronExp                string `json:"cronExp"`
 	RepoKey                string `json:"repoKey"`
-	Proxy                  string `json:"proxy"`
 	EnableEventReplication bool   `json:"enableEventReplication"`
 	SocketTimeoutMillis    int    `json:"socketTimeoutMillis"`
 	Enabled                bool   `json:"enabled"`
@@ -16,6 +13,16 @@ type ReplicationBody struct {
 	SyncProperties         bool   `json:"syncProperties"`
 	SyncStatistics         bool   `json:"syncStatistics"`
 	PathPrefix             string `json:"pathPrefix"`
+}
+
+type GetReplicationBody struct {
+	replicationBody
+	ProxyRef string `json:"proxyRef"`
+}
+
+type UpdateReplicationBody struct {
+	replicationBody
+	Proxy string `json:"proxy"`
 }
 
 type ReplicationParams struct {
@@ -36,41 +43,40 @@ type ReplicationParams struct {
 	IncludePathPrefixPattern string
 }
 
-// UnmarshalJSON overrides the default JSON unmarshal function because the POST request to create a replication
-// has a field named `proxy` but the GET request returns a JSON with a field named `proxyRef`
-func (rp *ReplicationParams) UnmarshalJSON(data []byte) error {
-	type Alias ReplicationParams
-
-	aux := &struct {
-		ProxyRef string `json:"proxyRef"`
-		*Alias
-	}{
-		Alias: (*Alias)(rp),
+func CreateUpdateReplicationBody(params ReplicationParams) *UpdateReplicationBody {
+	return &UpdateReplicationBody{
+		replicationBody: replicationBody{
+			Username:               params.Username,
+			Password:               params.Password,
+			URL:                    params.Url,
+			CronExp:                params.CronExp,
+			RepoKey:                params.RepoKey,
+			EnableEventReplication: params.EnableEventReplication,
+			SocketTimeoutMillis:    params.SocketTimeoutMillis,
+			Enabled:                params.Enabled,
+			SyncDeletes:            params.SyncDeletes,
+			SyncProperties:         params.SyncProperties,
+			SyncStatistics:         params.SyncStatistics,
+			PathPrefix:             params.PathPrefix,
+		},
+		Proxy: params.Proxy,
 	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	rp.Proxy = aux.ProxyRef
-
-	return nil
 }
 
-func CreateReplicationBody(params ReplicationParams) *ReplicationBody {
-	return &ReplicationBody{
-		Username:               params.Username,
-		Password:               params.Password,
-		URL:                    params.Url,
-		CronExp:                params.CronExp,
-		RepoKey:                params.RepoKey,
-		Proxy:                  params.Proxy,
-		EnableEventReplication: params.EnableEventReplication,
-		SocketTimeoutMillis:    params.SocketTimeoutMillis,
-		Enabled:                params.Enabled,
-		SyncDeletes:            params.SyncDeletes,
-		SyncProperties:         params.SyncProperties,
-		SyncStatistics:         params.SyncStatistics,
-		PathPrefix:             params.PathPrefix,
+func CreateReplicationParams(body GetReplicationBody) *ReplicationParams {
+	return &ReplicationParams{
+		Username:               body.Username,
+		Password:               body.Password,
+		Url:                    body.URL,
+		CronExp:                body.CronExp,
+		RepoKey:                body.RepoKey,
+		Proxy:                  body.ProxyRef,
+		EnableEventReplication: body.EnableEventReplication,
+		SocketTimeoutMillis:    body.SocketTimeoutMillis,
+		Enabled:                body.Enabled,
+		SyncDeletes:            body.SyncDeletes,
+		SyncProperties:         body.SyncProperties,
+		SyncStatistics:         body.SyncStatistics,
+		PathPrefix:             body.PathPrefix,
 	}
 }

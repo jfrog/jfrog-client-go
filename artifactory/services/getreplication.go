@@ -30,10 +30,16 @@ func (drs *GetReplicationService) GetReplication(repoKey string) ([]utils.Replic
 	if err != nil {
 		return nil, err
 	}
-	var replicationConf []utils.ReplicationParams
-	if err := json.Unmarshal(body, &replicationConf); err != nil {
+	var replicationBody []utils.GetReplicationBody
+	if err := json.Unmarshal(body, &replicationBody); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
+
+	var replicationConf = make([]utils.ReplicationParams, len(replicationBody))
+	for i, body := range replicationBody {
+		replicationConf[i] = *utils.CreateReplicationParams(body)
+	}
+
 	return replicationConf, nil
 }
 
