@@ -245,8 +245,8 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey stri
 			return buildName, buildNumber, nil
 		}
 	}
-	log.Debug(fmt.Sprintf("The %s/%s build run could not be found in Artifactory.", buildName, buildNumber))
-	return "", "", err
+	log.Info(fmt.Sprintf("A build-name: <%s> with a build-number: <%s> could not be found in Artifactory.", buildName, buildNumber))
+	return "", "", nil
 }
 
 func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte, err error) {
