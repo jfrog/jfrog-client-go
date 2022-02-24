@@ -137,14 +137,14 @@ type Module struct {
 	Artifacts         []Artifact   `json:"artifacts,omitempty"`
 	ExcludedArtifacts []Artifact   `json:"excludedArtifacts,omitempty"`
 	Dependencies      []Dependency `json:"dependencies,omitempty"`
-	*Checksum
+	Checksum
 }
 
 type Artifact struct {
 	Name string `json:"name,omitempty"`
 	Type string `json:"type,omitempty"`
 	Path string `json:"path,omitempty"`
-	*Checksum
+	Checksum
 }
 
 type Dependency struct {
@@ -152,7 +152,7 @@ type Dependency struct {
 	Type        string     `json:"type,omitempty"`
 	Scopes      []string   `json:"scopes,omitempty"`
 	RequestedBy [][]string `json:"requestedBy,omitempty"`
-	*Checksum
+	Checksum
 }
 
 type Issues struct {
@@ -179,6 +179,10 @@ type Checksum struct {
 	Md5  string `json:"md5,omitempty"`
 }
 
+func (c *Checksum) IsEmpty() bool {
+	return c.Md5 == "" && c.Sha1 == ""
+}
+
 type Env map[string]string
 
 type Vcs struct {
@@ -199,7 +203,7 @@ type Partial struct {
 	ModuleId     string       `json:"ModuleId,omitempty"`
 	Issues       *Issues      `json:"Issues,omitempty"`
 	VcsList      []Vcs        `json:"vcs,omitempty"`
-	*Checksum
+	Checksum
 }
 
 func (partials Partials) Len() int {
