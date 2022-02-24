@@ -1,6 +1,6 @@
 package utils
 
-type ReplicationBody struct {
+type replicationBody struct {
 	Username               string `json:"username"`
 	Password               string `json:"password"`
 	URL                    string `json:"url"`
@@ -15,6 +15,16 @@ type ReplicationBody struct {
 	PathPrefix             string `json:"pathPrefix"`
 }
 
+type GetReplicationBody struct {
+	replicationBody
+	ProxyRef string `json:"proxyRef"`
+}
+
+type UpdateReplicationBody struct {
+	replicationBody
+	Proxy string `json:"proxy"`
+}
+
 type ReplicationParams struct {
 	Username string
 	Password string
@@ -22,6 +32,7 @@ type ReplicationParams struct {
 	CronExp  string
 	// Source replication repository.
 	RepoKey                  string
+	Proxy                    string
 	EnableEventReplication   bool
 	SocketTimeoutMillis      int
 	Enabled                  bool
@@ -32,19 +43,40 @@ type ReplicationParams struct {
 	IncludePathPrefixPattern string
 }
 
-func CreateReplicationBody(params ReplicationParams) *ReplicationBody {
-	return &ReplicationBody{
-		Username:               params.Username,
-		Password:               params.Password,
-		URL:                    params.Url,
-		CronExp:                params.CronExp,
-		RepoKey:                params.RepoKey,
-		EnableEventReplication: params.EnableEventReplication,
-		SocketTimeoutMillis:    params.SocketTimeoutMillis,
-		Enabled:                params.Enabled,
-		SyncDeletes:            params.SyncDeletes,
-		SyncProperties:         params.SyncProperties,
-		SyncStatistics:         params.SyncStatistics,
-		PathPrefix:             params.PathPrefix,
+func CreateUpdateReplicationBody(params ReplicationParams) *UpdateReplicationBody {
+	return &UpdateReplicationBody{
+		replicationBody: replicationBody{
+			Username:               params.Username,
+			Password:               params.Password,
+			URL:                    params.Url,
+			CronExp:                params.CronExp,
+			RepoKey:                params.RepoKey,
+			EnableEventReplication: params.EnableEventReplication,
+			SocketTimeoutMillis:    params.SocketTimeoutMillis,
+			Enabled:                params.Enabled,
+			SyncDeletes:            params.SyncDeletes,
+			SyncProperties:         params.SyncProperties,
+			SyncStatistics:         params.SyncStatistics,
+			PathPrefix:             params.PathPrefix,
+		},
+		Proxy: params.Proxy,
+	}
+}
+
+func CreateReplicationParams(body GetReplicationBody) *ReplicationParams {
+	return &ReplicationParams{
+		Username:               body.Username,
+		Password:               body.Password,
+		Url:                    body.URL,
+		CronExp:                body.CronExp,
+		RepoKey:                body.RepoKey,
+		Proxy:                  body.ProxyRef,
+		EnableEventReplication: body.EnableEventReplication,
+		SocketTimeoutMillis:    body.SocketTimeoutMillis,
+		Enabled:                body.Enabled,
+		SyncDeletes:            body.SyncDeletes,
+		SyncProperties:         body.SyncProperties,
+		SyncStatistics:         body.SyncStatistics,
+		PathPrefix:             body.PathPrefix,
 	}
 }
