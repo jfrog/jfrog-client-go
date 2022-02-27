@@ -92,7 +92,7 @@ func CleanOldDirs() error {
 			}
 			// Delete old file/dirs.
 			if now.Sub(timeStamp).Hours() > maxFileAge {
-				if err := os.RemoveAll(path.Join(tempDirBase, file.Name())); err != nil {
+				if err := RemoveTempDir(path.Join(tempDirBase, file.Name())); err != nil {
 					return errorutils.CheckError(err)
 				}
 			}
