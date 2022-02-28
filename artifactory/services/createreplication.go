@@ -25,7 +25,7 @@ func (rs *CreateReplicationService) GetJfrogHttpClient() *jfroghttpclient.JfrogH
 	return rs.client
 }
 
-func (rs *CreateReplicationService) performRequest(params *utils.ReplicationBody) error {
+func (rs *CreateReplicationService) performRequest(params *utils.UpdateReplicationBody) error {
 	content, err := json.Marshal(params)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -50,7 +50,7 @@ func (rs *CreateReplicationService) performRequest(params *utils.ReplicationBody
 }
 
 func (rs *CreateReplicationService) CreateReplication(params CreateReplicationParams) error {
-	return rs.performRequest(utils.CreateReplicationBody(params.ReplicationParams))
+	return rs.performRequest(utils.CreateUpdateReplicationBody(params.ReplicationParams))
 }
 
 func NewCreateReplicationParams() CreateReplicationParams {

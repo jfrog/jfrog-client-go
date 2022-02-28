@@ -1,4 +1,10 @@
-# jfrog-client-go
+[![](readme_image.png)](#readme)
+
+<div align="center">
+
+# JFrog Go Client
+
+</div>
 
 | Branch |                                                                              Status                                                                               |
 | :----: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -89,6 +95,10 @@
       - [Deleting a Project](#deleting-a-project)
       - [Assigning Repository to Project](#assigning-repository-to-project)
       - [Unassigning Repository from Project](#unassigning-repository-from-project)
+      - [Get all groups assigned to a project](#get-all-groups-assigned-to-a-project)
+      - [Get a specific group assigned to a project](#get-a-specific-group-assigned-to-a-project)
+      - [Add or update a group assigned to a project](#add-or-update-a-group-assigned-to-a-project)
+      - [Remove a group from a project](#remove-a-group-from-a-project)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -1271,6 +1281,30 @@ err = accessManager.AssignRepoToProject("repoName", "tstprj", true)
 err = accessManager.AssignRepoToProject("repoName")
 ```
 
+#### Get all groups assigned to a project
+```go
+err = accessManager.GetProjectsGroups("tstprj")
+```
+
+#### Get a specific group assigned to a project
+```go
+err = accessManager.GetProjectsGroup("tstprj", "tstgroup")
+```
+
+#### Add or update a group assigned to a project
+```go
+projectGroup := accessServices.ProjectGroup{
+  Name:  "tstgroup",
+  Roles: []string{"Contributor","Release Manager"},
+}
+err = accessManager.UpdateGroupInProject("tstprj", "tstgroup", projectGroup)
+```
+
+#### Remove a group from a project
+```go
+err = accessManager.DeleteExistingProjectGroup("tstprj", "tstgroup")
+```
+
 ## Distribution APIs
 
 ### Creating Distribution Service Manager
@@ -1834,3 +1868,4 @@ err := pipelinesManager.DeleteIntegration(integrationId)
 projectIntegrationId := 1234
 err := pipelinesManager.AddSource(projectIntegrationId, "domain/repo", "master", "pipelines.yml")
 ```
+
