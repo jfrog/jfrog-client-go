@@ -74,9 +74,9 @@ func (logger *jfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
 		writer = os.Stderr
 		if isTerminalMode() {
 			logger.DebugLog = log.New(writer, fmt.Sprintf("[%s] ", color.Cyan.Render("Debug")), logFlags)
-			logger.InfoLog = log.New(writer, fmt.Sprintf("[%s] ", color.Blue.Render("Info")), logFlags)
-			logger.WarnLog = log.New(writer, fmt.Sprintf("[%s] ", color.Yellow.Render("Warn")), logFlags)
-			logger.ErrorLog = log.New(writer, fmt.Sprintf("[%s] ", color.Red.Render("Error")), logFlags)
+			logger.InfoLog = log.New(writer, fmt.Sprintf("[🔵%s] ", color.Blue.Render("Info")), logFlags)
+			logger.WarnLog = log.New(writer, fmt.Sprintf("[🟠%s] ", color.Yellow.Render("Warn")), logFlags)
+			logger.ErrorLog = log.New(writer, fmt.Sprintf("[🚨%s] ", color.Red.Render("Error")), logFlags)
 			return
 		}
 	}
