@@ -504,12 +504,18 @@ type UploadResponseBody struct {
 	Checksums entities.Checksum `json:"checksums,omitempty"`
 }
 
-func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (string, error) {
+func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (filePath string, err error) {
 	tempFile, err := fileutils.CreateTempFile()
 	if err != nil {
 		return "", err
 	}
-	filePath := tempFile.Name()
+	defer func() {
+		e := tempFile.Close()
+		if err == nil {
+			err = e
+		}
+	}()
+	filePath = tempFile.Name()
 	return filePath, SaveFileTransferDetailsInFile(filePath, filesDetails)
 }
 
