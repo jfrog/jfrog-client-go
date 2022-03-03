@@ -50,11 +50,6 @@ func walk(path string, info os.FileInfo, walkFn WalkFunc, visitedDirSymlinks map
 
 	for _, name := range names {
 		filename := filepath.Join(path, name)
-		realPath, err = filepath.EvalSymlinks(filename)
-		if err != nil {
-			realPath = filename
-		}
-
 		if walkIntoDirSymlink && IsPathSymlink(filename) {
 			symlinkRealPath, err := evalPathOfSymlink(filename)
 			if err != nil {
@@ -119,7 +114,10 @@ func readDirNames(dirname string) ([]string, error) {
 		return nil, err
 	}
 	names, err := f.Readdirnames(-1)
-	f.Close()
+	if err != nil {
+		return nil, err
+	}
+	err = f.Close()
 	if err != nil {
 		return nil, err
 	}

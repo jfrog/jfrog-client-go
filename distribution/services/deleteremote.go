@@ -17,7 +17,7 @@ type OnSuccess string
 
 const (
 	Keep   OnSuccess = "keep"
-	Delete           = "delete"
+	Delete OnSuccess = "delete"
 )
 
 // Delete received release bundles from the edge nodes. On success, keep or delete the release bundle from the distribution service.
@@ -94,7 +94,10 @@ func (dr *DeleteReleaseBundleService) execDeleteDistribute(name, version string,
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	if dr.Sync {
-		dr.waitForDeletion(name, version)
+		err := dr.waitForDeletion(name, version)
+		if err != nil {
+			return err
+		}
 	}
 	log.Debug("Distribution response: ", resp.Status)
 	log.Debug(utils.IndentJson(body))

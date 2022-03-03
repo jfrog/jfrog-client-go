@@ -78,7 +78,7 @@ func TestGetQueryReturnFields(t *testing.T) {
 
 	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "property"), t)
 	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, SYMLINK), append(minimalFields, "property"), t)
-	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, NONE), append(minimalFields), t)
+	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, NONE), minimalFields, t)
 
 	artifactoryParams.SortBy = []string{"Vava"}
 	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, NONE), append(minimalFields, "Vava"), t)

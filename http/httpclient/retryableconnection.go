@@ -15,9 +15,9 @@ type ErrorHandler func([]byte) error
 
 // Retryable connection specific errors
 var (
-	timeoutErr         = errors.New("read timeout")
-	exhaustedErr       = errors.New("connection error: exhausted retries")
-	missingRespBodyErr = errors.New("missing response body")
+	errTimeout         = errors.New("read timeout")
+	errExhausted       = errors.New("connection error: exhausted retries")
+	errMissingRespBody = errors.New("missing response body")
 )
 
 type RetryableConnection struct {
@@ -85,7 +85,7 @@ func (rt *RetryableConnection) Do() ([]byte, error) {
 
 		return result, err
 	}
-	return []byte{}, exhaustedErr
+	return []byte{}, errExhausted
 }
 
 type monitor struct {
@@ -100,7 +100,7 @@ type monitor struct {
 
 func (m *monitor) start() (result []byte, stable bool, err error) {
 	if m.resp == nil || m.resp.Body == nil {
-		err = errorutils.CheckError(missingRespBodyErr)
+		err = errorutils.CheckError(errMissingRespBody)
 		return
 	}
 	defer func() {
@@ -137,10 +137,10 @@ func (m *monitor) start() (result []byte, stable bool, err error) {
 		for {
 			// If last read exceeded the timeout signal for timeout error.
 			if m.lastRead.Add(m.readTimeout).Before(time.Now()) {
-				errChan <- timeoutErr
+				errChan <- errTimeout
 			} else {
 				// Sleep the remaining time until another timeout check is required
-				time.Sleep(m.readTimeout - time.Now().Sub(m.lastRead))
+				time.Sleep(m.readTimeout - time.Since(m.lastRead))
 			}
 		}
 	}()
@@ -154,6 +154,6 @@ func (m *monitor) start() (result []byte, stable bool, err error) {
 		stable = true
 	}
 	// receive the data or fail on timeout or error
-	errorutils.CheckError(err)
+	err = errorutils.CheckError(err)
 	return
 }

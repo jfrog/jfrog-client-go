@@ -113,7 +113,7 @@ func (cr *ContentReader) GetFilesPaths() []string {
 
 // Number of element in the array.
 func (cr *ContentReader) Length() (int, error) {
-	if cr.empty == true {
+	if cr.empty {
 		return 0, nil
 	}
 	if cr.length == 0 {
@@ -195,18 +195,6 @@ func findDecoderTargetPosition(dec *json.Decoder, target string, isArray bool) e
 		}
 	}
 	return nil
-}
-
-// Scan the JSON file and check if the array contains at least one element.
-func isEmptyArray(dec *json.Decoder, target string, isArray bool) (bool, error) {
-	if err := findDecoderTargetPosition(dec, target, isArray); err != nil {
-		return false, err
-	}
-	t, err := dec.Token()
-	if err != nil {
-		return false, errorutils.CheckError(err)
-	}
-	return t == json.Delim('{'), nil
 }
 
 func MergeReaders(arr []*ContentReader, arrayKey string) (contentReader *ContentReader, err error) {

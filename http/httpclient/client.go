@@ -231,12 +231,16 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 }
 
 func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails httputils.HttpClientDetails,
-	progress ioutils.ProgressMgr) (*http.Response, []byte, error) {
+	progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	var file *os.File
-	var err error
 	if localPath != "" {
 		file, err = os.Open(localPath)
-		defer file.Close()
+		defer func() {
+			e := file.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 		if errorutils.CheckError(err) != nil {
 			return nil, nil, err
 		}
@@ -395,7 +399,7 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 	return
 }
 
-func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, progress ioutils.ProgressMgr) error {
+func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, progress ioutils.ProgressMgr) (err error) {
 	fileName, err := fileutils.CreateFilePath(downloadFileDetails.LocalPath, downloadFileDetails.LocalFileName)
 	if err != nil {
 		return err
@@ -406,7 +410,12 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 		return err
 	}
 
-	defer out.Close()
+	defer func() {
+		e := out.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 
 	var reader io.Reader
 	if progress != nil {
@@ -590,12 +599,17 @@ func (jc *HttpClient) downloadChunksConcurrently(chunksPaths []string, flags Con
 	return respList[len(respList)-1], nil
 }
 
-func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
+func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error) {
 	destFile, err := os.OpenFile(flags.LocalFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() {
+		e := destFile.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 	var writer io.Writer
 	var actualSha1 hash.Hash
 	if len(flags.ExpectedSha1) > 0 {
@@ -609,7 +623,12 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) error {
 		if err != nil {
 			return err
 		}
-		defer reader.Close()
+		defer func() {
+			e := reader.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 		_, err = io.Copy(writer, reader)
 		if err != nil {
 			return err

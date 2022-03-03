@@ -108,7 +108,7 @@ func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams, includeV
 	if err = json.Unmarshal(body, &buildScanResponse); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	if &buildScanResponse == nil || buildScanResponse.Status == xrayScanStatusFailed {
+	if buildScanResponse.Status == xrayScanStatusFailed {
 		return nil, errorutils.CheckErrorf("Xray build scan failed")
 	}
 	return &buildScanResponse, err

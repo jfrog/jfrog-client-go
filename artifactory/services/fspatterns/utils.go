@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -35,8 +34,8 @@ func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
 	excludePathPattern := ""
 	for _, singleExclusion := range params.GetExclusions() {
 		if len(singleExclusion) > 0 {
-			singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
-			singleExclusion = utils.ConvertLocalPatternToRegexp(singleExclusion, params.GetPatternType())
+			singleExclusion = clientutils.ReplaceTildeWithUserHome(singleExclusion)
+			singleExclusion = clientutils.ConvertLocalPatternToRegexp(singleExclusion, params.GetPatternType())
 			if params.IsRecursive() && strings.HasSuffix(singleExclusion, fileutils.GetFileSeparator()) {
 				singleExclusion += "*"
 			}
@@ -74,10 +73,10 @@ func PrepareAndFilterPaths(path, excludePathPattern string, preserveSymlinks, in
 	return
 }
 
-func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifact, error) {
+func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (clientutils.Artifact, error) {
 	symlinkPath, err := GetFileSymlinkPath(rootPath)
 	if err != nil {
-		return utils.Artifact{}, err
+		return clientutils.Artifact{}, err
 	}
 
 	var uploadPath string
@@ -91,11 +90,11 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifa
 			uploadPath = targetPath + uploadPath
 		} else {
 			uploadPath = targetPath + localPath
-			uploadPath = utils.TrimPath(uploadPath)
+			uploadPath = clientutils.TrimPath(uploadPath)
 		}
 	}
 
-	return utils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, SymlinkTargetPath: symlinkPath}, nil
+	return clientutils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, SymlinkTargetPath: symlinkPath}, nil
 }
 
 func IsPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {
@@ -147,7 +146,7 @@ func getPlaceholderParentheses(pattern, target, archiveTarget string) clientutil
 // If path dose not exist error will be returned.
 func GetRootPath(pattern, target, archiveTarget string, patternType clientutils.PatternType, preserveSymLink bool) (string, error) {
 	placeholderParentheses := getPlaceholderParentheses(pattern, target, archiveTarget)
-	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
+	rootPath := clientutils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
 		return "", errorutils.CheckErrorf("Path does not exist: " + rootPath)
 	}

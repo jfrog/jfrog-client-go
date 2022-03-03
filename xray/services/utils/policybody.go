@@ -9,20 +9,20 @@ type Severity string
 
 const (
 	Critical    Severity = "Critical"
-	High                 = "High"
-	Medium               = "Medium"
-	Low                  = "Low"
-	Normal               = "Normal"
-	Pending              = "Pending"
-	Information          = "Information"
-	Unknown              = "Unknown"
+	High        Severity = "High"
+	Medium      Severity = "Medium"
+	Low         Severity = "Low"
+	Normal      Severity = "Normal"
+	Pending     Severity = "Pending"
+	Information Severity = "Information"
+	Unknown     Severity = "Unknown"
 )
 
 type PolicyType string
 
 const (
 	Security PolicyType = "security"
-	License             = "license"
+	License  PolicyType = "license"
 )
 
 func NewPolicyParams() PolicyParams {

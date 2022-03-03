@@ -26,6 +26,7 @@ func TestToken(t *testing.T) {
 	t.Run("RevokeToken: token not found", revokeTokenNotFoundTest)
 	t.Run("RefreshToken", refreshTokenTest)
 	t.Run("GetTokens", getTokensTest)
+	t.Run("GetUserTokens", getUserTokensTest)
 	teardown()
 }
 
@@ -209,12 +210,15 @@ func getTokensTest(t *testing.T) {
 	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
 }
 
-func getUserTokenstest(t *testing.T) {
+func getUserTokensTest(t *testing.T) {
 	token, err := createToken()
 	if err != nil {
 		t.Error(err)
 	}
 	tokens, err := testsSecurityService.GetUserTokens("anonymous")
+	if err != nil {
+		t.Error(err)
+	}
 	if len(tokens) != 1 {
 		t.Error("Failed to get tokens of anonymous user")
 	}
@@ -240,6 +244,9 @@ func getUserTokenstest(t *testing.T) {
 		t.Error(err)
 	}
 	tokens, err = testsSecurityService.GetUserTokens("test-user")
+	if err != nil {
+		t.Error(err)
+	}
 	if len(tokens) != 2 {
 		t.Error("Failed to get tokens of test-user")
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	distributionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -63,7 +62,7 @@ func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpg
 		return summary, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return summary, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+		return summary, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	if summary != nil {
 		summary.SetSucceeded(true)
@@ -71,7 +70,7 @@ func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpg
 	}
 
 	log.Debug("Distribution response: ", resp.Status)
-	log.Debug(utils.IndentJson(body))
+	log.Debug(clientutils.IndentJson(body))
 	return summary, nil
 }
 

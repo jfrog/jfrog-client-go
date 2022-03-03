@@ -203,10 +203,6 @@ func (esm *EmptyArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) initDownloadService() *services.DownloadService {
-	panic("Failed: Method is not implemented")
-}
-
 func (esm *EmptyArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error) {
 	panic("Failed: Method is not implemented")
 }

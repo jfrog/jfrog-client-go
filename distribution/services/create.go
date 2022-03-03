@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	distributionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -67,7 +66,7 @@ func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase stri
 		return summary, err
 	}
 	if !(resp.StatusCode == http.StatusCreated || (resp.StatusCode == http.StatusOK && releaseBundle.DryRun)) {
-		return summary, errorutils.CheckErrorf("Distribution response: " + resp.Status + "\n" + utils.IndentJson(body))
+		return summary, errorutils.CheckErrorf("Distribution response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 	}
 	if summary != nil {
 		summary.SetSucceeded(true)
@@ -75,7 +74,7 @@ func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase stri
 	}
 
 	log.Debug("Distribution response: ", resp.Status)
-	log.Debug(utils.IndentJson(body))
+	log.Debug(clientutils.IndentJson(body))
 	return summary, nil
 }
 

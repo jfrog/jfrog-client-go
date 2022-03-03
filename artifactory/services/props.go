@@ -87,10 +87,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 			encodedParam += url.QueryEscape(prop) + ","
 		}
 		// Remove trailing comma
-		if strings.HasSuffix(encodedParam, ",") {
-			encodedParam = encodedParam[:len(encodedParam)-1]
-		}
-
+		encodedParam = strings.TrimSuffix(encodedParam, ",")
 	}
 	var action func(string, string, string) (*http.Response, []byte, error)
 	if isDelete {
@@ -129,7 +126,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				return nil
 			}
 
-			producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
+			_, _ = producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
 		}
 		defer producerConsumer.Done()
 		if err := reader.GetError(); err != nil {
