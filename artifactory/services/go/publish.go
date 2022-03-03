@@ -37,7 +37,7 @@ func (gpc *GoPublishCommand) verifyCompatibleVersion(artifactoryVersion string) 
 }
 
 func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
-	rtUrl, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/"+params.GetTargetRepo(), make(map[string]string))
+	goApiUrl, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/", make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
@@ -46,41 +46,48 @@ func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpcl
 	moduleId := strings.Split(params.GetModuleId(), ":")
 	totalSucceed, totalFailed := 0, 0
 	var filesDetails []clientutils.FileTransferDetails
+	var artifactsDetails []utils.ArtifactDetails
 	// Upload zip file
-	success, failed, err := gpc.uploadFile(params, params.ZipPath, moduleId[0], ".zip", rtUrl, &filesDetails, gpc)
+	success, failed, err := gpc.uploadFile(params, params.ZipPath, moduleId[0], ".zip", goApiUrl, &filesDetails, &artifactsDetails, gpc)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	// Upload mod file
-	success, failed, err = gpc.uploadFile(params, params.ModPath, moduleId[0], ".mod", rtUrl, &filesDetails, gpc)
+	success, failed, err = gpc.uploadFile(params, params.ModPath, moduleId[0], ".mod", goApiUrl, &filesDetails, &artifactsDetails, gpc)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	if version.NewVersion(gpc.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersion) && params.GetInfoPath() != "" {
 		// Upload info file. This is supported from Artifactory version 6.10.0 and above
-		success, failed, err = gpc.uploadFile(params, params.InfoPath, moduleId[0], ".info", rtUrl, &filesDetails, gpc)
+		success, failed, err = gpc.uploadFile(params, params.InfoPath, moduleId[0], ".info", goApiUrl, &filesDetails, &artifactsDetails, gpc)
 		totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 		if err != nil {
 			return nil, err
 		}
 	}
-	tempFile, err := clientutils.SaveFileTransferDetailsInTempFile(&filesDetails)
+	fileTransferDetailsTempFile, err := clientutils.SaveFileTransferDetailsInTempFile(&filesDetails)
 	if err != nil {
 		return nil, err
 	}
-	return &utils.OperationSummary{TotalSucceeded: totalSucceed, TotalFailed: totalFailed, TransferDetailsReader: content.NewContentReader(tempFile, "files")}, nil
+	artifactsDetailsTempFile, err := utils.SaveArtifactDetailsInTempFile(&artifactsDetails)
+	if err != nil {
+		return nil, err
+	}
+	return &utils.OperationSummary{TotalSucceeded: totalSucceed, TotalFailed: totalFailed, TransferDetailsReader: content.NewContentReader(fileTransferDetailsTempFile, "files"), ArtifactsDetailsReader: content.NewContentReader(artifactsDetailsTempFile, "files")}, nil
 }
 
-func (gpc *GoPublishCommand) uploadFile(params GoParams, filePath string, moduleId, ext, url string, filesDetails *[]clientutils.FileTransferDetails, pwa *GoPublishCommand) (success, failed int, err error) {
+func (gpc *GoPublishCommand) uploadFile(params GoParams, filePath string, moduleId, ext, goApiUrl string, filesDetails *[]clientutils.FileTransferDetails, artifactsDetails *[]utils.ArtifactDetails, pwa *GoPublishCommand) (success, failed int, err error) {
 	success, failed = 0, 1
-	details, err := pwa.upload(filePath, moduleId, params.GetVersion(), params.GetProps(), ext, url)
+	pathInArtifactory := strings.Join([]string{params.GetTargetRepo(), moduleId, "@v", params.GetVersion() + ext}, "/")
+	details, err := pwa.upload(filePath, pathInArtifactory, params.GetVersion(), params.GetProps(), goApiUrl)
 	if err != nil {
 		return
 	}
 	success, failed = 1, 0
 	*filesDetails = append(*filesDetails, *details)
+	*artifactsDetails = append(*artifactsDetails, utils.ArtifactDetails{ArtifactoryPath: pathInArtifactory})
 	return
 }
 
@@ -89,23 +96,23 @@ func addGoVersion(version string, urlPath *string) {
 }
 
 // localPath - The location of the file on the file system.
-// moduleId - The name of the module for example github.com/jfrog/jfrog-client-go.
+// pathInArtifactory - The path of the file in Artifactory for example: go-repo/github.com/jfrog/jfrog-client-go/@v/v1.1.1.zip
 // version - The version of the project that being uploaded.
 // props - The properties to be assigned for each artifact
-// ext - The extension of the file: zip, mod, info. This extension will be joined with the version for the path. For example v1.2.3.info or v1.2.3.zip
-// urlPath - The url including the repository. For example: http://127.0.0.1/artifactory/api/go/go-local
-func (gpc *GoPublishCommand) upload(localPath, moduleId, version, props, ext, urlPath string) (*clientutils.FileTransferDetails, error) {
-	err := CreateUrlPath(moduleId, version, props, ext, &urlPath)
+// ext - The extension of the file: zip, mod, info. This extension will be joined with the version for the path. For example: v1.2.3.info or v1.2.3.zip
+// goApiUrl - The URL of the Go API in Artifactory. For example: http://127.0.0.1/artifactory/api/go/
+func (gpc *GoPublishCommand) upload(localPath, pathInArtifactory, version, props, goApiUrl string) (*clientutils.FileTransferDetails, error) {
+	err := CreateUrlPath(pathInArtifactory, props, &goApiUrl)
 	if err != nil {
 		return nil, err
 	}
-	addGoVersion(version, &urlPath)
+	addGoVersion(version, &goApiUrl)
 	details, err := fileutils.GetFileDetails(localPath, true)
 	if err != nil {
 		return nil, err
 	}
 	utils.AddChecksumHeaders(gpc.clientDetails.Headers, details)
-	resp, _, err := gpc.client.UploadFile(localPath, urlPath, "", &gpc.clientDetails, nil)
+	resp, _, err := gpc.client.UploadFile(localPath, goApiUrl, "", &gpc.clientDetails, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +121,7 @@ func (gpc *GoPublishCommand) upload(localPath, moduleId, version, props, ext, ur
 		log.Info("Failed to extract file's sha256 from response body.\nFile: " + localPath)
 	}
 	// Remove urls properties suffix
-	splitUrlPath := strings.Split(urlPath, ";")
+	splitUrlPath := strings.Split(goApiUrl, ";")
 	// Remove "api/go/" substring from url to get the actual file's path in Artifactory
 	targetPath := strings.ReplaceAll(splitUrlPath[0], "api/go/", "")
 	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: targetPath, Sha256: sha256}

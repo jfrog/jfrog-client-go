@@ -1,11 +1,14 @@
 package utils
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"strings"
 
-	buildinfo "github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
@@ -99,4 +102,25 @@ func ConvertArtifactsDetailsToBuildInfoDependencies(artifactsDetailsReader *cont
 		buildDependencies = append(buildDependencies, artifactDetails.ToBuildInfoDependency())
 	}
 	return buildDependencies, artifactsDetailsReader.GetError()
+}
+
+func SaveArtifactDetailsInTempFile(artifactsDetails *[]ArtifactDetails) (string, error) {
+	tempFile, err := fileutils.CreateTempFile()
+	if err != nil {
+		return "", err
+	}
+	filePath := tempFile.Name()
+	return filePath, saveArtifactDetailsInFile(filePath, artifactsDetails)
+}
+
+func saveArtifactDetailsInFile(filePath string, details *[]ArtifactDetails) error {
+	finalResult := struct {
+		Files *[]ArtifactDetails `json:"files"`
+	}{}
+	finalResult.Files = details
+	files, err := json.Marshal(finalResult)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	return errorutils.CheckError(ioutil.WriteFile(filePath, files, 0700))
 }
