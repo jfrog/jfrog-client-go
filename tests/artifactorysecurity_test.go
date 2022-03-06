@@ -260,7 +260,7 @@ func getUserTokensTest(t *testing.T) {
 // Util function to revoke a token
 func revokeToken(token string) (string, error) {
 	params := services.NewRevokeTokenParams()
-	params.TokenId = token
+	params.Token = token
 	return testsSecurityService.RevokeToken(params)
 }
 

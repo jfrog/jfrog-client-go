@@ -133,7 +133,7 @@ func (m *manager) readUrl() {
 	var originUrl string
 	for scanner.Scan() {
 		if IsNextLineUrl {
-			text := scanner.Text()
+			text := strings.TrimSpace(scanner.Text())
 			if strings.HasPrefix(text, "url") {
 				originUrl = strings.TrimSpace(strings.SplitAfter(text, "=")[1])
 				break
