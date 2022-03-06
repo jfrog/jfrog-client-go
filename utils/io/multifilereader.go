@@ -82,5 +82,4 @@ func (multiFileReader *multiFileReaderAt) ReadAt(p []byte, off int64) (n int, er
 		i++
 	}
 	// not suppose to get here
-	return
 }
