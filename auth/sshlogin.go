@@ -70,6 +70,7 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 		Auth: []ssh.AuthMethod{
 			sshAuth,
 		},
+		//#nosec G106 -- Used to get ssh headers only.
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 

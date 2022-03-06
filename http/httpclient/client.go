@@ -3,6 +3,7 @@ package httpclient
 import (
 	"bytes"
 	"context"
+	//#nosec G505 -- sha1 is supported by Artifactory.
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
@@ -427,6 +428,7 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 	}
 
 	if len(downloadFileDetails.ExpectedSha1) > 0 {
+		//#nosec G401 -- sha1 is supported by Artifactory.
 		actualSha1 := sha1.New()
 		writer := io.MultiWriter(actualSha1, out)
 
@@ -613,6 +615,7 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 	var writer io.Writer
 	var actualSha1 hash.Hash
 	if len(flags.ExpectedSha1) > 0 {
+		//#nosec G401 -- Sha1 is supported by Artifactory.
 		actualSha1 = sha1.New()
 		writer = io.MultiWriter(actualSha1, destFile)
 	} else {

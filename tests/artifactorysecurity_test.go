@@ -2,15 +2,14 @@ package tests
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 // Teardown should revoke these tokens
@@ -288,5 +287,5 @@ func teardown() {
 }
 
 func getUniqueUsername() string {
-	return "user-" + timestampStr
+	return getUniqueField("user")
 }

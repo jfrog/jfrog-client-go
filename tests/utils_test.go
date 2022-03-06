@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -1002,4 +1003,8 @@ func createAccessProjectManager() {
 	failOnHttpClientCreation(err)
 	testGroupService = services.NewGroupService(rtclient)
 	testGroupService.SetArtifactoryDetails(artDetails)
+}
+
+func getUniqueField(prefix string) string {
+	return strings.Join([]string{prefix, strconv.FormatInt(time.Now().Unix(), 10), runtime.GOOS}, "-")
 }
