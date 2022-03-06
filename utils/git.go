@@ -175,7 +175,7 @@ func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error
 	defer func() {
 		e = file.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 

@@ -20,4 +20,5 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: securego/gosec@v2.9.5
         with:
+          # Temporary ignoring G301,G302,G306
           args: -exclude=G204,G301,G302,G304,G306 -exclude-dir=\.*test\.* ./...

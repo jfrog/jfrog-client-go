@@ -511,7 +511,7 @@ func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (fil
 	defer func() {
 		e := tempFile.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	filePath = tempFile.Name()

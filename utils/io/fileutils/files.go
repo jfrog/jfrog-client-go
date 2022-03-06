@@ -752,7 +752,7 @@ func RemoveDirContents(dirPath string) (err error) {
 	defer func() {
 		e := d.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 	names, err := d.Readdirnames(-1)
