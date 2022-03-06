@@ -12,9 +12,6 @@ import (
 	"testing"
 )
 
-// Teardown should revoke these tokens
-var tokensToRevoke []string
-
 const tokenRevokeSuccessResponse = "Token revoked"
 const tokenNotFoundResponse = "Token not found"
 
@@ -26,7 +23,6 @@ func TestToken(t *testing.T) {
 	t.Run("RefreshToken", refreshTokenTest)
 	t.Run("GetTokens", getTokensTest)
 	t.Run("GetUserTokens", getUserTokensTest)
-	teardown()
 }
 
 func TestAPIKey(t *testing.T) {
@@ -151,7 +147,7 @@ func createTokenTest(t *testing.T) {
 	if token.AccessToken == "" {
 		t.Error("Failed to create access token")
 	}
-	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
+	revokeTokenCleanup(t, token.RefreshToken)
 }
 
 func revokeTokenTest(t *testing.T) {
@@ -192,7 +188,7 @@ func refreshTokenTest(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tokensToRevoke = append(tokensToRevoke, newToken.RefreshToken)
+	revokeTokenCleanup(t, newToken.RefreshToken)
 }
 
 func getTokensTest(t *testing.T) {
@@ -201,6 +197,7 @@ func getTokensTest(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	defer revokeTokenCleanup(t, token.RefreshToken)
 	tokens, err := testsSecurityService.GetTokens()
 	if err != nil {
 		t.Error(err)
@@ -210,7 +207,6 @@ func getTokensTest(t *testing.T) {
 			t.Error("Failed to get tokens")
 		}
 	}
-	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
 }
 
 func getUserTokensTest(t *testing.T) {
@@ -225,7 +221,7 @@ func getUserTokensTest(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
+	defer revokeTokenCleanup(t, token.RefreshToken)
 	assert.Len(t, tokens, 1)
 
 	username2 := username + "-second"
@@ -234,20 +230,20 @@ func getUserTokensTest(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	defer revokeTokenCleanup(t, token1.RefreshToken)
 
 	token2, err := createToken(username2)
 	if err != nil {
 		t.Error(err)
 		return
 	}
+	defer revokeTokenCleanup(t, token2.RefreshToken)
 
 	tokens, err = testsSecurityService.GetUserTokens(username2)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	tokensToRevoke = append(tokensToRevoke, token1.RefreshToken)
-	tokensToRevoke = append(tokensToRevoke, token2.RefreshToken)
 	assert.Len(t, tokens, 2)
 }
 
@@ -268,22 +264,15 @@ func createToken(username string) (services.CreateTokenResponseData, error) {
 	return testsSecurityService.CreateToken(params)
 }
 
-func revokeAllTokens() {
-	for _, element := range tokensToRevoke {
-		log.Debug("Revoking Token: ", element)
-		responseText, err := revokeToken(element)
-		if err != nil {
-			log.Error(err)
-		}
-		if responseText != tokenRevokeSuccessResponse {
-			log.Error("Token was not revoked: ", responseText)
-		}
+func revokeTokenCleanup(t *testing.T, refreshToken string) {
+	log.Debug("Revoking Token with refresh token: ", refreshToken)
+	responseText, err := revokeToken(refreshToken)
+	if err != nil {
+		t.Error(err)
 	}
-}
-
-func teardown() {
-	log.Info("REVOKING ALL ", len(tokensToRevoke), " tokens")
-	revokeAllTokens()
+	if responseText != tokenRevokeSuccessResponse {
+		t.Error("Token was not revoked: ", responseText)
+	}
 }
 
 func getUniqueUsername() string {
