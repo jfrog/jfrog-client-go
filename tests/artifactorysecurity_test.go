@@ -214,19 +214,18 @@ func getUserTokensTest(t *testing.T) {
 	token, err := createToken()
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	tokens, err := testsSecurityService.GetUserTokens("anonymous")
 	if err != nil {
 		t.Error(err)
+		return
 	}
-	if len(tokens) != 1 {
-		t.Error("Failed to get tokens of anonymous user")
-	}
-	if tokens[0] != token.AccessToken {
-		t.Error("Retried user token doesn't match expected token value")
-	}
-
 	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
+	if len(tokens) != 1 {
+		t.Error("Failed to get tokens of anonymous user - expected one token only")
+		return
+	}
 
 	params := services.NewCreateTokenParams()
 	params.Username = "test-user"
@@ -237,30 +236,31 @@ func getUserTokensTest(t *testing.T) {
 	token1, err := testsSecurityService.CreateToken(params)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	token2, err := testsSecurityService.CreateToken(params)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	tokens, err = testsSecurityService.GetUserTokens("test-user")
 	if err != nil {
 		t.Error(err)
-	}
-	if len(tokens) != 2 {
-		t.Error("Failed to get tokens of test-user")
-	}
-	if tokens[0] != token1.AccessToken || tokens[1] != token2.AccessToken {
-		t.Error("Retried user token doesn't match expected token value")
+		return
 	}
 	tokensToRevoke = append(tokensToRevoke, token1.RefreshToken)
 	tokensToRevoke = append(tokensToRevoke, token2.RefreshToken)
+	if len(tokens) != 2 {
+		t.Error("Failed to get tokens of test-user - expected exactly two tokens")
+		return
+	}
 }
 
 // Util function to revoke a token
 func revokeToken(token string) (string, error) {
 	params := services.NewRevokeTokenParams()
-	params.Token = token
+	params.TokenId = token
 	return testsSecurityService.RevokeToken(params)
 }
 

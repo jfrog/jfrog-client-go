@@ -37,7 +37,7 @@ func testCtxTimeout(t *testing.T) {
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Millisecond*250)
 	defer cancel()
 	sm, err := ctxMgr(t, artDetails, timeoutCtx)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	time.Sleep(time.Millisecond * 300)
 	_, err = sm.GetVersion()
 	assert.Error(t, err)

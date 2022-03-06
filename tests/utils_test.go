@@ -534,7 +534,7 @@ func uploadDummyFile(t *testing.T) {
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "b.in"}
 	up.Flat = true
 	summary, err = testsUploadService.UploadFiles(up)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
