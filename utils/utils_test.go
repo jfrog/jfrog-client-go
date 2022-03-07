@@ -247,10 +247,6 @@ func TestAntPathToRegExp(t *testing.T) {
 	}
 }
 
-func addRegExpPrefixAndSuffix(str string) string {
-	return "^" + str + "$"
-}
-
 func equalSlicesIgnoreOrder(s1, s2 []string) bool {
 	if len(s1) != len(s2) {
 		return false
