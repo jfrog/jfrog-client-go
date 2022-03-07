@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	biutils "github.com/jfrog/build-info-go/utils"
+	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"os"
 	"regexp"
 	"strings"
-
-	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
 // Return all the existing paths of the provided root path
@@ -34,8 +33,8 @@ func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
 	excludePathPattern := ""
 	for _, singleExclusion := range params.GetExclusions() {
 		if len(singleExclusion) > 0 {
-			singleExclusion = clientutils.ReplaceTildeWithUserHome(singleExclusion)
-			singleExclusion = clientutils.ConvertLocalPatternToRegexp(singleExclusion, params.GetPatternType())
+			singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
+			singleExclusion = utils.ConvertLocalPatternToRegexp(singleExclusion, params.GetPatternType())
 			if params.IsRecursive() && strings.HasSuffix(singleExclusion, fileutils.GetFileSeparator()) {
 				singleExclusion += "*"
 			}
@@ -73,10 +72,10 @@ func PrepareAndFilterPaths(path, excludePathPattern string, preserveSymlinks, in
 	return
 }
 
-func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (clientutils.Artifact, error) {
+func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifact, error) {
 	symlinkPath, err := GetFileSymlinkPath(rootPath)
 	if err != nil {
-		return clientutils.Artifact{}, err
+		return utils.Artifact{}, err
 	}
 
 	var uploadPath string
@@ -90,11 +89,11 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (clientutils.
 			uploadPath = targetPath + uploadPath
 		} else {
 			uploadPath = targetPath + localPath
-			uploadPath = clientutils.TrimPath(uploadPath)
+			uploadPath = utils.TrimPath(uploadPath)
 		}
 	}
 
-	return clientutils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, SymlinkTargetPath: symlinkPath}, nil
+	return utils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, SymlinkTargetPath: symlinkPath}, nil
 }
 
 func IsPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {
@@ -121,11 +120,11 @@ func GetFileSymlinkPath(filePath string) (string, error) {
 }
 
 // Find parentheses in 'target' and 'archive-target', merge the results to one slice with no duplication.
-func getPlaceholderParentheses(pattern, target, archiveTarget string) clientutils.ParenthesesSlice {
-	targetParentheses := clientutils.CreateParenthesesSlice(pattern, target)
-	archiveTargetParentheses := clientutils.CreateParenthesesSlice(pattern, archiveTarget)
-	parenthesesMap := make(map[clientutils.Parentheses]bool)
-	var parenthesesSlice []clientutils.Parentheses
+func getPlaceholderParentheses(pattern, target, archiveTarget string) utils.ParenthesesSlice {
+	targetParentheses := utils.CreateParenthesesSlice(pattern, target)
+	archiveTargetParentheses := utils.CreateParenthesesSlice(pattern, archiveTarget)
+	parenthesesMap := make(map[utils.Parentheses]bool)
+	var parenthesesSlice []utils.Parentheses
 	// Target parentheses
 	for _, v := range targetParentheses.Parentheses {
 		parenthesesSlice = append(parenthesesSlice, v)
@@ -139,14 +138,14 @@ func getPlaceholderParentheses(pattern, target, archiveTarget string) clientutil
 		parenthesesSlice = append(parenthesesSlice, v)
 		parenthesesMap[v] = true
 	}
-	return clientutils.NewParenthesesSlice(parenthesesSlice)
+	return utils.NewParenthesesSlice(parenthesesSlice)
 }
 
 // Get the local root path, from which to start collecting artifacts to be uploaded to Artifactory.
-// If path dose not exist error will be returned.
-func GetRootPath(pattern, target, archiveTarget string, patternType clientutils.PatternType, preserveSymLink bool) (string, error) {
+// If path does not exist error will be returned.
+func GetRootPath(pattern, target, archiveTarget string, patternType utils.PatternType, preserveSymLink bool) (string, error) {
 	placeholderParentheses := getPlaceholderParentheses(pattern, target, archiveTarget)
-	rootPath := clientutils.GetRootPath(pattern, patternType, placeholderParentheses)
+	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
 		return "", errorutils.CheckErrorf("Path does not exist: " + rootPath)
 	}

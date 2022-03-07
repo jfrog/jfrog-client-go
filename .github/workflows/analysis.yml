@@ -6,17 +6,22 @@ jobs:
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
-      - name: Static Code Analysis
-        uses: dominikh/staticcheck-action@v1.1.0
+      - name: Install Go
+        uses: actions/setup-go@v2
         with:
-          version: "2021.1.2"
+          go-version: 1.17.x
+      - name: Static Code Analysis
+        uses: dominikh/staticcheck-action@v1
+
   Go-Sec:
     runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
       - name: Run Gosec Security Scanner
         uses: securego/gosec@v2.9.5
         with:
