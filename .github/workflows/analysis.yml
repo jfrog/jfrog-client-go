@@ -22,8 +22,8 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.17.x
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@v2.9.5
-        with:
-          # Temporary ignoring G301,G302,G306
-          args: -exclude=G204,G301,G302,G304,G306 -exclude-dir=\.*test\.* ./...
+      - name: Install gosec
+        run: curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+      - name: Run gosec
+        # Temporary ignoring G301,G302,G306
+        run: gosec -exclude=G204,G301,G302,G304,G306 -exclude-dir=\.*test\.* ./...
