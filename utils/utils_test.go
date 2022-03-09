@@ -234,7 +234,7 @@ func TestAntPathToRegExp(t *testing.T) {
 		{"**/dev/**/a3/**", filepath.Join("dev", "**", "a3", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "a3", "b.txt")}},
 		{"exclude 'temp/foo5/a'", filepath.Join("**", "foo", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a"), filepath.Join("tmp", "foo")}},
 		{"include dirs", filepath.Join("tmp", "*", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a"), filepath.Join("tmp", "foo5", "a"), filepath.Join("tmp", "foo"), filepath.Join("tmp", "foo5")}},
-		{"include dirs", filepath.Join("tmp", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a"), filepath.Join("tmp", "foo5", "a"), filepath.Join("tmp", "foo"), filepath.Join("tmp", "foo5"), "tmp/"}},
+		{"include dirs", filepath.Join("tmp", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a"), filepath.Join("tmp", "foo5", "a"), filepath.Join("tmp", "foo"), filepath.Join("tmp", "foo5"), "tmp" + separator}},
 		{"**/", "**" + separator, fileSystemPaths, fileSystemPaths},
 		{"xxx/x*", filepath.Join("tmp", "f*"), fileSystemPaths, []string{filepath.Join("tmp", "foo"), filepath.Join("tmp", "foo5")}},
 		{"xxx/x*x", filepath.Join("tmp", "f*5"), fileSystemPaths, []string{filepath.Join("tmp", "foo5")}},
