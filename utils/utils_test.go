@@ -174,6 +174,7 @@ func TestIsWildcardParentheses(t *testing.T) {
 }
 
 func TestAntPathToRegExp(t *testing.T) {
+	separator := getFileSeparator()
 	var fileSystemPaths = []string{
 		filepath.Join("dev", "a", "b.txt"),
 		filepath.Join("dev", "a", "bb.txt"),
@@ -201,7 +202,10 @@ func TestAntPathToRegExp(t *testing.T) {
 		filepath.Join("test2", "a", "bb", "c.zip"),
 		filepath.Join("test2", "b.zip"),
 		filepath.Join("b.zip"),
+		"tmp" + separator,
+		filepath.Join("tmp", "foo"),
 		filepath.Join("tmp", "foo", "a"),
+		filepath.Join("tmp", "foo5"),
 		filepath.Join("tmp", "foo5", "a"),
 	}
 	tests := []struct {
@@ -228,7 +232,14 @@ func TestAntPathToRegExp(t *testing.T) {
 		{"*/b.zip", filepath.Join("*", "b.zip"), fileSystemPaths, []string{filepath.Join("test2", "b.zip")}},
 		{"**/dev/**/a3/*c*", filepath.Join("dev", "**", "a3", "*c*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "bc.txt")}},
 		{"**/dev/**/a3/**", filepath.Join("dev", "**", "a3", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "a3", "b.txt")}},
-		{"exclude 'temp/foo5/a'", filepath.Join("**", "foo", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a")}},
+		{"exclude 'temp/foo5/a'", filepath.Join("**", "foo", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a"), filepath.Join("tmp", "foo")}},
+		{"include dirs", filepath.Join("tmp", "*", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a"), filepath.Join("tmp", "foo5", "a"), filepath.Join("tmp", "foo"), filepath.Join("tmp", "foo5")}},
+		{"include dirs", filepath.Join("tmp", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a"), filepath.Join("tmp", "foo5", "a"), filepath.Join("tmp", "foo"), filepath.Join("tmp", "foo5"), "tmp/"}},
+		{"**/", "**" + separator, fileSystemPaths, fileSystemPaths},
+		{"xxx/x*", filepath.Join("tmp", "f*"), fileSystemPaths, []string{filepath.Join("tmp", "foo"), filepath.Join("tmp", "foo5")}},
+		{"xxx/x*x", filepath.Join("tmp", "f*5"), fileSystemPaths, []string{filepath.Join("tmp", "foo5")}},
+		{"xxx/x*", filepath.Join("dev", "a1", "a2", "b*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
+		{"xxx/*x*", filepath.Join("dev", "a1", "a2", "*c*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "bc.txt")}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
