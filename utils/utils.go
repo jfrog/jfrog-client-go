@@ -69,21 +69,21 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 			continue
 		}
 		if patternType == RegExp {
-			if strings.Index(section, "(") != -1 {
+			if strings.Contains(section, "(") {
 				break
 			}
 		} else {
-			if strings.Index(section, "*") != -1 {
+			if strings.Contains(section, "*") {
 				break
 			}
-			if strings.Index(section, "(") != -1 {
+			if strings.Contains(section, "(") {
 				temp := rootPath + section
 				if isWildcardParentheses(temp, parentheses) {
 					break
 				}
 			}
 			if patternType == AntPattern {
-				if strings.Index(section, "?") != -1 {
+				if strings.Contains(section, "?") {
 					break
 				}
 			}
@@ -128,8 +128,7 @@ func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 func StringToBool(boolVal string, defaultValue bool) (bool, error) {
 	if len(boolVal) > 0 {
 		result, err := strconv.ParseBool(boolVal)
-		errorutils.CheckError(err)
-		return result, err
+		return result, errorutils.CheckError(err)
 	}
 	return defaultValue, nil
 }
@@ -504,12 +503,18 @@ type UploadResponseBody struct {
 	Checksums entities.Checksum `json:"checksums,omitempty"`
 }
 
-func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (string, error) {
+func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (filePath string, err error) {
 	tempFile, err := fileutils.CreateTempFile()
 	if err != nil {
 		return "", err
 	}
-	filePath := tempFile.Name()
+	defer func() {
+		e := tempFile.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
+	filePath = tempFile.Name()
 	return filePath, SaveFileTransferDetailsInFile(filePath, filesDetails)
 }
 

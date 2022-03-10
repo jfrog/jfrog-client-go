@@ -80,7 +80,7 @@ func TestSimpleExceedConnectionRetries(t *testing.T) {
 	}
 
 	_, err := connection.Do()
-	if err != exhaustedErr {
+	if err != errExhausted {
 		t.Error(err)
 		return
 	}
@@ -136,7 +136,7 @@ func TestRetryExceedUnstableWindowConnection(t *testing.T) {
 	}
 
 	_, err := connection.Do()
-	if err != exhaustedErr {
+	if err != errExhausted {
 		t.Error(err)
 		return
 	}
@@ -160,7 +160,7 @@ func TestRetryExceededWithNoStableConnectionWindow(t *testing.T) {
 	}
 
 	_, err := connection.Do()
-	if err != exhaustedErr {
+	if err != errExhausted {
 		t.Error(err)
 		return
 	}
@@ -186,7 +186,7 @@ func TestErrorHandler(t *testing.T) {
 	}
 
 	_, err := connection.Do()
-	if err != exhaustedErr {
+	if err != errExhausted {
 		t.Error(err)
 		return
 	}

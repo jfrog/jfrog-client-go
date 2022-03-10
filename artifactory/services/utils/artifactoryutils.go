@@ -249,13 +249,6 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey stri
 	return "", "", nil
 }
 
-func createBodyForLatestBuildRequest(buildName, buildNumber string) (body []byte, err error) {
-	buildJsonArray := []Build{{buildName, buildNumber}}
-	body, err = json.Marshal(buildJsonArray)
-	err = errorutils.CheckError(err)
-	return
-}
-
 func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
 	var artifactsAqlSearchErr, dependenciesAqlSearchErr error
 	var readerWithProps *content.ContentReader
@@ -479,7 +472,7 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 		return nil, err
 	}
 	reader.Reset()
-	var priorityLevel int = 0
+	var priorityLevel = 0
 	// Step 2 - Append the files to the final results file.
 	// Scan each priority artifacts and apply them to the final result, skip results that have been already written, by higher priority.
 	for _, priority := range priorityArray {
@@ -559,6 +552,9 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 	}
 
 	requestFullUrl, err := BuildArtifactoryUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, queryParams)
+	if err != nil {
+		return nil, false, err
+	}
 
 	httpClient := flags.GetJfrogHttpClient()
 	log.Debug("Getting build-info from: ", requestFullUrl)
@@ -620,7 +616,6 @@ type CommonConf interface {
 type CommonConfImpl struct {
 	client     *jfroghttpclient.JfrogHttpClient
 	artDetails *auth.ServiceDetails
-	version    string
 }
 
 func NewCommonConfImpl(artDetails auth.ServiceDetails) (CommonConf, error) {

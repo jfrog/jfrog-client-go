@@ -34,6 +34,9 @@ func (ds *xrayDetails) getXrayVersion() (string, error) {
 		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
+	if err != nil {
+		return "", err
+	}
 	sm, err := xray.New(serviceConfig)
 	if err != nil {
 		return "", err

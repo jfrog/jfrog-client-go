@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-var SkipDir = errors.New("skip this directory")
+var ErrSkipDir = errors.New("skip this directory")
 
 type WalkFunc func(path string, info os.FileInfo, err error) error
 type Stat func(path string) (info os.FileInfo, err error)
@@ -33,7 +33,7 @@ func walk(path string, info os.FileInfo, walkFn WalkFunc, visitedDirSymlinks map
 	}
 	err = walkFn(path, info, nil)
 	if err != nil {
-		if info.IsDir() && err == SkipDir {
+		if info.IsDir() && err == ErrSkipDir {
 			return nil
 		}
 		return err
@@ -50,11 +50,6 @@ func walk(path string, info os.FileInfo, walkFn WalkFunc, visitedDirSymlinks map
 
 	for _, name := range names {
 		filename := filepath.Join(path, name)
-		realPath, err = filepath.EvalSymlinks(filename)
-		if err != nil {
-			realPath = filename
-		}
-
 		if walkIntoDirSymlink && IsPathSymlink(filename) {
 			symlinkRealPath, err := evalPathOfSymlink(filename)
 			if err != nil {
@@ -72,13 +67,13 @@ func walk(path string, info os.FileInfo, walkFn WalkFunc, visitedDirSymlinks map
 		}
 		fileInfo, err := fileHandler(filename)
 		if err != nil {
-			if err := walkFn(filename, fileInfo, err); err != nil && err != SkipDir {
+			if err := walkFn(filename, fileInfo, err); err != nil && err != ErrSkipDir {
 				return err
 			}
 		} else {
 			err = walk(filename, fileInfo, walkFn, visitedDirSymlinks, walkIntoDirSymlink)
 			if err != nil {
-				if !fileInfo.IsDir() || err != SkipDir {
+				if !fileInfo.IsDir() || err != ErrSkipDir {
 					return err
 				}
 			}
@@ -119,7 +114,10 @@ func readDirNames(dirname string) ([]string, error) {
 		return nil, err
 	}
 	names, err := f.Readdirnames(-1)
-	f.Close()
+	if err != nil {
+		return nil, err
+	}
+	err = f.Close()
 	if err != nil {
 		return nil, err
 	}

@@ -121,25 +121,30 @@ func (m *manager) readUrl() {
 		m.err = err
 		return
 	}
-	defer file.Close()
+	defer func() {
+		e := file.Close()
+		if m.err == nil {
+			m.err = errorutils.CheckError(e)
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	var IsNextLineUrl bool
 	var originUrl string
 	for scanner.Scan() {
 		if IsNextLineUrl {
-			text := scanner.Text()
-			strings.HasPrefix(text, "url")
-			originUrl = strings.TrimSpace(strings.SplitAfter(text, "=")[1])
-			break
+			text := strings.TrimSpace(scanner.Text())
+			if strings.HasPrefix(text, "url") {
+				originUrl = strings.TrimSpace(strings.SplitAfter(text, "=")[1])
+				break
+			}
 		}
 		if scanner.Text() == "[remote \"origin\"]" {
 			IsNextLineUrl = true
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		errorutils.CheckError(err)
-		m.err = err
+		m.err = errorutils.CheckError(err)
 		return
 	}
 	if !strings.HasSuffix(originUrl, ".git") {
@@ -170,7 +175,7 @@ func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error
 	defer func() {
 		e = file.Close()
 		if err == nil {
-			err = e
+			err = errorutils.CheckError(e)
 		}
 	}()
 
@@ -183,9 +188,7 @@ func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error
 		}
 		revision = text
 	}
-	if err = scanner.Err(); err != nil {
-		errorutils.CheckError(err)
-	}
+	err = errorutils.CheckError(scanner.Err())
 	return
 }
 
@@ -250,7 +253,6 @@ func (m *manager) readRevisionFromRef(refPath string) {
 	}
 
 	m.revision = revision
-	return
 }
 
 func (m *manager) readRevisionFromPackedRef(ref string) {
@@ -293,7 +295,6 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 		}
 	}
 	log.Debug("No packed-refs file was found. Assuming git repository is empty")
-	return
 }
 
 func (m *manager) readMessage() {

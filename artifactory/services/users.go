@@ -146,6 +146,9 @@ func (us *UserService) DeleteUser(name string) error {
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), name)
 	resp, body, err := us.client.SendDelete(url, nil, &httpDetails)
+	if err != nil {
+		return err
+	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}

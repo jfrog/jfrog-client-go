@@ -2,19 +2,15 @@ package tests
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
-
-// Teardown should revoke these tokens
-var tokensToRevoke []string
 
 const tokenRevokeSuccessResponse = "Token revoked"
 const tokenNotFoundResponse = "Token not found"
@@ -26,7 +22,7 @@ func TestToken(t *testing.T) {
 	t.Run("RevokeToken: token not found", revokeTokenNotFoundTest)
 	t.Run("RefreshToken", refreshTokenTest)
 	t.Run("GetTokens", getTokensTest)
-	teardown()
+	t.Run("GetUserTokens", getUserTokensTest)
 }
 
 func TestAPIKey(t *testing.T) {
@@ -143,18 +139,20 @@ func createDummySecurityService(tlsUrl string, setApiKey bool) (*services.Securi
 }
 
 func createTokenTest(t *testing.T) {
-	token, err := createToken()
+	username := getUniqueUsername()
+	token, err := createToken(username)
 	if err != nil {
 		t.Error(err)
 	}
 	if token.AccessToken == "" {
 		t.Error("Failed to create access token")
 	}
-	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
+	revokeTokenCleanup(t, token.RefreshToken)
 }
 
 func revokeTokenTest(t *testing.T) {
-	token, err := createToken()
+	username := getUniqueUsername()
+	token, err := createToken(username)
 	if err != nil {
 		t.Error(err)
 	}
@@ -178,7 +176,8 @@ func revokeTokenNotFoundTest(t *testing.T) {
 }
 
 func refreshTokenTest(t *testing.T) {
-	token, err := createToken()
+	username := getUniqueUsername()
+	token, err := createToken(username)
 	if err != nil {
 		t.Error(err)
 	}
@@ -189,14 +188,16 @@ func refreshTokenTest(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tokensToRevoke = append(tokensToRevoke, newToken.RefreshToken)
+	revokeTokenCleanup(t, newToken.RefreshToken)
 }
 
 func getTokensTest(t *testing.T) {
-	token, err := createToken()
+	username := getUniqueUsername()
+	token, err := createToken(username)
 	if err != nil {
 		t.Error(err)
 	}
+	defer revokeTokenCleanup(t, token.RefreshToken)
 	tokens, err := testsSecurityService.GetTokens()
 	if err != nil {
 		t.Error(err)
@@ -206,48 +207,44 @@ func getTokensTest(t *testing.T) {
 			t.Error("Failed to get tokens")
 		}
 	}
-	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
 }
 
-func getUserTokenstest(t *testing.T) {
-	token, err := createToken()
+func getUserTokensTest(t *testing.T) {
+	username := getUniqueUsername()
+	token, err := createToken(username)
 	if err != nil {
 		t.Error(err)
+		return
 	}
-	tokens, err := testsSecurityService.GetUserTokens("anonymous")
-	if len(tokens) != 1 {
-		t.Error("Failed to get tokens of anonymous user")
-	}
-	if tokens[0] != token.AccessToken {
-		t.Error("Retried user token doesn't match expected token value")
-	}
-
-	tokensToRevoke = append(tokensToRevoke, token.RefreshToken)
-
-	params := services.NewCreateTokenParams()
-	params.Username = "test-user"
-	params.Scope = "api:* member-of-groups:readers"
-	params.Refreshable = true  // We need to use the refresh token to revoke these tokens on teardown
-	params.Audience = "jfrt@*" // Allow token to be accepted by all instances of Artifactory.
-
-	token1, err := testsSecurityService.CreateToken(params)
+	tokens, err := testsSecurityService.GetUserTokens(username)
 	if err != nil {
 		t.Error(err)
+		return
 	}
+	defer revokeTokenCleanup(t, token.RefreshToken)
+	assert.Len(t, tokens, 1)
 
-	token2, err := testsSecurityService.CreateToken(params)
+	username2 := username + "-second"
+	token1, err := createToken(username2)
 	if err != nil {
 		t.Error(err)
+		return
 	}
-	tokens, err = testsSecurityService.GetUserTokens("test-user")
-	if len(tokens) != 2 {
-		t.Error("Failed to get tokens of test-user")
+	defer revokeTokenCleanup(t, token1.RefreshToken)
+
+	token2, err := createToken(username2)
+	if err != nil {
+		t.Error(err)
+		return
 	}
-	if tokens[0] != token1.AccessToken || tokens[1] != token2.AccessToken {
-		t.Error("Retried user token doesn't match expected token value")
+	defer revokeTokenCleanup(t, token2.RefreshToken)
+
+	tokens, err = testsSecurityService.GetUserTokens(username2)
+	if err != nil {
+		t.Error(err)
+		return
 	}
-	tokensToRevoke = append(tokensToRevoke, token1.RefreshToken)
-	tokensToRevoke = append(tokensToRevoke, token2.RefreshToken)
+	assert.Len(t, tokens, 2)
 }
 
 // Util function to revoke a token
@@ -258,29 +255,26 @@ func revokeToken(token string) (string, error) {
 }
 
 // Util function to create a token
-func createToken() (services.CreateTokenResponseData, error) {
+func createToken(username string) (services.CreateTokenResponseData, error) {
 	params := services.NewCreateTokenParams()
-	params.Username = "anonymous"
+	params.Username = username
 	params.Scope = "api:* member-of-groups:readers"
 	params.Refreshable = true  // We need to use the refresh token to revoke these tokens on teardown
 	params.Audience = "jfrt@*" // Allow token to be accepted by all instances of Artifactory.
 	return testsSecurityService.CreateToken(params)
 }
 
-func revokeAllTokens() {
-	for _, element := range tokensToRevoke {
-		log.Debug("Revoking Token: ", element)
-		responseText, err := revokeToken(element)
-		if err != nil {
-			log.Error(err)
-		}
-		if responseText != tokenRevokeSuccessResponse {
-			log.Error("Token was not revoked: ", responseText)
-		}
+func revokeTokenCleanup(t *testing.T, refreshToken string) {
+	log.Debug("Revoking Token with refresh token: ", refreshToken)
+	responseText, err := revokeToken(refreshToken)
+	if err != nil {
+		t.Error(err)
+	}
+	if responseText != tokenRevokeSuccessResponse {
+		t.Error("Token was not revoked: ", responseText)
 	}
 }
 
-func teardown() {
-	log.Info("REVOKING ALL ", len(tokensToRevoke), " tokens")
-	revokeAllTokens()
+func getUniqueUsername() string {
+	return getUniqueField("user")
 }

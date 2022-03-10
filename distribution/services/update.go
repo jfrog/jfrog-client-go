@@ -2,16 +2,14 @@ package services
 
 import (
 	"encoding/json"
-	"net/http"
-
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	distributionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
 )
 
 type UpdateReleaseBundleService struct {
@@ -28,7 +26,7 @@ func (ur *UpdateReleaseBundleService) GetDistDetails() auth.ServiceDetails {
 	return ur.DistDetails
 }
 
-func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams UpdateReleaseBundleParams) (*clientutils.Sha256Summary, error) {
+func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams UpdateReleaseBundleParams) (*utils.Sha256Summary, error) {
 	releaseBundleBody, err := distributionServiceUtils.CreateBundleBody(createBundleParams.ReleaseBundleParams, ur.DryRun)
 	if err != nil {
 		return nil, err
@@ -38,10 +36,10 @@ func (ur *UpdateReleaseBundleService) UpdateReleaseBundle(createBundleParams Upd
 
 // In case of an immediate sign- release bundle detailed summary (containing sha256) will be returned.
 // In other cases summary will be nil.
-func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpgPassphrase string, releaseBundle *distributionServiceUtils.ReleaseBundleBody) (*clientutils.Sha256Summary, error) {
-	var summary *clientutils.Sha256Summary = nil
+func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpgPassphrase string, releaseBundle *distributionServiceUtils.ReleaseBundleBody) (*utils.Sha256Summary, error) {
+	var summary *utils.Sha256Summary = nil
 	if *releaseBundle.SignImmediately {
-		summary = clientutils.NewSha256Summary()
+		summary = utils.NewSha256Summary()
 	}
 	httpClientsDetails := ur.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(releaseBundle)
