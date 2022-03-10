@@ -10,6 +10,39 @@ concurrency:
   group: ${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 jobs:
+  Go-Lint:
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test') || github.event_name == 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+
+      - name: Go Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            ~\AppData\Local\go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Lint
+        run: go vet -v ./...
+
   JFrog-Client-Go-Artifactory-Tests:
     if: contains(github.event.pull_request.labels.*.name, 'safe to test') || github.event_name == 'push'
     name: ${{ matrix.suite }} ${{ matrix.os }}
@@ -143,37 +176,3 @@ jobs:
 
     - name: repositories tests
       run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories=true  --rt.url='http://localhost:8081/artifactory/' --rt.user='admin' --rt.password='password'
-
-
-  Go-Lint:
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test') || github.event_name == 'push'
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.17.x
-
-      - name: Go Cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-            ~/Library/Caches/go-build
-            ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Lint
-        run: go vet -v ./...
