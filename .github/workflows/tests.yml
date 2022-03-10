@@ -62,15 +62,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Setup Artifactory
-        run: |
-          go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
-          ~/go/bin/local-rt-setup
-        env:
-          RTLIC: ${{secrets.RTLIC}}
-          GOPROXY: direct
-
+          
       - name: Go Cache
         uses: actions/cache@v2
         with:
@@ -81,7 +73,15 @@ jobs:
             ~\AppData\Local\go-build
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-
+            ${{ runner.os }}-go-          
+
+      - name: Setup Artifactory
+        run: |
+          go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
+          ~/go/bin/local-rt-setup
+        env:
+          RTLIC: ${{secrets.RTLIC}}
+          GOPROXY: direct
 
       - name: artifactory tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.artifactory=true --rt.url='http://localhost:8081/artifactory/' --rt.user='admin' --rt.password='password' --ci.runId=${{ runner.os }}-${{ matrix.suite }}
@@ -154,14 +154,6 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: Setup Artifactory
-      run: |
-        go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
-        ~/go/bin/local-rt-setup
-      env:
-        RTLIC: ${{secrets.RTLIC}}
-        GOPROXY: direct
-
     - name: Go Cache
       uses: actions/cache@v2
       with:
@@ -174,5 +166,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - name: repositories tests
+    - name: Setup Artifactory
+      run: |
+        go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
+        ~/go/bin/local-rt-setup
+      env:
+        RTLIC: ${{secrets.RTLIC}}
+        GOPROXY: direct
+
+    - name: Repositories tests
       run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories=true  --rt.url='http://localhost:8081/artifactory/' --rt.user='admin' --rt.password='password'
