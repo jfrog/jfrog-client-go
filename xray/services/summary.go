@@ -14,7 +14,7 @@ const (
 	summaryAPI = "api/v2/summary/"
 )
 
-func (ss *SummaryService) getSummeryUrl() string {
+func (ss *SummaryService) getSummaryUrl() string {
 	return ss.XrayDetails.GetUrl() + summaryAPI
 }
 
@@ -31,7 +31,7 @@ func NewSummaryService(client *jfroghttpclient.JfrogHttpClient) *SummaryService 
 
 func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryResponse, error) {
 	httpDetails := ss.XrayDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%sbuild?build_name=%s&build_number=%s", ss.getSummeryUrl(), params.BuildName, params.BuildNumber)
+	url := fmt.Sprintf("%sbuild?build_name=%s&build_number=%s", ss.getSummaryUrl(), params.BuildName, params.BuildNumber)
 	if params.Project != "" {
 		url += "&" + projectKeyQueryParam + params.Project
 	}
@@ -48,7 +48,7 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 		return nil, errorutils.CheckError(err)
 	}
 	if summaryResponse.Errors != nil && len(summaryResponse.Errors) > 0 {
-		return nil, errorutils.CheckErrorf("Getting build-summery for build: %s failed with error: %s", summaryResponse.Errors[0].Identifier, summaryResponse.Errors[0].Error)
+		return nil, errorutils.CheckErrorf("Getting build-summary for build: %s failed with error: %s", summaryResponse.Errors[0].Identifier, summaryResponse.Errors[0].Error)
 	}
 	return &summaryResponse, nil
 }
@@ -65,10 +65,10 @@ type Issue struct {
 	IssueType   string             `json:"issue_type,omitempty"`
 	Severity    string             `json:"severity,omitempty"`
 	Provider    string             `json:"provider,omitempty"`
-	Cves        []SummeryCve       `json:"cves,omitempty"`
+	Cves        []SummaryCve       `json:"cves,omitempty"`
 	Created     string             `json:"created,omitempty"`
 	ImpactPath  []string           `json:"impact_path,omitempty"`
-	Components  []SummeryComponent `json:"components,omitempty"`
+	Components  []SummaryComponent `json:"components,omitempty"`
 }
 
 type Error struct {
@@ -76,13 +76,13 @@ type Error struct {
 	Identifier string `json:"identifier,omitempty"`
 }
 
-type SummeryCve struct {
+type SummaryCve struct {
 	Id          string `json:"cve,omitempty"`
 	CvssV2Score string `json:"cvss_v2,omitempty"`
 	CvssV3Score string `json:"cvss_v3,omitempty"`
 }
 
-type SummeryComponent struct {
+type SummaryComponent struct {
 	ComponentId   string   `json:"component_id,omitempty"`
 	FixedVersions []string `json:"fixed_versions,omitempty"`
 }
