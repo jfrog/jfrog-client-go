@@ -240,12 +240,13 @@ func TestAntPathToRegExp(t *testing.T) {
 		{"xxx/x*x", filepath.Join("tmp", "f*5"), fileSystemPaths, []string{filepath.Join("tmp", "foo5")}},
 		{"xxx/x*", filepath.Join("dev", "a1", "a2", "b*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
 		{"xxx/*x*", filepath.Join("dev", "a1", "a2", "*c*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "bc.txt")}},
+		{"*", filepath.Join("*"), []string{"a", "a" + separator, filepath.Join("a", "b")}, []string{"a"}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			regExpStr := antPatternToRegExp(cleanPath(test.antPattern))
 			var matches []string
-			for _, checkedPath := range fileSystemPaths {
+			for _, checkedPath := range test.allFileSystemPaths {
 				match, _ := regexp.MatchString(regExpStr, checkedPath)
 				if match {
 					matches = append(matches, checkedPath)
@@ -256,10 +257,6 @@ func TestAntPathToRegExp(t *testing.T) {
 			}
 		})
 	}
-}
-
-func addRegExpPrefixAndSuffix(str string) string {
-	return "^" + str + "$"
 }
 
 func equalSlicesIgnoreOrder(s1, s2 []string) bool {
