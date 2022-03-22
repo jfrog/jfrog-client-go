@@ -84,6 +84,7 @@ type ArtifactoryServicesManager interface {
 	CreateUser(params services.UserParams) error
 	UpdateUser(params services.UserParams) error
 	DeleteUser(name string) error
+	InviteUser(email string) error
 	ConvertLocalToFederatedRepository(repoKey string) error
 	TriggerFederatedRepositoryFullSyncAll(repoKey string) error
 	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
@@ -352,6 +353,10 @@ func (esm *EmptyArtifactoryServicesManager) UpdateUser(params services.UserParam
 }
 
 func (esm *EmptyArtifactoryServicesManager) DeleteUser(name string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) InviteUser(email string) error {
 	panic("Failed: Method is not implemented")
 }
 
