@@ -3,11 +3,13 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
+	servicesutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
 )
 
 const (
@@ -51,6 +53,59 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 		return nil, errorutils.CheckErrorf("Getting build-summary for build: %s failed with error: %s", summaryResponse.Errors[0].Identifier, summaryResponse.Errors[0].Error)
 	}
 	return &summaryResponse, nil
+}
+
+func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*ArtifactSummaryResponse, error) {
+	httpDetails := ss.XrayDetails.CreateHttpClientDetails()
+	servicesutils.SetContentType("application/json", &httpDetails.Headers)
+
+	requestBody, err := json.Marshal(params)
+	if err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+
+	url := fmt.Sprintf("%sartifact", ss.getSummeryUrl())
+	resp, body, err := ss.client.SendPost(url, requestBody, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	}
+	var response ArtifactSummaryResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	if response.Errors != nil && len(response.Errors) > 0 {
+		return nil, errorutils.CheckErrorf("Getting artifact-summery for artifact: %s failed with error: %s", response.Errors[0].Identifier, response.Errors[0].Error)
+	}
+	return &response, nil
+}
+
+type ArtifactSummaryParams struct {
+	Checksums []string `json:"checksums,omitempty"`
+	Paths     []string `json:"paths,omitempty"`
+}
+
+type ArtifactSummaryResponse struct {
+	Artifacts []Artifact `json:"artifacts,omitempty"`
+	Errors    []Error    `json:"errors,omitempty"`
+}
+
+type Artifact struct {
+	General General `json:"general,omitempty"`
+	Issues  []Issue `json:"issues,omitempty"`
+	// TODO: Create License struct with correct fields for api/v2/summary/artifact endpoint
+	// Licenses []License `json:"licenses,omitempty"`
+}
+
+type General struct {
+	ComponentId string `json:"component_id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Path        string `json:"path,omitempty"`
+	PkgType     string `json:"pkg_type,omitempty"`
+	Sha256      string `json:"sha256,omitempty"`
 }
 
 type SummaryResponse struct {
