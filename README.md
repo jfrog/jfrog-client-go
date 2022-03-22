@@ -1764,13 +1764,11 @@ err := xrayManager.DeleteReport(reportId)
 #### Get Artifact Summary
 
 ```go
-summaryService := services.NewSummaryService(xrayManager.Client())
-summaryService.XrayDetails = xrayDetails
 artifactSummaryRequest := services.ArtifactSummaryParams{
   Checksums: []string{"a96370b18b3d7e70b7b34d49dcb621a805c15cf71217ee8c77be5a98cc793fd3"},
-  Paths:     []string{"example-path"},
+  Paths:     []string{"default/example-repository/example-folder/example-artifact"},
 }
-artifactSummary, err := summaryService.GetArtifactSummary(artifactSummaryRequest)
+artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
 ```
 
 ## Pipelines APIs
