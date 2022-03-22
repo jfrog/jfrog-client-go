@@ -1767,8 +1767,8 @@ err := xrayManager.DeleteReport(reportId)
 summaryService := services.NewSummaryService(xrayManager.Client())
 summaryService.XrayDetails = xrayDetails
 artifactSummaryRequest := services.ArtifactSummaryParams{
-  Checksums: []string{"a96370b18b3d7e70b7b34d49dcb621a805c15cf71217ee8c77be5a98cc793fd3"}
-  Paths: []string{"example-path"}
+  Checksums: []string{"a96370b18b3d7e70b7b34d49dcb621a805c15cf71217ee8c77be5a98cc793fd3"},
+  Paths:     []string{"example-path"},
 }
 artifactSummary, err := summaryService.GetArtifactSummary(artifactSummaryRequest)
 ```
