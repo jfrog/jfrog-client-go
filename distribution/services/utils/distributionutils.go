@@ -11,11 +11,11 @@ type ReleaseNotesSyntax string
 
 const (
 	Markdown  ReleaseNotesSyntax = "markdown"
-	Asciidoc                     = "asciidoc"
-	PlainText                    = "plain_text"
+	Asciidoc  ReleaseNotesSyntax = "asciidoc"
+	PlainText ReleaseNotesSyntax = "plain_text"
 )
 
-var fileSpecCaptureGroup = regexp.MustCompile("({\\d})")
+var fileSpecCaptureGroup = regexp.MustCompile(`({\d})`)
 
 type ReleaseBundleParams struct {
 	SpecFiles          []*rtUtils.CommonParams

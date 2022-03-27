@@ -133,6 +133,9 @@ func (ps *ProjectService) Delete(projectKey string) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s/%s", ps.getProjectsBaseUrl(), projectKey)
 	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
+	if err != nil {
+		return err
+	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}

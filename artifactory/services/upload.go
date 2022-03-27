@@ -73,24 +73,28 @@ func (us *UploadService) getOperationSummary(totalSucceeded, totalFailed int) *u
 	return us.resultsManager.getOperationSummary(totalSucceeded, totalFailed)
 }
 
-func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (*utils.OperationSummary, error) {
+func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (summary *utils.OperationSummary, err error) {
 	// Uploading threads are using this struct to report upload results.
-	var e error
 	uploadSummary := utils.NewResult(us.Threads)
 	producerConsumer := parallel.NewRunner(us.Threads, 20000, false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	if us.saveSummary {
-		us.resultsManager, e = newResultManager()
-		if e != nil {
-			return nil, e
+		us.resultsManager, err = newResultManager()
+		if err != nil {
+			return nil, err
 		}
-		defer us.resultsManager.close()
+		defer func() {
+			e := us.resultsManager.close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 	}
 	us.prepareUploadTasks(producerConsumer, errorsQueue, uploadSummary, uploadParams...)
 	totalUploaded, totalFailed := us.performUploadTasks(producerConsumer, uploadSummary)
-	e = errorsQueue.GetError()
-	if e != nil {
-		return nil, e
+	err = errorsQueue.GetError()
+	if err != nil {
+		return nil, err
 	}
 	return us.getOperationSummary(totalUploaded, totalFailed), nil
 }
@@ -147,7 +151,7 @@ func (us *UploadService) prepareUploadTasks(producer parallel.Runner, errorsQueu
 			if us.Progress != nil {
 				us.Progress.IncGeneralProgressTotalBy(1)
 			}
-			producer.AddTaskWithError(us.CreateUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
+			_, _ = producer.AddTaskWithError(us.CreateUploadAsZipFunc(uploadSummary, targetPath, archiveData, errorsQueue), errorsQueue.AddError)
 		}
 	}()
 }
@@ -166,8 +170,8 @@ func (us *UploadService) performUploadTasks(consumer parallel.Runner, uploadSumm
 	return
 }
 
-// Creates a new Properties struct with the artifact's props and the symlink props.
-func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) (*utils.Properties, error) {
+// Creates a new Properties' struct with the artifact's props and the symlink props.
+func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) (properties *utils.Properties, err error) {
 	artifactProps := utils.NewProperties()
 	artifactSymlink := artifact.SymlinkTargetPath
 	if uploadParams.IsSymlink() && len(artifactSymlink) > 0 {
@@ -183,7 +187,12 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 			if err != nil {
 				return nil, errorutils.CheckError(err)
 			}
-			defer file.Close()
+			defer func() {
+				e := file.Close()
+				if err == nil {
+					err = errorutils.CheckError(e)
+				}
+			}()
 			checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
 			if err != nil {
 				return nil, errorutils.CheckError(err)
@@ -201,7 +210,7 @@ type UploadDataHandlerFunc func(data UploadData)
 func getAddTaskToProducerFunc(producer parallel.Runner, errorsQueue *clientutils.ErrorsQueue, artifactHandlerFunc artifactContext) UploadDataHandlerFunc {
 	return func(data UploadData) {
 		taskFunc := artifactHandlerFunc(data)
-		producer.AddTaskWithError(taskFunc, errorsQueue.AddError)
+		_, _ = producer.AddTaskWithError(taskFunc, errorsQueue.AddError)
 	}
 }
 
@@ -226,7 +235,7 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, up
 }
 
 func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
-	if strings.Index(uploadParams.GetTarget(), "/") < 0 {
+	if !strings.Contains(uploadParams.GetTarget(), "/") {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
 	if uploadParams.Archive != "" && strings.HasSuffix(uploadParams.GetTarget(), "/") {
@@ -294,7 +303,7 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 			return err
 		}
 
-		if matches != nil && len(matches) > 0 {
+		if len(matches) > 0 {
 			target := uploadParams.GetTarget()
 			tempPaths := paths
 			tempIndex := index
@@ -992,13 +1001,26 @@ func (rm *resultsManager) finalizeResult(targetPath string, checksums *entities.
 }
 
 // Closes the ContentWriters that were opened by the resultManager
-func (rm *resultsManager) close() {
-	rm.singleFinalTransfersWriter.Close()
-	rm.artifactsDetailsWriter.Close()
-	for _, writer := range rm.notFinalTransfersWriters {
-		writer.Close()
-		writer.RemoveOutputFilePath()
+func (rm *resultsManager) close() error {
+	err := rm.singleFinalTransfersWriter.Close()
+	if err != nil {
+		return err
 	}
+	err = rm.artifactsDetailsWriter.Close()
+	if err != nil {
+		return err
+	}
+	for _, writer := range rm.notFinalTransfersWriters {
+		err = writer.Close()
+		if err != nil {
+			return err
+		}
+		err = writer.RemoveOutputFilePath()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Creates an OperationSummary struct with the results. New results should not be written after this method is called.

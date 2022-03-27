@@ -12,14 +12,13 @@ import (
 
 func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 	if !strings.HasSuffix(deletePattern, "/") {
-		return "", errors.New("Delete pattern must end with \"/\"")
+		return "", errors.New("delete pattern must end with \"/\"")
 	}
 
 	regexpPattern := "^" + strings.Replace(deletePattern, "*", "([^/]*|.*)", -1)
 	r, err := regexp.Compile(regexpPattern)
-	errorutils.CheckError(err)
 	if err != nil {
-		return "", err
+		return "", errorutils.CheckError(err)
 	}
 
 	groups := r.FindStringSubmatch(searchResult)

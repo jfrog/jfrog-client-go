@@ -38,10 +38,6 @@ func (ds *ReadFileService) SetDryRun(isDryRun bool) {
 	ds.DryRun = isDryRun
 }
 
-func (ds *ReadFileService) setMinSplitSize(minSplitSize int64) {
-	ds.MinSplitSize = minSplitSize
-}
-
 func (ds *ReadFileService) ReadRemoteFile(downloadPath string) (io.ReadCloser, error) {
 	readPath, err := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), downloadPath, make(map[string]string))
 	if err != nil {

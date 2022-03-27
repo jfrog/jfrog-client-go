@@ -1,23 +1,29 @@
 package io
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"io"
 	"os"
 	"sort"
 )
 
 // Create new multi file ReaderAt
-func NewMultiFileReaderAt(filePaths []string) (*multiFileReaderAt, error) {
-	readerAt := &multiFileReaderAt{}
+func NewMultiFileReaderAt(filePaths []string) (readerAt *multiFileReaderAt, err error) {
+	readerAt = &multiFileReaderAt{}
 	for _, v := range filePaths {
-		f, err := os.Open(v)
-		if err != nil {
-			return nil, err
+		f, curErr := os.Open(v)
+		if curErr != nil {
+			return nil, curErr
 		}
-		defer f.Close()
-		stat, err := f.Stat()
-		if err != nil {
-			return nil, err
+		defer func() {
+			e := f.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
+		stat, curErr := f.Stat()
+		if curErr != nil {
+			return nil, curErr
 		}
 
 		readerAt.filesPaths = append(readerAt.filesPaths, v)
@@ -45,13 +51,18 @@ func (multiFileReader *multiFileReaderAt) ReadAt(p []byte, off int64) (n int, er
 	i := sort.Search(len(multiFileReader.sizeIndex), func(i int) bool { return multiFileReader.sizeIndex[i] > off }) - 1
 
 	readBytes := 0
-	for true {
+	for {
 		var f *os.File
 		f, err = os.Open(multiFileReader.filesPaths[i])
 		if err != nil {
 			return
 		}
-		defer f.Close()
+		defer func() {
+			e := f.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 		relativeOff := off + int64(n) - multiFileReader.sizeIndex[i]
 		readBytes, err = f.ReadAt(p[n:], relativeOff)
 		n += readBytes
@@ -71,5 +82,4 @@ func (multiFileReader *multiFileReaderAt) ReadAt(p []byte, off int64) (n int, er
 		i++
 	}
 	// not suppose to get here
-	return
 }

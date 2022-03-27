@@ -34,7 +34,7 @@ func (ds *DistributeService) isDryRun() bool {
 
 func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) error {
 	dryRun := ""
-	if ds.DryRun == true {
+	if ds.DryRun {
 		dryRun = "[Dry run] "
 	}
 	message := "Distributing build..."

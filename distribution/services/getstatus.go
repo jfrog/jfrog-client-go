@@ -36,10 +36,10 @@ func (ds *DistributionStatusService) GetStatus(distributionStatusParams Distribu
 func (ds *DistributionStatusService) checkParameters(distributionStatusParams DistributionStatusParams) error {
 	var err error
 	if distributionStatusParams.Name == "" && (distributionStatusParams.Version != "" || distributionStatusParams.TrackerId != "") {
-		err = errors.New("Missing distribution name parameter")
+		err = errors.New("missing distribution name parameter")
 	}
 	if distributionStatusParams.Version == "" && distributionStatusParams.TrackerId != "" {
-		err = errors.New("Missing distribution version parameter")
+		err = errors.New("missing distribution version parameter")
 	}
 	return errorutils.CheckError(err)
 }
