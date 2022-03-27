@@ -233,7 +233,7 @@ func antPatternToRegExp(localPath string) string {
 	localPath = strings.Replace(localPath, separator+regAsterisk, separator+regAsteriskWithSeparatorPrefix, -1)
 	// `(.*)?/` => `(.*/)?`
 	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeparatorPrefix, -1)
-	// Convert the last '/**' in the expression if exist : `/(.*)?` => `(/.*)?`
+	// Convert the last '/**' in the expression if exists : `/(.*)?` => `(/.*)?`
 	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
 		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeparatorSuffix
 	}
