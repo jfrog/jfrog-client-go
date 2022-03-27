@@ -105,12 +105,12 @@ func getApiKeyFromBody(body []byte) (string, error) {
 	return apiKey, nil
 }
 
-func (ss *SecurityService) CreateToken(params CreateTokenParams) (CreateTokenResponseData, error) {
+func (ss *SecurityService) CreateToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	artifactoryUrl := ss.ArtDetails.GetUrl()
 	data := buildCreateTokenUrlValues(params)
 	httpClientsDetails := ss.getArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err := ss.client.SendPostForm(artifactoryUrl+tokenPath, data, &httpClientsDetails)
-	tokenInfo := CreateTokenResponseData{}
+	tokenInfo := auth.CreateTokenResponseData{}
 	if err != nil {
 		return tokenInfo, err
 	}
@@ -154,12 +154,12 @@ func (ss *SecurityService) GetUserTokens(username string) ([]string, error) {
 	return tokens, nil
 }
 
-func (ss *SecurityService) RefreshToken(params RefreshTokenParams) (CreateTokenResponseData, error) {
+func (ss *SecurityService) RefreshToken(params RefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	artifactoryUrl := ss.ArtDetails.GetUrl()
 	data := buildRefreshTokenUrlValues(params)
 	httpClientsDetails := ss.getArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err := ss.client.SendPostForm(artifactoryUrl+tokenPath, data, &httpClientsDetails)
-	tokenInfo := CreateTokenResponseData{}
+	tokenInfo := auth.CreateTokenResponseData{}
 	if err != nil {
 		return tokenInfo, err
 	}
@@ -233,14 +233,6 @@ func buildRevokeTokenUrlValues(params RevokeTokenParams) url.Values {
 		data.Set("token_id", params.TokenId)
 	}
 	return data
-}
-
-type CreateTokenResponseData struct {
-	Scope        string `json:"scope,omitempty"`
-	AccessToken  string `json:"access_token,omitempty"`
-	ExpiresIn    int    `json:"expires_in,omitempty"`
-	TokenType    string `json:"token_type,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
 type GetTokensResponseData struct {

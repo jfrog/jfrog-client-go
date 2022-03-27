@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"github.com/jfrog/jfrog-client-go/auth"
 	"io"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
@@ -62,10 +63,10 @@ type ArtifactoryServicesManager interface {
 	CreateAPIKey() (string, error)
 	RegenerateAPIKey() (string, error)
 	GetAPIKey() (string, error)
-	CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error)
+	CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error)
 	GetTokens() (services.GetTokensResponseData, error)
 	GetUserTokens(username string) ([]string, error)
-	RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error)
+	RefreshToken(params services.RefreshTokenParams) (auth.CreateTokenResponseData, error)
 	RevokeToken(params services.RevokeTokenParams) (string, error)
 	CreateReplication(params services.CreateReplicationParams) error
 	UpdateReplication(params services.UpdateReplicationParams) error
@@ -84,7 +85,6 @@ type ArtifactoryServicesManager interface {
 	CreateUser(params services.UserParams) error
 	UpdateUser(params services.UserParams) error
 	DeleteUser(name string) error
-	InviteUser(email string) error
 	ConvertLocalToFederatedRepository(repoKey string) error
 	TriggerFederatedRepositoryFullSyncAll(repoKey string) error
 	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
@@ -276,7 +276,7 @@ func (esm *EmptyArtifactoryServicesManager) GetAPIKey() (string, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
+func (esm *EmptyArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -288,7 +288,7 @@ func (esm *EmptyArtifactoryServicesManager) GetUserTokens(username string) ([]st
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
+func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.RefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
 

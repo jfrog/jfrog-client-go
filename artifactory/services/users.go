@@ -3,16 +3,15 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"net/http"
-	"strings"
-
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"net/http"
 )
+
+const InviteCliSourceName = "cli"
 
 type UserParams struct {
 	UserDetails     User
@@ -161,33 +160,4 @@ func (us *UserService) DeleteUser(name string) error {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
 	return err
-}
-
-func (us *UserService) InviteUser(email string) error {
-	httpDetails := us.ArtDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%saccess/api/v1/users/invite", strings.TrimSuffix(us.ArtDetails.GetUrl(), "artifactory/"))
-	data := InvitedUser{
-		InvitedEmail: email,
-	}
-	requestContent, err := json.Marshal(data)
-	if err != nil {
-		return errorutils.CheckError(err)
-	}
-	utils.SetContentType("application/json", &httpDetails.Headers)
-	//utils.AddAuthHeaders()"application/json", &httpDetails.Headers)
-	resp, body, err := us.client.SendPost(url, requestContent, &httpDetails)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		return errorutils.CheckErrorf("no response provided (including status code)")
-	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return err
-}
-
-type InvitedUser struct {
-	InvitedEmail string `json:"invitedEmail,omitempty" csv:"invitedEmail,omitempty"`
 }

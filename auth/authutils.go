@@ -8,6 +8,18 @@ import (
 	"time"
 )
 
+type CreateTokenResponseData struct {
+	CreateTokenData
+}
+
+type CreateTokenData struct {
+	Scope        string `json:"scope,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"`
+	ExpiresIn    int    `json:"expires_in,omitempty"`
+	TokenType    string `json:"token_type,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+}
+
 func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	// Separate token parts.
 	tokenParts := strings.Split(token, ".")

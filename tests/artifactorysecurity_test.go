@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	accessauth "github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
@@ -255,7 +256,7 @@ func revokeToken(token string) (string, error) {
 }
 
 // Util function to create a token
-func createToken(username string) (services.CreateTokenResponseData, error) {
+func createToken(username string) (accessauth.CreateTokenResponseData, error) {
 	params := services.NewCreateTokenParams()
 	params.Username = username
 	params.Scope = "api:* member-of-groups:readers"

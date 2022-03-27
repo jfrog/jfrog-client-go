@@ -116,6 +116,8 @@ var (
 
 	// Access Services
 	testsAccessProjectService *accessServices.ProjectService
+	testsAccessInviteService  *accessServices.InviteService
+	testsAccessTokensService  *accessServices.TokenService
 
 	timestamp    = time.Now().Unix()
 	timestampStr = strconv.FormatInt(timestamp, 10)
@@ -1003,6 +1005,24 @@ func createAccessProjectManager() {
 	failOnHttpClientCreation(err)
 	testGroupService = services.NewGroupService(rtclient)
 	testGroupService.SetArtifactoryDetails(artDetails)
+}
+
+func createAccessInviteManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessInviteService = accessServices.NewInviteService(client)
+	testsAccessInviteService.ServiceDetails = accessDetails
+	// To test "invite" flow we first have to create new "invited user" using ArtifactoryUserManager.
+	createArtifactoryUserManager()
+}
+
+func createAccessTokensManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessTokensService = accessServices.NewTokenService(client)
+	testsAccessTokensService.ServiceDetails = accessDetails
 }
 
 func getUniqueField(prefix string) string {

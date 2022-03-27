@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"github.com/jfrog/jfrog-client-go/auth"
 	"io"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
@@ -369,7 +370,7 @@ func (sm *ArtifactoryServicesManagerImp) GetAPIKey() (string, error) {
 	return securityService.GetAPIKey()
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
+func (sm *ArtifactoryServicesManagerImp) CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
 	return securityService.CreateToken(params)
@@ -387,7 +388,7 @@ func (sm *ArtifactoryServicesManagerImp) GetUserTokens(username string) ([]strin
 	return securityService.GetUserTokens(username)
 }
 
-func (sm *ArtifactoryServicesManagerImp) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
+func (sm *ArtifactoryServicesManagerImp) RefreshToken(params services.RefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
 	return securityService.RefreshToken(params)
@@ -503,12 +504,6 @@ func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
 	return userService.DeleteUser(name)
-}
-
-func (sm *ArtifactoryServicesManagerImp) InviteUser(email string) error {
-	userService := services.NewUserService(sm.client)
-	userService.ArtDetails = sm.config.GetServiceDetails()
-	return userService.InviteUser(email)
 }
 
 func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPromoteParams) error {
