@@ -175,7 +175,7 @@ func TestIsWildcardParentheses(t *testing.T) {
 
 // TestAntPathToRegExp check the functionality of antPatternToRegExp function.
 // Each time we take an array of paths, simulating files hierarchy on a filesystem, and an ANT pattern expression -
-//	 and see if the converting to regular expression worked as expected.
+//	 and see if the conversion to regular expression worked as expected.
 func TestAntPathToRegExp(t *testing.T) {
 	separator := getFileSeparator()
 	var paths = getFileSystemsPathsForTestingAntPattern(separator)
