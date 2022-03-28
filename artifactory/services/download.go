@@ -258,7 +258,7 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 			// Add a task. A task is a function of type TaskFunc which later on will be executed by other go routine, the communication is done using channels.
 			// The second argument is an error handling func in case the taskFunc return an error.
 			tasksCount++
-			producer.AddTaskWithError(fileHandler(tempData), errorsQueue.AddError)
+			_, _ = producer.AddTaskWithError(fileHandler(tempData), errorsQueue.AddError)
 			// We don't want to create directories which are created explicitly by download files when CommonParams.IncludeDirs is used.
 			alreadyCreatedDirs[resultItem.Path] = true
 		} else {
@@ -312,13 +312,12 @@ func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[str
 
 			// Some directories were created due to file download when we aren't in flat download flow.
 			if isFlat {
-				producer.AddTaskWithError(fileHandler(directoriesData[v]), errorsQueue.AddError)
+				_, _ = producer.AddTaskWithError(fileHandler(directoriesData[v]), errorsQueue.AddError)
 			} else if !alreadyCreatedDirs[v] {
-				producer.AddTaskWithError(fileHandler(directoriesData[v]), errorsQueue.AddError)
+				_, _ = producer.AddTaskWithError(fileHandler(directoriesData[v]), errorsQueue.AddError)
 			}
 		}
 	}
-	return
 }
 
 func (ds *DownloadService) performTasks(consumer parallel.Runner, errorsQueue *clientutils.ErrorsQueue) error {
@@ -428,7 +427,7 @@ func removeIfSymlink(localSymlinkPath string) error {
 	return nil
 }
 
-func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) error {
+func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) (err error) {
 	if symlinkChecksum && symlinkContentChecksum != "" {
 		if !fileutils.IsPathExists(symlinkArtifact, false) {
 			return errorutils.CheckErrorf("Symlink validation failed, target doesn't exist: " + symlinkArtifact)
@@ -437,7 +436,12 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		if err = errorutils.CheckError(err); err != nil {
 			return err
 		}
-		defer file.Close()
+		defer func() {
+			e := file.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 		checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
 		if err = errorutils.CheckError(err); err != nil {
 			return err

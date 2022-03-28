@@ -156,7 +156,7 @@ func (mc *MoveCopyService) moveFiles(reader *content.ContentReader, params []Mov
 		defer producerConsumer.Done()
 		for resultItem := new(MoveResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(MoveResultItem) {
 			fileMoveCopyHandlerFunc := mc.createMoveCopyFileHandlerFunc(&result)
-			producerConsumer.AddTaskWithError(fileMoveCopyHandlerFunc(resultItem.ResultItem, &params[resultItem.FileSpecId]),
+			_, _ = producerConsumer.AddTaskWithError(fileMoveCopyHandlerFunc(resultItem.ResultItem, &params[resultItem.FileSpecId]),
 				errorsQueue.AddError)
 		}
 		if err := reader.GetError(); err != nil {
@@ -269,7 +269,7 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 
 // Create destPath in Artifactory
 func (mc *MoveCopyService) createPathForMoveAction(destPath, logMsgPrefix string) (bool, error) {
-	if mc.IsDryRun() == true {
+	if mc.IsDryRun() {
 		log.Info(logMsgPrefix+"[Dry run]", "Create path:", destPath)
 		return true, nil
 	}

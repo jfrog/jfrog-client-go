@@ -41,6 +41,7 @@ func TestGetArtifactoryVersionWithProxyShouldFail(t *testing.T) {
 	rtDetails := GetRtDetails()
 
 	proxyUrl, err := url.Parse("http://invalidproxy:12345")
+	assert.NoError(t, err)
 	client := &http.Client{
 		Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
 	}

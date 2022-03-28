@@ -123,7 +123,7 @@ func createAqlQueryForBuild(includeQueryPart string, artifactsQuery bool, builds
 }
 
 //noinspection GoUnusedExportedFunction
-func CreateAqlQueryForNpm(npmName, npmVersion string) string {
+func CreateAqlQueryForYarn(npmName, npmVersion string) string {
 	itemsPart :=
 		`items.find({` +
 			`"@npm.name":"%s",` +

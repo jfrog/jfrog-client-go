@@ -26,7 +26,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.8.0"
+	Version     = "1.11.3"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -69,21 +69,21 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 			continue
 		}
 		if patternType == RegExp {
-			if strings.Index(section, "(") != -1 {
+			if strings.Contains(section, "(") {
 				break
 			}
 		} else {
-			if strings.Index(section, "*") != -1 {
+			if strings.Contains(section, "*") {
 				break
 			}
-			if strings.Index(section, "(") != -1 {
+			if strings.Contains(section, "(") {
 				temp := rootPath + section
 				if isWildcardParentheses(temp, parentheses) {
 					break
 				}
 			}
 			if patternType == AntPattern {
-				if strings.Index(section, "?") != -1 {
+				if strings.Contains(section, "?") {
 					break
 				}
 			}
@@ -128,8 +128,7 @@ func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 func StringToBool(boolVal string, defaultValue bool) (bool, error) {
 	if len(boolVal) > 0 {
 		result, err := strconv.ParseBool(boolVal)
-		errorutils.CheckError(err)
-		return result, err
+		return result, errorutils.CheckError(err)
 	}
 	return defaultValue, nil
 }
@@ -205,13 +204,19 @@ func cleanPath(path string) string {
 func antPatternToRegExp(localPath string) string {
 	localPath = stringutils.EscapeSpecialChars(localPath)
 	separator := getFileSeparator()
+	// 'xxx/' => 'xxx/**'
+	if strings.HasSuffix(localPath, separator) {
+		localPath += "**"
+	}
 	var wildcard = ".*"
 	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
 	var regAsterisk = "([^" + separator + "]*)"
+	// ant `\*` ~ regexp `([^/]+)` : `\*` matches one or more characters (except from `/`) with a `/` prefix.
+	var regAsteriskWithSeparatorPrefix = "([^" + separator + "]+)"
 	// ant `**` ~ regexp `(.*)?` : `**` matches zero or more 'directories' in a path.
 	var doubleRegAsterisk = "(" + wildcard + ")?"
-	var doubleRegAsteriskWithSeperatorPrefix = "(" + wildcard + separator + ")?"
-	var doubleRegAsteriskWithSeperatorSuffix = "(" + separator + wildcard + ")?"
+	var doubleRegAsteriskWithSeparatorPrefix = "(" + wildcard + separator + ")?"
+	var doubleRegAsteriskWithSeparatorSuffix = "(" + separator + wildcard + ")?"
 
 	// `?` => `.{1}` : `?` matches one character.
 	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
@@ -219,15 +224,17 @@ func antPatternToRegExp(localPath string) string {
 	localPath = strings.Replace(localPath, `*`, regAsterisk, -1)
 	// `**` => `(.*)?`
 	localPath = strings.Replace(localPath, regAsterisk+regAsterisk, doubleRegAsterisk, -1)
-	// `(.*)?/` => `(.*/)?`
-	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeperatorPrefix, -1)
-	// Convert the last '/**' in the expression if exist : `/(.*)?` => `(/.*)?`
-	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
-		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeperatorSuffix
-	}
 
-	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
-		localPath += wildcard
+	// `\([^/]*)` => `\([^/]+)` : there are 2 cases with '*':
+	//		1. xxx/x* : * will represent 0 or more characters.
+	//		2. xxx/* : * will represent 1 or more characters.
+	// This "replace" handles the second option.
+	localPath = strings.Replace(localPath, separator+regAsterisk, separator+regAsteriskWithSeparatorPrefix, -1)
+	// `(.*)?/` => `(.*/)?`
+	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeparatorPrefix, -1)
+	// Convert the last '/**' in the expression if exists : `/(.*)?` => `(/.*)?`
+	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
+		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeparatorSuffix
 	}
 	return "^" + localPath + "$"
 }
@@ -504,12 +511,18 @@ type UploadResponseBody struct {
 	Checksums entities.Checksum `json:"checksums,omitempty"`
 }
 
-func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (string, error) {
+func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (filePath string, err error) {
 	tempFile, err := fileutils.CreateTempFile()
 	if err != nil {
 		return "", err
 	}
-	filePath := tempFile.Name()
+	defer func() {
+		e := tempFile.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
+	filePath = tempFile.Name()
 	return filePath, SaveFileTransferDetailsInFile(filePath, filesDetails)
 }
 

@@ -3,7 +3,7 @@ package log
 import (
 	"fmt"
 	"github.com/gookit/color"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 	"io"
 	"log"
 	"os"
@@ -74,9 +74,9 @@ func (logger *jfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
 		writer = os.Stderr
 		if isTerminalMode() {
 			logger.DebugLog = log.New(writer, fmt.Sprintf("[%s] ", color.Cyan.Render("Debug")), logFlags)
-			logger.InfoLog = log.New(writer, fmt.Sprintf("[%s] ", color.Blue.Render("Info")), logFlags)
-			logger.WarnLog = log.New(writer, fmt.Sprintf("[%s] ", color.Yellow.Render("Warn")), logFlags)
-			logger.ErrorLog = log.New(writer, fmt.Sprintf("[%s] ", color.Red.Render("Error")), logFlags)
+			logger.InfoLog = log.New(writer, fmt.Sprintf("[🔵%s] ", color.Blue.Render("Info")), logFlags)
+			logger.WarnLog = log.New(writer, fmt.Sprintf("[🟠%s] ", color.Yellow.Render("Warn")), logFlags)
+			logger.ErrorLog = log.New(writer, fmt.Sprintf("[🚨%s] ", color.Red.Render("Error")), logFlags)
 			return
 		}
 	}
@@ -160,7 +160,7 @@ type Log interface {
 // Check if Stderr is a terminal
 func isTerminalMode() bool {
 	if terminalMode == nil {
-		t := terminal.IsTerminal(int(os.Stderr.Fd()))
+		t := term.IsTerminal(int(os.Stderr.Fd()))
 		terminalMode = &t
 	}
 	return *terminalMode

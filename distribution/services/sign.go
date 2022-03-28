@@ -2,16 +2,14 @@ package services
 
 import (
 	"encoding/json"
-	"net/http"
-
 	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
-	distrbutionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
+	distributionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
 )
 
 type SignBundleService struct {
@@ -27,15 +25,15 @@ func (sb *SignBundleService) GetDistDetails() auth.ServiceDetails {
 	return sb.DistDetails
 }
 
-func (sb *SignBundleService) SignReleaseBundle(signBundleParams SignBundleParams) (*clientutils.Sha256Summary, error) {
+func (sb *SignBundleService) SignReleaseBundle(signBundleParams SignBundleParams) (*utils.Sha256Summary, error) {
 	signBundleBody := &SignBundleBody{
 		StoringRepository: signBundleParams.StoringRepository,
 	}
 	return sb.execSignReleaseBundle(signBundleParams.Name, signBundleParams.Version, signBundleParams.GpgPassphrase, signBundleBody)
 }
 
-func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase string, signBundleBody *SignBundleBody) (*clientutils.Sha256Summary, error) {
-	summary := clientutils.NewSha256Summary()
+func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase string, signBundleBody *SignBundleBody) (*utils.Sha256Summary, error) {
+	summary := utils.NewSha256Summary()
 	httpClientsDetails := sb.DistDetails.CreateHttpClientDetails()
 	content, err := json.Marshal(signBundleBody)
 	if err != nil {
@@ -43,7 +41,7 @@ func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase 
 	}
 	url := sb.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version + "/sign"
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	distrbutionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
+	distributionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
 	resp, body, err := sb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return summary, err
@@ -55,7 +53,7 @@ func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase 
 	summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
 
 	log.Debug("Distribution response: ", resp.Status)
-	log.Debug(clientutils.IndentJson(body))
+	log.Debug(utils.IndentJson(body))
 	return summary, errorutils.CheckError(err)
 }
 
