@@ -11,7 +11,10 @@ import (
 	"net/http"
 )
 
-const inviteApi = "api/v1/users/invite"
+const (
+	inviteApi           = "api/v1/users/invite"
+	InviteCliSourceName = "cli"
+)
 
 type InviteService struct {
 	client         *jfroghttpclient.JfrogHttpClient
@@ -32,7 +35,7 @@ func (us *InviteService) InviteUser(email string) error {
 	url := fmt.Sprintf("%s%s", us.ServiceDetails.GetUrl(), inviteApi)
 	data := InvitedUser{
 		InvitedEmail: email,
-		Source:       "cli",
+		Source:       InviteCliSourceName,
 	}
 	requestContent, err := json.Marshal(data)
 	if err != nil {

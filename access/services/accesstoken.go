@@ -31,15 +31,14 @@ func (ps *TokenService) CreateAccessToken(params TokenParams) (auth.CreateTokenR
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpDetails.Headers)
 	utils.AddHeader("Authorization", fmt.Sprintf("Bearer %s", ps.ServiceDetails.GetAccessToken()), &httpDetails.Headers)
+
 	tokenInfo := auth.CreateTokenResponseData{}
 	requestContent, err := json.Marshal(params)
 	if errorutils.CheckError(err) != nil {
 		return tokenInfo, err
 	}
-
 	url := fmt.Sprintf("%s%s", ps.ServiceDetails.GetUrl(), tokensApi)
 	resp, body, err := ps.client.SendPost(url, requestContent, &httpDetails)
-
 	if err != nil {
 		return tokenInfo, err
 	}

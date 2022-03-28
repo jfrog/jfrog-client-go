@@ -3,15 +3,14 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"net/http"
 )
-
-const InviteCliSourceName = "cli"
 
 type UserParams struct {
 	UserDetails     User
@@ -100,7 +99,6 @@ func (us *UserService) CreateUser(params UserParams) error {
 			return errorutils.CheckErrorf("user '%s' already exists", user.Name)
 		}
 	}
-
 	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
 	if err != nil {
 		return err

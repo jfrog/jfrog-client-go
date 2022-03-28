@@ -17,6 +17,6 @@ func testCreateToken(t *testing.T) {
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
 	assert.NoError(t, err)
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
-	//TODO: check why
+	// TODO: check why 31536000
 	assert.Equal(t, 31536000, token.ExpiresIn)
 }

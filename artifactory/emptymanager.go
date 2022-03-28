@@ -356,10 +356,6 @@ func (esm *EmptyArtifactoryServicesManager) DeleteUser(name string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) InviteUser(email string) error {
-	panic("Failed: Method is not implemented")
-}
-
 func (esm *EmptyArtifactoryServicesManager) GetGroup(params services.GroupParams) (*services.Group, error) {
 	panic("Failed: Method is not implemented")
 }
