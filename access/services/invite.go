@@ -22,7 +22,7 @@ type InviteService struct {
 }
 
 type InvitedUser struct {
-	InvitedEmail string `json:"invitedEmail,omitempty" csv:"invitedEmail,omitempty"`
+	InvitedEmail string `json:"invited_email,omitempty" csv:"invited_email,omitempty"`
 	Source       string `json:"source,omitempty" csv:"source,omitempty"`
 }
 

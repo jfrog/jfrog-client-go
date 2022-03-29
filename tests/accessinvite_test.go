@@ -34,16 +34,16 @@ func testInviteUser(t *testing.T) {
 func getTestInvitedUserParams(email string) services.UserParams {
 	// Data members "name" and "email" should both be the email for internal access reasons.
 	userDetails := services.User{
-		Name:                     email,
-		Email:                    email,
-		Password:                 "Password1!",
-		Admin:                    &trueValue,
-		Realm:                    "internal",
-		ProfileUpdatable:         &trueValue,
-		DisableUIAccess:          &falseValue,
-		InternalPasswordDisabled: &falseValue,
-		ShouldInvite:             &trueValue,
-		Source:                   accessservices.InviteCliSourceName,
+		Name:     email,
+		Email:    email,
+		Password: "Password1!",
+		Admin:    &trueValue,
+		//Realm:                    "internal",
+		ProfileUpdatable: &trueValue,
+		//DisableUIAccess:          &falseValue,
+		//InternalPasswordDisabled: &falseValue,
+		ShouldInvite: &trueValue,
+		Source:       accessservices.InviteCliSourceName,
 	}
 	return services.UserParams{
 		UserDetails:     userDetails,
