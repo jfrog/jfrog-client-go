@@ -154,11 +154,13 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 type XrayGraphScanParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
-	RepoPath   string
-	ProjectKey string
-	Watches    []string
-	ScanType   ScanType
-	Graph      *GraphNode
+	RepoPath               string
+	ProjectKey             string
+	Watches                []string
+	ScanType               ScanType
+	Graph                  *GraphNode
+	IncludeVulnerabilities bool
+	IncludeLicenses        bool
 }
 
 type GraphNode struct {

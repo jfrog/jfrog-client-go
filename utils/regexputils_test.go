@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -42,7 +41,7 @@ func TestRemoveCredentialsFromLine(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.regex.MatchedResults = test.regex.RegExp.FindStringSubmatch(test.regex.Line)
 			if test.matched && len(test.regex.MatchedResults) > 3 {
-				t.Error(fmt.Sprintf("Expected to find 3 results, however, found %d.", len(test.regex.MatchedResults)))
+				t.Errorf("Expected to find 3 results, however, found %d.", len(test.regex.MatchedResults))
 			}
 			if test.matched && test.regex.MatchedResults[0] == "" {
 				t.Error("Expected to find a match.")
@@ -80,7 +79,7 @@ func TestReturnErrorOnNotFound(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.regex.MatchedResults = test.regex.RegExp.FindStringSubmatch(test.regex.Line)
 			if test.error && len(test.regex.MatchedResults) < 3 {
-				t.Error(fmt.Sprintf("Expected to find at least 3 results, however, found %d.", len(test.regex.MatchedResults)))
+				t.Errorf("Expected to find at least 3 results, however, found %d.", len(test.regex.MatchedResults))
 			}
 			if test.error && test.regex.MatchedResults[0] == "" {
 				t.Error("Expected to find 404 not found, found nothing.")

@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -31,7 +30,7 @@ func TestExtractSubjectFromAccessToken(t *testing.T) {
 			t.Error(err)
 		}
 		if err == nil && test.shouldError == true {
-			t.Error(fmt.Sprintf("Test number %d expected to return an error.", index))
+			t.Errorf("Test number %d expected to return an error.", index)
 		}
 		if subject != tests[index].expectedSubject {
 			t.Errorf("Expected subject to be: %s, got: %s.", test.expectedSubject, subject)
