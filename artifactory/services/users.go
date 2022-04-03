@@ -103,7 +103,10 @@ func (us *UserService) CreateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := us.client.SendPut(url, content, &httpDetails)
+
+	//content = []byte("{\n\t\t\"profileUpdatable\": true,\n\t\t\"disableUIAccess\": false,\n\t\t\"internalPasswordDisabled\": false,\n\t\t\"watchManager\": true,\n\t\t\"reportsManager\": true,\n\t\t\"policyManager\": true,\n\t\t\"projectAdmin\": true,\n\t\t\"userGroups\": [\n\t\t\t{\n\t\t\t\"groupName\": \"readers\",\n\t\t\t\"realm\": \"internal\",\n\t\t\t\"$$$id\": \"8078selected0\"\n\t\t\t}\n\t\t],\n\t\t\"email\": \"hanochg@gmail.com\",\n\t\t\"admin\": true,\n\t\t\"name\": \"hanochg@gmail.com\",\n\t\t\"password\": \"Passw0r!1d\",\n\t\t\"shouldInvite\": true,\n\t\t\"source\": \"cli\"\n\t}")
+	//url = "https://z0inviteflow0.jfrogdev.org/artifactory/api/users"
+	resp, body, err := us.client.SendPost(url, content, &httpDetails)
 	if err != nil {
 		return err
 	}
