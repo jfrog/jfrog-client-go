@@ -70,6 +70,7 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 		Auth: []ssh.AuthMethod{
 			sshAuth,
 		},
+		//#nosec G106 -- Used to get ssh headers only.
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
@@ -128,11 +129,9 @@ func readSshKeyAndPassphrase(sshKeyPath, sshPassphrase string) ([]byte, []byte, 
 
 func IsEncrypted(buffer []byte) (bool, error) {
 	_, err := ssh.ParsePrivateKey(buffer)
-	if err != nil {
-		if _, ok := err.(*ssh.PassphraseMissingError); ok {
-			// Key is encrypted
-			return true, nil
-		}
+	if _, ok := err.(*ssh.PassphraseMissingError); ok {
+		// Key is encrypted
+		return true, nil
 	}
 	// Key is not encrypted or an error occurred
 	return false, err

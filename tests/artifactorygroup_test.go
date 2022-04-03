@@ -23,6 +23,7 @@ func testCreateGroup(t *testing.T) {
 	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
 	createdGroup, err := testGroupService.GetGroup(groupParams)
+	assert.NoError(t, err)
 	assert.NotNil(t, createdGroup)
 	assert.Equal(t, groupParams.GroupDetails, *createdGroup)
 }
@@ -51,7 +52,6 @@ func testAddUsersToGroup(t *testing.T) {
 
 	// Create two new users
 	userNames := []string{"Alice", "Bob"}
-	users := []*services.User{}
 	for i, name := range userNames {
 		UserParams := getTestUserParams(false, name)
 		err = testUserService.CreateUser(UserParams)
@@ -59,7 +59,6 @@ func testAddUsersToGroup(t *testing.T) {
 		assert.NoError(t, err)
 		user, err := testUserService.GetUser(UserParams)
 		assert.NoError(t, err)
-		users = append(users, user)
 		userNames[i] = user.Name
 	}
 

@@ -135,6 +135,9 @@ func (rs *ReportService) Vulnerabilities(req ReportRequestParams) (*ReportRespon
 	}
 
 	resp, body, err := rs.client.SendPost(url, content, &httpClientsDetails)
+	if err != nil {
+		return nil, err
+	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return &retVal, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
@@ -155,6 +158,9 @@ func (rs *ReportService) Details(reportId string) (*ReportDetails, error) {
 
 	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI, reportId)
 	resp, body, _, err := rs.client.SendGet(url, true, &httpClientsDetails)
+	if err != nil {
+		return nil, err
+	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return &retVal, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
@@ -176,6 +182,9 @@ func (rs *ReportService) Content(request ReportContentRequestParams) (*ReportCon
 	url := fmt.Sprintf("%s/%s/%s?direction=%s&page_num=%d&num_of_rows=%d&order_by=%s",
 		rs.XrayDetails.GetUrl(), VulnerabilitiesAPI, request.ReportId, request.Direction, request.PageNum, request.NumRows, request.OrderBy)
 	resp, body, err := rs.client.SendPost(url, nil, &httpClientsDetails)
+	if err != nil {
+		return nil, err
+	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return &retVal, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
@@ -191,6 +200,9 @@ func (rs *ReportService) Delete(reportId string) error {
 
 	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI, reportId)
 	resp, body, err := rs.client.SendDelete(url, nil, &httpClientsDetails)
+	if err != nil {
+		return err
+	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}

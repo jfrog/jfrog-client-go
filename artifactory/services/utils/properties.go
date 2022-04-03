@@ -47,9 +47,7 @@ func (props *Properties) ParseAndAddProperties(propStr string) error {
 		}
 
 		splitValues := splitWhileIgnoringBackslashPrefixSeparators(value, multiValuesSeparator)
-		for _, val := range splitValues {
-			props.properties[key] = append(props.properties[key], val)
-		}
+		props.properties[key] = append(props.properties[key], splitValues...)
 	}
 	props.removeDuplicateValues()
 	return nil
