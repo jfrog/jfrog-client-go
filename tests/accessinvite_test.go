@@ -16,6 +16,7 @@ func TestAccessInvite(t *testing.T) {
 
 func testInviteUser(t *testing.T) {
 	randomMail := fmt.Sprintf("test%s@jfrog.com", timestampStr)
+	randomMail = "gaimacrame@gmail.com"
 	UserParams := getTestInvitedUserParams(randomMail)
 	err := testUserService.CreateUser(UserParams)
 	assert.NoError(t, err)
@@ -28,7 +29,7 @@ func testInviteUser(t *testing.T) {
 	assert.Error(t, err)
 	// TODO: check error
 	//assert.True(t, strings.HasSuffix(err.Error(), "already invited today"), "error : "+err.Error())
-	err = testUserService.DeleteUser(UserParams.UserDetails.Name)
+	//err = testUserService.DeleteUser(UserParams.UserDetails.Name)
 	assert.NoError(t, err)
 }
 
