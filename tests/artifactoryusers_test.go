@@ -13,6 +13,7 @@ func TestUsers(t *testing.T) {
 	initArtifactoryTest(t)
 	t.Run("create", testCreateUser)
 	t.Run("update", testUpdateUser)
+	t.Run("clear users groups", testClearUserGroups)
 	t.Run("delete", testDeleteUser)
 }
 
@@ -56,6 +57,22 @@ func testUpdateUser(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.True(t, reflect.DeepEqual(UserParams.UserDetails, *user))
+}
+
+func testClearUserGroups(t *testing.T) {
+	UserParams := getTestUserParams(true, "")
+
+	err := testUserService.CreateUser(UserParams)
+	defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
+	assert.NoError(t, err)
+
+	UserParams.ClearGroups = true
+	err = testUserService.UpdateUser(UserParams)
+	assert.NoError(t, err)
+	user, err := testUserService.GetUser(UserParams)
+	assert.NoError(t, err)
+
+	assert.Nil(t, user.Groups)
 }
 
 func testDeleteUser(t *testing.T) {
