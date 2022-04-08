@@ -64,7 +64,7 @@ func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*Art
 		return nil, errorutils.CheckError(err)
 	}
 
-	url := fmt.Sprintf("%sartifact", ss.getSummeryUrl())
+	url := fmt.Sprintf("%sartifact", ss.getSummaryUrl())
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpDetails)
 	if err != nil {
 		return nil, err
@@ -113,16 +113,17 @@ type SummaryResponse struct {
 }
 
 type Issue struct {
-	IssueId     string             `json:"issue_id,omitempty"`
-	Summary     string             `json:"summary,omitempty"`
-	Description string             `json:"description,omitempty"`
-	IssueType   string             `json:"issue_type,omitempty"`
-	Severity    string             `json:"severity,omitempty"`
-	Provider    string             `json:"provider,omitempty"`
-	Cves        []SummaryCve       `json:"cves,omitempty"`
-	Created     string             `json:"created,omitempty"`
-	ImpactPath  []string           `json:"impact_path,omitempty"`
-	Components  []SummaryComponent `json:"components,omitempty"`
+	IssueId                string             `json:"issue_id,omitempty"`
+	Summary                string             `json:"summary,omitempty"`
+	Description            string             `json:"description,omitempty"`
+	IssueType              string             `json:"issue_type,omitempty"`
+	Severity               string             `json:"severity,omitempty"`
+	Provider               string             `json:"provider,omitempty"`
+	Cves                   []SummaryCve       `json:"cves,omitempty"`
+	Created                string             `json:"created,omitempty"`
+	ImpactPath             []string           `json:"impact_path,omitempty"`
+	Components             []SummaryComponent `json:"components,omitempty"`
+	ComponentPhysicalPaths []string           `json:"component_physical_paths,omitempty"`
 }
 
 type SummaryLicense struct {
@@ -138,9 +139,10 @@ type Error struct {
 }
 
 type SummaryCve struct {
-	Id          string `json:"cve,omitempty"`
-	CvssV2Score string `json:"cvss_v2,omitempty"`
-	CvssV3Score string `json:"cvss_v3,omitempty"`
+	Id          string   `json:"cve,omitempty"`
+	CvssV2Score string   `json:"cvss_v2,omitempty"`
+	CvssV3Score string   `json:"cvss_v3,omitempty"`
+	Cwe         []string `json:"cwe,omitempty"`
 }
 
 type SummaryComponent struct {
