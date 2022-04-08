@@ -1,11 +1,12 @@
 package xray
 
 import (
+	"strings"
+
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
-	"strings"
 )
 
 // XrayServicesManager defines the http client and general configuration
@@ -179,4 +180,11 @@ func (sm *XrayServicesManager) DeleteReport(reportId string) error {
 	reportService := services.NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
 	return reportService.Delete(reportId)
+}
+
+// ArtifactSummary returns Xray artifact summaries for the requested checksums and/or paths
+func (sm *XrayServicesManager) ArtifactSummary(params services.ArtifactSummaryParams) (*services.ArtifactSummaryResponse, error) {
+	summaryService := services.NewSummaryService(sm.client)
+	summaryService.XrayDetails = sm.config.GetServiceDetails()
+	return summaryService.GetArtifactSummary(params)
 }

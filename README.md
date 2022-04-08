@@ -138,6 +138,7 @@
       - [Get Vulnerabilities Report Details](#get-vulnerabilities-report-details)
       - [Get Vulnerabilities Report Content](#get-vulnerabilities-report-content)
       - [Delete Vulnerabilities Report](#delete-vulnerabilities-report)
+      - [Get Artifact Summary](#get-artifact-summary)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -1758,6 +1759,16 @@ reportContent, err := xrayManager.ReportContent(reportContentRequest)
 ```go
 // The reportId argument value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
 err := xrayManager.DeleteReport(reportId)
+```
+
+#### Get Artifact Summary
+
+```go
+artifactSummaryRequest := services.ArtifactSummaryParams{
+  Checksums: []string{"a96370b18b3d7e70b7b34d49dcb621a805c15cf71217ee8c77be5a98cc793fd3"},
+  Paths:     []string{"default/example-repository/example-folder/example-artifact"},
+}
+artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
 ```
 
 ## Pipelines APIs
