@@ -94,10 +94,9 @@ type ArtifactSummaryResponse struct {
 }
 
 type Artifact struct {
-	General General `json:"general,omitempty"`
-	Issues  []Issue `json:"issues,omitempty"`
-	// TODO: Create License struct with correct fields for api/v2/summary/artifact endpoint
-	// Licenses []License `json:"licenses,omitempty"`
+	General  General          `json:"general,omitempty"`
+	Issues   []Issue          `json:"issues,omitempty"`
+	Licenses []SummaryLicense `json:"licenses,omitempty"`
 }
 
 type General struct {
@@ -124,6 +123,13 @@ type Issue struct {
 	Created     string             `json:"created,omitempty"`
 	ImpactPath  []string           `json:"impact_path,omitempty"`
 	Components  []SummaryComponent `json:"components,omitempty"`
+}
+
+type SummaryLicense struct {
+	Components  []string `json:"components,omitempty"`
+	FullName    string   `json:"full_name,omitempty"`
+	MoreInfoUrl []string `json:"more_info_url,omitempty"`
+	Name        string   `json:"name,omitempty"`
 }
 
 type Error struct {
