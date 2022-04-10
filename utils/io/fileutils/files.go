@@ -509,7 +509,7 @@ func IsStringInSlice(string string, strings []string) bool {
 func RemovePath(testPath string) error {
 	if _, err := os.Stat(testPath); err == nil {
 		// Delete the path
-		err = os.RemoveAll(testPath)
+		err = RemoveTempDir(testPath)
 		if err != nil {
 			return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())
 		}
