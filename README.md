@@ -13,7 +13,7 @@
 
 ## Table of Contents
 
-- [jfrog-client-go](#jfrog-client-go)
+- [JFrog Go Client](#jfrog-go-client)
   - [Table of Contents](#table-of-contents)
   - [General](#general)
   - [Pull Requests](#pull-requests)
@@ -1128,12 +1128,16 @@ params.UserDetails.Realm = "internal"
 params.UserDetails.ProfileUpdatable = &trueValue
 params.UserDetails.DisableUIAccess = &falseValue
 params.UserDetails.InternalPasswordDisabled = &falseValue
-params.UserDetails.groups = [2]string{"GroupA", "GroupB"}
-// Set to true in order to replace exist user with the same name
+params.UserDetails.groups = []string{"GroupA", "GroupB"}
+// Set to true to replace existing user with the same name.
 params.ReplaceIfExists = false
 err := serviceManager.CreateUser(params)
 
-params.UserDetails.groups = [3]string{"GroupA", "GroupB", "GroupC"}
+params.UserDetails.groups = []string{"GroupA", "GroupB", "GroupC"}
+err := serviceManager.UpdateUser(params)
+
+// Set to true to remove a user from every group.
+params.UserDetails.ClearGroups = true
 err := serviceManager.UpdateUser(params)
 ```
 
