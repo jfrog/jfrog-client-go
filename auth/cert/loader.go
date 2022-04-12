@@ -35,10 +35,10 @@ func LoadCertificate(clientCertPath, clientCertKeyPath string) (certificate tls.
 	certificate, err = tls.LoadX509KeyPair(clientCertPath, clientCertKeyPath)
 	if err != nil {
 		if clientCertKeyPath == "" {
-			err = errorutils.CheckErrorf("failed using the certificate located at %s. Reason: %s. Hint: No key for the certificate was provided.", clientCertPath, err.Error())
+			err = errorutils.CheckErrorf("failed using the certificate located at %s. Reason: %s. Hint: A certificate key was not provided. Make sure that the certificate doesn't require a key", clientCertPath, err.Error())
 			return
 		}
-		err = errorutils.CheckErrorf("Failed loading client certificate: " + err.Error())
+		err = errorutils.CheckErrorf("failed loading client certificate: " + err.Error())
 	}
 	return
 }
