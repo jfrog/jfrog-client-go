@@ -230,6 +230,7 @@ type Vulnerability struct {
 	VulnerableComponents []string             `json:"vulnerable_components,omitempty"`
 	Components           map[string]Component `json:"components,omitempty"`
 	IssueId              string               `json:"issue_id,omitempty"`
+	References           []string             `json:"references,omitempty"`
 }
 
 type License struct {
