@@ -487,7 +487,7 @@ func GetXrayDetails() auth.ServiceDetails {
 func GetPipelinesDetails() auth.ServiceDetails {
 	pDetails := pipelinesAuth.NewPipelinesDetails()
 	pDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*PipelinesUrl))
-	pDetails.SetAccessToken(*PipelinesAccessToken)
+	pDetails.SetAccessToken(*AccessToken)
 	return pDetails
 }
 
