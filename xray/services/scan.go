@@ -91,7 +91,11 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	}
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		scanError := ScanError{}
+		if err = json.Unmarshal(body, &scanError); err != nil {
+			return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		}
+		return "", errorutils.CheckErrorf(scanError.Error)
 	}
 	scanResponse := RequestScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
@@ -187,6 +191,10 @@ type GraphNode struct {
 
 type RequestScanResponse struct {
 	ScanId string `json:"scan_id,omitempty"`
+}
+
+type ScanError struct {
+	Error string `json:"error"`
 }
 
 type ScanResponse struct {
