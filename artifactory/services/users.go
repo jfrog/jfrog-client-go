@@ -15,6 +15,7 @@ import (
 type UserParams struct {
 	UserDetails     User
 	ReplaceIfExists bool
+	ClearGroups     bool
 }
 
 func NewUserParams() UserParams {
@@ -107,7 +108,6 @@ func (us *UserService) CreateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-
 	resp, body, err := us.client.SendPut(url, content, &httpDetails)
 	if err != nil {
 		return err
@@ -119,6 +119,9 @@ func (us *UserService) CreateUser(params UserParams) error {
 }
 
 func (us *UserService) UpdateUser(params UserParams) error {
+	if params.ClearGroups {
+		params.UserDetails.Groups = &[]string{}
+	}
 	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
 	if err != nil {
 		return err

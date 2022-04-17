@@ -154,11 +154,13 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 type XrayGraphScanParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
-	RepoPath   string
-	ProjectKey string
-	Watches    []string
-	ScanType   ScanType
-	Graph      *GraphNode
+	RepoPath               string
+	ProjectKey             string
+	Watches                []string
+	ScanType               ScanType
+	Graph                  *GraphNode
+	IncludeVulnerabilities bool
+	IncludeLicenses        bool
 }
 
 type GraphNode struct {
@@ -211,6 +213,14 @@ type Violation struct {
 	LicenseKey    string               `json:"license_key,omitempty"`
 	LicenseName   string               `json:"license_name,omitempty"`
 	IgnoreUrl     string               `json:"ignore_url,omitempty"`
+	RiskReason    string               `json:"risk_reason,omitempty"`
+	IsEol         *bool                `json:"is_eol,omitempty"`
+	EolMessage    string               `json:"eol_message,omitempty"`
+	LatestVersion string               `json:"latest_version,omitempty"`
+	NewerVersions *int                 `json:"newer_versions,omitempty"`
+	Cadence       *float64             `json:"cadence,omitempty"`
+	Commits       *int64               `json:"commits,omitempty"`
+	Committers    *int                 `json:"committers,omitempty"`
 }
 
 type Vulnerability struct {
@@ -220,6 +230,7 @@ type Vulnerability struct {
 	VulnerableComponents []string             `json:"vulnerable_components,omitempty"`
 	Components           map[string]Component `json:"components,omitempty"`
 	IssueId              string               `json:"issue_id,omitempty"`
+	References           []string             `json:"references,omitempty"`
 }
 
 type License struct {

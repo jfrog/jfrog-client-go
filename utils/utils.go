@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/io"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/jfrog/jfrog-client-go/utils/io"
 
 	"github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/gofrog/stringutils"
@@ -26,7 +27,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.10.0"
+	Version     = "1.12.1"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -204,13 +205,19 @@ func cleanPath(path string) string {
 func antPatternToRegExp(localPath string) string {
 	localPath = stringutils.EscapeSpecialChars(localPath)
 	separator := getFileSeparator()
+	// 'xxx/' => 'xxx/**'
+	if strings.HasSuffix(localPath, separator) {
+		localPath += "**"
+	}
 	var wildcard = ".*"
 	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
 	var regAsterisk = "([^" + separator + "]*)"
+	// ant `\*` ~ regexp `([^/]+)` : `\*` matches one or more characters (except from `/`) with a `/` prefix.
+	var regAsteriskWithSeparatorPrefix = "([^" + separator + "]+)"
 	// ant `**` ~ regexp `(.*)?` : `**` matches zero or more 'directories' in a path.
 	var doubleRegAsterisk = "(" + wildcard + ")?"
-	var doubleRegAsteriskWithSeperatorPrefix = "(" + wildcard + separator + ")?"
-	var doubleRegAsteriskWithSeperatorSuffix = "(" + separator + wildcard + ")?"
+	var doubleRegAsteriskWithSeparatorPrefix = "(" + wildcard + separator + ")?"
+	var doubleRegAsteriskWithSeparatorSuffix = "(" + separator + wildcard + ")?"
 
 	// `?` => `.{1}` : `?` matches one character.
 	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
@@ -218,15 +225,17 @@ func antPatternToRegExp(localPath string) string {
 	localPath = strings.Replace(localPath, `*`, regAsterisk, -1)
 	// `**` => `(.*)?`
 	localPath = strings.Replace(localPath, regAsterisk+regAsterisk, doubleRegAsterisk, -1)
-	// `(.*)?/` => `(.*/)?`
-	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeperatorPrefix, -1)
-	// Convert the last '/**' in the expression if exist : `/(.*)?` => `(/.*)?`
-	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
-		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeperatorSuffix
-	}
 
-	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
-		localPath += wildcard
+	// `\([^/]*)` => `\([^/]+)` : there are 2 cases with '*':
+	//		1. xxx/x* : * will represent 0 or more characters.
+	//		2. xxx/* : * will represent 1 or more characters.
+	// This "replace" handles the second option.
+	localPath = strings.Replace(localPath, separator+regAsterisk, separator+regAsteriskWithSeparatorPrefix, -1)
+	// `(.*)?/` => `(.*/)?`
+	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeparatorPrefix, -1)
+	// Convert the last '/**' in the expression if exists : `/(.*)?` => `(/.*)?`
+	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
+		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeparatorSuffix
 	}
 	return "^" + localPath + "$"
 }
