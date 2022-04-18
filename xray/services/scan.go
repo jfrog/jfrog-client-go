@@ -270,11 +270,11 @@ type Cve struct {
 }
 
 type ExtendedInformation struct {
-	ShortDescription             string                        `json:"short_description,omitempty"`       //////////////Might come in a format with links and titles like in README
-	FullDescription              string                        `json:"full_description,omitempty"`        //////////////Comes in a format with links and titles like in README
-	JfrogResearchSeverity        string                        `json:"jfrog_research_severity,omitempty"` ///////////Not shown in Xray UI. ex: Medium, Low
+	ShortDescription             string                        `json:"short_description,omitempty"`
+	FullDescription              string                        `json:"full_description,omitempty"`
+	JfrogResearchSeverity        string                        `json:"jfrog_research_severity,omitempty"`
 	JfrogResearchSeverityReasons []JfrogResearchSeverityReason `json:"jfrog_research_severity_reasons,omitempty"`
-	Remediation                  string                        `json:"remediation,omitempty"` //////////////Comes in a format with links and titles like in README
+	Remediation                  string                        `json:"remediation,omitempty"`
 }
 
 type JfrogResearchSeverityReason struct {
