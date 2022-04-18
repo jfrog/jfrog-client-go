@@ -280,6 +280,7 @@ type ExtendedInformation struct {
 type JfrogResearchSeverityReason struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
+	IsPositive  bool   `json:"is_positive,omitempty"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
