@@ -66,7 +66,7 @@ type ArtifactoryServicesManager interface {
 	CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error)
 	GetTokens() (services.GetTokensResponseData, error)
 	GetUserTokens(username string) ([]string, error)
-	RefreshToken(params services.RefreshTokenParams) (auth.CreateTokenResponseData, error)
+	RefreshToken(params services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error)
 	RevokeToken(params services.RevokeTokenParams) (string, error)
 	CreateReplication(params services.CreateReplicationParams) error
 	UpdateReplication(params services.UpdateReplicationParams) error
@@ -288,7 +288,7 @@ func (esm *EmptyArtifactoryServicesManager) GetUserTokens(username string) ([]st
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.RefreshTokenParams) (auth.CreateTokenResponseData, error) {
+func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
 

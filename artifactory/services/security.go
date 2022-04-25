@@ -154,7 +154,7 @@ func (ss *SecurityService) GetUserTokens(username string) ([]string, error) {
 	return tokens, nil
 }
 
-func (ss *SecurityService) RefreshToken(params RefreshTokenParams) (auth.CreateTokenResponseData, error) {
+func (ss *SecurityService) RefreshToken(params ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	artifactoryUrl := ss.ArtDetails.GetUrl()
 	data := buildRefreshTokenUrlValues(params)
 	httpClientsDetails := ss.getArtifactoryDetails().CreateHttpClientDetails()
@@ -208,7 +208,7 @@ func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
 	return data
 }
 
-func buildRefreshTokenUrlValues(params RefreshTokenParams) url.Values {
+func buildRefreshTokenUrlValues(params ArtifactoryRefreshTokenParams) url.Values {
 	data := buildCreateTokenUrlValues(params.Token)
 
 	// <grant_type> is used to tell the rest api whether to create or refresh a token.
@@ -256,7 +256,7 @@ type CreateTokenParams struct {
 	Audience    string
 }
 
-type RefreshTokenParams struct {
+type ArtifactoryRefreshTokenParams struct {
 	Token        CreateTokenParams
 	RefreshToken string
 	AccessToken  string
@@ -271,8 +271,8 @@ func NewCreateTokenParams() CreateTokenParams {
 	return CreateTokenParams{ExpiresIn: -1}
 }
 
-func NewRefreshTokenParams() RefreshTokenParams {
-	return RefreshTokenParams{Token: NewCreateTokenParams()}
+func NewArtifactoryRefreshTokenParams() ArtifactoryRefreshTokenParams {
+	return ArtifactoryRefreshTokenParams{Token: NewCreateTokenParams()}
 }
 
 func NewRevokeTokenParams() RevokeTokenParams {

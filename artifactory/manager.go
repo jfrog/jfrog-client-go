@@ -388,7 +388,7 @@ func (sm *ArtifactoryServicesManagerImp) GetUserTokens(username string) ([]strin
 	return securityService.GetUserTokens(username)
 }
 
-func (sm *ArtifactoryServicesManagerImp) RefreshToken(params services.RefreshTokenParams) (auth.CreateTokenResponseData, error) {
+func (sm *ArtifactoryServicesManagerImp) RefreshToken(params services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
 	return securityService.RefreshToken(params)

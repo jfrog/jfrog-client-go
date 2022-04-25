@@ -182,7 +182,7 @@ func refreshTokenTest(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	params := services.NewRefreshTokenParams()
+	params := services.NewArtifactoryRefreshTokenParams()
 	params.RefreshToken = token.RefreshToken
 	params.AccessToken = token.AccessToken
 	newToken, err := testsSecurityService.RefreshToken(params)

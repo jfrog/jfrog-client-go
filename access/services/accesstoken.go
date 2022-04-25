@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -13,13 +14,19 @@ import (
 
 const tokensApi = "api/v1/tokens"
 
+var trueValue = true
+
 type TokenService struct {
 	client         *jfroghttpclient.JfrogHttpClient
 	ServiceDetails auth.ServiceDetails
 }
 
 type TokenParams struct {
-	auth.CreateTokenData
+	auth.CommonTokenParams
+}
+
+func NewTokenParams() TokenParams {
+	return TokenParams{}
 }
 
 func NewTokenService(client *jfroghttpclient.JfrogHttpClient) *TokenService {
@@ -27,6 +34,19 @@ func NewTokenService(client *jfroghttpclient.JfrogHttpClient) *TokenService {
 }
 
 func (ps *TokenService) CreateAccessToken(params TokenParams) (auth.CreateTokenResponseData, error) {
+	return ps.createAccessToken(params)
+}
+
+func (ps *TokenService) RefreshAccessToken(params TokenParams) (auth.CreateTokenResponseData, error) {
+	p, err := createRefreshTokenRequestParams(params)
+	if err != nil {
+		return auth.CreateTokenResponseData{}, err
+	}
+	return ps.createAccessToken(*p)
+}
+
+// createAccessToken is being used to create and refresh access tokens.
+func (ps *TokenService) createAccessToken(params TokenParams) (auth.CreateTokenResponseData, error) {
 	// Set request's headers
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpDetails.Headers)
@@ -47,4 +67,16 @@ func (ps *TokenService) CreateAccessToken(params TokenParams) (auth.CreateTokenR
 	}
 	err = json.Unmarshal(body, &tokenInfo)
 	return tokenInfo, errorutils.CheckError(err)
+}
+
+func createRefreshTokenRequestParams(p TokenParams) (*TokenParams, error) {
+	// Validate provided parameters
+	if p.RefreshToken == "" {
+		return nil, errorutils.CheckError(errors.New("Error: trying to refresh token, but the 'refresh_token' field wasn't provided. "))
+	}
+	params := p
+	// Set refresh needed parameters
+	params.GrantType = "refresh_token"
+	params.Refreshable = &trueValue
+	return &params, nil
 }
