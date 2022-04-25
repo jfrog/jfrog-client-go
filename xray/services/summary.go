@@ -78,7 +78,7 @@ func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*Art
 		return nil, errorutils.CheckError(err)
 	}
 	if response.Errors != nil && len(response.Errors) > 0 {
-		return nil, errorutils.CheckErrorf("Getting artifact-summery for artifact: %s failed with error: %s", response.Errors[0].Identifier, response.Errors[0].Error)
+		return nil, errorutils.CheckErrorf("Getting artifact-summary for artifact: %s failed with error: %s", response.Errors[0].Identifier, response.Errors[0].Error)
 	}
 	return &response, nil
 }
