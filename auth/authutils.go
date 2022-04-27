@@ -115,23 +115,6 @@ func GetTokenMinutesLeft(token string) (int64, error) {
 	return left / 60, nil
 }
 
-// Returns 0 if expired
-func GetTokenMinutesPassed(token string) (int64, error) {
-	expiry, err := ExtractExpiryFromAccessToken(token)
-	if err != nil {
-		return 0, err
-	}
-	left, err := GetTokenMinutesLeft(token)
-	if err != nil {
-		return 0, err
-	}
-	passed := int64(expiry) - left
-	if passed < 0 {
-		return 0, nil
-	}
-	return passed, nil
-}
-
 type TokenPayload struct {
 	Subject        string `json:"sub,omitempty"`
 	Scope          string `json:"scp,omitempty"`
@@ -146,6 +129,8 @@ type TokenPayload struct {
 
 // Refreshable Tokens Constants.
 var RefreshBeforeExpiryMinutes = int64(10)
-var RefreshAfterExpiryMinutes = int64(50)
+
+// InviteRefreshBeforeExpiryMinutes : 1 year - 50 minutes
+var InviteRefreshBeforeExpiryMinutes = int64(365*24*60 - 50)
 
 const WaitBeforeRefreshSeconds = 15

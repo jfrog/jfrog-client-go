@@ -108,7 +108,7 @@ func (us *UserService) CreateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := us.client.SendPut(url, content, &httpDetails)
+	resp, body, err := us.client.SendPost(url, content, &httpDetails)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func (us *UserService) createOrUpdateUserRequest(user User) (url string, request
 		"Accept":       "application/json",
 	}
 
-	url = fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), user.Name)
+	url = fmt.Sprintf("%sapi/users", us.ArtDetails.GetUrl())
 	return
 }
 

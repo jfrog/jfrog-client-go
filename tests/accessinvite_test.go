@@ -4,6 +4,7 @@ import (
 	"fmt"
 	accessservices "github.com/jfrog/jfrog-client-go/access/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,21 +17,14 @@ func TestAccessInvite(t *testing.T) {
 
 func testInviteUser(t *testing.T) {
 	randomMail := fmt.Sprintf("test%s@jfrog.com", timestampStr)
-	randomMail = "gaimacrame@gmail.com"
 	UserParams := getTestInvitedUserParams(randomMail)
 	err := testUserService.CreateUser(UserParams)
 	assert.NoError(t, err)
-	user, err := testUserService.GetUser(UserParams)
-	assert.NoError(t, err)
-	assert.NotNil(t, user)
 
 	// Second invitation should fail because we can invite user only once a day for access internal reasons.
 	err = testsAccessInviteService.InviteUser(randomMail)
 	assert.Error(t, err)
-	// TODO: check error
-	//assert.True(t, strings.HasSuffix(err.Error(), "already invited today"), "error : "+err.Error())
-	//err = testUserService.DeleteUser(UserParams.UserDetails.Name)
-	assert.NoError(t, err)
+	assert.True(t, strings.Contains(err.Error(), "already invited today"), "error : "+err.Error())
 }
 
 func getTestInvitedUserParams(email string) services.UserParams {
