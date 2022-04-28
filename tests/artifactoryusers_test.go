@@ -90,7 +90,7 @@ func getTestUserParams(replaceIfExists bool, nameSuffix string) services.UserPar
 	userDetails := services.User{
 		Name:                     fmt.Sprintf("test%s%s", nameSuffix, timestampStr),
 		Email:                    "christianb@jfrog.com",
-		Password:                 "Password1",
+		Password:                 "Password1*",
 		Admin:                    &trueValue,
 		Realm:                    "internal",
 		ProfileUpdatable:         &trueValue,
