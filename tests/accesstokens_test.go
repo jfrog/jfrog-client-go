@@ -22,8 +22,7 @@ func testCreateRefreshableToken(t *testing.T) {
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
 	assert.NotEqual(t, tokenParams.AccessToken, token.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, "", token.RefreshToken, "Refresh token is empty")
-	// Access token can be valid for 1 year max.
-	assert.Equal(t, 31536000, token.ExpiresIn)
+	assert.Equal(t, testExpiredIn, token.ExpiresIn)
 }
 
 func testRefreshTokenTest(t *testing.T) {

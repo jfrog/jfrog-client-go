@@ -25,8 +25,8 @@ type TokenParams struct {
 	auth.CommonTokenParams
 }
 
-func NewTokenParams() TokenParams {
-	return TokenParams{}
+func NewTokenParams(params auth.CommonTokenParams) TokenParams {
+	return TokenParams{CommonTokenParams: params}
 }
 
 func NewTokenService(client *jfroghttpclient.JfrogHttpClient) *TokenService {
@@ -72,9 +72,9 @@ func (ps *TokenService) createAccessToken(params TokenParams) (auth.CreateTokenR
 func createRefreshTokenRequestParams(p auth.CommonTokenParams) (*TokenParams, error) {
 	// Validate provided parameters
 	if p.RefreshToken == "" {
-		return nil, errorutils.CheckError(errors.New("Error: trying to refresh token, but the 'refresh_token' field wasn't provided. "))
+		return nil, errorutils.CheckError(errors.New("error: trying to refresh token, but the 'refresh_token' field wasn't provided. "))
 	}
-	params := NewTokenParams()
+	params := NewTokenParams(p)
 	// Set refresh needed parameters
 	params.GrantType = "refresh_token"
 	params.Refreshable = &trueValue
