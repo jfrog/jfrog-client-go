@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const testExpiredIn = 10 * 60
+const testExpiredInSeconds = 10 * 60
 
 func TestAccessTokens(t *testing.T) {
 	initAccessTest(t)
@@ -16,18 +16,18 @@ func TestAccessTokens(t *testing.T) {
 }
 
 func testCreateRefreshableToken(t *testing.T) {
-	tokenParams := createRefreshableAccessTokenParams(testExpiredIn)
+	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
 	assert.NoError(t, err)
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
 	assert.NotEqual(t, tokenParams.AccessToken, token.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, "", token.RefreshToken, "Refresh token is empty")
-	assert.Equal(t, testExpiredIn, token.ExpiresIn)
+	assert.Equal(t, testExpiredInSeconds, token.ExpiresIn)
 }
 
 func testRefreshTokenTest(t *testing.T) {
 	// Create token
-	tokenParams := createRefreshableAccessTokenParams(testExpiredIn)
+	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
 	assert.NoError(t, err)
 	// Refresh token
@@ -40,15 +40,15 @@ func testRefreshTokenTest(t *testing.T) {
 	assert.Equal(t, token.ExpiresIn, newToken.ExpiresIn, "New access token's expiration is different from original one")
 }
 
-func createRefreshableAccessTokenParams(expiredIn int) services.TokenParams {
-	tokenParams := services.TokenParams{}
+func createRefreshableAccessTokenParams(expiredIn int) services.CreateTokenParams {
+	tokenParams := services.CreateTokenParams{}
 	tokenParams.ExpiresIn = expiredIn
 	tokenParams.Refreshable = &trueValue
 	return tokenParams
 }
 
-func createRefreshAccessTokenParams(token auth.CreateTokenResponseData) (refreshParams services.TokenParams) {
-	refreshParams = services.TokenParams{}
+func createRefreshAccessTokenParams(token auth.CreateTokenResponseData) (refreshParams services.CreateTokenParams) {
+	refreshParams = services.CreateTokenParams{}
 	refreshParams.ExpiresIn = token.ExpiresIn
 	refreshParams.Refreshable = &trueValue
 	refreshParams.GrantType = "refresh_token"

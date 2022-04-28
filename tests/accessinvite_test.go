@@ -21,14 +21,14 @@ func testInviteUser(t *testing.T) {
 	err := testUserService.CreateUser(UserParams)
 	assert.NoError(t, err)
 
-	// Second invitation should fail because we can invite user only once a day for access internal reasons.
+	// Second invitation should fail because we can invite user only once a day (Access's internal reasons).
 	err = testsAccessInviteService.InviteUser(randomMail)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "already invited today"), "error : "+err.Error())
 }
 
 func getTestInvitedUserParams(email string) services.UserParams {
-	// Data members "name" and "email" should both be the email for internal access reasons.
+	// Data members "name" and "email" should both be the email (Access's internal reasons).
 	userDetails := services.User{
 		Name:                     email,
 		Email:                    email,

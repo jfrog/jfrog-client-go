@@ -1013,7 +1013,7 @@ func createAccessInviteManager() {
 	failOnHttpClientCreation(err)
 	testsAccessInviteService = accessServices.NewInviteService(client)
 	testsAccessInviteService.ServiceDetails = accessDetails
-	// To test "invite" flow we first have to create new "invited user" using ArtifactoryUserManager.
+	// To test "invite" flow we first have to create new "invited user" using ArtifactoryUserManager and Artifactory's API.
 	createArtifactoryUserManager()
 }
 

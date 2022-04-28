@@ -21,19 +21,19 @@ type TokenService struct {
 	ServiceDetails auth.ServiceDetails
 }
 
-type TokenParams struct {
+type CreateTokenParams struct {
 	auth.CommonTokenParams
 }
 
-func NewTokenParams(params auth.CommonTokenParams) TokenParams {
-	return TokenParams{CommonTokenParams: params}
+func NewCreateTokenParams(params auth.CommonTokenParams) CreateTokenParams {
+	return CreateTokenParams{CommonTokenParams: params}
 }
 
 func NewTokenService(client *jfroghttpclient.JfrogHttpClient) *TokenService {
 	return &TokenService{client: client}
 }
 
-func (ps *TokenService) CreateAccessToken(params TokenParams) (auth.CreateTokenResponseData, error) {
+func (ps *TokenService) CreateAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	return ps.createAccessToken(params)
 }
 
@@ -45,8 +45,8 @@ func (ps *TokenService) RefreshAccessToken(token auth.CommonTokenParams) (auth.C
 	return ps.createAccessToken(*param)
 }
 
-// createAccessToken is being used to create and refresh access tokens.
-func (ps *TokenService) createAccessToken(params TokenParams) (auth.CreateTokenResponseData, error) {
+// createAccessToken is being used to create & refresh access tokens.
+func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	// Set request's headers
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpDetails.Headers)
@@ -69,12 +69,12 @@ func (ps *TokenService) createAccessToken(params TokenParams) (auth.CreateTokenR
 	return tokenInfo, errorutils.CheckError(err)
 }
 
-func createRefreshTokenRequestParams(p auth.CommonTokenParams) (*TokenParams, error) {
+func createRefreshTokenRequestParams(p auth.CommonTokenParams) (*CreateTokenParams, error) {
 	// Validate provided parameters
 	if p.RefreshToken == "" {
-		return nil, errorutils.CheckError(errors.New("error: trying to refresh token, but the 'refresh_token' field wasn't provided. "))
+		return nil, errorutils.CheckError(errors.New("error: trying to refresh token, but 'refresh_token' field wasn't provided. "))
 	}
-	params := NewTokenParams(p)
+	params := NewCreateTokenParams(p)
 	// Set refresh needed parameters
 	params.GrantType = "refresh_token"
 	params.Refreshable = &trueValue
