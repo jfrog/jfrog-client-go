@@ -91,7 +91,11 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	}
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		scanErrorJson := ScanErrorJson{}
+		if err = json.Unmarshal(body, &scanErrorJson); err != nil {
+			return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		}
+		return "", errorutils.CheckErrorf(scanErrorJson.Error)
 	}
 	scanResponse := RequestScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
@@ -189,6 +193,10 @@ type RequestScanResponse struct {
 	ScanId string `json:"scan_id,omitempty"`
 }
 
+type ScanErrorJson struct {
+	Error string `json:"error"`
+}
+
 type ScanResponse struct {
 	ScanId             string          `json:"scan_id,omitempty"`
 	XrayDataUrl        string          `json:"xray_data_url,omitempty"`
@@ -201,26 +209,27 @@ type ScanResponse struct {
 }
 
 type Violation struct {
-	Summary       string               `json:"summary,omitempty"`
-	Severity      string               `json:"severity,omitempty"`
-	ViolationType string               `json:"type,omitempty"`
-	Components    map[string]Component `json:"components,omitempty"`
-	WatchName     string               `json:"watch_name,omitempty"`
-	IssueId       string               `json:"issue_id,omitempty"`
-	Cves          []Cve                `json:"cves,omitempty"`
-	References    []string             `json:"references,omitempty"`
-	FailBuild     bool                 `json:"fail_build,omitempty"`
-	LicenseKey    string               `json:"license_key,omitempty"`
-	LicenseName   string               `json:"license_name,omitempty"`
-	IgnoreUrl     string               `json:"ignore_url,omitempty"`
-	RiskReason    string               `json:"risk_reason,omitempty"`
-	IsEol         *bool                `json:"is_eol,omitempty"`
-	EolMessage    string               `json:"eol_message,omitempty"`
-	LatestVersion string               `json:"latest_version,omitempty"`
-	NewerVersions *int                 `json:"newer_versions,omitempty"`
-	Cadence       *float64             `json:"cadence,omitempty"`
-	Commits       *int64               `json:"commits,omitempty"`
-	Committers    *int                 `json:"committers,omitempty"`
+	Summary             string               `json:"summary,omitempty"`
+	Severity            string               `json:"severity,omitempty"`
+	ViolationType       string               `json:"type,omitempty"`
+	Components          map[string]Component `json:"components,omitempty"`
+	WatchName           string               `json:"watch_name,omitempty"`
+	IssueId             string               `json:"issue_id,omitempty"`
+	Cves                []Cve                `json:"cves,omitempty"`
+	References          []string             `json:"references,omitempty"`
+	FailBuild           bool                 `json:"fail_build,omitempty"`
+	LicenseKey          string               `json:"license_key,omitempty"`
+	LicenseName         string               `json:"license_name,omitempty"`
+	IgnoreUrl           string               `json:"ignore_url,omitempty"`
+	RiskReason          string               `json:"risk_reason,omitempty"`
+	IsEol               *bool                `json:"is_eol,omitempty"`
+	EolMessage          string               `json:"eol_message,omitempty"`
+	LatestVersion       string               `json:"latest_version,omitempty"`
+	NewerVersions       *int                 `json:"newer_versions,omitempty"`
+	Cadence             *float64             `json:"cadence,omitempty"`
+	Commits             *int64               `json:"commits,omitempty"`
+	Committers          *int                 `json:"committers,omitempty"`
+	ExtendedInformation *ExtendedInformation `json:"extended_information,omitempty"`
 }
 
 type Vulnerability struct {
@@ -231,6 +240,7 @@ type Vulnerability struct {
 	Components           map[string]Component `json:"components,omitempty"`
 	IssueId              string               `json:"issue_id,omitempty"`
 	References           []string             `json:"references,omitempty"`
+	ExtendedInformation  *ExtendedInformation `json:"extended_information,omitempty"`
 }
 
 type License struct {
@@ -257,6 +267,20 @@ type Cve struct {
 	CvssV2Vector string `json:"cvss_v2_vector,omitempty"`
 	CvssV3Score  string `json:"cvss_v3_score,omitempty"`
 	CvssV3Vector string `json:"cvss_v3_vector,omitempty"`
+}
+
+type ExtendedInformation struct {
+	ShortDescription             string                        `json:"short_description,omitempty"`
+	FullDescription              string                        `json:"full_description,omitempty"`
+	JfrogResearchSeverity        string                        `json:"jfrog_research_severity,omitempty"`
+	JfrogResearchSeverityReasons []JfrogResearchSeverityReason `json:"jfrog_research_severity_reasons,omitempty"`
+	Remediation                  string                        `json:"remediation,omitempty"`
+}
+
+type JfrogResearchSeverityReason struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	IsPositive  bool   `json:"is_positive,omitempty"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {

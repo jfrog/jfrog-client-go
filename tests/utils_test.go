@@ -497,8 +497,8 @@ func setAuthenticationDetail(details auth.ServiceDetails) {
 	if !fileutils.IsSshUrl(details.GetUrl()) {
 		if *RtApiKey != "" {
 			details.SetApiKey(*RtApiKey)
-		} else if *RtAccessToken != "" {
-			details.SetAccessToken(*RtAccessToken)
+		} else if *AccessToken != "" {
+			details.SetAccessToken(*AccessToken)
 		} else {
 			details.SetUser(*RtUser)
 			details.SetPassword(*RtPassword)
