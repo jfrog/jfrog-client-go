@@ -33,7 +33,7 @@ func testRefreshTokenTest(t *testing.T) {
 	assert.NoError(t, err)
 	// Refresh token
 	refreshTokenParams := createRefreshAccessTokenParams(token)
-	newToken, err := testsAccessTokensService.RefreshAccessToken(refreshTokenParams)
+	newToken, err := testsAccessTokensService.RefreshAccessToken(refreshTokenParams.CommonTokenParams)
 	assert.NoError(t, err)
 	// Validate
 	assert.NotEqual(t, token.AccessToken, newToken.AccessToken, "New access token is identical to original one")

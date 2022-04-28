@@ -37,12 +37,12 @@ func (ps *TokenService) CreateAccessToken(params TokenParams) (auth.CreateTokenR
 	return ps.createAccessToken(params)
 }
 
-func (ps *TokenService) RefreshAccessToken(params TokenParams) (auth.CreateTokenResponseData, error) {
-	p, err := createRefreshTokenRequestParams(params)
+func (ps *TokenService) RefreshAccessToken(token auth.CommonTokenParams) (auth.CreateTokenResponseData, error) {
+	param, err := createRefreshTokenRequestParams(token)
 	if err != nil {
 		return auth.CreateTokenResponseData{}, err
 	}
-	return ps.createAccessToken(*p)
+	return ps.createAccessToken(*param)
 }
 
 // createAccessToken is being used to create and refresh access tokens.
@@ -69,12 +69,12 @@ func (ps *TokenService) createAccessToken(params TokenParams) (auth.CreateTokenR
 	return tokenInfo, errorutils.CheckError(err)
 }
 
-func createRefreshTokenRequestParams(p TokenParams) (*TokenParams, error) {
+func createRefreshTokenRequestParams(p auth.CommonTokenParams) (*TokenParams, error) {
 	// Validate provided parameters
 	if p.RefreshToken == "" {
 		return nil, errorutils.CheckError(errors.New("Error: trying to refresh token, but the 'refresh_token' field wasn't provided. "))
 	}
-	params := p
+	params := NewTokenParams()
 	// Set refresh needed parameters
 	params.GrantType = "refresh_token"
 	params.Refreshable = &trueValue
