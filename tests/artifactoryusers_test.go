@@ -96,6 +96,9 @@ func getTestUserParams(replaceIfExists bool, nameSuffix string) services.UserPar
 		ProfileUpdatable:         &trueValue,
 		DisableUIAccess:          &falseValue,
 		InternalPasswordDisabled: &falseValue,
+		WatchManager:             &falseValue,
+		ReportsManager:           &falseValue,
+		PolicyManager:            &falseValue,
 	}
 	return services.UserParams{
 		UserDetails:     userDetails,
