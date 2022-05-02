@@ -36,7 +36,8 @@ func testCreateUser(t *testing.T) {
 
 func testUpdateUser(t *testing.T) {
 	UserParams := getTestUserParams(true, "")
-
+	UserParams.UserDetails.Email = "changedgai@mail.com"
+	UserParams.UserDetails.Name = "gaiii"
 	err := testUserService.CreateUser(UserParams)
 	defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
 	assert.NoError(t, err)
