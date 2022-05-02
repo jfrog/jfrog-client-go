@@ -2,11 +2,12 @@ package log
 
 import (
 	"fmt"
-	"github.com/gookit/color"
-	"golang.org/x/term"
 	"io"
 	"log"
 	"os"
+
+	"github.com/gookit/color"
+	"golang.org/x/term"
 )
 
 var Logger Log
@@ -35,7 +36,7 @@ const (
 func NewLoggerWithFlags(logLevel LevelType, logToWriter io.Writer, logFlags int) *jfrogLogger {
 	logger := new(jfrogLogger)
 	logger.SetLogLevel(logLevel)
-	logger.SetOutputWriter(os.Stdout)
+	logger.SetOutputWriter(logToWriter)
 	logger.SetLogsWriter(logToWriter, logFlags)
 	return logger
 }
@@ -63,6 +64,9 @@ func (logger *jfrogLogger) SetLogLevel(LevelEnum LevelType) {
 }
 
 func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
+	if writer == nil {
+		writer = os.Stdout
+	}
 	logger.OutputLog = log.New(writer, "", 0)
 }
 
