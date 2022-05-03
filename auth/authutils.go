@@ -128,9 +128,11 @@ type TokenPayload struct {
 }
 
 // Refreshable Tokens Constants.
+
+// RefreshBeforeExpiryMinutes Artifactory's refresh token mechanism creates tokens that expired in 60 minutes. We want to refresh them after 50 minutes (when 10 minutes left)
 var RefreshBeforeExpiryMinutes = int64(10)
 
-// InviteRefreshBeforeExpiryMinutes : 1 year - 50 minutes
+// InviteRefreshBeforeExpiryMinutes Invitations mechanism creates tokens that are valid for 1 year. We want to refresh the token every 50 minutes.
 var InviteRefreshBeforeExpiryMinutes = int64(365*24*60 - 50)
 
 const WaitBeforeRefreshSeconds = 15

@@ -14,8 +14,6 @@ import (
 
 const tokensApi = "api/v1/tokens"
 
-var trueValue = true
-
 type TokenService struct {
 	client         *jfroghttpclient.JfrogHttpClient
 	ServiceDetails auth.ServiceDetails
@@ -45,7 +43,7 @@ func (ps *TokenService) RefreshAccessToken(token auth.CommonTokenParams) (auth.C
 	return ps.createAccessToken(*param)
 }
 
-// createAccessToken is being used to create & refresh access tokens.
+// createAccessToken is used to create & refresh access tokens.
 func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	// Set request's headers
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
@@ -70,12 +68,13 @@ func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.Create
 }
 
 func createRefreshTokenRequestParams(p auth.CommonTokenParams) (*CreateTokenParams, error) {
+	var trueValue = true
 	// Validate provided parameters
 	if p.RefreshToken == "" {
 		return nil, errorutils.CheckError(errors.New("error: trying to refresh token, but 'refresh_token' field wasn't provided. "))
 	}
 	params := NewCreateTokenParams(p)
-	// Set refresh needed parameters
+	// Set refresh required parameters
 	params.GrantType = "refresh_token"
 	params.Refreshable = &trueValue
 	return &params, nil

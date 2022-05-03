@@ -100,8 +100,8 @@ func (sm *AccessServicesManager) RefreshAccessToken(token auth.CommonTokenParams
 	return tokenService.RefreshAccessToken(token)
 }
 
-func (sm *AccessServicesManager) InviteUser(email string) error {
+func (sm *AccessServicesManager) InviteUser(email, source string) error {
 	inviteService := services.NewInviteService(sm.client)
 	inviteService.ServiceDetails = sm.config.GetServiceDetails()
-	return inviteService.InviteUser(email)
+	return inviteService.InviteUser(email, source)
 }

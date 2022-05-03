@@ -30,12 +30,12 @@ func NewInviteService(client *jfroghttpclient.JfrogHttpClient) *InviteService {
 	return &InviteService{client: client}
 }
 
-func (us *InviteService) InviteUser(email string) error {
+func (us *InviteService) InviteUser(email, source string) error {
 	httpDetails := us.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s%s", us.ServiceDetails.GetUrl(), inviteApi)
 	data := InvitedUser{
 		InvitedEmail: email,
-		Source:       InviteCliSourceName,
+		Source:       source,
 	}
 	requestContent, err := json.Marshal(data)
 	if err != nil {
@@ -47,7 +47,7 @@ func (us *InviteService) InviteUser(email string) error {
 		return err
 	}
 	if resp == nil {
-		return errorutils.CheckErrorf("no response provided (including status code)")
+		return errorutils.CheckErrorf("no response was returned for the request sent")
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))

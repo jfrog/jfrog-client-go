@@ -22,7 +22,7 @@ func testInviteUser(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Second invitation should fail because we can invite user only once a day (Access's internal reasons).
-	err = testsAccessInviteService.InviteUser(randomMail)
+	err = testsAccessInviteService.InviteUser(randomMail, "cli")
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "already invited today"), "error : "+err.Error())
 }
