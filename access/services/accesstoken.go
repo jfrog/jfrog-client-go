@@ -12,6 +12,7 @@ import (
 	"net/http"
 )
 
+//#nosec G101 -- False positive - no hardcoded credentials.
 const tokensApi = "api/v1/tokens"
 
 type TokenService struct {
@@ -45,7 +46,7 @@ func (ps *TokenService) RefreshAccessToken(token auth.CommonTokenParams) (auth.C
 
 // createAccessToken is used to create & refresh access tokens.
 func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
-	// Set request's headers
+	// Set the request headers
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpDetails.Headers)
 	utils.AddHeader("Authorization", fmt.Sprintf("Bearer %s", ps.ServiceDetails.GetAccessToken()), &httpDetails.Headers)
