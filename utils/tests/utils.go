@@ -132,7 +132,7 @@ func RemoveAndAssert(t *testing.T, path string) {
 }
 
 func RemoveAllAndAssert(t *testing.T, path string) {
-	assert.NoError(t, os.RemoveAll(path), "Couldn't removeAll: "+path)
+	assert.NoError(t, fileutils.RemoveTempDir(path), "Couldn't removeAll: "+path)
 }
 
 func SetEnvAndAssert(t *testing.T, key, value string) {

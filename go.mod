@@ -5,20 +5,20 @@ go 1.17
 require (
 	github.com/buger/jsonparser v1.1.1
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/golang-jwt/jwt/v4 v4.3.0
+	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/gookit/color v1.5.0
-	github.com/jfrog/build-info-go v1.2.1
+	github.com/jfrog/build-info-go v1.2.5
 	github.com/jfrog/gofrog v1.1.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/xanzy/ssh-agent v0.3.1
-	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
+	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
 )
 
 require (
-	github.com/CycloneDX/cyclonedx-go v0.4.0 // indirect
+	github.com/CycloneDX/cyclonedx-go v0.5.1 // indirect
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
@@ -55,6 +55,6 @@ exclude (
 	golang.org/x/text v0.3.4
 )
 
-// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.0.1-0.20220112142814-65cb52a6452a
+replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.2.6-0.20220501062728-3ce03e0924b3
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.0.7-0.20211128152632-e218c460d703

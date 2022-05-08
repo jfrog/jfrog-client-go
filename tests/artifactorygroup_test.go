@@ -58,8 +58,9 @@ func testAddUsersToGroup(t *testing.T) {
 		defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
 		assert.NoError(t, err)
 		user, err := testUserService.GetUser(UserParams)
-		assert.NoError(t, err)
-		userNames[i] = user.Name
+		if assert.NoError(t, err) {
+			userNames[i] = user.Name
+		}
 	}
 
 	// Add users to group

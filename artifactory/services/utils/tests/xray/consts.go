@@ -1220,3 +1220,74 @@ const VulnerabilityReportDetailsResponse = `
   ]
 }
 `
+
+const VulnerableXraySummaryArtifactResponse = `
+{
+  "artifacts": [
+    {
+      "general": {
+        "component_id": "foo/bar:84a28a42",
+        "name": "foo/bar:84a28a42",
+        "path": "default/foo/bar/84a28a42/",
+        "pkg_type": "Docker",
+        "sha256": "c255cbe29c2da2935b4433a54e4ce6a3710490ee1d2c47bc68a7fa1732a3be24"
+      },
+      "issues": [
+        {
+          "issue_id": "XRAY-189376",
+          "summary": "ImportedSymbols in debug/macho (for Open or OpenFat) in Go before 1.16.10 and 1.17.x before 1.17.3 Accesses a Memory Location After the End of a Buffer, aka an out-of-bounds slice situation.",
+          "description": "ImportedSymbols in debug/macho (for Open or OpenFat) in Go before 1.16.10 and 1.17.x before 1.17.3 Accesses a Memory Location After the End of a Buffer, aka an out-of-bounds slice situation.",
+          "issue_type": "security",
+          "severity": "High",
+          "provider": "JFrog",
+          "cves": [
+            {
+              "cve": "CVE-2021-41771",
+              "cvss_v2": "5.0/CVSS:2.0/AV:N/AC:L/Au:N/C:N/I:N/A:P",
+              "cvss_v3": "7.5/CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "cwe": [
+                "CWE-119"
+              ]
+            }
+          ],
+          "created": "2021-11-09T00:00:00.702Z",
+          "impact_path": [
+            "default/foo/bar/84a28a42/sha256__fc66940af1388789585cf7128aeb3edc547723e307b53e59b75ad2797ac1c765.tar.gz/bar/github.com/lang/go/go"
+          ],
+          "components": [
+            {
+              "component_id": "github.com/golang/go",
+              "fixed_versions": [
+                "[1.16.10]",
+                "[1.17.3]"
+              ]
+            },
+            {
+              "component_id": "github.com/golang/go/src",
+              "fixed_versions": [
+                "[1.16.10]",
+                "[1.17.3]"
+              ]
+            }
+          ],
+          "component_physical_paths": [
+            "sha256__fc66940af1388789585cf7128aeb3edc547723e307b53e59b75ad2797ac1c765.tar.gz/bar/github.com/lang/go/go"
+          ]
+        }
+      ],
+      "licenses": [
+        {
+          "components": [
+            "go://github.com/golang/go:1.15.8"
+          ],
+          "full_name": "Unknown license",
+          "more_info_url": [
+            "Unknown link"
+          ],
+          "name": "Unknown"
+        }
+      ]
+    }
+  ]
+}
+`
