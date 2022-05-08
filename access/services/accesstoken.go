@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"net/http"
 )
 
@@ -47,11 +48,13 @@ func (ps *TokenService) RefreshAccessToken(token auth.CommonTokenParams) (auth.C
 // createAccessToken is used to create & refresh access tokens.
 func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	// Set the request headers
+	tokenInfo := auth.CreateTokenResponseData{}
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpDetails.Headers)
-	utils.AddHeader("Authorization", fmt.Sprintf("Bearer %s", ps.ServiceDetails.GetAccessToken()), &httpDetails.Headers)
-
-	tokenInfo := auth.CreateTokenResponseData{}
+	err := ps.addAccessTokenAuthorizationHeader(params, &httpDetails)
+	if err != nil {
+		return tokenInfo, err
+	}
 	requestContent, err := json.Marshal(params)
 	if errorutils.CheckError(err) != nil {
 		return tokenInfo, err
@@ -66,6 +69,18 @@ func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.Create
 	}
 	err = json.Unmarshal(body, &tokenInfo)
 	return tokenInfo, errorutils.CheckError(err)
+}
+
+func (ps *TokenService) addAccessTokenAuthorizationHeader(params CreateTokenParams, httpDetails *httputils.HttpClientDetails) error {
+	access := ps.ServiceDetails.GetAccessToken()
+	if access == "" {
+		access = params.AccessToken
+	}
+	if access == "" {
+		return errorutils.CheckError(errors.New("Failed: Adding accessToken authorization, but No accessToken was provided. "))
+	}
+	utils.AddHeader("Authorization", fmt.Sprintf("Bearer %s", access), &httpDetails.Headers)
+	return nil
 }
 
 func createRefreshTokenRequestParams(p auth.CommonTokenParams) (*CreateTokenParams, error) {

@@ -44,6 +44,7 @@ func createRefreshableAccessTokenParams(expiredIn int) services.CreateTokenParam
 	tokenParams := services.CreateTokenParams{}
 	tokenParams.ExpiresIn = expiredIn
 	tokenParams.Refreshable = &trueValue
+	tokenParams.Audience = "*@*"
 	return tokenParams
 }
 
