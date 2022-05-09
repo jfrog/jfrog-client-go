@@ -84,6 +84,7 @@
       - [Fetching Group Details](#fetching-group-details)
       - [Creating and Updating a Group](#creating-and-updating-a-group)
       - [Deleting a Group](#deleting-a-group)
+      - [Executing Full System Export](#executing-a-full-system-export)
   - [Access APIs](#access-apis)
     - [Creating Access Service Manager](#creating-access-service-manager)
       - [Creating Access Details](#creating-access-details)
@@ -1185,6 +1186,13 @@ err := serviceManager.UpdateGroup(params)
 
 ```go
 err := serviceManager.DeleteGroup("myGroupName")
+```
+
+#### Executing a Full System Export
+
+```go
+params := services.NewExportParams("/tmp/")
+err := serviceManager.Export(params)
 ```
 
 ## Access APIs

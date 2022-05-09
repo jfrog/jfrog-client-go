@@ -510,6 +510,11 @@ func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPro
 	return systemService.PromoteDocker(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) Export(params services.ExportParams) error {
+	exportService := services.NewExportService(sm.config.GetServiceDetails(), sm.client)
+	return exportService.Export(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }

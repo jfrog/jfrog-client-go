@@ -87,6 +87,7 @@ type ArtifactoryServicesManager interface {
 	ConvertLocalToFederatedRepository(repoKey string) error
 	TriggerFederatedRepositoryFullSyncAll(repoKey string) error
 	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
+	Export(params services.ExportParams) error
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -380,6 +381,10 @@ func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncAl
 }
 
 func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) Export(params services.ExportParams) error {
 	panic("Failed: Method is not implemented")
 }
 
