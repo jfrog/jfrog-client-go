@@ -34,6 +34,12 @@ type User struct {
 	LastLoggedIn             string    `json:"lastLoggedIn,omitempty" csv:"lastLoggedIn,omitempty"`
 	Realm                    string    `json:"realm,omitempty" csv:"realm,omitempty"`
 	Groups                   *[]string `json:"groups,omitempty" csv:"groups,omitempty"`
+	ShouldInvite             *bool     `json:"shouldInvite,omitempty" csv:"shouldInvite,omitempty"`
+	Source                   string    `json:"source,omitempty" csv:"source,omitempty"`
+	WatchManager             *bool     `json:"watchManager,omitempty" csv:"watchManager,omitempty"`
+	ReportsManager           *bool     `json:"reportsManager,omitempty" csv:"reportsManager,omitempty"`
+	PolicyManager            *bool     `json:"policyManager,omitempty" csv:"policyManager,omitempty"`
+	ProjectAdmin             *bool     `json:"projectAdmin,omitempty" csv:"projectAdmin,omitempty"`
 }
 
 type UserService struct {

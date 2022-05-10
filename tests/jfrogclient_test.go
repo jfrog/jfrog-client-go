@@ -69,6 +69,8 @@ func setupIntegrationTests() {
 	}
 	if *TestAccess {
 		createAccessProjectManager()
+		createAccessInviteManager()
+		createAccessTokensManager()
 	}
 	if err := createRepo(); err != nil {
 		log.Error(err.Error())

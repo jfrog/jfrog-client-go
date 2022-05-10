@@ -2,6 +2,7 @@ package access
 
 import (
 	"github.com/jfrog/jfrog-client-go/access/services"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
@@ -85,4 +86,22 @@ func (sm *AccessServicesManager) DeleteExistingProjectGroup(projectKey string, g
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()
 	return projectService.DeleteExistingGroup(projectKey, groupName)
+}
+
+func (sm *AccessServicesManager) CreateAccessToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
+	tokenService := services.NewTokenService(sm.client)
+	tokenService.ServiceDetails = sm.config.GetServiceDetails()
+	return tokenService.CreateAccessToken(params)
+}
+
+func (sm *AccessServicesManager) RefreshAccessToken(token auth.CommonTokenParams) (auth.CreateTokenResponseData, error) {
+	tokenService := services.NewTokenService(sm.client)
+	tokenService.ServiceDetails = sm.config.GetServiceDetails()
+	return tokenService.RefreshAccessToken(token)
+}
+
+func (sm *AccessServicesManager) InviteUser(email, source string) error {
+	inviteService := services.NewInviteService(sm.client)
+	inviteService.ServiceDetails = sm.config.GetServiceDetails()
+	return inviteService.InviteUser(email, source)
 }
