@@ -22,6 +22,9 @@ var Format LogFormat
 // but through the 'isTerminalMode' function.
 var terminalMode *bool
 
+// defaultLogger is the default logger instance in case the user does not set one
+var defaultLogger = NewLogger(INFO, nil)
+
 const (
 	ERROR LevelType = iota
 	WARN
@@ -59,6 +62,13 @@ func SetLogger(newLogger Log) {
 	Logger = newLogger
 }
 
+func GetLogger() Log {
+	if Logger != nil {
+		return Logger
+	}
+	return defaultLogger
+}
+
 func (logger *jfrogLogger) SetLogLevel(LevelEnum LevelType) {
 	logger.LogLevel = LevelEnum
 }
@@ -90,35 +100,24 @@ func (logger *jfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
 	logger.ErrorLog = log.New(writer, "[Error] ", logFlags)
 }
 
-func validateLogInit() {
-	if Logger == nil {
-		panic("Logger not initialized. See API documentation.")
-	}
-}
-
 func Debug(a ...interface{}) {
-	validateLogInit()
-	Logger.Debug(a...)
+	GetLogger().Debug(a...)
 }
 
 func Info(a ...interface{}) {
-	validateLogInit()
-	Logger.Info(a...)
+	GetLogger().Info(a...)
 }
 
 func Warn(a ...interface{}) {
-	validateLogInit()
-	Logger.Warn(a...)
+	GetLogger().Warn(a...)
 }
 
 func Error(a ...interface{}) {
-	validateLogInit()
-	Logger.Error(a...)
+	GetLogger().Error(a...)
 }
 
 func Output(a ...interface{}) {
-	validateLogInit()
-	Logger.Output(a...)
+	GetLogger().Output(a...)
 }
 
 func (logger jfrogLogger) GetLogLevel() LevelType {
