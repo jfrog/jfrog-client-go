@@ -77,7 +77,7 @@ func (ps *TokenService) addAccessTokenAuthorizationHeader(params CreateTokenPara
 		access = params.AccessToken
 	}
 	if access == "" {
-		return errorutils.CheckError(errors.New("Failed: Adding accessToken authorization, but No accessToken was provided. "))
+		return errorutils.CheckError(errors.New("failed: adding accessToken authorization, but No accessToken was provided. "))
 	}
 	utils.AddHeader("Authorization", fmt.Sprintf("Bearer %s", access), &httpDetails.Headers)
 	return nil
