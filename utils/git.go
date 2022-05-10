@@ -43,8 +43,7 @@ func (m *GitManager) ExecGit(args ...string) (string, string, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-	errorutils.CheckError(err)
-	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
+	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), errorutils.CheckError(err)
 }
 
 func (m *GitManager) ReadConfig() error {
