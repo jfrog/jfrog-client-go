@@ -12,8 +12,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-const exportMessage = "Running full system export..."
-
 type ExportService struct {
 	client     *jfroghttpclient.JfrogHttpClient
 	artDetails auth.ServiceDetails
@@ -36,6 +34,7 @@ func (drs *ExportService) Export(exportParams ExportParams) error {
 		return errorutils.CheckError(err)
 	}
 
+	exportMessage := "Running full system export..."
 	if drs.DryRun {
 		log.Info("[Dry run] " + exportMessage)
 		log.Info("Export parameters: \n" + clientutils.IndentJson(requestContent))
@@ -51,8 +50,8 @@ func (drs *ExportService) Export(exportParams ExportParams) error {
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
-	log.Debug("Artifactory response:", resp.Status)
 	log.Info(string(body))
+	log.Debug("Artifactory response:", resp.Status)
 	return nil
 }
 
