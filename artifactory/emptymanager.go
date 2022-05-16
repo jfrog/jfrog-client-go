@@ -1,8 +1,9 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
 	"io"
+
+	"github.com/jfrog/jfrog-client-go/auth"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
@@ -74,6 +75,9 @@ type ArtifactoryServicesManager interface {
 	GetReplication(repoKey string) ([]utils.ReplicationParams, error)
 	GetVersion() (string, error)
 	GetServiceId() (string, error)
+	GetConfigDescriptor() (string, error)
+	ActivateKeyEncryption() error
+	DeactivateKeyEncryption() error
 	PromoteDocker(params services.DockerPromoteParams) error
 	Client() *jfroghttpclient.JfrogHttpClient
 	GetGroup(params services.GroupParams) (*services.Group, error)
@@ -318,6 +322,18 @@ func (esm *EmptyArtifactoryServicesManager) GetVersion() (string, error) {
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetServiceId() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetConfigDescriptor() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) ActivateKeyEncryption() error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DeactivateKeyEncryption() error {
 	panic("Failed: Method is not implemented")
 }
 
