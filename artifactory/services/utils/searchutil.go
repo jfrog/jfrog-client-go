@@ -2,7 +2,14 @@ package utils
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	buildinfo "github.com/jfrog/build-info-go/entities"
+	"github.com/jfrog/gofrog/version"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 	"net/http"
 	"os"
@@ -11,14 +18,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	buildinfo "github.com/jfrog/build-info-go/entities"
-	"github.com/jfrog/gofrog/version"
-
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type RequiredArtifactProps int
@@ -327,14 +326,25 @@ type ResultItem struct {
 	Repo        string     `json:"repo,omitempty"`
 	Path        string     `json:"path,omitempty"`
 	Name        string     `json:"name,omitempty"`
+	Created     string     `json:"created,omitempty"`
+	Modified    string     `json:"modified,omitempty"`
+	Updated     string     `json:"updated,omitempty"`
+	CreatedBy   string     `json:"created_by,omitempty"`
+	ModifiedBy  string     `json:"modified_by,omitempty"`
+	Type        string     `json:"type,omitempty"`
 	Actual_Md5  string     `json:"actual_md5,omitempty"`
 	Actual_Sha1 string     `json:"actual_sha1,omitempty"`
 	Sha256      string     `json:"sha256,omitempty"`
 	Size        int64      `json:"size,omitempty"`
-	Created     string     `json:"created,omitempty"`
-	Modified    string     `json:"modified,omitempty"`
 	Properties  []Property `json:"properties,omitempty"`
-	Type        string     `json:"type,omitempty"`
+	Stats       []Stat     `json:"stats,omitempty"`
+}
+
+type Stat struct {
+	Downloaded      string      `json:"downloaded,omitempty"`
+	Downloads       json.Number `json:"downloads,omitempty"`
+	DownloadedBy    string      `json:"downloaded_by,omitempty"`
+	RemoteDownloads json.Number `json:"remote_downloads,omitempty"`
 }
 
 func (item ResultItem) GetSortKey() string {
@@ -399,6 +409,15 @@ func (item *ResultItem) GetProperty(key string) string {
 		}
 	}
 	return ""
+}
+
+func (item *ResultItem) GetPropertiesAsMap() *Properties {
+	props := NewProperties()
+	for _, prop := range item.Properties {
+		splitValues := splitWhileIgnoringBackslashPrefixSeparators(prop.Value, multiValuesSeparator)
+		props.properties[prop.Key] = append(props.properties[prop.Key], splitValues...)
+	}
+	return props
 }
 
 func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (*content.ContentReader, error) {

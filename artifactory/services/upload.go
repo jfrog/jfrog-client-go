@@ -450,7 +450,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
 	if !us.DryRun {
 		if us.shouldTryChecksumDeploy(details.Size, uploadParams) {
-			resp, body, e = us.tryChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
+			resp, body, e = us.TryChecksumDeploy(details, targetUrlWithProps, httpClientsDetails)
 			if e != nil {
 				return false, e
 			}
@@ -519,7 +519,7 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
-			resp, body, err = us.tryChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
+			resp, body, err = us.TryChecksumDeploy(details, targetUrlWithProps, httpClientsDetails)
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
@@ -579,14 +579,12 @@ func addExplodeHeader(httpClientsDetails *httputils.HttpClientDetails, isExplode
 	}
 }
 
-func (us *UploadService) tryChecksumDeploy(details *fileutils.FileDetails, targetPath string, httpClientsDetails httputils.HttpClientDetails,
-	client *jfroghttpclient.JfrogHttpClient) (resp *http.Response, body []byte, err error) {
+func (us *UploadService) TryChecksumDeploy(details *fileutils.FileDetails, targetPath string, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	requestClientDetails := httpClientsDetails.Clone()
 	utils.AddHeader("X-Checksum-Deploy", "true", &requestClientDetails.Headers)
 	utils.AddChecksumHeaders(requestClientDetails.Headers, details)
 	utils.AddAuthHeaders(requestClientDetails.Headers, us.ArtDetails)
-
-	resp, body, err = client.SendPut(targetPath, nil, requestClientDetails)
+	resp, body, err = us.client.SendPut(targetPath, nil, requestClientDetails)
 	return
 }
 
@@ -667,7 +665,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			}
 			uploadResult.TotalCount[threadId]++
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
-			targetUrl, targetPathWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
+			targetUrl, targetPathWithProps, e := BuildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
 			if e != nil {
 				return
 			}
@@ -720,7 +718,7 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 				e = err
 			}
 		}()
-		targetUrl, targetUrlWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), targetPath, archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian(), archiveData.uploadParams.TargetProps)
+		targetUrl, targetUrlWithProps, e := BuildUploadUrls(us.ArtDetails.GetUrl(), targetPath, archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian(), archiveData.uploadParams.TargetProps)
 		if e != nil {
 			return
 		}
@@ -851,7 +849,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	return
 }
 
-func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string, targetProps *utils.Properties) (targetUrl, targetUrlWithProps string, e error) {
+func BuildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string, targetProps *utils.Properties) (targetUrl, targetUrlWithProps string, e error) {
 	targetUrl, e = utils.BuildArtifactoryUrl(artifactoryUrl, targetPath, make(map[string]string))
 	if e != nil {
 		return
