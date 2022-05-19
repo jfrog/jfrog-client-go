@@ -38,7 +38,6 @@ func (m *GitManager) ExecGit(args ...string) (string, string, error) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.Command("git", args...)
-	cmd.Dir = m.path
 	cmd.Stdin = nil
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
