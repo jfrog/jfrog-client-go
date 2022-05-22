@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -346,4 +347,24 @@ func (m *GitManager) getPathHandleSubmodule() (path string) {
 	}
 	path = strings.TrimSuffix(path, filepath.Join("", ".git"))
 	return
+}
+
+func (m *GitManager) Push(username, token string) error {
+	repo, err := git.PlainOpen(".")
+	if errorutils.CheckError(err) != nil {
+		return err
+	}
+	// Pushing to remote
+	err = repo.Push(&git.PushOptions{
+		RemoteName: "origin",
+		Auth: &http.BasicAuth{
+			Username: username,
+			Password: token,
+		},
+	})
+	//err = repo.Push(&git.PushOptions{
+	//	RefSpecs: []config.RefSpec{"refs/tags/*:refs/tags/*"},
+	//	Progress: os.Stdout,
+	//})
+	return errorutils.CheckError(err)
 }
