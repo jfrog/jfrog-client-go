@@ -370,6 +370,7 @@ func (m *GitManager) BranchExistsOnRemote(remoteName, branchName string) (bool, 
 			continue
 		}
 		branch := refName[len(refPrefix):]
+		log.Info("refname:", refName)
 		if branchName == branch {
 			return true, nil
 		}
