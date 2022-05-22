@@ -357,31 +357,10 @@ func (m *GitManager) Push(token string) error {
 	// Pushing to remote
 	err = repo.Push(&git.PushOptions{
 		RemoteName: "origin",
-		Auth: &http.TokenAuth{
-			Token: token,
+		Auth: &http.BasicAuth{
+			Username: "frogbot",
+			Password: token,
 		},
 	})
-	if err != nil {
-		log.Error("failed token")
-		// Pushing to remote
-		err = repo.Push(&git.PushOptions{
-			RemoteName: "origin",
-			Auth: &http.BasicAuth{
-				Password: token,
-			},
-		})
-
-		if err != nil {
-			log.Error("failed basic token")
-			// Pushing to remote
-			err = repo.Push(&git.PushOptions{
-				RemoteName: "origin",
-				Auth: &http.BasicAuth{
-					Username: "sverdlov93",
-					Password: token,
-				},
-			})
-		}
-	}
 	return errorutils.CheckError(err)
 }
