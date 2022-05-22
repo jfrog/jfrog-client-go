@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -349,18 +350,48 @@ func (m *GitManager) getPathHandleSubmodule() (path string) {
 	return
 }
 
-func (m *GitManager) Push(token string) error {
+func (m *GitManager) BranchExistsOnRemote(remoteName, branchName string) (bool, error) {
+	repo, err := git.PlainOpen(".")
+	if errorutils.CheckError(err) != nil {
+		return false, err
+	}
+	remote, err := repo.Remote(remoteName)
+	if err != nil {
+		return false, errorutils.CheckError(err)
+	}
+	refList, err := remote.List(&git.ListOptions{})
+	if err != nil {
+		return false, errorutils.CheckError(err)
+	}
+	refPrefix := "refs/heads/"
+	for _, ref := range refList {
+		refName := ref.Name().String()
+		if !strings.HasPrefix(refName, refPrefix) {
+			continue
+		}
+		branch := refName[len(refPrefix):]
+		if branchName == branch {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *GitManager) Push(remoteName, token string) error {
 	repo, err := git.PlainOpen(".")
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
 	// Pushing to remote
 	err = repo.Push(&git.PushOptions{
-		RemoteName: "origin",
+		RemoteName: remoteName,
 		Auth: &http.BasicAuth{
-			Username: "frogbot",
+			Username: "username", // The username can be anything except an empty string
 			Password: token,
 		},
 	})
+	if err != nil {
+		err = fmt.Errorf("git push failed with error: %s", err.Error())
+	}
 	return errorutils.CheckError(err)
 }
