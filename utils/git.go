@@ -349,7 +349,7 @@ func (m *GitManager) getPathHandleSubmodule() (path string) {
 	return
 }
 
-func (m *GitManager) Push(username, token string) error {
+func (m *GitManager) Push(token string) error {
 	repo, err := git.PlainOpen(".")
 	if errorutils.CheckError(err) != nil {
 		return err
@@ -357,14 +357,9 @@ func (m *GitManager) Push(username, token string) error {
 	// Pushing to remote
 	err = repo.Push(&git.PushOptions{
 		RemoteName: "origin",
-		Auth: &http.BasicAuth{
-			Username: username,
-			Password: token,
+		Auth: &http.TokenAuth{
+			Token: token,
 		},
 	})
-	//err = repo.Push(&git.PushOptions{
-	//	RefSpecs: []config.RefSpec{"refs/tags/*:refs/tags/*"},
-	//	Progress: os.Stdout,
-	//})
 	return errorutils.CheckError(err)
 }
