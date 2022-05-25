@@ -236,7 +236,6 @@ type Vulnerability struct {
 	Cves                 []Cve                `json:"cves,omitempty"`
 	Summary              string               `json:"summary,omitempty"`
 	Severity             string               `json:"severity,omitempty"`
-	VulnerableComponents []string             `json:"vulnerable_components,omitempty"`
 	Components           map[string]Component `json:"components,omitempty"`
 	IssueId              string               `json:"issue_id,omitempty"`
 	References           []string             `json:"references,omitempty"`

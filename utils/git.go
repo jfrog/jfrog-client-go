@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"bytes"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -9,6 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -17,7 +19,7 @@ const (
 	submoduleDotGitPrefix = "gitdir: "
 )
 
-type manager struct {
+type GitManager struct {
 	path                string
 	err                 error
 	revision            string
@@ -27,12 +29,23 @@ type manager struct {
 	submoduleDotGitPath string
 }
 
-func NewGitManager(path string) *manager {
+func NewGitManager(path string) *GitManager {
 	dotGitPath := filepath.Join(path, ".git")
-	return &manager{path: dotGitPath}
+	return &GitManager{path: dotGitPath}
 }
 
-func (m *manager) ReadConfig() error {
+func (m *GitManager) ExecGit(args ...string) (string, string, error) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("git", args...)
+	cmd.Stdin = nil
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), errorutils.CheckError(err)
+}
+
+func (m *GitManager) ReadConfig() error {
 	if m.path == "" {
 		return errorutils.CheckErrorf(".git path must be defined")
 	}
@@ -51,7 +64,7 @@ func (m *manager) ReadConfig() error {
 
 // If .git is a file and not a directory, assume it is a git submodule and extract the actual .git directory of the submodule.
 // The actual .git directory is under the parent project's .git/modules directory.
-func (m *manager) handleSubmoduleIfNeeded() {
+func (m *GitManager) handleSubmoduleIfNeeded() {
 	exists, err := fileutils.IsFileExists(m.path, false)
 	if err != nil {
 		m.err = err
@@ -95,23 +108,23 @@ func (m *manager) handleSubmoduleIfNeeded() {
 	m.path = actualAbsPath
 }
 
-func (m *manager) GetUrl() string {
+func (m *GitManager) GetUrl() string {
 	return m.url
 }
 
-func (m *manager) GetRevision() string {
+func (m *GitManager) GetRevision() string {
 	return m.revision
 }
 
-func (m *manager) GetBranch() string {
+func (m *GitManager) GetBranch() string {
 	return m.branch
 }
 
-func (m *manager) GetMessage() string {
+func (m *GitManager) GetMessage() string {
 	return m.message
 }
 
-func (m *manager) readUrl() {
+func (m *GitManager) readUrl() {
 	if m.err != nil {
 		return
 	}
@@ -165,7 +178,7 @@ func (m *manager) readUrl() {
 	m.url = RemoveCredentials(originUrl, matchedResult)
 }
 
-func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error) {
+func (m *GitManager) getRevisionAndBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
 	file, e := os.Open(dotGitPath)
 	if errorutils.CheckError(e) != nil {
@@ -192,7 +205,7 @@ func (m *manager) getRevisionAndBranchPath() (revision, refUrl string, err error
 	return
 }
 
-func (m *manager) readRevisionAndBranch() {
+func (m *GitManager) readRevisionAndBranch() {
 	if m.err != nil {
 		return
 	}
@@ -227,7 +240,7 @@ func (m *manager) readRevisionAndBranch() {
 	m.readRevisionFromPackedRef(ref)
 }
 
-func (m *manager) readRevisionFromRef(refPath string) {
+func (m *GitManager) readRevisionFromRef(refPath string) {
 	revision := ""
 	file, err := os.Open(refPath)
 	if errorutils.CheckError(err) != nil {
@@ -255,7 +268,7 @@ func (m *manager) readRevisionFromRef(refPath string) {
 	m.revision = revision
 }
 
-func (m *manager) readRevisionFromPackedRef(ref string) {
+func (m *GitManager) readRevisionFromPackedRef(ref string) {
 	packedRefPath := filepath.Join(m.path, "packed-refs")
 	exists, err := fileutils.IsFileExists(packedRefPath, false)
 	if err != nil {
@@ -297,7 +310,7 @@ func (m *manager) readRevisionFromPackedRef(ref string) {
 	log.Debug("No packed-refs file was found. Assuming git repository is empty")
 }
 
-func (m *manager) readMessage() {
+func (m *GitManager) readMessage() {
 	if m.err != nil {
 		return
 	}
@@ -308,7 +321,7 @@ func (m *manager) readMessage() {
 	}
 }
 
-func (m *manager) doReadMessage() (string, error) {
+func (m *GitManager) doReadMessage() (string, error) {
 	path := m.getPathHandleSubmodule()
 	gitRepo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: false})
 	if errorutils.CheckError(err) != nil {
@@ -325,7 +338,7 @@ func (m *manager) doReadMessage() (string, error) {
 	return strings.TrimSpace(message.Message), nil
 }
 
-func (m *manager) getPathHandleSubmodule() (path string) {
+func (m *GitManager) getPathHandleSubmodule() (path string) {
 	if m.submoduleDotGitPath == "" {
 		path = m.path
 	} else {

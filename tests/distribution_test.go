@@ -99,7 +99,9 @@ func createDelete(t *testing.T) {
 	verifyValidSha256(t, summary.GetSha256())
 	assert.NoError(t, err)
 	distributionResponse := getLocalBundle(t, bundleName, true)
-	assertReleaseBundleSigned(t, distributionResponse.State)
+        if assert.NotNil(t, distributionResponse) {
+		assertReleaseBundleSigned(t, distributionResponse.State)
+	}
 }
 
 func createUpdate(t *testing.T) {

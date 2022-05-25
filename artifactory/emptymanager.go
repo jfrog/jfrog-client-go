@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"github.com/jfrog/jfrog-client-go/auth"
 	"io"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
@@ -62,10 +63,10 @@ type ArtifactoryServicesManager interface {
 	CreateAPIKey() (string, error)
 	RegenerateAPIKey() (string, error)
 	GetAPIKey() (string, error)
-	CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error)
+	CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error)
 	GetTokens() (services.GetTokensResponseData, error)
 	GetUserTokens(username string) ([]string, error)
-	RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error)
+	RefreshToken(params services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error)
 	RevokeToken(params services.RevokeTokenParams) (string, error)
 	CreateReplication(params services.CreateReplicationParams) error
 	UpdateReplication(params services.UpdateReplicationParams) error
@@ -87,6 +88,7 @@ type ArtifactoryServicesManager interface {
 	ConvertLocalToFederatedRepository(repoKey string) error
 	TriggerFederatedRepositoryFullSyncAll(repoKey string) error
 	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
+	Export(params services.ExportParams) error
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -275,7 +277,7 @@ func (esm *EmptyArtifactoryServicesManager) GetAPIKey() (string, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
+func (esm *EmptyArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -287,7 +289,7 @@ func (esm *EmptyArtifactoryServicesManager) GetUserTokens(username string) ([]st
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
+func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -380,6 +382,10 @@ func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncAl
 }
 
 func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) Export(params services.ExportParams) error {
 	panic("Failed: Method is not implemented")
 }
 

@@ -79,11 +79,12 @@
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
       - [Fetching Users Details](#fetching-users-details)
       - [Fetching All Users Details](#fetching-all-users-details)
-      - [Creating and Updating a User](#creating-and-updating-a-user)
+      - [Creating Inviting and Updating a User](#creating-inviting-and-updating-a-user)
       - [Deleting a User](#deleting-a-user)
       - [Fetching Group Details](#fetching-group-details)
       - [Creating and Updating a Group](#creating-and-updating-a-group)
       - [Deleting a Group](#deleting-a-group)
+      - [Generating Full System Export](#generating-full-system-export)
   - [Access APIs](#access-apis)
     - [Creating Access Service Manager](#creating-access-service-manager)
       - [Creating Access Details](#creating-access-details)
@@ -1116,7 +1117,7 @@ You can get all users from Artifactory:
 users, err := servicesManager.GetAllUsers()
 ```
 
-#### Creating and Updating a User
+#### Creating Inviting and Updating a User
 
 ```go
 params := services.NewUserParams()
@@ -1131,6 +1132,11 @@ params.UserDetails.InternalPasswordDisabled = &falseValue
 params.UserDetails.groups = []string{"GroupA", "GroupB"}
 // Set to true to replace existing user with the same name.
 params.ReplaceIfExists = false
+err := serviceManager.CreateUser(params)
+
+// Inviting user to the platform.
+param.UserDetails.ShouldInvite = &trueValue
+param.UserDetails.Source = "cli"
 err := serviceManager.CreateUser(params)
 
 params.UserDetails.groups = []string{"GroupA", "GroupB", "GroupC"}
@@ -1185,6 +1191,13 @@ err := serviceManager.UpdateGroup(params)
 
 ```go
 err := serviceManager.DeleteGroup("myGroupName")
+```
+
+#### Generating Full System Export
+
+```go
+params := services.NewExportParams("/tmp/")
+err := serviceManager.Export(params)
 ```
 
 ## Access APIs
