@@ -1,4 +1,4 @@
-name: "Frogbot"
+name: "Frogbot Fix"
 on:
   push:
     branches:
