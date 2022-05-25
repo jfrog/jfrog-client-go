@@ -19,7 +19,7 @@ jobs:
         with:
           go-version: 1.17.x
 
-      - uses: jfrog/frogbot@dev
+      - uses: jfrog/frogbot@v2
         env:
           # [Mandatory]
           # JFrog platform URL
