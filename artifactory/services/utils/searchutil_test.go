@@ -2,9 +2,12 @@ package utils
 
 import (
 	"fmt"
-	"github.com/jfrog/gofrog/version"
 	"path/filepath"
 	"testing"
+
+	"github.com/jfrog/build-info-go/entities"
+	buildinfo "github.com/jfrog/build-info-go/entities"
+	"github.com/jfrog/gofrog/version"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
@@ -137,6 +140,40 @@ func TestReduceBottomChainDirResult(t *testing.T) {
 			}
 		}
 		utils.MaxBufferSize = 2
+	}
+}
+
+func TestToBuildInfoArtifact(t *testing.T) {
+	data := []struct {
+		artifact ArtifactDetails
+		res      buildinfo.Artifact
+	}{
+		{ArtifactDetails{
+			ArtifactoryPath: "repo/art/text.txt",
+			Checksums:       entities.Checksum{Sha1: "1", Md5: "2", Sha256: "3"},
+		}, buildinfo.Artifact{
+			Name:     "text.txt",
+			Type:     "txt",
+			Path:     "art/text.txt",
+			Checksum: buildinfo.Checksum{Sha1: "1", Md5: "2", Sha256: "3"},
+		}},
+		{ArtifactDetails{
+			ArtifactoryPath: "text",
+		}, buildinfo.Artifact{
+			Name: "text",
+			Type: "",
+			Path: "text",
+		}},
+	}
+
+	for _, d := range data {
+		got := d.artifact.ToBuildInfoArtifact()
+		assert.Equal(t, d.res.Type, got.Type)
+		assert.Equal(t, d.res.Name, got.Name)
+		assert.Equal(t, d.res.Path, got.Path)
+		assert.Equal(t, d.res.Md5, got.Md5)
+		assert.Equal(t, d.res.Sha1, got.Sha1)
+		assert.Equal(t, d.res.Sha256, got.Sha256)
 	}
 }
 
