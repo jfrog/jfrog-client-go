@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/jfrog/build-info-go/entities"
-	buildinfo "github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/gofrog/version"
 
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -146,20 +145,20 @@ func TestReduceBottomChainDirResult(t *testing.T) {
 func TestToBuildInfoArtifact(t *testing.T) {
 	data := []struct {
 		artifact ArtifactDetails
-		res      buildinfo.Artifact
+		res      entities.Artifact
 	}{
 		{ArtifactDetails{
 			ArtifactoryPath: "repo/art/text.txt",
 			Checksums:       entities.Checksum{Sha1: "1", Md5: "2", Sha256: "3"},
-		}, buildinfo.Artifact{
+		}, entities.Artifact{
 			Name:     "text.txt",
 			Type:     "txt",
 			Path:     "art/text.txt",
-			Checksum: buildinfo.Checksum{Sha1: "1", Md5: "2", Sha256: "3"},
+			Checksum: entities.Checksum{Sha1: "1", Md5: "2", Sha256: "3"},
 		}},
 		{ArtifactDetails{
 			ArtifactoryPath: "text",
-		}, buildinfo.Artifact{
+		}, entities.Artifact{
 			Name: "text",
 			Type: "",
 			Path: "text",
