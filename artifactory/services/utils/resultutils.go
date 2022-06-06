@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"errors"
 	"strings"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
@@ -60,12 +62,11 @@ func (ad *ArtifactDetails) ToBuildInfoArtifact() buildinfo.Artifact {
 	if i := strings.LastIndex(filename, "."); i != -1 {
 		artifact.Type = filename[i+1:]
 	}
-	// Remove the repository from Artifact's path.
-	// Since a build can be promoted, the build-info may be incorrect (builds are immutable).
+	// The 'path' property in the build-info should not include the repository. We therefore remove the repository from the path.
 	if i := strings.Index(ad.ArtifactoryPath, "/"); i != -1 {
 		artifact.Path = ad.ArtifactoryPath[i+1:]
 	} else {
-		artifact.Path = ad.ArtifactoryPath
+		return errorutils.CheckError(errors.New("artifact path:' " + ad.ArtifactoryPath + "' lacks repository name"))
 	}
 	return artifact
 }
