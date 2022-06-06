@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"errors"
 	"strings"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
@@ -49,18 +51,24 @@ func (cs *OperationSummary) Close() error {
 	return cs.ArtifactsDetailsReader.Close()
 }
 
-func (ad *ArtifactDetails) ToBuildInfoArtifact() buildinfo.Artifact {
+func (ad *ArtifactDetails) ToBuildInfoArtifact() (buildinfo.Artifact, error) {
 	artifact := buildinfo.Artifact{Checksum: buildinfo.Checksum{}}
 	artifact.Sha1 = ad.Checksums.Sha1
 	artifact.Md5 = ad.Checksums.Md5
+	artifact.Sha256 = ad.Checksums.Sha256
 	// Artifact name in build info as the name in artifactory
 	filename, _ := fileutils.GetFileAndDirFromPath(ad.ArtifactoryPath)
 	artifact.Name = filename
 	if i := strings.LastIndex(filename, "."); i != -1 {
 		artifact.Type = filename[i+1:]
 	}
-	artifact.Path = ad.ArtifactoryPath
-	return artifact
+	// The 'path' property in the build-info should not include the repository. We therefore remove the repository from the path.
+	if i := strings.Index(ad.ArtifactoryPath, "/"); i != -1 {
+		artifact.Path = ad.ArtifactoryPath[i+1:]
+	} else {
+		return artifact, errorutils.CheckError(errors.New("artifact path:' " + ad.ArtifactoryPath + "' lacks repository name"))
+	}
+	return artifact, nil
 }
 
 func (ad *ArtifactDetails) ToBuildInfoDependency() buildinfo.Dependency {
@@ -76,7 +84,11 @@ func (ad *ArtifactDetails) ToBuildInfoDependency() buildinfo.Dependency {
 func ConvertArtifactsDetailsToBuildInfoArtifacts(artifactsDetailsReader *content.ContentReader) ([]buildinfo.Artifact, error) {
 	var buildArtifacts []buildinfo.Artifact
 	for artifactDetails := new(ArtifactDetails); artifactsDetailsReader.NextRecord(artifactDetails) == nil; artifactDetails = new(ArtifactDetails) {
-		buildArtifacts = append(buildArtifacts, artifactDetails.ToBuildInfoArtifact())
+		artifact, err := artifactDetails.ToBuildInfoArtifact()
+		if err != nil {
+			return nil, err
+		}
+		buildArtifacts = append(buildArtifacts, artifact)
 	}
 	return buildArtifacts, artifactsDetailsReader.GetError()
 }
