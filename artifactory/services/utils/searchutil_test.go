@@ -145,12 +145,12 @@ func TestReduceBottomChainDirResult(t *testing.T) {
 func TestToBuildInfoArtifact(t *testing.T) {
 	data := []struct {
 		artifact ArtifactDetails
-		res      entities.Artifact
+		res      *entities.Artifact
 	}{
 		{ArtifactDetails{
 			ArtifactoryPath: "repo/art/text.txt",
 			Checksums:       entities.Checksum{Sha1: "1", Md5: "2", Sha256: "3"},
-		}, entities.Artifact{
+		}, &entities.Artifact{
 			Name:     "text.txt",
 			Type:     "txt",
 			Path:     "art/text.txt",
@@ -158,15 +158,15 @@ func TestToBuildInfoArtifact(t *testing.T) {
 		}},
 		{ArtifactDetails{
 			ArtifactoryPath: "text",
-		}, entities.Artifact{
-			Name: "text",
-			Type: "",
-			Path: "text",
-		}},
+		}, nil},
 	}
 
 	for _, d := range data {
-		got := d.artifact.ToBuildInfoArtifact()
+		got, err := d.artifact.ToBuildInfoArtifact()
+		if d.res == nil {
+			assert.Error(t, err)
+			continue
+		}
 		assert.Equal(t, d.res.Type, got.Type)
 		assert.Equal(t, d.res.Name, got.Name)
 		assert.Equal(t, d.res.Path, got.Path)

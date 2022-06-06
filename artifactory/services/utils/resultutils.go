@@ -51,7 +51,7 @@ func (cs *OperationSummary) Close() error {
 	return cs.ArtifactsDetailsReader.Close()
 }
 
-func (ad *ArtifactDetails) ToBuildInfoArtifact() buildinfo.Artifact {
+func (ad *ArtifactDetails) ToBuildInfoArtifact() (buildinfo.Artifact, error) {
 	artifact := buildinfo.Artifact{Checksum: buildinfo.Checksum{}}
 	artifact.Sha1 = ad.Checksums.Sha1
 	artifact.Md5 = ad.Checksums.Md5
@@ -66,9 +66,9 @@ func (ad *ArtifactDetails) ToBuildInfoArtifact() buildinfo.Artifact {
 	if i := strings.Index(ad.ArtifactoryPath, "/"); i != -1 {
 		artifact.Path = ad.ArtifactoryPath[i+1:]
 	} else {
-		return errorutils.CheckError(errors.New("artifact path:' " + ad.ArtifactoryPath + "' lacks repository name"))
+		return artifact, errorutils.CheckError(errors.New("artifact path:' " + ad.ArtifactoryPath + "' lacks repository name"))
 	}
-	return artifact
+	return artifact, nil
 }
 
 func (ad *ArtifactDetails) ToBuildInfoDependency() buildinfo.Dependency {
@@ -84,7 +84,11 @@ func (ad *ArtifactDetails) ToBuildInfoDependency() buildinfo.Dependency {
 func ConvertArtifactsDetailsToBuildInfoArtifacts(artifactsDetailsReader *content.ContentReader) ([]buildinfo.Artifact, error) {
 	var buildArtifacts []buildinfo.Artifact
 	for artifactDetails := new(ArtifactDetails); artifactsDetailsReader.NextRecord(artifactDetails) == nil; artifactDetails = new(ArtifactDetails) {
-		buildArtifacts = append(buildArtifacts, artifactDetails.ToBuildInfoArtifact())
+		artifact, err := artifactDetails.ToBuildInfoArtifact()
+		if err != nil {
+			return nil, err
+		}
+		buildArtifacts = append(buildArtifacts, artifact)
 	}
 	return buildArtifacts, artifactsDetailsReader.GetError()
 }
