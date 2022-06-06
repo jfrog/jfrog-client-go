@@ -5,6 +5,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/jfrog/build-info-go/entities"
+	biutils "github.com/jfrog/build-info-go/utils"
+	gofrog "github.com/jfrog/gofrog/io"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -13,9 +16,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
-
-	"github.com/jfrog/build-info-go/entities"
-	biutils "github.com/jfrog/build-info-go/utils"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
@@ -157,7 +157,7 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 // Return the recursive list of files and directories in the specified path
 func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) (fileList []string, err error) {
 	fileList = []string{}
-	err = Walk(path, func(path string, f os.FileInfo, err error) error {
+	err = gofrog.Walk(path, func(path string, f os.FileInfo, err error) error {
 		fileList = append(fileList, path)
 		return nil
 	}, walkIntoDirSymlink)
