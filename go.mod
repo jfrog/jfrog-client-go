@@ -8,7 +8,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/gookit/color v1.5.0
 	github.com/jfrog/build-info-go v1.2.6
-	github.com/jfrog/gofrog v1.1.1
+	github.com/jfrog/gofrog v1.1.2
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.1
@@ -55,6 +55,6 @@ exclude (
 	golang.org/x/text v0.3.4
 )
 
-replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.2.7-0.20220606063153-46b4aaf4d455
+replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.3.0
 
-replace github.com/jfrog/gofrog => github.com/gailazar300/gofrog v1.0.7-0.20220606092440-7016666a6043
+// replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.0.7-0.20211128152632-e218c460d703
