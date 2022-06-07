@@ -94,6 +94,7 @@ var (
 	testGroupService                      *services.GroupService
 	testBuildInfoService                  *services.BuildInfoService
 	testsFederationService                *services.FederationService
+	testsSystemService                    *services.SystemService
 
 	// Distribution services
 	testsBundleSetSigningKeyService      *distributionServices.SetSigningKeyService
@@ -388,6 +389,13 @@ func createArtifactoryFederationManager() {
 	failOnHttpClientCreation(err)
 	testsFederationService = services.NewFederationService(client)
 	testsFederationService.ArtDetails = artDetails
+}
+
+func createArtifactorySystemManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsSystemService = services.NewSystemService(artDetails, client)
 }
 
 func createJfrogHttpClient(artDetails *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {

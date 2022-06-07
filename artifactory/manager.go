@@ -452,6 +452,21 @@ func (sm *ArtifactoryServicesManagerImp) GetServiceId() (string, error) {
 	return systemService.GetServiceId()
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetConfigDescriptor() (string, error) {
+	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
+	return systemService.GetConfigDescriptor()
+}
+
+func (sm *ArtifactoryServicesManagerImp) ActivateKeyEncryption() error {
+	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
+	return systemService.ActivateKeyEncryption()
+}
+
+func (sm *ArtifactoryServicesManagerImp) DeactivateKeyEncryption() error {
+	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
+	return systemService.DeactivateKeyEncryption()
+}
+
 func (sm *ArtifactoryServicesManagerImp) GetGroup(params services.GroupParams) (*services.Group, error) {
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()

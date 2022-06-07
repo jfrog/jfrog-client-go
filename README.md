@@ -77,6 +77,9 @@
       - [Fetching a Permission Target](#fetching-a-permission-target)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
+      - [Fetching Artifactory's Config Descriptor](#fetching-artifactorys-config-descriptor)
+      - [Activating Artifactory's Key Encryption](#activating-artifactorys-key-encryption)
+      - [Deactivating Artifactory's Key Encryption](#deactivating-artifactorys-key-encryption)
       - [Fetching Users Details](#fetching-users-details)
       - [Fetching All Users Details](#fetching-all-users-details)
       - [Creating Inviting and Updating a User](#creating-inviting-and-updating-a-user)
@@ -1096,6 +1099,30 @@ version, err := servicesManager.GetVersion()
 
 ```go
 serviceId, err := servicesManager.GetServiceId()
+```
+
+#### Fetching Artifactory's Config Descriptor
+
+Notice: This API is enabled only on self-hosted Artifactory servers
+
+```go
+serviceId, err := servicesManager.GetConfigDescriptor()
+```
+
+#### Activating Artifactory's Key Encryption
+
+Notice: This API is enabled only on self-hosted Artifactory servers
+
+```go
+serviceId, err := servicesManager.ActivateKeyEncryption()
+```
+
+#### Deactivating Artifactory's Key Encryption
+
+Notice: This API is enabled only on self-hosted Artifactory servers
+
+```go
+serviceId, err := servicesManager.DeactivateKeyEncryption()
 ```
 
 #### Fetching Users Details

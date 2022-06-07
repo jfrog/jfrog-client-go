@@ -53,6 +53,7 @@ func setupIntegrationTests() {
 		createArtifactoryGroupManager()
 		createArtifactoryBuildInfoManager()
 		createArtifactoryFederationManager()
+		createArtifactorySystemManager()
 	}
 
 	if *TestDistribution {
