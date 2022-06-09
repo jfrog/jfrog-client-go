@@ -46,6 +46,24 @@ func (gs *GroupService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	gs.ArtDetails = rt
 }
 
+func (gs *GroupService) GetAllGroups() (g *[]Group, err error) {
+	httpDetails := gs.ArtDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%sapi/security/groups", gs.ArtDetails.GetUrl())
+	resp, body, _, err := gs.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	var groups []Group
+	if err := json.Unmarshal(body, &groups); err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	return &groups, nil
+}
+
 func (gs *GroupService) GetGroup(params GroupParams) (g *Group, err error) {
 	httpDetails := gs.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/groups/%s?includeUsers=%t", gs.ArtDetails.GetUrl(), params.GroupDetails.Name, params.IncludeUsers)

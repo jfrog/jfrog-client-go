@@ -86,6 +86,7 @@
       - [Fetching All Users Details](#fetching-all-users-details)
       - [Creating Inviting and Updating a User](#creating-inviting-and-updating-a-user)
       - [Deleting a User](#deleting-a-user)
+      - [Fetching All Groups](#fetching-all-groups)
       - [Fetching Group Details](#fetching-group-details)
       - [Creating and Updating a Group](#creating-and-updating-a-group)
       - [Deleting a Group](#deleting-a-group)
@@ -1195,6 +1196,14 @@ err := serviceManager.UpdateUser(params)
 
 ```go
 err := serviceManager.DeleteUser("myUserName")
+```
+
+#### Fetching All Groups
+
+You can get all groups from Artifactory
+
+```go
+group, err := serviceManager.GetAllGroups()
 ```
 
 #### Fetching Group Details
