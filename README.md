@@ -1203,7 +1203,7 @@ err := serviceManager.DeleteUser("myUserName")
 You can get all groups from Artifactory
 
 ```go
-group, err := serviceManager.GetAllGroups()
+groups, err := serviceManager.GetAllGroups()
 ```
 
 #### Fetching Group Details
