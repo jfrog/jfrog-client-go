@@ -65,20 +65,20 @@ func testReadConfig(t *testing.T) {
 	err := gitManager.ReadConfig()
 	assert.NoError(t, err)
 
-	gitExecutor := NewGitExecutor(dotGitPath)
-	url, _, err := gitExecutor.GetUrl()
+	gitExec := NewGitExecutor(dotGitPath)
+	url, _, err := gitExec.GetUrl()
 	assert.NoError(t, err)
 	if !strings.HasSuffix(url, ".git") {
 		url += ".git"
 	}
 	assert.Equal(t, url, gitManager.GetUrl(), "Wrong url")
-	revision, _, err := gitExecutor.GetRevision()
+	revision, _, err := gitExec.GetRevision()
 	assert.NoError(t, err)
 	assert.Equal(t, revision, gitManager.GetRevision(), "Wrong revision")
-	branch, _, err := gitExecutor.GetBranch()
+	branch, _, err := gitExec.GetBranch()
 	assert.NoError(t, err)
 	assert.Equal(t, branch, gitManager.GetBranch(), "Wrong branch")
-	message, _, err := gitExecutor.GetMessage(revision)
+	message, _, err := gitExec.GetMessage(revision)
 	assert.NoError(t, err)
 	assert.Equal(t, message, gitManager.GetMessage(), "Wrong message")
 }
