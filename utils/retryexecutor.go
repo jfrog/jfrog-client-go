@@ -30,7 +30,6 @@ func (runner *RetryExecutor) Execute() error {
 	var shouldRetry bool
 	for i := 0; i <= runner.MaxRetries; i++ {
 		// Run ExecutionHandler
-		log.Info("%%%%%%%%%%%%%%%%%%%%%%", time.Millisecond*time.Duration(runner.RetriesIntervalMilliSecs))
 		shouldRetry, err = runner.ExecutionHandler()
 
 		// If should not retry, return
