@@ -1,10 +1,11 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils/tests"
 
 	"github.com/stretchr/testify/assert"
 
@@ -270,10 +271,8 @@ func summaryDownload(t *testing.T) {
 		transfers = append(transfers, *item)
 	}
 	assert.Len(t, transfers, 1)
-	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+getRtTargetRepo()+"c.tar.gz", transfers[0].SourcePath)
-	target,err :=  transfers[0].FullTargetPath()
-	assert.NoError(t,err)
-	assert.Equal(t, filepath.Join(workingDir, "c.tar.gz"), target)
+	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+getRtTargetRepo()+"c.tar.gz", transfers[0].RtUrl+transfers[0].SourcePath)
+	assert.Equal(t, filepath.Join(workingDir, "c.tar.gz"), transfers[0].TargetPath)
 	var artifacts []utils.ArtifactDetails
 	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
 		artifacts = append(artifacts, *item)

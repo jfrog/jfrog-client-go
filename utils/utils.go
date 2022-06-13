@@ -477,29 +477,13 @@ func (bps *Sha256Summary) SetSha256(sha256 string) *Sha256Summary {
 }
 
 // Represents a file transfer from SourcePath to TargetPath.
-// Each of the paths can be on the local machine (full or relative) or in Artifactory (full URL).
+// Each of the paths can be on the local machine (full or relative) or in Artifactory (without Artifactory URL).
 // The file's Sha256 is calculated by Artifactory during the upload. we read the sha256 from the HTTP's response body.
-// SourcePath - Path in the local file system
-// TargetUrl - Path in artifactory (generic/my/path/to/artifact)
-// RtUrl - Artifactory URL (https://127.0.0.1/artifactory)
-// Sha256 - Artifact's sha256
 type FileTransferDetails struct {
 	SourcePath string `json:"sourcePath,omitempty"`
 	TargetPath string `json:"targetPath,omitempty"`
 	RtUrl      string `json:"rtUrl,omitempty"`
 	Sha256     string `json:"sha256,omitempty"`
-}
-
-func (ftd *FileTransferDetails) FullTargetPath() (string, error) {
-	// The function path.Join expects a path, not a URL.
-	// Therefore we first parse the URL to get a path.
-	targetUrl, err := url.Parse(ftd.RtUrl)
-	if err != nil {
-		return "", err
-	}
-	// The path.join will always use a single slash (forward) to separate between the two vars.
-	targetUrl.Path = path.Join(targetUrl.Path, ftd.TargetPath)
-	return targetUrl.String(), nil
 }
 
 // Represent deployed artifact's details returned from build-info project for maven and gradle.
@@ -512,10 +496,11 @@ type DeployableArtifactDetails struct {
 }
 
 func (details *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) (FileTransferDetails, error) {
-
-	targetPath := path.Join(targetRepository, details.ArtifactDest)
-
-	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetPath, Sha256: details.Sha256, RtUrl: rtUrl}, nil
+	targetUrl, err := url.Parse(path.Join(targetRepository, details.ArtifactDest))
+	if err != nil {
+		return FileTransferDetails{}, err
+	}
+	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetUrl.String(), Sha256: details.Sha256, RtUrl: rtUrl}, nil
 }
 
 type UploadResponseBody struct {
