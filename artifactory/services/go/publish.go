@@ -47,22 +47,21 @@ func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpcl
 	moduleId := strings.Split(params.GetModuleId(), ":")
 	totalSucceed, totalFailed := 0, 0
 	var filesDetails []clientutils.FileTransferDetails
-	var artifactsDetails []utils.ArtifactDetails
 	// Upload zip file
-	success, failed, err := gpc.uploadFile(params, params.ZipPath, moduleId[0], ".zip", goApiUrl, &filesDetails, &artifactsDetails, gpc)
+	success, failed, err := gpc.uploadFile(params, params.ZipPath, moduleId[0], ".zip", goApiUrl, &filesDetails, gpc)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	// Upload mod file
-	success, failed, err = gpc.uploadFile(params, params.ModPath, moduleId[0], ".mod", goApiUrl, &filesDetails, &artifactsDetails, gpc)
+	success, failed, err = gpc.uploadFile(params, params.ModPath, moduleId[0], ".mod", goApiUrl, &filesDetails, gpc)
 	if err != nil {
 		return nil, err
 	}
 	totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 	if version.NewVersion(gpc.artifactoryVersion).AtLeast(ArtifactoryMinSupportedVersion) && params.GetInfoPath() != "" {
 		// Upload info file. This is supported from Artifactory version 6.10.0 and above
-		success, failed, err = gpc.uploadFile(params, params.InfoPath, moduleId[0], ".info", goApiUrl, &filesDetails, &artifactsDetails, gpc)
+		success, failed, err = gpc.uploadFile(params, params.InfoPath, moduleId[0], ".info", goApiUrl, &filesDetails, gpc)
 		totalSucceed, totalFailed = totalSucceed+success, totalFailed+failed
 		if err != nil {
 			return nil, err
@@ -72,14 +71,11 @@ func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpcl
 	if err != nil {
 		return nil, err
 	}
-	artifactsDetailsTempFile, err := utils.SaveArtifactDetailsInTempFile(&artifactsDetails)
-	if err != nil {
-		return nil, err
-	}
-	return &utils.OperationSummary{TotalSucceeded: totalSucceed, TotalFailed: totalFailed, TransferDetailsReader: content.NewContentReader(fileTransferDetailsTempFile, "files"), ArtifactsDetailsReader: content.NewContentReader(artifactsDetailsTempFile, "files")}, nil
+
+	return &utils.OperationSummary{TotalSucceeded: totalSucceed, TotalFailed: totalFailed, TransferDetailsReader: content.NewContentReader(fileTransferDetailsTempFile, "files")}, nil
 }
 
-func (gpc *GoPublishCommand) uploadFile(params GoParams, filePath string, moduleId, ext, goApiUrl string, filesDetails *[]clientutils.FileTransferDetails, artifactsDetails *[]utils.ArtifactDetails, pwa *GoPublishCommand) (success, failed int, err error) {
+func (gpc *GoPublishCommand) uploadFile(params GoParams, filePath string, moduleId, ext, goApiUrl string, filesDetails *[]clientutils.FileTransferDetails, pwa *GoPublishCommand) (success, failed int, err error) {
 	success, failed = 0, 1
 	pathInArtifactory := strings.Join([]string{params.GetTargetRepo(), moduleId, "@v", params.GetVersion() + ext}, "/")
 	details, err := pwa.upload(filePath, pathInArtifactory, params.GetVersion(), params.GetProps(), goApiUrl)
@@ -88,7 +84,6 @@ func (gpc *GoPublishCommand) uploadFile(params GoParams, filePath string, module
 	}
 	success, failed = 1, 0
 	*filesDetails = append(*filesDetails, *details)
-	*artifactsDetails = append(*artifactsDetails, utils.ArtifactDetails{ArtifactoryPath: pathInArtifactory})
 	return
 }
 
