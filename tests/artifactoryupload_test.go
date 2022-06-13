@@ -320,7 +320,9 @@ func summaryUpload(t *testing.T) {
 	expectedSha256 := "4eb341b5d2762a853d79cc25e622aa8b978eb6e12c3259e2d99dc9dc60d82c5d"
 	assert.Len(t, transfers, 1)
 	assert.Equal(t, filepath.Join("testdata", "a", "a.in"), transfers[0].SourcePath)
-	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+getRtTargetRepo()+"a.in", transfers[0].TargetPath)
+	target,err :=  transfers[0].FullTargetPath()
+	assert.NoError(t,err)
+	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+getRtTargetRepo()+"a.in",target)
 	assert.Equal(t, expectedSha256, transfers[0].Sha256)
 	var artifacts []utils.ArtifactDetails
 	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {

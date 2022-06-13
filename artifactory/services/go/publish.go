@@ -1,11 +1,12 @@
 package _go
 
 import (
-	"github.com/jfrog/gofrog/version"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/jfrog/gofrog/version"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -102,6 +103,7 @@ func addGoVersion(version string, urlPath *string) {
 // ext - The extension of the file: zip, mod, info. This extension will be joined with the version for the path. For example: v1.2.3.info or v1.2.3.zip
 // goApiUrl - The URL of the Go API in Artifactory. For example: http://127.0.0.1/artifactory/api/go/
 func (gpc *GoPublishCommand) upload(localPath, pathInArtifactory, version, props, goApiUrl string) (*clientutils.FileTransferDetails, error) {
+	rtUrl := strings.ReplaceAll(goApiUrl, "api/go/", "")
 	err := CreateUrlPath(pathInArtifactory, props, &goApiUrl)
 	if err != nil {
 		return nil, err
@@ -120,10 +122,6 @@ func (gpc *GoPublishCommand) upload(localPath, pathInArtifactory, version, props
 	if sha256 == "" {
 		log.Info("Failed to extract file's sha256 from response body.\nFile: " + localPath)
 	}
-	// Remove urls properties suffix
-	splitUrlPath := strings.Split(goApiUrl, ";")
-	// Remove "api/go/" substring from url to get the actual file's path in Artifactory
-	targetPath := strings.ReplaceAll(splitUrlPath[0], "api/go/", "")
-	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: targetPath, Sha256: sha256}
+	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: pathInArtifactory, RtUrl: rtUrl, Sha256: sha256}
 	return &filesDetails, errorutils.CheckResponseStatus(resp, http.StatusCreated)
 }
