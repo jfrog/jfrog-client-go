@@ -3,8 +3,6 @@ package httpclient
 import (
 	"bytes"
 	"context"
-	"time"
-
 	//#nosec G505 -- sha1 is supported by Artifactory.
 	"crypto/sha1"
 	"encoding/hex"
@@ -281,7 +279,6 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	addUserAgentHeader(req)
 
 	client := jc.client
-	client.Timeout = 3 * time.Minute
 	resp, err = client.Do(req)
 	if errorutils.CheckError(err) != nil {
 		return nil, nil, err
