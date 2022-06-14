@@ -118,6 +118,7 @@ type XrayBuildParams struct {
 	BuildName   string `json:"build_name,omitempty"`
 	BuildNumber string `json:"build_number,omitempty"`
 	Project     string `json:"project,omitempty"`
+	Rescan      bool   `json:"rescan,omitempty"`
 }
 
 type RequestBuildScanResponse struct {
