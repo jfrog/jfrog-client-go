@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/forPelevin/gomoji"
 	"github.com/gookit/color"
-	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
 	"golang.org/x/term"
 	"io"
 	"log"
 	"os"
+	"runtime"
 )
 
 var Logger Log
@@ -213,7 +213,7 @@ func isTerminalMode() bool {
 // Check if Emoji is supported
 func isEmojiSupported() bool {
 	if emojiSupported == nil {
-		t := isTerminalMode() && !ioutils.IsWindows()
+		t := isTerminalMode() && runtime.GOOS != "windows"
 		emojiSupported = &t
 	}
 	return *emojiSupported
