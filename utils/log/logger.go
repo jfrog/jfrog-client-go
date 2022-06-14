@@ -88,9 +88,8 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 func (logger *jfrogLogger) Println(log *log.Logger, values ...interface{}) {
 	if !isEmojiSupported() {
 		for _, value := range values {
-			switch value.(type) {
-			case string:
-				value = gomoji.RemoveEmojis(value.(string))
+			if str, ok := value.(string); ok {
+				value = gomoji.RemoveEmojis(str)
 			}
 		}
 	}
