@@ -6,9 +6,9 @@ import (
 	"github.com/gookit/color"
 	"golang.org/x/term"
 	"io"
+	termUtils "k8s.io/kubectl/pkg/util/term"
 	"log"
 	"os"
-	"runtime"
 )
 
 var Logger Log
@@ -23,9 +23,9 @@ var Format LogFormat
 // but through the 'isTerminalMode' function.
 var terminalMode *bool
 
-// Determines whether emoji is supported. This variable should not be accessed directly,
-// but through the 'isEmojiSupported' function.
-var emojiSupported *bool
+// Determines whether colors supported. This variable should not be accessed directly,
+// but through the 'colorsSupported' function.
+var colorsSupported *bool
 
 // defaultLogger is the default logger instance in case the user does not set one
 var defaultLogger = NewLogger(INFO, nil)
@@ -86,7 +86,7 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 }
 
 func (logger *jfrogLogger) Println(log *log.Logger, values ...interface{}) {
-	if !isEmojiSupported() {
+	if !isColorsSupported(log.Writer()) {
 		for _, value := range values {
 			if str, ok := value.(string); ok {
 				value = gomoji.RemoveEmojis(str)
@@ -100,15 +100,13 @@ func (logger *jfrogLogger) Println(log *log.Logger, values ...interface{}) {
 // In case the writer is set for file, colors will not be in use.
 // Log flags to modify the log prefix as described in https://pkg.go.dev/log#pkg-constants.
 func (logger *jfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
-	writerIsStdErr := false
 	if writer == nil {
 		writer = os.Stderr
-		writerIsStdErr = true
 	}
-	logger.DebugLog = log.New(writer, getLogPrefix(DEBUG, writerIsStdErr), logFlags)
-	logger.InfoLog = log.New(writer, getLogPrefix(INFO, writerIsStdErr), logFlags)
-	logger.WarnLog = log.New(writer, getLogPrefix(WARN, writerIsStdErr), logFlags)
-	logger.ErrorLog = log.New(writer, getLogPrefix(ERROR, writerIsStdErr), logFlags)
+	logger.DebugLog = getLogWriter(writer, DEBUG, logFlags)
+	logger.InfoLog = getLogWriter(writer, INFO, logFlags)
+	logger.WarnLog = getLogWriter(writer, WARN, logFlags)
+	logger.ErrorLog = getLogWriter(writer, ERROR, logFlags)
 }
 
 type prefixStyle struct {
@@ -124,20 +122,15 @@ var prefixStyles = map[LevelType]*prefixStyle{
 	ERROR: {logLevel: "Error", emoji: "🚨", color: color.Red},
 }
 
-func getLogPrefix(logType LevelType, writerIsStdErr bool) string {
+func getLogWriter(writer io.Writer, logType LevelType, logFlags int) *log.Logger {
 	if logPrefixStyle, ok := prefixStyles[logType]; ok {
 		prefix := logPrefixStyle.logLevel
-		// Use colors only on stdErr terminal output
-		if writerIsStdErr && isTerminalMode() {
-			prefix = logPrefixStyle.color.Render(prefix)
+		if isColorsSupported(writer) {
+			prefix = logPrefixStyle.emoji + logPrefixStyle.color.Render(prefix)
 		}
-		if isEmojiSupported() {
-			prefix = logPrefixStyle.emoji + prefix
-		}
-		return fmt.Sprintf("[%s] ", prefix)
+		return log.New(writer, fmt.Sprintf("[%s] ", prefix), logFlags)
 	}
-
-	return ""
+	return log.New(writer, "", logFlags)
 }
 
 func Debug(a ...interface{}) {
@@ -209,13 +202,13 @@ func isTerminalMode() bool {
 	return *terminalMode
 }
 
-// Check if Emoji is supported
-func isEmojiSupported() bool {
-	if emojiSupported == nil {
-		t := isTerminalMode() && runtime.GOOS != "windows"
-		emojiSupported = &t
+// Check if Color is supported
+func isColorsSupported(writer io.Writer) bool {
+	if colorsSupported == nil {
+		t := termUtils.AllowsColorOutput(writer)
+		colorsSupported = &t
 	}
-	return *emojiSupported
+	return *colorsSupported
 }
 
 // Predefined color formatting functions
