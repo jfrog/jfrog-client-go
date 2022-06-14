@@ -943,7 +943,10 @@ func newResultManager() (*resultsManager, error) {
 	}, nil
 }
 
-// Write a result of a successful upload
+// Write a result of a successful upload.
+// localPath - Path in the local file system
+// targetUrl - Path in artifactory (repo-name/my/path/to/artifact)
+// rtUrl - Artifactory URL (https://127.0.0.1/artifactory)
 func (rm *resultsManager) addFinalResult(localPath, targetPath, rtUrl string, checksums *entities.Checksum) {
 	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
@@ -963,9 +966,9 @@ func (rm *resultsManager) addFinalResult(localPath, targetPath, rtUrl string, ch
 	rm.artifactsDetailsWriter.Write(artifactDetails)
 }
 
-// Write the details of a file transfer that is not completed yet
+// Write the details of a file transfer that is not completed yet.
 // localPath - Path in the local file system
-// targetUrl - Path in artifactory (generic/my/path/to/artifact)
+// targetUrl - Path in artifactory (repo-name/my/path/to/artifact)
 // rtUrl - Artifactory URL (https://127.0.0.1/artifactory)
 func (rm *resultsManager) addNotFinalResult(localPath, targetUrl, rtUrl string) error {
 	if _, ok := rm.notFinalTransfersWriters[targetUrl]; !ok {
