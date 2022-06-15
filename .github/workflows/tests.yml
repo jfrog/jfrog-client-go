@@ -77,7 +77,7 @@ jobs:
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.artifactory=true --rt.url='http://localhost:8081/artifactory/' --rt.user='admin' --rt.password='password' --ci.runId=${{ runner.os }}-${{ matrix.suite }}
         
       - name: Annotate tests
-        if: always()
+        if: ${{ github.event_name == 'pull_request_target' }}
         uses: guyarb/golang-test-annotations@v0.5.1
         with:
           test-results: test.json        
