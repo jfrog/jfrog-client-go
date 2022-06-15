@@ -6,9 +6,9 @@ import (
 	"github.com/gookit/color"
 	"golang.org/x/term"
 	"io"
-	termUtils "k8s.io/kubectl/pkg/util/term"
 	"log"
 	"os"
+	"runtime"
 )
 
 var Logger Log
@@ -86,7 +86,7 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 }
 
 func (logger *jfrogLogger) Println(log *log.Logger, values ...interface{}) {
-	if !isColorsSupported(log.Writer()) {
+	if !isColorsSupported() {
 		for _, value := range values {
 			if str, ok := value.(string); ok {
 				if gomoji.ContainsEmoji(str) {
@@ -105,34 +105,32 @@ func (logger *jfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
 	if writer == nil {
 		writer = os.Stderr
 	}
-	logger.DebugLog = getLogWriter(writer, DEBUG, logFlags)
-	logger.InfoLog = getLogWriter(writer, INFO, logFlags)
-	logger.WarnLog = getLogWriter(writer, WARN, logFlags)
-	logger.ErrorLog = getLogWriter(writer, ERROR, logFlags)
+	logger.DebugLog = log.New(writer, getLogPrefix(DEBUG), logFlags)
+	logger.InfoLog = log.New(writer, getLogPrefix(INFO), logFlags)
+	logger.WarnLog = log.New(writer, getLogPrefix(WARN), logFlags)
+	logger.ErrorLog = log.New(writer, getLogPrefix(ERROR), logFlags)
 }
 
-type prefixStyle struct {
+var prefixStyles = map[LevelType]struct {
 	logLevel string
 	color    color.Color
 	emoji    string
-}
-
-var prefixStyles = map[LevelType]*prefixStyle{
+}{
 	DEBUG: {logLevel: "Debug", color: color.Cyan},
 	INFO:  {logLevel: "Info", emoji: "🔵", color: color.Blue},
 	WARN:  {logLevel: "Warn", emoji: "🟠", color: color.Yellow},
 	ERROR: {logLevel: "Error", emoji: "🚨", color: color.Red},
 }
 
-func getLogWriter(writer io.Writer, logType LevelType, logFlags int) *log.Logger {
+func getLogPrefix(logType LevelType) string {
 	if logPrefixStyle, ok := prefixStyles[logType]; ok {
 		prefix := logPrefixStyle.logLevel
-		if isColorsSupported(writer) {
+		if isColorsSupported() {
 			prefix = logPrefixStyle.emoji + logPrefixStyle.color.Render(prefix)
 		}
-		return log.New(writer, fmt.Sprintf("[%s] ", prefix), logFlags)
+		return fmt.Sprintf("[%s] ", prefix)
 	}
-	return log.New(writer, "", logFlags)
+	return ""
 }
 
 func Debug(a ...interface{}) {
@@ -205,9 +203,28 @@ func isTerminalMode() bool {
 }
 
 // Check if Color is supported
-func isColorsSupported(writer io.Writer) bool {
+func isColorsSupported() bool {
+	supported := true
+
 	if colorsSupported == nil {
-		t := termUtils.AllowsColorOutput(writer)
+		// allowsColorOutput returns true if the process environment indicates color output is supported and desired.
+		// Copied from k8s.io/kubectl/pkg/util/term.AllowsColorOutput.
+
+		if !isTerminalMode() {
+			supported = false
+		} else if os.Getenv("TERM") == "dumb" {
+			// https://en.wikipedia.org/wiki/Computer_terminal#Dumb_terminals
+			supported = false
+		} else if _, noColor := os.LookupEnv("NO_COLOR"); noColor {
+			// https://no-color.org/
+			supported = false
+		} else if runtime.GOOS == "windows" && os.Getenv("WT_SESSION") == "" {
+			// On Windows WT_SESSION is set by the modern terminal component.
+			// Older terminals have poor support for UTF-8, VT escape codes, etc.
+			supported = false
+		}
+
+		t := supported
 		colorsSupported = &t
 	}
 	return *colorsSupported
