@@ -89,7 +89,9 @@ func (logger *jfrogLogger) Println(log *log.Logger, values ...interface{}) {
 	if !isColorsSupported(log.Writer()) {
 		for _, value := range values {
 			if str, ok := value.(string); ok {
-				value = gomoji.RemoveEmojis(str)
+				if gomoji.ContainsEmoji(str) {
+					value = gomoji.RemoveEmojis(str)
+				}
 			}
 		}
 	}
