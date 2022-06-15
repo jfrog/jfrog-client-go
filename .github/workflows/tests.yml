@@ -75,6 +75,12 @@ jobs:
 
       - name: artifactory tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.artifactory=true --rt.url='http://localhost:8081/artifactory/' --rt.user='admin' --rt.password='password' --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        
+      - name: Annotate tests
+        if: always()
+        uses: guyarb/golang-test-annotations@v0.5.1
+        with:
+          test-results: test.json        
 
   JFrog-Client-Go-Ds-Xr-Access-Tests:
     if: contains(github.event.pull_request.labels.*.name, 'safe to test') || github.event_name == 'push'
