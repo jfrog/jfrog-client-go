@@ -20,7 +20,7 @@ type LogFormat string
 var Format LogFormat
 
 // Determines whether the terminal is available. This variable should not be accessed directly,
-// but through the 'isTerminalMode' function.
+// but through the 'IsTerminal' function.
 var terminalMode *bool
 
 // Determines whether colors supported. This variable should not be accessed directly,
@@ -86,7 +86,7 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 }
 
 func (logger *jfrogLogger) Println(log *log.Logger, values ...interface{}) {
-	if !isColorsSupported() {
+	if !IsColorsSupported() {
 		for _, value := range values {
 			if str, ok := value.(string); ok {
 				if gomoji.ContainsEmoji(str) {
@@ -125,7 +125,7 @@ var prefixStyles = map[LevelType]struct {
 func getLogPrefix(logType LevelType) string {
 	if logPrefixStyle, ok := prefixStyles[logType]; ok {
 		prefix := logPrefixStyle.logLevel
-		if isColorsSupported() {
+		if IsColorsSupported() {
 			prefix = logPrefixStyle.emoji + logPrefixStyle.color.Render(prefix)
 		}
 		return fmt.Sprintf("[%s] ", prefix)
@@ -194,7 +194,7 @@ type Log interface {
 }
 
 // Check if Stderr is a terminal
-func isTerminalMode() bool {
+func IsTerminal() bool {
 	if terminalMode == nil {
 		t := term.IsTerminal(int(os.Stderr.Fd()))
 		terminalMode = &t
@@ -203,14 +203,14 @@ func isTerminalMode() bool {
 }
 
 // Check if Color is supported
-func isColorsSupported() bool {
+func IsColorsSupported() bool {
 	supported := true
 
 	if colorsSupported == nil {
 		// allowsColorOutput returns true if the process environment indicates color output is supported and desired.
 		// Copied from k8s.io/kubectl/pkg/util/term.AllowsColorOutput.
 
-		if !isTerminalMode() {
+		if !IsTerminal() {
 			supported = false
 		} else if os.Getenv("TERM") == "dumb" {
 			// https://en.wikipedia.org/wiki/Computer_terminal#Dumb_terminals
@@ -232,14 +232,14 @@ func isColorsSupported() bool {
 
 // Predefined color formatting functions
 func (f *LogFormat) Path(message string) string {
-	if isTerminalMode() {
+	if IsTerminal() {
 		return color.Green.Render(message)
 	}
 	return message
 }
 
 func (f *LogFormat) URL(message string) string {
-	if isTerminalMode() {
+	if IsTerminal() {
 		return color.Cyan.Render(message)
 	}
 	return message
