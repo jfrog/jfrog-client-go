@@ -16,8 +16,7 @@ jobs:
           go-version: 1.17.x
 
       - uses: jfrog/frogbot@v2
-        env:
-          # [Mandatory]
+        env: # [Mandatory]
           # JFrog platform URL
           JF_URL: ${{ secrets.FROGBOT_URL }}
           
@@ -25,6 +24,6 @@ jobs:
           # JFrog access token with 'read' permissions on Xray service
           JF_ACCESS_TOKEN: ${{ secrets.FROGBOT_ACCESS_TOKEN }}
           
-          # [Manadatory]
+          # [Mandatory]
           # The GitHub token automatically generated for the job
           JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
