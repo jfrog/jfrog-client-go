@@ -202,30 +202,28 @@ func IsTerminal() bool {
 	return *terminalMode
 }
 
-// Check if Color is supported
+// IsColorsSupported returns true if the process environment indicates color output is supported and desired.
 func IsColorsSupported() bool {
-	supported := true
 
 	if colorsSupported == nil {
-		// allowsColorOutput returns true if the process environment indicates color output is supported and desired.
-		// Copied from k8s.io/kubectl/pkg/util/term.AllowsColorOutput.
+		supported := true
 
-		if !IsTerminal() {
-			supported = false
-		} else if os.Getenv("TERM") == "dumb" {
+		if !IsTerminal() ||
+
 			// https://en.wikipedia.org/wiki/Computer_terminal#Dumb_terminals
-			supported = false
-		} else if _, noColor := os.LookupEnv("NO_COLOR"); noColor {
-			// https://no-color.org/
-			supported = false
-		} else if runtime.GOOS == "windows" && os.Getenv("WT_SESSION") == "" {
+			os.Getenv("TERM") == "dumb" ||
+
 			// On Windows WT_SESSION is set by the modern terminal component.
 			// Older terminals have poor support for UTF-8, VT escape codes, etc.
+			runtime.GOOS == "windows" && os.Getenv("WT_SESSION") == "" ||
+
+			// https://no-color.org/
+			func() bool { _, noColorEnvExists := os.LookupEnv("NO_COLOR"); return noColorEnvExists }() {
+
 			supported = false
 		}
 
-		t := supported
-		colorsSupported = &t
+		colorsSupported = &supported
 	}
 	return *colorsSupported
 }
