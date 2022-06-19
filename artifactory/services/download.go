@@ -521,7 +521,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				return e
 			}
 			if downloadParams.IsSymlink() {
-				if isSymlink, e := ds.createSymlinkIfNeeded( ds.GetArtifactoryDetails().GetUrl(), localPath, localFileName, logMsgPrefix, downloadData, successCounters, threadId, downloadParams); isSymlink {
+				if isSymlink, e := ds.createSymlinkIfNeeded(ds.GetArtifactoryDetails().GetUrl(), localPath, localFileName, logMsgPrefix, downloadData, successCounters, threadId, downloadParams); isSymlink {
 					return e
 				}
 			}

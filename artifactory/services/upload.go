@@ -727,7 +727,7 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		var saveFilesPathsFunc func(sourcePath string) error
 		if us.saveSummary {
 			saveFilesPathsFunc = func(localPath string) error {
-				return us.resultsManager.addNotFinalResult(localPath, targetPath, us.ArtDetails.GetUrl())
+				return us.resultsManager.addNonFinalResult(localPath, targetPath, us.ArtDetails.GetUrl())
 			}
 		}
 		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums", archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue)
@@ -970,7 +970,7 @@ func (rm *resultsManager) addFinalResult(localPath, targetPath, rtUrl string, ch
 // localPath - Path in the local file system
 // targetUrl - Path in artifactory (repo-name/my/path/to/artifact)
 // rtUrl - Artifactory URL (https://127.0.0.1/artifactory)
-func (rm *resultsManager) addNotFinalResult(localPath, targetUrl, rtUrl string) error {
+func (rm *resultsManager) addNonFinalResult(localPath, targetUrl, rtUrl string) error {
 	if _, ok := rm.notFinalTransfersWriters[targetUrl]; !ok {
 		var e error
 		rm.notFinalTransfersWriters[targetUrl], e = content.NewContentWriter(content.DefaultKey, true, false)
