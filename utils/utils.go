@@ -477,11 +477,12 @@ func (bps *Sha256Summary) SetSha256(sha256 string) *Sha256Summary {
 }
 
 // Represents a file transfer from SourcePath to TargetPath.
-// Each of the paths can be on the local machine (full or relative) or in Artifactory (full URL).
+// Each of the paths can be on the local machine (full or relative) or in Artifactory (without Artifactory URL).
 // The file's Sha256 is calculated by Artifactory during the upload. we read the sha256 from the HTTP's response body.
 type FileTransferDetails struct {
 	SourcePath string `json:"sourcePath,omitempty"`
 	TargetPath string `json:"targetPath,omitempty"`
+	RtUrl      string `json:"rtUrl,omitempty"`
 	Sha256     string `json:"sha256,omitempty"`
 }
 
@@ -495,17 +496,11 @@ type DeployableArtifactDetails struct {
 }
 
 func (details *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) (FileTransferDetails, error) {
-	// The function path.Join expects a path, not a URL.
-	// Therefore we first parse the URL to get a path.
-	targetUrl, err := url.Parse(rtUrl + targetRepository)
+	targetUrl, err := url.Parse(path.Join(targetRepository, details.ArtifactDest))
 	if err != nil {
 		return FileTransferDetails{}, err
 	}
-	// The path.join will always use a single slash (forward) to separate between the two vars.
-	targetUrl.Path = path.Join(targetUrl.Path, details.ArtifactDest)
-	targetPath := targetUrl.String()
-
-	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetPath, Sha256: details.Sha256}, nil
+	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetUrl.String(), Sha256: details.Sha256, RtUrl: rtUrl}, nil
 }
 
 type UploadResponseBody struct {

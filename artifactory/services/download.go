@@ -326,18 +326,19 @@ func (ds *DownloadService) performTasks(consumer parallel.Runner, errorsQueue *c
 	return errorsQueue.GetError()
 }
 
-func (ds *DownloadService) addToResults(resultItem *utils.ResultItem, downloadPath, localPath, localFileName string) {
+func (ds *DownloadService) addToResults(resultItem *utils.ResultItem, rtUrl, localPath, localFileName string) {
 	if ds.saveSummary {
-		transferDetails := createDependencyTransferDetails(downloadPath, localPath, localFileName)
+		transferDetails := createDependencyTransferDetails(rtUrl, resultItem.GetItemRelativePath(), localPath, localFileName)
 		ds.filesTransfersWriter.Write(transferDetails)
 		artifactDetails := createDependencyArtifactDetails(*resultItem)
 		ds.artifactsDetailsWriter.Write(artifactDetails)
 	}
 }
 
-func createDependencyTransferDetails(downloadPath, localPath, localFileName string) clientutils.FileTransferDetails {
+func createDependencyTransferDetails(rtUrl, relativeDownloadPath, localPath, localFileName string) clientutils.FileTransferDetails {
 	fileInfo := clientutils.FileTransferDetails{
-		SourcePath: downloadPath,
+		SourcePath: relativeDownloadPath,
+		RtUrl:      rtUrl,
 		TargetPath: filepath.Join(localPath, localFileName),
 	}
 	return fileInfo
@@ -520,7 +521,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				return e
 			}
 			if downloadParams.IsSymlink() {
-				if isSymlink, e := ds.createSymlinkIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix, downloadData, successCounters, threadId, downloadParams); isSymlink {
+				if isSymlink, e := ds.createSymlinkIfNeeded(ds.GetArtifactoryDetails().GetUrl(), localPath, localFileName, logMsgPrefix, downloadData, successCounters, threadId, downloadParams); isSymlink {
 					return e
 				}
 			}
@@ -530,7 +531,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				return e
 			}
 			successCounters[threadId]++
-			ds.addToResults(&downloadData.Dependency, downloadPath, localPath, localFileName)
+			ds.addToResults(&downloadData.Dependency, ds.GetArtifactoryDetails().GetUrl(), localPath, localFileName)
 			return nil
 		}
 	}
@@ -562,7 +563,7 @@ func createDir(localPath, localFileName, logMsgPrefix string) error {
 	return nil
 }
 
-func (ds *DownloadService) createSymlinkIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix string, downloadData DownloadData, successCounters []int, threadId int, downloadParams DownloadParams) (bool, error) {
+func (ds *DownloadService) createSymlinkIfNeeded(rtUrl, localPath, localFileName, logMsgPrefix string, downloadData DownloadData, successCounters []int, threadId int, downloadParams DownloadParams) (bool, error) {
 	symlinkArtifact := getArtifactSymlinkPath(downloadData.Dependency.Properties)
 	isSymlink := len(symlinkArtifact) > 0
 	if isSymlink {
@@ -571,7 +572,7 @@ func (ds *DownloadService) createSymlinkIfNeeded(downloadPath, localPath, localF
 			return isSymlink, e
 		}
 		successCounters[threadId]++
-		ds.addToResults(&downloadData.Dependency, downloadPath, localPath, localFileName)
+		ds.addToResults(&downloadData.Dependency, rtUrl, localPath, localFileName)
 		return isSymlink, nil
 	}
 	return isSymlink, nil

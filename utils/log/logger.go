@@ -18,9 +18,9 @@ type LogFormat string
 // Used for coloring sections of the log message. For example log.Format.Path("...")
 var Format LogFormat
 
-// Determines whether the terminal is available. This variable should not be accessed directly,
-// but through the 'isTerminalMode' function.
-var terminalMode *bool
+// Determines whether the terminal is available. This variable should not be accessed directly (besides  tests),,
+// but through the 'isTerminal' function.
+var TerminalMode *bool
 
 // defaultLogger is the default logger instance in case the user does not set one
 var defaultLogger = NewLogger(INFO, nil)
@@ -86,7 +86,7 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 func (logger *jfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
 	if writer == nil {
 		writer = os.Stderr
-		if isTerminalMode() {
+		if IsTerminal() {
 			logger.DebugLog = log.New(writer, fmt.Sprintf("[%s] ", color.Cyan.Render("Debug")), logFlags)
 			logger.InfoLog = log.New(writer, fmt.Sprintf("[🔵%s] ", color.Blue.Render("Info")), logFlags)
 			logger.WarnLog = log.New(writer, fmt.Sprintf("[🟠%s] ", color.Yellow.Render("Warn")), logFlags)
@@ -161,24 +161,24 @@ type Log interface {
 }
 
 // Check if Stderr is a terminal
-func isTerminalMode() bool {
-	if terminalMode == nil {
+func IsTerminal() bool {
+	if TerminalMode == nil {
 		t := term.IsTerminal(int(os.Stderr.Fd()))
-		terminalMode = &t
+		TerminalMode = &t
 	}
-	return *terminalMode
+	return *TerminalMode
 }
 
 // Predefined color formatting functions
 func (f *LogFormat) Path(message string) string {
-	if isTerminalMode() {
+	if IsTerminal() {
 		return color.Green.Render(message)
 	}
 	return message
 }
 
 func (f *LogFormat) URL(message string) string {
-	if isTerminalMode() {
+	if IsTerminal() {
 		return color.Cyan.Render(message)
 	}
 	return message

@@ -667,7 +667,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			}
 			uploadResult.TotalCount[threadId]++
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
-			targetUrl, targetPathWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
+			_, targetPathWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
 			if e != nil {
 				return
 			}
@@ -683,7 +683,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			if uploaded {
 				uploadResult.SuccessCount[threadId]++
 				if us.saveSummary {
-					us.resultsManager.addFinalResult(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, targetUrl, uploadFileDetails.Checksum.Sha256, &uploadFileDetails.Checksum)
+					us.resultsManager.addFinalResult(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, us.ArtDetails.GetUrl(), &uploadFileDetails.Checksum)
 				}
 			}
 			return
@@ -727,7 +727,7 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		var saveFilesPathsFunc func(sourcePath string) error
 		if us.saveSummary {
 			saveFilesPathsFunc = func(localPath string) error {
-				return us.resultsManager.addNotFinalResult(localPath, targetUrl)
+				return us.resultsManager.addNonFinalResult(localPath, targetPath, us.ArtDetails.GetUrl())
 			}
 		}
 		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums", archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue)
@@ -943,12 +943,16 @@ func newResultManager() (*resultsManager, error) {
 	}, nil
 }
 
-// Write a result of a successful upload
-func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha256 string, checksums *entities.Checksum) {
+// Write a result of a successful upload.
+// localPath - Path in the local file system
+// targetUrl - Path in artifactory (repo-name/my/path/to/artifact)
+// rtUrl - Artifactory URL (https://127.0.0.1/artifactory)
+func (rm *resultsManager) addFinalResult(localPath, targetPath, rtUrl string, checksums *entities.Checksum) {
 	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
-		TargetPath: targetUrl,
-		Sha256:     sha256,
+		TargetPath: targetPath,
+		RtUrl:      rtUrl,
+		Sha256:     checksums.Sha256,
 	}
 	rm.singleFinalTransfersWriter.Write(fileTransferDetails)
 	artifactDetails := utils.ArtifactDetails{
@@ -962,8 +966,11 @@ func (rm *resultsManager) addFinalResult(localPath, targetPath, targetUrl, sha25
 	rm.artifactsDetailsWriter.Write(artifactDetails)
 }
 
-// Write the details of a file transfer that is not completed yet
-func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
+// Write the details of a file transfer that is not completed yet.
+// localPath - Path in the local file system
+// targetUrl - Path in artifactory (repo-name/my/path/to/artifact)
+// rtUrl - Artifactory URL (https://127.0.0.1/artifactory)
+func (rm *resultsManager) addNonFinalResult(localPath, targetUrl, rtUrl string) error {
 	if _, ok := rm.notFinalTransfersWriters[targetUrl]; !ok {
 		var e error
 		rm.notFinalTransfersWriters[targetUrl], e = content.NewContentWriter(content.DefaultKey, true, false)
@@ -974,6 +981,7 @@ func (rm *resultsManager) addNotFinalResult(localPath, targetUrl string) error {
 	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetUrl,
+		RtUrl:      rtUrl,
 	}
 	rm.notFinalTransfersWriters[targetUrl].Write(fileTransferDetails)
 	return nil
