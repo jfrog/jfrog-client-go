@@ -23,7 +23,7 @@ var Format LogFormat
 // but through the 'IsTerminal' function.
 var terminalMode *bool
 
-// Determines whether colors supported. This variable should not be accessed directly,
+// Determines whether colors are supported. This variable should not be accessed directly,
 // but through the 'colorsSupported' function.
 var colorsSupported *bool
 
@@ -204,7 +204,6 @@ func IsTerminal() bool {
 
 // IsColorsSupported returns true if the process environment indicates color output is supported and desired.
 func IsColorsSupported() bool {
-
 	if colorsSupported == nil {
 		supported := true
 
@@ -215,7 +214,7 @@ func IsColorsSupported() bool {
 
 			// On Windows WT_SESSION is set by the modern terminal component.
 			// Older terminals have poor support for UTF-8, VT escape codes, etc.
-			runtime.GOOS == "windows" && os.Getenv("WT_SESSION") == "" ||
+			(runtime.GOOS == "windows" && os.Getenv("WT_SESSION") == "") ||
 
 			// https://no-color.org/
 			func() bool { _, noColorEnvExists := os.LookupEnv("NO_COLOR"); return noColorEnvExists }() {
