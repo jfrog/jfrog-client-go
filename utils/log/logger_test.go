@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -11,7 +12,12 @@ func TestLoggerRemoveEmojis(t *testing.T) {
 }
 
 func TestLoggerLeaveEmojis(t *testing.T) {
-	testLoggerWithEmojis(t, true, expectedLogOutputWithEmojis)
+	expected := expectedLogOutputWithEmojis
+	if io.IsWindows() {
+		// should not print emojis on Windows
+		expected = expectedLogOutputWithoutEmojis
+	}
+	testLoggerWithEmojis(t, true, expected)
 }
 
 func testLoggerWithEmojis(t *testing.T, mockIsTerminal bool, expected string) {
