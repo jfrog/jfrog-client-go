@@ -230,10 +230,18 @@ func IsStdOutTerminal() bool {
 	return *stdOutIsTerminal
 }
 
-// Set IsTerminal flag
-func SetIsTerminalFlags(isTerminal bool) {
+// SetIsTerminalFlagsWithCallback changes IsTerminal flags to the given value and return function that changes the flags back to the original values.
+func SetIsTerminalFlagsWithCallback(isTerminal bool) func() {
+	stdoutIsTerminalPrev := stdOutIsTerminal
+	stdErrIsTerminalPrev := stdErrIsTerminal
+
 	stdOutIsTerminal = &isTerminal
 	stdErrIsTerminal = &isTerminal
+
+	return func() {
+		stdOutIsTerminal = stdoutIsTerminalPrev
+		stdErrIsTerminal = stdErrIsTerminalPrev
+	}
 }
 
 func IsColorsSupported() bool {

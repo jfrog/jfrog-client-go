@@ -30,7 +30,9 @@ func testLoggerWithEmojis(t *testing.T, mockIsTerminalFlags bool, expected strin
 	SetLogger(NewLogger(DEBUG, buffer))
 	if mockIsTerminalFlags {
 		// Mock logger with isTerminal flags set to true
-		SetIsTerminalFlags(true)
+		revertFlags := SetIsTerminalFlagsWithCallback(true)
+		// Revert to previous status
+		defer revertFlags()
 	}
 	Debug("111", 111, "", "111😀111👻🪶")
 	Info("222", 222, "", "222😀222👻🪶")
