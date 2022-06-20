@@ -256,14 +256,14 @@ func isColorsSupported() bool {
 
 // Predefined color formatting functions
 func (f *LogFormat) Path(message string) string {
-	if IsTerminal() {
+	if isTerminalMode() {
 		return color.Green.Render(message)
 	}
 	return message
 }
 
 func (f *LogFormat) URL(message string) string {
-	if IsTerminal() {
+	if isTerminalMode() {
 		return color.Cyan.Render(message)
 	}
 	return message
