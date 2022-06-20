@@ -20,11 +20,11 @@ type LogFormat string
 var Format LogFormat
 
 // Determines whether the Stdout is terminal. This variable should not be accessed directly,
-// but through the 'IsTerminal' function.
+// but through the 'IsStdOutTerminal' function.
 var stdOutIsTerminal *bool
 
 // Determines whether the Stderr is terminal. This variable should not be accessed directly,
-// but through the 'IsTerminal' function.
+// but through the 'IsStdErrTerminal' function.
 var stdErrIsTerminal *bool
 
 // Determines whether colors are supported. This variable should not be accessed directly,
