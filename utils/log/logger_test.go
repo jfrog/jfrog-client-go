@@ -14,7 +14,7 @@ func TestLoggerRemoveEmojis(t *testing.T) {
 func TestLoggerLeaveEmojis(t *testing.T) {
 	expected := expectedLogOutputWithEmojis
 	if io.IsWindows() {
-		// should not print emojis on Windows
+		// Should not print emojis on Windows
 		expected = expectedLogOutputWithoutEmojis
 	}
 	testLoggerWithEmojis(t, true, expected)
@@ -29,7 +29,7 @@ func testLoggerWithEmojis(t *testing.T, mockIsTerminal bool, expected string) {
 	buffer := &bytes.Buffer{}
 	SetLogger(NewLogger(DEBUG, buffer))
 	if mockIsTerminal {
-		// Mock logger with true isTerminal flags
+		// Mock logger with isTerminal flags set to true
 		trueValue := true
 		StdOutIsTerminal = &trueValue
 		StdErrIsTerminal = &trueValue

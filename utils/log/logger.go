@@ -19,11 +19,11 @@ type LogFormat string
 // Used for coloring sections of the log message. For example log.Format.Path("...")
 var Format LogFormat
 
-// Determines whether the Stdout is terminal is available. This variable should not be accessed directly,
+// Determines whether the Stdout is terminal. This variable should not be accessed directly,
 // but through the 'IsTerminal' function.
 var StdOutIsTerminal *bool
 
-// Determines whether the Stderr is  terminal is available. This variable should not be accessed directly,
+// Determines whether the Stderr is terminal. This variable should not be accessed directly,
 // but through the 'IsTerminal' function.
 var StdErrIsTerminal *bool
 
@@ -88,7 +88,7 @@ func (logger *jfrogLogger) SetLogLevel(LevelEnum LevelType) {
 func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 	if writer != nil {
 		outputWriter = writer
-		// reset outIsTerminal flag
+		// Reset outIsTerminal flag
 		StdOutIsTerminal = nil
 	}
 	logger.OutputLog = log.New(outputWriter, "", 0)
