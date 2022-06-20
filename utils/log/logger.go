@@ -21,11 +21,11 @@ var Format LogFormat
 
 // Determines whether the Stdout is terminal. This variable should not be accessed directly,
 // but through the 'IsTerminal' function.
-var StdOutIsTerminal *bool
+var stdOutIsTerminal *bool
 
 // Determines whether the Stderr is terminal. This variable should not be accessed directly,
 // but through the 'IsTerminal' function.
-var StdErrIsTerminal *bool
+var stdErrIsTerminal *bool
 
 // Determines whether colors are supported. This variable should not be accessed directly,
 // but through the 'colorsSupported' function.
@@ -89,22 +89,9 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 	if writer != nil {
 		outputWriter = writer
 		// Reset outIsTerminal flag
-		StdOutIsTerminal = nil
+		stdOutIsTerminal = nil
 	}
 	logger.OutputLog = log.New(outputWriter, "", 0)
-}
-
-func (logger *jfrogLogger) Println(log *log.Logger, values ...interface{}) {
-	if !IsColorsSupported() {
-		for i, value := range values {
-			if str, ok := value.(string); ok {
-				if gomoji.ContainsEmoji(str) {
-					values[i] = gomoji.RemoveEmojis(str)
-				}
-			}
-		}
-	}
-	log.Println(values...)
 }
 
 // Set the logs' writer to Stderr unless an alternative one is provided.
@@ -114,7 +101,7 @@ func (logger *jfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
 	if writer != nil {
 		logWriter = writer
 		// reset errIsTerminal flag
-		StdErrIsTerminal = nil
+		stdErrIsTerminal = nil
 	}
 	logger.DebugLog = log.New(logWriter, getLogPrefix(DEBUG), logFlags)
 	logger.InfoLog = log.New(logWriter, getLogPrefix(INFO), logFlags)
@@ -136,7 +123,8 @@ var prefixStyles = map[LevelType]struct {
 func getLogPrefix(logType LevelType) string {
 	if logPrefixStyle, ok := prefixStyles[logType]; ok {
 		prefix := logPrefixStyle.logLevel
-		if isStdErrTerminal() && isColorsSupported() {
+		// Add emoji and color only if it's a terminal that supports it
+		if IsStdErrTerminal() && IsColorsSupported() {
 			prefix = logPrefixStyle.emoji + logPrefixStyle.color.Render(prefix)
 		}
 		return fmt.Sprintf("[%s] ", prefix)
@@ -170,30 +158,44 @@ func (logger jfrogLogger) GetLogLevel() LevelType {
 
 func (logger jfrogLogger) Debug(a ...interface{}) {
 	if logger.GetLogLevel() >= DEBUG {
-		logger.Println(logger.DebugLog, a...)
+		logger.Println(logger.DebugLog, IsStdErrTerminal(), a...)
 	}
 }
 
 func (logger jfrogLogger) Info(a ...interface{}) {
 	if logger.GetLogLevel() >= INFO {
-		logger.Println(logger.InfoLog, a...)
+		logger.Println(logger.InfoLog, IsStdErrTerminal(), a...)
 	}
 }
 
 func (logger jfrogLogger) Warn(a ...interface{}) {
 	if logger.GetLogLevel() >= WARN {
-		logger.Println(logger.WarnLog, a...)
+		logger.Println(logger.WarnLog, IsStdErrTerminal(), a...)
 	}
 }
 
 func (logger jfrogLogger) Error(a ...interface{}) {
 	if logger.GetLogLevel() >= ERROR {
-		logger.Println(logger.ErrorLog, a...)
+		logger.Println(logger.ErrorLog, IsStdErrTerminal(), a...)
 	}
 }
 
 func (logger jfrogLogger) Output(a ...interface{}) {
-	logger.Println(logger.OutputLog, a...)
+	logger.Println(logger.OutputLog, IsStdOutTerminal(), a...)
+}
+
+func (logger *jfrogLogger) Println(log *log.Logger, isTerminal bool, values ...interface{}) {
+	// Remove emojis from all strings if it's not a terminal or if the terminal is not supporting colors
+	if !(IsColorsSupported() && isTerminal) {
+		for i, value := range values {
+			if str, ok := value.(string); ok {
+				if gomoji.ContainsEmoji(str) {
+					values[i] = gomoji.RemoveEmojis(str)
+				}
+			}
+		}
+	}
+	log.Println(values...)
 }
 
 type Log interface {
@@ -204,38 +206,37 @@ type Log interface {
 	Output(a ...interface{})
 }
 
+// Check if StdErr is a terminal
+func IsStdErrTerminal() bool {
+	if stdErrIsTerminal == nil {
+		isTerminal := false
+		if v, ok := (logWriter).(*os.File); ok {
+			isTerminal = term.IsTerminal(int(v.Fd()))
+		}
+		stdErrIsTerminal = &isTerminal
+	}
+	return *stdErrIsTerminal
+}
+
 // Check if Stdout is a terminal
-func IsTerminal() bool {
-	if StdOutIsTerminal == nil {
-		t := isTerminal(outputWriter)
-		StdOutIsTerminal = &t
+func IsStdOutTerminal() bool {
+	if stdOutIsTerminal == nil {
+		isTerminal := false
+		if v, ok := (outputWriter).(*os.File); ok {
+			isTerminal = term.IsTerminal(int(v.Fd()))
+		}
+		stdOutIsTerminal = &isTerminal
 	}
-	return *StdOutIsTerminal
+	return *stdOutIsTerminal
 }
 
-// Check if Stderr is a terminal
-func isStdErrTerminal() bool {
-	if StdErrIsTerminal == nil {
-		t := isTerminal(logWriter)
-		StdErrIsTerminal = &t
-	}
-	return *StdErrIsTerminal
+// Set IsTerminal flag
+func SetIsTerminalFlags(isTerminal bool) {
+	stdOutIsTerminal = &isTerminal
+	stdErrIsTerminal = &isTerminal
 }
 
-// Check if writer is a terminal
-func isTerminal(writer io.Writer) bool {
-	if v, ok := (writer).(*os.File); ok {
-		return term.IsTerminal(int(v.Fd()))
-	}
-	return false
-}
-
-// IsColorsSupported returns true if the process environment indicates color output is supported and desired.
 func IsColorsSupported() bool {
-	return isColorsSupported() && IsTerminal()
-}
-
-func isColorsSupported() bool {
 	if colorsSupported == nil {
 		supported := true
 		if os.Getenv("TERM") == "dumb" ||
@@ -256,14 +257,14 @@ func isColorsSupported() bool {
 
 // Predefined color formatting functions
 func (f *LogFormat) Path(message string) string {
-	if IsTerminal() {
+	if IsStdErrTerminal() {
 		return color.Green.Render(message)
 	}
 	return message
 }
 
 func (f *LogFormat) URL(message string) string {
-	if IsTerminal() {
+	if IsStdErrTerminal() {
 		return color.Cyan.Render(message)
 	}
 	return message

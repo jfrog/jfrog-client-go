@@ -20,7 +20,7 @@ func TestLoggerLeaveEmojis(t *testing.T) {
 	testLoggerWithEmojis(t, true, expected)
 }
 
-func testLoggerWithEmojis(t *testing.T, mockIsTerminal bool, expected string) {
+func testLoggerWithEmojis(t *testing.T, mockIsTerminalFlags bool, expected string) {
 	previousLog := Logger
 	// Restore previous logger when the function returns.
 	defer SetLogger(previousLog)
@@ -28,11 +28,9 @@ func testLoggerWithEmojis(t *testing.T, mockIsTerminal bool, expected string) {
 	// Set new logger with output redirection to buffer.
 	buffer := &bytes.Buffer{}
 	SetLogger(NewLogger(DEBUG, buffer))
-	if mockIsTerminal {
+	if mockIsTerminalFlags {
 		// Mock logger with isTerminal flags set to true
-		trueValue := true
-		StdOutIsTerminal = &trueValue
-		StdErrIsTerminal = &trueValue
+		SetIsTerminalFlags(true)
 	}
 	Debug("111", 111, "", "111😀111👻🪶")
 	Info("222", 222, "", "222😀222👻🪶")
