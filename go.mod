@@ -63,6 +63,6 @@ exclude (
 	golang.org/x/text v0.3.4
 )
 
-// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.3.0
+replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.3.1-0.20220620130614-83dda95caddf
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.0.7-0.20211128152632-e218c460d703
