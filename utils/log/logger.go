@@ -34,8 +34,8 @@ var colorsSupported *bool
 // defaultLogger is the default logger instance in case the user does not set one
 var defaultLogger = NewLogger(INFO, nil)
 
-var logWriter = io.Writer(os.Stderr)
-var outputWriter = io.Writer(os.Stdout)
+var logWriter io.Writer
+var outputWriter io.Writer
 
 const (
 	ERROR LevelType = iota
@@ -48,11 +48,11 @@ const (
 // All logs are written to Stderr by default (output to Stdout).
 // If logToWriter != nil, logging is done to the provided writer instead.
 // Log flags to modify the log prefix as described in https://pkg.go.dev/log#pkg-constants.
-func NewLoggerWithFlags(logLevel LevelType, logToWriter io.Writer, logFlags int) *jfrogLogger {
+func NewLoggerWithFlags(logLevel LevelType, writer io.Writer, logFlags int) *jfrogLogger {
 	logger := new(jfrogLogger)
 	logger.SetLogLevel(logLevel)
-	logger.SetOutputWriter(logToWriter)
-	logger.SetLogsWriter(logToWriter, logFlags)
+	logger.SetOutputWriter(writer)
+	logger.SetLogsWriter(writer, logFlags)
 	return logger
 }
 
@@ -88,9 +88,11 @@ func (logger *jfrogLogger) SetLogLevel(LevelEnum LevelType) {
 func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 	if writer != nil {
 		outputWriter = writer
-		// Reset outIsTerminal flag
-		stdOutIsTerminal = nil
+	} else {
+		outputWriter = io.Writer(os.Stdout)
 	}
+	// Reset outIsTerminal flag
+	stdOutIsTerminal = nil
 	logger.OutputLog = log.New(outputWriter, "", 0)
 }
 
@@ -100,9 +102,11 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 func (logger *jfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
 	if writer != nil {
 		logWriter = writer
-		// reset errIsTerminal flag
-		stdErrIsTerminal = nil
+	} else {
+		logWriter = io.Writer(os.Stderr)
 	}
+	// reset errIsTerminal flag
+	stdErrIsTerminal = nil
 	logger.DebugLog = log.New(logWriter, getLogPrefix(DEBUG), logFlags)
 	logger.InfoLog = log.New(logWriter, getLogPrefix(INFO), logFlags)
 	logger.WarnLog = log.New(logWriter, getLogPrefix(WARN), logFlags)
