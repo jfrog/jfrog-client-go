@@ -158,7 +158,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 			log.Debug("Blocking HTTP redirect to ", redirectUrl)
 			return
 		}
-		// Due to security reasons, there's no built in HTTP redirect in the HTTP Client
+		// Due to security reasons, there's no built-in HTTP redirect in the HTTP Client
 		// for POST requests. We therefore implement the redirect on our own.
 		if req.Method == "POST" {
 			log.Debug("HTTP redirecting to ", redirectUrl)
