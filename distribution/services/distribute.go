@@ -22,6 +22,7 @@ type DistributeReleaseBundleService struct {
 	DistDetails auth.ServiceDetails
 	DryRun      bool
 	Sync        bool
+	CreateRepo  bool
 	// Max time in minutes to wait for sync distribution to finish.
 	MaxWaitMinutes int
 }
@@ -47,6 +48,7 @@ func (dr *DistributeReleaseBundleService) Distribute(distributeParams Distributi
 	distribution := &DistributionBody{
 		DryRun:            dr.DryRun,
 		DistributionRules: distributionRules,
+		CreateRepo:        dr.CreateRepo,
 	}
 
 	trackerId, err := dr.execDistribute(distributeParams.Name, distributeParams.Version, distribution)
@@ -135,6 +137,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 type DistributionBody struct {
 	DryRun            bool                    `json:"dry_run"`
 	DistributionRules []DistributionRulesBody `json:"distribution_rules"`
+	CreateRepo        bool                    `json:"auto_create_missing_repositories,omitempty"`
 }
 
 type DistributionRulesBody struct {
