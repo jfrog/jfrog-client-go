@@ -356,7 +356,6 @@ func createDistributeMapping(t *testing.T) {
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
-	testsBundleDistributeService.CreateRepo = true
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 
@@ -388,7 +387,6 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
-	testsBundleDistributeService.CreateRepo = true
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 
