@@ -70,7 +70,7 @@ func (dr *DistributeReleaseBundleService) execDistribute(name, version string, d
 	if distribution.DryRun {
 		dryRunStr = "[Dry run] "
 	}
-	log.Info(dryRunStr + "Distributing: " + name + "/" + version)
+	log.Info(dryRunStr + "Distributing: " + name + "/" + version + " content:" + string(content))
 
 	url := dr.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
