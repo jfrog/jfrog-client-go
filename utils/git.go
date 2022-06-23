@@ -3,16 +3,18 @@ package utils
 import (
 	"bufio"
 	"bytes"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"errors"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -100,7 +102,32 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		return
 	}
 	if !exists {
-		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + actualAbsPath + "'")
+		// as a fallback, try asking git for where the .git directory is directly (for worktrees)
+		var stdout bytes.Buffer
+		var stderr bytes.Buffer
+		cmd := exec.Command("git", "rev-parse", "--git-dir")
+		cmd.Dir = filepath.Dir(m.path)
+		cmd.Stdin = nil
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		err := cmd.Run()
+		if err != nil {
+			m.err = err
+			return
+		}
+		worktreePath := strings.TrimSpace(stdout.String())
+		// trim the worktree path to just the
+		worktreePathReduced := filepath.Dir(filepath.Dir(worktreePath))
+		exists, err = fileutils.IsDirExists(worktreePathReduced, false)
+		if err != nil {
+			m.err = err
+			return
+		}
+		if !exists {
+			m.err = errorutils.CheckError(errors.New("path found in .git file '" + m.path + "' does not exist: '" + actualAbsPath + "'"))
+			return
+		}
+		m.path = worktreePathReduced
 		return
 	}
 
