@@ -19,17 +19,36 @@ type FolderInfoChildren struct {
 	Folder bool   `json:"folder,omitempty"`
 }
 
-type FileList struct {
+type FileListParams struct {
+	Deep               bool
+	Depth              int
+	ListFolders        bool
+	MetadataTimestamps bool
+	IncludeRootPath    bool
+}
+
+func NewFileListParams() FileListParams {
+	return FileListParams{}
+}
+
+type FileListResponse struct {
 	Uri     string         `json:"uri,omitempty"`
 	Created string         `json:"created,omitempty"`
 	Files   []FileListFile `json:"files,omitempty"`
 }
 
 type FileListFile struct {
-	Uri          string      `json:"uri,omitempty"`
-	Size         json.Number `json:"size,omitempty"`
-	LastModified string      `json:"lastModified,omitempty"`
-	Folder       bool        `json:"folder,omitempty"`
+	Uri                string             `json:"uri,omitempty"`
+	Size               json.Number        `json:"size,omitempty"`
+	LastModified       string             `json:"lastModified,omitempty"`
+	Folder             bool               `json:"folder,omitempty"`
+	Sha1               string             `json:"sha1,omitempty"`
+	Sha2               string             `json:"sha2,omitempty"`
+	MetadataTimestamps MetadataTimestamps `json:"mdTimestamps,omitempty"`
+}
+
+type MetadataTimestamps struct {
+	Properties string `json:"properties,omitempty"`
 }
 
 type StorageInfo struct {

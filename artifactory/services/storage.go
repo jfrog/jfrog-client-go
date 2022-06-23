@@ -9,12 +9,15 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"path"
+	"strconv"
 )
 
 type StorageService struct {
 	client     *jfroghttpclient.JfrogHttpClient
 	artDetails *auth.ServiceDetails
 }
+
+const StorageRestApi = "api/storage/"
 
 func NewStorageService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *StorageService {
 	return &StorageService{artDetails: &artDetails, client: client}
@@ -30,7 +33,7 @@ func (s *StorageService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 
 func (s *StorageService) FolderInfo(relativePath string) (*utils.FolderInfo, error) {
 	client := s.GetJfrogHttpClient()
-	restAPI := path.Join("api", "storage", relativePath)
+	restAPI := path.Join(StorageRestApi, relativePath)
 	folderUrl, err := utils.BuildArtifactoryUrl(s.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return nil, err
@@ -51,14 +54,25 @@ func (s *StorageService) FolderInfo(relativePath string) (*utils.FolderInfo, err
 	return result, errorutils.CheckError(err)
 }
 
-func (s *StorageService) FileList(relativePath string) (*utils.FileList, error) {
+func (s *StorageService) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
 	client := s.GetJfrogHttpClient()
-	restAPI := path.Join("api", "storage", relativePath)
-	folderUrl, err := utils.BuildArtifactoryUrl(s.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+	restAPI := path.Join(StorageRestApi, relativePath)
+
+	// Convert params to map:
+	params := make(map[string]string)
+	params["list"] = "true"
+	addParamIfTrue(params, "deep", optionalParams.Deep)
+	addParamIfTrue(params, "listFolders", optionalParams.ListFolders)
+	addParamIfTrue(params, "mdTimestamps", optionalParams.MetadataTimestamps)
+	addParamIfTrue(params, "includeRootPath", optionalParams.IncludeRootPath)
+	if optionalParams.Depth > 0 {
+		params["depth"] = strconv.Itoa(optionalParams.Depth)
+	}
+
+	folderUrl, err := utils.BuildArtifactoryUrl(s.GetArtifactoryDetails().GetUrl(), restAPI, params)
 	if err != nil {
 		return nil, err
 	}
-	folderUrl += "?list&listFolders=1"
 
 	httpClientsDetails := s.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, _, err := client.SendGet(folderUrl, true, &httpClientsDetails)
@@ -70,7 +84,7 @@ func (s *StorageService) FileList(relativePath string) (*utils.FileList, error) 
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 
-	result := &utils.FileList{}
+	result := &utils.FileListResponse{}
 	err = json.Unmarshal(body, result)
 	return result, errorutils.CheckError(err)
 }
@@ -92,4 +106,10 @@ func (s *StorageService) StorageInfo() (*utils.StorageInfo, error) {
 	result := &utils.StorageInfo{}
 	err = json.Unmarshal(body, result)
 	return result, errorutils.CheckError(err)
+}
+
+func addParamIfTrue(params map[string]string, paramName string, value bool) {
+	if value {
+		params[paramName] = "1"
+	}
 }

@@ -95,7 +95,7 @@ type ArtifactoryServicesManager interface {
 	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
 	Export(params services.ExportParams) error
 	FolderInfo(relativePath string) (*utils.FolderInfo, error)
-	FileList(relativePath string) (*utils.FileList, error)
+	FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error)
 	StorageInfo() (*utils.StorageInfo, error)
 }
 
@@ -417,7 +417,7 @@ func (esm *EmptyArtifactoryServicesManager) FolderInfo(relativePath string) (*ut
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) FileList(relativePath string) (*utils.FileList, error) {
+func (esm *EmptyArtifactoryServicesManager) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
 	panic("Failed: Method is not implemented")
 }
 

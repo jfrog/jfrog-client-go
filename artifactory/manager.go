@@ -547,9 +547,9 @@ func (sm *ArtifactoryServicesManagerImp) FolderInfo(relativePath string) (*utils
 	return storageService.FolderInfo(relativePath)
 }
 
-func (sm *ArtifactoryServicesManagerImp) FileList(relativePath string) (*utils.FileList, error) {
+func (sm *ArtifactoryServicesManagerImp) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
 	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
-	return storageService.FileList(relativePath)
+	return storageService.FileList(relativePath, optionalParams)
 }
 
 func (sm *ArtifactoryServicesManagerImp) StorageInfo() (*utils.StorageInfo, error) {
