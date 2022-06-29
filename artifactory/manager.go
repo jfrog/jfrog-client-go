@@ -554,6 +554,7 @@ func (sm *ArtifactoryServicesManagerImp) FileList(relativePath string, optionalP
 
 func (sm *ArtifactoryServicesManagerImp) StorageInfo(refresh bool) (*utils.StorageInfo, error) {
 	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	// If refresh flag was provided - Send a refresh request to Artifactory before getting the storage info.
 	if refresh {
 		err := storageService.StorageInfoRefresh()
 		if err != nil {
