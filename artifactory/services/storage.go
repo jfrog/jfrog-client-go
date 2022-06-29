@@ -108,6 +108,22 @@ func (s *StorageService) StorageInfo() (*utils.StorageInfo, error) {
 	return result, errorutils.CheckError(err)
 }
 
+func (s *StorageService) StorageInfoRefresh() error {
+	client := s.GetJfrogHttpClient()
+	url := s.GetArtifactoryDetails().GetUrl() + "api/storageinfo/calculate"
+
+	httpClientsDetails := s.GetArtifactoryDetails().CreateHttpClientDetails()
+	resp, _, err := client.SendPost(url, nil, &httpClientsDetails)
+	if err != nil {
+		return err
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusAccepted); err != nil {
+		return errorutils.CheckError(err)
+	}
+	log.Debug("Artifactory response: ", resp.Status)
+	return nil
+}
+
 func addParamIfTrue(params map[string]string, paramName string, value bool) {
 	if value {
 		params[paramName] = "1"
