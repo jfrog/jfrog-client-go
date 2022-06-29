@@ -87,8 +87,11 @@ func storageInfoTest(t *testing.T) {
 	assert.NotEmpty(t, info.TotalSpace)
 	assert.NotEmpty(t, info.UsedSpace)
 	assert.NotEmpty(t, info.FreeSpace)
-	// TOTAL is returned as the first repo. Check the next repo.
+
+	// Verifying the repositories summary was filled correctly.
 	// Cannot check any repo that is created as part of the test suite because it does not reflect in storage info immediately.
+	// Cannot verify the first value because the repos "TOTAL" is returned there.
+	// Checking the 2nd value.
 	assert.True(t, len(info.RepositoriesSummaryList) > 1)
 	repo := info.RepositoriesSummaryList[1]
 	assert.NotEmpty(t, repo.RepoKey)
