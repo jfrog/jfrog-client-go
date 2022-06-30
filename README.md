@@ -1257,7 +1257,8 @@ serviceManager.FileList("repo/path/", optionalParams)
 #### Getting Storage Summary Info of Artifactory
 
 ```go
-serviceManager.StorageInfo()
+forceRefresh := true
+serviceManager.StorageInfo(forceRefresh)
 ```
 
 ## Access APIs

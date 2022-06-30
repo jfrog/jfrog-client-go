@@ -70,6 +70,11 @@ func fileListTest(t *testing.T) {
 }
 
 func storageInfoTest(t *testing.T) {
+	err := testsStorageService.StorageInfoRefresh()
+	if err != nil {
+		assert.NoError(t, err)
+		return
+	}
 	info, err := testsStorageService.StorageInfo()
 	if err != nil {
 		assert.NoError(t, err)
@@ -88,17 +93,19 @@ func storageInfoTest(t *testing.T) {
 	assert.NotEmpty(t, info.UsedSpace)
 	assert.NotEmpty(t, info.FreeSpace)
 
-	// Verifying the repositories summary was filled correctly.
-	// Cannot check any repo that is created as part of the test suite because it does not reflect in storage info immediately.
-	// Cannot verify the first value because the repos "TOTAL" is returned there.
-	// Checking the 2nd value.
-	assert.True(t, len(info.RepositoriesSummaryList) > 1)
-	repo := info.RepositoriesSummaryList[1]
-	assert.NotEmpty(t, repo.RepoKey)
-	assert.NotEmpty(t, repo.RepoType)
-	assert.NotEmpty(t, repo.FoldersCount)
-	assert.NotEmpty(t, repo.FilesCount)
-	assert.NotEmpty(t, repo.UsedSpace)
-	assert.NotEmpty(t, repo.UsedSpaceInBytes)
-	assert.NotEmpty(t, repo.ItemsCount)
+	for _, repoSummary := range info.RepositoriesSummaryList {
+		if repoSummary.RepoKey == getRtTargetRepoKey() {
+			assert.NotEmpty(t, repoSummary.RepoType)
+			assert.NotEmpty(t, repoSummary.FoldersCount)
+			assert.NotEmpty(t, repoSummary.FilesCount)
+			assert.NotEmpty(t, repoSummary.UsedSpace)
+			assert.NotEmpty(t, repoSummary.UsedSpaceInBytes)
+			assert.NotEmpty(t, repoSummary.ItemsCount)
+			assert.NotEmpty(t, repoSummary.PackageType)
+			assert.NotEmpty(t, repoSummary.ProjectKey)
+			assert.NotEmpty(t, repoSummary.Percentage)
+			return
+		}
+	}
+	assert.Fail(t, "could not find the summary of repo '"+getRtTargetRepoKey()+"' in the storage info")
 }

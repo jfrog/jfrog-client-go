@@ -74,6 +74,9 @@ type RepositorySummary struct {
 	UsedSpace        string      `json:"usedSpace,omitempty"`
 	UsedSpaceInBytes json.Number `json:"usedSpaceInBytes,omitempty"`
 	ItemsCount       json.Number `json:"itemsCount,omitempty"`
+	PackageType      string      `json:"packageType,omitempty"`
+	ProjectKey       string      `json:"projectKey,omitempty"`
+	Percentage       string      `json:"percentage,omitempty"`
 }
 
 type FileStoreSummary struct {
