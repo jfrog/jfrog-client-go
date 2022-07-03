@@ -93,6 +93,7 @@ func getTestUserParams(replaceIfExists bool, nameSuffix string) services.UserPar
 		Password:                 "Password1*",
 		Admin:                    &trueValue,
 		Realm:                    "internal",
+		ShouldInvite:             &falseValue,
 		ProfileUpdatable:         &trueValue,
 		DisableUIAccess:          &falseValue,
 		InternalPasswordDisabled: &falseValue,
