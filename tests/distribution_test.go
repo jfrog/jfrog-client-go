@@ -186,7 +186,7 @@ func updateDryRun(updateBundleParams services.UpdateReleaseBundleParams) error {
 func distributeDryRun(distributionParams services.DistributionParams) error {
 	defer setServicesToDryRunFalse()
 	testsBundleDistributeService.DryRun = true
-	testsBundleDistributeService.CreateRepo = true
+	testsBundleDistributeService.AutoCreateRepo = true
 	return testsBundleDistributeService.Distribute(distributionParams)
 }
 
@@ -288,7 +288,7 @@ func createSignDistributeDelete(t *testing.T) {
 	assert.Len(t, *response, 0)
 
 	// Distribute release bundle
-	testsBundleDistributeService.CreateRepo = true
+	testsBundleDistributeService.AutoCreateRepo = true
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 	waitForDistribution(t, bundleName)
@@ -325,7 +325,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
-	testsBundleDistributeService.CreateRepo = true
+	testsBundleDistributeService.AutoCreateRepo = true
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 
@@ -357,7 +357,7 @@ func createDistributeMapping(t *testing.T) {
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
 	// On distribution with path mapping, the target repository cannot be auto-created
-	testsBundleDistributeService.CreateRepo = false
+	testsBundleDistributeService.AutoCreateRepo = false
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 
@@ -390,7 +390,7 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
 	// On distribution with path mapping, the target repository cannot be auto-created
-	testsBundleDistributeService.CreateRepo = false
+	testsBundleDistributeService.AutoCreateRepo = false
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 
