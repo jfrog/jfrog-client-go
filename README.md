@@ -77,6 +77,7 @@
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
+      - [Fetching Running Artifactory Nodes in a Cluster](#fetching-running-artifactory-nodes-in-a-cluster)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
       - [Fetching Artifactory's Config Descriptor](#fetching-artifactorys-config-descriptor)
       - [Activating Artifactory's Key Encryption](#activating-artifactorys-key-encryption)
@@ -1103,6 +1104,12 @@ If the requested permission target does not exist, a nil value is returned for t
 
 ```go
 version, err := servicesManager.GetVersion()
+```
+
+#### Fetching Running Artifactory Nodes in a Cluster
+
+```go
+runningNodes, err := servicesManager.GetRunningNodes()
 ```
 
 #### Fetching Artifactory's Service ID

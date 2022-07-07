@@ -15,6 +15,7 @@ func TestSystem(t *testing.T) {
 	initArtifactoryTest(t)
 	t.Run("getVersion", testGetVersion)
 	t.Run("getServiceId", testGetServiceId)
+	t.Run("getRunningNodes", testGetRunningNodes)
 	t.Run("getConfigDescriptor", testGetConfigDescriptor)
 	t.Run("activateKeyEncryption", testActivateKeyEncryption)
 	t.Run("deactivateKeyEncryption", testDeactivateKeyEncryption)
@@ -30,6 +31,12 @@ func testGetServiceId(t *testing.T) {
 	serviceId, err := testsSystemService.GetServiceId()
 	assert.NoError(t, err)
 	assert.NotEmpty(t, serviceId)
+}
+
+func testGetRunningNodes(t *testing.T) {
+	runningNodes, err := testsSystemService.GetRunningNodes()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, runningNodes)
 }
 
 func testGetConfigDescriptor(t *testing.T) {
