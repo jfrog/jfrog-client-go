@@ -125,7 +125,7 @@ func (mc *MoveCopyService) getPathsToMove(moveSpec MoveCopyParams) (resultItems 
 			}
 		}()
 
-		resultItems, err = reduceMovePaths(utils.ResultItem{}, tempResultItems, moveSpec.IsFlat(), clientutils.PlaceholdersUserd(moveSpec.Pattern, moveSpec.Target))
+		resultItems, err = reduceMovePaths(utils.ResultItem{}, tempResultItems, moveSpec.IsFlat(), clientutils.IsPlaceholdersUsed(moveSpec.Pattern, moveSpec.Target))
 		if err != nil {
 			return
 		}

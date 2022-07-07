@@ -53,6 +53,7 @@ type ArtifactoryServicesManager interface {
 	Aql(aql string) (io.ReadCloser, error)
 	SetProps(params services.PropsParams) (int, error)
 	DeleteProps(params services.PropsParams) (int, error)
+	GetItemProps(relativePath string) (*utils.ItemProperties, error)
 	UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error)
 	UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
 	Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
@@ -93,6 +94,9 @@ type ArtifactoryServicesManager interface {
 	TriggerFederatedRepositoryFullSyncAll(repoKey string) error
 	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
 	Export(params services.ExportParams) error
+	FolderInfo(relativePath string) (*utils.FolderInfo, error)
+	FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error)
+	StorageInfo(refresh bool) (*utils.StorageInfo, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -234,6 +238,10 @@ func (esm *EmptyArtifactoryServicesManager) SetProps(params services.PropsParams
 }
 
 func (esm *EmptyArtifactoryServicesManager) DeleteProps(params services.PropsParams) (int, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetItemProps(relativePath string) (*utils.ItemProperties, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -402,6 +410,18 @@ func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncMi
 }
 
 func (esm *EmptyArtifactoryServicesManager) Export(params services.ExportParams) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) FolderInfo(relativePath string) (*utils.FolderInfo, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) StorageInfo(refresh bool) (*utils.StorageInfo, error) {
 	panic("Failed: Method is not implemented")
 }
 

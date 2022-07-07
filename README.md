@@ -42,6 +42,7 @@
       - [Searching Files in Artifactory](#searching-files-in-artifactory)
       - [Setting Properties on Files in Artifactory](#setting-properties-on-files-in-artifactory)
       - [Deleting Properties from Files in Artifactory](#deleting-properties-from-files-in-artifactory)
+      - [Getting Properties from Files in Artifactory](#getting-properties-from-files-in-artifactory)
       - [Publishing Build Info to Artifactory](#publishing-build-info-to-artifactory)
       - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
       - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
@@ -88,6 +89,9 @@
       - [Creating and Updating a Group](#creating-and-updating-a-group)
       - [Deleting a Group](#deleting-a-group)
       - [Generating Full System Export](#generating-full-system-export)
+      - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
+      - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
+      - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
   - [Access APIs](#access-apis)
     - [Creating Access Service Manager](#creating-access-service-manager)
       - [Creating Access Details](#creating-access-details)
@@ -543,6 +547,12 @@ propsParams.Reader = reader
 propsParams.Props = "key=value"
 
 rtManager.DeleteProps(propsParams)
+```
+
+#### Getting Properties from Files in Artifactory
+
+```go
+rtManager.GetItemProperties("repo/path/file")
 ```
 
 Read more about [ContentReader](#using-contentReader).
@@ -1225,6 +1235,30 @@ err := serviceManager.DeleteGroup("myGroupName")
 ```go
 params := services.NewExportParams("/tmp/")
 err := serviceManager.Export(params)
+```
+
+#### Getting Info of a Folder in Artifactory
+
+```go
+serviceManager.FolderInfo("repo/path/")
+```
+
+#### Getting a listing of files and folders within a folder in Artifactory
+```go
+optionalParams := servicesutils.NewFileListParams()
+optionalParams.Deep=               true
+optionalParams.Depth=              2
+optionalParams.ListFolders=        true
+optionalParams.MetadataTimestamps= true
+optionalParams.IncludeRootPath=    true
+serviceManager.FileList("repo/path/", optionalParams)
+```
+
+#### Getting Storage Summary Info of Artifactory
+
+```go
+forceRefresh := true
+serviceManager.StorageInfo(forceRefresh)
 ```
 
 ## Access APIs

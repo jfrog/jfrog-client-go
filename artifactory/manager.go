@@ -294,6 +294,13 @@ func (sm *ArtifactoryServicesManagerImp) DeleteProps(params services.PropsParams
 	setPropsService.Threads = sm.config.GetThreads()
 	return setPropsService.DeleteProps(params)
 }
+
+func (sm *ArtifactoryServicesManagerImp) GetItemProps(relativePath string) (*utils.ItemProperties, error) {
+	setPropsService := services.NewPropsService(sm.client)
+	setPropsService.ArtDetails = sm.config.GetServiceDetails()
+	return setPropsService.GetItemProperties(relativePath)
+}
+
 func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadService {
 	uploadService := services.NewUploadService(sm.client)
 	uploadService.Threads = sm.config.GetThreads()
@@ -533,4 +540,26 @@ func (sm *ArtifactoryServicesManagerImp) Export(params services.ExportParams) er
 
 func (sm *ArtifactoryServicesManagerImp) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
+}
+
+func (sm *ArtifactoryServicesManagerImp) FolderInfo(relativePath string) (*utils.FolderInfo, error) {
+	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	return storageService.FolderInfo(relativePath)
+}
+
+func (sm *ArtifactoryServicesManagerImp) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
+	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	return storageService.FileList(relativePath, optionalParams)
+}
+
+func (sm *ArtifactoryServicesManagerImp) StorageInfo(refresh bool) (*utils.StorageInfo, error) {
+	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	// If refresh flag was provided - Send a refresh request to Artifactory before getting the storage info.
+	if refresh {
+		err := storageService.StorageInfoRefresh()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return storageService.StorageInfo()
 }
