@@ -667,7 +667,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			}
 			uploadResult.TotalCount[threadId]++
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
-			_, targetPathWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
+			targetPathWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
 			if e != nil {
 				return
 			}
@@ -720,7 +720,7 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 				e = err
 			}
 		}()
-		targetUrl, targetUrlWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), targetPath, archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian(), archiveData.uploadParams.TargetProps)
+		targetUrlWithProps, e := buildUploadUrls(us.ArtDetails.GetUrl(), targetPath, archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian(), archiveData.uploadParams.TargetProps)
 		if e != nil {
 			return
 		}
@@ -746,7 +746,7 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		if uploaded {
 			uploadResult.SuccessCount[threadId]++
 			if us.saveSummary {
-				e = us.resultsManager.finalizeResult(targetUrl, &details.Checksum)
+				e = us.resultsManager.finalizeResult(targetPath, &details.Checksum)
 			}
 		}
 		return
@@ -851,8 +851,8 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	return
 }
 
-func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string, targetProps *utils.Properties) (targetUrl, targetUrlWithProps string, e error) {
-	targetUrl, e = utils.BuildArtifactoryUrl(artifactoryUrl, targetPath, make(map[string]string))
+func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string, targetProps *utils.Properties) ( targetUrlWithProps string, e error) {
+	targetUrl, e := utils.BuildArtifactoryUrl(artifactoryUrl, targetPath, make(map[string]string))
 	if e != nil {
 		return
 	}

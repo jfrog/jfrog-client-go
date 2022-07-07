@@ -47,7 +47,7 @@ func TestBuildUploadUrls(t *testing.T) {
 	for _, v := range testsParams {
 		targetProps, e := utils.ParseProperties(v.targetProps)
 		assert.NoError(t, e)
-		_, actualTargetPathWithProps, e := buildUploadUrls("http://localhost:8881/artifactory/", v.targetPath, v.buildProps, "", targetProps)
+		actualTargetPathWithProps, e := buildUploadUrls("http://localhost:8881/artifactory/", v.targetPath, v.buildProps, "", targetProps)
 		assert.NoError(t, e)
 		assert.Equal(t, v.expectedTargetPathWithProps, actualTargetPathWithProps)
 	}
