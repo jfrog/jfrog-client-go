@@ -1496,6 +1496,7 @@ summary, err := distManager.SignReleaseBundle(params)
 params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
 distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
 params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+// Auto-creating repository if it does not exist
 autoCreateRepo := true
 err := distManager.DistributeReleaseBundle(params, autoCreateRepo)
 ```
@@ -1506,6 +1507,7 @@ err := distManager.DistributeReleaseBundle(params, autoCreateRepo)
 params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
 distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
 params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+// Auto-creating repository if it does not exist
 autoCreateRepo := true
 // Wait up to 120 minutes for the release bundle distribution
 err := distManager.DistributeReleaseBundleSync(params, 120, autoCreateRepo)
