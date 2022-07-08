@@ -214,7 +214,11 @@ func buildKeyAllValQueryPart(key string, propValues []string) string {
 }
 
 func buildExcludedKeyValQueryPart(key string, value string) string {
-	return fmt.Sprintf(`"@%s":{"$ne":%s}`, key, getAqlValue(value))
+	operator := `$ne`
+	if strings.Contains(value, "*") || strings.Contains(value, "?") {
+		operator = `$nmatch`
+	}
+	return fmt.Sprintf(`"@%s":{"%s":"%s"}`, key, operator, value)
 }
 
 func buildItemTypeQueryPart(params *CommonParams) string {
@@ -398,7 +402,7 @@ func buildIncludeQueryPart(fieldsToInclude []string) string {
 // Optimization - If value is a wildcard pattern, return `{"$match":"value"}`. Otherwise, return `"value"`.
 func getAqlValue(val string) string {
 	var aqlValuePattern string
-	if strings.Contains(val, "*") {
+	if strings.Contains(val, "*") || strings.Contains(val, "?") {
 		aqlValuePattern = `{"$match":"%s"}`
 	} else {
 		aqlValuePattern = `"%s"`
