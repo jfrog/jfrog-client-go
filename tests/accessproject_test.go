@@ -41,7 +41,7 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 		assert.Contains(t, *allGroups, testGroup)
 	}
 
-	testGroup.Roles = append(testGroup.Roles, "Contributor")
+	testGroup.Roles = append(testGroup.Roles, "Developer")
 	err = testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup)
 	assert.NoError(t, err)
 
