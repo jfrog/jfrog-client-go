@@ -35,8 +35,10 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 
 	allGroups, err := testsAccessProjectService.GetGroups(projectParams.ProjectDetails.ProjectKey)
 	assert.NoError(t, err)
-	assert.Equal(t, len(*allGroups), 1, "Expected 1 group in the project but got %d", len(*allGroups))
-	assert.Contains(t, *allGroups, testGroup)
+	if assert.NotNil(t, allGroups) {
+		assert.Equal(t, len(*allGroups), 1, "Expected 1 group in the project but got %d", len(*allGroups))
+		assert.Contains(t, *allGroups, testGroup)
+	}
 
 	testGroup.Roles = append(testGroup.Roles, "Contributor")
 	err = testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup)
@@ -65,12 +67,11 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 	projectParams.ProjectDetails.AdminPrivileges.ManageMembers = &falseValue
 	projectParams.ProjectDetails.AdminPrivileges.ManageResources = &trueValue
 	projectParams.ProjectDetails.AdminPrivileges.IndexResources = &falseValue
-	err = testsAccessProjectService.Update(projectParams)
-	assert.NoError(t, err)
+	assert.NoError(t, testsAccessProjectService.Update(projectParams))
 	updatedProject, err := testsAccessProjectService.Get(projectParams.ProjectDetails.ProjectKey)
 	assert.NoError(t, err)
 	assert.NotNil(t, updatedProject)
-	if !reflect.DeepEqual(projectParams.ProjectDetails, *updatedProject) {
+	if assert.NotNil(t, updatedProject) && !reflect.DeepEqual(projectParams.ProjectDetails, *updatedProject) {
 		t.Error("Unexpected project details built. Expected: `", projectParams.ProjectDetails, "` Got `", *updatedProject, "`")
 	}
 }
