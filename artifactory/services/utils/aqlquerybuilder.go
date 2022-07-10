@@ -133,7 +133,7 @@ func CreateAqlQueryForYarn(npmName, npmVersion string) string {
 			`{"@npm.version":"v%[2]s"}` +
 			`]` +
 			`})%s`
-	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
+	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5", "sha256"}))
 }
 
 func CreateAqlQueryForPypi(repo, file string) string {

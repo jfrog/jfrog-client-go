@@ -395,11 +395,26 @@ func addSeparator(str1, separator, str2 string) string {
 }
 
 func (item *ResultItem) ToArtifact() buildinfo.Artifact {
-	return buildinfo.Artifact{Name: item.Name, Checksum: buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}, Path: path.Join(item.Path, item.Name)}
+	return buildinfo.Artifact{
+		Name: item.Name,
+		Checksum: buildinfo.Checksum{
+			Sha1:   item.Actual_Sha1,
+			Md5:    item.Actual_Md5,
+			Sha256: item.Sha256,
+		},
+		Path: path.Join(item.Path, item.Name),
+	}
 }
 
 func (item *ResultItem) ToDependency() buildinfo.Dependency {
-	return buildinfo.Dependency{Id: item.Name, Checksum: buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}}
+	return buildinfo.Dependency{
+		Id: item.Name,
+		Checksum: buildinfo.Checksum{
+			Sha1:   item.Actual_Sha1,
+			Md5:    item.Actual_Md5,
+			Sha256: item.Sha256,
+		},
+	}
 }
 
 type AqlSearchResultItemFilter func(SearchBasedContentItem, *content.ContentReader) (*content.ContentReader, error)

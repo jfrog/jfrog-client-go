@@ -53,7 +53,7 @@ func (gs *GroupService) GetGroup(params GroupParams) (g *Group, err error) {
 	if err != nil {
 		return nil, err
 	}
-	// If the requseted group doesn't exists.
+	// If the requested group doesn't exist.
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
