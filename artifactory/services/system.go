@@ -12,7 +12,10 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-const apiSystem = "api/system/"
+const (
+	apiSystem         = "api/system/"
+	runningNodeStatus = "RUNNING"
+)
 
 type SystemService struct {
 	client     *jfroghttpclient.JfrogHttpClient
@@ -54,6 +57,25 @@ func (ss *SystemService) GetServiceId() (string, error) {
 		return "", err
 	}
 	return string(body), nil
+}
+
+func (ss *SystemService) GetRunningNodes() ([]string, error) {
+	body, err := ss.sendGet("status")
+	if err != nil {
+		return []string{}, err
+	}
+	var status artifactoryStatus
+	err = json.Unmarshal(body, &status)
+	if err != nil {
+		return []string{}, errorutils.CheckError(err)
+	}
+	var runningNodes []string
+	for _, node := range status.Nodes {
+		if node.State == runningNodeStatus {
+			runningNodes = append(runningNodes, strings.TrimSpace(node.Id))
+		}
+	}
+	return runningNodes, nil
 }
 
 func (ss *SystemService) GetConfigDescriptor() (string, error) {
@@ -111,4 +133,11 @@ func (ss *SystemService) sendEmptyPost(endpoint string) error {
 
 type artifactoryVersion struct {
 	Version string `json:"version,omitempty"`
+}
+
+type artifactoryStatus struct {
+	Nodes []struct {
+		Id    string `json:"id,omitempty"`
+		State string `json:"state,omitempty"`
+	} `json:"nodes,omitempty"`
 }

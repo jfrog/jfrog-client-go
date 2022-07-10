@@ -75,6 +75,7 @@ type ArtifactoryServicesManager interface {
 	DeleteReplication(repoKey string) error
 	GetReplication(repoKey string) ([]utils.ReplicationParams, error)
 	GetVersion() (string, error)
+	GetRunningNodes() ([]string, error)
 	GetServiceId() (string, error)
 	GetConfigDescriptor() (string, error)
 	ActivateKeyEncryption() error
@@ -326,6 +327,10 @@ func (esm *EmptyArtifactoryServicesManager) GetReplication(repoKey string) ([]ut
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetVersion() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetRunningNodes() ([]string, error) {
 	panic("Failed: Method is not implemented")
 }
 
