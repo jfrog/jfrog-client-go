@@ -95,6 +95,7 @@ var (
 	testBuildInfoService                  *services.BuildInfoService
 	testsFederationService                *services.FederationService
 	testsSystemService                    *services.SystemService
+	testsStorageService                   *services.StorageService
 
 	// Distribution services
 	testsBundleSetSigningKeyService      *distributionServices.SetSigningKeyService
@@ -398,6 +399,13 @@ func createArtifactorySystemManager() {
 	testsSystemService = services.NewSystemService(artDetails, client)
 }
 
+func createArtifactoryStorageManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsStorageService = services.NewStorageService(artDetails, client)
+}
+
 func createJfrogHttpClient(artDetails *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
 	return jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath((*artDetails).GetClientCertPath()).
@@ -530,7 +538,11 @@ func uploadDummyFile(t *testing.T) {
 	defer clientTestUtils.RemoveAllAndAssert(t, workingDir)
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/"}
+	targetProps, err := utils.ParseProperties("dummy=yes")
+	if err != nil {
+		t.Error(err)
+	}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/", TargetProps: targetProps}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if summary.TotalSucceeded != 1 {

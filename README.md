@@ -42,6 +42,7 @@
       - [Searching Files in Artifactory](#searching-files-in-artifactory)
       - [Setting Properties on Files in Artifactory](#setting-properties-on-files-in-artifactory)
       - [Deleting Properties from Files in Artifactory](#deleting-properties-from-files-in-artifactory)
+      - [Getting Properties from Files in Artifactory](#getting-properties-from-files-in-artifactory)
       - [Publishing Build Info to Artifactory](#publishing-build-info-to-artifactory)
       - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
       - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
@@ -76,6 +77,7 @@
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
+      - [Fetching Running Artifactory Nodes in a Cluster](#fetching-running-artifactory-nodes-in-a-cluster)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
       - [Fetching Artifactory's Config Descriptor](#fetching-artifactorys-config-descriptor)
       - [Activating Artifactory's Key Encryption](#activating-artifactorys-key-encryption)
@@ -88,6 +90,9 @@
       - [Creating and Updating a Group](#creating-and-updating-a-group)
       - [Deleting a Group](#deleting-a-group)
       - [Generating Full System Export](#generating-full-system-export)
+      - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
+      - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
+      - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
   - [Access APIs](#access-apis)
     - [Creating Access Service Manager](#creating-access-service-manager)
       - [Creating Access Details](#creating-access-details)
@@ -98,7 +103,7 @@
       - [Updating a Project](#updating-a-project)
       - [Deleting a Project](#deleting-a-project)
       - [Assigning Repository to Project](#assigning-repository-to-project)
-      - [Unassigning Repository from Project](#unassigning-repository-from-project)
+      - [Unassigned Repository from Project](#unassigning-repository-from-project)
       - [Get all groups assigned to a project](#get-all-groups-assigned-to-a-project)
       - [Get a specific group assigned to a project](#get-a-specific-group-assigned-to-a-project)
       - [Add or update a group assigned to a project](#add-or-update-a-group-assigned-to-a-project)
@@ -150,8 +155,8 @@
       - [Creating New Pipelines Service Manager](#creating-new-pipelines-service-manager)
     - [Using Pipelines Services](#using-pipelines-services)
       - [Fetching Pipelines' System Info](#fetching-pipelines-system-info)
-      - [Creating Github Integration](#creating-github-integration)
-      - [Creating Github Enterprise Integration](#creating-github-enterprise-integration)
+      - [Creating GitHub Integration](#creating-github-integration)
+      - [Creating GitHub Enterprise Integration](#creating-github-enterprise-integration)
       - [Creating Bitbucket Integration](#creating-bitbucket-integration)
       - [Creating Bitbucket Server Integration](#creating-bitbucket-server-integration)
       - [Creating Gitlab Integration](#creating-gitlab-integration)
@@ -201,18 +206,18 @@ go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifac
 #### Test Types
 
 | Type                 | Description        | Prerequisites                 |
-| -------------------- | ------------------ | ----------------------------- |
+|----------------------|--------------------|-------------------------------|
 | `-test.artifactory`  | Artifactory tests  | Artifactory Pro               |
 | `-test.distribution` | Distribution tests | Artifactory with Distribution |
 | `-test.xray`         | Xray tests         | Artifactory with Xray         |
 | `-test.pipelines`    | Pipelines tests    | JFrog Pipelines               |
 | `-test.access`       | Access tests       | Artifactory Pro               |
-| `-test.repositories`   | Access tests       | Artifactory Pro               |
+| `-test.repositories` | Access tests       | Artifactory Pro               |
 
 #### Connection Details
 
 | Flag                  | Description                                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------------------------ |
+|-----------------------|--------------------------------------------------------------------------------------------------------|
 | `-rt.url`             | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-ds.url`             | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`             | [Optional] JFrog Xray URL.                                                                             |
@@ -543,6 +548,12 @@ propsParams.Reader = reader
 propsParams.Props = "key=value"
 
 rtManager.DeleteProps(propsParams)
+```
+
+#### Getting Properties from Files in Artifactory
+
+```go
+rtManager.GetItemProperties("repo/path/file")
 ```
 
 Read more about [ContentReader](#using-contentReader).
@@ -1095,6 +1106,12 @@ If the requested permission target does not exist, a nil value is returned for t
 version, err := servicesManager.GetVersion()
 ```
 
+#### Fetching Running Artifactory Nodes in a Cluster
+
+```go
+runningNodes, err := servicesManager.GetRunningNodes()
+```
+
 #### Fetching Artifactory's Service ID
 
 ```go
@@ -1185,7 +1202,7 @@ err := serviceManager.DeleteUser("myUserName")
 ```go
 params := services.NewGroupParams()
 params.GroupDetails.Name = "myGroupName"
-// Set this param to true to receive the user names associated with this group
+// Set this param to true to receive the usernames associated with this group
 params.IncludeUsers = true
 
 group, err := serviceManager.GetGroup(params)
@@ -1225,6 +1242,30 @@ err := serviceManager.DeleteGroup("myGroupName")
 ```go
 params := services.NewExportParams("/tmp/")
 err := serviceManager.Export(params)
+```
+
+#### Getting Info of a Folder in Artifactory
+
+```go
+serviceManager.FolderInfo("repo/path/")
+```
+
+#### Getting a listing of files and folders within a folder in Artifactory
+```go
+optionalParams := servicesutils.NewFileListParams()
+optionalParams.Deep=               true
+optionalParams.Depth=              2
+optionalParams.ListFolders=        true
+optionalParams.MetadataTimestamps= true
+optionalParams.IncludeRootPath=    true
+serviceManager.FileList("repo/path/", optionalParams)
+```
+
+#### Getting Storage Summary Info of Artifactory
+
+```go
+forceRefresh := true
+serviceManager.StorageInfo(forceRefresh)
 ```
 
 ## Access APIs
@@ -1414,7 +1455,7 @@ params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip", TargetProps: 
 // Be default, artifacts that are distributed as part of a release bundle, have the same path in their destination server
 // (the edge node) as the path they had on the distributing Artifactory server.
 // You have however the option for modifying the target path on edge node. You do this by defining the Target property as shown below.
-// The Pattern property is a wildcard based pattern. Any wildcards enclosed in parenthesis in the pattern (source)
+// The Pattern property is a wildcard based pattern. Any wildcards enclosed in parentheses in the pattern (source)
 // path can be matched with a corresponding placeholder in the target path, to determine the path and name
 // of the artifact, once distributed to the edge node.
 // In the following example, the path in the edge node is similar to the path in the source Artifactory server, except for the additional "dir" level at the root of the repository.
@@ -1423,7 +1464,7 @@ params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip", TargetProps: 
 pathMappingSpec := &utils.CommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
-// In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise summary is nil.
+// In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise, summary is nil.
 summary, err := distManager.CreateReleaseBundle(params)
 ```
 
@@ -1443,7 +1484,7 @@ params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip", TargetProps: 
 pathMappingSpec := &utils.CommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
-// In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise summary is nil.
+// In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise, summary is nil.
 summary, err := distManager.UpdateReleaseBundle(params)
 ```
 
@@ -1462,8 +1503,9 @@ summary, err := distManager.SignReleaseBundle(params)
 params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
 distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
 params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
-
-err := distManager.DistributeReleaseBundle(params)
+// Auto-creating repository if it does not exist
+autoCreateRepo := true
+err := distManager.DistributeReleaseBundle(params, autoCreateRepo)
 ```
 
 #### Sync Distributing a Release Bundle
@@ -1472,8 +1514,10 @@ err := distManager.DistributeReleaseBundle(params)
 params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
 distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
 params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+// Auto-creating repository if it does not exist
+autoCreateRepo := true
 // Wait up to 120 minutes for the release bundle distribution
-err := distManager.DistributeReleaseBundleSync(params, 120)
+err := distManager.DistributeReleaseBundleSync(params, 120, autoCreateRepo)
 ```
 
 #### Getting Distribution Status
@@ -1547,7 +1591,7 @@ reader.Reset()
 
 - `reader.Close()` removes the file used by the reader after it is used (preferably using `defer`).
 
-- `reader.GetError()` returns any error that might have occurd during `NextRecord()`.
+- `reader.GetError()` returns any error that might have occurred during `NextRecord()`.
 
 - `reader.Reset()` resets the reader back to the beginning of the output.
 
@@ -1855,13 +1899,13 @@ pipelinesManager, err := pipelines.New(serviceConfig)
 systemInfo, err := pipelinesManager.GetSystemInfo()
 ```
 
-#### Creating Github Integration
+#### Creating GitHub Integration
 
 ```go
 id, err := pipelinesManager.CreateGithubIntegration("integrationName", "token")
 ```
 
-#### Creating Github Enterprise Integration
+#### Creating GitHub Enterprise Integration
 
 ```go
 id, err := pipelinesManager.CreateGithubEnterpriseIntegration("integrationName", "url", "token")

@@ -18,10 +18,11 @@ const defaultMaxWaitMinutes = 60           // 1 hour
 const defaultSyncSleepIntervalSeconds = 10 // 10 seconds
 
 type DistributeReleaseBundleService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	DistDetails auth.ServiceDetails
-	DryRun      bool
-	Sync        bool
+	client         *jfroghttpclient.JfrogHttpClient
+	DistDetails    auth.ServiceDetails
+	DryRun         bool
+	Sync           bool
+	AutoCreateRepo bool
 	// Max time in minutes to wait for sync distribution to finish.
 	MaxWaitMinutes int
 }
@@ -47,6 +48,7 @@ func (dr *DistributeReleaseBundleService) Distribute(distributeParams Distributi
 	distribution := &DistributionBody{
 		DryRun:            dr.DryRun,
 		DistributionRules: distributionRules,
+		AutoCreateRepo:    dr.AutoCreateRepo,
 	}
 
 	trackerId, err := dr.execDistribute(distributeParams.Name, distributeParams.Version, distribution)
@@ -135,6 +137,7 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 type DistributionBody struct {
 	DryRun            bool                    `json:"dry_run"`
 	DistributionRules []DistributionRulesBody `json:"distribution_rules"`
+	AutoCreateRepo    bool                    `json:"auto_create_missing_repositories,omitempty"`
 }
 
 type DistributionRulesBody struct {

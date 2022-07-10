@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -327,14 +328,25 @@ type ResultItem struct {
 	Repo        string     `json:"repo,omitempty"`
 	Path        string     `json:"path,omitempty"`
 	Name        string     `json:"name,omitempty"`
+	Created     string     `json:"created,omitempty"`
+	Modified    string     `json:"modified,omitempty"`
+	Updated     string     `json:"updated,omitempty"`
+	CreatedBy   string     `json:"created_by,omitempty"`
+	ModifiedBy  string     `json:"modified_by,omitempty"`
+	Type        string     `json:"type,omitempty"`
 	Actual_Md5  string     `json:"actual_md5,omitempty"`
 	Actual_Sha1 string     `json:"actual_sha1,omitempty"`
 	Sha256      string     `json:"sha256,omitempty"`
 	Size        int64      `json:"size,omitempty"`
-	Created     string     `json:"created,omitempty"`
-	Modified    string     `json:"modified,omitempty"`
 	Properties  []Property `json:"properties,omitempty"`
-	Type        string     `json:"type,omitempty"`
+	Stats       []Stat     `json:"stats,omitempty"`
+}
+
+type Stat struct {
+	Downloaded      string      `json:"downloaded,omitempty"`
+	Downloads       json.Number `json:"downloads,omitempty"`
+	DownloadedBy    string      `json:"downloaded_by,omitempty"`
+	RemoteDownloads json.Number `json:"remote_downloads,omitempty"`
 }
 
 func (item ResultItem) GetSortKey() string {

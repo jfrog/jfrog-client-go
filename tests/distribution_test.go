@@ -99,7 +99,7 @@ func createDelete(t *testing.T) {
 	verifyValidSha256(t, summary.GetSha256())
 	assert.NoError(t, err)
 	distributionResponse := getLocalBundle(t, bundleName, true)
-        if assert.NotNil(t, distributionResponse) {
+	if assert.NotNil(t, distributionResponse) {
 		assertReleaseBundleSigned(t, distributionResponse.State)
 	}
 }
@@ -186,6 +186,7 @@ func updateDryRun(updateBundleParams services.UpdateReleaseBundleParams) error {
 func distributeDryRun(distributionParams services.DistributionParams) error {
 	defer setServicesToDryRunFalse()
 	testsBundleDistributeService.DryRun = true
+	testsBundleDistributeService.AutoCreateRepo = true
 	return testsBundleDistributeService.Distribute(distributionParams)
 }
 
@@ -287,6 +288,7 @@ func createSignDistributeDelete(t *testing.T) {
 	assert.Len(t, *response, 0)
 
 	// Distribute release bundle
+	testsBundleDistributeService.AutoCreateRepo = true
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 	waitForDistribution(t, bundleName)
@@ -323,6 +325,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
+	testsBundleDistributeService.AutoCreateRepo = true
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 
@@ -353,6 +356,8 @@ func createDistributeMapping(t *testing.T) {
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
+	// On distribution with path mapping, the target repository cannot be auto-created
+	testsBundleDistributeService.AutoCreateRepo = false
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 
@@ -384,6 +389,8 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
 	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
+	// On distribution with path mapping, the target repository cannot be auto-created
+	testsBundleDistributeService.AutoCreateRepo = false
 	err = testsBundleDistributeService.Distribute(distributeBundleParams)
 	assert.NoError(t, err)
 

@@ -172,3 +172,8 @@ func MergeProperties(properties []*Properties) *Properties {
 	mergedProps.removeDuplicateValues()
 	return mergedProps
 }
+
+type ItemProperties struct {
+	Properties map[string][]string `json:"properties,omitempty"`
+	Uri        string              `json:"uri,omitempty"`
+}
