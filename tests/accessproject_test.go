@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"reflect"
 	"testing"
 
@@ -41,16 +40,16 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 		assert.Contains(t, *allGroups, testGroup)
 	}
 
-	testGroup.Roles = append(testGroup.Roles, "Developer")
+	testGroup.Roles = append(testGroup.Roles, "Contributor")
 	err = testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup)
 	assert.NoError(t, err)
 
 	singleGroup, err := testsAccessProjectService.GetGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name)
 	assert.NoError(t, err)
-	log.Info(*singleGroup, testGroup)
 	assert.Equal(t, *singleGroup, testGroup, "Expected group %v but got %v", *singleGroup, testGroup)
 
-	assert.NoError(t, testsAccessProjectService.DeleteExistingGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name))
+	err = testsAccessProjectService.DeleteExistingGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name)
+	assert.NoError(t, err)
 
 	noGroups, err := testsAccessProjectService.GetGroups(projectParams.ProjectDetails.ProjectKey)
 	assert.NoError(t, err)
@@ -94,14 +93,14 @@ func getTestProjectParams() services.ProjectParams {
 		IndexResources:  &trueValue,
 	}
 	runId := getRunId()
-	runNumberSuffix := runId[len(runId)-7:]
+	runNumberSuffix := runId[len(runId)-3:]
 	projectDetails := services.Project{
 		DisplayName:       "testProject" + runNumberSuffix,
 		Description:       "My Test Project",
 		AdminPrivileges:   &adminPrivileges,
 		SoftLimit:         &falseValue,
-		StorageQuotaBytes: 1073741825,              // needs to be higher than 1073741824
-		ProjectKey:        "prj" + runNumberSuffix, // valid length: 2 <= ProjectKey <= 10
+		StorageQuotaBytes: 1073741825,                 // needs to be higher than 1073741824
+		ProjectKey:        "tstprj" + runNumberSuffix, // valid length: 2 <= ProjectKey <= 10
 	}
 	return services.ProjectParams{
 		ProjectDetails: projectDetails,

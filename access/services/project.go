@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -241,6 +240,5 @@ func (ps *ProjectService) DeleteExistingGroup(projectKey string, groupName strin
 	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 	}
-	log.Info(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)).Error())
 	return nil
 }
