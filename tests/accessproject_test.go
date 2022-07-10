@@ -93,14 +93,15 @@ func getTestProjectParams() services.ProjectParams {
 		ManageResources: &falseValue,
 		IndexResources:  &trueValue,
 	}
-	runIdSuffix := getRunId()[0:6]
+	runId := getRunId()
+	runNumberSuffix := runId[len(runId)-7:]
 	projectDetails := services.Project{
-		DisplayName:       "testProject" + runIdSuffix,
+		DisplayName:       "testProject" + runNumberSuffix,
 		Description:       "My Test Project",
 		AdminPrivileges:   &adminPrivileges,
 		SoftLimit:         &falseValue,
-		StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
-		ProjectKey:        "tstprj" + runIdSuffix,
+		StorageQuotaBytes: 1073741825,              // needs to be higher than 1073741824
+		ProjectKey:        "prj" + runNumberSuffix, // valid length: 2 <= ProjectKey <= 10
 	}
 	return services.ProjectParams{
 		ProjectDetails: projectDetails,
