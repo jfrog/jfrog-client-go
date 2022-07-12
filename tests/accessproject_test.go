@@ -39,7 +39,8 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 	assert.NoError(t, testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup))
 
 	singleGroup, err := testsAccessProjectService.GetGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name)
-	if assert.NoError(t, err) && assert.NotNil(t, singleGroup) {
+	if assert.NoError(t, err) &&
+		assert.NotNil(t, singleGroup, "Expected group %s but got nil", testGroup.Name) {
 		assert.Equal(t, testGroup, *singleGroup, "Expected group %v but got %v", testGroup, *singleGroup)
 	}
 
@@ -63,7 +64,7 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 	assert.NoError(t, testsAccessProjectService.Update(projectParams))
 	updatedProject, err := testsAccessProjectService.Get(projectParams.ProjectDetails.ProjectKey)
 	if assert.NoError(t, err) &&
-		assert.NotNil(t, updatedProject) &&
+		assert.NotNil(t, updatedProject, "Expected project %s but got nil", projectParams.ProjectDetails.ProjectKey) &&
 		!reflect.DeepEqual(projectParams.ProjectDetails, *updatedProject) {
 		t.Error("Unexpected project details built. Expected: `", projectParams.ProjectDetails, "` Got `", *updatedProject, "`")
 	}
