@@ -30,7 +30,8 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 	assert.NoError(t, testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup))
 
 	allGroups, err := testsAccessProjectService.GetGroups(projectParams.ProjectDetails.ProjectKey)
-	if assert.NoError(t, err) && assert.NotNil(t, allGroups) {
+	if assert.NoError(t, err) &&
+		assert.NotNil(t, allGroups, "Expected 1 group in the project but got 0") {
 		assert.Equal(t, len(*allGroups), 1, "Expected 1 group in the project but got %d", len(*allGroups))
 		assert.Contains(t, *allGroups, testGroup)
 	}
@@ -76,8 +77,7 @@ func deleteProjectAndGroupAndAssert(t *testing.T, projectKey string, groupName s
 }
 
 func deleteProjectAndAssert(t *testing.T, projectKey string) {
-	err := testsAccessProjectService.Delete(projectKey)
-	assert.NoError(t, err)
+	assert.NoError(t, testsAccessProjectService.Delete(projectKey))
 }
 
 func getTestProjectParams() services.ProjectParams {
