@@ -14,164 +14,167 @@
 ## Table of Contents
 
 - [JFrog Go Client](#jfrog-go-client)
-  - [Table of Contents](#table-of-contents)
-  - [General](#general)
-  - [Pull Requests](#pull-requests)
-    - [Guidelines](#guidelines)
-  - [Tests](#tests)
-    - [Flags](#flags)
-      - [Test Types](#test-types)
-      - [Connection Details](#connection-details)
-  - [General APIs](#general-apis)
-    - [Setting the Logger](#setting-the-logger)
-    - [Setting the Temp Dir](#setting-the-temp-dir)
-  - [Artifactory APIs](#artifactory-apis)
-    - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
-      - [Creating Artifactory Details](#creating-artifactory-details)
-      - [Creating Artifactory Details with Custom HTTP Client](#creating-artifactory-details-with-custom-http-client)
-      - [Creating Artifactory Service Config](#creating-artifactory-service-config)
-      - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
-    - [Using Artifactory Services](#using-artifactory-services)
-      - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
-      - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
-      - [Downloading Release Bundles from Artifactory](#downloading-release-bundles-from-artifactory)
-      - [Uploading and Downloading Files with Summary](#uploading-and-downloading-files-with-summary)
-      - [Copying Files in Artifactory](#copying-files-in-artifactory)
-      - [Moving Files in Artifactory](#moving-files-in-artifactory)
-      - [Deleting Files from Artifactory](#deleting-files-from-artifactory)
-      - [Searching Files in Artifactory](#searching-files-in-artifactory)
-      - [Setting Properties on Files in Artifactory](#setting-properties-on-files-in-artifactory)
-      - [Deleting Properties from Files in Artifactory](#deleting-properties-from-files-in-artifactory)
-      - [Getting Properties from Files in Artifactory](#getting-properties-from-files-in-artifactory)
-      - [Publishing Build Info to Artifactory](#publishing-build-info-to-artifactory)
-      - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
-      - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
-      - [Promoting a Docker Image in Artifactory](#promoting-a-docker-image-in-artifactory)
-      - [Triggering Build Scanning with JFrog Xray](#triggering-build-scanning-with-jfrog-xray)
-      - [Discarding Old Builds](#discarding-old-builds)
-      - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
-      - [Executing AQLs](#executing-aqls)
-      - [Reading Files in Artifactory](#reading-files-in-artifactory)
-      - [Creating an Access Token](#creating-an-access-token)
-      - [Fetching Access Tokens](#fetching-access-tokens)
-      - [Fetching Access Tokens of a User](#fetching-access-tokens-of-a-user)
-      - [Refreshing an Access Token](#refreshing-an-access-token)
-      - [Revoking an Access Token](#revoking-an-access-token)
-      - [Create API Key](#create-api-key)
-      - [Regenerate API Key](#regenerate-api-key)
-      - [Get API Key](#get-api-key)
-      - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
-      - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
-      - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
-      - [Creating and Updating Federated Repository](#creating-and-updating-federated-repository)
-      - [Removing a Repository](#removing-a-repository)
-      - [Getting Repository Details](#getting-repository-details)
-      - [Getting All Repositories](#getting-all-repositories)
-      - [Check if Repository Exists](#check-if-repository-exists)
-      - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
-      - [Getting a Repository Replication](#getting-a-repository-replication)
-      - [Removing a Repository Replication](#removing-a-repository-replication)
-      - [Converting a Local Repository to a Federated Repository](#converting-a-local-repository-to-a-federated-repository)
-      - [Triggering a Full Federated Repository Synchronisation](#triggering-a-full-federated-repository-synchronisation)
-      - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
-      - [Removing a Permission Target](#removing-a-permission-target)
-      - [Fetching a Permission Target](#fetching-a-permission-target)
-      - [Fetching Artifactory's Version](#fetching-artifactorys-version)
-      - [Fetching Running Artifactory Nodes in a Cluster](#fetching-running-artifactory-nodes-in-a-cluster)
-      - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
-      - [Fetching Artifactory's Config Descriptor](#fetching-artifactorys-config-descriptor)
-      - [Activating Artifactory's Key Encryption](#activating-artifactorys-key-encryption)
-      - [Deactivating Artifactory's Key Encryption](#deactivating-artifactorys-key-encryption)
-      - [Fetching Users Details](#fetching-users-details)
-      - [Fetching All Users Details](#fetching-all-users-details)
-      - [Creating Inviting and Updating a User](#creating-inviting-and-updating-a-user)
-      - [Deleting a User](#deleting-a-user)
-      - [Fetching Group Details](#fetching-group-details)
-      - [Creating and Updating a Group](#creating-and-updating-a-group)
-      - [Deleting a Group](#deleting-a-group)
-      - [Generating Full System Export](#generating-full-system-export)
-      - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
-      - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
-      - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
-  - [Access APIs](#access-apis)
-    - [Creating Access Service Manager](#creating-access-service-manager)
-      - [Creating Access Details](#creating-access-details)
-      - [Creating Access Service Config](#creating-access-service-config)
-      - [Creating New Access Service Manager](#creating-new-access-service-manager)
-    - [Using Access Services](#using-access-services)
-      - [Creating a New Project](#creating-a-new-project)
-      - [Updating a Project](#updating-a-project)
-      - [Deleting a Project](#deleting-a-project)
-      - [Assigning Repository to Project](#assigning-repository-to-project)
-      - [Unassigned Repository from Project](#unassigning-repository-from-project)
-      - [Get all groups assigned to a project](#get-all-groups-assigned-to-a-project)
-      - [Get a specific group assigned to a project](#get-a-specific-group-assigned-to-a-project)
-      - [Add or update a group assigned to a project](#add-or-update-a-group-assigned-to-a-project)
-      - [Remove a group from a project](#remove-a-group-from-a-project)
-  - [Distribution APIs](#distribution-apis)
-    - [Creating Distribution Service Manager](#creating-distribution-service-manager)
-      - [Creating Distribution Details](#creating-distribution-details)
-      - [Creating Distribution Service Config](#creating-distribution-service-config)
-      - [Creating New Distribution Service Manager](#creating-new-distribution-service-manager)
-    - [Using Distribution Services](#using-distribution-services)
-      - [Setting Distribution Signing Key](#setting-distribution-signing-key)
-      - [Creating a Release Bundle](#creating-a-release-bundle)
-      - [Updating a Release Bundle](#updating-a-release-bundle)
-      - [Signing a Release Bundle](#signing-a-release-bundle)
-      - [Async Distributing a Release Bundle](#async-distributing-a-release-bundle)
-      - [Sync Distributing a Release Bundle](#sync-distributing-a-release-bundle)
-      - [Getting Distribution Status](#getting-distribution-status)
-      - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle)
-      - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle)
-  - [Using ContentReader](#using-contentreader)
-  - [Xray APIs](#xray-apis)
-    - [Creating Xray Service Manager](#creating-xray-service-manager)
-      - [Creating Xray Details](#creating-xray-details)
-      - [Creating Xray Service Config](#creating-xray-service-config)
-      - [Creating New Xray Service Manager](#creating-new-xray-service-manager)
-    - [Using Xray Services](#using-xray-services)
-      - [Fetching Xray's Version](#fetching-xrays-version)
-      - [Creating an Xray Watch](#creating-an-xray-watch)
-      - [Get an Xray Watch](#get-an-xray-watch)
-      - [Update an Xray Watch](#update-an-xray-watch)
-      - [Delete an Xray Watch](#delete-an-xray-watch)
-      - [Creating a Security Xray Policy](#creating-a-security-xray-policy)
-      - [Creating a License Xray Policy](#creating-a-license-xray-policy)
-      - [Get an Xray Policy](#get-an-xray-policy)
-      - [Update an Xray Policy](#update-an-xray-policy)
-      - [Delete an Xray Policy](#delete-an-xray-policy)
-      - [Add Builds to Indexing Configuration](#add-builds-to-indexing-configuration)
-      - [Request Graph Scan](#request-graph-scan)
-      - [Retrieve the Graph Scan Results](#retrieve-the-graph-scan-results)
-      - [Generate Vulnerabilities Report](#generate-vulnerabilities-report)
-      - [Get Vulnerabilities Report Details](#get-vulnerabilities-report-details)
-      - [Get Vulnerabilities Report Content](#get-vulnerabilities-report-content)
-      - [Delete Vulnerabilities Report](#delete-vulnerabilities-report)
-      - [Get Artifact Summary](#get-artifact-summary)
-  - [Pipelines APIs](#pipelines-apis)
-    - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
-      - [Creating Pipelines Details](#creating-pipelines-details)
-      - [Creating Pipelines Service Config](#creating-pipelines-service-config)
-      - [Creating New Pipelines Service Manager](#creating-new-pipelines-service-manager)
-    - [Using Pipelines Services](#using-pipelines-services)
-      - [Fetching Pipelines' System Info](#fetching-pipelines-system-info)
-      - [Creating GitHub Integration](#creating-github-integration)
-      - [Creating GitHub Enterprise Integration](#creating-github-enterprise-integration)
-      - [Creating Bitbucket Integration](#creating-bitbucket-integration)
-      - [Creating Bitbucket Server Integration](#creating-bitbucket-server-integration)
-      - [Creating Gitlab Integration](#creating-gitlab-integration)
-      - [Creating Artifactory Integration](#creating-artifactory-integration)
-      - [Get Integration by Id](#get-integration-by-id)
-      - [Get Integration by Name](#get-integration-by-name)
-      - [Get All Integrations](#get-all-integrations)
-      - [Delete Integration](#delete-integration)
-      - [Add Pipeline Source](#add-pipeline-source)
+    - [Table of Contents](#table-of-contents)
+    - [General](#general)
+    - [Pull Requests](#pull-requests)
+        - [Guidelines](#guidelines)
+    - [Tests](#tests)
+        - [Flags](#flags)
+            - [Test Types](#test-types)
+            - [Connection Details](#connection-details)
+    - [General APIs](#general-apis)
+        - [Setting the Logger](#setting-the-logger)
+        - [Setting the Temp Dir](#setting-the-temp-dir)
+    - [Artifactory APIs](#artifactory-apis)
+        - [Creating Artifactory Service Manager](#creating-artifactory-service-manager)
+            - [Creating Artifactory Details](#creating-artifactory-details)
+            - [Creating Artifactory Details with Custom HTTP Client](#creating-artifactory-details-with-custom-http-client)
+            - [Creating Artifactory Service Config](#creating-artifactory-service-config)
+            - [Creating New Artifactory Service Manager](#creating-new-artifactory-service-manager)
+        - [Using Artifactory Services](#using-artifactory-services)
+            - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
+            - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
+            - [Downloading Release Bundles from Artifactory](#downloading-release-bundles-from-artifactory)
+            - [Uploading and Downloading Files with Summary](#uploading-and-downloading-files-with-summary)
+            - [Copying Files in Artifactory](#copying-files-in-artifactory)
+            - [Moving Files in Artifactory](#moving-files-in-artifactory)
+            - [Deleting Files from Artifactory](#deleting-files-from-artifactory)
+            - [Searching Files in Artifactory](#searching-files-in-artifactory)
+            - [Setting Properties on Files in Artifactory](#setting-properties-on-files-in-artifactory)
+            - [Deleting Properties from Files in Artifactory](#deleting-properties-from-files-in-artifactory)
+            - [Getting Properties from Files in Artifactory](#getting-properties-from-files-in-artifactory)
+            - [Publishing Build Info to Artifactory](#publishing-build-info-to-artifactory)
+            - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
+            - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
+            - [Promoting a Docker Image in Artifactory](#promoting-a-docker-image-in-artifactory)
+            - [Triggering Build Scanning with JFrog Xray](#triggering-build-scanning-with-jfrog-xray)
+            - [Discarding Old Builds](#discarding-old-builds)
+            - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
+            - [Executing AQLs](#executing-aqls)
+            - [Reading Files in Artifactory](#reading-files-in-artifactory)
+            - [Creating an Access Token](#creating-an-access-token)
+            - [Fetching Access Tokens](#fetching-access-tokens)
+            - [Fetching Access Tokens of a User](#fetching-access-tokens-of-a-user)
+            - [Refreshing an Access Token](#refreshing-an-access-token)
+            - [Revoking an Access Token](#revoking-an-access-token)
+            - [Create API Key](#create-api-key)
+            - [Regenerate API Key](#regenerate-api-key)
+            - [Get API Key](#get-api-key)
+            - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
+            - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
+            - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
+            - [Creating and Updating Federated Repository](#creating-and-updating-federated-repository)
+            - [Removing a Repository](#removing-a-repository)
+            - [Getting Repository Details](#getting-repository-details)
+            - [Getting All Repositories](#getting-all-repositories)
+            - [Check if Repository Exists](#check-if-repository-exists)
+            - [Creating and Updating Repository Replications](#creating-and-updating-repository-replications)
+            - [Getting a Repository Replication](#getting-a-repository-replication)
+            - [Removing a Repository Replication](#removing-a-repository-replication)
+            - [Converting a Local Repository to a Federated Repository](#converting-a-local-repository-to-a-federated-repository)
+            - [Triggering a Full Federated Repository Synchronisation](#triggering-a-full-federated-repository-synchronisation)
+            - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
+            - [Removing a Permission Target](#removing-a-permission-target)
+            - [Fetching a Permission Target](#fetching-a-permission-target)
+            - [Fetching Artifactory's Version](#fetching-artifactorys-version)
+            - [Fetching Running Artifactory Nodes in a Cluster](#fetching-running-artifactory-nodes-in-a-cluster)
+            - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
+            - [Fetching Artifactory's Config Descriptor](#fetching-artifactorys-config-descriptor)
+            - [Activating Artifactory's Key Encryption](#activating-artifactorys-key-encryption)
+            - [Deactivating Artifactory's Key Encryption](#deactivating-artifactorys-key-encryption)
+            - [Fetching Users Details](#fetching-users-details)
+            - [Fetching All Users Details](#fetching-all-users-details)
+            - [Creating Inviting and Updating a User](#creating-inviting-and-updating-a-user)
+            - [Deleting a User](#deleting-a-user)
+            - [Fetching Group Details](#fetching-group-details)
+            - [Creating and Updating a Group](#creating-and-updating-a-group)
+            - [Deleting a Group](#deleting-a-group)
+            - [Generating Full System Export](#generating-full-system-export)
+            - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
+            - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
+            - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
+    - [Access APIs](#access-apis)
+        - [Creating Access Service Manager](#creating-access-service-manager)
+            - [Creating Access Details](#creating-access-details)
+            - [Creating Access Service Config](#creating-access-service-config)
+            - [Creating New Access Service Manager](#creating-new-access-service-manager)
+        - [Using Access Services](#using-access-services)
+            - [Creating a New Project](#creating-a-new-project)
+            - [Updating a Project](#updating-a-project)
+            - [Deleting a Project](#deleting-a-project)
+            - [Assigning Repository to Project](#assigning-repository-to-project)
+            - [Unassigned Repository from Project](#unassigning-repository-from-project)
+            - [Get all groups assigned to a project](#get-all-groups-assigned-to-a-project)
+            - [Get a specific group assigned to a project](#get-a-specific-group-assigned-to-a-project)
+            - [Add or update a group assigned to a project](#add-or-update-a-group-assigned-to-a-project)
+            - [Remove a group from a project](#remove-a-group-from-a-project)
+    - [Distribution APIs](#distribution-apis)
+        - [Creating Distribution Service Manager](#creating-distribution-service-manager)
+            - [Creating Distribution Details](#creating-distribution-details)
+            - [Creating Distribution Service Config](#creating-distribution-service-config)
+            - [Creating New Distribution Service Manager](#creating-new-distribution-service-manager)
+        - [Using Distribution Services](#using-distribution-services)
+            - [Setting Distribution Signing Key](#setting-distribution-signing-key)
+            - [Creating a Release Bundle](#creating-a-release-bundle)
+            - [Updating a Release Bundle](#updating-a-release-bundle)
+            - [Signing a Release Bundle](#signing-a-release-bundle)
+            - [Async Distributing a Release Bundle](#async-distributing-a-release-bundle)
+            - [Sync Distributing a Release Bundle](#sync-distributing-a-release-bundle)
+            - [Getting Distribution Status](#getting-distribution-status)
+            - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle)
+            - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle)
+    - [Using ContentReader](#using-contentreader)
+    - [Xray APIs](#xray-apis)
+        - [Creating Xray Service Manager](#creating-xray-service-manager)
+            - [Creating Xray Details](#creating-xray-details)
+            - [Creating Xray Service Config](#creating-xray-service-config)
+            - [Creating New Xray Service Manager](#creating-new-xray-service-manager)
+        - [Using Xray Services](#using-xray-services)
+            - [Fetching Xray's Version](#fetching-xrays-version)
+            - [Creating an Xray Watch](#creating-an-xray-watch)
+            - [Get an Xray Watch](#get-an-xray-watch)
+            - [Update an Xray Watch](#update-an-xray-watch)
+            - [Delete an Xray Watch](#delete-an-xray-watch)
+            - [Creating a Security Xray Policy](#creating-a-security-xray-policy)
+            - [Creating a License Xray Policy](#creating-a-license-xray-policy)
+            - [Get an Xray Policy](#get-an-xray-policy)
+            - [Update an Xray Policy](#update-an-xray-policy)
+            - [Delete an Xray Policy](#delete-an-xray-policy)
+            - [Add Builds to Indexing Configuration](#add-builds-to-indexing-configuration)
+            - [Request Graph Scan](#request-graph-scan)
+            - [Retrieve the Graph Scan Results](#retrieve-the-graph-scan-results)
+            - [Generate Vulnerabilities Report](#generate-vulnerabilities-report)
+            - [Get Vulnerabilities Report Details](#get-vulnerabilities-report-details)
+            - [Get Vulnerabilities Report Content](#get-vulnerabilities-report-content)
+            - [Delete Vulnerabilities Report](#delete-vulnerabilities-report)
+            - [Get Artifact Summary](#get-artifact-summary)
+    - [Pipelines APIs](#pipelines-apis)
+        - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
+            - [Creating Pipelines Details](#creating-pipelines-details)
+            - [Creating Pipelines Service Config](#creating-pipelines-service-config)
+            - [Creating New Pipelines Service Manager](#creating-new-pipelines-service-manager)
+        - [Using Pipelines Services](#using-pipelines-services)
+            - [Fetching Pipelines' System Info](#fetching-pipelines-system-info)
+            - [Creating GitHub Integration](#creating-github-integration)
+            - [Creating GitHub Enterprise Integration](#creating-github-enterprise-integration)
+            - [Creating Bitbucket Integration](#creating-bitbucket-integration)
+            - [Creating Bitbucket Server Integration](#creating-bitbucket-server-integration)
+            - [Creating Gitlab Integration](#creating-gitlab-integration)
+            - [Creating Artifactory Integration](#creating-artifactory-integration)
+            - [Get Integration by Id](#get-integration-by-id)
+            - [Get Integration by Name](#get-integration-by-name)
+            - [Get All Integrations](#get-all-integrations)
+            - [Delete Integration](#delete-integration)
+            - [Add Pipeline Source](#add-pipeline-source)
 
 ## General
 
-_jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory, Xray and Distribution from your Go application.
+_jfrog-client-go_ is a library which provides Go APIs to performs actions on JFrog Artifactory, Xray and Distribution
+from your Go application.
 The project is still relatively new, and its APIs may therefore change frequently between releases.
-The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you may look at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
+The library can be used as a go-module, which should be added to your project's go.mod file. As a reference you may look
+at [JFrog CLI](https://github.com/jfrog/jfrog-cli-go)'
+s [go.mod](https://github.com/jfrog/jfrog-cli-go/blob/master/go.mod) file, which uses this library as a dependency.
 
 ## Pull Requests
 
@@ -185,7 +188,8 @@ We welcome pull requests from the community.
 
 ## Tests
 
-To run the tests on the source code, you'll need a running JFrog instance. See the _Prerequisites_ column in the _Test Types_ section below for more information.
+To run the tests on the source code, you'll need a running JFrog instance. See the _Prerequisites_ column in the _Test
+Types_ section below for more information.
 
 Use the following command with the below options to run the tests.
 
@@ -199,7 +203,8 @@ If you'd like to run a specific test, add the test function name using the `-run
 go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifactoryVersionWithCustomHttpClient -test.artifactory -rt.url=http://127.0.0.1:8081/artifactory -rt.user=admin -rt.password=password
 ```
 
-**Note:** The tests create an Artifactory repository named _jfrog-client-tests-repo1_. Once the tests are completed, the content of this repository is deleted.
+**Note:** The tests create an Artifactory repository named _jfrog-client-tests-repo1_. Once the tests are completed, the
+content of this repository is deleted.
 
 ### Flags
 
@@ -216,34 +221,37 @@ go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifac
 
 #### Connection Details
 
-| Flag                  | Description                                                                                            |
-|-----------------------|--------------------------------------------------------------------------------------------------------|
-| `-rt.url`             | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
-| `-ds.url`             | [Optional] JFrog Distribution URL.                                                                     |
-| `-xr.url`             | [Optional] JFrog Xray URL.                                                                             |
-| `-pipe.url`           | [Optional] JFrog Pipelines URL.                                                                        |
-| `-access.url`         | [Optional] JFrog Access URL.                                                                           |
-| `-rt.user`            | [Default: admin] Artifactory username.                                                                 |
-| `-rt.password`        | [Default: password] Artifactory password.                                                              |
-| `-rt.apikey`          | [Optional] Artifactory API key.                                                                        |
-| `-rt.sshKeyPath`      | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
-| `-rt.sshPassphrase`   | [Optional] Ssh key passphrase.                                                                         |
-| `-rt.accessToken`     | [Optional] Artifactory access token.                                                                   |
-| `-pipe.accessToken`   | [Optional] Pipelines access token.                                                                     |
-| `-pipe.vcsToken`      | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
-| `-pipe.vcsRepo`       | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
-| `-pipe.vcsBranch`     | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
-| `-access.accessToken` | [Optional] Access access token.                                                                        |
-| `-ci.runId`           | [Optional] A unique identifier used as a suffix to create repositories in the tests.                   |
+| Flag                | Description                                                                                            |
+|---------------------|--------------------------------------------------------------------------------------------------------|
+| `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
+| `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
+| `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
+| `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
+| `-access.url`       | [Optional] JFrog Access URL.                                                                           |
+| `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
+| `-rt.password`      | [Default: password] Artifactory password.                                                              |
+| `-rt.apikey`        | [Optional] Artifactory API key.                                                                        |
+| `-rt.sshKeyPath`    | [Optional] Ssh key file path. Should be used only if the Artifactory URL format is ssh://[domain]:port |
+| `-rt.sshPassphrase` | [Optional] Ssh key passphrase.                                                                         |
+| `-pipe.accessToken` | [Optional] Pipelines access token.                                                                     |
+| `-pipe.vcsToken`    | [Optional] Vcs token for Pipelines tests (should have admin permissions).                              |
+| `-pipe.vcsRepo`     | [Optional] Vcs full repo path for Pipelines tests (ex: "domain/myrepo").                               |
+| `-pipe.vcsBranch`   | [Optional] Vcs branch for Pipelines tests (ex: "main").                                                |
+| `-access.token`     | [Optional] Access access token.                                                                        |
+| `-ci.runId`         | [Optional] A unique identifier used as a suffix to create repositories in the tests.                   |
 
 ## General APIs
 
 ### Setting the Logger
+
 Default logger:
+
 ```go
 log.SetLogger(log.NewLogger(log.INFO, nil))
 ```
+
 You may also log to a file, and/or add log prefixes as shown below:
+
 ```go
 var file *os.File
 // Log flags as described in https://pkg.go.dev/log#pkg-constants.
@@ -326,7 +334,8 @@ rtManager, err := artifactory.New(serviceConfig)
 
 #### Uploading Files to Artifactory
 
-Using the `UploadFiles()` function, we can upload files and get the general statistics of the action (The actual number of successful and failed uploads), and the error value if it occurred.
+Using the `UploadFiles()` function, we can upload files and get the general statistics of the action (The actual number
+of successful and failed uploads), and the error value if it occurred.
 
 ```go
 params := services.NewUploadParams()
@@ -364,7 +373,9 @@ totalUploaded, totalFailed, err := rtManager.UploadFiles(params)
 
 #### Downloading Files from Artifactory
 
-Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download). In addition, we get the error value if it occurred.
+Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual
+number of files downloaded, and the number of files we expected to download). In addition, we get the error value if it
+occurred.
 
 ```go
 params := services.NewDownloadParams()
@@ -391,9 +402,12 @@ totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 
 #### Downloading Release Bundles from Artifactory
 
-Using the `DownloadFiles()` function, we can download release bundles and get the general statistics of the action (The actual number of files downloaded, and the number of files we expected to download). In addition, we get the error value if it occurred.
+Using the `DownloadFiles()` function, we can download release bundles and get the general statistics of the action (The
+actual number of files downloaded, and the number of files we expected to download). In addition, we get the error value
+if it occurred.
 
-It is possible to validate the downloaded release bundle's files by providing a local path to a GPG public key file (the public GPG key should of course correspond to the private GPG key which was used to sign the release bundle).
+It is possible to validate the downloaded release bundle's files by providing a local path to a GPG public key file (the
+public GPG key should of course correspond to the private GPG key which was used to sign the release bundle).
 
 ```go
 params := services.NewDownloadParams()
@@ -410,15 +424,20 @@ Read more about GPG signing release bundles [here](https://www.jfrog.com/conflue
 
 #### Uploading and Downloading Files with Summary
 
-The methods `UploadFilesWithSummary()` and `DownloadFilesWithSummary()` are similar to `UploadFlies()` and `DownloadFlies()`, but return an OperationSummary struct, which allows iterating over the details of the uploaded/downloaded files.<br>
+The methods `UploadFilesWithSummary()` and `DownloadFilesWithSummary()` are similar to `UploadFlies()`
+and `DownloadFlies()`, but return an OperationSummary struct, which allows iterating over the details of the
+uploaded/downloaded files.<br>
 The OperationSummary struct contains:
 
 - TotalSucceeded - the number of successful uploads/downloads
 - TotalFailed - the number of failed uploads/downloads
-- TransferDetailsReader - a ContentReader of FileTransferDetails structs, with a struct for each successful transfer of file
-- ArtifactsDetailsReader - a ContentReader of ArtifactDetails structs, with a struct for each artifact in Artifactory that was uploaded/downloaded successfully
+- TransferDetailsReader - a ContentReader of FileTransferDetails structs, with a struct for each successful transfer of
+  file
+- ArtifactsDetailsReader - a ContentReader of ArtifactDetails structs, with a struct for each artifact in Artifactory
+  that was uploaded/downloaded successfully
 
-The ContentReaders can be closed separately by calling `Close()` on each of them, or they both can be closed at once by calling `Close()` on the OperationSummary struct.
+The ContentReaders can be closed separately by calling `Close()` on each of them, or they both can be closed at once by
+calling `Close()` on the OperationSummary struct.
 
 ```go
 params := services.NewUploadParams()
@@ -740,7 +759,8 @@ apiKey, err := rtManager.GetAPIKey()
 
 You can create and update a local repository for the following package types:
 
-Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant, and Yum.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle,
+Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant, and Yum.
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>LocalRepositoryParams()`.
@@ -782,7 +802,8 @@ err = servicesManager.UpdateLocalRepository().Generic(params)
 
 You can create and update a remote repository for the following package types:
 
-Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Vcs, and Yum.
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle,
+Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Vcs, and Yum.
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>RemoteRepositoryParams()`.
@@ -825,7 +846,8 @@ err := servicesManager.CreateRemoteRepository(params)
 
 You can create and update a virtual repository for the following package types:
 
-Alpine, Bower, Cran, Chef, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, P2, Puppet, Pypi, Rpm, Sbt, and Yum.
+Alpine, Bower, Cran, Chef, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm,
+Nuget, P2, Puppet, Pypi, Rpm, Sbt, and Yum.
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>VirtualRepositoryParams()`.
@@ -866,7 +888,8 @@ err = servicesManager.UpdateVirtualRepository().Go(params)
 
 You can create and update a federated repository for the following package types:
 
-Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant and Yum
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle,
+Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Vagrant and Yum
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>FederatedRepositoryParams()`.
@@ -1049,7 +1072,8 @@ err := servicesManager.TriggerFederatedRepositoryFullSyncMirror("my-repository",
 You can create or update a permission target in Artifactory.
 Permissions are set according to the following conventions:
 `read, write, annotate, delete, manage, managedXrayMeta, distribute`
-For repositories You can specify the name `"ANY"` in order to apply to all repositories, `"ANY REMOTE"` for all remote repositories or `"ANY LOCAL"` for all local repositories.
+For repositories You can specify the name `"ANY"` in order to apply to all repositories, `"ANY REMOTE"` for all remote
+repositories or `"ANY LOCAL"` for all local repositories.
 
 Creating a new permission target :
 
@@ -1098,7 +1122,8 @@ You can fetch a permission target from Artifactory using its name:
 permissionTargetParams, err = servicesManager.GetPermissionTarget("java-developers")
 ```
 
-If the requested permission target does not exist, a nil value is returned for the _permissionTargetParams_ param, with a nil error value
+If the requested permission target does not exist, a nil value is returned for the _permissionTargetParams_ param, with
+a nil error value
 
 #### Fetching Artifactory's Version
 
@@ -1251,6 +1276,7 @@ serviceManager.FolderInfo("repo/path/")
 ```
 
 #### Getting a listing of files and folders within a folder in Artifactory
+
 ```go
 optionalParams := servicesutils.NewFileListParams()
 optionalParams.Deep=               true
@@ -1368,16 +1394,19 @@ err = accessManager.AssignRepoToProject("repoName")
 ```
 
 #### Get all groups assigned to a project
+
 ```go
 err = accessManager.GetProjectsGroups("tstprj")
 ```
 
 #### Get a specific group assigned to a project
+
 ```go
 err = accessManager.GetProjectsGroup("tstprj", "tstgroup")
 ```
 
 #### Add or update a group assigned to a project
+
 ```go
 projectGroup := accessServices.ProjectGroup{
   Name:  "tstgroup",
@@ -1387,6 +1416,7 @@ err = accessManager.UpdateGroupInProject("tstprj", "tstgroup", projectGroup)
 ```
 
 #### Remove a group from a project
+
 ```go
 err = accessManager.DeleteExistingProjectGroup("tstprj", "tstgroup")
 ```
@@ -1559,7 +1589,8 @@ err := distManager.DeleteLocalReleaseBundle(params)
 
 ## Using ContentReader
 
-Some APIs return a `content.ContentReader` struct, which allows reading the API's output. `content.ContentReader` provides access to large amounts of data safely, without loading all of it into the memory.
+Some APIs return a `content.ContentReader` struct, which allows reading the API's output. `content.ContentReader`
+provides access to large amounts of data safely, without loading all of it into the memory.
 Here's an example for how `content.ContentReader` should be used:
 
 ````go
