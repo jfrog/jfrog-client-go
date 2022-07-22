@@ -60,7 +60,6 @@ var (
 	RtApiKey                 *string
 	RtSshKeyPath             *string
 	RtSshPassphrase          *string
-	RtAccessToken            *string
 	PipelinesAccessToken     *string
 	PipelinesVcsToken        *string
 	PipelinesVcsRepoFullPath *string
@@ -151,7 +150,6 @@ func init() {
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
-	RtAccessToken = flag.String("rt.accessToken", "", "Artifactory access token")
 	PipelinesAccessToken = flag.String("pipe.accessToken", "", "Pipelines access token")
 	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")

@@ -216,8 +216,8 @@ func (m *GitManager) readRevisionAndBranch() {
 		return
 	}
 	if ref != "" {
-		splitRefArr := strings.Split(ref, "/")
-		m.branch = splitRefArr[len(splitRefArr)-1]
+		// Get branch short name (refs/heads/master > master)
+		m.branch = plumbing.ReferenceName(ref).Short()
 	}
 	// If the revision was returned, then we're done:
 	if revision != "" {
