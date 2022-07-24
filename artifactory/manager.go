@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"github.com/jfrog/jfrog-client-go/auth"
 	"io"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
@@ -293,6 +294,13 @@ func (sm *ArtifactoryServicesManagerImp) DeleteProps(params services.PropsParams
 	setPropsService.Threads = sm.config.GetThreads()
 	return setPropsService.DeleteProps(params)
 }
+
+func (sm *ArtifactoryServicesManagerImp) GetItemProps(relativePath string) (*utils.ItemProperties, error) {
+	setPropsService := services.NewPropsService(sm.client)
+	setPropsService.ArtDetails = sm.config.GetServiceDetails()
+	return setPropsService.GetItemProperties(relativePath)
+}
+
 func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadService {
 	uploadService := services.NewUploadService(sm.client)
 	uploadService.Threads = sm.config.GetThreads()
@@ -369,7 +377,7 @@ func (sm *ArtifactoryServicesManagerImp) GetAPIKey() (string, error) {
 	return securityService.GetAPIKey()
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
+func (sm *ArtifactoryServicesManagerImp) CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
 	return securityService.CreateToken(params)
@@ -387,7 +395,7 @@ func (sm *ArtifactoryServicesManagerImp) GetUserTokens(username string) ([]strin
 	return securityService.GetUserTokens(username)
 }
 
-func (sm *ArtifactoryServicesManagerImp) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
+func (sm *ArtifactoryServicesManagerImp) RefreshToken(params services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
 	return securityService.RefreshToken(params)
@@ -451,6 +459,26 @@ func (sm *ArtifactoryServicesManagerImp) GetServiceId() (string, error) {
 	return systemService.GetServiceId()
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetRunningNodes() ([]string, error) {
+	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
+	return systemService.GetRunningNodes()
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetConfigDescriptor() (string, error) {
+	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
+	return systemService.GetConfigDescriptor()
+}
+
+func (sm *ArtifactoryServicesManagerImp) ActivateKeyEncryption() error {
+	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
+	return systemService.ActivateKeyEncryption()
+}
+
+func (sm *ArtifactoryServicesManagerImp) DeactivateKeyEncryption() error {
+	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
+	return systemService.DeactivateKeyEncryption()
+}
+
 func (sm *ArtifactoryServicesManagerImp) GetGroup(params services.GroupParams) (*services.Group, error) {
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()
@@ -510,6 +538,33 @@ func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPro
 	return systemService.PromoteDocker(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) Export(params services.ExportParams) error {
+	exportService := services.NewExportService(sm.config.GetServiceDetails(), sm.client)
+	return exportService.Export(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
+}
+
+func (sm *ArtifactoryServicesManagerImp) FolderInfo(relativePath string) (*utils.FolderInfo, error) {
+	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	return storageService.FolderInfo(relativePath)
+}
+
+func (sm *ArtifactoryServicesManagerImp) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
+	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	return storageService.FileList(relativePath, optionalParams)
+}
+
+func (sm *ArtifactoryServicesManagerImp) StorageInfo(refresh bool) (*utils.StorageInfo, error) {
+	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	// If refresh flag was provided - Send a refresh request to Artifactory before getting the storage info.
+	if refresh {
+		err := storageService.StorageInfoRefresh()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return storageService.StorageInfo()
 }

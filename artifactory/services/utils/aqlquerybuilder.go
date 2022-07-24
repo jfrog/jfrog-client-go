@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"strconv"
 	"strings"
 
@@ -13,9 +14,12 @@ import (
 // Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
-	repoPathFileTriples, err := createRepoPathFileTriples(searchPattern, params.Recursive)
+	repoPathFileTriples, singleRepo, err := createRepoPathFileTriples(searchPattern, params.Recursive)
 	if err != nil {
 		return "", err
+	}
+	if params.Transitive && !singleRepo {
+		return "", errorutils.CheckErrorf("When searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash.")
 	}
 	includeRoot := strings.Count(searchPattern, "/") < 2
 	triplesSize := len(repoPathFileTriples)
@@ -119,7 +123,7 @@ func createAqlQueryForBuild(includeQueryPart string, artifactsQuery bool, builds
 }
 
 //noinspection GoUnusedExportedFunction
-func CreateAqlQueryForNpm(npmName, npmVersion string) string {
+func CreateAqlQueryForYarn(npmName, npmVersion string) string {
 	itemsPart :=
 		`items.find({` +
 			`"@npm.name":"%s",` +
@@ -129,7 +133,7 @@ func CreateAqlQueryForNpm(npmName, npmVersion string) string {
 			`{"@npm.version":"v%[2]s"}` +
 			`]` +
 			`})%s`
-	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
+	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5", "sha256"}))
 }
 
 func CreateAqlQueryForPypi(repo, file string) string {
@@ -143,7 +147,7 @@ func CreateAqlQueryForPypi(repo, file string) string {
 			`}]` +
 			`}]` +
 			`})%s`
-	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1"}))
+	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256"}))
 }
 
 func CreateAqlQueryForLatestCreated(repo, path string) string {
@@ -253,7 +257,7 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (
 	excludeQuery := ""
 	var excludeTriples []RepoPathFile
 	for _, exclusion := range params.GetExclusions() {
-		repoPathFileTriples, err := createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)
+		repoPathFileTriples, _, err := createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)
 		if err != nil {
 			return "", err
 		}
@@ -337,8 +341,8 @@ func BuildQueryFromSpecFile(specFile *CommonParams, requiredArtifactProps Requir
 	query := fmt.Sprintf(`items.find(%s)%s`, aqlBody, buildIncludeQueryPart(getQueryReturnFields(specFile, requiredArtifactProps)))
 	query = appendSortQueryPart(specFile, query)
 	query = appendOffsetQueryPart(specFile, query)
-	query = appendLimitQueryPart(specFile, query)
 	query = appendTransitiveQueryPart(specFile, query)
+	query = appendLimitQueryPart(specFile, query)
 	return query
 }
 

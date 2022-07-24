@@ -8,6 +8,21 @@ import (
 	"time"
 )
 
+type CreateTokenResponseData struct {
+	CommonTokenParams
+}
+
+type CommonTokenParams struct {
+	Scope        string `json:"scope,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"`
+	ExpiresIn    int    `json:"expires_in,omitempty"`
+	TokenType    string `json:"token_type,omitempty"`
+	Refreshable  *bool  `json:"refreshable,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	GrantType    string `json:"grant_type,omitempty"`
+	Audience     string `json:"audience,omitempty"`
+}
+
 func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	// Separate token parts.
 	tokenParts := strings.Split(token, ".")
@@ -113,6 +128,11 @@ type TokenPayload struct {
 }
 
 // Refreshable Tokens Constants.
+
+// RefreshBeforeExpiryMinutes Artifactory's refresh token mechanism creates tokens that expired in 60 minutes. We want to refresh them after 50 minutes (when 10 minutes left)
 var RefreshBeforeExpiryMinutes = int64(10)
+
+// InviteRefreshBeforeExpiryMinutes Invitations mechanism creates tokens that are valid for 1 year. We want to refresh the token every 50 minutes.
+var InviteRefreshBeforeExpiryMinutes = int64(365*24*60 - 50)
 
 const WaitBeforeRefreshSeconds = 15

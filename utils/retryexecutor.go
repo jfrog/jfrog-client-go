@@ -37,12 +37,8 @@ func (runner *RetryExecutor) Execute() error {
 			return err
 		}
 
-		message := runner.getLogRetryMessage(i+1, err)
-		if err != nil || runner.ErrorMessage != "" {
-			log.Warn(message)
-		} else {
-			log.Info(message)
-		}
+		// Print retry log message
+		runner.LogRetry(i, err)
 
 		// Going to sleep for RetryInterval milliseconds
 		if runner.RetriesIntervalMilliSecs > 0 && i < runner.MaxRetries {
@@ -53,13 +49,19 @@ func (runner *RetryExecutor) Execute() error {
 	return err
 }
 
-func (runner *RetryExecutor) getLogRetryMessage(attemptNumber int, err error) (message string) {
-	message = fmt.Sprintf("%s(Attempt %v)", runner.LogMsgPrefix, attemptNumber)
+func (runner *RetryExecutor) LogRetry(attemptNumber int, err error) {
+	message := fmt.Sprintf("%s(Attempt %v)", runner.LogMsgPrefix, attemptNumber+1)
 	if runner.ErrorMessage != "" {
 		message = fmt.Sprintf("%s - %s", message, runner.ErrorMessage)
 	}
 	if err != nil {
 		message = fmt.Sprintf("%s: %s", message, err.Error())
 	}
-	return
+
+	if err != nil || runner.ErrorMessage != "" {
+		log.Warn(message)
+	} else {
+		log.Debug(message)
+	}
+
 }

@@ -5,18 +5,18 @@ import (
 	"strings"
 )
 
-func CreateUrlPath(moduleId, version, props, extension string, url *string) error {
-	*url = strings.Join([]string{*url, moduleId, "@v", version + extension}, "/")
+func CreateUrlPath(pathInArtifactory, props string, goApiUrl *string) error {
+	*goApiUrl = *goApiUrl + pathInArtifactory
 	properties, err := utils.ParseProperties(props)
 	if err != nil {
 		return err
 	}
 
-	*url = strings.Join([]string{*url, properties.ToEncodedString(true)}, ";")
-	if strings.HasSuffix(*url, ";") {
-		tempUrl := *url
+	*goApiUrl = strings.Join([]string{*goApiUrl, properties.ToEncodedString(true)}, ";")
+	if strings.HasSuffix(*goApiUrl, ";") {
+		tempUrl := *goApiUrl
 		tempUrl = tempUrl[:len(tempUrl)-1]
-		*url = tempUrl
+		*goApiUrl = tempUrl
 	}
 	return nil
 }

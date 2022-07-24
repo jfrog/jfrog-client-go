@@ -53,7 +53,7 @@ func (gs *GroupService) GetGroup(params GroupParams) (g *Group, err error) {
 	if err != nil {
 		return nil, err
 	}
-	// If the requseted group doesn't exists.
+	// If the requested group doesn't exist.
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
@@ -135,6 +135,9 @@ func (gs *GroupService) DeleteGroup(name string) error {
 	httpDetails := gs.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/groups/%s", gs.ArtDetails.GetUrl(), name)
 	resp, body, err := gs.client.SendDelete(url, nil, &httpDetails)
+	if err != nil {
+		return err
+	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}

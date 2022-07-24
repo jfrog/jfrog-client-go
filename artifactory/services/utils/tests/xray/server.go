@@ -2,15 +2,16 @@ package xray
 
 import (
 	"fmt"
-	"github.com/buger/jsonparser"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	clienttests "github.com/jfrog/jfrog-client-go/utils/tests"
-	"github.com/jfrog/jfrog-client-go/xray/services"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/buger/jsonparser"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	clienttests "github.com/jfrog/jfrog-client-go/utils/tests"
+	"github.com/jfrog/jfrog-client-go/xray/services"
 )
 
 const (
@@ -45,6 +46,16 @@ func scanBuildHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Error(w, err.Error(), http.StatusInternalServerError)
+}
+
+func artifactSummaryHandler(w http.ResponseWriter, r *http.Request) {
+	_, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprint(w, VulnerableXraySummaryArtifactResponse)
 }
 
 func reportHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +104,7 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 func StartXrayMockServer() int {
 	handlers := clienttests.HttpServerHandlers{}
 	handlers["/api/xray/scanBuild"] = scanBuildHandler
+	handlers["/api/v2/summary/artifact"] = artifactSummaryHandler
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	handlers["/"] = http.NotFound
 

@@ -57,19 +57,21 @@ func (sm *DistributionServicesManager) SignReleaseBundle(params services.SignBun
 	return signBundleService.SignReleaseBundle(params)
 }
 
-func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.DistributionParams) error {
+func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.DistributionParams, autoCreateRepo bool) error {
 	distributeBundleService := services.NewDistributeReleaseBundleService(sm.client)
 	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
 	distributeBundleService.DryRun = sm.config.IsDryRun()
+	distributeBundleService.AutoCreateRepo = autoCreateRepo
 	return distributeBundleService.Distribute(params)
 }
 
-func (sm *DistributionServicesManager) DistributeReleaseBundleSync(params services.DistributionParams, maxWaitMinutes int) error {
+func (sm *DistributionServicesManager) DistributeReleaseBundleSync(params services.DistributionParams, maxWaitMinutes int, autoCreateRepo bool) error {
 	distributeBundleService := services.NewDistributeReleaseBundleService(sm.client)
 	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
 	distributeBundleService.DryRun = sm.config.IsDryRun()
 	distributeBundleService.MaxWaitMinutes = maxWaitMinutes
 	distributeBundleService.Sync = true
+	distributeBundleService.AutoCreateRepo = autoCreateRepo
 	return distributeBundleService.Distribute(params)
 }
 

@@ -5,17 +5,18 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/buger/jsonparser"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/buger/jsonparser"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
@@ -49,7 +50,7 @@ var (
 	TestXray                 *bool
 	TestPipelines            *bool
 	TestAccess               *bool
-	TestRepository           *bool
+	TestRepositories         *bool
 	RtUrl                    *string
 	DistUrl                  *string
 	XrayUrl                  *string
@@ -59,7 +60,6 @@ var (
 	RtApiKey                 *string
 	RtSshKeyPath             *string
 	RtSshPassphrase          *string
-	RtAccessToken            *string
 	PipelinesAccessToken     *string
 	PipelinesVcsToken        *string
 	PipelinesVcsRepoFullPath *string
@@ -93,6 +93,8 @@ var (
 	testGroupService                      *services.GroupService
 	testBuildInfoService                  *services.BuildInfoService
 	testsFederationService                *services.FederationService
+	testsSystemService                    *services.SystemService
+	testsStorageService                   *services.StorageService
 
 	// Distribution services
 	testsBundleSetSigningKeyService      *distributionServices.SetSigningKeyService
@@ -115,20 +117,19 @@ var (
 
 	// Access Services
 	testsAccessProjectService *accessServices.ProjectService
+	testsAccessInviteService  *accessServices.InviteService
+	testsAccessTokensService  *accessServices.TokenService
 
 	timestamp    = time.Now().Unix()
-	timestampStr = strconv.FormatInt(int64(timestamp), 10)
+	timestampStr = strconv.FormatInt(timestamp, 10)
 	trueValue    = true
 	falseValue   = false
 
 	// Tests configuration
-	RtTargetRepo    = "client-go"
-	RtTargetRepoKey = RtTargetRepo
+	RtTargetRepo = "client-go"
 )
 
 const (
-	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
-	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
 )
 
@@ -139,7 +140,7 @@ func init() {
 	TestXray = flag.Bool("test.xray", false, "Test xray")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
-	TestRepository = flag.Bool("test.repository", false, "Test repositories in Artifactory")
+	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
 	RtUrl = flag.String("rt.url", "", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
@@ -149,7 +150,6 @@ func init() {
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
-	RtAccessToken = flag.String("rt.accessToken", "", "Artifactory access token")
 	PipelinesAccessToken = flag.String("pipe.accessToken", "", "Pipelines access token")
 	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
@@ -390,6 +390,20 @@ func createArtifactoryFederationManager() {
 	testsFederationService.ArtDetails = artDetails
 }
 
+func createArtifactorySystemManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsSystemService = services.NewSystemService(artDetails, client)
+}
+
+func createArtifactoryStorageManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsStorageService = services.NewStorageService(artDetails, client)
+}
+
 func createJfrogHttpClient(artDetails *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
 	return jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath((*artDetails).GetClientCertPath()).
@@ -497,8 +511,8 @@ func setAuthenticationDetail(details auth.ServiceDetails) {
 	if !fileutils.IsSshUrl(details.GetUrl()) {
 		if *RtApiKey != "" {
 			details.SetApiKey(*RtApiKey)
-		} else if *RtAccessToken != "" {
-			details.SetAccessToken(*RtAccessToken)
+		} else if *AccessToken != "" {
+			details.SetAccessToken(*AccessToken)
 		} else {
 			details.SetUser(*RtUser)
 			details.SetPassword(*RtPassword)
@@ -522,7 +536,11 @@ func uploadDummyFile(t *testing.T) {
 	defer clientTestUtils.RemoveAllAndAssert(t, workingDir)
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/"}
+	targetProps, err := utils.ParseProperties("dummy=yes")
+	if err != nil {
+		t.Error(err)
+	}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/", TargetProps: targetProps}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if summary.TotalSucceeded != 1 {
@@ -537,6 +555,7 @@ func uploadDummyFile(t *testing.T) {
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "b.in"}
 	up.Flat = true
 	summary, err = testsUploadService.UploadFiles(up)
+	assert.NoError(t, err)
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -589,7 +608,7 @@ func artifactoryCleanup(t *testing.T) {
 }
 
 func createRepo() error {
-	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepository) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories) {
 		return nil
 	}
 	var err error
@@ -606,7 +625,7 @@ func createRepo() error {
 }
 
 func teardownIntegrationTests() {
-	if !(*TestArtifactory || *TestDistribution || *TestXray) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories) {
 		return
 	}
 	repo := getRtTargetRepoKey()
@@ -615,50 +634,6 @@ func teardownIntegrationTests() {
 		fmt.Printf("teardownIntegrationTests failed for:" + err.Error())
 		os.Exit(1)
 	}
-}
-
-func isRepoExist(repoName string) bool {
-	artDetails := GetRtDetails()
-	artHttpDetails := artDetails.CreateHttpClientDetails()
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
-	resp, _, _, err := client.SendGet(artDetails.GetUrl()+RepoDetailsUrl+repoName, true, artHttpDetails, "")
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
-
-	if resp.StatusCode != http.StatusBadRequest {
-		return true
-	}
-	return false
-}
-
-func execCreateRepoRest(repoConfig, repoName string) error {
-	content, err := ioutil.ReadFile(repoConfig)
-	if err != nil {
-		return err
-	}
-	artDetails := GetRtDetails()
-	artHttpDetails := artDetails.CreateHttpClientDetails()
-
-	artHttpDetails.Headers = map[string]string{"Content-Type": "application/json"}
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-	resp, _, err := client.SendPut(artDetails.GetUrl()+"api/repositories/"+repoName, content, artHttpDetails, "")
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errors.New("Fail to create repository. Reason local repository with key: " + repoName + " already exist\n")
-	}
-	log.Info("Repository", repoName, "created.")
-	return nil
 }
 
 func getTestDataPath() string {
@@ -994,6 +969,9 @@ func deleteBuildIndex(buildName string) error {
 
 	dataIndexBuild := indexedBuildsPayload{IndexedBuilds: indexedBuilds}
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
+	if err != nil {
+		return err
+	}
 
 	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails, "")
 	if err != nil {
@@ -1039,4 +1017,32 @@ func createAccessProjectManager() {
 	failOnHttpClientCreation(err)
 	testsAccessProjectService = accessServices.NewProjectService(client)
 	testsAccessProjectService.ServiceDetails = accessDetails
+
+	artDetails := GetRtDetails()
+	rtclient, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testGroupService = services.NewGroupService(rtclient)
+	testGroupService.SetArtifactoryDetails(artDetails)
+}
+
+func createAccessInviteManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessInviteService = accessServices.NewInviteService(client)
+	testsAccessInviteService.ServiceDetails = accessDetails
+	// To test "invite" flow we first have to create new "invited user" using ArtifactoryUserManager and Artifactory's API.
+	createArtifactoryUserManager()
+}
+
+func createAccessTokensManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessTokensService = accessServices.NewTokenService(client)
+	testsAccessTokensService.ServiceDetails = accessDetails
+}
+
+func getUniqueField(prefix string) string {
+	return strings.Join([]string{prefix, strconv.FormatInt(time.Now().Unix(), 10), runtime.GOOS}, "-")
 }

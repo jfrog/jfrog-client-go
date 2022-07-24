@@ -18,7 +18,11 @@ type ParenthesesSlice struct {
 	Parentheses []Parentheses
 }
 
-func NewParenthesesSlice(pattern, target string) ParenthesesSlice {
+func NewParenthesesSlice(slice []Parentheses) ParenthesesSlice {
+	return ParenthesesSlice{Parentheses: slice}
+}
+
+func CreateParenthesesSlice(pattern, target string) ParenthesesSlice {
 	return ParenthesesSlice{findParentheses(pattern, target)}
 }
 
@@ -32,13 +36,13 @@ func (p *ParenthesesSlice) IsPresent(index int) bool {
 }
 
 // Return true if at least one of the {i} in 'target' has corresponding parentheses in 'pattern'.
-func PlaceholdersUserd(pattern, target string) bool {
+func IsPlaceholdersUsed(pattern, target string) bool {
 	removedParenthesesTarget := RemovePlaceholderParentheses(pattern, target)
 	return removedParenthesesTarget != target
 }
 
 func RemovePlaceholderParentheses(pattern, target string) string {
-	parentheses := NewParenthesesSlice(pattern, target)
+	parentheses := CreateParenthesesSlice(pattern, target)
 	// Remove parentheses which have a corresponding placeholder.
 	var temp string
 	for i, c := range pattern {
@@ -53,7 +57,7 @@ func RemovePlaceholderParentheses(pattern, target string) string {
 
 // Escaping Parentheses with no corresponding placeholder.
 func addEscapingParentheses(pattern, target string) string {
-	parentheses := NewParenthesesSlice(pattern, target)
+	parentheses := CreateParenthesesSlice(pattern, target)
 	var temp string
 	for i, c := range pattern {
 		if (c == '(' || c == ')') && !parentheses.IsPresent(i) {

@@ -3,6 +3,8 @@ package artifactory
 import (
 	"io"
 
+	"github.com/jfrog/jfrog-client-go/auth"
+
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -51,6 +53,7 @@ type ArtifactoryServicesManager interface {
 	Aql(aql string) (io.ReadCloser, error)
 	SetProps(params services.PropsParams) (int, error)
 	DeleteProps(params services.PropsParams) (int, error)
+	GetItemProps(relativePath string) (*utils.ItemProperties, error)
 	UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error)
 	UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
 	Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
@@ -62,17 +65,21 @@ type ArtifactoryServicesManager interface {
 	CreateAPIKey() (string, error)
 	RegenerateAPIKey() (string, error)
 	GetAPIKey() (string, error)
-	CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error)
+	CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error)
 	GetTokens() (services.GetTokensResponseData, error)
 	GetUserTokens(username string) ([]string, error)
-	RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error)
+	RefreshToken(params services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error)
 	RevokeToken(params services.RevokeTokenParams) (string, error)
 	CreateReplication(params services.CreateReplicationParams) error
 	UpdateReplication(params services.UpdateReplicationParams) error
 	DeleteReplication(repoKey string) error
 	GetReplication(repoKey string) ([]utils.ReplicationParams, error)
 	GetVersion() (string, error)
+	GetRunningNodes() ([]string, error)
 	GetServiceId() (string, error)
+	GetConfigDescriptor() (string, error)
+	ActivateKeyEncryption() error
+	DeactivateKeyEncryption() error
 	PromoteDocker(params services.DockerPromoteParams) error
 	Client() *jfroghttpclient.JfrogHttpClient
 	GetGroup(params services.GroupParams) (*services.Group, error)
@@ -87,6 +94,10 @@ type ArtifactoryServicesManager interface {
 	ConvertLocalToFederatedRepository(repoKey string) error
 	TriggerFederatedRepositoryFullSyncAll(repoKey string) error
 	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
+	Export(params services.ExportParams) error
+	FolderInfo(relativePath string) (*utils.FolderInfo, error)
+	FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error)
+	StorageInfo(refresh bool) (*utils.StorageInfo, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -203,10 +214,6 @@ func (esm *EmptyArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) initDownloadService() *services.DownloadService {
-	panic("Failed: Method is not implemented")
-}
-
 func (esm *EmptyArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error) {
 	panic("Failed: Method is not implemented")
 }
@@ -232,6 +239,10 @@ func (esm *EmptyArtifactoryServicesManager) SetProps(params services.PropsParams
 }
 
 func (esm *EmptyArtifactoryServicesManager) DeleteProps(params services.PropsParams) (int, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetItemProps(relativePath string) (*utils.ItemProperties, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -279,7 +290,7 @@ func (esm *EmptyArtifactoryServicesManager) GetAPIKey() (string, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (services.CreateTokenResponseData, error) {
+func (esm *EmptyArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -291,7 +302,7 @@ func (esm *EmptyArtifactoryServicesManager) GetUserTokens(username string) ([]st
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.RefreshTokenParams) (services.CreateTokenResponseData, error) {
+func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -319,7 +330,23 @@ func (esm *EmptyArtifactoryServicesManager) GetVersion() (string, error) {
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) GetRunningNodes() ([]string, error) {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) GetServiceId() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetConfigDescriptor() (string, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) ActivateKeyEncryption() error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DeactivateKeyEncryption() error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -384,6 +411,22 @@ func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncAl
 }
 
 func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) Export(params services.ExportParams) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) FolderInfo(relativePath string) (*utils.FolderInfo, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) StorageInfo(refresh bool) (*utils.StorageInfo, error) {
 	panic("Failed: Method is not implemented")
 }
 

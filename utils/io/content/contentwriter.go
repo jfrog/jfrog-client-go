@@ -157,7 +157,6 @@ func (rw *ContentWriter) run() {
 	if err != nil {
 		rw.errorsQueue.AddError(errorutils.CheckError(err))
 	}
-	return
 }
 
 // Finish writing to the file.

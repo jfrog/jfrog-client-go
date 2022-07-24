@@ -9,9 +9,9 @@ import (
 type PollingAction func() (shouldStop bool, responseBody []byte, err error)
 
 type PollingExecutor struct {
-	// Maximum wait time in seconds.
+	// Maximum wait time in nanoseconds.
 	Timeout time.Duration
-	// Number of seconds to sleep between polling attempts.
+	// Number of nanoseconds to sleep between polling attempts.
 	PollingInterval time.Duration
 	// Prefix to add at the beginning of each info/error message.
 	MsgPrefix string

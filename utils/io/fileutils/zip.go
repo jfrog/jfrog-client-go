@@ -6,80 +6,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 )
-
-func IsZip(filename string) bool {
-	return strings.HasSuffix(strings.ToLower(filename), ".zip")
-}
-
-func Unzip(at io.ReaderAt, size int64, dest string) error {
-	r, err := zip.NewReader(at, size)
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(dest, 0755)
-	if err != nil {
-		return err
-	}
-	// Closure to address file descriptors issue with all the deferred .Close() methods
-	extractAndWriteFile := func(f *zip.File) error {
-		rc, err := f.Open()
-		if err != nil {
-			return err
-		}
-		defer func() {
-			if err := rc.Close(); err != nil {
-				panic(err)
-			}
-		}()
-
-		path := filepath.Join(dest, f.Name)
-
-		if f.FileInfo().IsDir() {
-			err = os.MkdirAll(path, 0700)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = os.MkdirAll(filepath.Dir(path), 0700)
-			if err != nil {
-				return err
-			}
-			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0700)
-			if err != nil {
-				return err
-			}
-			defer func() {
-				if err := f.Close(); err != nil {
-					panic(err)
-				}
-			}()
-
-			_, err = io.Copy(f, rc)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	for _, f := range r.File {
-		err := extractAndWriteFile(f)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 func ZipFolderFiles(source, target string) (err error) {
 	zipFile, err := os.Create(target)
 	if err != nil {
-		errorutils.CheckError(err)
-		return
+		return errorutils.CheckError(err)
 	}
 	defer func() {
 		if cerr := zipFile.Close(); cerr != nil && err == nil {
@@ -106,21 +38,18 @@ func ZipFolderFiles(source, target string) (err error) {
 
 		header, currentErr := zip.FileInfoHeader(info)
 		if currentErr != nil {
-			errorutils.CheckError(currentErr)
-			return
+			return errorutils.CheckError(currentErr)
 		}
 
 		header.Method = zip.Deflate
 		writer, currentErr := archive.CreateHeader(header)
 		if currentErr != nil {
-			errorutils.CheckError(currentErr)
-			return
+			return errorutils.CheckError(currentErr)
 		}
 
 		file, currentErr := os.Open(path)
 		if currentErr != nil {
-			errorutils.CheckError(currentErr)
-			return
+			return errorutils.CheckError(currentErr)
 		}
 		defer func() {
 			if cerr := file.Close(); cerr != nil && currentErr == nil {

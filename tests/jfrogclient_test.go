@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 func setupIntegrationTests() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
-	if *TestArtifactory || *TestDistribution || *TestXray || *TestRepository {
+	if *TestArtifactory || *TestDistribution || *TestXray || *TestRepositories {
 		createArtifactoryUploadManager()
 		createArtifactorySearchManager()
 		createArtifactoryDeleteManager()
@@ -53,6 +53,8 @@ func setupIntegrationTests() {
 		createArtifactoryGroupManager()
 		createArtifactoryBuildInfoManager()
 		createArtifactoryFederationManager()
+		createArtifactorySystemManager()
+		createArtifactoryStorageManager()
 	}
 
 	if *TestDistribution {
@@ -69,6 +71,8 @@ func setupIntegrationTests() {
 	}
 	if *TestAccess {
 		createAccessProjectManager()
+		createAccessInviteManager()
+		createAccessTokensManager()
 	}
 	if err := createRepo(); err != nil {
 		log.Error(err.Error())

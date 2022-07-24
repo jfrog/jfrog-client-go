@@ -47,9 +47,7 @@ func (props *Properties) ParseAndAddProperties(propStr string) error {
 		}
 
 		splitValues := splitWhileIgnoringBackslashPrefixSeparators(value, multiValuesSeparator)
-		for _, val := range splitValues {
-			props.properties[key] = append(props.properties[key], val)
-		}
+		props.properties[key] = append(props.properties[key], splitValues...)
 	}
 	props.removeDuplicateValues()
 	return nil
@@ -173,4 +171,9 @@ func MergeProperties(properties []*Properties) *Properties {
 	}
 	mergedProps.removeDuplicateValues()
 	return mergedProps
+}
+
+type ItemProperties struct {
+	Properties map[string][]string `json:"properties,omitempty"`
+	Uri        string              `json:"uri,omitempty"`
 }

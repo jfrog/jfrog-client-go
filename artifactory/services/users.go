@@ -15,6 +15,7 @@ import (
 type UserParams struct {
 	UserDetails     User
 	ReplaceIfExists bool
+	ClearGroups     bool
 }
 
 func NewUserParams() UserParams {
@@ -23,16 +24,22 @@ func NewUserParams() UserParams {
 
 // application/vnd.org.jfrog.artifactory.security.User+json
 type User struct {
-	Name                     string   `json:"name,omitempty" csv:"username,omitempty"`
-	Email                    string   `json:"email,omitempty" csv:"email,omitempty"`
-	Password                 string   `json:"password,omitempty" csv:"password,omitempty"`
-	Admin                    *bool    `json:"admin,omitempty" csv:"admin,omitempty"`
-	ProfileUpdatable         *bool    `json:"profileUpdatable,omitempty" csv:"profileUpdatable,omitempty"`
-	DisableUIAccess          *bool    `json:"disableUIAccess,omitempty" csv:"disableUIAccess,omitempty"`
-	InternalPasswordDisabled *bool    `json:"internalPasswordDisabled,omitempty" csv:"internalPasswordDisabled,omitempty"`
-	LastLoggedIn             string   `json:"lastLoggedIn,omitempty" csv:"lastLoggedIn,omitempty"`
-	Realm                    string   `json:"realm,omitempty" csv:"realm,omitempty"`
-	Groups                   []string `json:"groups,omitempty" csv:"groups,omitempty"`
+	Name                     string    `json:"name,omitempty" csv:"username,omitempty"`
+	Email                    string    `json:"email,omitempty" csv:"email,omitempty"`
+	Password                 string    `json:"password,omitempty" csv:"password,omitempty"`
+	Admin                    *bool     `json:"admin,omitempty" csv:"admin,omitempty"`
+	ProfileUpdatable         *bool     `json:"profileUpdatable,omitempty" csv:"profileUpdatable,omitempty"`
+	DisableUIAccess          *bool     `json:"disableUIAccess,omitempty" csv:"disableUIAccess,omitempty"`
+	InternalPasswordDisabled *bool     `json:"internalPasswordDisabled,omitempty" csv:"internalPasswordDisabled,omitempty"`
+	LastLoggedIn             string    `json:"lastLoggedIn,omitempty" csv:"lastLoggedIn,omitempty"`
+	Realm                    string    `json:"realm,omitempty" csv:"realm,omitempty"`
+	Groups                   *[]string `json:"groups,omitempty" csv:"groups,omitempty"`
+	ShouldInvite             *bool     `json:"shouldInvite,omitempty" csv:"shouldInvite,omitempty"`
+	Source                   string    `json:"source,omitempty" csv:"source,omitempty"`
+	WatchManager             *bool     `json:"watchManager,omitempty" csv:"watchManager,omitempty"`
+	ReportsManager           *bool     `json:"reportsManager,omitempty" csv:"reportsManager,omitempty"`
+	PolicyManager            *bool     `json:"policyManager,omitempty" csv:"policyManager,omitempty"`
+	ProjectAdmin             *bool     `json:"projectAdmin,omitempty" csv:"projectAdmin,omitempty"`
 }
 
 type UserService struct {
@@ -112,6 +119,9 @@ func (us *UserService) CreateUser(params UserParams) error {
 }
 
 func (us *UserService) UpdateUser(params UserParams) error {
+	if params.ClearGroups {
+		params.UserDetails.Groups = &[]string{}
+	}
 	url, content, httpDetails, err := us.createOrUpdateUserRequest(params.UserDetails)
 	if err != nil {
 		return err
@@ -146,6 +156,9 @@ func (us *UserService) DeleteUser(name string) error {
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), name)
 	resp, body, err := us.client.SendDelete(url, nil, &httpDetails)
+	if err != nil {
+		return err
+	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}

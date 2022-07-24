@@ -78,13 +78,12 @@ func (builder *httpClientBuilder) SetRetryWaitMilliSecs(retryWaitMilliSecs int) 
 
 func (builder *httpClientBuilder) AddClientCertToTransport(transport *http.Transport) error {
 	if builder.clientCertPath != "" {
-		certificate, err := tls.LoadX509KeyPair(builder.clientCertPath, builder.clientCertKeyPath)
+		certificate, err := cert.LoadCertificate(builder.clientCertPath, builder.clientCertKeyPath)
 		if err != nil {
-			return errorutils.CheckErrorf("Failed loading client certificate: " + err.Error())
+			return err
 		}
 		transport.TLSClientConfig.Certificates = []tls.Certificate{certificate}
 	}
-
 	return nil
 }
 
@@ -99,6 +98,7 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 
 	if builder.certificatesDirPath == "" {
 		transport = builder.createDefaultHttpTransport()
+		//#nosec G402 -- Insecure TLS allowed here.
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: builder.insecureTls}
 	} else {
 		transport, err = cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, builder.createDefaultHttpTransport())

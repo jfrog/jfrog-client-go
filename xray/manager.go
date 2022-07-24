@@ -1,6 +1,8 @@
 package xray
 
 import (
+	"strings"
+
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
@@ -134,22 +136,22 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 }
 
 // BuildScan scans a published build-info with Xray.
-// Returns a string represents the scan ID.
-func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams) (*services.BuildScanResponse, error) {
+// 'scanResponse' - Xray scan output of the requested build scan.
+// 'noFailBuildPolicy' - Indicates that the Xray API returned a "No Xray Fail build...." error
+func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
 	buildScanService := services.NewBuildScanService(sm.client)
 	buildScanService.XrayDetails = sm.config.GetServiceDetails()
-	err := buildScanService.Scan(params)
+	err = buildScanService.Scan(params)
 	if err != nil {
-		return nil, err
+		// If the includeVulnerabilities flag is true and error is "No Xray Fail build...." continue to GetBuildScanResults to get vulnerabilities
+		if includeVulnerabilities && strings.Contains(err.Error(), services.XrayScanBuildNoFailBuildPolicy) {
+			noFailBuildPolicy = true
+		} else {
+			return nil, false, err
+		}
 	}
-	return buildScanService.GetBuildScanResults(params)
-}
-
-// BuildSummary returns the summary of build scan which had been previously performed.
-func (sm *XrayServicesManager) BuildSummary(params services.XrayBuildParams) (*services.SummaryResponse, error) {
-	buildSummary := services.NewSummaryService(sm.client)
-	buildSummary.XrayDetails = sm.config.GetServiceDetails()
-	return buildSummary.GetBuildSummary(params)
+	scanResponse, err = buildScanService.GetBuildScanResults(params, includeVulnerabilities)
+	return
 }
 
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
@@ -178,4 +180,11 @@ func (sm *XrayServicesManager) DeleteReport(reportId string) error {
 	reportService := services.NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
 	return reportService.Delete(reportId)
+}
+
+// ArtifactSummary returns Xray artifact summaries for the requested checksums and/or paths
+func (sm *XrayServicesManager) ArtifactSummary(params services.ArtifactSummaryParams) (*services.ArtifactSummaryResponse, error) {
+	summaryService := services.NewSummaryService(sm.client)
+	summaryService.XrayDetails = sm.config.GetServiceDetails()
+	return summaryService.GetArtifactSummary(params)
 }

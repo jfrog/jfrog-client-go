@@ -4,15 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	biutils "github.com/jfrog/build-info-go/utils"
+	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"os"
 	"regexp"
 	"strings"
-
-	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/utils"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
 // Return all the existing paths of the provided root path
@@ -121,10 +119,32 @@ func GetFileSymlinkPath(filePath string) (string, error) {
 	return symlinkPath, nil
 }
 
+// Find parentheses in 'target' and 'archive-target', merge the results to one slice with no duplication.
+func getPlaceholderParentheses(pattern, target, archiveTarget string) utils.ParenthesesSlice {
+	targetParentheses := utils.CreateParenthesesSlice(pattern, target)
+	archiveTargetParentheses := utils.CreateParenthesesSlice(pattern, archiveTarget)
+	parenthesesMap := make(map[utils.Parentheses]bool)
+	var parenthesesSlice []utils.Parentheses
+	// Target parentheses
+	for _, v := range targetParentheses.Parentheses {
+		parenthesesSlice = append(parenthesesSlice, v)
+		parenthesesMap[v] = true
+	}
+	// Archive target parentheses
+	for _, v := range archiveTargetParentheses.Parentheses {
+		if parenthesesMap[v] {
+			continue
+		}
+		parenthesesSlice = append(parenthesesSlice, v)
+		parenthesesMap[v] = true
+	}
+	return utils.NewParenthesesSlice(parenthesesSlice)
+}
+
 // Get the local root path, from which to start collecting artifacts to be uploaded to Artifactory.
-// If path dose not exist error will be returned.
-func GetRootPath(pattern, target string, patternType clientutils.PatternType, preserveSymLink bool) (string, error) {
-	placeholderParentheses := clientutils.NewParenthesesSlice(pattern, target)
+// If path does not exist error will be returned.
+func GetRootPath(pattern, target, archiveTarget string, patternType utils.PatternType, preserveSymLink bool) (string, error) {
+	placeholderParentheses := getPlaceholderParentheses(pattern, target, archiveTarget)
 	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
 		return "", errorutils.CheckErrorf("Path does not exist: " + rootPath)

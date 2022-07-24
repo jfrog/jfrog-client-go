@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -143,6 +144,9 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 	}
 	defer mergedReader.Close()
 	buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
+	if err != nil {
+		return nil, err
+	}
 	return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
 }
 
@@ -256,36 +260,46 @@ func ExecAql(aqlQuery string, flags CommonConf) (io.ReadCloser, error) {
 	return resp.Body, err
 }
 
-func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (*content.ContentReader, error) {
-	body, err := ExecAql(aqlQuery, flags)
+func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (reader *content.ContentReader, err error) {
+	var body io.ReadCloser
+	body, err = ExecAql(aqlQuery, flags)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer func() {
-		err := body.Close()
-		if err != nil {
-			log.Warn("Could not close connection:" + err.Error() + ".")
+		if body != nil {
+			e := body.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
 		}
 	}()
 	log.Debug("Streaming data to file...")
-	filePath, err := streamToFile(body)
+	var filePath string
+	filePath, err = streamToFile(body)
 	if err != nil {
-		return nil, err
+		return
 	}
-	log.Debug("Finish streaming data successfully.")
-	return content.NewContentReader(filePath, content.DefaultKey), err
+	log.Debug("Finished streaming data successfully.")
+	reader = content.NewContentReader(filePath, content.DefaultKey)
+	return
 }
 
 // Save the reader output into a temp file.
 // return the file path.
-func streamToFile(reader io.Reader) (string, error) {
+func streamToFile(reader io.Reader) (filePath string, err error) {
 	var fd *os.File
 	bufioReader := bufio.NewReaderSize(reader, 65536)
-	fd, err := fileutils.CreateTempFile()
+	fd, err = fileutils.CreateTempFile()
 	if err != nil {
 		return "", err
 	}
-	defer fd.Close()
+	defer func() {
+		e := fd.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 	_, err = io.Copy(fd, bufioReader)
 	return fd.Name(), errorutils.CheckError(err)
 }
@@ -314,14 +328,25 @@ type ResultItem struct {
 	Repo        string     `json:"repo,omitempty"`
 	Path        string     `json:"path,omitempty"`
 	Name        string     `json:"name,omitempty"`
+	Created     string     `json:"created,omitempty"`
+	Modified    string     `json:"modified,omitempty"`
+	Updated     string     `json:"updated,omitempty"`
+	CreatedBy   string     `json:"created_by,omitempty"`
+	ModifiedBy  string     `json:"modified_by,omitempty"`
+	Type        string     `json:"type,omitempty"`
 	Actual_Md5  string     `json:"actual_md5,omitempty"`
 	Actual_Sha1 string     `json:"actual_sha1,omitempty"`
 	Sha256      string     `json:"sha256,omitempty"`
 	Size        int64      `json:"size,omitempty"`
-	Created     string     `json:"created,omitempty"`
-	Modified    string     `json:"modified,omitempty"`
 	Properties  []Property `json:"properties,omitempty"`
-	Type        string     `json:"type,omitempty"`
+	Stats       []Stat     `json:"stats,omitempty"`
+}
+
+type Stat struct {
+	Downloaded      string      `json:"downloaded,omitempty"`
+	Downloads       json.Number `json:"downloads,omitempty"`
+	DownloadedBy    string      `json:"downloaded_by,omitempty"`
+	RemoteDownloads json.Number `json:"remote_downloads,omitempty"`
 }
 
 func (item ResultItem) GetSortKey() string {
@@ -370,11 +395,26 @@ func addSeparator(str1, separator, str2 string) string {
 }
 
 func (item *ResultItem) ToArtifact() buildinfo.Artifact {
-	return buildinfo.Artifact{Name: item.Name, Checksum: buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}, Path: path.Join(item.Path, item.Name)}
+	return buildinfo.Artifact{
+		Name: item.Name,
+		Checksum: buildinfo.Checksum{
+			Sha1:   item.Actual_Sha1,
+			Md5:    item.Actual_Md5,
+			Sha256: item.Sha256,
+		},
+		Path: path.Join(item.Path, item.Name),
+	}
 }
 
 func (item *ResultItem) ToDependency() buildinfo.Dependency {
-	return buildinfo.Dependency{Id: item.Name, Checksum: buildinfo.Checksum{Sha1: item.Actual_Sha1, Md5: item.Actual_Md5}}
+	return buildinfo.Dependency{
+		Id: item.Name,
+		Checksum: buildinfo.Checksum{
+			Sha1:   item.Actual_Sha1,
+			Md5:    item.Actual_Md5,
+			Sha256: item.Sha256,
+		},
+	}
 }
 
 type AqlSearchResultItemFilter func(SearchBasedContentItem, *content.ContentReader) (*content.ContentReader, error)
