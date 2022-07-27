@@ -432,7 +432,7 @@ func (us *UploadService) uploadFile(localPath, targetPathWithProps string, fileI
 		return nil, false, err
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
-	return details, us.DryRun || checksumDeployed || isSuccessfulResponseStatusCode(resp.StatusCode), nil
+	return details, us.DryRun || checksumDeployed || isSuccessfulUploadStatusCode(resp.StatusCode), nil
 }
 
 func (us *UploadService) shouldTryChecksumDeploy(fileSize int64, uploadParams UploadParams) bool {
@@ -454,7 +454,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 			if e != nil {
 				return false, e
 			}
-			checksumDeployed = isSuccessfulResponseStatusCode(resp.StatusCode)
+			checksumDeployed = isSuccessfulUploadStatusCode(resp.StatusCode)
 		}
 
 		if !checksumDeployed {
@@ -493,7 +493,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 		}
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
-	uploaded := us.DryRun || checksumDeployed || isSuccessfulResponseStatusCode(resp.StatusCode)
+	uploaded := us.DryRun || checksumDeployed || isSuccessfulUploadStatusCode(resp.StatusCode)
 	return uploaded, nil
 }
 
@@ -523,7 +523,7 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
-			checksumDeployed = isSuccessfulResponseStatusCode(resp.StatusCode)
+			checksumDeployed = isSuccessfulUploadStatusCode(resp.StatusCode)
 		}
 		if !checksumDeployed {
 			resp, body, err = utils.UploadFile(localPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
@@ -558,7 +558,7 @@ func (us *UploadService) doUploadFromReader(fileReader io.Reader, targetUrlWithP
 }
 
 func logUploadResponse(logMsgPrefix string, resp *http.Response, body []byte, checksumDeployed, isDryRun bool) {
-	if resp != nil && !isSuccessfulResponseStatusCode(resp.StatusCode) {
+	if resp != nil && !isSuccessfulUploadStatusCode(resp.StatusCode) {
 		log.Error(logMsgPrefix + "Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 		return
 	}
@@ -1058,6 +1058,6 @@ func (rm *resultsManager) getTransferDetailsReader() *content.ContentReader {
 	return content.NewMultiSourceContentReader(writersPaths, content.DefaultKey)
 }
 
-func isSuccessfulResponseStatusCode(statusCode int) bool {
+func isSuccessfulUploadStatusCode(statusCode int) bool {
 	return statusCode == http.StatusOK || statusCode == http.StatusCreated || statusCode == http.StatusAccepted
 }
