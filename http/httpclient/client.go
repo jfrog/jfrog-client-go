@@ -283,7 +283,7 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	if errorutils.CheckError(err) != nil {
 		return nil, nil, err
 	}
-	if resp != nil && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+	if resp != nil && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
 		return nil, nil, errorutils.CheckError(errors.New("Server response: " + resp.Status))
 	}
 	defer func() {
