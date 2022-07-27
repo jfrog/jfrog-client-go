@@ -1059,5 +1059,5 @@ func (rm *resultsManager) getTransferDetailsReader() *content.ContentReader {
 }
 
 func isSuccessfulResponseStatusCode(statusCode int) bool {
-	return statusCode == http.StatusCreated || statusCode == http.StatusOK || statusCode == http.StatusAccepted
+	return statusCode == http.StatusOK || statusCode == http.StatusCreated || statusCode == http.StatusAccepted
 }
