@@ -567,7 +567,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 		return nil, false, nil
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, false, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+		return nil, false, err
 	}
 
 	// Build BuildInfo struct from json.

@@ -7,7 +7,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -34,15 +33,14 @@ func (rs *CreateReplicationService) performRequest(params *utils.UpdateReplicati
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.replications.ReplicationConfigRequest+json", &httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/replications/" + params.RepoKey
 	var resp *http.Response
-	var body []byte
 	log.Info("Creating replication..")
 	operationString := "creating"
-	resp, body, err = rs.client.SendPut(url, content, &httpClientsDetails)
+	resp, _, err = rs.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done " + operationString + " repository.")

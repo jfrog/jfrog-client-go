@@ -30,7 +30,7 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 	}
 
 	errorBody, _ := ioutil.ReadAll(resp.Body)
-	return GenerateResponseError(resp.Status, string(errorBody))
+	return CheckError(GenerateResponseError(resp.Status, string(errorBody)))
 }
 
 func GenerateResponseError(status, body string) error {

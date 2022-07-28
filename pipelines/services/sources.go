@@ -58,11 +58,10 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 		return -1, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		err := errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body))
 		if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), sourceAlreadyExistsResponseString) {
 			return -1, errorutils.CheckError(&SourceAlreadyExistsError{InnerError: err})
 		}
-		return -1, errorutils.CheckError(err)
+		return -1, err
 	}
 
 	created := &Source{}
@@ -78,7 +77,7 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 		return nil, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+		return nil, err
 	}
 	source := &Source{}
 	err = json.Unmarshal(body, source)
@@ -87,14 +86,11 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 
 func (ss *SourcesService) DeleteSource(sourceId int) error {
 	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
-	resp, body, err := ss.client.SendDelete(ss.ServiceDetails.GetUrl()+SourcesRestApi+strconv.Itoa(sourceId), nil, &httpDetails)
+	resp, _, err := ss.client.SendDelete(ss.ServiceDetails.GetUrl()+SourcesRestApi+strconv.Itoa(sourceId), nil, &httpDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, http.StatusOK)
 }
 
 type Source struct {

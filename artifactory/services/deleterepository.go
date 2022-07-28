@@ -5,7 +5,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -26,12 +25,12 @@ func (drs *DeleteRepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogH
 func (drs *DeleteRepositoryService) Delete(repoKey string) error {
 	httpClientsDetails := drs.ArtDetails.CreateHttpClientDetails()
 	log.Info("Deleting repository " + repoKey + "...")
-	resp, body, err := drs.client.SendDelete(drs.ArtDetails.GetUrl()+"api/repositories/"+repoKey, nil, &httpClientsDetails)
+	resp, _, err := drs.client.SendDelete(drs.ArtDetails.GetUrl()+"api/repositories/"+repoKey, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done deleting repository.")

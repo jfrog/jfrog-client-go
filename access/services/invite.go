@@ -6,7 +6,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/http"
 )
@@ -42,15 +41,12 @@ func (us *InviteService) InviteUser(email, source string) error {
 		return errorutils.CheckError(err)
 	}
 	utils.SetContentType("application/json", &httpDetails.Headers)
-	resp, body, err := us.client.SendPost(url, requestContent, &httpDetails)
+	resp, _, err := us.client.SendPost(url, requestContent, &httpDetails)
 	if err != nil {
 		return err
 	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response was returned for the request sent")
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return err
+	return errorutils.CheckResponseStatus(resp, http.StatusOK)
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -28,11 +27,10 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 		return nil, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		err := errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body))
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, errorutils.CheckError(&PipelinesNotAvailableError{InnerError: err})
 		}
-		return nil, errorutils.CheckError(err)
+		return nil, err
 	}
 	var sysInfo PipelinesSystemInfo
 	err = json.Unmarshal(body, &sysInfo)

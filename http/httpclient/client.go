@@ -280,11 +280,10 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 
 	client := jc.client
 	resp, err = client.Do(req)
-	if errorutils.CheckError(err) != nil {
+	if errorutils.CheckError(err) != nil || resp == nil {
 		return
 	}
-	if resp != nil && errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusOK, http.StatusAccepted) != nil {
-		err = errorutils.CheckErrorf("Server response: " + resp.Status)
+	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusOK, http.StatusAccepted); err != nil {
 		return
 	}
 	defer func() {

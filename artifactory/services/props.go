@@ -121,7 +121,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 					return err
 				}
 				if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
-					return errorutils.CheckError(err)
+					return err
 				}
 				successCounters[threadId]++
 				return nil
@@ -181,7 +181,7 @@ func (ps *PropsService) GetItemProperties(relativePath string) (*utils.ItemPrope
 		return nil, nil
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(err)
+		return nil, err
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 

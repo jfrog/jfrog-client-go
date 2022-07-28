@@ -79,7 +79,7 @@ func (dr *DistributeReleaseBundleService) execDistribute(name, version string, d
 		return "", err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
-		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+		return "", err
 	}
 	response := distributionResponseBody{}
 	err = json.Unmarshal(body, &response)

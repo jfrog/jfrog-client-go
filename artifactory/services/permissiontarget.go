@@ -8,7 +8,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -29,12 +28,12 @@ func (pts *PermissionTargetService) GetJfrogHttpClient() *jfroghttpclient.JfrogH
 func (pts *PermissionTargetService) Delete(permissionTargetName string) error {
 	httpClientsDetails := pts.ArtDetails.CreateHttpClientDetails()
 	log.Info("Deleting permission target...")
-	resp, body, err := pts.client.SendDelete(pts.ArtDetails.GetUrl()+"api/v2/security/permissions/"+permissionTargetName, nil, &httpClientsDetails)
+	resp, _, err := pts.client.SendDelete(pts.ArtDetails.GetUrl()+"api/v2/security/permissions/"+permissionTargetName, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
@@ -54,7 +53,7 @@ func (pts *PermissionTargetService) Get(permissionTargetName string) (*Permissio
 		return nil, nil
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return nil, err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
@@ -83,26 +82,24 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 	var url = pts.ArtDetails.GetUrl() + "api/v2/security/permissions/" + params.Name
 	var operationString string
 	var resp *http.Response
-	var body []byte
 	if update {
 		log.Info("Updating permission target...")
 		operationString = "updating"
-		resp, body, err = pts.client.SendPut(url, content, &httpClientsDetails)
+		resp, _, err = pts.client.SendPut(url, content, &httpClientsDetails)
 	} else {
 		log.Info("Creating permission target...")
 		operationString = "creating"
-		resp, body, err = pts.client.SendPost(url, content, &httpClientsDetails)
+		resp, _, err = pts.client.SendPost(url, content, &httpClientsDetails)
 	}
 	if err != nil {
 		return err
 	}
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		err = errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body))
 		if resp.StatusCode == http.StatusConflict {
 			return errorutils.CheckError(&PermissionTargetAlreadyExistsError{InnerError: err})
 		}
-		return errorutils.CheckError(err)
+		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done " + operationString + " permission target.")

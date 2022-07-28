@@ -57,15 +57,14 @@ func (xbms *BinMgrService) AddBuildsToIndexing(buildNames []string) error {
 	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var url = xbms.getBinMgrURL() + "/builds"
 	var resp *http.Response
-	var respBody []byte
 
 	log.Info("Configuring Xray to index the build...")
-	resp, respBody, err = xbms.client.SendPost(url, content, &httpClientsDetails)
+	resp, _, err = xbms.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(respBody)))
+		return err
 	}
 	log.Debug("Xray response:", resp.Status)
 	log.Debug("Done adding builds to indexing configuration.")

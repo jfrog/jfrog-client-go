@@ -7,7 +7,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
@@ -67,7 +66,7 @@ func (us *UserService) GetUser(params UserParams) (u *User, err error) {
 		return nil, nil
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return nil, err
 	}
 	var user User
 	if err := json.Unmarshal(body, &user); err != nil {
@@ -84,7 +83,7 @@ func (us *UserService) GetAllUsers() ([]*User, error) {
 		return nil, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return nil, err
 	}
 	var users []*User
 	if err := json.Unmarshal(body, &users); err != nil {
@@ -108,14 +107,11 @@ func (us *UserService) CreateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := us.client.SendPut(url, content, &httpDetails)
+	resp, _, err := us.client.SendPut(url, content, &httpDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated)
 }
 
 func (us *UserService) UpdateUser(params UserParams) error {
@@ -126,14 +122,11 @@ func (us *UserService) UpdateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := us.client.SendPost(url, content, &httpDetails)
+	resp, _, err := us.client.SendPost(url, content, &httpDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated)
 }
 
 func (us *UserService) createOrUpdateUserRequest(user User) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
@@ -155,15 +148,12 @@ func (us *UserService) createOrUpdateUserRequest(user User) (url string, request
 func (us *UserService) DeleteUser(name string) error {
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), name)
-	resp, body, err := us.client.SendDelete(url, nil, &httpDetails)
+	resp, _, err := us.client.SendDelete(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return err
+	return errorutils.CheckResponseStatus(resp, http.StatusOK)
 }

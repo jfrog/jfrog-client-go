@@ -48,7 +48,7 @@ func (drs *ExportService) Export(exportParams ExportParams) error {
 		return err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return err
 	}
 	log.Info(string(body))
 	log.Debug("Artifactory response:", resp.Status)

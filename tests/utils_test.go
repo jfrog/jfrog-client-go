@@ -763,7 +763,7 @@ func getRepoConfig(repoKey string) ([]byte, error) {
 		return nil, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return nil, err
 	}
 	return body, nil
 }

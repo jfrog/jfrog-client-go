@@ -7,7 +7,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
@@ -71,7 +70,7 @@ func (ps *ProjectService) Get(projectKey string) (u *Project, err error) {
 		return nil, nil
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return nil, err
 	}
 	var project Project
 	err = json.Unmarshal(body, &project)
@@ -90,14 +89,11 @@ func (ps *ProjectService) Create(params ProjectParams) error {
 	if err != nil {
 		return err
 	}
-	resp, body, err := ps.client.SendPost(ps.getProjectsBaseUrl(), content, &httpDetails)
+	resp, _, err := ps.client.SendPost(ps.getProjectsBaseUrl(), content, &httpDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated)
 }
 
 func (ps *ProjectService) Update(params ProjectParams) error {
@@ -106,14 +102,11 @@ func (ps *ProjectService) Update(params ProjectParams) error {
 		return err
 	}
 	url := fmt.Sprintf("%s/%s", ps.getProjectsBaseUrl(), params.ProjectDetails.ProjectKey)
-	resp, body, err := ps.client.SendPut(url, content, &httpDetails)
+	resp, _, err := ps.client.SendPut(url, content, &httpDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated)
 }
 
 func (ps *ProjectService) createOrUpdateRequest(project Project) (requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
@@ -132,43 +125,34 @@ func (ps *ProjectService) createOrUpdateRequest(project Project) (requestContent
 func (ps *ProjectService) Delete(projectKey string) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s/%s", ps.getProjectsBaseUrl(), projectKey)
-	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
+	resp, _, err := ps.client.SendDelete(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return err
+	return errorutils.CheckResponseStatus(resp, http.StatusNoContent)
 }
 
 func (ps *ProjectService) AssignRepo(repoName, projectKey string, isForce bool) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s/_/attach/repositories/%s/%s?force=%t", ps.getProjectsBaseUrl(), repoName, projectKey, isForce)
-	resp, body, err := ps.client.SendPut(url, nil, &httpDetails)
+	resp, _, err := ps.client.SendPut(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusNoContent); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusNoContent)
 }
 
 func (ps *ProjectService) UnassignRepo(repoName string) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s/_/attach/repositories/%s", ps.getProjectsBaseUrl(), repoName)
-	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
+	resp, _, err := ps.client.SendDelete(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusNoContent); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusNoContent)
 }
 
 func (ps *ProjectService) GetGroups(projectKey string) (*[]ProjectGroup, error) {
@@ -183,7 +167,7 @@ func (ps *ProjectService) GetGroups(projectKey string) (*[]ProjectGroup, error) 
 		return nil, nil
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return nil, err
 	}
 	var projectGroups ProjectGroups
 	err = json.Unmarshal(body, &projectGroups)
@@ -202,7 +186,7 @@ func (ps *ProjectService) GetGroup(projectKey string, groupName string) (*Projec
 		return nil, nil
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return nil, err
 	}
 	var projectGroup ProjectGroup
 	err = json.Unmarshal(body, &projectGroup)
@@ -220,25 +204,19 @@ func (ps *ProjectService) UpdateGroup(projectKey string, groupName string, group
 		"Content-Type": "application/json",
 		"Accept":       "application/json",
 	}
-	resp, body, err := ps.client.SendPut(url, requestContent, &httpDetails)
+	resp, _, err := ps.client.SendPut(url, requestContent, &httpDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, http.StatusOK)
 }
 
 func (ps *ProjectService) DeleteExistingGroup(projectKey string, groupName string) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s/%s/groups/%s", ps.getProjectsBaseUrl(), projectKey, groupName)
-	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
+	resp, _, err := ps.client.SendDelete(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, http.StatusNoContent)
 }

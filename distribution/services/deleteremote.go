@@ -91,7 +91,7 @@ func (dr *DeleteReleaseBundleService) execDeleteDistribute(name, version string,
 		return err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+		return err
 	}
 	if dr.Sync {
 		err := dr.waitForDeletion(name, version)

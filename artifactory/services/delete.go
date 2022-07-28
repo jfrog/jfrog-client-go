@@ -112,14 +112,13 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 				return nil
 			}
 			httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
-			resp, body, err := ds.client.SendDelete(deletePath, nil, &httpClientsDetails)
+			resp, _, err := ds.client.SendDelete(deletePath, nil, &httpClientsDetails)
 			if err != nil {
 				log.Error(err)
 				return err
 			}
 			if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
-				err = errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body))
-				log.Error(errorutils.CheckError(err))
+				log.Error(err)
 				return err
 			}
 			result.SuccessCount[threadId]++
@@ -198,7 +197,7 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 	if err != nil || specFile.ExcludeProps == "" || length == 0 {
 		return nil, err
 	}
-	// Send AQL to get all artifacts that includes the exclude props.
+	// Send AQL to get all artifacts that include the exclude props.
 	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
@@ -216,11 +215,17 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 		if err != nil {
 			return nil, err
 		}
-		artifactNotToBeDeleteReader, err := getSortedArtifactsToNotDelete(specFile, ds)
+		var artifactNotToBeDeleteReader *content.ContentReader
+		artifactNotToBeDeleteReader, err = getSortedArtifactsToNotDelete(specFile, ds)
 		if err != nil {
 			return nil, err
 		}
-		defer artifactNotToBeDeleteReader.Close()
+		defer func() {
+			e := artifactNotToBeDeleteReader.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 		if err = utils.WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter); err != nil {
 			return nil, err
 		}

@@ -6,7 +6,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/http"
 )
@@ -139,7 +138,7 @@ func (rs *ReportService) Vulnerabilities(req ReportRequestParams) (*ReportRespon
 		return nil, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return &retVal, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return &retVal, err
 	}
 
 	err = json.Unmarshal(body, &retVal)
@@ -162,7 +161,7 @@ func (rs *ReportService) Details(reportId string) (*ReportDetails, error) {
 		return nil, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return &retVal, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return &retVal, err
 	}
 
 	err = json.Unmarshal(body, &retVal)
@@ -186,7 +185,7 @@ func (rs *ReportService) Content(request ReportContentRequestParams) (*ReportCon
 		return nil, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return &retVal, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return &retVal, err
 	}
 
 	err = json.Unmarshal(body, &retVal)
@@ -199,12 +198,12 @@ func (rs *ReportService) Delete(reportId string) error {
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI, reportId)
-	resp, body, err := rs.client.SendDelete(url, nil, &httpClientsDetails)
+	resp, _, err := rs.client.SendDelete(url, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return err
 	}
 
 	return nil

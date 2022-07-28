@@ -10,7 +10,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
@@ -92,8 +91,8 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
-		if err = json.Unmarshal(body, &scanErrorJson); err != nil {
-			return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		if unMarshalErr := json.Unmarshal(body, &scanErrorJson); unMarshalErr != nil {
+			return "", err
 		}
 		return "", errorutils.CheckErrorf(scanErrorJson.Error)
 	}
@@ -125,7 +124,6 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 			return true, nil, err
 		}
 		if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
-			err = errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
 			return true, nil, err
 		}
 		// Got the full valid response.
@@ -183,7 +181,7 @@ type GraphNode struct {
 	Licenses []string `json:"licenses,omitempty"`
 	// Component properties
 	Properties map[string]string `json:"properties,omitempty"`
-	// List of sub components.
+	// List of subcomponents.
 	Nodes []*GraphNode `json:"nodes,omitempty"`
 	// Node parent (for internal use)
 	Parent *GraphNode `json:"-"`
@@ -233,13 +231,13 @@ type Violation struct {
 }
 
 type Vulnerability struct {
-	Cves                 []Cve                `json:"cves,omitempty"`
-	Summary              string               `json:"summary,omitempty"`
-	Severity             string               `json:"severity,omitempty"`
-	Components           map[string]Component `json:"components,omitempty"`
-	IssueId              string               `json:"issue_id,omitempty"`
-	References           []string             `json:"references,omitempty"`
-	ExtendedInformation  *ExtendedInformation `json:"extended_information,omitempty"`
+	Cves                []Cve                `json:"cves,omitempty"`
+	Summary             string               `json:"summary,omitempty"`
+	Severity            string               `json:"severity,omitempty"`
+	Components          map[string]Component `json:"components,omitempty"`
+	IssueId             string               `json:"issue_id,omitempty"`
+	References          []string             `json:"references,omitempty"`
+	ExtendedInformation *ExtendedInformation `json:"extended_information,omitempty"`
 }
 
 type License struct {
