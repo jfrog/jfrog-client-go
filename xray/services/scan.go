@@ -228,6 +228,7 @@ type Violation struct {
 	Commits             *int64               `json:"commits,omitempty"`
 	Committers          *int                 `json:"committers,omitempty"`
 	ExtendedInformation *ExtendedInformation `json:"extended_information,omitempty"`
+	Technology          string               `json:"-"`
 }
 
 type Vulnerability struct {
@@ -238,6 +239,7 @@ type Vulnerability struct {
 	IssueId             string               `json:"issue_id,omitempty"`
 	References          []string             `json:"references,omitempty"`
 	ExtendedInformation *ExtendedInformation `json:"extended_information,omitempty"`
+	Technology          string               `json:"-"`
 }
 
 type License struct {
