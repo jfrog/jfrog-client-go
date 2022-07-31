@@ -254,12 +254,12 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 	}
 	httpClientsDetails := mc.GetArtifactoryDetails().CreateHttpClientDetails()
 
-	resp, _, err := mc.client.SendPost(requestFullUrl, nil, &httpClientsDetails)
+	resp, body, err := mc.client.SendPost(requestFullUrl, nil, &httpClientsDetails)
 	if err != nil {
 		return false, err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		log.Error(err)
 	}
 
@@ -284,12 +284,12 @@ func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string
 		return false, err
 	}
 	httpClientsDetails := mc.GetArtifactoryDetails().CreateHttpClientDetails()
-	resp, _, err := mc.client.SendPut(requestFullUrl, nil, &httpClientsDetails)
+	resp, body, err := mc.client.SendPut(requestFullUrl, nil, &httpClientsDetails)
 	if err != nil {
 		return false, err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusCreated); err != nil {
 		log.Error(err)
 	}
 

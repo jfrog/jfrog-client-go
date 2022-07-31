@@ -37,13 +37,13 @@ func (ps *PingService) Ping() ([]byte, error) {
 		return nil, err
 	}
 	httpClientDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
-	resp, respBody, _, err := ps.client.SendGet(url, true, &httpClientDetails)
+	resp, body, _, err := ps.client.SendGet(url, true, &httpClientDetails)
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return respBody, err
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return body, err
 	}
 	log.Debug("Artifactory response: ", resp.Status)
-	return respBody, nil
+	return body, nil
 }

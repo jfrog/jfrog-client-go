@@ -69,7 +69,7 @@ func (ps *ProjectService) Get(projectKey string) (u *Project, err error) {
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	var project Project
@@ -89,11 +89,11 @@ func (ps *ProjectService) Create(params ProjectParams) error {
 	if err != nil {
 		return err
 	}
-	resp, _, err := ps.client.SendPost(ps.getProjectsBaseUrl(), content, &httpDetails)
+	resp, body, err := ps.client.SendPost(ps.getProjectsBaseUrl(), content, &httpDetails)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated)
 }
 
 func (ps *ProjectService) Update(params ProjectParams) error {
@@ -102,11 +102,11 @@ func (ps *ProjectService) Update(params ProjectParams) error {
 		return err
 	}
 	url := fmt.Sprintf("%s/%s", ps.getProjectsBaseUrl(), params.ProjectDetails.ProjectKey)
-	resp, _, err := ps.client.SendPut(url, content, &httpDetails)
+	resp, body, err := ps.client.SendPut(url, content, &httpDetails)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated)
 }
 
 func (ps *ProjectService) createOrUpdateRequest(project Project) (requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
@@ -125,34 +125,34 @@ func (ps *ProjectService) createOrUpdateRequest(project Project) (requestContent
 func (ps *ProjectService) Delete(projectKey string) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s/%s", ps.getProjectsBaseUrl(), projectKey)
-	resp, _, err := ps.client.SendDelete(url, nil, &httpDetails)
+	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusNoContent)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusNoContent)
 }
 
 func (ps *ProjectService) AssignRepo(repoName, projectKey string, isForce bool) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s/_/attach/repositories/%s/%s?force=%t", ps.getProjectsBaseUrl(), repoName, projectKey, isForce)
-	resp, _, err := ps.client.SendPut(url, nil, &httpDetails)
+	resp, body, err := ps.client.SendPut(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusNoContent)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusNoContent)
 }
 
 func (ps *ProjectService) UnassignRepo(repoName string) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s/_/attach/repositories/%s", ps.getProjectsBaseUrl(), repoName)
-	resp, _, err := ps.client.SendDelete(url, nil, &httpDetails)
+	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusNoContent)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusNoContent)
 }
 
 func (ps *ProjectService) GetGroups(projectKey string) (*[]ProjectGroup, error) {
@@ -166,7 +166,7 @@ func (ps *ProjectService) GetGroups(projectKey string) (*[]ProjectGroup, error) 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	var projectGroups ProjectGroups
@@ -185,7 +185,7 @@ func (ps *ProjectService) GetGroup(projectKey string, groupName string) (*Projec
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	var projectGroup ProjectGroup
@@ -204,19 +204,19 @@ func (ps *ProjectService) UpdateGroup(projectKey string, groupName string, group
 		"Content-Type": "application/json",
 		"Accept":       "application/json",
 	}
-	resp, _, err := ps.client.SendPut(url, requestContent, &httpDetails)
+	resp, body, err := ps.client.SendPut(url, requestContent, &httpDetails)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
 }
 
 func (ps *ProjectService) DeleteExistingGroup(projectKey string, groupName string) error {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%s/%s/groups/%s", ps.getProjectsBaseUrl(), projectKey, groupName)
-	resp, _, err := ps.client.SendDelete(url, nil, &httpDetails)
+	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusNoContent)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusNoContent)
 }

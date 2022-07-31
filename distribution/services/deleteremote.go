@@ -90,7 +90,7 @@ func (dr *DeleteReleaseBundleService) execDeleteDistribute(name, version string,
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
 		return err
 	}
 	if dr.Sync {

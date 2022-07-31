@@ -112,12 +112,12 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 				return nil
 			}
 			httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
-			resp, _, err := ds.client.SendDelete(deletePath, nil, &httpClientsDetails)
+			resp, body, err := ds.client.SendDelete(deletePath, nil, &httpClientsDetails)
 			if err != nil {
 				log.Error(err)
 				return err
 			}
-			if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
+			if err = errorutils.CheckResponseStatus(resp, body, http.StatusNoContent); err != nil {
 				log.Error(err)
 				return err
 			}

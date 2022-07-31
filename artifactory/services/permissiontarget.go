@@ -28,11 +28,11 @@ func (pts *PermissionTargetService) GetJfrogHttpClient() *jfroghttpclient.JfrogH
 func (pts *PermissionTargetService) Delete(permissionTargetName string) error {
 	httpClientsDetails := pts.ArtDetails.CreateHttpClientDetails()
 	log.Info("Deleting permission target...")
-	resp, _, err := pts.client.SendDelete(pts.ArtDetails.GetUrl()+"api/v2/security/permissions/"+permissionTargetName, nil, &httpClientsDetails)
+	resp, body, err := pts.client.SendDelete(pts.ArtDetails.GetUrl()+"api/v2/security/permissions/"+permissionTargetName, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 
@@ -52,7 +52,7 @@ func (pts *PermissionTargetService) Get(permissionTargetName string) (*Permissio
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 
@@ -82,20 +82,21 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 	var url = pts.ArtDetails.GetUrl() + "api/v2/security/permissions/" + params.Name
 	var operationString string
 	var resp *http.Response
+	var body []byte
 	if update {
 		log.Info("Updating permission target...")
 		operationString = "updating"
-		resp, _, err = pts.client.SendPut(url, content, &httpClientsDetails)
+		resp, body, err = pts.client.SendPut(url, content, &httpClientsDetails)
 	} else {
 		log.Info("Creating permission target...")
 		operationString = "creating"
-		resp, _, err = pts.client.SendPost(url, content, &httpClientsDetails)
+		resp, body, err = pts.client.SendPost(url, content, &httpClientsDetails)
 	}
 	if err != nil {
 		return err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
 			return &PermissionTargetAlreadyExistsError{InnerError: err}
 		}

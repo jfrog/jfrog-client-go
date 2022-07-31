@@ -41,12 +41,12 @@ func (us *InviteService) InviteUser(email, source string) error {
 		return errorutils.CheckError(err)
 	}
 	utils.SetContentType("application/json", &httpDetails.Headers)
-	resp, _, err := us.client.SendPost(url, requestContent, &httpDetails)
+	resp, body, err := us.client.SendPost(url, requestContent, &httpDetails)
 	if err != nil {
 		return err
 	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response was returned for the request sent")
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
 }

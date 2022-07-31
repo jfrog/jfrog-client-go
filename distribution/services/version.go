@@ -30,7 +30,7 @@ func (vs *VersionService) GetDistributionVersion() (string, error) {
 		return "", err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return "", err
 	}
 	var version distributionVersion

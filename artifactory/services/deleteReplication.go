@@ -26,11 +26,11 @@ func (drs *DeleteReplicationService) GetJfrogHttpClient() *jfroghttpclient.Jfrog
 func (drs *DeleteReplicationService) DeleteReplication(repoKey string) error {
 	httpClientsDetails := drs.ArtDetails.CreateHttpClientDetails()
 	log.Info("Deleting replication job...")
-	resp, _, err := drs.client.SendDelete(drs.ArtDetails.GetUrl()+"api/replications/"+repoKey, nil, &httpClientsDetails)
+	resp, body, err := drs.client.SendDelete(drs.ArtDetails.GetUrl()+"api/replications/"+repoKey, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)

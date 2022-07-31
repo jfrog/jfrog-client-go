@@ -32,14 +32,13 @@ func (rs *UpdateReplicationService) performRequest(params *utils.UpdateReplicati
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.replications.ReplicationConfigRequest+json", &httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/replications/" + params.RepoKey
-	var resp *http.Response
 	log.Info("Update replication...")
 	operationString := "updating"
-	resp, _, err = rs.client.SendPost(url, content, &httpClientsDetails)
+	resp, body, err := rs.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)

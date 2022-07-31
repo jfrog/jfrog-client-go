@@ -65,11 +65,11 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	resp, _, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
+	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusNoContent); err != nil {
 		return err
 	}
 	if params.IsAsync() {

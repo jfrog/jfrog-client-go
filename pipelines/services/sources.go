@@ -57,7 +57,7 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 	if err != nil {
 		return -1, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), sourceAlreadyExistsResponseString) {
 			return -1, &SourceAlreadyExistsError{InnerError: err}
 		}
@@ -76,7 +76,7 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	source := &Source{}
@@ -86,11 +86,11 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 
 func (ss *SourcesService) DeleteSource(sourceId int) error {
 	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
-	resp, _, err := ss.client.SendDelete(ss.ServiceDetails.GetUrl()+SourcesRestApi+strconv.Itoa(sourceId), nil, &httpDetails)
+	resp, body, err := ss.client.SendDelete(ss.ServiceDetails.GetUrl()+SourcesRestApi+strconv.Itoa(sourceId), nil, &httpDetails)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
 }
 
 type Source struct {

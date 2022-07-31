@@ -29,11 +29,11 @@ func (fs *FederationService) ConvertLocalToFederated(repoKey string) error {
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var url = fs.ArtDetails.GetUrl() + "api/federation/migrate/" + url.PathEscape(repoKey)
 	log.Info("Converting local repository to federated repository...")
-	resp, _, err := fs.client.SendPost(url, nil, &httpClientsDetails)
+	resp, body, err := fs.client.SendPost(url, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
@@ -46,11 +46,11 @@ func (fs *FederationService) TriggerFederatedFullSyncAll(repoKey string) error {
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var url = fs.ArtDetails.GetUrl() + "api/federation/fullSync/" + url.PathEscape(repoKey)
 	log.Info("Triggering full federated repository synchronisation...")
-	resp, _, err := fs.client.SendPost(url, nil, &httpClientsDetails)
+	resp, body, err := fs.client.SendPost(url, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
@@ -63,11 +63,11 @@ func (fs *FederationService) TriggerFederatedFullSyncMirror(repoKey string, mirr
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var url = fs.ArtDetails.GetUrl() + "api/federation/fullSync/" + url.PathEscape(repoKey) + "?mirror=" + url.QueryEscape(mirrorUrl)
 	log.Info("Triggering federated repository synchronisation...")
-	resp, _, err := fs.client.SendPost(url, nil, &httpClientsDetails)
+	resp, body, err := fs.client.SendPost(url, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)

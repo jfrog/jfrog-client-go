@@ -72,11 +72,11 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	resp, _, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
+	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 

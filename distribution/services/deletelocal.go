@@ -38,11 +38,11 @@ func (dlr *DeleteLocalReleaseBundleService) execDeleteLocalDistribution(name, ve
 	httpClientsDetails := dlr.DistDetails.CreateHttpClientDetails()
 	url := dlr.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	resp, _, err := dlr.client.SendDelete(url, nil, &httpClientsDetails)
+	resp, body, err := dlr.client.SendDelete(url, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusNoContent); err != nil {
 		return err
 	}
 	if dlr.Sync {

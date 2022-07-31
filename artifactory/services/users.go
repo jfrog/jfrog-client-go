@@ -65,7 +65,7 @@ func (us *UserService) GetUser(params UserParams) (u *User, err error) {
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	var user User
@@ -82,7 +82,7 @@ func (us *UserService) GetAllUsers() ([]*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	var users []*User
@@ -107,11 +107,11 @@ func (us *UserService) CreateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	resp, _, err := us.client.SendPut(url, content, &httpDetails)
+	resp, body, err := us.client.SendPut(url, content, &httpDetails)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated)
 }
 
 func (us *UserService) UpdateUser(params UserParams) error {
@@ -122,11 +122,11 @@ func (us *UserService) UpdateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	resp, _, err := us.client.SendPost(url, content, &httpDetails)
+	resp, body, err := us.client.SendPost(url, content, &httpDetails)
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated)
 }
 
 func (us *UserService) createOrUpdateUserRequest(user User) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
@@ -148,12 +148,12 @@ func (us *UserService) createOrUpdateUserRequest(user User) (url string, request
 func (us *UserService) DeleteUser(name string) error {
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/users/%s", us.ArtDetails.GetUrl(), name)
-	resp, _, err := us.client.SendDelete(url, nil, &httpDetails)
+	resp, body, err := us.client.SendDelete(url, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
-	return errorutils.CheckResponseStatus(resp, http.StatusOK)
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
 }

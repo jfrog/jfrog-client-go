@@ -38,19 +38,20 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 	var url = rs.ArtDetails.GetUrl() + "api/repositories/" + url.PathEscape(repoKey)
 	var operationString string
 	var resp *http.Response
+	var body []byte
 	if rs.isUpdate {
 		log.Info("Updating " + strings.ToLower(rs.repoType) + " repository...")
 		operationString = "updating"
-		resp, _, err = rs.client.SendPost(url, content, &httpClientsDetails)
+		resp, body, err = rs.client.SendPost(url, content, &httpClientsDetails)
 	} else {
 		log.Info("Creating " + strings.ToLower(rs.repoType) + " repository...")
 		operationString = "creating"
-		resp, _, err = rs.client.SendPut(url, content, &httpClientsDetails)
+		resp, body, err = rs.client.SendPut(url, content, &httpClientsDetails)
 	}
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 
