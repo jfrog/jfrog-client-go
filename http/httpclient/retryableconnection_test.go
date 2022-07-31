@@ -205,7 +205,7 @@ func execGet(port int, path string, c *testContext) (*http.Response, error) {
 	}
 	c.tryNum++
 
-	return resp, errorutils.CheckResponseStatus(resp, body, http.StatusOK)
+	return resp, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
 type flushWriter struct {

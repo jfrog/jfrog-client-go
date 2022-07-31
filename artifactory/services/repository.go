@@ -51,7 +51,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 

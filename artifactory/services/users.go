@@ -65,7 +65,7 @@ func (us *UserService) GetUser(params UserParams) (u *User, err error) {
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	var user User
@@ -82,7 +82,7 @@ func (us *UserService) GetAllUsers() ([]*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	var users []*User
@@ -111,7 +111,7 @@ func (us *UserService) CreateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated)
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated)
 }
 
 func (us *UserService) UpdateUser(params UserParams) error {
@@ -126,7 +126,7 @@ func (us *UserService) UpdateUser(params UserParams) error {
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated)
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated)
 }
 
 func (us *UserService) createOrUpdateUserRequest(user User) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
@@ -155,5 +155,5 @@ func (us *UserService) DeleteUser(name string) error {
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
-	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }

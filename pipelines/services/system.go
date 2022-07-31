@@ -26,7 +26,7 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, &PipelinesNotAvailableError{InnerError: err}
 		}

@@ -47,7 +47,7 @@ func (drs *ExportService) Export(exportParams ExportParams) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Info(string(body))

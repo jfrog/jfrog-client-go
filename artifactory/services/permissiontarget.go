@@ -32,7 +32,7 @@ func (pts *PermissionTargetService) Delete(permissionTargetName string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 
@@ -52,7 +52,7 @@ func (pts *PermissionTargetService) Get(permissionTargetName string) (*Permissio
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 
@@ -96,7 +96,7 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 		return err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
 			return &PermissionTargetAlreadyExistsError{InnerError: err}
 		}

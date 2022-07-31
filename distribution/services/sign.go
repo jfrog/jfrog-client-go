@@ -46,7 +46,7 @@ func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase 
 	if err != nil {
 		return summary, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return summary, err
 	}
 	summary.SetSucceeded(true)

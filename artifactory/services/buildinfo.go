@@ -70,7 +70,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	if err != nil {
 		return summary, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated, http.StatusNoContent); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated, http.StatusNoContent); err != nil {
 		return summary, err
 	}
 	summary.SetSucceeded(true)

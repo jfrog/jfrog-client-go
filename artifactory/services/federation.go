@@ -33,7 +33,7 @@ func (fs *FederationService) ConvertLocalToFederated(repoKey string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
@@ -50,7 +50,7 @@ func (fs *FederationService) TriggerFederatedFullSyncAll(repoKey string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
@@ -67,7 +67,7 @@ func (fs *FederationService) TriggerFederatedFullSyncMirror(repoKey string, mirr
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)

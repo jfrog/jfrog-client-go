@@ -50,7 +50,7 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
 
-	err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusAccepted)
+	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}

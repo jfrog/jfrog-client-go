@@ -61,7 +61,7 @@ func (xbms *BinMgrService) AddBuildsToIndexing(buildNames []string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		return err
 	}
 	log.Debug("Xray response:", resp.Status)

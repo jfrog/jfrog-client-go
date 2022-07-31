@@ -117,7 +117,7 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 				log.Error(err)
 				return err
 			}
-			if err = errorutils.CheckResponseStatus(resp, body, http.StatusNoContent); err != nil {
+			if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent); err != nil {
 				log.Error(err)
 				return err
 			}

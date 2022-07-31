@@ -67,7 +67,7 @@ func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	log.Debug("Artifactory response:", resp.Status)
@@ -102,7 +102,7 @@ func (rs *RepositoriesService) createRepo(params interface{}, repoName string) e
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)

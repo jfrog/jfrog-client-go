@@ -78,7 +78,7 @@ func (dr *DistributeReleaseBundleService) execDistribute(name, version string, d
 	if err != nil {
 		return "", err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
 		return "", err
 	}
 	response := distributionResponseBody{}

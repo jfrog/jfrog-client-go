@@ -48,5 +48,5 @@ func (us *InviteService) InviteUser(email, source string) error {
 	if resp == nil {
 		return errorutils.CheckErrorf("no response was returned for the request sent")
 	}
-	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }

@@ -60,7 +60,7 @@ func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpg
 	if err != nil {
 		return summary, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return summary, err
 	}
 	if summary != nil {

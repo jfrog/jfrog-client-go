@@ -89,7 +89,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		return "", err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
 		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
 			return "", errorutils.CheckErrorf(scanErrorJson.Error)
@@ -123,7 +123,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		if err != nil {
 			return true, nil, err
 		}
-		if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
 			return true, nil, err
 		}
 		// Got the full valid response.
