@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 )
@@ -30,20 +31,22 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 			return nil
 		}
 	}
-	errorString := ""
-	body, err := ioutil.ReadAll(resp.Body)
-	if err == nil {
-		var content bytes.Buffer
-		if err = json.Indent(&content, body, "", "  "); err == nil {
-			errorString = content.String()
-		} else {
-			errorString = string(body)
-		}
-	}
-
-	return CheckError(GenerateResponseError(resp.Status, errorString))
+	return CheckError(GenerateResponseError(resp.Status, generateErrorString(resp.Body)))
 }
 
 func GenerateResponseError(status, body string) error {
 	return fmt.Errorf("server response: %s\n%s", status, body)
+}
+
+func generateErrorString(body io.ReadCloser) string {
+	bodyArray, err := ioutil.ReadAll(body)
+	if err != nil {
+		return ""
+	}
+	var content bytes.Buffer
+	if err = json.Indent(&content, bodyArray, "", "  "); err != nil {
+		return string(bodyArray)
+	} else {
+		return content.String()
+	}
 }
