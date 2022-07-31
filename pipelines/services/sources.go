@@ -57,7 +57,7 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 	if err != nil {
 		return -1, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), sourceAlreadyExistsResponseString) {
 			return -1, &SourceAlreadyExistsError{InnerError: err}
 		}
@@ -76,7 +76,7 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	source := &Source{}
@@ -90,7 +90,7 @@ func (ss *SourcesService) DeleteSource(sourceId int) error {
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
 type Source struct {

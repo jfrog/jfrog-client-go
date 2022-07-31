@@ -46,7 +46,7 @@ func (bs *BuildScanService) Scan(params XrayBuildParams) error {
 		return err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		return err
 	}
 	buildScanResponse := RequestBuildScanResponse{}
@@ -82,7 +82,7 @@ func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams, includeV
 		if err != nil {
 			return true, nil, err
 		}
-		if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
 			return true, nil, err
 		}
 		// Got the full valid response.

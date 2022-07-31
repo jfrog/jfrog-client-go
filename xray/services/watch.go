@@ -64,7 +64,7 @@ func (xws *WatchService) Delete(watchName string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 
@@ -94,7 +94,7 @@ func (xws *WatchService) Create(params utils.WatchParams) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
 			return &WatchAlreadyExistsError{InnerError: err}
 		}
@@ -137,7 +137,7 @@ func (xws *WatchService) Update(params utils.WatchParams) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		return err
 	}
 	log.Debug("Xray response:", resp.Status)
@@ -156,7 +156,7 @@ func (xws *WatchService) Get(watchName string) (watchResp *utils.WatchParams, er
 	if err != nil {
 		return &utils.WatchParams{}, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return &utils.WatchParams{}, err
 	}
 	err = json.Unmarshal(body, &watch)

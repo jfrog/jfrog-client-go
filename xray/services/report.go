@@ -137,7 +137,7 @@ func (rs *ReportService) Vulnerabilities(req ReportRequestParams) (*ReportRespon
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return &retVal, err
 	}
 
@@ -160,7 +160,7 @@ func (rs *ReportService) Details(reportId string) (*ReportDetails, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return &retVal, err
 	}
 
@@ -184,7 +184,7 @@ func (rs *ReportService) Content(request ReportContentRequestParams) (*ReportCon
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return &retVal, err
 	}
 
@@ -202,7 +202,7 @@ func (rs *ReportService) Delete(reportId string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 

@@ -110,7 +110,7 @@ func (ss *SystemService) sendGet(endpoint string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		return nil, err
 	}
 	log.Debug("Artifactory response:", resp.Status)
@@ -123,7 +123,7 @@ func (ss *SystemService) sendEmptyPost(endpoint string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response:", string(body), resp.Status)

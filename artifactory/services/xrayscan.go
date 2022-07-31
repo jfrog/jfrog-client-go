@@ -120,7 +120,7 @@ func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Re
 	if err != nil {
 		return resp, err
 	}
-	return resp, errorutils.CheckResponseStatus(resp, body, http.StatusOK)
+	return resp, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
 type errorResponse struct {

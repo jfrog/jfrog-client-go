@@ -385,7 +385,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 			return err
 		}
 		log.Debug(logMsgPrefix, "Artifactory response:", resp.Status)
-		return errorutils.CheckResponseStatus(resp, []byte{}, http.StatusOK)
+		return errorutils.CheckResponseStatus(resp, http.StatusOK)
 	}
 
 	concurrentDownloadFlags := httpclient.ConcurrentDownloadFlags{
@@ -403,7 +403,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, []byte{}, http.StatusPartialContent)
+	return errorutils.CheckResponseStatus(resp, http.StatusPartialContent)
 }
 
 func (ds *DownloadService) isFileAcceptRange(downloadFileDetails *httpclient.DownloadFileDetails) (bool, error) {
@@ -412,7 +412,7 @@ func (ds *DownloadService) isFileAcceptRange(downloadFileDetails *httpclient.Dow
 	if err != nil {
 		return false, err
 	}
-	err = errorutils.CheckResponseStatus(resp, []byte{}, http.StatusOK)
+	err = errorutils.CheckResponseStatus(resp, http.StatusOK)
 	if err != nil {
 		return false, err
 	}

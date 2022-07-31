@@ -163,7 +163,7 @@ func (is *IntegrationsService) createIntegration(integration IntegrationCreation
 	if err != nil {
 		return -1, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
 			return -1, &IntegrationAlreadyExistsError{InnerError: err}
 		}
@@ -206,7 +206,7 @@ func (is *IntegrationsService) DeleteIntegration(integrationId int) error {
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
 func (is *IntegrationsService) GetIntegrationById(integrationId int) (*Integration, error) {
@@ -217,7 +217,7 @@ func (is *IntegrationsService) GetIntegrationById(integrationId int) (*Integrati
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	integration := &Integration{}
@@ -247,7 +247,7 @@ func (is *IntegrationsService) GetAllIntegrations() ([]Integration, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	integrations := &[]Integration{}

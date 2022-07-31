@@ -85,7 +85,7 @@ func (ss *SecurityService) GetAPIKey() (string, error) {
 		return "", err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return "", err
 	}
 
@@ -114,7 +114,7 @@ func (ss *SecurityService) CreateToken(params CreateTokenParams) (auth.CreateTok
 	if err != nil {
 		return tokenInfo, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return tokenInfo, err
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
@@ -131,7 +131,7 @@ func (ss *SecurityService) GetTokens() (GetTokensResponseData, error) {
 	if err != nil {
 		return tokens, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return tokens, err
 	}
 	if err = json.Unmarshal(body, &tokens); err != nil {
@@ -163,7 +163,7 @@ func (ss *SecurityService) RefreshToken(params ArtifactoryRefreshTokenParams) (a
 	if err != nil {
 		return tokenInfo, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return tokenInfo, err
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
@@ -181,7 +181,7 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 	if err != nil {
 		return "", err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return "", err
 	}
 	return string(body), err

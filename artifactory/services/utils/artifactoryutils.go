@@ -566,7 +566,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 		log.Debug("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body))
 		return nil, false, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, false, err
 	}
 

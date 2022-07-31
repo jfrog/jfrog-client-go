@@ -49,7 +49,7 @@ func (drs *GetReplicationService) preform(repoKey string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	log.Debug("Artifactory response:", resp.Status)

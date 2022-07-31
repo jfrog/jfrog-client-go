@@ -120,7 +120,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				if err != nil {
 					return err
 				}
-				if err = errorutils.CheckResponseStatus(resp, body, http.StatusNoContent); err != nil {
+				if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent); err != nil {
 					return err
 				}
 				successCounters[threadId]++
@@ -180,7 +180,7 @@ func (ps *PropsService) GetItemProperties(relativePath string) (*utils.ItemPrope
 	if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), "No properties could be found") {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
 	log.Debug("Artifactory response: ", resp.Status)

@@ -23,8 +23,18 @@ func CheckErrorf(format string, a ...interface{}) error {
 }
 
 // Check expected status codes and return error if needed
-// We use body instead of resp.Body beacuse resp.body disappears after resp.Close()
-func CheckResponseStatus(resp *http.Response, body []byte, expectedStatusCodes ...int) error {
+func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error {
+	for _, statusCode := range expectedStatusCodes {
+		if statusCode == resp.StatusCode {
+			return nil
+		}
+	}
+	return CheckError(GenerateResponseError(resp.Status, ""))
+}
+
+// Check expected status codes and return error with body if needed
+// We use body instead of resp.Body because resp.body disappears after resp.Close()
+func CheckResponseStatusWithBody(resp *http.Response, body []byte, expectedStatusCodes ...int) error {
 	for _, statusCode := range expectedStatusCodes {
 		if statusCode == resp.StatusCode {
 			return nil

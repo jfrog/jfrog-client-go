@@ -259,7 +259,7 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 		return false, err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		log.Error(err)
 	}
 
@@ -289,7 +289,7 @@ func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string
 		return false, err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
 		log.Error(err)
 	}
 

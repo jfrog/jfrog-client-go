@@ -48,7 +48,7 @@ func (ds *ReadFileService) ReadRemoteFile(downloadPath string) (io.ReadCloser, e
 	if err != nil {
 		return nil, err
 	}
-	err = errorutils.CheckResponseStatus(resp, []byte{}, http.StatusOK)
+	err = errorutils.CheckResponseStatus(resp, http.StatusOK)
 	if err != nil {
 		return nil, err
 	}

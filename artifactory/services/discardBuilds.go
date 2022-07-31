@@ -69,7 +69,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusNoContent); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent); err != nil {
 		return err
 	}
 	if params.IsAsync() {

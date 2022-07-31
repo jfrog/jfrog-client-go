@@ -118,5 +118,5 @@ func (gpc *GoPublishCommand) upload(localPath, pathInArtifactory, version, props
 		log.Info("Failed to extract file's sha256 from response body.\nFile: " + localPath)
 	}
 	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: pathInArtifactory, RtUrl: rtUrl, Sha256: sha256}
-	return &filesDetails, errorutils.CheckResponseStatus(resp, body, http.StatusCreated)
+	return &filesDetails, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated)
 }

@@ -66,7 +66,7 @@ func (xps *PolicyService) Delete(policyName string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	log.Debug("Xray response:", resp.Status)
@@ -92,7 +92,7 @@ func (xps *PolicyService) Create(params utils.PolicyParams) error {
 		return err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
 			return &PolicyAlreadyExistsError{InnerError: err}
 		}
@@ -122,7 +122,7 @@ func (xps *PolicyService) Update(params utils.PolicyParams) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		return err
 	}
 	log.Debug("Xray response:", resp.Status)
@@ -141,7 +141,7 @@ func (xps *PolicyService) Get(policyName string) (policyResp *utils.PolicyParams
 	if err != nil {
 		return &utils.PolicyParams{}, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return &utils.PolicyParams{}, err
 	}
 
