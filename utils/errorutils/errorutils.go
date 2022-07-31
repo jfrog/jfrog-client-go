@@ -32,7 +32,7 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 	}
 	errorString := ""
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if err == nil {
 		var content bytes.Buffer
 		if err = json.Indent(&content, body, "", "  "); err == nil {
 			errorString = content.String()
