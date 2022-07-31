@@ -46,7 +46,6 @@ func generateErrorString(body io.ReadCloser) string {
 	var content bytes.Buffer
 	if err = json.Indent(&content, bodyArray, "", "  "); err != nil {
 		return string(bodyArray)
-	} else {
-		return content.String()
 	}
+	return content.String()
 }
