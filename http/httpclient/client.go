@@ -269,7 +269,7 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	size int64) (resp *http.Response, body []byte, err error) {
 	req, err := jc.newRequest("PUT", url, reader)
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 	req.ContentLength = size
 	req.Close = true
@@ -280,11 +280,11 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 
 	client := jc.client
 	resp, err = client.Do(req)
-	if errorutils.CheckError(err) != nil {
-		return nil, nil, err
+	if errorutils.CheckError(err) != nil || resp == nil {
+		return
 	}
-	if resp != nil && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return nil, nil, errorutils.CheckError(errors.New("Server response: " + resp.Status))
+	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusOK, http.StatusAccepted); err != nil {
+		return 
 	}
 	defer func() {
 		if resp != nil && resp.Body != nil {
@@ -295,9 +295,7 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 		}
 	}()
 	body, err = ioutil.ReadAll(resp.Body)
-	if errorutils.CheckError(err) != nil {
-		return nil, nil, err
-	}
+	err = errorutils.CheckError(err)
 	return
 }
 
@@ -453,13 +451,18 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 // The caller is responsible to check the resp.StatusCode.
 // You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, logMsgPrefix string,
-	httpClientsDetails httputils.HttpClientDetails, progress ioutils.ProgressMgr) (*http.Response, error) {
+	httpClientsDetails httputils.HttpClientDetails, progress ioutils.ProgressMgr) (resp *http.Response, err error) {
 	// Create temp dir for file chunks.
 	tempDirPath, err := fileutils.CreateTempDir()
 	if err != nil {
-		return nil, err
+		return
 	}
-	defer fileutils.RemoveTempDir(tempDirPath)
+	defer func() {
+		e := fileutils.RemoveTempDir(tempDirPath)
+		if err == nil {
+			err = e
+		}
+	}()
 
 	chunksPaths := make([]string, flags.SplitCount)
 
@@ -471,27 +474,27 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 		defer progress.RemoveProgress(downloadProgressId)
 	}
 
-	resp, err := jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, tempDirPath, httpClientsDetails, progress, downloadProgressId)
+	resp, err = jc.downloadChunksConcurrently(chunksPaths, flags, logMsgPrefix, tempDirPath, httpClientsDetails, progress, downloadProgressId)
 	if err != nil {
-		return nil, err
+		return
 	}
 	// If not all chunks were downloaded successfully, return
 	if resp.StatusCode != http.StatusPartialContent {
-		return resp, nil
+		return
 	}
 
 	if flags.LocalPath != "" {
 		err = os.MkdirAll(flags.LocalPath, 0777)
 		if errorutils.CheckError(err) != nil {
-			return nil, err
+			return
 		}
 		flags.LocalFileName = filepath.Join(flags.LocalPath, flags.LocalFileName)
 	}
 
 	if fileutils.IsPathExists(flags.LocalFileName, false) {
-		err := os.Remove(flags.LocalFileName)
+		err = os.Remove(flags.LocalFileName)
 		if errorutils.CheckError(err) != nil {
-			return nil, err
+			return
 		}
 	}
 	if progress != nil {
@@ -499,17 +502,17 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 	}
 	err = mergeChunks(chunksPaths, flags)
 	if errorutils.CheckError(err) != nil {
-		return nil, err
+		return
 	}
 
 	if flags.Explode {
-		if err := utils.ExtractArchive(flags.LocalPath, flags.LocalFileName, flags.FileName, logMsgPrefix); err != nil {
-			return nil, err
+		if err = utils.ExtractArchive(flags.LocalPath, flags.LocalFileName, flags.FileName, logMsgPrefix); err != nil {
+			return
 		}
 	}
 
 	log.Info(logMsgPrefix + "Done downloading.")
-	return resp, nil
+	return
 }
 
 // The caller is responsible to check that resp.StatusCode is http.StatusOK
