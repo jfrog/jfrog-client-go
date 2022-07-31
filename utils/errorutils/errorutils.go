@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -29,11 +30,14 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 			return nil
 		}
 	}
-	return CheckError(GenerateResponseError(resp.Status, ""))
+	// Add resp.Body to error response if exists
+	errorBody, _ := ioutil.ReadAll(resp.Body)
+	return CheckError(GenerateResponseError(resp.Status, string(errorBody)))
 }
 
 // Check expected status codes and return error with body if needed
-// We use body instead of resp.Body because resp.body disappears after resp.Close()
+// We use body variable that was saved outside the resp.body object,
+// Instead of resp.Body because resp.body disappears after resp.body.Close()
 func CheckResponseStatusWithBody(resp *http.Response, body []byte, expectedStatusCodes ...int) error {
 	for _, statusCode := range expectedStatusCodes {
 		if statusCode == resp.StatusCode {
