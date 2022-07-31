@@ -91,10 +91,10 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 
 	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
-		if unMarshalErr := json.Unmarshal(body, &scanErrorJson); unMarshalErr != nil {
-			return "", err
+		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
+			return "", errorutils.CheckErrorf(scanErrorJson.Error)
 		}
-		return "", errorutils.CheckErrorf(scanErrorJson.Error)
+		return "", err
 	}
 	scanResponse := RequestScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
