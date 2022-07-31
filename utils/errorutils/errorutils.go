@@ -1,9 +1,10 @@
 package errorutils
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"io/ioutil"
 	"net/http"
 )
@@ -31,9 +32,14 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 	}
 
 	errorBody, _ := ioutil.ReadAll(resp.Body)
-	return CheckError(GenerateResponseError(resp.Status, clientutils.IndentJson(errorBody)))
+	errorString := string(errorBody)
+	var content bytes.Buffer
+	if err := json.Indent(&content, errorBody, "", "  "); err != nil {
+		errorString = content.String()
+	}
+	return CheckError(GenerateResponseError(resp.Status, errorString))
 }
 
 func GenerateResponseError(status, body string) error {
-	return errors.New("Server response: " + status + "\n" + body)
+	return fmt.Errorf("Server response: %s\n%s", status, body)
 }
