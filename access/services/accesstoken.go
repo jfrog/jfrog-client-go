@@ -62,7 +62,7 @@ func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.Create
 	if err != nil {
 		return tokenInfo, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return tokenInfo, err
 	}
 	err = json.Unmarshal(body, &tokenInfo)
