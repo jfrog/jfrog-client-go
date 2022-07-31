@@ -30,16 +30,19 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 			return nil
 		}
 	}
-
-	errorBody, _ := ioutil.ReadAll(resp.Body)
-	errorString := string(errorBody)
-	var content bytes.Buffer
-	if err := json.Indent(&content, errorBody, "", "  "); err != nil {
-		errorString = content.String()
+	errorString := ""
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		errorString = string(body)
+		var content bytes.Buffer
+		if err = json.Indent(&content, body, "", "  "); err != nil {
+			errorString = content.String()
+		}
 	}
+
 	return CheckError(GenerateResponseError(resp.Status, errorString))
 }
 
 func GenerateResponseError(status, body string) error {
-	return fmt.Errorf("Server response: %s\n%s", status, body)
+	return fmt.Errorf("server response: %s\n%s", status, body)
 }
