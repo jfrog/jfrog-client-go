@@ -45,12 +45,12 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
-	resp, _, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
+	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
 
-	err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted)
+	err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusAccepted)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}

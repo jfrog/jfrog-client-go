@@ -46,8 +46,8 @@ func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase 
 	if err != nil {
 		return summary, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return summary, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return summary, err
 	}
 	summary.SetSucceeded(true)
 	summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))

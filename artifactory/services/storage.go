@@ -44,8 +44,8 @@ func (s *StorageService) FolderInfo(relativePath string) (*utils.FolderInfo, err
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(err)
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 
@@ -79,8 +79,8 @@ func (s *StorageService) FileList(relativePath string, optionalParams utils.File
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(err)
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 
@@ -98,8 +98,8 @@ func (s *StorageService) StorageInfo() (*utils.StorageInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(err)
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 
@@ -113,12 +113,12 @@ func (s *StorageService) StorageInfoRefresh() error {
 	url := s.GetArtifactoryDetails().GetUrl() + "api/storageinfo/calculate"
 
 	httpClientsDetails := s.GetArtifactoryDetails().CreateHttpClientDetails()
-	resp, _, err := client.SendPost(url, nil, &httpClientsDetails)
+	resp, body, err := client.SendPost(url, nil, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusAccepted); err != nil {
-		return errorutils.CheckError(err)
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusAccepted); err != nil {
+		return err
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 	return nil

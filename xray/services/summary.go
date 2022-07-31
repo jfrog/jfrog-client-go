@@ -8,7 +8,6 @@ import (
 	servicesutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
@@ -41,8 +40,8 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	var summaryResponse SummaryResponse
 	err = json.Unmarshal(body, &summaryResponse)
@@ -69,8 +68,8 @@ func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*Art
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	var response ArtifactSummaryResponse
 	err = json.Unmarshal(body, &response)

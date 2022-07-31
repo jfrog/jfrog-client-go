@@ -57,12 +57,11 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 	if err != nil {
 		return -1, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		err := errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
 		if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), sourceAlreadyExistsResponseString) {
-			return -1, errorutils.CheckError(&SourceAlreadyExistsError{InnerError: err})
+			return -1, &SourceAlreadyExistsError{InnerError: err}
 		}
-		return -1, errorutils.CheckError(err)
+		return -1, err
 	}
 
 	created := &Source{}
@@ -77,8 +76,8 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	source := &Source{}
 	err = json.Unmarshal(body, source)
@@ -91,10 +90,7 @@ func (ss *SourcesService) DeleteSource(sourceId int) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
 }
 
 type Source struct {

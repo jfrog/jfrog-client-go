@@ -115,13 +115,13 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				// Because we do set/delete props on search results that took into account the
 				// recursive flag, we do not want the action itself to be recursive.
 				setPropertiesURL += "?properties=" + encodedParam + "&recursive=0"
-				resp, _, err := action(logMsgPrefix, relativePath, setPropertiesURL)
+				resp, body, err := action(logMsgPrefix, relativePath, setPropertiesURL)
 
 				if err != nil {
 					return err
 				}
-				if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
-					return errorutils.CheckError(err)
+				if err = errorutils.CheckResponseStatus(resp, body, http.StatusNoContent); err != nil {
+					return err
 				}
 				successCounters[threadId]++
 				return nil
@@ -180,8 +180,8 @@ func (ps *PropsService) GetItemProperties(relativePath string) (*utils.ItemPrope
 	if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), "No properties could be found") {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(err)
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 

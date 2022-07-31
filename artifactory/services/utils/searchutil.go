@@ -253,8 +253,8 @@ func ExecAql(aqlQuery string, flags CommonConf) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(err)
+	if err = errorutils.CheckResponseStatus(resp, []byte{}, http.StatusOK); err != nil {
+		return nil, err
 	}
 	log.Debug("Artifactory response: ", resp.Status)
 	return resp.Body, err

@@ -259,8 +259,8 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 		return false, err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		log.Error(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		log.Error(err)
 	}
 
 	log.Debug(logMsgPrefix+"Artifactory response:", resp.Status)
@@ -289,8 +289,8 @@ func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string
 		return false, err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated); err != nil {
-		log.Error(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusCreated); err != nil {
+		log.Error(err)
 	}
 
 	log.Debug(logMsgPrefix+"Artifactory response:", resp.Status)

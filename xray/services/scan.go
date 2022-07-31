@@ -10,7 +10,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
@@ -90,12 +89,12 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		return "", err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
-		if err = json.Unmarshal(body, &scanErrorJson); err != nil {
-			return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
+			return "", errorutils.CheckErrorf(scanErrorJson.Error)
 		}
-		return "", errorutils.CheckErrorf(scanErrorJson.Error)
+		return "", err
 	}
 	scanResponse := RequestScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
@@ -124,8 +123,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		if err != nil {
 			return true, nil, err
 		}
-		if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
-			err = errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
 			return true, nil, err
 		}
 		// Got the full valid response.
@@ -183,7 +181,7 @@ type GraphNode struct {
 	Licenses []string `json:"licenses,omitempty"`
 	// Component properties
 	Properties map[string]string `json:"properties,omitempty"`
-	// List of sub components.
+	// List of subcomponents.
 	Nodes []*GraphNode `json:"nodes,omitempty"`
 	// Node parent (for internal use)
 	Parent *GraphNode `json:"-"`

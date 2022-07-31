@@ -198,18 +198,14 @@ func execGet(port int, path string, c *testContext) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, _, _, err := client.Send("POST", "http://localhost:"+strconv.Itoa(port)+path,
+	resp, body, _, err := client.Send("POST", "http://localhost:"+strconv.Itoa(port)+path,
 		[]byte(strconv.Itoa(c.tryNum)), true, false, httputils.HttpClientDetails{}, "")
 	if err != nil {
 		return resp, err
 	}
 	c.tryNum++
 
-	if resp.StatusCode != http.StatusOK {
-		err = errorutils.CheckErrorf("Response: " + resp.Status)
-	}
-
-	return resp, err
+	return resp, errorutils.CheckResponseStatus(resp, body, http.StatusOK)
 }
 
 type flushWriter struct {

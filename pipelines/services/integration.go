@@ -163,15 +163,14 @@ func (is *IntegrationsService) createIntegration(integration IntegrationCreation
 	if err != nil {
 		return -1, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		err := errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
-			return -1, errorutils.CheckError(&IntegrationAlreadyExistsError{InnerError: err})
+			return -1, &IntegrationAlreadyExistsError{InnerError: err}
 		}
 		if resp.StatusCode == http.StatusUnauthorized {
-			return -1, errorutils.CheckError(&IntegrationUnauthorizedError{InnerError: err})
+			return -1, &IntegrationUnauthorizedError{InnerError: err}
 		}
-		return -1, errorutils.CheckError(err)
+		return -1, err
 	}
 
 	created := &Integration{}
@@ -207,10 +206,7 @@ func (is *IntegrationsService) DeleteIntegration(integrationId int) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatus(resp, body, http.StatusOK)
 }
 
 func (is *IntegrationsService) GetIntegrationById(integrationId int) (*Integration, error) {
@@ -221,8 +217,8 @@ func (is *IntegrationsService) GetIntegrationById(integrationId int) (*Integrati
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	integration := &Integration{}
 	err = json.Unmarshal(body, integration)
@@ -251,8 +247,8 @@ func (is *IntegrationsService) GetAllIntegrations() ([]Integration, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	integrations := &[]Integration{}
 	err = json.Unmarshal(body, integrations)

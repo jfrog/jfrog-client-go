@@ -85,8 +85,8 @@ func (ss *SecurityService) GetAPIKey() (string, error) {
 		return "", err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return "", err
 	}
 
 	return getApiKeyFromBody(body)
@@ -114,8 +114,8 @@ func (ss *SecurityService) CreateToken(params CreateTokenParams) (auth.CreateTok
 	if err != nil {
 		return tokenInfo, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return tokenInfo, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return tokenInfo, err
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
 		return tokenInfo, errorutils.CheckError(err)
@@ -131,8 +131,8 @@ func (ss *SecurityService) GetTokens() (GetTokensResponseData, error) {
 	if err != nil {
 		return tokens, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return tokens, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return tokens, err
 	}
 	if err = json.Unmarshal(body, &tokens); err != nil {
 		return tokens, errorutils.CheckError(err)
@@ -163,8 +163,8 @@ func (ss *SecurityService) RefreshToken(params ArtifactoryRefreshTokenParams) (a
 	if err != nil {
 		return tokenInfo, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return tokenInfo, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return tokenInfo, err
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
 		return tokenInfo, errorutils.CheckError(err)
@@ -181,8 +181,8 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 	if err != nil {
 		return "", err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return "", err
 	}
 	return string(body), err
 }

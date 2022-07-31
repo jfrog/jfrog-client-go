@@ -52,8 +52,8 @@ func (ds *DistributionStatusService) execGetStatus(name, version, trackerId stri
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatus(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	log.Debug("Distribution response: ", resp.Status)
 	log.Debug(utils.IndentJson(body))

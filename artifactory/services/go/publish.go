@@ -109,7 +109,7 @@ func (gpc *GoPublishCommand) upload(localPath, pathInArtifactory, version, props
 		return nil, err
 	}
 	utils.AddChecksumHeaders(gpc.clientDetails.Headers, details)
-	resp, _, err := gpc.client.UploadFile(localPath, goApiUrl, "", &gpc.clientDetails, nil)
+	resp, body, err := gpc.client.UploadFile(localPath, goApiUrl, "", &gpc.clientDetails, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -118,5 +118,5 @@ func (gpc *GoPublishCommand) upload(localPath, pathInArtifactory, version, props
 		log.Info("Failed to extract file's sha256 from response body.\nFile: " + localPath)
 	}
 	filesDetails := clientutils.FileTransferDetails{SourcePath: localPath, TargetPath: pathInArtifactory, RtUrl: rtUrl, Sha256: sha256}
-	return &filesDetails, errorutils.CheckResponseStatus(resp, http.StatusCreated)
+	return &filesDetails, errorutils.CheckResponseStatus(resp, body, http.StatusCreated)
 }
