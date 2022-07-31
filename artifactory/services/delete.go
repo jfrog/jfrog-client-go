@@ -216,14 +216,14 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 			return nil, err
 		}
 		var artifactNotToBeDeleteReader *content.ContentReader
-		artifactNotToBeDeleteReader, err = getSortedArtifactsToNotDelete(specFile, ds)
+		artifactNotToBeDeleteReader, err := getSortedArtifactsToNotDelete(specFile, ds)
 		if err != nil {
 			return nil, err
 		}
 		defer func() {
 			e := artifactNotToBeDeleteReader.Close()
 			if err == nil {
-				err = errorutils.CheckError(e)
+				err = e
 			}
 		}()
 		if err = utils.WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter); err != nil {

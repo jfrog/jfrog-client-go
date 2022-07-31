@@ -95,7 +95,7 @@ func (xps *PolicyService) Create(params utils.PolicyParams) error {
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
-			return errorutils.CheckError(&PolicyAlreadyExistsError{InnerError: err})
+			return &PolicyAlreadyExistsError{InnerError: err}
 		}
 		return err
 	}

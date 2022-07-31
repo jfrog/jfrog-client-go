@@ -59,7 +59,7 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), sourceAlreadyExistsResponseString) {
-			return -1, errorutils.CheckError(&SourceAlreadyExistsError{InnerError: err})
+			return -1, &SourceAlreadyExistsError{InnerError: err}
 		}
 		return -1, err
 	}

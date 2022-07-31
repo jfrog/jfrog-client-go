@@ -97,7 +97,7 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
-			return errorutils.CheckError(&PermissionTargetAlreadyExistsError{InnerError: err})
+			return &PermissionTargetAlreadyExistsError{InnerError: err}
 		}
 		return err
 	}

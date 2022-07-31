@@ -3,6 +3,7 @@ package errorutils
 import (
 	"errors"
 	"fmt"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"io/ioutil"
 	"net/http"
 )
@@ -30,7 +31,7 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 	}
 
 	errorBody, _ := ioutil.ReadAll(resp.Body)
-	return CheckError(GenerateResponseError(resp.Status, string(errorBody)))
+	return CheckError(GenerateResponseError(resp.Status, clientutils.IndentJson(errorBody)))
 }
 
 func GenerateResponseError(status, body string) error {

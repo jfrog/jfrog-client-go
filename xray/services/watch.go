@@ -97,7 +97,7 @@ func (xws *WatchService) Create(params utils.WatchParams) error {
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
-			return errorutils.CheckError(&WatchAlreadyExistsError{InnerError: err})
+			return &WatchAlreadyExistsError{InnerError: err}
 		}
 		return err
 	}

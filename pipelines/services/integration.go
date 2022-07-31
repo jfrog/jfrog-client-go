@@ -165,10 +165,10 @@ func (is *IntegrationsService) createIntegration(integration IntegrationCreation
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
-			return -1, errorutils.CheckError(&IntegrationAlreadyExistsError{InnerError: err})
+			return -1, &IntegrationAlreadyExistsError{InnerError: err}
 		}
 		if resp.StatusCode == http.StatusUnauthorized {
-			return -1, errorutils.CheckError(&IntegrationUnauthorizedError{InnerError: err})
+			return -1, &IntegrationUnauthorizedError{InnerError: err}
 		}
 		return -1, err
 	}
