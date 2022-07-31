@@ -230,16 +230,18 @@ type Violation struct {
 	Commits             *int64               `json:"commits,omitempty"`
 	Committers          *int                 `json:"committers,omitempty"`
 	ExtendedInformation *ExtendedInformation `json:"extended_information,omitempty"`
+	Technology          string               `json:"-"`
 }
 
 type Vulnerability struct {
-	Cves                 []Cve                `json:"cves,omitempty"`
-	Summary              string               `json:"summary,omitempty"`
-	Severity             string               `json:"severity,omitempty"`
-	Components           map[string]Component `json:"components,omitempty"`
-	IssueId              string               `json:"issue_id,omitempty"`
-	References           []string             `json:"references,omitempty"`
-	ExtendedInformation  *ExtendedInformation `json:"extended_information,omitempty"`
+	Cves                []Cve                `json:"cves,omitempty"`
+	Summary             string               `json:"summary,omitempty"`
+	Severity            string               `json:"severity,omitempty"`
+	Components          map[string]Component `json:"components,omitempty"`
+	IssueId             string               `json:"issue_id,omitempty"`
+	References          []string             `json:"references,omitempty"`
+	ExtendedInformation *ExtendedInformation `json:"extended_information,omitempty"`
+	Technology          string               `json:"-"`
 }
 
 type License struct {
