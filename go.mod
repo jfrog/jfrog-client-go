@@ -11,7 +11,6 @@ require (
 	github.com/jfrog/build-info-go v1.4.0
 	github.com/jfrog/gofrog v1.2.0
 	github.com/mholt/archiver/v3 v3.5.1
-	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.0
 	github.com/xanzy/ssh-agent v0.3.1
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
@@ -43,6 +42,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.2 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
