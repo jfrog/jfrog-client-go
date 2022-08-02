@@ -25,7 +25,7 @@ func TestIsVersionCompatible(t *testing.T) {
 		t.Run(test.artifactoryVersion, func(t *testing.T) {
 			result := isVersionCompatible(test.artifactoryVersion)
 			if test.expectedResult != result {
-				t.Error(fmt.Errorf("Expected %t, got %t", test.expectedResult, result))
+				t.Error(fmt.Errorf("expected %t, got %t", test.expectedResult, result))
 			}
 		})
 	}
@@ -61,7 +61,7 @@ func TestReportUsageJson(t *testing.T) {
 			}
 
 			if string(body) != test.expectedResult {
-				t.Error(fmt.Errorf("Expected %s, got %s", test.expectedResult, string(body)))
+				t.Error(fmt.Errorf("expected %s, got %s", test.expectedResult, string(body)))
 			}
 		})
 	}

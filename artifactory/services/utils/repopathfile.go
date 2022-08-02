@@ -3,7 +3,6 @@ package utils
 import (
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/pkg/errors"
 	"regexp"
 	"strings"
 )
@@ -28,7 +27,7 @@ var asteriskRegexp = regexp.MustCompile(`\*`)
 func createRepoPathFileTriples(pattern string, recursive bool) (triples []RepoPathFile, singleRepo bool, err error) {
 	firstSlashIndex := strings.Index(pattern, "/")
 	if firstSlashIndex == 0 {
-		return nil, false, errorutils.CheckError(errors.New("a pattern of a path in Artifactory must start with a repository name or an asterisk (*)"))
+		return nil, false, errorutils.CheckErrorf("a pattern of a path in Artifactory must start with a repository name or an asterisk (*)")
 	}
 
 	asteriskIndices := asteriskRegexp.FindAllStringIndex(pattern, -1)

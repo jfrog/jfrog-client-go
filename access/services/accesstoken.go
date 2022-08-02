@@ -2,12 +2,10 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"net/http"
@@ -65,7 +63,7 @@ func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.Create
 		return tokenInfo, err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return tokenInfo, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return tokenInfo, err
 	}
 	err = json.Unmarshal(body, &tokenInfo)
 	return tokenInfo, errorutils.CheckError(err)
@@ -77,7 +75,7 @@ func (ps *TokenService) addAccessTokenAuthorizationHeader(params CreateTokenPara
 		access = params.AccessToken
 	}
 	if access == "" {
-		return errorutils.CheckError(errors.New("failed: adding accessToken authorization, but No accessToken was provided. "))
+		return errorutils.CheckErrorf("failed: adding accessToken authorization, but No accessToken was provided. ")
 	}
 	utils.AddHeader("Authorization", fmt.Sprintf("Bearer %s", access), &httpDetails.Headers)
 	return nil
@@ -87,7 +85,7 @@ func createRefreshTokenRequestParams(p auth.CommonTokenParams) (*CreateTokenPara
 	var trueValue = true
 	// Validate provided parameters
 	if p.RefreshToken == "" {
-		return nil, errorutils.CheckError(errors.New("error: trying to refresh token, but 'refresh_token' field wasn't provided. "))
+		return nil, errorutils.CheckErrorf("error: trying to refresh token, but 'refresh_token' field wasn't provided. ")
 	}
 	params := NewCreateTokenParams(p)
 	// Set refresh required parameters

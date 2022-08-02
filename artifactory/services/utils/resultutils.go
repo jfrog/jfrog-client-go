@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -67,7 +66,7 @@ func (ad *ArtifactDetails) ToBuildInfoArtifact() (buildinfo.Artifact, error) {
 	if i := strings.Index(ad.ArtifactoryPath, "/"); i != -1 {
 		artifact.Path = ad.ArtifactoryPath[i+1:]
 	} else {
-		return artifact, errorutils.CheckError(errors.New("artifact path:' " + ad.ArtifactoryPath + "' lacks repository name"))
+		return artifact, errorutils.CheckErrorf("artifact path:' " + ad.ArtifactoryPath + "' lacks repository name")
 	}
 	return artifact, nil
 }

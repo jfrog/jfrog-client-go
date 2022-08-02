@@ -432,7 +432,7 @@ func (us *UploadService) uploadFile(localPath, targetPathWithProps string, fileI
 		return nil, false, err
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
-	return details, us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK, nil
+	return details, us.DryRun || checksumDeployed || isSuccessfulUploadStatusCode(resp.StatusCode), nil
 }
 
 func (us *UploadService) shouldTryChecksumDeploy(fileSize int64, uploadParams UploadParams) bool {
@@ -454,7 +454,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 			if e != nil {
 				return false, e
 			}
-			checksumDeployed = resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK
+			checksumDeployed = isSuccessfulUploadStatusCode(resp.StatusCode)
 		}
 
 		if !checksumDeployed {
@@ -493,7 +493,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 		}
 	}
 	logUploadResponse(logMsgPrefix, resp, body, checksumDeployed, us.DryRun)
-	uploaded := us.DryRun || checksumDeployed || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK
+	uploaded := us.DryRun || checksumDeployed || isSuccessfulUploadStatusCode(resp.StatusCode)
 	return uploaded, nil
 }
 
@@ -523,7 +523,7 @@ func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix st
 			if err != nil {
 				return resp, details, body, checksumDeployed, err
 			}
-			checksumDeployed = resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK
+			checksumDeployed = isSuccessfulUploadStatusCode(resp.StatusCode)
 		}
 		if !checksumDeployed {
 			resp, body, err = utils.UploadFile(localPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
@@ -558,7 +558,7 @@ func (us *UploadService) doUploadFromReader(fileReader io.Reader, targetUrlWithP
 }
 
 func logUploadResponse(logMsgPrefix string, resp *http.Response, body []byte, checksumDeployed, isDryRun bool) {
-	if resp != nil && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+	if resp != nil && !isSuccessfulUploadStatusCode(resp.StatusCode) {
 		log.Error(logMsgPrefix + "Artifactory response: " + resp.Status + "\n" + clientutils.IndentJson(body))
 		return
 	}
@@ -763,8 +763,16 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 	go func() {
 		var e error
 		zipWriter := zip.NewWriter(pw)
-		defer pw.Close()
-		defer zipWriter.Close()
+		defer func() {
+			e = zipWriter.Close()
+			if e != nil {
+				errorsQueue.AddError(e)
+			}
+			e = pw.Close()
+			if e != nil {
+				errorsQueue.AddError(e)
+			}
+		}()
 		for uploadData := new(UploadData); archiveDataReader.NextRecord(uploadData) == nil; uploadData = new(UploadData) {
 			e = us.addFileToZip(&uploadData.Artifact, progressPrefix, flat, symlink, zipWriter)
 			if e != nil {
@@ -851,7 +859,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	return
 }
 
-func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string, targetProps *utils.Properties) ( targetUrlWithProps string, err error) {
+func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string, targetProps *utils.Properties) (targetUrlWithProps string, err error) {
 	targetUrl, err := utils.BuildArtifactoryUrl(artifactoryUrl, targetPath, make(map[string]string))
 	if err != nil {
 		return
@@ -1048,4 +1056,8 @@ func (rm *resultsManager) getTransferDetailsReader() *content.ContentReader {
 		writersPaths = append(writersPaths, rm.singleFinalTransfersWriter.GetFilePath())
 	}
 	return content.NewMultiSourceContentReader(writersPaths, content.DefaultKey)
+}
+
+func isSuccessfulUploadStatusCode(statusCode int) bool {
+	return statusCode == http.StatusOK || statusCode == http.StatusCreated || statusCode == http.StatusAccepted
 }

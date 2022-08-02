@@ -8,7 +8,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -33,8 +32,8 @@ func (pts *PermissionTargetService) Delete(permissionTargetName string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
@@ -53,8 +52,8 @@ func (pts *PermissionTargetService) Get(permissionTargetName string) (*Permissio
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
@@ -97,12 +96,11 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 		return err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		err = errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		if resp.StatusCode == http.StatusConflict {
-			return errorutils.CheckError(&PermissionTargetAlreadyExistsError{InnerError: err})
+			return &PermissionTargetAlreadyExistsError{InnerError: err}
 		}
-		return errorutils.CheckError(err)
+		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done " + operationString + " permission target.")

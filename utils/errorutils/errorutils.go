@@ -1,6 +1,8 @@
 package errorutils
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -28,11 +30,31 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 			return nil
 		}
 	}
-
+	// Add resp.Body to error response if exists
 	errorBody, _ := ioutil.ReadAll(resp.Body)
-	return GenerateResponseError(resp.Status, string(errorBody))
+	return CheckError(GenerateResponseError(resp.Status, string(errorBody)))
+}
+
+// Check expected status codes and return error with body if needed
+// We use body variable that was saved outside the resp.body object,
+// Instead of resp.Body because resp.body disappears after resp.body.Close()
+func CheckResponseStatusWithBody(resp *http.Response, body []byte, expectedStatusCodes ...int) error {
+	for _, statusCode := range expectedStatusCodes {
+		if statusCode == resp.StatusCode {
+			return nil
+		}
+	}
+	return CheckError(GenerateResponseError(resp.Status, generateErrorString(body)))
 }
 
 func GenerateResponseError(status, body string) error {
-	return errors.New("Server response: " + status + "\n" + body)
+	return fmt.Errorf("server response: %s\n%s", status, body)
+}
+
+func generateErrorString(bodyArray []byte) string {
+	var content bytes.Buffer
+	if err := json.Indent(&content, bodyArray, "", "  "); err != nil {
+		return string(bodyArray)
+	}
+	return content.String()
 }

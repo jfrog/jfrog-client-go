@@ -8,7 +8,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
@@ -57,8 +56,8 @@ func (gs *GroupService) GetGroup(params GroupParams) (g *Group, err error) {
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	var group Group
 	if err := json.Unmarshal(body, &group); err != nil {
@@ -87,10 +86,7 @@ func (gs *GroupService) CreateGroup(params GroupParams) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated)
 }
 
 type GroupAlreadyExistsError struct {
@@ -110,10 +106,7 @@ func (gs *GroupService) UpdateGroup(params GroupParams) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
 func (gs *GroupService) createOrUpdateGroupRequest(group Group) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
@@ -141,8 +134,5 @@ func (gs *GroupService) DeleteGroup(name string) error {
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return err
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
