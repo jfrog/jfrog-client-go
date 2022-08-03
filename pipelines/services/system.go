@@ -34,7 +34,7 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 	}
 	var sysInfo PipelinesSystemInfo
 	err = json.Unmarshal(body, &sysInfo)
-	return &sysInfo, errorutils.CheckError(err)
+	return &sysInfo, errorutils.CheckErrorf("couldn't parse Pipelines server response: " + err.Error())
 }
 
 type PipelinesSystemInfo struct {
