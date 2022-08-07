@@ -32,6 +32,10 @@ type Group struct {
 	UsersNames      []string `json:"userNames,omitempty"`
 }
 
+type groupName struct {
+	Name            string   `json:"name"`
+}
+
 type GroupService struct {
 	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
@@ -43,6 +47,31 @@ func NewGroupService(client *jfroghttpclient.JfrogHttpClient) *GroupService {
 
 func (gs *GroupService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	gs.ArtDetails = rt
+}
+
+func (gs *GroupService) GetAllGroups() (g *[]string, err error) {
+	httpDetails := gs.ArtDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%sapi/security/groups", gs.ArtDetails.GetUrl())
+	resp, body, _, err := gs.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	}
+	var groupNames []groupName
+	if err := json.Unmarshal(body, &groupNames); err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+
+	// Flatten the output
+	var groups []string
+	for _, groupName := range groupNames {
+		groups = append(groups, groupName.Name)
+	}
+
+	return &groups, nil
 }
 
 func (gs *GroupService) GetGroup(params GroupParams) (g *Group, err error) {
