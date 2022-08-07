@@ -39,7 +39,7 @@ func (vs *VersionService) GetVersion() (string, error) {
 	var version xrayVersion
 	err = json.Unmarshal(body, &version)
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return "", errorutils.CheckErrorf("couldn't parse Xray server response: " + err.Error())
 	}
 	return strings.TrimSpace(version.Version), nil
 }
