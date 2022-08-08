@@ -33,7 +33,7 @@ type Group struct {
 }
 
 type groupName struct {
-	Name            string   `json:"name"`
+	Name string `json:"name"`
 }
 
 type GroupService struct {
@@ -58,7 +58,7 @@ func (gs *GroupService) GetAllGroups() (g *[]string, err error) {
 	}
 
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		return nil, err
 	}
 	var groupNames []groupName
 	if err := json.Unmarshal(body, &groupNames); err != nil {
