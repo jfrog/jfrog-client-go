@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -76,63 +75,31 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		// .git is a directory, continue extracting vcs details.
 		return
 	}
-
-	// Saving .git file path
-	m.submoduleDotGitPath = m.path
-
-	content, err := ioutil.ReadFile(m.path)
+	// ask git for where the .git directory is directly for submodules and worktrees
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("git", "rev-parse", "--git-dir")
+	cmd.Dir = filepath.Dir(m.path)
+	cmd.Stdin = nil
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
 	if err != nil {
-		m.err = errorutils.CheckError(err)
+		m.err = err
 		return
 	}
-
-	line := string(content)
-	// Expecting git submodule to have exactly one line, with a prefix and the path to the actual submodule's git.
-	if !strings.HasPrefix(line, submoduleDotGitPrefix) {
-		m.err = errorutils.CheckErrorf("failed to parse .git path for submodule")
-		return
-	}
-
-	// Extract path by removing prefix.
-	actualRelativePath := strings.TrimSpace(line[strings.Index(line, ":")+1:])
-	actualAbsPath := filepath.Join(filepath.Dir(m.path), actualRelativePath)
-	exists, err = fileutils.IsDirExists(actualAbsPath, false)
+	ResolvedGitPath := strings.TrimSpace(stdout.String())
+	exists, err = fileutils.IsDirExists(ResolvedGitPath, false)
 	if err != nil {
 		m.err = err
 		return
 	}
 	if !exists {
-		// as a fallback, try asking git for where the .git directory is directly (for worktrees)
-		var stdout bytes.Buffer
-		var stderr bytes.Buffer
-		cmd := exec.Command("git", "rev-parse", "--git-dir")
-		cmd.Dir = filepath.Dir(m.path)
-		cmd.Stdin = nil
-		cmd.Stdout = &stdout
-		cmd.Stderr = &stderr
-		err := cmd.Run()
-		if err != nil {
-			m.err = err
-			return
-		}
-		worktreePath := strings.TrimSpace(stdout.String())
-		// trim the worktree path to just the
-		worktreePathReduced := filepath.Dir(filepath.Dir(worktreePath))
-		exists, err = fileutils.IsDirExists(worktreePathReduced, false)
-		if err != nil {
-			m.err = err
-			return
-		}
-		if !exists {
-			m.err = errorutils.CheckError(errors.New("path found in .git file '" + m.path + "' does not exist: '" + actualAbsPath + "'"))
-			return
-		}
-		m.path = worktreePathReduced
+		m.err = errorutils.CheckError(errors.New("path found in .git file '" + m.path + "' does not exist: '" + ResolvedGitPath + "'"))
 		return
 	}
-
-	// Actual .git directory found.
-	m.path = actualAbsPath
+	m.path = ResolvedGitPath
+	return
 }
 
 func (m *GitManager) GetUrl() string {
