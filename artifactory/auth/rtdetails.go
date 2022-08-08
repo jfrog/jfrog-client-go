@@ -22,7 +22,7 @@ func (rt *artifactoryDetails) GetVersion() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Debug("The Artifactory version is:", rt.Version)
+		log.Debug("JFrog Artifactory version is:", rt.Version)
 	}
 	return rt.Version, nil
 }
