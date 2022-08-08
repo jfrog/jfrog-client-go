@@ -23,7 +23,7 @@ func (ds *xrayDetails) GetVersion() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Debug("The Xray version is:", ds.Version)
+		log.Debug("JFrog Xray version is:", ds.Version)
 	}
 	return ds.Version, nil
 }

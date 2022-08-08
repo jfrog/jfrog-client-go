@@ -22,7 +22,7 @@ func (pd *pipelinesDetails) GetVersion() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Debug("The Pipelines version is:", pd.Version)
+		log.Debug("JFrog Pipelines version is:", pd.Version)
 	}
 	return pd.Version, nil
 }
