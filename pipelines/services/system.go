@@ -37,7 +37,6 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 	if err != nil {
 		return nil, errorutils.CheckErrorf("couldn't parse Pipelines server response: " + err.Error())
 	}
-	log.Debug("JFrog Pipelines version is:", sysInfo.Version)
 	return &sysInfo, nil
 }
 
