@@ -22,10 +22,17 @@ func testCreateGroup(t *testing.T) {
 	err := testGroupService.CreateGroup(groupParams)
 	defer deleteGroupAndAssert(t, groupParams.GroupDetails.Name)
 	assert.NoError(t, err)
+
 	createdGroup, err := testGroupService.GetGroup(groupParams)
 	assert.NoError(t, err)
 	assert.NotNil(t, createdGroup)
 	assert.Equal(t, groupParams.GroupDetails, *createdGroup)
+
+	allGroups, err := testGroupService.GetAllGroups()
+	assert.NoError(t, err)
+	assert.NotNil(t, allGroups)
+	assert.Contains(t, *allGroups, groupParams.GroupDetails.Name)
+
 }
 
 func testUpdateGroup(t *testing.T) {
@@ -79,6 +86,11 @@ func testDeleteGroup(t *testing.T) {
 	group, err := testGroupService.GetGroup(groupParams)
 	assert.NoError(t, err)
 	assert.Nil(t, group)
+
+	allGroups, err := testGroupService.GetAllGroups()
+	assert.NoError(t, err)
+	assert.NotNil(t, allGroups)
+	assert.NotContains(t, *allGroups, groupParams.GroupDetails.Name)
 }
 
 func getTestGroupParams(includeUsers bool) services.GroupParams {
