@@ -29,6 +29,23 @@ func TestUnarchive(t *testing.T) {
 	}
 }
 
+func TestUnarchiveSymlink(t *testing.T) {
+	tests := []string{"zip", "tar", "tar.gz"}
+	for _, extension := range tests {
+		t.Run(extension, func(t *testing.T) {
+			// Create temp directory
+			tmpDir, createTempDirCallback := createTempDirWithCallbackAndAssert(t)
+			defer createTempDirCallback()
+
+			// Run unarchive
+			err := runUnarchive("softlink-rel."+extension, "archives", tmpDir)
+			assert.NoError(t, err)
+			assert.FileExists(t, filepath.Join(tmpDir, "softlink-rel", "a", "softlink-rel"))
+			assert.FileExists(t, filepath.Join(tmpDir, "softlink-rel", "b", "c", "d", "file"))
+		})
+	}
+}
+
 func TestUnarchiveZipSlip(t *testing.T) {
 	tests := []struct {
 		testType    string
@@ -38,7 +55,7 @@ func TestUnarchiveZipSlip(t *testing.T) {
 		{"rel", []string{"zip", "tar", "tar.gz"}, "illegal path in archive: '../file'"},
 		{"abs", []string{"tar", "tar.gz"}, "illegal path in archive: '/tmp/bla/file'"},
 		{"softlink-abs", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: '/tmp/bla/file'"},
-		{"softlink-rel", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: '../file'"},
+		{"softlink-rel", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: '../../file'"},
 	}
 	for _, test := range tests {
 		t.Run(test.testType, func(t *testing.T) {
