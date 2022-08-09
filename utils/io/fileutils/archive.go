@@ -142,7 +142,7 @@ func inspectArchive(archive interface{}, localArchivePath, destinationDir string
 		}
 		if !isEntryInDestination(destinationDir, "", header.EntryPath) {
 			return errorutils.CheckErrorf(
-				"illegal path in archive: '%s'. To prevent ZipSlip attacks, the path must lead to an entry under '%s'",
+				"illegal path in archive: '%s'. To prevent Zip Slip attacks, the path must lead to an entry under '%s'",
 				header.EntryPath, destinationDir)
 		}
 
@@ -168,7 +168,7 @@ func checkSymlinkEntry(header *archiveHeader, archiveEntry archiver.File, destin
 
 	if !isEntryInDestination(destinationDir, filepath.Dir(header.EntryPath), targetLinkPath) {
 		return errorutils.CheckErrorf(
-			"illegal link path in archive: '%s'. To prevent ZipSlip attacks, the path must lead to an entry under '%s'",
+			"illegal link path in archive: '%s'. To prevent Zip Symlink attacks, the path must lead to an entry under '%s'",
 			targetLinkPath, destinationDir)
 	}
 	return nil
