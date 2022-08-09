@@ -140,9 +140,9 @@ func inspectArchive(archive interface{}, localArchivePath, destinationDir string
 		if err != nil {
 			return err
 		}
-		if !isEntryInDestination(destinationDir, header.EntryPath) {
+		if !isEntryInDestination(destinationDir, "", header.EntryPath) {
 			return errorutils.CheckErrorf(
-				"illegal path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
+				"illegal path in archive: '%s'. To prevent Zip Slip exploit, the path can't lead to an entry outside '%s'",
 				header.EntryPath, destinationDir)
 		}
 
@@ -166,16 +166,16 @@ func checkSymlinkEntry(header *archiveHeader, archiveEntry archiver.File, destin
 		targetLinkPath = string(content)
 	}
 
-	if !isEntryInDestination(destinationDir, targetLinkPath) {
+	if !isEntryInDestination(destinationDir, filepath.Dir(header.EntryPath), targetLinkPath) {
 		return errorutils.CheckErrorf(
-			"illegal link path in archive: '%s'. For security reasons, the path should lead to an entry under '%s'",
+			"illegal link path in archive: '%s'. To prevent Zip Slip Symlink exploit, the path can't lead to an entry outside '%s'",
 			targetLinkPath, destinationDir)
 	}
 	return nil
 }
 
 // Make sure the extraction path of the archive entry is under the destination dir
-func isEntryInDestination(destinationDir, pathInArchive string) bool {
+func isEntryInDestination(destinationDir, entryDirInArchive, pathInArchive string) bool {
 	// If pathInArchive starts with '/' and we are on Windows, the path is illegal
 	pathInArchive = strings.TrimSpace(pathInArchive)
 	if os.IsPathSeparator('\\') && strings.HasPrefix(pathInArchive, "/") {
@@ -185,7 +185,7 @@ func isEntryInDestination(destinationDir, pathInArchive string) bool {
 	pathInArchive = filepath.Clean(pathInArchive)
 	if !filepath.IsAbs(pathInArchive) {
 		// If path is relative, concatenate it to the destination dir
-		pathInArchive = filepath.Join(destinationDir, pathInArchive)
+		pathInArchive = filepath.Join(destinationDir, entryDirInArchive, pathInArchive)
 	}
 	return strings.HasPrefix(pathInArchive, destinationDir)
 }
