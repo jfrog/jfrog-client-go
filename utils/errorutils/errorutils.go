@@ -48,7 +48,11 @@ func CheckResponseStatusWithBody(resp *http.Response, body []byte, expectedStatu
 }
 
 func GenerateResponseError(status, body string) error {
-	return fmt.Errorf("server response: %s\n%s", status, body)
+	responseErrString := "server response: " + status
+	if body != "" {
+		responseErrString = responseErrString + "\n" + body
+	}
+	return fmt.Errorf(responseErrString)
 }
 
 func generateErrorString(bodyArray []byte) string {
