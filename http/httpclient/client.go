@@ -425,7 +425,7 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 		reader = resp.Body
 	}
 
-	if len(downloadFileDetails.ExpectedSha1) > 0 {
+	if len(downloadFileDetails.ExpectedSha1) > 0 && !downloadFileDetails.IgnoreHashCheck {
 		//#nosec G401 -- sha1 is supported by Artifactory.
 		actualSha1 := sha1.New()
 		writer := io.MultiWriter(actualSha1, out)
@@ -640,7 +640,7 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 			return err
 		}
 	}
-	if len(flags.ExpectedSha1) > 0 {
+	if len(flags.ExpectedSha1) > 0 && !flags.IgnoreHashCheck {
 		if hex.EncodeToString(actualSha1.Sum(nil)) != flags.ExpectedSha1 {
 			err = errors.New("Checksum mismatch for  " + flags.LocalFileName + ", expected: " + flags.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
 		}
@@ -774,23 +774,25 @@ func addUserAgentHeader(req *http.Request) {
 }
 
 type DownloadFileDetails struct {
-	FileName      string `json:"FileName,omitempty"`
-	DownloadPath  string `json:"DownloadPath,omitempty"`
-	RelativePath  string `json:"RelativePath,omitempty"`
-	LocalPath     string `json:"LocalPath,omitempty"`
-	LocalFileName string `json:"LocalFileName,omitempty"`
-	ExpectedSha1  string `json:"ExpectedSha1,omitempty"`
-	Size          int64  `json:"Size,omitempty"`
+	FileName        string `json:"FileName,omitempty"`
+	DownloadPath    string `json:"DownloadPath,omitempty"`
+	RelativePath    string `json:"RelativePath,omitempty"`
+	LocalPath       string `json:"LocalPath,omitempty"`
+	LocalFileName   string `json:"LocalFileName,omitempty"`
+	ExpectedSha1    string `json:"ExpectedSha1,omitempty"`
+	Size            int64  `json:"Size,omitempty"`
+	IgnoreHashCheck bool   `json:"IgnoreHashCheck"`
 }
 
 type ConcurrentDownloadFlags struct {
-	FileName      string
-	DownloadPath  string
-	RelativePath  string
-	LocalFileName string
-	LocalPath     string
-	ExpectedSha1  string
-	FileSize      int64
-	SplitCount    int
-	Explode       bool
+	FileName        string
+	DownloadPath    string
+	RelativePath    string
+	LocalFileName   string
+	LocalPath       string
+	ExpectedSha1    string
+	FileSize        int64
+	SplitCount      int
+	Explode         bool
+	IgnoreHashCheck bool
 }

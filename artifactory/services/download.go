@@ -355,15 +355,16 @@ func createDependencyArtifactDetails(resultItem utils.ResultItem) utils.Artifact
 	return fileInfo
 }
 
-func createDownloadFileDetails(downloadPath, localPath, localFileName string, downloadData DownloadData) (details *httpclient.DownloadFileDetails) {
+func createDownloadFileDetails(downloadPath, localPath, localFileName string, downloadData DownloadData, ignoreHashCheck bool) (details *httpclient.DownloadFileDetails) {
 	details = &httpclient.DownloadFileDetails{
-		FileName:      downloadData.Dependency.Name,
-		DownloadPath:  downloadPath,
-		RelativePath:  downloadData.Dependency.GetItemRelativePath(),
-		LocalPath:     localPath,
-		LocalFileName: localFileName,
-		Size:          downloadData.Dependency.Size,
-		ExpectedSha1:  downloadData.Dependency.Actual_Sha1}
+		FileName:        downloadData.Dependency.Name,
+		DownloadPath:    downloadPath,
+		RelativePath:    downloadData.Dependency.GetItemRelativePath(),
+		LocalPath:       localPath,
+		LocalFileName:   localFileName,
+		Size:            downloadData.Dependency.Size,
+		ExpectedSha1:    downloadData.Dependency.Actual_Sha1,
+		IgnoreHashCheck: ignoreHashCheck}
 	return
 }
 
@@ -549,7 +550,7 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 		}
 		return e
 	}
-	downloadFileDetails := createDownloadFileDetails(downloadPath, localPath, localFileName, downloadData)
+	downloadFileDetails := createDownloadFileDetails(downloadPath, localPath, localFileName, downloadData, downloadParams.IsIgnoreHashCheck())
 	return ds.downloadFile(downloadFileDetails, logMsgPrefix, downloadParams)
 }
 
@@ -594,6 +595,7 @@ type DownloadParams struct {
 	MinSplitSize    int64
 	SplitCount      int
 	PublicGpgKey    string
+	IgnoreHashCheck bool
 }
 
 func (ds *DownloadParams) IsFlat() bool {
@@ -610,6 +612,10 @@ func (ds *DownloadParams) GetFile() *utils.CommonParams {
 
 func (ds *DownloadParams) IsSymlink() bool {
 	return ds.Symlink
+}
+
+func (ds *DownloadParams) IsIgnoreHashCheck() bool {
+	return ds.IgnoreHashCheck
 }
 
 func (ds *DownloadParams) ValidateSymlinks() bool {
