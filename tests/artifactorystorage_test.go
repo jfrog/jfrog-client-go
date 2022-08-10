@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	servicesutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -8,6 +9,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestArtifactoryStorage(t *testing.T) {
@@ -75,7 +77,7 @@ func storageInfoTest(t *testing.T) {
 		assert.NoError(t, err)
 		return
 	}
-	info, err := testsStorageService.StorageInfo()
+	info, err := waitForRepoInStorageInfo(testsStorageService, getRtTargetRepoKey(), 5)
 	if err != nil {
 		assert.NoError(t, err)
 		return
@@ -108,4 +110,21 @@ func storageInfoTest(t *testing.T) {
 		}
 	}
 	assert.Fail(t, "could not find the summary of repo '"+getRtTargetRepoKey()+"' in the storage info")
+}
+
+func waitForRepoInStorageInfo(testsStorageService *services.StorageService, repositoryKey string, timeoutInSeconds int) (*servicesutils.StorageInfo, error) {
+	for i := 0; i < timeoutInSeconds; i++ {
+		storageInfo, err := testsStorageService.StorageInfo()
+		if err != nil {
+			return nil, err
+		}
+
+		if _, err := storageInfo.FindRepositoryWithKey(repositoryKey); err == nil {
+			return storageInfo, nil
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil, errors.New("Failed to find a repositoryKey with the key " + repositoryKey + " within " + string(rune(timeoutInSeconds)) + " seconds")
 }
