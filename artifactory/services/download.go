@@ -390,15 +390,16 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	}
 
 	concurrentDownloadFlags := httpclient.ConcurrentDownloadFlags{
-		FileName:      downloadFileDetails.FileName,
-		DownloadPath:  downloadFileDetails.DownloadPath,
-		RelativePath:  downloadFileDetails.RelativePath,
-		LocalFileName: downloadFileDetails.LocalFileName,
-		LocalPath:     downloadFileDetails.LocalPath,
-		ExpectedSha1:  downloadFileDetails.ExpectedSha1,
-		FileSize:      downloadFileDetails.Size,
-		SplitCount:    downloadParams.SplitCount,
-		Explode:       downloadParams.IsExplode()}
+		FileName:        downloadFileDetails.FileName,
+		DownloadPath:    downloadFileDetails.DownloadPath,
+		RelativePath:    downloadFileDetails.RelativePath,
+		LocalFileName:   downloadFileDetails.LocalFileName,
+		LocalPath:       downloadFileDetails.LocalPath,
+		ExpectedSha1:    downloadFileDetails.ExpectedSha1,
+		FileSize:        downloadFileDetails.Size,
+		SplitCount:      downloadParams.SplitCount,
+		Explode:         downloadParams.IsExplode(),
+		IgnoreHashCheck: downloadParams.IgnoreHashCheck}
 
 	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails, ds.Progress)
 	if err != nil {

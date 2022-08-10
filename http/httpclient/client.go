@@ -781,7 +781,7 @@ type DownloadFileDetails struct {
 	LocalFileName   string `json:"LocalFileName,omitempty"`
 	ExpectedSha1    string `json:"ExpectedSha1,omitempty"`
 	Size            int64  `json:"Size,omitempty"`
-	IgnoreHashCheck bool   `json:"IgnoreHashCheck"`
+	IgnoreHashCheck bool   `json:"IgnoreHashCheck,omitempty"`
 }
 
 type ConcurrentDownloadFlags struct {
