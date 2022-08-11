@@ -1081,24 +1081,27 @@ Creating a new permission target :
 ```go
 params := services.NewPermissionTargetParams()
 params.Name = "java-developers"
+params.Repo = &services.PermissionTargetSection{}
 params.Repo.Repositories = []string{"ANY REMOTE", "local-repo1", "local-repo2"}
 params.Repo.ExcludePatterns = []string{"dir/*"}
-params.Repo.Actions.Users = map[string][]string {
-	"user1" : {"read", "write"},
-    "user2" : {"write","annotate", "read"},
+params.Repo.Actions = &services.Actions{}
+params.Repo.Actions.Users = map[string][]string{
+    "user1": {"read", "write"},
+    "user2": {"write", "annotate", "read"},
 }
-params.Repo.Actions.Groups = map[string][]string {
-	"group1" : {"manage","read","annotate"},
+params.Repo.Actions.Groups = map[string][]string{
+    "group1": {"manage", "read", "annotate"},
 }
 // This is the default value that cannot be changed
+params.Build = &services.PermissionTargetSection{}
 params.Build.Repositories = []string{"artifactory-build-info"}
-params.Build.Actions.Groups = map[string][]string {
-	"group1" : {"manage","read","write","annotate","delete"},
-	"group2" : {"read"},
-
+params.Build.Actions = &services.Actions{}
+params.Build.Actions.Groups = map[string][]string{
+    "group1": {"manage", "read", "write", "annotate", "delete"},
+    "group2": {"read"},
 }
 
-err = servicesManager.CreatePermissionTarget(params)
+err := testsPermissionTargetService.Create(params)
 ```
 
 Updating an existing permission target :
