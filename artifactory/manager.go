@@ -1,8 +1,9 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
 	"io"
+
+	"github.com/jfrog/jfrog-client-go/auth"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
@@ -557,14 +558,12 @@ func (sm *ArtifactoryServicesManagerImp) FileList(relativePath string, optionalP
 	return storageService.FileList(relativePath, optionalParams)
 }
 
-func (sm *ArtifactoryServicesManagerImp) StorageInfo(refresh bool) (*utils.StorageInfo, error) {
+func (sm *ArtifactoryServicesManagerImp) GetStorageInfo() (*utils.StorageInfo, error) {
 	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
-	// If refresh flag was provided - Send a refresh request to Artifactory before getting the storage info.
-	if refresh {
-		err := storageService.StorageInfoRefresh()
-		if err != nil {
-			return nil, err
-		}
-	}
 	return storageService.StorageInfo()
+}
+
+func (sm *ArtifactoryServicesManagerImp) CalculateStorageInfo() error {
+	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	return storageService.StorageInfoRefresh()
 }

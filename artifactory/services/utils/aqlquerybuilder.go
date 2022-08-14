@@ -2,12 +2,12 @@ package utils
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"strconv"
 	"strings"
 
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 
+	buildInfoUtils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
 )
 
@@ -318,7 +318,7 @@ func includePropertiesInAqlForSpec(specFile *CommonParams) bool {
 
 func appendMissingFields(fields []string, defaultFields []string) []string {
 	for _, field := range fields {
-		if !fileutils.IsStringInSlice(field, defaultFields) {
+		if !buildInfoUtils.IsStringInSlice(field, defaultFields) {
 			defaultFields = append(defaultFields, field)
 		}
 	}

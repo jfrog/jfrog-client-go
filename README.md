@@ -94,6 +94,7 @@
             - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
             - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
             - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
+            - [Triggerring Storage Info Recalculation in Artifactory](#triggerring-storage-info-recalculation-in-artifactory)
     - [Access APIs](#access-apis)
         - [Creating Access Service Manager](#creating-access-service-manager)
             - [Creating Access Details](#creating-access-details)
@@ -1299,8 +1300,13 @@ serviceManager.FileList("repo/path/", optionalParams)
 #### Getting Storage Summary Info of Artifactory
 
 ```go
-forceRefresh := true
-serviceManager.StorageInfo(forceRefresh)
+storageInfo, err := serviceManager.GetStorageInfo()
+```
+
+#### Triggerring Storage Info Recalculation in Artifactory
+
+```go
+err := serviceManager.CalculateStorageInfo()
 ```
 
 ## Access APIs
