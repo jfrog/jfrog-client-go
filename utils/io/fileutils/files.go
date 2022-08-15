@@ -5,9 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/jfrog/build-info-go/entities"
-	biutils "github.com/jfrog/build-info-go/utils"
-	gofrog "github.com/jfrog/gofrog/io"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -16,6 +13,10 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	"github.com/jfrog/build-info-go/entities"
+	biutils "github.com/jfrog/build-info-go/utils"
+	gofrog "github.com/jfrog/gofrog/io"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
@@ -471,7 +472,7 @@ func CopyDir(fromPath, toPath string, includeDirs bool, excludeNames []string) e
 
 	for _, v := range files {
 		// Skip if excluded
-		if IsStringInSlice(filepath.Base(v), excludeNames) {
+		if biutils.IsStringInSlice(filepath.Base(v), excludeNames) {
 			continue
 		}
 
@@ -494,15 +495,6 @@ func CopyDir(fromPath, toPath string, includeDirs bool, excludeNames []string) e
 		}
 	}
 	return err
-}
-
-func IsStringInSlice(string string, strings []string) bool {
-	for _, v := range strings {
-		if v == string {
-			return true
-		}
-	}
-	return false
 }
 
 // Removing the provided path from the filesystem
