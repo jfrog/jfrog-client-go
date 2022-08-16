@@ -91,9 +91,6 @@ func storageInfoTest(t *testing.T) {
 	assert.NotEmpty(t, info.ArtifactsCount)
 	assert.NotEmpty(t, info.StorageType)
 	assert.NotEmpty(t, info.StorageDirectory)
-	assert.NotEmpty(t, info.TotalSpace)
-	assert.NotEmpty(t, info.UsedSpace)
-	assert.NotEmpty(t, info.FreeSpace)
 
 	for _, repoSummary := range info.RepositoriesSummaryList {
 		if repoSummary.RepoKey == getRtTargetRepoKey() {
