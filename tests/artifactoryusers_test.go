@@ -2,6 +2,10 @@ package tests
 
 import (
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 
@@ -15,6 +19,8 @@ func TestUsers(t *testing.T) {
 	t.Run("update", testUpdateUser)
 	t.Run("clear users groups", testClearUserGroups)
 	t.Run("delete", testDeleteUser)
+	t.Run("get locked users", testGetLockedUsers)
+	t.Run("unlock user", testUnlockUser)
 }
 
 func testCreateUser(t *testing.T) {
@@ -110,4 +116,52 @@ func getTestUserParams(replaceIfExists bool, nameSuffix string) services.UserPar
 func deleteUserAndAssert(t *testing.T, username string) {
 	err := testUserService.DeleteUser(username)
 	assert.NoError(t, err)
+}
+
+func testGetLockedUsers(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check method
+		assert.Equal(t, http.MethodGet, r.Method)
+
+		// Check URL
+		assert.Equal(t, "/api/security/lockedUsers", r.URL.Path)
+
+		// Send response 200 OK
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte("[ \"froguser\" ]"))
+		assert.NoError(t, err)
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	service := createMockUserService(t, ts.URL)
+	results, err := service.GetLockedUsers()
+	assert.NoError(t, err)
+	assert.Len(t, results, 1)
+	assert.Equal(t, "froguser", *(results[0]))
+}
+
+func testUnlockUser(t *testing.T) {
+	err := testUserService.UnlockUser("froguser")
+	assert.NoError(t, err)
+}
+
+func createMockUserService(t *testing.T, url string) *services.UserService {
+	// Create artifactory details
+	rtDetails := auth.NewArtifactoryDetails()
+	rtDetails.SetUrl(url + "/")
+
+	// Create http client
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetInsecureTls(true).
+		SetClientCertPath(rtDetails.GetClientCertPath()).
+		SetClientCertKeyPath(rtDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(rtDetails.RunPreRequestFunctions).
+		Build()
+	assert.NoError(t, err, "Failed to create Artifactory client: %v\n")
+
+	// Create system service
+	userService := services.NewUserService(client)
+	userService.SetArtifactoryDetails(rtDetails)
+	return userService
 }

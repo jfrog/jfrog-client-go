@@ -1223,6 +1223,20 @@ err := serviceManager.UpdateUser(params)
 err := serviceManager.DeleteUser("myUserName")
 ```
 
+#### Fetching Locked Out Users
+
+```go
+lockedUsers, err := serviceManager.GetLockedUsers()
+```
+
+#### Unlock Locked Out User
+
+Unlocks a locked out user. This function succeeds even if the user doesn't exist or not locked.
+
+```go
+err := serviceManager.UnlockUser("userToUnlock")
+```
+
 #### Fetching All Groups
 
 You can get all groups from Artifactory
