@@ -138,7 +138,7 @@ func testGetLockedUsers(t *testing.T) {
 	results, err := service.GetLockedUsers()
 	assert.NoError(t, err)
 	assert.Len(t, results, 1)
-	assert.Equal(t, "froguser", *(results[0]))
+	assert.Equal(t, "froguser", results[0])
 }
 
 func testUnlockUser(t *testing.T) {

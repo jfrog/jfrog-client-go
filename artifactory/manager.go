@@ -534,7 +534,7 @@ func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {
 	return userService.DeleteUser(name)
 }
 
-func (sm *ArtifactoryServicesManagerImp) GetLockedUsers() ([]*string, error) {
+func (sm *ArtifactoryServicesManagerImp) GetLockedUsers() ([]string, error) {
 	userService := services.NewUserService(sm.client)
 	userService.ArtDetails = sm.config.GetServiceDetails()
 	return userService.GetLockedUsers()

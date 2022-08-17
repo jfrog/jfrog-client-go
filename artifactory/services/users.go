@@ -158,7 +158,7 @@ func (us *UserService) DeleteUser(name string) error {
 	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
-func (us *UserService) GetLockedUsers() ([]*string, error) {
+func (us *UserService) GetLockedUsers() ([]string, error) {
 	httpDetails := us.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/lockedUsers", us.ArtDetails.GetUrl())
 	resp, body, _, err := us.client.SendGet(url, true, &httpDetails)
@@ -168,7 +168,7 @@ func (us *UserService) GetLockedUsers() ([]*string, error) {
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
-	var lockedUsers []*string
+	var lockedUsers []string
 	if err = json.Unmarshal(body, &lockedUsers); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
