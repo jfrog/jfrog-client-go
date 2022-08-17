@@ -67,3 +67,37 @@ func TestMergeProperties(t *testing.T) {
 		t.Error("Failed to marge Properties. expected:", expected, "actual:", mergedProps)
 	}
 }
+
+func TestPropertiesAreEncodedInAPredictableOrderWhenConcatenated(t *testing.T) {
+	tests := []struct {
+		properties   Properties
+		concatValues bool
+		expected     string
+	}{
+		{
+			Properties{properties: map[string][]string{"c": {"x"}, "a": {"y"}, "b": {"z"}}},
+			true,
+			"a=y;b=z;c=x",
+		},
+		{
+			Properties{properties: map[string][]string{"c": {"x", "f"}, "a": {"y"}, "b": {"z"}}},
+			true,
+			"a=y;b=z;c=x%2Cf",
+		},
+		{
+			Properties{properties: map[string][]string{"c": {"x"}, "a": {"y"}, "b": {"z"}}},
+			false,
+			"a=y;b=z;c=x",
+		},
+		{
+			Properties{properties: map[string][]string{"c": {"x", "f"}, "a": {"y"}, "b": {"z"}}},
+			false,
+			"a=y;b=z;c=x;c=f",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.expected, func(t *testing.T) {
+			assert.Equal(t, test.expected, test.properties.ToEncodedString(test.concatValues))
+		})
+	}
+}

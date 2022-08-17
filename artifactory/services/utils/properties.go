@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -53,6 +54,20 @@ func (props *Properties) ParseAndAddProperties(propStr string) error {
 	return nil
 }
 
+// Creates an array containing the keys sorted in increasing order.
+func (props *Properties) getSortedKeys() []string {
+	// Sort the keys to create a predictable order
+	keys := make([]string, 0, len(props.properties))
+	for k := range props.properties {
+		keys = append(keys, k)
+	}
+
+	// sort the slice by keys
+	sort.Strings(keys)
+
+	return keys
+}
+
 // Searches for the first "=" instance, and split str into 2 substrings.
 // Returns error for invalid property format.
 func splitPropToKeyAndValue(str string) (key, value string, err error) {
@@ -96,8 +111,10 @@ func (props *Properties) AddProperty(key, value string) {
 // Otherwise, each value of the property will be written with its key separately. For example: key=val1;key=val2;...
 func (props *Properties) ToEncodedString(concatValues bool) string {
 	encodedProps := ""
-	for key, values := range props.properties {
+	for _, key := range props.getSortedKeys() {
 		var jointProp string
+
+		values := props.properties[key]
 
 		if concatValues {
 			jointProp = fmt.Sprintf("%s=", url.QueryEscape(key))
