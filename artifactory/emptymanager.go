@@ -83,6 +83,7 @@ type ArtifactoryServicesManager interface {
 	PromoteDocker(params services.DockerPromoteParams) error
 	Client() *jfroghttpclient.JfrogHttpClient
 	GetGroup(params services.GroupParams) (*services.Group, error)
+	GetAllGroups() (*[]string, error)
 	CreateGroup(params services.GroupParams) error
 	UpdateGroup(params services.GroupParams) error
 	DeleteGroup(name string) error
@@ -398,6 +399,10 @@ func (esm *EmptyArtifactoryServicesManager) UnlockUser(name string) error {
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetGroup(params services.GroupParams) (*services.Group, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetAllGroups() (*[]string, error) {
 	panic("Failed: Method is not implemented")
 }
 
