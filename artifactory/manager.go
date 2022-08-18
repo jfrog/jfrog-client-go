@@ -486,6 +486,12 @@ func (sm *ArtifactoryServicesManagerImp) GetGroup(params services.GroupParams) (
 	return groupService.GetGroup(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetAllGroups() (*[]string, error) {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.GetAllGroups()
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreateGroup(params services.GroupParams) error {
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()
