@@ -534,6 +534,18 @@ func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {
 	return userService.DeleteUser(name)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetLockedUsers() ([]string, error) {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.GetLockedUsers()
+}
+
+func (sm *ArtifactoryServicesManagerImp) UnlockUser(name string) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.UnlockUser(name)
+}
+
 func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPromoteParams) error {
 	systemService := services.NewDockerPromoteService(sm.config.GetServiceDetails(), sm.client)
 	return systemService.PromoteDocker(params)
