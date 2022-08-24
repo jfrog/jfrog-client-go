@@ -355,7 +355,7 @@ func createDependencyArtifactDetails(resultItem utils.ResultItem) utils.Artifact
 	return fileInfo
 }
 
-func createDownloadFileDetails(downloadPath, localPath, localFileName string, downloadData DownloadData) (details *httpclient.DownloadFileDetails) {
+func createDownloadFileDetails(downloadPath, localPath, localFileName string, downloadData DownloadData, skipChecksum bool) (details *httpclient.DownloadFileDetails) {
 	details = &httpclient.DownloadFileDetails{
 		FileName:      downloadData.Dependency.Name,
 		DownloadPath:  downloadPath,
@@ -363,7 +363,8 @@ func createDownloadFileDetails(downloadPath, localPath, localFileName string, do
 		LocalPath:     localPath,
 		LocalFileName: localFileName,
 		Size:          downloadData.Dependency.Size,
-		ExpectedSha1:  downloadData.Dependency.Actual_Sha1}
+		ExpectedSha1:  downloadData.Dependency.Actual_Sha1,
+		SkipChecksum:  skipChecksum}
 	return
 }
 
@@ -397,7 +398,8 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		ExpectedSha1:  downloadFileDetails.ExpectedSha1,
 		FileSize:      downloadFileDetails.Size,
 		SplitCount:    downloadParams.SplitCount,
-		Explode:       downloadParams.IsExplode()}
+		Explode:       downloadParams.IsExplode(),
+		SkipChecksum:  downloadParams.SkipChecksum}
 
 	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails, ds.Progress)
 	if err != nil {
@@ -549,7 +551,7 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 		}
 		return e
 	}
-	downloadFileDetails := createDownloadFileDetails(downloadPath, localPath, localFileName, downloadData)
+	downloadFileDetails := createDownloadFileDetails(downloadPath, localPath, localFileName, downloadData, downloadParams.IsSkipChecksum())
 	return ds.downloadFile(downloadFileDetails, logMsgPrefix, downloadParams)
 }
 
@@ -594,6 +596,7 @@ type DownloadParams struct {
 	MinSplitSize    int64
 	SplitCount      int
 	PublicGpgKey    string
+	SkipChecksum    bool
 }
 
 func (ds *DownloadParams) IsFlat() bool {
@@ -610,6 +613,10 @@ func (ds *DownloadParams) GetFile() *utils.CommonParams {
 
 func (ds *DownloadParams) IsSymlink() bool {
 	return ds.Symlink
+}
+
+func (ds *DownloadParams) IsSkipChecksum() bool {
+	return ds.SkipChecksum
 }
 
 func (ds *DownloadParams) ValidateSymlinks() bool {

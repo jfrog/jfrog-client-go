@@ -425,7 +425,7 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 		reader = resp.Body
 	}
 
-	if len(downloadFileDetails.ExpectedSha1) > 0 {
+	if len(downloadFileDetails.ExpectedSha1) > 0 && !downloadFileDetails.SkipChecksum {
 		//#nosec G401 -- sha1 is supported by Artifactory.
 		actualSha1 := sha1.New()
 		writer := io.MultiWriter(actualSha1, out)
@@ -640,7 +640,7 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 			return err
 		}
 	}
-	if len(flags.ExpectedSha1) > 0 {
+	if len(flags.ExpectedSha1) > 0 && !flags.SkipChecksum {
 		if hex.EncodeToString(actualSha1.Sum(nil)) != flags.ExpectedSha1 {
 			err = errors.New("Checksum mismatch for  " + flags.LocalFileName + ", expected: " + flags.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
 		}
@@ -781,6 +781,7 @@ type DownloadFileDetails struct {
 	LocalFileName string `json:"LocalFileName,omitempty"`
 	ExpectedSha1  string `json:"ExpectedSha1,omitempty"`
 	Size          int64  `json:"Size,omitempty"`
+	SkipChecksum  bool   `json:"SkipChecksum,omitempty"`
 }
 
 type ConcurrentDownloadFlags struct {
@@ -793,4 +794,5 @@ type ConcurrentDownloadFlags struct {
 	FileSize      int64
 	SplitCount    int
 	Explode       bool
+	SkipChecksum  bool
 }

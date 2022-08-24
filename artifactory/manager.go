@@ -1,8 +1,9 @@
 package artifactory
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
 	"io"
+
+	"github.com/jfrog/jfrog-client-go/auth"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
@@ -485,6 +486,12 @@ func (sm *ArtifactoryServicesManagerImp) GetGroup(params services.GroupParams) (
 	return groupService.GetGroup(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetAllGroups() (*[]string, error) {
+	groupService := services.NewGroupService(sm.client)
+	groupService.ArtDetails = sm.config.GetServiceDetails()
+	return groupService.GetAllGroups()
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreateGroup(params services.GroupParams) error {
 	groupService := services.NewGroupService(sm.client)
 	groupService.ArtDetails = sm.config.GetServiceDetails()
@@ -533,6 +540,18 @@ func (sm *ArtifactoryServicesManagerImp) DeleteUser(name string) error {
 	return userService.DeleteUser(name)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetLockedUsers() ([]string, error) {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.GetLockedUsers()
+}
+
+func (sm *ArtifactoryServicesManagerImp) UnlockUser(name string) error {
+	userService := services.NewUserService(sm.client)
+	userService.ArtDetails = sm.config.GetServiceDetails()
+	return userService.UnlockUser(name)
+}
+
 func (sm *ArtifactoryServicesManagerImp) PromoteDocker(params services.DockerPromoteParams) error {
 	systemService := services.NewDockerPromoteService(sm.config.GetServiceDetails(), sm.client)
 	return systemService.PromoteDocker(params)
@@ -557,14 +576,12 @@ func (sm *ArtifactoryServicesManagerImp) FileList(relativePath string, optionalP
 	return storageService.FileList(relativePath, optionalParams)
 }
 
-func (sm *ArtifactoryServicesManagerImp) StorageInfo(refresh bool) (*utils.StorageInfo, error) {
+func (sm *ArtifactoryServicesManagerImp) GetStorageInfo() (*utils.StorageInfo, error) {
 	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
-	// If refresh flag was provided - Send a refresh request to Artifactory before getting the storage info.
-	if refresh {
-		err := storageService.StorageInfoRefresh()
-		if err != nil {
-			return nil, err
-		}
-	}
 	return storageService.StorageInfo()
+}
+
+func (sm *ArtifactoryServicesManagerImp) CalculateStorageInfo() error {
+	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	return storageService.StorageInfoRefresh()
 }

@@ -1,6 +1,9 @@
 package utils
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+)
 
 type FolderInfo struct {
 	Uri          string               `json:"uri,omitempty"`
@@ -55,6 +58,16 @@ type StorageInfo struct {
 	BinariesSummary         `json:"binariesSummary,omitempty"`
 	RepositoriesSummaryList []RepositorySummary `json:"repositoriesSummaryList,omitempty"`
 	FileStoreSummary        `json:"fileStoreSummary,omitempty"`
+}
+
+func (si *StorageInfo) FindRepositoryWithKey(key string) (*RepositorySummary, error) {
+	for _, rs := range si.RepositoriesSummaryList {
+		if rs.RepoKey == key {
+			return &rs, nil
+		}
+	}
+
+	return nil, errors.New("Failed to locate repository with key: " + key)
 }
 
 type BinariesSummary struct {
