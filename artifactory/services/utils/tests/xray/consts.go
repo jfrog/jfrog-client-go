@@ -1235,8 +1235,8 @@ const VulnerableXraySummaryArtifactResponse = `
       "issues": [
         {
           "issue_id": "XRAY-189376",
-          "summary": "ImportedSymbols in debug/macho (for Open or OpenFat) in Go before 1.16.10 and 1.18.x before 1.17.3 Accesses a Memory Location After the End of a Buffer, aka an out-of-bounds slice situation.",
-          "description": "ImportedSymbols in debug/macho (for Open or OpenFat) in Go before 1.16.10 and 1.18.x before 1.17.3 Accesses a Memory Location After the End of a Buffer, aka an out-of-bounds slice situation.",
+          "summary": "ImportedSymbols in debug/macho (for Open or OpenFat) in Go before 1.16.10 and 1.17.x before 1.17.3 Accesses a Memory Location After the End of a Buffer, aka an out-of-bounds slice situation.",
+          "description": "ImportedSymbols in debug/macho (for Open or OpenFat) in Go before 1.16.10 and 1.17.x before 1.17.3 Accesses a Memory Location After the End of a Buffer, aka an out-of-bounds slice situation.",
           "issue_type": "security",
           "severity": "High",
           "provider": "JFrog",

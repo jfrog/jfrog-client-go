@@ -55,8 +55,8 @@ github.com/imdario/mergo v0.3.12/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c2EWnYs/m4=
-github.com/jfrog/build-info-go v1.4.1 h1:JdkMVpN+Cr+wMKVRJ1/2JeXtL7MLjVnGv23b/tAJ3gg=
-github.com/jfrog/build-info-go v1.4.1/go.mod h1:LM0CXNLF2FkvcyXrPEp6Ox1ARmcOsx/eOrVG2Jer2Ss=
+github.com/jfrog/build-info-go v1.4.2-0.20220824135117-55e04bb58e4a h1:FGQRScgU3b/JBDEvGr/snws7HchGu56SUoj2x2ykMS8=
+github.com/jfrog/build-info-go v1.4.2-0.20220824135117-55e04bb58e4a/go.mod h1:Z9h/tnAFZUN5NZqBKwLoaErQZiVWFjNPKYyDovB5W7M=
 github.com/jfrog/gofrog v1.2.0 h1:vlVwEL5ppuwOjBHUphxxuHUAv4QC3vwF3FDI9aDrbqM=
 github.com/jfrog/gofrog v1.2.0/go.mod h1:IXM6bw5sI6hMdhamlCYQpB1W17S0D1dwvBtzhaIarNU=
 github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 h1:DowS9hvgyYSX4TO5NpyC606/Z4SxnNYbT+WX27or6Ck=
