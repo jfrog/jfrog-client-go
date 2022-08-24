@@ -616,7 +616,8 @@ func localYumTest(t *testing.T) {
 	ylp := services.NewYumLocalRepositoryParams()
 	ylp.Key = repoKey
 	setLocalRepositoryBaseParams(&ylp.LocalRepositoryBaseParams, false)
-	ylp.YumRootDepth = 6
+	yumRootDepth := 6
+	ylp.YumRootDepth = &yumRootDepth
 	ylp.CalculateYumMetadata = &trueValue
 	ylp.EnableFileListsIndexing = &trueValue
 	ylp.YumGroupFileNames = "filename"
@@ -631,7 +632,7 @@ func localYumTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, ylp)
 
 	setLocalRepositoryBaseParams(&ylp.LocalRepositoryBaseParams, true)
-	ylp.YumRootDepth = 18
+	*ylp.YumRootDepth = 18
 	ylp.CalculateYumMetadata = &falseValue
 	ylp.EnableFileListsIndexing = &falseValue
 	ylp.YumGroupFileNames = ""
