@@ -21,7 +21,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "0.27.5"
+	Version     = "0.28.0"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
