@@ -8,8 +8,8 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/gookit/color v1.5.1
-	github.com/jfrog/build-info-go v1.4.1
-	github.com/jfrog/gofrog v1.2.0
+	github.com/jfrog/build-info-go v1.5.0
+	github.com/jfrog/gofrog v1.2.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.0
 	github.com/xanzy/ssh-agent v0.3.1
@@ -18,7 +18,7 @@ require (
 )
 
 require (
-	github.com/CycloneDX/cyclonedx-go v0.5.1 // indirect
+	github.com/CycloneDX/cyclonedx-go v0.6.0 // indirect
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
@@ -52,6 +52,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.4.2-0.20220824162930-2f2a2893d4a7
+// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.4.2-0.20220824162930-2f2a2893d4a7
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.1.3-0.20220628060849-fcdbffb153da
