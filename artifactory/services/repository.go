@@ -61,7 +61,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 }
 
 type RepositoryBaseParams struct {
-	Rclass          string   `json:"rclass"`
+	Rclass          string   `json:"rclass,omitempty"`
 	Key             string   `json:"key,omitempty"`
 	ProjectKey      string   `json:"projectKey,omitempty"`
 	Environments    []string `json:"environments,omitempty"`
@@ -91,14 +91,14 @@ type DebianRepositoryParams struct {
 }
 
 type DockerRepositoryParams struct {
-	MaxUniqueTags       int    `json:"maxUniqueTags,omitempty"`
+	MaxUniqueTags       *int   `json:"maxUniqueTags,omitempty"`
 	DockerApiVersion    string `json:"dockerApiVersion,omitempty"`
 	BlockPushingSchema1 *bool  `json:"blockPushingSchema1,omitempty"`
-	DockerTagRetention  int    `json:"dockerTagRetention,omitempty"`
+	DockerTagRetention  *int   `json:"dockerTagRetention,omitempty"`
 }
 
 type JavaPackageManagersRepositoryParams struct {
-	MaxUniqueSnapshots           int    `json:"maxUniqueSnapshots,omitempty"`
+	MaxUniqueSnapshots           *int   `json:"maxUniqueSnapshots,omitempty"`
 	HandleReleases               *bool  `json:"handleReleases,omitempty"`
 	HandleSnapshots              *bool  `json:"handleSnapshots,omitempty"`
 	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
@@ -112,12 +112,12 @@ type KeyPairRefsRepositoryParams struct {
 }
 
 type NugetRepositoryParams struct {
-	MaxUniqueSnapshots       int   `json:"maxUniqueSnapshots,omitempty"`
+	MaxUniqueSnapshots       *int  `json:"maxUniqueSnapshots,omitempty"`
 	ForceNugetAuthentication *bool `json:"forceNugetAuthentication,omitempty"`
 }
 
 type RpmRepositoryParams struct {
-	YumRootDepth            int    `json:"yumRootDepth,omitempty"`
+	YumRootDepth            *int   `json:"yumRootDepth,omitempty"`
 	CalculateYumMetadata    *bool  `json:"calculateYumMetadata,omitempty"`
 	EnableFileListsIndexing *bool  `json:"enableFileListsIndexing,omitempty"`
 	YumGroupFileNames       string `json:"yumGroupFileNames,omitempty"`
