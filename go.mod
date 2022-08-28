@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/buger/jsonparser v1.1.1
-	github.com/forPelevin/gomoji v1.1.6
+	github.com/forPelevin/gomoji v1.1.4
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gookit/color v1.5.1
@@ -41,7 +41,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rivo/uniseg v0.3.4 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/ulikunitz/xz v0.5.9 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
