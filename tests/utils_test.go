@@ -697,28 +697,34 @@ func setDebianRepositoryParams(params *services.DebianRepositoryParams, isUpdate
 
 func setDockerRepositoryParams(params *services.DockerRepositoryParams, isUpdate bool) {
 	if !isUpdate {
+		maxUniqueTags := 18
+		params.MaxUniqueTags = &maxUniqueTags
+		dockerTagRetention := 10
+		params.DockerTagRetention = &dockerTagRetention
 		params.DockerApiVersion = "V1"
-		params.MaxUniqueTags = 18
 		params.BlockPushingSchema1 = &falseValue
-		params.DockerTagRetention = 10
 	} else {
+		maxUniqueTags := 36
+		params.MaxUniqueTags = &maxUniqueTags
+		dockerTagRetention := 0
+		params.DockerTagRetention = &dockerTagRetention
 		params.DockerApiVersion = "V2"
-		params.MaxUniqueTags = 36
 		params.BlockPushingSchema1 = &trueValue
-		params.DockerTagRetention = 0
 	}
 }
 
 func setJavaPackageManagersRepositoryParams(params *services.JavaPackageManagersRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.MaxUniqueSnapshots = 18
+		maxUniqueTags := 18
+		params.MaxUniqueSnapshots = &maxUniqueTags
 		params.HandleReleases = &trueValue
 		params.HandleSnapshots = &trueValue
 		params.SuppressPomConsistencyChecks = &trueValue
 		params.SnapshotVersionBehavior = "non-unique"
 		params.ChecksumPolicyType = "server-generated-checksums"
 	} else {
-		params.MaxUniqueSnapshots = 36
+		maxUniqueTags := 36
+		params.MaxUniqueSnapshots = &maxUniqueTags
 		params.HandleReleases = &falseValue
 		params.HandleSnapshots = &falseValue
 		params.SuppressPomConsistencyChecks = &falseValue
@@ -729,22 +735,26 @@ func setJavaPackageManagersRepositoryParams(params *services.JavaPackageManagers
 
 func setNugetRepositoryParams(params *services.NugetRepositoryParams, isUpdate bool) {
 	if !isUpdate {
+		maxUniqueTags := 24
+		params.MaxUniqueSnapshots = &maxUniqueTags
 		params.ForceNugetAuthentication = &trueValue
-		params.MaxUniqueSnapshots = 24
 	} else {
+		maxUniqueTags := 18
+		params.MaxUniqueSnapshots = &maxUniqueTags
 		params.ForceNugetAuthentication = &falseValue
-		params.MaxUniqueSnapshots = 18
 	}
 }
 
 func setRpmRepositoryParams(params *services.RpmRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.YumRootDepth = 6
+		yumRootDepth := 6
+		params.YumRootDepth = &yumRootDepth
 		params.CalculateYumMetadata = &trueValue
 		params.EnableFileListsIndexing = &trueValue
 		params.YumGroupFileNames = "filename"
 	} else {
-		params.YumRootDepth = 18
+		yumRootDepth := 18
+		params.YumRootDepth = &yumRootDepth
 		params.CalculateYumMetadata = &falseValue
 		params.EnableFileListsIndexing = &falseValue
 		params.YumGroupFileNames = ""
