@@ -1161,7 +1161,7 @@ serviceId, err := servicesManager.GetConfigDescriptor()
 Notice: This API is enabled only on self-hosted Artifactory servers
 
 ```go
-serviceId, err := servicesManager.ActivateKeyEncryption()
+err := servicesManager.ActivateKeyEncryption()
 ```
 
 #### Deactivating Artifactory's Key Encryption
@@ -1169,7 +1169,7 @@ serviceId, err := servicesManager.ActivateKeyEncryption()
 Notice: This API is enabled only on self-hosted Artifactory servers
 
 ```go
-serviceId, err := servicesManager.DeactivateKeyEncryption()
+wasEncrypted, err := servicesManager.DeactivateKeyEncryption()
 ```
 
 #### Fetching Users Details

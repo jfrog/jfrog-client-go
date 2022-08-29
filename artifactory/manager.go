@@ -475,7 +475,7 @@ func (sm *ArtifactoryServicesManagerImp) ActivateKeyEncryption() error {
 	return systemService.ActivateKeyEncryption()
 }
 
-func (sm *ArtifactoryServicesManagerImp) DeactivateKeyEncryption() error {
+func (sm *ArtifactoryServicesManagerImp) DeactivateKeyEncryption() (bool, error) {
 	systemService := services.NewSystemService(sm.config.GetServiceDetails(), sm.client)
 	return systemService.DeactivateKeyEncryption()
 }

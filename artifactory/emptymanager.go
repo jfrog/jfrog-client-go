@@ -79,7 +79,7 @@ type ArtifactoryServicesManager interface {
 	GetServiceId() (string, error)
 	GetConfigDescriptor() (string, error)
 	ActivateKeyEncryption() error
-	DeactivateKeyEncryption() error
+	DeactivateKeyEncryption() (bool, error)
 	PromoteDocker(params services.DockerPromoteParams) error
 	Client() *jfroghttpclient.JfrogHttpClient
 	GetGroup(params services.GroupParams) (*services.Group, error)
@@ -350,7 +350,7 @@ func (esm *EmptyArtifactoryServicesManager) ActivateKeyEncryption() error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DeactivateKeyEncryption() error {
+func (esm *EmptyArtifactoryServicesManager) DeactivateKeyEncryption() (bool, error) {
 	panic("Failed: Method is not implemented")
 }
 
