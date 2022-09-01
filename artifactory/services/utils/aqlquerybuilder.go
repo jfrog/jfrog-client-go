@@ -317,7 +317,6 @@ func includePropertiesInAqlForSpec(specFile *CommonParams) bool {
 
 func appendMissingFields(fields []string, defaultFields []string) []string {
 	for _, field := range fields {
-
 		if !slices.Contains(defaultFields, field) {
 			defaultFields = append(defaultFields, field)
 		}
