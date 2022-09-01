@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"golang.org/x/exp/slices"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -472,7 +473,7 @@ func CopyDir(fromPath, toPath string, includeDirs bool, excludeNames []string) e
 
 	for _, v := range files {
 		// Skip if excluded
-		if biutils.IsStringInSlice(filepath.Base(v), excludeNames) {
+		if slices.Contains(excludeNames, filepath.Base(v)) {
 			continue
 		}
 
