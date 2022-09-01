@@ -288,23 +288,24 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 	validateWatchGeneralSettings(t, paramsBuildsByPattern)
 
 	targetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
-	assert.NoError(t, err)
-	assert.Equal(t, utils.WatchBuildAll, targetConfig.Builds.Type)
-	assert.Equal(t, []string{"excludePath"}, targetConfig.Builds.All.ExcludePatterns)
-	assert.Equal(t, []string{"includePath", "fake"}, targetConfig.Builds.All.IncludePatterns)
+	if assert.NoError(t, err) {
+		assert.Equal(t, utils.WatchBuildAll, targetConfig.Builds.Type)
+		assert.Equal(t, []string{"excludePath"}, targetConfig.Builds.All.ExcludePatterns)
+		assert.Equal(t, []string{"includePath", "fake"}, targetConfig.Builds.All.IncludePatterns)
 
-	targetConfig.Builds.All.ExcludePatterns = []string{"excludePath-2"}
-	targetConfig.Builds.All.IncludePatterns = []string{"includePath-2", "fake-2"}
+		targetConfig.Builds.All.ExcludePatterns = []string{"excludePath-2"}
+		targetConfig.Builds.All.IncludePatterns = []string{"includePath-2", "fake-2"}
 
-	err = testsXrayWatchService.Update(*targetConfig)
-	assert.NoError(t, err)
+		err = testsXrayWatchService.Update(*targetConfig)
+		assert.NoError(t, err)
 
-	validateWatchGeneralSettings(t, *targetConfig)
-	updatedTargetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
-	assert.NoError(t, err)
+		validateWatchGeneralSettings(t, *targetConfig)
+		updatedTargetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
+		assert.NoError(t, err)
 
-	assert.Equal(t, []string{"excludePath-2"}, updatedTargetConfig.Builds.All.ExcludePatterns)
-	assert.Equal(t, []string{"includePath-2", "fake-2"}, updatedTargetConfig.Builds.All.IncludePatterns)
+		assert.Equal(t, []string{"excludePath-2"}, updatedTargetConfig.Builds.All.ExcludePatterns)
+		assert.Equal(t, []string{"includePath-2", "fake-2"}, updatedTargetConfig.Builds.All.IncludePatterns)
+	}
 }
 
 func testXrayWatchUpdateMissingWatch(t *testing.T) {
@@ -330,11 +331,12 @@ func testXrayWatchGetMissingWatch(t *testing.T) {
 
 func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {
 	targetConfig, err := testsXrayWatchService.Get(params.Name)
-	assert.NoError(t, err)
-	assert.Equal(t, params.Name, targetConfig.Name)
-	assert.Equal(t, params.Description, targetConfig.Description)
-	assert.Equal(t, params.Active, targetConfig.Active)
-	assert.ElementsMatch(t, params.Policies, targetConfig.Policies)
+	if assert.NoError(t, err) {
+		assert.Equal(t, params.Name, targetConfig.Name)
+		assert.Equal(t, params.Description, targetConfig.Description)
+		assert.Equal(t, params.Active, targetConfig.Active)
+		assert.ElementsMatch(t, params.Policies, targetConfig.Policies)
+	}
 }
 
 func createRepoLocal(t *testing.T, repoKey string) {

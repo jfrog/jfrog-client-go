@@ -2,13 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"golang.org/x/exp/slices"
 	"strconv"
 	"strings"
 
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-
-	buildInfoUtils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
@@ -318,7 +317,7 @@ func includePropertiesInAqlForSpec(specFile *CommonParams) bool {
 
 func appendMissingFields(fields []string, defaultFields []string) []string {
 	for _, field := range fields {
-		if !buildInfoUtils.IsStringInSlice(field, defaultFields) {
+		if !slices.Contains(defaultFields, field) {
 			defaultFields = append(defaultFields, field)
 		}
 	}

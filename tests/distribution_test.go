@@ -473,20 +473,21 @@ func waitForDistribution(t *testing.T, bundleName string) {
 	}
 	for i := 0; i < 120; i++ {
 		response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
-		assert.NoError(t, err)
-		assert.Len(t, *response, 1)
+		if assert.NoError(t, err) {
+			assert.Len(t, *response, 1)
 
-		switch (*response)[0].Status {
-		case services.Completed:
-			return
-		case services.Failed:
-			t.Error("Distribution failed for " + bundleName + "/" + bundleVersion)
-			return
-		case services.InProgress, services.NotDistributed:
-			// Wait
+			switch (*response)[0].Status {
+			case services.Completed:
+				return
+			case services.Failed:
+				t.Error("Distribution failed for " + bundleName + "/" + bundleVersion)
+				return
+			case services.InProgress, services.NotDistributed:
+				// Wait
+			}
+			t.Log("Waiting for " + bundleName + "/" + bundleVersion + "...")
+			time.Sleep(time.Second)
 		}
-		t.Log("Waiting for " + bundleName + "/" + bundleVersion + "...")
-		time.Sleep(time.Second)
 	}
 	t.Error("Timeout for release bundle distribution " + bundleName + "/" + bundleVersion)
 }

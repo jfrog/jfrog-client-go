@@ -253,6 +253,7 @@ type License struct {
 type Component struct {
 	FixedVersions []string           `json:"fixed_versions,omitempty"`
 	ImpactPaths   [][]ImpactPathNode `json:"impact_paths,omitempty"`
+	Cpes          []string           `json:"cpes,omitempty"`
 }
 
 type ImpactPathNode struct {
