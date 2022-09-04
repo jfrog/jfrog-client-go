@@ -1,14 +1,20 @@
 package utils
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type ExecutionHandlerFunc func() (bool, error)
 
 type RetryExecutor struct {
+	// The context
+	Context context.Context
+
 	// The amount of retries to perform.
 	MaxRetries int
 
@@ -33,7 +39,7 @@ func (runner *RetryExecutor) Execute() error {
 		shouldRetry, err = runner.ExecutionHandler()
 
 		// If should not retry, return
-		if !shouldRetry {
+		if !shouldRetry || runner.isCancelled() {
 			return err
 		}
 
@@ -63,5 +69,15 @@ func (runner *RetryExecutor) LogRetry(attemptNumber int, err error) {
 	} else {
 		log.Debug(message)
 	}
+}
 
+func (runner *RetryExecutor) isCancelled() bool {
+	if runner.Context == nil {
+		return false
+	}
+	if errors.Is(runner.Context.Err(), context.Canceled) {
+		log.Info("Retry executor was cancelled")
+		return true
+	}
+	return false
 }

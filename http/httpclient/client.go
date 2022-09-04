@@ -98,6 +98,7 @@ func (jc *HttpClient) newRequest(method, url string, body io.Reader) (req *http.
 
 func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, closeBody bool, httpClientsDetails httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	retryExecutor := utils.RetryExecutor{
+		Context:                  jc.ctx,
 		MaxRetries:               jc.retries,
 		RetriesIntervalMilliSecs: jc.retryWaitMilliSecs,
 		LogMsgPrefix:             logMsgPrefix,
