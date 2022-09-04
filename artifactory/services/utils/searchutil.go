@@ -370,28 +370,16 @@ func (item ResultItem) GetItemRelativePath() string {
 	}
 
 	url := item.Repo
-	url = addSeparator(url, "/", item.Path)
-	url = addSeparator(url, "/", item.Name)
+	url = path.Join(url, item.Path, item.Name)
 	if item.Type == "folder" {
 		url = appendFolderSuffix(url)
 	}
 	return url
 }
 
-// Returns "item.Repo/item.Path/" lowercased.
+// Returns "item.Repo/item.Path/".
 func (item ResultItem) GetItemRelativeLocation() string {
-	return strings.ToLower(addSeparator(item.Repo, "/", item.Path) + "/")
-}
-
-func addSeparator(str1, separator, str2 string) string {
-	if str2 == "" {
-		return str1
-	}
-	if str1 == "" {
-		return str2
-	}
-
-	return str1 + separator + str2
+	return path.Join(item.Repo, item.Path) + "/"
 }
 
 func (item *ResultItem) ToArtifact() buildinfo.Artifact {
