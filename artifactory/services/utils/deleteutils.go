@@ -63,7 +63,7 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 			if candidateDirToBeDeleted.Name == "." {
 				continue
 			}
-			candidateDirToBeDeletedPath = strings.ToLower(candidateDirToBeDeleted.GetItemRelativePath())
+			candidateDirToBeDeletedPath = candidateDirToBeDeleted.GetItemRelativePath()
 		}
 		// Fetch the next 'artifactNotToBeDelete'.
 		if artifactNotToBeDeleted == nil {
@@ -74,7 +74,7 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 				writeRemainCandidate(resultWriter, dirsToBeDeletedReader)
 				break
 			}
-			itemNotToBeDeletedLocation = strings.ToLower(artifactNotToBeDeleted.GetItemRelativeLocation())
+			itemNotToBeDeletedLocation = artifactNotToBeDeleted.GetItemRelativeLocation()
 		}
 		// Found an 'artifact not to be deleted' in 'dir to be deleted', therefore skip writing the dir to the result file.
 		if strings.HasPrefix(itemNotToBeDeletedLocation, candidateDirToBeDeletedPath) {
