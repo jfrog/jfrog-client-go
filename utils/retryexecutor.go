@@ -39,8 +39,11 @@ func (runner *RetryExecutor) Execute() error {
 		shouldRetry, err = runner.ExecutionHandler()
 
 		// If should not retry, return
-		if !shouldRetry || runner.isCancelled() {
+		if !shouldRetry {
 			return err
+		}
+		if cancelledErr := runner.checkCancelled(); cancelledErr != nil {
+			return cancelledErr
 		}
 
 		// Print retry log message
@@ -71,13 +74,14 @@ func (runner *RetryExecutor) LogRetry(attemptNumber int, err error) {
 	}
 }
 
-func (runner *RetryExecutor) isCancelled() bool {
+func (runner *RetryExecutor) checkCancelled() error {
 	if runner.Context == nil {
-		return false
+		return nil
 	}
-	if errors.Is(runner.Context.Err(), context.Canceled) {
+	contextErr := runner.Context.Err()
+	if errors.Is(contextErr, context.Canceled) {
 		log.Info("Retry executor was cancelled")
-		return true
+		return contextErr
 	}
-	return false
+	return nil
 }

@@ -57,9 +57,9 @@ func TestRetryExecutorCancel(t *testing.T) {
 	retriesToPerform := 5
 	runCount := 0
 
-	context, cancelFunc := context.WithCancel(context.Background())
+	retryContext, cancelFunc := context.WithCancel(context.Background())
 	executor := RetryExecutor{
-		Context:                  context,
+		Context:                  retryContext,
 		MaxRetries:               retriesToPerform,
 		RetriesIntervalMilliSecs: 0,
 		ErrorMessage:             "Testing RetryExecutor",
@@ -70,7 +70,7 @@ func TestRetryExecutorCancel(t *testing.T) {
 	}
 
 	cancelFunc()
-	assert.NoError(t, executor.Execute())
+	assert.EqualError(t, executor.Execute(), context.Canceled.Error())
 	if runCount != 1 {
 		t.Error(fmt.Errorf("expected, %d, got: %d", retriesToPerform, runCount))
 	}
