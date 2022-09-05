@@ -19,6 +19,7 @@ func TestSystem(t *testing.T) {
 	t.Run("getConfigDescriptor", testGetConfigDescriptor)
 	t.Run("activateKeyEncryption", testActivateKeyEncryption)
 	t.Run("deactivateKeyEncryption", testDeactivateKeyEncryption)
+	t.Run("deactivateKeyEncryptionNotEncrypted", testDeactivateKeyEncryptionNotEncrypted)
 }
 
 func testGetVersion(t *testing.T) {
@@ -95,7 +96,30 @@ func testDeactivateKeyEncryption(t *testing.T) {
 	defer ts.Close()
 
 	service := createMockSystemService(t, ts.URL)
-	assert.NoError(t, service.DeactivateKeyEncryption())
+	wasEncrypted, err := service.DeactivateKeyEncryption()
+	assert.NoError(t, err)
+	assert.True(t, wasEncrypted)
+}
+
+func testDeactivateKeyEncryptionNotEncrypted(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check method
+		assert.Equal(t, http.MethodPost, r.Method)
+
+		// Check URL
+		assert.Equal(t, "/api/system/decrypt", r.URL.Path)
+
+		// Send response 200 OK
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte("Cannot decrypt without artifactory key file"))
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	service := createMockSystemService(t, ts.URL)
+	wasEncrypted, err := service.DeactivateKeyEncryption()
+	assert.NoError(t, err)
+	assert.False(t, wasEncrypted)
 }
 
 func createMockSystemService(t *testing.T, url string) *services.SystemService {

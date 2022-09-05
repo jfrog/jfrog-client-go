@@ -95,13 +95,24 @@ func (ss *SystemService) ActivateKeyEncryption() error {
 	return nil
 }
 
-func (ss *SystemService) DeactivateKeyEncryption() error {
+func (ss *SystemService) DeactivateKeyEncryption() (wasEncrypted bool, err error) {
 	log.Info("Deactivating key encryption in Artifactory...")
-	if err := ss.sendEmptyPost("decrypt"); err != nil {
-		return err
+	httpDetails := (*ss.artDetails).CreateHttpClientDetails()
+	resp, body, err := ss.client.SendPost((*ss.artDetails).GetUrl()+apiSystem+"decrypt", nil, &httpDetails)
+	if err != nil {
+		return false, err
+	}
+	log.Debug("Artifactory response:", string(body), resp.Status)
+	if resp.StatusCode == http.StatusConflict {
+		log.Info("Artifactory key encryption is already decativated")
+		return false, nil
+	}
+
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+		return false, err
 	}
 	log.Info("Artifactory key encryption deactivated")
-	return nil
+	return true, nil
 }
 
 func (ss *SystemService) sendGet(endpoint string) ([]byte, error) {
