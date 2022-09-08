@@ -102,12 +102,12 @@ type CvssScore struct {
 }
 
 type Resource struct {
-	IncludePathPatterns []string     `json:"include_path_patterns,omitempty"`
 	Repositories        []Repository `json:"repositories,omitempty"`
 }
 
 type Repository struct {
-	Name string `json:"name,omitempty"`
+	Name                string       `json:"name,omitempty"`
+	IncludePathPatterns []string     `json:"include_path_patterns,omitempty"`
 }
 
 // ReportResponse defines a report request response
