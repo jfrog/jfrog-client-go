@@ -2,21 +2,20 @@ package usage
 
 import (
 	"encoding/json"
-	"fmt"
-	"net/http"
-
 	"errors"
+	"fmt"
 	versionutil "github.com/jfrog/gofrog/version"
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
 )
 
 const minArtifactoryVersion = "6.9.0"
 const ReportUsagePrefix = "Usage Report: "
 
-func SendReportUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager) error {
+func SendReportUsage(productId, commandName, serviceId, serverSize string, serviceManager artifactory.ArtifactoryServicesManager) error {
 	config := serviceManager.GetConfig()
 	if config == nil {
 		return errorutils.CheckErrorf(ReportUsagePrefix + "Expected full config, but no configuration exists.")
@@ -40,7 +39,7 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 		return nil
 	}
 
-	bodyContent, err := reportUsageToJson(productId, commandName)
+	bodyContent, err := reportUsageToJson(productId, commandName, serviceId, serverSize)
 	if err != nil {
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
@@ -67,8 +66,16 @@ func isVersionCompatible(artifactoryVersion string) bool {
 	return version.AtLeast(minArtifactoryVersion)
 }
 
-func reportUsageToJson(productId, commandName string) ([]byte, error) {
+func reportUsageToJson(productId, commandName, serviceId, serverSize string) ([]byte, error) {
 	featureInfo := feature{FeatureId: commandName}
+	if serviceId != "" && serverSize != "" {
+		attributes := map[string]string{
+			"serviceId":  serviceId,
+			"serverSize": serverSize,
+		}
+
+		featureInfo.Attributes = attributes
+	}
 	params := reportUsageParams{ProductId: productId, Features: []feature{featureInfo}}
 	bodyContent, err := json.Marshal(params)
 	return bodyContent, errorutils.CheckError(err)
@@ -80,5 +87,6 @@ type reportUsageParams struct {
 }
 
 type feature struct {
-	FeatureId string `json:"featureId,omitempty"`
+	FeatureId  string            `json:"featureId,omitempty"`
+	Attributes map[string]string `json:"attributes,omitempty"`
 }
