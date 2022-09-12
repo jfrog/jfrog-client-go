@@ -36,29 +36,35 @@ func TestReportUsageJson(t *testing.T) {
 	type test struct {
 		productId      string
 		commandName    string
-		serviceId      string
-		serverSize     string
+		serviceId      ReportUsageAttribute
+		serverSize     ReportUsageAttribute
 		expectedResult string
 		jsonPatternNum int
 	}
 
 	jsonPatterns := []string{
-		`{"productId":"%s","features":[{"featureId":"%s","attributes":{"serverSize":"%s","serviceId":"%s"}}]}`,
+		`{"productId":"%s","features":[{"featureId":"%s","attributes":{"%s":"%s","%s":"%s"}}]}`,
+		`{"productId":"%s","features":[{"featureId":"%s","attributes":{"%s":"%s"}}]}`,
 		`{"productId":"%s","features":[{"featureId":"%s"}]}`,
 	}
 
 	preTests := []test{
-		{"jfrog-cli-go/1.26.0", "rt_transfer_files", "jfrt@01g8dj3wcw22y01atqp63n1haq", "6.08 GB", "{\"productId\":\"jfrog-cli-go/1.26.0\",\"features\":[{\"featureId\":\"rt_transfer_files\",\"attributes\":{\"serverSize\":\"6.08 GB\",\"serviceId\":\"jfrt@01g8dj3wcw22y01atqp63n1haq\"}}]}", 0},
-		{"jfrog-client-go", "rt_download", "", "3.58 GB", "{\"productId\":\"jfrog-client-go\",\"features\":[{\"featureId\":\"rt_download\"}]}", 1},
-		{"test", "rt_build", "jfrt@01g8dj3wcw22y01atqp63n1haq", "", "", 1},
-		{"agent/1.25.0", "rt_go", "", "", "", 1},
+		{"jfrog-cli-go/1.26.0", "rt_transfer_files", ReportUsageAttribute{"sourceServiceId", "jfrt@01g8dj3wcw22y01atqp63n1haq"}, ReportUsageAttribute{"sourceStorageSize", "6.08 GB"}, "{\"productId\":\"jfrog-cli-go/1.26.0\",\"features\":[{\"featureId\":\"rt_transfer_files\",\"attributes\":{\"sourceStorageSize\":\"6.08 GB\",\"sourceServiceId\":\"jfrt@01g8dj3wcw22y01atqp63n1haq\"}}]}", 0},
+		{"jfrog-client-go", "rt_download", ReportUsageAttribute{}, ReportUsageAttribute{"sourceStorageSize", "3.58 GB"}, "{\"productId\":\"jfrog-client-go\",\"features\":[{\"featureId\":\"rt_download\"}]}", 1},
+		{"test", "rt_build", ReportUsageAttribute{"sourceServiceId", "jfrt@01g8dj3wcw22y01atqp63n1haq"}, ReportUsageAttribute{}, "", 1},
+		{"agent/1.25.0", "rt_go", ReportUsageAttribute{}, ReportUsageAttribute{}, "", 2},
 	}
 
 	var tests []test
 	// Create the expected json
 	for _, test := range preTests {
-		if test.serverSize != "" && test.serviceId != "" {
-			test.expectedResult = fmt.Sprintf(jsonPatterns[test.jsonPatternNum], test.productId, test.commandName, test.serverSize, test.serviceId)
+		// Check if at least one of the structs isn't empty
+		if test.serverSize != (ReportUsageAttribute{}) && test.serviceId != (ReportUsageAttribute{}) {
+			test.expectedResult = fmt.Sprintf(jsonPatterns[test.jsonPatternNum], test.productId, test.commandName, test.serviceId.AttributeName, test.serviceId.AttributeValue, test.serverSize.AttributeName, test.serverSize.AttributeValue)
+		} else if test.serverSize != (ReportUsageAttribute{}) {
+			test.expectedResult = fmt.Sprintf(jsonPatterns[test.jsonPatternNum], test.productId, test.commandName, test.serverSize.AttributeName, test.serverSize.AttributeValue)
+		} else if test.serviceId != (ReportUsageAttribute{}) {
+			test.expectedResult = fmt.Sprintf(jsonPatterns[test.jsonPatternNum], test.productId, test.commandName, test.serviceId.AttributeName, test.serviceId.AttributeValue)
 		} else {
 			test.expectedResult = fmt.Sprintf(jsonPatterns[test.jsonPatternNum], test.productId, test.commandName)
 		}

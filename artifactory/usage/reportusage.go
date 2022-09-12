@@ -73,8 +73,13 @@ func isVersionCompatible(artifactoryVersion string) bool {
 
 func reportUsageToJson(productId, commandName string, attributes ...ReportUsageAttribute) ([]byte, error) {
 	featureInfo := feature{FeatureId: commandName}
-	for _, attribute := range attributes {
-		featureInfo.Attributes[attribute.AttributeName] = attribute.AttributeValue
+	if len(attributes) > 0 {
+		featureInfo.Attributes = make(map[string]string, 0)
+		for _, attribute := range attributes {
+			if attribute != (ReportUsageAttribute{}) {
+				featureInfo.Attributes[attribute.AttributeName] = attribute.AttributeValue
+			}
+		}
 	}
 	params := reportUsageParams{ProductId: productId, Features: []feature{featureInfo}}
 	bodyContent, err := json.Marshal(params)
