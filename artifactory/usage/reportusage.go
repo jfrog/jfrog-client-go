@@ -15,7 +15,12 @@ import (
 const minArtifactoryVersion = "6.9.0"
 const ReportUsagePrefix = "Usage Report: "
 
-func SendReportUsage(productId, commandName, serviceId, serverSize string, serviceManager artifactory.ArtifactoryServicesManager) error {
+type ReportUsageAttribute struct {
+	AttributeName  string
+	AttributeValue string
+}
+
+func SendReportUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
 	config := serviceManager.GetConfig()
 	if config == nil {
 		return errorutils.CheckErrorf(ReportUsagePrefix + "Expected full config, but no configuration exists.")
@@ -39,7 +44,7 @@ func SendReportUsage(productId, commandName, serviceId, serverSize string, servi
 		return nil
 	}
 
-	bodyContent, err := reportUsageToJson(productId, commandName, serviceId, serverSize)
+	bodyContent, err := reportUsageToJson(productId, commandName, attributes...)
 	if err != nil {
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
@@ -66,15 +71,10 @@ func isVersionCompatible(artifactoryVersion string) bool {
 	return version.AtLeast(minArtifactoryVersion)
 }
 
-func reportUsageToJson(productId, commandName, serviceId, serverSize string) ([]byte, error) {
+func reportUsageToJson(productId, commandName string, attributes ...ReportUsageAttribute) ([]byte, error) {
 	featureInfo := feature{FeatureId: commandName}
-	if serviceId != "" && serverSize != "" {
-		attributes := map[string]string{
-			"serviceId":  serviceId,
-			"serverSize": serverSize,
-		}
-
-		featureInfo.Attributes = attributes
+	for _, attribute := range attributes {
+		featureInfo.Attributes[attribute.AttributeName] = attribute.AttributeValue
 	}
 	params := reportUsageParams{ProductId: productId, Features: []feature{featureInfo}}
 	bodyContent, err := json.Marshal(params)
