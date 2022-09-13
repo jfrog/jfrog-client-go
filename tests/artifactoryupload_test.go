@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	clienttests "github.com/jfrog/jfrog-client-go/utils/tests"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -394,8 +393,8 @@ func TestUploadFilesWithFailure(t *testing.T) {
 
 // Creates handlers for TestUploadFilesWithFailure mock server.
 // The first upload request returns 200, and the rest return 404.
-func createUploadFilesWithFailureHandlers() *clienttests.HttpServerHandlers {
-	handlers := clienttests.HttpServerHandlers{}
+func createUploadFilesWithFailureHandlers() *testutils.HttpServerHandlers {
+	handlers := testutils.HttpServerHandlers{}
 	counter := 0
 	handlers["/generic"] = func(w http.ResponseWriter, r *http.Request) {
 		if counter == 0 {
@@ -409,8 +408,8 @@ func createUploadFilesWithFailureHandlers() *clienttests.HttpServerHandlers {
 	return &handlers
 }
 
-func startArtifactoryMockServer(handlers *clienttests.HttpServerHandlers) int {
-	port, err := clienttests.StartHttpServer(*handlers)
+func startArtifactoryMockServer(handlers *testutils.HttpServerHandlers) int {
+	port, err := testutils.StartHttpServer(*handlers)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
