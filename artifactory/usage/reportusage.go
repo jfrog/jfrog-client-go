@@ -20,6 +20,10 @@ type ReportUsageAttribute struct {
 	AttributeValue string
 }
 
+func (rua *ReportUsageAttribute) isEmpty() bool {
+	return rua.AttributeName == ""
+}
+
 func SendReportUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
 	config := serviceManager.GetConfig()
 	if config == nil {
@@ -74,9 +78,9 @@ func isVersionCompatible(artifactoryVersion string) bool {
 func reportUsageToJson(productId, commandName string, attributes ...ReportUsageAttribute) ([]byte, error) {
 	featureInfo := feature{FeatureId: commandName}
 	if len(attributes) > 0 {
-		featureInfo.Attributes = make(map[string]string, 0)
+		featureInfo.Attributes = make(map[string]string, len(attributes))
 		for _, attribute := range attributes {
-			if attribute != (ReportUsageAttribute{}) {
+			if !attribute.isEmpty() {
 				featureInfo.Attributes[attribute.AttributeName] = attribute.AttributeValue
 			}
 		}

@@ -33,7 +33,7 @@ func TestIsVersionCompatible(t *testing.T) {
 }
 
 func TestReportUsageJson(t *testing.T) {
-	type test struct {
+	type reportUsageTestCase struct {
 		productId      string
 		commandName    string
 		serviceId      ReportUsageAttribute
@@ -48,14 +48,14 @@ func TestReportUsageJson(t *testing.T) {
 		`{"productId":"%s","features":[{"featureId":"%s"}]}`,
 	}
 
-	preTests := []test{
+	preTests := []reportUsageTestCase{
 		{"jfrog-cli-go/1.26.0", "rt_transfer_files", ReportUsageAttribute{"sourceServiceId", "jfrt@01g8dj3wcw22y01atqp63n1haq"}, ReportUsageAttribute{"sourceStorageSize", "6.08 GB"}, "{\"productId\":\"jfrog-cli-go/1.26.0\",\"features\":[{\"featureId\":\"rt_transfer_files\",\"attributes\":{\"sourceStorageSize\":\"6.08 GB\",\"sourceServiceId\":\"jfrt@01g8dj3wcw22y01atqp63n1haq\"}}]}", 0},
 		{"jfrog-client-go", "rt_download", ReportUsageAttribute{}, ReportUsageAttribute{"sourceStorageSize", "3.58 GB"}, "{\"productId\":\"jfrog-client-go\",\"features\":[{\"featureId\":\"rt_download\"}]}", 1},
 		{"test", "rt_build", ReportUsageAttribute{"sourceServiceId", "jfrt@01g8dj3wcw22y01atqp63n1haq"}, ReportUsageAttribute{}, "", 1},
 		{"agent/1.25.0", "rt_go", ReportUsageAttribute{}, ReportUsageAttribute{}, "", 2},
 	}
 
-	var tests []test
+	var tests []reportUsageTestCase
 	// Create the expected json
 	for _, test := range preTests {
 		// Check if at least one of the structs isn't empty
