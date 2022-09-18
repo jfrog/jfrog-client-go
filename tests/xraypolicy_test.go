@@ -24,11 +24,11 @@ func deletePolicy(t *testing.T, policyName string) {
 }
 
 func createMinSeverity(t *testing.T) {
-	policyName := "create-min-severity" + getRunId('-')
+	policyName := "create-min-severity" + getRunId()
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "min-severity" + getRunId('-'),
+		Name:     "min-severity" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
 		Priority: 1,
 	}
@@ -36,11 +36,11 @@ func createMinSeverity(t *testing.T) {
 }
 
 func createRangeSeverity(t *testing.T) {
-	policyName := "create-range-severity" + getRunId('-')
+	policyName := "create-range-severity" + getRunId()
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "range-severity" + getRunId('-'),
+		Name:     "range-severity" + getRunId(),
 		Criteria: *utils.CreateCvssRangePolicyCriteria(3.4, 5.6),
 		Priority: 1,
 	}
@@ -48,11 +48,11 @@ func createRangeSeverity(t *testing.T) {
 }
 
 func createLicenseAllowed(t *testing.T) {
-	policyName := "create-allowed-licenses" + getRunId('-')
+	policyName := "create-allowed-licenses" + getRunId()
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "allowed-licenses" + getRunId('-'),
+		Name:     "allowed-licenses" + getRunId(),
 		Criteria: *utils.CreateLicensePolicyCriteria(true, true, true, "MIT", "Apache-2.0"),
 		Priority: 1,
 	}
@@ -60,11 +60,11 @@ func createLicenseAllowed(t *testing.T) {
 }
 
 func createLicenseBanned(t *testing.T) {
-	policyName := "create-banned-licenses" + getRunId('-')
+	policyName := "create-banned-licenses" + getRunId()
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "banned-licenses" + getRunId('-'),
+		Name:     "banned-licenses" + getRunId(),
 		Criteria: *utils.CreateLicensePolicyCriteria(false, true, true, "MIT", "Apache-2.0"),
 		Priority: 1,
 	}
@@ -72,16 +72,16 @@ func createLicenseBanned(t *testing.T) {
 }
 
 func create2Priorities(t *testing.T) {
-	policyName := "create-2-priorties" + getRunId('-')
+	policyName := "create-2-priorties" + getRunId()
 	defer deletePolicy(t, policyName)
 
 	policyRule1 := utils.PolicyRule{
-		Name:     "priority-1" + getRunId('-'),
+		Name:     "priority-1" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
 		Priority: 1,
 	}
 	policyRule2 := utils.PolicyRule{
-		Name:     "priority-2" + getRunId('-'),
+		Name:     "priority-2" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
 		Priority: 2,
 	}
@@ -89,11 +89,11 @@ func create2Priorities(t *testing.T) {
 }
 
 func createPolicyActions(t *testing.T) {
-	policyName := "create-policy-actions" + getRunId('-')
+	policyName := "create-policy-actions" + getRunId()
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "policy-actions" + getRunId('-'),
+		Name:     "policy-actions" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.High),
 		Priority: 1,
 		Actions: &utils.PolicyAction{
@@ -112,18 +112,18 @@ func createPolicyActions(t *testing.T) {
 }
 
 func createUpdatePolicy(t *testing.T) {
-	policyName := "update-policy" + getRunId('-')
+	policyName := "update-policy" + getRunId()
 	defer deletePolicy(t, policyName)
 
 	policyRule := utils.PolicyRule{
-		Name:     "low-severity" + getRunId('-'),
+		Name:     "low-severity" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
 		Priority: 1,
 	}
 	createAndCheckPolicy(t, policyName, true, utils.Security, policyRule)
 
 	policyRule = utils.PolicyRule{
-		Name:     "medium-severity" + getRunId('-'),
+		Name:     "medium-severity" + getRunId(),
 		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
 		Priority: 1,
 	}

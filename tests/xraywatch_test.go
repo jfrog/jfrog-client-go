@@ -2,10 +2,11 @@ package tests
 
 import (
 	"fmt"
+	"testing"
+
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestXrayWatch(t *testing.T) {
@@ -19,19 +20,19 @@ func TestXrayWatch(t *testing.T) {
 }
 
 func testXrayWatchAll(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s", "policy1", getRunId('-'))
+	policy1Name := fmt.Sprintf("%s-%s", "policy1", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, testsXrayPolicyService.Delete(policy1Name))
 	}()
-	policy2Name := fmt.Sprintf("%s-%s", "policy2", getRunId('-'))
+	policy2Name := fmt.Sprintf("%s-%s", "policy2", getRunId())
 	err = createDummyPolicy(policy2Name)
 	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, testsXrayPolicyService.Delete(policy2Name))
 	}()
-	AllWatchName := fmt.Sprintf("%s-%s", "client-go-tests-watch-all-repos", getRunId('-'))
+	AllWatchName := fmt.Sprintf("%s-%s", "client-go-tests-watch-all-repos", getRunId())
 	paramsAllRepos := utils.NewWatchParams()
 	paramsAllRepos.Name = AllWatchName
 	paramsAllRepos.Description = "All Repos"
@@ -116,33 +117,33 @@ func testXrayWatchAll(t *testing.T) {
 }
 
 func testXrayWatchSelectedRepos(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId('-'))
+	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, testsXrayPolicyService.Delete(policy1Name))
 	}()
-	repo1Name := fmt.Sprintf("%s-%s", "repo1", getRunId('-'))
+	repo1Name := fmt.Sprintf("%s-%s", "repo1", getRunId())
 	createRepoLocal(t, repo1Name)
 	defer deleteRepo(t, repo1Name)
-	repo2Name := fmt.Sprintf("%s-%s", "repo2", getRunId('-'))
+	repo2Name := fmt.Sprintf("%s-%s", "repo2", getRunId())
 	createRepoRemote(t, repo2Name)
 	defer deleteRepo(t, repo2Name)
 
-	build1Name := fmt.Sprintf("%s-%s", "build1", getRunId('-'))
+	build1Name := fmt.Sprintf("%s-%s", "build1", getRunId())
 	err = createAndIndexBuild(t, build1Name)
 	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, deleteBuild(build1Name))
 	}()
-	build2Name := fmt.Sprintf("%s-%s", "build2", getRunId('-'))
+	build2Name := fmt.Sprintf("%s-%s", "build2", getRunId())
 	err = createAndIndexBuild(t, build2Name)
 	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, deleteBuild(build2Name))
 	}()
 	paramsSelectedRepos := utils.NewWatchParams()
-	paramsSelectedRepos.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-selected-repos", getRunId('-'))
+	paramsSelectedRepos.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-selected-repos", getRunId())
 	paramsSelectedRepos.Description = "Selected Repos"
 	paramsSelectedRepos.Active = true
 	paramsSelectedRepos.Policies = []utils.AssignedPolicy{
@@ -260,14 +261,14 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 }
 
 func testXrayWatchBuildsByPattern(t *testing.T) {
-	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId('-'))
+	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, testsXrayPolicyService.Delete(policy1Name))
 	}()
 	paramsBuildsByPattern := utils.NewWatchParams()
-	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-builds-by-pattern", getRunId('-'))
+	paramsBuildsByPattern.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-builds-by-pattern", getRunId())
 	paramsBuildsByPattern.Description = "Builds By Pattern"
 	paramsBuildsByPattern.Builds.Type = utils.WatchBuildAll
 	paramsBuildsByPattern.Builds.All.ExcludePatterns = []string{"excludePath"}
@@ -310,7 +311,7 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 
 func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch := utils.NewWatchParams()
-	paramsMissingWatch.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-missing", getRunId('-'))
+	paramsMissingWatch.Name = fmt.Sprintf("%s-%s", "client-go-tests-watch-missing", getRunId())
 	paramsMissingWatch.Description = "Missing Watch"
 	paramsMissingWatch.Builds.Type = utils.WatchBuildAll
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}

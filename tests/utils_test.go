@@ -159,14 +159,18 @@ func init() {
 }
 
 func getRtTargetRepoKey() string {
-	return RtTargetRepo + "-" + getRunId('-')
+	return RtTargetRepo + "-" + getRunId()
 }
 
 func getRtTargetRepo() string {
 	return getRtTargetRepoKey() + "/"
 }
 
-func getRunId(separator rune) string {
+func getRunId() string {
+	return getCustomRunId('-')
+}
+
+func getCustomRunId(separator rune) string {
 	if ciRunId != nil && *ciRunId != "" {
 		return *ciRunId + string(separator) + timestampStr
 	}

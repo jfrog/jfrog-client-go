@@ -1,10 +1,11 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/access/services"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/access/services"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAccessProject(t *testing.T) {
@@ -86,7 +87,7 @@ func getTestProjectParams() services.ProjectParams {
 		ManageResources: &falseValue,
 		IndexResources:  &trueValue,
 	}
-	runId := getRunId('-')
+	runId := getRunId()
 	runNumberSuffix := runId[len(runId)-3:]
 	projectDetails := services.Project{
 		DisplayName:       "testProject" + runNumberSuffix,
