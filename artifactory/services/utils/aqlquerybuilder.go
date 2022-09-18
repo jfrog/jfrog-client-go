@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"golang.org/x/exp/slices"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -149,7 +150,8 @@ func CreateAqlQueryForPypi(repo, file string) string {
 	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256"}))
 }
 
-func CreateAqlQueryForLatestCreated(repo, path string) string {
+func CreateAqlQueryForLatestCreated(buildInfoRepo, buildName string) string {
+	buildName = url.PathEscape(buildName)
 	itemsPart :=
 		`items.find({` +
 			`"repo": "%s",` +
@@ -157,7 +159,7 @@ func CreateAqlQueryForLatestCreated(repo, path string) string {
 			`})` +
 			`.sort({%s})` +
 			`.limit(1)`
-	return fmt.Sprintf(itemsPart, repo, path, buildSortQueryPart([]string{"created"}, "desc"))
+	return fmt.Sprintf(itemsPart, buildInfoRepo, buildName, buildSortQueryPart([]string{"created"}, "desc"))
 }
 
 func prepareSearchPattern(pattern string, repositoryExists bool) string {
