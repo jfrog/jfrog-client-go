@@ -18,7 +18,7 @@ func testAddPipelineSource(t *testing.T) {
 		return
 	}
 	// Create integration with provided token.
-	integrationName := getUniqueIntegrationName(services.GithubName)
+	integrationName := getUniqueIntegrationName("testAddPipelineSource", services.GithubName)
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
 	if err != nil {
 		assert.NoError(t, err)

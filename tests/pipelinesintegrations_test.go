@@ -9,12 +9,11 @@ import (
 )
 
 const (
-	integrationNamesPrefix = "jfrog_client_pipelines_integrations_tests"
-	testsDummyRtUrl        = "https://pipelines.integration.com/artifactory/"
-	testsDummyVcsUrl       = "https://non-existing-vcs.com/"
-	testsDummyUser         = "nonexistinguser"
-	testsDummyToken        = "nonexistingtoken"
-	testsDummyApiKey       = "nonexistingkey"
+	testsDummyRtUrl  = "https://pipelines.integration.com/artifactory/"
+	testsDummyVcsUrl = "https://non-existing-vcs.com/"
+	testsDummyUser   = "nonexistinguser"
+	testsDummyToken  = "nonexistingtoken"
+	testsDummyApiKey = "nonexistingkey"
 )
 
 func TestPipelinesIntegrations(t *testing.T) {
@@ -28,7 +27,7 @@ func TestPipelinesIntegrations(t *testing.T) {
 }
 
 func testCreateGithubIntegrationAndGetByName(t *testing.T) {
-	name := getUniqueIntegrationName(services.GithubName)
+	name := getUniqueIntegrationName("testCreateGithubIntegrationAndGetByName", services.GithubName)
 	id, err := testsPipelinesIntegrationsService.CreateGithubIntegration(name, testsDummyToken)
 	if err != nil {
 		assert.NoError(t, err)
@@ -48,7 +47,7 @@ func testCreateGithubIntegrationAndGetByName(t *testing.T) {
 }
 
 func testCreateGithubEnterpriseIntegration(t *testing.T) {
-	name := getUniqueIntegrationName(services.GithubEnterpriseName)
+	name := getUniqueIntegrationName("testCreateGithubEnterpriseIntegration", services.GithubEnterpriseName)
 	id, err := testsPipelinesIntegrationsService.CreateGithubEnterpriseIntegration(name, testsDummyVcsUrl, testsDummyToken)
 	if err != nil {
 		assert.NoError(t, err)
@@ -59,7 +58,7 @@ func testCreateGithubEnterpriseIntegration(t *testing.T) {
 }
 
 func testCreateBitbucketIntegration(t *testing.T) {
-	name := getUniqueIntegrationName(services.BitbucketName)
+	name := getUniqueIntegrationName("testCreateBitbucketIntegration", services.BitbucketName)
 	id, err := testsPipelinesIntegrationsService.CreateBitbucketIntegration(name, testsDummyUser, testsDummyToken)
 	if err != nil {
 		assert.NoError(t, err)
@@ -70,7 +69,7 @@ func testCreateBitbucketIntegration(t *testing.T) {
 }
 
 func testCreateBitbucketServerIntegration(t *testing.T) {
-	name := getUniqueIntegrationName(services.BitbucketServerName)
+	name := getUniqueIntegrationName("testCreateBitbucketServerIntegration", services.BitbucketServerName)
 	id, err := testsPipelinesIntegrationsService.CreateBitbucketServerIntegration(name, testsDummyVcsUrl, testsDummyUser, testsDummyToken)
 	if err != nil {
 		assert.NoError(t, err)
@@ -81,7 +80,7 @@ func testCreateBitbucketServerIntegration(t *testing.T) {
 }
 
 func testCreateGitlabIntegration(t *testing.T) {
-	name := getUniqueIntegrationName(services.GitlabName)
+	name := getUniqueIntegrationName("testCreateGitlabIntegration", services.GitlabName)
 	id, err := testsPipelinesIntegrationsService.CreateGitlabIntegration(name, testsDummyVcsUrl, testsDummyToken)
 	if err != nil {
 		assert.NoError(t, err)
@@ -92,7 +91,7 @@ func testCreateGitlabIntegration(t *testing.T) {
 }
 
 func testCreateArtifactoryIntegration(t *testing.T) {
-	name := getUniqueIntegrationName(services.ArtifactoryName)
+	name := getUniqueIntegrationName("testCreateArtifactoryIntegration", services.ArtifactoryName)
 	id, err := testsPipelinesIntegrationsService.CreateArtifactoryIntegration(name, testsDummyRtUrl, testsDummyUser, testsDummyApiKey)
 	if err != nil {
 		assert.NoError(t, err)
@@ -113,8 +112,8 @@ func getIntegrationAndAssert(t *testing.T, id int, name, integrationType string)
 	assert.Equal(t, integrationType, integration.MasterIntegrationName)
 }
 
-func getUniqueIntegrationName(integrationType string) string {
-	return strings.Join([]string{integrationNamesPrefix, integrationType, getCustomRunId('_')}, "_")
+func getUniqueIntegrationName(testName, integrationType string) string {
+	return strings.Join([]string{testName, integrationType, getCustomRunId('_')}, "_")
 }
 
 func deleteIntegrationAndAssert(t *testing.T, id int) {
