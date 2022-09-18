@@ -1,10 +1,11 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/access/services"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/access/services"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAccessProject(t *testing.T) {

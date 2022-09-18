@@ -166,9 +166,16 @@ func getRtTargetRepo() string {
 	return getRtTargetRepoKey() + "/"
 }
 
+// Get a run ID string used in the generated tests resources to prevent using same resources names in the test.
+// Examples - Repository names, build-info names, Docker image names, Release Bundle names.
 func getRunId() string {
+	return getCustomRunId('-')
+}
+
+// Get a run ID string using a custom character. We use '-' for most of the resources names and '_' for JFrog Pipelines integration names.
+func getCustomRunId(separator rune) string {
 	if ciRunId != nil && *ciRunId != "" {
-		return *ciRunId + "-" + timestampStr
+		return *ciRunId + string(separator) + timestampStr
 	}
 	return timestampStr
 }

@@ -2,10 +2,11 @@ package tests
 
 import (
 	"fmt"
+	"testing"
+
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestXrayWatch(t *testing.T) {
