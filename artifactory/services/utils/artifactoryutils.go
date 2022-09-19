@@ -153,7 +153,13 @@ func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier, projectKey string
 
 func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
 	if buildNumber == LatestBuildNumberKey || buildNumber == lastRelease {
-		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
+		latestBuildNumber, err := getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
+		if err != nil {
+			return "", "", err
+		}
+		if latestBuildNumber != "" {
+			buildNumber = latestBuildNumber
+		}
 	}
 	return buildName, buildNumber, nil
 }
@@ -226,7 +232,7 @@ type Build struct {
 	BuildNumber string `json:"buildNumber"`
 }
 
-func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
+func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, error) {
 	buildRepo := defaultBuildRepositoriesName
 	if projectKey != "" {
 		buildRepo = projectKey
@@ -235,18 +241,18 @@ func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey stri
 	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, buildName)
 	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	defer reader.Close()
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if i := strings.LastIndex(resultItem.Name, "-"); i != -1 {
 			// Remove the timestamp and .json to get the build number
 			buildNumber = resultItem.Name[:i]
-			return buildName, buildNumber, nil
+			return buildNumber, nil
 		}
 	}
 	log.Debug(fmt.Sprintf("A build-name: <%s> with a build-number: <%s> could not be found in Artifactory.", buildName, buildNumber))
-	return "", "", nil
+	return "", nil
 }
 
 func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
