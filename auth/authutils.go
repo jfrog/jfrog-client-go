@@ -29,7 +29,9 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 
 	// Decode the payload.
 	if len(tokenParts) != 3 {
-		return TokenPayload{}, errorutils.CheckErrorf("received invalid access-token")
+		return TokenPayload{}, errorutils.CheckErrorf("couldn't extract payload from Access Token.\n" +
+			"Hint: Reference and Identity Tokens are currently not supported by this functionality. " +
+			"You can still use them in the username and password authentication, by setting the Reference/Identity Token as password.")
 	}
 	payload, err := base64.RawStdEncoding.DecodeString(tokenParts[1])
 	if err != nil {
@@ -40,7 +42,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	var tokenPayload TokenPayload
 	err = json.Unmarshal(payload, &tokenPayload)
 	if err != nil {
-		return TokenPayload{}, errorutils.CheckErrorf("Failed extracting payload from the provided access-token." + err.Error())
+		return TokenPayload{}, errorutils.CheckErrorf("failed extracting payload from the provided access-token. " + err.Error())
 	}
 	err = setAudienceManually(&tokenPayload, payload)
 	return tokenPayload, err
