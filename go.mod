@@ -12,7 +12,7 @@ require (
 	github.com/jfrog/gofrog v1.2.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.0
-	github.com/xanzy/ssh-agent v0.3.2
+	github.com/xanzy/ssh-agent v0.3.3-0.20220920102508-0fa644ba07f4
 	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8
 	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
