@@ -314,10 +314,10 @@ func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadSer
 func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
 	uploadService := sm.initUploadService()
 	summary, e := uploadService.UploadFiles(params...)
-	if e != nil {
+	if summary == nil {
 		return 0, 0, e
 	}
-	return summary.TotalSucceeded, summary.TotalFailed, nil
+	return summary.TotalSucceeded, summary.TotalFailed, e
 }
 
 func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {

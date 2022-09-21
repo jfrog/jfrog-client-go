@@ -92,11 +92,7 @@ func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (summary *uti
 	}
 	us.prepareUploadTasks(producerConsumer, errorsQueue, uploadSummary, uploadParams...)
 	totalUploaded, totalFailed := us.performUploadTasks(producerConsumer, uploadSummary)
-	err = errorsQueue.GetError()
-	if err != nil {
-		return nil, err
-	}
-	return us.getOperationSummary(totalUploaded, totalFailed), nil
+	return us.getOperationSummary(totalUploaded, totalFailed), errorsQueue.GetError()
 }
 
 type ArchiveUploadData struct {
