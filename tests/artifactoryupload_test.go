@@ -1,12 +1,18 @@
 package tests
 
 import (
+	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
@@ -347,4 +353,66 @@ func readerCloseAndAssert(t *testing.T, reader *content.ContentReader) {
 
 func readerGetErrorAndAssert(t *testing.T, reader *content.ContentReader) {
 	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
+}
+
+func TestUploadFilesWithFailure(t *testing.T) {
+	// Create Artifactory mock server
+	port := startArtifactoryMockServer(createUploadFilesWithFailureHandlers())
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		Build()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Create Artifactory mock details
+	rtDetails := auth.NewArtifactoryDetails()
+	rtDetails.SetUrl("http://localhost:" + strconv.Itoa(port))
+	rtDetails.SetUser("user")
+	rtDetails.SetPassword("password")
+
+	// Create upload service
+	params := services.NewUploadParams()
+	dir, err := os.Getwd()
+	assert.NoError(t, err)
+	params.Pattern = filepath.Join(dir, "testdata", "upload", "folder*")
+	params.Target = "/generic"
+	params.Flat = true
+	params.Recursive = true
+	service := services.NewUploadService(client)
+	service.Threads = 1
+	service.SetServiceDetails(rtDetails)
+
+	// Upload files
+	summary, err := service.UploadFiles(params)
+
+	// Check for expected results
+	assert.Error(t, err)
+	assert.Equal(t, summary.TotalSucceeded, 1)
+	assert.Equal(t, summary.TotalFailed, 1)
+}
+
+// Creates handlers for TestUploadFilesWithFailure mock server.
+// The first upload request returns 200, and the rest return 404.
+func createUploadFilesWithFailureHandlers() *testutils.HttpServerHandlers {
+	handlers := testutils.HttpServerHandlers{}
+	counter := 0
+	handlers["/generic"] = func(w http.ResponseWriter, r *http.Request) {
+		if counter == 0 {
+			fmt.Fprintln(w, "{\"checksums\":{\"sha256\":\"123\"}}")
+			w.WriteHeader(http.StatusOK)
+			counter++
+		} else {
+			http.Error(w, "404 page not found", http.StatusNotFound)
+		}
+	}
+	return &handlers
+}
+
+func startArtifactoryMockServer(handlers *testutils.HttpServerHandlers) int {
+	port, err := testutils.StartHttpServer(*handlers)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+	return port
 }
