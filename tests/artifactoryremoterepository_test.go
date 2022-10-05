@@ -803,6 +803,7 @@ func remoteSwiftTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	srp := services.NewSwiftRemoteRepositoryParams()
 	srp.Key = repoKey
+	srp.Url = "https://github.com"
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Swift(srp)
