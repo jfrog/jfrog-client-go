@@ -35,6 +35,7 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localPypiTest", localPypiTest)
 	t.Run("localRpmTest", localRpmTest)
 	t.Run("localSbtTest", localSbtTest)
+	t.Run("localSwiftTest", localSwiftTest)
 	t.Run("localVagrantTest", localVagrantTest)
 	t.Run("localYumTest", localYumTest)
 	t.Run("localCreateWithParamTest", localCreateWithParamTest)
@@ -587,6 +588,26 @@ func localSbtTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&slp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Sbt(slp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, slp)
+}
+
+func localSwiftTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	slp := services.NewSwiftLocalRepositoryParams()
+	slp.Key = repoKey
+	setLocalRepositoryBaseParams(&slp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Swift(slp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, slp)
+
+	setLocalRepositoryBaseParams(&slp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Swift(slp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, slp)
 }

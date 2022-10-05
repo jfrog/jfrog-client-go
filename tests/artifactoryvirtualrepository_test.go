@@ -32,6 +32,7 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualPypiTest", virtualPypiTest)
 	t.Run("virtualRpmTest", virtualRpmTest)
 	t.Run("virtualSbtTest", virtualSbtTest)
+	t.Run("virtualSwiftTest", virtualSwiftTest)
 	t.Run("virtualYumTest", virtualYumTest)
 	t.Run("virtualCreateWithParamTest", virtualCreateWithParamTest)
 	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
@@ -580,6 +581,30 @@ func virtualSbtTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Sbt(svp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, svp)
+}
+
+func virtualSwiftTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	gvp := services.NewSwiftVirtualRepositoryParams()
+	gvp.Key = repoKey
+	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
+	//gvp.ExternalDependenciesEnabled = &trueValue
+	//gvp.ExternalDependenciesPatterns = []string{"**/*microsoft*/**", "**/*github*/**"}
+
+	err := testsCreateVirtualRepositoryService.Swift(gvp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, gvp)
+
+	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
+	//gvp.ExternalDependenciesEnabled = &falseValue
+	//gvp.ExternalDependenciesPatterns = nil
+
+	err = testsUpdateVirtualRepositoryService.Swift(gvp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, gvp)
 }
 
 func virtualYumTest(t *testing.T) {
