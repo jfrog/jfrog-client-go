@@ -585,26 +585,22 @@ func virtualSbtTest(t *testing.T) {
 
 func virtualSwiftTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
-	gvp := services.NewSwiftVirtualRepositoryParams()
-	gvp.Key = repoKey
-	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
-	//gvp.ExternalDependenciesEnabled = &trueValue
-	//gvp.ExternalDependenciesPatterns = []string{"**/*microsoft*/**", "**/*github*/**"}
+	svp := services.NewSwiftVirtualRepositoryParams()
+	svp.Key = repoKey
+	setVirtualRepositoryBaseParams(&svp.VirtualRepositoryBaseParams, false)
 
-	err := testsCreateVirtualRepositoryService.Swift(gvp)
+	err := testsCreateVirtualRepositoryService.Swift(svp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, gvp)
+	validateRepoConfig(t, repoKey, svp)
 
-	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
-	//gvp.ExternalDependenciesEnabled = &falseValue
-	//gvp.ExternalDependenciesPatterns = nil
+	setVirtualRepositoryBaseParams(&svp.VirtualRepositoryBaseParams, true)
 
-	err = testsUpdateVirtualRepositoryService.Swift(gvp)
+	err = testsUpdateVirtualRepositoryService.Swift(svp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gvp)
+	validateRepoConfig(t, repoKey, svp)
 }
 
 func virtualYumTest(t *testing.T) {
