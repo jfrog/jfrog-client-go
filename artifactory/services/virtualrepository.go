@@ -120,6 +120,10 @@ func (vrs *VirtualRepositoryService) Sbt(params SbtVirtualRepositoryParams) erro
 	return vrs.performRequest(params, params.Key)
 }
 
+func (vrs *VirtualRepositoryService) Swift(params SwiftVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
 func (vrs *VirtualRepositoryService) Yum(params YumVirtualRepositoryParams) error {
 	return vrs.performRequest(params, params.Key)
 }
@@ -358,6 +362,14 @@ type SbtVirtualRepositoryParams struct {
 
 func NewSbtVirtualRepositoryParams() SbtVirtualRepositoryParams {
 	return SbtVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("sbt")}
+}
+
+type SwiftVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+}
+
+func NewSwiftVirtualRepositoryParams() SwiftVirtualRepositoryParams {
+	return SwiftVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("swift")}
 }
 
 type YumVirtualRepositoryParams struct {

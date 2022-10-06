@@ -32,6 +32,7 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualPypiTest", virtualPypiTest)
 	t.Run("virtualRpmTest", virtualRpmTest)
 	t.Run("virtualSbtTest", virtualSbtTest)
+	t.Run("virtualSwiftTest", virtualSwiftTest)
 	t.Run("virtualYumTest", virtualYumTest)
 	t.Run("virtualCreateWithParamTest", virtualCreateWithParamTest)
 	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
@@ -578,6 +579,26 @@ func virtualSbtTest(t *testing.T) {
 	setJavaPackageManagersVirtualRepositoryParams(&svp.CommonJavaVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Sbt(svp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, svp)
+}
+
+func virtualSwiftTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	svp := services.NewSwiftVirtualRepositoryParams()
+	svp.Key = repoKey
+	setVirtualRepositoryBaseParams(&svp.VirtualRepositoryBaseParams, false)
+
+	err := testsCreateVirtualRepositoryService.Swift(svp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, svp)
+
+	setVirtualRepositoryBaseParams(&svp.VirtualRepositoryBaseParams, true)
+
+	err = testsUpdateVirtualRepositoryService.Swift(svp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, svp)
 }
