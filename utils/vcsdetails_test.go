@@ -11,7 +11,7 @@ import (
 
 func TestVcsDetails(t *testing.T) {
 	// Test the following .git types, on their corresponding paths in testdata.
-	testRuns := []string{"vcs", "packedvcs", "submodule"}
+	testRuns := []string{"vcs", "packedvcs", "submodule", "worktree"}
 	for _, test := range testRuns {
 		t.Run(test, func(t *testing.T) {
 			var projectPath, tmpDir string
@@ -24,6 +24,8 @@ func TestVcsDetails(t *testing.T) {
 
 			if test == "submodule" {
 				projectPath = testsutils.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test), tmpDir)
+			} else if test == "worktree" {
+				projectPath = testsutils.InitVcsWorktreeTestDir(t, filepath.Join("testdata", test), tmpDir)
 			} else {
 				projectPath = initVcsTestDir(t, filepath.Join("testdata", test), tmpDir)
 			}

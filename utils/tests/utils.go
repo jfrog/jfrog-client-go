@@ -115,6 +115,20 @@ func InitVcsSubmoduleTestDir(t *testing.T, srcPath, tmpDir string) (submodulePat
 	return submodulePath
 }
 
+func InitVcsWorktreeTestDir(t *testing.T, srcPath, tmpDir string) (worktreePath string) {
+	var err error
+	assert.NoError(t, fileutils.CopyDir(srcPath, tmpDir, true, nil))
+	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
+		assert.NoError(t, err)
+		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git")))
+	}
+	worktreeDst := filepath.Join(tmpDir, "worktree_repo")
+	assert.NoError(t, fileutils.CopyFile(worktreeDst, filepath.Join(tmpDir, "gitWorktreeData")))
+	worktreePath, err = filepath.Abs(worktreeDst)
+	assert.NoError(t, err)
+	return worktreePath
+}
+
 func ChangeDirAndAssert(t *testing.T, dirPath string) {
 	assert.NoError(t, os.Chdir(dirPath), "Couldn't change dir to "+dirPath)
 }

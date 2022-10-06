@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -66,6 +67,7 @@ func (m *GitManager) ReadConfig() error {
 // If .git is a file and not a directory, assume it is a git submodule and extract the actual .git directory of the submodule.
 // The actual .git directory is under the parent project's .git/modules directory.
 func (m *GitManager) handleSubmoduleIfNeeded() {
+	fmt.Println("checking at filepath: ", m.path)
 	exists, err := fileutils.IsFileExists(m.path, false)
 	if err != nil {
 		m.err = err
@@ -89,6 +91,10 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		return
 	}
 	ResolvedGitPath := strings.TrimSpace(stdout.String())
+	// trim the worktree path to just the
+	// worktreePathReduced := filepath.Dir(filepath.Dir(worktreePath))
+	fmt.Println("git gave path: ", ResolvedGitPath)
+	fmt.Println("with error: ", m.err)
 	exists, err = fileutils.IsDirExists(ResolvedGitPath, false)
 	if err != nil {
 		m.err = err
