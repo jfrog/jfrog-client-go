@@ -136,6 +136,10 @@ func (rrs *RemoteRepositoryService) Sbt(params SbtRemoteRepositoryParams) error 
 	return rrs.performRequest(params, params.Key)
 }
 
+func (rrs *RemoteRepositoryService) Swift(params SwiftRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
 func (rrs *RemoteRepositoryService) Vcs(params VcsRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
@@ -459,6 +463,14 @@ type SbtRemoteRepositoryParams struct {
 
 func NewSbtRemoteRepositoryParams() SbtRemoteRepositoryParams {
 	return SbtRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("sbt")}
+}
+
+type SwiftRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewSwiftRemoteRepositoryParams() SwiftRemoteRepositoryParams {
+	return SwiftRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("swift")}
 }
 
 type VcsRemoteRepositoryParams struct {

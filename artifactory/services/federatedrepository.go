@@ -132,6 +132,10 @@ func (frs *FederatedRepositoryService) Sbt(params SbtFederatedRepositoryParams) 
 	return frs.performRequest(params, params.Key)
 }
 
+func (frs *FederatedRepositoryService) Swift(params SwiftFederatedRepositoryParams) error {
+	return frs.performRequest(params, params.Key)
+}
+
 func (frs *FederatedRepositoryService) Vagrant(params VagrantFederatedRepositoryParams) error {
 	return frs.performRequest(params, params.Key)
 }
@@ -376,6 +380,14 @@ type SbtFederatedRepositoryParams struct {
 
 func NewSbtFederatedRepositoryParams() SbtFederatedRepositoryParams {
 	return SbtFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("sbt")}
+}
+
+type SwiftFederatedRepositoryParams struct {
+	FederatedRepositoryBaseParams
+}
+
+func NewSwiftFederatedRepositoryParams() SwiftFederatedRepositoryParams {
+	return SwiftFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("swift")}
 }
 
 type VagrantFederatedRepositoryParams struct {

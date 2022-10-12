@@ -43,6 +43,7 @@ func TestArtifactoryFederatedRepository(t *testing.T) {
 	t.Run("federatedPypiTest", federatedPypiTest)
 	t.Run("federatedRpmTest", federatedRpmTest)
 	t.Run("federatedSbtTest", federatedSbtTest)
+	t.Run("federatedSwiftTest", federatedSwiftTest)
 	t.Run("federatedVagrantTest", federatedVagrantTest)
 	t.Run("federatedYumTest", federatedYumTest)
 	t.Run("federatedCreateWithParamTest", federatedCreateWithParamTest)
@@ -601,6 +602,26 @@ func federatedSbtTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&sfp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Sbt(sfp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, sfp)
+}
+
+func federatedSwiftTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	sfp := services.NewSwiftFederatedRepositoryParams()
+	sfp.Key = repoKey
+	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, false)
+
+	err := testsCreateFederatedRepositoryService.Swift(sfp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, sfp)
+
+	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, true)
+
+	err = testsUpdateFederatedRepositoryService.Swift(sfp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, sfp)
 }

@@ -132,6 +132,10 @@ func (lrs *LocalRepositoryService) Sbt(params SbtLocalRepositoryParams) error {
 	return lrs.performRequest(params, params.Key)
 }
 
+func (lrs *LocalRepositoryService) Swift(params SwiftLocalRepositoryParams) error {
+	return lrs.performRequest(params, params.Key)
+}
+
 func (lrs *LocalRepositoryService) Vagrant(params VagrantLocalRepositoryParams) error {
 	return lrs.performRequest(params, params.Key)
 }
@@ -370,6 +374,14 @@ type SbtLocalRepositoryParams struct {
 
 func NewSbtLocalRepositoryParams() SbtLocalRepositoryParams {
 	return SbtLocalRepositoryParams{LocalRepositoryBaseParams: NewLocalRepositoryPackageParams("sbt")}
+}
+
+type SwiftLocalRepositoryParams struct {
+	LocalRepositoryBaseParams
+}
+
+func NewSwiftLocalRepositoryParams() SwiftLocalRepositoryParams {
+	return SwiftLocalRepositoryParams{LocalRepositoryBaseParams: NewLocalRepositoryPackageParams("swift")}
 }
 
 type VagrantLocalRepositoryParams struct {
