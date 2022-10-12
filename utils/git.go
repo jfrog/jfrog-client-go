@@ -3,8 +3,6 @@ package utils
 import (
 	"bufio"
 	"bytes"
-	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -67,7 +65,6 @@ func (m *GitManager) ReadConfig() error {
 // If .git is a file and not a directory, assume it is a git submodule and extract the actual .git directory of the submodule.
 // The actual .git directory is under the parent project's .git/modules directory.
 func (m *GitManager) handleSubmoduleIfNeeded() {
-	fmt.Println("checking at filepath: ", m.path)
 	exists, err := fileutils.IsFileExists(m.path, false)
 	if err != nil {
 		m.err = err
@@ -99,7 +96,7 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		return
 	}
 	if !exists {
-		m.err = errorutils.CheckError(errors.New("path found in .git file '" + m.path + "' does not exist: '" + ResolvedGitPath + "'"))
+		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + ResolvedGitPath + "'")
 		return
 	}
 	m.path = ResolvedGitPath
