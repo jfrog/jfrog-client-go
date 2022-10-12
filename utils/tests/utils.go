@@ -120,11 +120,11 @@ func InitVcsWorktreeTestDir(t *testing.T, srcPath, tmpDir string) (worktreePath 
 	assert.NoError(t, fileutils.CopyDir(srcPath, tmpDir, true, nil))
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
 		assert.NoError(t, err)
-		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git")))
+		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, "bare.git")))
 	}
 	worktreeDst := filepath.Join(tmpDir, "worktree_repo")
-	assert.NoError(t, fileutils.CopyFile(worktreeDst, filepath.Join(tmpDir, "gitWorktreeData")))
 	worktreePath, err = filepath.Abs(worktreeDst)
+	assert.NoError(t, fileutils.MoveFile(filepath.Join(worktreeDst, "gitWorktreeData"), filepath.Join(worktreeDst, ".git")))
 	assert.NoError(t, err)
 	return worktreePath
 }

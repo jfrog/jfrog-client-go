@@ -93,8 +93,6 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 	ResolvedGitPath := strings.TrimSpace(stdout.String())
 	// trim the worktree path to just the
 	// worktreePathReduced := filepath.Dir(filepath.Dir(worktreePath))
-	fmt.Println("git gave path: ", ResolvedGitPath)
-	fmt.Println("with error: ", m.err)
 	exists, err = fileutils.IsDirExists(ResolvedGitPath, false)
 	if err != nil {
 		m.err = err
