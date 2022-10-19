@@ -3,18 +3,19 @@ package fspatterns
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"regexp"
+	"strings"
+
 	biutils "github.com/jfrog/build-info-go/utils"
 	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"os"
-	"regexp"
-	"strings"
 )
 
 // Return all the existing paths of the provided root path
-func GetPaths(rootPath string, isRecursive, includeDirs, isSymlink bool) ([]string, error) {
+func ListFiles(rootPath string, isRecursive, includeDirs, isSymlink bool, excludePathPattern string) ([]string, error) {
 	var paths []string
 	var err error
 	if isRecursive {
@@ -25,7 +26,7 @@ func GetPaths(rootPath string, isRecursive, includeDirs, isSymlink bool) ([]stri
 	if err != nil {
 		return paths, err
 	}
-	return paths, nil
+	return filterFiles(paths, excludePathPattern)
 }
 
 // Transform to regexp and prepare Exclude patterns to be used
@@ -47,26 +48,38 @@ func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
 	return excludePathPattern
 }
 
-// Return only subpaths of the provided by the user path that matched to the provided regexp.
-// Subpaths that matched to an exclude pattern won't returned
-func PrepareAndFilterPaths(path, excludePathPattern string, preserveSymlinks, includeDirs bool, regexp *regexp.Regexp) (matches []string, isDir, isSymlinkFlow bool, err error) {
+func filterFiles(files []string, excludePathPattern string) (filteredFiles []string, err error) {
+	var excludedPath bool
+	for i := 0; i < len(files); i++ {
+		if files[i] == "." {
+			continue
+		}
+		excludedPath, err = isPathExcluded(files[i], excludePathPattern)
+		if err != nil {
+			return
+		}
+		if !excludedPath {
+			filteredFiles = append(filteredFiles, files[i])
+		}
+	}
+	return
+}
+
+// Return the actual sub-paths that match the regex provided.
+// Excluded sub-paths are not returned
+func SearchPatterns(path string, preserveSymlinks, includeDirs bool, regexp *regexp.Regexp) (matches []string, isDir bool, err error) {
 	isDir, err = fileutils.IsDirExists(path, false)
 	if err != nil {
 		return
 	}
-
-	excludedPath, err := IsPathExcluded(path, excludePathPattern)
-	if err != nil {
-		return
-	}
-
-	if excludedPath {
-		return
-	}
-	isSymlinkFlow = preserveSymlinks && fileutils.IsPathSymlink(path)
-
+	isSymlinkFlow := preserveSymlinks && fileutils.IsPathSymlink(path)
 	if isDir && !includeDirs && !isSymlinkFlow {
 		return
+	}
+	// Upload directory. We ignore IsDir in a symlink flow since we want to create a dummy file instead that holds the symlink property.
+	// Properties cannot be assigned to repositories in Artifactory.
+	if isSymlinkFlow {
+		isDir = false
 	}
 	matches = regexp.FindStringSubmatch(path)
 	return
@@ -96,7 +109,7 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifa
 	return utils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, SymlinkTargetPath: symlinkPath}, nil
 }
 
-func IsPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {
+func isPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {
 	if len(excludePathPattern) > 0 {
 		excludedPath, err = regexp.MatchString(excludePathPattern, path)
 	}

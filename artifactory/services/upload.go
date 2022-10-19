@@ -277,7 +277,7 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 	} else {
 		convertPatternToRegexp(&uploadParams)
 	}
-	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
+	err = scanFilesByPattern(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
 	return err
 }
 
@@ -305,52 +305,65 @@ func addEscapingParenthesesForUpload(pattern, target, targetPathInArchive string
 	return clientutils.AddEscapingParentheses(pattern, target, targetPathInArchive)
 }
 
-func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
+func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-
-	paths, err := fspatterns.GetPaths(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), uploadParams.IsSymlink())
+	paths, err := fspatterns.ListFiles(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), uploadParams.IsSymlink(), excludePathPattern)
 	if err != nil {
 		return err
 	}
-	// Longest paths first
+	// Longest files path first
 	sort.Sort(sort.Reverse(sort.StringSlice(paths)))
-	// 'foldersPaths' is a subset of the 'paths' array. foldersPaths is in use only when we need to upload folders with flat=true.
-	// 'foldersPaths' will contain only the directories paths which are in the 'paths' array.
-	var foldersPaths []string
-	for index, path := range paths {
-		matches, isDir, isSymlinkFlow, err := fspatterns.PrepareAndFilterPaths(path, excludePathPattern, uploadParams.IsSymlink(), uploadParams.IsIncludeDirs(), patternRegex)
+	var uploadedTargets []string
+	// 'uploadedDirs' is in use only when we need to upload folders with flat=true.
+	// 'uploadedDirs' will contain only local directories paths that have been uploaded to Artifactory.
+	var uploadedDirs []string
+	for _, path := range paths {
+		matches, isDir, err := fspatterns.SearchPatterns(path, uploadParams.IsSymlink(), uploadParams.IsIncludeDirs(), patternRegex)
 		if err != nil {
 			return err
 		}
-
 		if len(matches) > 0 {
-			target := uploadParams.GetTarget()
-			tempPaths := paths
-			tempIndex := index
-			// In case we need to upload directories with flat=true, we want to avoid the creation of unnecessary paths in Artifactory.
-			// To achieve this, we need to take into consideration the directories which had already been uploaded, ignoring all files paths.
-			// When flat=false we take into consideration folder paths which were created implicitly by file upload
-			if uploadParams.IsFlat() && uploadParams.IsIncludeDirs() && isDir {
-				foldersPaths = append(foldersPaths, path)
-				tempPaths = foldersPaths
-				tempIndex = len(foldersPaths) - 1
+			taskData, err := NewUploadTaskData(path, isDir, matches, len(matches), uploadParams, vcsCache)
+			if err != nil {
+				return err
 			}
-			taskData := &uploadTaskData{target: target, path: path, isDir: isDir, isSymlinkFlow: isSymlinkFlow,
-				paths: tempPaths, groups: matches, index: tempIndex, size: len(matches), uploadParams: uploadParams,
-				vcsCache: vcsCache,
+			if isDir {
+				if skipDirUpload(uploadedTargets, uploadedDirs, taskData.target, path, uploadParams.IsIncludeDirs()) {
+					continue
+				}
+				uploadedDirs = append(uploadedDirs, path)
 			}
+			// Update progress
 			incGeneralProgressTotal(progressMgr, uploadParams)
+			// Create upload task
 			err = createUploadTask(taskData, dataHandlerFunc, uploadParams.Regexp)
 			if err != nil {
 				return err
 			}
+			uploadedTargets = append(uploadedTargets, taskData.target)
 		}
 	}
 	return nil
+}
+
+// targetFiles - Paths in Artifactory of the the files that were uploaded.
+// sourceDirs - Paths of the the local dirs that have been already uploaded to Artifactory. (Longest files path first).
+// targetDir - The directory target path to be uploaded.
+// sourceDir - The directory source path to be uploaded.
+func skipDirUpload(targetFiles, sourceDirs []string, targetDir, sourceDir string, includeDirs bool) bool {
+	// Check that the dir is not already created in Artifactory following an implicitly upload child file.
+	if utils.IsContainsPrefix(targetFiles, targetDir+"/") {
+		return true
+	}
+	// Check that the source dir is a bottom-chain dir as includeDirs expect it to be.
+	if includeDirs && len(sourceDirs) > 0 && utils.IsContainsPrefix(sourceDirs, sourceDir+fileutils.GetFileSeparator()) {
+		return true
+	}
+	return false
 }
 
 func incGeneralProgressTotal(progressMgr ioutils.ProgressMgr, uploadParams UploadParams) {
@@ -368,34 +381,39 @@ type uploadTaskData struct {
 	path          string
 	isDir         bool
 	isSymlinkFlow bool
-	paths         []string
 	groups        []string
-	index         int
 	size          int
 	uploadParams  UploadParams
 	vcsCache      *clientutils.VcsCache
 }
 
-func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc, isRegexp bool) (err error) {
-	var placeholdersUsed bool
-	taskData.target, placeholdersUsed, err = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target, isRegexp)
-	if err != nil {
-		return err
-	}
+func NewUploadTaskData(path string, isDir bool, groups []string, size int, uploadParams UploadParams, vcsCache *clientutils.VcsCache, isRegexp bool) (*uploadTaskData, error) {
+	target, placeholdersUsed := clientutils.ReplacePlaceHolders(groups, uploadParams.GetTarget(), isRegexp)
 	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
+	symlinkPath, err := fspatterns.GetFileSymlinkPath(path)
+	if err != nil {
+		return nil, err
+	}
+	// If preserving symlinks or symlink target is empty, use root path name for upload (symlink itself / regular file)
+	if uploadParams.IsSymlink() || symlinkPath == "" {
+		target = getUploadTarget(path, target, uploadParams.IsFlat(), placeholdersUsed)
+	} else {
+		target = getUploadTarget(symlinkPath, target, uploadParams.IsFlat(), placeholdersUsed)
+	}
+	return &uploadTaskData{target: target, path: path, isDir: isDir,
+		groups: groups, size: len(groups), uploadParams: uploadParams,
+		vcsCache: vcsCache,
+	}, nil
+}
+
+func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc) error {
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
 	if err != nil {
 		return err
 	}
-	// If preserving symlinks or symlink target is empty, use root path name for upload (symlink itself / regular file)
-	if taskData.uploadParams.IsSymlink() || symlinkPath == "" {
-		taskData.target = getUploadTarget(taskData.path, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
-	} else {
-		taskData.target = getUploadTarget(symlinkPath, taskData.target, taskData.uploadParams.IsFlat(), placeholdersUsed)
-	}
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders.
 	// This operation replace the placeholders with the relevant value.
-	targetPathInArchive, _, err := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive, isRegexp)
+	targetPathInArchive, _,err := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive, isRegexp)
 	if err != nil {
 		return err
 	}
@@ -412,14 +430,7 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandle
 		}
 		buildProps += vcsProps
 	}
-	uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
-	if taskData.isDir && taskData.uploadParams.IsIncludeDirs() && !taskData.isSymlinkFlow {
-		if taskData.path != "." && (taskData.index == 0 || !utils.IsSubPath(taskData.paths, taskData.index, fileutils.GetFileSeparator())) {
-			uploadData.IsDir = true
-		} else {
-			return nil
-		}
-	}
+	uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps, IsDir: taskData.isDir, IsSymlinkFlow: taskData.isSymlinkFlow}
 	dataHandlerFunc(uploadData)
 	return nil
 }
@@ -440,17 +451,24 @@ func getUploadTarget(rootPath, target string, isFlat, placeholdersUsed bool) str
 
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) uploadFile(localPath, targetPathWithProps string, fileInfo *os.FileInfo, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
+func (us *UploadService) uploadFile(artifact UploadData, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
 	var checksumDeployed = false
 	var resp *http.Response
 	var details *fileutils.FileDetails
 	var body []byte
-	var err error
+	targetPathWithProps, err := buildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
+	if err != nil {
+		return nil, false, err
+	}
+	fileInfo, err := os.Lstat(artifact.Artifact.LocalPath)
+	if errorutils.CheckError(err) != nil {
+		return nil, false, err
+	}
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
-	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(*fileInfo) {
+	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileInfo) {
 		resp, details, body, err = us.uploadSymlink(targetPathWithProps, logMsgPrefix, httpClientsDetails, uploadParams)
 	} else {
-		resp, details, body, checksumDeployed, err = us.doUpload(localPath, targetPathWithProps, logMsgPrefix, httpClientsDetails, *fileInfo, uploadParams)
+		resp, details, body, checksumDeployed, err = us.doUpload(artifact.Artifact.LocalPath, targetPathWithProps, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
 	}
 	if err != nil {
 		return nil, false, err
@@ -678,10 +696,11 @@ func (up *UploadParams) GetDebian() string {
 }
 
 type UploadData struct {
-	Artifact    clientutils.Artifact
-	TargetProps *utils.Properties
-	BuildProps  string
-	IsDir       bool
+	Artifact      clientutils.Artifact
+	TargetProps   *utils.Properties
+	BuildProps    string
+	IsDir         bool
+	IsSymlinkFlow bool
 }
 
 type artifactContext func(UploadData) parallel.TaskFunc
@@ -689,33 +708,39 @@ type artifactContext func(UploadData) parallel.TaskFunc
 func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, uploadParams UploadParams) artifactContext {
 	return func(artifact UploadData) parallel.TaskFunc {
 		return func(threadId int) (err error) {
-			if artifact.IsDir {
-				err = us.createFolderInArtifactory(artifact)
-				return
-			}
 			uploadResult.TotalCount[threadId]++
+			var checksums *entities.Checksum
+			var uploaded bool
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
-			targetPathWithProps, err := buildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
-			if err != nil {
-				return
-			}
-			fileInfo, err := os.Lstat(artifact.Artifact.LocalPath)
-			if errorutils.CheckError(err) != nil {
-				return
-			}
-			log.Info(logMsgPrefix+"Uploading artifact:", artifact.Artifact.LocalPath)
-			uploadFileDetails, uploaded, err := us.uploadFile(artifact.Artifact.LocalPath, targetPathWithProps, &fileInfo, uploadParams, logMsgPrefix)
-			if err != nil {
-				return
+			log.Info(logMsgPrefix+"Uploading:", artifact.Artifact.LocalPath)
+			if artifact.IsDir {
+				// Upload directory
+				err = us.createFolderInArtifactory(artifact)
+				if err != nil {
+					return
+				}
+				uploaded = true
+			} else {
+				// Upload file
+				var uploadFileDetails *fileutils.FileDetails
+				uploadFileDetails, uploaded, err = us.uploadFile(artifact, uploadParams, logMsgPrefix)
+				if err != nil {
+					return
+				}
+				checksums = &uploadFileDetails.Checksum
 			}
 			if uploaded {
-				uploadResult.SuccessCount[threadId]++
-				if us.saveSummary {
-					us.resultsManager.addFinalResult(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, us.ArtDetails.GetUrl(), &uploadFileDetails.Checksum)
-				}
+				us.postUpload(uploadResult, threadId, artifact, checksums)
 			}
 			return
 		}
+	}
+}
+
+func (us *UploadService) postUpload(uploadResult *utils.Result, threadId int, artifact UploadData, checksums *entities.Checksum) {
+	uploadResult.SuccessCount[threadId]++
+	if us.saveSummary {
+		us.resultsManager.addFinalResult(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, us.ArtDetails.GetUrl(), checksums)
 	}
 }
 
@@ -729,7 +754,7 @@ func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
 	resp, body, err := us.client.SendPut(url, emptyContent, &httpClientsDetails)
 	if err != nil {
-		log.Debug(resp)
+		log.Error(resp)
 		return err
 	}
 	logUploadResponse("Uploaded directory:", resp, body, false, us.DryRun)
