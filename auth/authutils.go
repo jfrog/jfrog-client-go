@@ -30,7 +30,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	// Decode the payload.
 	if len(tokenParts) != 3 {
 		return TokenPayload{}, errorutils.CheckErrorf("couldn't extract payload from Access Token.\n" +
-			"Hint: Reference and Identity Tokens are currently not supported by this functionality. " +
+			"Hint: Reference Tokens are currently not supported by this functionality. " +
 			"You can use them as the password in Basic Authentication (username and password). " +
 			"(supported by JFrog Artifactory 7.43.0 or higher)",
 		)
