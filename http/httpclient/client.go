@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -172,7 +171,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	}
 	if closeBody {
 		defer resp.Body.Close()
-		respBody, _ = ioutil.ReadAll(resp.Body)
+		respBody, _ = io.ReadAll(resp.Body)
 	}
 	return
 }
@@ -271,7 +270,7 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if errorutils.CheckError(err) != nil {
 		return nil, nil, err
 	}
@@ -632,7 +631,7 @@ func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, en
 func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
 	httpClientsDetails httputils.HttpClientDetails, progress ioutils.ProgressMgr, progressId int) (fileName string, resp *http.Response, err error) {
 
-	tempFile, err := ioutil.TempFile(chunkDownloadPath, strconv.Itoa(currentSplit)+"_")
+	tempFile, err := os.CreateTemp(chunkDownloadPath, strconv.Itoa(currentSplit)+"_")
 	if errorutils.CheckError(err) != nil {
 		return
 	}

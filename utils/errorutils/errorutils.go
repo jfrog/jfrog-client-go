@@ -2,7 +2,7 @@ package errorutils
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -21,7 +21,7 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 		}
 	}
 
-	errorBody, _ := ioutil.ReadAll(resp.Body)
+	errorBody, _ := io.ReadAll(resp.Body)
 	return errors.New(resp.Status + " " + string(errorBody))
 }
 

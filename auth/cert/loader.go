@@ -5,8 +5,8 @@ import (
 	"crypto/x509"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -14,13 +14,13 @@ func loadCertificates(caCertPool *x509.CertPool, certificatesDirPath string) err
 	if !fileutils.IsPathExists(certificatesDirPath, false) {
 		return nil
 	}
-	files, err := ioutil.ReadDir(certificatesDirPath)
+	files, err := os.ReadDir(certificatesDirPath)
 	err = errorutils.CheckError(err)
 	if err != nil {
 		return err
 	}
 	for _, file := range files {
-		caCert, err := ioutil.ReadFile(filepath.Join(certificatesDirPath, file.Name()))
+		caCert, err := os.ReadFile(filepath.Join(certificatesDirPath, file.Name()))
 		err = errorutils.CheckError(err)
 		if err != nil {
 			return err

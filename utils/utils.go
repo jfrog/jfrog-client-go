@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -254,11 +253,14 @@ func replaceSpecialChars(path string) string {
 
 // Replaces matched regular expression from path to corresponding placeholder {i} at target.
 // Example 1:
-//      pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
-//      returns "hello"
+//
+//	pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
+//	returns "hello"
+//
 // Example 2:
-//      pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
-//      returns "hello"
+//
+//	pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
+//	returns "hello"
 func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, error) {
 	asteriskIndex := strings.Index(pattern, "*")
 	slashIndex := strings.Index(pattern, "/")
@@ -526,7 +528,7 @@ func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetai
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	return errorutils.CheckError(ioutil.WriteFile(filePath, files, 0700))
+	return errorutils.CheckError(os.WriteFile(filePath, files, 0700))
 }
 
 // Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
