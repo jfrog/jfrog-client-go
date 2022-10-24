@@ -176,11 +176,10 @@ func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) stri
 	if localPath == "./" || localPath == ".\\" || localPath == ".\\\\" {
 		return "^.*$"
 	}
-	if strings.HasPrefix(localPath, ".\\\\") {
-		localPath = localPath[3:]
-	} else if strings.HasPrefix(localPath, "./") || strings.HasPrefix(localPath, ".\\") {
-		localPath = localPath[2:]
-	}
+	localPath = strings.TrimPrefix(localPath, ".\\\\")
+	localPath = strings.TrimPrefix(localPath, "./")
+	localPath = strings.TrimPrefix(localPath, ".\\")
+
 	if patternType == AntPattern {
 		localPath = antPatternToRegExp(cleanPath(localPath))
 	} else if patternType == WildCardPattern {
