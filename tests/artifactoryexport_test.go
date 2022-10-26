@@ -2,7 +2,7 @@ package tests
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -49,7 +49,7 @@ func testExport(t *testing.T, exportParams services.ExportParams) {
 		assert.Equal(t, "/api/export/system", r.URL.Path)
 
 		// Check body
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		assert.NoError(t, err)
 		response := services.ExportBody{}
 		err = json.Unmarshal(body, &response)
