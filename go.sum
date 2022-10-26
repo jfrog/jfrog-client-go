@@ -29,6 +29,10 @@ github.com/emirpasic/gods v1.12.0/go.mod h1:YfzfFFoVP/catgzJb4IKIqXjX78Ha8FMSDh3
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/forPelevin/gomoji v1.1.6 h1:mSIGhjyMiywuGFHR/6CLL/L6HwwDiQmYGdl1R9a/05w=
 github.com/forPelevin/gomoji v1.1.6/go.mod h1:h31zCiwG8nIto/c9RmijODA1xgN2JSvwKfU7l65xeTk=
+github.com/gailazar300/build-info-go v0.1.1-0.20221026134224-5f633ac088c3 h1:hTfz7an78txA3fft708oQWUQT/XC93KH9U6U3BO+Kks=
+github.com/gailazar300/build-info-go v0.1.1-0.20221026134224-5f633ac088c3/go.mod h1:iSTj26qEX3eUtyAGMH0qKsW4WJT+MceYxLWP9FfiAq4=
+github.com/gailazar300/gofrog v1.1.2-0.20221026134646-c581613106c2 h1:neZnMfhoEq5k5TEIDf86OYV4VlWqwocu9rG9/X6O5QU=
+github.com/gailazar300/gofrog v1.1.2-0.20221026134646-c581613106c2/go.mod h1:o00tSRff6IapTgaCMuX1Cs9MH08Y1JqnsKgRtx91Gc4=
 github.com/gliderlabs/ssh v0.2.2 h1:6zsha5zo/TWhRhwqCD3+EarCAgZ2yN28ipRnGPnwkI0=
 github.com/gliderlabs/ssh v0.2.2/go.mod h1:U7qILu1NlMHj9FlMhZLlkCdDnU1DBEAqr0aevW3Awn0=
 github.com/go-git/gcfg v1.5.0 h1:Q5ViNfGF8zFgyJWPqYwA7qGFoMTEiBmdlkcfRmpIMa4=
@@ -54,10 +58,6 @@ github.com/imdario/mergo v0.3.12/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c2EWnYs/m4=
-github.com/jfrog/build-info-go v1.8.0 h1:YqinllHwS8lscBOpvQ1+fxzRRYICrY54kwZs3ohj3Us=
-github.com/jfrog/build-info-go v1.8.0/go.mod h1:00yoQNP5tiZNdmw+4RtE8ZRJ4CeV0O/BJzkKwLDNQAM=
-github.com/jfrog/gofrog v1.2.4 h1:PDk/TFUz6HFvXIdoVI4UFzeoVocMVIu+YkROKHJXCOY=
-github.com/jfrog/gofrog v1.2.4/go.mod h1:lbkGXX/DHKdomaSV34eiOC3pAr1HRNa9ffOYh7U7b1U=
 github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 h1:DowS9hvgyYSX4TO5NpyC606/Z4SxnNYbT+WX27or6Ck=
 github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/klauspost/compress v1.4.1/go.mod h1:RyIbtBH6LamlWaDj8nUwkbUhJ87Yi3uG0guNDohfE1A=
