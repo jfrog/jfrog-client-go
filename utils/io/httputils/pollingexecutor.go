@@ -15,7 +15,7 @@ type PollingExecutor struct {
 	PollingInterval time.Duration
 	// Prefix to add at the beginning of each info/error message.
 	MsgPrefix string
-	// pollingAction is the operation to run until the condition fullfiled.
+	// pollingAction is the operation to run until the condition fulfilled.
 	PollingAction PollingAction
 }
 

@@ -27,7 +27,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.24.0"
+	Version     = "1.24.1"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -107,7 +107,7 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 	return rootPath
 }
 
-// Return true if the ‘str’ argument contains open parentasis, that is related to a placeholder.
+// Return true if the ‘str’ argument contains open parenthesis, that is related to a placeholder.
 // The ‘parentheses’ argument contains all the indexes of placeholder parentheses.
 func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 	toFind := "("
@@ -173,14 +173,13 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 }
 
 func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) string {
-	if localPath == "./" || localPath == ".\\" {
+	if localPath == "./" || localPath == ".\\" || localPath == ".\\\\" {
 		return "^.*$"
 	}
-	if strings.HasPrefix(localPath, "./") {
-		localPath = localPath[2:]
-	} else if strings.HasPrefix(localPath, ".\\") {
-		localPath = localPath[3:]
-	}
+	localPath = strings.TrimPrefix(localPath, ".\\\\")
+	localPath = strings.TrimPrefix(localPath, "./")
+	localPath = strings.TrimPrefix(localPath, ".\\")
+
 	if patternType == AntPattern {
 		localPath = antPatternToRegExp(cleanPath(localPath))
 	} else if patternType == WildCardPattern {
