@@ -31,7 +31,7 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, &PipelinesNotAvailableError{InnerError: err}
 		}
-		return nil, errors.New("failed while attempting to get Pipelines version " + err.Error())
+		return nil, errors.New("failed while attempting to get Pipelines version:\n" + err.Error())
 	}
 	var sysInfo PipelinesSystemInfo
 	err = json.Unmarshal(body, &sysInfo)

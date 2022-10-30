@@ -32,7 +32,7 @@ func (vs *VersionService) GetDistributionVersion() (string, error) {
 	}
 
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", errors.New("failed while attempting to get Distribution version " + err.Error())
+		return "", errors.New("failed while attempting to get Distribution version:\n" + err.Error())
 	}
 	var version distributionVersion
 	err = json.Unmarshal(body, &version)
