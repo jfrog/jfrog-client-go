@@ -53,6 +53,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/jfrog/build-info-go => github.com/gailazar300/build-info-go v0.1.1-0.20221030152859-2c7264d217f7
+replace github.com/jfrog/build-info-go => github.com/gailazar300/build-info-go v0.1.1-0.20221030173700-09f52fc862c7
 
-replace github.com/jfrog/gofrog => github.com/gailazar300/gofrog v1.1.2-0.20221026134646-c581613106c2
+replace github.com/jfrog/gofrog => github.com/gailazar300/gofrog v1.1.2-0.20221020124730-6c4eca700351

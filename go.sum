@@ -29,10 +29,10 @@ github.com/emirpasic/gods v1.12.0/go.mod h1:YfzfFFoVP/catgzJb4IKIqXjX78Ha8FMSDh3
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/forPelevin/gomoji v1.1.6 h1:mSIGhjyMiywuGFHR/6CLL/L6HwwDiQmYGdl1R9a/05w=
 github.com/forPelevin/gomoji v1.1.6/go.mod h1:h31zCiwG8nIto/c9RmijODA1xgN2JSvwKfU7l65xeTk=
-github.com/gailazar300/build-info-go v0.1.1-0.20221030152859-2c7264d217f7 h1:b838fcXB+v2jKVWSe20AAEAHEDgSW5W0IYTO9T8PtX0=
-github.com/gailazar300/build-info-go v0.1.1-0.20221030152859-2c7264d217f7/go.mod h1:iSTj26qEX3eUtyAGMH0qKsW4WJT+MceYxLWP9FfiAq4=
-github.com/gailazar300/gofrog v1.1.2-0.20221026134646-c581613106c2 h1:neZnMfhoEq5k5TEIDf86OYV4VlWqwocu9rG9/X6O5QU=
-github.com/gailazar300/gofrog v1.1.2-0.20221026134646-c581613106c2/go.mod h1:o00tSRff6IapTgaCMuX1Cs9MH08Y1JqnsKgRtx91Gc4=
+github.com/gailazar300/build-info-go v0.1.1-0.20221030173700-09f52fc862c7 h1:dDP7eHSiCDdL75kG8Zap1grlI7WzKHoVvVh76FOi/zU=
+github.com/gailazar300/build-info-go v0.1.1-0.20221030173700-09f52fc862c7/go.mod h1:iSTj26qEX3eUtyAGMH0qKsW4WJT+MceYxLWP9FfiAq4=
+github.com/gailazar300/gofrog v1.1.2-0.20221020124730-6c4eca700351 h1:8O2wtc15fiPR8UVQ1Ovup+E0kEvEI8OSfdmcrNZnmbo=
+github.com/gailazar300/gofrog v1.1.2-0.20221020124730-6c4eca700351/go.mod h1:o00tSRff6IapTgaCMuX1Cs9MH08Y1JqnsKgRtx91Gc4=
 github.com/gliderlabs/ssh v0.2.2 h1:6zsha5zo/TWhRhwqCD3+EarCAgZ2yN28ipRnGPnwkI0=
 github.com/gliderlabs/ssh v0.2.2/go.mod h1:U7qILu1NlMHj9FlMhZLlkCdDnU1DBEAqr0aevW3Awn0=
 github.com/go-git/gcfg v1.5.0 h1:Q5ViNfGF8zFgyJWPqYwA7qGFoMTEiBmdlkcfRmpIMa4=
