@@ -29,8 +29,8 @@ github.com/emirpasic/gods v1.12.0/go.mod h1:YfzfFFoVP/catgzJb4IKIqXjX78Ha8FMSDh3
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/forPelevin/gomoji v1.1.6 h1:mSIGhjyMiywuGFHR/6CLL/L6HwwDiQmYGdl1R9a/05w=
 github.com/forPelevin/gomoji v1.1.6/go.mod h1:h31zCiwG8nIto/c9RmijODA1xgN2JSvwKfU7l65xeTk=
-github.com/gailazar300/build-info-go v0.1.1-0.20221030141301-6f3b8ed64fec h1:bBzyTP8PKJw9flNOP3kGhe8uEhzqZwKKLK8pYkJgCfg=
-github.com/gailazar300/build-info-go v0.1.1-0.20221030141301-6f3b8ed64fec/go.mod h1:iSTj26qEX3eUtyAGMH0qKsW4WJT+MceYxLWP9FfiAq4=
+github.com/gailazar300/build-info-go v0.1.1-0.20221030151010-1ae25a86cd71 h1:jQdQ/EbHqFuCfO/tXtZZKUg8KnDBfUY9qu2Mp5OG9Gw=
+github.com/gailazar300/build-info-go v0.1.1-0.20221030151010-1ae25a86cd71/go.mod h1:iSTj26qEX3eUtyAGMH0qKsW4WJT+MceYxLWP9FfiAq4=
 github.com/gailazar300/gofrog v1.1.2-0.20221026134646-c581613106c2 h1:neZnMfhoEq5k5TEIDf86OYV4VlWqwocu9rG9/X6O5QU=
 github.com/gailazar300/gofrog v1.1.2-0.20221026134646-c581613106c2/go.mod h1:o00tSRff6IapTgaCMuX1Cs9MH08Y1JqnsKgRtx91Gc4=
 github.com/gliderlabs/ssh v0.2.2 h1:6zsha5zo/TWhRhwqCD3+EarCAgZ2yN28ipRnGPnwkI0=
