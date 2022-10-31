@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -122,7 +123,7 @@ func (ss *SystemService) sendGet(endpoint string) ([]byte, error) {
 		return nil, err
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed while attempting to get Artifactory %s:\n%s", endpoint, err.Error())
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	return body, nil

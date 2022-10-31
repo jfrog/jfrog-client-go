@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -30,7 +31,7 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, &PipelinesNotAvailableError{InnerError: err}
 		}
-		return nil, err
+		return nil, errors.New("failed while attempting to get Pipelines version:\n" + err.Error())
 	}
 	var sysInfo PipelinesSystemInfo
 	err = json.Unmarshal(body, &sysInfo)
@@ -50,5 +51,5 @@ type PipelinesNotAvailableError struct {
 }
 
 func (*PipelinesNotAvailableError) Error() string {
-	return "Pipelines: Pipelines is not aviable at the moment."
+	return "Pipelines: Pipelines is not available at the moment."
 }
