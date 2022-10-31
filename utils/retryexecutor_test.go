@@ -33,7 +33,7 @@ func TestRetryExecutorSuccess(t *testing.T) {
 	}
 }
 
-func TestRetryExecutorFail(t *testing.T) {
+func TestRetryExecutorTimeout(t *testing.T) {
 	retriesToPerform := 5
 	runCount := 0
 
@@ -47,7 +47,7 @@ func TestRetryExecutorFail(t *testing.T) {
 		},
 	}
 
-	assert.NoError(t, executor.Execute())
+	assert.EqualError(t, executor.Execute(), executor.getTimeoutErrorMsg())
 	if runCount != retriesToPerform+1 {
 		t.Error(fmt.Errorf("expected, %d, got: %d", retriesToPerform, runCount))
 	}
