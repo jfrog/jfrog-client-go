@@ -55,6 +55,11 @@ func (runner *RetryExecutor) Execute() error {
 			time.Sleep(time.Millisecond * time.Duration(runner.RetriesIntervalMilliSecs))
 		}
 	}
+	// If the error is not nil, return it and log the timeout message. Otherwise, generate new error.
+	if err != nil {
+		log.Info(runner.getTimeoutErrorMsg())
+		return err
+	}
 	return errorutils.CheckErrorf(runner.getTimeoutErrorMsg())
 }
 
