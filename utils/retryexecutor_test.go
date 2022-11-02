@@ -45,7 +45,7 @@ func TestRetryExecutorTimeoutWithDefaultError(t *testing.T) {
 		},
 	}
 
-	assert.EqualError(t, executor.Execute(), executor.getTimeoutErrorMsg())
+	assert.Equal(t, executor.Execute(), RetryExecutorTimeoutError{executor.getTimeoutErrorMsg()})
 	assert.Equal(t, retriesToPerform+1, runCount)
 }
 
@@ -53,7 +53,7 @@ func TestRetryExecutorTimeoutWithCustomError(t *testing.T) {
 	retriesToPerform := 5
 	runCount := 0
 
-	errorMsg := "Retry failed due to reason"
+	executionHandler := errors.New("retry failed due to reason")
 
 	executor := RetryExecutor{
 		MaxRetries:               retriesToPerform,
@@ -61,11 +61,11 @@ func TestRetryExecutorTimeoutWithCustomError(t *testing.T) {
 		ErrorMessage:             "Testing RetryExecutor",
 		ExecutionHandler: func() (bool, error) {
 			runCount++
-			return true, errors.New(errorMsg)
+			return true, executionHandler
 		},
 	}
 
-	assert.EqualError(t, executor.Execute(), errorMsg)
+	assert.Equal(t, executor.Execute(), executionHandler)
 	assert.Equal(t, retriesToPerform+1, runCount)
 }
 

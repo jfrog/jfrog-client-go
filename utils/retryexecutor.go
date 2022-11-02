@@ -39,7 +39,7 @@ func (runner *RetryExecutor) Execute() error {
 		// Run ExecutionHandler
 		shouldRetry, err = runner.ExecutionHandler()
 
-		// If should not retry, return
+		// If we should not retry, return.
 		if !shouldRetry {
 			return err
 		}
@@ -60,7 +60,16 @@ func (runner *RetryExecutor) Execute() error {
 		log.Info(runner.getTimeoutErrorMsg())
 		return err
 	}
-	return errorutils.CheckErrorf(runner.getTimeoutErrorMsg())
+	return errorutils.CheckError(RetryExecutorTimeoutError{runner.getTimeoutErrorMsg()})
+}
+
+// Error of this type will be returned if the executor reaches timeout and no other error is returned by the execution handler.
+type RetryExecutorTimeoutError struct {
+	errMsg string
+}
+
+func (retryErr RetryExecutorTimeoutError) Error() string {
+	return retryErr.errMsg
 }
 
 func (runner *RetryExecutor) getTimeoutErrorMsg() string {
