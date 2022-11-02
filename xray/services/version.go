@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -34,7 +35,7 @@ func (vs *VersionService) GetVersion() (string, error) {
 		return "", err
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", err
+		return "", errors.New("failed while attempting to get Xray version:\n" + err.Error())
 	}
 	var version xrayVersion
 	err = json.Unmarshal(body, &version)
