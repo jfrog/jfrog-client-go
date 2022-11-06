@@ -14,8 +14,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-const defaultMaxWaitMinutes = 60           // 1 hour
-const defaultSyncSleepIntervalSeconds = 10 // 10 seconds
+const defaultMaxWaitMinutes = 60                     // 1 hour
+const DefaultDistributeSyncSleepIntervalSeconds = 10 // 10 seconds
 
 type DistributeReleaseBundleService struct {
 	client         *jfroghttpclient.JfrogHttpClient
@@ -81,7 +81,7 @@ func (dr *DistributeReleaseBundleService) execDistribute(name, version string, d
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
 		return "", err
 	}
-	response := distributionResponseBody{}
+	response := DistributionResponseBody{}
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return "", errorutils.CheckError(err)
@@ -106,8 +106,8 @@ func (dr *DistributeReleaseBundleService) waitForDistribution(distributeParams *
 	}
 	distributingMessage := fmt.Sprintf("Sync: Distributing %s/%s...", distributeParams.Name, distributeParams.Version)
 	retryExecutor := &utils.RetryExecutor{
-		MaxRetries:               maxWaitMinutes * 60 / defaultMaxWaitMinutes,
-		RetriesIntervalMilliSecs: defaultSyncSleepIntervalSeconds * 1000,
+		MaxRetries:               maxWaitMinutes * 60 / DefaultDistributeSyncSleepIntervalSeconds,
+		RetriesIntervalMilliSecs: DefaultDistributeSyncSleepIntervalSeconds * 1000,
 		ErrorMessage:             "",
 		LogMsgPrefix:             distributingMessage,
 		ExecutionHandler: func() (bool, error) {
@@ -146,7 +146,7 @@ type DistributionRulesBody struct {
 	CountryCodes []string `json:"country_codes,omitempty"`
 }
 
-type distributionResponseBody struct {
+type DistributionResponseBody struct {
 	TrackerId json.Number `json:"id"`
 }
 

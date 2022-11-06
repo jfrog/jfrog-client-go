@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -38,7 +39,7 @@ func (runner *RetryExecutor) Execute() error {
 		// Run ExecutionHandler
 		shouldRetry, err = runner.ExecutionHandler()
 
-		// If should not retry, return
+		// If we should not retry, return.
 		if !shouldRetry {
 			return err
 		}
@@ -54,8 +55,25 @@ func (runner *RetryExecutor) Execute() error {
 			time.Sleep(time.Millisecond * time.Duration(runner.RetriesIntervalMilliSecs))
 		}
 	}
-	log.Info(fmt.Sprintf("%s executor timeout after %v attempts with %v milliseconds wait intervals", runner.LogMsgPrefix, runner.MaxRetries, runner.RetriesIntervalMilliSecs))
-	return err
+	// If the error is not nil, return it and log the timeout message. Otherwise, generate new error.
+	if err != nil {
+		log.Info(runner.getTimeoutErrorMsg())
+		return err
+	}
+	return errorutils.CheckError(RetryExecutorTimeoutError{runner.getTimeoutErrorMsg()})
+}
+
+// Error of this type will be returned if the executor reaches timeout and no other error is returned by the execution handler.
+type RetryExecutorTimeoutError struct {
+	errMsg string
+}
+
+func (retryErr RetryExecutorTimeoutError) Error() string {
+	return retryErr.errMsg
+}
+
+func (runner *RetryExecutor) getTimeoutErrorMsg() string {
+	return fmt.Sprintf("%s executor timeout after %v attempts with %v milliseconds wait intervals", runner.LogMsgPrefix, runner.MaxRetries, runner.RetriesIntervalMilliSecs)
 }
 
 func (runner *RetryExecutor) LogRetry(attemptNumber int, err error) {
