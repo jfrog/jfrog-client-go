@@ -45,4 +45,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/jfrog/gofrog => github.com/gailazar300/gofrog v1.1.2-0.20221020124730-6c4eca700351
+replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.2.5-0.20221107113836-a4c9225c690e
