@@ -2,7 +2,7 @@ package tests
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -34,7 +34,7 @@ func TestDockerPromote(t *testing.T) {
 		assert.Equal(t, "/api/docker/"+sourceRepo+"/v2/promote", r.URL.Path)
 
 		// Check body
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		assert.NoError(t, err)
 		response := services.DockerPromoteBody{}
 		err = json.Unmarshal(body, &response)

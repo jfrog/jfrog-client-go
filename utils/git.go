@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -78,7 +77,7 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 	// Saving .git file path
 	m.submoduleDotGitPath = m.path
 
-	content, err := ioutil.ReadFile(m.path)
+	content, err := os.ReadFile(m.path)
 	if err != nil {
 		m.err = errorutils.CheckError(err)
 		return

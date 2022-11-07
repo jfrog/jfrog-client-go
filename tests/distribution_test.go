@@ -3,8 +3,8 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -408,9 +408,9 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 // Send GPG keys to Distribution and Artifactory to allow signing of release bundles
 func sendGpgKeys(t *testing.T) {
 	// Read gpg public and private key
-	publicKey, err := ioutil.ReadFile(filepath.Join(getTestDataPath(), "public.key"))
+	publicKey, err := os.ReadFile(filepath.Join(getTestDataPath(), "public.key"))
 	assert.NoError(t, err)
-	privateKey, err := ioutil.ReadFile(filepath.Join(getTestDataPath(), "private.key"))
+	privateKey, err := os.ReadFile(filepath.Join(getTestDataPath(), "private.key"))
 	assert.NoError(t, err)
 
 	err = testsBundleSetSigningKeyService.SetSigningKey(services.NewSetSigningKeyParams(string(publicKey), string(privateKey)))
