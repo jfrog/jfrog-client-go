@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 
@@ -108,7 +108,7 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 }
 
 func readSshKeyAndPassphrase(sshKeyPath, sshPassphrase string) ([]byte, []byte, error) {
-	sshKey, err := ioutil.ReadFile(utils.ReplaceTildeWithUserHome(sshKeyPath))
+	sshKey, err := os.ReadFile(utils.ReplaceTildeWithUserHome(sshKeyPath))
 	if err != nil {
 		return nil, nil, errorutils.CheckError(err)
 	}

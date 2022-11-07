@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -572,7 +571,7 @@ func isRepoExist(repoName string) bool {
 }
 
 func execCreateRepoRest(repoConfig, repoName string) error {
-	content, err := ioutil.ReadFile(repoConfig)
+	content, err := os.ReadFile(repoConfig)
 	if err != nil {
 		return err
 	}

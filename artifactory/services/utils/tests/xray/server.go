@@ -5,7 +5,7 @@ import (
 	"github.com/buger/jsonparser"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	clienttests "github.com/jfrog/jfrog-client-go/utils/tests"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 )
@@ -17,7 +17,7 @@ const (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

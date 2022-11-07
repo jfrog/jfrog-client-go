@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"os/user"
@@ -162,7 +161,7 @@ func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, 
 		path += sep
 	}
 	var fileList []string
-	files, _ := ioutil.ReadDir(path)
+	files, _ := os.ReadDir(path)
 	path = strings.TrimPrefix(path, "."+sep)
 
 	for _, f := range files {
@@ -206,7 +205,7 @@ func ListFiles(path string, includeDirs bool) ([]string, error) {
 		path += sep
 	}
 	fileList := []string{}
-	files, _ := ioutil.ReadDir(path)
+	files, _ := os.ReadDir(path)
 	path = strings.TrimPrefix(path, "."+sep)
 
 	for _, f := range files {
@@ -333,7 +332,7 @@ func IsSshUrl(urlPath string) bool {
 }
 
 func ReadFile(filePath string) ([]byte, error) {
-	content, err := ioutil.ReadFile(filePath)
+	content, err := os.ReadFile(filePath)
 	err = errorutils.CheckError(err)
 	return content, err
 }

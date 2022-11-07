@@ -2,7 +2,6 @@ package tests
 
 import (
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -30,7 +29,7 @@ func TestArtifactoryDownload(t *testing.T) {
 
 func flatDownload(t *testing.T) {
 	var err error
-	workingDir, err := ioutil.TempDir("", "downloadTests")
+	workingDir, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
@@ -52,7 +51,7 @@ func flatDownload(t *testing.T) {
 		t.Error("Missing file c.tar.gz")
 	}
 
-	workingDir2, err := ioutil.TempDir("", "downloadTests")
+	workingDir2, err := os.MkdirTemp("", "downloadTests")
 	downloadTarget = workingDir2 + string(filepath.Separator)
 	if err != nil {
 		t.Error(err)
@@ -77,7 +76,7 @@ func flatDownload(t *testing.T) {
 func recursiveDownload(t *testing.T) {
 	uploadDummyFile(t)
 	var err error
-	workingDir, err := ioutil.TempDir("", "downloadTests")
+	workingDir, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
@@ -99,7 +98,7 @@ func recursiveDownload(t *testing.T) {
 		t.Error("Missing file c.tar.gz")
 	}
 
-	workingDir2, err := ioutil.TempDir("", "downloadTests")
+	workingDir2, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
@@ -124,7 +123,7 @@ func recursiveDownload(t *testing.T) {
 func placeholderDownload(t *testing.T) {
 	uploadDummyFile(t)
 	var err error
-	workingDir, err := ioutil.TempDir("", "downloadTests")
+	workingDir, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
@@ -146,7 +145,7 @@ func placeholderDownload(t *testing.T) {
 
 func includeDirsDownload(t *testing.T) {
 	var err error
-	workingDir, err := ioutil.TempDir("", "downloadTests")
+	workingDir, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
@@ -170,7 +169,7 @@ func includeDirsDownload(t *testing.T) {
 }
 
 func excludePatternsDownload(t *testing.T) {
-	workingDir, err := ioutil.TempDir("", "downloadTests")
+	workingDir, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
@@ -195,7 +194,7 @@ func excludePatternsDownload(t *testing.T) {
 }
 
 func exclusionsDownload(t *testing.T) {
-	workingDir, err := ioutil.TempDir("", "downloadTests")
+	workingDir, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
@@ -220,7 +219,7 @@ func exclusionsDownload(t *testing.T) {
 }
 
 func explodeArchiveDownload(t *testing.T) {
-	workingDir, err := ioutil.TempDir("", "downloadTests")
+	workingDir, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
@@ -272,7 +271,7 @@ func explodeDownloadAndVerify(t *testing.T, downloadParams *services.DownloadPar
 }
 
 func summaryDownload(t *testing.T) {
-	workingDir, err := ioutil.TempDir("", "downloadTests")
+	workingDir, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
@@ -309,7 +308,7 @@ func summaryDownload(t *testing.T) {
 
 // Test downloading of two different files to the same path in the local machine. Only the first of them will be downloaded.
 func duplicateDownload(t *testing.T) {
-	workingDir, err := ioutil.TempDir("", "downloadTests")
+	workingDir, err := os.MkdirTemp("", "downloadTests")
 	if err != nil {
 		t.Error(err)
 	}
