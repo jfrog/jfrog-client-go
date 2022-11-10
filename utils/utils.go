@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -27,7 +26,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.23.4"
+	Version     = "1.24.3"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -107,7 +106,7 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 	return rootPath
 }
 
-// Return true if the ‘str’ argument contains open parentasis, that is related to a placeholder.
+// Return true if the ‘str’ argument contains open parenthesis, that is related to a placeholder.
 // The ‘parentheses’ argument contains all the indexes of placeholder parentheses.
 func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 	toFind := "("
@@ -173,14 +172,13 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 }
 
 func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) string {
-	if localPath == "./" || localPath == ".\\" {
+	if localPath == "./" || localPath == ".\\" || localPath == ".\\\\" {
 		return "^.*$"
 	}
-	if strings.HasPrefix(localPath, "./") {
-		localPath = localPath[2:]
-	} else if strings.HasPrefix(localPath, ".\\") {
-		localPath = localPath[3:]
-	}
+	localPath = strings.TrimPrefix(localPath, ".\\\\")
+	localPath = strings.TrimPrefix(localPath, "./")
+	localPath = strings.TrimPrefix(localPath, ".\\")
+
 	if patternType == AntPattern {
 		localPath = antPatternToRegExp(cleanPath(localPath))
 	} else if patternType == WildCardPattern {
@@ -249,11 +247,15 @@ func getFileSeparator() string {
 
 // Replaces matched regular expression from path to corresponding placeholder {i} at target.
 // Example 1:
-//      pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
-//      returns "hello"
+//
+//	pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
+//	returns "hello"
+//
 // Example 2:
-//      pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
-//      returns "hello"
+//
+//	pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
+//	returns "hello"
+//
 // return (parsed target, placeholders replaced in target, error)
 func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, bool, error) {
 	asteriskIndex := strings.Index(pattern, "*")
@@ -533,7 +535,7 @@ func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetai
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	return errorutils.CheckError(ioutil.WriteFile(filePath, files, 0700))
+	return errorutils.CheckError(os.WriteFile(filePath, files, 0700))
 }
 
 // Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
