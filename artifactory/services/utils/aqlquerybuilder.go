@@ -121,7 +121,7 @@ func createAqlQueryForBuild(includeQueryPart string, artifactsQuery bool, builds
 	return fmt.Sprintf(itemsPart, queryBody, includeQueryPart)
 }
 
-//noinspection GoUnusedExportedFunction
+// noinspection GoUnusedExportedFunction
 func CreateAqlQueryForYarn(npmName, npmVersion string) string {
 	itemsPart :=
 		`items.find({` +

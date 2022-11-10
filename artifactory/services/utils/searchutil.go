@@ -103,10 +103,11 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 
 // Search with builds may return duplicated items, as the search is performed by checksums.
 // Some are not part of the build and others may be duplicated of the same artifact.
-// 1. Save SHA1 values received for build-name.
-// 2. Remove artifacts that not are present on the sha1 list
-// 3. If we have more than one artifact with the same sha1:
-// 	3.1 Compare the build-name & build-number among all the artifact with the same sha1.
+//  1. Save SHA1 values received for build-name.
+//  2. Remove artifacts that not are present on the sha1 list
+//  3. If we have more than one artifact with the same sha1:
+//     3.1 Compare the build-name & build-number among all the artifact with the same sha1.
+//
 // This will prevent unnecessary search upon all Artifactory:
 func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
 	if includePropertiesInAqlForSpec(specFile) {
