@@ -79,8 +79,8 @@ func ExtractUsernameFromAccessToken(token string) (username string) {
 		if err != nil {
 			log.Warn(err.Error() + "\n" +
 				"The provided access token is not a valid JWT, probably a reference token.\n" +
-				"Some build tools only support basic authentication which requires also a username.\n" +
-				"If you plan to work with one of those tools, please provide a username.")
+				"Some package managers only support basic authentication which requires also a username.\n" +
+				"If you plan to work with one of those package managers, please provide a username.")
 		}
 	}()
 	tokenPayload, err := extractPayloadFromAccessToken(token)
