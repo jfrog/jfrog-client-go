@@ -227,10 +227,7 @@ func checkAnnotatedTag(ref *plumbing.Reference, repo *git.Repository) (*object.C
 	}
 	// Find the commit object associated with the annotated tag.
 	commit, err := repo.CommitObject(annotatedTag.Target)
-	if err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-	return commit, err
+	return commit, errorutils.CheckError(err)
 }
 
 func collectLfsFileFromGit(results map[string]struct{}, file *object.File) error {
