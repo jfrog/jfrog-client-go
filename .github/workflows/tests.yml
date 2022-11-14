@@ -3,7 +3,7 @@ on:
   push:
   # Triggers the workflow on labeled PRs only.
   pull_request_target:
-    types: [ labeled ]
+    types: [labeled]
 # Ensures that only the latest commit is running for each PR at a time.
 # Ignores this rule for push events.
 concurrency:
@@ -18,7 +18,7 @@ jobs:
         uses: actions-ecosystem/action-remove-labels@v1
         if: ${{github.event_name != 'push' }}
         with:
-          labels: 'safe to test'
+          labels: "safe to test"
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -46,8 +46,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [ artifactory ]
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        suite: [artifactory]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install Go
@@ -84,8 +84,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [ distribution, xray, access ]
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        suite: [distribution, xray, access]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -106,7 +106,15 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: ${{ matrix.suite }} tests
-        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --ds.url=${{ secrets.PLATFORM_URL }}/distribution --xr.url=${{ secrets.PLATFORM_URL }}/xray --access.url=${{ secrets.PLATFORM_URL }}/access --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url=$RT_URL --ds.url=$DIST_URL --xr.url=$XRAY_URL --access.url=$ACCESS_URL --rt.user=$PLATFORM_USER --rt.password=$PLATFORM_PASSWORD --access.token=$PLATFORM_ADMIN_TOKEN --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        env:
+          RT_URL: ${{ secrets.PLATFORM_URL }}/artifactory
+          DIST_URL: ${{ secrets.PLATFORM_URL }}/distribution
+          XRAY_URL: ${{ secrets.PLATFORM_URL }}/xray
+          ACCESS_URL: ${{ secrets.PLATFORM_URL }}/access
+          PLATFORM_USER: ${{ secrets.PLATFORM_USER }}
+          PLATFORM_PASSWORD: ${{ secrets.PLATFORM_PASSWORD }}
+          PLATFORM_ADMIN_TOKEN: ${{ secrets.PLATFORM_ADMIN_TOKEN }}
 
   JFrog-Client-Go-Pipelines-Tests:
     needs: Pretest
@@ -131,7 +139,16 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: pipelines tests
-        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --pipe.url=${{ secrets.PLATFORM_URL }}/pipelines --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --pipe.accessToken=${{ secrets.PLATFORM_ADMIN_TOKEN }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }} --ci.runId=${{ runner.os }}_pipe
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines --rt.url=$RT_URL --pipe.url=$PIPE_URL --rt.user=$PLATFORM_USER --rt.password=$PLATFORM_PASSWORD --pipe.accessToken=$PLATFORM_ADMIN_TOKEN --pipe.vcsToken=$CLI_PIPE_VCS_TOKEN --pipe.vcsRepo=$CLI_PIPE_VCS_REPO --pipe.vcsBranch=$CLI_PIPE_VCS_BRANCH --ci.runId=${{ runner.os }}_pipe
+        env:
+          RT_URL: ${{ secrets.PLATFORM_URL }}/artifactory
+          PIPE_URL: ${{ secrets.PLATFORM_URL }}/pipelines
+          PLATFORM_USER: ${{ secrets.PLATFORM_USER }}
+          PLATFORM_PASSWORD: ${{ secrets.PLATFORM_PASSWORD }}
+          PLATFORM_ADMIN_TOKEN: ${{ secrets.PLATFORM_ADMIN_TOKEN }}
+          CLI_PIPE_VCS_TOKEN: ${{ secrets.CLI_PIPE_VCS_TOKEN }}
+          CLI_PIPE_VCS_REPO: ${{ secrets.CLI_PIPE_VCS_REPO }}
+          CLI_PIPE_VCS_BRANCH: ${{ secrets.CLI_PIPE_VCS_BRANCH }}
 
   JFrog-Client-Go-Repositories-Tests:
     needs: Pretest
