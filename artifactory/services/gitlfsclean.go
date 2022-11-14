@@ -198,9 +198,13 @@ func getLfsFilesFromGit(path, refMatch string) (map[string]struct{}, error) {
 		if err != nil || !match {
 			return errorutils.CheckError(err)
 		}
-		commit, err := repo.CommitObject(ref.Hash())
+		var commit *object.Commit
+		commit, err = repo.CommitObject(ref.Hash())
 		if err != nil {
-			return errorutils.CheckError(err)
+			commit, err = checkAnnotatedTag(ref, repo)
+			if err != nil {
+				return err
+			}
 		}
 		files, err := commit.Files()
 		if err != nil {
@@ -212,6 +216,18 @@ func getLfsFilesFromGit(path, refMatch string) (map[string]struct{}, error) {
 		return errorutils.CheckError(err)
 	})
 	return results, errorutils.CheckError(err)
+}
+
+// checkAnnotatedTag checks the case of an annotated tag in which the commit is within the tag object
+func checkAnnotatedTag(ref *plumbing.Reference, repo *git.Repository) (*object.Commit, error) {
+	// Get the annotated tag object.
+	annotatedTag, err := repo.TagObject(ref.Hash())
+	if err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	// Find the commit object associated with the annotated tag.
+	commit, err := repo.CommitObject(annotatedTag.Target)
+	return commit, errorutils.CheckError(err)
 }
 
 func collectLfsFileFromGit(results map[string]struct{}, file *object.File) error {

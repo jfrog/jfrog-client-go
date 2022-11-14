@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"strings"
 	"time"
 )
@@ -29,11 +30,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 
 	// Decode the payload.
 	if len(tokenParts) != 3 {
-		return TokenPayload{}, errorutils.CheckErrorf("couldn't extract payload from Access Token.\n" +
-			"Hint: Reference Tokens are currently not supported by this functionality. " +
-			"You can use them as the password in Basic Authentication (username and password). " +
-			"(supported by JFrog Artifactory 7.43.0 or higher)",
-		)
+		return TokenPayload{}, errorutils.CheckErrorf("couldn't extract payload from Access Token")
 	}
 	payload, err := base64.RawStdEncoding.DecodeString(tokenParts[1])
 	if err != nil {
@@ -76,24 +73,37 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 	return errorutils.CheckErrorf("failed extracting audience from payload. Audience is of unexpected type")
 }
 
-func ExtractUsernameFromAccessToken(token string) (string, error) {
+func ExtractUsernameFromAccessToken(token string) (username string) {
+	var err error
+	defer func() {
+		if err != nil {
+			log.Warn(err.Error() + "\n" +
+				"The provided access token is not a valid JWT, probably a reference token.\n" +
+				"Some package managers only support basic authentication which requires also a username.\n" +
+				"If you plan to work with one of those package managers, please provide a username.")
+		}
+	}()
 	tokenPayload, err := extractPayloadFromAccessToken(token)
 	if err != nil {
-		return "", err
+		return
 	}
 	// Extract subject.
 	if tokenPayload.Subject == "" {
-		return "", errorutils.CheckErrorf("could not extract subject from the provided access-token")
+		err = errorutils.CheckErrorf("couldn't extract subject from the provided access-token")
+		return
 	}
 
 	// Extract username from subject.
 	usernameStartIndex := strings.LastIndex(tokenPayload.Subject, "/")
 	if usernameStartIndex < 0 {
-		return "", errorutils.CheckErrorf("Could not extract username from access-token's subject: %s", tokenPayload.Subject)
+		err = errorutils.CheckErrorf("couldn't extract username from access-token's subject: %s", tokenPayload.Subject)
+		return
 	}
-	username := tokenPayload.Subject[usernameStartIndex+1:]
-
-	return username, nil
+	username = tokenPayload.Subject[usernameStartIndex+1:]
+	if username == "" {
+		err = errorutils.CheckErrorf("empty username extracted from access-token's subject: %s", tokenPayload.Subject)
+	}
+	return
 }
 
 // Extracts the expiry from an access token, in seconds
