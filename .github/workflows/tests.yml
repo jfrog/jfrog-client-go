@@ -106,7 +106,7 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: ${{ matrix.suite }} tests
-        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url=$RT_URL --ds.url=$DIST_URL --xr.url=$XRAY_URL --access.url=$ACCESS_URL --rt.user=$PLATFORM_USER --rt.password=$PLATFORM_PASSWORD --access.token=$PLATFORM_ADMIN_TOKEN --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url="$RT_URL" --ds.url="$DIST_URL" --xr.url="$XRAY_URL" --access.url="$ACCESS_URL" --rt.user="$PLATFORM_USER" --rt.password="$PLATFORM_PASSWORD" --access.token="$PLATFORM_ADMIN_TOKEN" --ci.runId=${{ runner.os }}-${{ matrix.suite }}
         env:
           RT_URL: ${{ secrets.PLATFORM_URL }}/artifactory
           DIST_URL: ${{ secrets.PLATFORM_URL }}/distribution
@@ -139,7 +139,7 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: pipelines tests
-        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines --rt.url=$RT_URL --pipe.url=$PIPE_URL --rt.user=$PLATFORM_USER --rt.password=$PLATFORM_PASSWORD --pipe.accessToken=$PLATFORM_ADMIN_TOKEN --pipe.vcsToken=$CLI_PIPE_VCS_TOKEN --pipe.vcsRepo=$CLI_PIPE_VCS_REPO --pipe.vcsBranch=$CLI_PIPE_VCS_BRANCH --ci.runId=${{ runner.os }}_pipe
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines --rt.url="$RT_URL" --pipe.url="$PIPE_URL" --rt.user="$PLATFORM_USER" --rt.password="$PLATFORM_PASSWORD" --pipe.accessToken="$PLATFORM_ADMIN_TOKEN" --pipe.vcsToken="$CLI_PIPE_VCS_TOKEN" --pipe.vcsRepo="$CLI_PIPE_VCS_REPO" --pipe.vcsBranch="$CLI_PIPE_VCS_BRANCH" --ci.runId=${{ runner.os }}_pipe
         env:
           RT_URL: ${{ secrets.PLATFORM_URL }}/artifactory
           PIPE_URL: ${{ secrets.PLATFORM_URL }}/pipelines
