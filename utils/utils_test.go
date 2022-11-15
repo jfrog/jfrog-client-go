@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -75,6 +76,22 @@ func assertSplitWithEscape(str string, expected []string, t *testing.T) {
 	}
 }
 
+func TestConvertLocalPatternToRegexp(t *testing.T) {
+	var tests = []struct {
+		localPath string
+		expected  string
+	}{
+		{"./", "^.*$"},
+		{".\\\\", "^.*$"},
+		{".\\", "^.*$"},
+		{"./abc", "abc"},
+		{".\\\\abc", "abc"},
+		{".\\abc", "abc"},
+	}
+	for _, test := range tests {
+		assert.Equal(t, test.expected, ConvertLocalPatternToRegexp(test.localPath, RegExp))
+	}
+}
 func TestCleanPath(t *testing.T) {
 	if io.IsWindows() {
 		parameter := "\\\\foo\\\\baz\\\\..\\\\bar\\\\*"
@@ -175,7 +192,8 @@ func TestIsWildcardParentheses(t *testing.T) {
 
 // TestAntPathToRegExp check the functionality of antPatternToRegExp function.
 // Each time we take an array of paths, simulating files hierarchy on a filesystem, and an ANT pattern expression -
-//	 and see if the conversion to regular expression worked as expected.
+//
+//	and see if the conversion to regular expression worked as expected.
 func TestAntPathToRegExp(t *testing.T) {
 	separator := getFileSeparator()
 	var paths = getFileSystemsPathsForTestingAntPattern(separator)

@@ -3,7 +3,7 @@ package fileutils
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -159,7 +159,7 @@ func checkSymlinkEntry(header *archiveHeader, archiveEntry archiver.File, destin
 	if targetLinkPath == "" {
 		// The link destination path is not always in the archive header
 		// In that case, we will look at the link content to get the link destination path
-		content, err := ioutil.ReadAll(archiveEntry.ReadCloser)
+		content, err := io.ReadAll(archiveEntry.ReadCloser)
 		if err != nil {
 			return errorutils.CheckError(err)
 		}

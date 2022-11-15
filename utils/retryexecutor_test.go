@@ -2,7 +2,7 @@ package utils
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -28,12 +28,10 @@ func TestRetryExecutorSuccess(t *testing.T) {
 	}
 
 	assert.NoError(t, executor.Execute())
-	if runCount != breakRetriesAt {
-		t.Error(fmt.Errorf("expected, %d, got: %d", breakRetriesAt, runCount))
-	}
+	assert.Equal(t, breakRetriesAt, runCount)
 }
 
-func TestRetryExecutorFail(t *testing.T) {
+func TestRetryExecutorTimeoutWithDefaultError(t *testing.T) {
 	retriesToPerform := 5
 	runCount := 0
 
@@ -47,10 +45,28 @@ func TestRetryExecutorFail(t *testing.T) {
 		},
 	}
 
-	assert.NoError(t, executor.Execute())
-	if runCount != retriesToPerform+1 {
-		t.Error(fmt.Errorf("expected, %d, got: %d", retriesToPerform, runCount))
+	assert.Equal(t, executor.Execute(), RetryExecutorTimeoutError{executor.getTimeoutErrorMsg()})
+	assert.Equal(t, retriesToPerform+1, runCount)
+}
+
+func TestRetryExecutorTimeoutWithCustomError(t *testing.T) {
+	retriesToPerform := 5
+	runCount := 0
+
+	executionHandler := errors.New("retry failed due to reason")
+
+	executor := RetryExecutor{
+		MaxRetries:               retriesToPerform,
+		RetriesIntervalMilliSecs: 0,
+		ErrorMessage:             "Testing RetryExecutor",
+		ExecutionHandler: func() (bool, error) {
+			runCount++
+			return true, executionHandler
+		},
 	}
+
+	assert.Equal(t, executor.Execute(), executionHandler)
+	assert.Equal(t, retriesToPerform+1, runCount)
 }
 
 func TestRetryExecutorCancel(t *testing.T) {
@@ -71,7 +87,5 @@ func TestRetryExecutorCancel(t *testing.T) {
 
 	cancelFunc()
 	assert.EqualError(t, executor.Execute(), context.Canceled.Error())
-	if runCount != 1 {
-		t.Error(fmt.Errorf("expected, %d, got: %d", retriesToPerform, runCount))
-	}
+	assert.Equal(t, 1, runCount)
 }

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -25,15 +26,8 @@ func TestExtractSubjectFromAccessToken(t *testing.T) {
 	}
 
 	for index, test := range tests {
-		subject, err := ExtractUsernameFromAccessToken(test.inputToken)
-		if err != nil && test.shouldError == false {
-			t.Error(err)
-		}
-		if err == nil && test.shouldError == true {
-			t.Errorf("Test number %d expected to return an error.", index)
-		}
-		if subject != tests[index].expectedSubject {
-			t.Errorf("Expected subject to be: %s, got: %s.", test.expectedSubject, subject)
-		}
+		username := ExtractUsernameFromAccessToken(test.inputToken)
+		assert.Equal(t, username == "", test.shouldError)
+		assert.Equal(t, username, tests[index].expectedSubject)
 	}
 }

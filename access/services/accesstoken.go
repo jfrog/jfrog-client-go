@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-//#nosec G101 -- False positive - no hardcoded credentials.
+// #nosec G101 -- False positive - no hardcoded credentials.
 const tokensApi = "api/v1/tokens"
 
 type TokenService struct {

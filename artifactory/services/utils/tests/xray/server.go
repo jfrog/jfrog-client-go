@@ -2,7 +2,7 @@ package xray
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -22,7 +22,7 @@ const (
 )
 
 func scanBuildHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -49,7 +49,7 @@ func scanBuildHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func artifactSummaryHandler(w http.ResponseWriter, r *http.Request) {
-	_, err := ioutil.ReadAll(r.Body)
+	_, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
