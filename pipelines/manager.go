@@ -103,3 +103,15 @@ func (sm *PipelinesServicesManager) AddPipelineSource(projectIntegrationId int, 
 	sourcesService.ServiceDetails = sm.config.GetServiceDetails()
 	return sourcesService.AddSource(projectIntegrationId, repositoryFullName, branch, fileFilter)
 }
+
+func (sm *PipelinesServicesManager) GetPipelineRunStatusByBranch(branch, pipeline string) (*services.PipResponse, error) {
+	runService := services.NewRunService(sm.client)
+	runService.ServiceDetails = sm.config.GetServiceDetails()
+	return runService.GetRunStatus(branch, pipeline)
+}
+
+func (sm *PipelinesServicesManager) TriggerPipelineRun(branch, pipeline string) (string, error) {
+	runService := services.NewRunService(sm.client)
+	runService.ServiceDetails = sm.config.GetServiceDetails()
+	return runService.TriggerPipelineRun(branch, pipeline)
+}
