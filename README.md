@@ -1639,7 +1639,7 @@ defer func() {
 }()
 
 // Iterate over the results.
-for currentResult := new(ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(ResultItem)  {
+for currentResult := new(utils.ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(utils.ResultItem)  {
     fmt.Printf("Found artifact: %s of type: %s\n", currentResult.Name, currentResult.Type)
 }
 if err := resultReader.GetError(); err != nil {
@@ -1650,7 +1650,7 @@ if err := resultReader.GetError(); err != nil {
 reader.Reset()
 ````
 
-- `reader.NextRecord(currentResult)` reads the next record from the reader into `currentResult` of type `ResultItem`.
+- `reader.NextRecord(currentResult)` reads the next record from the reader into `currentResult` of type `utils.ResultItem`.
 
 - `reader.Close()` removes the file used by the reader after it is used (preferably using `defer`).
 
