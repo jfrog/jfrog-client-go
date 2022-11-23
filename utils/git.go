@@ -87,19 +87,17 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		m.err = err
 		return
 	}
-	ResolvedGitPath := strings.TrimSpace(stdout.String())
-	// trim the worktree path to just the
-	// worktreePathReduced := filepath.Dir(filepath.Dir(worktreePath))
-	exists, err = fileutils.IsDirExists(ResolvedGitPath, false)
+	resolvedGitPath := strings.TrimSpace(stdout.String())
+	exists, err = fileutils.IsDirExists(resolvedGitPath, false)
 	if err != nil {
 		m.err = err
 		return
 	}
 	if !exists {
-		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + ResolvedGitPath + "'")
+		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + resolvedGitPath + "'")
 		return
 	}
-	m.path = ResolvedGitPath
+	m.path = resolvedGitPath
 	return
 }
 
