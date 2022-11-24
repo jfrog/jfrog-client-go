@@ -1,6 +1,6 @@
 module github.com/jfrog/jfrog-client-go
 
-go 1.18
+go 1.19
 
 require (
 	github.com/buger/jsonparser v1.1.1
@@ -8,8 +8,8 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gookit/color v1.5.1
-	github.com/jfrog/build-info-go v1.8.1
-	github.com/jfrog/gofrog v1.2.4
+	github.com/jfrog/build-info-go v1.8.2
+	github.com/jfrog/gofrog v1.2.5
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.0
 	github.com/xanzy/ssh-agent v0.3.3-0.20220920102508-0fa644ba07f4
@@ -53,6 +53,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.5.1-0.20220901152139-b617a66ca9b1
+// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.8.2-0.20221107114147-4a1ad939c80e
 
-// replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.1.3-0.20220628060849-fcdbffb153da
+// replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.2.5-0.20221107113836-a4c9225c690e

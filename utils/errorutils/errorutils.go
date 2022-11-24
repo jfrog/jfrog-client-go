@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -31,7 +31,7 @@ func CheckResponseStatus(resp *http.Response, expectedStatusCodes ...int) error 
 		}
 	}
 	// Add resp.Body to error response if exists
-	errorBody, _ := ioutil.ReadAll(resp.Body)
+	errorBody, _ := io.ReadAll(resp.Body)
 	return CheckError(GenerateResponseError(resp.Status, string(errorBody)))
 }
 

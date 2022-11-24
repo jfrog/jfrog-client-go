@@ -2,7 +2,7 @@ package content
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 	"sync"
 	"testing"
@@ -74,7 +74,7 @@ func TestContentWriter(t *testing.T) {
 	writeTestRecords(t, writer)
 	of, err := os.Open(writer.GetFilePath())
 	assert.NoError(t, err)
-	byteValue, _ := ioutil.ReadAll(of)
+	byteValue, _ := io.ReadAll(of)
 	var response Response
 	assert.NoError(t, json.Unmarshal(byteValue, &response))
 	assert.NoError(t, of.Close())
