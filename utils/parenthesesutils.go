@@ -56,7 +56,7 @@ func RemovePlaceholderParentheses(pattern, target string) string {
 }
 
 // Escaping Parentheses with no corresponding placeholder.
-func addEscapingParentheses(pattern, target string) string {
+func AddEscapingParentheses(pattern, target string) string {
 	parentheses := CreateParenthesesSlice(pattern, target)
 	var temp string
 	for i, c := range pattern {

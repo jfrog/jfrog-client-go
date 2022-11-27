@@ -196,7 +196,7 @@ func cleanPath(path string) string {
 		path += temp
 	}
 	// Since filepath.Clean replaces \\ with \, we revert this action.
-	path = strings.Replace(path, `\`, `\\`, -1)
+	//path = strings.Replace(path, `\`, `\\`, -1)
 	return path
 }
 
@@ -266,7 +266,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
-	pattern = addEscapingParentheses(pattern, target)
+	pattern = AddEscapingParentheses(pattern, target)
 	pattern = stringutils.WildcardPatternToRegExp(pattern)
 	if slashIndex < 0 {
 		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern

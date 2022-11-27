@@ -272,6 +272,7 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		dataHandlerFunc(uploadData)
 		return err
 	}
+	uploadParams.SetPattern(clientutils.AddEscapingParentheses(uploadParams.GetPattern(), uploadParams.GetTarget()))
 	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
 	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
 	return err
