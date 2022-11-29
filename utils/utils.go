@@ -284,7 +284,10 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 
 	groups := r.FindStringSubmatch(path)
 	if len(groups) > 0 {
-		target, replaceOccurred := ReplacePlaceHolders(groups, target)
+		target, replaceOccurred, err := ReplacePlaceHolders(groups, target)
+		if err != nil {
+			return "", false, err
+		}
 		return target, replaceOccurred, nil
 	}
 	return target, false, nil
@@ -293,10 +296,10 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 // group - regular expression matched group to replace with placeholders
 // toReplace - target pattern to replace
 // Return - (parsed placeholders string, placeholders were  replaced)
-func ReplacePlaceHolders(groups []string, toReplace string) (string, bool) {
-	// TODO add max indexer check
-	if toReplace == "" {
-		return toReplace, false
+func ReplacePlaceHolders(groups []string, toReplace string) (string, bool, error) {
+	maxPlaceholderIndex, err := getMaxPlaceholderIndex(toReplace)
+	if err != nil {
+		return "", false, err
 	}
 	preReplaced := toReplace
 	// Index for the placeholder number.
@@ -305,14 +308,32 @@ func ReplacePlaceHolders(groups []string, toReplace string) (string, bool) {
 	placeHolderIndexer := 1
 	for i := 1; i < len(groups); i++ {
 		group := strings.ReplaceAll(groups[i], "\\", "/")
-		for !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") {
+		for !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") && placeHolderIndexer <= maxPlaceholderIndex {
 			placeHolderIndexer++
 		}
 		toReplace = strings.ReplaceAll(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}", group)
 		placeHolderIndexer++
 	}
 	replaceOccurred := preReplaced != toReplace
-	return toReplace, replaceOccurred
+	return toReplace, replaceOccurred, nil
+}
+
+// Returns the higher index between all placeHolders target instances.
+// Example: for input "{1}{5}{3}" returns 5.
+func getMaxPlaceholderIndex(toReplace string) (int, error) {
+	reg := regexp.MustCompile("\\{\\d+\\}+")
+	placeholders := reg.FindAllString(toReplace, -1)
+	max := 0
+	for _, placeholder := range placeholders {
+		num, err := strconv.Atoi(strings.TrimPrefix(strings.TrimSuffix(placeholder, "}"), "{"))
+		if err != nil {
+			return 0, err
+		}
+		if num > max {
+			max = num
+		}
+	}
+	return max, nil
 }
 
 func GetLogMsgPrefix(threadId int, dryRun bool) string {

@@ -355,9 +355,9 @@ type uploadTaskData struct {
 	vcsCache      *clientutils.VcsCache
 }
 
-func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc) error {
+func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc) (err error) {
 	var placeholdersUsed bool
-	taskData.target, placeholdersUsed = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
+	taskData.target, placeholdersUsed, err = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
 
 	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
@@ -372,8 +372,10 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandle
 	}
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders.
 	// This operation replace the placeholders with the relevant value.
-	targetPathInArchive, _ := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive)
-
+	targetPathInArchive, _, err := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive)
+	if err != nil {
+		return err
+	}
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, SymlinkTargetPath: symlinkPath, TargetPathInArchive: targetPathInArchive}
 	props, err := createProperties(artifact, taskData.uploadParams)
 	if err != nil {
