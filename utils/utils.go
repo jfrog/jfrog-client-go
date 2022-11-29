@@ -308,8 +308,11 @@ func ReplacePlaceHolders(groups []string, toReplace string) (string, bool, error
 	placeHolderIndexer := 1
 	for i := 1; i < len(groups); i++ {
 		group := strings.ReplaceAll(groups[i], "\\", "/")
-		for !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") && placeHolderIndexer <= maxPlaceholderIndex {
+		for !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") {
 			placeHolderIndexer++
+			if placeHolderIndexer > maxPlaceholderIndex {
+				break
+			}
 		}
 		toReplace = strings.ReplaceAll(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}", group)
 		placeHolderIndexer++
@@ -321,7 +324,7 @@ func ReplacePlaceHolders(groups []string, toReplace string) (string, bool, error
 // Returns the higher index between all placeHolders target instances.
 // Example: for input "{1}{5}{3}" returns 5.
 func getMaxPlaceholderIndex(toReplace string) (int, error) {
-	reg := regexp.MustCompile("\\{\\d+\\}+")
+	reg := regexp.MustCompile("\\{(\\d+?)\\}")
 	placeholders := reg.FindAllString(toReplace, -1)
 	max := 0
 	for _, placeholder := range placeholders {

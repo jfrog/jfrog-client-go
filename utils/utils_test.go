@@ -292,3 +292,31 @@ func equalSlicesIgnoreOrder(s1, s2 []string) bool {
 	sort.Strings(s2)
 	return reflect.DeepEqual(s1, s2)
 }
+
+func TestGetMaxPlaceholderIndex(t *testing.T) {
+	type args struct {
+		toReplace string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{"empty", args{""}, 0, nil},
+		{"empty", args{"{}"}, 0, nil},
+		{"basic", args{"{1}{5}{3}"}, 5, nil},
+		{"basic", args{"}5{{3}"}, 3, nil},
+		{"basic", args{"{1}}5}{3}"}, 3, nil},
+		{"basic", args{"{1}5{}}{3}"}, 3, nil},
+		{"special characters", args{"!@#$%^&*abc(){}}{{2}!@#$%^&*abc(){}}{{1}!@#$%^&*abc(){}}{"}, 2, nil},
+		{"multiple digits", args{"{2}{100}fdsff{101}d#%{99}"}, 101, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getMaxPlaceholderIndex(tt.args.toReplace)
+			assert.NoError(t, err)
+			assert.Equalf(t, tt.want, got, "getMaxPlaceholderIndex(%v)", tt.args.toReplace)
+		})
+	}
+}
