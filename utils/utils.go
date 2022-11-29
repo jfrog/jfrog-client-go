@@ -196,7 +196,7 @@ func cleanPath(path string) string {
 		path += temp
 	}
 	// Since filepath.Clean replaces \\ with \, we revert this action.
-	//path = strings.Replace(path, `\`, `\\`, -1)
+	path = strings.Replace(path, `\`, `\\`, -1)
 	return path
 }
 
@@ -294,10 +294,22 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 // toReplace - target pattern to replace
 // Return - (parsed placeholders string, placeholders were  replaced)
 func ReplacePlaceHolders(groups []string, toReplace string) (string, bool) {
+	// TODO add max indexer check
+	if toReplace == "" {
+		return toReplace, false
+	}
 	preReplaced := toReplace
+	// Index for the placeholder number.
+	// Example : in case of toReplace="target/{1}{3}", we have a group with 2 elements.
+	// The second element indexer in the group is 2, but its placeholder indexer is 3.
+	placeHolderIndexer := 1
 	for i := 1; i < len(groups); i++ {
-		group := strings.Replace(groups[i], "\\", "/", -1)
-		toReplace = strings.Replace(toReplace, "{"+strconv.Itoa(i)+"}", group, -1)
+		group := strings.ReplaceAll(groups[i], "\\", "/")
+		for !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") {
+			placeHolderIndexer++
+		}
+		toReplace = strings.ReplaceAll(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}", group)
+		placeHolderIndexer++
 	}
 	replaceOccurred := preReplaced != toReplace
 	return toReplace, replaceOccurred

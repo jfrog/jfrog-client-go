@@ -272,8 +272,14 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		dataHandlerFunc(uploadData)
 		return err
 	}
-	uploadParams.SetPattern(clientutils.AddEscapingParentheses(uploadParams.GetPattern(), uploadParams.GetTarget()))
 	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
+	uploadParams.SetPattern(clientutils.AddEscapingParentheses(uploadParams.GetPattern(), uploadParams.GetTarget()))
+	if ioutils.IsWindows() {
+		if strings.Count(uploadParams.GetPattern(), "/") > 0 {
+			// Assuming forward slashes - not doubling backslash to allow regexp escaping
+			uploadParams.SetPattern(strings.Replace(uploadParams.GetPattern(), "/", "\\\\", -1))
+		}
+	}
 	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
 	return err
 }
