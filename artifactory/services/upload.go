@@ -358,7 +358,9 @@ type uploadTaskData struct {
 func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc) (err error) {
 	var placeholdersUsed bool
 	taskData.target, placeholdersUsed, err = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
-
+	if err != nil {
+		return err
+	}
 	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
 	if err != nil {
