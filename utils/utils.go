@@ -196,7 +196,7 @@ func cleanPath(path string) string {
 		path += temp
 	}
 	// Since filepath.Clean replaces \\ with \, we revert this action.
-	path = strings.Replace(path, `\`, `\\`, -1)
+	//path = strings.Replace(path, `\`, `\\`, -1)
 	return path
 }
 
