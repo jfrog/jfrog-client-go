@@ -257,7 +257,7 @@ func getFileSeparator() string {
 //	returns "hello"
 //
 // return (parsed target, placeholders replaced in target, error)
-func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, bool, error) {
+func BuildTargetPath(pattern, path, target string, ignoreRepo, isRegexp bool) (string, bool, error) {
 	asteriskIndex := strings.Index(pattern, "*")
 	slashIndex := strings.Index(pattern, "/")
 	if shouldRemoveRepo(ignoreRepo, asteriskIndex, slashIndex) {
@@ -284,7 +284,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 
 	groups := r.FindStringSubmatch(path)
 	if len(groups) > 0 {
-		target, replaceOccurred, err := ReplacePlaceHolders(groups, target)
+		target, replaceOccurred, err := ReplacePlaceHolders(groups, target, isRegexp)
 		if err != nil {
 			return "", false, err
 		}
@@ -296,7 +296,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 // group - regular expression matched group to replace with placeholders
 // toReplace - target pattern to replace
 // Return - (parsed placeholders string, placeholders were  replaced)
-func ReplacePlaceHolders(groups []string, toReplace string) (string, bool, error) {
+func ReplacePlaceHolders(groups []string, toReplace string, isRegexp bool) (string, bool, error) {
 	maxPlaceholderIndex, err := getMaxPlaceholderIndex(toReplace)
 	if err != nil {
 		return "", false, err
@@ -308,7 +308,7 @@ func ReplacePlaceHolders(groups []string, toReplace string) (string, bool, error
 	placeHolderIndexer := 1
 	for i := 1; i < len(groups); i++ {
 		group := strings.ReplaceAll(groups[i], "\\", "/")
-		for !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") {
+		for !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") && !isRegexp {
 			placeHolderIndexer++
 			if placeHolderIndexer > maxPlaceholderIndex {
 				break

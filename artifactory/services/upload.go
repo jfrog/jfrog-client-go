@@ -319,7 +319,7 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 				vcsCache: vcsCache,
 			}
 			incGeneralProgressTotal(progressMgr, uploadParams)
-			err = createUploadTask(taskData, dataHandlerFunc)
+			err = createUploadTask(taskData, dataHandlerFunc, uploadParams.Regexp)
 			if err != nil {
 				return err
 			}
@@ -351,9 +351,9 @@ type uploadTaskData struct {
 	vcsCache      *clientutils.VcsCache
 }
 
-func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc) (err error) {
+func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc, isRegexp bool) (err error) {
 	var placeholdersUsed bool
-	taskData.target, placeholdersUsed, err = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
+	taskData.target, placeholdersUsed, err = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target, isRegexp)
 	if err != nil {
 		return err
 	}
@@ -370,7 +370,7 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandle
 	}
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders.
 	// This operation replace the placeholders with the relevant value.
-	targetPathInArchive, _, err := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive)
+	targetPathInArchive, _, err := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive, isRegexp)
 	if err != nil {
 		return err
 	}

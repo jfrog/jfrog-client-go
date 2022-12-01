@@ -220,7 +220,7 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 		if err != nil {
 			return "", err
 		}
-		target, placeholdersUsed, err := clientutils.BuildTargetPath(downloadParams.GetPattern(), resultItem.GetItemRelativePath(), downloadParams.GetTarget(), true)
+		target, placeholdersUsed, err := clientutils.BuildTargetPath(downloadParams.GetPattern(), resultItem.GetItemRelativePath(), downloadParams.GetTarget(), true, downloadParams.Regexp)
 		if err != nil {
 			return "", err
 		}
@@ -510,7 +510,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				successCounters[threadId]++
 				return nil
 			}
-			target, placeholdersUsed, e := clientutils.BuildTargetPath(downloadData.DownloadPath, downloadData.Dependency.GetItemRelativePath(), downloadData.Target, true)
+			target, placeholdersUsed, e := clientutils.BuildTargetPath(downloadData.DownloadPath, downloadData.Dependency.GetItemRelativePath(), downloadData.Target, true, downloadParams.Regexp)
 			if e != nil {
 				return e
 			}
