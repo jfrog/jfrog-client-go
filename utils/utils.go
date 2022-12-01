@@ -295,12 +295,13 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo, isRegexp bool) (s
 
 // ReplacePlaceHolders group - regular expression matched group to replace with placeholders
 // toReplace - target pattern to replace
-// isRegexp - When using a regular expression, all parentheses content in the target will be at the given group parameter.
+// isRegexp -
 //
-//				  A non-regular expression will, however, allow us to consider the parentheses as literal characters,
-//	           the size of the group (containing the parentheses content) can be smaller than the maximum placeholder indexer - in this case, special treatment is required
-//				  Example : pattern: (a)/(b)/(c), target: "target/{1}{3}" => '(a)' and '(c)' will be considered as placeholders, and '(b)' will be treated as the directory's actual name.
-//		          In this case, the index of '(c)' in the group is 2, but its placeholder indexer is 3.
+//			When using a regular expression, all parentheses content in the target will be at the given group parameter.
+//			A non-regular expression will, however, allow us to consider the parentheses as literal characters,
+//	        the size of the group (containing the parentheses content) can be smaller than the maximum placeholder indexer - in this case, special treatment is required
+//			Example : pattern: (a)/(b)/(c), target: "target/{1}{3}" => '(a)' and '(c)' will be considered as placeholders, and '(b)' will be treated as the directory's actual name.
+//		    In this case, the index of '(c)' in the group is 2, but its placeholder indexer is 3.
 //
 // Return - (parsed placeholders string, placeholders were  replaced)
 func ReplacePlaceHolders(groups []string, toReplace string, isRegexp bool) (string, bool, error) {
@@ -313,8 +314,8 @@ func ReplacePlaceHolders(groups []string, toReplace string, isRegexp bool) (stri
 	placeHolderIndexer := 1
 	for i := 1; i < len(groups); i++ {
 		group := strings.ReplaceAll(groups[i], "\\", "/")
+		// handling non-regular expression cases
 		for !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") && !isRegexp {
-			// handling non-regular expression cases
 			placeHolderIndexer++
 			if placeHolderIndexer > maxPlaceholderIndex {
 				break
