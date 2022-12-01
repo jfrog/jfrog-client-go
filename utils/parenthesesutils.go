@@ -26,11 +26,6 @@ func CreateParenthesesSlice(pattern, target string) ParenthesesSlice {
 	return ParenthesesSlice{findParentheses(pattern, target)}
 }
 
-//TODO remove
-//func CreateWildcardsParenthesesSlice(pattern string) ParenthesesSlice {
-//	return ParenthesesSlice{findWildcardsParentheses(pattern)}
-//}
-
 func (p *ParenthesesSlice) IsPresent(index int) bool {
 	for _, v := range p.Parentheses {
 		if v.OpenIndex == index || v.CloseIndex == index {
@@ -100,20 +95,6 @@ func findParentheses(pattern, target string) []Parentheses {
 	}
 	return result
 }
-
-//TODO remove
-//// Find the list of Parentheses in the pattern, which correspond wildcards.
-//func findWildcardsParentheses(pattern string) []Parentheses {
-//	parentheses := getAllParentheses(pattern)
-//	// Filter parentheses without placeholders
-//	var result []Parentheses
-//	for _, p := range parentheses {
-//		if p.CloseIndex-p.OpenIndex == 3 && pattern[p.OpenIndex+1] == '.' && pattern[p.OpenIndex+2] == '*' {
-//			result = append(result, p)
-//		}
-//	}
-//	return result
-//}
 
 // Find the list of Parentheses in the pattern.
 func getAllParentheses(pattern string) []Parentheses {
