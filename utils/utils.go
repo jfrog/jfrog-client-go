@@ -295,17 +295,15 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo, isRegexp bool) (s
 	return target, false, nil
 }
 
-// ReplacePlaceHolders group - regular expression matched group to replace with placeholders
-// toReplace - target pattern to replace
-// isRegexp -
-//
-//			When using a regular expression, all parentheses content in the target will be at the given group parameter.
-//			A non-regular expression will, however, allow us to consider the parentheses as literal characters,
-//	        the size of the group (containing the parentheses content) can be smaller than the maximum placeholder indexer - in this case, special treatment is required
-//			Example : pattern: (a)/(b)/(c), target: "target/{1}{3}" => '(a)' and '(c)' will be considered as placeholders, and '(b)' will be treated as the directory's actual name.
-//		    In this case, the index of '(c)' in the group is 2, but its placeholder indexer is 3.
-//
-// Return - (parsed placeholders string, placeholders were  replaced)
+// ReplacePlaceHolders replace placeholders with their matching regular expressions.
+// group - Regular expression matched group to replace with placeholders.
+// toReplace - Target pattern to replace.
+// isRegexp - When using a regular expression, all parentheses content in the target will be at the given group parameter.
+// A non-regular expression will, however, allow us to consider the parentheses as literal characters.
+// The size of the group (containing the parentheses content) can be smaller than the maximum placeholder indexer - in this case, special treatment is required.
+// Example : pattern: (a)/(b)/(c), target: "target/{1}{3}" => '(a)' and '(c)' will be considered as placeholders, and '(b)' will be treated as the directory's actual name.
+// In this case, the index of '(c)' in the group is 2, but its placeholder indexer is 3.
+// Return - The parsed placeholders string, along with a boolean to indicate whether they have been replaced or not.
 func ReplacePlaceHolders(groups []string, toReplace string, isRegexp bool) (string, bool, error) {
 	maxPlaceholderIndex, err := getMaxPlaceholderIndex(toReplace)
 	if err != nil {
@@ -316,8 +314,8 @@ func ReplacePlaceHolders(groups []string, toReplace string, isRegexp bool) (stri
 	placeHolderIndexer := 1
 	for i := 1; i < len(groups); i++ {
 		group := strings.ReplaceAll(groups[i], "\\", "/")
-		// handling non-regular expression cases
-		for !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") && !isRegexp {
+		// Handling non-regular expression cases
+		for !isRegexp && !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") {
 			placeHolderIndexer++
 			if placeHolderIndexer > maxPlaceholderIndex {
 				break

@@ -86,7 +86,7 @@ func getPlaceHoldersValues(target string) []int {
 // Find the list of Parentheses in the pattern, which correspond to placeholders defined in the target.
 func findParentheses(pattern, target string) []Parentheses {
 	parentheses := getAllParentheses(pattern)
-	// Filter parentheses without placeholders
+	// Filter out parentheses without placeholders
 	var result []Parentheses
 	for _, v := range getPlaceHoldersValues(target) {
 		if len(parentheses) > v-1 {
