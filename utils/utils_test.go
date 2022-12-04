@@ -320,3 +320,41 @@ func TestGetMaxPlaceholderIndex(t *testing.T) {
 		})
 	}
 }
+
+func TestReplacePlaceHolders(t *testing.T) {
+	type args struct {
+		groups    []string
+		toReplace string
+		isRegexp  bool
+	}
+	tests := []struct {
+		name            string
+		args            args
+		expected        string
+		expectedBoolean bool
+	}{
+		// First element in the group isn't relevant cause the matching loop starts from index 1.
+		{"non regexp, empty group", args{[]string{}, "{1}-{2}-{3}", false}, "{1}-{2}-{3}", false},
+		{"non regexp, empty group", args{[]string{""}, "{1}-{2}-{3}", false}, "{1}-{2}-{3}", false},
+		{"regexp, empty group", args{[]string{}, "{1}-{2}-{3}", true}, "{1}-{2}-{3}", false},
+		{"regexp, empty group", args{[]string{""}, "{1}-{2}-{3}", true}, "{1}-{2}-{3}", false},
+		// Non regular expressions
+		{"basic", args{[]string{"", "a", "b", "c"}, "{1}-{2}-{3}", false}, "a-b-c", true},
+		{"opposite order", args{[]string{"", "a", "b", "c"}, "{3}-{2}-{1}-{4}", false}, "c-b-a-{4}", true},
+		{"double", args{[]string{"", "a", "b"}, "{2}-{2}-{1}-{1}", false}, "b-b-a-a", true},
+		{"skip placeholders indexes", args{[]string{"", "a", "b"}, "{4}-{1}", false}, "b-a", true},
+		// Regular expressions
+		{"basic", args{[]string{"", "a", "b", "c"}, "{1}-{2}-{3}", true}, "a-b-c", true},
+		{"opposite order", args{[]string{"", "a", "b", "c"}, "{4}-{3}-{2}-{5}", true}, "{4}-c-b-{5}", true},
+		{"double", args{[]string{"", "a", "b"}, "{2}-{2}-{1}-{1}", true}, "b-b-a-a", true},
+		{"skip placeholders indexes", args{[]string{"", "a", "b"}, "{3}-{1}", true}, "{3}-a", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, replaceOccurred, err := ReplacePlaceHolders(tt.args.groups, tt.args.toReplace, tt.args.isRegexp)
+			assert.NoError(t, err)
+			assert.Equalf(t, tt.expected, result, "ReplacePlaceHolders(%v, %v, %v)", tt.args.groups, tt.args.toReplace, tt.args.isRegexp)
+			assert.Equalf(t, tt.expectedBoolean, replaceOccurred, "ReplacePlaceHolders(%v, %v, %v)", tt.args.groups, tt.args.toReplace, tt.args.isRegexp)
+		})
+	}
+}
