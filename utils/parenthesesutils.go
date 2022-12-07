@@ -55,7 +55,7 @@ func RemovePlaceholderParentheses(pattern, target string) string {
 	return temp
 }
 
-// Escaping Parentheses with no corresponding placeholder.
+// Escaping parentheses with no corresponding placeholder.
 func AddEscapingParentheses(pattern, target string) string {
 	parentheses := CreateParenthesesSlice(pattern, target)
 	var temp string
@@ -88,9 +88,9 @@ func findParentheses(pattern, target string) []Parentheses {
 	parentheses := getAllParentheses(pattern)
 	// Filter out parentheses without placeholders
 	var result []Parentheses
-	for _, v := range getPlaceHoldersValues(target) {
-		if len(parentheses) > v-1 {
-			result = append(result, parentheses[v-1])
+	for _, placeHolderValueIndex := range getPlaceHoldersValues(target) {
+		if len(parentheses) > placeHolderValueIndex-1 {
+			result = append(result, parentheses[placeHolderValueIndex-1])
 		}
 	}
 	return result
@@ -100,11 +100,11 @@ func findParentheses(pattern, target string) []Parentheses {
 func getAllParentheses(pattern string) []Parentheses {
 	// Save each parentheses index
 	var parentheses []Parentheses
-	for i, v := range pattern {
-		if v == '(' {
+	for i, char := range pattern {
+		if char == '(' {
 			parentheses = append(parentheses, Parentheses{i, 0})
 		}
-		if v == ')' {
+		if char == ')' {
 			for j := len(parentheses) - 1; j >= 0; j-- {
 				if parentheses[j].CloseIndex == 0 {
 					parentheses[j].CloseIndex = i

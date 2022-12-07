@@ -48,12 +48,8 @@ func TestBuildTargetPath(t *testing.T) {
 
 func assertBuildTargetPath(regexp, source, dest, expected string, ignoreRepo bool, t *testing.T) {
 	result, _, err := BuildTargetPath(regexp, source, dest, ignoreRepo, true)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if expected != result {
-		t.Error("Unexpected target string built. Expected: `" + expected + "` Got `" + result + "`")
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
 }
 
 func TestSplitWithEscape(t *testing.T) {

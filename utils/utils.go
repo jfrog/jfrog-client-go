@@ -197,7 +197,7 @@ func cleanPath(path string) string {
 	}
 	if io.IsWindows() {
 		// Since filepath.Clean replaces \\ with \, we revert this action.
-		path = strings.Replace(path, `\`, `\\`, -1)
+		path = strings.ReplaceAll(path, `\`, `\\`)
 	}
 	return path
 }
@@ -331,13 +331,16 @@ func ReplacePlaceHolders(groups []string, toReplace string, isRegexp bool) (stri
 // Returns the higher index between all placeHolders target instances.
 // Example: for input "{1}{5}{3}" returns 5.
 func getMaxPlaceholderIndex(toReplace string) (int, error) {
-	reg := regexp.MustCompile(`\{(\d+?)}`)
+	reg, err := regexp.Compile(`\{(\d+?)}`)
+	if err != nil {
+		return 0, errorutils.CheckError(err)
+	}
 	placeholders := reg.FindAllString(toReplace, -1)
 	max := 0
 	for _, placeholder := range placeholders {
 		num, err := strconv.Atoi(strings.TrimPrefix(strings.TrimSuffix(placeholder, "}"), "{"))
 		if err != nil {
-			return 0, err
+			return 0, errorutils.CheckError(err)
 		}
 		if num > max {
 			max = num
