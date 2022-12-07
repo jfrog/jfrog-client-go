@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/io"
 	"regexp"
 	"sort"
 	"strconv"
@@ -72,10 +73,14 @@ func AddEscapingParentheses(pattern, target, targetPathInArchive string) string 
 func addEscapingParentheses(pattern, target, targetPathInArchive string) string {
 	parentheses := CreateParenthesesSlice(pattern, target)
 	archiveParentheses := CreateParenthesesSlice(pattern, targetPathInArchive)
+	escape := "\\"
+	if io.IsWindows() {
+		escape = "\\\\"
+	}
 	var temp string
 	for i, c := range pattern {
 		if (c == '(' || c == ')') && !parentheses.IsPresent(i) && !archiveParentheses.IsPresent(i) {
-			temp = temp + "\\" + string(c)
+			temp = temp + escape + string(c)
 		} else {
 			temp = temp + string(c)
 		}
