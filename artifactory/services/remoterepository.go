@@ -367,7 +367,9 @@ func NewGradleRemoteRepositoryParams() GradleRemoteRepositoryParams {
 
 type HelmRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ChartsBaseUrl string `json:"chartsBaseUrl,omitempty"`
+	ChartsBaseUrl                string   `json:"chartsBaseUrl,omitempty"`
+	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
 }
 
 func NewHelmRemoteRepositoryParams() HelmRemoteRepositoryParams {
