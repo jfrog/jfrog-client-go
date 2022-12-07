@@ -191,6 +191,11 @@ func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) stri
 // Clean /../ | /./ using filepath.Clean.
 func cleanPath(path string) string {
 	temp := path[len(path)-1:]
+	if io.IsWindows() {
+		// Since filepath.Clean replaces \\ with \, we revert this action.
+		path = strings.ReplaceAll(path, `\(`, `\\(`)
+		path = strings.ReplaceAll(path, `\)`, `\\)`)
+	}
 	path = filepath.Clean(path)
 	if temp == `\` || temp == "/" {
 		path += temp
