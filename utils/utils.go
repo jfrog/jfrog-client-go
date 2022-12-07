@@ -268,7 +268,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo, isRegexp bool) (s
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
-	pattern = AddEscapingParentheses(pattern, target)
+	pattern = AddEscapingParentheses(pattern, target, "")
 	pattern = stringutils.WildcardPatternToRegExp(pattern)
 	if slashIndex < 0 {
 		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern

@@ -274,7 +274,7 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 	}
 	// Escaping parentheses with no corresponding placeholder for non-regular expression.
 	if !uploadParams.Regexp {
-		uploadParams.SetPattern(clientutils.AddEscapingParentheses(uploadParams.GetPattern(), uploadParams.GetTarget()))
+		uploadParams.SetPattern(clientutils.AddEscapingParentheses(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive))
 	}
 	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
 	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)

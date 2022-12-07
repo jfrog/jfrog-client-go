@@ -55,12 +55,13 @@ func RemovePlaceholderParentheses(pattern, target string) string {
 	return temp
 }
 
-// Escaping parentheses with no corresponding placeholder.
-func AddEscapingParentheses(pattern, target string) string {
+// AddEscapingParentheses escaping parentheses with no corresponding placeholder.
+func AddEscapingParentheses(pattern, target, targetPathInArchive string) string {
 	parentheses := CreateParenthesesSlice(pattern, target)
+	archiveParentheses := CreateParenthesesSlice(pattern, targetPathInArchive)
 	var temp string
 	for i, c := range pattern {
-		if (c == '(' || c == ')') && !parentheses.IsPresent(i) {
+		if (c == '(' || c == ')') && !parentheses.IsPresent(i) && !archiveParentheses.IsPresent(i) {
 			temp = temp + "\\" + string(c)
 		} else {
 			temp = temp + string(c)

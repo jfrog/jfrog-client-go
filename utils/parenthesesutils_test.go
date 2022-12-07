@@ -87,7 +87,8 @@ func TestAddEscapingParentheses(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, AddEscapingParentheses(tt.args.pattern, tt.args.target), "AddEscapingParentheses(%v, %v)", tt.args.pattern, tt.args.target)
+			// TODO: change test ""
+			assert.Equalf(t, tt.want, AddEscapingParentheses(tt.args.pattern, tt.args.target, ""), "AddEscapingParentheses(%v, %v)", tt.args.pattern, tt.args.target)
 		})
 	}
 }
