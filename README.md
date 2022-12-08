@@ -168,6 +168,8 @@
             - [Get All Integrations](#get-all-integrations)
             - [Delete Integration](#delete-integration)
             - [Add Pipeline Source](#add-pipeline-source)
+            - [Get Recent Pipeline Run Status](#get-recent-pipeline-run-status)
+            - [Trigger Pipeline Run](#trigger-pipeline-run)
 
 ## General
 
@@ -2031,3 +2033,18 @@ projectIntegrationId := 1234
 err := pipelinesManager.AddSource(projectIntegrationId, "domain/repo", "master", "pipelines.yml")
 ```
 
+#### Get Recent Pipeline Run Status
+
+```go
+branch := "master"
+pipeline := "pipeline_name"
+response, err := pipelinesManager.GetPipelineRunStatusByBranch(branch, pipeline)
+```
+
+#### Trigger Pipeline Run
+
+```go
+branch := "master"
+pipeline := "pipeline_name"
+status, err := pipelinesManager.TriggerPipelineRun(branch, pipeline)
+```
