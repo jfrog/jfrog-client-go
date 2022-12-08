@@ -531,6 +531,8 @@ func remoteHelmTest(t *testing.T) {
 	hrp.Url = "https://storage.googleapis.com/kubernetes-charts"
 	setRemoteRepositoryBaseParams(&hrp.RemoteRepositoryBaseParams, false)
 	hrp.ChartsBaseUrl = "charts"
+	hrp.ExternalDependenciesEnabled = true
+	hrp.ExternalDependenciesPatterns = []string{"https://github.com/**"}
 
 	err := testsCreateRemoteRepositoryService.Helm(hrp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -543,6 +545,8 @@ func remoteHelmTest(t *testing.T) {
 
 	setRemoteRepositoryBaseParams(&hrp.RemoteRepositoryBaseParams, true)
 	hrp.ChartsBaseUrl = ""
+	hrp.ExternalDependenciesEnabled = false
+	hrp.ExternalDependenciesPatterns = []string{}
 
 	err = testsUpdateRemoteRepositoryService.Helm(hrp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
