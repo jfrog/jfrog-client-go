@@ -99,6 +99,10 @@ func (sm *DistributionServicesManager) Client() *jfroghttpclient.JfrogHttpClient
 	return sm.client
 }
 
+func (sm *DistributionServicesManager) Config() config.Config {
+	return sm.config
+}
+
 func (sm *DistributionServicesManager) GetDistributionVersion() (string, error) {
 	versionService := services.NewVersionService(sm.client)
 	versionService.DistDetails = sm.config.GetServiceDetails()

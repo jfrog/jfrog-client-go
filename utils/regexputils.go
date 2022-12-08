@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-//#nosec G101 -- False positive - no hardcoded credentials.
+// #nosec G101 -- False positive - no hardcoded credentials.
 const CredentialsInUrlRegexp = `(http|https|git)://.+@`
 
 func GetRegExp(regex string) (*regexp.Regexp, error) {

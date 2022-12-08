@@ -1,7 +1,6 @@
 package fileutils
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
@@ -33,7 +32,7 @@ func CreateTempDir() (string, error) {
 		return "", errorutils.CheckErrorf("Temp dir cannot be created in an empty base dir.")
 	}
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	dirPath, err := ioutil.TempDir(tempDirBase, tempPrefix+"-"+timestamp+"-")
+	dirPath, err := os.MkdirTemp(tempDirBase, tempPrefix+"-"+timestamp+"-")
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
@@ -69,7 +68,7 @@ func CreateTempFile() (*os.File, error) {
 		return nil, errorutils.CheckErrorf("Temp File cannot be created in an empty base dir.")
 	}
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	fd, err := ioutil.TempFile(tempDirBase, tempPrefix+"-"+timestamp+"-")
+	fd, err := os.CreateTemp(tempDirBase, tempPrefix+"-"+timestamp+"-")
 	return fd, err
 }
 
@@ -77,7 +76,7 @@ func CreateTempFile() (*os.File, error) {
 // Each temp file/Dir is named with prefix+timestamp, search for all temp files/dirs that match the common prefix and validate their timestamp.
 func CleanOldDirs() error {
 	// Get all files at temp dir
-	files, err := ioutil.ReadDir(tempDirBase)
+	files, err := os.ReadDir(tempDirBase)
 	if err != nil {
 		log.Error(err)
 		return errorutils.CheckError(err)
