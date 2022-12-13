@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -32,12 +33,14 @@ const (
 	resourceVersions     = "api/v1/resourceVersions"
 )
 
-func (rs *RunService) GetRunStatus(branch, pipeName string) (*PipelineRunStatusResponse, error) {
+func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) (*PipelineRunStatusResponse, error) {
 	httpDetails := rs.getHttpDetails()
 
 	// query params
 	queryParams := make(map[string]string, 0)
-	queryParams["pipelineSourceBranch"] = branch
+	if isMultiBranch { // add this query param only when pipeline source is multi-branch
+		queryParams["pipelineSourceBranch"] = branch
+	}
 	if pipeName != "" {
 		queryParams["name"] = pipeName
 	}
@@ -89,14 +92,21 @@ func (rs *RunService) constructPipelinesURL(qParams map[string]string, apiPath s
 	return uri.String(), nil
 }
 
-func (rs *RunService) TriggerPipelineRun(branch, pipeline string) (string, error) {
+func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) (string, error) {
 	httpDetails := rs.getHttpDetails()
 	m := make(map[string]string, 0)
 
-	payload := strings.NewReader(`{
+	var payload *strings.Reader
+	if isMultiBranch { // add this query param only when pipeline source is multi-branch
+		payload = strings.NewReader(`{
 	    "branchName": "` + strings.TrimSpace(branch) + `",
 		"pipelineName": "` + strings.TrimSpace(pipeline) + `"
 		}`)
+	} else {
+		payload = strings.NewReader(`{
+		"pipelineName": "` + strings.TrimSpace(pipeline) + `"
+		}`)
+	}
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(payload)
 	if err != nil {
@@ -126,6 +136,51 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string) (string, error
 	if resp.StatusCode == http.StatusOK {
 		s := fmt.Sprintf("triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch)
 		return s, nil
+	}
+
+	return "", nil
+}
+
+func (rs *RunService) CancelTheRun(runID int) (string, error) {
+	log.Info("cancelling the run ", runID)
+	runValue := strconv.Itoa(runID)
+	cancelRun := "api/v1/runs/:runId/cancel"
+	cancelRun = strings.Replace(cancelRun, ":runId", runValue, 1)
+	httpDetails := rs.getHttpDetails()
+	m := make(map[string]string, 0)
+	payload := strings.NewReader(`{
+		}`)
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(payload)
+	if err != nil {
+		log.Error("Failed to read stream to send payload to trigger pipelines")
+		return "", errorutils.CheckError(err)
+	}
+
+	// URL Construction
+	headers := make(map[string]string, 0)
+	headers["Content-Type"] = "application/json"
+	httpDetails.Headers = headers
+	uri, pipeURLErr := rs.constructPipelinesURL(m, cancelRun)
+	if pipeURLErr != nil {
+		return "", pipeURLErr
+	}
+
+	// Prepare Request
+	resp, body, err := rs.client.SendPost(uri, buf.Bytes(), &httpDetails)
+	if err != nil {
+		return "", errorutils.CheckError(err)
+	}
+
+	// Response Analysis
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return "", err
+	}
+	if resp.StatusCode == http.StatusOK {
+		s := fmt.Sprintf("cancelled run %s successfully", runValue)
+		return s, nil
+	} else {
+		log.Error("unable to find run id")
 	}
 
 	return "", nil

@@ -67,6 +67,7 @@ var (
 	AccessUrl                *string
 	AccessToken              *string
 	ciRunId                  *string
+	PipelineName             *string
 
 	// Artifactory services
 	testsUploadService                    *services.UploadService
@@ -114,6 +115,9 @@ var (
 	// Pipelines Services
 	testsPipelinesIntegrationsService *pipelinesServices.IntegrationsService
 	testsPipelinesSourcesService      *pipelinesServices.SourcesService
+	testPipelinesRunService           *pipelinesServices.RunService
+	testPipelinesSyncService          *pipelinesServices.SyncService
+	testPipelinesSyncStatusService    *pipelinesServices.SyncStatusService
 
 	// Access Services
 	testsAccessProjectService *accessServices.ProjectService
@@ -154,6 +158,7 @@ func init() {
 	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
 	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
+	PipelineName = flag.String("pipe.pipeName", "", "pipeline name for Pipelines tests")
 	AccessUrl = flag.String("access.url", "", "Access url")
 	AccessToken = flag.String("access.token", "", "Access token")
 }
@@ -477,6 +482,42 @@ func createPipelinesSourcesManager() {
 	failOnHttpClientCreation(err)
 	testsPipelinesSourcesService = pipelinesServices.NewSourcesService(client)
 	testsPipelinesSourcesService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesRunManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesRunService = pipelinesServices.NewRunService(client)
+	testPipelinesRunService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesSyncManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesSyncService = pipelinesServices.NewSyncService(client)
+	testPipelinesSyncService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesSyncStatusManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesSyncStatusService = pipelinesServices.NewSyncStatusService(client)
+	testPipelinesSyncStatusService.ServiceDetails = pipelinesDetails
 }
 
 func failOnHttpClientCreation(err error) {
