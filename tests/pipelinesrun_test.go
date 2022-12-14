@@ -14,7 +14,6 @@ func TestPipelinesRunService(t *testing.T) {
 	initPipelinesTest(t)
 	t.Run("test trigger pipeline resource sync", testTriggerSync)
 	t.Run("test get sync status", testGetSyncStatus)
-	//t.Run("test trigger run status", testTriggerRun)
 	t.Run("test get run status", testGetRunStatus)
 }
 
@@ -28,24 +27,15 @@ func testTriggerSync(t *testing.T) {
 	timeString := strconv.Itoa(int(unixTime))
 	integrationName := strings.Join([]string{"github", "integration_test", timeString}, "_")
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
+	assert.NoError(t, err)
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
 	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
-	if srcErr != nil {
-		assert.NoError(t, srcErr)
-		return
-	}
+	assert.NoError(t, srcErr)
 	defer deleteSourceAndAssert(t, sourceId)
 	syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
-	if syncErr != nil {
-		assert.NoError(t, syncErr)
-		return
-	}
+	assert.NoError(t, syncErr)
 }
 
 func testGetSyncStatus(t *testing.T) {
@@ -58,75 +48,48 @@ func testGetSyncStatus(t *testing.T) {
 	timeString := strconv.Itoa(int(unixTime))
 	integrationName := strings.Join([]string{"github", "integration_test", timeString}, "_")
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
+	assert.NoError(t, err)
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
 	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
-	if srcErr != nil {
-		assert.NoError(t, srcErr)
-		return
-	}
+	assert.NoError(t, srcErr)
+
 	defer deleteSourceAndAssert(t, sourceId)
 	syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
-	if syncErr != nil {
-		assert.NoError(t, syncErr)
-		return
-	}
+	assert.NoError(t, syncErr)
 	time.Sleep(15 * time.Second)
 	resourceStatus, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsBranch)
-	if syncStatusErr != nil {
-		assert.NoError(t, syncStatusErr)
-		return
-	}
+	assert.NoError(t, syncStatusErr)
 	if resourceStatus[0].LastSyncStatusCode != 4002 {
 		time.Sleep(15 * time.Second)
 		_, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsBranch)
-		if syncStatusErr != nil {
-			assert.NoError(t, syncStatusErr)
-			return
-		}
+		assert.NoError(t, syncStatusErr)
 	}
 }
 
 func testGetRunStatus(t *testing.T) {
-	if *PipelinesVcsToken == "" {
-		assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured")
-		return
-	}
+	assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured")
 	// Create integration with provided token.
 	unixTime := time.Now().Unix()
 	timeString := strconv.Itoa(int(unixTime))
 	integrationName := strings.Join([]string{"github", "integration_test", timeString}, "_")
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
+	assert.NoError(t, err)
+
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
 	sourceId, sourceErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
-	if sourceErr != nil {
-		assert.NoError(t, sourceErr)
-		return
-	}
+	assert.NoError(t, sourceErr)
 	defer deleteSourceAndAssert(t, sourceId)
 
 	syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
-	if syncErr != nil {
-		assert.NoError(t, syncErr)
-		return
-	}
+	assert.NoError(t, syncErr)
+
 	time.Sleep(15 * time.Second)
 	resourceStatus, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsBranch)
-	if syncStatusErr != nil {
-		assert.NoError(t, syncStatusErr)
-		return
-	}
+	assert.NoError(t, syncStatusErr)
 	if resourceStatus[0].LastSyncStatusCode != 4002 {
 		time.Sleep(15 * time.Second)
 		_, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsBranch)
@@ -135,25 +98,17 @@ func testGetRunStatus(t *testing.T) {
 			return
 		}
 	}
-	status, trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, *PipelineName, false)
-	if trigErr != nil {
-		assert.NoError(t, trigErr)
-		return
-	}
-	assertTriggerRun(t, *PipelineName, *PipelinesVcsBranch, status)
+	pipelineName := "pipelines_run_int_test"
+	status, trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, false)
+	assert.NoError(t, trigErr)
+	assertTriggerRun(t, pipelineName, *PipelinesVcsBranch, status)
 	time.Sleep(60 * time.Second)
 
-	runStatus, runErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, *PipelineName, false)
-	if runErr != nil {
-		assert.NoError(t, runErr)
-		return
-	}
+	runStatus, runErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, false)
+	assert.NoError(t, runErr)
 	if len(runStatus.Pipelines) == 0 {
-		_, runErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, *PipelineName, true)
-		if runErr != nil {
-			assert.NoError(t, runErr)
-			return
-		}
+		_, runErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, true)
+		assert.NoError(t, runErr)
 	}
 	if len(runStatus.Pipelines) > 0 && isCancellable(runStatus.Pipelines[0].Run.StatusCode) {
 
@@ -162,10 +117,7 @@ func testGetRunStatus(t *testing.T) {
 		if runStatus != nil {
 			runID := runStatus.Pipelines[0].Run.ID
 			run, cancelErr := testPipelinesRunService.CancelTheRun(runID)
-			if cancelErr != nil {
-				assert.NoError(t, cancelErr)
-				return
-			}
+			assert.NoError(t, cancelErr)
 			assert.Equal(t, "cancelled run "+strconv.Itoa(runID)+" successfully", run)
 		}
 	}

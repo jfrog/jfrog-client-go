@@ -67,7 +67,6 @@ var (
 	AccessUrl                *string
 	AccessToken              *string
 	ciRunId                  *string
-	PipelineName             *string
 
 	// Artifactory services
 	testsUploadService                    *services.UploadService
@@ -158,7 +157,6 @@ func init() {
 	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
 	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
-	PipelineName = flag.String("pipe.pipeName", "", "pipeline name for Pipelines tests")
 	AccessUrl = flag.String("access.url", "", "Access url")
 	AccessToken = flag.String("access.token", "", "Access token")
 }
