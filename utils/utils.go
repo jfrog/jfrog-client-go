@@ -58,7 +58,7 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 	separator := "/"
 	sections := strings.Split(path, separator)
 	if len(sections) == 1 {
-		separator = "\\"
+		separator = "\\\\"
 		sections = strings.Split(path, separator)
 	}
 

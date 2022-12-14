@@ -282,11 +282,6 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 			uploadParams.SetPattern(clientutils.AddEscapingParenthesesForUploadCmd(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive))
 		}
 	}
-
-	//// Escaping parentheses with no corresponding placeholder for non-regular expression.
-	//if !uploadParams.Regexp && !uploadParams.Ant {
-	//	uploadParams.SetPattern(clientutils.AddEscapingParenthesesForUploadCmd(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive))
-	//}
 	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
 	return err
 }
