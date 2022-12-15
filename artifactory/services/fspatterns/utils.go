@@ -143,9 +143,9 @@ func getPlaceholderParentheses(pattern, target, archiveTarget string) utils.Pare
 
 // Get the local root path, from which to start collecting artifacts to be uploaded to Artifactory.
 // If path does not exist error will be returned.
-func GetRootPath(pattern, target, archiveTarget string, patternType utils.PatternType, preserveSymLink bool) (string, error) {
+func GetRootPath(pattern, target, archiveTarget string, patternType utils.PatternType, preserveSymLink, isRegexp bool) (string, error) {
 	placeholderParentheses := getPlaceholderParentheses(pattern, target, archiveTarget)
-	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
+	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses, isRegexp)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
 		return "", errorutils.CheckErrorf("Path does not exist: " + rootPath)
 	}
