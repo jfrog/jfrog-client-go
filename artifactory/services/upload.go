@@ -239,7 +239,7 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 	}
 	uploadParams.SetPattern(clientutils.ReplaceTildeWithUserHome(uploadParams.GetPattern()))
 	// Save parentheses index in pattern, witch have corresponding placeholder.
-	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive, uploadParams.GetPatternType(), uploadParams.IsSymlink(), uploadParams.Regexp)
+	rootPath, err := fspatterns.GetRootPath(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive, uploadParams.GetPatternType(), uploadParams.IsSymlink())
 	if err != nil {
 		return err
 	}
