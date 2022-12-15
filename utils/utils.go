@@ -58,12 +58,12 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 	separator := "/"
 	sections := strings.Split(path, separator)
 	if len(sections) == 1 {
+		separator = "\\"
 		if strings.Contains(path, "\\\\") {
-			separator = "\\\\"
+			sections = strings.Split(path, "\\\\")
 		} else {
-			separator = "\\"
+			sections = strings.Split(path, separator)
 		}
-		sections = strings.Split(path, separator)
 	}
 
 	// Now we start building the root path, making sure to leave out the sub-directory that includes the pattern.
