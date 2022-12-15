@@ -272,12 +272,28 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		dataHandlerFunc(uploadData)
 		return err
 	}
+
+	if uploadParams.Ant {
+		convertAntPatternToRegexp(&uploadParams)
+	} else {
+		convertPatternToRegexp(&uploadParams)
+	}
+	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
+	return err
+}
+
+// convertAntPatternToRegexp convert a given Ant pattern to regular expression.
+// When converting Ant pattern to regexp we add parenthesis to manually convert the pattern to a regexp, that's why we need to
+func convertAntPatternToRegexp(uploadParams *UploadParams) {
+	uploadParams.SetPattern(clientutils.AddEscapingParenthesesForUploadCmd(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive))
+	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
+}
+
+func convertPatternToRegexp(uploadParams *UploadParams) {
+	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
 	if !uploadParams.Regexp {
 		uploadParams.SetPattern(clientutils.AddEscapingParenthesesForUploadCmd(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive))
 	}
-	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
-	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
-	return err
 }
 
 func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
