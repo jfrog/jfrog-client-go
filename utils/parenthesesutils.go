@@ -61,11 +61,11 @@ func AddEscapingParenthesesForUploadCmd(pattern, target, targetPathInArchive str
 }
 
 // AddEscapingParentheses escaping parentheses with no corresponding placeholder.
-func AddEscapingParentheses(pattern, target, targetPathInArchive string) string {
+func AddEscapingParentheses(pattern, target string) string {
 	return addEscapingParentheses(pattern, target, "")
 }
 
-// AddEscapingParentheses escaping parentheses with no corresponding placeholder.
+// addEscapingParentheses escaping parentheses with no corresponding placeholder.
 // pattern - the pattern in which the parentheses are escaped.
 // target - target parameter containing placeholders.
 // targetPathInArchive - The target archive path contains placeholders (relevant only for upload commands).
