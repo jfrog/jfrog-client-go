@@ -272,7 +272,6 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		dataHandlerFunc(uploadData)
 		return err
 	}
-
 	if uploadParams.Ant {
 		convertAntPatternToRegexp(&uploadParams)
 	} else {
@@ -283,12 +282,17 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 }
 
 // convertAntPatternToRegexp convert a given Ant pattern to regular expression.
-// When converting Ant pattern to regexp we add parenthesis to manually convert the pattern to a regexp, that's why we need to
+// To convert Ant patterns to regexps, we manually add parenthesis and other special characters to the pattern.
+// Thus, we need to escape parentheses before converting.
 func convertAntPatternToRegexp(uploadParams *UploadParams) {
 	uploadParams.SetPattern(clientutils.AddEscapingParenthesesForUploadCmd(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive))
 	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
 }
 
+// convertPatternToRegexp convert a given pattern to regular expression.
+// When converting we have 2 options:
+// 1. 'regexp' is true - clients are responsible for escaping parentheses that represent literal characters in the pattern - no additional treatment is required.
+// 2. 'regexp' is false - it is necessary to manually escape parentheses that represent literal characters (and not placeholders).
 func convertPatternToRegexp(uploadParams *UploadParams) {
 	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
 	if !uploadParams.Regexp {
