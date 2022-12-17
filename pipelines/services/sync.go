@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -81,8 +80,7 @@ func (ss *SyncService) getPipelineResourceID(repoName string) (int, bool, error)
 		return 0, false, err
 	}
 	if resp.StatusCode == http.StatusOK {
-		s := fmt.Sprintf("received resource id ")
-		log.Info(s)
+		log.Info("received resource id")
 	}
 	p := make([]PipelineResources, 0)
 	err = json.Unmarshal(body, &p)

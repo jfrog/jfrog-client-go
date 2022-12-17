@@ -10,6 +10,11 @@ import (
 	"time"
 )
 
+const (
+	defaultMaxWaitMinutes    = 45 * time.Minute // 45 minutes
+	defaultSyncSleepInterval = 5 * time.Second  // 5 seconds
+)
+
 func TestPipelinesRunService(t *testing.T) {
 	initPipelinesTest(t)
 	t.Run("test trigger pipeline resource sync", testTriggerSync)
@@ -106,20 +111,18 @@ func testGetRunStatus(t *testing.T) {
 
 	runStatus, runErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, false)
 	assert.NoError(t, runErr)
-	if len(runStatus.Pipelines) == 0 {
+	if runStatus != nil && len(runStatus.Pipelines) == 0 {
 		_, runErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, true)
 		assert.NoError(t, runErr)
 	}
-	if len(runStatus.Pipelines) > 0 && isCancellable(runStatus.Pipelines[0].Run.StatusCode) {
+	if runStatus != nil && len(runStatus.Pipelines) > 0 && isCancellable(runStatus.Pipelines[0].Run.StatusCode) {
 
 		runStatusCode := runStatus.Pipelines[0].Run.StatusCode
 		assertRunStatus(t, runStatusCode)
-		if runStatus != nil {
-			runID := runStatus.Pipelines[0].Run.ID
-			run, cancelErr := testPipelinesRunService.CancelTheRun(runID)
-			assert.NoError(t, cancelErr)
-			assert.Equal(t, "cancelled run "+strconv.Itoa(runID)+" successfully", run)
-		}
+		runID := runStatus.Pipelines[0].Run.ID
+		run, cancelErr := testPipelinesRunService.CancelTheRun(runID)
+		assert.NoError(t, cancelErr)
+		assert.Equal(t, "cancelled run "+strconv.Itoa(runID)+" successfully", run)
 	}
 
 }
