@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-const (
-	defaultMaxWaitMinutes    = 45 * time.Minute // 45 minutes
-	defaultSyncSleepInterval = 5 * time.Second  // 5 seconds
-)
-
 func TestPipelinesRunService(t *testing.T) {
 	initPipelinesTest(t)
 	t.Run("test trigger pipeline resource sync", testTriggerSync)
