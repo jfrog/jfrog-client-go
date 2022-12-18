@@ -31,8 +31,8 @@ func TestSearchPatterns(t *testing.T) {
 		pattern string
 		result  []string
 	}{
-		{filepath.Join("testdata", "a", "a3"), "^testdata/a/.*", []string{filepath.Join("testdata", "a", "a3")}},
-		{filepath.Join("testdata", "a", "a3"), "^testdata/b/.*", []string{}},
+		{filepath.Join("testdata", "a", "a3"), "^"+filepath.Join("testdata","a")+".*", []string{filepath.Join("testdata", "a", "a3")}},
+		{filepath.Join("testdata", "a", "a3"), "^"+filepath.Join("testdata","b")+".*", []string{}},
 	}
 	for _, d := range data {
 		patternRegex, err := regexp.Compile(d.pattern)
