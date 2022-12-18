@@ -327,7 +327,7 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 			return err
 		}
 		if len(matches) > 0 {
-			taskData, err := NewUploadTaskData(path, isDir, matches, len(matches), uploadParams, vcsCache)
+			taskData, err := NewUploadTaskData(path, isDir, matches, len(matches), uploadParams, vcsCache, uploadParams.Regexp)
 			if err != nil {
 				return err
 			}
@@ -388,7 +388,10 @@ type uploadTaskData struct {
 }
 
 func NewUploadTaskData(path string, isDir bool, groups []string, size int, uploadParams UploadParams, vcsCache *clientutils.VcsCache, isRegexp bool) (*uploadTaskData, error) {
-	target, placeholdersUsed := clientutils.ReplacePlaceHolders(groups, uploadParams.GetTarget(), isRegexp)
+	target, placeholdersUsed, err := clientutils.ReplacePlaceHolders(groups, uploadParams.GetTarget(), isRegexp)
+	if err != nil {
+		return nil, err
+	}
 	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(path)
 	if err != nil {
@@ -406,7 +409,7 @@ func NewUploadTaskData(path string, isDir bool, groups []string, size int, uploa
 	}, nil
 }
 
-func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc) error {
+func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc, isRegexp bool) error {
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
 	if err != nil {
 		return err
