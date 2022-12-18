@@ -251,7 +251,7 @@ func getFileSeparator() string {
 	return "/"
 }
 
-// Replaces matched regular expression from path to corresponding placeholder {i} at target.
+// BuildTargetPath Replaces matched regular expression from path to corresponding placeholder {i} at target.
 // Example 1:
 //
 //	pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
@@ -263,7 +263,7 @@ func getFileSeparator() string {
 //	returns "hello"
 //
 // return (parsed target, placeholders replaced in target, error)
-func BuildTargetPath(pattern, path, target string, ignoreRepo, isRegexp bool) (string, bool, error) {
+func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, bool, error) {
 	asteriskIndex := strings.Index(pattern, "*")
 	slashIndex := strings.Index(pattern, "/")
 	if shouldRemoveRepo(ignoreRepo, asteriskIndex, slashIndex) {
@@ -272,7 +272,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo, isRegexp bool) (s
 		pattern = removeRepoFromPath(pattern)
 		path = removeRepoFromPath(path)
 	}
-	pattern = AddEscapingParentheses(pattern, target)
+	pattern = addEscapingParentheses(pattern, target)
 	pattern = stringutils.WildcardPatternToRegExp(pattern)
 	if slashIndex < 0 {
 		// If '/' doesn't exist, add an optional trailing-slash to support cases in which the provided pattern
@@ -290,7 +290,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo, isRegexp bool) (s
 
 	groups := r.FindStringSubmatch(path)
 	if len(groups) > 0 {
-		target, replaceOccurred, err := ReplacePlaceHolders(groups, target, isRegexp)
+		target, replaceOccurred, err := ReplacePlaceHolders(groups, target, false)
 		if err != nil {
 			return "", false, err
 		}

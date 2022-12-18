@@ -52,3 +52,59 @@ func TestBuildUploadUrls(t *testing.T) {
 		assert.Equal(t, v.expectedTargetPathWithProps, actualTargetPathWithProps)
 	}
 }
+
+func TestAddEscapingParenthesesWithTargetInArchive(t *testing.T) {
+	type args struct {
+		pattern         string
+		target          string
+		targetInArchive string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"empty parentheses", args{"()", "", "{2}"}, "\\(\\)"},
+		{"empty parentheses", args{"()", "", "{}"}, "\\(\\)"},
+		{"empty parentheses", args{"()", "", "{1}"}, "()"},
+		{"empty parentheses", args{")(", "", "{1}"}, "\\)\\("},
+		{"first parentheses", args{"(a)/(b)/(c)", "", "{2}/{3}"}, "\\(a\\)/(b)/(c)"},
+		{"second parentheses", args{"(a)/(b)/(c)", "", "{1}/{3}"}, "(a)/\\(b\\)/(c)"},
+		{"third parentheses", args{"(a)/(b)/(c)", "", "{1}/{2}"}, "(a)/(b)/\\(c\\)"},
+		{"empty placeholders", args{"(a)/(b)/(c)", "", ""}, "\\(a\\)/\\(b\\)/\\(c\\)"},
+		{"un-symmetric parentheses", args{")a)/(b)/(c(", "", ""}, "\\)a\\)/\\(b\\)/\\(c\\("},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, addEscapingParenthesesForUpload(tt.args.pattern, tt.args.target, tt.args.targetInArchive), "AddEscapingParentheses(%v, %v)", tt.args.pattern, tt.args.target)
+		})
+	}
+}
+
+func TestAddEscapingParenthesesWithTargetAndTargetInArchive(t *testing.T) {
+	type args struct {
+		pattern         string
+		target          string
+		targetInArchive string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"empty parentheses", args{"()", "{2}", "{3}"}, "\\(\\)"},
+		{"empty parentheses", args{"()", "{}", "{}"}, "\\(\\)"},
+		{"empty parentheses", args{"()()", "{2}", "{1}"}, "()()"},
+		{"empty parentheses", args{"))(((", "{2}", "{1}"}, "\\)\\)\\(\\(\\("},
+		{"first parentheses", args{"(a)/(b)/(c)/(d)", "{4}", "{2}/{3}"}, "\\(a\\)/(b)/(c)/(d)"},
+		{"second parentheses", args{"(a)/(b)/(c)/(d)", "{1}/{4}", "{1}/{3}"}, "(a)/\\(b\\)/(c)/(d)"},
+		{"last parentheses", args{"(a)/(b)/(c)/(d)", "{1}/{3}", "{2}/{3}"}, "(a)/(b)/(c)/\\(d\\)"},
+		{"mixed parentheses", args{"(a)/(b)/(c)/(d)/(e)/(f)", "{5}", "{1}/{2}"}, "(a)/(b)/\\(c\\)/\\(d\\)/(e)/\\(f\\)"},
+		{"out of range placeholders", args{"(a)/(b)/(c)", "{5}", "{4}"}, "\\(a\\)/\\(b\\)/\\(c\\)"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, addEscapingParenthesesForUpload(tt.args.pattern, tt.args.target, tt.args.targetInArchive), "AddEscapingParentheses(%v, %v)", tt.args.pattern, tt.args.target)
+		})
+	}
+}

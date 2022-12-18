@@ -184,7 +184,7 @@ func (mc *MoveCopyService) createMoveCopyFileHandlerFunc(result *utils.Result) f
 
 			// Get destination path.
 			destFile, err := getDestinationPath(params.GetFile().Target, params.GetFile().Pattern, resultItem.Path,
-				resultItem.GetItemRelativePath(), params.IsFlat(), params.Regexp)
+				resultItem.GetItemRelativePath(), params.IsFlat())
 			if err != nil {
 				return err
 			}
@@ -214,9 +214,9 @@ func (mc *MoveCopyService) createMoveCopyFileHandlerFunc(result *utils.Result) f
 }
 
 // Create the destination path of the move/copy.
-func getDestinationPath(specTarget, specPattern, sourceItemPath, sourceItemRelativePath string, isFlat, isRegexp bool) (string, error) {
+func getDestinationPath(specTarget, specPattern, sourceItemPath, sourceItemRelativePath string, isFlat bool) (string, error) {
 	// Apply placeholders.
-	destFile, placeholdersUsed, err := clientutils.BuildTargetPath(specPattern, sourceItemRelativePath, specTarget, true, isRegexp)
+	destFile, placeholdersUsed, err := clientutils.BuildTargetPath(specPattern, sourceItemRelativePath, specTarget, true)
 	if err != nil {
 		return "", err
 	}

@@ -55,21 +55,16 @@ func RemovePlaceholderParentheses(pattern, target string) string {
 	return temp
 }
 
-// AddEscapingParenthesesForUploadCmd escaping parentheses with no corresponding placeholder.
-func AddEscapingParenthesesForUploadCmd(pattern, target, targetPathInArchive string) string {
-	return addEscapingParentheses(pattern, target, targetPathInArchive)
+// addEscapingParentheses escapes parentheses with no corresponding placeholder.
+func addEscapingParentheses(pattern, target string) string {
+	return AddEscapingParentheses(pattern, target, "")
 }
 
-// AddEscapingParentheses escaping parentheses with no corresponding placeholder.
-func AddEscapingParentheses(pattern, target string) string {
-	return addEscapingParentheses(pattern, target, "")
-}
-
-// addEscapingParentheses escaping parentheses with no corresponding placeholder.
+// AddEscapingParentheses escapes parentheses with no corresponding placeholder.
 // pattern - the pattern in which the parentheses are escaped.
 // target - target parameter containing placeholders.
-// targetPathInArchive - The target archive path contains placeholders (relevant only for upload commands).
-func addEscapingParentheses(pattern, target, targetPathInArchive string) string {
+// targetPathInArchive - The target archive path containing placeholders (relevant only for upload commands).
+func AddEscapingParentheses(pattern, target, targetPathInArchive string) string {
 	parentheses := CreateParenthesesSlice(pattern, target)
 	archiveParentheses := CreateParenthesesSlice(pattern, targetPathInArchive)
 	var temp string
