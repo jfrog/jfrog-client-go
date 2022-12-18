@@ -30,9 +30,11 @@ const (
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
-var MaxBufferSize = 50000
-
-var userAgent = getDefaultUserAgent()
+var (
+	MaxBufferSize          = 50000
+	userAgent              = getDefaultUserAgent()
+	curlyParenthesesRegexp = regexp.MustCompile(`\{(\d+?)}`)
+)
 
 func getVersion() string {
 	return Version
@@ -335,11 +337,7 @@ func ReplacePlaceHolders(groups []string, toReplace string, isRegexp bool) (stri
 // Returns the higher index between all placeHolders target instances.
 // Example: for input "{1}{5}{3}" returns 5.
 func getMaxPlaceholderIndex(toReplace string) (int, error) {
-	reg, err := regexp.Compile(`\{(\d+?)}`)
-	if err != nil {
-		return 0, errorutils.CheckError(err)
-	}
-	placeholders := reg.FindAllString(toReplace, -1)
+	placeholders := curlyParenthesesRegexp.FindAllString(toReplace, -1)
 	max := 0
 	for _, placeholder := range placeholders {
 		num, err := strconv.Atoi(strings.TrimPrefix(strings.TrimSuffix(placeholder, "}"), "{"))
