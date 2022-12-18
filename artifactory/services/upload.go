@@ -272,9 +272,37 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		dataHandlerFunc(uploadData)
 		return err
 	}
-	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
+	if uploadParams.Ant {
+		convertAntPatternToRegexp(&uploadParams)
+	} else {
+		convertPatternToRegexp(&uploadParams)
+	}
 	err = collectPatternMatchingFiles(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
 	return err
+}
+
+// convertAntPatternToRegexp converts a given Ant pattern to a regular expression.
+// To convert Ant patterns to regexps, we manually add parenthesis and other special characters to the pattern.
+// Thus, we need to escape parentheses before converting.
+func convertAntPatternToRegexp(uploadParams *UploadParams) {
+	uploadParams.SetPattern(addEscapingParenthesesForUpload(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive))
+	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
+}
+
+// convertPatternToRegexp converts a given pattern to a regular expression.
+// When converting we have 2 options:
+// 1. 'regexp' is true - clients are responsible for escaping parentheses that represent literal characters in the pattern - no additional treatment is required.
+// 2. 'regexp' is false - it is necessary to manually escape parentheses that represent literal characters (and not placeholders).
+func convertPatternToRegexp(uploadParams *UploadParams) {
+	uploadParams.SetPattern(clientutils.ConvertLocalPatternToRegexp(uploadParams.GetPattern(), uploadParams.GetPatternType()))
+	if !uploadParams.Regexp {
+		uploadParams.SetPattern(addEscapingParenthesesForUpload(uploadParams.GetPattern(), uploadParams.GetTarget(), uploadParams.TargetPathInArchive))
+	}
+}
+
+// addEscapingParenthesesForUpload escapes parentheses with no corresponding placeholder.
+func addEscapingParenthesesForUpload(pattern, target, targetPathInArchive string) string {
+	return clientutils.AddEscapingParentheses(pattern, target, targetPathInArchive)
 }
 
 func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
@@ -316,7 +344,7 @@ func collectPatternMatchingFiles(uploadParams UploadParams, rootPath string, pro
 				vcsCache: vcsCache,
 			}
 			incGeneralProgressTotal(progressMgr, uploadParams)
-			err = createUploadTask(taskData, dataHandlerFunc)
+			err = createUploadTask(taskData, dataHandlerFunc, uploadParams.Regexp)
 			if err != nil {
 				return err
 			}
@@ -348,10 +376,12 @@ type uploadTaskData struct {
 	vcsCache      *clientutils.VcsCache
 }
 
-func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc) error {
+func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandlerFunc, isRegexp bool) (err error) {
 	var placeholdersUsed bool
-	taskData.target, placeholdersUsed = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target)
-
+	taskData.target, placeholdersUsed, err = clientutils.ReplacePlaceHolders(taskData.groups, taskData.target, isRegexp)
+	if err != nil {
+		return err
+	}
 	// Get symlink target (returns empty string if regular file) - Used in upload name / symlinks properties
 	symlinkPath, err := fspatterns.GetFileSymlinkPath(taskData.path)
 	if err != nil {
@@ -365,8 +395,10 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandle
 	}
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders.
 	// This operation replace the placeholders with the relevant value.
-	targetPathInArchive, _ := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive)
-
+	targetPathInArchive, _, err := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive, isRegexp)
+	if err != nil {
+		return err
+	}
 	artifact := clientutils.Artifact{LocalPath: taskData.path, TargetPath: taskData.target, SymlinkTargetPath: symlinkPath, TargetPathInArchive: targetPathInArchive}
 	props, err := createProperties(artifact, taskData.uploadParams)
 	if err != nil {
