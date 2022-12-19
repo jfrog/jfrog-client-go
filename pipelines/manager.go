@@ -116,16 +116,16 @@ func (sm *PipelinesServicesManager) TriggerPipelineRun(branch, pipeline string, 
 	return runService.TriggerPipelineRun(branch, pipeline, isMultiBranch)
 }
 
-func (sm *PipelinesServicesManager) SyncPipelineResource(branch, repoFullName string) error {
+func (sm *PipelinesServicesManager) SyncPipelineResource(branch, repoFullName string) (int, error) {
 	syncService := services.NewSyncService(sm.client)
 	syncService.ServiceDetails = sm.config.GetServiceDetails()
 	return syncService.SyncPipelineSource(branch, repoFullName)
 }
 
-func (sm *PipelinesServicesManager) GetSyncStatusForPipelineResource(branch string) ([]services.PipelineSyncStatus, error) {
+func (sm *PipelinesServicesManager) GetSyncStatusForPipelineResource(repo, branch string) ([]services.PipelineSyncStatus, error) {
 	syncStatusService := services.NewSyncStatusService(sm.client)
 	syncStatusService.ServiceDetails = sm.config.GetServiceDetails()
-	return syncStatusService.GetSyncPipelineResourceStatus(branch)
+	return syncStatusService.GetSyncPipelineResourceStatus(repo, branch)
 }
 
 func (sm *PipelinesServicesManager) CancelTheRun(runID int) (string, error) {

@@ -34,7 +34,7 @@ func testTriggerSync(t *testing.T) {
 	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
 	assert.NoError(t, srcErr)
 	defer deleteSourceAndAssert(t, sourceId)
-	syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
+	_, syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
 	assert.NoError(t, syncErr)
 }
 
@@ -56,14 +56,14 @@ func testGetSyncStatus(t *testing.T) {
 	assert.NoError(t, srcErr)
 
 	defer deleteSourceAndAssert(t, sourceId)
-	syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
+	_, syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
 	assert.NoError(t, syncErr)
 	time.Sleep(15 * time.Second)
-	resourceStatus, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsBranch)
+	resourceStatus, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
 	assert.NoError(t, syncStatusErr)
-	if resourceStatus[0].LastSyncStatusCode != 4002 {
+	if len(resourceStatus) == 0 || resourceStatus[0].LastSyncStatusCode != 4002 {
 		time.Sleep(15 * time.Second)
-		_, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsBranch)
+		_, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
 		assert.NoError(t, syncStatusErr)
 	}
 }
@@ -84,15 +84,15 @@ func testGetRunStatus(t *testing.T) {
 	assert.NoError(t, sourceErr)
 	defer deleteSourceAndAssert(t, sourceId)
 
-	syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
+	_, syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
 	assert.NoError(t, syncErr)
 
 	time.Sleep(15 * time.Second)
-	resourceStatus, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsBranch)
+	resourceStatus, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
 	assert.NoError(t, syncStatusErr)
-	if resourceStatus[0].LastSyncStatusCode != 4002 {
+	if resourceStatus != nil || resourceStatus[0].LastSyncStatusCode != 4002 {
 		time.Sleep(15 * time.Second)
-		_, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsBranch)
+		_, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
 		if syncStatusErr != nil {
 			assert.NoError(t, syncStatusErr)
 			return

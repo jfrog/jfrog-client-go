@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 type SyncStatusService struct {
@@ -26,9 +27,16 @@ func NewSyncStatusService(client *jfroghttpclient.JfrogHttpClient) *SyncStatusSe
 }
 
 // GetSyncPipelineResourceStatus fetches pipeline sync status
-func (ss *SyncStatusService) GetSyncPipelineResourceStatus(branch string) ([]PipelineSyncStatus, error) {
+func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch string) ([]PipelineSyncStatus, error) {
+	// fetch resource ID
+	resID, _, resourceErr := ss.getPipelineResourceID(repoName)
+	if resourceErr != nil {
+		log.Error("unable to fetch resourceID for: ", repoName)
+		return []PipelineSyncStatus{}, errorutils.CheckError(resourceErr)
+	}
 	queryParams := make(map[string]string, 0)
-	queryParams["pipelineSourceBranches"] = branch
+	//queryParams["pipelineSourceBranches"] = branch
+	queryParams["pipelineSourceIds"] = strconv.Itoa(resID)
 	uriVal, err := ss.constructURL(pipelineSyncStatus, queryParams)
 	if err != nil {
 		return []PipelineSyncStatus{}, errorutils.CheckError(err)
@@ -45,7 +53,6 @@ func (ss *SyncStatusService) GetSyncPipelineResourceStatus(branch string) ([]Pip
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return []PipelineSyncStatus{}, errorutils.CheckError(err)
 	}
-
 	rsc := make([]PipelineSyncStatus, 0)
 	jsonErr := json.Unmarshal(body, &rsc)
 	if jsonErr != nil {
@@ -70,4 +77,42 @@ func (ss *SyncStatusService) constructURL(api string, qParams map[string]string)
 	uri.RawQuery = queryString.Encode()
 
 	return uri.String(), nil
+}
+
+// getPipelineResourceID fetches resource ID for given full repository name
+func (ss *SyncStatusService) getPipelineResourceID(repoName string) (int, bool, error) {
+	httpDetails := ss.getHttpDetails()
+	queryParams := make(map[string]string, 0)
+
+	uriVal, errURL := ss.constructURL(pipelineResources, queryParams)
+	if errURL != nil {
+		return 0, false, errorutils.CheckError(errURL)
+	}
+
+	resp, body, _, err := ss.client.SendGet(uriVal, true, &httpDetails)
+	if err != nil {
+		return 0, false, errorutils.CheckError(err)
+	}
+	// Response Analysis
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return 0, false, err
+	}
+	if resp.StatusCode == http.StatusOK {
+		log.Info("received resource id")
+	}
+	p := make([]PipelineResources, 0)
+	err = json.Unmarshal(body, &p)
+	if err != nil {
+		log.Error("Failed to unmarshal json response")
+		return 0, false, errorutils.CheckError(err)
+	}
+	for _, res := range p {
+		if res.RepositoryFullName == repoName && res.IsMultiBranch {
+			return res.ID, res.IsMultiBranch, nil
+		} else if res.RepositoryFullName == repoName && !res.IsMultiBranch {
+			log.Debug("received repository name ", repoName, "is multi branch ", res.IsMultiBranch)
+			return res.ID, res.IsMultiBranch, nil
+		}
+	}
+	return 0, false, nil
 }
