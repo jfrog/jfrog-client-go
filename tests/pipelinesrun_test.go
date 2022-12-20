@@ -3,7 +3,9 @@ package tests
 import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"strconv"
 	"strings"
 	"testing"
@@ -34,8 +36,7 @@ func testTriggerSync(t *testing.T) {
 	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
 	assert.NoError(t, srcErr)
 	defer deleteSourceAndAssert(t, sourceId)
-	_, syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
-	assert.NoError(t, syncErr)
+	pollSyncPipelineSource(t)
 }
 
 func testGetSyncStatus(t *testing.T) {
@@ -56,16 +57,8 @@ func testGetSyncStatus(t *testing.T) {
 	assert.NoError(t, srcErr)
 
 	defer deleteSourceAndAssert(t, sourceId)
-	_, syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
-	assert.NoError(t, syncErr)
-	time.Sleep(15 * time.Second)
-	resourceStatus, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
-	assert.NoError(t, syncStatusErr)
-	if len(resourceStatus) == 0 || resourceStatus[0].LastSyncStatusCode != 4002 {
-		time.Sleep(15 * time.Second)
-		_, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
-		assert.NoError(t, syncStatusErr)
-	}
+	pollSyncPipelineSource(t)
+	pollForSyncResourceStatus(t)
 }
 
 func testGetRunStatus(t *testing.T) {
@@ -84,42 +77,75 @@ func testGetRunStatus(t *testing.T) {
 	assert.NoError(t, sourceErr)
 	defer deleteSourceAndAssert(t, sourceId)
 
-	_, syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
-	assert.NoError(t, syncErr)
+	pollSyncPipelineSource(t)
 
-	time.Sleep(15 * time.Second)
-	resourceStatus, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
-	assert.NoError(t, syncStatusErr)
-	if resourceStatus != nil || resourceStatus[0].LastSyncStatusCode != 4002 {
-		time.Sleep(15 * time.Second)
-		_, syncStatusErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
-		if syncStatusErr != nil {
-			assert.NoError(t, syncStatusErr)
-			return
-		}
-	}
+	pollForSyncResourceStatus(t)
 	pipelineName := "pipelines_run_int_test"
 	status, trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, false)
 	assert.NoError(t, trigErr)
 	assertTriggerRun(t, pipelineName, *PipelinesVcsBranch, status)
-	time.Sleep(60 * time.Second)
 
-	runStatus, runErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, false)
-	assert.NoError(t, runErr)
-	if runStatus != nil && len(runStatus.Pipelines) == 0 {
-		_, runErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, true)
-		assert.NoError(t, runErr)
+	pollGetRunStatus(t, pipelineName)
+}
+
+func pollGetRunStatus(t *testing.T, pipelineName string) {
+	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
+		pipRunResponse, syncErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, false)
+		assert.NoError(t, syncErr)
+
+		// Got the full valid response.
+		if pipRunResponse != nil && len(pipRunResponse.Pipelines) > 0 && pipRunResponse.Pipelines[0].Name == pipelineName {
+			if isCancellable(pipRunResponse.Pipelines[0].Run.StatusCode) {
+
+				runStatusCode := pipRunResponse.Pipelines[0].Run.StatusCode
+				assertRunStatus(t, runStatusCode)
+				runID := pipRunResponse.Pipelines[0].Run.ID
+				run, cancelErr := testPipelinesRunService.CancelTheRun(runID)
+				assert.NoError(t, cancelErr)
+				assert.Equal(t, "cancelled run "+strconv.Itoa(runID)+" successfully", run)
+			}
+			return true, []byte{}, nil
+		}
+		return false, []byte{}, nil
 	}
-	if runStatus != nil && len(runStatus.Pipelines) > 0 && isCancellable(runStatus.Pipelines[0].Run.StatusCode) {
-
-		runStatusCode := runStatus.Pipelines[0].Run.StatusCode
-		assertRunStatus(t, runStatusCode)
-		runID := runStatus.Pipelines[0].Run.ID
-		run, cancelErr := testPipelinesRunService.CancelTheRun(runID)
-		assert.NoError(t, cancelErr)
-		assert.Equal(t, "cancelled run "+strconv.Itoa(runID)+" successfully", run)
+	// define default wait time
+	defaultMaxWaitMinutes := 10 * time.Minute
+	defaultSyncSleepInterval := 5 * time.Second // 5 seconds
+	pollingExecutor := &httputils.PollingExecutor{
+		Timeout:         defaultMaxWaitMinutes,
+		PollingInterval: defaultSyncSleepInterval,
+		PollingAction:   pollingAction,
+		MsgPrefix:       "Syncing Pipeline Resource...",
 	}
+	// polling execution
+	_, err := pollingExecutor.Execute()
+	assert.NoError(t, err)
+}
 
+func pollForSyncResourceStatus(t *testing.T) {
+	//define polling action
+	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
+		pipResStatus, body, syncErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
+		assert.NoError(t, syncErr)
+
+		// Got the full valid response.
+		if len(pipResStatus) > 0 && pipResStatus[0].LastSyncStatusCode == 4002 {
+			return true, body, nil
+		}
+		return false, body, nil
+	}
+	// define default wait time
+	defaultMaxWaitMinutes := 10 * time.Minute
+	defaultSyncSleepInterval := 5 * time.Second // 5 seconds
+	pollingExecutor := &httputils.PollingExecutor{
+		Timeout:         defaultMaxWaitMinutes,
+		PollingInterval: defaultSyncSleepInterval,
+		PollingAction:   pollingAction,
+		MsgPrefix:       "Syncing Pipeline Resource...",
+	}
+	// polling execution
+	_, err := pollingExecutor.Execute()
+	assert.NoError(t, err)
 }
 
 func isCancellable(statusCode int) bool {
@@ -148,4 +174,30 @@ func assertRunStatus(t *testing.T, statusCode int) {
 func assertTriggerRun(t *testing.T, pipeline string, branch string, result string) {
 	expected := fmt.Sprintf("triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch)
 	assert.Equal(t, expected, result)
+}
+
+func pollSyncPipelineSource(t *testing.T) {
+	//define polling action
+	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
+		statusCode, body, syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
+		assert.NoError(t, syncErr)
+
+		// Got the full valid response.
+		if statusCode == http.StatusOK {
+			return true, body, nil
+		}
+		return false, body, nil
+	}
+	// define default wait time
+	defaultMaxWaitMinutes := 10 * time.Minute
+	defaultSyncSleepInterval := 5 * time.Second // 5 seconds
+	pollingExecutor := &httputils.PollingExecutor{
+		Timeout:         defaultMaxWaitMinutes,
+		PollingInterval: defaultSyncSleepInterval,
+		PollingAction:   pollingAction,
+		MsgPrefix:       "Syncing Pipeline Resource...",
+	}
+	// polling execution
+	_, err := pollingExecutor.Execute()
+	assert.NoError(t, err)
 }

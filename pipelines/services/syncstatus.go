@@ -27,39 +27,39 @@ func NewSyncStatusService(client *jfroghttpclient.JfrogHttpClient) *SyncStatusSe
 }
 
 // GetSyncPipelineResourceStatus fetches pipeline sync status
-func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch string) ([]PipelineSyncStatus, error) {
+func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch string) ([]PipelineSyncStatus, []byte, error) {
 	// fetch resource ID
 	resID, _, resourceErr := ss.getPipelineResourceID(repoName)
 	if resourceErr != nil {
 		log.Error("unable to fetch resourceID for: ", repoName)
-		return []PipelineSyncStatus{}, errorutils.CheckError(resourceErr)
+		return []PipelineSyncStatus{}, []byte{}, errorutils.CheckError(resourceErr)
 	}
 	queryParams := make(map[string]string, 0)
 	//queryParams["pipelineSourceBranches"] = branch
 	queryParams["pipelineSourceIds"] = strconv.Itoa(resID)
 	uriVal, err := ss.constructURL(pipelineSyncStatus, queryParams)
 	if err != nil {
-		return []PipelineSyncStatus{}, errorutils.CheckError(err)
+		return []PipelineSyncStatus{}, []byte{}, errorutils.CheckError(err)
 	}
 	httpDetails := ss.getHttpDetails()
 	log.Info("fetching pipeline sync status ...")
 
 	resp, body, _, err := ss.client.SendGet(uriVal, true, &httpDetails)
 	if err != nil {
-		return []PipelineSyncStatus{}, errorutils.CheckError(err)
+		return []PipelineSyncStatus{}, body, errorutils.CheckError(err)
 	}
 
 	// Response Analysis
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return []PipelineSyncStatus{}, errorutils.CheckError(err)
+		return []PipelineSyncStatus{}, body, errorutils.CheckError(err)
 	}
 	rsc := make([]PipelineSyncStatus, 0)
 	jsonErr := json.Unmarshal(body, &rsc)
 	if jsonErr != nil {
-		return []PipelineSyncStatus{}, errorutils.CheckError(jsonErr)
+		return []PipelineSyncStatus{}, body, errorutils.CheckError(jsonErr)
 	}
 
-	return rsc, nil
+	return rsc, body, nil
 }
 
 // constructURL from server config and api for fetching run status for a given branch
