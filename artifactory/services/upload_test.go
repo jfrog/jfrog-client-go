@@ -1,9 +1,11 @@
 package services
 
 import (
+	"path/filepath"
+	"testing"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestDebianProperties(t *testing.T) {
@@ -106,5 +108,25 @@ func TestAddEscapingParenthesesWithTargetAndTargetInArchive(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equalf(t, tt.want, addEscapingParenthesesForUpload(tt.args.pattern, tt.args.target, tt.args.targetInArchive), "AddEscapingParentheses(%v, %v)", tt.args.pattern, tt.args.target)
 		})
+	}
+}
+
+func TestSkipDirUpload(t *testing.T) {
+	data := []struct {
+		targetFiles []string
+		sourceDirs  []string
+		targetDir   string
+		sourceDir   string
+		includeDirs bool
+		result      bool
+	}{
+		{[]string{}, []string{}, "cli-rt1-1671381032/b", "testdata/a/b", true, false},
+		{[]string{"dirdir/b/"}, []string{}, "dirdir", "testdata/a/b", true, true},
+		{[]string{"cli-rt1-1671381032/b/"}, []string{}, "cli-rt1-1671381032/b", "testdata/a/b", true, true},
+		{[]string{"cli-rt1-1671383851/c", "cli-rt1-1671383851/b3.in"}, []string{filepath.Join("testdata", "a", "b", "c")}, "cli-rt1-1671383851/b", filepath.Join("testdata", "a", "b"), true, true},
+	}
+	for _, d := range data {
+		got := skipDirUpload(d.targetFiles, d.sourceDirs, d.targetDir, d.sourceDir, d.includeDirs)
+		assert.Equal(t, d.result, got)
 	}
 }

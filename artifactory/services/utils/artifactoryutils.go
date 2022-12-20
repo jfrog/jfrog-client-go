@@ -139,6 +139,16 @@ func IsSubPath(paths []string, index int, separator string) bool {
 	return false
 }
 
+// Returns true if one or more paths have a 'prefix' as a prefix
+func IsContainsPrefix(paths []string, prefix string) bool {
+	for i := 0; i < len(paths); i++ {
+		if strings.HasPrefix(paths[i], prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 // This method parses buildIdentifier. buildIdentifier should be from the format "buildName/buildNumber".
 // If no buildNumber provided LATEST will be downloaded.
 // If buildName or buildNumber contains "/" (slash) it should be escaped by "\" (backslash).
