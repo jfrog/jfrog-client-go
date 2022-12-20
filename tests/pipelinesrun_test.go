@@ -105,6 +105,8 @@ func pollGetRunStatus(t *testing.T, pipelineName string) {
 				run, cancelErr := testPipelinesRunService.CancelTheRun(runID)
 				assert.NoError(t, cancelErr)
 				assert.Equal(t, "cancelled run "+strconv.Itoa(runID)+" successfully", run)
+			} else {
+				return false, []byte{}, nil
 			}
 			return true, []byte{}, nil
 		}
