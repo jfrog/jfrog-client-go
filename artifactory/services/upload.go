@@ -416,7 +416,7 @@ func createUploadTask(taskData *uploadTaskData, dataHandlerFunc UploadDataHandle
 	}
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders.
 	// This operation replace the placeholders with the relevant value.
-	targetPathInArchive, _,err := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive, isRegexp)
+	targetPathInArchive, _, err := clientutils.ReplacePlaceHolders(taskData.groups, taskData.uploadParams.TargetPathInArchive, isRegexp)
 	if err != nil {
 		return err
 	}
