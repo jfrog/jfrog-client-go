@@ -20,6 +20,12 @@ func TestPipelinesRunService(t *testing.T) {
 	t.Run("test get run status", testGetRunStatus)
 }
 
+const (
+	// define default wait time
+	defaultMaxWaitMinutes    = 10 * time.Minute
+	defaultSyncSleepInterval = 5 * time.Second // 5 seconds
+)
+
 func testTriggerSync(t *testing.T) {
 	if *PipelinesVcsToken == "" {
 		assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured")
@@ -81,8 +87,10 @@ func testGetRunStatus(t *testing.T) {
 	pollSyncPipelineSource(t)
 
 	pollForSyncResourceStatus(t)
+	_, isMultiBranch, resourceErr := testPipelinesSyncService.GetPipelineResourceID(*PipelinesVcsRepoFullPath)
+	assert.NoError(t, resourceErr)
 	pipelineName := "pipelines_run_int_test"
-	status, trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, false)
+	status, trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, isMultiBranch)
 	assert.NoError(t, trigErr)
 	assertTriggerRun(t, pipelineName, *PipelinesVcsBranch, status)
 
@@ -91,7 +99,9 @@ func testGetRunStatus(t *testing.T) {
 
 func pollGetRunStatus(t *testing.T, pipelineName string) {
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		pipRunResponse, syncErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, false)
+		_, isMultiBranch, resourceErr := testPipelinesSyncService.GetPipelineResourceID(*PipelinesVcsRepoFullPath)
+		assert.NoError(t, resourceErr)
+		pipRunResponse, syncErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, isMultiBranch)
 		assert.NoError(t, syncErr)
 
 		// Got the full valid response.
@@ -112,9 +122,6 @@ func pollGetRunStatus(t *testing.T, pipelineName string) {
 		}
 		return false, []byte{}, nil
 	}
-	// define default wait time
-	defaultMaxWaitMinutes := 10 * time.Minute
-	defaultSyncSleepInterval := 5 * time.Second // 5 seconds
 	pollingExecutor := &httputils.PollingExecutor{
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
@@ -138,9 +145,6 @@ func pollForSyncResourceStatus(t *testing.T) {
 		}
 		return false, body, nil
 	}
-	// define default wait time
-	defaultMaxWaitMinutes := 10 * time.Minute
-	defaultSyncSleepInterval := 5 * time.Second // 5 seconds
 	pollingExecutor := &httputils.PollingExecutor{
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
@@ -192,9 +196,7 @@ func pollSyncPipelineSource(t *testing.T) {
 		}
 		return false, body, nil
 	}
-	// define default wait time
-	defaultMaxWaitMinutes := 10 * time.Minute
-	defaultSyncSleepInterval := 5 * time.Second // 5 seconds
+
 	pollingExecutor := &httputils.PollingExecutor{
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,

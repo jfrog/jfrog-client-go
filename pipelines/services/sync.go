@@ -30,12 +30,12 @@ func NewSyncService(client *jfroghttpclient.JfrogHttpClient) *SyncService {
 // SyncPipelineSource trigger sync for pipeline resource
 func (ss *SyncService) SyncPipelineSource(branch string, repoName string) (int, []byte, error) {
 	// fetch resource ID
-	resID, _, resourceErr := ss.getPipelineResourceID(repoName)
+	resID, _, resourceErr := ss.GetPipelineResourceID(repoName)
 	if resourceErr != nil {
 		log.Error("unable to fetch resourceID for: ", repoName)
 		return 0, []byte{}, errorutils.CheckError(resourceErr)
 	}
-	log.Info("trying to trigger pipeline source sync ...")
+	log.Info("triggering pipeline source sync ...")
 
 	// trigger sync
 	httpDetails := ss.getHttpDetails()
@@ -61,8 +61,8 @@ func (ss *SyncService) SyncPipelineSource(branch string, repoName string) (int, 
 	return resp.StatusCode, body, nil
 }
 
-// getPipelineResourceID fetches resource ID for given full repository name
-func (ss *SyncService) getPipelineResourceID(repoName string) (int, bool, error) {
+// GetPipelineResourceID fetches resource ID for given full repository name
+func (ss *SyncService) GetPipelineResourceID(repoName string) (int, bool, error) {
 	httpDetails := ss.getHttpDetails()
 	queryParams := make(map[string]string, 0)
 
@@ -80,7 +80,7 @@ func (ss *SyncService) getPipelineResourceID(repoName string) (int, bool, error)
 		return 0, false, err
 	}
 	if resp.StatusCode == http.StatusOK {
-		log.Info("received resource id")
+		log.Debug("received resource id")
 	}
 	p := make([]PipelineResources, 0)
 	err = json.Unmarshal(body, &p)
