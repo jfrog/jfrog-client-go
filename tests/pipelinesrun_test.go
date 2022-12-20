@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strconv"
@@ -95,6 +96,7 @@ func pollGetRunStatus(t *testing.T, pipelineName string) {
 
 		// Got the full valid response.
 		if pipRunResponse != nil && len(pipRunResponse.Pipelines) > 0 && pipRunResponse.Pipelines[0].Name == pipelineName {
+			log.Info("pipelines status code ", pipRunResponse.Pipelines[0].Run.StatusCode)
 			if isCancellable(pipRunResponse.Pipelines[0].Run.StatusCode) {
 
 				runStatusCode := pipRunResponse.Pipelines[0].Run.StatusCode
@@ -115,7 +117,7 @@ func pollGetRunStatus(t *testing.T, pipelineName string) {
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
-		MsgPrefix:       "Syncing Pipeline Resource...",
+		MsgPrefix:       "Get pipeline run status...",
 	}
 	// polling execution
 	_, err := pollingExecutor.Execute()
@@ -141,7 +143,7 @@ func pollForSyncResourceStatus(t *testing.T) {
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
-		MsgPrefix:       "Syncing Pipeline Resource...",
+		MsgPrefix:       "Get pipeline sync status...",
 	}
 	// polling execution
 	_, err := pollingExecutor.Execute()
