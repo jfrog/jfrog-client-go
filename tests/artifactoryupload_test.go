@@ -171,7 +171,7 @@ func includeDirsUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if summary.TotalSucceeded != 0 {
+	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
 	if summary.TotalFailed != 0 {

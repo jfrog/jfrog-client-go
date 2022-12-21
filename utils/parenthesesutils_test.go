@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 )
@@ -61,5 +62,33 @@ func TestGetPlaceHoldersValues(t *testing.T) {
 	want := []int{1, 2, 3}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("sortNoDuplicates(%v) == %v, want %v", target, got, want)
+	}
+}
+
+func TestAddEscapingParentheses(t *testing.T) {
+	type args struct {
+		pattern         string
+		target          string
+		targetInArchive string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"empty parentheses", args{"()", "{2}", ""}, "\\(\\)"},
+		{"empty parentheses", args{"()", "{}", ""}, "\\(\\)"},
+		{"empty parentheses", args{"()", "{1}", ""}, "()"},
+		{"empty parentheses", args{")(", "{1}", ""}, "\\)\\("},
+		{"first parentheses", args{"(a)/(b)/(c)", "{2}/{3}", ""}, "\\(a\\)/(b)/(c)"},
+		{"second parentheses", args{"(a)/(b)/(c)", "{1}/{3}", ""}, "(a)/\\(b\\)/(c)"},
+		{"third parentheses", args{"(a)/(b)/(c)", "{1}/{2}", ""}, "(a)/(b)/\\(c\\)"},
+		{"empty placeholders", args{"(a)/(b)/(c)", "", ""}, "\\(a\\)/\\(b\\)/\\(c\\)"},
+		{"un-symmetric parentheses", args{")a)/(b)/(c(", "", ""}, "\\)a\\)/\\(b\\)/\\(c\\("},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, addEscapingParentheses(tt.args.pattern, tt.args.target), "AddEscapingParentheses(%v, %v)", tt.args.pattern, tt.args.target)
+		})
 	}
 }
