@@ -65,7 +65,7 @@ func RunTests(testsPackages []string, hideUnitTestsLog bool) error {
 	if len(testsPackages) == 0 {
 		return nil
 	}
-	testsPackages = append([]string{"test", "-v"}, testsPackages...)
+	testsPackages = append([]string{"test", "-v", "-p", "1"}, testsPackages...)
 	cmd := exec.Command("go", testsPackages...)
 
 	if hideUnitTestsLog {
