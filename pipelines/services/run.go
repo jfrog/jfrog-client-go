@@ -3,7 +3,9 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -29,6 +31,7 @@ const (
 	triggerpipeline      = "api/v1/pipelines/trigger"
 	pipelineSyncStatus   = "api/v1/pipelineSyncStatuses"
 	pipelineResources    = "api/v1/pipelineSources"
+	cancelRunPath        = "api/v1/runs/:runId/cancel"
 	syncPipelineResource = "api/v1/pipelineSources"
 	resourceVersions     = "api/v1/resourceVersions"
 )
@@ -48,31 +51,27 @@ func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) 
 	// URL Construction
 	uri, pipeURLErr := rs.constructPipelinesURL(queryParams, runStatus)
 	if pipeURLErr != nil {
-		return nil, errorutils.CheckError(pipeURLErr)
+		return nil, pipeURLErr
 	}
 
 	// Prepare Request
 	resp, body, _, err := rs.client.SendGet(uri, true, &httpDetails)
 	if err != nil {
-		return nil, errorutils.CheckError(err)
+		return nil, err
 	}
 
 	// Response Analysis
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(err)
+		return nil, err
 	}
-	p := PipelineRunStatusResponse{}
-	err = json.Unmarshal(body, &p)
-	if err != nil {
-		log.Error("Failed to unmarshal json response")
-		return &PipelineRunStatusResponse{}, errorutils.CheckError(err)
-	}
-	return &p, nil
+	pipRunResp := PipelineRunStatusResponse{}
+	err = json.Unmarshal(body, &pipRunResp)
+	fmt.Printf("pipeline response %+v\n", string(body))
+	return &pipRunResp, errorutils.CheckError(err)
 }
 
 func (rs *RunService) getHttpDetails() httputils.HttpClientDetails {
-	httpDetails := rs.ServiceDetails.CreateHttpClientDetails()
-	return httpDetails
+	return rs.ServiceDetails.CreateHttpClientDetails()
 }
 
 // constructPipelinesURL creates URL with all required details to make api call
@@ -92,9 +91,9 @@ func (rs *RunService) constructPipelinesURL(qParams map[string]string, apiPath s
 	return uri.String(), nil
 }
 
-func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) (string, error) {
+func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) error {
 	httpDetails := rs.getHttpDetails()
-	m := make(map[string]string, 0)
+	queryParams := make(map[string]string, 0)
 
 	var payload *strings.Reader
 	if isMultiBranch { // add this query param only when pipeline source is multi-branch
@@ -111,77 +110,68 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 	_, err := buf.ReadFrom(payload)
 	if err != nil {
 		log.Error("Failed to read stream to send payload to trigger pipelines")
-		return "", errorutils.CheckError(err)
+		return errorutils.CheckError(err)
 	}
 
 	// URL Construction
-	headers := make(map[string]string, 0)
-	headers["Content-Type"] = "application/json"
-	httpDetails.Headers = headers
-	uri, pipeURLErr := rs.constructPipelinesURL(m, triggerpipeline)
+	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
+	uri, pipeURLErr := rs.constructPipelinesURL(queryParams, triggerpipeline)
 	if pipeURLErr != nil {
-		return "", pipeURLErr
+		return pipeURLErr
 	}
 
 	// Prepare Request
 	resp, body, err := rs.client.SendPost(uri, buf.Bytes(), &httpDetails)
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return err
 	}
 
 	// Response Analysis
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", err
+		return err
 	}
-	if resp.StatusCode == http.StatusOK {
-		s := fmt.Sprintf("triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch)
-		return s, nil
-	}
+	log.Info(fmt.Sprintf("triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch))
 
-	return "", nil
+	return nil
 }
 
-func (rs *RunService) CancelTheRun(runID int) (string, error) {
+func (rs *RunService) CancelRun(runID int) error {
 	log.Info("cancelling the run ", runID)
 	runValue := strconv.Itoa(runID)
-	cancelRun := "api/v1/runs/:runId/cancel"
+	cancelRun := cancelRunPath
 	cancelRun = strings.Replace(cancelRun, ":runId", runValue, 1)
 	httpDetails := rs.getHttpDetails()
-	m := make(map[string]string, 0)
+	queryParams := make(map[string]string, 0)
 	payload := strings.NewReader(`{
 		}`)
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(payload)
 	if err != nil {
 		log.Error("Failed to read stream to send payload to trigger pipelines")
-		return "", errorutils.CheckError(err)
+		return errorutils.CheckError(err)
 	}
 
 	// URL Construction
-	headers := make(map[string]string, 0)
-	headers["Content-Type"] = "application/json"
-	httpDetails.Headers = headers
-	uri, pipeURLErr := rs.constructPipelinesURL(m, cancelRun)
+	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
+	uri, pipeURLErr := rs.constructPipelinesURL(queryParams, cancelRun)
 	if pipeURLErr != nil {
-		return "", pipeURLErr
+		return pipeURLErr
 	}
 
 	// Prepare Request
 	resp, body, err := rs.client.SendPost(uri, buf.Bytes(), &httpDetails)
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return errorutils.CheckError(err)
 	}
 
 	// Response Analysis
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", err
+		return err
 	}
 	if resp.StatusCode == http.StatusOK {
-		s := fmt.Sprintf("cancelled run %s successfully", runValue)
-		return s, nil
-	} else {
-		log.Error("unable to find run id")
+		log.Info(fmt.Sprintf("cancelled run %s successfully", runValue))
+		return nil
 	}
-
-	return "", nil
+	log.Error("unable to find run id")
+	return errors.New(fmt.Sprintf("Unable to find run ID: %d", runID))
 }

@@ -110,7 +110,7 @@ func (sm *PipelinesServicesManager) GetPipelineRunStatusByBranch(branch, pipelin
 	return runService.GetRunStatus(branch, pipeline, isMultiBranch)
 }
 
-func (sm *PipelinesServicesManager) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) (string, error) {
+func (sm *PipelinesServicesManager) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) error {
 	runService := services.NewRunService(sm.client)
 	runService.ServiceDetails = sm.config.GetServiceDetails()
 	return runService.TriggerPipelineRun(branch, pipeline, isMultiBranch)
@@ -126,12 +126,12 @@ func (sm *PipelinesServicesManager) SyncPipelineResource(branch, repoFullName st
 func (sm *PipelinesServicesManager) GetSyncStatusForPipelineResource(repo, branch string) ([]services.PipelineSyncStatus, error) {
 	syncStatusService := services.NewSyncStatusService(sm.client)
 	syncStatusService.ServiceDetails = sm.config.GetServiceDetails()
-	pipSyncStatus, _, err := syncStatusService.GetSyncPipelineResourceStatus(repo, branch)
+	pipSyncStatus, err := syncStatusService.GetSyncPipelineResourceStatus(repo, branch)
 	return pipSyncStatus, err
 }
 
-func (sm *PipelinesServicesManager) CancelTheRun(runID int) (string, error) {
+func (sm *PipelinesServicesManager) CancelTheRun(runID int) error {
 	runService := services.NewRunService(sm.client)
 	runService.ServiceDetails = sm.config.GetServiceDetails()
-	return runService.CancelTheRun(runID)
+	return runService.CancelRun(runID)
 }

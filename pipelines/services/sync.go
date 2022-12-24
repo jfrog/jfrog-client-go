@@ -19,8 +19,7 @@ type SyncService struct {
 }
 
 func (ss *SyncService) getHttpDetails() httputils.HttpClientDetails {
-	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
-	return httpDetails
+	return ss.ServiceDetails.CreateHttpClientDetails()
 }
 
 func NewSyncService(client *jfroghttpclient.JfrogHttpClient) *SyncService {
@@ -33,31 +32,30 @@ func (ss *SyncService) SyncPipelineSource(branch string, repoName string) (int, 
 	resID, _, resourceErr := ss.GetPipelineResourceID(repoName)
 	if resourceErr != nil {
 		log.Error("unable to fetch resourceID for: ", repoName)
-		return 0, []byte{}, errorutils.CheckError(resourceErr)
+		return 0, []byte{}, resourceErr
 	}
-	log.Info("triggering pipeline source sync ...")
+	log.Info("Triggering pipeline source sync ...")
 
 	// trigger sync
 	httpDetails := ss.getHttpDetails()
-	queryParams := make(map[string]string, 0)
-	queryParams["sync"] = "true"
-	queryParams["branch"] = branch
+	queryParams := map[string]string{
+		"sync":   "true",
+		"branch": branch,
+	}
 
 	apiPath := path.Join(pipelineResources, strconv.Itoa(resID))
 	uriVal, errURL := ss.constructURL(apiPath, queryParams)
 	if errURL != nil {
-		return 0, []byte{}, errorutils.CheckError(errURL)
+		return 0, []byte{}, errURL
 	}
 	resp, body, _, httpErr := ss.client.SendGet(uriVal, true, &httpDetails)
 	if httpErr != nil {
 		return 0, body, errorutils.CheckError(httpErr)
 	}
 	if err := errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return 0, body, errorutils.CheckError(err)
+		return resp.StatusCode, body, errorutils.CheckError(err)
 	}
-	if resp.StatusCode == http.StatusOK {
-		log.Info("Triggered pipeline sync successfully")
-	}
+	log.Info("Triggered pipeline sync successfully")
 	return resp.StatusCode, body, nil
 }
 
@@ -75,13 +73,11 @@ func (ss *SyncService) GetPipelineResourceID(repoName string) (int, bool, error)
 	if err != nil {
 		return 0, false, errorutils.CheckError(err)
 	}
-	// Response Analysis
+	// Response analysis
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return 0, false, err
+		return resp.StatusCode, false, err
 	}
-	if resp.StatusCode == http.StatusOK {
-		log.Debug("received resource id")
-	}
+	log.Debug("Received resource id")
 	p := make([]PipelineResources, 0)
 	err = json.Unmarshal(body, &p)
 	if err != nil {
@@ -89,9 +85,7 @@ func (ss *SyncService) GetPipelineResourceID(repoName string) (int, bool, error)
 		return 0, false, errorutils.CheckError(err)
 	}
 	for _, res := range p {
-		if res.RepositoryFullName == repoName && res.IsMultiBranch {
-			return res.ID, res.IsMultiBranch, nil
-		} else if res.RepositoryFullName == repoName && !res.IsMultiBranch {
+		if res.RepositoryFullName == repoName {
 			log.Debug("received repository name ", repoName, "is multi branch ", res.IsMultiBranch)
 			return res.ID, res.IsMultiBranch, nil
 		}

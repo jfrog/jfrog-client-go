@@ -18,8 +18,7 @@ type SyncStatusService struct {
 }
 
 func (ss *SyncStatusService) getHttpDetails() httputils.HttpClientDetails {
-	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
-	return httpDetails
+	return ss.ServiceDetails.CreateHttpClientDetails()
 }
 
 func NewSyncStatusService(client *jfroghttpclient.JfrogHttpClient) *SyncStatusService {
@@ -27,43 +26,42 @@ func NewSyncStatusService(client *jfroghttpclient.JfrogHttpClient) *SyncStatusSe
 }
 
 // GetSyncPipelineResourceStatus fetches pipeline sync status
-func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch string) ([]PipelineSyncStatus, []byte, error) {
+func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch string) ([]PipelineSyncStatus, error) {
 	// fetch resource ID
 	resID, isMultiBranch, resourceErr := ss.getPipelineResourceID(repoName)
 	if resourceErr != nil {
-		log.Error("unable to fetch resourceID for: ", repoName)
-		return []PipelineSyncStatus{}, []byte{}, errorutils.CheckError(resourceErr)
+		log.Error("Unable to fetch resourceID for: ", repoName)
+		return []PipelineSyncStatus{}, resourceErr
 	}
 	queryParams := make(map[string]string, 0)
 	if isMultiBranch {
 		queryParams["pipelineSourceBranches"] = branch
-		queryParams["pipelineSourceIds"] = strconv.Itoa(resID)
-	} else {
-		queryParams["pipelineSourceIds"] = strconv.Itoa(resID)
 	}
+	queryParams["pipelineSourceIds"] = strconv.Itoa(resID)
+
 	uriVal, err := ss.constructURL(pipelineSyncStatus, queryParams)
 	if err != nil {
-		return []PipelineSyncStatus{}, []byte{}, errorutils.CheckError(err)
+		return []PipelineSyncStatus{}, errorutils.CheckError(err)
 	}
 	httpDetails := ss.getHttpDetails()
 	log.Info("fetching pipeline sync status ...")
 
 	resp, body, _, err := ss.client.SendGet(uriVal, true, &httpDetails)
 	if err != nil {
-		return []PipelineSyncStatus{}, body, errorutils.CheckError(err)
+		return []PipelineSyncStatus{}, errorutils.CheckError(err)
 	}
 
 	// Response Analysis
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return []PipelineSyncStatus{}, body, errorutils.CheckError(err)
+		return []PipelineSyncStatus{}, err
 	}
 	rsc := make([]PipelineSyncStatus, 0)
 	jsonErr := json.Unmarshal(body, &rsc)
 	if jsonErr != nil {
-		return []PipelineSyncStatus{}, body, errorutils.CheckError(jsonErr)
+		return []PipelineSyncStatus{}, errorutils.CheckError(jsonErr)
 	}
 
-	return rsc, body, nil
+	return rsc, nil
 }
 
 // constructURL from server config and api for fetching run status for a given branch
@@ -111,11 +109,9 @@ func (ss *SyncStatusService) getPipelineResourceID(repoName string) (int, bool, 
 		return 0, false, errorutils.CheckError(err)
 	}
 	for _, res := range p {
-		if res.RepositoryFullName == repoName && res.IsMultiBranch {
-			return res.ID, res.IsMultiBranch, nil
-		} else if res.RepositoryFullName == repoName && !res.IsMultiBranch {
+		if res.RepositoryFullName == repoName {
 			log.Debug("received repository name ", repoName, "is multi branch ", res.IsMultiBranch)
-			return res.ID, res.IsMultiBranch, nil
+			return res.ID, *res.IsMultiBranch, nil
 		}
 	}
 	return 0, false, nil

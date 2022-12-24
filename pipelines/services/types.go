@@ -9,7 +9,7 @@ type PipelineRunStatusResponse struct {
 
 type StaticPropertyBag struct {
 	TriggeredByUserName    string `json:"triggeredByUserName,omitempty"`
-	SignedPipelinesEnabled bool   `json:"signedPipelinesEnabled,omitempty"`
+	SignedPipelinesEnabled *bool  `json:"signedPipelinesEnabled,omitempty"`
 }
 
 type Run struct {
@@ -40,12 +40,12 @@ type PipelineSyncStatus struct {
 	ProjectID                    int        `json:"projectId,omitempty"`
 	PipelineSourceID             int        `json:"pipelineSourceId,omitempty"`
 	PipelineSourceBranch         string     `json:"pipelineSourceBranch,omitempty"`
-	IsSyncing                    bool       `json:"isSyncing,omitempty"`
+	IsSyncing                    *bool      `json:"isSyncing,omitempty"`
 	LastSyncStatusCode           int        `json:"lastSyncStatusCode,omitempty"`
 	LastSyncStartedAt            time.Time  `json:"lastSyncStartedAt,omitempty"`
 	LastSyncEndedAt              time.Time  `json:"lastSyncEndedAt,omitempty"`
 	LastSyncLogs                 string     `json:"lastSyncLogs,omitempty"`
-	IsMissingConfig              bool       `json:"isMissingConfig,omitempty"`
+	IsMissingConfig              *bool      `json:"isMissingConfig,omitempty"`
 	TriggeredByResourceVersionID int        `json:"triggeredByResourceVersionId,omitempty"`
 	CreatedAt                    time.Time  `json:"createdAt,omitempty"`
 	UpdatedAt                    time.Time  `json:"updatedAt,omitempty"`
@@ -67,14 +67,14 @@ type PipelineResources struct {
 	ProjectIntegrationID     int         `json:"projectIntegrationId,omitempty"`
 	RepositoryFullName       string      `json:"repositoryFullName,omitempty"`
 	ConfigFolder             string      `json:"configFolder,omitempty"`
-	IsMultiBranch            bool        `json:"isMultiBranch,omitempty"`
+	IsMultiBranch            *bool       `json:"isMultiBranch,omitempty"`
 	IsInternal               interface{} `json:"isInternal,omitempty"`
 	Branch                   interface{} `json:"branch,omitempty"`
 	BranchExcludePattern     string      `json:"branchExcludePattern,omitempty"`
 	BranchIncludePattern     string      `json:"branchIncludePattern,omitempty"`
 	FileFilter               string      `json:"fileFilter,omitempty"`
 	Environments             interface{} `json:"environments,omitempty"`
-	IsSyncing                bool        `json:"isSyncing,omitempty"`
+	IsSyncing                *bool       `json:"isSyncing,omitempty"`
 	LastSyncStatusCode       int         `json:"lastSyncStatusCode,omitempty"`
 	LastSyncStartedAt        time.Time   `json:"lastSyncStartedAt,omitempty"`
 	LastSyncEndedAt          time.Time   `json:"lastSyncEndedAt,omitempty"`

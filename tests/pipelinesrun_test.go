@@ -27,8 +27,7 @@ const (
 )
 
 func testTriggerSync(t *testing.T) {
-	if *PipelinesVcsToken == "" {
-		assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured")
+	if !assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured") {
 		return
 	}
 	// Create integration with provided token.
@@ -47,8 +46,7 @@ func testTriggerSync(t *testing.T) {
 }
 
 func testGetSyncStatus(t *testing.T) {
-	if *PipelinesVcsToken == "" {
-		assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured")
+	if !assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured") {
 		return
 	}
 	// Create integration with provided token.'
@@ -69,7 +67,9 @@ func testGetSyncStatus(t *testing.T) {
 }
 
 func testGetRunStatus(t *testing.T) {
-	assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured")
+	if !assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured") {
+		return
+	}
 	// Create integration with provided token.
 	unixTime := time.Now().Unix()
 	timeString := strconv.Itoa(int(unixTime))
@@ -90,9 +90,8 @@ func testGetRunStatus(t *testing.T) {
 	_, isMultiBranch, resourceErr := testPipelinesSyncService.GetPipelineResourceID(*PipelinesVcsRepoFullPath)
 	assert.NoError(t, resourceErr)
 	pipelineName := "pipelines_run_int_test"
-	status, trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, isMultiBranch)
+	trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, isMultiBranch)
 	assert.NoError(t, trigErr)
-	assertTriggerRun(t, pipelineName, *PipelinesVcsBranch, status)
 
 	pollGetRunStatus(t, pipelineName)
 }
@@ -112,9 +111,8 @@ func pollGetRunStatus(t *testing.T, pipelineName string) {
 				runStatusCode := pipRunResponse.Pipelines[0].Run.StatusCode
 				assertRunStatus(t, runStatusCode)
 				runID := pipRunResponse.Pipelines[0].Run.ID
-				run, cancelErr := testPipelinesRunService.CancelTheRun(runID)
+				cancelErr := testPipelinesRunService.CancelRun(runID)
 				assert.NoError(t, cancelErr)
-				assert.Equal(t, "cancelled run "+strconv.Itoa(runID)+" successfully", run)
 			} else {
 				return false, []byte{}, nil
 			}
@@ -136,14 +134,14 @@ func pollGetRunStatus(t *testing.T, pipelineName string) {
 func pollForSyncResourceStatus(t *testing.T) {
 	//define polling action
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		pipResStatus, body, syncErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
+		pipResStatus, syncErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
 		assert.NoError(t, syncErr)
 
 		// Got the full valid response.
 		if len(pipResStatus) > 0 && pipResStatus[0].LastSyncStatusCode == 4002 {
-			return true, body, nil
+			return true, []byte{}, nil
 		}
-		return false, body, nil
+		return false, []byte{}, nil
 	}
 	pollingExecutor := &httputils.PollingExecutor{
 		Timeout:         defaultMaxWaitMinutes,
@@ -158,17 +156,7 @@ func pollForSyncResourceStatus(t *testing.T) {
 
 func isCancellable(statusCode int) bool {
 	switch statusCode {
-	case 4000:
-		fallthrough
-	case 4001:
-		fallthrough
-	case 4005:
-		fallthrough
-	case 4006:
-		fallthrough
-	case 4016:
-		fallthrough
-	case 4022:
+	case 4000, 4001, 4005, 4006, 4016, 4022:
 		return true
 
 	}
@@ -176,7 +164,8 @@ func isCancellable(statusCode int) bool {
 }
 
 func assertRunStatus(t *testing.T, statusCode int) {
-	assert.True(t, statusCode >= 4000 && statusCode <= 4022)
+	assert.GreaterOrEqual(t, statusCode, 4000)
+	assert.LessOrEqual(t, statusCode, 4022)
 }
 
 func assertTriggerRun(t *testing.T, pipeline string, branch string, result string) {
@@ -190,11 +179,7 @@ func pollSyncPipelineSource(t *testing.T) {
 		statusCode, body, syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
 		assert.NoError(t, syncErr)
 
-		// Got the full valid response.
-		if statusCode == http.StatusOK {
-			return true, body, nil
-		}
-		return false, body, nil
+		return statusCode == http.StatusOK, body, nil
 	}
 
 	pollingExecutor := &httputils.PollingExecutor{
