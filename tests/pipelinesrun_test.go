@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/pipelines/services"
 	pipelinesServices "github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -39,7 +38,7 @@ func testTriggerSync(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
+	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
 	assert.NoError(t, srcErr)
 	defer deleteSourceAndAssert(t, sourceId)
 	pollSyncPipelineSource(t)
@@ -58,7 +57,7 @@ func testGetSyncStatus(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
+	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
 	assert.NoError(t, srcErr)
 
 	defer deleteSourceAndAssert(t, sourceId)
@@ -80,7 +79,7 @@ func testGetRunStatus(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, sourceErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
+	sourceId, sourceErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
 	assert.NoError(t, sourceErr)
 	defer deleteSourceAndAssert(t, sourceId)
 
@@ -91,7 +90,7 @@ func testGetRunStatus(t *testing.T) {
 		testPipelinesSyncService.ServiceDetails.GetUrl(),
 		*PipelinesVcsRepoFullPath,
 		testPipelinesSyncService.ServiceDetails.CreateHttpClientDetails())
-	
+
 	assert.NoError(t, resourceErr)
 	pipelineName := "pipelines_run_int_test"
 	trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, isMultiBranch)
