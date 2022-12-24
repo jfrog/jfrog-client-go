@@ -87,9 +87,9 @@ func testGetRunStatus(t *testing.T) {
 
 	pollForSyncResourceStatus(t)
 	_, isMultiBranch, resourceErr := pipelinesServices.GetPipelineResourceID(testPipelinesSyncService.GetHTTPClient(),
-		testPipelinesSyncService.ServiceDetails.GetUrl(),
+		testPipelinesSyncService.GetServiceURL(),
 		*PipelinesVcsRepoFullPath,
-		testPipelinesSyncService.ServiceDetails.CreateHttpClientDetails())
+		testPipelinesSyncService.GetHttpDetails())
 
 	assert.NoError(t, resourceErr)
 	pipelineName := "pipelines_run_int_test"
