@@ -86,7 +86,7 @@ func testGetRunStatus(t *testing.T) {
 	pollSyncPipelineSource(t)
 
 	pollForSyncResourceStatus(t)
-	_, isMultiBranch, resourceErr := pipelinesServices.GetPipelineResourceID(testPipelinesSyncService.GetClient(),
+	_, isMultiBranch, resourceErr := pipelinesServices.GetPipelineResourceID(testPipelinesSyncService.GetHTTPClient(),
 		testPipelinesSyncService.ServiceDetails.GetUrl(),
 		*PipelinesVcsRepoFullPath,
 		testPipelinesSyncService.ServiceDetails.CreateHttpClientDetails())
@@ -101,7 +101,7 @@ func testGetRunStatus(t *testing.T) {
 
 func pollGetRunStatus(t *testing.T, pipelineName string) {
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		_, isMultiBranch, resourceErr := pipelinesServices.GetPipelineResourceID(testPipelinesSyncService.GetClient(),
+		_, isMultiBranch, resourceErr := pipelinesServices.GetPipelineResourceID(testPipelinesSyncService.GetHTTPClient(),
 			testPipelinesSyncService.ServiceDetails.GetUrl(),
 			*PipelinesVcsRepoFullPath,
 			testPipelinesSyncService.ServiceDetails.CreateHttpClientDetails())

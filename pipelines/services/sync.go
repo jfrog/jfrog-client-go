@@ -24,6 +24,10 @@ func NewSyncService(client *jfroghttpclient.JfrogHttpClient) *SyncService {
 	return &SyncService{client: client}
 }
 
+func (ss *SyncService) GetHTTPClient() *jfroghttpclient.JfrogHttpClient {
+	return ss.client
+}
+
 // SyncPipelineSource trigger sync for pipeline resource
 func (ss *SyncService) SyncPipelineSource(branch string, repoName string) (int, []byte, error) {
 	// fetch resource ID
