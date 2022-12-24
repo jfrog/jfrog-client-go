@@ -9,8 +9,8 @@ import (
 	"net/http"
 )
 
-// getPipelineResourceID fetches resource ID for given full repository name
-func getPipelineResourceID(client *jfroghttpclient.JfrogHttpClient, apiURL, repoName string, httpDetails httputils.HttpClientDetails) (int, bool, error) {
+// GetPipelineResourceID fetches resource ID for given full repository name
+func GetPipelineResourceID(client *jfroghttpclient.JfrogHttpClient, apiURL, repoName string, httpDetails httputils.HttpClientDetails) (int, bool, error) {
 	queryParams := make(map[string]string, 0)
 
 	uriVal, errURL := constructPipelinesURL(queryParams, apiURL, pipelineResources)

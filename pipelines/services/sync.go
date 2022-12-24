@@ -27,7 +27,7 @@ func NewSyncService(client *jfroghttpclient.JfrogHttpClient) *SyncService {
 // SyncPipelineSource trigger sync for pipeline resource
 func (ss *SyncService) SyncPipelineSource(branch string, repoName string) (int, []byte, error) {
 	// fetch resource ID
-	resID, _, resourceErr := getPipelineResourceID(ss.client, ss.GetUrl(), repoName, ss.getHttpDetails())
+	resID, _, resourceErr := GetPipelineResourceID(ss.client, ss.GetUrl(), repoName, ss.getHttpDetails())
 	if resourceErr != nil {
 		log.Error("unable to fetch resourceID for: ", repoName)
 		return 0, []byte{}, resourceErr

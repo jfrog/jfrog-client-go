@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
+	pipelinesServices "github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
@@ -86,7 +87,11 @@ func testGetRunStatus(t *testing.T) {
 	pollSyncPipelineSource(t)
 
 	pollForSyncResourceStatus(t)
-	_, isMultiBranch, resourceErr := testPipelinesSyncService.GetPipelineResourceID(*PipelinesVcsRepoFullPath)
+	_, isMultiBranch, resourceErr := pipelinesServices.GetPipelineResourceID(testPipelinesSyncService.GetClient(),
+		testPipelinesSyncService.ServiceDetails.GetUrl(),
+		*PipelinesVcsRepoFullPath,
+		testPipelinesSyncService.ServiceDetails.CreateHttpClientDetails())
+	
 	assert.NoError(t, resourceErr)
 	pipelineName := "pipelines_run_int_test"
 	trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, isMultiBranch)
@@ -97,7 +102,11 @@ func testGetRunStatus(t *testing.T) {
 
 func pollGetRunStatus(t *testing.T, pipelineName string) {
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		_, isMultiBranch, resourceErr := testPipelinesSyncService.GetPipelineResourceID(*PipelinesVcsRepoFullPath)
+		_, isMultiBranch, resourceErr := pipelinesServices.GetPipelineResourceID(testPipelinesSyncService.GetClient(),
+			testPipelinesSyncService.ServiceDetails.GetUrl(),
+			*PipelinesVcsRepoFullPath,
+			testPipelinesSyncService.ServiceDetails.CreateHttpClientDetails())
+
 		assert.NoError(t, resourceErr)
 		pipRunResponse, syncErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, isMultiBranch)
 		assert.NoError(t, syncErr)

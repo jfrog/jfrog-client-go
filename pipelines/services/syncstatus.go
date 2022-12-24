@@ -27,7 +27,7 @@ func NewSyncStatusService(client *jfroghttpclient.JfrogHttpClient) *SyncStatusSe
 // GetSyncPipelineResourceStatus fetches pipeline sync status
 func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch string) ([]PipelineSyncStatus, error) {
 	// fetch resource ID
-	resID, isMultiBranch, resourceErr := getPipelineResourceID(ss.client, ss.GetUrl(), repoName, ss.getHttpDetails())
+	resID, isMultiBranch, resourceErr := GetPipelineResourceID(ss.client, ss.GetUrl(), repoName, ss.getHttpDetails())
 	if resourceErr != nil {
 		log.Error("Unable to fetch resourceID for: ", repoName)
 		return []PipelineSyncStatus{}, resourceErr
