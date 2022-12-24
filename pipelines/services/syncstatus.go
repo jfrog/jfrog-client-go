@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
-	"net/url"
 	"strconv"
 )
 
@@ -28,7 +27,7 @@ func NewSyncStatusService(client *jfroghttpclient.JfrogHttpClient) *SyncStatusSe
 // GetSyncPipelineResourceStatus fetches pipeline sync status
 func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch string) ([]PipelineSyncStatus, error) {
 	// fetch resource ID
-	resID, isMultiBranch, resourceErr := ss.getPipelineResourceID(repoName)
+	resID, isMultiBranch, resourceErr := getPipelineResourceID(ss.client, ss.GetUrl(), repoName, ss.getHttpDetails())
 	if resourceErr != nil {
 		log.Error("Unable to fetch resourceID for: ", repoName)
 		return []PipelineSyncStatus{}, resourceErr
@@ -39,9 +38,9 @@ func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch stri
 	}
 	queryParams["pipelineSourceIds"] = strconv.Itoa(resID)
 
-	uriVal, err := ss.constructURL(pipelineSyncStatus, queryParams)
-	if err != nil {
-		return []PipelineSyncStatus{}, errorutils.CheckError(err)
+	uriVal, errURL := constructPipelinesURL(queryParams, ss.ServiceDetails.GetUrl(), pipelineSyncStatus)
+	if errURL != nil {
+		return []PipelineSyncStatus{}, errURL
 	}
 	httpDetails := ss.getHttpDetails()
 	log.Info("fetching pipeline sync status ...")
@@ -62,57 +61,4 @@ func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch stri
 	}
 
 	return rsc, nil
-}
-
-// constructURL from server config and api for fetching run status for a given branch
-// and prepares URL string
-func (ss *SyncStatusService) constructURL(api string, qParams map[string]string) (string, error) {
-	uri, err := url.Parse(ss.ServiceDetails.GetUrl() + api)
-	if err != nil {
-		log.Error("Failed to parse pipelines fetch run status url")
-		return "", errorutils.CheckError(err)
-	}
-	queryString := uri.Query()
-	for k, v := range qParams {
-		queryString.Set(k, v)
-	}
-	uri.RawQuery = queryString.Encode()
-
-	return uri.String(), nil
-}
-
-// getPipelineResourceID fetches resource ID for given full repository name
-func (ss *SyncStatusService) getPipelineResourceID(repoName string) (int, bool, error) {
-	httpDetails := ss.getHttpDetails()
-	queryParams := make(map[string]string, 0)
-
-	uriVal, errURL := ss.constructURL(pipelineResources, queryParams)
-	if errURL != nil {
-		return 0, false, errorutils.CheckError(errURL)
-	}
-
-	resp, body, _, err := ss.client.SendGet(uriVal, true, &httpDetails)
-	if err != nil {
-		return 0, false, errorutils.CheckError(err)
-	}
-	// Response Analysis
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return 0, false, err
-	}
-	if resp.StatusCode == http.StatusOK {
-		log.Debug("received resource id")
-	}
-	p := make([]PipelineResources, 0)
-	err = json.Unmarshal(body, &p)
-	if err != nil {
-		log.Error("Failed to unmarshal json response")
-		return 0, false, errorutils.CheckError(err)
-	}
-	for _, res := range p {
-		if res.RepositoryFullName == repoName {
-			log.Debug("received repository name ", repoName, "is multi branch ", res.IsMultiBranch)
-			return res.ID, *res.IsMultiBranch, nil
-		}
-	}
-	return 0, false, nil
 }

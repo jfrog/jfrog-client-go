@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 )
@@ -48,7 +47,7 @@ func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) 
 	}
 
 	// URL Construction
-	uri, pipeURLErr := rs.constructPipelinesURL(queryParams, runStatus)
+	uri, pipeURLErr := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), runStatus)
 	if pipeURLErr != nil {
 		return nil, pipeURLErr
 	}
@@ -71,23 +70,6 @@ func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) 
 
 func (rs *RunService) getHttpDetails() httputils.HttpClientDetails {
 	return rs.ServiceDetails.CreateHttpClientDetails()
-}
-
-// constructPipelinesURL creates URL with all required details to make api call
-// like headers, queryParams, apiPath
-func (rs *RunService) constructPipelinesURL(qParams map[string]string, apiPath string) (string, error) {
-	uri, err := url.Parse(rs.ServiceDetails.GetUrl() + apiPath)
-	if err != nil {
-		log.Error("Failed to parse pipelines fetch run status url")
-		return "", errorutils.CheckError(err)
-	}
-	queryString := uri.Query()
-	for k, v := range qParams {
-		queryString.Set(k, v)
-	}
-	uri.RawQuery = queryString.Encode()
-
-	return uri.String(), nil
 }
 
 func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) error {
@@ -114,7 +96,7 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 
 	// URL Construction
 	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
-	uri, pipeURLErr := rs.constructPipelinesURL(queryParams, triggerpipeline)
+	uri, pipeURLErr := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), triggerpipeline)
 	if pipeURLErr != nil {
 		return pipeURLErr
 	}
@@ -152,7 +134,7 @@ func (rs *RunService) CancelRun(runID int) error {
 
 	// URL Construction
 	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
-	uri, pipeURLErr := rs.constructPipelinesURL(queryParams, cancelRun)
+	uri, pipeURLErr := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), cancelRun)
 	if pipeURLErr != nil {
 		return pipeURLErr
 	}
