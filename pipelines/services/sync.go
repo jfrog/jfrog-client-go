@@ -87,7 +87,7 @@ func (ss *SyncService) GetPipelineResourceID(repoName string) (int, bool, error)
 	for _, res := range p {
 		if res.RepositoryFullName == repoName {
 			log.Debug("received repository name ", repoName, "is multi branch ", res.IsMultiBranch)
-			return res.ID, res.IsMultiBranch, nil
+			return res.ID, *res.IsMultiBranch, nil
 		}
 	}
 	return 0, false, nil
