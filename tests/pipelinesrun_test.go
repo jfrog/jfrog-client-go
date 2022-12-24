@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -166,11 +165,6 @@ func isCancellable(statusCode int) bool {
 func assertRunStatus(t *testing.T, statusCode int) {
 	assert.GreaterOrEqual(t, statusCode, 4000)
 	assert.LessOrEqual(t, statusCode, 4022)
-}
-
-func assertTriggerRun(t *testing.T, pipeline string, branch string, result string) {
-	expected := fmt.Sprintf("triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch)
-	assert.Equal(t, expected, result)
 }
 
 func pollSyncPipelineSource(t *testing.T) {

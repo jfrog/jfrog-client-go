@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -173,5 +172,5 @@ func (rs *RunService) CancelRun(runID int) error {
 		return nil
 	}
 	log.Error("unable to find run id")
-	return errors.New(fmt.Sprintf("Unable to find run ID: %d", runID))
+	return fmt.Errorf(fmt.Sprintf("Unable to find run ID: %d", runID))
 }
