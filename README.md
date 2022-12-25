@@ -170,6 +170,9 @@
             - [Add Pipeline Source](#add-pipeline-source)
             - [Get Recent Pipeline Run Status](#get-recent-pipeline-run-status)
             - [Trigger Pipeline Run](#trigger-pipeline-run)
+            - [Trigger Pipeline Sync](#trigger-pipeline-sync)
+            - [Get Pipeline Sync Status](#get-last-pipeline-sync-status)
+            - [Cancel The Run](#cancel-run)
 
 ## General
 
