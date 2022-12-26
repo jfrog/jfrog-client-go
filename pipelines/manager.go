@@ -116,11 +116,11 @@ func (sm *PipelinesServicesManager) TriggerPipelineRun(branch, pipeline string, 
 	return runService.TriggerPipelineRun(branch, pipeline, isMultiBranch)
 }
 
-func (sm *PipelinesServicesManager) SyncPipelineResource(branch, repoFullName string) (int, error) {
+func (sm *PipelinesServicesManager) SyncPipelineResource(branch, repoFullName string) error {
 	syncService := services.NewSyncService(sm.client)
 	syncService.ServiceDetails = sm.config.GetServiceDetails()
-	statusCode, _, err := syncService.SyncPipelineSource(branch, repoFullName)
-	return statusCode, err
+	err := syncService.SyncPipelineSource(branch, repoFullName)
+	return err
 }
 
 func (sm *PipelinesServicesManager) GetSyncStatusForPipelineResource(repo, branch string) ([]services.PipelineSyncStatus, error) {

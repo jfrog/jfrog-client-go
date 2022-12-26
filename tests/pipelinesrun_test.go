@@ -5,7 +5,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
-	"net/http"
 	"strconv"
 	"strings"
 	"testing"
@@ -178,10 +177,10 @@ func assertRunStatus(t *testing.T, statusCode int) {
 func pollSyncPipelineSource(t *testing.T) {
 	//define polling action
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		statusCode, body, syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
+		syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
 		assert.NoError(t, syncErr)
 
-		return statusCode == http.StatusOK, body, nil
+		return syncErr == nil, nil, syncErr
 	}
 
 	pollingExecutor := &httputils.PollingExecutor{
