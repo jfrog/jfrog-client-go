@@ -113,7 +113,6 @@ func pollGetRunStatus(t *testing.T, pipelineName string) {
 		if pipRunResponse != nil && len(pipRunResponse.Pipelines) > 0 && pipRunResponse.Pipelines[0].Name == pipelineName {
 			log.Info("pipelines status code ", pipRunResponse.Pipelines[0].Run.StatusCode)
 			if isCancellable(pipRunResponse.Pipelines[0].Run.StatusCode) {
-
 				runStatusCode := pipRunResponse.Pipelines[0].Run.StatusCode
 				assertRunStatus(t, runStatusCode)
 				runID := pipRunResponse.Pipelines[0].Run.ID
@@ -164,7 +163,6 @@ func isCancellable(statusCode int) bool {
 	switch statusCode {
 	case 4000, 4001, 4005, 4006, 4016, 4022:
 		return true
-
 	}
 	return false
 }
