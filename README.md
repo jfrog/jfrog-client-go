@@ -2051,3 +2051,26 @@ branch := "master"
 pipeline := "pipeline_name"
 status, err := pipelinesManager.TriggerPipelineRun(branch, pipeline)
 ```
+
+#### Trigger Pipeline Sync
+
+```go
+branch := "master"
+repoName := "jfrog/pipelines" // repository full path
+err := pipelinesManager.SyncPipelineResource(branch, repoFullName)
+```
+
+#### Get Pipeline Sync Status
+
+```go
+branch := "master"
+repoName := "jfrog/pipelines" // repository full path
+err := pipelinesManager.GetSyncStatusForPipelineResource(branch, repoFullName)
+```
+
+#### Cancel Run
+
+```go
+runID := 234 // run id of pipeline
+err := pipelinesManager.CancelTheRun(runID)
+```

@@ -64,7 +64,6 @@ func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) 
 	}
 	pipRunResp := PipelineRunStatusResponse{}
 	err = json.Unmarshal(body, &pipRunResp)
-	fmt.Printf("pipeline response %+v\n", string(body))
 	return &pipRunResp, errorutils.CheckError(err)
 }
 
