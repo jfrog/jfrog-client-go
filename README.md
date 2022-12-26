@@ -2072,5 +2072,5 @@ err := pipelinesManager.GetSyncStatusForPipelineResource(branch, repoFullName)
 
 ```go
 runID := 234 // run id of pipeline
-err := pipelinesManager.CancelTheRun(runID)
+err := pipelinesManager.CancelRun(runID)
 ```
