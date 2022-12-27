@@ -114,6 +114,9 @@ var (
 	// Pipelines Services
 	testsPipelinesIntegrationsService *pipelinesServices.IntegrationsService
 	testsPipelinesSourcesService      *pipelinesServices.SourcesService
+	testPipelinesRunService           *pipelinesServices.RunService
+	testPipelinesSyncService          *pipelinesServices.SyncService
+	testPipelinesSyncStatusService    *pipelinesServices.SyncStatusService
 
 	// Access Services
 	testsAccessProjectService *accessServices.ProjectService
@@ -477,6 +480,42 @@ func createPipelinesSourcesManager() {
 	failOnHttpClientCreation(err)
 	testsPipelinesSourcesService = pipelinesServices.NewSourcesService(client)
 	testsPipelinesSourcesService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesRunManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesRunService = pipelinesServices.NewRunService(client)
+	testPipelinesRunService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesSyncManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesSyncService = pipelinesServices.NewSyncService(client)
+	testPipelinesSyncService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesSyncStatusManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesSyncStatusService = pipelinesServices.NewSyncStatusService(client)
+	testPipelinesSyncStatusService.ServiceDetails = pipelinesDetails
 }
 
 func failOnHttpClientCreation(err error) {
