@@ -91,6 +91,10 @@ func (rs *RepositoriesService) CreateFederated(params FederatedRepositoryBasePar
 	return rs.createRepo(params, params.Key)
 }
 
+func (rs *RepositoriesService) CreateWithJsonParams(params interface{}, repoName string) error {
+	return rs.createRepo(params, repoName)
+}
+
 func (rs *RepositoriesService) createRepo(params interface{}, repoName string) error {
 	content, err := json.Marshal(params)
 	if errorutils.CheckError(err) != nil {
