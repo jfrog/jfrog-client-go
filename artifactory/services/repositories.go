@@ -91,7 +91,7 @@ func (rs *RepositoriesService) CreateFederated(params FederatedRepositoryBasePar
 	return rs.createRepo(params, params.Key)
 }
 
-func (rs *RepositoriesService) CreateWithJsonParams(params interface{}, repoName string) error {
+func (rs *RepositoriesService) Create(params interface{}, repoName string) error {
 	return rs.createRepo(params, repoName)
 }
 
