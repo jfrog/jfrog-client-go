@@ -56,6 +56,7 @@ func TestUnarchiveZipSlip(t *testing.T) {
 		{"abs", []string{"tar", "tar.gz"}, "illegal path in archive: '/tmp/bla/file'"},
 		{"softlink-abs", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: '/tmp/bla/file'"},
 		{"softlink-rel", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: '../../file'"},
+		{"hardlink-tilde", []string{"tar", "tar.gz"}, "walking hardlink: illegal link path in archive: '~/../../../../../../../../../Users/Shared/sharedFile.txt'"},
 	}
 	for _, test := range tests {
 		t.Run(test.testType, func(t *testing.T) {

@@ -168,6 +168,11 @@
             - [Get All Integrations](#get-all-integrations)
             - [Delete Integration](#delete-integration)
             - [Add Pipeline Source](#add-pipeline-source)
+            - [Get Recent Pipeline Run Status](#get-recent-pipeline-run-status)
+            - [Trigger Pipeline Run](#trigger-pipeline-run)
+            - [Trigger Pipeline Sync](#trigger-pipeline-sync)
+            - [Get Pipeline Sync Status](#get-last-pipeline-sync-status)
+            - [Cancel The Run](#cancel-run)
 
 ## General
 
@@ -2031,3 +2036,41 @@ projectIntegrationId := 1234
 err := pipelinesManager.AddSource(projectIntegrationId, "domain/repo", "master", "pipelines.yml")
 ```
 
+#### Get Recent Pipeline Run Status
+
+```go
+branch := "master"
+pipeline := "pipeline_name"
+response, err := pipelinesManager.GetPipelineRunStatusByBranch(branch, pipeline)
+```
+
+#### Trigger Pipeline Run
+
+```go
+branch := "master"
+pipeline := "pipeline_name"
+status, err := pipelinesManager.TriggerPipelineRun(branch, pipeline)
+```
+
+#### Trigger Pipeline Sync
+
+```go
+branch := "master"
+repoName := "jfrog/pipelines" // repository full path
+err := pipelinesManager.SyncPipelineResource(branch, repoFullName)
+```
+
+#### Get Pipeline Sync Status
+
+```go
+branch := "master"
+repoName := "jfrog/pipelines" // repository full path
+err := pipelinesManager.GetSyncStatusForPipelineResource(branch, repoFullName)
+```
+
+#### Cancel Run
+
+```go
+runID := 234 // run id of pipeline
+err := pipelinesManager.CancelRun(runID)
+```

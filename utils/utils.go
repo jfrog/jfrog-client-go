@@ -30,9 +30,11 @@ const (
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
-var MaxBufferSize = 50000
-
-var userAgent = getDefaultUserAgent()
+var (
+	MaxBufferSize          = 50000
+	userAgent              = getDefaultUserAgent()
+	curlyParenthesesRegexp = regexp.MustCompile(`\{(\d+?)}`)
+)
 
 func getVersion() string {
 	return Version
@@ -59,7 +61,11 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 	sections := strings.Split(path, separator)
 	if len(sections) == 1 {
 		separator = "\\"
-		sections = strings.Split(path, separator)
+		if strings.Contains(path, "\\\\") {
+			sections = strings.Split(path, "\\\\")
+		} else {
+			sections = strings.Split(path, separator)
+		}
 	}
 
 	// Now we start building the root path, making sure to leave out the sub-directory that includes the pattern.
@@ -195,8 +201,10 @@ func cleanPath(path string) string {
 	if temp == `\` || temp == "/" {
 		path += temp
 	}
-	// Since filepath.Clean replaces \\ with \, we revert this action.
-	path = strings.Replace(path, `\`, `\\`, -1)
+	if io.IsWindows() {
+		// Since filepath.Clean replaces \\ with \, we revert this action.
+		path = strings.ReplaceAll(path, `\`, `\\`)
+	}
 	return path
 }
 
@@ -245,7 +253,7 @@ func getFileSeparator() string {
 	return "/"
 }
 
-// Replaces matched regular expression from path to corresponding placeholder {i} at target.
+// BuildTargetPath Replaces matched regular expression from path to corresponding placeholder {i} at target.
 // Example 1:
 //
 //	pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
@@ -284,23 +292,63 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 
 	groups := r.FindStringSubmatch(path)
 	if len(groups) > 0 {
-		target, replaceOccurred := ReplacePlaceHolders(groups, target)
+		target, replaceOccurred, err := ReplacePlaceHolders(groups, target, false)
+		if err != nil {
+			return "", false, err
+		}
 		return target, replaceOccurred, nil
 	}
 	return target, false, nil
 }
 
-// group - regular expression matched group to replace with placeholders
-// toReplace - target pattern to replace
-// Return - (parsed placeholders string, placeholders were  replaced)
-func ReplacePlaceHolders(groups []string, toReplace string) (string, bool) {
+// ReplacePlaceHolders replace placeholders with their matching regular expressions.
+// group - Regular expression matched group to replace with placeholders.
+// toReplace - Target pattern to replace.
+// isRegexp - When using a regular expression, all parentheses content in the target will be at the given group parameter.
+// A non-regular expression will, however, allow us to consider the parentheses as literal characters.
+// The size of the group (containing the parentheses content) can be smaller than the maximum placeholder indexer - in this case, special treatment is required.
+// Example : pattern: (a)/(b)/(c), target: "target/{1}{3}" => '(a)' and '(c)' will be considered as placeholders, and '(b)' will be treated as the directory's actual name.
+// In this case, the index of '(c)' in the group is 2, but its placeholder indexer is 3.
+// Return - The parsed placeholders string, along with a boolean to indicate whether they have been replaced or not.
+func ReplacePlaceHolders(groups []string, toReplace string, isRegexp bool) (string, bool, error) {
+	maxPlaceholderIndex, err := getMaxPlaceholderIndex(toReplace)
+	if err != nil {
+		return "", false, err
+	}
 	preReplaced := toReplace
+	// Index for the placeholder number.
+	placeHolderIndexer := 1
 	for i := 1; i < len(groups); i++ {
-		group := strings.Replace(groups[i], "\\", "/", -1)
-		toReplace = strings.Replace(toReplace, "{"+strconv.Itoa(i)+"}", group, -1)
+		group := strings.ReplaceAll(groups[i], "\\", "/")
+		// Handling non-regular expression cases
+		for !isRegexp && !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") {
+			placeHolderIndexer++
+			if placeHolderIndexer > maxPlaceholderIndex {
+				break
+			}
+		}
+		toReplace = strings.ReplaceAll(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}", group)
+		placeHolderIndexer++
 	}
 	replaceOccurred := preReplaced != toReplace
-	return toReplace, replaceOccurred
+	return toReplace, replaceOccurred, nil
+}
+
+// Returns the higher index between all placeHolders target instances.
+// Example: for input "{1}{5}{3}" returns 5.
+func getMaxPlaceholderIndex(toReplace string) (int, error) {
+	placeholders := curlyParenthesesRegexp.FindAllString(toReplace, -1)
+	max := 0
+	for _, placeholder := range placeholders {
+		num, err := strconv.Atoi(strings.TrimPrefix(strings.TrimSuffix(placeholder, "}"), "{"))
+		if err != nil {
+			return 0, errorutils.CheckError(err)
+		}
+		if num > max {
+			max = num
+		}
+	}
+	return max, nil
 }
 
 func GetLogMsgPrefix(threadId int, dryRun bool) string {
