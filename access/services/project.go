@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -75,6 +76,23 @@ func (ps *ProjectService) Get(projectKey string) (u *Project, err error) {
 	var project Project
 	err = json.Unmarshal(body, &project)
 	return &project, errorutils.CheckError(err)
+}
+
+func (ps *ProjectService) GetAll() ([]Project, error) {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := ps.getProjectsBaseUrl()
+	log.Info("getting from " + url)
+	resp, body, _, err := ps.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	// check there is no client or server error response
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+	var projects []Project
+	err = json.Unmarshal(body, &projects)
+	return projects, errorutils.CheckError(err)
 }
 
 func (ps *ProjectService) Create(params ProjectParams) error {
