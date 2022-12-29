@@ -146,7 +146,7 @@ func inspectArchive(archive interface{}, localArchivePath, destinationDir string
 				header.EntryPath, destinationDir)
 		}
 
-		if (archiveEntry.Mode() & os.ModeSymlink) != 0 {
+		if (archiveEntry.Mode()&os.ModeSymlink) != 0 || len(header.TargetLink) > 0 {
 			err = checkSymlinkEntry(header, archiveEntry, destinationDir)
 		}
 		return err
