@@ -25,7 +25,7 @@ type ArtifactoryServicesManager interface {
 	CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error
 	CreateFederatedRepository() *services.FederatedRepositoryService
 	CreateFederatedRepositoryWithParams(params services.FederatedRepositoryBaseParams) error
-	CreateRepository(params interface{}, repoName string) error
+	CreateRepositoryWithParams(params interface{}, repoName string) error
 	UpdateLocalRepository() *services.LocalRepositoryService
 	UpdateRemoteRepository() *services.RemoteRepositoryService
 	UpdateVirtualRepository() *services.VirtualRepositoryService
@@ -143,7 +143,7 @@ func (esm *EmptyArtifactoryServicesManager) CreateFederatedRepositoryWithParams(
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateRepository(params interface{}, repoName string) error {
+func (esm *EmptyArtifactoryServicesManager) CreateRepositoryWithParams(params interface{}, repoName string) error {
 	panic("Failed: Method is not implemented")
 }
 
