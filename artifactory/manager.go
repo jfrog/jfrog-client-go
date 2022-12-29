@@ -114,7 +114,7 @@ func (sm *ArtifactoryServicesManagerImp) CreateFederatedRepositoryWithParams(par
 	return repositoryService.CreateFederated(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateRepositoryWithJsonParams(params interface{}, repoName string) error {
+func (sm *ArtifactoryServicesManagerImp) CreateRepository(params interface{}, repoName string) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService.CreateWithJsonParams(params, repoName)
