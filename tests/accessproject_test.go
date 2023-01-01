@@ -81,8 +81,6 @@ func deleteProjectAndAssert(t *testing.T, projectKey string) {
 	assert.NoError(t, testsAccessProjectService.Delete(projectKey))
 }
 
-// "tstprj"
-// "testProject"
 func getTestProjectParams(projectKey string, projectName string) services.ProjectParams {
 	adminPrivileges := services.AdminPrivileges{
 		ManageMembers:   &trueValue,
@@ -96,8 +94,8 @@ func getTestProjectParams(projectKey string, projectName string) services.Projec
 		Description:       "My Test Project",
 		AdminPrivileges:   &adminPrivileges,
 		SoftLimit:         &falseValue,
-		StorageQuotaBytes: 1073741825,                   // needs to be higher than 1073741824
-		ProjectKey:        projectKey + runNumberSuffix, // valid length: 2 <= ProjectKey <= 10
+		StorageQuotaBytes: 1073741825,                   // Needs to be higher than 1073741824
+		ProjectKey:        projectKey + runNumberSuffix, // Valid length: 2 <= ProjectKey <= 10
 	}
 	return services.ProjectParams{
 		ProjectDetails: projectDetails,
