@@ -34,6 +34,12 @@ func (sm *AccessServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }
 
+func (sm *AccessServicesManager) Ping() ([]byte, error) {
+	projectService := services.NewPingService(sm.client)
+	projectService.ServiceDetails = sm.config.GetServiceDetails()
+	return projectService.Ping()
+}
+
 func (sm *AccessServicesManager) CreateProject(params services.ProjectParams) error {
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()

@@ -55,7 +55,7 @@ func (ds *DistributionStatusService) execGetStatus(name, version, trackerId stri
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
-	log.Debug("Distribution response: ", resp.Status)
+	log.Debug("Distribution response:", resp.Status)
 	log.Debug(utils.IndentJson(body))
 	var distributionStatusResponse []DistributionStatusResponse
 	stringBody := string(body)
