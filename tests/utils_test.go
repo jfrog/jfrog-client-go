@@ -119,6 +119,7 @@ var (
 	testPipelinesSyncStatusService    *pipelinesServices.SyncStatusService
 
 	// Access Services
+	testsAccessPingService    *accessServices.PingService
 	testsAccessProjectService *accessServices.ProjectService
 	testsAccessInviteService  *accessServices.InviteService
 	testsAccessTokensService  *accessServices.TokenService
@@ -148,8 +149,10 @@ func init() {
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
+	AccessUrl = flag.String("access.url", "", "Access url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
+	AccessToken = flag.String("access.token", "", "Access token")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
@@ -158,7 +161,6 @@ func init() {
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
 	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
 	AccessUrl = flag.String("access.url", "", "Access url")
-	AccessToken = flag.String("access.token", "", "Access token")
 }
 
 func getRtTargetRepoKey() string {
@@ -1097,6 +1099,14 @@ func createAccessTokensManager() {
 	failOnHttpClientCreation(err)
 	testsAccessTokensService = accessServices.NewTokenService(client)
 	testsAccessTokensService.ServiceDetails = accessDetails
+}
+
+func createAccessPingManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessPingService = accessServices.NewPingService(client)
+	testsAccessPingService.ServiceDetails = accessDetails
 }
 
 func getUniqueField(prefix string) string {
