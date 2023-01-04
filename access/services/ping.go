@@ -27,6 +27,6 @@ func (ps *PingService) Ping() ([]byte, error) {
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return body, err
 	}
-	log.Debug("JFrog Access response: ", resp.Status)
+	log.Debug("JFrog Access response:", resp.Status)
 	return body, nil
 }
