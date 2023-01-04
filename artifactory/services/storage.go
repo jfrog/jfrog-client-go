@@ -47,7 +47,7 @@ func (s *StorageService) FolderInfo(relativePath string) (*utils.FolderInfo, err
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
-	log.Debug("Artifactory response: ", resp.Status)
+	log.Debug("Artifactory response:", resp.Status)
 
 	result := &utils.FolderInfo{}
 	err = json.Unmarshal(body, result)
@@ -82,7 +82,7 @@ func (s *StorageService) FileList(relativePath string, optionalParams utils.File
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
-	log.Debug("Artifactory response: ", resp.Status)
+	log.Debug("Artifactory response:", resp.Status)
 
 	result := &utils.FileListResponse{}
 	err = json.Unmarshal(body, result)
@@ -101,7 +101,7 @@ func (s *StorageService) StorageInfo() (*utils.StorageInfo, error) {
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
-	log.Debug("Artifactory response: ", resp.Status)
+	log.Debug("Artifactory response:", resp.Status)
 
 	result := &utils.StorageInfo{}
 	err = json.Unmarshal(body, result)
@@ -120,7 +120,7 @@ func (s *StorageService) StorageInfoRefresh() error {
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted); err != nil {
 		return err
 	}
-	log.Debug("Artifactory response: ", resp.Status)
+	log.Debug("Artifactory response:", resp.Status)
 	return nil
 }
 
