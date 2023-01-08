@@ -757,11 +757,7 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 		return
 	}
 	if httpClientsDetails.AccessToken != "" {
-		if httpClientsDetails.User != "" {
-			req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.AccessToken)
-		} else {
-			req.Header.Set("Authorization", "Bearer "+httpClientsDetails.AccessToken)
-		}
+		req.Header.Set("Authorization", "Bearer "+httpClientsDetails.AccessToken)
 		return
 	}
 	if httpClientsDetails.Password != "" {
