@@ -378,7 +378,7 @@ func remoteDockerTest(t *testing.T) {
 	drp.ExternalDependenciesEnabled = &trueValue
 	drp.ExternalDependenciesPatterns = []string{"image/**"}
 	drp.EnableTokenAuthentication = &trueValue
-	drp.BlockPullingSchema1 = &trueValue
+	drp.BlockPushingSchema1 = &trueValue
 
 	err := testsCreateRemoteRepositoryService.Docker(drp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -393,7 +393,7 @@ func remoteDockerTest(t *testing.T) {
 	drp.ExternalDependenciesEnabled = &falseValue
 	drp.ExternalDependenciesPatterns = nil
 	drp.EnableTokenAuthentication = &falseValue
-	drp.BlockPullingSchema1 = &falseValue
+	drp.BlockPushingSchema1 = &falseValue
 	// Docker prerequisite - artifacts must be stored locally in cache
 	drp.StoreArtifactsLocally = &trueValue
 	err = testsUpdateRemoteRepositoryService.Docker(drp)

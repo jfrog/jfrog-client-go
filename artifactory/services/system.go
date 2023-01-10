@@ -105,7 +105,7 @@ func (ss *SystemService) DeactivateKeyEncryption() (wasEncrypted bool, err error
 	}
 	log.Debug("Artifactory response:", string(body), resp.Status)
 	if resp.StatusCode == http.StatusConflict {
-		log.Info("Artifactory key encryption is already decativated")
+		log.Info("Artifactory key encryption is already deactivated")
 		return false, nil
 	}
 
