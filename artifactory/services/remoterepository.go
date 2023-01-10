@@ -314,7 +314,7 @@ type DockerRemoteRepositoryParams struct {
 	ExternalDependenciesEnabled  *bool    `json:"externalDependenciesEnabled,omitempty"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
 	EnableTokenAuthentication    *bool    `json:"enableTokenAuthentication,omitempty"`
-	BlockPullingSchema1          *bool    `json:"blockPushingSchema1,omitempty"`
+	BlockPushingSchema1          *bool    `json:"blockPushingSchema1,omitempty"`
 }
 
 func NewDockerRemoteRepositoryParams() DockerRemoteRepositoryParams {

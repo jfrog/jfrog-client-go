@@ -747,7 +747,7 @@ func (jc *HttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetails http
 }
 
 func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClientDetails) {
-	//Set authentication
+	// Set authentication
 	if httpClientsDetails.ApiKey != "" {
 		if httpClientsDetails.User != "" {
 			req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.ApiKey)
