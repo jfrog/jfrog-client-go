@@ -46,6 +46,18 @@ func (sm *AccessServicesManager) CreateProject(params services.ProjectParams) er
 	return projectService.Create(params)
 }
 
+func (sm *AccessServicesManager) GetProject(projectKey string) (*services.Project, error) {
+	projectService := services.NewProjectService(sm.client)
+	projectService.ServiceDetails = sm.config.GetServiceDetails()
+	return projectService.Get(projectKey)
+}
+
+func (sm *AccessServicesManager) GetAllProjects() ([]services.Project, error) {
+	projectService := services.NewProjectService(sm.client)
+	projectService.ServiceDetails = sm.config.GetServiceDetails()
+	return projectService.GetAll()
+}
+
 func (sm *AccessServicesManager) UpdateProject(params services.ProjectParams) error {
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()

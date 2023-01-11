@@ -23,7 +23,7 @@ func NewRepositoriesService(client *jfroghttpclient.JfrogHttpClient) *Repositori
 	return &RepositoriesService{client: client}
 }
 
-// Get fetches repository details from Artifactory using given repokey (name) into the given params struct.
+// Get fetches repository details from Artifactory using given repoKey (name) into the given params struct.
 // The function expects to get the repo key and a pointer to a param struct that will be filled up.
 // The param struct should contain the desired param's fields corresponded to the Artifactory REST API, such as RepositoryDetails, LocalRepositoryBaseParams, etc.
 func (rs *RepositoriesService) Get(repoKey string, repoDetails interface{}) error {
@@ -89,6 +89,10 @@ func (rs *RepositoriesService) CreateLocal(params LocalRepositoryBaseParams) err
 
 func (rs *RepositoriesService) CreateFederated(params FederatedRepositoryBaseParams) error {
 	return rs.createRepo(params, params.Key)
+}
+
+func (rs *RepositoriesService) Create(params interface{}, repoName string) error {
+	return rs.createRepo(params, repoName)
 }
 
 func (rs *RepositoriesService) createRepo(params interface{}, repoName string) error {
