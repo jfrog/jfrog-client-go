@@ -30,17 +30,28 @@ pipelines:
       - name: go_sec
         type: Bash
         configuration:
-          integrations:
-            - name: entArt
           inputSteps:
             - name: trigger_all
+          environmentVariables:
+            readOnly:
+              RESOLVE_REPO: npm-virtual
         execution:
           onStart:
-            - task: jfrog/setup-go@v0.0.2
+            #This whole section will be replaced by getting task as jfrog/setup-go
+            - pushd $res_jfrogClientGoRepo_resourcePath/setup-go
+              - jfrog npmc --repo-resolve $RESOLVE_REPO
+              - jfrog npm install
+              - npm run dist
+              - popd
+            - task: $res_jfrogClientGoRepo_resourcePath/setup-go
+              id: go_setup_task_from_source
               input:
-                version: 1.19.3
+                version: "1.19.3"
+                cacheIntegration: int_default_artifactory
             - go version
             - go env GOPATH
+          onExecute:
+            - echo "Step execution"
 
 
 
