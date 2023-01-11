@@ -1,0 +1,16 @@
+name: setup-go
+description: Setup Golang programming language
+source: github.com/jfrog/pipe-task-setup-go
+labels:
+  - golang
+  - go
+  - setup
+input:
+  - name: version
+    description: Golang version to be installed
+  - name: cacheIntegration
+    description: Artifactory integration to be used to cache the Golang installer. If not provided, the first Artifactory integration available to the step will be used.
+  - name: cacheRepository
+    description: Artifactory repository to be used to cache the Golang installer. If not provided, caching will not be used.
+execution:
+  - node16 dist/index.js main
