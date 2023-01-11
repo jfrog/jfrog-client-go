@@ -33,8 +33,7 @@ pipelines:
           inputSteps:
             - name: trigger_all
           environmentVariables:
-            readOnly:
-              RESOLVE_REPO: npm-virtual
+            RESOLVE_REPO: npm-virtual
         execution:
           onStart:
             #This whole section will be replaced by getting task as jfrog/setup-go
