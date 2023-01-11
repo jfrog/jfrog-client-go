@@ -38,10 +38,10 @@ pipelines:
           onStart:
             #This whole section will be replaced by getting task as jfrog/setup-go
             - pushd $res_jfrogClientGoRepo_resourcePath/setup-go
-              - jfrog npmc --repo-resolve $RESOLVE_REPO
-              - jfrog npm install
-              - npm run dist
-              - popd
+            - jfrog npmc --repo-resolve $RESOLVE_REPO
+            - jfrog npm install
+            - npm run dist
+            - popd
             - task: $res_jfrogClientGoRepo_resourcePath/setup-go
               id: go_setup_task_from_source
               input:
