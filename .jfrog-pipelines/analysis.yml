@@ -10,7 +10,7 @@ resources:
 pipelines:
   - name: jfrog_goclient_static_analysis
     steps:
-      - name: Sample
+      - name: trigger_all
         type: Bash
         configuration:
           inputResources:
@@ -21,11 +21,17 @@ pipelines:
             - echo $res_jfrogClientGoRepo_commitSha
       - name: static_code_analysis
         type: Bash
+        configuration:
+          inputSteps:
+            - name: trigger_all
         execution:
           onExecute:
             - echo Gyana is working on it hard...
       - name: go_sec
         type: Bash
+        configuration:
+          inputSteps:
+            - name: trigger_all
         execution:
           onStart:
             - task: jfrog/setup-go@v0.0.2
