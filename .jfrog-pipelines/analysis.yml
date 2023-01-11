@@ -30,6 +30,8 @@ pipelines:
       - name: go_sec
         type: Bash
         configuration:
+          inputResources:
+            - name: jfrogClientGoRepo
           inputSteps:
             - name: trigger_all
           environmentVariables:
