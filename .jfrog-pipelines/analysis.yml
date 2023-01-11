@@ -30,6 +30,8 @@ pipelines:
       - name: go_sec
         type: Bash
         configuration:
+          integrations:
+            - name: entArt
           inputSteps:
             - name: trigger_all
         execution:
