@@ -9,6 +9,18 @@ resources:
 
 pipelines:
   - name: jfrog_goclient_static_analysis
+    configuration:
+      jfrogCliVersion: 2
+      runtime:
+        type: image
+        image:
+          custom:
+            name: releases-docker.jfrog.io/jfrog/pipelines-u18node
+            tag: "16"
+            autoPull: true
+      environmentVariables:
+        readOnly:
+          RESOLVE_REPO: npm-virtual
     steps:
       - name: trigger_all
         type: Bash
@@ -30,12 +42,12 @@ pipelines:
       - name: go_sec
         type: Bash
         configuration:
+          integrations:
+            - name: int_default_artifactory
           inputResources:
             - name: jfrogClientGoRepo
           inputSteps:
             - name: trigger_all
-          environmentVariables:
-            RESOLVE_REPO: npm-virtual
         execution:
           onStart:
             #This whole section will be replaced by getting task as jfrog/setup-go
