@@ -19,3 +19,20 @@ pipelines:
           onExecute:
             - echo Hello
             - echo $res_jfrogClientGoRepo_commitSha
+      - name: static_code_analysis
+        type: Bash
+        execution:
+          onExecute:
+            - echo Gyana is working on it hard...
+      - name: go_sec
+        type: Bash
+        execution:
+          onStart:
+            - task: jfrog/setup-go@v0.0.2
+              input:
+                version: 1.19.3
+            - go version
+            - go env GOPATH
+
+
+
