@@ -1,0 +1,21 @@
+resources:
+  - name: jfrogClientGoRepo
+    type: GitRepo
+    configuration:
+      gitProvider: LeelaGitHub
+      path: leela-dev/jfrog-client-go
+      branches:
+        include: ^{{gitBranch}}$
+
+pipelines:
+  - name: Static Analysis
+    steps:
+      - name: Sample
+        type: Bash
+        configuration:
+          inputResources:
+            - name: jfrogClientGoRepo
+        execution:
+          onExecute:
+            - echo Hello
+            - echo $res_jfrogClientGoRepo_commitSha
