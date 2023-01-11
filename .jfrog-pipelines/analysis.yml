@@ -8,7 +8,7 @@ resources:
         include: ^{{gitBranch}}$
 
 pipelines:
-  - name: Static Analysis
+  - name: jfrog_goclient_static_analysis
     steps:
       - name: Sample
         type: Bash
