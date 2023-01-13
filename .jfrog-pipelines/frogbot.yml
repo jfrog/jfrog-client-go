@@ -31,7 +31,7 @@ pipelines:
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
             # [Mandatory]
             # GitHub organization namespace
-            JF_GIT_OWNER: ""
+            JF_GIT_OWNER: "leeladev"
         execution:
           onExecute:
             - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
