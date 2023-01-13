@@ -1,4 +1,14 @@
 resources:
+  - name: jfrogClientGoRepo
+    type: GitRepo
+    configuration:
+      gitProvider: LeelaGitHub
+      path: leela-dev/jfrog-client-go
+      branches:
+        include: ^{{gitBranch}}$
+      buildOn:
+        pullRequestCreate: true
+
   - name: cron_trigger
     type: CronTrigger
     configuration:
@@ -32,6 +42,7 @@ pipelines:
             # [Mandatory]
             # GitHub organization namespace
             JF_GIT_OWNER: "leela-dev"
+            JF_GIT_REPO: $res_jfrogClientGoRepo_gitRepoFullName
         execution:
           onExecute:
             - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
