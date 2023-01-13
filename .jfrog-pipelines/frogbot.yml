@@ -1,0 +1,43 @@
+resources:
+  - name: cron_trigger
+    type: CronTrigger
+    configuration:
+      interval: '*/5 * * * *'     # Every 5 minutes
+pipelines:
+  - name: Frogbot
+    steps:
+      - name: Frogbot_Scan
+        type: Bash
+        configuration:
+          integrations:
+            - name: jfrogPlatform
+            - name: LeelaGitHub
+          inputResources:
+            - name: cron_trigger
+          environmentVariables:
+            # [Mandatory]
+            # JFrog platform URL
+            JF_URL: $int_jfrogPlatform_url
+            # [Mandatory if JF_USER and JF_PASSWORD are not provided]
+            # JFrog access token with 'read' permissions for Xray
+            JF_ACCESS_TOKEN: $int_jfrogPlatform_accessToken
+            # [Mandatory]
+            # GitHub personal access token with the following permissions:
+            # Read and Write access to code, pull requests, security events, and workflows
+            JF_GIT_TOKEN: $int_LeelaGitHub_token
+            JF_GIT_PROVIDER: "github"
+            # [Mandatory]
+            # API endpoint to GitHub Enterprise server
+            JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
+            # [Mandatory]
+            # GitHub organization namespace
+            JF_GIT_OWNER: ""
+        execution:
+          onExecute:
+            - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
+            - ./frogbot scan-pull-requests
+            - ./frogbot scan-and-fix-repos
+            # For Windows runner:
+            # - iwr https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/frogbot-windows-amd64/frogbot.exe -OutFile .\frogbot.exe
+            # - .\frogbot.exe scan-pull-requests
+            # - .\frogbot.exe scan-and-fix-repos
