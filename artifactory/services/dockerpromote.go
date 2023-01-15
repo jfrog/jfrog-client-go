@@ -68,7 +68,7 @@ func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error 
 		return err
 	}
 
-	log.Debug("Artifactory response: ", resp.Status)
+	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Promoted image", params.SourceDockerImage, "to:", params.TargetRepo, "repository.")
 	return nil
 }

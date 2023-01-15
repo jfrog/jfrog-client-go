@@ -72,7 +72,7 @@ func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase stri
 		summary.SetSha256(resp.Header.Get("X-Checksum-Sha256"))
 	}
 
-	log.Debug("Distribution response: ", resp.Status)
+	log.Debug("Distribution response:", resp.Status)
 	log.Debug(utils.IndentJson(body))
 	return summary, nil
 }

@@ -52,7 +52,7 @@ func TestFilterBuildAqlSearchResults(t *testing.T) {
 	assert.True(t, isMatch)
 }
 
-func TestIsContainsPrefix(t *testing.T) {
+func TestHasPrefix(t *testing.T) {
 	data := []struct {
 		a   []string
 		b   string
@@ -62,8 +62,8 @@ func TestIsContainsPrefix(t *testing.T) {
 		{[]string{"abc,ab"}, "k", false},
 	}
 	for _, d := range data {
-		if got := IsContainsPrefix(d.a, d.b); got != d.res {
-			t.Errorf("IsContainsPrefix(%v, %v) == %v, want %v", d.a, d.b, got, d.res)
+		if got := HasPrefix(d.a, d.b); got != d.res {
+			t.Errorf("HasPrefix(%v, %v) == %v, want %v", d.a, d.b, got, d.res)
 		}
 	}
 }

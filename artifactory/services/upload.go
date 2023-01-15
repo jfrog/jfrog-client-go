@@ -350,17 +350,17 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 	return nil
 }
 
-// targetFiles - Paths in Artifactory of the the files that were uploaded.
-// sourceDirs - Paths of the the local dirs that have been already uploaded to Artifactory. (Longest files path first).
+// targetFiles - Paths in Artifactory of the files that were uploaded.
+// sourceDirs - Paths of the local dirs that have already been uploaded to Artifactory. (Longest files path first).
 // targetDir - The directory target path to be uploaded.
 // sourceDir - The directory source path to be uploaded.
 func skipDirUpload(targetFiles, sourceDirs []string, targetDir, sourceDir string, includeDirs bool) bool {
-	// Check that the dir is not already created in Artifactory following an implicitly upload child file.
-	if utils.IsContainsPrefix(targetFiles, targetDir+"/") {
+	// Check that the dir is not already created in Artifactory following an upload of a child file.
+	if utils.HasPrefix(targetFiles, targetDir+"/") {
 		return true
 	}
 	// Check that the source dir is a bottom-chain dir as includeDirs expect it to be.
-	if includeDirs && len(sourceDirs) > 0 && utils.IsContainsPrefix(sourceDirs, sourceDir+fileutils.GetFileSeparator()) {
+	if includeDirs && len(sourceDirs) > 0 && utils.HasPrefix(sourceDirs, sourceDir+fileutils.GetFileSeparator()) {
 		return true
 	}
 	return false

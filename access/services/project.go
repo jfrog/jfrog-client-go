@@ -77,6 +77,21 @@ func (ps *ProjectService) Get(projectKey string) (u *Project, err error) {
 	return &project, errorutils.CheckError(err)
 }
 
+func (ps *ProjectService) GetAll() ([]Project, error) {
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	url := ps.getProjectsBaseUrl()
+	resp, body, _, err := ps.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+	var projects []Project
+	err = json.Unmarshal(body, &projects)
+	return projects, errorutils.CheckError(err)
+}
+
 func (ps *ProjectService) Create(params ProjectParams) error {
 	project, err := ps.Get(params.ProjectDetails.ProjectKey)
 	if err != nil {

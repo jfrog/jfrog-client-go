@@ -19,7 +19,7 @@ func TestAccessProjectGroups(t *testing.T) {
 }
 
 func testAccessProjectAddGetDeleteGroups(t *testing.T) {
-	projectParams := getTestProjectParams()
+	projectParams := getTestProjectParams("tstprj", "testProject")
 	assert.NoError(t, testsAccessProjectService.Create(projectParams))
 
 	testGroup := getTestProjectGroupParams("a-test-group")
@@ -54,7 +54,7 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 }
 
 func testAccessProjectCreateUpdateDelete(t *testing.T) {
-	projectParams := getTestProjectParams()
+	projectParams := getTestProjectParams("tstprj", "testProject")
 	assert.NoError(t, testsAccessProjectService.Create(projectParams))
 	defer deleteProjectAndAssert(t, projectParams.ProjectDetails.ProjectKey)
 	projectParams.ProjectDetails.Description += "123"
@@ -81,7 +81,7 @@ func deleteProjectAndAssert(t *testing.T, projectKey string) {
 	assert.NoError(t, testsAccessProjectService.Delete(projectKey))
 }
 
-func getTestProjectParams() services.ProjectParams {
+func getTestProjectParams(projectKey string, projectName string) services.ProjectParams {
 	adminPrivileges := services.AdminPrivileges{
 		ManageMembers:   &trueValue,
 		ManageResources: &falseValue,
@@ -90,12 +90,12 @@ func getTestProjectParams() services.ProjectParams {
 	runId := getRunId()
 	runNumberSuffix := runId[len(runId)-3:]
 	projectDetails := services.Project{
-		DisplayName:       "testProject" + runNumberSuffix,
+		DisplayName:       projectName + runNumberSuffix,
 		Description:       "My Test Project",
 		AdminPrivileges:   &adminPrivileges,
 		SoftLimit:         &falseValue,
-		StorageQuotaBytes: 1073741825,                 // needs to be higher than 1073741824
-		ProjectKey:        "tstprj" + runNumberSuffix, // valid length: 2 <= ProjectKey <= 10
+		StorageQuotaBytes: 1073741825,                   // Needs to be higher than 1073741824
+		ProjectKey:        projectKey + runNumberSuffix, // Valid length: 2 <= ProjectKey <= 10
 	}
 	return services.ProjectParams{
 		ProjectDetails: projectDetails,
@@ -107,4 +107,26 @@ func getTestProjectGroupParams(groupName string) services.ProjectGroup {
 		Name:  groupName,
 		Roles: []string{"Contributor", "Release Manager"},
 	}
+}
+
+func TestGetAllProjects(t *testing.T) {
+	initAccessTest(t)
+	preProjects, err := testsAccessProjectService.GetAll()
+	assert.NoError(t, err)
+	oldNumOfPrjs := len(preProjects)
+	params1 := getTestProjectParams("tstprj", "projectForTest")
+	params2 := getTestProjectParams("tstprj1", "projectTesting")
+	params3 := getTestProjectParams("tstprj2", "testProject")
+	params4 := getTestProjectParams("tstprj3", "It'sForTest")
+	assert.NoError(t, testsAccessProjectService.Create(params1))
+	assert.NoError(t, testsAccessProjectService.Create(params2))
+	assert.NoError(t, testsAccessProjectService.Create(params3))
+	assert.NoError(t, testsAccessProjectService.Create(params4))
+	projects, err := testsAccessProjectService.GetAll()
+	assert.NoError(t, err, "Failed to Unmarshal")
+	assert.Equal(t, oldNumOfPrjs+4, len(projects))
+	deleteProjectAndAssert(t, params1.ProjectDetails.ProjectKey)
+	deleteProjectAndAssert(t, params2.ProjectDetails.ProjectKey)
+	deleteProjectAndAssert(t, params3.ProjectDetails.ProjectKey)
+	deleteProjectAndAssert(t, params4.ProjectDetails.ProjectKey)
 }

@@ -87,7 +87,7 @@ func (dr *DistributeReleaseBundleService) execDistribute(name, version string, d
 		return "", errorutils.CheckError(err)
 	}
 
-	log.Debug("Distribution response: ", resp.Status)
+	log.Debug("Distribution response:", resp.Status)
 	log.Debug(utils.IndentJson(body))
 	return response.TrackerId, nil
 }
