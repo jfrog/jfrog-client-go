@@ -1,5 +1,5 @@
 resources:
-  - name: jfrogClientGoRepo
+  - name: jfrogGoClientRepo
     type: GitRepo
     configuration:
       gitProvider: LeelaGitHub
@@ -42,7 +42,7 @@ pipelines:
             # [Mandatory]
             # GitHub organization namespace
             JF_GIT_OWNER: "leela-dev"
-            JF_GIT_REPO: $res_jfrogClientGoRepo_gitRepoFullName
+            JF_GIT_REPO: $res_jfrogGoClientRepo_gitRepoFullName
         execution:
           onExecute:
             - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
