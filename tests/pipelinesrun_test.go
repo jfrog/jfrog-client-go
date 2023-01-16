@@ -19,7 +19,7 @@ func TestPipelinesRunService(t *testing.T) {
 }
 
 const (
-	// define default wait time
+	// Define default wait time
 	defaultMaxWaitMinutes    = 10 * time.Minute
 	defaultSyncSleepInterval = 5 * time.Second // 5 seconds
 )
@@ -85,14 +85,14 @@ func testGetRunStatus(t *testing.T) {
 	pollSyncPipelineSource(t)
 
 	pollForSyncResourceStatus(t)
-	_, isMultiBranch, resourceErr := pipelinesServices.GetPipelineResourceID(testPipelinesSyncService.GetHTTPClient(),
+	res, resourceErr := pipelinesServices.GetPipelineResource(testPipelinesSyncService.GetHTTPClient(),
 		testPipelinesSyncService.GetServiceURL(),
 		*PipelinesVcsRepoFullPath,
 		testPipelinesSyncService.GetHttpDetails())
 
 	assert.NoError(t, resourceErr)
 	pipelineName := "pipelines_run_int_test"
-	trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, isMultiBranch)
+	trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, *res.IsMultiBranch)
 	assert.NoError(t, trigErr)
 
 	pollGetRunStatus(t, pipelineName)
@@ -100,13 +100,13 @@ func testGetRunStatus(t *testing.T) {
 
 func pollGetRunStatus(t *testing.T, pipelineName string) {
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		_, isMultiBranch, resourceErr := pipelinesServices.GetPipelineResourceID(testPipelinesSyncService.GetHTTPClient(),
+		res, resourceErr := pipelinesServices.GetPipelineResource(testPipelinesSyncService.GetHTTPClient(),
 			testPipelinesSyncService.ServiceDetails.GetUrl(),
 			*PipelinesVcsRepoFullPath,
 			testPipelinesSyncService.ServiceDetails.CreateHttpClientDetails())
 
 		assert.NoError(t, resourceErr)
-		pipRunResponse, syncErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, isMultiBranch)
+		pipRunResponse, syncErr := testPipelinesRunService.GetRunStatus(*PipelinesVcsBranch, pipelineName, *res.IsMultiBranch)
 		assert.NoError(t, syncErr)
 
 		// Got the full valid response.
@@ -131,13 +131,13 @@ func pollGetRunStatus(t *testing.T, pipelineName string) {
 		PollingAction:   pollingAction,
 		MsgPrefix:       "Get pipeline run status...",
 	}
-	// polling execution
+	// Polling execution
 	_, err := pollingExecutor.Execute()
 	assert.NoError(t, err)
 }
 
 func pollForSyncResourceStatus(t *testing.T) {
-	//define polling action
+	// Define polling action
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		pipResStatus, syncErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
 		assert.NoError(t, syncErr)
@@ -154,7 +154,7 @@ func pollForSyncResourceStatus(t *testing.T) {
 		PollingAction:   pollingAction,
 		MsgPrefix:       "Get pipeline sync status...",
 	}
-	// polling execution
+	// Polling execution
 	_, err := pollingExecutor.Execute()
 	assert.NoError(t, err)
 }
@@ -173,7 +173,7 @@ func assertRunStatus(t *testing.T, statusCode int) {
 }
 
 func pollSyncPipelineSource(t *testing.T) {
-	//define polling action
+	// Define polling action
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		syncErr := testPipelinesSyncService.SyncPipelineSource(*PipelinesVcsBranch, *PipelinesVcsRepoFullPath)
 		assert.NoError(t, syncErr)
@@ -187,7 +187,7 @@ func pollSyncPipelineSource(t *testing.T) {
 		PollingAction:   pollingAction,
 		MsgPrefix:       "Syncing Pipeline Resource...",
 	}
-	// polling execution
+	// Polling execution
 	_, err := pollingExecutor.Execute()
 	assert.NoError(t, err)
 }
