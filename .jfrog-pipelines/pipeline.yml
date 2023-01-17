@@ -53,12 +53,6 @@ pipelines:
             - name: trigger_all
         execution:
           onStart:
-            #This whole section will be replaced by getting task as jfrog/setup-go
-            - pushd $res_jfrogClientGoRepo_resourcePath/setup-go
-            - jfrog npmc --repo-resolve $RESOLVE_REPO
-            - jfrog npm install
-            - npm run dist
-            - popd
             - task: jfrog/setup-go@v0.0.2
               input:
                 version: "1.19.3"
