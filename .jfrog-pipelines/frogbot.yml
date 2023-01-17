@@ -20,8 +20,7 @@ pipelines:
             - name: jfrogClientGo
         execution:
           onExecute:
-            - readarray -d / -t strarr <<< "$res_jfrogClientGo_gitRepoFullName"
-            - add_run_variables repoName="${strarr[1]}"
+            - add_run_variables repoName=$(echo "$res_jfrogClientGo_gitRepoFullName" | cut -f2 -d'/')
       - name: Frogbot_Scan
         type: Bash
         configuration:
