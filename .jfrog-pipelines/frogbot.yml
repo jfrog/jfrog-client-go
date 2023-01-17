@@ -13,6 +13,15 @@ resources:
 pipelines:
   - name: Frogbot
     steps:
+      - name: prepare_for_frogbot_scan
+        type: Bash
+        configuration:
+          inputResources:
+            - name: jfrogClientGo
+        execution:
+          onExecute:
+            - IFS='/' read -r -a array <<< "$res_jfrogClientGo_gitRepoFullName"
+            - add_run_variables repoName="${array[0]}"
       - name: Frogbot_Scan
         type: Bash
         configuration:
@@ -22,24 +31,13 @@ pipelines:
           inputResources:
             - name: jfrogClientGo
           environmentVariables:
-            # [Mandatory]
-            # JFrog platform URL
             JF_URL: $int_jfrogPlatform_url
-            # [Mandatory if JF_USER and JF_PASSWORD are not provided]
-            # JFrog access token with 'read' permissions for Xray
             JF_ACCESS_TOKEN: $int_jfrogPlatform_accessToken
-            # [Mandatory]
-            # GitHub personal access token with the following permissions:
-            # Read and Write access to code, pull requests, security events, and workflows
             JF_GIT_TOKEN: $int_LeelaGitHub_token
             JF_GIT_PROVIDER: "github"
-            # [Mandatory]
-            # API endpoint to GitHub Enterprise server
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
-            # [Mandatory]
-            # GitHub organization namespace
             JF_GIT_OWNER: "leela-dev"
-            JF_GIT_REPO: $res_jfrogClientGo_gitRepoFullName
+            JF_GIT_REPO: $repoName
         execution:
           onExecute:
             - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
