@@ -20,11 +20,13 @@ pipelines:
             - name: jfrogClientGo
         execution:
           onExecute:
-            - IFS='/' read -r -a array <<< "$res_jfrogClientGo_gitRepoFullName"
-            - add_run_variables repoName="${array[0]}"
+            - readarray -d / -t strarr <<< "$res_jfrogClientGo_gitRepoFullName"
+            - add_run_variables repoName="${strarr[1]}"
       - name: Frogbot_Scan
         type: Bash
         configuration:
+          inputSteps:
+            - name: prepare_for_frogbot_scan
           integrations:
             - name: jfrogPlatform
             - name: LeelaGitHub
