@@ -39,11 +39,10 @@ pipelines:
             JF_GIT_PROVIDER: "github"
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
             JF_GIT_OWNER: "leela-dev"
-            JF_GIT_REPO: $repoName
+            JF_GIT_REPO: "$repoName"
         execution:
           onExecute:
             - echo $repoName
-            - export JF_GIT_REPO = $repoName
             - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
             - ./frogbot scan-pull-requests
             - ./frogbot scan-and-fix-repos
