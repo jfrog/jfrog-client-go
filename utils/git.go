@@ -15,10 +15,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-const (
-	submoduleDotGitPrefix = "gitdir: "
-)
-
 type GitManager struct {
 	path                string
 	err                 error
@@ -98,7 +94,6 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		return
 	}
 	m.path = resolvedGitPath
-	return
 }
 
 func (m *GitManager) GetUrl() string {
