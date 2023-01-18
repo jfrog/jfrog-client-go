@@ -41,6 +41,7 @@ pipelines:
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
             JF_GIT_OWNER: "leela-dev"
             JF_GIT_REPO: $repo_name
+            JF_GIT_BASE_BRANCH: "master"
         execution:
           onStart:
             - task: jfrog/setup-go@v0.0.2
