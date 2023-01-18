@@ -30,6 +30,7 @@ pipelines:
           integrations:
             - name: jfrogPlatform
             - name: LeelaGitHub
+            - name: int_default_artifactory
           inputResources:
             - name: jfrogClientGo
           environmentVariables:
@@ -41,9 +42,17 @@ pipelines:
             JF_GIT_OWNER: "leela-dev"
             JF_GIT_REPO: "jfrog-client-go"
         execution:
+          onStart:
+            - task: jfrog/setup-go@v0.0.2
+              input:
+                version: "1.19.3"
+                cacheIntegration: int_default_artifactory
+            - go version
+            - go env GOPATH
           onExecute:
             - echo $repoName
             - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
+            - cd $res_jfrogClientGo_resourcePath
             - ./frogbot scan-and-fix-repos
             # For Windows runner:
             # - iwr https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/frogbot-windows-amd64/frogbot.exe -OutFile .\frogbot.exe
