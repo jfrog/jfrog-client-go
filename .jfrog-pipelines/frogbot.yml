@@ -20,8 +20,8 @@ pipelines:
             - name: jfrogClientGo
         execution:
           onExecute:
-            - add_run_variables repoName=$(echo $res_jfrogClientGo_gitRepoFullName | cut -f2 -d'/')
-            - echo $repoName
+            - add_run_variables repo_name="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f2 -d'/')"
+            - echo $repo_name
       - name: Frogbot_Scan
         type: Bash
         configuration:
@@ -40,7 +40,7 @@ pipelines:
             JF_GIT_PROVIDER: "github"
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
             JF_GIT_OWNER: "leela-dev"
-            JF_GIT_REPO: "jfrog-client-go"
+            JF_GIT_REPO: $repo_name
         execution:
           onStart:
             - task: jfrog/setup-go@v0.0.2
