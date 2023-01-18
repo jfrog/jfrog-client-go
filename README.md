@@ -104,7 +104,7 @@
             - [Creating a New Project](#creating-a-new-project)
             - [Updating a Project](#updating-a-project)
             - [Deleting a Project](#deleting-a-project)
-	    - [Getting a Project](#getting-a-project)
+            - [Getting a Project](#getting-a-project)
             - [Getting all Projects](#getting-all-projects)
             - [Assigning Repository to Project](#assigning-repository-to-project)
             - [Unassigned Repository from Project](#unassigning-repository-from-project)
