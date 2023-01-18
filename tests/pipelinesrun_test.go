@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	pipelinesServices "github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -21,7 +22,7 @@ func TestPipelinesRunService(t *testing.T) {
 const (
 	// Define default wait time
 	defaultMaxWaitMinutes    = 10 * time.Minute
-	defaultSyncSleepInterval = 5 * time.Second // 5 seconds
+	defaultSyncSleepInterval = 5 * time.Second
 )
 
 func testTriggerSync(t *testing.T) {
@@ -142,9 +143,12 @@ func pollForSyncResourceStatus(t *testing.T) {
 		pipResStatus, syncErr := testPipelinesSyncStatusService.GetSyncPipelineResourceStatus(*PipelinesVcsRepoFullPath, *PipelinesVcsBranch)
 		assert.NoError(t, syncErr)
 
-		// Got the full valid response.
 		if len(pipResStatus) > 0 && pipResStatus[0].LastSyncStatusCode == 4002 {
+			// Got the full valid response.
 			return true, []byte{}, nil
+		} else if len(pipResStatus) > 0 && pipResStatus[0].LastSyncStatusCode == 4003 {
+			// Sync Failed, it is not needed to retry.
+			return true, []byte{}, fmt.Errorf("failed to sync pipelines source\n%s", pipResStatus[0].LastSyncLogs)
 		}
 		return false, []byte{}, nil
 	}
