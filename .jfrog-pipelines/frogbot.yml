@@ -39,7 +39,7 @@ pipelines:
             JF_GIT_PROVIDER: "github"
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
             JF_GIT_OWNER: "leela-dev"
-            JF_GIT_REPO: $repoName
+            JF_GIT_REPO: "jfrog-client-go"
         execution:
           onExecute:
             - echo $repoName
