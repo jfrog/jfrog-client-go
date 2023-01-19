@@ -70,8 +70,9 @@ func localAlpineTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&alp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Alpine(alp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, alp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, alp)
+	}
 }
 
 func localBowerTest(t *testing.T) {
@@ -90,8 +91,9 @@ func localBowerTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&blp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Bower(blp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, blp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, blp)
+	}
 }
 
 func localCargoTest(t *testing.T) {
@@ -112,8 +114,9 @@ func localCargoTest(t *testing.T) {
 	setCargoRepositoryParams(&clp.CargoRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Cargo(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, clp)
+	}
 }
 
 func localChefTest(t *testing.T) {
@@ -132,8 +135,9 @@ func localChefTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Chef(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, clp)
+	}
 }
 
 func localCocoapodsTest(t *testing.T) {
@@ -152,8 +156,9 @@ func localCocoapodsTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Cocoapods(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, clp)
+	}
 }
 
 func localComposerTest(t *testing.T) {
@@ -172,8 +177,9 @@ func localComposerTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Composer(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, clp)
+	}
 }
 
 func localConanTest(t *testing.T) {
@@ -192,8 +198,9 @@ func localConanTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Conan(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, clp)
+	}
 }
 
 func localCondaTest(t *testing.T) {
@@ -212,8 +219,9 @@ func localCondaTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Conda(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, clp)
+	}
 }
 
 func localCranTest(t *testing.T) {
@@ -232,8 +240,9 @@ func localCranTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&clp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Cran(clp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, clp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, clp)
+	}
 }
 
 func localDebianTest(t *testing.T) {
@@ -254,8 +263,9 @@ func localDebianTest(t *testing.T) {
 	setDebianRepositoryParams(&dlp.DebianRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Debian(dlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, dlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, dlp)
+	}
 }
 
 func localDockerTest(t *testing.T) {
@@ -276,8 +286,9 @@ func localDockerTest(t *testing.T) {
 	setDockerRepositoryParams(&dlp.DockerRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Docker(dlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, dlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, dlp)
+	}
 }
 
 func localGemsTest(t *testing.T) {
@@ -296,8 +307,9 @@ func localGemsTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Gems(glp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, glp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, glp)
+	}
 }
 
 func localGenericTest(t *testing.T) {
@@ -316,8 +328,9 @@ func localGenericTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Generic(glp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, glp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, glp)
+	}
 }
 
 func localGitlfsTest(t *testing.T) {
@@ -336,8 +349,9 @@ func localGitlfsTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Gitlfs(glp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, glp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, glp)
+	}
 }
 
 func localGoTest(t *testing.T) {
@@ -356,8 +370,9 @@ func localGoTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Go(glp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, glp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, glp)
+	}
 }
 
 func localGradleTest(t *testing.T) {
@@ -378,8 +393,9 @@ func localGradleTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&glp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Gradle(glp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, glp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, glp)
+	}
 }
 
 func localHelmTest(t *testing.T) {
@@ -398,8 +414,9 @@ func localHelmTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&hlp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Helm(hlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, hlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, hlp)
+	}
 }
 
 func localIvyTest(t *testing.T) {
@@ -420,8 +437,9 @@ func localIvyTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&ilp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Ivy(ilp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, ilp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, ilp)
+	}
 }
 
 func localMavenTest(t *testing.T) {
@@ -442,8 +460,9 @@ func localMavenTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&mlp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Maven(mlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, mlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, mlp)
+	}
 }
 
 func localNpmTest(t *testing.T) {
@@ -462,8 +481,9 @@ func localNpmTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&nlp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Npm(nlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nlp)
+	}
 }
 
 func localNugetTest(t *testing.T) {
@@ -484,8 +504,9 @@ func localNugetTest(t *testing.T) {
 	setNugetRepositoryParams(&nlp.NugetRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Nuget(nlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nlp)
+	}
 }
 
 func localOpkgTest(t *testing.T) {
@@ -504,8 +525,9 @@ func localOpkgTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&olp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Opkg(olp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, olp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, olp)
+	}
 }
 
 func localPuppetTest(t *testing.T) {
@@ -524,8 +546,9 @@ func localPuppetTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&plp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Puppet(plp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, plp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, plp)
+	}
 }
 
 func localPypiTest(t *testing.T) {
@@ -544,8 +567,9 @@ func localPypiTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&plp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Pypi(plp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, plp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, plp)
+	}
 }
 
 func localRpmTest(t *testing.T) {
@@ -566,8 +590,9 @@ func localRpmTest(t *testing.T) {
 	setRpmRepositoryParams(&rlp.RpmRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Rpm(rlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, rlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, rlp)
+	}
 }
 
 func localSbtTest(t *testing.T) {
@@ -588,8 +613,9 @@ func localSbtTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&slp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateLocalRepositoryService.Sbt(slp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, slp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, slp)
+	}
 }
 
 func localSwiftTest(t *testing.T) {
@@ -608,8 +634,9 @@ func localSwiftTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&slp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Swift(slp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, slp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, slp)
+	}
 }
 
 func localVagrantTest(t *testing.T) {
@@ -628,8 +655,9 @@ func localVagrantTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&vlp.LocalRepositoryBaseParams, true)
 
 	err = testsUpdateLocalRepositoryService.Vagrant(vlp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, vlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, vlp)
+	}
 }
 
 func localYumTest(t *testing.T) {
@@ -659,8 +687,9 @@ func localYumTest(t *testing.T) {
 	ylp.YumGroupFileNames = ""
 
 	err = testsUpdateLocalRepositoryService.Yum(ylp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, ylp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, ylp)
+	}
 }
 
 func localCreateWithParamTest(t *testing.T) {

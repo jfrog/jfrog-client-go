@@ -144,8 +144,9 @@ func remoteAlpineTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Alpine(arp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, arp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, arp)
+	}
 }
 
 func remoteBowerTest(t *testing.T) {
@@ -170,8 +171,9 @@ func remoteBowerTest(t *testing.T) {
 	setVcsRemoteRepositoryParams(&brp.VcsGitRemoteRepositoryParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Bower(brp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, brp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, brp)
+	}
 }
 
 func remoteCargoTest(t *testing.T) {
@@ -196,8 +198,9 @@ func remoteCargoTest(t *testing.T) {
 	crp.CargoAnonymousAccess = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Cargo(crp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, crp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, crp)
+	}
 }
 
 func remoteChefTest(t *testing.T) {
@@ -219,8 +222,9 @@ func remoteChefTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Chef(crp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, crp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, crp)
+	}
 }
 
 func remoteCocoapodsTest(t *testing.T) {
@@ -245,8 +249,9 @@ func remoteCocoapodsTest(t *testing.T) {
 	setVcsRemoteRepositoryParams(&crp.VcsGitRemoteRepositoryParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Cocoapods(crp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, crp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, crp)
+	}
 }
 
 func remoteComposerTest(t *testing.T) {
@@ -271,8 +276,9 @@ func remoteComposerTest(t *testing.T) {
 	setVcsRemoteRepositoryParams(&crp.VcsGitRemoteRepositoryParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Composer(crp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, crp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, crp)
+	}
 }
 
 func remoteConanTest(t *testing.T) {
@@ -294,8 +300,9 @@ func remoteConanTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Conan(crp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, crp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, crp)
+	}
 }
 
 func remoteCondaTest(t *testing.T) {
@@ -317,8 +324,9 @@ func remoteCondaTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Conda(crp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, crp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, crp)
+	}
 }
 
 func remoteCranTest(t *testing.T) {
@@ -340,8 +348,9 @@ func remoteCranTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Cran(crp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, crp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, crp)
+	}
 }
 
 func remoteDebianTest(t *testing.T) {
@@ -365,8 +374,9 @@ func remoteDebianTest(t *testing.T) {
 	drp.ListRemoteFolderItems = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Debian(drp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, drp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, drp)
+	}
 }
 
 func remoteDockerTest(t *testing.T) {
@@ -397,8 +407,9 @@ func remoteDockerTest(t *testing.T) {
 	// Docker prerequisite - artifacts must be stored locally in cache
 	drp.StoreArtifactsLocally = &trueValue
 	err = testsUpdateRemoteRepositoryService.Docker(drp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, drp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, drp)
+	}
 }
 
 func remoteGemsTest(t *testing.T) {
@@ -422,8 +433,9 @@ func remoteGemsTest(t *testing.T) {
 	grp.ListRemoteFolderItems = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Gems(grp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, grp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, grp)
+	}
 }
 
 func remoteGenericTest(t *testing.T) {
@@ -447,8 +459,9 @@ func remoteGenericTest(t *testing.T) {
 	grp.ListRemoteFolderItems = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Generic(grp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, grp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, grp)
+	}
 }
 
 func remoteGitlfsTest(t *testing.T) {
@@ -470,8 +483,9 @@ func remoteGitlfsTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Gitlfs(grp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, grp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, grp)
+	}
 }
 
 func remoteGoTest(t *testing.T) {
@@ -495,8 +509,9 @@ func remoteGoTest(t *testing.T) {
 	grp.VcsGitProvider = "GITHUB"
 
 	err = testsUpdateRemoteRepositoryService.Go(grp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, grp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, grp)
+	}
 }
 
 func remoteGradleTest(t *testing.T) {
@@ -520,8 +535,9 @@ func remoteGradleTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&grp.JavaPackageManagersRemoteRepositoryParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Gradle(grp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, grp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, grp)
+	}
 }
 
 func remoteHelmTest(t *testing.T) {
@@ -549,8 +565,9 @@ func remoteHelmTest(t *testing.T) {
 	hrp.ExternalDependenciesPatterns = []string{}
 
 	err = testsUpdateRemoteRepositoryService.Helm(hrp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, hrp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, hrp)
+	}
 }
 
 func remoteIvyTest(t *testing.T) {
@@ -574,8 +591,9 @@ func remoteIvyTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&irp.JavaPackageManagersRemoteRepositoryParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Ivy(irp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, irp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, irp)
+	}
 }
 
 func remoteMavenTest(t *testing.T) {
@@ -599,8 +617,9 @@ func remoteMavenTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&mrp.JavaPackageManagersRemoteRepositoryParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Maven(mrp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, mrp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, mrp)
+	}
 }
 
 func remoteNpmTest(t *testing.T) {
@@ -622,8 +641,9 @@ func remoteNpmTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&nrp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Npm(nrp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nrp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nrp)
+	}
 }
 
 func remoteNugetTest(t *testing.T) {
@@ -653,8 +673,9 @@ func remoteNugetTest(t *testing.T) {
 	nrp.ForceNugetAuthentication = &trueValue
 
 	err = testsUpdateRemoteRepositoryService.Nuget(nrp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nrp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nrp)
+	}
 }
 
 func remoteOpkgTest(t *testing.T) {
@@ -676,8 +697,9 @@ func remoteOpkgTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&orp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Opkg(orp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, orp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, orp)
+	}
 }
 
 func remoteP2Test(t *testing.T) {
@@ -701,8 +723,9 @@ func remoteP2Test(t *testing.T) {
 	prp.ListRemoteFolderItems = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.P2(prp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, prp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, prp)
+	}
 }
 
 func remotePuppetTest(t *testing.T) {
@@ -724,8 +747,9 @@ func remotePuppetTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Puppet(prp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, prp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, prp)
+	}
 }
 
 func remotePypiTest(t *testing.T) {
@@ -749,8 +773,9 @@ func remotePypiTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Pypi(prp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, prp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, prp)
+	}
 }
 
 func remoteRpmTest(t *testing.T) {
@@ -774,8 +799,9 @@ func remoteRpmTest(t *testing.T) {
 	rrp.ListRemoteFolderItems = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Rpm(rrp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, rrp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, rrp)
+	}
 }
 
 func remoteSbtTest(t *testing.T) {
@@ -799,8 +825,9 @@ func remoteSbtTest(t *testing.T) {
 	setJavaPackageManagersRemoteRepositoryParams(&srp.JavaPackageManagersRemoteRepositoryParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Sbt(srp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, srp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, srp)
+	}
 }
 
 func remoteSwiftTest(t *testing.T) {
@@ -822,8 +849,9 @@ func remoteSwiftTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Swift(srp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, srp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, srp)
+	}
 }
 
 func remoteVcsTest(t *testing.T) {
@@ -849,8 +877,9 @@ func remoteVcsTest(t *testing.T) {
 	vrp.MaxUniqueSnapshots = 50
 
 	err = testsUpdateRemoteRepositoryService.Vcs(vrp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, vrp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, vrp)
+	}
 }
 
 func remoteYumTest(t *testing.T) {
@@ -876,8 +905,9 @@ func remoteYumTest(t *testing.T) {
 	yrp.ListRemoteFolderItems = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Yum(yrp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, yrp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, yrp)
+	}
 }
 
 func remoteGenericSmartRemoteTest(t *testing.T) {
@@ -887,7 +917,9 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-	assert.NoError(t, err, "Failed to create "+repoKeyLocal)
+	if !assert.NoError(t, err, "Failed to create "+repoKeyLocal) {
+		return
+	}
 	defer deleteRepo(t, repoKeyLocal)
 	validateRepoConfig(t, repoKeyLocal, glp)
 
@@ -922,7 +954,9 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 	grp.ListRemoteFolderItems = &trueValue
 
 	err = testsCreateRemoteRepositoryService.Generic(grp)
-	assert.NoError(t, err, "Failed to create "+repoKeyRemote)
+	if !assert.NoError(t, err, "Failed to create "+repoKeyRemote) {
+		return
+	}
 	defer deleteRepo(t, repoKeyRemote)
 	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
 	grp.Description += ArtifactoryLocalFileCacheSuffix
@@ -949,8 +983,9 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 	grp.ListRemoteFolderItems = &falseValue
 
 	err = testsUpdateRemoteRepositoryService.Generic(grp)
-	assert.NoError(t, err, "Failed to update "+repoKeyRemote)
-	validateRepoConfig(t, repoKeyRemote, grp)
+	if assert.NoError(t, err, "Failed to update "+repoKeyRemote) {
+		validateRepoConfig(t, repoKeyRemote, grp)
+	}
 }
 
 func remoteCreateWithParamTest(t *testing.T) {
