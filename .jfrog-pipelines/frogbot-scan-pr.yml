@@ -1,0 +1,62 @@
+resources:
+  - name: jfrogGoClient
+    type: GitRepo
+    configuration:
+      gitProvider: LeelaGitHub
+      path: leela-dev/jfrog-client-go
+      branches:
+        include: dev
+      buildOn:
+        pullRequestCreate: true
+
+pipelines:
+  - name: Frogbot Scan PR
+    steps:
+      - name: prepare_for_frogbot_scan
+        type: Bash
+        configuration:
+          inputResources:
+            - name: jfrogGoClient
+        execution:
+          onExecute:
+            - add_run_variables owner="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f1 -d'/')"
+            - add_run_variables repo_name="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f2 -d'/')"
+            - echo $owner
+            - echo $repo_name
+      - name: Frogbot_Scan
+        type: Bash
+        configuration:
+          inputSteps:
+            - name: prepare_for_frogbot_scan
+          integrations:
+            - name: jfrogPlatform
+            - name: LeelaGitHub
+            - name: int_default_artifactory
+          inputResources:
+            - name: jfrogGoClient
+          environmentVariables:
+            JF_URL: $int_jfrogPlatform_url
+            JF_ACCESS_TOKEN: $int_jfrogPlatform_accessToken
+            JF_GIT_TOKEN: $int_LeelaGitHub_token
+            JF_GIT_PROVIDER: "github"
+            JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
+            JF_GIT_OWNER: $owner
+            JF_GIT_REPO: $repo_name
+        execution:
+          onStart:
+            - task: jfrog/setup-go@v0.0.2
+              input:
+                version: "1.19.3"
+                cacheIntegration: int_default_artifactory
+            - go version
+            - go env GOPATH
+          onExecute:
+            - cd $res_jfrogClientGo_resourcePath
+            - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
+            - ./frogbot scan-pull-request
+            # For Windows runner:
+            # - iwr https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/frogbot-windows-amd64/frogbot.exe -OutFile .\frogbot.exe
+            # - .\frogbot.exe scan-pull-request
+
+
+
