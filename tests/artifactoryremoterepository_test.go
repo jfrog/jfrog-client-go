@@ -954,11 +954,11 @@ func getRemoteRepoDetailsTest(t *testing.T) {
 	// Get repo details
 	data := getRepo(t, repoKey)
 	// Validate
-	assert.Equal(t, data.Key, repoKey)
-	assert.Equal(t, data.Description, grp.Description+" (local file cache)")
-	assert.Equal(t, data.GetRepoType(), "remote")
-	assert.Equal(t, data.Url, grp.Url)
-	assert.Equal(t, data.PackageType, "generic")
+	assert.Equal(t, repoKey, data.Key)
+	assert.Equal(t, grp.Description, data.Description)
+	assert.Equal(t, "remote", data.GetRepoType())
+	assert.Equal(t, grp.Url, data.Url)
+	assert.Equal(t, "generic", data.PackageType)
 }
 
 func getAllRemoteRepoDetailsTest(t *testing.T) {
