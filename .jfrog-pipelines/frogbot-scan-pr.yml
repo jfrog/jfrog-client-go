@@ -41,6 +41,7 @@ pipelines:
             JF_GIT_TOKEN: $int_LeelaGitHub_token
             JF_GIT_PROVIDER: "github"
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
+            JF_GIT_PULL_REQUEST_ID: $res_jfrogGoClient_pullRequestNumber
         execution:
           onStart:
             - task: jfrog/setup-go@v0.0.2
@@ -50,7 +51,7 @@ pipelines:
             - go version
             - go env GOPATH
           onExecute:
-            - cd $res_jfrogClientGo_resourcePath
+            - cd $res_jfrogGoClient_resourcePath
             - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
             - ./frogbot scan-pull-request
             # For Windows runner:
