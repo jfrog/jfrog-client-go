@@ -2,7 +2,7 @@
 
 <div align="center">
 
-# JFrog Go Client 
+# JFrog Go Client  
 
 </div>
 
