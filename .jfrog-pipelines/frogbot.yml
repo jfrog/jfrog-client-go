@@ -55,6 +55,7 @@ pipelines:
             - cd $res_jfrogClientGo_resourcePath
             - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
             - ./frogbot create-fix-pull-requests
+            - ./frogbot scan-pull-request
             # For Windows runner:
             # - iwr https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/frogbot-windows-amd64/frogbot.exe -OutFile .\frogbot.exe
             # - .\frogbot.exe scan-pull-requests
