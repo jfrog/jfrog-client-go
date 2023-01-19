@@ -41,7 +41,7 @@ pipelines:
             JF_GIT_PROVIDER: "github"
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
             JF_GIT_USERNAME: $owner_name
-            JF_GIT_OWNER: $owner_name
+            JF_GIT_OWNER: ${owner_name}
             JF_GIT_REPO: $repo_name
         execution:
           onStart:
@@ -57,6 +57,8 @@ pipelines:
             - echo $owner_name
             - echo $repo_name
             - echo $JF_GIT_OWNER
+            - echo $JF_GIT_REPO
+            - echo $JF_GIT_USERNAME
             - ./frogbot create-fix-pull-requests
             # For Windows runner:
             # - iwr https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/frogbot-windows-amd64/frogbot.exe -OutFile .\frogbot.exe
