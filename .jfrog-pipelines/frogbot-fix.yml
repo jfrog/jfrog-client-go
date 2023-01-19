@@ -10,7 +10,7 @@ resources:
         commit: true
 
 pipelines:
-  - name: Frogbot Fix
+  - name: Frogbot_Fix
     steps:
       - name: prepare_for_frogbot_scan
         type: Bash

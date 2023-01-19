@@ -10,7 +10,7 @@ resources:
         pullRequestCreate: true
 
 pipelines:
-  - name: Frogbot Scan PR
+  - name: Frogbot_Scan_PR
     steps:
       - name: prepare_for_frogbot_scan
         type: Bash
