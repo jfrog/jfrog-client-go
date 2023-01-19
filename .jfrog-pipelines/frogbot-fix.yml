@@ -5,13 +5,12 @@ resources:
       gitProvider: LeelaGitHub
       path: leela-dev/jfrog-client-go
       branches:
-        include: ^{{gitBranch}}$
+        include: dev
       buildOn:
         commit: true
-        pullRequestCreate: true
 
 pipelines:
-  - name: Frogbot
+  - name: Frogbot Fix
     steps:
       - name: prepare_for_frogbot_scan
         type: Bash
@@ -20,7 +19,9 @@ pipelines:
             - name: jfrogClientGo
         execution:
           onExecute:
+            - add_run_variables owner="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f1 -d'/')"
             - add_run_variables repo_name="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f2 -d'/')"
+            - echo $owner
             - echo $repo_name
       - name: Frogbot_Scan
         type: Bash
@@ -39,9 +40,8 @@ pipelines:
             JF_GIT_TOKEN: $int_LeelaGitHub_token
             JF_GIT_PROVIDER: "github"
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
-            JF_GIT_OWNER: "leela-dev"
+            JF_GIT_OWNER: $owner
             JF_GIT_REPO: $repo_name
-            JF_GIT_BASE_BRANCH: "master"
         execution:
           onStart:
             - task: jfrog/setup-go@v0.0.2
@@ -51,14 +51,12 @@ pipelines:
             - go version
             - go env GOPATH
           onExecute:
-            - echo $repoName
             - cd $res_jfrogClientGo_resourcePath
             - curl -fLg "https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/getFrogbot.sh" | sh
             - ./frogbot create-fix-pull-requests
             # For Windows runner:
             # - iwr https://releases.jfrog.io/artifactory/frogbot/v2/[RELEASE]/frogbot-windows-amd64/frogbot.exe -OutFile .\frogbot.exe
-            # - .\frogbot.exe scan-pull-requests
-            # - .\frogbot.exe scan-and-fix-repos
+            # - .\frogbot.exe create-fix-pull-requests
 
 
 
