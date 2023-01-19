@@ -37,8 +37,8 @@ func testTriggerSync(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
-	if !assert.NoError(t, srcErr) {
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteSourceAndAssert(t, sourceId)
@@ -58,11 +58,10 @@ func testGetSyncStatus(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
-	if !assert.NoError(t, srcErr) {
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
+	if !assert.NoError(t, err) {
 		return
 	}
-
 	defer deleteSourceAndAssert(t, sourceId)
 	pollSyncPipelineSource(t)
 	pollForSyncResourceStatus(t)
@@ -81,8 +80,8 @@ func testGetRunStatus(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, sourceErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
-	if !assert.NoError(t, sourceErr) {
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteSourceAndAssert(t, sourceId)
