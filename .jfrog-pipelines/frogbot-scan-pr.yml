@@ -7,6 +7,7 @@ resources:
       branches:
         include: dev
       buildOn:
+        commit: false
         pullRequestCreate: true
 
 pipelines:
@@ -19,10 +20,10 @@ pipelines:
             - name: jfrogGoClient
         execution:
           onExecute:
-            - add_run_variables owner="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f1 -d'/')"
-            - add_run_variables repo_name="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f2 -d'/')"
-            - echo $owner
-            - echo $repo_name
+            - add_run_variables JF_GIT_OWNER="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f1 -d'/')"
+            - add_run_variables JF_GIT_REPO="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f2 -d'/')"
+            - echo $JF_GIT_REPO
+            - echo $JF_GIT_OWNER
       - name: Frogbot_Scan
         type: Bash
         configuration:
