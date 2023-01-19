@@ -5,8 +5,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
-	"strconv"
-	"strings"
 	"testing"
 	"time"
 )
@@ -29,16 +27,16 @@ func testTriggerSync(t *testing.T) {
 		return
 	}
 	// Create integration with provided token.
-	unixTime := time.Now().Unix()
-	timeString := strconv.Itoa(int(unixTime))
-	integrationName := strings.Join([]string{"github", "integration_test", timeString}, "_")
+	integrationName := getUniqueIntegrationName(pipelinesServices.GithubName)
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
 	assert.NoError(t, err)
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
-	assert.NoError(t, srcErr)
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
+	if !assert.NoError(t, err) {
+		return
+	}
 	defer deleteSourceAndAssert(t, sourceId)
 	pollSyncPipelineSource(t)
 }
@@ -47,18 +45,17 @@ func testGetSyncStatus(t *testing.T) {
 	if !assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured") {
 		return
 	}
-	// Create integration with provided token.'
-	unixTime := time.Now().Unix()
-	timeString := strconv.Itoa(int(unixTime))
-	integrationName := strings.Join([]string{"github", "integration_test", timeString}, "_")
+	// Create integration with provided token.
+	integrationName := getUniqueIntegrationName(pipelinesServices.GithubName)
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
 	assert.NoError(t, err)
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, srcErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
-	assert.NoError(t, srcErr)
-
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
+	if !assert.NoError(t, err) {
+		return
+	}
 	defer deleteSourceAndAssert(t, sourceId)
 	pollSyncPipelineSource(t)
 	pollForSyncResourceStatus(t)
@@ -69,17 +66,16 @@ func testGetRunStatus(t *testing.T) {
 		return
 	}
 	// Create integration with provided token.
-	unixTime := time.Now().Unix()
-	timeString := strconv.Itoa(int(unixTime))
-	integrationName := strings.Join([]string{"github", "integration_test", timeString}, "_")
+	integrationName := getUniqueIntegrationName(pipelinesServices.GithubName)
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
 	assert.NoError(t, err)
-
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, sourceErr := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
-	assert.NoError(t, sourceErr)
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
+	if !assert.NoError(t, err) {
+		return
+	}
 	defer deleteSourceAndAssert(t, sourceId)
 
 	pollSyncPipelineSource(t)

@@ -40,13 +40,11 @@ func createAPIKeyTest(t *testing.T) {
 	defer tls.Close()
 
 	apiKeyService, err := createDummySecurityService(tls.URL, true)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	key, err := apiKeyService.CreateAPIKey()
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, expectedApiKey, key)
@@ -58,13 +56,11 @@ func regenerateAPIKeyTest(t *testing.T) {
 	defer tls.Close()
 
 	apiKeyService, err := createDummySecurityService(tls.URL, true)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	key, err := apiKeyService.RegenerateAPIKey()
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, expectedApiKey, key)
@@ -86,13 +82,11 @@ func getAPIKeyTestCore(t *testing.T, expectedApiKey string) {
 	defer tls.Close()
 
 	apiKeyService, err := createDummySecurityService(tls.URL, true)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	key, err := apiKeyService.GetAPIKey()
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, expectedApiKey, key)

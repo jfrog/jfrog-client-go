@@ -8,8 +8,7 @@ import (
 func TestPipelinesVersion(t *testing.T) {
 	initPipelinesTest(t)
 	version, err := GetPipelinesDetails().GetVersion()
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.NotEmpty(t, version)

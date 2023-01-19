@@ -63,7 +63,7 @@ func setFederatedRepositoryBaseParams(params *services.FederatedRepositoryBasePa
 	} else {
 		params.ArchiveBrowsingEnabled = &falseValue
 		params.Members = []services.FederatedRepositoryMember{
-			{Url: memberUrl, Enabled: &falseValue},
+			{Url: memberUrl, Enabled: &trueValue},
 		}
 	}
 }
@@ -84,8 +84,9 @@ func federatedAlpineTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&afp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Alpine(afp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, afp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, afp)
+	}
 }
 
 func federatedBowerTest(t *testing.T) {
@@ -104,8 +105,9 @@ func federatedBowerTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&bfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Bower(bfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, bfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, bfp)
+	}
 }
 
 func federatedCargoTest(t *testing.T) {
@@ -126,8 +128,9 @@ func federatedCargoTest(t *testing.T) {
 	setCargoRepositoryParams(&cfp.CargoRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Cargo(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedChefTest(t *testing.T) {
@@ -146,8 +149,9 @@ func federatedChefTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Chef(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedCocoapodsTest(t *testing.T) {
@@ -166,8 +170,9 @@ func federatedCocoapodsTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Cocoapods(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedComposerTest(t *testing.T) {
@@ -186,8 +191,9 @@ func federatedComposerTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Composer(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedConanTest(t *testing.T) {
@@ -206,8 +212,9 @@ func federatedConanTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Conan(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedCondaTest(t *testing.T) {
@@ -226,8 +233,9 @@ func federatedCondaTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Conda(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedCranTest(t *testing.T) {
@@ -246,8 +254,9 @@ func federatedCranTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Cran(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedDebianTest(t *testing.T) {
@@ -268,8 +277,9 @@ func federatedDebianTest(t *testing.T) {
 	setDebianRepositoryParams(&dfp.DebianRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Debian(dfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, dfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, dfp)
+	}
 }
 
 func federatedDockerTest(t *testing.T) {
@@ -290,8 +300,9 @@ func federatedDockerTest(t *testing.T) {
 	setDockerRepositoryParams(&dfp.DockerRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Docker(dfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, dfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, dfp)
+	}
 }
 
 func federatedGemsTest(t *testing.T) {
@@ -310,8 +321,9 @@ func federatedGemsTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Gems(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedGenericTest(t *testing.T) {
@@ -330,8 +342,9 @@ func federatedGenericTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Generic(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedGitlfsTest(t *testing.T) {
@@ -350,8 +363,9 @@ func federatedGitlfsTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Gitlfs(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedGoTest(t *testing.T) {
@@ -370,8 +384,9 @@ func federatedGoTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Go(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedGradleTest(t *testing.T) {
@@ -392,8 +407,9 @@ func federatedGradleTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&gfp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Gradle(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedHelmTest(t *testing.T) {
@@ -412,8 +428,9 @@ func federatedHelmTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&hfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Helm(hfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, hfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, hfp)
+	}
 }
 
 func federatedIvyTest(t *testing.T) {
@@ -434,8 +451,9 @@ func federatedIvyTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&ifp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Ivy(ifp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, ifp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, ifp)
+	}
 }
 
 func federatedMavenTest(t *testing.T) {
@@ -456,8 +474,9 @@ func federatedMavenTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&mfp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Maven(mfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, mfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, mfp)
+	}
 }
 
 func federatedNpmTest(t *testing.T) {
@@ -476,8 +495,9 @@ func federatedNpmTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&nfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Npm(nfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nfp)
+	}
 }
 
 func federatedNugetTest(t *testing.T) {
@@ -498,8 +518,9 @@ func federatedNugetTest(t *testing.T) {
 	setNugetRepositoryParams(&nfp.NugetRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Nuget(nfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nfp)
+	}
 }
 
 func federatedOpkgTest(t *testing.T) {
@@ -518,8 +539,9 @@ func federatedOpkgTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&ofp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Opkg(ofp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, ofp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, ofp)
+	}
 }
 
 func federatedPuppetTest(t *testing.T) {
@@ -538,8 +560,9 @@ func federatedPuppetTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&pfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Puppet(pfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, pfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, pfp)
+	}
 }
 
 func federatedPypiTest(t *testing.T) {
@@ -558,8 +581,9 @@ func federatedPypiTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&pfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Pypi(pfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, pfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, pfp)
+	}
 }
 
 func federatedRpmTest(t *testing.T) {
@@ -580,8 +604,9 @@ func federatedRpmTest(t *testing.T) {
 	setRpmRepositoryParams(&rfp.RpmRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Rpm(rfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, rfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, rfp)
+	}
 }
 
 func federatedSbtTest(t *testing.T) {
@@ -602,8 +627,9 @@ func federatedSbtTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&sfp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Sbt(sfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, sfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, sfp)
+	}
 }
 
 func federatedSwiftTest(t *testing.T) {
@@ -622,8 +648,9 @@ func federatedSwiftTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Swift(sfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, sfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, sfp)
+	}
 }
 
 func federatedVagrantTest(t *testing.T) {
@@ -642,10 +669,10 @@ func federatedVagrantTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&vfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Vagrant(vfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, vfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, vfp)
+	}
 }
-
 func federatedYumTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	yfp := services.NewYumFederatedRepositoryParams()
@@ -666,10 +693,10 @@ func federatedYumTest(t *testing.T) {
 	setRpmRepositoryParams(&yfp.RpmRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Yum(yfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, yfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, yfp)
+	}
 }
-
 func federatedCreateWithParamTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	params := services.NewFederatedRepositoryBaseParams()
