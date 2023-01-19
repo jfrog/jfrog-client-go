@@ -101,7 +101,9 @@ func testXrayWatchAll(t *testing.T) {
 		},
 	}
 	err = testsXrayWatchService.Update(*targetConfig)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
 
 	validateWatchGeneralSettings(t, *targetConfig)
 	updatedTargetConfig, err := testsXrayWatchService.Get(paramsAllRepos.Name)
@@ -184,7 +186,9 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 		BinMgrID: "default",
 	}
 	err = testsXrayWatchService.Create(paramsSelectedRepos)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
 	defer func() {
 		assert.NoError(t, testsXrayWatchService.Delete(paramsSelectedRepos.Name))
 	}()
@@ -241,7 +245,9 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	targetConfig.Repositories.Repositories[repo1Name] = updatedRepo1
 
 	err = testsXrayWatchService.Update(*targetConfig)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
 
 	validateWatchGeneralSettings(t, *targetConfig)
 	updatedTargetConfig, err := testsXrayWatchService.Get(paramsSelectedRepos.Name)
@@ -289,24 +295,28 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 	validateWatchGeneralSettings(t, paramsBuildsByPattern)
 
 	targetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
-	if assert.NoError(t, err) {
-		assert.Equal(t, utils.WatchBuildAll, targetConfig.Builds.Type)
-		assert.Equal(t, []string{"excludePath"}, targetConfig.Builds.All.ExcludePatterns)
-		assert.Equal(t, []string{"includePath", "fake"}, targetConfig.Builds.All.IncludePatterns)
-
-		targetConfig.Builds.All.ExcludePatterns = []string{"excludePath-2"}
-		targetConfig.Builds.All.IncludePatterns = []string{"includePath-2", "fake-2"}
-
-		err = testsXrayWatchService.Update(*targetConfig)
-		assert.NoError(t, err)
-
-		validateWatchGeneralSettings(t, *targetConfig)
-		updatedTargetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
-		assert.NoError(t, err)
-
-		assert.Equal(t, []string{"excludePath-2"}, updatedTargetConfig.Builds.All.ExcludePatterns)
-		assert.Equal(t, []string{"includePath-2", "fake-2"}, updatedTargetConfig.Builds.All.IncludePatterns)
+	if !assert.NoError(t, err) {
+		return
 	}
+
+	assert.Equal(t, utils.WatchBuildAll, targetConfig.Builds.Type)
+	assert.Equal(t, []string{"excludePath"}, targetConfig.Builds.All.ExcludePatterns)
+	assert.Equal(t, []string{"includePath", "fake"}, targetConfig.Builds.All.IncludePatterns)
+
+	targetConfig.Builds.All.ExcludePatterns = []string{"excludePath-2"}
+	targetConfig.Builds.All.IncludePatterns = []string{"includePath-2", "fake-2"}
+
+	err = testsXrayWatchService.Update(*targetConfig)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	validateWatchGeneralSettings(t, *targetConfig)
+	updatedTargetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
+	assert.NoError(t, err)
+
+	assert.Equal(t, []string{"excludePath-2"}, updatedTargetConfig.Builds.All.ExcludePatterns)
+	assert.Equal(t, []string{"includePath-2", "fake-2"}, updatedTargetConfig.Builds.All.IncludePatterns)
 }
 
 func testXrayWatchUpdateMissingWatch(t *testing.T) {
