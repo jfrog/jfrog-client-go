@@ -23,7 +23,7 @@ pipelines:
             - add_run_variables repo_name="$(echo $res_jfrogClientGo_gitRepoFullName | cut -f2 -d'/')"
             - echo $owner_name
             - echo $repo_name
-      - name: Frogbot_Scan
+      - name: Frogbot_Fix
         type: Bash
         configuration:
           inputSteps:
@@ -40,6 +40,7 @@ pipelines:
             JF_GIT_TOKEN: $int_LeelaGitHub_token
             JF_GIT_PROVIDER: "github"
             JF_GIT_API_ENDPOINT: $int_LeelaGitHub_url
+            JF_GIT_USERNAME: $owner_name
             JF_GIT_OWNER: $owner_name
             JF_GIT_REPO: $repo_name
         execution:
