@@ -16,7 +16,7 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
+	testUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
@@ -149,10 +149,10 @@ func init() {
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	AccessUrl = flag.String("access.url", "", "Access url")
+	AccessUrl = flag.String("access.url", "http://localhost:8081/access", "Access url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
-	AccessToken = flag.String("access.token", "", "Access token")
+	AccessToken = flag.String("access.token", testUtils.GetLocalArtifactoryTokenIfNeeded(*RtUrl), "Access token")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
@@ -580,7 +580,7 @@ func uploadDummyFile(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer clientTestUtils.RemoveAllAndAssert(t, workingDir)
+	defer testUtils.RemoveAllAndAssert(t, workingDir)
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
 	targetProps, err := utils.ParseProperties("dummy=yes")

@@ -171,3 +171,10 @@ func SetEnvWithCallbackAndAssert(t *testing.T, key, value string) func() {
 func UnSetEnvAndAssert(t *testing.T, key string) {
 	assert.NoError(t, os.Unsetenv(key), "Failed to unset env: "+key)
 }
+
+func GetLocalArtifactoryTokenIfNeeded(url string) (adminToken string) {
+	if strings.Contains(url, "localhost:8081") {
+		adminToken = os.Getenv("JFROG_TESTS_LOCAL_ACCESS_TOKEN")
+	}
+	return
+}
