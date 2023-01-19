@@ -3,19 +3,16 @@ package utils
 import (
 	"bufio"
 	"bytes"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-)
-
-const (
-	submoduleDotGitPrefix = "gitdir: "
 )
 
 type GitManager struct {
@@ -73,38 +70,30 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		// .git is a directory, continue extracting vcs details.
 		return
 	}
-
-	// Saving .git file path
-	m.submoduleDotGitPath = m.path
-
-	content, err := os.ReadFile(m.path)
+	// ask git for where the .git directory is directly for submodules and worktrees
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("git", "rev-parse", "--git-dir")
+	cmd.Dir = filepath.Dir(m.path)
+	cmd.Stdin = nil
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
 	if err != nil {
-		m.err = errorutils.CheckError(err)
+		m.err = err
 		return
 	}
-
-	line := string(content)
-	// Expecting git submodule to have exactly one line, with a prefix and the path to the actual submodule's git.
-	if !strings.HasPrefix(line, submoduleDotGitPrefix) {
-		m.err = errorutils.CheckErrorf("failed to parse .git path for submodule")
-		return
-	}
-
-	// Extract path by removing prefix.
-	actualRelativePath := strings.TrimSpace(line[strings.Index(line, ":")+1:])
-	actualAbsPath := filepath.Join(filepath.Dir(m.path), actualRelativePath)
-	exists, err = fileutils.IsDirExists(actualAbsPath, false)
+	resolvedGitPath := strings.TrimSpace(stdout.String())
+	exists, err = fileutils.IsDirExists(resolvedGitPath, false)
 	if err != nil {
 		m.err = err
 		return
 	}
 	if !exists {
-		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + actualAbsPath + "'")
+		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + resolvedGitPath + "'")
 		return
 	}
-
-	// Actual .git directory found.
-	m.path = actualAbsPath
+	m.path = resolvedGitPath
 }
 
 func (m *GitManager) GetUrl() string {

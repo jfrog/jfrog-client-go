@@ -104,6 +104,8 @@
             - [Creating a New Project](#creating-a-new-project)
             - [Updating a Project](#updating-a-project)
             - [Deleting a Project](#deleting-a-project)
+            - [Getting a Project](#getting-a-project)
+            - [Getting all Projects](#getting-all-projects)
             - [Assigning Repository to Project](#assigning-repository-to-project)
             - [Unassigned Repository from Project](#unassigning-repository-from-project)
             - [Get all groups assigned to a project](#get-all-groups-assigned-to-a-project)
@@ -171,7 +173,7 @@
             - [Get Recent Pipeline Run Status](#get-recent-pipeline-run-status)
             - [Trigger Pipeline Run](#trigger-pipeline-run)
             - [Trigger Pipeline Sync](#trigger-pipeline-sync)
-            - [Get Pipeline Sync Status](#get-last-pipeline-sync-status)
+            - [Get Pipeline Sync Status](#get-pipeline-sync-status)
             - [Cancel The Run](#cancel-run)
 
 ## General
@@ -1415,6 +1417,18 @@ err = accessManager.UpdateProject(projectParams)
 
 ```go
 err = accessManager.DeleteProject("tstprj")
+```
+
+#### Getting a Project
+
+```go
+err = accessManager.GetProject("tstprj")
+```
+
+#### Getting all Projects
+
+```go
+err = accessManager.GetAllProjects()
 ```
 
 #### Assigning Repository to Project
