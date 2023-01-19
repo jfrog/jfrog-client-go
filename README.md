@@ -92,9 +92,9 @@
             - [Deleting a Group](#deleting-a-group)
             - [Generating Full System Export](#generating-full-system-export)
             - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
-            - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
+            - [Getting a Listing of Files and Folders Within a Folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
             - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
-            - [Triggerring Storage Info Recalculation in Artifactory](#triggerring-storage-info-recalculation-in-artifactory)
+            - [Triggering Storage Info Recalculation in Artifactory](#triggering-storage-info-recalculation-in-artifactory)
     - [Access APIs](#access-apis)
         - [Creating Access Service Manager](#creating-access-service-manager)
             - [Creating Access Details](#creating-access-details)
@@ -105,13 +105,13 @@
             - [Updating a Project](#updating-a-project)
             - [Deleting a Project](#deleting-a-project)
             - [Getting a Project](#getting-a-project)
-            - [Getting all Projects](#getting-all-projects)
+            - [Getting All Projects](#getting-all-projects)
             - [Assigning Repository to Project](#assigning-repository-to-project)
             - [Unassigned Repository from Project](#unassigning-repository-from-project)
-            - [Get all groups assigned to a project](#get-all-groups-assigned-to-a-project)
-            - [Get a specific group assigned to a project](#get-a-specific-group-assigned-to-a-project)
-            - [Add or update a group assigned to a project](#add-or-update-a-group-assigned-to-a-project)
-            - [Remove a group from a project](#remove-a-group-from-a-project)
+            - [Get All Groups Assigned to a Project](#get-all-groups-assigned-to-a-project)
+            - [Get a Specific Group Assigned to a Project](#get-a-specific-group-assigned-to-a-project)
+            - [Add or Update a Group Assigned to a Project](#add-or-update-a-group-assigned-to-a-project)
+            - [Remove a Group From a Project](#remove-a-group-from-a-project)
     - [Distribution APIs](#distribution-apis)
         - [Creating Distribution Service Manager](#creating-distribution-service-manager)
             - [Creating Distribution Details](#creating-distribution-details)
@@ -310,27 +310,27 @@ rtDetails.SetUser("user")
 rtDetails.SetPassword("password")
 rtDetails.SetAccessToken("accesstoken")
 serviceConfig, err := config.NewConfigBuilder().
-    SetServiceDetails(rtDetails).
-    SetDryRun(false).
-    SetHttpClient(myCustomClient).
-    Build()
+SetServiceDetails(rtDetails).
+SetDryRun(false).
+SetHttpClient(myCustomClient).
+Build()
 ```
 
 #### Creating Artifactory Service Config
 
 ```go
 serviceConfig, err := config.NewConfigBuilder().
-    SetServiceDetails(rtDetails).
-    SetCertificatesPath(certPath).
-    SetThreads(threads).
-    SetDryRun(false).
-    // Add [Context](https://golang.org/pkg/context/)
-    SetContext(ctx).
-    // Optionally overwrite the default HTTP timeout, which is set to 30 seconds.
-    SetHttpTimeout(180 * time.Second).
-    // Optionally overwrite the default HTTP retries, which is set to 3.
-    SetHttpRetries(8).
-    Build()
+SetServiceDetails(rtDetails).
+SetCertificatesPath(certPath).
+SetThreads(threads).
+SetDryRun(false).
+// Add [Context](https://golang.org/pkg/context/)
+SetContext(ctx).
+// Optionally overwrite the default HTTP timeout, which is set to 30 seconds.
+SetHttpTimeout(180 * time.Second).
+// Optionally overwrite the default HTTP retries, which is set to 3.
+SetHttpRetries(8).
+Build()
 ```
 
 #### Creating New Artifactory Service Manager
@@ -459,11 +459,11 @@ reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResult
 
 // Iterate over each file
 for currentFileInfo := new(utils.FileInfo); reader.NextRecord(currentFileInfo) == nil; currentFileInfo = new(utils.FileInfo) {
-     fmt.Printf("File path: %s\n", currentFileInfo.LocalPath)
+fmt.Printf("File path: %s\n", currentFileInfo.LocalPath)
 }
 
 if err := reader.GetError(); err != nil {
-    return err
+return err
 }
 ```
 
@@ -508,7 +508,7 @@ params.Recursive = true
 
 pathsToDelete, err := rtManager.GetPathsToDelete(params)
 if err != nil {
-    return err
+return err
 }
 defer pathsToDelete.Close()
 rtManager.DeleteFiles(pathsToDelete)
@@ -527,7 +527,7 @@ params.Recursive = true
 
 reader, err := rtManager.SearchFiles(params)
 if err != nil {
-    return err
+return err
 }
 defer reader.Close()
 ```
@@ -543,7 +543,7 @@ searchParams.IncludeDirs = false
 
 reader, err = rtManager.SearchFiles(searchParams)
 if err != nil {
-    return err
+return err
 }
 defer reader.Close()
 propsParams = services.NewPropsParams()
@@ -566,7 +566,7 @@ searchParams.IncludeDirs = false
 
 resultItems, err = rtManager.SearchFiles(searchParams)
 if err != nil {
-    return err
+return err
 }
 defer reader.Close()
 propsParams = services.NewPropsParams()
@@ -678,7 +678,7 @@ params.Refs = "refs/remotes/*"
 params.Repo = "my-project-lfs"
 params.GitPath = "path/to/git"
 
-reader,err := rtManager.GetUnreferencedGitLfsFiles(params)
+reader, err := rtManager.GetUnreferencedGitLfsFiles(params)
 
 defer reader.Close()
 rtManager.DeleteFiles(reader)
@@ -883,7 +883,7 @@ params := services.NewVirtualRepositoryBaseParams()
 params.Key = "generic-repo"
 params.PackageType = "generic"
 params.Description = "This is a public description for generic-repo"
-params.Repositories = string[]{"remote-repo","local-repo"}
+params.Repositories = string[]{"remote-repo", "local-repo"}
 err := servicesManager.CreateVirtualRepository(params)
 ```
 
@@ -917,8 +917,8 @@ params.IncludesPattern = "**/*"
 params.ExcludesPattern = "excludedDir/*"
 params.DownloadRedirect = true
 params.Members = []services.FederatedRepositoryMemberParams{
-		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
-	}
+{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+}
 err = servicesManager.CreateFederatedRepository().Generic(params)
 ```
 
@@ -930,8 +930,8 @@ params.Key = "generic-repo"
 params.PackageType = "generic"
 params.Description = "This is a public description for generic-repo"
 params.Members = []services.FederatedRepositoryMemberParams{
-		{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
-	}
+{Url: "http://targetartifactory/artifactory/federatedRepositoryName", Enabled: true},
+}
 err := servicesManager.CreateFederatedRepository(params)
 ```
 
@@ -1094,19 +1094,19 @@ params.Repo.Repositories = []string{"ANY REMOTE", "local-repo1", "local-repo2"}
 params.Repo.ExcludePatterns = []string{"dir/*"}
 params.Repo.Actions = &services.Actions{}
 params.Repo.Actions.Users = map[string][]string{
-    "user1": {"read", "write"},
-    "user2": {"write", "annotate", "read"},
+"user1": {"read", "write"},
+"user2": {"write", "annotate", "read"},
 }
 params.Repo.Actions.Groups = map[string][]string{
-    "group1": {"manage", "read", "annotate"},
+"group1": {"manage", "read", "annotate"},
 }
 // This is the default value that cannot be changed
 params.Build = &services.PermissionTargetSection{}
 params.Build.Repositories = []string{"artifactory-build-info"}
 params.Build.Actions = &services.Actions{}
 params.Build.Actions.Groups = map[string][]string{
-    "group1": {"manage", "read", "write", "annotate", "delete"},
-    "group2": {"read"},
+"group1": {"manage", "read", "write", "annotate", "delete"},
+"group2": {"read"},
 }
 
 err := testsPermissionTargetService.Create(params)
@@ -1313,11 +1313,11 @@ serviceManager.FolderInfo("repo/path/")
 
 ```go
 optionalParams := servicesutils.NewFileListParams()
-optionalParams.Deep=               true
-optionalParams.Depth=              2
-optionalParams.ListFolders=        true
-optionalParams.MetadataTimestamps= true
-optionalParams.IncludeRootPath=    true
+optionalParams.Deep= true
+optionalParams.Depth = 2
+optionalParams.ListFolders = true
+optionalParams.MetadataTimestamps = true
+optionalParams.IncludeRootPath = true
 serviceManager.FileList("repo/path/", optionalParams)
 ```
 
@@ -1327,7 +1327,7 @@ serviceManager.FileList("repo/path/", optionalParams)
 storageInfo, err := serviceManager.GetStorageInfo()
 ```
 
-#### Triggerring Storage Info Recalculation in Artifactory
+#### Triggering Storage Info Recalculation in Artifactory
 
 ```go
 err := serviceManager.CalculateStorageInfo()
@@ -1375,17 +1375,17 @@ accessManager, err := access.New(serviceConfig)
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
-	ManageMembers:   &trueValue,
-	ManageResources: &trueValue,
-	IndexResources:  &trueValue,
+ManageMembers:   &trueValue,
+ManageResources: &trueValue,
+IndexResources:  &trueValue,
 }
 projectDetails := accessServices.Project{
-	DisplayName:       "testProject",
-	Description:       "My Test Project",
-	AdminPrivileges:   &adminPriviligies,
-	SoftLimit:         &falseValue,
-	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
-	ProjectKey:        "tstprj",
+DisplayName:       "testProject",
+Description:       "My Test Project",
+AdminPrivileges:   &adminPriviligies,
+SoftLimit:         &falseValue,
+StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+ProjectKey:        "tstprj",
 }
 projectParams = accessServices.NewProjectParams()
 projectParams.ProjectDetails = projectDetails
@@ -1396,17 +1396,17 @@ err = accessManager.CreateProject(projectParams)
 
 ```go
 adminPriviligies := accessServices.AdminPrivileges{
-	ManageMembers:   true,
-	ManageResources: true,
-	IndexResources:  true,
+ManageMembers:   true,
+ManageResources: true,
+IndexResources:  true,
 }
 projectDetails := accessServices.Project{
-	DisplayName:       "testProject",
-	Description:       "My Test Project",
-	AdminPrivileges:   &adminPriviligies,
-	SoftLimit:         &falseValue,
-	StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
-	ProjectKey:        "tstprj",
+DisplayName:       "testProject",
+Description:       "My Test Project",
+AdminPrivileges:   &adminPriviligies,
+SoftLimit:         &falseValue,
+StorageQuotaBytes: 1073741825, // needs to be higher than 1073741824
+ProjectKey:        "tstprj",
 }
 projectParams = accessServices.NewProjectParams()
 projectParams.ProjectDetails = projectDetails
@@ -1460,8 +1460,8 @@ err = accessManager.GetProjectsGroup("tstprj", "tstgroup")
 
 ```go
 projectGroup := accessServices.ProjectGroup{
-  Name:  "tstgroup",
-  Roles: []string{"Contributor","Release Manager"},
+Name:  "tstgroup",
+Roles: []string{"Contributor", "Release Manager"},
 }
 err = accessManager.UpdateGroupInProject("tstprj", "tstgroup", projectGroup)
 ```
@@ -1495,15 +1495,15 @@ distDetails.SetClientCertKeyPath("path/to/.key")
 
 ```go
 serviceConfig, err := config.NewConfigBuilder().
-    SetServiceDetails(rtDetails).
-    SetCertificatesPath(certPath).
-    SetThreads(threads).
-    SetDryRun(false).
-    // Add [Context](https://golang.org/pkg/context/)
-    SetContext(ctx).
-    // Optionally overwrite the default HTTP retries, which is set to 3.
-    SetHttpRetries(8).
-    Build()
+SetServiceDetails(rtDetails).
+SetCertificatesPath(certPath).
+SetThreads(threads).
+SetDryRun(false).
+// Add [Context](https://golang.org/pkg/context/)
+SetContext(ctx).
+// Optionally overwrite the default HTTP retries, which is set to 3.
+SetHttpRetries(8).
+Build()
 ```
 
 #### Creating New Distribution Service Manager
@@ -1647,29 +1647,30 @@ Here's an example for how `content.ContentReader` should be used:
 ````go
 reader, err := servicesManager.SearchFiles(searchParams)
 if err != nil {
-    return err
+return err
 }
 
 // Remove the data file used by the reader.
-defer func() {
-    if reader != nil {
-        err = reader.Close()
-    }
+defer func () {
+if reader != nil {
+err = reader.Close()
+}
 }()
 
 // Iterate over the results.
 for currentResult := new(utils.ResultItem); reader.NextRecord(currentResult) == nil; currentResult = new(utils.ResultItem)  {
-    fmt.Printf("Found artifact: %s of type: %s\n", currentResult.Name, currentResult.Type)
+fmt.Printf("Found artifact: %s of type: %s\n", currentResult.Name, currentResult.Type)
 }
 if err := resultReader.GetError(); err != nil {
-    return err
+return err
 }
 
 // Resets the reader pointer back to the beginning of the output. Make sure not to call this method after the reader had been closed using ```reader.Close()```
 reader.Reset()
 ````
 
-- `reader.NextRecord(currentResult)` reads the next record from the reader into `currentResult` of type `utils.ResultItem`.
+- `reader.NextRecord(currentResult)` reads the next record from the reader into `currentResult` of
+  type `utils.ResultItem`.
 
 - `reader.Close()` removes the file used by the reader after it is used (preferably using `defer`).
 
@@ -1700,11 +1701,11 @@ xrayDetails.SetClientCertKeyPath("path/to/.key")
 
 ```go
 serviceConfig, err := config.NewConfigBuilder().
-    SetServiceDetails(xrayDetails).
-    SetCertificatesPath(certPath).
-    // Optionally overwrite the default HTTP retries, which is set to 3.
-    SetHttpRetries(8).
-    Build()
+SetServiceDetails(xrayDetails).
+SetCertificatesPath(certPath).
+// Optionally overwrite the default HTTP retries, which is set to 3.
+SetHttpRetries(8).
+Build()
 ```
 
 #### Creating New Xray Service Manager
@@ -1743,14 +1744,14 @@ params.Builds.Type = utils.WatchBuildAll
 params.Builds.All.Bin_Mgr_ID = "default"
 
 params.Policies = []utils.AssignedPolicy{
-  {
-    Name: policy1Name,
-    Type: "security",
-  },
-  {
-    Name: policy2Name,
-    Type: "security",
-  },
+{
+Name: policy1Name,
+Type: "security",
+},
+{
+Name: policy2Name,
+Type: "security",
+},
 }
 
 err := xrayManager.CreateWatch(*params)
@@ -1786,28 +1787,28 @@ params.Type = utils.Security
 params.Description = "Security policy with 2 rules"
 params.Rules = []utils.PolicyRule{
 params.Rules = []utils.PolicyRule{
-	{
-		Name:     "min-severity-rule",
-		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
-		Priority: 1,
-	},
-	{
-		Name:     "cvss-range-rule",
-		Criteria: *utils.CreateCvssRangePolicyCriteria(5.7, 8.9),
-		Priority: 2,
-		Actions: &utils.PolicyAction{
-			Webhooks: []string{"sec_webhook"},
-			BlockDownload: utils.PolicyBlockDownload{
-				Active:    &trueValue,
-				Unscanned: &falseValue,
-			},
-			BlockReleaseBundleDistribution: &falseValue,
-			FailBuild:                      &trueValue,
-			NotifyDeployer:                 &falseValue,
-			NotifyWatchRecipients:          &trueValue,
-			CustomSeverity:                 utils.Medium,
-		},
-	},
+{
+Name:     "min-severity-rule",
+Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
+Priority: 1,
+},
+{
+Name:     "cvss-range-rule",
+Criteria: *utils.CreateCvssRangePolicyCriteria(5.7, 8.9),
+Priority: 2,
+Actions: &utils.PolicyAction{
+Webhooks: []string{"sec_webhook"},
+BlockDownload: utils.PolicyBlockDownload{
+Active:    &trueValue,
+Unscanned: &falseValue,
+},
+BlockReleaseBundleDistribution: &falseValue,
+FailBuild:                      &trueValue,
+NotifyDeployer:                 &falseValue,
+NotifyWatchRecipients:          &trueValue,
+CustomSeverity:                 utils.Medium,
+},
+},
 }
 err := xrayManager.CreatePolicy(params)
 ```
@@ -1820,16 +1821,16 @@ params.Name = "example-licence-policy"
 params.Type = utils.License
 params.Description = "License policy with 2 rules"
 params.Rules = []utils.PolicyRule{
-	{
-		Name:     "allowed-licenses",
-		Criteria: *utils.CreateLicensePolicyCriteria(true, true, false, "MIT", "Apache-2.0"),
-		Priority: 1,
-	},
-	{
-		Name:     "baned-licenses",
-		Criteria: *utils.CreateLicensePolicyCriteria(false, true, false, "GPL"),
-		Priority: 2,
-	},
+{
+Name:     "allowed-licenses",
+Criteria: *utils.CreateLicensePolicyCriteria(true, true, false, "MIT", "Apache-2.0"),
+Priority: 1,
+},
+{
+Name:     "baned-licenses",
+Criteria: *utils.CreateLicensePolicyCriteria(false, true, false, "GPL"),
+Priority: 2,
+},
 }
 err := xrayManager.CreatePolicy(params)
 ```
@@ -1868,8 +1869,8 @@ err := xrayManager.AddBuildsToIndexing(buildsToIndex)
 graphScanParams := &XrayGraphScanParams{}
 // Dependency tree. Each node must have a component identifier, see https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-ComponentIdentifiers.
 graphScanParams.Graph = &GraphNode{
-  Id: "gav://org.jfrog.buildinfo:build-info-extractor-gradle:4.24.5",
-  Nodes: []*GraphNode{{Id: "gav://junit:junit:4.13.2"}, {Id: "gav://commons-lang:commons-lang:2.6"}}}
+Id: "gav://org.jfrog.buildinfo:build-info-extractor-gradle:4.24.5",
+Nodes: []*GraphNode{{Id: "gav://junit:junit:4.13.2"}, {Id: "gav://commons-lang:commons-lang:2.6"}}}
 scanId, err := xrayManager.ScanGraph(graphScanParams)
 ```
 
@@ -1884,19 +1885,19 @@ scanResults, err := xrayManager.GetScanGraphResults(scanId)
 
 ```go
 reportRequest := services.ReportRequestParams{
-  Name: "example-report",
-  Filters: services.Filter{
-    HasRemediation: &trueValue,
-    Severity:       []string{ "High" },
-  },
-  Resources: services.Resource{
-    IncludePathPatterns: []string{ "/example-sub-dir/**" },
-    Repositories: []services.Repository{
-      {
-        Name: "example-repository",
-      },
-    },
-  },
+Name: "example-report",
+Filters: services.Filter{
+HasRemediation: &trueValue,
+Severity:       []string{ "High" },
+},
+Resources: services.Resource{
+IncludePathPatterns: []string{ "/example-sub-dir/**" },
+Repositories: []services.Repository{
+{
+Name: "example-repository",
+},
+},
+},
 }
 
 // The reportRequestResponse will contain the report ID to use in subsequent requests
@@ -1915,11 +1916,11 @@ reportDetails, err := xrayManager.ReportDetails(reportId)
 ```go
 // The ReportId value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
 reportContentRequest := services.ReportContentRequestParams{
-  ReportId:  "example-report-id",
-  Direction: "asc",
-  PageNum:   0,
-  NumRows:   0,
-  OrderBy:   "severity",
+ReportId:  "example-report-id",
+Direction: "asc",
+PageNum:   0,
+NumRows:   0,
+OrderBy:   "severity",
 }
 reportContent, err := xrayManager.ReportContent(reportContentRequest)
 ```
@@ -1935,8 +1936,8 @@ err := xrayManager.DeleteReport(reportId)
 
 ```go
 artifactSummaryRequest := services.ArtifactSummaryParams{
-  Checksums: []string{"a96370b18b3d7e70b7b34d49dcb621a805c15cf71217ee8c77be5a98cc793fd3"},
-  Paths:     []string{"default/example-repository/example-folder/example-artifact"},
+Checksums: []string{"a96370b18b3d7e70b7b34d49dcb621a805c15cf71217ee8c77be5a98cc793fd3"},
+Paths:     []string{"default/example-repository/example-folder/example-artifact"},
 }
 artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
 ```
@@ -1960,11 +1961,11 @@ pipelinesDetails.SetClientCertKeyPath("path/to/.key")
 
 ```go
 serviceConfig, err := config.NewConfigBuilder().
-    SetServiceDetails(pipelinesDetails).
-    SetCertificatesPath(pipelinesDetails.GetClientCertPath()).
-    // Optionally overwrite the default HTTP retries, which is set to 3.
-    SetHttpRetries(8).
-    Build()
+SetServiceDetails(pipelinesDetails).
+SetCertificatesPath(pipelinesDetails.GetClientCertPath()).
+// Optionally overwrite the default HTTP retries, which is set to 3.
+SetHttpRetries(8).
+Build()
 ```
 
 #### Creating New Pipelines Service Manager
