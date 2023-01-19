@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const ArtifactoryLocalFileCacheSuffix = " (local file cache)"
 const MavenCentralUrl = "https://repo.maven.apache.org"
 
 func TestArtifactoryRemoteRepository(t *testing.T) {
@@ -137,8 +136,6 @@ func remoteAlpineTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	arp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, arp)
 
 	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, true)
@@ -163,8 +160,6 @@ func remoteBowerTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	brp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, brp)
 
 	setRemoteRepositoryBaseParams(&brp.RemoteRepositoryBaseParams, true)
@@ -190,8 +185,6 @@ func remoteCargoTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	crp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -215,8 +208,6 @@ func remoteChefTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	crp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -241,8 +232,6 @@ func remoteCocoapodsTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	crp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -268,8 +257,6 @@ func remoteComposerTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	crp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -293,8 +280,6 @@ func remoteConanTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	crp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -317,8 +302,6 @@ func remoteCondaTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	crp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -341,8 +324,6 @@ func remoteCranTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	crp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
@@ -366,8 +347,6 @@ func remoteDebianTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	drp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, drp)
 
 	setRemoteRepositoryBaseParams(&drp.RemoteRepositoryBaseParams, true)
@@ -395,8 +374,6 @@ func remoteDockerTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	drp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, drp)
 
 	setRemoteRepositoryBaseParams(&drp.RemoteRepositoryBaseParams, true)
@@ -425,8 +402,6 @@ func remoteGemsTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	grp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -451,8 +426,6 @@ func remoteGenericTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	grp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -476,8 +449,6 @@ func remoteGitlfsTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	grp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -501,8 +472,6 @@ func remoteGoTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	grp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -527,8 +496,6 @@ func remoteGradleTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	grp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
@@ -555,8 +522,6 @@ func remoteHelmTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	hrp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, hrp)
 
 	setRemoteRepositoryBaseParams(&hrp.RemoteRepositoryBaseParams, true)
@@ -583,8 +548,6 @@ func remoteIvyTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	irp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, irp)
 
 	setRemoteRepositoryBaseParams(&irp.RemoteRepositoryBaseParams, true)
@@ -609,8 +572,6 @@ func remoteMavenTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	mrp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, mrp)
 
 	setRemoteRepositoryBaseParams(&mrp.RemoteRepositoryBaseParams, true)
@@ -634,8 +595,6 @@ func remoteNpmTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	nrp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, nrp)
 
 	setRemoteRepositoryBaseParams(&nrp.RemoteRepositoryBaseParams, true)
@@ -662,8 +621,6 @@ func remoteNugetTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	nrp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, nrp)
 
 	setRemoteRepositoryBaseParams(&nrp.RemoteRepositoryBaseParams, true)
@@ -690,8 +647,6 @@ func remoteOpkgTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	orp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, orp)
 
 	setRemoteRepositoryBaseParams(&orp.RemoteRepositoryBaseParams, true)
@@ -715,8 +670,6 @@ func remoteP2Test(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	prp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, prp)
 
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, true)
@@ -740,8 +693,6 @@ func remotePuppetTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	prp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, prp)
 
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, true)
@@ -766,8 +717,6 @@ func remotePypiTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	prp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, prp)
 
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, true)
@@ -791,8 +740,6 @@ func remoteRpmTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	rrp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, rrp)
 
 	setRemoteRepositoryBaseParams(&rrp.RemoteRepositoryBaseParams, true)
@@ -817,8 +764,6 @@ func remoteSbtTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	srp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, srp)
 
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
@@ -842,8 +787,6 @@ func remoteSwiftTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	srp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, srp)
 
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
@@ -868,8 +811,6 @@ func remoteVcsTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	vrp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, vrp)
 
 	setRemoteRepositoryBaseParams(&vrp.RemoteRepositoryBaseParams, true)
@@ -897,8 +838,6 @@ func remoteYumTest(t *testing.T) {
 	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	yrp.PackageType = "rpm"
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	yrp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKey, yrp)
 
 	setRemoteRepositoryBaseParams(&yrp.RemoteRepositoryBaseParams, true)
@@ -958,8 +897,6 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 		return
 	}
 	defer deleteRepo(t, repoKeyRemote)
-	// The local file cache suffix is added by Artifactory, so we add it here to pass the validation
-	grp.Description += ArtifactoryLocalFileCacheSuffix
 	validateRepoConfig(t, repoKeyRemote, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)

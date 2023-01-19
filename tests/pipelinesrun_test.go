@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -28,7 +29,9 @@ func testTriggerSync(t *testing.T) {
 		return
 	}
 	// Create integration with provided token.
-	integrationName := strings.Join([]string{"github", "integration_test", getCustomRunId('_')}, "_")
+	unixTime := time.Now().Unix()
+	timeString := strconv.Itoa(int(unixTime))
+	integrationName := strings.Join([]string{"github", "integration_test", timeString}, "_")
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
 	assert.NoError(t, err)
 	defer deleteIntegrationAndAssert(t, integrationId)
@@ -47,7 +50,9 @@ func testGetSyncStatus(t *testing.T) {
 		return
 	}
 	// Create integration with provided token.
-	integrationName := strings.Join([]string{"github", "integration_test", getCustomRunId('_')}, "_")
+	unixTime := time.Now().Unix()
+	timeString := strconv.Itoa(int(unixTime))
+	integrationName := strings.Join([]string{"github", "integration_test", timeString}, "_")
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
 	assert.NoError(t, err)
 	defer deleteIntegrationAndAssert(t, integrationId)
@@ -68,10 +73,11 @@ func testGetRunStatus(t *testing.T) {
 		return
 	}
 	// Create integration with provided token.
-	integrationName := strings.Join([]string{"github", "integration_test", getCustomRunId('_')}, "_")
+	unixTime := time.Now().Unix()
+	timeString := strconv.Itoa(int(unixTime))
+	integrationName := strings.Join([]string{"github", "integration_test", timeString}, "_")
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
 	assert.NoError(t, err)
-
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
