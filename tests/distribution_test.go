@@ -296,10 +296,8 @@ func createSignDistributeDelete(t *testing.T) {
 
 	// Assert release bundle in "completed" status
 	response, err = testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
-	assert.NoError(t, err)
-	if assert.NotNil(t, *response) {
+	if assert.NoError(t, err) && assert.NotEmpty(t, *response) {
 		assert.Equal(t, services.Completed, (*response)[0].Status)
-
 	}
 }
 
@@ -341,8 +339,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 		Version: bundleVersion,
 	}
 	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
-	assert.NoError(t, err)
-	if assert.NotNil(t, *response) {
+	if assert.NoError(t, err) && assert.NotEmpty(t, *response) {
 		assert.Equal(t, services.Completed, (*response)[0].Status)
 	}
 }
