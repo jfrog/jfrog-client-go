@@ -95,9 +95,11 @@ func createDelete(t *testing.T) {
 	createBundleParams.SignImmediately = true
 	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	if !assert.NoError(t, err) {
+		return
+	}
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
-	assert.NoError(t, err)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	if assert.NotNil(t, distributionResponse) {
 		assertReleaseBundleSigned(t, distributionResponse.State)
@@ -116,8 +118,7 @@ func createUpdate(t *testing.T) {
 
 	// Test DryRun first
 	err := createDryRun(createBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	// Verify was not created.
@@ -125,8 +126,7 @@ func createUpdate(t *testing.T) {
 
 	// Create unsigned release bundle
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Nil(t, summary)
@@ -141,16 +141,14 @@ func createUpdate(t *testing.T) {
 	updateBundleParams.SignImmediately = false
 	// Test DryRun first
 	err = updateDryRun(updateBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	// Verify the release bundle was not updated.
 	assertCreatedLocalBundle(t, bundleName, createBundleParams)
 
 	summary, err = testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Nil(t, summary)
@@ -278,8 +276,7 @@ func createSignDistributeDelete(t *testing.T) {
 
 	// Test DryRun first.
 	err = distributeDryRun(distributeBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	// Assert release bundle not in distribution yet.
@@ -296,7 +293,10 @@ func createSignDistributeDelete(t *testing.T) {
 	// Assert release bundle in "completed" status
 	response, err = testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
 	assert.NoError(t, err)
-	assert.Equal(t, services.Completed, (*response)[0].Status)
+	if assert.NotNil(t, *response) {
+		assert.Equal(t, services.Completed, (*response)[0].Status)
+
+	}
 }
 
 func createSignSyncDistributeDelete(t *testing.T) {
@@ -336,7 +336,9 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	}
 	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
 	assert.NoError(t, err)
-	assert.Equal(t, services.Completed, (*response)[0].Status)
+	if assert.NotNil(t, *response) {
+		assert.Equal(t, services.Completed, (*response)[0].Status)
+	}
 }
 
 func createDistributeMapping(t *testing.T) {
