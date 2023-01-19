@@ -847,18 +847,22 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 	return func() (shouldRetry bool, err error) {
 		config, err := getRepoConfig(repoKey)
 		if err != nil || config == nil {
-			return true, errors.New("failed reading repository config for " + repoKey)
+			err = errors.New("failed reading repository config for " + repoKey)
+			return
 		}
 		var confMap, expectedConfigMap map[string]interface{}
 		if err = json.Unmarshal(config, &confMap); err != nil {
-			return false, errors.New("failed unmarshalling repository config for " + repoKey)
+			err = errors.New("failed unmarshalling repository config for " + repoKey)
+			return
 		}
 		tmpJson, err := json.Marshal(expectedConfig)
 		if err != nil {
-			return false, errors.New("failed marshalling expected config for " + repoKey)
+			err = errors.New("failed marshalling expected config for " + repoKey)
+			return
 		}
 		if err = json.Unmarshal(tmpJson, &expectedConfigMap); err != nil {
-			return false, errors.New("failed unmarshalling expected config for " + repoKey)
+			err = errors.New("failed unmarshalling expected config for " + repoKey)
+			return
 		}
 		for key, expectedValue := range expectedConfigMap {
 			// The password field may be encrypted and won't match the value set, need to handle this during validation
@@ -867,20 +871,22 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 			}
 			// Download Redirect is only supported on Enterprise Plus. Expect false otherwise.
 			if key == "downloadRedirect" {
-				eplus, err := isEnterprisePlus()
+				var eplus bool
+				eplus, err = isEnterprisePlus()
 				if err != nil {
-					return false, err
+					return
 				}
 				if !eplus {
 					expectedValue = false
 				}
 			}
 			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
-				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual: %s", repoKey, key, expectedValue, confMap[key])
-				return true, errors.New(errMsg)
+				err = fmt.Errorf("config validation for '%s' failed. key: '%s'\nexpected: '%s'\nactual: '%s'", repoKey, key, expectedValue, confMap[key])
+				shouldRetry = true
+				return
 			}
 		}
-		return false, nil
+		return
 	}
 }
 
