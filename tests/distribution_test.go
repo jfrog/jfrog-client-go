@@ -207,8 +207,10 @@ func createWithProps(t *testing.T) {
 		TargetProps: targetProps,
 	}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	if !assert.NoError(t, err) {
+		return
+	}
 	assert.Nil(t, summary)
-	assert.NoError(t, err)
 
 	// Check results
 	distributionResponse := getLocalBundle(t, bundleName, true)
@@ -250,7 +252,9 @@ func createSignDistributeDelete(t *testing.T) {
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
 	assert.Nil(t, summary)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
@@ -307,7 +311,9 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
 	assert.Nil(t, summary)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
