@@ -58,12 +58,12 @@ func setFederatedRepositoryBaseParams(params *services.FederatedRepositoryBasePa
 	if !isUpdate {
 		params.ArchiveBrowsingEnabled = &trueValue
 		params.Members = []services.FederatedRepositoryMember{
-			{Url: memberUrl, Enabled: &trueValue},
+			{Url: memberUrl, Enabled: &falseValue},
 		}
 	} else {
 		params.ArchiveBrowsingEnabled = &falseValue
 		params.Members = []services.FederatedRepositoryMember{
-			{Url: memberUrl, Enabled: &falseValue},
+			{Url: memberUrl, Enabled: &trueValue},
 		}
 	}
 }
