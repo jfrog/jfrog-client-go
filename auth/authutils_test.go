@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 /* #nosec G101 -- Dummy tokens for tests. */
@@ -25,10 +26,10 @@ func TestExtractUsernameFromAccessToken(t *testing.T) {
 		{"tempuser", token4, false},
 	}
 
-	for index, test := range testCases {
-		username := ExtractUsernameFromAccessToken(test.inputToken)
-		assert.Equal(t, username == "", test.shouldError)
-		assert.Equal(t, username, testCases[index].expectedUsername)
+	for _, testCase := range testCases {
+		username := ExtractUsernameFromAccessToken(testCase.inputToken)
+		assert.Equal(t, testCase.shouldError, username == "")
+		assert.Equal(t, testCase.expectedUsername, username)
 	}
 }
 
@@ -51,6 +52,6 @@ func TestExtractSubjectFromAccessToken(t *testing.T) {
 		} else {
 			assert.NoError(t, err)
 		}
-		assert.Equal(t, subject, testCase.expectedSubject)
+		assert.Equal(t, testCase.expectedSubject, subject)
 	}
 }
