@@ -88,16 +88,18 @@ func initRemoteDistributionTest(t *testing.T, bundleName string) string {
 
 func createDelete(t *testing.T) {
 	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+getRunId())
-	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create signed release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SignImmediately = true
 	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer deleteLocalBundle(t, bundleName, true)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
-	assert.NoError(t, err)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	if assert.NotNil(t, distributionResponse) {
 		assertReleaseBundleSigned(t, distributionResponse.State)
@@ -106,7 +108,6 @@ func createDelete(t *testing.T) {
 
 func createUpdate(t *testing.T) {
 	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+getRunId())
-	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create release bundle params
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
@@ -116,8 +117,7 @@ func createUpdate(t *testing.T) {
 
 	// Test DryRun first
 	err := createDryRun(createBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	// Verify was not created.
@@ -125,10 +125,10 @@ func createUpdate(t *testing.T) {
 
 	// Create unsigned release bundle
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
+	defer deleteLocalBundle(t, bundleName, true)
 	assert.Nil(t, summary)
 	distributionResponse := assertCreatedLocalBundle(t, bundleName, createBundleParams)
 	spec := distributionResponse.BundleSpec
@@ -141,16 +141,14 @@ func createUpdate(t *testing.T) {
 	updateBundleParams.SignImmediately = false
 	// Test DryRun first
 	err = updateDryRun(updateBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	// Verify the release bundle was not updated.
 	assertCreatedLocalBundle(t, bundleName, createBundleParams)
 
 	summary, err = testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Nil(t, summary)
@@ -198,7 +196,6 @@ func setServicesToDryRunFalse() {
 
 func createWithProps(t *testing.T) {
 	bundleName := initLocalDistributionTest(t, "client-test-bundle-"+getRunId())
-	defer deleteLocalBundle(t, bundleName, true)
 
 	// Create release bundle with properties
 	targetProps, err := utils.ParseProperties("key1=value1;key2=value2,value3")
@@ -209,8 +206,11 @@ func createWithProps(t *testing.T) {
 		TargetProps: targetProps,
 	}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer deleteLocalBundle(t, bundleName, true)
 	assert.Nil(t, summary)
-	assert.NoError(t, err)
 
 	// Check results
 	distributionResponse := getLocalBundle(t, bundleName, true)
@@ -246,13 +246,15 @@ func createWithProps(t *testing.T) {
 
 func createSignDistributeDelete(t *testing.T) {
 	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
-	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 	assert.Nil(t, summary)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
@@ -260,7 +262,9 @@ func createSignDistributeDelete(t *testing.T) {
 	// Sign release bundle
 	signBundleParams := services.NewSignBundleParams(bundleName, bundleVersion)
 	summary, err = testsBundleSignService.SignReleaseBundle(signBundleParams)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 	distributionResponse = getLocalBundle(t, bundleName, true)
@@ -278,8 +282,7 @@ func createSignDistributeDelete(t *testing.T) {
 
 	// Test DryRun first.
 	err = distributeDryRun(distributeBundleParams)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	// Assert release bundle not in distribution yet.
@@ -295,19 +298,22 @@ func createSignDistributeDelete(t *testing.T) {
 
 	// Assert release bundle in "completed" status
 	response, err = testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
-	assert.NoError(t, err)
-	assert.Equal(t, services.Completed, (*response)[0].Status)
+	if assert.NoError(t, err) && assert.NotEmpty(t, *response) {
+		assert.Equal(t, services.Completed, (*response)[0].Status)
+	}
 }
 
 func createSignSyncDistributeDelete(t *testing.T) {
 	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
-	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create unsigned release bundle
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in"}}
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 	assert.Nil(t, summary)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
@@ -315,7 +321,9 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	// Sign release bundle
 	signBundleParams := services.NewSignBundleParams(bundleName, bundleVersion)
 	summary, err = testsBundleSignService.SignReleaseBundle(signBundleParams)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 	distributionResponse = getLocalBundle(t, bundleName, true)
@@ -335,20 +343,23 @@ func createSignSyncDistributeDelete(t *testing.T) {
 		Version: bundleVersion,
 	}
 	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
-	assert.NoError(t, err)
-	assert.Equal(t, services.Completed, (*response)[0].Status)
+	if assert.NoError(t, err) && assert.NotEmpty(t, *response) {
+		assert.Equal(t, services.Completed, (*response)[0].Status)
+	}
 }
 
 func createDistributeMapping(t *testing.T) {
 	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
-	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in", Target: getRtTargetRepo() + "b.out"}}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 
@@ -374,14 +385,16 @@ func createDistributeMapping(t *testing.T) {
 
 func createDistributeMappingPlaceholder(t *testing.T) {
 	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
-	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
 	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: "(" + getRtTargetRepo() + ")" + "(*).in", Target: "{1}{2}.out"}}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer deleteRemoteAndLocalBundle(t, bundleName, true)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 

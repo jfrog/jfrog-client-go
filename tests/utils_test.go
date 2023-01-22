@@ -16,7 +16,7 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	clientTestUtils "github.com/jfrog/jfrog-client-go/utils/tests"
+	testUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
@@ -149,10 +149,10 @@ func init() {
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	AccessUrl = flag.String("access.url", "", "Access url")
+	AccessUrl = flag.String("access.url", "http://localhost:8081/access", "Access url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
-	AccessToken = flag.String("access.token", "", "Access token")
+	AccessToken = flag.String("access.token", testUtils.GetLocalArtifactoryTokenIfNeeded(*RtUrl), "Access token")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
@@ -580,7 +580,7 @@ func uploadDummyFile(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer clientTestUtils.RemoveAllAndAssert(t, workingDir)
+	defer testUtils.RemoveAllAndAssert(t, workingDir)
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
 	targetProps, err := utils.ParseProperties("dummy=yes")
@@ -847,18 +847,22 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 	return func() (shouldRetry bool, err error) {
 		config, err := getRepoConfig(repoKey)
 		if err != nil || config == nil {
-			return true, errors.New("failed reading repository config for " + repoKey)
+			err = errors.New("failed reading repository config for " + repoKey)
+			return
 		}
 		var confMap, expectedConfigMap map[string]interface{}
 		if err = json.Unmarshal(config, &confMap); err != nil {
-			return false, errors.New("failed unmarshalling repository config for " + repoKey)
+			err = errors.New("failed unmarshalling repository config for " + repoKey)
+			return
 		}
 		tmpJson, err := json.Marshal(expectedConfig)
 		if err != nil {
-			return false, errors.New("failed marshalling expected config for " + repoKey)
+			err = errors.New("failed marshalling expected config for " + repoKey)
+			return
 		}
 		if err = json.Unmarshal(tmpJson, &expectedConfigMap); err != nil {
-			return false, errors.New("failed unmarshalling expected config for " + repoKey)
+			err = errors.New("failed unmarshalling expected config for " + repoKey)
+			return
 		}
 		for key, expectedValue := range expectedConfigMap {
 			// The password field may be encrypted and won't match the value set, need to handle this during validation
@@ -867,20 +871,22 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 			}
 			// Download Redirect is only supported on Enterprise Plus. Expect false otherwise.
 			if key == "downloadRedirect" {
-				eplus, err := isEnterprisePlus()
+				var eplus bool
+				eplus, err = isEnterprisePlus()
 				if err != nil {
-					return false, err
+					return
 				}
 				if !eplus {
 					expectedValue = false
 				}
 			}
 			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
-				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual: %s", repoKey, key, expectedValue, confMap[key])
-				return true, errors.New(errMsg)
+				err = fmt.Errorf("config validation for '%s' failed. key: '%s'\nexpected: '%s'\nactual: '%s'", repoKey, key, expectedValue, confMap[key])
+				shouldRetry = true
+				return
 			}
 		}
-		return false, nil
+		return
 	}
 }
 
