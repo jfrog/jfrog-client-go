@@ -747,7 +747,7 @@ func (jc *HttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetails http
 }
 
 func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClientDetails) {
-	//Set authentication
+	// Set authentication
 	if httpClientsDetails.ApiKey != "" {
 		if httpClientsDetails.User != "" {
 			req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.ApiKey)
@@ -757,11 +757,7 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 		return
 	}
 	if httpClientsDetails.AccessToken != "" {
-		if httpClientsDetails.User != "" {
-			req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.AccessToken)
-		} else {
-			req.Header.Set("Authorization", "Bearer "+httpClientsDetails.AccessToken)
-		}
+		req.Header.Set("Authorization", "Bearer "+httpClientsDetails.AccessToken)
 		return
 	}
 	if httpClientsDetails.Password != "" {

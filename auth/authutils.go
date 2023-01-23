@@ -3,10 +3,11 @@ package auth
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"strings"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type CreateTokenResponseData struct {
@@ -127,6 +128,15 @@ func GetTokenMinutesLeft(token string) (int64, error) {
 		return 0, nil
 	}
 	return left / 60, nil
+}
+
+// Extracts the subject from an access token
+func ExtractSubjectFromAccessToken(token string) (string, error) {
+	tokenPayload, err := extractPayloadFromAccessToken(token)
+	if err != nil {
+		return "", err
+	}
+	return tokenPayload.Subject, nil
 }
 
 type TokenPayload struct {

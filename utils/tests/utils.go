@@ -115,6 +115,20 @@ func InitVcsSubmoduleTestDir(t *testing.T, srcPath, tmpDir string) (submodulePat
 	return submodulePath
 }
 
+func InitVcsWorktreeTestDir(t *testing.T, srcPath, tmpDir string) (worktreePath string) {
+	var err error
+	assert.NoError(t, fileutils.CopyDir(srcPath, tmpDir, true, nil))
+	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
+		assert.NoError(t, err)
+		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, "bare.git")))
+	}
+	worktreeDst := filepath.Join(tmpDir, "worktree_repo")
+	worktreePath, err = filepath.Abs(worktreeDst)
+	assert.NoError(t, fileutils.MoveFile(filepath.Join(worktreeDst, "gitWorktreeData"), filepath.Join(worktreeDst, ".git")))
+	assert.NoError(t, err)
+	return worktreePath
+}
+
 func ChangeDirAndAssert(t *testing.T, dirPath string) {
 	assert.NoError(t, os.Chdir(dirPath), "Couldn't change dir to "+dirPath)
 }
@@ -156,4 +170,11 @@ func SetEnvWithCallbackAndAssert(t *testing.T, key, value string) func() {
 
 func UnSetEnvAndAssert(t *testing.T, key string) {
 	assert.NoError(t, os.Unsetenv(key), "Failed to unset env: "+key)
+}
+
+func GetLocalArtifactoryTokenIfNeeded(url string) (adminToken string) {
+	if strings.Contains(url, "localhost:8081") {
+		adminToken = os.Getenv("JFROG_TESTS_LOCAL_ACCESS_TOKEN")
+	}
+	return
 }

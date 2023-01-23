@@ -30,8 +30,7 @@ func TestPipelinesIntegrations(t *testing.T) {
 func testCreateGithubIntegrationAndGetByName(t *testing.T) {
 	name := getUniqueIntegrationName(services.GithubName)
 	id, err := testsPipelinesIntegrationsService.CreateGithubIntegration(name, testsDummyToken)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteIntegrationAndAssert(t, id)
@@ -39,8 +38,7 @@ func testCreateGithubIntegrationAndGetByName(t *testing.T) {
 
 	// Test get by name.
 	integration, err := testsPipelinesIntegrationsService.GetIntegrationByName(name)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, name, integration.Name)
@@ -50,8 +48,7 @@ func testCreateGithubIntegrationAndGetByName(t *testing.T) {
 func testCreateGithubEnterpriseIntegration(t *testing.T) {
 	name := getUniqueIntegrationName(services.GithubEnterpriseName)
 	id, err := testsPipelinesIntegrationsService.CreateGithubEnterpriseIntegration(name, testsDummyVcsUrl, testsDummyToken)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteIntegrationAndAssert(t, id)
@@ -61,8 +58,7 @@ func testCreateGithubEnterpriseIntegration(t *testing.T) {
 func testCreateBitbucketIntegration(t *testing.T) {
 	name := getUniqueIntegrationName(services.BitbucketName)
 	id, err := testsPipelinesIntegrationsService.CreateBitbucketIntegration(name, testsDummyUser, testsDummyToken)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteIntegrationAndAssert(t, id)
@@ -72,8 +68,7 @@ func testCreateBitbucketIntegration(t *testing.T) {
 func testCreateBitbucketServerIntegration(t *testing.T) {
 	name := getUniqueIntegrationName(services.BitbucketServerName)
 	id, err := testsPipelinesIntegrationsService.CreateBitbucketServerIntegration(name, testsDummyVcsUrl, testsDummyUser, testsDummyToken)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteIntegrationAndAssert(t, id)
@@ -83,8 +78,7 @@ func testCreateBitbucketServerIntegration(t *testing.T) {
 func testCreateGitlabIntegration(t *testing.T) {
 	name := getUniqueIntegrationName(services.GitlabName)
 	id, err := testsPipelinesIntegrationsService.CreateGitlabIntegration(name, testsDummyVcsUrl, testsDummyToken)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteIntegrationAndAssert(t, id)
@@ -94,8 +88,7 @@ func testCreateGitlabIntegration(t *testing.T) {
 func testCreateArtifactoryIntegration(t *testing.T) {
 	name := getUniqueIntegrationName(services.ArtifactoryName)
 	id, err := testsPipelinesIntegrationsService.CreateArtifactoryIntegration(name, testsDummyRtUrl, testsDummyUser, testsDummyApiKey)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteIntegrationAndAssert(t, id)
@@ -104,8 +97,7 @@ func testCreateArtifactoryIntegration(t *testing.T) {
 
 func getIntegrationAndAssert(t *testing.T, id int, name, integrationType string) {
 	integration, err := testsPipelinesIntegrationsService.GetIntegrationById(id)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.NotNil(t, integration)

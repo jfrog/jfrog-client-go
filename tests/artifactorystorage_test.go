@@ -24,8 +24,7 @@ func TestArtifactoryStorage(t *testing.T) {
 
 func fileInfoTest(t *testing.T) {
 	info, err := testsStorageService.FolderInfo(getRtTargetRepo() + "test/")
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, utils.AddTrailingSlashIfNeeded(*RtUrl)+path.Join(services.StorageRestApi, getRtTargetRepo()+"test/"), info.Uri)
@@ -49,8 +48,7 @@ func fileListTest(t *testing.T) {
 	params.IncludeRootPath = true
 
 	fileList, err := testsStorageService.FileList(getRtTargetRepo(), params)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, utils.AddTrailingSlashIfNeeded(*RtUrl)+path.Join(services.StorageRestApi, getRtTargetRepo()), fileList.Uri)
@@ -73,13 +71,11 @@ func fileListTest(t *testing.T) {
 
 func storageInfoTest(t *testing.T) {
 	err := testsStorageService.StorageInfoRefresh()
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	info, err := waitForRepoInStorageInfo(testsStorageService, getRtTargetRepoKey(), 5)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 

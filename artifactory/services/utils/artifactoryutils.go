@@ -139,13 +139,14 @@ func IsSubPath(paths []string, index int, separator string) bool {
 	return false
 }
 
-// Returns true if one or more paths have a 'prefix' as a prefix
-func IsContainsPrefix(paths []string, prefix string) bool {
+// Returns true if one or more paths has a value of 'prefix' as a prefix
+func HasPrefix(paths []string, prefix string) bool {
 	for i := 0; i < len(paths); i++ {
 		if strings.HasPrefix(paths[i], prefix) {
 			return true
 		}
 	}
+
 	return false
 }
 

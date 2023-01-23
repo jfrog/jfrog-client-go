@@ -114,6 +114,12 @@ func (sm *ArtifactoryServicesManagerImp) CreateFederatedRepositoryWithParams(par
 	return repositoryService.CreateFederated(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateRepositoryWithParams(params interface{}, repoName string) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.Create(params, repoName)
+}
+
 func (sm *ArtifactoryServicesManagerImp) UpdateLocalRepository() *services.LocalRepositoryService {
 	repositoryService := services.NewLocalRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()

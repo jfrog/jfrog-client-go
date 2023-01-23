@@ -183,7 +183,7 @@ func (ps *PropsService) GetItemProperties(relativePath string) (*utils.ItemPrope
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
-	log.Debug("Artifactory response: ", resp.Status)
+	log.Debug("Artifactory response:", resp.Status)
 
 	result := &utils.ItemProperties{}
 	err = json.Unmarshal(body, result)

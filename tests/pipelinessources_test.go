@@ -20,16 +20,14 @@ func testAddPipelineSource(t *testing.T) {
 	// Create integration with provided token.
 	integrationName := getUniqueIntegrationName(services.GithubName)
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
 	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer deleteSourceAndAssert(t, sourceId)
@@ -38,8 +36,7 @@ func testAddPipelineSource(t *testing.T) {
 
 func getSourceAndAssert(t *testing.T, sourceId, intId int) {
 	source, err := testsPipelinesSourcesService.GetSource(sourceId)
-	if err != nil {
-		assert.NoError(t, err)
+	if !assert.NoError(t, err) {
 		return
 	}
 	assert.NotNil(t, source)

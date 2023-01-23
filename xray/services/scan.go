@@ -183,8 +183,15 @@ type GraphNode struct {
 	Properties map[string]string `json:"properties,omitempty"`
 	// List of subcomponents.
 	Nodes []*GraphNode `json:"nodes,omitempty"`
+	// Other component IDs field is populated by the Xray indexer to get a better accuracy in '.deb' files.
+	OtherComponentIds []OtherComponentIds `json:"other_component_ids,omitempty"`
 	// Node parent (for internal use)
 	Parent *GraphNode `json:"-"`
+}
+
+type OtherComponentIds struct {
+	Id     string `json:"component_id,omitempty"`
+	Origin int    `json:"origin,omitempty"`
 }
 
 type RequestScanResponse struct {
