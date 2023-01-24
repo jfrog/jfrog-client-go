@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -29,8 +30,7 @@ func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch stri
 	// Fetch resource ID
 	res, resourceErr := GetPipelineResource(ss.client, ss.GetUrl(), repoName, ss.getHttpDetails())
 	if resourceErr != nil {
-		log.Error("Unable to fetch resourceID for: ", repoName)
-		return []PipelineSyncStatus{}, resourceErr
+		return []PipelineSyncStatus{}, fmt.Errorf("%w; Second error", resourceErr)
 	}
 	queryParams := make(map[string]string, 0)
 	if *res.IsMultiBranch {
@@ -38,7 +38,6 @@ func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch stri
 	}
 	queryParams["pipelineSourceIds"] = strconv.Itoa(res.ID)
 	uriVal, errURL := constructPipelinesURL(queryParams, ss.ServiceDetails.GetUrl(), pipelineSyncStatus)
-	log.Info(uriVal)
 	if errURL != nil {
 		return []PipelineSyncStatus{}, errURL
 	}
