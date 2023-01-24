@@ -37,7 +37,6 @@ func (ss *SyncService) SyncPipelineSource(branch string, repoName string) error 
 	// Fetch pipeline resource to retrieve resource ID
 	res, resourceErr := GetPipelineResource(ss.client, ss.GetUrl(), repoName, ss.GetHttpDetails())
 	if resourceErr != nil {
-		log.Error("Unable to fetch resourceID for: ", repoName)
 		return resourceErr
 	}
 	log.Info("Triggering pipeline source sync...")
