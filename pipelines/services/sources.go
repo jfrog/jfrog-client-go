@@ -99,7 +99,7 @@ type Source struct {
 	RepositoryFullName   string `json:"repositoryFullName,omitempty"`
 	Branch               string `json:"branch,omitempty"`
 	FileFilter           string `json:"fileFilter,omitempty"`
-	// For multibranch pipelines only:
+	// For multibranch pipelines only
 	IsMultiBranch        bool   `json:"isMultiBranch,omitempty"`
 	BranchExcludePattern string `json:"branchExcludePattern,omitempty"`
 	BranchIncludePattern string `json:"branchIncludePattern,omitempty"`
