@@ -3,8 +3,7 @@ package httpclient
 import (
 	"bytes"
 	"context"
-	"strings"
-
+	"github.com/jfrog/jfrog-client-go/auth"
 	//#nosec G505 -- sha1 is supported by Artifactory.
 	"crypto/sha1"
 	"encoding/hex"
@@ -24,11 +23,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-)
-
-const (
-	apiKeyPrefix        = "AKCp8"
-	apiKeyMinimalLength = 73
 )
 
 type HttpClient struct {
@@ -764,7 +758,7 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 		return
 	}
 	if httpClientsDetails.AccessToken != "" {
-		if isApiKey(httpClientsDetails.AccessToken) {
+		if auth.IsApiKey(httpClientsDetails.AccessToken) {
 			log.Warn("The received Access Token is an API key and will be used as a password in username/password authentication.\n" +
 				"To avoid this message in the future please use it a a password.")
 			req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.AccessToken)
@@ -776,10 +770,6 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 	if httpClientsDetails.Password != "" {
 		req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.Password)
 	}
-}
-
-func isApiKey(token string) bool {
-	return strings.HasPrefix(token, apiKeyPrefix) && len(token) >= apiKeyMinimalLength
 }
 
 func addUserAgentHeader(req *http.Request) {

@@ -10,6 +10,11 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
+const (
+	apiKeyPrefix        = "AKCp8"
+	apiKeyMinimalLength = 73
+)
+
 type CreateTokenResponseData struct {
 	CommonTokenParams
 }
@@ -23,6 +28,10 @@ type CommonTokenParams struct {
 	RefreshToken string `json:"refresh_token,omitempty"`
 	GrantType    string `json:"grant_type,omitempty"`
 	Audience     string `json:"audience,omitempty"`
+}
+
+func IsApiKey(key string) bool {
+	return strings.HasPrefix(key, apiKeyPrefix) && len(key) >= apiKeyMinimalLength
 }
 
 func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
@@ -78,10 +87,14 @@ func ExtractUsernameFromAccessToken(token string) (username string) {
 	var err error
 	defer func() {
 		if err != nil {
-			log.Warn(err.Error() + "\n" +
-				"The provided access token is not a valid JWT, probably a reference token.\n" +
-				"Some package managers only support basic authentication which requires also a username.\n" +
-				"If you plan to work with one of those package managers, please provide a username.")
+			if IsApiKey(token) {
+				log.Warn("The provided access token is an API key which should be used as password.")
+			} else {
+				log.Warn(err.Error() + ".\n" +
+					"The provided access token is not a valid JWT, probably a reference token.\n" +
+					"Some package managers only support basic authentication which requires also a username.\n" +
+					"If you plan to work with one of those package managers, please provide a username.")
+			}
 		}
 	}()
 	tokenPayload, err := extractPayloadFromAccessToken(token)
