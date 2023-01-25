@@ -84,17 +84,17 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 }
 
 func ExtractUsernameFromAccessToken(token string) (username string) {
+	if IsApiKey(token) {
+		log.Warn("The provided access token is an API key which should be used as password.")
+		return
+	}
 	var err error
 	defer func() {
 		if err != nil {
-			if IsApiKey(token) {
-				log.Warn("The provided access token is an API key which should be used as password.")
-			} else {
-				log.Warn(err.Error() + ".\n" +
-					"The provided access token is not a valid JWT, probably a reference token.\n" +
-					"Some package managers only support basic authentication which requires also a username.\n" +
-					"If you plan to work with one of those package managers, please provide a username.")
-			}
+			log.Warn(err.Error() + ".\n" +
+				"The provided access token is not a valid JWT, probably a reference token.\n" +
+				"Some package managers only support basic authentication which requires also a username.\n" +
+				"If you plan to work with one of those package managers, please provide a username.")
 		}
 	}()
 	tokenPayload, err := extractPayloadFromAccessToken(token)
