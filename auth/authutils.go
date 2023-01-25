@@ -3,16 +3,12 @@ package auth
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"strings"
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-)
-
-const (
-	apiKeyPrefix        = "AKCp8"
-	apiKeyMinimalLength = 73
 )
 
 type CreateTokenResponseData struct {
@@ -28,10 +24,6 @@ type CommonTokenParams struct {
 	RefreshToken string `json:"refresh_token,omitempty"`
 	GrantType    string `json:"grant_type,omitempty"`
 	Audience     string `json:"audience,omitempty"`
-}
-
-func IsApiKey(key string) bool {
-	return strings.HasPrefix(key, apiKeyPrefix) && len(key) >= apiKeyMinimalLength
 }
 
 func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
@@ -84,7 +76,7 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 }
 
 func ExtractUsernameFromAccessToken(token string) (username string) {
-	if IsApiKey(token) {
+	if httpclient.IsApiKey(token) {
 		log.Warn("The provided access token is an API key which should be used as password.")
 		return
 	}
