@@ -37,9 +37,10 @@ const (
 func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) (*PipelineRunStatusResponse, error) {
 	httpDetails := rs.getHttpDetails()
 
-	// query params
+	// Query params
 	queryParams := make(map[string]string, 0)
-	if isMultiBranch { // add this query param only when pipeline source is multi-branch
+	if isMultiBranch {
+		// Add this query param only when pipeline source is multi-branch
 		queryParams["pipelineSourceBranch"] = branch
 	}
 	if pipeName != "" {
@@ -47,9 +48,9 @@ func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) 
 	}
 
 	// URL Construction
-	uri, pipeURLErr := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), runStatus)
-	if pipeURLErr != nil {
-		return nil, pipeURLErr
+	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), runStatus)
+	if err != nil {
+		return nil, err
 	}
 
 	// Prepare Request
@@ -76,7 +77,8 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 	queryParams := make(map[string]string, 0)
 
 	var payload *strings.Reader
-	if isMultiBranch { // add this query param only when pipeline source is multi-branch
+	if isMultiBranch {
+		// Add this query param only when pipeline source is multi-branch
 		payload = strings.NewReader(`{
 	    "branchName": "` + strings.TrimSpace(branch) + `",
 		"pipelineName": "` + strings.TrimSpace(pipeline) + `"
@@ -89,15 +91,14 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(payload)
 	if err != nil {
-		log.Error("Failed to read stream to send payload to trigger pipelines")
 		return errorutils.CheckError(err)
 	}
 
 	// URL Construction
 	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
-	uri, pipeURLErr := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), triggerpipeline)
-	if pipeURLErr != nil {
-		return pipeURLErr
+	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), triggerpipeline)
+	if err != nil {
+		return err
 	}
 
 	// Prepare Request
@@ -107,16 +108,16 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 	}
 
 	// Response Analysis
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+	if err := errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
-	log.Info(fmt.Sprintf("triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch))
+	log.Info(fmt.Sprintf("Triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch))
 
 	return nil
 }
 
 func (rs *RunService) CancelRun(runID int) error {
-	log.Info("cancelling the run ", runID)
+	log.Info("Cancelling the run ", runID)
 	runValue := strconv.Itoa(runID)
 	cancelRun := cancelRunPath
 	cancelRun = strings.Replace(cancelRun, ":runId", runValue, 1)
@@ -127,15 +128,14 @@ func (rs *RunService) CancelRun(runID int) error {
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(payload)
 	if err != nil {
-		log.Error("Failed to read stream to send payload to trigger pipelines")
 		return errorutils.CheckError(err)
 	}
 
 	// URL Construction
 	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
-	uri, pipeURLErr := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), cancelRun)
-	if pipeURLErr != nil {
-		return pipeURLErr
+	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), cancelRun)
+	if err != nil {
+		return err
 	}
 
 	// Prepare Request
@@ -145,13 +145,12 @@ func (rs *RunService) CancelRun(runID int) error {
 	}
 
 	// Response Analysis
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+	if err := errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
 	if resp.StatusCode == http.StatusOK {
-		log.Info(fmt.Sprintf("cancelled run %s successfully", runValue))
+		log.Info(fmt.Sprintf("Cancelled run %s successfully", runValue))
 		return nil
 	}
-	log.Error("unable to find run id")
 	return fmt.Errorf(fmt.Sprintf("Unable to find run ID: %d", runID))
 }

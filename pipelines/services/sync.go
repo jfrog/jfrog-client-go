@@ -34,25 +34,21 @@ func (ss *SyncService) GetServiceURL() string {
 
 // SyncPipelineSource trigger sync for pipeline resource
 func (ss *SyncService) SyncPipelineSource(branch string, repoName string) error {
-	// fetch resource ID
-	resID, _, resourceErr := GetPipelineResourceID(ss.client, ss.GetUrl(), repoName, ss.GetHttpDetails())
+	// Fetch pipeline resource to retrieve resource ID
+	res, resourceErr := GetPipelineResource(ss.client, ss.GetUrl(), repoName, ss.GetHttpDetails())
 	if resourceErr != nil {
-		log.Error("unable to fetch resourceID for: ", repoName)
 		return resourceErr
 	}
-	log.Info("Triggering pipeline source sync ...")
-
-	// trigger sync
+	log.Info("Triggering pipeline source sync...")
 	httpDetails := ss.GetHttpDetails()
 	queryParams := map[string]string{
 		"sync":   "true",
 		"branch": branch,
 	}
-
-	apiPath := path.Join(pipelineResources, strconv.Itoa(resID))
-	uriVal, errURL := constructPipelinesURL(queryParams, ss.ServiceDetails.GetUrl(), apiPath)
-	if errURL != nil {
-		return errURL
+	apiPath := path.Join(pipelineResources, strconv.Itoa(res.ID))
+	uriVal, err := constructPipelinesURL(queryParams, ss.ServiceDetails.GetUrl(), apiPath)
+	if err != nil {
+		return err
 	}
 	resp, body, _, httpErr := ss.client.SendGet(uriVal, true, &httpDetails)
 	if httpErr != nil {
