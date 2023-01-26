@@ -73,7 +73,11 @@ func (retryErr RetryExecutorTimeoutError) Error() string {
 }
 
 func (runner *RetryExecutor) getTimeoutErrorMsg() string {
-	return fmt.Sprintf("%s executor timeout after %v attempts with %v milliseconds wait intervals", runner.LogMsgPrefix, runner.MaxRetries, runner.RetriesIntervalMilliSecs)
+	prefix := ""
+	if runner.LogMsgPrefix != "" {
+		prefix = runner.LogMsgPrefix + " "
+	}
+	return fmt.Sprintf("%sexecutor timeout after %v attempts with %v milliseconds wait intervals", prefix, runner.MaxRetries, runner.RetriesIntervalMilliSecs)
 }
 
 func (runner *RetryExecutor) LogRetry(attemptNumber int, err error) {
