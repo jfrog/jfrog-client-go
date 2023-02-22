@@ -8,7 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.2
-	github.com/jfrog/build-info-go v1.8.7
+	github.com/jfrog/build-info-go v1.8.8
 	github.com/jfrog/gofrog v1.2.5
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.1
