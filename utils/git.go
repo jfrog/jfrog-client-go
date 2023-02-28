@@ -73,7 +73,7 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 	// ask git for where the .git directory is directly for submodules and worktrees
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-	cmd := exec.Command("git", "rev-parse", "--git-dir")
+	cmd := exec.Command("git", "rev-parse", "--git-common-dir")
 	cmd.Dir = filepath.Dir(m.path)
 	cmd.Stdin = nil
 	cmd.Stdout = &stdout
