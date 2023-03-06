@@ -1012,6 +1012,9 @@ func newResultManager() (*resultsManager, error) {
 // targetUrl - Path in artifactory (repo-name/my/path/to/artifact)
 // rtUrl - Artifactory URL (https://127.0.0.1/artifactory)
 func (rm *resultsManager) addFinalResult(localPath, targetPath, rtUrl string, checksums *entities.Checksum) {
+	if checksums == nil {
+		checksums = &entities.Checksum{}
+	}
 	fileTransferDetails := clientutils.FileTransferDetails{
 		SourcePath: localPath,
 		TargetPath: targetPath,
