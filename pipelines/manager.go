@@ -101,7 +101,7 @@ func (sm *PipelinesServicesManager) DeleteIntegration(integrationId int) error {
 func (sm *PipelinesServicesManager) AddPipelineSource(projectIntegrationId int, repositoryFullName, branch, fileFilter string) (id int, err error) {
 	sourcesService := services.NewSourcesService(sm.client)
 	sourcesService.ServiceDetails = sm.config.GetServiceDetails()
-	return sourcesService.AddSource(projectIntegrationId, repositoryFullName, branch, fileFilter)
+	return sourcesService.AddSource(projectIntegrationId, repositoryFullName, branch, fileFilter, "")
 }
 
 func (sm *PipelinesServicesManager) GetPipelineRunStatusByBranch(branch, pipeline string, isMultiBranch bool) (*services.PipelineRunStatusResponse, error) {

@@ -26,7 +26,7 @@ func testAddPipelineSource(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter)
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, services.DefaultPipelinesFileFilter, "")
 	if !assert.NoError(t, err) {
 		return
 	}

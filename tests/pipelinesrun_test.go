@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
+	"strings"
 	"testing"
 	"time"
 )
@@ -19,14 +20,16 @@ func TestPipelinesRunService(t *testing.T) {
 
 const (
 	// Define default wait time
-	defaultMaxWaitMinutes    = 10 * time.Minute
-	defaultSyncSleepInterval = 5 * time.Second
+	defaultMaxWaitMinutes     = 10 * time.Minute
+	defaultSyncSleepInterval  = 5 * time.Second
+	defaultPipelineSourceName = "PipeRunTest"
 )
 
 func testTriggerSync(t *testing.T) {
 	if !assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured") {
 		return
 	}
+	deleteSourceIfAlreadyExists(t)
 	// Create integration with provided token.
 	integrationName := getUniqueIntegrationName(pipelinesServices.GithubName)
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
@@ -34,7 +37,7 @@ func testTriggerSync(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter, defaultPipelineSourceName)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -46,6 +49,7 @@ func testGetSyncStatus(t *testing.T) {
 	if !assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured") {
 		return
 	}
+	deleteSourceIfAlreadyExists(t)
 	// Create integration with provided token.
 	integrationName := getUniqueIntegrationName(pipelinesServices.GithubName)
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
@@ -53,7 +57,7 @@ func testGetSyncStatus(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter, defaultPipelineSourceName)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -66,6 +70,7 @@ func testGetRunStatus(t *testing.T) {
 	if !assert.NotEmpty(t, *PipelinesVcsToken, "cannot run pipelines tests without vcs token configured") {
 		return
 	}
+	deleteSourceIfAlreadyExists(t)
 	// Create integration with provided token.
 	integrationName := getUniqueIntegrationName(pipelinesServices.GithubName)
 	integrationId, err := testsPipelinesIntegrationsService.CreateGithubIntegration(integrationName, *PipelinesVcsToken)
@@ -73,7 +78,7 @@ func testGetRunStatus(t *testing.T) {
 	defer deleteIntegrationAndAssert(t, integrationId)
 
 	// Create source with the above integration and assert.
-	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter)
+	sourceId, err := testsPipelinesSourcesService.AddSource(integrationId, *PipelinesVcsRepoFullPath, *PipelinesVcsBranch, pipelinesServices.DefaultPipelinesFileFilter, defaultPipelineSourceName)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -93,6 +98,21 @@ func testGetRunStatus(t *testing.T) {
 	assert.NoError(t, trigErr)
 
 	pollGetRunStatus(t, pipelineName)
+}
+
+func deleteSourceIfAlreadyExists(t *testing.T) {
+	queryParams := map[string]string{
+		"name":               defaultPipelineSourceName,
+		"repositoryFullName": strings.TrimSpace(*PipelinesVcsRepoFullPath),
+		"branch":             strings.TrimSpace(*PipelinesVcsBranch),
+	}
+	sources, err := testsPipelinesSourcesService.GetSourceByFilter(queryParams)
+	if err != nil {
+		return
+	}
+	for _, source := range sources {
+		deleteSourceAndAssert(t, source.Id)
+	}
 }
 
 func pollGetRunStatus(t *testing.T, pipelineName string) {
