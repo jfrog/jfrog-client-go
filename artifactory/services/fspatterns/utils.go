@@ -12,6 +12,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 // Return all the existing paths of the provided root path
@@ -60,6 +61,8 @@ func filterFiles(files []string, excludePathPattern string) (filteredFiles []str
 		}
 		if !excludedPath {
 			filteredFiles = append(filteredFiles, files[i])
+		} else {
+			log.Debug(fmt.Sprintf("The path '%s' is excluded", files[i]))
 		}
 	}
 	return

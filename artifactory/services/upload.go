@@ -712,7 +712,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 	return func(artifact UploadData) parallel.TaskFunc {
 		return func(threadId int) (err error) {
 			uploadResult.TotalCount[threadId]++
-			var checksums *entities.Checksum
+			checksums := &entities.Checksum{}
 			var uploaded bool
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, us.DryRun)
 			log.Info(logMsgPrefix+"Uploading:", artifact.Artifact.LocalPath)
