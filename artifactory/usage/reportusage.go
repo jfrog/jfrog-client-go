@@ -41,7 +41,7 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 	// Check Artifactory version
 	artifactoryVersion, err := rtDetails.GetVersion()
 	if err != nil {
-		return errors.New(ReportUsagePrefix + err.Error())
+		return errors.New(ReportUsagePrefix + "Couldn't get Artifactory version. Error: " + err.Error())
 	}
 	if !isVersionCompatible(artifactoryVersion) {
 		log.Debug(fmt.Sprintf(ReportUsagePrefix+"Expected Artifactory version %s or above, got %s", minArtifactoryVersion, artifactoryVersion))
@@ -55,16 +55,15 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
-		return errors.New(ReportUsagePrefix + err.Error())
+		return errors.New(ReportUsagePrefix + "Couldn't send usage info. Error: " + err.Error())
 	}
 
 	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return err
 	}
 
-	log.Debug(ReportUsagePrefix+"Artifactory response:", resp.Status)
-	log.Debug(ReportUsagePrefix + "Usage info sent successfully.")
+	log.Debug(ReportUsagePrefix+"Usage info sent successfully.", "Artifactory response:", resp.Status)
 	return nil
 }
 

@@ -327,7 +327,7 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 			return err
 		}
 		if len(matches) > 0 {
-			taskData, err := NewUploadTaskData(path, isDir, matches, len(matches), uploadParams, vcsCache, uploadParams.Regexp)
+			taskData, err := newUploadTaskData(path, isDir, matches, uploadParams, vcsCache, uploadParams.Regexp)
 			if err != nil {
 				return err
 			}
@@ -387,7 +387,7 @@ type uploadTaskData struct {
 	vcsCache      *clientutils.VcsCache
 }
 
-func NewUploadTaskData(path string, isDir bool, groups []string, size int, uploadParams UploadParams, vcsCache *clientutils.VcsCache, isRegexp bool) (*uploadTaskData, error) {
+func newUploadTaskData(path string, isDir bool, groups []string, uploadParams UploadParams, vcsCache *clientutils.VcsCache, isRegexp bool) (*uploadTaskData, error) {
 	target, placeholdersUsed, err := clientutils.ReplacePlaceHolders(groups, uploadParams.GetTarget(), isRegexp)
 	if err != nil {
 		return nil, err
@@ -530,7 +530,7 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 						return false, nil
 					}
 					// Perform retry
-					log.Warn(fmt.Sprintf("%sThe server response: %s\n %s", logMsgPrefix, resp.Status, clientutils.IndentJson(body)))
+					log.Warn(fmt.Sprintf("%sThe server response: %s\n%s", logMsgPrefix, resp.Status, clientutils.IndentJson(body)))
 					return true, nil
 				},
 			}
