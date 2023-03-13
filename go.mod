@@ -8,7 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.2
-	github.com/jfrog/build-info-go v1.8.7
+	github.com/jfrog/build-info-go v1.8.9
 	github.com/jfrog/gofrog v1.2.5
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.1
@@ -49,7 +49,7 @@ require (
 	github.com/ulikunitz/xz v0.5.9 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
