@@ -131,7 +131,7 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 				return false, nil
 			}
 			// Perform retry
-			log.Warn(fmt.Sprintf("%sThe server response: %s\n %s", logMsgPrefix, resp.Status, utils.IndentJson(respBody)))
+			log.Warn(fmt.Sprintf("%sThe server response: %s\n%s", logMsgPrefix, resp.Status, utils.IndentJson(respBody)))
 			return true, nil
 		},
 	}
@@ -233,7 +233,7 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 				return false, nil
 			}
 			// Perform retry
-			log.Warn(fmt.Sprintf("%sThe server response: %s\n %s", logMsgPrefix, resp.Status, utils.IndentJson(body)))
+			log.Warn(fmt.Sprintf("%sThe server response: %s\n%s", logMsgPrefix, resp.Status, utils.IndentJson(body)))
 			return true, nil
 		},
 	}
