@@ -60,7 +60,7 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 
 	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return err
 	}
 
 	log.Debug(ReportUsagePrefix+"Usage info sent successfully.", "Artifactory response:", resp.Status)
