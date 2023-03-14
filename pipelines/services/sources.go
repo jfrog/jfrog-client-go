@@ -92,14 +92,11 @@ func (ss *SourcesService) GetSourceByFilter(queryParams map[string]string) ([]So
 	if err != nil {
 		return nil, err
 	}
-	source, err := ss.SendRequestAndParseResponse(pipelineSourcesURL, httpDetails)
-	if err != nil {
-		return source, err
-	}
+	source, err := ss.sendRequestAndParseResponse(pipelineSourcesURL, httpDetails)
 	return source, err
 }
 
-func (ss *SourcesService) SendRequestAndParseResponse(url string, httpDetails httputils.HttpClientDetails) ([]Source, error) {
+func (ss *SourcesService) sendRequestAndParseResponse(url string, httpDetails httputils.HttpClientDetails) ([]Source, error) {
 	resp, body, _, err := ss.client.SendGet(url, true, &httpDetails)
 	if err != nil {
 		return nil, err
