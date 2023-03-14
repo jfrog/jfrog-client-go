@@ -34,6 +34,24 @@ var (
 	MaxBufferSize          = 50000
 	userAgent              = getDefaultUserAgent()
 	curlyParenthesesRegexp = regexp.MustCompile(`\{(\d+?)}`)
+	
+	// Replace ** with a special string.
+	doubleStartSpecialString = "__JFROG_DOUBLE_STAR__"
+
+	// Match any /**
+	doubleStarRegex = regexp.MustCompile(fmt.Sprintf(`(\%s\*\*)`, string(os.PathSeparator)))
+
+	// Match '__JFROG_DOUBLE_STAR__/...' at the beginning of the string.
+	prefixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf("^%s%s", doubleStartSpecialString, string(os.PathSeparator)))
+
+	// match '/__JFROG_DOUBLE_STAR__...' at the end of the string.
+	postfixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf("%s%s$", string(os.PathSeparator), doubleStartSpecialString))
+
+	// match '.../__JFROG_DOUBLE_STAR__/...' in the middle of the string.
+	middleDoubleStarRegex = regexp.MustCompile(fmt.Sprintf("%s%s%s", string(os.PathSeparator), doubleStartSpecialString, string(os.PathSeparator)))
+
+	// match any '...__JFROG_DOUBLE_STAR__...'
+	middleDoubleStarNoSeparateRegex = regexp.MustCompile(doubleStartSpecialString)
 )
 
 func getVersion() string {
@@ -185,9 +203,10 @@ func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) stri
 	localPath = strings.TrimPrefix(localPath, "./")
 	localPath = strings.TrimPrefix(localPath, ".\\")
 
-	if patternType == AntPattern {
-		localPath = antPatternToRegExp(cleanPath(localPath))
-	} else if patternType == WildCardPattern {
+	switch patternType {
+	case AntPattern:
+		localPath = AntToRegex(cleanPath(localPath))
+	case WildCardPattern:
 		localPath = stringutils.WildcardPatternToRegExp(cleanPath(localPath))
 	}
 
@@ -208,49 +227,43 @@ func cleanPath(path string) string {
 	return path
 }
 
-func antPatternToRegExp(localPath string) string {
-	localPath = stringutils.EscapeSpecialChars(localPath)
-	separator := getFileSeparator()
-	// 'xxx/' => 'xxx/**'
-	if strings.HasSuffix(localPath, separator) {
-		localPath += "**"
-	}
-	var wildcard = ".*"
-	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
-	var regAsterisk = "([^" + separator + "]*)"
-	// ant `\*` ~ regexp `([^/]+)` : `\*` matches one or more characters (except from `/`) with a `/` prefix.
-	var regAsteriskWithSeparatorPrefix = "([^" + separator + "]+)"
-	// ant `**` ~ regexp `(.*)?` : `**` matches zero or more 'directories' in a path.
-	var doubleRegAsterisk = "(" + wildcard + ")?"
-	var doubleRegAsteriskWithSeparatorPrefix = "(" + wildcard + separator + ")?"
-	var doubleRegAsteriskWithSeparatorSuffix = "(" + separator + wildcard + ")?"
-
-	// `?` => `.{1}` : `?` matches one character.
-	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
-	// `*` => `([^/]*)`
-	localPath = strings.Replace(localPath, `*`, regAsterisk, -1)
-	// `**` => `(.*)?`
-	localPath = strings.Replace(localPath, regAsterisk+regAsterisk, doubleRegAsterisk, -1)
-
-	// `\([^/]*)` => `\([^/]+)` : there are 2 cases with '*':
-	//		1. xxx/x* : * will represent 0 or more characters.
-	//		2. xxx/* : * will represent 1 or more characters.
-	// This "replace" handles the second option.
-	localPath = strings.Replace(localPath, separator+regAsterisk, separator+regAsteriskWithSeparatorPrefix, -1)
-	// `(.*)?/` => `(.*/)?`
-	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeparatorPrefix, -1)
-	// Convert the last '/**' in the expression if exists : `/(.*)?` => `(/.*)?`
-	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
-		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeparatorSuffix
-	}
-	return "^" + localPath + "$"
+func AntToRegex(antPattern string) string {
+	antPattern = stringutils.EscapeSpecialChars(antPattern)
+	antPattern = antQuestionMarkToRegex(antPattern)
+	return "^" + antStarsToRegex(antPattern) + "$"
 }
 
-func getFileSeparator() string {
-	if io.IsWindows() {
-		return "\\\\"
+func antStarsToRegex(antPattern string) string {
+	separator := string(os.PathSeparator)
+	if strings.HasSuffix(antPattern, separator) {
+		antPattern += "**"
 	}
-	return "/"
+
+	//Replace all /**/**/**... duplications with one /**
+	antPattern = doubleStarRegex.ReplaceAllString(antPattern, "/**")
+
+	// Replace ** with a special string, so it doesn't get mixed up with single *
+	antPattern = strings.ReplaceAll(antPattern, "**", doubleStartSpecialString)
+
+	// ant `*` => regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
+	antPattern = strings.ReplaceAll(antPattern, `*`, "([^"+separator+"]*)")
+
+	// ant `/**/` => regexp `/(.*/)*` : Matches zero or more 'directories' in a path.
+	antPattern = middleDoubleStarRegex.ReplaceAllString(antPattern, separator+"(.*"+separator+")*")
+
+	// ant `**/` => regexp `(.*/)*` : Matches zero or more 'directories' at the beginning of the path.
+	antPattern = prefixDoubleStarRegex.ReplaceAllString(antPattern, "(.*"+separator+")*")
+
+	// ant `/**` => regexp `(/.*)*` : Matches zero or more 'directories' at the end of the path.
+	antPattern = postfixDoubleStarRegex.ReplaceAllString(antPattern, "("+separator+".*)*")
+
+	// ant `**` => regexp `(.*)*` : Matches zero or more 'directories'.
+	antPattern = middleDoubleStarNoSeparateRegex.ReplaceAllString(antPattern, "(.*)")
+	return antPattern
+}
+
+func antQuestionMarkToRegex(antPattern string) string {
+	return strings.ReplaceAll(antPattern, "?", ".")
 }
 
 // BuildTargetPath Replaces matched regular expression from path to corresponding placeholder {i} at target.
