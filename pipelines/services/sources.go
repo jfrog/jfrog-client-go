@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -28,13 +29,14 @@ const (
 	sourceAlreadyExistsResponseString = "source already exists"
 )
 
-func (ss *SourcesService) AddSource(projectIntegrationId int, repositoryFullName, branch, fileFilter string) (id int, err error) {
+func (ss *SourcesService) AddSource(projectIntegrationId int, repositoryFullName, branch, fileFilter, name string) (id int, err error) {
 	source := Source{
 		ProjectId:            defaultProjectId,
 		ProjectIntegrationId: projectIntegrationId,
 		RepositoryFullName:   repositoryFullName,
 		Branch:               branch,
 		FileFilter:           fileFilter,
+		Name:                 name,
 	}
 	return ss.doAddSource(source)
 }
@@ -84,6 +86,29 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 	return source, errorutils.CheckError(err)
 }
 
+func (ss *SourcesService) GetSourceByFilter(queryParams map[string]string) ([]Source, error) {
+	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
+	pipelineSourcesURL, err := constructPipelinesURL(queryParams, ss.ServiceDetails.GetUrl(), SourcesRestApi)
+	if err != nil {
+		return nil, err
+	}
+	source, err := ss.sendRequestAndParseResponse(pipelineSourcesURL, httpDetails)
+	return source, err
+}
+
+func (ss *SourcesService) sendRequestAndParseResponse(url string, httpDetails httputils.HttpClientDetails) ([]Source, error) {
+	resp, body, _, err := ss.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+	source := make([]Source, 0)
+	err = json.Unmarshal(body, &source)
+	return source, errorutils.CheckError(err)
+}
+
 func (ss *SourcesService) DeleteSource(sourceId int) error {
 	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
 	resp, body, err := ss.client.SendDelete(ss.ServiceDetails.GetUrl()+SourcesRestApi+strconv.Itoa(sourceId), nil, &httpDetails)
@@ -104,7 +129,8 @@ type Source struct {
 	BranchExcludePattern string `json:"branchExcludePattern,omitempty"`
 	BranchIncludePattern string `json:"branchIncludePattern,omitempty"`
 
-	Id int `json:"id,omitempty"`
+	Id   int    `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type SourceAlreadyExistsError struct {

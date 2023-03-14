@@ -2047,7 +2047,7 @@ err := pipelinesManager.DeleteIntegration(integrationId)
 
 ```go
 projectIntegrationId := 1234
-err := pipelinesManager.AddSource(projectIntegrationId, "domain/repo", "master", "pipelines.yml")
+err := pipelinesManager.AddSource(projectIntegrationId, "domain/repo", "master", "pipelines.yml", "pipelineSourceName")
 ```
 
 #### Get Recent Pipeline Run Status
