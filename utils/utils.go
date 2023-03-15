@@ -34,7 +34,7 @@ var (
 	MaxBufferSize          = 50000
 	userAgent              = getDefaultUserAgent()
 	curlyParenthesesRegexp = regexp.MustCompile(`\{(\d+?)}`)
-	
+
 	// Replace ** with a special string.
 	doubleStartSpecialString = "__JFROG_DOUBLE_STAR__"
 
@@ -42,13 +42,13 @@ var (
 	doubleStarRegex = regexp.MustCompile(fmt.Sprintf(`(\%s\*\*)`, string(os.PathSeparator)))
 
 	// Match '__JFROG_DOUBLE_STAR__/...' at the beginning of the string.
-	prefixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf("^%s%s", doubleStartSpecialString, string(os.PathSeparator)))
+	prefixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf(`^%s\%s`, doubleStartSpecialString, string(os.PathSeparator)))
 
 	// match '/__JFROG_DOUBLE_STAR__...' at the end of the string.
-	postfixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf("%s%s$", string(os.PathSeparator), doubleStartSpecialString))
+	postfixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf(`\%s%s$`, string(os.PathSeparator), doubleStartSpecialString))
 
 	// match '.../__JFROG_DOUBLE_STAR__/...' in the middle of the string.
-	middleDoubleStarRegex = regexp.MustCompile(fmt.Sprintf("%s%s%s", string(os.PathSeparator), doubleStartSpecialString, string(os.PathSeparator)))
+	middleDoubleStarRegex = regexp.MustCompile(fmt.Sprintf(`\%s%s\%s`, string(os.PathSeparator), doubleStartSpecialString, string(os.PathSeparator)))
 
 	// match any '...__JFROG_DOUBLE_STAR__...'
 	middleDoubleStarNoSeparateRegex = regexp.MustCompile(doubleStartSpecialString)
