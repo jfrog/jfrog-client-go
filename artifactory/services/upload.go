@@ -3,18 +3,8 @@ package services
 import (
 	"archive/zip"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strconv"
-	"strings"
-
 	"github.com/jfrog/build-info-go/entities"
 	biutils "github.com/jfrog/build-info-go/utils"
-
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -27,6 +17,15 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 type UploadService struct {
@@ -786,7 +785,10 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 				return us.resultsManager.addNonFinalResult(localPath, targetPath, us.ArtDetails.GetUrl())
 			}
 		}
-		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums", archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue)
+		// Make sure all go routines in readFilesAsZip calls were done.
+		var zipReadersWg sync.WaitGroup
+		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums",
+			archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue, &zipReadersWg)
 		details, err := fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
 		if err != nil {
 			return
@@ -795,7 +797,8 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 
 		getReaderFunc := func() (io.Reader, error) {
 			archiveDataReader.Reset()
-			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, nil, errorsQueue), nil
+			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat,
+				archiveData.uploadParams.Symlink, nil, errorsQueue, &zipReadersWg), nil
 		}
 		uploaded, err := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, details)
 
@@ -805,6 +808,7 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 				err = us.resultsManager.finalizeResult(targetPath, &details.Checksum)
 			}
 		}
+		zipReadersWg.Wait()
 		return
 	}
 }
@@ -813,10 +817,12 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 // archiveDataReader is a ContentReader of UploadData items containing the details of the files to stream.
 // saveFilesPathsFunc (optional) is a func that is called for each file that is written into the ZIP, and gets the file's local path as a parameter.
 func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader, progressPrefix string, flat, symlink bool,
-	saveFilesPathsFunc func(sourcePath string) error, errorsQueue *clientutils.ErrorsQueue) io.Reader {
+	saveFilesPathsFunc func(sourcePath string) error, errorsQueue *clientutils.ErrorsQueue, zipReadersWg *sync.WaitGroup) io.Reader {
 	pr, pw := io.Pipe()
+	zipReadersWg.Add(1)
 
 	go func() {
+		defer zipReadersWg.Done()
 		var e error
 		zipWriter := zip.NewWriter(pw)
 		defer func() {
