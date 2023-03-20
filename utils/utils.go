@@ -38,19 +38,13 @@ var (
 	// Replace ** with a special string.
 	doubleStartSpecialString = "__JFROG_DOUBLE_STAR__"
 
-	// Match any /**
-	doubleStarRegex = regexp.MustCompile(fmt.Sprintf(`(\%s\*\*)`, string(os.PathSeparator)))
+	// Match **/ ('__JFROG_DOUBLE_STAR__/...')
+	prefixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf(`%s\%s`, doubleStartSpecialString, string(os.PathSeparator)))
 
-	// Match '__JFROG_DOUBLE_STAR__/...' at the beginning of the string.
-	prefixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf(`^%s\%s`, doubleStartSpecialString, string(os.PathSeparator)))
+	// match /** ('/__JFROG_DOUBLE_STAR__...')
+	postfixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf(`\%s%s`, string(os.PathSeparator), doubleStartSpecialString))
 
-	// match '/__JFROG_DOUBLE_STAR__...' at the end of the string.
-	postfixDoubleStarRegex = regexp.MustCompile(fmt.Sprintf(`\%s%s$`, string(os.PathSeparator), doubleStartSpecialString))
-
-	// match '.../__JFROG_DOUBLE_STAR__/...' in the middle of the string.
-	middleDoubleStarRegex = regexp.MustCompile(fmt.Sprintf(`\%s%s\%s`, string(os.PathSeparator), doubleStartSpecialString, string(os.PathSeparator)))
-
-	// match any '...__JFROG_DOUBLE_STAR__...'
+	// match **  ('...__JFROG_DOUBLE_STAR__...')
 	middleDoubleStarNoSeparateRegex = regexp.MustCompile(doubleStartSpecialString)
 )
 
@@ -235,12 +229,8 @@ func AntToRegex(antPattern string) string {
 
 func antStarsToRegex(antPattern string) string {
 	separator := string(os.PathSeparator)
-	if strings.HasSuffix(antPattern, separator) {
-		antPattern += "**"
-	}
 
-	//Replace all /**/**/**... duplications with one /**
-	antPattern = doubleStarRegex.ReplaceAllString(antPattern, "/**")
+	antPattern = addMissingShorthand(antPattern)
 
 	// Replace ** with a special string, so it doesn't get mixed up with single *
 	antPattern = strings.ReplaceAll(antPattern, "**", doubleStartSpecialString)
@@ -248,13 +238,10 @@ func antStarsToRegex(antPattern string) string {
 	// ant `*` => regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
 	antPattern = strings.ReplaceAll(antPattern, `*`, "([^"+separator+"]*)")
 
-	// ant `/**/` => regexp `/(.*/)*` : Matches zero or more 'directories' in a path.
-	antPattern = middleDoubleStarRegex.ReplaceAllString(antPattern, separator+"(.*"+separator+")*")
-
-	// ant `**/` => regexp `(.*/)*` : Matches zero or more 'directories' at the beginning of the path.
+	// // ant `**/` => regexp `(.*/)*` : Matches zero or more 'directories' at the beginning of the path.
 	antPattern = prefixDoubleStarRegex.ReplaceAllString(antPattern, "(.*"+separator+")*")
 
-	// ant `/**` => regexp `(/.*)*` : Matches zero or more 'directories' at the end of the path.
+	// // ant `/**` => regexp `(/.*)*` : Matches zero or more 'directories' at the end of the path.
 	antPattern = postfixDoubleStarRegex.ReplaceAllString(antPattern, "("+separator+".*)*")
 
 	// ant `**` => regexp `(.*)*` : Matches zero or more 'directories'.
@@ -264,6 +251,14 @@ func antStarsToRegex(antPattern string) string {
 
 func antQuestionMarkToRegex(antPattern string) string {
 	return strings.ReplaceAll(antPattern, "?", ".")
+}
+
+func addMissingShorthand(antPattern string) string {
+	// There is one "shorthand": if a pattern ends with / or \, then ** is appended. For example, mypackage/test/ is interpreted as if it were mypackage/test/**.
+	if strings.HasSuffix(antPattern, string(os.PathSeparator)) {
+		return antPattern + "**"
+	}
+	return antPattern
 }
 
 // BuildTargetPath Replaces matched regular expression from path to corresponding placeholder {i} at target.
