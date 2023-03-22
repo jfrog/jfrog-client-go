@@ -8,10 +8,8 @@ import (
 	"testing"
 )
 
-// TestAntPathToRegExp check the functionality of antPatternToRegExp function.
-// Each time we take an array of paths, simulating files hierarchy on a filesystem, and an ANT pattern expression -
-//
-//	and see if the conversion to regular expression worked as expected.
+// In each case, we take an array of paths, simulating a filesystem hierarchy, and an ANT pattern expression and
+// check if the conversion to regular expression worked.
 func TestAntPathToRegExp(t *testing.T) {
 	separator := string(os.PathSeparator)
 	var paths = getFileSystemsPathsForTestingAntPattern(separator)
