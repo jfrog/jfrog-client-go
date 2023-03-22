@@ -54,10 +54,10 @@ func antStarsToRegex(antPattern string) string {
 	// ant `*` => regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
 	antPattern = strings.ReplaceAll(antPattern, `*`, "([^"+separator+"]*)")
 
-	// // ant `**/` => regexp `(.*/)*` : Matches zero or more 'directories' at the beginning of the path.
+	// ant `**/` => regexp `(.*/)*` : Matches zero or more 'directories' at the beginning of the path.
 	antPattern = prefixDoubleStarRegex.ReplaceAllString(antPattern, "(.*"+separator+")*")
 
-	// // ant `/**` => regexp `(/.*)*` : Matches zero or more 'directories' at the end of the path.
+	// ant `/**` => regexp `(/.*)*` : Matches zero or more 'directories' at the end of the path.
 	antPattern = postfixDoubleStarRegex.ReplaceAllString(antPattern, "("+separator+".*)*")
 
 	// ant `**` => regexp `(.*)*` : Matches zero or more 'directories'.
