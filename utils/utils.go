@@ -185,9 +185,10 @@ func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) stri
 	localPath = strings.TrimPrefix(localPath, "./")
 	localPath = strings.TrimPrefix(localPath, ".\\")
 
-	if patternType == AntPattern {
-		localPath = antPatternToRegExp(cleanPath(localPath))
-	} else if patternType == WildCardPattern {
+	switch patternType {
+	case AntPattern:
+		localPath = AntToRegex(cleanPath(localPath))
+	case WildCardPattern:
 		localPath = stringutils.WildcardPatternToRegExp(cleanPath(localPath))
 	}
 
@@ -206,51 +207,6 @@ func cleanPath(path string) string {
 		path = strings.ReplaceAll(path, `\`, `\\`)
 	}
 	return path
-}
-
-func antPatternToRegExp(localPath string) string {
-	localPath = stringutils.EscapeSpecialChars(localPath)
-	separator := getFileSeparator()
-	// 'xxx/' => 'xxx/**'
-	if strings.HasSuffix(localPath, separator) {
-		localPath += "**"
-	}
-	var wildcard = ".*"
-	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
-	var regAsterisk = "([^" + separator + "]*)"
-	// ant `\*` ~ regexp `([^/]+)` : `\*` matches one or more characters (except from `/`) with a `/` prefix.
-	var regAsteriskWithSeparatorPrefix = "([^" + separator + "]+)"
-	// ant `**` ~ regexp `(.*)?` : `**` matches zero or more 'directories' in a path.
-	var doubleRegAsterisk = "(" + wildcard + ")?"
-	var doubleRegAsteriskWithSeparatorPrefix = "(" + wildcard + separator + ")?"
-	var doubleRegAsteriskWithSeparatorSuffix = "(" + separator + wildcard + ")?"
-
-	// `?` => `.{1}` : `?` matches one character.
-	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
-	// `*` => `([^/]*)`
-	localPath = strings.Replace(localPath, `*`, regAsterisk, -1)
-	// `**` => `(.*)?`
-	localPath = strings.Replace(localPath, regAsterisk+regAsterisk, doubleRegAsterisk, -1)
-
-	// `\([^/]*)` => `\([^/]+)` : there are 2 cases with '*':
-	//		1. xxx/x* : * will represent 0 or more characters.
-	//		2. xxx/* : * will represent 1 or more characters.
-	// This "replace" handles the second option.
-	localPath = strings.Replace(localPath, separator+regAsterisk, separator+regAsteriskWithSeparatorPrefix, -1)
-	// `(.*)?/` => `(.*/)?`
-	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeparatorPrefix, -1)
-	// Convert the last '/**' in the expression if exists : `/(.*)?` => `(/.*)?`
-	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
-		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeparatorSuffix
-	}
-	return "^" + localPath + "$"
-}
-
-func getFileSeparator() string {
-	if io.IsWindows() {
-		return "\\\\"
-	}
-	return "/"
 }
 
 // BuildTargetPath Replaces matched regular expression from path to corresponding placeholder {i} at target.
