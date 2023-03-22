@@ -70,36 +70,37 @@ func TestAntPathToRegExp(t *testing.T) {
 }
 
 func TestAntToRegex(t *testing.T) {
-	separator := string(os.PathSeparator)
 	tests := []struct {
 		description   string
 		ant           string
 		expectedRegex string
 	}{
+		{"a.zip", "a.zip", "^a\\.zip$"},
 		{"ab", "ab", "^ab$"},
 		{"**", "**", "^(.*)$"},
-		{"**/", "**" + separator, "^(.*/)*(.*)$"},
-		{"**/*", "**" + separator + "*", "^(.*/)*([^/]*)$"},
-		{"/**", separator + "**", "^(/.*)*$"},
-		{"*/**", "*" + separator + "**", "^([^/]*)(/.*)*$"},
-		{"/**/ab", separator + "**" + separator + "ab", "^/(.*/)*ab$"},
-		{"/**/ab*", separator + "**" + separator + "ab*", "^/(.*/)*ab([^/]*)$"},
-		{"/**/ab/", separator + "**" + separator + "ab" + separator, "^/(.*/)*ab(/.*)*$"},
-		{"/**/ab/*", separator + "**" + separator + "ab" + separator + "*", "^/(.*/)*ab/([^/]*)$"},
-		{"/**/ab*/", separator + "**" + separator + "ab*" + separator, "^/(.*/)*ab([^/]*)(/.*)*$"},
-		{"ab/**/", "ab" + separator + "**" + separator, "^ab/(.*/)*(.*)$"},
-		{"*ab/**/", "*ab" + separator + "**" + separator, "^([^/]*)ab/(.*/)*(.*)$"},
-		{"/ab/**/", separator + "ab" + separator + "**" + separator, "^/ab/(.*/)*(.*)$"},
-		{"/ab*/**/", separator + "ab*" + separator + "**" + separator, "^/ab([^/]*)/(.*/)*(.*)$"},
-		{"/**/ab/**/", separator + "**" + separator + "ab" + separator + "**" + separator, "^/(.*/)*ab/(.*/)*(.*)$"},
-		{"/**/a*b/**/", separator + "**" + separator + "a*b" + separator + "**" + separator, "^/(.*/)*a([^/]*)b/(.*/)*(.*)$"},
-		{"/**/ab/**/cd/**/ef/", separator + "**" + separator + "ab" + separator + "**" + separator + "cd" + separator + "**" + separator + "ef" + separator, "^/(.*/)*ab/(.*/)*cd/(.*/)*ef(/.*)*$"},
+		{"**/", "**/", "^(.*/)*(.*)$"},
+		{"**/*", "**/*", "^(.*/)*([^/]*)$"},
+		{"/**", "/**", "^(/.*)*$"},
+		{"*/**", "*/**", "^([^/]*)(/.*)*$"},
+		{"/**/ab", "/**/ab", "^/(.*/)*ab$"},
+		{"/**/ab*", "/**/ab*", "^/(.*/)*ab([^/]*)$"},
+		{"/**/ab/", "/**/ab/", "^/(.*/)*ab(/.*)*$"},
+		{"/**/ab/*", "/**/ab/*", "^/(.*/)*ab/([^/]*)$"},
+		{"/**/ab*/", "/**/ab*/", "^/(.*/)*ab([^/]*)(/.*)*$"},
+		{"ab/**/", "ab/**/", "^ab/(.*/)*(.*)$"},
+		{"*ab/**/", "*ab/**/", "^([^/]*)ab/(.*/)*(.*)$"},
+		{"/ab/**/", "/ab/**/", "^/ab/(.*/)*(.*)$"},
+		{"/ab*/**/", "/ab*/**/", "^/ab([^/]*)/(.*/)*(.*)$"},
+		{"/**/ab/**/", "/**/ab/**/", "^/(.*/)*ab/(.*/)*(.*)$"},
+		{"/**/a*b/**/", "/**/a*b/**/", "^/(.*/)*a([^/]*)b/(.*/)*(.*)$"},
+		{"/**/ab/**/cd/**/ef/", "/**/ab/**/cd/**/ef/", "^/(.*/)*ab/(.*/)*cd/(.*/)*ef(/.*)*$"},
 	}
 	for _, test := range tests {
 		t.Run("'"+test.description+"'", func(t *testing.T) {
-			regExpStr := AntToRegex(cleanPath(test.ant))
-			if regExpStr != test.expectedRegex {
-				t.Error("Unmatched! : ant pattern `" + test.ant + "` translated to:\n" + regExpStr + "\nbut expect it to be:\n" + test.expectedRegex + "")
+			regExpStr := AntToRegex(cleanPath(strings.ReplaceAll(test.ant, "/", string(os.PathSeparator))))
+			expectedRegExpStr := strings.ReplaceAll(test.expectedRegex, "/", getFileSeparatorForAntToRegex())
+			if regExpStr != expectedRegExpStr {
+				t.Error("Unmatched! : ant pattern `" + test.ant + "` translated to:\n" + regExpStr + "\nbut expect it to be:\n" + expectedRegExpStr + "")
 			}
 		})
 	}
