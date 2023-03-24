@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func testWorkspaceValidationWhenPipelinesResourcesAreNotValid(t *testing.T) {
+func TestWorkspaceValidationWhenPipelinesResourcesAreNotValid(t *testing.T) {
 
 	if !assert.NotEmpty(t, *PipelinesAccessToken, "cannot run pipelines tests without access token configured") {
 		return
@@ -31,7 +31,7 @@ func testWorkspaceValidationWhenPipelinesResourcesAreNotValid(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func testWorkspaceValidationWhenPipelinesResourcesAreValid(t *testing.T) {
+func TestWorkspaceValidationWhenPipelinesResourcesAreValid(t *testing.T) {
 	if !assert.NotEmpty(t, *PipelinesAccessToken, "cannot run pipelines tests without access token configured") {
 		return
 	}

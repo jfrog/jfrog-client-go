@@ -117,6 +117,7 @@ var (
 	testPipelinesRunService           *pipelinesServices.RunService
 	testPipelinesSyncService          *pipelinesServices.SyncService
 	testPipelinesSyncStatusService    *pipelinesServices.SyncStatusService
+	testPipelinesWorkspaceService     *pipelinesServices.WorkspaceService
 
 	// Access Services
 	testsAccessPingService    *accessServices.PingService
@@ -517,6 +518,18 @@ func createPipelinesSyncStatusManager() {
 	failOnHttpClientCreation(err)
 	testPipelinesSyncStatusService = pipelinesServices.NewSyncStatusService(client)
 	testPipelinesSyncStatusService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesWorkspaceServiceManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesWorkspaceService = pipelinesServices.NewWorkspaceService(client)
+	testPipelinesWorkspaceService.ServiceDetails = pipelinesDetails
 }
 
 func failOnHttpClientCreation(err error) {
