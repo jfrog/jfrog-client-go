@@ -193,6 +193,7 @@ type RemoteRepositoryBaseParams struct {
 	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
 	ClientTlsCertificate              string                  `json:"clientTlsCertificate,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
+	QueryParams                       string                  `json:"queryParams,omitempty"`
 }
 
 func NewRemoteRepositoryBaseParams() RemoteRepositoryBaseParams {
