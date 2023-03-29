@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -46,4 +47,33 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFlattenGraph(t *testing.T) {
+	nodeA := &GraphNode{Id: "A"}
+	nodeB := &GraphNode{Id: "B"}
+	nodeC := &GraphNode{Id: "C"}
+	nodeD := &GraphNode{Id: "D"}
+	nodeE := &GraphNode{Id: "E"}
+	nodeF := &GraphNode{Id: "F"}
+
+	// Set dependencies
+	nodeA.Nodes = []*GraphNode{nodeB, nodeC}
+	nodeB.Nodes = []*GraphNode{nodeC, nodeD}
+	nodeC.Nodes = []*GraphNode{nodeD}
+	nodeD.Nodes = []*GraphNode{nodeE}
+	nodeF.Nodes = []*GraphNode{nodeA, nodeB, nodeC}
+
+	// Create graph
+	graph := []*GraphNode{nodeA, nodeB, nodeC, nodeD, nodeE, nodeF}
+	flatGraph := FlattenGraph(graph)
+
+	// Check that the graph has been flattened correctly
+	assert.Equal(t, len(flatGraph), 6)
+	assert.Equal(t, len(flatGraph[0].Nodes), 4)
+	assert.Equal(t, len(flatGraph[1].Nodes), 3)
+	assert.Equal(t, len(flatGraph[2].Nodes), 2)
+	assert.Equal(t, len(flatGraph[3].Nodes), 1)
+	assert.Equal(t, len(flatGraph[4].Nodes), 0)
+	assert.Equal(t, len(flatGraph[5].Nodes), 3)
 }
