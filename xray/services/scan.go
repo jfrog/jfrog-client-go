@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"github.com/jfrog/gofrog/datastructures"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"strings"
@@ -187,6 +188,42 @@ type GraphNode struct {
 	OtherComponentIds []OtherComponentIds `json:"other_component_ids,omitempty"`
 	// Node parent (for internal use)
 	Parent *GraphNode `json:"-"`
+}
+
+// FlattenGraph return a 3 level graph: module level, direct dependencies level, transitives level - without duplicates.
+func FlattenGraph(graph []*GraphNode) []*GraphNode {
+	flatGraph := make([]*GraphNode, 0, len(graph))
+	for _, node := range graph {
+		directsSet := datastructures.MakeSet[string]()
+		node.Nodes = getUniqueDirectDependencies(node, directsSet)
+		flatGraph = append(flatGraph, node)
+	}
+	return flatGraph
+}
+
+func getUniqueDirectDependencies(module *GraphNode, directsSet *datastructures.Set[string]) []*GraphNode {
+	uniqueDirects := []*GraphNode{}
+	for _, dependency := range module.Nodes {
+		if !directsSet.Exists(dependency.Id) {
+			directsSet.Add(dependency.Id)
+			transitivesSet := datastructures.MakeSet[string]()
+			dependency.Nodes = getUniqueTransitiveDependencies(dependency, transitivesSet)
+			uniqueDirects = append(uniqueDirects, dependency)
+		}
+	}
+	return uniqueDirects
+}
+
+func getUniqueTransitiveDependencies(directDependency *GraphNode, transitivesSet *datastructures.Set[string]) []*GraphNode {
+	uniqueTransitives := []*GraphNode{}
+	for _, dependency := range directDependency.Nodes {
+		if !transitivesSet.Exists(dependency.Id) {
+			transitivesSet.Add(dependency.Id)
+			uniqueTransitives = append(uniqueTransitives, &GraphNode{Id: dependency.Id, Parent: directDependency})
+			uniqueTransitives = append(uniqueTransitives, getUniqueTransitiveDependencies(dependency, transitivesSet)...)
+		}
+	}
+	return uniqueTransitives
 }
 
 type OtherComponentIds struct {
