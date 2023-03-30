@@ -15,6 +15,21 @@ jobs:
         with:
           install-go: false
 
+  GolangCI-Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.x
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          skip-cache: true
+
+  
   Go-Sec:
     runs-on: ubuntu-latest
     steps:
