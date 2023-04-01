@@ -141,6 +141,12 @@ func (sm *PipelinesServicesManager) ValidatePipelineSources(data []byte) (string
 	return validateService.ValidatePipeline(data)
 }
 
+func (sm *PipelinesServicesManager) WorkspaceSync() error {
+	workspaceService := services.NewWorkspaceService(sm.client)
+	workspaceService.ServiceDetails = sm.config.GetServiceDetails()
+	return workspaceService.WorkspaceSync()
+}
+
 func (sm *PipelinesServicesManager) WorkspacePollSyncStatus() ([]services.WorkspacesResponse, error) {
 	workspaceService := services.NewWorkspaceService(sm.client)
 	workspaceService.ServiceDetails = sm.config.GetServiceDetails()
@@ -191,4 +197,16 @@ func (sm *PipelinesServicesManager) GetStepConsoles(stepID string) (map[string][
 	workspaceService := services.NewWorkspaceService(sm.client)
 	workspaceService.ServiceDetails = sm.config.GetServiceDetails()
 	return workspaceService.GetStepLogsUsingStepID(stepID)
+}
+
+func (sm *PipelinesServicesManager) GetWorkspace() ([]services.WorkspacesResponse, error) {
+	workspaceService := services.NewWorkspaceService(sm.client)
+	workspaceService.ServiceDetails = sm.config.GetServiceDetails()
+	return workspaceService.GetWorkspace()
+}
+
+func (sm *PipelinesServicesManager) DeleteWorkspace(projectKey string) error {
+	workspaceService := services.NewWorkspaceService(sm.client)
+	workspaceService.ServiceDetails = sm.config.GetServiceDetails()
+	return workspaceService.DeleteWorkspace("2")
 }
