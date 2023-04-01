@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/mondo192/jfrog-client-go/http/httpclient"
+	ioutils "github.com/mondo192/jfrog-client-go/utils/io"
+	"github.com/mondo192/jfrog-client-go/utils/io/httputils"
 )
 
 type JfrogHttpClient struct {

@@ -2,7 +2,7 @@ package log
 
 import (
 	"bytes"
-	"github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/mondo192/jfrog-client-go/utils/io"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

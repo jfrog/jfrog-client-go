@@ -3,10 +3,10 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/mondo192/jfrog-client-go/artifactory/services/utils"
+	"github.com/mondo192/jfrog-client-go/auth"
+	"github.com/mondo192/jfrog-client-go/http/jfroghttpclient"
+	"github.com/mondo192/jfrog-client-go/utils/errorutils"
 	"net/http"
 )
 

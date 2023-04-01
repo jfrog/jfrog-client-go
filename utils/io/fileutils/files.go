@@ -18,7 +18,7 @@ import (
 	biutils "github.com/jfrog/build-info-go/utils"
 	gofrog "github.com/jfrog/gofrog/io"
 
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/mondo192/jfrog-client-go/utils/errorutils"
 )
 
 const (

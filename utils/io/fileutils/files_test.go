@@ -1,7 +1,7 @@
 package fileutils
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/mondo192/jfrog-client-go/utils/io"
 	"os"
 	"path/filepath"
 	"reflect"

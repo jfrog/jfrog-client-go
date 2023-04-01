@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/mholt/archiver/v3"
+	"github.com/mondo192/jfrog-client-go/utils/errorutils"
 )
 
 func IsSupportedArchive(filePath string) bool {

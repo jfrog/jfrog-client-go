@@ -2,11 +2,11 @@ package tests
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	accessauth "github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mondo192/jfrog-client-go/artifactory/auth"
+	"github.com/mondo192/jfrog-client-go/artifactory/services"
+	accessauth "github.com/mondo192/jfrog-client-go/auth"
+	"github.com/mondo192/jfrog-client-go/http/jfroghttpclient"
+	"github.com/mondo192/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"

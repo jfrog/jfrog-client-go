@@ -1,8 +1,8 @@
 package io
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	testUtils "github.com/jfrog/jfrog-client-go/utils/tests"
+	"github.com/mondo192/jfrog-client-go/utils/io/fileutils"
+	testUtils "github.com/mondo192/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"reflect"

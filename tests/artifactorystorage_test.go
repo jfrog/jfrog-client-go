@@ -2,9 +2,9 @@ package tests
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	servicesutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/mondo192/jfrog-client-go/artifactory/services"
+	servicesutils "github.com/mondo192/jfrog-client-go/artifactory/services/utils"
+	"github.com/mondo192/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
 	"path"
 	"strings"

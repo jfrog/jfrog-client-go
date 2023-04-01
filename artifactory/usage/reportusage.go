@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	versionutil "github.com/jfrog/gofrog/version"
-	"github.com/jfrog/jfrog-client-go/artifactory"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mondo192/jfrog-client-go/artifactory"
+	"github.com/mondo192/jfrog-client-go/artifactory/services/utils"
+	"github.com/mondo192/jfrog-client-go/utils/errorutils"
+	"github.com/mondo192/jfrog-client-go/utils/log"
 	"net/http"
 )
 

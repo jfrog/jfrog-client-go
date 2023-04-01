@@ -2,7 +2,7 @@ package jfroghttpclient
 
 import (
 	"context"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"github.com/mondo192/jfrog-client-go/http/httpclient"
 	"net/http"
 	"time"
 )

@@ -1,10 +1,10 @@
 package access
 
 import (
-	"github.com/jfrog/jfrog-client-go/access/services"
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/config"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/mondo192/jfrog-client-go/access/services"
+	"github.com/mondo192/jfrog-client-go/auth"
+	"github.com/mondo192/jfrog-client-go/config"
+	"github.com/mondo192/jfrog-client-go/http/jfroghttpclient"
 )
 
 type AccessServicesManager struct {

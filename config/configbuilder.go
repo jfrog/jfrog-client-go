@@ -2,8 +2,8 @@ package config
 
 import (
 	"context"
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"github.com/mondo192/jfrog-client-go/auth"
+	"github.com/mondo192/jfrog-client-go/http/httpclient"
 	"net/http"
 	"time"
 )

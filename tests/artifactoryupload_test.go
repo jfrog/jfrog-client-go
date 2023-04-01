@@ -8,17 +8,17 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mondo192/jfrog-client-go/http/jfroghttpclient"
+	"github.com/mondo192/jfrog-client-go/utils/io/content"
+	"github.com/mondo192/jfrog-client-go/utils/log"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	testutils "github.com/jfrog/jfrog-client-go/utils/tests"
+	"github.com/mondo192/jfrog-client-go/artifactory/auth"
+	"github.com/mondo192/jfrog-client-go/artifactory/services"
+	"github.com/mondo192/jfrog-client-go/artifactory/services/utils"
+	"github.com/mondo192/jfrog-client-go/artifactory/services/utils/tests"
+	clientutils "github.com/mondo192/jfrog-client-go/utils"
+	"github.com/mondo192/jfrog-client-go/utils/io/fileutils"
+	testutils "github.com/mondo192/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
 )
 

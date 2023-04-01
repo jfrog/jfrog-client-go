@@ -2,8 +2,8 @@ package tests
 
 import (
 	"bufio"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mondo192/jfrog-client-go/utils/io/fileutils"
+	"github.com/mondo192/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"net/http"

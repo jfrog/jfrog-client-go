@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/jfrog/jfrog-client-go/xray/services/utils"
+	"github.com/mondo192/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
 )
 

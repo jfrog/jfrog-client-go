@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/mondo192/jfrog-client-go/utils"
+	"github.com/mondo192/jfrog-client-go/utils/errorutils"
 	"regexp"
 	"strings"
 )

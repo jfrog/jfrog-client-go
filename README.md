@@ -8,8 +8,8 @@
 
 | Branch |                                                                                                                                                                              Status                                                                                                                                                                              |
 |:------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| master | [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml) |
-|  dev   |    [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml)    |
+| master | [![Build status](https://github.com/mondo192/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/mondo192/jfrog-client-go/actions) [![Static Analysis](https://github.com/mondo192/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=master)](https://github.com/mondo192/jfrog-client-go/actions/workflows/analysis.yml) |
+|  dev   |    [![Build status](https://github.com/mondo192/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/mondo192/jfrog-client-go/actions) [![Static Analysis](https://github.com/mondo192/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=dev)](https://github.com/mondo192/jfrog-client-go/actions/workflows/analysis.yml)    |
 
 ## Table of Contents
 
@@ -203,13 +203,13 @@ Types_ section below for more information.
 Use the following command with the below options to run the tests.
 
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 [test-types] [flags]
+go test -v github.com/mondo192/jfrog-client-go/tests -timeout 0 [test-types] [flags]
 ```
 
 If you'd like to run a specific test, add the test function name using the `-run` flag. For example:
 
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifactoryVersionWithCustomHttpClient -test.artifactory -rt.url=http://127.0.0.1:8081/artifactory -rt.user=admin -rt.password=password
+go test -v github.com/mondo192/jfrog-client-go/tests -timeout 0 -run TestGetArtifactoryVersionWithCustomHttpClient -test.artifactory -rt.url=http://127.0.0.1:8081/artifactory -rt.user=admin -rt.password=password
 ```
 
 **Note:** The tests create an Artifactory repository named _jfrog-client-tests-repo1_. Once the tests are completed, the

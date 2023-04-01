@@ -8,10 +8,10 @@ import (
 	"github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/gofrog/version"
 
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mondo192/jfrog-client-go/utils"
+	"github.com/mondo192/jfrog-client-go/utils/io/content"
+	"github.com/mondo192/jfrog-client-go/utils/io/fileutils"
+	"github.com/mondo192/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
 )
 

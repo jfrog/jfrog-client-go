@@ -2,7 +2,7 @@ package usage
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/mondo192/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

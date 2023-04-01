@@ -4,7 +4,7 @@ import (
 	"github.com/jfrog/gofrog/version"
 	"testing"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/mondo192/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
 )
 

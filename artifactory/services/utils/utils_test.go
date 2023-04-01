@@ -1,13 +1,13 @@
 package utils
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/mondo192/jfrog-client-go/utils/io/content"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mondo192/jfrog-client-go/utils/log"
 )
 
 func init() {

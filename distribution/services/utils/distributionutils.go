@@ -4,7 +4,7 @@ import (
 	"github.com/jfrog/gofrog/stringutils"
 	"regexp"
 
-	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	rtUtils "github.com/mondo192/jfrog-client-go/artifactory/services/utils"
 )
 
 type ReleaseNotesSyntax string

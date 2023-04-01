@@ -18,12 +18,12 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mondo192/jfrog-client-go/utils"
+	"github.com/mondo192/jfrog-client-go/utils/errorutils"
+	ioutils "github.com/mondo192/jfrog-client-go/utils/io"
+	"github.com/mondo192/jfrog-client-go/utils/io/fileutils"
+	"github.com/mondo192/jfrog-client-go/utils/io/httputils"
+	"github.com/mondo192/jfrog-client-go/utils/log"
 )
 
 type HttpClient struct {

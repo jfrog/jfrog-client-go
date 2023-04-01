@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/mondo192/jfrog-client-go/artifactory/auth"
+	"github.com/mondo192/jfrog-client-go/artifactory/services"
+	"github.com/mondo192/jfrog-client-go/http/jfroghttpclient"
 	"github.com/stretchr/testify/assert"
 )
 

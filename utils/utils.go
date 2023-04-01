@@ -12,15 +12,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/mondo192/jfrog-client-go/utils/io"
 
 	"github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/gofrog/stringutils"
 
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/mondo192/jfrog-client-go/utils/io/fileutils"
 
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/mondo192/jfrog-client-go/utils/errorutils"
+	"github.com/mondo192/jfrog-client-go/utils/log"
 )
 
 const (

@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/config"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/xray"
+	"github.com/mondo192/jfrog-client-go/auth"
+	"github.com/mondo192/jfrog-client-go/config"
+	"github.com/mondo192/jfrog-client-go/utils/log"
+	"github.com/mondo192/jfrog-client-go/xray"
 )
 
 // NewXrayDetails creates a struct of the Xray details

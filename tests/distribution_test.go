@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/distribution/services"
-	distributionServicesUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	artifactoryServices "github.com/mondo192/jfrog-client-go/artifactory/services"
+	"github.com/mondo192/jfrog-client-go/artifactory/services/utils"
+	"github.com/mondo192/jfrog-client-go/distribution/services"
+	distributionServicesUtils "github.com/mondo192/jfrog-client-go/distribution/services/utils"
+	"github.com/mondo192/jfrog-client-go/http/httpclient"
+	"github.com/mondo192/jfrog-client-go/utils/io/httputils"
 	"github.com/stretchr/testify/assert"
 )
 

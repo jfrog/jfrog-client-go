@@ -1,6 +1,6 @@
 package utils
 
-import "github.com/jfrog/jfrog-client-go/utils/log"
+import "github.com/mondo192/jfrog-client-go/utils/log"
 
 type ErrorsQueue struct {
 	errorsChan chan error

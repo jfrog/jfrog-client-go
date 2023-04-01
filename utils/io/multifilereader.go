@@ -1,7 +1,7 @@
 package io
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/mondo192/jfrog-client-go/utils/errorutils"
 	"io"
 	"os"
 	"sort"

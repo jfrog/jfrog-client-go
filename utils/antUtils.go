@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/jfrog/gofrog/stringutils"
-	"github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/mondo192/jfrog-client-go/utils/io"
 )
 
 var (
@@ -61,7 +61,7 @@ func antStarsToRegex(antPattern string) string {
 	antPattern = postfixDoubleStarRegex.ReplaceAllString(antPattern, "("+separator+".*)*")
 
 	// ant `**` => regexp `(.*)*` : Matches zero or more 'directories'.
-	return  middleDoubleStarNoSeparateRegex.ReplaceAllString(antPattern, "(.*)")
+	return middleDoubleStarNoSeparateRegex.ReplaceAllString(antPattern, "(.*)")
 }
 
 func antQuestionMarkToRegex(antPattern string) string {
