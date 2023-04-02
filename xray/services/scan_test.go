@@ -62,18 +62,18 @@ func TestFlattenGraph(t *testing.T) {
 	nodeA.Nodes = []*GraphNode{nodeB, nodeC}
 	nodeB.Nodes = []*GraphNode{nodeC, nodeD}
 	nodeC.Nodes = []*GraphNode{nodeD}
-	nodeD.Nodes = []*GraphNode{nodeE}
+	nodeD.Nodes = []*GraphNode{nodeE, nodeF}
 	nodeF.Nodes = []*GraphNode{nodeA, nodeB, nodeC}
 
 	// Create graph
-	graph := []*GraphNode{nodeA, nodeB, nodeC, nodeD, nodeE, nodeF}
+	graph := []*GraphNode{nodeA, nodeB, nodeC}
 	flatGraph := FlattenGraph(graph)
 
 	// Check that the graph has been flattened correctly
 	assert.Equal(t, len(flatGraph), 6)
 	set := datastructures.MakeSet[string]()
 	for _, node := range flatGraph {
-		assert.Equal(t, node.Nodes, 0)
+		assert.Len(t, node.Nodes, 0)
 		assert.False(t, set.Exists(node.Id))
 		set.Add(node.Id)
 	}

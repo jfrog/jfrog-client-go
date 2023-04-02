@@ -190,14 +190,14 @@ type GraphNode struct {
 	Parent *GraphNode `json:"-"`
 }
 
-// FlattenGraph creates a set of dependencies from the given graph.
+// FlattenGraph creates a set of dependencies from the given graph, and a map of the paths to each dependency.
 func FlattenGraph(graph []*GraphNode) []*GraphNode {
 	flatGraph := []*GraphNode{}
 	depsSet := datastructures.MakeSet[string]()
 	for _, node := range graph {
 		flatGraph = append(flatGraph, getUniqueDependencies(node, depsSet)...)
 	}
-	return flatGraph
+	return []*GraphNode{{Id: "root", Nodes: flatGraph}}
 }
 
 func getUniqueDependencies(node *GraphNode, depsSet *datastructures.Set[string]) []*GraphNode {
