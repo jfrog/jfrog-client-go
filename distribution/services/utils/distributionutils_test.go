@@ -24,7 +24,7 @@ func TestCreateBundleBody(t *testing.T) {
 	assert.Equal(t, "storing-repo", releaseBundleBody.StoringRepository)
 	assert.Equal(t, "Release bundle description", releaseBundleBody.Description)
 	assert.Equal(t, "Release notes", releaseBundleBody.ReleaseNotes.Content)
-	assert.Equal(t, ReleaseNotesSyntax(Asciidoc), releaseBundleBody.ReleaseNotes.Syntax)
+	assert.Equal(t, Asciidoc, releaseBundleBody.ReleaseNotes.Syntax)
 	assert.Len(t, releaseBundleBody.BundleSpec.Queries, 0)
 }
 

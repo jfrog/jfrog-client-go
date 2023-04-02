@@ -163,8 +163,8 @@ func CreateAqlQueryForLatestCreated(repo, path string) string {
 func prepareSearchPattern(pattern string, repositoryExists bool) string {
 	addWildcardIfNeeded(&pattern, repositoryExists)
 	// Remove parenthesis
-	pattern = strings.Replace(pattern, "(", "", -1)
-	pattern = strings.Replace(pattern, ")", "", -1)
+	pattern = strings.ReplaceAll(pattern, "(", "")
+	pattern = strings.ReplaceAll(pattern, ")", "")
 	return pattern
 }
 

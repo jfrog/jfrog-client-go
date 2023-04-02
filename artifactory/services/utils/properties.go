@@ -121,7 +121,7 @@ func (props *Properties) ToEncodedString(concatValues bool) string {
 		}
 		for _, value := range values {
 			if concatValues {
-				propValue := strings.Replace(value, multiValuesSeparator, fmt.Sprintf("\\%s", multiValuesSeparator), -1)
+				propValue := strings.ReplaceAll(value, multiValuesSeparator, fmt.Sprintf("\\%s", multiValuesSeparator))
 				jointProp = fmt.Sprintf("%s%s%s", jointProp, url.QueryEscape(propValue), url.QueryEscape(multiValuesSeparator))
 			} else {
 				jointProp = fmt.Sprintf("%s%s=%s%s", jointProp, url.QueryEscape(key), url.QueryEscape(value), propsSeparator)

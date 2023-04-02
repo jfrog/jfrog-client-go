@@ -77,13 +77,13 @@ func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err e
 		fileInfo, err = os.Stat(path)
 	}
 	// We should not do CheckError here, because the error is checked by the calling functions.
-	return fileInfo, err
+	return
 }
 
 func IsDirEmpty(path string) (isEmpty bool, err error) {
 	dir, err := os.Open(path)
-	if err != nil {
-		return false, errorutils.CheckError(err)
+	if errorutils.CheckError(err) != nil {
+		return
 	}
 	defer func() {
 		e := dir.Close()
@@ -94,9 +94,12 @@ func IsDirEmpty(path string) (isEmpty bool, err error) {
 
 	_, err = dir.Readdirnames(1)
 	if err == io.EOF {
-		return true, nil
+		isEmpty = true
+		err = nil
+		return
 	}
-	return false, errorutils.CheckError(err)
+	err = errorutils.CheckError(err)
+	return
 }
 
 func IsPathSymlink(path string) bool {
