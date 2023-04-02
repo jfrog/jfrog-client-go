@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/jfrog/gofrog/datastructures"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -70,10 +71,10 @@ func TestFlattenGraph(t *testing.T) {
 
 	// Check that the graph has been flattened correctly
 	assert.Equal(t, len(flatGraph), 6)
-	assert.Equal(t, len(flatGraph[0].Nodes), 4)
-	assert.Equal(t, len(flatGraph[1].Nodes), 3)
-	assert.Equal(t, len(flatGraph[2].Nodes), 2)
-	assert.Equal(t, len(flatGraph[3].Nodes), 1)
-	assert.Equal(t, len(flatGraph[4].Nodes), 0)
-	assert.Equal(t, len(flatGraph[5].Nodes), 3)
+	set := datastructures.MakeSet[string]()
+	for _, node := range flatGraph {
+		assert.Equal(t, node.Nodes, 0)
+		assert.False(t, set.Exists(node.Id))
+		set.Add(node.Id)
+	}
 }

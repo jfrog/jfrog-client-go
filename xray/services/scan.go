@@ -190,40 +190,32 @@ type GraphNode struct {
 	Parent *GraphNode `json:"-"`
 }
 
-// FlattenGraph return a 3 level graph: module level, direct dependencies level, transitives level - without duplicates.
+// FlattenGraph creates a set of dependencies from the given graph.
 func FlattenGraph(graph []*GraphNode) []*GraphNode {
-	flatGraph := make([]*GraphNode, 0, len(graph))
+	flatGraph := []*GraphNode{}
+	depsSet := datastructures.MakeSet[string]()
 	for _, node := range graph {
-		directsSet := datastructures.MakeSet[string]()
-		node.Nodes = getUniqueDirectDependencies(node, directsSet)
-		flatGraph = append(flatGraph, node)
+		flatGraph = append(flatGraph, getUniqueDependencies(node, depsSet)...)
 	}
 	return flatGraph
 }
 
-func getUniqueDirectDependencies(module *GraphNode, directsSet *datastructures.Set[string]) []*GraphNode {
-	uniqueDirects := []*GraphNode{}
-	for _, dependency := range module.Nodes {
-		if !directsSet.Exists(dependency.Id) {
-			directsSet.Add(dependency.Id)
-			transitivesSet := datastructures.MakeSet[string]()
-			dependency.Nodes = getUniqueTransitiveDependencies(dependency, transitivesSet)
-			uniqueDirects = append(uniqueDirects, dependency)
+func getUniqueDependencies(node *GraphNode, depsSet *datastructures.Set[string]) []*GraphNode {
+	uniqueDeps := []*GraphNode{}
+	// Append current node
+	if !depsSet.Exists(node.Id) {
+		uniqueDeps = append(uniqueDeps, &GraphNode{Id: node.Id})
+		depsSet.Add(node.Id)
+	}
+	// Append current node children
+	for _, dependency := range node.Nodes {
+		if !depsSet.Exists(dependency.Id) {
+			depsSet.Add(dependency.Id)
+			uniqueDeps = append(uniqueDeps, &GraphNode{Id: dependency.Id})
+			uniqueDeps = append(uniqueDeps, getUniqueDependencies(dependency, depsSet)...)
 		}
 	}
-	return uniqueDirects
-}
-
-func getUniqueTransitiveDependencies(directDependency *GraphNode, transitivesSet *datastructures.Set[string]) []*GraphNode {
-	uniqueTransitives := []*GraphNode{}
-	for _, dependency := range directDependency.Nodes {
-		if !transitivesSet.Exists(dependency.Id) {
-			transitivesSet.Add(dependency.Id)
-			uniqueTransitives = append(uniqueTransitives, &GraphNode{Id: dependency.Id, Parent: directDependency})
-			uniqueTransitives = append(uniqueTransitives, getUniqueTransitiveDependencies(dependency, transitivesSet)...)
-		}
-	}
-	return uniqueTransitives
+	return uniqueDeps
 }
 
 type OtherComponentIds struct {
