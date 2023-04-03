@@ -2,8 +2,8 @@ package services
 
 import (
 	"encoding/json"
-	"github.com/jfrog/gofrog/datastructures"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"golang.org/x/exp/maps"
 	"net/http"
 	"strings"
 	"time"
@@ -190,32 +190,23 @@ type GraphNode struct {
 	Parent *GraphNode `json:"-"`
 }
 
-// FlattenGraph creates a set of dependencies from the given graph, and a map of the paths to each dependency.
+// FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
 func FlattenGraph(graph []*GraphNode) []*GraphNode {
-	flatGraph := []*GraphNode{}
-	depsSet := datastructures.MakeSet[string]()
+	allDependencies := map[string]*GraphNode{}
 	for _, node := range graph {
-		flatGraph = append(flatGraph, getUniqueDependencies(node, depsSet)...)
+		populateUniqueDependencies(node, allDependencies)
 	}
-	return []*GraphNode{{Id: "root", Nodes: flatGraph}}
+	return []*GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}
 }
 
-func getUniqueDependencies(node *GraphNode, depsSet *datastructures.Set[string]) []*GraphNode {
-	uniqueDeps := []*GraphNode{}
-	// Append current node
-	if !depsSet.Exists(node.Id) {
-		uniqueDeps = append(uniqueDeps, &GraphNode{Id: node.Id})
-		depsSet.Add(node.Id)
+func populateUniqueDependencies(node *GraphNode, allDependencies map[string]*GraphNode) {
+	if _, exist := allDependencies[node.Id]; exist {
+		return
 	}
-	// Append current node children
+	allDependencies[node.Id] = &GraphNode{Id: node.Id}
 	for _, dependency := range node.Nodes {
-		if !depsSet.Exists(dependency.Id) {
-			depsSet.Add(dependency.Id)
-			uniqueDeps = append(uniqueDeps, &GraphNode{Id: dependency.Id})
-			uniqueDeps = append(uniqueDeps, getUniqueDependencies(dependency, depsSet)...)
-		}
+		populateUniqueDependencies(dependency, allDependencies)
 	}
-	return uniqueDeps
 }
 
 type OtherComponentIds struct {
