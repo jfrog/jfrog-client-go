@@ -149,7 +149,7 @@ func (rw *ContentWriter) run() {
 			firstRecord = false
 		}
 	}
-	closeString = closeString + jsonArraySuffix
+	closeString += jsonArraySuffix
 	if rw.isCompleteFile {
 		closeString += "}\n"
 	}

@@ -90,7 +90,7 @@ var repoPathFilesDataProvider = []createRepoPathFileTriplesTest{
 func TestCreatePathFilePairs(t *testing.T) {
 	for _, sample := range pathFilesDataProvider {
 		t.Run(sample.pattern+"_recursive_"+strconv.FormatBool(sample.recursive), func(t *testing.T) {
-			validateRepoPathFile(createPathFilePairs("r", sample.pattern, sample.recursive), sample.expectedTriples, sample.pattern, t)
+			validateRepoPathFile(t, createPathFilePairs("r", sample.pattern, sample.recursive), sample.expectedTriples, sample.pattern)
 		})
 	}
 }
@@ -101,12 +101,12 @@ func TestCreateRepoPathFileTriples(t *testing.T) {
 			repoPathFileTriples, singleRepo, err := createRepoPathFileTriples(sample.pattern, sample.recursive)
 			assert.NoError(t, err)
 			assert.Equal(t, sample.expectedSingleRepo, singleRepo)
-			validateRepoPathFile(repoPathFileTriples, sample.expectedTriples, sample.pattern, t)
+			validateRepoPathFile(t, repoPathFileTriples, sample.expectedTriples, sample.pattern)
 		})
 	}
 }
 
-func validateRepoPathFile(actual, expected []RepoPathFile, pattern string, t *testing.T) {
+func validateRepoPathFile(t *testing.T, actual, expected []RepoPathFile, pattern string) {
 	if len(actual) != len(expected) {
 		t.Errorf("Wrong triple.\nPattern:  %v\nExpected: %v\nActual:   %v", pattern, expected, actual)
 	}

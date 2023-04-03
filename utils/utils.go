@@ -317,10 +317,10 @@ func GetLogMsgPrefix(threadId int, dryRun bool) string {
 }
 
 func TrimPath(path string) string {
-	path = strings.Replace(path, "\\", "/", -1)
-	path = strings.Replace(path, "//", "/", -1)
-	path = strings.Replace(path, "../", "", -1)
-	path = strings.Replace(path, "./", "", -1)
+	path = strings.ReplaceAll(path, "\\", "/")
+	path = strings.ReplaceAll(path, "//", "/")
+	path = strings.ReplaceAll(path, "../", "")
+	path = strings.ReplaceAll(path, "./", "")
 	return path
 }
 
@@ -344,7 +344,7 @@ func GetUserHomeDir() string {
 		if home == "" {
 			home = os.Getenv("USERPROFILE")
 		}
-		return strings.Replace(home, "\\", "\\\\", -1)
+		return strings.ReplaceAll(home, "\\", "\\\\")
 	}
 	return os.Getenv("HOME")
 }

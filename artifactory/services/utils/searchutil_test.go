@@ -68,7 +68,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 
 	oldMaxSize := utils.MaxBufferSize
 	defer func() { utils.MaxBufferSize = oldMaxSize }()
-	//Test buffer + sort
+	// Test buffer + sort
 	utils.MaxBufferSize = 3
 	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step4.json"), content.DefaultKey)
 	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
@@ -79,7 +79,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	assert.True(t, isMatch)
 	readerCloseAndAssert(t, resultReader)
 
-	//Two files in the same folder and one is a prefix to another.
+	// Two files in the same folder and one is a prefix to another.
 	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step5.json"), content.DefaultKey)
 	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
 	assert.NoError(t, err)
@@ -89,7 +89,7 @@ func TestReduceTopChainDirResult(t *testing.T) {
 	assert.True(t, isMatch)
 	readerCloseAndAssert(t, resultReader)
 
-	//Two files in the same folder and one is a prefix to another and their folder.
+	// Two files in the same folder and one is a prefix to another and their folder.
 	reader = content.NewContentReader(filepath.Join(testDataPath, "reduce_top_chain_step6.json"), content.DefaultKey)
 	resultReader, err = ReduceTopChainDirResult(ResultItem{}, reader)
 	assert.NoError(t, err)

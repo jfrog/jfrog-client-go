@@ -2,11 +2,11 @@ package utils
 
 import (
 	"fmt"
-	jwt "github.com/golang-jwt/jwt/v4"
+	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"golang.org/x/crypto/openpgp"
 	"os"
 	"path/filepath"
 	"strings"
