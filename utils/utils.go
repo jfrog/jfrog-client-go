@@ -202,10 +202,6 @@ func cleanPath(path string) string {
 	if temp == `\` || temp == "/" {
 		path += temp
 	}
-	if io.IsWindows() {
-		// Since filepath.Clean replaces \\ with \, we revert this action.
-		path = strings.ReplaceAll(path, `\`, `\\`)
-	}
 	return path
 }
 
