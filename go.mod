@@ -3,7 +3,7 @@ module github.com/jfrog/jfrog-client-go
 go 1.20
 
 require (
-	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
+	github.com/ProtonMail/go-crypto v0.0.0-20230331115716-d34776aa93ec
 	github.com/buger/jsonparser v1.1.1
 	github.com/forPelevin/gomoji v1.1.8
 	github.com/go-git/go-git/v5 v5.6.1
