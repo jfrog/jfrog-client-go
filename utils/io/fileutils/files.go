@@ -544,8 +544,9 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	if err != nil {
 		return
 	}
+	origWd := wd
 	defer func() {
-		e := os.Chdir(wd)
+		e := os.Chdir(origWd)
 		if err == nil {
 			err = e
 		}
@@ -586,7 +587,7 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 		visitedPaths[wd] = true
 		// CD to the parent directory.
 		wd = filepath.Dir(wd)
-		err := os.Chdir(wd)
+		err = os.Chdir(wd)
 		if err != nil {
 			return "", false, err
 		}
