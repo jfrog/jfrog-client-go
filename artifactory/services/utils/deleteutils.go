@@ -15,7 +15,7 @@ func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 		return "", errors.New("delete pattern must end with \"/\"")
 	}
 
-	regexpPattern := "^" + strings.Replace(deletePattern, "*", "([^/]*|.*)", -1)
+	regexpPattern := "^" + strings.ReplaceAll(deletePattern, "*", "([^/]*|.*)")
 	r, err := regexp.Compile(regexpPattern)
 	if err != nil {
 		return "", errorutils.CheckError(err)
