@@ -546,10 +546,7 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	}
 	origWd := wd
 	defer func() {
-		e := os.Chdir(origWd)
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, os.Chdir(origWd))
 	}()
 	// Get the OS root.
 	osRoot := os.Getenv("SYSTEMDRIVE")
