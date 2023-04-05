@@ -678,7 +678,7 @@ func teardownIntegrationTests() {
 	repo := getRtTargetRepoKey()
 	err := testsDeleteRepositoryService.Delete(repo)
 	if err != nil {
-		fmt.Printf("teardownIntegrationTests failed for:" + err.Error())
+		fmt.Print("teardownIntegrationTests failed for:" + err.Error())
 		os.Exit(1)
 	}
 }

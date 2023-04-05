@@ -77,13 +77,13 @@ func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err e
 		fileInfo, err = os.Stat(path)
 	}
 	// We should not do CheckError here, because the error is checked by the calling functions.
-	return fileInfo, err
+	return
 }
 
 func IsDirEmpty(path string) (isEmpty bool, err error) {
 	dir, err := os.Open(path)
-	if err != nil {
-		return false, errorutils.CheckError(err)
+	if errorutils.CheckError(err) != nil {
+		return
 	}
 	defer func() {
 		e := dir.Close()
@@ -94,9 +94,12 @@ func IsDirEmpty(path string) (isEmpty bool, err error) {
 
 	_, err = dir.Readdirnames(1)
 	if err == io.EOF {
-		return true, nil
+		isEmpty = true
+		err = nil
+		return
 	}
-	return false, errorutils.CheckError(err)
+	err = errorutils.CheckError(err)
+	return
 }
 
 func IsPathSymlink(path string) bool {
@@ -282,16 +285,17 @@ func CreateDirIfNotExist(path string) error {
 
 // Reads the content of the file in the source path and appends it to
 // the file in the destination path.
-func AppendFile(srcPath string, destFile *os.File) error {
+func AppendFile(srcPath string, destFile *os.File) (err error) {
 	srcFile, err := os.Open(srcPath)
-	err = errorutils.CheckError(err)
-	if err != nil {
-		return err
+	if errorutils.CheckError(err) != nil {
+		return
 	}
 
-	defer func() error {
-		err := srcFile.Close()
-		return errorutils.CheckError(err)
+	defer func() {
+		e := srcFile.Close()
+		if err == nil {
+			err = e
+		}
 	}()
 
 	reader := bufio.NewReader(srcFile)
@@ -299,7 +303,8 @@ func AppendFile(srcPath string, destFile *os.File) error {
 	writer := bufio.NewWriter(destFile)
 	buf := make([]byte, 1024000)
 	for {
-		n, err := reader.Read(buf)
+		var n int
+		n, err = reader.Read(buf)
 		if err != io.EOF {
 			err = errorutils.CheckError(err)
 			if err != nil {
@@ -397,10 +402,20 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (*FileDet
 	details := new(FileDetails)
 
 	pr, pw := io.Pipe()
-	defer pr.Close()
+	defer func() {
+		e := pr.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
 
 	go func() {
-		defer pw.Close()
+		defer func() {
+			e := pw.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}()
 		details.Size, err = io.Copy(pw, reader)
 	}()
 
@@ -529,8 +544,13 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	if err != nil {
 		return
 	}
-	defer os.Chdir(wd)
-
+	origWd := wd
+	defer func() {
+		e := os.Chdir(origWd)
+		if err == nil {
+			err = e
+		}
+	}()
 	// Get the OS root.
 	osRoot := os.Getenv("SYSTEMDRIVE")
 	if osRoot != "" {
@@ -567,7 +587,7 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 		visitedPaths[wd] = true
 		// CD to the parent directory.
 		wd = filepath.Dir(wd)
-		err := os.Chdir(wd)
+		err = os.Chdir(wd)
 		if err != nil {
 			return "", false, err
 		}
