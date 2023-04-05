@@ -2,6 +2,8 @@ package services
 
 import (
 	"fmt"
+	"github.com/jfrog/gofrog/datastructures"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -54,5 +56,34 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 				t.Error(test.testName, "Expecting:", test.expectedQuery, "Got:", actualQuery)
 			}
 		})
+	}
+}
+
+func TestFlattenGraph(t *testing.T) {
+	nodeA := &GraphNode{Id: "A"}
+	nodeB := &GraphNode{Id: "B"}
+	nodeC := &GraphNode{Id: "C"}
+	nodeD := &GraphNode{Id: "D"}
+	nodeE := &GraphNode{Id: "E"}
+	nodeF := &GraphNode{Id: "F"}
+
+	// Set dependencies
+	nodeA.Nodes = []*GraphNode{nodeB, nodeC}
+	nodeB.Nodes = []*GraphNode{nodeC, nodeD}
+	nodeC.Nodes = []*GraphNode{nodeD}
+	nodeD.Nodes = []*GraphNode{nodeE, nodeF}
+	nodeF.Nodes = []*GraphNode{nodeA, nodeB, nodeC}
+
+	// Create graph
+	graph := []*GraphNode{nodeA, nodeB, nodeC}
+	flatGraph := FlattenGraph(graph)
+
+	// Check that the graph has been flattened correctly
+	assert.Equal(t, len(flatGraph[0].Nodes), 6)
+	set := datastructures.MakeSet[string]()
+	for _, node := range flatGraph[0].Nodes {
+		assert.Len(t, node.Nodes, 0)
+		assert.False(t, set.Exists(node.Id))
+		set.Add(node.Id)
 	}
 }
