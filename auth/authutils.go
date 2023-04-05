@@ -24,7 +24,7 @@ type CommonTokenParams struct {
 	RefreshToken     string `json:"refresh_token,omitempty"`
 	GrantType        string `json:"grant_type,omitempty"`
 	Audience         string `json:"audience,omitempty"`
-	IsReferenceToken *bool  `json:"include_reference_token,omitempty"`
+	IncludeReferenceToken *bool  `json:"include_reference_token,omitempty"`
 }
 
 func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
