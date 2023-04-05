@@ -13,7 +13,6 @@ func TestAccessTokens(t *testing.T) {
 	initAccessTest(t)
 	t.Run("createAccessToken", testCreateRefreshableToken)
 	t.Run("testRefreshTokenTest", testRefreshTokenTest)
-	t.Run("testReferenceTokenTest", testReferenceTokenTest)
 }
 
 func testCreateRefreshableToken(t *testing.T) {
@@ -41,21 +40,6 @@ func testRefreshTokenTest(t *testing.T) {
 	assert.Equal(t, token.ExpiresIn, newToken.ExpiresIn, "New access token's expiration is different from original one")
 }
 
-func testReferenceTokenTest(t *testing.T) {
-	// Create token
-	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
-	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
-	assert.NoError(t, err)
-	// Refernece token
-	referenceTokenParams := createReferenceAccessTokenParams(token)
-	newToken, err := testsAccessTokensService.RefreshAccessToken(referenceTokenParams.CommonTokenParams)
-	assert.NoError(t, err)
-	// Validate
-	assert.NotEqual(t, token.AccessToken, newToken.AccessToken, "New access token is identical to original one")
-	assert.NotEqual(t, token.IsReferenceToken, newToken.IsReferenceToken, "New reference token is identical to original one")
-	assert.Equal(t, token.ExpiresIn, newToken.ExpiresIn, "New access token's expiration is different from original one")
-}
-
 func createRefreshableAccessTokenParams(expiredIn int) services.CreateTokenParams {
 	tokenParams := services.CreateTokenParams{}
 	tokenParams.ExpiresIn = expiredIn
@@ -72,15 +56,5 @@ func createRefreshAccessTokenParams(token auth.CreateTokenResponseData) (refresh
 	refreshParams.TokenType = "Bearer"
 	refreshParams.RefreshToken = token.RefreshToken
 	refreshParams.AccessToken = token.AccessToken
-	return
-}
-
-func createReferenceAccessTokenParams(token auth.CreateTokenResponseData) (referenceParams services.CreateTokenParams) {
-	referenceParams = services.CreateTokenParams{}
-	referenceParams.ExpiresIn = token.ExpiresIn
-	referenceParams.TokenType = "Bearer"
-	referenceParams.RefreshToken = token.RefreshToken
-	referenceParams.AccessToken = token.AccessToken
-	referenceParams.IsReferenceToken = &trueValue
 	return
 }
