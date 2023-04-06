@@ -21,10 +21,11 @@ type TokenService struct {
 
 type CreateTokenParams struct {
 	auth.CommonTokenParams
+	IncludeReferenceToken *bool `json:"include_reference_token,omitempty"`
 }
 
-func NewCreateTokenParams(params auth.CommonTokenParams) CreateTokenParams {
-	return CreateTokenParams{CommonTokenParams: params}
+func NewCreateTokenParams(params CreateTokenParams) CreateTokenParams {
+	return CreateTokenParams{CommonTokenParams: params.CommonTokenParams, IncludeReferenceToken: params.IncludeReferenceToken}
 }
 
 func NewTokenService(client *jfroghttpclient.JfrogHttpClient) *TokenService {
@@ -35,7 +36,7 @@ func (ps *TokenService) CreateAccessToken(params CreateTokenParams) (auth.Create
 	return ps.createAccessToken(params)
 }
 
-func (ps *TokenService) RefreshAccessToken(token auth.CommonTokenParams) (auth.CreateTokenResponseData, error) {
+func (ps *TokenService) RefreshAccessToken(token CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	param, err := createRefreshTokenRequestParams(token)
 	if err != nil {
 		return auth.CreateTokenResponseData{}, err
@@ -81,7 +82,7 @@ func (ps *TokenService) addAccessTokenAuthorizationHeader(params CreateTokenPara
 	return nil
 }
 
-func createRefreshTokenRequestParams(p auth.CommonTokenParams) (*CreateTokenParams, error) {
+func createRefreshTokenRequestParams(p CreateTokenParams) (*CreateTokenParams, error) {
 	var trueValue = true
 	// Validate provided parameters
 	if p.RefreshToken == "" {
