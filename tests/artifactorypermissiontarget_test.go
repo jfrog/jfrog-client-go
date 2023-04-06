@@ -159,7 +159,7 @@ func TestDocumentationExampleCreateUpdateAndDeletePermissionTarget(t *testing.T)
 }
 
 func createRandomUser(t *testing.T) string {
-	name := fmt.Sprintf("test-%s-%s", timestampStr, randomString(16))
+	name := fmt.Sprintf("test-%s-%s", timestampStr, randomString(t, 16))
 	userDetails := services.User{
 		Name:                     name,
 		Email:                    name + "@jfrog.com",
@@ -186,20 +186,19 @@ func createRandomUser(t *testing.T) string {
 }
 
 func createRandomRepo(t *testing.T) string {
-	repoKey := fmt.Sprintf("test-%s-%s", timestampStr, randomString(16))
+	repoKey := fmt.Sprintf("test-%s-%s", timestampStr, randomString(t, 16))
 	glp := services.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
 	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, false)
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
-
 	assert.NoError(t, err)
 
 	return repoKey
 }
 
 func createRandomGroup(t *testing.T) string {
-	name := fmt.Sprintf("test-%s-%s", timestampStr, randomString(16))
+	name := fmt.Sprintf("test-%s-%s", timestampStr, randomString(t, 16))
 
 	groupDetails := services.Group{
 		Name:            name,
@@ -221,8 +220,9 @@ func createRandomGroup(t *testing.T) string {
 	return name
 }
 
-func randomString(length int) string {
+func randomString(t *testing.T, length int) string {
 	b := make([]byte, length)
-	rand.Read(b)
+	_, err := rand.Read(b)
+	assert.NoError(t, err)
 	return fmt.Sprintf("%x", b)[:length]
 }

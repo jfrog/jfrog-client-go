@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"strconv"
 	"strings"
 	"testing"
@@ -63,7 +64,8 @@ func artifactSummary(t *testing.T, checksums []string, paths []string, expected 
 	}
 
 	buf := bytes.NewBuffer([]byte{})
-	json.Compact(buf, []byte(expected))
+	err = json.Compact(buf, []byte(expected))
+	assert.NoError(t, err)
 	expected = buf.String()
 
 	expected = strings.ReplaceAll(expected, "\n", "")

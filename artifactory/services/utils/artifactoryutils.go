@@ -107,7 +107,7 @@ func BuildArtifactoryUrl(baseUrl, path string, params map[string]string) (string
 	parsedUrl.RawQuery = q.Encode()
 
 	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
-	encodedUrl := strings.Replace(parsedUrl.String(), ";", url.QueryEscape(";"), -1)
+	encodedUrl := strings.ReplaceAll(parsedUrl.String(), ";", url.QueryEscape(";"))
 	return encodedUrl, nil
 }
 
@@ -227,8 +227,8 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 		}
 	}
 	// Remove escape chars.
-	name = strings.Replace(name, "\\/", "/", -1)
-	version = strings.Replace(version, "\\/", "/", -1)
+	name = strings.ReplaceAll(name, "\\/", "/")
+	version = strings.ReplaceAll(version, "\\/", "/")
 	return name, version, nil
 }
 

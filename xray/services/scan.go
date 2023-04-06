@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"golang.org/x/exp/maps"
 	"net/http"
 	"strings"
 	"time"
@@ -187,6 +188,25 @@ type GraphNode struct {
 	OtherComponentIds []OtherComponentIds `json:"other_component_ids,omitempty"`
 	// Node parent (for internal use)
 	Parent *GraphNode `json:"-"`
+}
+
+// FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
+func FlattenGraph(graph []*GraphNode) []*GraphNode {
+	allDependencies := map[string]*GraphNode{}
+	for _, node := range graph {
+		populateUniqueDependencies(node, allDependencies)
+	}
+	return []*GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}
+}
+
+func populateUniqueDependencies(node *GraphNode, allDependencies map[string]*GraphNode) {
+	if _, exist := allDependencies[node.Id]; exist {
+		return
+	}
+	allDependencies[node.Id] = &GraphNode{Id: node.Id}
+	for _, dependency := range node.Nodes {
+		populateUniqueDependencies(dependency, allDependencies)
+	}
 }
 
 type OtherComponentIds struct {
