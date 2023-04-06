@@ -29,19 +29,35 @@ func TestUnarchive(t *testing.T) {
 	}
 }
 
-func TestUnarchiveSymlink(t *testing.T) {
-	tests := []string{"zip", "tar", "tar.gz"}
-	for _, extension := range tests {
-		t.Run(extension, func(t *testing.T) {
-			// Create temp directory
-			tmpDir, createTempDirCallback := createTempDirWithCallbackAndAssert(t)
-			defer createTempDirCallback()
+var unarchiveSymlinksCases = []struct {
+	prefix        string
+	expectedFiles []string
+}{
+	{prefix: "softlink-rel", expectedFiles: []string{filepath.Join("softlink-rel", "a", "softlink-rel"), filepath.Join("softlink-rel", "b", "c", "d", "file")}},
+	{prefix: "softlink-cousin", expectedFiles: []string{filepath.Join("a", "b", "softlink-cousin"), filepath.Join("a", "c", "d")}},
+	{prefix: "softlink-uncle-file", expectedFiles: []string{filepath.Join("a", "b", "softlink-uncle"), filepath.Join("a", "c")}},
+}
 
-			// Run unarchive
-			err := runUnarchive("softlink-rel."+extension, "archives", tmpDir)
-			assert.NoError(t, err)
-			assert.FileExists(t, filepath.Join(tmpDir, "softlink-rel", "a", "softlink-rel"))
-			assert.FileExists(t, filepath.Join(tmpDir, "softlink-rel", "b", "c", "d", "file"))
+func TestUnarchiveSymlink(t *testing.T) {
+	testExtensions := []string{"zip", "tar", "tar.gz"}
+	for _, extension := range testExtensions {
+		t.Run(extension, func(t *testing.T) {
+			for _, testCase := range unarchiveSymlinksCases {
+				t.Run(testCase.prefix, func(t *testing.T) {
+					// Create temp directory
+					tmpDir, createTempDirCallback := createTempDirWithCallbackAndAssert(t)
+					defer createTempDirCallback()
+
+					// Run unarchive
+					err := runUnarchive(testCase.prefix+"."+extension, "archives", tmpDir)
+					assert.NoError(t, err)
+
+					// Assert the all expected files were extracted
+					for _, expectedFiles := range testCase.expectedFiles {
+						assert.FileExists(t, filepath.Join(tmpDir, expectedFiles))
+					}
+				})
+			}
 		})
 	}
 }
@@ -56,6 +72,8 @@ func TestUnarchiveZipSlip(t *testing.T) {
 		{"abs", []string{"tar", "tar.gz"}, "illegal path in archive: '/tmp/bla/file'"},
 		{"softlink-abs", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: '/tmp/bla/file'"},
 		{"softlink-rel", []string{"zip", "tar", "tar.gz"}, "illegal link path in archive: '../../file'"},
+		{"softlink-loop", []string{"tar"}, "a link can't lead to an ancestor directory"},
+		{"softlink-uncle", []string{"zip", "tar", "tar.gz"}, "a link can't lead to an ancestor directory"},
 		{"hardlink-tilde", []string{"tar", "tar.gz"}, "walking hardlink: illegal link path in archive: '~/../../../../../../../../../Users/Shared/sharedFile.txt'"},
 	}
 	for _, test := range tests {
