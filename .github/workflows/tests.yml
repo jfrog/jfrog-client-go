@@ -68,12 +68,14 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: Setup Artifactory
-        run: |
-          go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
-          ~/go/bin/local-rt-setup
-        env:
-          RTLIC: ${{secrets.RTLIC}}
-          GOPROXY: direct
+        uses: nick-fields/retry@v2
+        with:
+          timeout_seconds: 10
+          max_attempts: 2
+          retry_on: error
+          command: |
+            go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
+            ~/go/bin/local-rt-setup
 
       - name: artifactory tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
@@ -156,12 +158,14 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: Setup Artifactory
-        run: |
-          go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
-          ~/go/bin/local-rt-setup
-        env:
-          RTLIC: ${{secrets.RTLIC}}
-          GOPROXY: direct
+        uses: nick-fields/retry@v2
+        with:
+          timeout_seconds: 10
+          max_attempts: 2
+          retry_on: error
+          command: |
+            go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
+            ~/go/bin/local-rt-setup
 
       - name: Repositories tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories
