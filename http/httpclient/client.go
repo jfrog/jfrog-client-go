@@ -326,31 +326,31 @@ func (jc *HttpClient) ReadRemoteFile(downloadPath string, httpClientsDetails htt
 // Bulk downloads a file.
 // You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) DownloadFileWithProgress(downloadFileDetails *DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.ProgressMgr) (*http.Response, error) {
-	resp, _, err := jc.downloadFile(downloadFileDetails, logMsgPrefix, true, httpClientsDetails, isExplode, progress)
+	httpClientsDetails httputils.HttpClientDetails, isExplode, isBypassArchiveInspection bool, progress ioutils.ProgressMgr) (*http.Response, error) {
+	resp, _, err := jc.downloadFile(downloadFileDetails, logMsgPrefix, true, httpClientsDetails, isExplode, isBypassArchiveInspection, progress)
 	return resp, err
 }
 
 // Bulk downloads a file.
 func (jc *HttpClient) DownloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails httputils.HttpClientDetails, isExplode bool) (*http.Response, error) {
-	return jc.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, httpClientsDetails, isExplode, nil)
+	httpClientsDetails httputils.HttpClientDetails, isExplode, bypassArchiveInspection bool) (*http.Response, error) {
+	return jc.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, httpClientsDetails, isExplode, bypassArchiveInspection, nil)
 }
 
 func (jc *HttpClient) DownloadFileNoRedirect(downloadPath, localPath, fileName string, httpClientsDetails httputils.HttpClientDetails) (*http.Response, string, error) {
 	downloadFileDetails := &DownloadFileDetails{DownloadPath: downloadPath, LocalPath: localPath, FileName: fileName}
-	return jc.downloadFile(downloadFileDetails, "", false, httpClientsDetails, false, nil)
+	return jc.downloadFile(downloadFileDetails, "", false, httpClientsDetails, false, false, nil)
 }
 
 func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string, followRedirect bool,
-	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
+	httpClientsDetails httputils.HttpClientDetails, isExplode, bypassArchiveInspection bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:               jc.retries,
 		RetriesIntervalMilliSecs: jc.retryWaitMilliSecs,
 		ErrorMessage:             fmt.Sprintf("Failure occurred while downloading %s", downloadFileDetails.DownloadPath),
 		LogMsgPrefix:             logMsgPrefix,
 		ExecutionHandler: func() (bool, error) {
-			resp, redirectUrl, err = jc.doDownloadFile(downloadFileDetails, logMsgPrefix, followRedirect, httpClientsDetails, isExplode, progress)
+			resp, redirectUrl, err = jc.doDownloadFile(downloadFileDetails, logMsgPrefix, followRedirect, httpClientsDetails, isExplode, bypassArchiveInspection, progress)
 			// In case followRedirect is 'false' and doDownloadFile did redirect, an error is returned and redirectUrl
 			// receives the redirect address. This case should not retry.
 			if err != nil && !followRedirect && redirectUrl != "" {
@@ -379,7 +379,7 @@ func (jc *HttpClient) downloadFile(downloadFileDetails *DownloadFileDetails, log
 }
 
 func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, logMsgPrefix string, followRedirect bool,
-	httpClientsDetails httputils.HttpClientDetails, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
+	httpClientsDetails httputils.HttpClientDetails, isExplode, bypassArchiveInspection bool, progress ioutils.ProgressMgr) (resp *http.Response, redirectUrl string, err error) {
 	resp, redirectUrl, err = jc.sendGetForFileDownload(downloadFileDetails.DownloadPath, followRedirect, httpClientsDetails, "")
 	if err != nil {
 		return
@@ -404,7 +404,7 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 
 	// Extract archive.
 	if isExplode {
-		err = utils.ExtractArchive(downloadFileDetails.LocalPath, downloadFileDetails.LocalFileName, downloadFileDetails.FileName, logMsgPrefix)
+		err = utils.ExtractArchive(downloadFileDetails.LocalPath, downloadFileDetails.LocalFileName, downloadFileDetails.FileName, logMsgPrefix, bypassArchiveInspection)
 	}
 	return
 }
@@ -517,7 +517,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 	}
 
 	if flags.Explode {
-		if err = utils.ExtractArchive(flags.LocalPath, flags.LocalFileName, flags.FileName, logMsgPrefix); err != nil {
+		if err = utils.ExtractArchive(flags.LocalPath, flags.LocalFileName, flags.FileName, logMsgPrefix, flags.BypassArchiveInspection); err != nil {
 			return
 		}
 	}
@@ -798,14 +798,15 @@ type DownloadFileDetails struct {
 }
 
 type ConcurrentDownloadFlags struct {
-	FileName      string
-	DownloadPath  string
-	RelativePath  string
-	LocalFileName string
-	LocalPath     string
-	ExpectedSha1  string
-	FileSize      int64
-	SplitCount    int
-	Explode       bool
-	SkipChecksum  bool
+	FileName                string
+	DownloadPath            string
+	RelativePath            string
+	LocalFileName           string
+	LocalPath               string
+	ExpectedSha1            string
+	FileSize                int64
+	SplitCount              int
+	Explode                 bool
+	BypassArchiveInspection bool
+	SkipChecksum            bool
 }
