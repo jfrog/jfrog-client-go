@@ -33,6 +33,7 @@ jobs:
       - name: Go Cache
         uses: actions/cache@v3
         with:
+          enableCrossOsArchive: true
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
@@ -63,6 +64,7 @@ jobs:
       - name: Go Cache
         uses: actions/cache@v3
         with:
+          enableCrossOsArchive: true
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
@@ -102,6 +104,7 @@ jobs:
       - name: Go Cache
         uses: actions/cache@v3
         with:
+          enableCrossOsArchive: true
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
@@ -127,6 +130,7 @@ jobs:
       - name: Go Cache
         uses: actions/cache@v3
         with:
+          enableCrossOsArchive: true
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
@@ -152,6 +156,7 @@ jobs:
       - name: Go Cache
         uses: actions/cache@v3
         with:
+          enableCrossOsArchive: true
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
