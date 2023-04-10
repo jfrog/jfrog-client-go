@@ -73,7 +73,7 @@ jobs:
           RTLIC: ${{secrets.RTLIC}}
           GOPROXY: direct
         run: |
-          go install {{ env.setup.url }} || go install {{ env.setup.url }}
+          go install ${{ env.setup-url }} || go install ${{ env.setup-url }}
           ~/go/bin/local-rt-setup
 
       - name: artifactory tests
@@ -162,7 +162,7 @@ jobs:
           RTLIC: ${{secrets.RTLIC}}
           GOPROXY: direct
         run: |
-          go install {{ env.setup.url }} || go install {{ env.setup.url }}
+          go install ${{ env.setup-url }} || go install ${{ env.setup-url }}
           ~/go/bin/local-rt-setup
 
       - name: Repositories tests
