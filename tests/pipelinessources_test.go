@@ -2,10 +2,9 @@ package tests
 
 import (
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
 
 func TestPipelinesSources(t *testing.T) {
@@ -48,15 +47,14 @@ func getSourceAndAssert(t *testing.T, sourceId, intId int) {
 }
 
 func deleteSourceAndAssert(t *testing.T, id int) {
-	var err error
-	for i := 0; i < 10; i++ {
-		err = testsPipelinesSourcesService.DeleteSource(id)
-		if err == nil {
-			// Successfully deleted
-			return
-		}
-		log.Info("Failed deleting source. Trying again after sleep...")
-		time.Sleep(5 * time.Second)
+	pollingExecutor := &utils.RetryExecutor{
+		MaxRetries:               10,
+		RetriesIntervalMilliSecs: 3000,
+		ErrorMessage:             "Failed deleting source. Trying again after sleep...",
+		ExecutionHandler: func() (shouldRetry bool, err error) {
+			err = testsPipelinesSourcesService.DeleteSource(id)
+			return err != nil, err
+		},
 	}
-	assert.NoError(t, err)
+	assert.NoError(t, pollingExecutor.Execute())
 }

@@ -73,7 +73,7 @@ jobs:
           RTLIC: ${{secrets.RTLIC}}
           GOPROXY: direct
         run: |
-          go install ${{env.setup-url}} || go install ${{env.setup-url}}
+          for i in {1..3}; do go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest && break; done
           ~/go/bin/local-rt-setup
 
       - name: artifactory tests
@@ -162,9 +162,8 @@ jobs:
           RTLIC: ${{secrets.RTLIC}}
           GOPROXY: direct
         run: |
-          go install ${{env.setup-url}} || go install ${{env.setup-url}}
+          for i in {1..3}; do go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest && break; done
           ~/go/bin/local-rt-setup
-
 
       - name: Repositories tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories
