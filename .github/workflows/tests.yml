@@ -69,7 +69,6 @@ jobs:
 
       - name: Setup Artifactory
         env:
-          setup-url: github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
           RTLIC: ${{secrets.RTLIC}}
           GOPROXY: direct
         run: |
@@ -158,7 +157,6 @@ jobs:
 
       - name: Setup Artifactory
         env:
-          setup-url: github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
           RTLIC: ${{secrets.RTLIC}}
           GOPROXY: direct
         run: |
