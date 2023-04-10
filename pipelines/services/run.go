@@ -150,5 +150,5 @@ func (rs *RunService) CancelRun(runID int) error {
 		log.Info(fmt.Sprintf("Cancelled run %s successfully", runValue))
 		return nil
 	}
-	return fmt.Errorf(fmt.Sprintf("Unable to find run ID: %d", runID))
+	return fmt.Errorf("unable to find run ID: %d", runID)
 }
