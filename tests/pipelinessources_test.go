@@ -48,8 +48,15 @@ func getSourceAndAssert(t *testing.T, sourceId, intId int) {
 }
 
 func deleteSourceAndAssert(t *testing.T, id int) {
-	// Add delay to avoid deletion failing
-	time.Sleep(3 * time.Second)
-	err := testsPipelinesSourcesService.DeleteSource(id)
+	var err error
+	for i := 0; i < 10; i++ {
+		err = testsPipelinesSourcesService.DeleteSource(id)
+		if err == nil {
+			// Successfully deleted
+			return
+		}
+		log.Info("Failed deleting source. Trying again after sleep...")
+		time.Sleep(5 * time.Second)
+	}
 	assert.NoError(t, err)
 }
