@@ -2,6 +2,7 @@ package tests
 
 import (
 	"testing"
+	"time"
 
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/stretchr/testify/assert"
@@ -47,6 +48,8 @@ func getSourceAndAssert(t *testing.T, sourceId, intId int) {
 }
 
 func deleteSourceAndAssert(t *testing.T, id int) {
+	// Add delay to avoid deletion failing
+	time.Sleep(3 * time.Second)
 	err := testsPipelinesSourcesService.DeleteSource(id)
 	assert.NoError(t, err)
 }
