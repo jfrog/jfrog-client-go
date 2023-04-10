@@ -3,6 +3,7 @@ package tests
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/stretchr/testify/assert"
@@ -110,6 +111,8 @@ func getUniqueIntegrationName(integrationType string) string {
 }
 
 func deleteIntegrationAndAssert(t *testing.T, id int) {
+	// Add delay to avoid deletion failing
+	time.Sleep(3 * time.Second)
 	err := testsPipelinesIntegrationsService.DeleteIntegration(id)
 	assert.NoError(t, err)
 }
