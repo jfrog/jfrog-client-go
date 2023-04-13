@@ -120,16 +120,16 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 	log.Info("Waiting for scan to complete...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		resp, responseBody, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
+		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
 			return true, nil, err
 		}
-		if err = errorutils.CheckResponseStatusWithBody(resp, responseBody, http.StatusOK, http.StatusAccepted); err != nil {
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
 			return true, nil, err
 		}
 		// Got the full valid response.
 		if resp.StatusCode == http.StatusOK {
-			return true, responseBody, nil
+			return true, body, nil
 		}
 		return false, nil, nil
 	}
