@@ -44,7 +44,7 @@ func CheckResponseStatusWithBody(resp *http.Response, body []byte, expectedStatu
 			return nil
 		}
 	}
-	return CheckError(GenerateResponseError(resp.Status, generateErrorString(body)))
+	return CheckError(GenerateResponseError(resp.Status, GenerateErrorString(body)))
 }
 
 func GenerateResponseError(status, body string) error {
@@ -55,7 +55,7 @@ func GenerateResponseError(status, body string) error {
 	return fmt.Errorf(responseErrString)
 }
 
-func generateErrorString(bodyArray []byte) string {
+func GenerateErrorString(bodyArray []byte) string {
 	var content bytes.Buffer
 	if err := json.Indent(&content, bodyArray, "", "  "); err != nil {
 		return string(bodyArray)
