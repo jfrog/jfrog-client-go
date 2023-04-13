@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
+	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -61,8 +62,7 @@ func testXrayWatchAll(t *testing.T) {
 		},
 	}
 
-	err = testsXrayWatchService.Create(paramsAllRepos)
-	assert.NoError(t, err)
+	createWatchWithRetries(t, paramsAllRepos)
 	defer func() {
 		assert.NoError(t, testsXrayWatchService.Delete(paramsAllRepos.Name))
 	}()
@@ -185,10 +185,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 		Name:     build1Name,
 		BinMgrID: "default",
 	}
-	err = testsXrayWatchService.Create(paramsSelectedRepos)
-	if !assert.NoError(t, err) {
-		return
-	}
+	createWatchWithRetries(t, paramsSelectedRepos)
 	defer func() {
 		assert.NoError(t, testsXrayWatchService.Delete(paramsSelectedRepos.Name))
 	}()
@@ -286,9 +283,7 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 			Type: "security",
 		},
 	}
-
-	err = testsXrayWatchService.Create(paramsBuildsByPattern)
-	assert.NoError(t, err)
+	createWatchWithRetries(t, paramsBuildsByPattern)
 	defer func() {
 		assert.NoError(t, testsXrayWatchService.Delete(paramsBuildsByPattern.Name))
 	}()
@@ -401,4 +396,17 @@ func createAndIndexBuild(t *testing.T, buildName string) error {
 	assert.NoError(t, err)
 	err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
 	return err
+}
+
+func createWatchWithRetries(t *testing.T, params utils.WatchParams) {
+	pollingExecutor := &clientUtils.RetryExecutor{
+		MaxRetries:               3,
+		RetriesIntervalMilliSecs: 3000,
+		ErrorMessage:             "Failed creating a watch. Trying again after sleep...",
+		ExecutionHandler: func() (shouldRetry bool, err error) {
+			err = testsXrayWatchService.Create(params)
+			return err != nil, err
+		},
+	}
+	assert.NoError(t, pollingExecutor.Execute())
 }
