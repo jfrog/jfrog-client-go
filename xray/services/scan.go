@@ -150,7 +150,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
 		// Failed due to an internal Xray error
-		return nil, errorutils.CheckErrorf("the scan request failed on JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
+		return nil, errorutils.CheckErrorf("received a failure status from JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
 	}
 	return &scanResponse, err
 }
