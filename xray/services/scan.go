@@ -120,16 +120,16 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 	log.Info("Waiting for scan to complete...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
+		resp, responseBody, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
 			return true, nil, err
 		}
-		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
+		if err = errorutils.CheckResponseStatusWithBody(resp, responseBody, http.StatusOK, http.StatusAccepted); err != nil {
 			return true, nil, err
 		}
 		// Got the full valid response.
 		if resp.StatusCode == http.StatusOK {
-			return true, body, nil
+			return true, responseBody, nil
 		}
 		return false, nil, nil
 	}
@@ -149,7 +149,8 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		return nil, errorutils.CheckError(err)
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
-		return nil, errorutils.CheckErrorf("Xray scan failed")
+		// Failed due to an internal Xray error
+		return nil, errorutils.CheckErrorf("the scan task failed while running on Xray server:\n%s", errorutils.GenerateErrorString(body))
 	}
 	return &scanResponse, err
 }
