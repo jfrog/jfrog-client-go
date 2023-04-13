@@ -146,11 +146,11 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 	scanResponse := ScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckError(err)
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
 		// Failed due to an internal Xray error
-		return nil, errorutils.CheckErrorf("the scan task failed while running on Xray server:\n%s", errorutils.GenerateErrorString(body))
+		return nil, errorutils.CheckErrorf("the scan request failed on JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
 	}
 	return &scanResponse, err
 }
