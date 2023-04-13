@@ -32,8 +32,7 @@ func (rs *CreateReplicationService) performRequest(params *utils.UpdateReplicati
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.replications.ReplicationConfigRequest+json", &httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/replications/" + params.RepoKey
-	log.Info("Creating replication..")
-	operationString := "creating"
+	log.Info("Creating replication...")
 	resp, body, err := rs.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
@@ -42,7 +41,7 @@ func (rs *CreateReplicationService) performRequest(params *utils.UpdateReplicati
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done " + operationString + " repository.")
+	log.Info("Done creating replication.")
 	return nil
 }
 

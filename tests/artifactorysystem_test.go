@@ -50,7 +50,8 @@ func testGetConfigDescriptor(t *testing.T) {
 
 		// Send response 200 OK
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("<config></config>"))
+		_, err := w.Write([]byte("<config></config>"))
+		assert.NoError(t, err)
 	})
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
@@ -71,7 +72,8 @@ func testActivateKeyEncryption(t *testing.T) {
 
 		// Send response 200 OK
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Done"))
+		_, err := w.Write([]byte("Done"))
+		assert.NoError(t, err)
 	})
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
@@ -90,7 +92,8 @@ func testDeactivateKeyEncryption(t *testing.T) {
 
 		// Send response 200 OK
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Done"))
+		_, err := w.Write([]byte("Done"))
+		assert.NoError(t, err)
 	})
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
@@ -111,7 +114,8 @@ func testDeactivateKeyEncryptionNotEncrypted(t *testing.T) {
 
 		// Send response 200 OK
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte("Cannot decrypt without artifactory key file"))
+		_, err := w.Write([]byte("Cannot decrypt without artifactory key file"))
+		assert.NoError(t, err)
 	})
 	ts := httptest.NewServer(handler)
 	defer ts.Close()

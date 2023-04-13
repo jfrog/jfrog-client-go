@@ -28,7 +28,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
 
       - name: Go Cache
         uses: actions/cache@v3
@@ -53,7 +53,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -68,12 +68,13 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: Setup Artifactory
-        run: |
-          go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
-          ~/go/bin/local-rt-setup
         env:
+          setup-url: github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
           RTLIC: ${{secrets.RTLIC}}
           GOPROXY: direct
+        run: |
+          go install ${{ env.setup-url }} || go install ${{ env.setup-url }}
+          ~/go/bin/local-rt-setup
 
       - name: artifactory tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
@@ -96,7 +97,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
 
       - name: Go Cache
         uses: actions/cache@v3
@@ -121,7 +122,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
 
       - name: Go Cache
         uses: actions/cache@v3
@@ -141,7 +142,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -156,12 +157,13 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: Setup Artifactory
-        run: |
-          go install github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
-          ~/go/bin/local-rt-setup
         env:
+          setup-url: github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
           RTLIC: ${{secrets.RTLIC}}
           GOPROXY: direct
+        run: |
+          go install ${{ env.setup-url }} || go install ${{ env.setup-url }}
+          ~/go/bin/local-rt-setup
 
       - name: Repositories tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories

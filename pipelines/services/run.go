@@ -25,13 +25,11 @@ func NewRunService(client *jfroghttpclient.JfrogHttpClient) *RunService {
 }
 
 const (
-	runStatus            = "api/v1/search/pipelines/"
-	triggerpipeline      = "api/v1/pipelines/trigger"
-	pipelineSyncStatus   = "api/v1/pipelineSyncStatuses"
-	pipelineResources    = "api/v1/pipelineSources"
-	cancelRunPath        = "api/v1/runs/:runId/cancel"
-	syncPipelineResource = "api/v1/pipelineSources"
-	resourceVersions     = "api/v1/resourceVersions"
+	runStatus          = "api/v1/search/pipelines/"
+	triggerpipeline    = "api/v1/pipelines/trigger"
+	pipelineSyncStatus = "api/v1/pipelineSyncStatuses"
+	pipelineResources  = "api/v1/pipelineSources"
+	cancelRunPath      = "api/v1/runs/:runId/cancel"
 )
 
 func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) (*PipelineRunStatusResponse, error) {
@@ -152,5 +150,5 @@ func (rs *RunService) CancelRun(runID int) error {
 		log.Info(fmt.Sprintf("Cancelled run %s successfully", runValue))
 		return nil
 	}
-	return fmt.Errorf(fmt.Sprintf("Unable to find run ID: %d", runID))
+	return fmt.Errorf("unable to find run ID: %d", runID)
 }
