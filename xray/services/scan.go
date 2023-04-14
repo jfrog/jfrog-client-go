@@ -118,7 +118,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	} else if includeLicenses {
 		endPoint += includeLicensesParam
 	}
-	log.Info("Waiting for scan to complete...")
+	log.Info("Waiting for scan to complete on JFrog Xray...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
@@ -146,10 +146,11 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 	scanResponse := ScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckError(err)
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
-		return nil, errorutils.CheckErrorf("Xray scan failed")
+		// Failed due to an internal Xray error
+		return nil, errorutils.CheckErrorf("received a failure status from JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
 	}
 	return &scanResponse, err
 }
