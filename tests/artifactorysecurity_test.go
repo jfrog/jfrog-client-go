@@ -260,7 +260,7 @@ func createToken(username string) (accessauth.CreateTokenResponseData, error) {
 }
 
 func revokeTokenCleanup(t *testing.T, refreshToken string) {
-	log.Debug("Revoking Token with refresh token: ", refreshToken)
+	log.Debug("Revoking Token with refresh token:", refreshToken)
 	responseText, err := revokeToken(refreshToken)
 	if err != nil {
 		t.Error(err)

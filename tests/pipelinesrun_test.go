@@ -128,7 +128,7 @@ func pollGetRunStatus(t *testing.T, pipelineName string) {
 
 		// Got the full valid response.
 		if pipRunResponse != nil && len(pipRunResponse.Pipelines) > 0 && pipRunResponse.Pipelines[0].Name == pipelineName {
-			log.Info("pipelines status code ", pipRunResponse.Pipelines[0].Run.StatusCode)
+			log.Info("pipelines status code", pipRunResponse.Pipelines[0].Run.StatusCode)
 			if isCancellable(pipRunResponse.Pipelines[0].Run.StatusCode) {
 				runStatusCode := pipRunResponse.Pipelines[0].Run.StatusCode
 				assertRunStatus(t, runStatusCode)
