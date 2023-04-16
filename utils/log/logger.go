@@ -208,6 +208,7 @@ type Log interface {
 	Warn(a ...interface{})
 	Error(a ...interface{})
 	Output(a ...interface{})
+	GetLogLevel() LevelType
 }
 
 // Check if StdErr is a terminal
