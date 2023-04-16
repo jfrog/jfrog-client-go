@@ -115,7 +115,7 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 }
 
 func (rs *RunService) CancelRun(runID int) error {
-	log.Info("Cancelling the run ", runID)
+	log.Info("Cancelling the run", runID)
 	runValue := strconv.Itoa(runID)
 	cancelRun := cancelRunPath
 	cancelRun = strings.Replace(cancelRun, ":runId", runValue, 1)
