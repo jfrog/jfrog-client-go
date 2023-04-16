@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"golang.org/x/exp/maps"
 	"net/http"
@@ -192,12 +193,20 @@ type GraphNode struct {
 }
 
 // FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
-func FlattenGraph(graph []*GraphNode) []*GraphNode {
+func FlattenGraph(graph []*GraphNode) ([]*GraphNode, error) {
 	allDependencies := map[string]*GraphNode{}
 	for _, node := range graph {
 		populateUniqueDependencies(node, allDependencies)
 	}
-	return []*GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}
+	if log.GetLogger().GetLogLevel() == log.DEBUG {
+		// Print dependencies list only on DEBUG mode.
+		jsonList, err := json.Marshal(maps.Keys(allDependencies))
+		if err != nil {
+			return nil, errorutils.CheckError(err)
+		}
+		log.Debug("Flat dependencies list:\n" + clientutils.IndentJsonArray(jsonList))
+	}
+	return []*GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}, nil
 }
 
 func populateUniqueDependencies(node *GraphNode, allDependencies map[string]*GraphNode) {

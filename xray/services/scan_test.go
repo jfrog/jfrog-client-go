@@ -67,7 +67,8 @@ func TestFlattenGraph(t *testing.T) {
 
 	// Create graph
 	graph := []*GraphNode{nodeA, nodeB, nodeC}
-	flatGraph := FlattenGraph(graph)
+	flatGraph, err := FlattenGraph(graph)
+	assert.NoError(t, err)
 
 	// Check that the graph has been flattened correctly
 	assert.Equal(t, len(flatGraph[0].Nodes), 6)
