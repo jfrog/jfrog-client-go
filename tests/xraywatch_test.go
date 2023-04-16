@@ -100,10 +100,7 @@ func testXrayWatchAll(t *testing.T) {
 			Type: "security",
 		},
 	}
-	err = testsXrayWatchService.Update(*targetConfig)
-	if !assert.NoError(t, err) {
-		return
-	}
+	updateWatchWithRetries(t, *targetConfig)
 
 	validateWatchGeneralSettings(t, *targetConfig)
 	updatedTargetConfig, err := testsXrayWatchService.Get(paramsAllRepos.Name)
@@ -240,11 +237,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	updatedRepo1.Filters.Properties = map[string]string{"some-key": "some-value-2"}
 
 	targetConfig.Repositories.Repositories[repo1Name] = updatedRepo1
-
-	err = testsXrayWatchService.Update(*targetConfig)
-	if !assert.NoError(t, err) {
-		return
-	}
+	updateWatchWithRetries(t, *targetConfig)
 
 	validateWatchGeneralSettings(t, *targetConfig)
 	updatedTargetConfig, err := testsXrayWatchService.Get(paramsSelectedRepos.Name)
@@ -301,10 +294,7 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 	targetConfig.Builds.All.ExcludePatterns = []string{"excludePath-2"}
 	targetConfig.Builds.All.IncludePatterns = []string{"includePath-2", "fake-2"}
 
-	err = testsXrayWatchService.Update(*targetConfig)
-	if !assert.NoError(t, err) {
-		return
-	}
+	updateWatchWithRetries(t, *targetConfig)
 
 	validateWatchGeneralSettings(t, *targetConfig)
 	updatedTargetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
@@ -397,14 +387,29 @@ func createAndIndexBuild(t *testing.T, buildName string) error {
 	err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
 	return err
 }
-
 func createWatchWithRetries(t *testing.T, params utils.WatchParams) {
+	createOrUpdateWatchWithRetries(t, params, false)
+}
+
+func updateWatchWithRetries(t *testing.T, params utils.WatchParams) {
+	createOrUpdateWatchWithRetries(t, params, true)
+}
+
+func createOrUpdateWatchWithRetries(t *testing.T, params utils.WatchParams, isUpdate bool) {
+	actionType := "creating"
+	if isUpdate {
+		actionType = "updating"
+	}
 	pollingExecutor := &clientUtils.RetryExecutor{
 		MaxRetries:               3,
 		RetriesIntervalMilliSecs: 3000,
-		ErrorMessage:             "Failed creating a watch. Trying again after sleep...",
+		ErrorMessage:             fmt.Sprintf("Failed %s a watch with the following params: %+v. Trying again after sleep...", actionType, params),
 		ExecutionHandler: func() (shouldRetry bool, err error) {
-			err = testsXrayWatchService.Create(params)
+			if isUpdate {
+				err = testsXrayWatchService.Update(params)
+			} else {
+				err = testsXrayWatchService.Create(params)
+			}
 			return err != nil, err
 		},
 	}
