@@ -198,11 +198,14 @@ func FlattenGraph(graph []*GraphNode) ([]*GraphNode, error) {
 	for _, node := range graph {
 		populateUniqueDependencies(node, allDependencies)
 	}
-	jsonList, err := json.Marshal(maps.Keys(allDependencies))
-	if err != nil {
-		return nil, errorutils.CheckError(err)
+	if log.GetLogger().GetLogLevel() == log.DEBUG {
+		// Print dependencies list only on DEBUG mode.
+		jsonList, err := json.Marshal(maps.Keys(allDependencies))
+		if err != nil {
+			return nil, errorutils.CheckError(err)
+		}
+		log.Debug("Flat dependencies list:\n" + clientutils.IndentJsonArray(jsonList))
 	}
-	log.Debug("Flat dependencies list:\n" + clientutils.IndentJsonArray(jsonList))
 	return []*GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}, nil
 }
 
