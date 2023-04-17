@@ -975,12 +975,13 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t, "remote", "")
+	data := getAllRepos(t, "remote")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {
 		if v.Key == repoKey {
-			repo = &v
+			rRepo := v
+			repo = &rRepo
 			break
 		}
 	}

@@ -35,7 +35,7 @@ func SshAuthentication(url, sshKeyPath, sshPassphrase string) (sshAuthHeaders ma
 		log.Debug("Trying to authenticate via SSH Key...")
 
 		// Check if key specified
-		if len(sshKeyPath) <= 0 {
+		if len(sshKeyPath) == 0 {
 			log.Error("Authentication via SSH key failed.")
 			return nil, "", errorutils.CheckErrorf("SSH key not specified.")
 		}

@@ -127,7 +127,7 @@ func TestFindUpstreamFolder(t *testing.T) {
 	}()
 
 	// Create path to directory to find.
-	dirPath := filepath.Join("testdata")
+	dirPath := "testdata"
 	err = os.Chdir(dirPath)
 	if err != nil {
 		assert.Error(t, err)

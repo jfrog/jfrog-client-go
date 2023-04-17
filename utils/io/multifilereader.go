@@ -8,7 +8,7 @@ import (
 )
 
 // Create new multi file ReaderAt
-func NewMultiFileReaderAt(filePaths []string) (readerAt *multiFileReaderAt, err error) {
+func newMultiFileReaderAt(filePaths []string) (readerAt *multiFileReaderAt, err error) {
 	readerAt = &multiFileReaderAt{}
 	for _, v := range filePaths {
 		f, curErr := os.Open(v)
@@ -50,19 +50,19 @@ func (multiFileReader *multiFileReaderAt) ReadAt(p []byte, off int64) (n int, er
 	// Search for the correct index to find the correct file offset
 	i := sort.Search(len(multiFileReader.sizeIndex), func(i int) bool { return multiFileReader.sizeIndex[i] > off }) - 1
 
-	readBytes := 0
+	var readBytes int
 	for {
 		var f *os.File
 		f, err = os.Open(multiFileReader.filesPaths[i])
 		if err != nil {
 			return
 		}
-		defer func() {
+		defer func(loopErr error) {
 			e := f.Close()
-			if err == nil {
+			if loopErr == nil {
 				err = errorutils.CheckError(e)
 			}
-		}()
+		}(err)
 		relativeOff := off + int64(n) - multiFileReader.sizeIndex[i]
 		readBytes, err = f.ReadAt(p[n:], relativeOff)
 		n += readBytes

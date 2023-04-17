@@ -1,3 +1,4 @@
+//nolint:forcetypeassert
 package utils
 
 import (

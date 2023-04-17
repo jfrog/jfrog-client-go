@@ -699,12 +699,13 @@ func getAllVirtualRepoDetailsTest(t *testing.T) {
 	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t, "virtual", "")
+	data := getAllRepos(t, "virtual")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {
 		if v.Key == repoKey {
-			repo = &v
+			vRepo := v
+			repo = &vRepo
 			break
 		}
 	}

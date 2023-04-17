@@ -101,7 +101,10 @@ func getApiKeyFromBody(body []byte) (string, error) {
 	if len(data) == 0 {
 		return "", nil
 	}
-	apiKey := data["apiKey"].(string)
+	apiKey, ok := data["apiKey"].(string)
+	if !ok {
+		return "", errorutils.CheckErrorf("unable to assert apiKey string value")
+	}
 	return apiKey, nil
 }
 

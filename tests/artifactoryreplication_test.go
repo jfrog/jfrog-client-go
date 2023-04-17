@@ -18,7 +18,7 @@ func TestReplication(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = deleteReplication(t)
+	err = deleteReplication()
 	if err != nil {
 		t.Error(err)
 	}
@@ -58,7 +58,7 @@ func getAndAssertReplication(t *testing.T, expected []utils.ReplicationParams) e
 	return nil
 }
 
-func deleteReplication(t *testing.T) error {
+func deleteReplication() error {
 	err := testsReplicationDeleteService.DeleteReplication(getRtTargetRepoKey())
 	if err != nil {
 		return err

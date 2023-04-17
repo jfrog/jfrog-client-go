@@ -144,7 +144,7 @@ func GetFileAndDirFromPath(path string) (fileName, dir string) {
 func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool, placeholdersUsed bool) (localTargetPath, fileName string) {
 	targetFileName, targetDirPath := GetFileAndDirFromPath(targetPath)
 	// Remove double slashes and double backslashes that may appear in the path
-	localTargetPath = filepath.Join(targetDirPath)
+	localTargetPath = targetDirPath
 	// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
 	if !flat && !placeholdersUsed {
 		localTargetPath = filepath.Join(targetDirPath, relativePath)

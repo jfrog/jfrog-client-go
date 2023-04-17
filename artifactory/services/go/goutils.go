@@ -6,7 +6,7 @@ import (
 )
 
 func CreateUrlPath(pathInArtifactory, props string, goApiUrl *string) error {
-	*goApiUrl = *goApiUrl + pathInArtifactory
+	*goApiUrl += pathInArtifactory
 	properties, err := utils.ParseProperties(props)
 	if err != nil {
 		return err

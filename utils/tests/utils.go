@@ -31,7 +31,11 @@ func StartHttpServer(handlers HttpServerHandlers) (int, error) {
 			panic(err)
 		}
 	}()
-	return listener.Addr().(*net.TCPAddr).Port, nil
+	tcpAddr, ok := listener.Addr().(*net.TCPAddr)
+	if !ok {
+		panic("Couldn't assert listener address to tcpAddr")
+	}
+	return tcpAddr.Port, nil
 }
 
 func GetTestPackages(searchPattern string) []string {

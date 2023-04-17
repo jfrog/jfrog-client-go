@@ -522,7 +522,7 @@ func DisableTransitiveSearchIfNotAllowed(params *CommonParams, artifactoryVersio
 
 func appendFolderSuffix(folderPath string) string {
 	if !strings.HasSuffix(folderPath, "/") {
-		folderPath = folderPath + "/"
+		folderPath += "/"
 	}
 	return folderPath
 }
