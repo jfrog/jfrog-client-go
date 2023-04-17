@@ -44,7 +44,7 @@ func TestNewMultiFileReaderAt(t *testing.T) {
 			}
 
 			// Create multiFileReaderAt
-			multiReader, err := NewMultiFileReaderAt(files)
+			multiReader, err := newMultiFileReaderAt(files)
 			if err != nil {
 				t.Error(err)
 			}
