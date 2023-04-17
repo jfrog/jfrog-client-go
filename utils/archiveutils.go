@@ -14,7 +14,7 @@ import (
 // localFileName - The name of the archive file.
 // originFileName - The name of the archive file in Artifactory.
 // logMsgPrefix - A prefix to the log message.
-// bypassInspection - set to true to bypass archive inspection against ZipSlip
+// bypassInspection - Set to true to bypass archive inspection against ZipSlip
 // Extract an archive file to the 'localPath'.
 func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix string, bypassInspection bool) error {
 	unarchiver := &unarchive.Unarchiver{
@@ -46,8 +46,7 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 }
 
 func extract(localFilePath, originArchiveName, extractionPath string, unarchiver *unarchive.Unarchiver) error {
-	err := unarchiver.Unarchive(localFilePath, originArchiveName, extractionPath)
-	if err != nil {
+	if err := unarchiver.Unarchive(localFilePath, originArchiveName, extractionPath); err != nil{
 		return errorutils.CheckError(err)
 	}
 	// If the file was extracted successfully, remove it from the file system
