@@ -568,7 +568,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 	}
 
 	httpClient := flags.GetJfrogHttpClient()
-	log.Debug("Getting build-info from: ", requestFullUrl)
+	log.Debug("Getting build-info from:", requestFullUrl)
 	resp, body, _, err := httpClient.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
 		return nil, false, err

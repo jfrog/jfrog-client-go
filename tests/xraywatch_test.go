@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
+	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -61,8 +62,7 @@ func testXrayWatchAll(t *testing.T) {
 		},
 	}
 
-	err = testsXrayWatchService.Create(paramsAllRepos)
-	assert.NoError(t, err)
+	createWatchWithRetries(t, paramsAllRepos)
 	defer func() {
 		assert.NoError(t, testsXrayWatchService.Delete(paramsAllRepos.Name))
 	}()
@@ -100,10 +100,7 @@ func testXrayWatchAll(t *testing.T) {
 			Type: "security",
 		},
 	}
-	err = testsXrayWatchService.Update(*targetConfig)
-	if !assert.NoError(t, err) {
-		return
-	}
+	updateWatchWithRetries(t, *targetConfig)
 
 	validateWatchGeneralSettings(t, *targetConfig)
 	updatedTargetConfig, err := testsXrayWatchService.Get(paramsAllRepos.Name)
@@ -185,10 +182,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 		Name:     build1Name,
 		BinMgrID: "default",
 	}
-	err = testsXrayWatchService.Create(paramsSelectedRepos)
-	if !assert.NoError(t, err) {
-		return
-	}
+	createWatchWithRetries(t, paramsSelectedRepos)
 	defer func() {
 		assert.NoError(t, testsXrayWatchService.Delete(paramsSelectedRepos.Name))
 	}()
@@ -243,11 +237,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	updatedRepo1.Filters.Properties = map[string]string{"some-key": "some-value-2"}
 
 	targetConfig.Repositories.Repositories[repo1Name] = updatedRepo1
-
-	err = testsXrayWatchService.Update(*targetConfig)
-	if !assert.NoError(t, err) {
-		return
-	}
+	updateWatchWithRetries(t, *targetConfig)
 
 	validateWatchGeneralSettings(t, *targetConfig)
 	updatedTargetConfig, err := testsXrayWatchService.Get(paramsSelectedRepos.Name)
@@ -286,9 +276,7 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 			Type: "security",
 		},
 	}
-
-	err = testsXrayWatchService.Create(paramsBuildsByPattern)
-	assert.NoError(t, err)
+	createWatchWithRetries(t, paramsBuildsByPattern)
 	defer func() {
 		assert.NoError(t, testsXrayWatchService.Delete(paramsBuildsByPattern.Name))
 	}()
@@ -306,10 +294,7 @@ func testXrayWatchBuildsByPattern(t *testing.T) {
 	targetConfig.Builds.All.ExcludePatterns = []string{"excludePath-2"}
 	targetConfig.Builds.All.IncludePatterns = []string{"includePath-2", "fake-2"}
 
-	err = testsXrayWatchService.Update(*targetConfig)
-	if !assert.NoError(t, err) {
-		return
-	}
+	updateWatchWithRetries(t, *targetConfig)
 
 	validateWatchGeneralSettings(t, *targetConfig)
 	updatedTargetConfig, err := testsXrayWatchService.Get(paramsBuildsByPattern.Name)
@@ -401,4 +386,32 @@ func createAndIndexBuild(t *testing.T, buildName string) error {
 	assert.NoError(t, err)
 	err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
 	return err
+}
+func createWatchWithRetries(t *testing.T, params utils.WatchParams) {
+	createOrUpdateWatchWithRetries(t, params, false)
+}
+
+func updateWatchWithRetries(t *testing.T, params utils.WatchParams) {
+	createOrUpdateWatchWithRetries(t, params, true)
+}
+
+func createOrUpdateWatchWithRetries(t *testing.T, params utils.WatchParams, isUpdate bool) {
+	actionType := "creating"
+	if isUpdate {
+		actionType = "updating"
+	}
+	pollingExecutor := &clientUtils.RetryExecutor{
+		MaxRetries:               3,
+		RetriesIntervalMilliSecs: 3000,
+		ErrorMessage:             fmt.Sprintf("Failed %s a watch with the following params: %+v. Trying again after sleep...", actionType, params),
+		ExecutionHandler: func() (shouldRetry bool, err error) {
+			if isUpdate {
+				err = testsXrayWatchService.Update(params)
+			} else {
+				err = testsXrayWatchService.Create(params)
+			}
+			return err != nil, err
+		},
+	}
+	assert.NoError(t, pollingExecutor.Execute())
 }
