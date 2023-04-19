@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bufio"
+	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +34,7 @@ func StartHttpServer(handlers HttpServerHandlers) (int, error) {
 	}()
 	tcpAddr, ok := listener.Addr().(*net.TCPAddr)
 	if !ok {
-		panic("Couldn't assert listener address to tcpAddr")
+		return 0, errors.New("couldn't assert listener address to tcpAddr")
 	}
 	return tcpAddr.Port, nil
 }
