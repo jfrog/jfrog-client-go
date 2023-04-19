@@ -52,7 +52,7 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 			return nil, errorutils.CheckError(err)
 		}
 	}
-	if len(repo) <= 0 {
+	if len(repo) == 0 {
 		repo, err = detectRepo(gitPath, glc.GetArtifactoryDetails().GetUrl())
 		if err != nil {
 			return nil, err

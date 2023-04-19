@@ -59,13 +59,14 @@ func TestReportUsageJson(t *testing.T) {
 	// Create the expected json
 	for _, test := range preTests {
 		// Check if at least one of the structs isn't empty
-		if test.serverSize != (ReportUsageAttribute{}) && test.serviceId != (ReportUsageAttribute{}) {
+		switch {
+		case test.serverSize != (ReportUsageAttribute{}) && test.serviceId != (ReportUsageAttribute{}):
 			test.expectedResult = fmt.Sprintf(jsonPatterns[test.jsonPatternNum], test.productId, test.commandName, test.serviceId.AttributeName, test.serviceId.AttributeValue, test.serverSize.AttributeName, test.serverSize.AttributeValue)
-		} else if test.serverSize != (ReportUsageAttribute{}) {
+		case test.serverSize != (ReportUsageAttribute{}):
 			test.expectedResult = fmt.Sprintf(jsonPatterns[test.jsonPatternNum], test.productId, test.commandName, test.serverSize.AttributeName, test.serverSize.AttributeValue)
-		} else if test.serviceId != (ReportUsageAttribute{}) {
+		case test.serviceId != (ReportUsageAttribute{}):
 			test.expectedResult = fmt.Sprintf(jsonPatterns[test.jsonPatternNum], test.productId, test.commandName, test.serviceId.AttributeName, test.serviceId.AttributeValue)
-		} else {
+		default:
 			test.expectedResult = fmt.Sprintf(jsonPatterns[test.jsonPatternNum], test.productId, test.commandName)
 		}
 

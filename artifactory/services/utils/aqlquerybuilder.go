@@ -12,7 +12,7 @@ import (
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
-	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
+	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target)
 	repoPathFileTriples, singleRepo, err := createRepoPathFileTriples(searchPattern, params.Recursive)
 	if err != nil {
 		return "", err
@@ -405,8 +405,8 @@ func getAqlValue(val string) string {
 	return fmt.Sprintf(aqlValuePattern, val)
 }
 
-func prepareSourceSearchPattern(pattern, target string, repositoryExists bool) string {
-	addWildcardIfNeeded(&pattern, repositoryExists)
+func prepareSourceSearchPattern(pattern, target string) string {
+	addWildcardIfNeeded(&pattern, true)
 	pattern = utils.RemovePlaceholderParentheses(pattern, target)
 	return pattern
 }

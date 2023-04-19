@@ -154,7 +154,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	addUserAgentHeader(req)
 	copyHeaders(httpClientsDetails, req)
 
-	if !followRedirect || (followRedirect && req.Method == "POST") {
+	if !followRedirect || (followRedirect && req.Method == http.MethodPost) {
 		jc.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			redirectUrl = req.URL.String()
 			return errors.New("redirect")
@@ -171,7 +171,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 		}
 		// Due to security reasons, there's no built-in HTTP redirect in the HTTP Client
 		// for POST requests. We therefore implement the redirect on our own.
-		if req.Method == "POST" {
+		if req.Method == http.MethodPost {
 			log.Debug("HTTP redirecting to", redirectUrl)
 			resp, respBody, err = jc.SendPost(redirectUrl, content, httpClientsDetails, "")
 			redirectUrl = ""

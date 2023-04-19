@@ -55,11 +55,12 @@ func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 
 func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	var params []string
-	if scanParams.ProjectKey != "" {
+	switch {
+	case scanParams.ProjectKey != "":
 		params = append(params, projectQueryParam+scanParams.ProjectKey)
-	} else if scanParams.RepoPath != "" {
+	case scanParams.RepoPath != "":
 		params = append(params, repoPathQueryParam+scanParams.RepoPath)
-	} else if len(scanParams.Watches) > 0 {
+	case len(scanParams.Watches) > 0:
 		for _, watch := range scanParams.Watches {
 			if watch != "" {
 				params = append(params, watchesQueryParam+watch)
@@ -109,7 +110,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
+	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam

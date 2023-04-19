@@ -744,12 +744,13 @@ func getAllFederatedRepoDetailsTest(t *testing.T) {
 	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t, "federated", "")
+	data := getAllRepos(t, "federated")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {
 		if v.Key == repoKey {
-			repo = &v
+			fRepo := v
+			repo = &fRepo
 			break
 		}
 	}

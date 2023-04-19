@@ -91,7 +91,7 @@ func TestGetQueryReturnFields(t *testing.T) {
 
 func assertEqualFieldsList(t *testing.T, actual, expected []string) {
 	if len(actual) != len(expected) {
-		t.Error("The function getQueryReturnFields() expected to return the array:\n" + strings.Join(expected[:], ",") + ".\nbut returned:\n" + strings.Join(actual[:], ",") + ".")
+		t.Error("The function getQueryReturnFields() expected to return the array:\n" + strings.Join(expected, ",") + ".\nbut returned:\n" + strings.Join(actual, ",") + ".")
 	}
 	for _, v := range actual {
 		isFound := false
@@ -102,7 +102,7 @@ func assertEqualFieldsList(t *testing.T, actual, expected []string) {
 			}
 		}
 		if !isFound {
-			t.Error("The function getQueryReturnFields() expected to return the array:\n'" + strings.Join(expected[:], ",") + "'.\nbut returned:\n'" + strings.Join(actual[:], ",") + "'.\n" +
+			t.Error("The function getQueryReturnFields() expected to return the array:\n'" + strings.Join(expected, ",") + "'.\nbut returned:\n'" + strings.Join(actual, ",") + "'.\n" +
 				"The field " + v + "is missing!")
 		}
 	}
@@ -133,46 +133,46 @@ func TestCreateAqlQueryForLatestCreated(t *testing.T) {
 }
 
 func TestPrepareSourceSearchPattern(t *testing.T) {
-	newPattern := prepareSourceSearchPattern("/testdata/b/b1/b.in", "/testdata", true)
+	newPattern := prepareSourceSearchPattern("/testdata/b/b1/b.in", "/testdata")
 	assert.Equal(t, "/testdata/b/b1/b.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1(b).in", "/testdata", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1(b).in", "/testdata")
 	assert.Equal(t, "/testdata/b/b1(b).in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1(b.in", "/testdata", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1(b.in", "/testdata")
 	assert.Equal(t, "/testdata/b/b1(b.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1/)b.in", "/testdata", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1/)b.in", "/testdata")
 	assert.Equal(t, "/testdata/b/b1/)b.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1/(*).in", "/testdata/{1}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1/(*).in", "/testdata/{1}.zip")
 	assert.Equal(t, "/testdata/b/b1/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1/(*)", "/testdata/{1}", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1/(*)", "/testdata/{1}")
 	assert.Equal(t, "/testdata/b/b1/*", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/(b1)/(*).in", "/testdata/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/(b1)/(*).in", "/testdata/{2}.zip")
 	assert.Equal(t, "/testdata/b/(b1)/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/(b/(b1)/(*).in", "/testdata/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/(b/(b1)/(*).in", "/testdata/{2}.zip")
 	assert.Equal(t, "/testdata/(b/(b1)/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b/(b1)/(*).in", "/testdata/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b/(b1)/(*).in", "/testdata/{2}.zip")
 	assert.Equal(t, "/testdata/)b/(b1)/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{2}.zip")
 	assert.Equal(t, "/testdata/)b(/(b1)/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{1}/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{1}/{2}.zip")
 	assert.Equal(t, "/testdata/)b(/b1/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{1}/{1}/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{1}/{1}/{2}.zip")
 	assert.Equal(t, "/testdata/)b(/b1/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).(in)", "/testdata/{1}/{1}/{3}/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).(in)", "/testdata/{1}/{1}/{3}/{2}.zip")
 	assert.Equal(t, "/testdata/)b(/b1/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/(/(.in", "/testdata", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/(/(.in", "/testdata")
 	assert.Equal(t, "/testdata/b/(/(.in", newPattern)
 }
 

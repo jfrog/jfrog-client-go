@@ -13,9 +13,10 @@ jobs:
           go-version: 1.20.x
 
       - name: Static Code Analysis
-        uses: dominikh/staticcheck-action@v1
+        uses: golangci/golangci-lint-action@v3
         with:
-          install-go: false
+          args: -E=errcheck,gosimple,govet,ineffassign,staticcheck,typecheck,unused,gocritic,asasalint,asciicheck,errchkjson,errname,exportloopref,forcetypeassert,makezero,nilerr,unparam,unconvert,wastedassign,usestdlibvars --timeout=5m
+
 
   Go-Sec:
     runs-on: ubuntu-latest
