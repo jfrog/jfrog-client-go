@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"golang.org/x/exp/maps"
 	"net/http"
@@ -54,11 +55,12 @@ func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 
 func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	var params []string
-	if scanParams.ProjectKey != "" {
+	switch {
+	case scanParams.ProjectKey != "":
 		params = append(params, projectQueryParam+scanParams.ProjectKey)
-	} else if scanParams.RepoPath != "" {
+	case scanParams.RepoPath != "":
 		params = append(params, repoPathQueryParam+scanParams.RepoPath)
-	} else if len(scanParams.Watches) > 0 {
+	case len(scanParams.Watches) > 0:
 		for _, watch := range scanParams.Watches {
 			if watch != "" {
 				params = append(params, watchesQueryParam+watch)
@@ -108,7 +110,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
+	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam
@@ -118,7 +120,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	} else if includeLicenses {
 		endPoint += includeLicensesParam
 	}
-	log.Info("Waiting for scan to complete...")
+	log.Info("Waiting for scan to complete on JFrog Xray...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
@@ -146,10 +148,11 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 	scanResponse := ScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckError(err)
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
-		return nil, errorutils.CheckErrorf("Xray scan failed")
+		// Failed due to an internal Xray error
+		return nil, errorutils.CheckErrorf("received a failure status from JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
 	}
 	return &scanResponse, err
 }
@@ -191,12 +194,20 @@ type GraphNode struct {
 }
 
 // FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
-func FlattenGraph(graph []*GraphNode) []*GraphNode {
+func FlattenGraph(graph []*GraphNode) ([]*GraphNode, error) {
 	allDependencies := map[string]*GraphNode{}
 	for _, node := range graph {
 		populateUniqueDependencies(node, allDependencies)
 	}
-	return []*GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}
+	if log.GetLogger().GetLogLevel() == log.DEBUG {
+		// Print dependencies list only on DEBUG mode.
+		jsonList, err := json.Marshal(maps.Keys(allDependencies))
+		if err != nil {
+			return nil, errorutils.CheckError(err)
+		}
+		log.Debug("Flat dependencies list:\n" + clientutils.IndentJsonArray(jsonList))
+	}
+	return []*GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}, nil
 }
 
 func populateUniqueDependencies(node *GraphNode, allDependencies map[string]*GraphNode) {

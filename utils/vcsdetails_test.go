@@ -22,15 +22,16 @@ func TestVcsDetails(t *testing.T) {
 				assert.NoError(t, fileutils.RemoveTempDir(tmpDir), "Couldn't remove temp dir")
 			}()
 
-			if test == "submodule" {
+			switch test {
+			case "submodule":
 				projectPath = testsutils.InitVcsSubmoduleTestDir(t, filepath.Join("testdata", test), tmpDir)
-			} else if test == "worktree" {
+			case "worktree":
 				projectPath = testsutils.InitVcsWorktreeTestDir(t, filepath.Join("testdata", test), tmpDir)
-			} else {
+			default:
 				projectPath = initVcsTestDir(t, filepath.Join("testdata", test), tmpDir)
 			}
 			vcsDetails := NewVcsDetails()
-			revision, url, branch, err := vcsDetails.GetVcsDetails(filepath.Join(projectPath))
+			revision, url, branch, err := vcsDetails.GetVcsDetails(projectPath)
 			assert.NoError(t, err)
 			assert.Equal(t, "https://github.com/jfrog/jfrog-cli.git", url)
 			assert.Equal(t, "6198a6294722fdc75a570aac505784d2ec0d1818", revision)

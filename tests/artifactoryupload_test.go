@@ -396,6 +396,7 @@ func TestUploadFilesWithFailure(t *testing.T) {
 func createUploadFilesWithFailureHandlers() *testutils.HttpServerHandlers {
 	handlers := testutils.HttpServerHandlers{}
 	counter := 0
+	//nolint:unparam
 	handlers["/generic"] = func(w http.ResponseWriter, r *http.Request) {
 		if counter == 0 {
 			fmt.Fprintln(w, "{\"checksums\":{\"sha256\":\"123\"}}")

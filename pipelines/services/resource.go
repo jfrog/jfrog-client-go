@@ -33,7 +33,7 @@ func GetPipelineResource(client *jfroghttpclient.JfrogHttpClient, apiURL, repoNa
 	}
 	for _, res := range p {
 		if res.RepositoryFullName == repoName {
-			log.Debug("Received repository name ", repoName, "is multi branch ", *res.IsMultiBranch)
+			log.Debug("Received repository name", repoName, "is multi branch", *res.IsMultiBranch)
 			return &res, nil
 		}
 	}

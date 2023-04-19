@@ -61,7 +61,7 @@ func antStarsToRegex(antPattern string) string {
 	antPattern = postfixDoubleStarRegex.ReplaceAllString(antPattern, "("+separator+".*)*")
 
 	// ant `**` => regexp `(.*)*` : Matches zero or more 'directories'.
-	return  middleDoubleStarNoSeparateRegex.ReplaceAllString(antPattern, "(.*)")
+	return middleDoubleStarNoSeparateRegex.ReplaceAllString(antPattern, "(.*)")
 }
 
 func antQuestionMarkToRegex(antPattern string) string {

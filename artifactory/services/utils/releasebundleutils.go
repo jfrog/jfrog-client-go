@@ -94,7 +94,7 @@ func (r *RbGpgValidator) VerifyArtifact(artifactPath, sha256 string) error {
 func (r *RbGpgValidator) verifyJwtToken(bundleTokenStr string) (*ReleaseBundleModel, error) {
 	model := &ReleaseBundleModel{}
 	token, err := jwt.ParseWithClaims(bundleTokenStr, model, func(token *jwt.Token) (interface{}, error) {
-		key, err := os.ReadFile(filepath.Join(r.publicKeyFilePath))
+		key, err := os.ReadFile(r.publicKeyFilePath)
 		if err != nil {
 			return nil, errorutils.CheckError(err)
 		}
