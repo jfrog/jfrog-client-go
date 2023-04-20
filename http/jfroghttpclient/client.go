@@ -7,6 +7,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	ioutils "github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
@@ -146,6 +147,14 @@ func (rtc *JfrogHttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetail
 		return
 	}
 	return rtc.httpClient.IsAcceptRanges(downloadUrl, *httpClientsDetails)
+}
+
+func (rtc *JfrogHttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetails *httputils.HttpClientDetails) (remoteFileDetails *fileutils.FileDetails, resp *http.Response, err error) {
+	err = rtc.runPreRequestInterceptors(httpClientsDetails)
+	if err != nil {
+		return
+	}
+	return rtc.httpClient.GetRemoteFileDetails(downloadUrl, *httpClientsDetails)
 }
 
 // Runs an interceptor before sending a request

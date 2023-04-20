@@ -15,10 +15,12 @@ import (
 )
 
 const (
-	CleanScanBuildName      = "cleanBuildName"
-	FatalScanBuildName      = "fatalBuildName"
-	VulnerableBuildName     = "vulnerableBuildName"
-	VulnerabilitiesEndpoint = "vulnerabilities"
+	CleanScanBuildName          = "cleanBuildName"
+	FatalScanBuildName          = "fatalBuildName"
+	VulnerableBuildName         = "vulnerableBuildName"
+	VulnerabilitiesEndpoint     = "vulnerabilities"
+	ContextualAnalysisFeatureId = "contextual_analysis"
+	BadFeatureId                = "unknown"
 )
 
 func scanBuildHandler(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +47,6 @@ func scanBuildHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, VulnerableXrayScanResponse)
 		return
 	}
-	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
 func artifactSummaryHandler(w http.ResponseWriter, r *http.Request) {
@@ -101,10 +102,23 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid reports request", http.StatusBadRequest)
 }
 
+func entitlementsHandler(w http.ResponseWriter, r *http.Request) {
+	featureId := r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
+	switch featureId {
+	case ContextualAnalysisFeatureId:
+		fmt.Fprint(w, EntitledResponse)
+		return
+	case BadFeatureId:
+		fmt.Fprint(w, NotEntitledResponse)
+		return
+	}
+}
+
 func StartXrayMockServer() int {
 	handlers := clienttests.HttpServerHandlers{}
 	handlers["/api/xray/scanBuild"] = scanBuildHandler
 	handlers["/api/v2/summary/artifact"] = artifactSummaryHandler
+	handlers["/api/v1/entitlements/feature/"] = entitlementsHandler
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	handlers["/"] = http.NotFound
 

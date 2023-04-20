@@ -188,3 +188,10 @@ func (sm *XrayServicesManager) ArtifactSummary(params services.ArtifactSummaryPa
 	summaryService.XrayDetails = sm.config.GetServiceDetails()
 	return summaryService.GetArtifactSummary(params)
 }
+
+// IsEntitled returns true if the user is entitled for the requested feature ID
+func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
+	entitlementsService := services.NewEntitlementsService(sm.client)
+	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
+	return entitlementsService.IsEntitled(featureId)
+}
