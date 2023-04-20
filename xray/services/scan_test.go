@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"github.com/jfrog/gofrog/datastructures"
+	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -51,22 +52,22 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 }
 
 func TestFlattenGraph(t *testing.T) {
-	nodeA := &GraphNode{Id: "A"}
-	nodeB := &GraphNode{Id: "B"}
-	nodeC := &GraphNode{Id: "C"}
-	nodeD := &GraphNode{Id: "D"}
-	nodeE := &GraphNode{Id: "E"}
-	nodeF := &GraphNode{Id: "F"}
+	nodeA := &xrayUtils.GraphNode{Id: "A"}
+	nodeB := &xrayUtils.GraphNode{Id: "B"}
+	nodeC := &xrayUtils.GraphNode{Id: "C"}
+	nodeD := &xrayUtils.GraphNode{Id: "D"}
+	nodeE := &xrayUtils.GraphNode{Id: "E"}
+	nodeF := &xrayUtils.GraphNode{Id: "F"}
 
 	// Set dependencies
-	nodeA.Nodes = []*GraphNode{nodeB, nodeC}
-	nodeB.Nodes = []*GraphNode{nodeC, nodeD}
-	nodeC.Nodes = []*GraphNode{nodeD}
-	nodeD.Nodes = []*GraphNode{nodeE, nodeF}
-	nodeF.Nodes = []*GraphNode{nodeA, nodeB, nodeC}
+	nodeA.Nodes = []*xrayUtils.GraphNode{nodeB, nodeC}
+	nodeB.Nodes = []*xrayUtils.GraphNode{nodeC, nodeD}
+	nodeC.Nodes = []*xrayUtils.GraphNode{nodeD}
+	nodeD.Nodes = []*xrayUtils.GraphNode{nodeE, nodeF}
+	nodeF.Nodes = []*xrayUtils.GraphNode{nodeA, nodeB, nodeC}
 
 	// Create graph
-	graph := []*GraphNode{nodeA, nodeB, nodeC}
+	graph := []*xrayUtils.GraphNode{nodeA, nodeB, nodeC}
 	flatGraph, err := FlattenGraph(graph)
 	assert.NoError(t, err)
 
