@@ -15,7 +15,7 @@ type EntitlementsService struct {
 	XrayDetails auth.ServiceDetails
 }
 
-// NewVersionService creates a new service to retrieve the entitlement data from Xray
+// NewEntitlementsService creates a new service to retrieve the entitlement data from Xray
 func NewEntitlementsService(client *jfroghttpclient.JfrogHttpClient) *EntitlementsService {
 	return &EntitlementsService{client: client}
 }
