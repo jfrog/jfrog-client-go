@@ -381,7 +381,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	if bulkDownload {
 		var resp *http.Response
 		resp, err := ds.client.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, &httpClientsDetails,
-			downloadParams.IsExplode(), ds.Progress)
+			downloadParams.IsExplode(), downloadParams.IsBypassArchiveInspection(), ds.Progress)
 		if err != nil {
 			return err
 		}
@@ -547,7 +547,7 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 	if isEqual {
 		log.Debug(logMsgPrefix, "File already exists locally.")
 		if downloadParams.IsExplode() {
-			e = clientutils.ExtractArchive(localPath, localFileName, downloadData.Dependency.Name, logMsgPrefix)
+			e = clientutils.ExtractArchive(localPath, localFileName, downloadData.Dependency.Name, logMsgPrefix, downloadParams.IsBypassArchiveInspection())
 		}
 		return e
 	}
@@ -589,14 +589,15 @@ type DownloadData struct {
 
 type DownloadParams struct {
 	*utils.CommonParams
-	Symlink         bool
-	ValidateSymlink bool
-	Flat            bool
-	Explode         bool
-	MinSplitSize    int64
-	SplitCount      int
-	PublicGpgKey    string
-	SkipChecksum    bool
+	Symlink                 bool
+	ValidateSymlink         bool
+	Flat                    bool
+	Explode                 bool
+	BypassArchiveInspection bool
+	MinSplitSize            int64
+	SplitCount              int
+	PublicGpgKey            string
+	SkipChecksum            bool
 }
 
 func (ds *DownloadParams) IsFlat() bool {
@@ -605,6 +606,10 @@ func (ds *DownloadParams) IsFlat() bool {
 
 func (ds *DownloadParams) IsExplode() bool {
 	return ds.Explode
+}
+
+func (ds *DownloadParams) IsBypassArchiveInspection() bool {
+	return ds.BypassArchiveInspection
 }
 
 func (ds *DownloadParams) GetFile() *utils.CommonParams {
