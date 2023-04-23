@@ -37,12 +37,12 @@ func (gpc *GoPublishCommand) verifyCompatibleVersion(artifactoryVersion string) 
 	return nil
 }
 
-func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, ArtDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
-	goApiUrl, err := utils.BuildArtifactoryUrl(ArtDetails.GetUrl(), "api/go/", make(map[string]string))
+func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, artDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
+	goApiUrl, err := utils.BuildArtifactoryUrl(artDetails.GetUrl(), "api/go/", make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
-	gpc.clientDetails = ArtDetails.CreateHttpClientDetails()
+	gpc.clientDetails = artDetails.CreateHttpClientDetails()
 	gpc.client = client
 	moduleId := strings.Split(params.GetModuleId(), ":")
 	totalSucceed, totalFailed := 0, 0

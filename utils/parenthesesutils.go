@@ -49,7 +49,7 @@ func RemovePlaceholderParentheses(pattern, target string) string {
 		if (c == '(' || c == ')') && parentheses.IsPresent(i) {
 			continue
 		} else {
-			temp = temp + string(c)
+			temp += string(c)
 		}
 	}
 	return temp
@@ -72,7 +72,7 @@ func AddEscapingParentheses(pattern, target, targetPathInArchive string) string 
 		if (c == '(' || c == ')') && !parentheses.IsPresent(i) && !archiveParentheses.IsPresent(i) {
 			temp = temp + "\\" + string(c)
 		} else {
-			temp = temp + string(c)
+			temp += string(c)
 		}
 	}
 	return temp
