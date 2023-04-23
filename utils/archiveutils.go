@@ -1,21 +1,26 @@
 package utils
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jfrog/gofrog/unarchive"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 // localPath - The path of the downloaded archive file.
-// localFileName - name of the archive file.
-// originFileName - name of the archive file in Artifactory.
-// logMsgPrefix - prefix log message.
+// localFileName - The name of the archive file.
+// originFileName - The name of the archive file in Artifactory.
+// logMsgPrefix - A prefix to the log message.
+// bypassInspection - Set to true to bypass archive inspection against ZipSlip
 // Extract an archive file to the 'localPath'.
-func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix string) error {
-	if !fileutils.IsSupportedArchive(originFileName) {
+func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix string, bypassInspection bool) error {
+	unarchiver := &unarchive.Unarchiver{
+		BypassInspection: bypassInspection,
+	}
+	if !unarchiver.IsSupportedArchive(originFileName) {
 		return nil
 	}
 	extractionPath, err := getExtractionPath(localPath)
@@ -37,13 +42,12 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 		return err
 	}
 	log.Info(logMsgPrefix+"Extracting archive:", archivePath, "to", extractionPath)
-	return extract(archivePath, originFileName, extractionPath)
+	return errorutils.CheckError(extract(archivePath, originFileName, extractionPath, unarchiver))
 }
 
-func extract(localFilePath, originArchiveName, extractionPath string) error {
-	err := fileutils.Unarchive(localFilePath, originArchiveName, extractionPath)
-	if err != nil {
-		return err
+func extract(localFilePath, originArchiveName, extractionPath string, unarchiver *unarchive.Unarchiver) error {
+	if err := unarchiver.Unarchive(localFilePath, originArchiveName, extractionPath); err != nil{
+		return errorutils.CheckError(err)
 	}
 	// If the file was extracted successfully, remove it from the file system
 	return errorutils.CheckError(os.Remove(localFilePath))
