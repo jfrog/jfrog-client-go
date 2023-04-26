@@ -125,6 +125,7 @@ var (
 	testsAccessInviteService  *accessServices.InviteService
 	testsAccessTokensService  *accessServices.TokenService
 	testAccessUserService     *accessServicesV2.UserService
+	testAccessGroupService    *accessServicesV2.GroupService
 
 	timestamp    = time.Now().Unix()
 	timestampStr = strconv.FormatInt(timestamp, 10)
