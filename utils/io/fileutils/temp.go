@@ -44,6 +44,10 @@ func SetTempDirBase(dirPath string) {
 	tempDirBase = dirPath
 }
 
+func GetTempDirBase() string {
+	return tempDirBase
+}
+
 func RemoveTempDir(dirPath string) error {
 	exists, err := IsDirExists(dirPath, false)
 	if err != nil {
