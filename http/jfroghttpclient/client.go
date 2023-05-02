@@ -118,17 +118,17 @@ func (rtc *JfrogHttpClient) ReadRemoteFile(downloadPath string, httpClientsDetai
 }
 
 func (rtc *JfrogHttpClient) DownloadFileWithProgress(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails *httputils.HttpClientDetails, isExplode bool, progress ioutils.ProgressMgr) (resp *http.Response, err error) {
+	httpClientsDetails *httputils.HttpClientDetails, isExplode, bypassArchiveInspection bool, progress ioutils.ProgressMgr) (resp *http.Response, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
 		return
 	}
-	return rtc.httpClient.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, *httpClientsDetails, isExplode, progress)
+	return rtc.httpClient.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, *httpClientsDetails, isExplode, bypassArchiveInspection, progress)
 }
 
 func (rtc *JfrogHttpClient) DownloadFile(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string,
-	httpClientsDetails *httputils.HttpClientDetails, isExplode bool) (resp *http.Response, err error) {
-	return rtc.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, httpClientsDetails, isExplode, nil)
+	httpClientsDetails *httputils.HttpClientDetails, isExplode, bypassArchiveInspection bool) (resp *http.Response, err error) {
+	return rtc.DownloadFileWithProgress(downloadFileDetails, logMsgPrefix, httpClientsDetails, isExplode, bypassArchiveInspection, nil)
 }
 
 func (rtc *JfrogHttpClient) DownloadFileConcurrently(flags httpclient.ConcurrentDownloadFlags,
