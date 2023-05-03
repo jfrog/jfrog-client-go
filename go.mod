@@ -9,8 +9,8 @@ require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.3
-	github.com/jfrog/build-info-go v1.9.2
-	github.com/jfrog/gofrog v1.2.5
+	github.com/jfrog/build-info-go v1.9.3
+	github.com/jfrog/gofrog v1.3.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.2
 	github.com/xanzy/ssh-agent v0.3.3
@@ -57,4 +57,4 @@ require (
 
 // replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.8.9-0.20230418123708-71a0dbbcb331
 
-replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.2.6-0.20230418122323-2bf299dd6d27
+// replace github.com/jfrog/gofrog => github.com/jfrog/gofrog dev
