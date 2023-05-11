@@ -118,6 +118,8 @@
       - [Remove a group from a project](#remove-a-group-from-a-project)
       - [Send Web Login Authentication Request](#send-web-login-authentication-request)
       - [Get Web Login Authentication Token](#get-web-login-authentication-token)
+      - [Create an access token](#create-an-access-token)
+      - [Refresh an existing access token](#refresh-an-existing-access-token)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -1511,6 +1513,41 @@ err = accessManager.SendLoginAuthenticationRequest(uuid)
 ```go
 uuid := "09b34617-b48a-455d-8b05-25a6989fb76a"
 err = accessManager.GetLoginAuthenticationToken(uuid)
+```
+
+#### Create an access token
+
+```go
+import "github.com/jfrog/jfrog-client-go/access/services"
+
+False := false // required to be passed by reference below
+True := true   // required to be passed by reference below
+createParams := services.CreateTokenParams{
+    CommonTokenParams: auth.CommonTokenParams{
+        Scope:       "applied-permissions/groups:grp",
+        ExpiresIn:   3600,
+        Refreshable: &True,
+        Audience:    "jfrt@*",
+    },
+    Description:           "my best token",
+    IncludeReferenceToken: &False,
+    Username:              "username",
+}
+
+accessToken, err := accessManager.CreateAccessToken(createParams)
+```
+
+#### Refresh an existing access token
+
+```go
+import "github.com/jfrog/jfrog-client-go/access/services"
+
+refreshParams := services.CreateTokenParams{
+    CommonTokenParams: auth.CommonTokenParams{
+        RefreshToken: accessToken.RefreshToken,
+    },
+}
+refreshedToken, err := accessManager.RefreshAccessToken(refreshParams)
 ```
 
 ## Distribution APIs
