@@ -324,7 +324,6 @@ func getQueryReturnFieldsWithInclude(includedQuery []string) []string {
 		}
 		if !equal {
 			returnFields = append(returnFields, includedQuery[i])
-			equal = true
 		}
 	}
 	return returnFields
