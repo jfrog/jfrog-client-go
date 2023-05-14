@@ -74,10 +74,20 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (*content.C
 
 	wg.Wait()
 	if artifactsReader != nil {
-		defer artifactsReader.Close()
+		defer func() {
+			e := artifactsReader.Close()
+			if err == nil {
+				err = e
+			}
+		}()
 	}
 	if dependenciesReader != nil {
-		defer dependenciesReader.Close()
+		defer func() {
+			e := dependenciesReader.Close()
+			if err == nil {
+				err = e
+			}
+		}()
 	}
 	if artErr != nil {
 		return nil, artErr
@@ -116,7 +126,12 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 		if err != nil {
 			return nil, err
 		}
-		defer mergedReader.Close()
+		defer func() {
+			e := mergedReader.Close()
+			if err == nil {
+				err = e
+			}
+		}()
 		buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
 		if err != nil {
 			return nil, err
@@ -133,17 +148,32 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 	if err != nil {
 		return nil, err
 	}
-	defer readerWithProps.Close()
+	defer func() {
+		e := readerWithProps.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	artifactsSortedReaderWithProps, err := loadMissingProperties(artifactsReader, readerWithProps)
 	if err != nil {
 		return nil, err
 	}
-	defer artifactsSortedReaderWithProps.Close()
+	defer func() {
+		e := artifactsSortedReaderWithProps.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsSortedReaderWithProps, dependenciesReader)
 	if err != nil {
 		return nil, err
 	}
-	defer mergedReader.Close()
+	defer func() {
+		e := mergedReader.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
 	if err != nil {
 		return nil, err
@@ -189,14 +219,24 @@ func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtif
 	if filteredReader != nil {
 		// This one will close the original reader that was used
 		// to create the filteredReader (a new pointer will be created by the defer mechanism).
-		defer reader.Close()
+		defer func() {
+			e := reader.Close()
+			if err == nil {
+				err = e
+			}
+		}()
 		// The new reader assignment will not affect the defer statement.
 		reader = filteredReader
 	}
 	fetchedProps, err = fetchProps(specFile, flags, requiredArtifactProps, reader)
 	if fetchedProps != nil {
 		// Before returning the new reader, we close the one we used to creat it.
-		defer reader.Close()
+		defer func() {
+			e := reader.Close()
+			if err == nil {
+				err = e
+			}
+		}()
 		return fetchedProps, err
 	}
 	// Returns the open filteredReader or the original reader that returned from the AQL search.
@@ -235,7 +275,12 @@ func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps 
 		if err != nil {
 			return nil, err
 		}
-		defer readerWithProps.Close()
+		defer func() {
+			e := readerWithProps.Close()
+			if err == nil {
+				err = e
+			}
+		}()
 		return loadMissingProperties(reader, readerWithProps)
 	}
 	return nil, nil
@@ -338,7 +383,9 @@ type ResultItem struct {
 	Actual_Md5  string     `json:"actual_md5,omitempty"`
 	Actual_Sha1 string     `json:"actual_sha1,omitempty"`
 	Sha256      string     `json:"sha256,omitempty"`
+	Depth       int        `json:"depth,omitempty"`
 	Size        int64      `json:"size,omitempty"`
+	OriginalMd5 string     `json:"original_md5,omitempty"`
 	Properties  []Property `json:"properties,omitempty"`
 	Stats       []Stat     `json:"stats,omitempty"`
 }
@@ -422,7 +469,12 @@ func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *conte
 	if err != nil {
 		return nil, err
 	}
-	defer writer.Close()
+	defer func() {
+		e := writer.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 
 	// Get the expected record type from the reader.
 	recordType := reflect.ValueOf(readerRecord).Type()
@@ -460,7 +512,12 @@ func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.
 	if err != nil {
 		return nil, err
 	}
-	defer writer.Close()
+	defer func() {
+		e := writer.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 
 	// Get the expected record type from the reader.
 	recordType := reflect.ValueOf(readerRecord).Type()
@@ -507,7 +564,12 @@ func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content
 	if err != nil {
 		return nil, err
 	}
-	defer sortedFile.Close()
+	defer func() {
+		e := sortedFile.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	return resultsFilter(readerRecord, sortedFile)
 }
 
