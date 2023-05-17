@@ -95,7 +95,7 @@ func (bs *BuildScanService) GetBuildScanResults(params XrayBuildParams, includeV
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
-		MsgPrefix:       fmt.Sprintf("Get Build Scan results for Build:%s/%s...", params.BuildName, params.BuildNumber),
+		MsgPrefix:       fmt.Sprintf("Get Build Scan results for Build: %s/%s...", params.BuildName, params.BuildNumber),
 	}
 
 	body, err := pollingExecutor.Execute()
