@@ -468,7 +468,9 @@ func CopyFile(dst, src string) (err error) {
 	if err != nil {
 		return err
 	}
-	return nil
+	// Preserve permissions of origin file
+	srcStat, _ := srcFile.Stat()
+	return os.Chmod(dstPath, srcStat.Mode())
 }
 
 // Copy directory content from one path to another.
