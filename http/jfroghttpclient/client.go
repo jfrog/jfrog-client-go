@@ -150,8 +150,7 @@ func (rtc *JfrogHttpClient) IsAcceptRanges(downloadUrl string, httpClientsDetail
 }
 
 func (rtc *JfrogHttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetails *httputils.HttpClientDetails) (remoteFileDetails *fileutils.FileDetails, resp *http.Response, err error) {
-	err = rtc.runPreRequestInterceptors(httpClientsDetails)
-	if err != nil {
+	if err = rtc.runPreRequestInterceptors(httpClientsDetails); err != nil {
 		return
 	}
 	return rtc.httpClient.GetRemoteFileDetails(downloadUrl, *httpClientsDetails)
