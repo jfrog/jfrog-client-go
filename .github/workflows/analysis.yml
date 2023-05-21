@@ -1,5 +1,11 @@
 name: "Static Analysis"
-on: [ "push", "pull_request" ]
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+  pull_request:
 jobs:
   Static-Check:
     runs-on: ubuntu-latest
