@@ -549,6 +549,7 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 	fileDetails := new(fileutils.FileDetails)
 	fileDetails.Checksum.Md5 = resp.Header.Get("X-Checksum-Md5")
 	fileDetails.Checksum.Sha1 = resp.Header.Get("X-Checksum-Sha1")
+	fileDetails.Checksum.Sha256 = resp.Header.Get("X-Checksum-Sha256")
 	fileDetails.Size = fileSize
 	return fileDetails, resp, nil
 }

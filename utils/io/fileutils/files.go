@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"golang.org/x/exp/slices"
 	"io"
 	"net/url"
 	"os"
@@ -17,8 +16,8 @@ import (
 	"github.com/jfrog/build-info-go/entities"
 	biutils "github.com/jfrog/build-info-go/utils"
 	gofrog "github.com/jfrog/gofrog/io"
-
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -441,13 +440,11 @@ type FileDetails struct {
 func CopyFile(dst, src string) (err error) {
 	srcFile, err := os.Open(src)
 	if err != nil {
-		return err
+		return errorutils.CheckError(err)
 	}
 	defer func() {
-		e := srcFile.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		e := errorutils.CheckError(srcFile.Close())
+		err = errors.Join(err, e)
 	}()
 	fileName, _ := GetFileAndDirFromPath(src)
 	dstPath, err := CreateFilePath(dst, fileName)
@@ -456,19 +453,14 @@ func CopyFile(dst, src string) (err error) {
 	}
 	dstFile, err := os.Create(dstPath)
 	if err != nil {
-		return err
+		return errorutils.CheckError(err)
 	}
 	defer func() {
-		e := dstFile.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		e := errorutils.CheckError(dstFile.Close())
+		err = errors.Join(err, e)
 	}()
 	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return err
-	}
-	return nil
+	return errorutils.CheckError(err)
 }
 
 // Copy directory content from one path to another.
