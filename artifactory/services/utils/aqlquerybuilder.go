@@ -320,6 +320,7 @@ func getQueryReturnFieldsWithInclude(includedQuery []string) []string {
 		for j := range returnFields {
 			if includedQuery[i] == returnFields[j] {
 				equal = true
+				break
 			}
 		}
 		if !equal {
