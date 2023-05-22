@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,7 +35,7 @@ const (
 
 // Use this function when searching by build without pattern or aql.
 // Collect build artifacts and build dependencies separately, then merge the results into one reader.
-func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (*content.ContentReader, error) {
+func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerContent *content.ContentReader, err error) {
 	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err
@@ -75,18 +76,12 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (*content.C
 	wg.Wait()
 	if artifactsReader != nil {
 		defer func() {
-			e := artifactsReader.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, artifactsReader.Close())
 		}()
 	}
 	if dependenciesReader != nil {
 		defer func() {
-			e := dependenciesReader.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, dependenciesReader.Close())
 		}()
 	}
 	if artErr != nil {
@@ -95,8 +90,8 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (*content.C
 	if depErr != nil {
 		return nil, depErr
 	}
-
-	return filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, aggregatedBuilds)
+	readerContent, err = filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, aggregatedBuilds)
+	return
 }
 
 func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
