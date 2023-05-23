@@ -533,9 +533,10 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 		return nil, nil, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, resp, nil
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, nil, err
 	}
+	log.Debug("Artifactory response:", resp.Status)
 
 	fileSize := int64(0)
 	contentLength := resp.Header.Get("Content-Length")
