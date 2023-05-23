@@ -156,9 +156,24 @@ func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includ
 
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
 func (sm *XrayServicesManager) GenerateVulnerabilitiesReport(params services.ReportRequestParams) (resp *services.ReportResponse, err error) {
+	return sm.GenerateReport(params, services.Vulnerabilities)
+}
+
+// GenerateLicensesReport returns a Xray report response of the requested report
+func (sm *XrayServicesManager) GenerateLicensesReport(params services.ReportRequestParams) (resp *services.ReportResponse, err error) {
+	return sm.GenerateReport(params, services.Licenses)
+}
+
+// GenerateVoilationsReport returns a Xray report response of the requested report
+func (sm *XrayServicesManager) GenerateVoilationsReport(params services.ReportRequestParams) (resp *services.ReportResponse, err error) {
+	return sm.GenerateReport(params, services.Violations)
+}
+
+// GenerateReport returns a Xray report response of the requested report
+func (sm *XrayServicesManager) GenerateReport(params services.ReportRequestParams, reportType string) (resp *services.ReportResponse, err error) {
 	reportService := services.NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
-	return reportService.Vulnerabilities(params)
+	return reportService.RequestReport(params, reportType)
 }
 
 // ReportDetails returns a Xray details response for the requested report

@@ -13,7 +13,10 @@ import (
 const (
 	// ReportsAPI refer to: https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-REPORTS
 	ReportsAPI         = "api/v1/reports"
-	VulnerabilitiesAPI = ReportsAPI + "/vulnerabilities"
+	Vulnerabilities    = "vulnerabilities"
+	Licenses           = "licenses"
+	Violations         = "violations"
+	VulnerabilitiesAPI = ReportsAPI + "/" + Vulnerabilities
 )
 
 // ReportService defines the Http client and Xray details
@@ -123,11 +126,16 @@ func NewReportService(client *jfroghttpclient.JfrogHttpClient) *ReportService {
 
 // Vulnerabilities requests a new Xray scan for vulnerabilities
 func (rs *ReportService) Vulnerabilities(req ReportRequestParams) (*ReportResponse, error) {
+	return rs.RequestReport(req, Vulnerabilities)
+}
+
+// requests a new Xray scan for Report of type (vulnerabilities/licenses/voilations)
+func (rs *ReportService) RequestReport(req ReportRequestParams, reportType string) (*ReportResponse, error) {
 	retVal := ReportResponse{}
 	httpClientsDetails := rs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	url := fmt.Sprintf("%s/%s", rs.XrayDetails.GetUrl(), VulnerabilitiesAPI)
+	url := fmt.Sprintf("%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI+"/"+reportType)
 	content, err := json.Marshal(req)
 	if err != nil {
 		return &retVal, errorutils.CheckError(err)

@@ -151,10 +151,10 @@
       - [Add Builds to Indexing Configuration](#add-builds-to-indexing-configuration)
       - [Request Graph Scan](#request-graph-scan)
       - [Retrieve the Graph Scan Results](#retrieve-the-graph-scan-results)
-      - [Generate Vulnerabilities Report](#generate-vulnerabilities-report)
-      - [Get Vulnerabilities Report Details](#get-vulnerabilities-report-details)
-      - [Get Vulnerabilities Report Content](#get-vulnerabilities-report-content)
-      - [Delete Vulnerabilities Report](#delete-vulnerabilities-report)
+      - [Generate Vulnerabilities/Licences/Violations Report](#generate-vulnerabilities-licences-violations-report)
+      - [Get Vulnerabilities/Licenses/Violations Report Details](#get-vulnerabilities-licences-violations-report-details)
+      - [Get Vulnerabilities/Licenses/Violations Report Content](#get-vulnerabilities-licences-violations-report-content)
+      - [Delete Vulnerabilities/Licenses/Violations Report](#delete-vulnerabilities-licences-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
       - [Get Entitlement info](#get-entitlement-info)
   - [Pipelines APIs](#pipelines-apis)
@@ -1885,7 +1885,7 @@ scanId, err := xrayManager.ScanGraph(graphScanParams)
 scanResults, err := xrayManager.GetScanGraphResults(scanId)
 ```
 
-#### Generate Vulnerabilities Report
+#### Generate Vulnerabilities/Licences/Violations Report
 
 ```go
 reportRequest := services.ReportRequestParams{
@@ -1905,17 +1905,22 @@ reportRequest := services.ReportRequestParams{
 }
 
 // The reportRequestResponse will contain the report ID to use in subsequent requests
+// Vulnerabilities Report
 reportRequestResponse, err := xrayManager.GenerateVulnerabilitiesReport(reportRequest)
+// Licences Report
+reportRequestResponse, err := xrayManager.GenerateLicensesReport(reportRequest)
+// Violations Report
+reportRequestResponse, err := xrayManager.GenerateViolationsReport(reportRequest)
 ```
 
-#### Get Vulnerabilities Report Details
+#### Get Vulnerabilities/Licences/Violations Report Details
 
 ```go
 // The reportId argument value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
 reportDetails, err := xrayManager.ReportDetails(reportId)
 ```
 
-#### Get Vulnerabilities Report Content
+#### Get Vulnerabilities/Licences/Violations Report Content
 
 ```go
 // The ReportId value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
@@ -1929,7 +1934,7 @@ reportContentRequest := services.ReportContentRequestParams{
 reportContent, err := xrayManager.ReportContent(reportContentRequest)
 ```
 
-#### Delete Vulnerabilities Report
+#### Delete Vulnerabilities/Licences/Violations Report
 
 ```go
 // The reportId argument value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
