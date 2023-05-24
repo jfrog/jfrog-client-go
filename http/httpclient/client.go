@@ -533,9 +533,10 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 		return nil, nil, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, resp, nil
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, nil, err
 	}
+	log.Debug("Artifactory response:", resp.Status)
 
 	fileSize := int64(0)
 	contentLength := resp.Header.Get("Content-Length")
@@ -549,6 +550,7 @@ func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetail
 	fileDetails := new(fileutils.FileDetails)
 	fileDetails.Checksum.Md5 = resp.Header.Get("X-Checksum-Md5")
 	fileDetails.Checksum.Sha1 = resp.Header.Get("X-Checksum-Sha1")
+	fileDetails.Checksum.Sha256 = resp.Header.Get("X-Checksum-Sha256")
 	fileDetails.Size = fileSize
 	return fileDetails, resp, nil
 }

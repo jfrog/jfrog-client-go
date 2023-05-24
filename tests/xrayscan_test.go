@@ -57,6 +57,6 @@ func scanBuild(t *testing.T, buildName, buildNumber, expected string) {
 
 	expected = strings.ReplaceAll(expected, "\n", "")
 	if string(result) != expected {
-		t.Error("Expected:", string(result), "Got: ", expected)
+		t.Error("Expected:", expected, "Got: ", string(result))
 	}
 }
