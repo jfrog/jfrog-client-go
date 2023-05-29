@@ -1291,3 +1291,17 @@ const VulnerableXraySummaryArtifactResponse = `
   ]
 }
 `
+
+const EntitledResponse = `
+{
+  "entitled": true,
+  "feature_id": "contextual_analysis"
+}
+`
+
+const NotEntitledResponse = `
+{
+  "entitled": false,
+  "feature_id": "unknown"
+}
+`
