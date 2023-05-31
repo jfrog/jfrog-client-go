@@ -199,11 +199,11 @@ func SearchBySpecWithPattern(specFile *CommonParams, flags CommonConf, requiredA
 }
 
 // Use this function when running Aql with pattern
-func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
+func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (reader *content.ContentReader, err error) {
 	// Execute the search according to provided aql in specFile.
 	var fetchedProps *content.ContentReader
 	query := BuildQueryFromSpecFile(specFile, requiredArtifactProps)
-	reader, err := aqlSearch(query, flags)
+	reader, err = aqlSearch(query, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -214,28 +214,29 @@ func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtif
 	if filteredReader != nil {
 		// This one will close the original reader that was used
 		// to create the filteredReader (a new pointer will be created by the defer mechanism).
-		defer func() {
+		defer func(reader *content.ContentReader) {
 			e := reader.Close()
 			if err == nil {
 				err = e
 			}
-		}()
+		}(reader)
 		// The new reader assignment will not affect the defer statement.
 		reader = filteredReader
 	}
 	fetchedProps, err = fetchProps(specFile, flags, requiredArtifactProps, reader)
 	if fetchedProps != nil {
 		// Before returning the new reader, we close the one we used to creat it.
-		defer func() {
+		defer func(reader *content.ContentReader) {
 			e := reader.Close()
 			if err == nil {
 				err = e
 			}
-		}()
-		return fetchedProps, err
+		}(reader)
+		reader = fetchedProps
+		return
 	}
 	// Returns the open filteredReader or the original reader that returned from the AQL search.
-	return reader, err
+	return
 }
 
 // Filter the results by build, if no build found or items to filter, nil will be returned.
