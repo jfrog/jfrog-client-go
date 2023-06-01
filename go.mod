@@ -9,7 +9,7 @@ require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.3
-	github.com/jfrog/build-info-go v1.9.5
+	github.com/jfrog/build-info-go v1.9.6
 	github.com/jfrog/gofrog v1.3.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.2
@@ -24,7 +24,7 @@ require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/andybalholm/brotli v1.0.1 // indirect
-	github.com/cloudflare/circl v1.1.0 // indirect
+	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
