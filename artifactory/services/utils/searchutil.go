@@ -75,14 +75,14 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 
 	wg.Wait()
 	if artifactsReader != nil {
-		defer func() {
+		defer func(artifactsReader *content.ContentReader) {
 			err = errors.Join(err, artifactsReader.Close())
-		}()
+		}(artifactsReader)
 	}
 	if dependenciesReader != nil {
-		defer func() {
+		defer func(artifactsReader *content.ContentReader) {
 			err = errors.Join(err, dependenciesReader.Close())
-		}()
+		}(dependenciesReader)
 	}
 	if artErr != nil {
 		return nil, artErr
