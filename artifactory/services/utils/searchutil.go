@@ -80,7 +80,7 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 		}(artifactsReader)
 	}
 	if dependenciesReader != nil {
-		defer func(artifactsReader *content.ContentReader) {
+		defer func(dependenciesReader *content.ContentReader) {
 			err = errors.Join(err, dependenciesReader.Close())
 		}(dependenciesReader)
 	}
