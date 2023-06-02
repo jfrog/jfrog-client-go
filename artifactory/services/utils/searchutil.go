@@ -121,12 +121,12 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 		if err != nil {
 			return nil, err
 		}
-		defer func() {
+		defer func(mergedReader *content.ContentReader) {
 			e := mergedReader.Close()
 			if err == nil {
 				err = e
 			}
-		}()
+		}(mergedReader)
 		buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
 		if err != nil {
 			return nil, err
