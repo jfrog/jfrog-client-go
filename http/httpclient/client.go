@@ -272,8 +272,16 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	} else {
 		reader = reqContent
 	}
+	resp, body, err = jc.UploadFileFromReader(reader, url, httpClientsDetails, size)
+	progress.IncrementGeneralProgress()
+	return
+}
 
-	return jc.UploadFileFromReader(reader, url, httpClientsDetails, size)
+func (jc *HttpClient) CheckIfPositiveResponse(response *http.Response) bool {
+	if response.StatusCode == http.StatusCreated || response.StatusCode == http.StatusOK || response.StatusCode == http.StatusAccepted {
+		return true
+	}
+	return false
 }
 
 func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails httputils.HttpClientDetails,

@@ -14,6 +14,8 @@ type ProgressMgr interface {
 	GetProgress(id int) (progress Progress)
 	// Aborts a progress indicator. Called on both successful and unsuccessful operations.
 	RemoveProgress(id int)
+	// Increments the general progress by 1
+	IncrementGeneralProgress()
 	// Quits the whole progress mechanism.
 	Quit() (err error)
 	// Increments the general progress total count by given n.
