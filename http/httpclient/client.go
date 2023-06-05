@@ -273,7 +273,9 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 		reader = reqContent
 	}
 	resp, body, err = jc.UploadFileFromReader(reader, url, httpClientsDetails, size)
-	progress.IncrementGeneralProgress()
+	if progress != nil {
+		progress.IncrementGeneralProgress()
+	}
 	return
 }
 
