@@ -12,6 +12,7 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualAlpineTest", virtualAlpineTest)
 	t.Run("virtualBowerTest", virtualBowerTest)
 	t.Run("virtualChefTest", virtualChefTest)
+	t.Run("virtualComposerTest", virtualComposerTest)
 	t.Run("virtualConanTest", virtualConanTest)
 	t.Run("virtualCondaTest", virtualCondaTest)
 	t.Run("virtualCranTest", virtualCranTest)
@@ -33,6 +34,7 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 	t.Run("virtualRpmTest", virtualRpmTest)
 	t.Run("virtualSbtTest", virtualSbtTest)
 	t.Run("virtualSwiftTest", virtualSwiftTest)
+	t.Run("virtualTerraformTest", virtualTerraformTest)
 	t.Run("virtualYumTest", virtualYumTest)
 	t.Run("virtualCreateWithParamTest", virtualCreateWithParamTest)
 	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
@@ -143,6 +145,28 @@ func virtualChefTest(t *testing.T) {
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, cvp)
 	}
+}
+
+func virtualComposerTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	cvp := services.NewComposerVirtualRepositoryParams()
+	cvp.Key = repoKey
+	setVirtualRepositoryBaseParams(&cvp.VirtualRepositoryBaseParams, false)
+	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, false)
+
+	err := testsCreateVirtualRepositoryService.Composer(cvp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, cvp)
+
+	setVirtualRepositoryBaseParams(&cvp.VirtualRepositoryBaseParams, true)
+	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, true)
+
+	err = testsUpdateVirtualRepositoryService.Composer(cvp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, cvp)
 }
 
 func virtualConanTest(t *testing.T) {
@@ -625,6 +649,28 @@ func virtualSwiftTest(t *testing.T) {
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, svp)
 	}
+}
+
+func virtualTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	avp := services.NewTerraformVirtualRepositoryParams()
+	avp.Key = repoKey
+	setVirtualRepositoryBaseParams(&avp.VirtualRepositoryBaseParams, false)
+	setCacheVirtualRepositoryParams(&avp.CommonCacheVirtualRepositoryParams, false)
+
+	err := testsCreateVirtualRepositoryService.Terraform(avp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, avp)
+
+	setVirtualRepositoryBaseParams(&avp.VirtualRepositoryBaseParams, true)
+	setCacheVirtualRepositoryParams(&avp.CommonCacheVirtualRepositoryParams, true)
+
+	err = testsUpdateVirtualRepositoryService.Terraform(avp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, avp)
 }
 
 func virtualYumTest(t *testing.T) {

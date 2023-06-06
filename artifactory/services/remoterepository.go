@@ -139,6 +139,10 @@ func (rrs *RemoteRepositoryService) Swift(params SwiftRemoteRepositoryParams) er
 	return rrs.performRequest(params, params.Key)
 }
 
+func (rrs *RemoteRepositoryService) Terraform(params TerraformRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
 func (rrs *RemoteRepositoryService) Vcs(params VcsRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
@@ -473,6 +477,18 @@ type SwiftRemoteRepositoryParams struct {
 
 func NewSwiftRemoteRepositoryParams() SwiftRemoteRepositoryParams {
 	return SwiftRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("swift")}
+}
+
+type TerraformRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	TerraformRegistryUrl  string `json:"terraformRegistryUrl,omitempty"`
+	TerraformProvidersUrl string `json:"terraformProvidersUrl,omitempty"`
+	VcsType               string `json:"vcsType,omitempty"`
+	VcsGitProvider        string `json:"vcsGitProvider,omitempty"`
+}
+
+func NewTerraformRemoteRepositoryParams() TerraformRemoteRepositoryParams {
+	return TerraformRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("terraform")}
 }
 
 type VcsRemoteRepositoryParams struct {
