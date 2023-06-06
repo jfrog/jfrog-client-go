@@ -40,6 +40,10 @@ func (vrs *VirtualRepositoryService) Chef(params ChefVirtualRepositoryParams) er
 	return vrs.performRequest(params, params.Key)
 }
 
+func (vrs *VirtualRepositoryService) Composer(params ComposerVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
 func (vrs *VirtualRepositoryService) Conan(params ConanVirtualRepositoryParams) error {
 	return vrs.performRequest(params, params.Key)
 }
@@ -124,6 +128,10 @@ func (vrs *VirtualRepositoryService) Swift(params SwiftVirtualRepositoryParams) 
 	return vrs.performRequest(params, params.Key)
 }
 
+func (vrs *VirtualRepositoryService) Terraform(params TerraformVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
 func (vrs *VirtualRepositoryService) Yum(params YumVirtualRepositoryParams) error {
 	return vrs.performRequest(params, params.Key)
 }
@@ -180,6 +188,15 @@ type ChefVirtualRepositoryParams struct {
 
 func NewChefVirtualRepositoryParams() ChefVirtualRepositoryParams {
 	return ChefVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("chef")}
+}
+
+type ComposerVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
+}
+
+func NewComposerVirtualRepositoryParams() ComposerVirtualRepositoryParams {
+	return ComposerVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("composer")}
 }
 
 type ConanVirtualRepositoryParams struct {
@@ -370,6 +387,15 @@ type SwiftVirtualRepositoryParams struct {
 
 func NewSwiftVirtualRepositoryParams() SwiftVirtualRepositoryParams {
 	return SwiftVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("swift")}
+}
+
+type TerraformVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
+}
+
+func NewTerraformVirtualRepositoryParams() TerraformVirtualRepositoryParams {
+	return TerraformVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("terraform")}
 }
 
 type YumVirtualRepositoryParams struct {
