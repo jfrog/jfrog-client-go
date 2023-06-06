@@ -114,7 +114,7 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 //     3.1 Compare the build-name & build-number among all the artifact with the same sha1.
 //
 // This will prevent unnecessary search upon all Artifactory:
-func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
+func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *CommonParams, flags CommonConf, builds []Build) (reader *content.ContentReader, err error) {
 	if includePropertiesInAqlForSpec(specFile) {
 		// Don't fetch artifacts' properties from Artifactory.
 		mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader)
@@ -141,36 +141,28 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 		return nil, err
 	}
 	defer func() {
-		e := readerWithProps.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, errorutils.CheckError(readerWithProps.Close()))
 	}()
 	artifactsSortedReaderWithProps, err := loadMissingProperties(artifactsReader, readerWithProps)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		e := artifactsSortedReaderWithProps.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, errorutils.CheckError(artifactsSortedReaderWithProps.Close()))
 	}()
 	mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsSortedReaderWithProps, dependenciesReader)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		e := mergedReader.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, errorutils.CheckError(mergedReader.Close()))
 	}()
 	buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
 	if err != nil {
 		return nil, err
 	}
-	return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
+	reader, err = filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
+	return
 }
 
 func mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader *content.ContentReader) (*content.ContentReader, error) {
@@ -212,10 +204,7 @@ func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtif
 		// This one will close the original reader that was used
 		// to create the filteredReader (a new pointer will be created by the defer mechanism).
 		defer func(reader *content.ContentReader) {
-			e := reader.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, errorutils.CheckError(reader.Close()))
 		}(reader)
 		// The new reader assignment will not affect the defer statement.
 		reader = filteredReader
@@ -224,10 +213,7 @@ func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtif
 	if fetchedProps != nil {
 		// Before returning the new reader, we close the one we used to creat it.
 		defer func(reader *content.ContentReader) {
-			e := reader.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, errorutils.CheckError(reader.Close()))
 		}(reader)
 		reader = fetchedProps
 		return
@@ -269,10 +255,7 @@ func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps 
 			return nil, err
 		}
 		defer func() {
-			e := readerWithProps.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, errorutils.CheckError(reader.Close()))
 		}()
 		return loadMissingProperties(reader, readerWithProps)
 	}
@@ -307,10 +290,7 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (reader *content.Conte
 	}
 	defer func() {
 		if body != nil {
-			e := body.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(body.Close()))
 		}
 	}()
 	log.Debug("Streaming data to file...")
@@ -334,10 +314,7 @@ func streamToFile(reader io.Reader) (filePath string, err error) {
 		return "", err
 	}
 	defer func() {
-		e := fd.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(fd.Close()))
 	}()
 	_, err = io.Copy(fd, bufioReader)
 	return fd.Name(), errorutils.CheckError(err)
@@ -457,17 +434,14 @@ func (item *ResultItem) GetProperty(key string) string {
 	return ""
 }
 
-func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (*content.ContentReader, error) {
+func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (resultReader *content.ContentReader, err error) {
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		e := writer.Close()
-		if err == nil {
-			err = e
-		}
-	}()
+	defer func(writer *content.ContentWriter) {
+		err = errors.Join(err, errorutils.CheckError(writer.Close()))
+	}(writer)
 
 	// Get the expected record type from the reader.
 	recordType := reflect.ValueOf(readerRecord).Type()
@@ -491,26 +465,24 @@ func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *conte
 			temp = rPath
 		}
 	}
-	if err := reader.GetError(); err != nil {
+	if err = reader.GetError(); err != nil {
 		return nil, err
 	}
 	reader.Reset()
-	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
+	resultReader = content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey())
+	return
 }
 
 // Reduce the amount of items by saving only the shortest item path for each unique path e.g.:
 // a | a/b | c | e/f -> a | c | e/f
-func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (*content.ContentReader, error) {
+func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (resultReader *content.ContentReader, err error) {
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		e := writer.Close()
-		if err == nil {
-			err = e
-		}
-	}()
+	defer func(writer *content.ContentWriter) {
+		err = errors.Join(err, errorutils.CheckError(writer.Close()))
+	}(writer)
 
 	// Get the expected record type from the reader.
 	recordType := reflect.ValueOf(readerRecord).Type()
@@ -536,11 +508,12 @@ func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.
 			}
 		}
 	}
-	if err := reader.GetError(); err != nil {
+	if err = reader.GetError(); err != nil {
 		return nil, err
 	}
 	reader.Reset()
-	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
+	resultReader = content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey())
+	return
 }
 
 func ReduceTopChainDirResult(readerRecord SearchBasedContentItem, searchResults *content.ContentReader) (*content.ContentReader, error) {
@@ -552,18 +525,16 @@ func ReduceBottomChainDirResult(readerRecord SearchBasedContentItem, searchResul
 }
 
 // Reduce Dir results by using the resultsFilter.
-func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content.ContentReader, ascendingOrder bool, resultsFilter AqlSearchResultItemFilter) (*content.ContentReader, error) {
+func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content.ContentReader, ascendingOrder bool, resultsFilter AqlSearchResultItemFilter) (reader *content.ContentReader, err error) {
 	sortedFile, err := content.SortContentReader(readerRecord, searchResults, ascendingOrder)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		e := sortedFile.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, errorutils.CheckError(sortedFile.Close()))
 	}()
-	return resultsFilter(readerRecord, sortedFile)
+	reader, err = resultsFilter(readerRecord, sortedFile)
+	return
 }
 
 func DisableTransitiveSearchIfNotAllowed(params *CommonParams, artifactoryVersion *version.Version) {
