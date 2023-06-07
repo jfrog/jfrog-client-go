@@ -203,8 +203,8 @@ func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtif
 	if filteredReader != nil {
 		// This one will close the original reader that was used
 		// to create the filteredReader (a new pointer will be created by the defer mechanism).
-		defer func(reader *content.ContentReader) {
-			err = errors.Join(err, errorutils.CheckError(reader.Close()))
+		defer func(readerWithProps *content.ContentReader) {
+			err = errors.Join(err, errorutils.CheckError(readerWithProps.Close()))
 		}(reader)
 		// The new reader assignment will not affect the defer statement.
 		reader = filteredReader
