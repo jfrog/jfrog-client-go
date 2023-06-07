@@ -30,6 +30,7 @@ type ArtifactoryServicesManager interface {
 	UpdateRemoteRepository() *services.RemoteRepositoryService
 	UpdateVirtualRepository() *services.VirtualRepositoryService
 	UpdateFederatedRepository() *services.FederatedRepositoryService
+	UpdateRepositoryWithParams(params interface{}, repoName string) error
 	DeleteRepository(repoKey string) error
 	GetRepository(repoKey string, repoDetails interface{}) error
 	GetAllRepositories() (*[]services.RepositoryDetails, error)
@@ -160,6 +161,10 @@ func (esm *EmptyArtifactoryServicesManager) UpdateVirtualRepository() *services.
 }
 
 func (esm *EmptyArtifactoryServicesManager) UpdateFederatedRepository() *services.FederatedRepositoryService {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) UpdateRepositoryWithParams(params interface{}, repoName string) error {
 	panic("Failed: Method is not implemented")
 }
 

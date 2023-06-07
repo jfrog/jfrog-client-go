@@ -75,34 +75,31 @@ func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
 	return body, nil
 }
 
-func (rs *RepositoriesService) CreateRemote(params RemoteRepositoryBaseParams) error {
-	return rs.createRepo(params, params.Key)
-}
-
-func (rs *RepositoriesService) CreateVirtual(params VirtualRepositoryBaseParams) error {
-	return rs.createRepo(params, params.Key)
-}
-
-func (rs *RepositoriesService) CreateLocal(params LocalRepositoryBaseParams) error {
-	return rs.createRepo(params, params.Key)
-}
-
-func (rs *RepositoriesService) CreateFederated(params FederatedRepositoryBaseParams) error {
-	return rs.createRepo(params, params.Key)
-}
-
 func (rs *RepositoriesService) Create(params interface{}, repoName string) error {
-	return rs.createRepo(params, repoName)
+	return rs.createOrUpdateRepo(params, repoName, false)
 }
 
-func (rs *RepositoriesService) createRepo(params interface{}, repoName string) error {
+func (rs *RepositoriesService) Update(params interface{}, repoName string) error {
+	return rs.createOrUpdateRepo(params, repoName, true)
+}
+
+func (rs *RepositoriesService) createOrUpdateRepo(params interface{}, repoName string, isUpdate bool) error {
 	content, err := json.Marshal(params)
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	resp, body, err := rs.client.SendPut(rs.ArtDetails.GetUrl()+"api/repositories/"+repoName, content, &httpClientsDetails)
+	var action string
+	var resp *http.Response
+	var body []byte
+	if isUpdate {
+		action = "updated"
+		resp, body, err = rs.client.SendPost(rs.ArtDetails.GetUrl()+"api/repositories/"+repoName, content, &httpClientsDetails)
+	} else {
+		action = "created"
+		resp, body, err = rs.client.SendPut(rs.ArtDetails.GetUrl()+"api/repositories/"+repoName, content, &httpClientsDetails)
+	}
 	if err != nil {
 		return err
 	}
@@ -110,7 +107,7 @@ func (rs *RepositoriesService) createRepo(params interface{}, repoName string) e
 		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info(fmt.Sprintf("Repository %s%s created.", rs.ArtDetails.GetUrl(), repoName))
+	log.Info(fmt.Sprintf("Repository %s%s %s.", rs.ArtDetails.GetUrl(), repoName, action))
 	return nil
 }
 

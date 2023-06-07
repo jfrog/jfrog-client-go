@@ -46,7 +46,7 @@ func ExtractArchive(localPath, localFileName, originFileName, logMsgPrefix strin
 }
 
 func extract(localFilePath, originArchiveName, extractionPath string, unarchiver *unarchive.Unarchiver) error {
-	if err := unarchiver.Unarchive(localFilePath, originArchiveName, extractionPath); err != nil{
+	if err := unarchiver.Unarchive(localFilePath, originArchiveName, extractionPath); err != nil {
 		return errorutils.CheckError(err)
 	}
 	// If the file was extracted successfully, remove it from the file system
