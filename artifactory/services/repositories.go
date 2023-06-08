@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -76,39 +75,21 @@ func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
 }
 
 func (rs *RepositoriesService) Create(params interface{}, repoName string) error {
-	return rs.createOrUpdateRepo(params, repoName, false)
+	repositoryService := &RepositoryService{
+		ArtDetails: rs.ArtDetails,
+		client:     rs.client,
+		isUpdate:   false,
+	}
+	return repositoryService.performRequest(params, repoName)
 }
 
 func (rs *RepositoriesService) Update(params interface{}, repoName string) error {
-	return rs.createOrUpdateRepo(params, repoName, true)
-}
-
-func (rs *RepositoriesService) createOrUpdateRepo(params interface{}, repoName string, isUpdate bool) error {
-	content, err := json.Marshal(params)
-	if errorutils.CheckError(err) != nil {
-		return err
+	repositoryService := &RepositoryService{
+		ArtDetails: rs.ArtDetails,
+		client:     rs.client,
+		isUpdate:   true,
 	}
-	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	var action string
-	var resp *http.Response
-	var body []byte
-	if isUpdate {
-		action = "updated"
-		resp, body, err = rs.client.SendPost(rs.ArtDetails.GetUrl()+"api/repositories/"+repoName, content, &httpClientsDetails)
-	} else {
-		action = "created"
-		resp, body, err = rs.client.SendPut(rs.ArtDetails.GetUrl()+"api/repositories/"+repoName, content, &httpClientsDetails)
-	}
-	if err != nil {
-		return err
-	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return err
-	}
-	log.Debug("Artifactory response:", resp.Status)
-	log.Info(fmt.Sprintf("Repository %s%s %s.", rs.ArtDetails.GetUrl(), repoName, action))
-	return nil
+	return repositoryService.performRequest(params, repoName)
 }
 
 type RepositoryDetails struct {

@@ -13,7 +13,6 @@ type LocalRepositoryService struct {
 func NewLocalRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *LocalRepositoryService {
 	return &LocalRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: LocalRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
