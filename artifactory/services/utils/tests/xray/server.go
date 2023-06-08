@@ -123,7 +123,6 @@ func buildScanHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case http.MethodPost:
-		// TODO: validate body
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
