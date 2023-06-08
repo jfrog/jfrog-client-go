@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -75,43 +74,22 @@ func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
 	return body, nil
 }
 
-func (rs *RepositoriesService) CreateRemote(params RemoteRepositoryBaseParams) error {
-	return rs.createRepo(params, params.Key)
-}
-
-func (rs *RepositoriesService) CreateVirtual(params VirtualRepositoryBaseParams) error {
-	return rs.createRepo(params, params.Key)
-}
-
-func (rs *RepositoriesService) CreateLocal(params LocalRepositoryBaseParams) error {
-	return rs.createRepo(params, params.Key)
-}
-
-func (rs *RepositoriesService) CreateFederated(params FederatedRepositoryBaseParams) error {
-	return rs.createRepo(params, params.Key)
-}
-
 func (rs *RepositoriesService) Create(params interface{}, repoName string) error {
-	return rs.createRepo(params, repoName)
+	repositoryService := &RepositoryService{
+		ArtDetails: rs.ArtDetails,
+		client:     rs.client,
+		isUpdate:   false,
+	}
+	return repositoryService.performRequest(params, repoName)
 }
 
-func (rs *RepositoriesService) createRepo(params interface{}, repoName string) error {
-	content, err := json.Marshal(params)
-	if errorutils.CheckError(err) != nil {
-		return err
+func (rs *RepositoriesService) Update(params interface{}, repoName string) error {
+	repositoryService := &RepositoryService{
+		ArtDetails: rs.ArtDetails,
+		client:     rs.client,
+		isUpdate:   true,
 	}
-	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	resp, body, err := rs.client.SendPut(rs.ArtDetails.GetUrl()+"api/repositories/"+repoName, content, &httpClientsDetails)
-	if err != nil {
-		return err
-	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return err
-	}
-	log.Debug("Artifactory response:", resp.Status)
-	log.Info(fmt.Sprintf("Repository %s%s created.", rs.ArtDetails.GetUrl(), repoName))
-	return nil
+	return repositoryService.performRequest(params, repoName)
 }
 
 type RepositoryDetails struct {

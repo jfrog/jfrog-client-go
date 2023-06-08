@@ -93,25 +93,25 @@ func (sm *ArtifactoryServicesManagerImp) CreateFederatedRepository() *services.F
 func (sm *ArtifactoryServicesManagerImp) CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoryService.CreateLocal(params)
+	return repositoryService.Create(params, params.Key)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateRemoteRepositoryWithParams(params services.RemoteRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoryService.CreateRemote(params)
+	return repositoryService.Create(params, params.Key)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoryService.CreateVirtual(params)
+	return repositoryService.Create(params, params.Key)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateFederatedRepositoryWithParams(params services.FederatedRepositoryBaseParams) error {
 	repositoryService := services.NewRepositoriesService(sm.client)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoryService.CreateFederated(params)
+	return repositoryService.Create(params, params.Key)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateRepositoryWithParams(params interface{}, repoName string) error {
@@ -142,6 +142,12 @@ func (sm *ArtifactoryServicesManagerImp) UpdateFederatedRepository() *services.F
 	repositoryService := services.NewFederatedRepositoryService(sm.client, true)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoryService
+}
+
+func (sm *ArtifactoryServicesManagerImp) UpdateRepositoryWithParams(params interface{}, repoName string) error {
+	repositoryService := services.NewRepositoriesService(sm.client)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.Update(params, repoName)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DeleteRepository(repoKey string) error {

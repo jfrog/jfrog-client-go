@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -14,14 +13,13 @@ import (
 )
 
 type RepositoryService struct {
-	repoType   string
 	isUpdate   bool
 	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewRepositoryService(repoType string, client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *RepositoryService {
-	return &RepositoryService{repoType: repoType, client: client, isUpdate: isUpdate}
+func NewRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *RepositoryService {
+	return &RepositoryService{client: client, isUpdate: isUpdate}
 }
 
 func (rs *RepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -34,17 +32,17 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 		return err
 	}
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/vnd.org.jfrog.artifactory.repositories."+strings.ToTitle(rs.repoType)+"RepositoryConfiguration+json", &httpClientsDetails.Headers)
+	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/repositories/" + url.PathEscape(repoKey)
 	var operationString string
 	var resp *http.Response
 	var body []byte
 	if rs.isUpdate {
-		log.Info("Updating " + strings.ToLower(rs.repoType) + " repository...")
+		log.Info("Updating repository '" + repoKey + "'...")
 		operationString = "updating"
 		resp, body, err = rs.client.SendPost(url, content, &httpClientsDetails)
 	} else {
-		log.Info("Creating " + strings.ToLower(rs.repoType) + " repository...")
+		log.Info("Creating repository '" + repoKey + "'...")
 		operationString = "creating"
 		resp, body, err = rs.client.SendPut(url, content, &httpClientsDetails)
 	}
