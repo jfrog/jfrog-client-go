@@ -38,13 +38,13 @@ func scanBuildHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch buildName {
 	case CleanScanBuildName:
-		fmt.Fprint(w, CleanXrayScanResponse)
+		_, _ = fmt.Fprint(w, CleanXrayScanResponse)
 		return
 	case FatalScanBuildName:
-		fmt.Fprint(w, FatalErrorXrayScanResponse)
+		_, _ = fmt.Fprint(w, FatalErrorXrayScanResponse)
 		return
 	case VulnerableBuildName:
-		fmt.Fprint(w, VulnerableXrayScanResponse)
+		_, _ = fmt.Fprint(w, VulnerableXrayScanResponse)
 		return
 	}
 }
@@ -56,7 +56,7 @@ func artifactSummaryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprint(w, VulnerableXraySummaryArtifactResponse)
+	_, _ = fmt.Fprint(w, VulnerableXraySummaryArtifactResponse)
 }
 
 func reportHandler(w http.ResponseWriter, r *http.Request) {
