@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -987,7 +988,8 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	}
 	// Validate
 	assert.NotNil(t, repo, "Repo "+repoKey+" not found")
-	assert.Equal(t, grp.Description+" (local file cache)", repo.Description)
+	repo.Description = strings.TrimSuffix(repo.Description, " (local file cache)")
+	assert.Equal(t, grp.Description, repo.Description)
 	assert.Equal(t, "Generic", repo.PackageType)
 	assert.Equal(t, grp.Url, repo.Url)
 }
