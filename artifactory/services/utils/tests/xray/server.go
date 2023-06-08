@@ -106,12 +106,44 @@ func entitlementsHandler(w http.ResponseWriter, r *http.Request) {
 	featureId := r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
 	switch featureId {
 	case ContextualAnalysisFeatureId:
-		fmt.Fprint(w, EntitledResponse)
+		_, _ = fmt.Fprint(w, EntitledResponse)
 		return
 	case BadFeatureId:
-		fmt.Fprint(w, NotEntitledResponse)
+		_, _ = fmt.Fprint(w, NotEntitledResponse)
 		return
 	}
+}
+
+func buildScanHandler(w http.ResponseWriter, r *http.Request) {
+	argsSegment := strings.Split(r.URL.Path, services.BuildScanAPI)[1]
+	switch r.Method {
+	case http.MethodGet:
+		if argsSegment == "/test-get/3" {
+			_, _ = fmt.Fprintf(w, BuildScanResultsResponse, "get")
+			return
+		}
+	case http.MethodPost:
+		// TODO: validate body
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		buildName, err := jsonparser.GetString(body, "build_name")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if argsSegment == "/" && strings.HasPrefix(buildName, "test-") {
+			_, _ = fmt.Fprint(w, TriggerBuildScanResponse)
+			return
+		}
+		if argsSegment == "/scanResult" && buildName == "test-post" {
+			_, _ = fmt.Fprintf(w, BuildScanResultsResponse, "post")
+			return
+		}
+	}
+	http.Error(w, "Invalid reports request", http.StatusBadRequest)
 }
 
 func StartXrayMockServer() int {
@@ -120,6 +152,7 @@ func StartXrayMockServer() int {
 	handlers["/api/v2/summary/artifact"] = artifactSummaryHandler
 	handlers["/api/v1/entitlements/feature/"] = entitlementsHandler
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
+	handlers[fmt.Sprintf("/%s/", services.BuildScanAPI)] = buildScanHandler
 	handlers["/"] = http.NotFound
 
 	port, err := clienttests.StartHttpServer(handlers)

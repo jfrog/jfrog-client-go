@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 
@@ -64,8 +66,56 @@ func testEntitlements(t *testing.T, featureId string, expected bool) {
 	}
 }
 
+func TestScanBuild(t *testing.T) {
+	initXrayTest(t)
+	xrayServerPort := xray.StartXrayMockServer()
+	xrayDetails := newTestXrayDetails(GetXrayDetails())
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(xrayDetails.GetClientCertPath()).
+		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
+		Build()
+	if err != nil {
+		t.Error(err)
+	}
+	testsBuildScanService := services.NewBuildScanService(client)
+	xrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/")
+	tests := []struct {
+		name        string
+		buildName   string
+		buildNumber string
+		xrayVersion string
+	}{
+		{name: "get-api", buildName: "test-get", buildNumber: "3", xrayVersion: "3.75.12"},
+		{name: "post-api", buildName: "test-post", buildNumber: "3", xrayVersion: "3.76.1"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			xrayDetails.version = test.xrayVersion
+			testsBuildScanService.XrayDetails = xrayDetails
+			scanResponse, noFailBuildPolicy, err := testsBuildScanService.ScanBuild(services.XrayBuildParams{BuildName: test.buildName, BuildNumber: test.buildNumber}, true)
+			assert.NoError(t, err)
+			assert.True(t, noFailBuildPolicy)
+			assert.NotNil(t, scanResponse)
+		})
+	}
+}
+
 func initXrayTest(t *testing.T) {
 	if !*TestXray {
 		t.Skip("Skipping xray test. To run xray test add the '-test.xray=true' option.")
 	}
+}
+
+type testXrayDetails struct {
+	auth.ServiceDetails
+	version string
+}
+
+func newTestXrayDetails(serviceDetails auth.ServiceDetails) testXrayDetails {
+	return testXrayDetails{ServiceDetails: serviceDetails}
+}
+
+func (txd testXrayDetails) GetVersion() (string, error) {
+	return txd.version, nil
 }
