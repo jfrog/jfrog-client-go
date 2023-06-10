@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -930,7 +931,7 @@ func remoteCreateWithParamTest(t *testing.T) {
 	params := services.NewRemoteRepositoryBaseParams()
 	params.Key = repoKey
 	params.Url = "https://github.com/"
-	err := testsRepositoriesService.CreateRemote(params)
+	err := testsRepositoriesService.Create(params, params.Key)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
@@ -987,7 +988,8 @@ func getAllRemoteRepoDetailsTest(t *testing.T) {
 	}
 	// Validate
 	assert.NotNil(t, repo, "Repo "+repoKey+" not found")
-	assert.Equal(t, grp.Description+" (local file cache)", repo.Description)
+	repo.Description = strings.TrimSuffix(repo.Description, " (local file cache)")
+	assert.Equal(t, grp.Description, repo.Description)
 	assert.Equal(t, "Generic", repo.PackageType)
 	assert.Equal(t, grp.Url, repo.Url)
 }

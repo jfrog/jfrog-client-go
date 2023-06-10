@@ -656,7 +656,7 @@ func virtualCreateWithParamTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	params := services.NewVirtualRepositoryBaseParams()
 	params.Key = repoKey
-	err := testsRepositoriesService.CreateVirtual(params)
+	err := testsRepositoriesService.Create(params, params.Key)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}

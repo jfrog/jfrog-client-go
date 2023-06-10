@@ -30,6 +30,7 @@ type ArtifactoryServicesManager interface {
 	UpdateRemoteRepository() *services.RemoteRepositoryService
 	UpdateVirtualRepository() *services.VirtualRepositoryService
 	UpdateFederatedRepository() *services.FederatedRepositoryService
+	UpdateRepositoryWithParams(params interface{}, repoName string) error
 	DeleteRepository(repoKey string) error
 	GetRepository(repoKey string, repoDetails interface{}) error
 	GetAllRepositories() (*[]services.RepositoryDetails, error)
@@ -115,7 +116,7 @@ func (esm *EmptyArtifactoryServicesManager) CreateLocalRepository() *services.Lo
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreateLocalRepositoryWithParams(services.LocalRepositoryBaseParams) error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -123,7 +124,7 @@ func (esm *EmptyArtifactoryServicesManager) CreateRemoteRepository() *services.R
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateRemoteRepositoryWithParams(params services.RemoteRepositoryBaseParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreateRemoteRepositoryWithParams(services.RemoteRepositoryBaseParams) error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -131,7 +132,7 @@ func (esm *EmptyArtifactoryServicesManager) CreateVirtualRepository() *services.
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateVirtualRepositoryWithParams(params services.VirtualRepositoryBaseParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreateVirtualRepositoryWithParams(services.VirtualRepositoryBaseParams) error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -139,11 +140,11 @@ func (esm *EmptyArtifactoryServicesManager) CreateFederatedRepository() *service
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateFederatedRepositoryWithParams(params services.FederatedRepositoryBaseParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreateFederatedRepositoryWithParams(services.FederatedRepositoryBaseParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateRepositoryWithParams(params interface{}, repoName string) error {
+func (esm *EmptyArtifactoryServicesManager) CreateRepositoryWithParams(interface{}, string) error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -163,115 +164,119 @@ func (esm *EmptyArtifactoryServicesManager) UpdateFederatedRepository() *service
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DeleteRepository(repoKey string) error {
+func (esm *EmptyArtifactoryServicesManager) UpdateRepositoryWithParams(interface{}, string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetRepository(repoKey string, repoDetails interface{}) error {
+func (esm *EmptyArtifactoryServicesManager) DeleteRepository(string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) IsRepoExists(repoKey string) (bool, error) {
+func (esm *EmptyArtifactoryServicesManager) GetRepository(string, interface{}) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreatePermissionTarget(params services.PermissionTargetParams) error {
+func (esm *EmptyArtifactoryServicesManager) IsRepoExists(string) (bool, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UpdatePermissionTarget(params services.PermissionTargetParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreatePermissionTarget(services.PermissionTargetParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DeletePermissionTarget(permissionTargetName string) error {
+func (esm *EmptyArtifactoryServicesManager) UpdatePermissionTarget(services.PermissionTargetParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetPermissionTarget(permissionTargetName string) (*services.PermissionTargetParams, error) {
+func (esm *EmptyArtifactoryServicesManager) DeletePermissionTarget(string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) PublishBuildInfo(build *buildinfo.BuildInfo, project string) (*clientutils.Sha256Summary, error) {
+func (esm *EmptyArtifactoryServicesManager) GetPermissionTarget(string) (*services.PermissionTargetParams, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DistributeBuild(params services.BuildDistributionParams) error {
+func (esm *EmptyArtifactoryServicesManager) PublishBuildInfo(*buildinfo.BuildInfo, string) (*clientutils.Sha256Summary, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) PromoteBuild(params services.PromotionParams) error {
+func (esm *EmptyArtifactoryServicesManager) DistributeBuild(services.BuildDistributionParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DiscardBuilds(params services.DiscardBuildsParams) error {
+func (esm *EmptyArtifactoryServicesManager) PromoteBuild(services.PromotionParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) XrayScanBuild(params services.XrayScanParams) ([]byte, error) {
+func (esm *EmptyArtifactoryServicesManager) DiscardBuilds(services.DiscardBuildsParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetPathsToDelete(params services.DeleteParams) (*content.ContentReader, error) {
+func (esm *EmptyArtifactoryServicesManager) XrayScanBuild(services.XrayScanParams) ([]byte, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DeleteFiles(reader *content.ContentReader) (int, error) {
+func (esm *EmptyArtifactoryServicesManager) GetPathsToDelete(services.DeleteParams) (*content.ContentReader, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) ReadRemoteFile(readPath string) (io.ReadCloser, error) {
+func (esm *EmptyArtifactoryServicesManager) DeleteFiles(*content.ContentReader) (int, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error) {
+func (esm *EmptyArtifactoryServicesManager) ReadRemoteFile(string) (io.ReadCloser, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DownloadFilesWithSummary(params ...services.DownloadParams) (operationSummary *utils.OperationSummary, err error) {
+func (esm *EmptyArtifactoryServicesManager) DownloadFiles(...services.DownloadParams) (int, int, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error) {
+func (esm *EmptyArtifactoryServicesManager) DownloadFilesWithSummary(...services.DownloadParams) (*utils.OperationSummary, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) SearchFiles(params services.SearchParams) (*content.ContentReader, error) {
+func (esm *EmptyArtifactoryServicesManager) GetUnreferencedGitLfsFiles(services.GitLfsCleanParams) (*content.ContentReader, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) Aql(aql string) (io.ReadCloser, error) {
+func (esm *EmptyArtifactoryServicesManager) SearchFiles(services.SearchParams) (*content.ContentReader, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) SetProps(params services.PropsParams) (int, error) {
+func (esm *EmptyArtifactoryServicesManager) Aql(string) (io.ReadCloser, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DeleteProps(params services.PropsParams) (int, error) {
+func (esm *EmptyArtifactoryServicesManager) SetProps(services.PropsParams) (int, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetItemProps(relativePath string) (*utils.ItemProperties, error) {
+func (esm *EmptyArtifactoryServicesManager) DeleteProps(services.PropsParams) (int, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
+func (esm *EmptyArtifactoryServicesManager) GetItemProps(string) (*utils.ItemProperties, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
+func (esm *EmptyArtifactoryServicesManager) UploadFiles(...services.UploadParams) (int, int, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {
+func (esm *EmptyArtifactoryServicesManager) UploadFilesWithSummary(...services.UploadParams) (*utils.OperationSummary, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {
+func (esm *EmptyArtifactoryServicesManager) Copy(...services.MoveCopyParams) (int, int, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error) {
+func (esm *EmptyArtifactoryServicesManager) Move(...services.MoveCopyParams) (int, int, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) PublishGoProject(_go.GoParams) (*utils.OperationSummary, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -283,7 +288,7 @@ func (esm *EmptyArtifactoryServicesManager) GetConfig() config.Config {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error) {
+func (esm *EmptyArtifactoryServicesManager) GetBuildInfo(services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -299,7 +304,7 @@ func (esm *EmptyArtifactoryServicesManager) GetAPIKey() (string, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
+func (esm *EmptyArtifactoryServicesManager) CreateToken(services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -307,31 +312,31 @@ func (esm *EmptyArtifactoryServicesManager) GetTokens() (services.GetTokensRespo
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetUserTokens(username string) ([]string, error) {
+func (esm *EmptyArtifactoryServicesManager) GetUserTokens(string) ([]string, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) RefreshToken(params services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error) {
+func (esm *EmptyArtifactoryServicesManager) RefreshToken(services.ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) RevokeToken(params services.RevokeTokenParams) (string, error) {
+func (esm *EmptyArtifactoryServicesManager) RevokeToken(services.RevokeTokenParams) (string, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateReplication(params services.CreateReplicationParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreateReplication(services.CreateReplicationParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UpdateReplication(params services.UpdateReplicationParams) error {
+func (esm *EmptyArtifactoryServicesManager) UpdateReplication(services.UpdateReplicationParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DeleteReplication(repoKey string) error {
+func (esm *EmptyArtifactoryServicesManager) DeleteReplication(string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetReplication(repoKey string) ([]utils.ReplicationParams, error) {
+func (esm *EmptyArtifactoryServicesManager) GetReplication(string) ([]utils.ReplicationParams, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -359,7 +364,7 @@ func (esm *EmptyArtifactoryServicesManager) DeactivateKeyEncryption() (bool, err
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) PromoteDocker(params services.DockerPromoteParams) error {
+func (esm *EmptyArtifactoryServicesManager) PromoteDocker(services.DockerPromoteParams) error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -371,11 +376,11 @@ func (esm *EmptyArtifactoryServicesManager) GetAllRepositories() (*[]services.Re
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetAllRepositoriesFiltered(params services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error) {
+func (esm *EmptyArtifactoryServicesManager) GetAllRepositoriesFiltered(services.RepositoriesFilterParams) (*[]services.RepositoryDetails, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetUser(params services.UserParams) (*services.User, error) {
+func (esm *EmptyArtifactoryServicesManager) GetUser(services.UserParams) (*services.User, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -383,15 +388,15 @@ func (esm *EmptyArtifactoryServicesManager) GetAllUsers() ([]*services.User, err
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateUser(params services.UserParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreateUser(services.UserParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UpdateUser(params services.UserParams) error {
+func (esm *EmptyArtifactoryServicesManager) UpdateUser(services.UserParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DeleteUser(name string) error {
+func (esm *EmptyArtifactoryServicesManager) DeleteUser(string) error {
 	panic("Failed: Method is not implemented")
 }
 
@@ -399,11 +404,11 @@ func (esm *EmptyArtifactoryServicesManager) GetLockedUsers() ([]string, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UnlockUser(name string) error {
+func (esm *EmptyArtifactoryServicesManager) UnlockUser(string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetGroup(params services.GroupParams) (*services.Group, error) {
+func (esm *EmptyArtifactoryServicesManager) GetGroup(services.GroupParams) (*services.Group, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -411,39 +416,39 @@ func (esm *EmptyArtifactoryServicesManager) GetAllGroups() (*[]string, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateGroup(params services.GroupParams) error {
+func (esm *EmptyArtifactoryServicesManager) CreateGroup(services.GroupParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UpdateGroup(params services.GroupParams) error {
+func (esm *EmptyArtifactoryServicesManager) UpdateGroup(services.GroupParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DeleteGroup(name string) error {
+func (esm *EmptyArtifactoryServicesManager) DeleteGroup(string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) ConvertLocalToFederatedRepository(repoKey string) error {
+func (esm *EmptyArtifactoryServicesManager) ConvertLocalToFederatedRepository(string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncAll(repoKey string) error {
+func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncAll(string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error {
+func (esm *EmptyArtifactoryServicesManager) TriggerFederatedRepositoryFullSyncMirror(string, string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) Export(params services.ExportParams) error {
+func (esm *EmptyArtifactoryServicesManager) Export(services.ExportParams) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) FolderInfo(relativePath string) (*utils.FolderInfo, error) {
+func (esm *EmptyArtifactoryServicesManager) FolderInfo(string) (*utils.FolderInfo, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
+func (esm *EmptyArtifactoryServicesManager) FileList(string, utils.FileListParams) (*utils.FileListResponse, error) {
 	panic("Failed: Method is not implemented")
 }
 
