@@ -13,7 +13,6 @@ type FederatedRepositoryService struct {
 func NewFederatedRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *FederatedRepositoryService {
 	return &FederatedRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: FederatedRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},

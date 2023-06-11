@@ -701,7 +701,7 @@ func federatedCreateWithParamTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	params := services.NewFederatedRepositoryBaseParams()
 	params.Key = repoKey
-	err := testsRepositoriesService.CreateFederated(params)
+	err := testsRepositoriesService.Create(params, params.Key)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}

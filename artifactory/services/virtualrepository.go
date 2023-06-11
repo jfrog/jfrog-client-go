@@ -13,7 +13,6 @@ type VirtualRepositoryService struct {
 func NewVirtualRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *VirtualRepositoryService {
 	return &VirtualRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: VirtualRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
