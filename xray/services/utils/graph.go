@@ -24,6 +24,9 @@ type GraphNode struct {
 	OtherComponentIds []OtherComponentIds `json:"other_component_ids,omitempty"`
 	// Node parent (for internal use)
 	Parent *GraphNode `json:"-"`
+	// Node Can appear in some cases without children. When adding node to flatten graph,
+	// we want to process node again if it was processed without children.
+	ChildrenExist bool `json:"-"`
 }
 
 type OtherComponentIds struct {
