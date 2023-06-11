@@ -296,14 +296,36 @@ func buildReleaseBundleQuery(params *CommonParams) (string, error) {
 // If requiredArtifactProps is NONE or 'includePropertiesInAqlForSpec' return false,
 // "property" field won't be included due to a limitation in the AQL implementation in Artifactory.
 func getQueryReturnFields(specFile *CommonParams, requiredArtifactProps RequiredArtifactProps) []string {
-	returnFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "modified", "created"}
+	var returnFields []string
+	if len(specFile.Include) > 0 {
+		returnFields = getQueryReturnFieldsWithInclude(specFile.Include)
+	} else {
+		returnFields = []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "modified", "created"}
+	}
 	if !includePropertiesInAqlForSpec(specFile) {
-		// Sort dose not work when property is in the include section. in this case we will append properties in later stage.
+		// Sort does not work when property is in the include section. in this case we will append properties in later stage.
 		return appendMissingFields(specFile.SortBy, returnFields)
 	}
 	if requiredArtifactProps != NONE {
 		// If any prop is needed we just add all the properties to the result.
 		return append(returnFields, "property")
+	}
+	return returnFields
+}
+
+func getQueryReturnFieldsWithInclude(includedQuery []string) []string {
+	returnFields := []string{"name", "repo", "path"}
+	for i := range includedQuery {
+		equal := false
+		for j := range returnFields {
+			if includedQuery[i] == returnFields[j] {
+				equal = true
+				break
+			}
+		}
+		if !equal {
+			returnFields = append(returnFields, includedQuery[i])
+		}
 	}
 	return returnFields
 }
