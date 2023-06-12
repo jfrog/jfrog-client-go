@@ -58,13 +58,17 @@ func TestFlattenGraph(t *testing.T) {
 	nodeD := &xrayUtils.GraphNode{Id: "D"}
 	nodeE := &xrayUtils.GraphNode{Id: "E"}
 	nodeF := &xrayUtils.GraphNode{Id: "F"}
+	nodeG := &xrayUtils.GraphNode{Id: "G"}
+	nodeGNoChildren := &xrayUtils.GraphNode{Id: "G"}
+	nodeH := &xrayUtils.GraphNode{Id: "H"}
 
 	// Set dependencies
 	nodeA.Nodes = []*xrayUtils.GraphNode{nodeB, nodeC}
 	nodeB.Nodes = []*xrayUtils.GraphNode{nodeC, nodeD}
 	nodeC.Nodes = []*xrayUtils.GraphNode{nodeD}
 	nodeD.Nodes = []*xrayUtils.GraphNode{nodeE, nodeF}
-	nodeF.Nodes = []*xrayUtils.GraphNode{nodeA, nodeB, nodeC}
+	nodeF.Nodes = []*xrayUtils.GraphNode{nodeGNoChildren, nodeA, nodeB, nodeC, nodeG}
+	nodeG.Nodes = []*xrayUtils.GraphNode{nodeH}
 
 	// Create graph
 	graph := []*xrayUtils.GraphNode{nodeA, nodeB, nodeC}
@@ -72,7 +76,7 @@ func TestFlattenGraph(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check that the graph has been flattened correctly
-	assert.Equal(t, len(flatGraph[0].Nodes), 6)
+	assert.Equal(t, len(flatGraph[0].Nodes), 8)
 	set := datastructures.MakeSet[string]()
 	for _, node := range flatGraph[0].Nodes {
 		assert.Len(t, node.Nodes, 0)
