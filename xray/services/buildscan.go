@@ -21,7 +21,7 @@ const (
 	XrayScanBuildNoFailBuildPolicy        = "No Xray “Fail build in case of a violation” policy rule has been defined on this build"
 	projectKeyQueryParam                  = "projectKey="
 	includeVulnerabilitiesQueryParam      = "include_vulnerabilities="
-	buildScanResultsPostApiMinXrayVersion = "3.75.13"
+	buildScanResultsPostApiMinXrayVersion = "3.77.0"
 	buildScanResultsPostApi               = "scanResult"
 )
 
@@ -84,7 +84,7 @@ func (bs *BuildScanService) triggerScan(paramsBytes []byte) error {
 }
 
 // prepareGetResultsRequest creates a function that requests for the scan results from Xray.
-// Starting from Xray version 3.75.13, there's a new POST API that supports special characters in the build-name and build-number fields.
+// Starting from Xray version 3.77.0, there's a new POST API that supports special characters in the build-name and build-number fields.
 func (bs *BuildScanService) prepareGetResultsRequest(params XrayBuildParams, paramsBytes []byte, includeVulnerabilities bool) (getResultsReqFunc func() (*http.Response, []byte, error), err error) {
 	xrayVer, err := bs.XrayDetails.GetVersion()
 	if err != nil {
