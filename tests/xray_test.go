@@ -87,7 +87,7 @@ func TestScanBuild(t *testing.T) {
 		xrayVersion string
 	}{
 		{name: "get-api", buildName: "test-get", buildNumber: "3", xrayVersion: "3.75.12"},
-		{name: "post-api", buildName: "test-post", buildNumber: "3", xrayVersion: "3.76.1"},
+		{name: "post-api", buildName: "test-post", buildNumber: "3", xrayVersion: "3.77.0"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
