@@ -696,7 +696,7 @@ func localCreateWithParamTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	params := services.NewLocalRepositoryBaseParams()
 	params.Key = repoKey
-	err := testsRepositoriesService.CreateLocal(params)
+	err := testsRepositoriesService.Create(params, params.Key)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}

@@ -188,10 +188,17 @@ func FlattenGraph(graph []*xrayUtils.GraphNode) ([]*xrayUtils.GraphNode, error) 
 }
 
 func populateUniqueDependencies(node *xrayUtils.GraphNode, allDependencies map[string]*xrayUtils.GraphNode) {
-	if _, exist := allDependencies[node.Id]; exist {
+	if value, exist := allDependencies[node.Id]; exist &&
+		(len(node.Nodes) == 0 || value.ChildrenExist) {
 		return
 	}
 	allDependencies[node.Id] = &xrayUtils.GraphNode{Id: node.Id}
+	if len(node.Nodes) > 0 {
+		// In some cases node can appear twice, with or without children, this because of the depth limit when creating the graph.
+		// If the node was covered with its children, we mark that, so we won't cover it again.
+		// If its without children, we want to cover it again when it comes with its children.
+		allDependencies[node.Id].ChildrenExist = true
+	}
 	for _, dependency := range node.Nodes {
 		populateUniqueDependencies(dependency, allDependencies)
 	}
