@@ -279,13 +279,6 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	return
 }
 
-func (jc *HttpClient) CheckIfPositiveResponse(response *http.Response) bool {
-	if response.StatusCode == http.StatusCreated || response.StatusCode == http.StatusOK || response.StatusCode == http.StatusAccepted {
-		return true
-	}
-	return false
-}
-
 func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails httputils.HttpClientDetails,
 	size int64) (resp *http.Response, body []byte, err error) {
 	req, err := jc.newRequest("PUT", url, reader)
