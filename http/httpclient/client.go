@@ -239,6 +239,9 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 	}
 
 	err = retryExecutor.Execute()
+	if progress != nil {
+		progress.IncrementGeneralProgress()
+	}
 	return
 }
 
@@ -273,9 +276,6 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 		reader = reqContent
 	}
 	resp, body, err = jc.UploadFileFromReader(reader, url, httpClientsDetails, size)
-	if progress != nil {
-		progress.IncrementGeneralProgress()
-	}
 	return
 }
 
