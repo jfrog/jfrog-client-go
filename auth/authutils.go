@@ -3,9 +3,10 @@ package auth
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"strings"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -25,6 +26,7 @@ type CommonTokenParams struct {
 	RefreshToken string `json:"refresh_token,omitempty"`
 	GrantType    string `json:"grant_type,omitempty"`
 	Audience     string `json:"audience,omitempty"`
+	Description  string `json:"description,omitempty"`
 }
 
 func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
