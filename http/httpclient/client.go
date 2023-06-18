@@ -214,6 +214,9 @@ func setRequestHeaders(httpClientsDetails httputils.HttpClientDetails, size int6
 // You may implement the log.Progress interface, or pass nil to run without progress display.
 func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails,
 	progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
+	if progress != nil {
+		progress.IncrementGeneralProgress()
+	}
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:               jc.retries,
 		RetriesIntervalMilliSecs: jc.retryWaitMilliSecs,
@@ -273,9 +276,6 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 		reader = reqContent
 	}
 	resp, body, err = jc.UploadFileFromReader(reader, url, httpClientsDetails, size)
-	if progress != nil {
-		progress.IncrementGeneralProgress()
-	}
 	return
 }
 
