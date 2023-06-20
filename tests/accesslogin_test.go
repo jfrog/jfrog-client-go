@@ -34,6 +34,7 @@ func TestAccessLogin(t *testing.T) {
 			assert.NoError(t, err)
 			req := services.LoginAuthRequestBody{}
 			err = json.Unmarshal(body, &req)
+			assert.NoError(t, err)
 			assert.Equal(t, uuid, req.Session)
 
 			w.WriteHeader(http.StatusOK)
