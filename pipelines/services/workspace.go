@@ -2,6 +2,8 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -15,13 +17,14 @@ import (
 
 const (
 	workspaces         = "api/v1/workspaces"
-	deleteWorkspace    = "api/v1/workspaces/:id"
+	deleteWorkspace    = "api/v1/workspaces/:project"
 	validateWorkspace  = "api/v1/validateWorkspace"
-	workspaceSync      = "api/v1/syncWorkspace"
+	workspaceSync      = "api/v1/syncWorkspace/:project"
 	workspacePipelines = "api/v1/pipelines"
 	workspaceRuns      = "api/v1/runs"
 	workspaceSteps     = "api/v1/steps"
-	stepConsoles       = "api/v1/steplets/:stepID/consoles"
+	stepConsoles       = "api/v1/steps/:stepID/consoles"
+	stepletConsoles    = "api/v1/steplets/:stepID/consoles"
 )
 
 type WorkspaceService struct {
@@ -60,9 +63,9 @@ func (ws *WorkspaceService) GetWorkspace() ([]WorkspacesResponse, error) {
 	return wsStatusResp, nil
 }
 
-func (ws *WorkspaceService) DeleteWorkspace(projectKey string) error {
+func (ws *WorkspaceService) DeleteWorkspace(workspaceID string) error {
 	httpDetails := ws.getHttpDetails()
-	deleteWorkspaceAPI := strings.Replace(deleteWorkspace, ":id", projectKey, 1)
+	deleteWorkspaceAPI := strings.Replace(deleteWorkspace, ":project", workspaceID, 1)
 	// Query params
 	queryParams := make(map[string]string, 0)
 	// URL construction
@@ -103,12 +106,13 @@ func (ws *WorkspaceService) ValidateWorkspace(data []byte) error {
 	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
-func (ws *WorkspaceService) WorkspaceSync() error {
+func (ws *WorkspaceService) WorkspaceSync(project string) error {
 	httpDetails := ws.getHttpDetails()
 	// Query params
-	queryParams := make(map[string]string, 0)
+	queryParams := make(map[string]string, 0) // Query params
+	syncWorkspaceAPI := strings.Replace(workspaceSync, ":project", project, 1)
 	// URL construction
-	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), workspaceSync)
+	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), syncWorkspaceAPI)
 	if err != nil {
 		return err
 	}
@@ -125,7 +129,6 @@ func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunI
 	httpDetails := ws.getHttpDetails()
 	pipelineFilter := strings.Join(pipelines, ",")
 	// Query params
-	// TODO ADD include in query param if needed
 	queryParams := map[string]string{
 		"names":   pipelineFilter,
 		"limit":   "1",
@@ -136,15 +139,31 @@ func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunI
 	if err != nil {
 		return nil, err
 	}
-	// Prepare request
-	resp, body, _, err := ws.client.SendGet(uri, true, &httpDetails)
-	if err != nil {
-		return nil, err
+	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
+		// Prepare request
+		resp, body, _, err := ws.client.SendGet(uri, true, &httpDetails)
+		if err != nil {
+			return true, body, err
+		}
+		// Response analysis
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+			return false, body, err
+		}
+		pipeRunIDs := make([]PipelinesRunID, 0)
+		err = json.Unmarshal(body, &pipeRunIDs)
+		if pipeRunIDs[0].LatestRunID == 0 {
+			return false, body, errors.New("Pipeline didnt start running yet")
+		}
+		return true, body, err
 	}
-	// Response analysis
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return nil, err
+	pollingExecutor := &httputils.PollingExecutor{
+		Timeout:         2 * time.Minute,
+		PollingInterval: 5 * time.Second,
+		PollingAction:   pollingAction,
+		MsgPrefix:       "Get pipeline workspace sync status...",
 	}
+	// Polling execution
+	body, err := pollingExecutor.Execute()
 	pipeRunIDs := make([]PipelinesRunID, 0)
 	err = json.Unmarshal(body, &pipeRunIDs)
 	return pipeRunIDs, err
@@ -234,12 +253,15 @@ func (ws *WorkspaceService) WorkspacePollSyncStatus() ([]WorkspacesResponse, err
 			return true, body, err
 		}
 		if len(wsStatusResp) > 0 && *wsStatusResp[0].IsSyncing {
+			fmt.Printf("%+v \n", wsStatusResp)
 			return false, body, err
+		} else if wsStatusResp[0].LastSyncStatusCode == 4003 || wsStatusResp[0].LastSyncStatusCode == 4004 {
+			return true, body, err
 		}
 		return true, body, err
 	}
 	pollingExecutor := &httputils.PollingExecutor{
-		Timeout:         10 * time.Minute,
+		Timeout:         2 * time.Minute,
 		PollingInterval: 5 * time.Second,
 		PollingAction:   pollingAction,
 		MsgPrefix:       "Get pipeline workspace sync status...",
@@ -258,6 +280,31 @@ func (ws *WorkspaceService) WorkspacePollSyncStatus() ([]WorkspacesResponse, err
 func (ws *WorkspaceService) GetStepLogsUsingStepID(stepID string) (map[string][]Console, error) {
 	httpDetails := ws.getHttpDetails()
 	stepConsolesAPI := strings.Replace(stepConsoles, ":stepID", stepID, 1)
+	// Query params
+	queryParams := make(map[string]string, 0)
+	// URL construction
+	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), stepConsolesAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Prepare request
+	resp, body, _, err := ws.client.SendGet(uri, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	// Response Analysis
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+	consoles := make(map[string][]Console)
+	err = json.Unmarshal(body, &consoles)
+	return consoles, err
+}
+
+// GetStepletLogsUsingStepID retrieve steps logs using step id
+func (ws *WorkspaceService) GetStepletLogsUsingStepID(stepID string) (map[string][]Console, error) {
+	httpDetails := ws.getHttpDetails()
+	stepConsolesAPI := strings.Replace(stepletConsoles, ":stepID", stepID, 1)
 	// Query params
 	queryParams := make(map[string]string, 0)
 	// URL construction

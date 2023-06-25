@@ -130,18 +130,18 @@ type PipelinesRunID struct {
 }
 
 type Console struct {
-	ConsoleID        string      `json:"consoleId"`
-	IsSuccess        interface{} `json:"isSuccess"`
-	IsShown          bool        `json:"isShown"`
-	ParentConsoleID  string      `json:"parentConsoleId"`
-	StepletID        int         `json:"stepletId"`
-	PipelineID       int         `json:"pipelineId"`
-	Timestamp        int64       `json:"timestamp"`
-	TimestampEndedAt interface{} `json:"timestampEndedAt"`
-	Type             string      `json:"type"`
-	Message          string      `json:"message"`
-	CreatedAt        time.Time   `json:"createdAt"`
-	UpdatedAt        time.Time   `json:"updatedAt"`
+	ConsoleID        string      `json:"consoleId,omitempty"`
+	IsSuccess        *bool       `json:"isSuccess,omitempty"`
+	IsShown          interface{} `json:"isShown,omitempty"`
+	ParentConsoleID  string      `json:"parentConsoleId,omitempty"`
+	StepletID        int         `json:"stepletId,omitempty"`
+	PipelineID       int         `json:"pipelineId,omitempty"`
+	Timestamp        int64       `json:"timestamp,omitempty"`
+	TimestampEndedAt interface{} `json:"timestampEndedAt,omitempty"`
+	Type             string      `json:"type,omitempty"`
+	Message          string      `json:"message,omitempty"`
+	CreatedAt        time.Time   `json:"createdAt,omitempty"`
+	UpdatedAt        time.Time   `json:"updatedAt,omitempty"`
 }
 
 // Validation Types

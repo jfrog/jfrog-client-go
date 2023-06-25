@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type RunService struct {
@@ -101,18 +102,28 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 		return err
 	}
 
-	// Prepare Request
-	resp, body, err := rs.client.SendPost(uri, buf.Bytes(), &httpDetails)
-	if err != nil {
-		return err
-	}
+	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
+		// Prepare Request
+		resp, body, err := rs.client.SendPost(uri, buf.Bytes(), &httpDetails)
+		if err != nil {
+			return true, body, err
+		}
 
-	// Response Analysis
-	if err := errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return err
+		// Response Analysis
+		if err := errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+			return false, body, err
+		}
+		log.Info(fmt.Sprintf("Triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch))
+		return true, body, err
 	}
-	log.Info(fmt.Sprintf("Triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch))
-
+	pollingExecutor := &httputils.PollingExecutor{
+		Timeout:         2 * time.Minute,
+		PollingInterval: 5 * time.Second,
+		PollingAction:   pollingAction,
+		MsgPrefix:       "Get pipeline workspace sync status...",
+	}
+	// Polling execution
+	_, err = pollingExecutor.Execute()
 	return nil
 }
 
