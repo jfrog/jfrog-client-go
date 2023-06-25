@@ -656,7 +656,7 @@ func virtualCreateWithParamTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	params := services.NewVirtualRepositoryBaseParams()
 	params.Key = repoKey
-	err := testsRepositoriesService.CreateVirtual(params)
+	err := testsRepositoriesService.Create(params, params.Key)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
@@ -699,12 +699,13 @@ func getAllVirtualRepoDetailsTest(t *testing.T) {
 	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t, "virtual", "")
+	data := getAllRepos(t, "virtual")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {
 		if v.Key == repoKey {
-			repo = &v
+			vRepo := v
+			repo = &vRepo
 			break
 		}
 	}

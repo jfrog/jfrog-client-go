@@ -41,6 +41,7 @@ type CommonParams struct {
 	Ant              bool
 	ArchiveEntries   string
 	Transitive       bool
+	Include          []string
 }
 
 type FileGetter interface {

@@ -569,11 +569,12 @@ func GetPipelinesDetails() auth.ServiceDetails {
 
 func setAuthenticationDetail(details auth.ServiceDetails) {
 	if !fileutils.IsSshUrl(details.GetUrl()) {
-		if *RtApiKey != "" {
+		switch {
+		case *RtApiKey != "":
 			details.SetApiKey(*RtApiKey)
-		} else if *AccessToken != "" {
+		case *AccessToken != "":
 			details.SetAccessToken(*AccessToken)
-		} else {
+		default:
 			details.SetUser(*RtUser)
 			details.SetPassword(*RtPassword)
 		}
@@ -691,7 +692,7 @@ func teardownIntegrationTests() {
 	repo := getRtTargetRepoKey()
 	err := testsDeleteRepositoryService.Delete(repo)
 	if err != nil {
-		fmt.Printf("teardownIntegrationTests failed for:" + err.Error())
+		fmt.Print("teardownIntegrationTests failed for:" + err.Error())
 		os.Exit(1)
 	}
 }
@@ -932,10 +933,10 @@ func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
 	return &data
 }
 
-func getAllRepos(t *testing.T, repoType, packageType string) *[]services.RepositoryDetails {
+func getAllRepos(t *testing.T, repoType string) *[]services.RepositoryDetails {
 	params := services.NewRepositoriesFilterParams()
 	params.RepoType = repoType
-	params.PackageType = packageType
+	params.PackageType = ""
 	data, err := testsRepositoriesService.GetWithFilter(params)
 	assert.NoError(t, err, "Failed to get all repositories details")
 	return data

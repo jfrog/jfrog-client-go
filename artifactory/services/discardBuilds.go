@@ -44,7 +44,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 		excludeBuilds = strings.Split(params.GetExcludeBuilds(), ",")
 	}
 
-	minimumBuildDateString, err := "", nil
+	minimumBuildDateString := ""
 	if params.GetMaxDays() != "" {
 		minimumBuildDateString, err = calculateMinimumBuildDate(time.Now(), params.GetMaxDays())
 		if err != nil {

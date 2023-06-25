@@ -701,7 +701,7 @@ func federatedCreateWithParamTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	params := services.NewFederatedRepositoryBaseParams()
 	params.Key = repoKey
-	err := testsRepositoriesService.CreateFederated(params)
+	err := testsRepositoriesService.Create(params, params.Key)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
@@ -744,12 +744,13 @@ func getAllFederatedRepoDetailsTest(t *testing.T) {
 	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t, "federated", "")
+	data := getAllRepos(t, "federated")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {
 		if v.Key == repoKey {
-			repo = &v
+			fRepo := v
+			repo = &fRepo
 			break
 		}
 	}

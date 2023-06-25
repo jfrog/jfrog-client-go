@@ -26,7 +26,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.27.0"
+	Version     = "1.29.1"
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -205,6 +205,7 @@ func cleanPath(path string) string {
 	if io.IsWindows() {
 		// Since filepath.Clean replaces \\ with \, we revert this action.
 		path = strings.ReplaceAll(path, `\`, `\\`)
+		path = strings.ReplaceAll(path, `\\\\`, `\\`)
 	}
 	return path
 }
@@ -316,10 +317,10 @@ func GetLogMsgPrefix(threadId int, dryRun bool) string {
 }
 
 func TrimPath(path string) string {
-	path = strings.Replace(path, "\\", "/", -1)
-	path = strings.Replace(path, "//", "/", -1)
-	path = strings.Replace(path, "../", "", -1)
-	path = strings.Replace(path, "./", "", -1)
+	path = strings.ReplaceAll(path, "\\", "/")
+	path = strings.ReplaceAll(path, "//", "/")
+	path = strings.ReplaceAll(path, "../", "")
+	path = strings.ReplaceAll(path, "./", "")
 	return path
 }
 
@@ -343,7 +344,7 @@ func GetUserHomeDir() string {
 		if home == "" {
 			home = os.Getenv("USERPROFILE")
 		}
-		return strings.Replace(home, "\\", "\\\\", -1)
+		return strings.ReplaceAll(home, "\\", "\\\\")
 	}
 	return os.Getenv("HOME")
 }
@@ -401,15 +402,16 @@ func SplitWithEscape(str string, separator rune) []string {
 	var current bytes.Buffer
 	escaped := false
 	for _, char := range str {
-		if char == '\\' {
+		switch {
+		case char == '\\':
 			if escaped {
 				current.WriteRune(char)
 			}
 			escaped = true
-		} else if char == separator && !escaped {
+		case char == separator && !escaped:
 			parts = append(parts, current.String())
 			current.Reset()
-		} else {
+		default:
 			escaped = false
 			current.WriteRune(char)
 		}

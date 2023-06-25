@@ -112,10 +112,10 @@ func (sm *AccessServicesManager) CreateAccessToken(params services.CreateTokenPa
 	return tokenService.CreateAccessToken(params)
 }
 
-func (sm *AccessServicesManager) RefreshAccessToken(token auth.CommonTokenParams) (auth.CreateTokenResponseData, error) {
+func (sm *AccessServicesManager) RefreshAccessToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	tokenService := services.NewTokenService(sm.client)
 	tokenService.ServiceDetails = sm.config.GetServiceDetails()
-	return tokenService.RefreshAccessToken(token)
+	return tokenService.RefreshAccessToken(params)
 }
 
 func (sm *AccessServicesManager) InviteUser(email, source string) error {

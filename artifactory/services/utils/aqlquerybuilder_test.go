@@ -47,26 +47,26 @@ func TestBuildAqlSearchQuery(t *testing.T) {
 
 func TestCommonParams(t *testing.T) {
 	artifactoryParams := CommonParams{}
-	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), false, t)
+	assertIsSortLimitSpecBool(t, !includePropertiesInAqlForSpec(&artifactoryParams), false)
 
 	artifactoryParams.SortBy = []string{"Vava", "Bubu"}
-	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), true, t)
+	assertIsSortLimitSpecBool(t, !includePropertiesInAqlForSpec(&artifactoryParams), true)
 
 	artifactoryParams.SortBy = nil
 	artifactoryParams.Limit = 0
-	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), false, t)
+	assertIsSortLimitSpecBool(t, !includePropertiesInAqlForSpec(&artifactoryParams), false)
 
 	artifactoryParams.Limit = -3
-	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), false, t)
+	assertIsSortLimitSpecBool(t, !includePropertiesInAqlForSpec(&artifactoryParams), false)
 
 	artifactoryParams.Limit = 3
-	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), true, t)
+	assertIsSortLimitSpecBool(t, !includePropertiesInAqlForSpec(&artifactoryParams), true)
 
 	artifactoryParams.SortBy = []string{"Vava", "Bubu"}
-	assertIsSortLimitSpecBool(!includePropertiesInAqlForSpec(&artifactoryParams), true, t)
+	assertIsSortLimitSpecBool(t, !includePropertiesInAqlForSpec(&artifactoryParams), true)
 }
 
-func assertIsSortLimitSpecBool(actual, expected bool, t *testing.T) {
+func assertIsSortLimitSpecBool(t *testing.T, actual, expected bool) {
 	if actual != expected {
 		t.Error("The function includePropertiesInAqlForSpec() expected to return " + strconv.FormatBool(expected) + " but returned " + strconv.FormatBool(actual) + ".")
 	}
@@ -76,22 +76,22 @@ func TestGetQueryReturnFields(t *testing.T) {
 	artifactoryParams := CommonParams{}
 	minimalFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "created", "modified"}
 
-	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "property"), t)
-	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, SYMLINK), append(minimalFields, "property"), t)
-	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, NONE), minimalFields, t)
+	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "property"))
+	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, SYMLINK), append(minimalFields, "property"))
+	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, NONE), minimalFields)
 
 	artifactoryParams.SortBy = []string{"Vava"}
-	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, NONE), append(minimalFields, "Vava"), t)
-	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "Vava"), t)
-	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, SYMLINK), append(minimalFields, "Vava"), t)
+	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, NONE), append(minimalFields, "Vava"))
+	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "Vava"))
+	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, SYMLINK), append(minimalFields, "Vava"))
 
 	artifactoryParams.SortBy = []string{"Vava", "Bubu"}
-	assertEqualFieldsList(getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "Vava", "Bubu"), t)
+	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "Vava", "Bubu"))
 }
 
-func assertEqualFieldsList(actual, expected []string, t *testing.T) {
+func assertEqualFieldsList(t *testing.T, actual, expected []string) {
 	if len(actual) != len(expected) {
-		t.Error("The function getQueryReturnFields() expected to return the array:\n" + strings.Join(expected[:], ",") + ".\nbut returned:\n" + strings.Join(actual[:], ",") + ".")
+		t.Error("The function getQueryReturnFields() expected to return the array:\n" + strings.Join(expected, ",") + ".\nbut returned:\n" + strings.Join(actual, ",") + ".")
 	}
 	for _, v := range actual {
 		isFound := false
@@ -102,18 +102,18 @@ func assertEqualFieldsList(actual, expected []string, t *testing.T) {
 			}
 		}
 		if !isFound {
-			t.Error("The function getQueryReturnFields() expected to return the array:\n'" + strings.Join(expected[:], ",") + "'.\nbut returned:\n'" + strings.Join(actual[:], ",") + "'.\n" +
+			t.Error("The function getQueryReturnFields() expected to return the array:\n'" + strings.Join(expected, ",") + "'.\nbut returned:\n'" + strings.Join(actual, ",") + "'.\n" +
 				"The field " + v + "is missing!")
 		}
 	}
 }
 
 func TestBuildSortBody(t *testing.T) {
-	assertSortBody(buildSortQueryPart([]string{"bubu"}, ""), `"$asc":["bubu"]`, t)
-	assertSortBody(buildSortQueryPart([]string{"bubu", "kuku"}, ""), `"$asc":["bubu","kuku"]`, t)
+	assertSortBody(t, buildSortQueryPart([]string{"bubu"}, ""), `"$asc":["bubu"]`)
+	assertSortBody(t, buildSortQueryPart([]string{"bubu", "kuku"}, ""), `"$asc":["bubu","kuku"]`)
 }
 
-func assertSortBody(actual, expected string, t *testing.T) {
+func assertSortBody(t *testing.T, actual, expected string) {
 	if actual != expected {
 		t.Error("The function buildSortQueryPart expected to return the string:\n'" + expected + "'.\nbut returned:\n'" + actual + "'.")
 	}
@@ -133,46 +133,46 @@ func TestCreateAqlQueryForLatestCreated(t *testing.T) {
 }
 
 func TestPrepareSourceSearchPattern(t *testing.T) {
-	newPattern := prepareSourceSearchPattern("/testdata/b/b1/b.in", "/testdata", true)
+	newPattern := prepareSourceSearchPattern("/testdata/b/b1/b.in", "/testdata")
 	assert.Equal(t, "/testdata/b/b1/b.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1(b).in", "/testdata", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1(b).in", "/testdata")
 	assert.Equal(t, "/testdata/b/b1(b).in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1(b.in", "/testdata", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1(b.in", "/testdata")
 	assert.Equal(t, "/testdata/b/b1(b.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1/)b.in", "/testdata", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1/)b.in", "/testdata")
 	assert.Equal(t, "/testdata/b/b1/)b.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1/(*).in", "/testdata/{1}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1/(*).in", "/testdata/{1}.zip")
 	assert.Equal(t, "/testdata/b/b1/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/b1/(*)", "/testdata/{1}", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/b1/(*)", "/testdata/{1}")
 	assert.Equal(t, "/testdata/b/b1/*", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/(b1)/(*).in", "/testdata/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/(b1)/(*).in", "/testdata/{2}.zip")
 	assert.Equal(t, "/testdata/b/(b1)/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/(b/(b1)/(*).in", "/testdata/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/(b/(b1)/(*).in", "/testdata/{2}.zip")
 	assert.Equal(t, "/testdata/(b/(b1)/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b/(b1)/(*).in", "/testdata/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b/(b1)/(*).in", "/testdata/{2}.zip")
 	assert.Equal(t, "/testdata/)b/(b1)/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{2}.zip")
 	assert.Equal(t, "/testdata/)b(/(b1)/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{1}/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{1}/{2}.zip")
 	assert.Equal(t, "/testdata/)b(/b1/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{1}/{1}/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).in", "/testdata/{1}/{1}/{2}.zip")
 	assert.Equal(t, "/testdata/)b(/b1/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).(in)", "/testdata/{1}/{1}/{3}/{2}.zip", true)
+	newPattern = prepareSourceSearchPattern("/testdata/)b(/(b1)/(*).(in)", "/testdata/{1}/{1}/{3}/{2}.zip")
 	assert.Equal(t, "/testdata/)b(/b1/*.in", newPattern)
 
-	newPattern = prepareSourceSearchPattern("/testdata/b/(/(.in", "/testdata", true)
+	newPattern = prepareSourceSearchPattern("/testdata/b/(/(.in", "/testdata")
 	assert.Equal(t, "/testdata/b/(/(.in", newPattern)
 }
 

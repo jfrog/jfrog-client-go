@@ -2,7 +2,10 @@ package services
 
 import (
 	"encoding/json"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
+	"golang.org/x/exp/maps"
 	"net/http"
 	"strings"
 	"time"
@@ -53,11 +56,12 @@ func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 
 func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	var params []string
-	if scanParams.ProjectKey != "" {
+	switch {
+	case scanParams.ProjectKey != "":
 		params = append(params, projectQueryParam+scanParams.ProjectKey)
-	} else if scanParams.RepoPath != "" {
+	case scanParams.RepoPath != "":
 		params = append(params, repoPathQueryParam+scanParams.RepoPath)
-	} else if len(scanParams.Watches) > 0 {
+	case len(scanParams.Watches) > 0:
 		for _, watch := range scanParams.Watches {
 			if watch != "" {
 				params = append(params, watchesQueryParam+watch)
@@ -107,7 +111,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
+	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam
@@ -117,7 +121,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	} else if includeLicenses {
 		endPoint += includeLicensesParam
 	}
-	log.Info("Waiting for scan to complete...")
+	log.Info("Waiting for scan to complete on JFrog Xray...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
@@ -145,10 +149,11 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 	scanResponse := ScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckError(err)
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
-		return nil, errorutils.CheckErrorf("Xray scan failed")
+		// Failed due to an internal Xray error
+		return nil, errorutils.CheckErrorf("received a failure status from JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
 	}
 	return &scanResponse, err
 }
@@ -160,33 +165,43 @@ type XrayGraphScanParams struct {
 	ProjectKey             string
 	Watches                []string
 	ScanType               ScanType
-	Graph                  *GraphNode
+	Graph                  *xrayUtils.GraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
 }
 
-type GraphNode struct {
-	// Component Id in the JFrog standard.
-	// For instance, for maven: gav://<groupId>:<artifactId>:<version>
-	// For detailed format examples please see:
-	// https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-ComponentIdentifiers
-	Id string `json:"component_id,omitempty"`
-	// Sha of the binary representing the component.
-	Sha256 string `json:"sha256,omitempty"`
-	Sha1   string `json:"sha1,omitempty"`
-	// For root file shall be the file name.
-	// For internal components shall be the internal path. (Relevant only for binary scan).
-	Path string `json:"path,omitempty"`
-	// List of license names
-	Licenses []string `json:"licenses,omitempty"`
-	// Component properties
-	Properties map[string]string `json:"properties,omitempty"`
-	// List of subcomponents.
-	Nodes []*GraphNode `json:"nodes,omitempty"`
-	// Other component IDs field is populated by the Xray indexer to get a better accuracy in '.deb' files.
-	OtherComponentIds []OtherComponentIds `json:"other_component_ids,omitempty"`
-	// Node parent (for internal use)
-	Parent *GraphNode `json:"-"`
+// FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
+func FlattenGraph(graph []*xrayUtils.GraphNode) ([]*xrayUtils.GraphNode, error) {
+	allDependencies := map[string]*xrayUtils.GraphNode{}
+	for _, node := range graph {
+		populateUniqueDependencies(node, allDependencies)
+	}
+	if log.GetLogger().GetLogLevel() == log.DEBUG {
+		// Print dependencies list only on DEBUG mode.
+		jsonList, err := json.Marshal(maps.Keys(allDependencies))
+		if err != nil {
+			return nil, errorutils.CheckError(err)
+		}
+		log.Debug("Flat dependencies list:\n" + clientutils.IndentJsonArray(jsonList))
+	}
+	return []*xrayUtils.GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}, nil
+}
+
+func populateUniqueDependencies(node *xrayUtils.GraphNode, allDependencies map[string]*xrayUtils.GraphNode) {
+	if value, exist := allDependencies[node.Id]; exist &&
+		(len(node.Nodes) == 0 || value.ChildrenExist) {
+		return
+	}
+	allDependencies[node.Id] = &xrayUtils.GraphNode{Id: node.Id}
+	if len(node.Nodes) > 0 {
+		// In some cases node can appear twice, with or without children, this because of the depth limit when creating the graph.
+		// If the node was covered with its children, we mark that, so we won't cover it again.
+		// If its without children, we want to cover it again when it comes with its children.
+		allDependencies[node.Id].ChildrenExist = true
+	}
+	for _, dependency := range node.Nodes {
+		populateUniqueDependencies(dependency, allDependencies)
+	}
 }
 
 type OtherComponentIds struct {
@@ -292,15 +307,4 @@ type JfrogResearchSeverityReason struct {
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
 	return gp.ProjectKey
-}
-
-func (currNode *GraphNode) NodeHasLoop() bool {
-	parent := currNode.Parent
-	for parent != nil {
-		if currNode.Id == parent.Id {
-			return true
-		}
-		parent = parent.Parent
-	}
-	return false
 }

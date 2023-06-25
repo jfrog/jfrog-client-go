@@ -12,7 +12,7 @@ import (
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
-	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
+	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target)
 	repoPathFileTriples, singleRepo, err := createRepoPathFileTriples(searchPattern, params.Recursive)
 	if err != nil {
 		return "", err
@@ -163,8 +163,8 @@ func CreateAqlQueryForLatestCreated(repo, path string) string {
 func prepareSearchPattern(pattern string, repositoryExists bool) string {
 	addWildcardIfNeeded(&pattern, repositoryExists)
 	// Remove parenthesis
-	pattern = strings.Replace(pattern, "(", "", -1)
-	pattern = strings.Replace(pattern, ")", "", -1)
+	pattern = strings.ReplaceAll(pattern, "(", "")
+	pattern = strings.ReplaceAll(pattern, ")", "")
 	return pattern
 }
 
@@ -296,14 +296,36 @@ func buildReleaseBundleQuery(params *CommonParams) (string, error) {
 // If requiredArtifactProps is NONE or 'includePropertiesInAqlForSpec' return false,
 // "property" field won't be included due to a limitation in the AQL implementation in Artifactory.
 func getQueryReturnFields(specFile *CommonParams, requiredArtifactProps RequiredArtifactProps) []string {
-	returnFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "modified", "created"}
+	var returnFields []string
+	if len(specFile.Include) > 0 {
+		returnFields = getQueryReturnFieldsWithInclude(specFile.Include)
+	} else {
+		returnFields = []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "modified", "created"}
+	}
 	if !includePropertiesInAqlForSpec(specFile) {
-		// Sort dose not work when property is in the include section. in this case we will append properties in later stage.
+		// Sort does not work when property is in the include section. in this case we will append properties in later stage.
 		return appendMissingFields(specFile.SortBy, returnFields)
 	}
 	if requiredArtifactProps != NONE {
 		// If any prop is needed we just add all the properties to the result.
 		return append(returnFields, "property")
+	}
+	return returnFields
+}
+
+func getQueryReturnFieldsWithInclude(includedQuery []string) []string {
+	returnFields := []string{"name", "repo", "path"}
+	for i := range includedQuery {
+		equal := false
+		for j := range returnFields {
+			if includedQuery[i] == returnFields[j] {
+				equal = true
+				break
+			}
+		}
+		if !equal {
+			returnFields = append(returnFields, includedQuery[i])
+		}
 	}
 	return returnFields
 }
@@ -405,8 +427,8 @@ func getAqlValue(val string) string {
 	return fmt.Sprintf(aqlValuePattern, val)
 }
 
-func prepareSourceSearchPattern(pattern, target string, repositoryExists bool) string {
-	addWildcardIfNeeded(&pattern, repositoryExists)
+func prepareSourceSearchPattern(pattern, target string) string {
+	addWildcardIfNeeded(&pattern, true)
 	pattern = utils.RemovePlaceholderParentheses(pattern, target)
 	return pattern
 }

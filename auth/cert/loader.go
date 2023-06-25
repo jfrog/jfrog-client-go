@@ -60,7 +60,6 @@ func GetTransportWithLoadedCert(certificatesDirPath string, insecureTls bool, tr
 		ClientSessionCache: tls.NewLRUClientSessionCache(1),
 		InsecureSkipVerify: insecureTls,
 	}
-	transport.TLSClientConfig.BuildNameToCertificate()
 
 	return transport, nil
 }

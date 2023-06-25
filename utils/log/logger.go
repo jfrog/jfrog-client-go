@@ -81,8 +81,8 @@ func GetLogger() Log {
 	return defaultLogger
 }
 
-func (logger *jfrogLogger) SetLogLevel(LevelEnum LevelType) {
-	logger.LogLevel = LevelEnum
+func (logger *jfrogLogger) SetLogLevel(levelEnum LevelType) {
+	logger.LogLevel = levelEnum
 }
 
 func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
@@ -208,6 +208,7 @@ type Log interface {
 	Warn(a ...interface{})
 	Error(a ...interface{})
 	Output(a ...interface{})
+	GetLogLevel() LevelType
 }
 
 // Check if StdErr is a terminal

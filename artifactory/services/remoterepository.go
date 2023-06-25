@@ -13,7 +13,6 @@ type RemoteRepositoryService struct {
 func NewRemoteRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *RemoteRepositoryService {
 	return &RemoteRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: RemoteRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
@@ -193,6 +192,7 @@ type RemoteRepositoryBaseParams struct {
 	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
 	ClientTlsCertificate              string                  `json:"clientTlsCertificate,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
+	QueryParams                       string                  `json:"queryParams,omitempty"`
 }
 
 func NewRemoteRepositoryBaseParams() RemoteRepositoryBaseParams {

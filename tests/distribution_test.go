@@ -220,15 +220,16 @@ func createWithProps(t *testing.T) {
 	// Populate prop1Values and prop2Values
 	var prop1Values []string
 	var prop2Values []string
-	if addedProps[0].Key == "key1" {
+	switch addedProps[0].Key {
+	case "key1":
 		assert.Equal(t, "key2", addedProps[1].Key)
 		prop1Values = addedProps[0].Values
 		prop2Values = addedProps[1].Values
-	} else if addedProps[0].Key == "key2" {
+	case "key2":
 		assert.Equal(t, "key1", addedProps[1].Key)
 		prop1Values = addedProps[1].Values
 		prop2Values = addedProps[0].Values
-	} else {
+	default:
 		assert.Fail(t, "Unexpected key", addedProps[0].Key)
 	}
 
@@ -254,7 +255,7 @@ func createSignDistributeDelete(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	defer deleteRemoteAndLocalBundle(t, bundleName, true)
+	defer deleteRemoteAndLocalBundle(t, bundleName)
 	assert.Nil(t, summary)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
@@ -313,7 +314,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	defer deleteRemoteAndLocalBundle(t, bundleName, true)
+	defer deleteRemoteAndLocalBundle(t, bundleName)
 	assert.Nil(t, summary)
 	distributionResponse := getLocalBundle(t, bundleName, true)
 	assert.Equal(t, open, distributionResponse.State)
@@ -359,7 +360,7 @@ func createDistributeMapping(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	defer deleteRemoteAndLocalBundle(t, bundleName, true)
+	defer deleteRemoteAndLocalBundle(t, bundleName)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 
@@ -394,7 +395,7 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	defer deleteRemoteAndLocalBundle(t, bundleName, true)
+	defer deleteRemoteAndLocalBundle(t, bundleName)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 
@@ -551,7 +552,7 @@ func deleteLocalBundle(t *testing.T, bundleName string, assertDeletion bool) {
 	assert.Nil(t, distributionResponse)
 }
 
-func deleteRemoteAndLocalBundle(t *testing.T, bundleName string, assertDeletion bool) {
+func deleteRemoteAndLocalBundle(t *testing.T, bundleName string) {
 	deleteBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
 	// Delete also local release bundle
 	deleteBundleParams.DeleteFromDistribution = true
@@ -559,8 +560,5 @@ func deleteRemoteAndLocalBundle(t *testing.T, bundleName string, assertDeletion 
 	deleteBundleParams.Sync = true
 	err := testsBundleDeleteRemoteService.DeleteDistribution(deleteBundleParams)
 	artifactoryCleanup(t)
-	if !assertDeletion {
-		return
-	}
 	assert.NoError(t, err)
 }
