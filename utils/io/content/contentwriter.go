@@ -3,6 +3,7 @@ package content
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -107,8 +108,7 @@ func (rw *ContentWriter) run() {
 	var err error
 	if !rw.useStdout {
 		defer func() {
-			err = rw.outputFile.Close()
-			if err != nil {
+			if err = errors.Join(rw.outputFile.Sync(), rw.outputFile.Close()); err != nil {
 				rw.errorsQueue.AddError(errorutils.CheckError(err))
 			}
 		}()

@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,7 +35,7 @@ const (
 
 // Use this function when searching by build without pattern or aql.
 // Collect build artifacts and build dependencies separately, then merge the results into one reader.
-func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (*content.ContentReader, error) {
+func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerContent *content.ContentReader, err error) {
 	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err
@@ -74,10 +75,14 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (*content.C
 
 	wg.Wait()
 	if artifactsReader != nil {
-		defer artifactsReader.Close()
+		defer func(artifactsReader *content.ContentReader) {
+			err = errors.Join(err, artifactsReader.Close())
+		}(artifactsReader)
 	}
 	if dependenciesReader != nil {
-		defer dependenciesReader.Close()
+		defer func(dependenciesReader *content.ContentReader) {
+			err = errors.Join(err, dependenciesReader.Close())
+		}(dependenciesReader)
 	}
 	if artErr != nil {
 		return nil, artErr
@@ -85,8 +90,8 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (*content.C
 	if depErr != nil {
 		return nil, depErr
 	}
-
-	return filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, aggregatedBuilds)
+	readerContent, err = filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, aggregatedBuilds)
+	return
 }
 
 func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
@@ -109,14 +114,16 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 //     3.1 Compare the build-name & build-number among all the artifact with the same sha1.
 //
 // This will prevent unnecessary search upon all Artifactory:
-func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
+func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *CommonParams, flags CommonConf, builds []Build) (reader *content.ContentReader, err error) {
 	if includePropertiesInAqlForSpec(specFile) {
 		// Don't fetch artifacts' properties from Artifactory.
 		mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader)
 		if err != nil {
 			return nil, err
 		}
-		defer mergedReader.Close()
+		defer func(innerReader *content.ContentReader) {
+			err = errors.Join(err, errorutils.CheckError(innerReader.Close()))
+		}(mergedReader)
 		buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
 		if err != nil {
 			return nil, err
@@ -133,22 +140,29 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 	if err != nil {
 		return nil, err
 	}
-	defer readerWithProps.Close()
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(readerWithProps.Close()))
+	}()
 	artifactsSortedReaderWithProps, err := loadMissingProperties(artifactsReader, readerWithProps)
 	if err != nil {
 		return nil, err
 	}
-	defer artifactsSortedReaderWithProps.Close()
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(artifactsSortedReaderWithProps.Close()))
+	}()
 	mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsSortedReaderWithProps, dependenciesReader)
 	if err != nil {
 		return nil, err
 	}
-	defer mergedReader.Close()
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(mergedReader.Close()))
+	}()
 	buildArtifactsSha1, err := extractSha1FromAqlResponse(mergedReader)
 	if err != nil {
 		return nil, err
 	}
-	return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
+	reader, err = filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
+	return
 }
 
 func mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader *content.ContentReader) (*content.ContentReader, error) {
@@ -174,11 +188,11 @@ func SearchBySpecWithPattern(specFile *CommonParams, flags CommonConf, requiredA
 }
 
 // Use this function when running Aql with pattern
-func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
+func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (reader *content.ContentReader, err error) {
 	// Execute the search according to provided aql in specFile.
 	var fetchedProps *content.ContentReader
 	query := BuildQueryFromSpecFile(specFile, requiredArtifactProps)
-	reader, err := aqlSearch(query, flags)
+	reader, err = aqlSearch(query, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -189,18 +203,23 @@ func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtif
 	if filteredReader != nil {
 		// This one will close the original reader that was used
 		// to create the filteredReader (a new pointer will be created by the defer mechanism).
-		defer reader.Close()
+		defer func(readerWithProps *content.ContentReader) {
+			err = errors.Join(err, errorutils.CheckError(readerWithProps.Close()))
+		}(reader)
 		// The new reader assignment will not affect the defer statement.
 		reader = filteredReader
 	}
 	fetchedProps, err = fetchProps(specFile, flags, requiredArtifactProps, reader)
 	if fetchedProps != nil {
 		// Before returning the new reader, we close the one we used to creat it.
-		defer reader.Close()
-		return fetchedProps, err
+		defer func(reader *content.ContentReader) {
+			err = errors.Join(err, errorutils.CheckError(reader.Close()))
+		}(reader)
+		reader = fetchedProps
+		return
 	}
 	// Returns the open filteredReader or the original reader that returned from the AQL search.
-	return reader, err
+	return
 }
 
 // Filter the results by build, if no build found or items to filter, nil will be returned.
@@ -235,7 +254,9 @@ func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps 
 		if err != nil {
 			return nil, err
 		}
-		defer readerWithProps.Close()
+		defer func() {
+			err = errors.Join(err, errorutils.CheckError(reader.Close()))
+		}()
 		return loadMissingProperties(reader, readerWithProps)
 	}
 	return nil, nil
@@ -269,10 +290,7 @@ func ExecAqlSaveToFile(aqlQuery string, flags CommonConf) (reader *content.Conte
 	}
 	defer func() {
 		if body != nil {
-			e := body.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(body.Close()))
 		}
 	}()
 	log.Debug("Streaming data to file...")
@@ -296,10 +314,7 @@ func streamToFile(reader io.Reader) (filePath string, err error) {
 		return "", err
 	}
 	defer func() {
-		e := fd.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(fd.Close()))
 	}()
 	_, err = io.Copy(fd, bufioReader)
 	return fd.Name(), errorutils.CheckError(err)
@@ -338,7 +353,9 @@ type ResultItem struct {
 	Actual_Md5  string     `json:"actual_md5,omitempty"`
 	Actual_Sha1 string     `json:"actual_sha1,omitempty"`
 	Sha256      string     `json:"sha256,omitempty"`
+	Depth       int        `json:"depth,omitempty"`
 	Size        int64      `json:"size,omitempty"`
+	OriginalMd5 string     `json:"original_md5,omitempty"`
 	Properties  []Property `json:"properties,omitempty"`
 	Stats       []Stat     `json:"stats,omitempty"`
 }
@@ -417,12 +434,14 @@ func (item *ResultItem) GetProperty(key string) string {
 	return ""
 }
 
-func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (*content.ContentReader, error) {
+func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (resultReader *content.ContentReader, err error) {
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer writer.Close()
+	defer func(writer *content.ContentWriter) {
+		err = errors.Join(err, errorutils.CheckError(writer.Close()))
+	}(writer)
 
 	// Get the expected record type from the reader.
 	recordType := reflect.ValueOf(readerRecord).Type()
@@ -446,21 +465,24 @@ func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *conte
 			temp = rPath
 		}
 	}
-	if err := reader.GetError(); err != nil {
+	if err = reader.GetError(); err != nil {
 		return nil, err
 	}
 	reader.Reset()
-	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
+	resultReader = content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey())
+	return
 }
 
 // Reduce the amount of items by saving only the shortest item path for each unique path e.g.:
 // a | a/b | c | e/f -> a | c | e/f
-func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (*content.ContentReader, error) {
+func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.ContentReader) (resultReader *content.ContentReader, err error) {
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer writer.Close()
+	defer func(writer *content.ContentWriter) {
+		err = errors.Join(err, errorutils.CheckError(writer.Close()))
+	}(writer)
 
 	// Get the expected record type from the reader.
 	recordType := reflect.ValueOf(readerRecord).Type()
@@ -486,11 +508,12 @@ func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.
 			}
 		}
 	}
-	if err := reader.GetError(); err != nil {
+	if err = reader.GetError(); err != nil {
 		return nil, err
 	}
 	reader.Reset()
-	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
+	resultReader = content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey())
+	return
 }
 
 func ReduceTopChainDirResult(readerRecord SearchBasedContentItem, searchResults *content.ContentReader) (*content.ContentReader, error) {
@@ -502,13 +525,16 @@ func ReduceBottomChainDirResult(readerRecord SearchBasedContentItem, searchResul
 }
 
 // Reduce Dir results by using the resultsFilter.
-func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content.ContentReader, ascendingOrder bool, resultsFilter AqlSearchResultItemFilter) (*content.ContentReader, error) {
+func ReduceDirResult(readerRecord SearchBasedContentItem, searchResults *content.ContentReader, ascendingOrder bool, resultsFilter AqlSearchResultItemFilter) (reader *content.ContentReader, err error) {
 	sortedFile, err := content.SortContentReader(readerRecord, searchResults, ascendingOrder)
 	if err != nil {
 		return nil, err
 	}
-	defer sortedFile.Close()
-	return resultsFilter(readerRecord, sortedFile)
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(sortedFile.Close()))
+	}()
+	reader, err = resultsFilter(readerRecord, sortedFile)
+	return
 }
 
 func DisableTransitiveSearchIfNotAllowed(params *CommonParams, artifactoryVersion *version.Version) {
