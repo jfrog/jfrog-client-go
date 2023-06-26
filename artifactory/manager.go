@@ -393,6 +393,7 @@ func (sm *ArtifactoryServicesManagerImp) GetAPIKey() (string, error) {
 func (sm *ArtifactoryServicesManagerImp) CreateToken(params services.CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
+	// Deprecated
 	return securityService.CreateToken(params)
 }
 

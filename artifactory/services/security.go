@@ -208,6 +208,9 @@ func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
 	if params.ExpiresIn >= 0 {
 		data.Set("expires_in", strconv.Itoa(params.ExpiresIn))
 	}
+	if params.Description != "" {
+		data.Set("description", params.Description)
+	}
 	return data
 }
 
@@ -257,6 +260,7 @@ type CreateTokenParams struct {
 	ExpiresIn   int
 	Refreshable bool
 	Audience    string
+	Description string
 }
 
 type ArtifactoryRefreshTokenParams struct {

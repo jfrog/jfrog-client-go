@@ -118,6 +118,18 @@ func (sm *AccessServicesManager) RefreshAccessToken(params services.CreateTokenP
 	return tokenService.RefreshAccessToken(params)
 }
 
+func (sm *AccessServicesManager) RevokeAccessToken(tokenId string) error {
+	tokenService := services.NewTokenService(sm.client)
+	tokenService.ServiceDetails = sm.config.GetServiceDetails()
+	return tokenService.RevokeAccessToken(tokenId)
+}
+
+func (sm *AccessServicesManager) GetAccessTokens() (auth.GetTokensResponseData, error) {
+	tokenService := services.NewTokenService(sm.client)
+	tokenService.ServiceDetails = sm.config.GetServiceDetails()
+	return tokenService.GetAccessTokens()
+}
+
 func (sm *AccessServicesManager) InviteUser(email, source string) error {
 	inviteService := services.NewInviteService(sm.client)
 	inviteService.ServiceDetails = sm.config.GetServiceDetails()

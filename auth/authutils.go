@@ -21,12 +21,28 @@ type CommonTokenParams struct {
 	Scope        string `json:"scope,omitempty"`
 	AccessToken  string `json:"access_token,omitempty"`
 	ExpiresIn    int    `json:"expires_in,omitempty"`
+	TokenId      string `json:"token_id,omitempty"`
 	TokenType    string `json:"token_type,omitempty"`
 	Refreshable  *bool  `json:"refreshable,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 	GrantType    string `json:"grant_type,omitempty"`
 	Audience     string `json:"audience,omitempty"`
+	Username     string `json:"username,omitempty"`
 	Description  string `json:"description,omitempty"`
+}
+
+type GetTokensResponseData struct {
+	Tokens []GetTokensResponseToken `json:"tokens,omitempty"`
+}
+
+type GetTokensResponseToken struct {
+	TokenId     string `json:"token_id,omitempty"`
+	Subject     string `json:"subject,omitempty"`
+	Expiry      int64  `json:"expiry,omitempty"`
+	IssuedAt    int64  `json:"issued_at,omitempty"`
+	Issuer      string `json:"issuer,omitempty"`
+	Description string `json:"description,omitempty"`
+	Refreshable bool   `json:"refreshable,omitempty"`
 }
 
 func extractPayloadFromAccessToken(token string) (TokenPayload, error) {

@@ -3,12 +3,13 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"net/http"
 )
 
 // #nosec G101 -- False positive - no hardcoded credentials.
@@ -44,6 +45,14 @@ func (ps *TokenService) RefreshAccessToken(token CreateTokenParams) (auth.Create
 	return ps.createAccessToken(*param)
 }
 
+func (ps *TokenService) RevokeAccessToken(tokenId string) error {
+	return ps.revokeToken(tokenId)
+}
+
+func (ps *TokenService) GetAccessTokens() (auth.GetTokensResponseData, error) {
+	return ps.getAccessTokens()
+}
+
 // createAccessToken is used to create & refresh access tokens.
 func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	// Set the request headers
@@ -68,6 +77,45 @@ func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.Create
 	}
 	err = json.Unmarshal(body, &tokenInfo)
 	return tokenInfo, errorutils.CheckError(err)
+}
+
+// revokeToken is used to revoke access tokens.
+func (ps *TokenService) revokeToken(tokenId string) error {
+	// Set the request headers
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &httpDetails.Headers)
+	err := ps.addAccessTokenAuthorizationHeader(CreateTokenParams{}, &httpDetails)
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("%s%s/%s", ps.ServiceDetails.GetUrl(), tokensApi, tokenId)
+	resp, body, err := ps.client.SendDelete(url, nil, &httpDetails)
+	if err != nil {
+		return err
+	}
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
+}
+
+// getAccessTokens is used to get access tokens.
+func (ps *TokenService) getAccessTokens() (auth.GetTokensResponseData, error) {
+	// Set the request headers
+	var tokens auth.GetTokensResponseData
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &httpDetails.Headers)
+	err := ps.addAccessTokenAuthorizationHeader(CreateTokenParams{}, &httpDetails)
+	if err != nil {
+		return tokens, err
+	}
+	url := fmt.Sprintf("%s%s", ps.ServiceDetails.GetUrl(), tokensApi)
+	resp, body, _, err := ps.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return tokens, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return tokens, err
+	}
+	err = json.Unmarshal(body, &tokens)
+	return tokens, errorutils.CheckError(err)
 }
 
 func (ps *TokenService) addAccessTokenAuthorizationHeader(params CreateTokenParams, httpDetails *httputils.HttpClientDetails) error {
