@@ -3,15 +3,16 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"strconv"
 	"testing"
 )
 
 func TestPipelinesWorkspaceService(t *testing.T) {
 	t.Run("test trigger pipelines workspace when resources are not valid", TestWorkspaceValidationWhenPipelinesResourcesAreNotValid)
 	t.Run("test trigger pipelines workspace when resources are valid", TestWorkspaceValidationWhenPipelinesResourcesAreValid)
+	t.Run("test workspace sync when it fails for the first time and succeeds later", TestWorkspaceValidationFailureAndSucceedsWhenValidIntegrationCreated)
 }
 
 func TestWorkspaceValidationWhenPipelinesResourcesAreNotValid(t *testing.T) {
@@ -19,7 +20,7 @@ func TestWorkspaceValidationWhenPipelinesResourcesAreNotValid(t *testing.T) {
 	if !assert.NotEmpty(t, *PipelinesAccessToken, "cannot run pipelines tests without access token configured") {
 		return
 	}
-	filePath := "/Users/bhanur/go/src/pipeline-cli/jfrog-client-go/tests/testdata/pipelines.yml"
+	filePath := "testdata/pipelines.yml"
 
 	// get pipelines.yaml content
 	pipelineRes, err := getWorkspaceRunPayload([]string{filePath})
@@ -38,7 +39,7 @@ func TestWorkspaceValidationWhenPipelinesResourcesAreValid(t *testing.T) {
 	if !assert.NotEmpty(t, *PipelinesAccessToken, "cannot run pipelines tests without access token configured") {
 		return
 	}
-	filePath := "/Users/bhanur/go/src/pipeline-cli/jfrog-client-go/tests/testdata/pipelines.yml"
+	filePath := "testdata/pipelines.yml"
 
 	// get pipelines.yaml content
 	pipelineRes, err := getWorkspaceRunPayload([]string{filePath})
@@ -53,9 +54,60 @@ func TestWorkspaceValidationWhenPipelinesResourcesAreValid(t *testing.T) {
 	if len(wsResp) < 1 {
 		assert.Fail(t, "No workspace created")
 	}
-	for _, ws := range wsResp {
+	syncStatusResp, err := testPipelinesWorkspaceService.WorkspacePollSyncStatus()
+	assert.NoError(t, err)
+	for _, ws := range syncStatusResp {
 		fmt.Printf("%+v \n", ws)
-		err = testPipelinesWorkspaceService.DeleteWorkspace(strconv.Itoa(ws.ID))
+		err = testPipelinesWorkspaceService.DeleteWorkspace("default")
+	}
+	assert.NoError(t, err)
+}
+
+func TestWorkspaceValidationFailureAndSucceedsWhenValidIntegrationCreated(t *testing.T) {
+	if !assert.NotEmpty(t, *PipelinesAccessToken, "cannot run pipelines tests without access token configured") {
+		return
+	}
+	filePath := "testdata/pipelines-integration.yml"
+
+	// Get pipelines-integration.yaml content
+	pipelineRes, err := getWorkspaceRunPayload([]string{filePath})
+	if !assert.NoError(t, err) {
+		return
+	}
+	// Call workspace validation
+	err = testPipelinesWorkspaceService.ValidateWorkspace(pipelineRes)
+	assert.Error(t, err)
+
+	// Create valid integration required for pipelines
+	id, err := testsPipelinesIntegrationsService.CreateArtifactoryIntegration("int_workspace_artifactory", testsDummyRtUrl, testsDummyUser, testsDummyApiKey)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer deleteIntegrationAndAssert(t, id)
+	getIntegrationAndAssert(t, id, "int_workspace_artifactory", services.ArtifactoryName)
+
+	// Validate workspace pipelines should be successful here
+	err = testPipelinesWorkspaceService.ValidateWorkspace(pipelineRes)
+	assert.NoError(t, err)
+
+	wsResp, err := testPipelinesWorkspaceService.GetWorkspace()
+	assert.NoError(t, err)
+	if len(wsResp) < 1 {
+		assert.Fail(t, "No workspace created")
+	}
+	var syncStatusResp []services.WorkspacesResponse
+	syncStatusResp, err = testPipelinesWorkspaceService.WorkspacePollSyncStatus()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	err = testPipelinesWorkspaceService.WorkspaceSync("default")
+	assert.NoError(t, err)
+	syncStatusResp, err = testPipelinesWorkspaceService.WorkspacePollSyncStatus()
+	assert.NoError(t, err)
+	for _, ws := range syncStatusResp {
+		fmt.Printf("%+v \n", ws)
+		err = testPipelinesWorkspaceService.DeleteWorkspace("default")
 	}
 	assert.NoError(t, err)
 }
@@ -87,12 +139,10 @@ func getWorkspaceRunPayload(resources []string) ([]byte, error) {
 		}
 		pipelineDefinitions = append(pipelineDefinitions, pipeDefinition)
 	}
-	// need to define handling values
 	workSpaceValidation := WorkSpaceValidation{
-		ProjectId:   "1",
 		Files:       pipelineDefinitions,
 		ProjectName: "default",
-		Name:        "bhanu",
+		Name:        "",
 	}
 	return json.Marshal(workSpaceValidation)
 }

@@ -60,7 +60,7 @@ func (ws *WorkspaceService) GetWorkspace() ([]WorkspacesResponse, error) {
 	}
 	wsStatusResp := make([]WorkspacesResponse, 0)
 	err = json.Unmarshal(body, &wsStatusResp)
-	return wsStatusResp, nil
+	return wsStatusResp, err
 }
 
 func (ws *WorkspaceService) DeleteWorkspace(workspaceID string) error {
@@ -195,7 +195,6 @@ func (ws *WorkspaceService) WorkspaceStepStatus(pipelinesRunID int) ([]byte, err
 	queryParams := map[string]string{
 		"runIds": strconv.Itoa(pipelinesRunID),
 		"limit":  "15",
-		//"include": "name,statusCode,triggeredAt,externalBuildUrl",
 	}
 	// URL construction
 	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), workspaceSteps)
@@ -215,7 +214,7 @@ func (ws *WorkspaceService) WorkspaceStepStatus(pipelinesRunID int) ([]byte, err
 func (ws *WorkspaceService) GetWorkspacePipelines(workspaces []WorkspacesResponse) (map[string]string, error) {
 	pipelineNames := make(map[string]string, 1)
 	log.Info("Collecting pipeline names configured")
-	// Validate and return pipeline names as slice
+	// Validate and return pipeline names and branch as map
 	if len(workspaces) > 0 && !(*workspaces[0].IsSyncing) {
 		pipelines := workspaces[0].PipelinesYmlPropertyBag.Pipelines
 		for _, pi := range pipelines {

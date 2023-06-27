@@ -30,8 +30,8 @@ func NewValidateService(client *jfroghttpclient.JfrogHttpClient) *ValidateServic
 	return &ValidateService{client: client}
 }
 
-func (rs *ValidateService) getHttpDetails() httputils.HttpClientDetails {
-	httpDetails := rs.ServiceDetails.CreateHttpClientDetails()
+func (vs *ValidateService) getHttpDetails() httputils.HttpClientDetails {
+	httpDetails := vs.ServiceDetails.CreateHttpClientDetails()
 	return httpDetails
 }
 
@@ -83,9 +83,7 @@ func processValidatePipResourceResponse(resp []byte, userName string) (string, e
 	}
 	if v, ok := rsc["pipelines.yml"]; ok {
 		if v.IsValid != nil && *v.IsValid {
-			userName = "@bhanur"
 			log.Info("validation of pipeline resources completed successfully ")
-			log.Info("workspace updated with latest resource files for user: ", userName)
 			msg := color.Green.Sprintf("validation completed ")
 			time.Sleep(2 * time.Second)
 			log.Info(msg)
@@ -104,12 +102,10 @@ func processValidatePipResourceResponse(resp []byte, userName string) (string, e
 	return "", errors.New("pipelines.yml not found")
 }
 
-/*
-constructPipelinesURL creates URL with all required details to make api call
-like headers, queryParams, apiPath
-*/
-func (rs *ValidateService) constructValidateAPIURL(qParams map[string]string, apiPath string) string {
-	uri, err := url.Parse(rs.ServiceDetails.GetUrl() + apiPath)
+// constructPipelinesURL creates URL with all required details to make api call
+// like headers, queryParams, apiPath
+func (vs *ValidateService) constructValidateAPIURL(qParams map[string]string, apiPath string) string {
+	uri, err := url.Parse(vs.ServiceDetails.GetUrl() + apiPath)
 	if err != nil {
 		log.Error("Failed to parse pipelines fetch run status url")
 	}
