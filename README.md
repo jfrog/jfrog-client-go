@@ -181,11 +181,11 @@
       - [Get Pipeline Sync Status](#get-pipeline-sync-status)
       - [Cancel Run](#cancel-run)
   - [Lifecycle APIs](#lifecycle-apis)
-    - [Creating LifeCycle Service Manager](#creating-lifeCycle-service-manager)
-      - [Creating LifeCycle Details](#creating-lifeCycle-details)
-      - [Creating LifeCycle Service Config](#creating-lifeCycle-service-config)
-      - [Creating New LifeCycle Service Manager](#creating-new-lifeCycle-service-manager)
-    - [Using LifeCycle Services](#using-lifeCycle-services)
+    - [Creating Lifecycle Service Manager](#creating-lifeCycle-service-manager)
+      - [Creating Lifecycle Details](#creating-lifeCycle-details)
+      - [Creating Lifecycle Service Config](#creating-lifeCycle-service-config)
+      - [Creating New Lifecycle Service Manager](#creating-new-lifeCycle-service-manager)
+    - [Using Lifecycle Services](#using-lifeCycle-services)
       - [Creating a Release Bundle From Published Builds](#creating-a-release-bundle-from-published-builds)
       - [Creating a Release Bundle From Release Bundles](#creating-a-release-bundle-from-release-bundles)
       - [Promoting a Release Bundle](#promoting-a-release-bundle)
@@ -2152,20 +2152,22 @@ lifecycleManager, err := lifecycle.New(serviceConfig)
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
 params := CreateOrPromoteReleaseBundleParams{}
-// Release Bundle project key
-params.ProjectKey = "project"
-params.Async = true
 // The GPG/RSA key-pair name given in Artifactory.
 params.SigningKeyName = "key-pair"
+// Optional:
+params.ProjectKey = "project"
+params.Async = true
+
 
 source := CreateFromBuildsSource{Builds: []BuildSource{
     {
         BuildName:       "name",
         BuildNumber:     "number",
+		// Optional:
         BuildRepository: "artifactory-build-info",
     },
 }}
-serviceManager.CreateFromBuilds(rbDetails, params, source)
+serviceManager.CreateReleaseBundleFromBuilds(rbDetails, params, source)
 ```
 
 #### Creating a Release Bundle From Release Bundles
@@ -2173,11 +2175,11 @@ serviceManager.CreateFromBuilds(rbDetails, params, source)
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
 params := CreateOrPromoteReleaseBundleParams{}
-// Release Bundle project key
-params.ProjectKey = "project"
-params.Async = true
 // The GPG/RSA key-pair name given in Artifactory.
 params.SigningKeyName = "key-pair"
+// Optional:
+params.ProjectKey = "project"
+params.Async = true
 
 source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
     {
@@ -2186,7 +2188,7 @@ source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
        ProjectKey:           "default",
     },
 }}
-serviceManager.CreateFromBundles(rbDetails, params, source)
+serviceManager.CreateReleaseBundleFromBundles(rbDetails, params, source)
 ```
 
 #### Promoting a Release Bundle
@@ -2194,23 +2196,24 @@ serviceManager.CreateFromBundles(rbDetails, params, source)
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
 params := CreateOrPromoteReleaseBundleParams{}
-// Release Bundle project key
-params.ProjectKey = "project"
-params.Async = true
 // The GPG/RSA key-pair name given in Artifactory.
 params.SigningKeyName = "key-pair"
+// Optional:
+params.ProjectKey = "project"
+params.Async = true
 
 environment := "target-env"
 overwrite:=true
-resp, err := serviceManager.Promote(rbDetails, params, environment, overwrite)
+resp, err := serviceManager.PromoteReleaseBundle(rbDetails, params, environment, overwrite)
 ```
 
 #### Get Release Bundle Creation Status
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-projectKey := "default"
 sync := true
+// Optional:
+projectKey := "default"
 resp, err := serviceManager.GetReleaseBundleCreationStatus(rbDetails, projectKey, sync)
 ```
 
@@ -2218,9 +2221,10 @@ resp, err := serviceManager.GetReleaseBundleCreationStatus(rbDetails, projectKey
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-projectKey := "default"
 createdMillis := "1668073165322"
 sync := true
+// Optional:
+projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 ```
 
@@ -2229,11 +2233,11 @@ resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKe
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
 params := CreateOrPromoteReleaseBundleParams{}
-// Release Bundle project key
-params.ProjectKey = "project"
-params.Async = true
 // The GPG/RSA key-pair name given in Artifactory.
 params.SigningKeyName = "key-pair"
+// Optional:
+params.ProjectKey = "project"
+params.Async = true
+
 resp, err := serviceManager.DeleteReleaseBundle(rbDetails, params)
 ```
-

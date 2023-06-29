@@ -17,25 +17,25 @@ var testRb = lifecycle.ReleaseBundleDetails{
 	ReleaseBundleVersion: "1.2.3",
 }
 
-type testSuite struct {
-	wait        bool
+type testCase struct {
+	sync        bool
 	errExpected bool
 	finalStatus lifecycle.RbStatus
 }
 
 func TestSimpleGetReleaseBundleStatus(t *testing.T) {
-	testSuites := map[string]testSuite{
-		"no wait processing": {wait: false, errExpected: false, finalStatus: lifecycle.Processing},
-		"no wait pending":    {wait: false, errExpected: false, finalStatus: lifecycle.Pending},
-		"no wait completed":  {wait: false, errExpected: false, finalStatus: lifecycle.Completed},
-		"no wait failed":     {wait: false, errExpected: false, finalStatus: lifecycle.Failed},
-		"wait completed":     {wait: true, errExpected: false, finalStatus: lifecycle.Completed},
-		"wait rejected":      {wait: true, errExpected: false, finalStatus: lifecycle.Rejected},
-		"wait failed":        {wait: true, errExpected: false, finalStatus: lifecycle.Failed},
-		"wait deleting":      {wait: true, errExpected: false, finalStatus: lifecycle.Deleting},
-		"unexpected status":  {wait: true, errExpected: true, finalStatus: "some status"},
+	testCases := map[string]testCase{
+		"no sync processing": {sync: false, errExpected: false, finalStatus: lifecycle.Processing},
+		"no sync pending":    {sync: false, errExpected: false, finalStatus: lifecycle.Pending},
+		"no sync completed":  {sync: false, errExpected: false, finalStatus: lifecycle.Completed},
+		"no sync failed":     {sync: false, errExpected: false, finalStatus: lifecycle.Failed},
+		"sync completed":     {sync: true, errExpected: false, finalStatus: lifecycle.Completed},
+		"sync rejected":      {sync: true, errExpected: false, finalStatus: lifecycle.Rejected},
+		"sync failed":        {sync: true, errExpected: false, finalStatus: lifecycle.Failed},
+		"sync deleting":      {sync: true, errExpected: false, finalStatus: lifecycle.Deleting},
+		"unexpected status":  {sync: true, errExpected: true, finalStatus: "some status"},
 	}
-	for testName, test := range testSuites {
+	for testName, test := range testCases {
 		t.Run(testName, func(t *testing.T) {
 			handlerFunc, requestNum := createDefaultHandlerFunc(t, test.finalStatus)
 			testGetRBStatus(t, test, handlerFunc)
@@ -66,16 +66,16 @@ func TestComplexReleaseBundleWaitForOperation(t *testing.T) {
 			writeMockStatusResponse(t, w, lifecycle.ReleaseBundleStatusResponse{Status: rbStatus})
 		}
 	}
-	test := testSuite{wait: true, errExpected: false, finalStatus: lifecycle.Completed}
+	test := testCase{sync: true, errExpected: false, finalStatus: lifecycle.Completed}
 	testGetRBStatus(t, test, handlerFunc)
 	assert.Equal(t, 3, requestNum)
 }
 
-func testGetRBStatus(t *testing.T, test testSuite, handlerFunc http.HandlerFunc) {
+func testGetRBStatus(t *testing.T, test testCase, handlerFunc http.HandlerFunc) {
 	mockServer, rbService := createMockServer(t, handlerFunc)
 	defer mockServer.Close()
 
-	statusResp, err := rbService.GetReleaseBundleCreationStatus(testRb, "", test.wait)
+	statusResp, err := rbService.GetReleaseBundleCreationStatus(testRb, "", test.sync)
 	if test.errExpected {
 		assert.Error(t, err)
 		return
