@@ -178,6 +178,7 @@ func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey str
 			log.Debug(fmt.Sprintf("A build-name: <%s> with a build-number: <%s> could not be found in Artifactory.", buildName, buildNumber))
 			return "", "", nil
 		}
+		return buildName, foundBuildNumber, nil
 	}
 	return buildName, buildNumber, nil
 }
