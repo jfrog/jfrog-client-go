@@ -47,9 +47,12 @@ func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation) 
 
 	content, err := json.Marshal(operation.getRequestBody())
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, errorutils.CheckError(err)
 	}
 	resp, body, err := rbs.client.SendPost(requestFullUrl, content, &httpClientDetails)
+	if err != nil {
+		return []byte{}, err
+	}
 
 	if !operation.getOperationParams().Async {
 		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
