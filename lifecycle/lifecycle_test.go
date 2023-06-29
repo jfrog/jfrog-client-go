@@ -51,7 +51,7 @@ func TestComplexReleaseBundleWaitForOperation(t *testing.T) {
 
 	requestNum := 0
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/"+lifecycle.GetReleaseBundleCreateStatusRestApi(testRb) {
+		if r.RequestURI == "/"+lifecycle.GetReleaseBundleCreationStatusRestApi(testRb) {
 			w.WriteHeader(http.StatusOK)
 			var rbStatus lifecycle.RbStatus
 			switch requestNum {
@@ -75,7 +75,7 @@ func testGetRBStatus(t *testing.T, test testSuite, handlerFunc http.HandlerFunc)
 	mockServer, rbService := createMockServer(t, handlerFunc)
 	defer mockServer.Close()
 
-	statusResp, err := rbService.GetReleaseBundleCreateStatus(testRb, "", test.wait)
+	statusResp, err := rbService.GetReleaseBundleCreationStatus(testRb, "", test.wait)
 	if test.errExpected {
 		assert.Error(t, err)
 		return
@@ -106,7 +106,7 @@ func writeMockStatusResponse(t *testing.T, w http.ResponseWriter, statusResp lif
 func createDefaultHandlerFunc(t *testing.T, status lifecycle.RbStatus) (http.HandlerFunc, *int) {
 	requestNum := 0
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/"+lifecycle.GetReleaseBundleCreateStatusRestApi(testRb) {
+		if r.RequestURI == "/"+lifecycle.GetReleaseBundleCreationStatusRestApi(testRb) {
 			w.WriteHeader(http.StatusOK)
 			requestNum++
 			writeMockStatusResponse(t, w, lifecycle.ReleaseBundleStatusResponse{Status: status})

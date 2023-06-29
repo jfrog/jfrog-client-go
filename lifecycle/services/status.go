@@ -30,21 +30,21 @@ const (
 	Deleting   RbStatus = "DELETING"
 )
 
-func (rbs *ReleaseBundlesService) GetReleaseBundleCreateStatus(rbDetails ReleaseBundleDetails, projectKey string, wait bool) (ReleaseBundleStatusResponse, error) {
-	return rbs.getReleaseBundleOperationStatus(GetReleaseBundleCreateStatusRestApi(rbDetails), projectKey, wait, "creation")
+func (rbs *ReleaseBundlesService) GetReleaseBundleCreationStatus(rbDetails ReleaseBundleDetails, projectKey string, sync bool) (ReleaseBundleStatusResponse, error) {
+	return rbs.getReleaseBundleOperationStatus(GetReleaseBundleCreationStatusRestApi(rbDetails), projectKey, sync, "creation")
 }
 
-func GetReleaseBundleCreateStatusRestApi(rbDetails ReleaseBundleDetails) string {
+func GetReleaseBundleCreationStatusRestApi(rbDetails ReleaseBundleDetails) string {
 	return path.Join(releaseBundleBaseApi, statusesApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 
-func (rbs *ReleaseBundlesService) GetReleaseBundlePromotionStatus(rbDetails ReleaseBundleDetails, projectKey, createdMillis string, wait bool) (ReleaseBundleStatusResponse, error) {
+func (rbs *ReleaseBundlesService) GetReleaseBundlePromotionStatus(rbDetails ReleaseBundleDetails, projectKey, createdMillis string, sync bool) (ReleaseBundleStatusResponse, error) {
 	restApi := path.Join(promotionBaseApi, statusesApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion, createdMillis)
-	return rbs.getReleaseBundleOperationStatus(restApi, projectKey, wait, "promotion")
+	return rbs.getReleaseBundleOperationStatus(restApi, projectKey, sync, "promotion")
 }
 
-func (rbs *ReleaseBundlesService) getReleaseBundleOperationStatus(restApi string, projectKey string, wait bool, operationStr string) (ReleaseBundleStatusResponse, error) {
-	if wait {
+func (rbs *ReleaseBundlesService) getReleaseBundleOperationStatus(restApi string, projectKey string, sync bool, operationStr string) (ReleaseBundleStatusResponse, error) {
+	if sync {
 		return rbs.waitForRbOperationCompletion(restApi, projectKey, operationStr)
 	}
 	statusResp, _, err := rbs.getReleaseBundleStatus(restApi, projectKey)

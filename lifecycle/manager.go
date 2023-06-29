@@ -50,14 +50,14 @@ func (lcs *LifecycleServicesManager) PromoteReleaseBundle(rbDetails lifecycle.Re
 	return rbService.Promote(rbDetails, params, environment, overwrite)
 }
 
-func (lcs *LifecycleServicesManager) GetReleaseBundleCreateStatus(rbDetails lifecycle.ReleaseBundleDetails, projectKey string, wait bool) (lifecycle.ReleaseBundleStatusResponse, error) {
+func (lcs *LifecycleServicesManager) GetReleaseBundleCreationStatus(rbDetails lifecycle.ReleaseBundleDetails, projectKey string, sync bool) (lifecycle.ReleaseBundleStatusResponse, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.GetReleaseBundleCreateStatus(rbDetails, projectKey, wait)
+	return rbService.GetReleaseBundleCreationStatus(rbDetails, projectKey, sync)
 }
 
-func (lcs *LifecycleServicesManager) GetReleaseBundlePromotionStatus(rbDetails lifecycle.ReleaseBundleDetails, projectKey, createdMillis string, wait bool) (lifecycle.ReleaseBundleStatusResponse, error) {
+func (lcs *LifecycleServicesManager) GetReleaseBundlePromotionStatus(rbDetails lifecycle.ReleaseBundleDetails, projectKey, createdMillis string, sync bool) (lifecycle.ReleaseBundleStatusResponse, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, wait)
+	return rbService.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 }
 
 func (lcs *LifecycleServicesManager) DeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, params lifecycle.ReleaseBundleQueryParams) error {
