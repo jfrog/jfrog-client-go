@@ -135,7 +135,7 @@ func (sm *PipelinesServicesManager) CancelRun(runID int) error {
 	return runService.CancelRun(runID)
 }
 
-func (sm *PipelinesServicesManager) ValidatePipelineSources(data []byte) (string, error) {
+func (sm *PipelinesServicesManager) ValidatePipelineSources(data []byte) error {
 	validateService := services.NewValidateService(sm.client)
 	validateService.ServiceDetails = sm.config.GetServiceDetails()
 	return validateService.ValidatePipeline(data)

@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gookit/color"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -13,12 +12,10 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
-	"time"
 )
 
 const (
-	validatePipResourcePath = "api/v1/validateYaml/json"
+	validatePipResourcePath = "api/v1/validateYaml"
 )
 
 type ValidateService struct {
@@ -35,71 +32,72 @@ func (vs *ValidateService) getHttpDetails() httputils.HttpClientDetails {
 	return httpDetails
 }
 
-func (vs *ValidateService) ValidatePipeline(data []byte) (string, error) {
-	var opMsg string
+func (vs *ValidateService) ValidatePipeline(data []byte) error {
 	var err error
 	httpDetails := vs.getHttpDetails()
 
-	// query params
+	// Query params
 	m := make(map[string]string, 0)
 
 	// URL Construction
 	uri := vs.constructValidateAPIURL(m, validatePipResourcePath)
 
-	// headers
+	// Headers
 	headers := make(map[string]string, 0)
 	headers["Content-Type"] = "application/json"
 	httpDetails.Headers = headers
+	log.Debug(string(data))
 
-	// send post request
+	// Send post request
 	resp, body, err := vs.client.SendPost(uri, data, &httpDetails)
 	if err != nil {
-		return "", err
+		return err
 	}
 	if err := errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", err
+		return err
 	}
 
-	// process response
+	// Process response
 	if nil != resp && resp.StatusCode == http.StatusOK {
 		log.Info("Processing resources yaml response ")
-		time.Sleep(2 * time.Second)
 		log.Info(string(body))
-		opMsg, err = processValidatePipResourceResponse(body, "")
+		err = processValidatePipResourceResponse(body)
 		if err != nil {
 			log.Error("Failed to process resources validation response")
 		}
 	}
-	return opMsg, nil
+	return nil
 }
 
 // processValidatePipResourceResponse process validate pipeline resource response
-func processValidatePipResourceResponse(resp []byte, userName string) (string, error) {
-	fmt.Println("unfurling response")
-	rsc := make(map[string]ValidationResponse)
-	err := json.Unmarshal(resp, &rsc)
+func processValidatePipResourceResponse(resp []byte) error {
+	validationResponse := make(map[string]ValidationResponse)
+	err := json.Unmarshal(resp, &validationResponse)
 	if err != nil {
-		return "", err
+		return err
 	}
-	if v, ok := rsc["pipelines.yml"]; ok {
+	if len(validationResponse) == 0 {
+		return errors.New("pipelines not found")
+	}
+	for k, v := range validationResponse {
 		if v.IsValid != nil && *v.IsValid {
-			log.Info("validation of pipeline resources completed successfully ")
-			msg := color.Green.Sprintf("validation completed ")
-			time.Sleep(2 * time.Second)
+			fileName := color.Green.Sprintf("%s", k)
+			log.Error(fileName)
+			log.Info("Validation of pipeline resources completed successfully ")
+			msg := color.Green.Sprintf("Validation completed")
 			log.Info(msg)
-			return msg, nil
 		} else {
-			log.Error("pipeline resources validation FAILED!! check below errors and try again")
-			msg := v.Errors[0].Text
-			lnNum := v.Errors[0].LineNumber
-			msgs := strings.Split(msg, ":")
-			opMsg := color.Red.Sprintf("%s", msgs[0]+":"+strconv.Itoa(lnNum)+":\n"+" "+msgs[1])
-			//log.PrintMessage("Please refer pipelines documentation " + coreutils.PrintLink("https://www.jfrog.com/confluence/display/JFROG/Managing+Pipeline+Sources#ManagingPipelineSources-ValidatingYAML") + "")
-			log.Error(opMsg)
-			return opMsg, nil
+			fileName := color.Red.Sprintf("%s", k)
+			log.Error(fileName)
+			validationErrors := v.Errors
+			for _, validationError := range validationErrors {
+				lineNum := validationError.LineNumber
+				errorMessage := color.Red.Sprintf("%s", validationError.Text+":"+strconv.Itoa(lineNum))
+				log.Error(errorMessage)
+			}
 		}
 	}
-	return "", errors.New("pipelines.yml not found")
+	return nil
 }
 
 // constructPipelinesURL creates URL with all required details to make api call

@@ -63,9 +63,9 @@ func (ws *WorkspaceService) GetWorkspace() ([]WorkspacesResponse, error) {
 	return wsStatusResp, err
 }
 
-func (ws *WorkspaceService) DeleteWorkspace(workspaceID string) error {
+func (ws *WorkspaceService) DeleteWorkspace(projectName string) error {
 	httpDetails := ws.getHttpDetails()
-	deleteWorkspaceAPI := strings.Replace(deleteWorkspace, ":project", workspaceID, 1)
+	deleteWorkspaceAPI := strings.Replace(deleteWorkspace, ":project", projectName, 1)
 	// Query params
 	queryParams := make(map[string]string, 0)
 	// URL construction
@@ -109,7 +109,7 @@ func (ws *WorkspaceService) ValidateWorkspace(data []byte) error {
 func (ws *WorkspaceService) WorkspaceSync(project string) error {
 	httpDetails := ws.getHttpDetails()
 	// Query params
-	queryParams := make(map[string]string, 0) // Query params
+	queryParams := make(map[string]string, 0)
 	syncWorkspaceAPI := strings.Replace(workspaceSync, ":project", project, 1)
 	// URL construction
 	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), syncWorkspaceAPI)
