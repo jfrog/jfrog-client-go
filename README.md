@@ -36,7 +36,7 @@
     - [Using Artifactory Services](#using-artifactory-services)
       - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
       - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
-      - [Downloading Release Bundles from Artifactory](#downloading-release-bundles-from-artifactory)
+      - [Downloading Release Bundles from Artifactory](#downloading-release-bundles-v1-from-artifactory)
       - [Uploading and Downloading Files with Summary](#uploading-and-downloading-files-with-summary)
       - [Copying Files in Artifactory](#copying-files-in-artifactory)
       - [Moving Files in Artifactory](#moving-files-in-artifactory)
@@ -98,7 +98,7 @@
       - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
       - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
       - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
-      - [Triggerring Storage Info Recalculation in Artifactory](#triggerring-storage-info-recalculation-in-artifactory)
+      - [Triggering Storage Info Recalculation in Artifactory](#triggering-storage-info-recalculation-in-artifactory)
   - [Access APIs](#access-apis)
     - [Creating Access Service Manager](#creating-access-service-manager)
       - [Creating Access Details](#creating-access-details)
@@ -123,14 +123,14 @@
       - [Creating New Distribution Service Manager](#creating-new-distribution-service-manager)
     - [Using Distribution Services](#using-distribution-services)
       - [Setting Distribution Signing Key](#setting-distribution-signing-key)
-      - [Creating a Release Bundle](#creating-a-release-bundle)
-      - [Updating a Release Bundle](#updating-a-release-bundle)
-      - [Signing a Release Bundle](#signing-a-release-bundle)
-      - [Async Distributing a Release Bundle](#async-distributing-a-release-bundle)
-      - [Sync Distributing a Release Bundle](#sync-distributing-a-release-bundle)
+      - [Creating a Release Bundle](#creating-a-release-bundle-v1)
+      - [Updating a Release Bundle](#updating-a-release-bundle-v1)
+      - [Signing a Release Bundle](#signing-a-release-bundle-v1)
+      - [Async Distributing a Release Bundle](#async-distributing-a-release-bundle-v1)
+      - [Sync Distributing a Release Bundle](#sync-distributing-a-release-bundle-v1)
       - [Getting Distribution Status](#getting-distribution-status)
-      - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle)
-      - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle)
+      - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle-v1)
+      - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle-v1)
   - [Using ContentReader](#using-contentreader)
   - [Xray APIs](#xray-apis)
     - [Creating Xray Service Manager](#creating-xray-service-manager)
@@ -180,6 +180,18 @@
       - [Trigger Pipeline Sync](#trigger-pipeline-sync)
       - [Get Pipeline Sync Status](#get-pipeline-sync-status)
       - [Cancel Run](#cancel-run)
+  - [Lifecycle APIs](#lifecycle-apis)
+    - [Creating Lifecycle Service Manager](#creating-lifeCycle-service-manager)
+      - [Creating Lifecycle Details](#creating-lifeCycle-details)
+      - [Creating Lifecycle Service Config](#creating-lifeCycle-service-config)
+      - [Creating New Lifecycle Service Manager](#creating-new-lifeCycle-service-manager)
+    - [Using Lifecycle Services](#using-lifeCycle-services)
+      - [Creating a Release Bundle From Published Builds](#creating-a-release-bundle-from-published-builds)
+      - [Creating a Release Bundle From Release Bundles](#creating-a-release-bundle-from-release-bundles)
+      - [Promoting a Release Bundle](#promoting-a-release-bundle)
+      - [Get Release Bundle Creation Status](#get-release-bundle-creation-status)
+      - [Get Release Bundle Promotion Status](#get-release-bundle-promotion-status)
+      - [Delete Release Bundle](#delete-release-bundle)
 
 ## General
 
@@ -414,9 +426,9 @@ params.MinSplitSize = 7168
 totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 ```
 
-#### Downloading Release Bundles from Artifactory
+#### Downloading Release Bundles v1 from Artifactory
 
-Using the `DownloadFiles()` function, we can download release bundles and get the general statistics of the action (The
+Using the `DownloadFiles()` function, we can download release bundles v1 and get the general statistics of the action (The
 actual number of files downloaded, and the number of files we expected to download). In addition, we get the error value
 if it occurred.
 
@@ -434,7 +446,7 @@ params.PublicGpgKey = "public/key/file/path"
 totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 ```
 
-Read more about GPG signing release bundles [here](https://www.jfrog.com/confluence/display/JFROG/GPG+Signing).
+Read more about GPG signing release bundles v1 [here](https://www.jfrog.com/confluence/display/JFROG/GPG+Signing).
 
 #### Uploading and Downloading Files with Summary
 
@@ -1332,7 +1344,7 @@ serviceManager.FileList("repo/path/", optionalParams)
 storageInfo, err := serviceManager.GetStorageInfo()
 ```
 
-#### Triggerring Storage Info Recalculation in Artifactory
+#### Triggering Storage Info Recalculation in Artifactory
 
 ```go
 err := serviceManager.CalculateStorageInfo()
@@ -1527,7 +1539,7 @@ params := services.NewSetSigningKeyParams("private-gpg-key", "public-gpg-key")
 err := distManager.SetSigningKey(params)
 ```
 
-#### Creating a Release Bundle
+#### Creating a Release Bundle v1
 
 ```go
 params := services.NewCreateReleaseBundleParams("bundle-name", "1")
@@ -1538,7 +1550,7 @@ targetProps := utils.NewProperties()
 targetProps.AddProperty("key1", "val1")
 params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip", TargetProps: targetProps}}
 
-// Be default, artifacts that are distributed as part of a release bundle, have the same path in their destination server
+// Be default, artifacts that are distributed as part of a release bundle v1, have the same path in their destination server
 // (the edge node) as the path they had on the distributing Artifactory server.
 // You have however the option for modifying the target path on edge node. You do this by defining the Target property as shown below.
 // The Pattern property is a wildcard based pattern. Any wildcards enclosed in parentheses in the pattern (source)
@@ -1550,11 +1562,11 @@ params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip", TargetProps: 
 pathMappingSpec := &utils.CommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
-// In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise, summary is nil.
+// In case: params.SignImmediately == true, the summary contain the release bundle v1 details. Otherwise, summary is nil.
 summary, err := distManager.CreateReleaseBundle(params)
 ```
 
-#### Updating a Release Bundle
+#### Updating a Release Bundle v1
 
 ```go
 params := services.NewUpdateReleaseBundleParams("bundle-name", "1")
@@ -1566,15 +1578,15 @@ targetProps.AddProperty("key1", "val1")
 params.SpecFiles = []*utils.CommonParams{{Pattern: "repo/*/*.zip", TargetProps: targetProps}}
 
 // The Target property defines the target path in the edge node, and can include replaceable in the form of {1}, {2}, ...
-// Read more about it in the above "Creating a Release Bundle" section.
+// Read more about it in the above "Creating a Release Bundle v1" section.
 pathMappingSpec := &utils.CommonParams{Pattern: "source-repo/(a)/(*.zip)", Target: "target-repo/{1}-{2}"}
 params.SpecFiles = append(params.SpecFiles, pathMappingSpec)
 
-// In case: params.SignImmediately == true, the summary contain the release bundle details. Otherwise, summary is nil.
+// In case: params.SignImmediately == true, the summary contain the release bundle v1 details. Otherwise, summary is nil.
 summary, err := distManager.UpdateReleaseBundle(params)
 ```
 
-#### Signing a Release Bundle
+#### Signing a Release Bundle v1
 
 ```go
 params := services.NewSignBundleParams("bundle-name", "1")
@@ -1583,7 +1595,7 @@ params.GpgPassphrase = "123456"
 summary, err := distManager.SignReleaseBundle(params)
 ```
 
-#### Async Distributing a Release Bundle
+#### Async Distributing a Release Bundle v1
 
 ```go
 params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
@@ -1594,7 +1606,7 @@ autoCreateRepo := true
 err := distManager.DistributeReleaseBundle(params, autoCreateRepo)
 ```
 
-#### Sync Distributing a Release Bundle
+#### Sync Distributing a Release Bundle v1
 
 ```go
 params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
@@ -1602,7 +1614,7 @@ distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityNa
 params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
 // Auto-creating repository if it does not exist
 autoCreateRepo := true
-// Wait up to 120 minutes for the release bundle distribution
+// Wait up to 120 minutes for the release bundle v1 distribution
 err := distManager.DistributeReleaseBundleSync(params, 120, autoCreateRepo)
 ```
 
@@ -1621,7 +1633,7 @@ params.TrackerId = "123456789"
 status, err := distributeBundleService.GetStatus(params)
 ```
 
-#### Deleting a Remote Release Bundle
+#### Deleting a Remote Release Bundle v1
 
 ```go
 params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
@@ -1635,7 +1647,7 @@ param.MaxWaitMinutes = 10
 err := distManager.DeleteReleaseBundle(params)
 ```
 
-#### Deleting a Local Release Bundle
+#### Deleting a Local Release Bundle v1
 
 ```go
 params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
@@ -1946,7 +1958,7 @@ artifactSummaryRequest := services.ArtifactSummaryParams{
 artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
 ```
 
-#### Get Entitlement info  
+#### Get Entitlement Info
 
 ```go
     // The featureId is the requested feature ID to check, for instance: "contextual_analysis"
@@ -2099,4 +2111,133 @@ err := pipelinesManager.GetSyncStatusForPipelineResource(branch, repoFullName)
 ```go
 runID := 234 // run id of pipeline
 err := pipelinesManager.CancelRun(runID)
+```
+
+## Lifecycle APIs
+
+### Creating Lifecycle Service Manager
+
+#### Creating Lifecycle Details
+
+```go
+lcDetails := auth.NewLifecycleDetails()
+lcDetails.SetUrl("http://localhost:8081/lifecycle")
+lcDetails.SetAccessToken("access-token")
+// if client certificates are required
+lcDetails.SetClientCertPath("path/to/.cer")
+lcDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Lifecycle Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(lcDetails).
+    SetCertificatesPath(lcDetails.GetClientCertPath()).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(8).
+    Build()
+```
+
+#### Creating New Lifecycle Service Manager
+
+```go
+lifecycleManager, err := lifecycle.New(serviceConfig)
+```
+
+### Using Lifecycle Services
+
+#### Creating a Release Bundle From Published Builds
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+params := CreateOrPromoteReleaseBundleParams{}
+// The GPG/RSA key-pair name given in Artifactory.
+params.SigningKeyName = "key-pair"
+// Optional:
+params.ProjectKey = "project"
+params.Async = true
+
+
+source := CreateFromBuildsSource{Builds: []BuildSource{
+    {
+        BuildName:       "name",
+        BuildNumber:     "number",
+		// Optional:
+        BuildRepository: "artifactory-build-info",
+    },
+}}
+serviceManager.CreateReleaseBundleFromBuilds(rbDetails, params, source)
+```
+
+#### Creating a Release Bundle From Release Bundles
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+params := CreateOrPromoteReleaseBundleParams{}
+// The GPG/RSA key-pair name given in Artifactory.
+params.SigningKeyName = "key-pair"
+// Optional:
+params.ProjectKey = "project"
+params.Async = true
+
+source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
+    {
+       ReleaseBundleName:    "name",
+       ReleaseBundleVersion: "version",
+       ProjectKey:           "default",
+    },
+}}
+serviceManager.CreateReleaseBundleFromBundles(rbDetails, params, source)
+```
+
+#### Promoting a Release Bundle
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+params := CreateOrPromoteReleaseBundleParams{}
+// The GPG/RSA key-pair name given in Artifactory.
+params.SigningKeyName = "key-pair"
+// Optional:
+params.ProjectKey = "project"
+params.Async = true
+
+environment := "target-env"
+overwrite:=true
+resp, err := serviceManager.PromoteReleaseBundle(rbDetails, params, environment, overwrite)
+```
+
+#### Get Release Bundle Creation Status
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+sync := true
+// Optional:
+projectKey := "default"
+resp, err := serviceManager.GetReleaseBundleCreationStatus(rbDetails, projectKey, sync)
+```
+
+#### Get Release Bundle Promotion Status
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+createdMillis := "1668073165322"
+sync := true
+// Optional:
+projectKey := "default"
+resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
+```
+
+#### Delete Release Bundle
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+params := CreateOrPromoteReleaseBundleParams{}
+// The GPG/RSA key-pair name given in Artifactory.
+params.SigningKeyName = "key-pair"
+// Optional:
+params.ProjectKey = "project"
+params.Async = true
+
+resp, err := serviceManager.DeleteReleaseBundle(rbDetails, params)
 ```
