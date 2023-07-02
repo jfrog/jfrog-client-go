@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
 	biutils "github.com/jfrog/build-info-go/utils"
-	serviceutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -31,13 +31,17 @@ func ListFiles(rootPath string, isRecursive, includeDirs, isSymlink bool, exclud
 }
 
 // Transform to regexp and prepare Exclude patterns to be used
-func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
+func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternType, isRecursive bool) (string, error) {
 	excludePathPattern := ""
-	for _, singleExclusion := range params.GetExclusions() {
+	for _, singleExclusion := range exclusions {
 		if len(singleExclusion) > 0 {
+			singleExclusion, err := filepath.Abs(singleExclusion)
+			if err != nil {
+				return "", err
+			}
 			singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
-			singleExclusion = utils.ConvertLocalPatternToRegexp(singleExclusion, params.GetPatternType())
-			if params.IsRecursive() && strings.HasSuffix(singleExclusion, fileutils.GetFileSeparator()) {
+			singleExclusion = utils.ConvertLocalPatternToRegexp(singleExclusion, patternType)
+			if isRecursive && strings.HasSuffix(singleExclusion, fileutils.GetFileSeparator()) {
 				singleExclusion += "*"
 			}
 			excludePathPattern += fmt.Sprintf(`(%s)|`, singleExclusion)
@@ -46,7 +50,7 @@ func PrepareExcludePathPattern(params serviceutils.FileGetter) string {
 	if len(excludePathPattern) > 0 {
 		excludePathPattern = excludePathPattern[:len(excludePathPattern)-1]
 	}
-	return excludePathPattern
+	return excludePathPattern, nil
 }
 
 func filterFiles(files []string, excludePathPattern string) (filteredFiles []string, err error) {

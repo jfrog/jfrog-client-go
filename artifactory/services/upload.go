@@ -305,7 +305,10 @@ func addEscapingParenthesesForUpload(pattern, target, targetPathInArchive string
 }
 
 func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
-	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
+	excludePathPattern, err := fspatterns.PrepareExcludePathPattern(uploadParams.Exclusions, uploadParams.GetPatternType(), uploadParams.IsRecursive())
+	if err != nil {
+		return err
+	}
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
 	if errorutils.CheckError(err) != nil {
 		return err
