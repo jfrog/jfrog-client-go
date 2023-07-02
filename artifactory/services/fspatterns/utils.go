@@ -39,6 +39,7 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 				singleExclusion, err := filepath.Abs(singleExclusion)
 				if err != nil {
 					return singleExclusion, err
+
 				}
 			}
 			singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
