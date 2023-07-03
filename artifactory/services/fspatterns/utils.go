@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -30,18 +29,11 @@ func ListFiles(rootPath string, isRecursive, includeDirs, isSymlink bool, exclud
 	return filterFiles(paths, excludePathPattern)
 }
 
-// Transform to regexp and prepare Exclude patterns to be used
-func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternType, isRecursive, isPublish bool) (string, error) {
+// Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
+func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternType, isRecursive bool) (string, error) {
 	excludePathPattern := ""
 	for _, singleExclusion := range exclusions {
 		if len(singleExclusion) > 0 {
-			if isPublish {
-				singleExclusion, err := filepath.Abs(singleExclusion)
-				if err != nil {
-					return singleExclusion, err
-
-				}
-			}
 			singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
 			singleExclusion = utils.ConvertLocalPatternToRegexp(singleExclusion, patternType)
 			if isRecursive && strings.HasSuffix(singleExclusion, fileutils.GetFileSeparator()) {
