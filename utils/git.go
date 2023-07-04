@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -62,8 +63,7 @@ func (m *GitManager) ReadConfig() error {
 // The actual .git directory is under the parent project's .git/modules directory.
 func (m *GitManager) handleSubmoduleIfNeeded() {
 	exists, err := fileutils.IsFileExists(m.path, false)
-	if err != nil {
-		m.err = err
+	if m.err = errors.Join(m.err, err); m.err != nil {
 		return
 	}
 	if !exists {
@@ -79,14 +79,12 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err = cmd.Run()
-	if err != nil {
-		m.err = err
+	if m.err = errors.Join(m.err, err); m.err != nil {
 		return
 	}
 	resolvedGitPath := strings.TrimSpace(stdout.String())
 	exists, err = fileutils.IsDirExists(resolvedGitPath, false)
-	if err != nil {
-		m.err = err
+	if m.err = errors.Join(m.err, err); m.err != nil {
 		return
 	}
 	if !exists {
@@ -118,15 +116,11 @@ func (m *GitManager) readUrl() {
 	}
 	dotGitPath := filepath.Join(m.path, "config")
 	file, err := os.Open(dotGitPath)
-	if errorutils.CheckError(err) != nil {
-		m.err = err
+	if m.err = errors.Join(m.err, errorutils.CheckError(err)); m.err != nil {
 		return
 	}
 	defer func() {
-		e := file.Close()
-		if m.err == nil {
-			m.err = errorutils.CheckError(e)
-		}
+		m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
 	}()
 
 	scanner := bufio.NewScanner(file)
@@ -144,8 +138,7 @@ func (m *GitManager) readUrl() {
 			IsNextLineUrl = true
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		m.err = errorutils.CheckError(err)
+	if m.err = errors.Join(m.err, scanner.Err()); m.err != nil {
 		return
 	}
 	if !strings.HasSuffix(originUrl, ".git") {
@@ -155,8 +148,7 @@ func (m *GitManager) readUrl() {
 
 	// Mask url if required
 	regExp, err := GetRegExp(CredentialsInUrlRegexp)
-	if err != nil {
-		m.err = err
+	if m.err = errors.Join(m.err, err); m.err != nil {
 		return
 	}
 	matchedResult := regExp.FindString(originUrl)
@@ -169,15 +161,11 @@ func (m *GitManager) readUrl() {
 func (m *GitManager) getRevisionAndBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
 	file, e := os.Open(dotGitPath)
-	if errorutils.CheckError(e) != nil {
-		err = e
+	if err = errors.Join(err, errorutils.CheckError(e)); err != nil {
 		return
 	}
 	defer func() {
-		e = file.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, file.Close())
 	}()
 
 	scanner := bufio.NewScanner(file)
@@ -199,8 +187,7 @@ func (m *GitManager) readRevisionAndBranch() {
 	}
 	// This function will either return the revision or the branch ref:
 	revision, ref, err := m.getRevisionAndBranchPath()
-	if err != nil {
-		m.err = err
+	if m.err = errors.Join(m.err, err); m.err != nil {
 		return
 	}
 	if ref != "" {
@@ -216,8 +203,7 @@ func (m *GitManager) readRevisionAndBranch() {
 	// Else, if found ref try getting revision using it.
 	refPath := filepath.Join(m.path, ref)
 	exists, err := fileutils.IsFileExists(refPath, false)
-	if err != nil {
-		m.err = err
+	if m.err = errors.Join(m.err, err); m.err != nil {
 		return
 	}
 	if exists {
@@ -231,15 +217,11 @@ func (m *GitManager) readRevisionAndBranch() {
 func (m *GitManager) readRevisionFromRef(refPath string) {
 	revision := ""
 	file, err := os.Open(refPath)
-	if errorutils.CheckError(err) != nil {
-		m.err = err
+	if m.err = errors.Join(m.err, errorutils.CheckError(err)); m.err != nil {
 		return
 	}
 	defer func() {
-		e := file.Close()
-		if m.err == nil {
-			m.err = e
-		}
+		m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
 	}()
 
 	scanner := bufio.NewScanner(file)
@@ -248,32 +230,25 @@ func (m *GitManager) readRevisionFromRef(refPath string) {
 		revision = strings.TrimSpace(text)
 		break
 	}
-	if err := scanner.Err(); err != nil {
-		m.err = errorutils.CheckError(err)
+	if m.err = errors.Join(m.err, errorutils.CheckError(scanner.Err())); m.err != nil {
 		return
 	}
-
 	m.revision = revision
 }
 
 func (m *GitManager) readRevisionFromPackedRef(ref string) {
 	packedRefPath := filepath.Join(m.path, "packed-refs")
 	exists, err := fileutils.IsFileExists(packedRefPath, false)
-	if err != nil {
-		m.err = err
+	if m.err = errors.Join(m.err, err); m.err != nil {
 		return
 	}
 	if exists {
 		file, err := os.Open(packedRefPath)
-		if errorutils.CheckError(err) != nil {
-			m.err = err
+		if m.err = errors.Join(m.err, errorutils.CheckError(err)); m.err != nil {
 			return
 		}
 		defer func() {
-			e := file.Close()
-			if m.err == nil {
-				m.err = e
-			}
+			m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
 		}()
 
 		scanner := bufio.NewScanner(file)
@@ -285,13 +260,12 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 				if len(split) == 2 {
 					m.revision = split[0]
 				} else {
-					m.err = errorutils.CheckErrorf("failed fetching revision for ref :" + ref + " - Unexpected line structure in packed-refs file")
+					m.err = errors.Join(err, errorutils.CheckErrorf("failed fetching revision for ref :"+ref+" - Unexpected line structure in packed-refs file"))
 				}
 				return
 			}
 		}
-		if err = scanner.Err(); err != nil {
-			m.err = errorutils.CheckError(err)
+		if m.err = errors.Join(m.err, errorutils.CheckError(scanner.Err())); m.err != nil {
 			return
 		}
 	}
