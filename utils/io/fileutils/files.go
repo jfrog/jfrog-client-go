@@ -85,10 +85,7 @@ func IsDirEmpty(path string) (isEmpty bool, err error) {
 		return
 	}
 	defer func() {
-		e := dir.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(dir.Close()))
 	}()
 
 	_, err = dir.Readdirnames(1)
@@ -291,10 +288,7 @@ func AppendFile(srcPath string, destFile *os.File) (err error) {
 	}
 
 	defer func() {
-		e := srcFile.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, errorutils.CheckError(srcFile.Close()))
 	}()
 
 	reader := bufio.NewReader(srcFile)
@@ -366,10 +360,7 @@ func GetFileDetails(filePath string, includeChecksums bool) (details *FileDetail
 
 	file, err := os.Open(filePath)
 	defer func() {
-		e := file.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(file.Close()))
 	}()
 	if errorutils.CheckError(err) != nil {
 		return nil, err
@@ -385,10 +376,7 @@ func GetFileDetails(filePath string, includeChecksums bool) (details *FileDetail
 func calcChecksumDetails(filePath string) (checksum entities.Checksum, err error) {
 	file, err := os.Open(filePath)
 	defer func() {
-		e := file.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(file.Close()))
 	}()
 	if errorutils.CheckError(err) != nil {
 		return entities.Checksum{}, err
@@ -402,18 +390,12 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (*FileDet
 
 	pr, pw := io.Pipe()
 	defer func() {
-		e := pr.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(pr.Close()))
 	}()
 
 	go func() {
 		defer func() {
-			e := pw.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(pw.Close()))
 		}()
 		details.Size, err = io.Copy(pw, reader)
 	}()
@@ -443,8 +425,7 @@ func CopyFile(dst, src string) (err error) {
 		return errorutils.CheckError(err)
 	}
 	defer func() {
-		e := errorutils.CheckError(srcFile.Close())
-		err = errors.Join(err, e)
+		err = errors.Join(err, errorutils.CheckError(srcFile.Close()))
 	}()
 	fileName, _ := GetFileAndDirFromPath(src)
 	dstPath, err := CreateFilePath(dst, fileName)
@@ -456,8 +437,7 @@ func CopyFile(dst, src string) (err error) {
 		return errorutils.CheckError(err)
 	}
 	defer func() {
-		e := errorutils.CheckError(dstFile.Close())
-		err = errors.Join(err, e)
+		err = errors.Join(err, errorutils.CheckError(dstFile.Close()))
 	}()
 	_, err = io.Copy(dstFile, srcFile)
 	return errorutils.CheckError(err)
@@ -506,12 +486,12 @@ func CopyDir(fromPath, toPath string, includeDirs bool, excludeNames []string) e
 
 // Removing the provided path from the filesystem
 func RemovePath(testPath string) error {
-	if _, err := os.Stat(testPath); err == nil {
-		// Delete the path
-		err = RemoveTempDir(testPath)
-		if err != nil {
-			return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())
-		}
+	_, err := os.Stat(testPath)
+	// Delete the path
+	err = errors.Join(err, RemoveTempDir(testPath))
+	if err != nil {
+		return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())
+
 	}
 	return nil
 }
@@ -538,10 +518,7 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	}
 	origWd := wd
 	defer func() {
-		e := os.Chdir(origWd)
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, errorutils.CheckError(os.Chdir(origWd)))
 	}()
 	// Get the OS root.
 	osRoot := os.Getenv("SYSTEMDRIVE")
@@ -615,20 +592,14 @@ func JsonEqual(filePath1, filePath2 string) (isEqual bool, err error) {
 		return false, err
 	}
 	defer func() {
-		e := reader1.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(reader1.Close()))
 	}()
 	reader2, err := os.Open(filePath2)
 	if err != nil {
 		return false, err
 	}
 	defer func() {
-		e := reader2.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(reader2.Close()))
 	}()
 	var j, j2 interface{}
 	d := json.NewDecoder(reader1)
@@ -704,10 +675,7 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	}
 	defer func() {
 		if inputFileOpen {
-			e := inputFile.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(inputFile.Close()))
 		}
 	}()
 	inputFileInfo, err := inputFile.Stat()
@@ -721,10 +689,7 @@ func MoveFile(sourcePath, destPath string) (err error) {
 		return errorutils.CheckError(err)
 	}
 	defer func() {
-		e := outputFile.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(outputFile.Close()))
 	}()
 
 	_, err = io.Copy(outputFile, inputFile)
@@ -754,10 +719,7 @@ func RemoveDirContents(dirPath string) (err error) {
 		return errorutils.CheckError(err)
 	}
 	defer func() {
-		e := d.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(d.Close()))
 	}()
 	names, err := d.Readdirnames(-1)
 	if err != nil {
