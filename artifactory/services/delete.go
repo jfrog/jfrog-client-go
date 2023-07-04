@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -61,10 +62,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 			return
 		}
 		defer func() {
-			e := tempResultItems.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, tempResultItems.Close())
 		}()
 		toBeDeletedDirs, err = removeNotToBeDeletedDirs(deleteParams.GetFile(), ds, tempResultItems)
 		if err != nil {
@@ -76,10 +74,7 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 			toBeDeletedDirs = tempResultItems
 		}
 		defer func() {
-			e := toBeDeletedDirs.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, toBeDeletedDirs.Close())
 		}()
 		resultItems, err = utils.ReduceTopChainDirResult(utils.ResultItem{}, toBeDeletedDirs)
 		if err != nil {
@@ -206,10 +201,7 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 	if len(bufferFiles) > 0 {
 		defer func() {
 			for _, file := range bufferFiles {
-				e := file.Close()
-				if err == nil {
-					err = errorutils.CheckError(e)
-				}
+				err = errors.Join(err, file.Close())
 			}
 		}()
 		if err != nil {
@@ -221,10 +213,7 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 			return nil, err
 		}
 		defer func() {
-			e := artifactNotToBeDeleteReader.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, artifactNotToBeDeleteReader.Close())
 		}()
 		if err = utils.WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter); err != nil {
 			return nil, err
