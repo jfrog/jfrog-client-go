@@ -53,7 +53,7 @@ func TestAccessLogin(t *testing.T) {
 
 			w.WriteHeader(http.StatusOK)
 		default:
-			t.Fatalf("recieved unexpected request method")
+			assert.Fail(t, "received unexpected request method")
 		}
 
 	})
@@ -73,7 +73,7 @@ func TestAccessLoginTimeout(t *testing.T) {
 	initAccessTest(t)
 	orgMaxWait := services.MaxWait
 	defer func() { services.MaxWait = orgMaxWait }()
-	services.MaxWait = 6 * time.Second
+	services.MaxWait = time.Second
 
 	// Create mock server
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,7 @@ func TestAccessLoginTimeout(t *testing.T) {
 			assert.Equal(t, "/api/v2/authentication/jfrog_client_login/token/"+uuid, r.URL.Path)
 			w.WriteHeader(http.StatusBadRequest)
 		default:
-			t.Fatalf("recieved unexpected request method")
+			assert.Fail(t, "received unexpected request method")
 		}
 
 	})

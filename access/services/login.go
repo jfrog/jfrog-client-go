@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	baseApi                  = "api/v2/authentication/jfrog_client_login/"
+	baseClientLoginApi       = "api/v2/authentication/jfrog_client_login/"
 	requestApi               = "request"
 	tokenApi                 = "token"
 	defaultMaxWait           = 5 * time.Minute
@@ -36,7 +36,7 @@ func NewLoginService(client *jfroghttpclient.JfrogHttpClient) *LoginService {
 }
 
 func (ls *LoginService) SendLoginAuthenticationRequest(uuid string) error {
-	restAPI := path.Join(baseApi, requestApi)
+	restAPI := path.Join(baseClientLoginApi, requestApi)
 	fullUrl, err := utils.BuildArtifactoryUrl(ls.ServiceDetails.GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func (ls *LoginService) GetLoginAuthenticationToken(uuid string) (token auth.Com
 }
 
 func (ls *LoginService) getLoginAuthenticationToken(uuid string) (resp *http.Response, body []byte, err error) {
-	restAPI := path.Join(baseApi, tokenApi, uuid)
+	restAPI := path.Join(baseClientLoginApi, tokenApi, uuid)
 	fullUrl, err := utils.BuildArtifactoryUrl(ls.ServiceDetails.GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return
