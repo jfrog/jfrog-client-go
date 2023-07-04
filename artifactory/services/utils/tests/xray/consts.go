@@ -1305,3 +1305,66 @@ const NotEntitledResponse = `
   "feature_id": "unknown"
 }
 `
+
+const TriggerBuildScanResponse = `
+{
+  "info":"No Xray “Fail build in case of a violation” policy rule has been defined on this build. The Xray scan will run in parallel to the deployment of the build and will not obstruct the build. To review the Xray scan results, see the Xray Violations tab in the UI."
+}
+`
+
+const BuildScanResultsResponse = `
+{
+  "build_name": "test-%[1]s",
+  "build_number": "3",
+  "status": "completed",
+  "more_details_url": "http://localhost:8046/xray/ui/builds/test-%[1]s/3/1/xrayData?buildRepo=artifactory-build-info",
+  "fail_build": false,
+  "violations": [],
+  "vulnerabilities": [
+    {
+      "cves": [
+        {
+          "cve": "CVE-2022-41853",
+          "cvss_v3_score": "9.8",
+          "cvss_v3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "summary": "Those using java.sql.Statement or java.sql.PreparedStatement in hsqldb (HyperSQL DataBase) to process untrusted input may be vulnerable to a remote code execution attack. By default it is allowed to call any static method of any Java class in the classpath resulting in code execution. The issue can be prevented by updating to 2.7.1 or by setting the system property \"hsqldb.method_class_names\" to classes which are allowed to be called. For example, System.setProperty(\"hsqldb.method_class_names\", \"abc\") or Java argument -Dhsqldb.method_class_names=\"abc\" can be used. From version 2.7.1 all classes by default are not accessible except those in java.lang.Math and need to be manually enabled.",
+      "severity": "Critical",
+      "components": {
+        "gav://org.hsqldb:hsqldb:1.8.0.10": {
+          "package_name": "org.hsqldb:hsqldb",
+          "package_version": "1.8.0.10",
+          "package_type": "maven",
+          "fixed_versions": [
+            "[2.7.1]"
+          ],
+          "infected_versions": [
+            "(,2.7.1)"
+          ],
+          "impact_paths": [
+            [
+              {
+                "component_id": "build://test-%[1]s:3"
+              },
+              {
+                "component_id": "gav://org.hsqldb:hsqldb:1.8.0.10"
+              }
+            ]
+          ]
+        }
+      },
+      "issue_id": "XRAY-256683",
+      "references": [
+        "http://hsqldb.org/doc/2.0/guide/sqlroutines-chapt.html#src_jrt_access_control",
+        "https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=50212#c7",
+        "https://lists.debian.org/debian-lts-announce/2022/12/msg00020.html"
+      ],
+      "is_high_profile": false,
+      "provider": "JFrog",
+      "edited": "0001-01-01T00:00:00Z",
+      "applicability":null
+    }
+  ]
+}
+`

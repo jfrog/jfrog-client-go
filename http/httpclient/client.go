@@ -531,12 +531,12 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 // The caller is responsible to check that resp.StatusCode is http.StatusOK
 func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetails httputils.HttpClientDetails) (*fileutils.FileDetails, *http.Response, error) {
-	resp, _, err := jc.SendHead(downloadUrl, httpClientsDetails, "")
+	resp, body, err := jc.SendHead(downloadUrl, httpClientsDetails, "")
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, nil, err
 	}
 	log.Debug("Artifactory response:", resp.Status)
