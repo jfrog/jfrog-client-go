@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -42,8 +43,7 @@ func (glc *GitLfsCleanService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpCl
 	return glc.client
 }
 
-func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitLfsCleanParams) (*content.ContentReader, error) {
-	var err error
+func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitLfsCleanParams) (filesToDeleteReader *content.ContentReader, err error) {
 	repo := gitLfsCleanParams.GetRepo()
 	gitPath := gitLfsCleanParams.GetGitPath()
 	if gitPath == "" {
@@ -64,13 +64,15 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	defer artifactoryLfsFilesReader.Close()
+	defer func() {
+		err = errors.Join(err, artifactoryLfsFilesReader.Close())
+	}()
 	log.Info("Collecting files to preserve from Git references matching the pattern", gitLfsCleanParams.GetRef(), "...")
 	gitLfsFiles, err := getLfsFilesFromGit(gitPath, refsRegex)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	filesToDeleteReader, err := findFilesToDelete(artifactoryLfsFilesReader, gitLfsFiles)
+	filesToDeleteReader, err = findFilesToDelete(artifactoryLfsFilesReader, gitLfsFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -79,22 +81,25 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 		return nil, err
 	}
 	log.Info("Found", len(gitLfsFiles), "files to keep, and", length, "to clean")
-	return filesToDeleteReader, nil
+	return
 }
 
-func findFilesToDelete(artifactoryLfsFilesReader *content.ContentReader, gitLfsFiles map[string]struct{}) (*content.ContentReader, error) {
+func findFilesToDelete(artifactoryLfsFilesReader *content.ContentReader, gitLfsFiles map[string]struct{}) (contentReader *content.ContentReader, err error) {
 	cw, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer cw.Close()
+	defer func() {
+		err = errors.Join(err, cw.Close())
+	}()
 	for resultItem := new(utils.ResultItem); artifactoryLfsFilesReader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		if _, keepFile := gitLfsFiles[resultItem.Name]; !keepFile {
 			cw.Write(*resultItem)
 		}
 	}
 	artifactoryLfsFilesReader.Reset()
-	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
+	contentReader = content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey())
+	return
 }
 
 func lfsConfigUrlExtractor(conf *gitconfig.Config) (*url.URL, error) {
@@ -148,10 +153,7 @@ func getLfsUrl(gitPath, configFile string, lfsUrlExtractor lfsUrlExtractorFunc) 
 		return nil, errorutils.CheckError(err)
 	}
 	defer func() {
-		e := lfsConf.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(lfsConf.Close()))
 	}()
 	conf := gitconfig.New()
 	err = gitconfig.NewDecoder(lfsConf).Decode(conf)
