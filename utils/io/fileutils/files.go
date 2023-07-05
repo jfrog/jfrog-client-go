@@ -484,12 +484,12 @@ func CopyDir(fromPath, toPath string, includeDirs bool, excludeNames []string) e
 
 // Removing the provided path from the filesystem
 func RemovePath(testPath string) error {
-	_, err := os.Stat(testPath)
-	// Delete the path
-	err = errors.Join(err, RemoveTempDir(testPath))
-	if err != nil {
-		return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())
-
+	if _, err := os.Stat(testPath); err == nil {
+		// Delete the path
+		err = errors.Join(err, RemoveTempDir(testPath))
+		if err != nil {
+			return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())
+		}
 	}
 	return nil
 }
