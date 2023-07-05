@@ -1,8 +1,6 @@
 package xray
 
 import (
-	"strings"
-
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
@@ -141,17 +139,7 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
 	buildScanService := services.NewBuildScanService(sm.client)
 	buildScanService.XrayDetails = sm.config.GetServiceDetails()
-	err = buildScanService.Scan(params)
-	if err != nil {
-		// If the includeVulnerabilities flag is true and error is "No Xray Fail build...." continue to GetBuildScanResults to get vulnerabilities
-		if includeVulnerabilities && strings.Contains(err.Error(), services.XrayScanBuildNoFailBuildPolicy) {
-			noFailBuildPolicy = true
-		} else {
-			return nil, false, err
-		}
-	}
-	scanResponse, err = buildScanService.GetBuildScanResults(params, includeVulnerabilities)
-	return
+	return buildScanService.ScanBuild(params, includeVulnerabilities)
 }
 
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
