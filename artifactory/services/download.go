@@ -112,7 +112,7 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (oper
 	}
 	ds.prepareTasks(producerConsumer, expectedChan, successCounters, errorsQueue, downloadParams...)
 
-	err = errors.Join(err, ds.performTasks(producerConsumer, errorsQueue))
+	err = ds.performTasks(producerConsumer, errorsQueue)
 	totalSuccess := 0
 	for _, v := range successCounters {
 		totalSuccess += v
