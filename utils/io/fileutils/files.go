@@ -343,8 +343,7 @@ func IsSshUrl(urlPath string) bool {
 
 func ReadFile(filePath string) ([]byte, error) {
 	content, err := os.ReadFile(filePath)
-	err = errorutils.CheckError(err)
-	return content, err
+	return content, errorutils.CheckError(err)
 }
 
 func GetFileDetails(filePath string, includeChecksums bool) (details *FileDetails, err error) {
@@ -362,12 +361,12 @@ func GetFileDetails(filePath string, includeChecksums bool) (details *FileDetail
 	defer func() {
 		err = errors.Join(err, errorutils.CheckError(file.Close()))
 	}()
-	if errorutils.CheckError(err) != nil {
-		return nil, err
+	if err != nil {
+		return nil, errorutils.CheckError(err)
 	}
 	fileInfo, err := file.Stat()
-	if errorutils.CheckError(err) != nil {
-		return nil, err
+	if err != nil {
+		return nil, errorutils.CheckError(err)
 	}
 	details.Size = fileInfo.Size()
 	return details, nil
@@ -378,15 +377,14 @@ func calcChecksumDetails(filePath string) (checksum entities.Checksum, err error
 	defer func() {
 		err = errors.Join(err, errorutils.CheckError(file.Close()))
 	}()
-	if errorutils.CheckError(err) != nil {
-		return entities.Checksum{}, err
+	if err != nil {
+		return entities.Checksum{}, errorutils.CheckError(err)
 	}
 	return calcChecksumDetailsFromReader(file)
 }
 
-func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (*FileDetails, error) {
-	var err error
-	details := new(FileDetails)
+func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details *FileDetails, err error) {
+	details = new(FileDetails)
 
 	pr, pw := io.Pipe()
 	defer func() {
@@ -403,7 +401,7 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (*FileDet
 	if includeChecksums {
 		details.Checksum, err = calcChecksumDetailsFromReader(pr)
 	}
-	return details, err
+	return
 }
 
 func calcChecksumDetailsFromReader(reader io.Reader) (entities.Checksum, error) {
