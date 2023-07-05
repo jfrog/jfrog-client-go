@@ -116,6 +116,8 @@
       - [Get a specific group assigned to a project](#get-a-specific-group-assigned-to-a-project)
       - [Add or update a group assigned to a project](#add-or-update-a-group-assigned-to-a-project)
       - [Remove a group from a project](#remove-a-group-from-a-project)
+      - [Send Web Login Authentication Request](#send-web-login-authentication-request)
+      - [Get Web Login Authentication Token](#get-web-login-authentication-token)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -1487,6 +1489,20 @@ err = accessManager.UpdateGroupInProject("tstprj", "tstgroup", projectGroup)
 
 ```go
 err = accessManager.DeleteExistingProjectGroup("tstprj", "tstgroup")
+```
+
+#### Send Web Login Authentication Request
+
+```go
+uuid := "09b34617-b48a-455d-8b05-25a6989fb76a"
+err = accessManager.SendLoginAuthenticationRequest(uuid)
+```
+
+#### Get Web Login Authentication Token
+
+```go
+uuid := "09b34617-b48a-455d-8b05-25a6989fb76a"
+err = accessManager.GetLoginAuthenticationToken(uuid)
 ```
 
 ## Distribution APIs
