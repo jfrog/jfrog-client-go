@@ -30,7 +30,7 @@ func ListFiles(rootPath string, isRecursive, includeDirs, isSymlink bool, exclud
 }
 
 // Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
-func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternType, isRecursive bool) (string, error) {
+func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternType, isRecursive bool) string {
 	excludePathPattern := ""
 	for _, singleExclusion := range exclusions {
 		if len(singleExclusion) > 0 {
@@ -45,7 +45,7 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 	if len(excludePathPattern) > 0 {
 		excludePathPattern = excludePathPattern[:len(excludePathPattern)-1]
 	}
-	return excludePathPattern, nil
+	return excludePathPattern
 }
 
 func filterFiles(files []string, excludePathPattern string) (filteredFiles []string, err error) {
