@@ -123,3 +123,15 @@ func (sm *AccessServicesManager) InviteUser(email, source string) error {
 	inviteService.ServiceDetails = sm.config.GetServiceDetails()
 	return inviteService.InviteUser(email, source)
 }
+
+func (sm *AccessServicesManager) SendLoginAuthenticationRequest(uuid string) error {
+	loginService := services.NewLoginService(sm.client)
+	loginService.ServiceDetails = sm.config.GetServiceDetails()
+	return loginService.SendLoginAuthenticationRequest(uuid)
+}
+
+func (sm *AccessServicesManager) GetLoginAuthenticationToken(uuid string) (auth.CommonTokenParams, error) {
+	loginService := services.NewLoginService(sm.client)
+	loginService.ServiceDetails = sm.config.GetServiceDetails()
+	return loginService.GetLoginAuthenticationToken(uuid)
+}
