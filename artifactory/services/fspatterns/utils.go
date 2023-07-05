@@ -32,6 +32,7 @@ func ListFiles(rootPath string, isRecursive, includeDirs, isSymlink bool, exclud
 // Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
 func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternType, isRecursive bool) string {
 	excludePathPattern := ""
+
 	for _, singleExclusion := range exclusions {
 		if len(singleExclusion) > 0 {
 			singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
