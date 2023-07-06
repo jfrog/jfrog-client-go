@@ -63,7 +63,8 @@ func (m *GitManager) ReadConfig() error {
 // The actual .git directory is under the parent project's .git/modules directory.
 func (m *GitManager) handleSubmoduleIfNeeded() {
 	exists, err := fileutils.IsFileExists(m.path, false)
-	if m.err = errors.Join(m.err, err); m.err != nil {
+	if err != nil {
+		m.err = err
 		return
 	}
 	if !exists {
