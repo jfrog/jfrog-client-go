@@ -117,7 +117,8 @@ func (m *GitManager) readUrl() {
 	}
 	dotGitPath := filepath.Join(m.path, "config")
 	file, err := os.Open(dotGitPath)
-	if m.err = errors.Join(m.err, errorutils.CheckError(err)); m.err != nil {
+	if err != nil {
+		m.err = err
 		return
 	}
 	defer func() {
@@ -139,7 +140,8 @@ func (m *GitManager) readUrl() {
 			IsNextLineUrl = true
 		}
 	}
-	if m.err = errors.Join(m.err, scanner.Err()); m.err != nil {
+	if err != nil {
+		m.err = err
 		return
 	}
 	if !strings.HasSuffix(originUrl, ".git") {
@@ -149,7 +151,8 @@ func (m *GitManager) readUrl() {
 
 	// Mask url if required
 	regExp, err := GetRegExp(CredentialsInUrlRegexp)
-	if m.err = errors.Join(m.err, err); m.err != nil {
+	if err != nil {
+		m.err = err
 		return
 	}
 	matchedResult := regExp.FindString(originUrl)
@@ -161,8 +164,8 @@ func (m *GitManager) readUrl() {
 
 func (m *GitManager) getRevisionAndBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
-	file, e := os.Open(dotGitPath)
-	if err = errors.Join(err, errorutils.CheckError(e)); err != nil {
+	file, err := os.Open(dotGitPath)
+	if errorutils.CheckError(err) != nil {
 		return
 	}
 	defer func() {
@@ -188,7 +191,8 @@ func (m *GitManager) readRevisionAndBranch() {
 	}
 	// This function will either return the revision or the branch ref:
 	revision, ref, err := m.getRevisionAndBranchPath()
-	if m.err = errors.Join(m.err, err); m.err != nil {
+	if err != nil {
+		m.err = err
 		return
 	}
 	if ref != "" {
@@ -204,7 +208,8 @@ func (m *GitManager) readRevisionAndBranch() {
 	// Else, if found ref try getting revision using it.
 	refPath := filepath.Join(m.path, ref)
 	exists, err := fileutils.IsFileExists(refPath, false)
-	if m.err = errors.Join(m.err, err); m.err != nil {
+	if err != nil {
+		m.err = err
 		return
 	}
 	if exists {
@@ -218,7 +223,8 @@ func (m *GitManager) readRevisionAndBranch() {
 func (m *GitManager) readRevisionFromRef(refPath string) {
 	revision := ""
 	file, err := os.Open(refPath)
-	if m.err = errors.Join(m.err, errorutils.CheckError(err)); m.err != nil {
+	if err != nil {
+		m.err = err
 		return
 	}
 	defer func() {
@@ -231,7 +237,8 @@ func (m *GitManager) readRevisionFromRef(refPath string) {
 		revision = strings.TrimSpace(text)
 		break
 	}
-	if m.err = errors.Join(m.err, errorutils.CheckError(scanner.Err())); m.err != nil {
+	if err != nil {
+		m.err = err
 		return
 	}
 	m.revision = revision
@@ -240,12 +247,14 @@ func (m *GitManager) readRevisionFromRef(refPath string) {
 func (m *GitManager) readRevisionFromPackedRef(ref string) {
 	packedRefPath := filepath.Join(m.path, "packed-refs")
 	exists, err := fileutils.IsFileExists(packedRefPath, false)
-	if m.err = errors.Join(m.err, err); m.err != nil {
+	if err != nil {
+		m.err = err
 		return
 	}
 	if exists {
 		file, err := os.Open(packedRefPath)
-		if m.err = errors.Join(m.err, errorutils.CheckError(err)); m.err != nil {
+		if err != nil {
+			m.err = err
 			return
 		}
 		defer func() {
@@ -266,7 +275,8 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 				return
 			}
 		}
-		if m.err = errors.Join(m.err, errorutils.CheckError(scanner.Err())); m.err != nil {
+		if err != nil {
+			m.err = err
 			return
 		}
 	}
