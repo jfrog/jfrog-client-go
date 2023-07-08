@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"path"
@@ -88,32 +89,36 @@ func (ds *DownloadService) getOperationSummary(totalSucceeded, totalFailed int) 
 	return operationSummary
 }
 
-func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (*utils.OperationSummary, error) {
-	var e error
+func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (opertaionSummary *utils.OperationSummary, err error) {
 	producerConsumer := parallel.NewRunner(ds.GetThreads(), 20000, false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	expectedChan := make(chan int, 1)
 	successCounters := make([]int, ds.GetThreads())
 	if ds.saveSummary {
-		ds.filesTransfersWriter, e = content.NewContentWriter(content.DefaultKey, true, false)
-		if e != nil {
-			return nil, e
+		ds.filesTransfersWriter, err = content.NewContentWriter(content.DefaultKey, true, false)
+		if err != nil {
+			return nil, err
 		}
-		defer ds.filesTransfersWriter.Close()
-		ds.artifactsDetailsWriter, e = content.NewContentWriter(content.DefaultKey, true, false)
-		if e != nil {
-			return nil, e
+		defer func() {
+			err = errors.Join(err, ds.filesTransfersWriter.Close())
+		}()
+		ds.artifactsDetailsWriter, err = content.NewContentWriter(content.DefaultKey, true, false)
+		if err != nil {
+			return nil, err
 		}
-		defer ds.artifactsDetailsWriter.Close()
+		defer func() {
+			err = errors.Join(err, ds.artifactsDetailsWriter.Close())
+		}()
 	}
 	ds.prepareTasks(producerConsumer, expectedChan, successCounters, errorsQueue, downloadParams...)
 
-	e = ds.performTasks(producerConsumer, errorsQueue)
+	err = ds.performTasks(producerConsumer, errorsQueue)
 	totalSuccess := 0
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
-	return ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess), e
+	opertaionSummary = ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess)
+	return
 }
 
 func (ds *DownloadService) gpgValidateReleaseBundle(bundleParam, publicKeyFilePath string) error {
@@ -127,8 +132,7 @@ func (ds *DownloadService) gpgValidateReleaseBundle(bundleParam, publicKeyFilePa
 	}
 	gpgValidator := utils.NewRbGpgValidator()
 	gpgValidator.SetRbName(bundleName).SetRbVersion(bundleVersion).SetClient(ds.client).SetAtrifactoryDetails(ds.artDetails).SetPublicKey(publicKeyFilePath)
-	err = gpgValidator.Validate()
-	if err != nil {
+	if err = gpgValidator.Validate(); err != nil {
 		return err
 	}
 	// Add the validated release bundle to the map.
@@ -156,10 +160,8 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 		for _, downloadParams := range downloadParamsSlice {
 			utils.DisableTransitiveSearchIfNotAllowed(downloadParams.CommonParams, artifactoryVersion)
 			if downloadParams.PublicGpgKey != "" {
-				err = ds.gpgValidateReleaseBundle(downloadParams.GetBundle(), downloadParams.GetPublicGpgKey())
-				if err != nil {
+				if err = ds.gpgValidateReleaseBundle(downloadParams.GetBundle(), downloadParams.GetPublicGpgKey()); err != nil {
 					errorsQueue.AddError(err)
-					return
 				}
 			}
 			var reader *content.ContentReader
@@ -187,8 +189,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			}
 			// Produce download tasks for the download consumers.
 			totalTasks += ds.produceTasks(reader, downloadParams, producer, fileHandlerFunc, errorsQueue)
-			err = reader.Close()
-			if err != nil {
+			if err = reader.Close(); err != nil {
 				errorsQueue.AddError(err)
 				return
 			}
@@ -279,8 +280,7 @@ func rbGpgValidate(rbGpgValidationMap map[string]*utils.RbGpgValidator, bundle s
 	if rbGpgValidator == nil {
 		return errorutils.CheckErrorf("release bundle validator for '%s' was not found unexpectedly. This may be caused by a bug", artifactPath)
 	}
-	err := rbGpgValidator.VerifyArtifact(artifactPath, resultItem.Sha256)
-	if err != nil {
+	if err := rbGpgValidator.VerifyArtifact(artifactPath, resultItem.Sha256); err != nil {
 		return err
 	}
 	return nil
@@ -440,10 +440,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 			return err
 		}
 		defer func() {
-			e := file.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(file.Close()))
 		}()
 		checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
 		if err = errorutils.CheckError(err); err != nil {
@@ -518,8 +515,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 			if downloadData.Dependency.Type == "folder" {
 				return createDir(localPath, localFileName, logMsgPrefix)
 			}
-			e = removeIfSymlink(filepath.Join(localPath, localFileName))
-			if e != nil {
+			if e = removeIfSymlink(filepath.Join(localPath, localFileName)); e != nil {
 				return e
 			}
 			if downloadParams.IsSymlink() {
@@ -527,8 +523,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 					return e
 				}
 			}
-			e = ds.downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix, downloadData, downloadParams)
-			if e != nil {
+			if e = ds.downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix, downloadData, downloadParams); e != nil {
 				log.Error(logMsgPrefix, "Received an error: "+e.Error())
 				return e
 			}
@@ -557,8 +552,7 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 
 func createDir(localPath, localFileName, logMsgPrefix string) error {
 	folderPath := filepath.Join(localPath, localFileName)
-	e := fileutils.CreateDirIfNotExist(folderPath)
-	if e != nil {
+	if e := fileutils.CreateDirIfNotExist(folderPath); e != nil {
 		return e
 	}
 	log.Info(logMsgPrefix + "Creating folder: " + folderPath)

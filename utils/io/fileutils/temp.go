@@ -56,8 +56,7 @@ func RemoveTempDir(dirPath string) error {
 	if !exists {
 		return nil
 	}
-	err = os.RemoveAll(dirPath)
-	if err == nil {
+	if err = os.RemoveAll(dirPath); err == nil {
 		return nil
 	}
 	// Sometimes removing the directory fails (in Windows) because it's locked by another process.

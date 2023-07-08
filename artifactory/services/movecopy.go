@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"net/http"
 	"path"
 	"strconv"
@@ -50,10 +51,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	moveReaders := []*ReaderSpecTuple{}
 	defer func() {
 		for _, readerSpec := range moveReaders {
-			e := readerSpec.Reader.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, errorutils.CheckError(readerSpec.Reader.Close()))
 		}
 	}()
 	for i, moveSpec := range moveSpecs {
@@ -72,10 +70,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 		return
 	}
 	defer func() {
-		e := tempAggregatedReader.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, tempAggregatedReader.Close())
 	}()
 	aggregatedReader := tempAggregatedReader
 	if mc.moveType == MOVE {
@@ -86,10 +81,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 		}
 	}
 	defer func() {
-		e := aggregatedReader.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, aggregatedReader.Close())
 	}()
 	successCount, failedCount, err = mc.moveFiles(aggregatedReader, moveSpecs)
 	if err != nil {
@@ -119,10 +111,7 @@ func (mc *MoveCopyService) getPathsToMove(moveSpec MoveCopyParams) (resultItems 
 			return
 		}
 		defer func() {
-			e := tempResultItems.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, tempResultItems.Close())
 		}()
 
 		resultItems, err = reduceMovePaths(utils.ResultItem{}, tempResultItems, moveSpec.IsFlat(), clientutils.IsPlaceholdersUsed(moveSpec.Pattern, moveSpec.Target))
