@@ -203,10 +203,7 @@ func MergeReaders(arr []*ContentReader, arrayKey string) (contentReader *Content
 		return nil, err
 	}
 	defer func() {
-		e := cw.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, cw.Close())
 	}()
 	for _, cr := range arr {
 		for item := new(interface{}); cr.NextRecord(item) == nil; item = new(interface{}) {
@@ -261,10 +258,7 @@ func SortContentReaderByCalculatedKey(reader *ContentReader, getKeyFunc keyCalcu
 	var sortedReaders []*ContentReader
 	defer func() {
 		for _, r := range sortedReaders {
-			e := r.Close()
-			if err == nil {
-				err = e
-			}
+			err = errors.Join(err, r.Close())
 		}
 	}()
 
@@ -332,10 +326,7 @@ func mergeSortedReadersByCalculatedKey(sortedReaders []*ContentReader, ascending
 		return nil, err
 	}
 	defer func() {
-		e := resultWriter.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, resultWriter.Close())
 	}()
 	currentContentItem := make([]*SortRecord, len(sortedReaders))
 	sortedFilesClone := make([]*ContentReader, len(sortedReaders))
@@ -389,10 +380,7 @@ func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*Conte
 		return nil, err
 	}
 	defer func() {
-		e := resultWriter.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, resultWriter.Close())
 	}()
 
 	// Get the expected record type from the reader.
@@ -453,10 +441,7 @@ func SortAndSaveBufferToFile(keysToContentItems map[string]SortableContentItem, 
 		return nil, err
 	}
 	defer func() {
-		e := writer.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, writer.Close())
 	}()
 	if increasingOrder {
 		sort.Strings(allKeys)
