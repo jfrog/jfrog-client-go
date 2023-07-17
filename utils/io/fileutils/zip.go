@@ -2,6 +2,7 @@ package fileutils
 
 import (
 	"archive/zip"
+	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"io"
 	"os"
@@ -14,16 +15,12 @@ func ZipFolderFiles(source, target string) (err error) {
 		return errorutils.CheckError(err)
 	}
 	defer func() {
-		if cerr := zipFile.Close(); cerr != nil && err == nil {
-			err = cerr
-		}
+		err = errors.Join(errorutils.CheckError(zipFile.Close()))
 	}()
 
 	archive := zip.NewWriter(zipFile)
 	defer func() {
-		if cerr := archive.Close(); cerr != nil && err == nil {
-			err = cerr
-		}
+		err = errors.Join(errorutils.CheckError(archive.Close()))
 	}()
 
 	return filepath.Walk(source, func(path string, info os.FileInfo, err error) (currentErr error) {
@@ -31,8 +28,7 @@ func ZipFolderFiles(source, target string) (err error) {
 			return
 		}
 
-		if err != nil {
-			currentErr = err
+		if currentErr = errors.Join(currentErr, err); currentErr != nil {
 			return
 		}
 
@@ -52,9 +48,7 @@ func ZipFolderFiles(source, target string) (err error) {
 			return errorutils.CheckError(currentErr)
 		}
 		defer func() {
-			if cerr := file.Close(); cerr != nil && currentErr == nil {
-				currentErr = cerr
-			}
+			currentErr = errors.Join(errorutils.CheckError(file.Close()))
 		}()
 		_, currentErr = io.Copy(writer, file)
 		return

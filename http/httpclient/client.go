@@ -186,10 +186,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	if closeBody {
 		defer func() {
 			if resp != nil && resp.Body != nil {
-				e := resp.Body.Close()
-				if err == nil {
-					err = errorutils.CheckError(e)
-				}
+				err = errors.Join(err, errorutils.CheckError(resp.Body.Close()))
 			}
 		}()
 		respBody, _ = io.ReadAll(resp.Body)
@@ -240,7 +237,6 @@ func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClient
 			return true, nil
 		},
 	}
-
 	err = retryExecutor.Execute()
 	return
 }
@@ -251,10 +247,7 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	if localPath != "" {
 		file, err = os.Open(localPath)
 		defer func() {
-			e := file.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(file.Close()))
 		}()
 		if errorutils.CheckError(err) != nil {
 			return nil, nil, err
@@ -297,15 +290,12 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	if errorutils.CheckError(err) != nil || resp == nil {
 		return
 	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated, http.StatusOK, http.StatusAccepted); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusOK, http.StatusAccepted); err != nil {
 		return
 	}
 	defer func() {
 		if resp != nil && resp.Body != nil {
-			e := resp.Body.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(resp.Body.Close()))
 		}
 	}()
 	body, err = io.ReadAll(resp.Body)
@@ -389,10 +379,7 @@ func (jc *HttpClient) doDownloadFile(downloadFileDetails *DownloadFileDetails, l
 	}
 	defer func() {
 		if resp != nil && resp.Body != nil {
-			e := resp.Body.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(resp.Body.Close()))
 		}
 	}()
 	if resp.StatusCode != http.StatusOK {
@@ -420,14 +407,11 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 
 	out, err := os.Create(fileName)
 	if errorutils.CheckError(err) != nil {
-		return err
+		return
 	}
 
 	defer func() {
-		e := out.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(out.Close()))
 	}()
 
 	var reader io.Reader
@@ -472,10 +456,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 		return
 	}
 	defer func() {
-		e := fileutils.RemoveTempDir(tempDirPath)
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, fileutils.RemoveTempDir(tempDirPath))
 	}()
 
 	chunksPaths := make([]string, flags.SplitCount)
@@ -626,10 +607,7 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 		return err
 	}
 	defer func() {
-		e := destFile.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(destFile.Close()))
 	}()
 	var writer io.Writer
 	var actualSha1 hash.Hash
@@ -646,10 +624,7 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 			return err
 		}
 		defer func() {
-			e := reader.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(reader.Close()))
 		}()
 		_, err = io.Copy(writer, reader)
 		if err != nil {
@@ -702,10 +677,7 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 		return
 	}
 	defer func() {
-		e := tempFile.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(tempFile.Close()))
 	}()
 
 	if httpClientsDetails.Headers == nil {
@@ -718,10 +690,7 @@ func (jc *HttpClient) doDownloadFileRange(flags ConcurrentDownloadFlags, start, 
 	}
 	defer func() {
 		if resp != nil && resp.Body != nil {
-			e := resp.Body.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, errorutils.CheckError(resp.Body.Close()))
 		}
 	}()
 	// Unexpected http response

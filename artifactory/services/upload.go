@@ -2,6 +2,7 @@ package services
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"github.com/jfrog/build-info-go/entities"
 	biutils "github.com/jfrog/build-info-go/utils"
@@ -83,10 +84,7 @@ func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (summary *uti
 			return nil, err
 		}
 		defer func() {
-			e := us.resultsManager.close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, us.resultsManager.close())
 		}()
 	}
 	us.prepareUploadTasks(producerConsumer, errorsQueue, uploadSummary, uploadParams...)
@@ -183,10 +181,7 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 				return nil, errorutils.CheckError(err)
 			}
 			defer func() {
-				e := file.Close()
-				if err == nil {
-					err = errorutils.CheckError(e)
-				}
+				err = errors.Join(err, errorutils.CheckError(file.Close()))
 			}()
 			checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
 			if err != nil {
@@ -770,10 +765,7 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 
 		archiveDataReader := content.NewContentReader(archiveData.writer.GetFilePath(), archiveData.writer.GetArrayKey())
 		defer func() {
-			deferErr := archiveDataReader.Close()
-			if err == nil {
-				err = deferErr
-			}
+			err = errors.Join(err, errorutils.CheckError(archiveDataReader.Close()))
 		}()
 		targetUrlWithProps, err := buildUploadUrls(us.ArtDetails.GetUrl(), targetPath, archiveData.uploadParams.BuildProps, archiveData.uploadParams.GetDebian(), archiveData.uploadParams.TargetProps)
 		if err != nil {
@@ -901,10 +893,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		return err
 	}
 	defer func() {
-		deferErr := file.Close()
-		if err == nil {
-			err = deferErr
-		}
+		err = errors.Join(err, errorutils.CheckError(file.Close()))
 	}()
 	if us.Progress != nil {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
