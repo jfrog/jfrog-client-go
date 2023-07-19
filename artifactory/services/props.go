@@ -165,7 +165,7 @@ func NewPropsParams() PropsParams {
 }
 
 func (ps *PropsService) GetItemProperties(relativePath string) (*utils.ItemProperties, error) {
-	restAPI := path.Join("api", "storage", relativePath)
+	restAPI := path.Join("api", "storage", path.Clean(relativePath))
 	propertiesURL, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return nil, err
