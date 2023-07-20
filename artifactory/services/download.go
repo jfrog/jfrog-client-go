@@ -116,6 +116,7 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (oper
 	totalSuccess := 0
 	for _, v := range successCounters {
 		totalSuccess += v
+		ds.Progress.IncrementGeneralProgress(v)
 	}
 	opertaionSummary = ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess)
 	return
