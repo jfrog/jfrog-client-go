@@ -212,7 +212,7 @@ func setRequestHeaders(httpClientsDetails httputils.HttpClientDetails, size int6
 func (jc *HttpClient) UploadFile(localPath, url, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails,
 	progress ioutils.ProgressMgr) (resp *http.Response, body []byte, err error) {
 	if progress != nil {
-		progress.IncrementGeneralProgress(1)
+		progress.IncrementGeneralProgress()
 	}
 	retryExecutor := utils.RetryExecutor{
 		MaxRetries:               jc.retries,

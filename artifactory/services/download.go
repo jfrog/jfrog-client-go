@@ -370,7 +370,7 @@ func createDownloadFileDetails(downloadPath, localPath, localFileName string, do
 
 func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.DownloadFileDetails, logMsgPrefix string, downloadParams DownloadParams) error {
 	if ds.Progress != nil {
-		ds.Progress.IncrementGeneralProgress(1)
+		ds.Progress.IncrementGeneralProgress()
 	}
 	httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
 	bulkDownload := downloadParams.SplitCount == 0 || downloadParams.MinSplitSize < 0 || downloadParams.MinSplitSize*1000 > downloadFileDetails.Size
@@ -545,7 +545,7 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 	}
 	if isEqual {
 		log.Debug(logMsgPrefix, "File already exists locally.")
-		ds.Progress.IncrementGeneralProgress(1)
+		ds.Progress.IncrementGeneralProgress()
 		if downloadParams.IsExplode() {
 			e = clientutils.ExtractArchive(localPath, localFileName, downloadData.Dependency.Name, logMsgPrefix, downloadParams.IsBypassArchiveInspection())
 		}
