@@ -545,7 +545,9 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 	}
 	if isEqual {
 		log.Debug(logMsgPrefix, "File already exists locally.")
-		ds.Progress.IncrementGeneralProgress()
+		if ds.Progress != nil {
+			ds.Progress.IncrementGeneralProgress()
+		}
 		if downloadParams.IsExplode() {
 			e = clientutils.ExtractArchive(localPath, localFileName, downloadData.Dependency.Name, logMsgPrefix, downloadParams.IsBypassArchiveInspection())
 		}
