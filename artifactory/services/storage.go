@@ -33,7 +33,7 @@ func (s *StorageService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 
 func (s *StorageService) FolderInfo(relativePath string) (*utils.FolderInfo, error) {
 	client := s.GetJfrogHttpClient()
-	restAPI := path.Join(StorageRestApi, relativePath)
+	restAPI := path.Join(StorageRestApi, path.Clean(relativePath))
 	folderUrl, err := utils.BuildArtifactoryUrl(s.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (s *StorageService) FolderInfo(relativePath string) (*utils.FolderInfo, err
 
 func (s *StorageService) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
 	client := s.GetJfrogHttpClient()
-	restAPI := path.Join(StorageRestApi, relativePath)
+	restAPI := path.Join(StorageRestApi, path.Clean(relativePath))
 
 	// Convert params to map:
 	params := make(map[string]string)
