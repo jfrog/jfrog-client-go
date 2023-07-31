@@ -871,6 +871,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		header.Name = artifact.TargetPathInArchive
 	}
 	header.Method = zip.Deflate
+	header.Modified = info.ModTime()
 
 	// If this is a directory, add it to the writer with a trailing slash.
 	if info.IsDir() {
