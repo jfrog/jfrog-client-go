@@ -39,7 +39,10 @@ type ReportXrayEventData struct {
 	Attributes map[string]string `json:"data,omitempty"`
 }
 
-func SendXrayReportUsage(productId, commandName string, serviceManager xray.XrayServicesManager, attributes ...ReportUsageAttribute) error {
+func SendXrayReportUsage(serviceManager xray.XrayServicesManager, events ...ReportXrayEventData) error {
+	if len(events) == 0 {
+		return errorutils.CheckErrorf(ReportUsagePrefix + "Nothing to send.")
+	}
 	config := serviceManager.Config()
 	if config == nil {
 		return errorutils.CheckErrorf(ReportUsagePrefix + "Expected full config, but no configuration exists.")
@@ -63,7 +66,7 @@ func SendXrayReportUsage(productId, commandName string, serviceManager xray.Xray
 	}
 	clientDetails := xrDetails.CreateHttpClientDetails()
 
-	bodyContent, err := reportUsageXrayToJson(CreateUsageEvents(productId, commandName, attributes...))
+	bodyContent, err := reportUsageXrayToJson(events...)
 	if err != nil {
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
@@ -119,27 +122,25 @@ type ReportEcosystemUsageData struct {
 	Features  []string `json:"features"`
 }
 
-func SendEcosystemReportUsage(productId, accountId, clientId string, features ...string) error {
-	reportInfo, err := CreateUsageData(productId, accountId, clientId, features...)
-	if err != nil {
-		return errorutils.CheckErrorf(ReportUsagePrefix + err.Error())
+func SendEcosystemReportUsage(events ...ReportEcosystemUsageData) error {
+	if len(events) == 0 {
+		return errorutils.CheckErrorf(ReportUsagePrefix + "Nothing to send.")
 	}
-
-	bodyContent, err := reportUsageEcosystemToJson(reportInfo)
+	bodyContent, err := reportUsageEcosystemToJson(events...)
 	if err != nil {
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
 
 	resp, body, err := sendRequestToEcosystemService(bodyContent)
 	if err != nil {
-		return errors.New(ReportUsagePrefix + "Couldn't send usage info. Error: " + err.Error())
+		return errors.New(ReportUsagePrefix + "Couldn't send usage info to Ecosystem. Error: " + err.Error())
 	}
 
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
 		return err
 	}
 
-	log.Debug(ReportUsagePrefix+"Usage info sent successfully.", "Xray response:", resp.Status)
+	log.Debug(ReportUsagePrefix+"Usage info sent successfully.", "Ecosystem response:", resp.Status)
 	return nil
 }
 
