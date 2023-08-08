@@ -79,10 +79,10 @@ func TestEcosystemReportUsageJson(t *testing.T) {
 		Features  []string
 	}
 	jsonPatterns := []string{
-		`{"productId":"%s","accountId":"%s","features":[]}`,
-		`{"productId":"%s","accountId":"%s","features":["%s"]}`,
-		`{"productId":"%s","accountId":"%s","clientId":"%s","features":["%s"]}`,
-		`{"productId":"%s","accountId":"%s","clientId":"%s","features":["%s","%s"]}`,
+		`[{"productId":"%s","accountId":"%s","features":[]}]`,
+		`[{"productId":"%s","accountId":"%s","features":["%s"]}]`,
+		`[{"productId":"%s","accountId":"%s","clientId":"%s","features":["%s"]}]`,
+		`[{"productId":"%s","accountId":"%s","clientId":"%s","features":["%s","%s"]}]`,
 	}
 
 	cases := []reportUsageTestCase{

@@ -151,13 +151,13 @@ func CreateUsageData(productId, accountId, clientId string, features ...string) 
 		}
 	}
 	if len(reportInfo.Features) == 0 {
-		err = fmt.Errorf("Expected at least one feature to report usage on.")
+		err = fmt.Errorf("expected at least one feature to report usage on")
 	}
 	return
 }
 
-func reportUsageEcosystemToJson(event ReportEcosystemUsageData) ([]byte, error) {
-	bodyContent, err := json.Marshal(event)
+func reportUsageEcosystemToJson(events ...ReportEcosystemUsageData) ([]byte, error) {
+	bodyContent, err := json.Marshal(events)
 	return bodyContent, errorutils.CheckError(err)
 }
 
