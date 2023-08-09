@@ -33,7 +33,7 @@ func TestIsXrayVersionCompatible(t *testing.T) {
 	}
 }
 
-func TestXrayReportUsageJson(t *testing.T) {
+func TestXrayUsageEventToJson(t *testing.T) {
 	type reportUsageTestCase struct {
 		productId  string
 		EventId    string
@@ -64,14 +64,14 @@ func TestXrayReportUsageJson(t *testing.T) {
 		}
 		// Run test
 		t.Run(test.EventId, func(t *testing.T) {
-			body, err := reportUsageXrayToJson(CreateUsageEvents(test.productId, test.EventId, test.Attributes...))
+			body, err := xrayUsageEventsToJson(CreateUsageEvent(test.productId, test.EventId, test.Attributes...))
 			assert.NoError(t, err)
 			assert.Equal(t, expectedResult, string(body))
 		})
 	}
 }
 
-func TestEcosystemReportUsageJson(t *testing.T) {
+func TestEcosystemReportUsageToJson(t *testing.T) {
 	type reportUsageTestCase struct {
 		ProductId string
 		AccountId string
@@ -120,7 +120,7 @@ func TestEcosystemReportUsageJson(t *testing.T) {
 		t.Run(strings.Join(test.Features, ","), func(t *testing.T) {
 			if data, err := CreateUsageData(test.ProductId, test.AccountId, test.ClientId, test.Features...); len(test.Features) > 0 {
 				assert.NoError(t, err)
-				body, err := reportUsageEcosystemToJson(data)
+				body, err := ecosystemUsageReportsToJson(data)
 				assert.NoError(t, err)
 				assert.Equal(t, expectedResult, string(body))
 			} else {

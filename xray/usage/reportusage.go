@@ -39,7 +39,7 @@ type ReportXrayEventData struct {
 	Attributes map[string]string `json:"data,omitempty"`
 }
 
-func SendXrayReportUsage(serviceManager xray.XrayServicesManager, events ...ReportXrayEventData) error {
+func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...ReportXrayEventData) error {
 	if len(events) == 0 {
 		return errorutils.CheckErrorf(ReportUsagePrefix + "Nothing to send.")
 	}
@@ -66,7 +66,7 @@ func SendXrayReportUsage(serviceManager xray.XrayServicesManager, events ...Repo
 	}
 	clientDetails := xrDetails.CreateHttpClientDetails()
 
-	bodyContent, err := reportUsageXrayToJson(events...)
+	bodyContent, err := xrayUsageEventsToJson(events...)
 	if err != nil {
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
@@ -92,7 +92,7 @@ func isVersionCompatible(xrayVersion string) bool {
 	return version.AtLeast(minXrayVersion)
 }
 
-func CreateUsageEvents(productId, featureId string, additionalAttributes ...ReportUsageAttribute) ReportXrayEventData {
+func CreateUsageEvent(productId, featureId string, additionalAttributes ...ReportUsageAttribute) ReportXrayEventData {
 	reportInfo := ReportXrayEventData{ProductId: productId, EventId: getExpectedEventName(productId, featureId), Origin: "API"}
 
 	if len(additionalAttributes) > 0 {
@@ -106,7 +106,7 @@ func CreateUsageEvents(productId, featureId string, additionalAttributes ...Repo
 	return reportInfo
 }
 
-func reportUsageXrayToJson(events ...ReportXrayEventData) ([]byte, error) {
+func xrayUsageEventsToJson(events ...ReportXrayEventData) ([]byte, error) {
 	bodyContent, err := json.Marshal(events)
 	return bodyContent, errorutils.CheckError(err)
 }
@@ -122,11 +122,11 @@ type ReportEcosystemUsageData struct {
 	Features  []string `json:"features"`
 }
 
-func SendEcosystemReportUsage(events ...ReportEcosystemUsageData) error {
-	if len(events) == 0 {
+func SendEcosystemUsageReports(reports ...ReportEcosystemUsageData) error {
+	if len(reports) == 0 {
 		return errorutils.CheckErrorf(ReportUsagePrefix + "Nothing to send.")
 	}
-	bodyContent, err := reportUsageEcosystemToJson(events...)
+	bodyContent, err := ecosystemUsageReportsToJson(reports...)
 	if err != nil {
 		return errors.New(ReportUsagePrefix + err.Error())
 	}
@@ -157,7 +157,7 @@ func CreateUsageData(productId, accountId, clientId string, features ...string) 
 	return
 }
 
-func reportUsageEcosystemToJson(events ...ReportEcosystemUsageData) ([]byte, error) {
+func ecosystemUsageReportsToJson(events ...ReportEcosystemUsageData) ([]byte, error) {
 	bodyContent, err := json.Marshal(events)
 	return bodyContent, errorutils.CheckError(err)
 }
