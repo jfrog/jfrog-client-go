@@ -21,39 +21,59 @@ type TokenService struct {
 
 type CreateTokenParams struct {
 	auth.CommonTokenParams
-	IncludeReferenceToken *bool `json:"include_reference_token,omitempty"`
+	Description           string `json:"description,omitempty"`
+	IncludeReferenceToken *bool  `json:"include_reference_token,omitempty"`
+	Username              string `json:"username,omitempty"`
 }
 
 func NewCreateTokenParams(params CreateTokenParams) CreateTokenParams {
-	return CreateTokenParams{CommonTokenParams: params.CommonTokenParams, IncludeReferenceToken: params.IncludeReferenceToken}
+	return CreateTokenParams{
+		CommonTokenParams:     params.CommonTokenParams,
+		Description:           params.Description,
+		IncludeReferenceToken: params.IncludeReferenceToken,
+		Username:              params.Username,
+	}
 }
 
 func NewTokenService(client *jfroghttpclient.JfrogHttpClient) *TokenService {
 	return &TokenService{client: client}
 }
 
+// CreateAccessToken Create an access token for the JFrog Platform
 func (ps *TokenService) CreateAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	return ps.createAccessToken(params)
 }
 
+// RefreshAccessToken Refresh an existing access token without having to provide the old token.
+// The Refresh Token is the same API endpoint as Create Token, with a specific grant type: refresh_token
 func (ps *TokenService) RefreshAccessToken(token CreateTokenParams) (auth.CreateTokenResponseData, error) {
-	param, err := createRefreshTokenRequestParams(token)
-	if err != nil {
-		return auth.CreateTokenResponseData{}, err
+	// Validate provided parameters
+	if token.RefreshToken == "" {
+		return auth.CreateTokenResponseData{}, errorutils.CheckErrorf("error: trying to refresh token, but 'refresh_token' field wasn't provided. ")
 	}
-	return ps.createAccessToken(*param)
+	// Set refresh required parameters
+	var trueValue = true
+	params := NewCreateTokenParams(token)
+	params.GrantType = "refresh_token"
+	params.Refreshable = &trueValue
+
+	return ps.createAccessToken(params)
 }
 
 // createAccessToken is used to create & refresh access tokens.
 func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
-	// Set the request headers
+	// Create output response variable
 	tokenInfo := auth.CreateTokenResponseData{}
+
+	// Set the request headers
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpDetails.Headers)
 	err := ps.addAccessTokenAuthorizationHeader(params, &httpDetails)
 	if err != nil {
 		return tokenInfo, err
 	}
+
+	// Marshall the request body
 	requestContent, err := json.Marshal(params)
 	if errorutils.CheckError(err) != nil {
 		return tokenInfo, err
@@ -70,6 +90,8 @@ func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.Create
 	return tokenInfo, errorutils.CheckError(err)
 }
 
+// Use AccessToken from ServiceDetails (which is the default behaviour)
+// If that is not present then we can use the token we are refreshing as the token
 func (ps *TokenService) addAccessTokenAuthorizationHeader(params CreateTokenParams, httpDetails *httputils.HttpClientDetails) error {
 	access := ps.ServiceDetails.GetAccessToken()
 	if access == "" {
@@ -80,17 +102,4 @@ func (ps *TokenService) addAccessTokenAuthorizationHeader(params CreateTokenPara
 	}
 	utils.AddHeader("Authorization", fmt.Sprintf("Bearer %s", access), &httpDetails.Headers)
 	return nil
-}
-
-func createRefreshTokenRequestParams(p CreateTokenParams) (*CreateTokenParams, error) {
-	var trueValue = true
-	// Validate provided parameters
-	if p.RefreshToken == "" {
-		return nil, errorutils.CheckErrorf("error: trying to refresh token, but 'refresh_token' field wasn't provided. ")
-	}
-	params := NewCreateTokenParams(p)
-	// Set refresh required parameters
-	params.GrantType = "refresh_token"
-	params.Refreshable = &trueValue
-	return &params, nil
 }
