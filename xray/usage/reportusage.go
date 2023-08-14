@@ -19,7 +19,7 @@ const (
 	minXrayVersion = "3.80.0"
 
 	xrayUsageApiPath     = "api/v1/usage/events/send"
-	ecosystemUsageApiUrl = "http://ecosystem-services.jfrog.info/api/usage/report"
+	ecosystemUsageApiUrl = "http://usage-ecosystem.jfrog.info/api/usage/report"
 	ReportUsagePrefix    = "Usage Report: "
 )
 
@@ -33,10 +33,10 @@ func (rua *ReportUsageAttribute) isEmpty() bool {
 }
 
 type ReportXrayEventData struct {
+	Attributes map[string]string `json:"data,omitempty"`
 	ProductId  string            `json:"product_name"`
 	EventId    string            `json:"event_name"`
 	Origin     string            `json:"origin,omitempty"`
-	Attributes map[string]string `json:"data,omitempty"`
 }
 
 func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...ReportXrayEventData) error {
