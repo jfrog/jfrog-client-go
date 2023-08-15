@@ -1,4 +1,4 @@
-package services
+package scan
 
 import (
 	"encoding/json"
@@ -32,15 +32,103 @@ const (
 	andIncludeLicensesParam     = "&include_licenses=true"
 
 	// Get scan results timeouts
-	defaultMaxWaitMinutes    = 45 * time.Minute // 45 minutes
-	defaultSyncSleepInterval = 5 * time.Second  // 5 seconds
+	DefaultMaxWaitMinutes    = 45 * time.Minute // 45 minutes
+	DefaultSyncSleepInterval = 5 * time.Second  // 5 seconds
 
 	// ScanType values
 	Dependency ScanType = "dependency"
 	Binary     ScanType = "binary"
 
-	xrayScanStatusFailed = "failed"
+	XrayScanStatusFailed = "failed"
 )
+
+type ScanServiceInterface interface {
+	ScanGraph(scanParams XrayGraphScanParams) (string, error)
+	GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error)
+}
+
+type XscScanService struct {
+	ScanService
+}
+
+func (xsc *XscScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
+	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	requestBody, err := json.Marshal(scanParams.Graph)
+	if err != nil {
+		return "", errorutils.CheckError(err)
+	}
+	url := xsc.XrayDetails.GetUrl() + scanGraphAPI
+	url += createScanGraphQueryParams(scanParams)
+	resp, body, err := xsc.client.SendPost(url, requestBody, &httpClientsDetails)
+	if err != nil {
+		return "", err
+	}
+
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+		scanErrorJson := ScanErrorJson{}
+		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
+			return "", errorutils.CheckErrorf(scanErrorJson.Error)
+		}
+		return "", err
+	}
+	scanResponse := RequestScanResponse{}
+	if err = json.Unmarshal(body, &scanResponse); err != nil {
+		return "", errorutils.CheckError(err)
+	}
+	return scanResponse.ScanId, err
+}
+
+func (xsc *XscScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
+	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+
+	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
+	endPoint := xsc.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
+	if includeVulnerabilities {
+		endPoint += includeVulnerabilitiesParam
+		if includeLicenses {
+			endPoint += andIncludeLicensesParam
+		}
+	} else if includeLicenses {
+		endPoint += includeLicensesParam
+	}
+	log.Info("Waiting for scan to complete on JFrog Xray...")
+	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
+		resp, body, _, err := xsc.client.SendGet(endPoint, true, &httpClientsDetails)
+		if err != nil {
+			return true, nil, err
+		}
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
+			return true, nil, err
+		}
+		// Got the full valid response.
+		if resp.StatusCode == http.StatusOK {
+			return true, body, nil
+		}
+		return false, nil, nil
+	}
+	pollingExecutor := &httputils.PollingExecutor{
+		Timeout:         DefaultMaxWaitMinutes,
+		PollingInterval: DefaultSyncSleepInterval,
+		PollingAction:   pollingAction,
+		MsgPrefix:       "Get Dependencies Scan results... ",
+	}
+
+	body, err := pollingExecutor.Execute()
+	if err != nil {
+		return nil, err
+	}
+	scanResponse := ScanResponse{}
+	if err = json.Unmarshal(body, &scanResponse); err != nil {
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
+	}
+	if scanResponse.ScannedStatus == XrayScanStatusFailed {
+		// Failed due to an internal Xray error
+		return nil, errorutils.CheckErrorf("received a failure status from JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
+	}
+	return &scanResponse, err
+}
 
 type ScanType string
 
@@ -50,35 +138,14 @@ type ScanService struct {
 }
 
 // NewScanService creates a new service to scan binaries and audit code projects' dependencies.
-func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
-	return &ScanService{client: client}
+func NewScanService(client *jfroghttpclient.JfrogHttpClient, details auth.ServiceDetails) ScanServiceInterface {
+	// TODO check if this is okay,maybe change to details
+	// TODO for dev always true
+	if client.XscEnabled() {
+		return &XscScanService{ScanService{client: client, XrayDetails: details}}
+	}
+	return &ScanService{client: client, XrayDetails: details}
 }
-
-func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
-	var params []string
-	switch {
-	case scanParams.ProjectKey != "":
-		params = append(params, projectQueryParam+scanParams.ProjectKey)
-	case scanParams.RepoPath != "":
-		params = append(params, repoPathQueryParam+scanParams.RepoPath)
-	case len(scanParams.Watches) > 0:
-		for _, watch := range scanParams.Watches {
-			if watch != "" {
-				params = append(params, watchesQueryParam+watch)
-			}
-		}
-	}
-
-	if scanParams.ScanType != "" {
-		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
-	}
-
-	if len(params) == 0 {
-		return ""
-	}
-	return "?" + strings.Join(params, "&")
-}
-
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
@@ -137,8 +204,8 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		return false, nil, nil
 	}
 	pollingExecutor := &httputils.PollingExecutor{
-		Timeout:         defaultMaxWaitMinutes,
-		PollingInterval: defaultSyncSleepInterval,
+		Timeout:         DefaultMaxWaitMinutes,
+		PollingInterval: DefaultSyncSleepInterval,
 		PollingAction:   pollingAction,
 		MsgPrefix:       "Get Dependencies Scan results... ",
 	}
@@ -151,7 +218,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
 		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
 	}
-	if scanResponse.ScannedStatus == xrayScanStatusFailed {
+	if scanResponse.ScannedStatus == XrayScanStatusFailed {
 		// Failed due to an internal Xray error
 		return nil, errorutils.CheckErrorf("received a failure status from JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
 	}
@@ -168,6 +235,36 @@ type XrayGraphScanParams struct {
 	Graph                  *xrayUtils.GraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
+	xscContextDetails      *XscGitInfoContext
+}
+
+func (gp *XrayGraphScanParams) GetProjectKey() string {
+	return gp.ProjectKey
+}
+
+func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
+	var params []string
+	switch {
+	case scanParams.ProjectKey != "":
+		params = append(params, projectQueryParam+scanParams.ProjectKey)
+	case scanParams.RepoPath != "":
+		params = append(params, repoPathQueryParam+scanParams.RepoPath)
+	case len(scanParams.Watches) > 0:
+		for _, watch := range scanParams.Watches {
+			if watch != "" {
+				params = append(params, watchesQueryParam+watch)
+			}
+		}
+	}
+
+	if scanParams.ScanType != "" {
+		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
+	}
+
+	if len(params) == 0 {
+		return ""
+	}
+	return "?" + strings.Join(params, "&")
 }
 
 // FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
@@ -305,6 +402,18 @@ type JfrogResearchSeverityReason struct {
 	IsPositive  bool   `json:"is_positive,omitempty"`
 }
 
-func (gp *XrayGraphScanParams) GetProjectKey() string {
-	return gp.ProjectKey
+type XscGitInfoContext struct {
+	GitRepoUrl        string   `json:"git_repo_url"`
+	GitRepoName       string   `json:"git_repo_name"`
+	GitTargetRepoName string   `json:"git_target_repo_name"`
+	GitProject        string   `json:"git_project"`
+	GitProvider       string   `json:"git_provider"`
+	Technologies      []string `json:"technologies"`
+	BranchName        string   `json:"branch_name"`
+	TargetBranchName  string   `json:"target_branch_name"`
+	LastCommit        string   `json:"last_commit"`
+	CommitHash        string   `json:"commit_hash"`
+	CommitMessage     string   `json:"commit_message"`
+	CommitAuthor      string   `json:"commit_author"`
+	Date              int64    `json:"date"`
 }

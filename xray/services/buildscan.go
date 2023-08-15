@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/xray/scan"
 	"net/http"
 	"strings"
 )
@@ -121,8 +122,8 @@ func (bs *BuildScanService) getBuildScanResults(reqFunc func() (*http.Response, 
 		return false, nil, nil
 	}
 	pollingExecutor := &httputils.PollingExecutor{
-		Timeout:         defaultMaxWaitMinutes,
-		PollingInterval: defaultSyncSleepInterval,
+		Timeout:         scan.DefaultMaxWaitMinutes,
+		PollingInterval: scan.DefaultSyncSleepInterval,
 		PollingAction:   pollingAction,
 		MsgPrefix:       fmt.Sprintf("Get Build Scan results for Build: %s/%s...", params.BuildName, params.BuildNumber),
 	}
@@ -135,7 +136,7 @@ func (bs *BuildScanService) getBuildScanResults(reqFunc func() (*http.Response, 
 	if err = json.Unmarshal(body, &buildScanResponse); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	if buildScanResponse.Status == xrayScanStatusFailed {
+	if buildScanResponse.Status == scan.XrayScanStatusFailed {
 		return nil, errorutils.CheckErrorf("Xray build scan failed")
 	}
 	return &buildScanResponse, err
@@ -178,10 +179,10 @@ type RequestBuildScanResponse struct {
 }
 
 type BuildScanResponse struct {
-	Status          string          `json:"status,omitempty"`
-	MoreDetailsUrl  string          `json:"more_details_url,omitempty"`
-	FailBuild       bool            `json:"fail_build,omitempty"`
-	Violations      []Violation     `json:"violations,omitempty"`
-	Vulnerabilities []Vulnerability `json:"vulnerabilities,omitempty"`
-	Info            string          `json:"info,omitempty"`
+	Status          string               `json:"status,omitempty"`
+	MoreDetailsUrl  string               `json:"more_details_url,omitempty"`
+	FailBuild       bool                 `json:"fail_build,omitempty"`
+	Violations      []scan.Violation     `json:"violations,omitempty"`
+	Vulnerabilities []scan.Vulnerability `json:"vulnerabilities,omitempty"`
+	Info            string               `json:"info,omitempty"`
 }
