@@ -41,14 +41,14 @@ func TestXrayUsageEventToJson(t *testing.T) {
 	}
 	jsonPatterns := []string{
 		`[{"product_name":"%s","event_name":"%s","origin":"API"}]`,
-		`[{"product_name":"%s","event_name":"%s","origin":"API","data":{"%s":"%s"}}]`,
-		`[{"product_name":"%s","event_name":"%s","origin":"API","data":{"%s":"%s","%s":"%s"}}]`,
+		`[{"data":{"%s":"%s"},"product_name":"%s","event_name":"%s","origin":"API"}]`,
+		`[{"data":{"%s":"%s","%s":"%s"},"product_name":"%s","event_name":"%s","origin":"API"}]`,
 	}
 
 	cases := []reportUsageTestCase{
 		{"jfrog-cli-go", "generic_audit", []ReportUsageAttribute{}},
 		{"frogbot", "scan_pull_request", []ReportUsageAttribute{{AttributeName: "clientId", AttributeValue: "repo1"}}},
-		{"jfrog-idea-plugin", "ci", []ReportUsageAttribute{{AttributeName: "buildNumber", AttributeValue: "1023456"}, {AttributeName: "clientId", AttributeValue: "user-hash"}}},
+		{"jfrog-idea-plugin", "ci", []ReportUsageAttribute{{AttributeName: "buildNumber", AttributeValue: "1023456"},{AttributeName: "clientId", AttributeValue: "user-hash"}}},
 	}
 
 	for _, test := range cases {
@@ -56,9 +56,9 @@ func TestXrayUsageEventToJson(t *testing.T) {
 		expectedResult := ""
 		switch {
 		case len(test.Attributes) == 1:
-			expectedResult = fmt.Sprintf(jsonPatterns[1], test.productId, getExpectedEventName(test.productId, test.EventId), test.Attributes[0].AttributeName, test.Attributes[0].AttributeValue)
+			expectedResult = fmt.Sprintf(jsonPatterns[1], test.Attributes[0].AttributeName, test.Attributes[0].AttributeValue, test.productId, getExpectedEventName(test.productId, test.EventId))
 		case len(test.Attributes) == 2:
-			expectedResult = fmt.Sprintf(jsonPatterns[2], test.productId, getExpectedEventName(test.productId, test.EventId), test.Attributes[0].AttributeName, test.Attributes[0].AttributeValue, test.Attributes[1].AttributeName, test.Attributes[1].AttributeValue)
+			expectedResult = fmt.Sprintf(jsonPatterns[2], test.Attributes[0].AttributeName, test.Attributes[0].AttributeValue, test.Attributes[1].AttributeName, test.Attributes[1].AttributeValue, test.productId, getExpectedEventName(test.productId, test.EventId))
 		default:
 			expectedResult = fmt.Sprintf(jsonPatterns[0], test.productId, getExpectedEventName(test.productId, test.EventId))
 		}
