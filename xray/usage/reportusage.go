@@ -19,7 +19,7 @@ const (
 	minXrayVersion = "3.80.0"
 
 	xrayUsageApiPath     = "api/v1/usage/events/send"
-	ecosystemUsageApiUrl = "http://usage-ecosystem.jfrog.info/api/usage/report"
+	ecosystemUsageApiUrl = "https://usage-ecosystem.jfrog.info/api/usage/report"
 	ReportUsagePrefix    = "Usage Report: "
 )
 
