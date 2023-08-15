@@ -56,11 +56,11 @@ func TestXrayUsageEventToJson(t *testing.T) {
 		expectedResult := ""
 		switch {
 		case len(test.Attributes) == 1:
-			expectedResult = fmt.Sprintf(jsonPatterns[1], test.Attributes[0].AttributeName, test.Attributes[0].AttributeValue, test.productId, getExpectedEventName(test.productId, test.EventId))
+			expectedResult = fmt.Sprintf(jsonPatterns[1], test.Attributes[0].AttributeName, test.Attributes[0].AttributeValue, test.productId, GetExpectedXrayEventName(test.productId, test.EventId))
 		case len(test.Attributes) == 2:
-			expectedResult = fmt.Sprintf(jsonPatterns[2], test.Attributes[0].AttributeName, test.Attributes[0].AttributeValue, test.Attributes[1].AttributeName, test.Attributes[1].AttributeValue, test.productId, getExpectedEventName(test.productId, test.EventId))
+			expectedResult = fmt.Sprintf(jsonPatterns[2], test.Attributes[0].AttributeName, test.Attributes[0].AttributeValue, test.Attributes[1].AttributeName, test.Attributes[1].AttributeValue, test.productId, GetExpectedXrayEventName(test.productId, test.EventId))
 		default:
-			expectedResult = fmt.Sprintf(jsonPatterns[0], test.productId, getExpectedEventName(test.productId, test.EventId))
+			expectedResult = fmt.Sprintf(jsonPatterns[0], test.productId, GetExpectedXrayEventName(test.productId, test.EventId))
 		}
 		// Run test
 		t.Run(test.EventId, func(t *testing.T) {

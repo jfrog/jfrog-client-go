@@ -93,7 +93,7 @@ func isVersionCompatible(xrayVersion string) bool {
 }
 
 func CreateUsageEvent(productId, featureId string, additionalAttributes ...ReportUsageAttribute) ReportXrayEventData {
-	reportInfo := ReportXrayEventData{ProductId: productId, EventId: GetExpectedEventName(productId, featureId), Origin: "API"}
+	reportInfo := ReportXrayEventData{ProductId: productId, EventId: GetExpectedXrayEventName(productId, featureId), Origin: "API"}
 
 	if len(additionalAttributes) > 0 {
 		reportInfo.Attributes = make(map[string]string, len(additionalAttributes))
@@ -111,7 +111,7 @@ func xrayUsageEventsToJson(events ...ReportXrayEventData) ([]byte, error) {
 	return bodyContent, errorutils.CheckError(err)
 }
 
-func GetExpectedEventName(productId, commandName string) string {
+func GetExpectedXrayEventName(productId, commandName string) string {
 	return "server_" + productId + "_" + commandName
 }
 
