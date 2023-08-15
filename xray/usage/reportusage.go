@@ -93,7 +93,7 @@ func isVersionCompatible(xrayVersion string) bool {
 }
 
 func CreateUsageEvent(productId, featureId string, additionalAttributes ...ReportUsageAttribute) ReportXrayEventData {
-	reportInfo := ReportXrayEventData{ProductId: productId, EventId: getExpectedEventName(productId, featureId), Origin: "API"}
+	reportInfo := ReportXrayEventData{ProductId: productId, EventId: GetExpectedEventName(productId, featureId), Origin: "API"}
 
 	if len(additionalAttributes) > 0 {
 		reportInfo.Attributes = make(map[string]string, len(additionalAttributes))
