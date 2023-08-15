@@ -111,7 +111,7 @@ func xrayUsageEventsToJson(events ...ReportXrayEventData) ([]byte, error) {
 	return bodyContent, errorutils.CheckError(err)
 }
 
-func getExpectedEventName(productId, commandName string) string {
+func GetExpectedEventName(productId, commandName string) string {
 	return "server_" + productId + "_" + commandName
 }
 

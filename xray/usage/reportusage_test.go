@@ -48,7 +48,7 @@ func TestXrayUsageEventToJson(t *testing.T) {
 	cases := []reportUsageTestCase{
 		{"jfrog-cli-go", "generic_audit", []ReportUsageAttribute{}},
 		{"frogbot", "scan_pull_request", []ReportUsageAttribute{{AttributeName: "clientId", AttributeValue: "repo1"}}},
-		{"jfrog-idea-plugin", "ci", []ReportUsageAttribute{{AttributeName: "buildNumber", AttributeValue: "1023456"},{AttributeName: "clientId", AttributeValue: "user-hash"}}},
+		{"jfrog-idea-plugin", "ci", []ReportUsageAttribute{{AttributeName: "buildNumber", AttributeValue: "1023456"}, {AttributeName: "clientId", AttributeValue: "user-hash"}}},
 	}
 
 	for _, test := range cases {
