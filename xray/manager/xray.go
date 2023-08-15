@@ -1,4 +1,4 @@
-package xray
+package manager
 
 import (
 	"github.com/jfrog/jfrog-client-go/config"
@@ -14,7 +14,7 @@ type XrayServicesManager struct {
 }
 
 // New creates a service manager to interact with Xray
-func New(config config.Config) (*XrayServicesManager, error) {
+func New(config config.Config) (SecurityServiceManager, error) {
 	details := config.GetServiceDetails()
 	var err error
 	manager := &XrayServicesManager{config: config}

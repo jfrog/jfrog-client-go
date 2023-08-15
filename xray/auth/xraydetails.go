@@ -4,7 +4,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/xray"
+	"github.com/jfrog/jfrog-client-go/xray/manager"
 )
 
 // NewXrayDetails creates a struct of the Xray details
@@ -37,7 +37,7 @@ func (ds *xrayDetails) getXrayVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	sm, err := xray.New(serviceConfig)
+	sm, err := manager.New(serviceConfig)
 	if err != nil {
 		return "", err
 	}
