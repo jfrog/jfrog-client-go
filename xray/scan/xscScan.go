@@ -33,36 +33,33 @@ func NewXscScanService(client *jfroghttpclient.JfrogHttpClient, details auth.Ser
 	return &XscScanService{ScanService{client: client, XrayDetails: details}}
 }
 
-func (xsc *XscScanService) SendScanContext(details *XscGitInfoContext) error {
+func (xsc *XscScanService) SendScanContext(details *XscGitInfoContext) (multiScanId string, err error) {
 	if details == nil {
-		return nil
+		return
 	}
 	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(details)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return "", errorutils.CheckError(err)
 	}
 	url := xsc.XrayDetails.GetXscUrl() + postScanContextAPI
 	resp, body, err := xsc.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
-		return err
+		return
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
 		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
-			return errorutils.CheckErrorf(scanErrorJson.Error)
+			return "", errorutils.CheckErrorf(scanErrorJson.Error)
 		}
-		return err
+		return
 	}
 	scanResponse := XscPostContextResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return errorutils.CheckError(err)
+		return "", errorutils.CheckError(err)
 	}
-	if scanResponse.MultiScanId != "" {
-		details.MultiScanId = scanResponse.MultiScanId
-	}
-	return err
+	return scanResponse.MultiScanId, err
 }
 
 func (xsc *XscScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {

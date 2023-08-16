@@ -147,7 +147,8 @@ type XrayGraphScanParams struct {
 	Graph                  *xrayUtils.GraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
-	ContextDetails         *XscGitInfoContext
+	XscGitInfoContext      *XscGitInfoContext
+	MultiScanId            string
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
@@ -167,8 +168,8 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 				params = append(params, watchesQueryParam+watch)
 			}
 		}
-	case scanParams.ContextDetails != nil && scanParams.ContextDetails.MultiScanId != "":
-		params = append(params, multiScanIdParam+scanParams.ContextDetails.MultiScanId)
+	case scanParams.XscGitInfoContext != nil && scanParams.MultiScanId != "":
+		params = append(params, multiScanIdParam+scanParams.MultiScanId)
 	}
 
 	if scanParams.ScanType != "" {
@@ -225,7 +226,7 @@ type RequestScanResponse struct {
 }
 
 type XscPostContextResponse struct {
-	MultiScanId string
+	MultiScanId string `json:"multi_scan_id,omitempty"`
 }
 
 type XscVersionResponse struct {
@@ -338,5 +339,4 @@ type XscGitInfoContext struct {
 	CommitMessage     string   `json:"commit_message"`
 	CommitAuthor      string   `json:"commit_author"`
 	Date              int64    `json:"date"`
-	MultiScanId       string   `json:"omit_empty"`
 }

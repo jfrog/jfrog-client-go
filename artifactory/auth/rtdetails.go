@@ -52,7 +52,3 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 	}
 	return sm.GetVersion()
 }
-
-func (rt *artifactoryDetails) GetPlatformUrl() string {
-	return rt.PlatformUrl
-}

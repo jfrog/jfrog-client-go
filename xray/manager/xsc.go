@@ -18,12 +18,12 @@ func (xsc *XscServicesManger) SetClient(client *jfroghttpclient.JfrogHttpClient)
 }
 
 // ScanGraph will send XSC the given graph for scan
-// Sends ContextDetails before scanning in order to show relevant information about the scan in the platform,
+// Sends XscGitInfoContext before scanning in order to show relevant information about the scan in the platform,
 // getting multi-scan-id to pass in the calls.
 // Returns a string represents the scan ID.
 func (xsc *XscServicesManger) ScanGraph(params scan.XrayGraphScanParams) (scanId string, err error) {
 	scanService := scan.NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
-	if err = scanService.SendScanContext(params.ContextDetails); err != nil {
+	if params.MultiScanId, err = scanService.SendScanContext(params.XscGitInfoContext); err != nil {
 		return
 	}
 	return scanService.ScanGraph(params)

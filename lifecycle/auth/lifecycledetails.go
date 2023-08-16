@@ -19,7 +19,3 @@ func (rt *lifecycleDetails) GetXscUrl() string {
 func (rt *lifecycleDetails) GetVersion() (string, error) {
 	panic("Failed: Method is not implemented")
 }
-
-func (rt *lifecycleDetails) GetPlatformUrl() string {
-	return rt.PlatformUrl
-}

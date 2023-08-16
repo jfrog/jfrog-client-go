@@ -54,7 +54,6 @@ type ServiceDetails interface {
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
 	GetXscUrl() string
-	GetPlatformUrl() string
 }
 
 type CommonConfigFields struct {
