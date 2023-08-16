@@ -9,6 +9,10 @@ type XscServicesManger struct {
 	XrayServicesManager
 }
 
+func (xsc *XscServicesManger) IsXscEnabled() (bool, string) {
+	return xsc.XrayServicesManager.IsXscEnabled()
+}
+
 func (xsc *XscServicesManger) SetClient(client *jfroghttpclient.JfrogHttpClient) {
 	xsc.XrayServicesManager.SetClient(client)
 }
@@ -18,12 +22,10 @@ func (xsc *XscServicesManger) SetClient(client *jfroghttpclient.JfrogHttpClient)
 // getting multi-scan-id to pass in the calls.
 // Returns a string represents the scan ID.
 func (xsc *XscServicesManger) ScanGraph(params scan.XrayGraphScanParams) (scanId string, err error) {
-	var multiScanId string
 	scanService := scan.NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
-	if multiScanId, err = scanService.SendScanContext(params.ContextDetails); err != nil {
+	if err = scanService.SendScanContext(params.ContextDetails); err != nil {
 		return
 	}
-	params.ContextDetails.MultiScanId = multiScanId
 	return scanService.ScanGraph(params)
 }
 

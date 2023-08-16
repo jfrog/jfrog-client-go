@@ -50,3 +50,7 @@ func (pd *pipelinesDetails) getPipelinesVersion() (string, error) {
 	}
 	return sys.Version, nil
 }
+
+func (pd *pipelinesDetails) GetPlatformUrl() string {
+	return pd.PlatformUrl
+}

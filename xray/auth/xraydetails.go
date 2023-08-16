@@ -56,3 +56,7 @@ func (ds *XrayDetails) GetXscUrl() string {
 func (ds *XrayDetails) SetXscUrl(url string) {
 	ds.XscUrl = url
 }
+
+func (ds *XrayDetails) GetPlatformUrl() string {
+	return ds.PlatformUrl
+}

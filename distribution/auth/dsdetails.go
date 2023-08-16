@@ -46,3 +46,7 @@ func (ds *distributionDetails) getDistributionVersion() (string, error) {
 	}
 	return sm.GetDistributionVersion()
 }
+
+func (ds *distributionDetails) GetPlatformUrl() string {
+	return ds.PlatformUrl
+}

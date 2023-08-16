@@ -54,6 +54,7 @@ type ServiceDetails interface {
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
 	GetXscUrl() string
+	GetPlatformUrl() string
 }
 
 type CommonConfigFields struct {
@@ -74,6 +75,7 @@ type CommonConfigFields struct {
 	TokenMutex             sync.Mutex
 	client                 *jfroghttpclient.JfrogHttpClient
 	httpTimeout            time.Duration
+	PlatformUrl            string
 }
 
 func (ccf *CommonConfigFields) GetUrl() string {

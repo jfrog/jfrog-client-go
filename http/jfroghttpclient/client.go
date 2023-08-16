@@ -166,8 +166,3 @@ func (rtc *JfrogHttpClient) runPreRequestInterceptors(httpClientDetails *httputi
 	}
 	return nil
 }
-
-func (rtc *JfrogHttpClient) XscEnabled() bool {
-	// TODO CHANGE THIS OR MOVE THIS FUNCTION
-	return true
-}

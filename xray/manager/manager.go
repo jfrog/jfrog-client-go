@@ -38,4 +38,5 @@ type SecurityServiceManager interface {
 	AddBuildsToIndexing(buildNames []string) error
 	ArtifactSummary(params services.ArtifactSummaryParams) (*services.ArtifactSummaryResponse, error)
 	IsEntitled(featureId string) (bool, error)
+	IsXscEnabled() (bool, string)
 }

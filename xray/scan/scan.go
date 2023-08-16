@@ -225,7 +225,11 @@ type RequestScanResponse struct {
 }
 
 type XscPostContextResponse struct {
-	MultiScanId string `json:"multi_scan_id,omitempty"`
+	MultiScanId string
+}
+
+type XscVersionResponse struct {
+	Version string `json:"xsc_version"`
 }
 
 type ScanErrorJson struct {
