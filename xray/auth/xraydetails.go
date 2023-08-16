@@ -8,15 +8,20 @@ import (
 )
 
 // NewXrayDetails creates a struct of the Xray details
-func NewXrayDetails() *xrayDetails {
-	return &xrayDetails{}
+func NewXrayDetails() *XrayDetails {
+	return &XrayDetails{}
 }
 
-type xrayDetails struct {
+type XrayDetails struct {
 	auth.CommonConfigFields
 }
 
-func (ds *xrayDetails) GetVersion() (string, error) {
+type XscDetails struct {
+	auth.CommonConfigFields
+	XscUrl string
+}
+
+func (ds *XrayDetails) GetVersion() (string, error) {
 	var err error
 	if ds.Version == "" {
 		ds.Version, err = ds.getXrayVersion()
@@ -28,7 +33,7 @@ func (ds *xrayDetails) GetVersion() (string, error) {
 	return ds.Version, nil
 }
 
-func (ds *xrayDetails) getXrayVersion() (string, error) {
+func (ds *XrayDetails) getXrayVersion() (string, error) {
 	cd := auth.ServiceDetails(ds)
 	serviceConfig, err := config.NewConfigBuilder().
 		SetServiceDetails(cd).
@@ -42,4 +47,12 @@ func (ds *xrayDetails) getXrayVersion() (string, error) {
 		return "", err
 	}
 	return sm.GetVersion()
+}
+
+func (ds *XrayDetails) GetXscUrl() string {
+	return ds.XscUrl
+}
+
+func (ds *XrayDetails) SetXscUrl(url string) {
+	ds.XscUrl = url
 }

@@ -15,6 +15,10 @@ type artifactoryDetails struct {
 	auth.CommonConfigFields
 }
 
+func (rt *artifactoryDetails) GetXscUrl() string {
+	panic("Failed: Method is not implemented")
+}
+
 func (rt *artifactoryDetails) GetVersion() (string, error) {
 	var err error
 	if rt.Version == "" {

@@ -15,11 +15,15 @@ type XrayServicesManager struct {
 }
 
 // New creates a service manager to interact with Xray
-func New(config config.Config) (SecurityServiceManager, error) {
+func New(config config.Config) (manager SecurityServiceManager, err error) {
 	details := config.GetServiceDetails()
-	var err error
-	manager := &XrayServicesManager{config: config}
-	manager.client, err = jfroghttpclient.JfrogClientBuilder().
+	if details.GetXscUrl() != "" {
+		manager = &XscServicesManger{XrayServicesManager{config: config}}
+	} else {
+		manager = &XrayServicesManager{config: config}
+	}
+
+	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetContext(config.GetContext()).
@@ -30,12 +34,21 @@ func New(config config.Config) (SecurityServiceManager, error) {
 		SetRetries(config.GetHttpRetries()).
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
 		Build()
+
+	if err != nil {
+		return
+	}
+	manager.SetClient(client)
 	return manager, err
 }
 
 // Client will return the http client
 func (sm *XrayServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
+}
+
+func (sm *XrayServicesManager) SetClient(client *jfroghttpclient.JfrogHttpClient) {
+	sm.client = client
 }
 
 func (sm *XrayServicesManager) Config() config.Config {
@@ -121,14 +134,16 @@ func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
 // ScanGraph will send Xray the given graph for scan
 // Returns a string represents the scan ID.
 func (sm *XrayServicesManager) ScanGraph(params scan.XrayGraphScanParams) (scanId string, err error) {
-	scanService := scan.NewScanService(sm.client, sm.config.GetServiceDetails())
+	scanService := scan.NewScanService(sm.client)
+	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.ScanGraph(params)
 }
 
 // GetScanGraphResults returns an Xray scan output of the requested graph scan.
 // The scanId input should be received from ScanGraph request.
 func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*scan.ScanResponse, error) {
-	scanService := scan.NewScanService(sm.client, sm.config.GetServiceDetails())
+	scanService := scan.NewScanService(sm.client)
+	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses)
 }
 

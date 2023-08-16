@@ -15,6 +15,10 @@ type distributionDetails struct {
 	auth.CommonConfigFields
 }
 
+func (ds *distributionDetails) GetXscUrl() string {
+	panic("Failed: Method is not implemented")
+}
+
 func (ds *distributionDetails) GetVersion() (string, error) {
 	var err error
 	if ds.Version == "" {

@@ -15,6 +15,10 @@ type pipelinesDetails struct {
 	auth.CommonConfigFields
 }
 
+func (pd *pipelinesDetails) GetXscUrl() string {
+	panic("Failed: Method is not implemented")
+}
+
 func (pd *pipelinesDetails) GetVersion() (string, error) {
 	var err error
 	if pd.Version == "" {

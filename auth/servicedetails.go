@@ -53,10 +53,12 @@ type ServiceDetails interface {
 	RunPreRequestFunctions(httpClientDetails *httputils.HttpClientDetails) error
 
 	CreateHttpClientDetails() httputils.HttpClientDetails
+	GetXscUrl() string
 }
 
 type CommonConfigFields struct {
 	Url                    string                         `json:"-"`
+	XscUrl                 string                         `json:"-"`
 	User                   string                         `json:"-"`
 	Password               string                         `json:"-"`
 	ApiKey                 string                         `json:"-"`

@@ -12,6 +12,10 @@ type accessDetails struct {
 	auth.CommonConfigFields
 }
 
+func (rt *accessDetails) GetXscUrl() string {
+	panic("Failed: Method is not implemented")
+}
+
 func (rt *accessDetails) GetVersion() (string, error) {
 	panic("Failed: Method is not implemented")
 }

@@ -47,89 +47,6 @@ type ScanServiceInterface interface {
 	GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error)
 }
 
-type XscScanService struct {
-	ScanService
-}
-
-func (xsc *XscScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
-	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	requestBody, err := json.Marshal(scanParams.Graph)
-	if err != nil {
-		return "", errorutils.CheckError(err)
-	}
-	url := xsc.XrayDetails.GetUrl() + scanGraphAPI
-	url += createScanGraphQueryParams(scanParams)
-	resp, body, err := xsc.client.SendPost(url, requestBody, &httpClientsDetails)
-	if err != nil {
-		return "", err
-	}
-
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
-		scanErrorJson := ScanErrorJson{}
-		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
-			return "", errorutils.CheckErrorf(scanErrorJson.Error)
-		}
-		return "", err
-	}
-	scanResponse := RequestScanResponse{}
-	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return "", errorutils.CheckError(err)
-	}
-	return scanResponse.ScanId, err
-}
-
-func (xsc *XscScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
-	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-
-	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	endPoint := xsc.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
-	if includeVulnerabilities {
-		endPoint += includeVulnerabilitiesParam
-		if includeLicenses {
-			endPoint += andIncludeLicensesParam
-		}
-	} else if includeLicenses {
-		endPoint += includeLicensesParam
-	}
-	log.Info("Waiting for scan to complete on JFrog Xray...")
-	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		resp, body, _, err := xsc.client.SendGet(endPoint, true, &httpClientsDetails)
-		if err != nil {
-			return true, nil, err
-		}
-		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
-			return true, nil, err
-		}
-		// Got the full valid response.
-		if resp.StatusCode == http.StatusOK {
-			return true, body, nil
-		}
-		return false, nil, nil
-	}
-	pollingExecutor := &httputils.PollingExecutor{
-		Timeout:         DefaultMaxWaitMinutes,
-		PollingInterval: DefaultSyncSleepInterval,
-		PollingAction:   pollingAction,
-		MsgPrefix:       "Get Dependencies Scan results... ",
-	}
-
-	body, err := pollingExecutor.Execute()
-	if err != nil {
-		return nil, err
-	}
-	scanResponse := ScanResponse{}
-	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
-	}
-	if scanResponse.ScannedStatus == XrayScanStatusFailed {
-		// Failed due to an internal Xray error
-		return nil, errorutils.CheckErrorf("received a failure status from JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
-	}
-	return &scanResponse, err
-}
-
 type ScanType string
 
 type ScanService struct {
@@ -138,13 +55,8 @@ type ScanService struct {
 }
 
 // NewScanService creates a new service to scan binaries and audit code projects' dependencies.
-func NewScanService(client *jfroghttpclient.JfrogHttpClient, details auth.ServiceDetails) ScanServiceInterface {
-	// TODO check if this is okay,maybe change to details
-	// TODO for dev always true
-	if client.XscEnabled() {
-		return &XscScanService{ScanService{client: client, XrayDetails: details}}
-	}
-	return &ScanService{client: client, XrayDetails: details}
+func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
+	return &ScanService{client: client}
 }
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
@@ -235,7 +147,7 @@ type XrayGraphScanParams struct {
 	Graph                  *xrayUtils.GraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
-	xscContextDetails      *XscGitInfoContext
+	ContextDetails         *XscGitInfoContext
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
@@ -308,6 +220,10 @@ type OtherComponentIds struct {
 
 type RequestScanResponse struct {
 	ScanId string `json:"scan_id,omitempty"`
+}
+
+type XscPostContextResponse struct {
+	MultiScanId string `json:"multi_scan_id,omitempty"`
 }
 
 type ScanErrorJson struct {

@@ -8,9 +8,11 @@ import (
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 )
 
+// SecurityServiceManager holds operations to Xray ( regrading if for Xray backend or XSC )
 type SecurityServiceManager interface {
-	// Getters
+	// Attributes
 	Client() *jfroghttpclient.JfrogHttpClient
+	SetClient(client *jfroghttpclient.JfrogHttpClient)
 	Config() config.Config
 	GetVersion() (string, error)
 	// Watches
