@@ -17,6 +17,8 @@ const (
 	postGraphAPI = "api/v1/sca/scan/graph"
 
 	multiScanIdParam = "multi_scan_id="
+
+	XscVersionAPI = "/api/v1/system/version"
 )
 
 type XscScanService struct {

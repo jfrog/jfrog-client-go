@@ -1,11 +1,15 @@
 package manager
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/xray/scan"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
+	"net/http"
 )
 
 // XrayServicesManager defines the http client and general configuration
@@ -196,4 +200,28 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	entitlementsService := services.NewEntitlementsService(sm.client)
 	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
 	return entitlementsService.IsEntitled(featureId)
+}
+
+// IsXscEnabled Trying to get XSC version, if route is not available, user is not entitled for XSC.
+func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion string) {
+	httpDetails := sm.config.GetServiceDetails().CreateHttpClientDetails()
+	serverDetails := sm.config.GetServiceDetails()
+
+	resp, body, _, err := sm.client.SendGet(serverDetails.GetXscUrl()+scan.XscVersionAPI, true, &httpDetails)
+	if err != nil {
+		return
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		err = fmt.Errorf("failed while attempting to get XSC entitlements response with error:%s", err.Error())
+		return
+	}
+	versionResponse := scan.XscVersionResponse{}
+	if err = json.Unmarshal(body, &versionResponse); err != nil {
+		err = errorutils.CheckErrorf("couldn't parse Xray server response: " + err.Error())
+		return
+	}
+	if versionResponse.Version != "" {
+		return true, versionResponse.Version
+	}
+	return
 }
