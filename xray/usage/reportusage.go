@@ -18,9 +18,12 @@ import (
 const (
 	minXrayVersion = "3.80.0"
 
-	xrayUsageApiPath     = "api/v1/usage/events/send"
-	ecosystemUsageApiUrl = "https://usage-ecosystem.jfrog.info/api/usage/report"
-	ReportUsagePrefix    = "Usage Report: "
+	xrayUsageApiPath = "api/v1/usage/events/send"
+
+	EcosystemUsageBaseUrl = "https://usage-ecosystem.jfrog.info/"
+	ecosystemUsageApiPath = "api/usage/report"
+
+	ReportUsagePrefix = "Usage Report: "
 )
 
 type ReportUsageAttribute struct {
@@ -170,5 +173,5 @@ func sendRequestToEcosystemService(content []byte) (resp *http.Response, respBod
 
 	details := httputils.HttpClientDetails{}
 	utils.AddHeader("Content-Type", "application/json", &details.Headers)
-	return client.SendPost(ecosystemUsageApiUrl, content, details, "")
+	return client.SendPost(EcosystemUsageBaseUrl+ecosystemUsageApiPath, content, details, "")
 }
