@@ -15,6 +15,8 @@ const (
 	postScanContextAPI = "api/v1/gitinfo"
 
 	postGraphAPI = "api/v1/sca/scan/graph"
+
+	multiScanIdParam = "multi_scan_id="
 )
 
 type XscScanService struct {
@@ -30,6 +32,9 @@ func NewXscScanService(client *jfroghttpclient.JfrogHttpClient, details auth.Ser
 }
 
 func (xsc *XscScanService) SendScanContext(details *XscGitInfoContext) (string, error) {
+	if details == nil {
+		return "", nil
+	}
 	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(details)
@@ -55,16 +60,17 @@ func (xsc *XscScanService) SendScanContext(details *XscGitInfoContext) (string, 
 	return scanResponse.MultiScanId, err
 }
 
-func (xsc *XscScanService) ScanGraph(scanParams XrayGraphScanParams, id string) (string, error) {
+func (xsc *XscScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
 	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(scanParams.Graph)
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
+
 	url := xsc.XrayDetails.GetXscUrl() + postGraphAPI
-	// TODO fix this
-	url += "?multi_scan_id=" + id
+	url += createScanGraphQueryParams(scanParams)
+
 	resp, body, err := xsc.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err

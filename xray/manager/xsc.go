@@ -23,7 +23,8 @@ func (xsc *XscServicesManger) ScanGraph(params scan.XrayGraphScanParams) (scanId
 	if multiScanId, err = scanService.SendScanContext(params.ContextDetails); err != nil {
 		return
 	}
-	return scanService.ScanGraph(params, multiScanId)
+	params.ContextDetails.MultiScanId = multiScanId
+	return scanService.ScanGraph(params)
 }
 
 // GetScanGraphResults returns an XSC scan output of the requested graph scan.
