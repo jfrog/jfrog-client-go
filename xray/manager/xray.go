@@ -21,12 +21,7 @@ type XrayServicesManager struct {
 // New creates a service manager to interact with Xray
 func New(config config.Config) (manager SecurityServiceManager, err error) {
 	details := config.GetServiceDetails()
-	if details.GetXscUrl() != "" {
-		manager = &XscServicesManger{XrayServicesManager{config: config}}
-	} else {
-		manager = &XrayServicesManager{config: config}
-	}
-
+	manager = &XrayServicesManager{config: config}
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
@@ -38,7 +33,6 @@ func New(config config.Config) (manager SecurityServiceManager, err error) {
 		SetRetries(config.GetHttpRetries()).
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
 		Build()
-
 	if err != nil {
 		return
 	}
