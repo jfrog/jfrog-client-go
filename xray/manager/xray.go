@@ -2,10 +2,10 @@ package manager
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/xray/scan"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
@@ -21,7 +21,12 @@ type XrayServicesManager struct {
 // New creates a service manager to interact with Xray
 func New(config config.Config) (manager SecurityServiceManager, err error) {
 	details := config.GetServiceDetails()
-	manager = &XrayServicesManager{config: config}
+	if details.GetXscVersion() != "" {
+		manager = &XscServicesManger{XrayServicesManager{config: config}}
+	} else {
+		manager = &XrayServicesManager{config: config}
+	}
+
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
@@ -206,8 +211,8 @@ func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion stri
 		return
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		err = fmt.Errorf("failed while attempting to get XSC entitlements response with error:%s", err.Error())
-		return
+		log.Debug("XSC service is not enabled for this server")
+		return false, "", nil
 	}
 	versionResponse := scan.XscVersionResponse{}
 	if err = json.Unmarshal(body, &versionResponse); err != nil {

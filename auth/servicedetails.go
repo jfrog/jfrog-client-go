@@ -31,6 +31,7 @@ type ServiceDetails interface {
 	GetClient() *jfroghttpclient.JfrogHttpClient
 	GetVersion() (string, error)
 	GetXscUrl() string
+	GetXscVersion() string
 
 	SetUrl(url string)
 	SetUser(user string)

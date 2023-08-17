@@ -14,11 +14,7 @@ func NewXrayDetails() *XrayDetails {
 
 type XrayDetails struct {
 	auth.CommonConfigFields
-}
-
-type XscDetails struct {
-	auth.CommonConfigFields
-	XscUrl string
+	XscVersion string
 }
 
 func (ds *XrayDetails) GetVersion() (string, error) {
@@ -55,4 +51,11 @@ func (ds *XrayDetails) GetXscUrl() string {
 
 func (ds *XrayDetails) SetXscUrl(url string) {
 	ds.XscUrl = url
+}
+
+func (ds *XrayDetails) GetXscVersion() string {
+	return ds.XscVersion
+}
+func (ds *XrayDetails) SetXscVersion(version string) {
+	ds.XscVersion = version
 }

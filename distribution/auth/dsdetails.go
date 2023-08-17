@@ -7,19 +7,23 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-func NewDistributionDetails() *DistributionDetails {
-	return &DistributionDetails{}
+func NewDistributionDetails() *distributionDetails {
+	return &distributionDetails{}
 }
 
-type DistributionDetails struct {
+type distributionDetails struct {
 	auth.CommonConfigFields
 }
 
-func (ds *DistributionDetails) GetXscUrl() string {
+func (ds *distributionDetails) GetXscUrl() string {
 	panic("Failed: Method is not implemented")
 }
 
-func (ds *DistributionDetails) GetVersion() (string, error) {
+func (ds *distributionDetails) GetXscVersion() string {
+	panic("Failed: Method is not implemented")
+}
+
+func (ds *distributionDetails) GetVersion() (string, error) {
 	var err error
 	if ds.Version == "" {
 		ds.Version, err = ds.getDistributionVersion()
@@ -31,7 +35,7 @@ func (ds *DistributionDetails) GetVersion() (string, error) {
 	return ds.Version, nil
 }
 
-func (ds *DistributionDetails) getDistributionVersion() (string, error) {
+func (ds *distributionDetails) getDistributionVersion() (string, error) {
 	cd := auth.ServiceDetails(ds)
 	serviceConfig, err := config.NewConfigBuilder().
 		SetServiceDetails(cd).

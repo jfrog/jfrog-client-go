@@ -2,6 +2,7 @@ package manager
 
 import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/xray/scan"
 )
 
@@ -17,14 +18,16 @@ func (xsc *XscServicesManger) SetClient(client *jfroghttpclient.JfrogHttpClient)
 	xsc.XrayServicesManager.SetClient(client)
 }
 
-// ScanGraph will send XSC the given graph for scan
-// Sends XscGitInfoContext before scanning in order to show relevant information about the scan in the platform,
-// getting multi-scan-id to pass in the calls.
+// ScanGraph scans dependency graph with XscGitInfoContext.
+// XscGitInfoContext allows linking of scans and other data to the corresponding git repository.
+// By passing multi-scan-id in the api calls.
 // Returns a string represents the scan ID.
 func (xsc *XscServicesManger) ScanGraph(params scan.XrayGraphScanParams) (scanId string, err error) {
+	log.Debug("Scanning graph using XSC service...")
 	scanService := scan.NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
 	if params.MultiScanId, err = scanService.SendScanContext(params.XscGitInfoContext); err != nil {
-		return
+		// Don't fail on when failed to send XscGitInfoContext
+		log.Warn("failed to pass git info context with error:%s", err.Error())
 	}
 	return scanService.ScanGraph(params)
 }

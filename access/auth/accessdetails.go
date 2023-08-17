@@ -19,3 +19,7 @@ func (rt *accessDetails) GetXscUrl() string {
 func (rt *accessDetails) GetVersion() (string, error) {
 	panic("Failed: Method is not implemented")
 }
+
+func (rt *accessDetails) GetXscVersion() string {
+	panic("Failed: Method is not implemented")
+}

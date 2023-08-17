@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 )
 
-// SecurityServiceManager holds operations to Xray ( regrading if for Xray backend or XSC )
+// SecurityServiceManager manages JFrog Xray service operations (Xray backend or XSC).
 type SecurityServiceManager interface {
 	// Attributes
 	Client() *jfroghttpclient.JfrogHttpClient

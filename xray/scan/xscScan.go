@@ -34,6 +34,7 @@ func NewXscScanService(client *jfroghttpclient.JfrogHttpClient, details auth.Ser
 }
 
 func (xsc *XscScanService) SendScanContext(details *XscGitInfoContext) (multiScanId string, err error) {
+	// XscGitInfoContext is optional
 	if details == nil {
 		return
 	}
