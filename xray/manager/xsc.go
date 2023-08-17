@@ -9,7 +9,7 @@ type XscServicesManger struct {
 	XrayServicesManager
 }
 
-func (xsc *XscServicesManger) IsXscEnabled() (bool, string) {
+func (xsc *XscServicesManger) IsXscEnabled() (bool, string, error) {
 	return xsc.XrayServicesManager.IsXscEnabled()
 }
 

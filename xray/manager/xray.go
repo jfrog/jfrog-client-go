@@ -197,7 +197,7 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 }
 
 // IsXscEnabled Trying to get XSC version, if route is not available, user is not entitled for XSC.
-func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion string) {
+func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion string, err error) {
 	httpDetails := sm.config.GetServiceDetails().CreateHttpClientDetails()
 	serverDetails := sm.config.GetServiceDetails()
 
@@ -215,7 +215,9 @@ func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion stri
 		return
 	}
 	if versionResponse.Version != "" {
-		return true, versionResponse.Version
+		xscEntitled = true
+		xsxVersion = versionResponse.Version
+		return
 	}
 	return
 }

@@ -30,6 +30,7 @@ type ServiceDetails interface {
 	GetSshAuthHeaders() map[string]string
 	GetClient() *jfroghttpclient.JfrogHttpClient
 	GetVersion() (string, error)
+	GetXscUrl() string
 
 	SetUrl(url string)
 	SetUser(user string)
@@ -51,9 +52,7 @@ type ServiceDetails interface {
 	AuthenticateSsh(sshKey, sshPassphrase string) error
 	InitSsh() error
 	RunPreRequestFunctions(httpClientDetails *httputils.HttpClientDetails) error
-
 	CreateHttpClientDetails() httputils.HttpClientDetails
-	GetXscUrl() string
 }
 
 type CommonConfigFields struct {
@@ -74,7 +73,6 @@ type CommonConfigFields struct {
 	TokenMutex             sync.Mutex
 	client                 *jfroghttpclient.JfrogHttpClient
 	httpTimeout            time.Duration
-	PlatformUrl            string
 }
 
 func (ccf *CommonConfigFields) GetUrl() string {
