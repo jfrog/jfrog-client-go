@@ -744,7 +744,7 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 	if httpClientsDetails.AccessToken != "" {
 		if IsApiKey(httpClientsDetails.AccessToken) {
 			log.Warn("The provided Access Token is an API key and will be used as a password in username/password authentication.\n" +
-				"To avoid this message in the future please use it a a password.")
+				"To avoid this message in the future please use it as a password.")
 			req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.AccessToken)
 		} else {
 			req.Header.Set("Authorization", "Bearer "+httpClientsDetails.AccessToken)
