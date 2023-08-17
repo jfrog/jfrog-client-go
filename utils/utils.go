@@ -146,6 +146,12 @@ func AddTrailingSlashIfNeeded(url string) string {
 	return url
 }
 
+// GenerateXscUrl Generate XSC url provided from flags.
+// Replacing Xray suffix with Xsc.
+func GenerateXscUrl(url string) string {
+	return strings.Replace(url, "xray/", "xsc/", 1)
+}
+
 func IndentJson(jsonStr []byte) string {
 	return doIndentJson(jsonStr, "", "  ")
 }

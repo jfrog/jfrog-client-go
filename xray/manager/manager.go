@@ -15,6 +15,7 @@ type SecurityServiceManager interface {
 	SetClient(client *jfroghttpclient.JfrogHttpClient)
 	Config() config.Config
 	GetVersion() (string, error)
+
 	// Watches
 	CreateWatch(params utils.WatchParams) error
 	GetWatch(watchName string) (*utils.WatchParams, error)
