@@ -210,7 +210,7 @@ func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion stri
 	if err != nil {
 		return
 	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+	if resp.StatusCode != http.StatusOK {
 		log.Debug("XSC service is not enabled for this server")
 		return false, "", nil
 	}
