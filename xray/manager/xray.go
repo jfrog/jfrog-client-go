@@ -18,33 +18,6 @@ type XrayServicesManager struct {
 	config config.Config
 }
 
-// New creates a service manager to interact with Xray
-func New(config config.Config) (manager SecurityServiceManager, err error) {
-	details := config.GetServiceDetails()
-	if details.GetXscVersion() != "" {
-		manager = &XscServicesManger{XrayServicesManager{config: config}}
-	} else {
-		manager = &XrayServicesManager{config: config}
-	}
-
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetCertificatesPath(config.GetCertificatesPath()).
-		SetInsecureTls(config.IsInsecureTls()).
-		SetContext(config.GetContext()).
-		SetTimeout(config.GetHttpTimeout()).
-		SetClientCertPath(details.GetClientCertPath()).
-		SetClientCertKeyPath(details.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
-		SetRetries(config.GetHttpRetries()).
-		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
-		Build()
-	if err != nil {
-		return
-	}
-	manager.SetClient(client)
-	return manager, err
-}
-
 // Client will return the http client
 func (sm *XrayServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
@@ -201,7 +174,7 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	return entitlementsService.IsEntitled(featureId)
 }
 
-// IsXscEnabled Trying to get XSC version, if route is not available, user is not entitled for XSC.
+// IsXscEnabled will try to get XSC version. If route is not available, user is not entitled for XSC.
 func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion string, err error) {
 	httpDetails := sm.config.GetServiceDetails().CreateHttpClientDetails()
 	serverDetails := sm.config.GetServiceDetails()

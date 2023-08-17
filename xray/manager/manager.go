@@ -41,3 +41,30 @@ type SecurityServiceManager interface {
 	IsEntitled(featureId string) (bool, error)
 	IsXscEnabled() (bool, string, error)
 }
+
+// New creates a service manager to interact with Xray
+// When XSC is enabled returns XscServicesManger.
+func New(config config.Config) (manager SecurityServiceManager, err error) {
+	details := config.GetServiceDetails()
+	if details.GetXscVersion() != "" {
+		manager = &XscServicesManger{XrayServicesManager{config: config}}
+	} else {
+		manager = &XrayServicesManager{config: config}
+	}
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetCertificatesPath(config.GetCertificatesPath()).
+		SetInsecureTls(config.IsInsecureTls()).
+		SetContext(config.GetContext()).
+		SetTimeout(config.GetHttpTimeout()).
+		SetClientCertPath(details.GetClientCertPath()).
+		SetClientCertKeyPath(details.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
+		SetRetries(config.GetHttpRetries()).
+		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
+		Build()
+	if err != nil {
+		return
+	}
+	manager.SetClient(client)
+	return manager, err
+}
