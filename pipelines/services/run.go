@@ -36,7 +36,7 @@ func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) 
 	httpDetails := rs.getHttpDetails()
 
 	// Query params
-	queryParams := make(map[string]string, 0)
+	queryParams := make(map[string]string)
 	if isMultiBranch {
 		// Add this query param only when pipeline source is multi-branch
 		queryParams["pipelineSourceBranch"] = branch
