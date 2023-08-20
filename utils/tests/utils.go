@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 )
 
 type HttpServerHandlers map[string]func(w http.ResponseWriter, r *http.Request)
@@ -28,12 +27,8 @@ func StartHttpServer(handlers HttpServerHandlers) (int, error) {
 		for k, v := range handlers {
 			httpMux.HandleFunc(k, v)
 		}
-		server := &http.Server{
-			Handler:      httpMux,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
-		}
-		if err = server.Serve(listener); err != nil {
+		err = http.Serve(listener, httpMux)
+		if err != nil {
 			panic(err)
 		}
 	}()
