@@ -13,12 +13,14 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 type HttpServerHandlers map[string]func(w http.ResponseWriter, r *http.Request)
 
 func StartHttpServer(handlers HttpServerHandlers) (int, error) {
-	listener, err := net.Listen("tcp", ":0")
+	address := ":0"
+	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		return 0, err
 	}
@@ -27,8 +29,12 @@ func StartHttpServer(handlers HttpServerHandlers) (int, error) {
 		for k, v := range handlers {
 			httpMux.HandleFunc(k, v)
 		}
-		err = http.Serve(listener, httpMux)
-		if err != nil {
+		server := &http.Server{
+			Handler:      httpMux,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		if err = server.Serve(listener); err != nil {
 			panic(err)
 		}
 	}()
