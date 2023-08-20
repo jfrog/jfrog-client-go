@@ -98,7 +98,8 @@ func (xsc *XscScanService) GetScanGraphResults(scanId string, includeVulnerabili
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	endPoint := xsc.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
+	// TODO multi scan should be removed here but caused api to crash so dummy value inserted.
+	endPoint := xsc.XrayDetails.GetXscUrl() + scanGraphAPI + "/" + scanId + "?multi_scan_id=a"
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam
 		if includeLicenses {

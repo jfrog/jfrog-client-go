@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	scanGraphAPI = "api/v1/scan/graph"
+	scanGraphAPI = "api/v1/sca/scan/graph"
 
 	// Graph scan query params
 	repoPathQueryParam = "repo_path="
@@ -338,5 +338,5 @@ type XscGitInfoContext struct {
 	CommitHash        string   `json:"commit_hash"`
 	CommitMessage     string   `json:"commit_message"`
 	CommitAuthor      string   `json:"commit_author"`
-	Date              int64    `json:"date"`
+	Date              string   `json:"date"`
 }
