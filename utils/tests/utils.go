@@ -19,8 +19,7 @@ import (
 type HttpServerHandlers map[string]func(w http.ResponseWriter, r *http.Request)
 
 func StartHttpServer(handlers HttpServerHandlers) (int, error) {
-	address := ":0"
-	listener, err := net.Listen("tcp", address)
+	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		return 0, err
 	}
