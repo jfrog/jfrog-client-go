@@ -34,7 +34,6 @@ func TestExtractRepo(t *testing.T) {
 
 func TestGetLfsFilesFromGit(t *testing.T) {
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
-	//nolint
 	//nosec G101
 	fileId := "4bf4c8c0fef3f5c8cf6f255d1c784377138588c0a9abe57e440bce3ccb350c2e"
 	gitPath := getCliDotGitPath(t)
