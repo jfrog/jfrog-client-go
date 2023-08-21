@@ -168,10 +168,14 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 				params = append(params, watchesQueryParam+watch)
 			}
 		}
-	case scanParams.XscGitInfoContext != nil && scanParams.MultiScanId != "":
-		params = append(params, multiScanIdParam+scanParams.MultiScanId)
+	case scanParams.XscGitInfoContext != nil:
+		if scanParams.MultiScanId != "" {
+			params = append(params, multiScanIdParam+scanParams.MultiScanId)
+		}
+		if len(scanParams.XscGitInfoContext.Technologies) > 0 {
+			params = append(params, scanTechQueryParam+scanParams.XscGitInfoContext.Technologies[0])
+		}
 	}
-
 	if scanParams.ScanType != "" {
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
@@ -326,17 +330,15 @@ type JfrogResearchSeverityReason struct {
 }
 
 type XscGitInfoContext struct {
-	GitRepoUrl        string   `json:"git_repo_url"`
-	GitRepoName       string   `json:"git_repo_name"`
-	GitTargetRepoName string   `json:"git_target_repo_name"`
-	GitProject        string   `json:"git_project"`
-	GitProvider       string   `json:"git_provider"`
-	Technologies      []string `json:"technologies"`
-	BranchName        string   `json:"branch_name"`
-	TargetBranchName  string   `json:"target_branch_name"`
-	LastCommit        string   `json:"last_commit"`
-	CommitHash        string   `json:"commit_hash"`
-	CommitMessage     string   `json:"commit_message"`
-	CommitAuthor      string   `json:"commit_author"`
-	Date              string   `json:"date"`
+	GitRepoUrl    string   `json:"git_repo_url"`
+	GitRepoName   string   `json:"git_repo_name"`
+	GitProject    string   `json:"git_project"`
+	GitProvider   string   `json:"git_provider"`
+	Technologies  []string `json:"technologies"`
+	BranchName    string   `json:"branch_name"`
+	LastCommit    string   `json:"last_commit"`
+	CommitHash    string   `json:"commit_hash"`
+	CommitMessage string   `json:"commit_message"`
+	CommitAuthor  string   `json:"commit_author"`
+	Date          string   `json:"date"`
 }

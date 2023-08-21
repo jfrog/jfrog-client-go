@@ -18,6 +18,8 @@ const (
 
 	multiScanIdParam = "multi_scan_id="
 
+	scanTechQueryParam = "tech="
+
 	XscVersionAPI = "/api/v1/system/version"
 )
 
@@ -93,21 +95,12 @@ func (xsc *XscScanService) ScanGraph(scanParams XrayGraphScanParams) (string, er
 	return scanResponse.ScanId, err
 }
 
-func (xsc *XscScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
+func (xsc *XscScanService) GetScanGraphResults(scanId string, _, _ bool) (*ScanResponse, error) {
 	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	// TODO multi scan should be removed here but caused api to crash so dummy value inserted.
-	endPoint := xsc.XrayDetails.GetXscUrl() + scanGraphAPI + "/" + scanId + "?multi_scan_id=a"
-	if includeVulnerabilities {
-		endPoint += includeVulnerabilitiesParam
-		if includeLicenses {
-			endPoint += andIncludeLicensesParam
-		}
-	} else if includeLicenses {
-		endPoint += includeLicensesParam
-	}
+	endPoint := xsc.XrayDetails.GetXscUrl() + scanGraphAPI + "/" + scanId + "?multi_scan_id=dummpyIdRemoveme"
 	log.Info("Waiting for scan to complete on JFrog Xray...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := xsc.client.SendGet(endPoint, true, &httpClientsDetails)

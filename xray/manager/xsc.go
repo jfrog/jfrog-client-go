@@ -27,7 +27,7 @@ func (xsc *XscServicesManger) ScanGraph(params scan.XrayGraphScanParams) (scanId
 	scanService := scan.NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
 	if params.MultiScanId, err = scanService.SendScanContext(params.XscGitInfoContext); err != nil {
 		// Don't fail the entire scan when failed to send XscGitInfoContext
-		log.Warn("failed to send xsc git info context with the foloowing error: ", err.Error())
+		log.Warn("failed to send xsc git info context with the following error: ", err.Error())
 	}
 	return scanService.ScanGraph(params)
 }
