@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	scanGraphAPI = "api/v1/sca/scan/graph"
+	scanGraphAPI = "api/v1/scan/graph"
 
 	// Graph scan query params
 	repoPathQueryParam = "repo_path="

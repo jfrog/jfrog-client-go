@@ -14,7 +14,7 @@ import (
 const (
 	postScanContextAPI = "api/v1/gitinfo"
 
-	postGraphAPI = "api/v1/sca/scan/graph"
+	XscGraphAPI = "api/v1/sca/scan/graph"
 
 	multiScanIdParam = "multi_scan_id="
 
@@ -73,7 +73,7 @@ func (xsc *XscScanService) ScanGraph(scanParams XrayGraphScanParams) (string, er
 		return "", errorutils.CheckError(err)
 	}
 
-	url := xsc.XrayDetails.GetXscUrl() + postGraphAPI
+	url := xsc.XrayDetails.GetXscUrl() + XscGraphAPI
 	url += createScanGraphQueryParams(scanParams)
 
 	resp, body, err := xsc.client.SendPost(url, requestBody, &httpClientsDetails)
@@ -100,7 +100,7 @@ func (xsc *XscScanService) GetScanGraphResults(scanId string, _, _ bool) (*ScanR
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	endPoint := xsc.XrayDetails.GetXscUrl() + scanGraphAPI + "/" + scanId + "?multi_scan_id=dummpyIdRemoveme"
+	endPoint := xsc.XrayDetails.GetXscUrl() + XscGraphAPI + "/" + scanId + "?multi_scan_id=dummpyIdRemoveme"
 	log.Info("Waiting for scan to complete on JFrog Xray...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := xsc.client.SendGet(endPoint, true, &httpClientsDetails)
