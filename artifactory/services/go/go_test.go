@@ -18,11 +18,11 @@ func TestCreateUrlPath(t *testing.T) {
 		{"withoutBuildProperties", "go-repo/github.com/jfrog/test/@v/v1.1.1.zip", "", "http://test.url/api/go/", "http://test.url/api/go/go-repo/github.com/jfrog/test/@v/v1.1.1.zip"},
 		{"withoutBuildPropertiesModExtension", "go-repo/github.com/jfrog/test/@v/v1.1.1.mod", "", "http://test.url/api/go/", "http://test.url/api/go/go-repo/github.com/jfrog/test/@v/v1.1.1.mod"},
 	}
-	for _, test := range tests {
+	for i, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.NoError(t, CreateUrlPath(test.pathInArtifactory, test.props, &test.goApiUrl))
+			assert.NoError(t, CreateUrlPath(tests[i].pathInArtifactory, tests[i].props, &tests[i].goApiUrl))
 			// The props might have a different order each time, so we split the URLs and check if the lists are equal (ignoring the order)
-			assert.ElementsMatch(t, strings.Split(test.goApiUrl, ";"), strings.Split(test.expectedUrl, ";"))
+			assert.ElementsMatch(t, strings.Split(tests[i].goApiUrl, ";"), strings.Split(tests[i].expectedUrl, ";"))
 		})
 	}
 }
