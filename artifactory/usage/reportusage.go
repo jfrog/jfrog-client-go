@@ -3,13 +3,14 @@ package usage
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	versionutil "github.com/jfrog/gofrog/version"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
 )
 
 const minArtifactoryVersion = "6.9.0"
@@ -24,58 +25,82 @@ func (rua *ReportUsageAttribute) isEmpty() bool {
 	return rua.AttributeName == ""
 }
 
-func SendReportUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
+func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryServicesManager) (url string, clientDetails httputils.HttpClientDetails, err error) {
 	config := serviceManager.GetConfig()
 	if config == nil {
-		return errorutils.CheckErrorf(ReportUsagePrefix + "Expected full config, but no configuration exists.")
+		err = errorutils.CheckErrorf("Expected full config, but no configuration exists.")
+		return
 	}
 	rtDetails := config.GetServiceDetails()
 	if rtDetails == nil {
-		return errorutils.CheckErrorf(ReportUsagePrefix + "Artifactory details not configured.")
+		err = errorutils.CheckErrorf("Artifactory details not configured.")
+		return
 	}
-	url, err := utils.BuildArtifactoryUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
-	if err != nil {
-		return errors.New(ReportUsagePrefix + err.Error())
-	}
-	clientDetails := rtDetails.CreateHttpClientDetails()
 	// Check Artifactory version
 	artifactoryVersion, err := rtDetails.GetVersion()
 	if err != nil {
-		return errors.New(ReportUsagePrefix + "Couldn't get Artifactory version. Error: " + err.Error())
+		err = errors.New("Couldn't get Artifactory version. Error: " + err.Error())
+		return
 	}
-	if !isVersionCompatible(artifactoryVersion) {
-		log.Debug(fmt.Sprintf(ReportUsagePrefix+"Expected Artifactory version %s or above, got %s", minArtifactoryVersion, artifactoryVersion))
-		return nil
+	if e := clientutils.ValidateMinimumVersion(clientutils.Artifactory, minArtifactoryVersion, artifactoryVersion); e != nil {
+		log.Debug(ReportUsagePrefix, e.Error())
+		return
 	}
-
-	bodyContent, err := reportUsageToJson(productId, commandName, attributes...)
+	url, err = clientutils.BuildUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
 	if err != nil {
-		return errors.New(ReportUsagePrefix + err.Error())
+		err = errors.New(ReportUsagePrefix + err.Error())
+		return
 	}
+	clientDetails = rtDetails.CreateHttpClientDetails()
+	return
+}
+
+func sendReport(url string, serviceManager artifactory.ArtifactoryServicesManager, clientDetails httputils.HttpClientDetails, bodyContent []byte) error {
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
 		return errors.New(ReportUsagePrefix + "Couldn't send usage info. Error: " + err.Error())
 	}
-
 	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 	if err != nil {
 		return err
 	}
-
-	log.Debug(ReportUsagePrefix+"Usage info sent successfully.", "Artifactory response:", resp.Status)
+	log.Debug(ReportUsagePrefix, "Usage info sent successfully.", "Artifactory response:", resp.Status)
 	return nil
 }
 
-// Returns an error if the Artifactory version is not compatible
-func isVersionCompatible(artifactoryVersion string) bool {
-	// API exists from Artifactory version 6.9.0 and above:
-	version := versionutil.NewVersion(artifactoryVersion)
-	return version.AtLeast(minArtifactoryVersion)
+func ReportUsageToArtifactory(productId string, serviceManager artifactory.ArtifactoryServicesManager, features ...Feature) error {
+	url, clientDetails, err := validateAndGetUsageServerInfo(serviceManager)
+	if err != nil || url == "" {
+		return err
+	}
+	bodyContent, err := usageFeaturesToJson(productId, features...)
+	if err != nil {
+		return errors.New(ReportUsagePrefix + err.Error())
+	}
+	return sendReport(url, serviceManager, clientDetails, bodyContent)
+}
+
+func SendReportUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
+	url, clientDetails, err := validateAndGetUsageServerInfo(serviceManager)
+	if err != nil || url == "" {
+		return err
+	}
+	bodyContent, err := reportUsageToJson(productId, commandName, attributes...)
+	if err != nil {
+		return errors.New(ReportUsagePrefix + err.Error())
+	}
+	return sendReport(url, serviceManager, clientDetails, bodyContent)
+}
+
+func usageFeaturesToJson(productId string, features ...Feature) ([]byte, error) {
+	params := reportUsageParams{ProductId: productId, Features: features}
+	bodyContent, err := json.Marshal(params)
+	return bodyContent, errorutils.CheckError(err)
 }
 
 func reportUsageToJson(productId, commandName string, attributes ...ReportUsageAttribute) ([]byte, error) {
-	featureInfo := feature{FeatureId: commandName}
+	featureInfo := Feature{FeatureId: commandName}
 	if len(attributes) > 0 {
 		featureInfo.Attributes = make(map[string]string, len(attributes))
 		for _, attribute := range attributes {
@@ -84,17 +109,16 @@ func reportUsageToJson(productId, commandName string, attributes ...ReportUsageA
 			}
 		}
 	}
-	params := reportUsageParams{ProductId: productId, Features: []feature{featureInfo}}
-	bodyContent, err := json.Marshal(params)
-	return bodyContent, errorutils.CheckError(err)
+	return usageFeaturesToJson(productId, featureInfo)
 }
 
 type reportUsageParams struct {
 	ProductId string    `json:"productId"`
-	Features  []feature `json:"features,omitempty"`
+	Features  []Feature `json:"features,omitempty"`
 }
 
-type feature struct {
+type Feature struct {
 	FeatureId  string            `json:"featureId,omitempty"`
 	Attributes map[string]string `json:"attributes,omitempty"`
+	ClientId   string            `json:"uniqueClientId,omitempty"`
 }
