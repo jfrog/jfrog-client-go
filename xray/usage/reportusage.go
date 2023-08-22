@@ -15,7 +15,6 @@ import (
 const (
 	minXrayVersion    = "3.81.4"
 	xrayUsageApiPath  = "api/v1/usage/events/send"
-	ReportUsagePrefix = "Usage Report:"
 )
 
 type ReportUsageAttribute struct {
@@ -51,23 +50,23 @@ func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...Repo
 		return errors.New("Couldn't get Xray version. Error: " + err.Error())
 	}
 	if e := clientutils.ValidateMinimumVersion(clientutils.Xray, minXrayVersion, xrayVersion); e != nil {
-		log.Debug(ReportUsagePrefix, e.Error())
+		log.Debug("Usage Report:", e.Error())
 		return nil
 	}
 	url, err := clientutils.BuildUrl(xrDetails.GetUrl(), xrayUsageApiPath, make(map[string]string))
 	if err != nil {
-		return errors.New(ReportUsagePrefix + err.Error())
+		return errors.New(err.Error())
 	}
 	clientDetails := xrDetails.CreateHttpClientDetails()
 
 	bodyContent, err := json.Marshal(events)
 	if errorutils.CheckError(err) != nil {
-		return errors.New(ReportUsagePrefix + err.Error())
+		return errors.New(err.Error())
 	}
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
-		return errors.New(ReportUsagePrefix + "Couldn't send usage info. Error: " + err.Error())
+		return errors.New("Couldn't send usage info. Error: " + err.Error())
 	}
 	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 	if err != nil {

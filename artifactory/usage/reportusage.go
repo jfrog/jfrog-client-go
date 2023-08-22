@@ -14,7 +14,6 @@ import (
 )
 
 const minArtifactoryVersion = "6.9.0"
-const ReportUsagePrefix = "Usage Report: "
 
 type ReportUsageAttribute struct {
 	AttributeName  string
@@ -43,12 +42,12 @@ func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryService
 		return
 	}
 	if e := clientutils.ValidateMinimumVersion(clientutils.Artifactory, minArtifactoryVersion, artifactoryVersion); e != nil {
-		log.Debug(ReportUsagePrefix, e.Error())
+		log.Debug("Usage Report:", e.Error())
 		return
 	}
 	url, err = clientutils.BuildUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
 	if err != nil {
-		err = errors.New(ReportUsagePrefix + err.Error())
+		err = errors.New(err.Error())
 		return
 	}
 	clientDetails = rtDetails.CreateHttpClientDetails()
@@ -59,13 +58,12 @@ func sendReport(url string, serviceManager artifactory.ArtifactoryServicesManage
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
-		return errors.New(ReportUsagePrefix + "Couldn't send usage info. Error: " + err.Error())
+		return errors.New("Couldn't send usage info. Error: " + err.Error())
 	}
 	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 	if err != nil {
 		return err
 	}
-	log.Debug(ReportUsagePrefix, "Usage info sent successfully.", "Artifactory response:", resp.Status)
 	return nil
 }
 
@@ -76,7 +74,7 @@ func ReportUsageToArtifactory(productId string, serviceManager artifactory.Artif
 	}
 	bodyContent, err := usageFeaturesToJson(productId, features...)
 	if err != nil {
-		return errors.New(ReportUsagePrefix + err.Error())
+		return err
 	}
 	return sendReport(url, serviceManager, clientDetails, bodyContent)
 }
@@ -88,7 +86,7 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 	}
 	bodyContent, err := reportUsageToJson(productId, commandName, attributes...)
 	if err != nil {
-		return errors.New(ReportUsagePrefix + err.Error())
+		return err
 	}
 	return sendReport(url, serviceManager, clientDetails, bodyContent)
 }
