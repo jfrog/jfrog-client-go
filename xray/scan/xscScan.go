@@ -100,7 +100,7 @@ func (xsc *XscScanService) GetScanGraphResults(scanId string, _, _ bool) (*ScanR
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	endPoint := xsc.XrayDetails.GetXscUrl() + XscGraphAPI + "/" + scanId + "?multi_scan_id=dummpyIdRemoveme"
+	endPoint := xsc.XrayDetails.GetXscUrl() + XscGraphAPI + "/" + scanId
 	log.Info("Waiting for scan to complete on JFrog Xray...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := xsc.client.SendGet(endPoint, true, &httpClientsDetails)
