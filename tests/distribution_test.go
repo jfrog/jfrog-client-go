@@ -3,19 +3,19 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"os"
-	"path/filepath"
-	"testing"
-	"time"
-
 	artifactoryServices "github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/distribution/services"
 	distributionServicesUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
 )
 
 type distributableDistributionStatus string
@@ -181,11 +181,12 @@ func updateDryRun(updateBundleParams services.UpdateReleaseBundleParams) error {
 	return err
 }
 
-func distributeDryRun(distributionParams services.DistributionParams) error {
+func distributeDryRun(distributionParams distribution.DistributionParams) error {
 	defer setServicesToDryRunFalse()
 	testsBundleDistributeService.DryRun = true
 	testsBundleDistributeService.AutoCreateRepo = true
-	return testsBundleDistributeService.Distribute(distributionParams)
+	testsBundleDistributeService.DistributeParams = distributionParams
+	return testsBundleDistributeService.Distribute()
 }
 
 func setServicesToDryRunFalse() {
@@ -272,8 +273,8 @@ func createSignDistributeDelete(t *testing.T) {
 	assertReleaseBundleSigned(t, distributionResponse.State)
 
 	// Create distribute params.
-	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
-	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
+	distributeBundleParams := distribution.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
+	distributeBundleParams.DistributionRules = []*distribution.DistributionCommonParams{{SiteName: "*"}}
 
 	// Create response params.
 	distributionStatusParams := services.DistributionStatusParams{
@@ -293,7 +294,8 @@ func createSignDistributeDelete(t *testing.T) {
 
 	// Distribute release bundle
 	testsBundleDistributeService.AutoCreateRepo = true
-	err = testsBundleDistributeService.Distribute(distributeBundleParams)
+	testsBundleDistributeService.DistributeParams = distributeBundleParams
+	err = testsBundleDistributeService.Distribute()
 	assert.NoError(t, err)
 	waitForDistribution(t, bundleName)
 
@@ -331,11 +333,12 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	assertReleaseBundleSigned(t, distributionResponse.State)
 
 	// Distribute release bundle
-	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
-	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
+	distributeBundleParams := distribution.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
+	distributeBundleParams.DistributionRules = []*distribution.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
 	testsBundleDistributeService.AutoCreateRepo = true
-	err = testsBundleDistributeService.Distribute(distributeBundleParams)
+	testsBundleDistributeService.DistributeParams = distributeBundleParams
+	err = testsBundleDistributeService.Distribute()
 	assert.NoError(t, err)
 
 	// Assert release bundle in "completed" status
@@ -365,12 +368,13 @@ func createDistributeMapping(t *testing.T) {
 	verifyValidSha256(t, summary.GetSha256())
 
 	// Distribute release bundle
-	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
-	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
+	distributeBundleParams := distribution.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
+	distributeBundleParams.DistributionRules = []*distribution.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
 	// On distribution with path mapping, the target repository cannot be auto-created
 	testsBundleDistributeService.AutoCreateRepo = false
-	err = testsBundleDistributeService.Distribute(distributeBundleParams)
+	testsBundleDistributeService.DistributeParams = distributeBundleParams
+	err = testsBundleDistributeService.Distribute()
 	assert.NoError(t, err)
 
 	// Make sure <RtTargetRepo>/b.out does exist in Artifactory
@@ -400,12 +404,13 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	verifyValidSha256(t, summary.GetSha256())
 
 	// Distribute release bundle
-	distributeBundleParams := services.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
-	distributeBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
+	distributeBundleParams := distribution.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
+	distributeBundleParams.DistributionRules = []*distribution.DistributionCommonParams{{SiteName: "*"}}
 	testsBundleDistributeService.Sync = true
 	// On distribution with path mapping, the target repository cannot be auto-created
 	testsBundleDistributeService.AutoCreateRepo = false
-	err = testsBundleDistributeService.Distribute(distributeBundleParams)
+	testsBundleDistributeService.DistributeParams = distributeBundleParams
+	err = testsBundleDistributeService.Distribute()
 	assert.NoError(t, err)
 
 	// Make sure <RtTargetRepo>/b.out does exist in Artifactory
@@ -556,7 +561,7 @@ func deleteRemoteAndLocalBundle(t *testing.T, bundleName string) {
 	deleteBundleParams := services.NewDeleteReleaseBundleParams(bundleName, bundleVersion)
 	// Delete also local release bundle
 	deleteBundleParams.DeleteFromDistribution = true
-	deleteBundleParams.DistributionRules = []*distributionServicesUtils.DistributionCommonParams{{SiteName: "*"}}
+	deleteBundleParams.DistributionRules = []*distribution.DistributionCommonParams{{SiteName: "*"}}
 	deleteBundleParams.Sync = true
 	err := testsBundleDeleteRemoteService.DeleteDistribution(deleteBundleParams)
 	artifactoryCleanup(t)
