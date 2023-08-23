@@ -41,7 +41,7 @@ func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryService
 		err = errors.New("Couldn't get Artifactory version. Error: " + err.Error())
 		return
 	}
-	if e := clientutils.ValidateMinimumVersion(clientutils.Artifactory, minArtifactoryVersion, artifactoryVersion); e != nil {
+	if e := clientutils.ValidateMinimumVersion(clientutils.Artifactory, artifactoryVersion, minArtifactoryVersion); e != nil {
 		log.Debug("Usage Report:", e.Error())
 		return
 	}
