@@ -1129,24 +1129,34 @@ func createAccessPingManager() {
 	testsAccessPingService.ServiceDetails = accessDetails
 }
 
-func createXscServiceManager() {
+func createSecurityServiceManager() {
 	xrayDetails := xrayAuth.NewXrayDetails()
 	xrayUrl := clientutils.AddTrailingSlashIfNeeded(*XrayUrl)
 	xrayDetails.SetUrl(xrayUrl)
 	xrayDetails.SetXscUrl(strings.Replace(xrayUrl, "/xray/", "/xsc/", 1))
-	xrayDetails.SetXscVersion("0.0.0")
+	// Xsv version is used to determine if XSC in enabled or not, in the case we want to
+	// test XSC, set the version.
+	if *TestXsc {
+		xrayDetails.SetXscVersion("0.0.0")
+	}
 	setAuthenticationDetail(xrayDetails)
+	initSecurityManagerByServerDetails(xrayDetails)
+}
 
+// Init securityServiceManager to be XSC or Xray depends on the server details.
+func initSecurityManagerByServerDetails(xrayDetails *xrayAuth.XrayDetails) {
 	xsc := auth.ServiceDetails(xrayDetails)
 	serviceConfig, err := config.NewConfigBuilder().
 		SetServiceDetails(xsc).
 		SetCertificatesPath(xsc.GetClientCertPath()).
 		Build()
 	failOnHttpClientCreation(err)
-	xscServiceManager, err := manager.New(serviceConfig)
-
-	failOnHttpClientCreation(err)
-	securityServiceManager = xscServiceManager
+	securityService, err := manager.New(serviceConfig)
+	if err != nil {
+		log.Error("failed to initialize securityServiceManager")
+		os.Exit(1)
+	}
+	securityServiceManager = securityService
 }
 
 func getUniqueField(prefix string) string {

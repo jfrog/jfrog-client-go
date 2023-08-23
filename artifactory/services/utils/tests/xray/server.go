@@ -148,6 +148,8 @@ func securityHandler(w http.ResponseWriter, r *http.Request) {
 		_, err = fmt.Fprint(w, scanGraphResponse)
 	case "9c9dbd61-f544-4e33-4613-34727043d71f":
 		_, err = fmt.Fprint(w, getScanResultsResponse)
+	case "version":
+		_, err = fmt.Fprint(w, xscVersionResponse)
 	}
 	if err != nil {
 		log.Error(err)

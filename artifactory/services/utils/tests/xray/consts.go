@@ -1386,3 +1386,9 @@ const getScanResultsResponse = `
     
 }
 `
+
+const xscVersionResponse = `
+{
+"xsc_version": "0.0.0"
+}
+`
