@@ -1368,3 +1368,21 @@ const BuildScanResultsResponse = `
   ]
 }
 `
+
+const gitInfoSentResponse = `
+{
+    "multi_scan_id": "f2a8d4fe-40e6-11ee-84e4-02ee10c7f40e"
+}
+`
+
+const scanGraphResponse = `
+{
+    "scan_id": "9c9dbd61-f544-4e33-4613-34727043d71f"
+}
+`
+
+const getScanResultsResponse = `
+{
+    
+}
+`

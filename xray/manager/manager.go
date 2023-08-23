@@ -27,7 +27,7 @@ type SecurityServiceManager interface {
 	UpdatePolicy(params utils.PolicyParams) error
 	DeletePolicy(policyName string) error
 	// Scan
-	ScanGraph(params scan.XrayGraphScanParams) (scanId string, err error)
+	ScanGraph(params *scan.XrayGraphScanParams) (scanId string, err error)
 	GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*scan.ScanResponse, error)
 	BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error)
 	// Report

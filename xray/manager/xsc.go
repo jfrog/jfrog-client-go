@@ -22,7 +22,7 @@ func (xsc *XscServicesManger) SetClient(client *jfroghttpclient.JfrogHttpClient)
 // XscGitInfoContext allows linking of scans and other data to the corresponding git repository.
 // By passing multi-scan-id in the api calls.
 // Returns a string represents the scan ID.
-func (xsc *XscServicesManger) ScanGraph(params scan.XrayGraphScanParams) (scanId string, err error) {
+func (xsc *XscServicesManger) ScanGraph(params *scan.XrayGraphScanParams) (scanId string, err error) {
 	log.Debug("Scanning graph using XSC service...")
 	scanService := scan.NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
 	if params.MultiScanId, err = scanService.SendScanContext(params.XscGitInfoContext); err != nil {

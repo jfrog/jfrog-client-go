@@ -34,6 +34,7 @@ type ServiceDetails interface {
 	GetXscVersion() string
 
 	SetUrl(url string)
+	SetXscUrl(url string)
 	SetUser(user string)
 	SetPassword(password string)
 	SetApiKey(apiKey string)

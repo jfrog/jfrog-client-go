@@ -138,6 +138,23 @@ func entitlementsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func securityHandler(w http.ResponseWriter, r *http.Request) {
+	var err error
+	endpoint := r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
+	switch endpoint {
+	case "gitinfo":
+		_, err = fmt.Fprint(w, gitInfoSentResponse)
+	case "graph":
+		_, err = fmt.Fprint(w, scanGraphResponse)
+	case "9c9dbd61-f544-4e33-4613-34727043d71f":
+		_, err = fmt.Fprint(w, getScanResultsResponse)
+	}
+	if err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func buildScanHandler(w http.ResponseWriter, r *http.Request) {
 	argsSegment := strings.Split(r.URL.Path, services.BuildScanAPI)[1]
 	switch r.Method {
@@ -186,6 +203,8 @@ func StartXrayMockServer() int {
 	handlers["/api/xray/scanBuild"] = scanBuildHandler
 	handlers["/api/v2/summary/artifact"] = artifactSummaryHandler
 	handlers["/api/v1/entitlements/feature/"] = entitlementsHandler
+	handlers["/xsc/"] = securityHandler
+	handlers["/xray/"] = securityHandler
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	handlers[fmt.Sprintf("/%s/", services.BuildScanAPI)] = buildScanHandler
 	handlers["/"] = http.NotFound

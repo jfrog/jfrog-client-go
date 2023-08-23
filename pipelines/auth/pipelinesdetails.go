@@ -19,6 +19,10 @@ func (pd *pipelinesDetails) GetXscUrl() string {
 	panic("Failed: Method is not implemented")
 }
 
+func (pd *pipelinesDetails) SetXscUrl(url string) {
+	panic("Failed: Method is not implemented")
+}
+
 func (pd *pipelinesDetails) GetXscVersion() string {
 	panic("Failed: Method is not implemented")
 }

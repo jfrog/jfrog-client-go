@@ -5,6 +5,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/config"
+	"github.com/jfrog/jfrog-client-go/xray/manager"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -48,6 +50,7 @@ var (
 	TestArtifactory          *bool
 	TestDistribution         *bool
 	TestXray                 *bool
+	TestXsc                  *bool
 	TestPipelines            *bool
 	TestAccess               *bool
 	TestRepositories         *bool
@@ -110,6 +113,7 @@ var (
 	testsXrayWatchService  *xrayServices.WatchService
 	testsXrayPolicyService *xrayServices.PolicyService
 	testXrayBinMgrService  *xrayServices.BinMgrService
+	securityServiceManager manager.SecurityServiceManager
 
 	// Pipelines Services
 	testsPipelinesIntegrationsService *pipelinesServices.IntegrationsService
@@ -142,6 +146,7 @@ func init() {
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
+	TestXsc = flag.Bool("test.xsc", false, "Test xsc")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
 	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
@@ -542,9 +547,18 @@ func GetDistDetails() auth.ServiceDetails {
 
 func GetXrayDetails() auth.ServiceDetails {
 	xrayDetails := xrayAuth.NewXrayDetails()
-	xrayDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*XrayUrl))
+	xrayUrl := clientutils.AddTrailingSlashIfNeeded(*XrayUrl)
+	xrayDetails.SetUrl(xrayUrl)
+	setupXsc(xrayDetails, xrayUrl)
 	setAuthenticationDetail(xrayDetails)
 	return xrayDetails
+}
+
+func setupXsc(xrayDetails *xrayAuth.XrayDetails, xrayUrl string) {
+	if *TestXsc {
+		xrayDetails.SetXscUrl(strings.Replace(xrayUrl, "xray", "xsc", 1))
+		xrayDetails.SetXscVersion("0.0.0")
+	}
 }
 
 func GetPipelinesDetails() auth.ServiceDetails {
@@ -1113,6 +1127,26 @@ func createAccessPingManager() {
 	failOnHttpClientCreation(err)
 	testsAccessPingService = accessServices.NewPingService(client)
 	testsAccessPingService.ServiceDetails = accessDetails
+}
+
+func createXscServiceManager() {
+	xrayDetails := xrayAuth.NewXrayDetails()
+	xrayUrl := clientutils.AddTrailingSlashIfNeeded(*XrayUrl)
+	xrayDetails.SetUrl(xrayUrl)
+	xrayDetails.SetXscUrl(strings.Replace(xrayUrl, "/xray/", "/xsc/", 1))
+	xrayDetails.SetXscVersion("0.0.0")
+	setAuthenticationDetail(xrayDetails)
+
+	xsc := auth.ServiceDetails(xrayDetails)
+	serviceConfig, err := config.NewConfigBuilder().
+		SetServiceDetails(xsc).
+		SetCertificatesPath(xsc.GetClientCertPath()).
+		Build()
+	failOnHttpClientCreation(err)
+	xscServiceManager, err := manager.New(serviceConfig)
+
+	failOnHttpClientCreation(err)
+	securityServiceManager = xscServiceManager
 }
 
 func getUniqueField(prefix string) string {

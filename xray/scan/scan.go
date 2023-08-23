@@ -43,7 +43,7 @@ const (
 )
 
 type ScanServiceInterface interface {
-	ScanGraph(scanParams XrayGraphScanParams) (string, error)
+	ScanGraph(scanParams *XrayGraphScanParams) (string, error)
 	GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error)
 }
 
@@ -58,7 +58,7 @@ type ScanService struct {
 func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 	return &ScanService{client: client}
 }
-func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
+func (ss *ScanService) ScanGraph(scanParams *XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(scanParams.Graph)
@@ -66,7 +66,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		return "", errorutils.CheckError(err)
 	}
 	url := ss.XrayDetails.GetUrl() + scanGraphAPI
-	url += createScanGraphQueryParams(scanParams)
+	url += createScanGraphQueryParams(*scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err

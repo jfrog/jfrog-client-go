@@ -16,6 +16,10 @@ func (rt *lifecycleDetails) GetXscUrl() string {
 	panic("Failed: Method is not implemented")
 }
 
+func (rt *lifecycleDetails) SetXscUrl(url string) {
+	panic("Failed: Method is not implemented")
+}
+
 func (rt *lifecycleDetails) GetVersion() (string, error) {
 	panic("Failed: Method is not implemented")
 }

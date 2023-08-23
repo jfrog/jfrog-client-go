@@ -27,10 +27,6 @@ type XscScanService struct {
 	ScanService
 }
 
-func (xsc *XscScanService) GetUrl() string {
-	return ""
-}
-
 func NewXscScanService(client *jfroghttpclient.JfrogHttpClient, details auth.ServiceDetails) *XscScanService {
 	return &XscScanService{ScanService{client: client, XrayDetails: details}}
 }
@@ -65,7 +61,7 @@ func (xsc *XscScanService) SendScanContext(details *XscGitInfoContext) (multiSca
 	return scanResponse.MultiScanId, err
 }
 
-func (xsc *XscScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
+func (xsc *XscScanService) ScanGraph(scanParams *XrayGraphScanParams) (string, error) {
 	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(scanParams.Graph)
@@ -74,7 +70,7 @@ func (xsc *XscScanService) ScanGraph(scanParams XrayGraphScanParams) (string, er
 	}
 
 	url := xsc.XrayDetails.GetXscUrl() + XscGraphAPI
-	url += createScanGraphQueryParams(scanParams)
+	url += createScanGraphQueryParams(*scanParams)
 
 	resp, body, err := xsc.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {

@@ -19,6 +19,10 @@ func (ds *distributionDetails) GetXscUrl() string {
 	panic("Failed: Method is not implemented")
 }
 
+func (ds *distributionDetails) SetXscUrl(url string) {
+	panic("Failed: Method is not implemented")
+}
+
 func (ds *distributionDetails) GetXscVersion() string {
 	panic("Failed: Method is not implemented")
 }

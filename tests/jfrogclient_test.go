@@ -65,6 +65,9 @@ func setupIntegrationTests() {
 		createXrayPolicyManager()
 		createXrayBinMgrManager()
 	}
+	if *TestXsc {
+		createXscServiceManager()
+	}
 	if *TestPipelines {
 		createPipelinesIntegrationsManager()
 		createPipelinesSourcesManager()
