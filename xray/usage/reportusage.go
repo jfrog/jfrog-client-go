@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	minXrayVersion    = "3.81.4"
-	xrayUsageApiPath  = "api/v1/usage/events/send"
+	minXrayVersion   = "3.81.4"
+	xrayUsageApiPath = "api/v1/usage/events/send"
 )
 
 type ReportUsageAttribute struct {
