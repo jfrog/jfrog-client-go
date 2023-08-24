@@ -150,6 +150,8 @@ func securityHandler(w http.ResponseWriter, r *http.Request) {
 		_, err = fmt.Fprint(w, getScanResultsResponse)
 	case "version":
 		_, err = fmt.Fprint(w, xscVersionResponse)
+	default:
+		panic("Unexpected request URI:" + r.RequestURI)
 	}
 	if err != nil {
 		log.Error(err)
