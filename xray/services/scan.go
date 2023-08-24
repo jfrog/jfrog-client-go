@@ -82,7 +82,13 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	requestBody, err := json.Marshal(scanParams.Graph)
+	var err error
+	var requestBody []byte
+	if scanParams.AuditGraph != nil {
+		requestBody, err = json.Marshal(scanParams.AuditGraph)
+	} else {
+		requestBody, err = json.Marshal(scanParams.BinaryGraph)
+	}
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
@@ -165,7 +171,8 @@ type XrayGraphScanParams struct {
 	ProjectKey             string
 	Watches                []string
 	ScanType               ScanType
-	Graph                  *xrayUtils.GraphNode
+	AuditGraph             *xrayUtils.GraphNode
+	BinaryGraph            *xrayUtils.BinaryGraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
 }
@@ -188,25 +195,13 @@ func FlattenGraph(graph []*xrayUtils.GraphNode) ([]*xrayUtils.GraphNode, error) 
 }
 
 func populateUniqueDependencies(node *xrayUtils.GraphNode, allDependencies map[string]*xrayUtils.GraphNode) {
-	if value, exist := allDependencies[node.Id]; exist &&
-		(len(node.Nodes) == 0 || value.ChildrenExist) {
+	if _, exist := allDependencies[node.Id]; exist && len(node.Nodes) == 0 {
 		return
 	}
 	allDependencies[node.Id] = &xrayUtils.GraphNode{Id: node.Id}
-	if len(node.Nodes) > 0 {
-		// In some cases node can appear twice, with or without children, this because of the depth limit when creating the graph.
-		// If the node was covered with its children, we mark that, so we won't cover it again.
-		// If its without children, we want to cover it again when it comes with its children.
-		allDependencies[node.Id].ChildrenExist = true
-	}
 	for _, dependency := range node.Nodes {
 		populateUniqueDependencies(dependency, allDependencies)
 	}
-}
-
-type OtherComponentIds struct {
-	Id     string `json:"component_id,omitempty"`
-	Origin int    `json:"origin,omitempty"`
 }
 
 type RequestScanResponse struct {
