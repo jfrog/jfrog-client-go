@@ -178,7 +178,7 @@ type XrayGraphScanParams struct {
 }
 
 // FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
-func FlattenGraph(graph []*xrayUtils.GraphNode) ([]*xrayUtils.GraphNode, error) {
+func FlattenGraph(graph []*xrayUtils.GraphNode) (*xrayUtils.GraphNode, error) {
 	allDependencies := map[string]*xrayUtils.GraphNode{}
 	for _, node := range graph {
 		allDependencies[node.Id] = &xrayUtils.GraphNode{Id: node.Id}
@@ -192,7 +192,7 @@ func FlattenGraph(graph []*xrayUtils.GraphNode) ([]*xrayUtils.GraphNode, error) 
 		}
 		log.Debug("Flat dependencies list:\n" + clientutils.IndentJsonArray(jsonList))
 	}
-	return []*xrayUtils.GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}, nil
+	return &xrayUtils.GraphNode{Id: "root", Nodes: maps.Values(allDependencies)}, nil
 }
 
 func populateUniqueDependencies(currNode *xrayUtils.GraphNode, allDependencies map[string]*xrayUtils.GraphNode) {

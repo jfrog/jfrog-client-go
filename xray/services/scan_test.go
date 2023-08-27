@@ -69,9 +69,9 @@ func TestFlattenGraph(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check that the graph has been flattened correctly
-	assert.Len(t, flatGraph[0].Nodes, 8)
+	assert.Len(t, flatGraph.Nodes, 8)
 	set := datastructures.MakeSet[string]()
-	for _, node := range flatGraph[0].Nodes {
+	for _, node := range flatGraph.Nodes {
 		assert.Len(t, node.Nodes, 0)
 		assert.False(t, set.Exists(node.Id))
 		set.Add(node.Id)
