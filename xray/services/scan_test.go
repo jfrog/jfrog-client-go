@@ -58,6 +58,7 @@ func TestFlattenGraph(t *testing.T) {
 	// Create random trees with the following 8 IDs
 	timestamp := time.Now().Unix()
 	log.Info("Timestamp for test:", timestamp)
+	//#nosec G404
 	seed := rand.New(rand.NewSource(timestamp))
 	depIds := []string{"dep1", "dep2", "dep3", "dep4", "dep5", "dep6", "dep7", "dep8"}
 	tree1 := generateTreeWithIDs(depIds, seed)
