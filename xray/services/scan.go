@@ -201,7 +201,9 @@ func populateUniqueDependencies(currNode *xrayUtils.GraphNode, allDependencies m
 		if dependency.NodeHasLoop() {
 			continue
 		}
-		allDependencies[dependency.Id] = &xrayUtils.GraphNode{Id: dependency.Id}
+		if _, exist := allDependencies[dependency.Id]; !exist {
+			allDependencies[dependency.Id] = &xrayUtils.GraphNode{Id: dependency.Id}
+		}
 		populateUniqueDependencies(dependency, allDependencies)
 	}
 }

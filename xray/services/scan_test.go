@@ -3,10 +3,12 @@ package services
 import (
 	"fmt"
 	"github.com/jfrog/gofrog/datastructures"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
+	"time"
 )
 
 func TestCreateScanGraphQueryParams(t *testing.T) {
@@ -54,17 +56,20 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 
 func TestFlattenGraph(t *testing.T) {
 	// Create random trees with the following 8 IDs
+	timestamp := time.Now().Unix()
+	log.Info("Timestamp for test:", timestamp)
+	seed := rand.New(rand.NewSource(timestamp))
 	depIds := []string{"dep1", "dep2", "dep3", "dep4", "dep5", "dep6", "dep7", "dep8"}
-	tree1 := generateTreeWithIDs(depIds)
-	tree2 := generateTreeWithIDs(depIds)
-	tree3 := generateTreeWithIDs(depIds)
+	tree1 := generateTreeWithIDs(depIds, seed)
+	tree2 := generateTreeWithIDs(depIds, seed)
+	tree3 := generateTreeWithIDs(depIds, seed)
 
 	// Create graph
 	flatGraph, err := FlattenGraph([]*xrayUtils.GraphNode{tree1, tree2, tree3})
 	assert.NoError(t, err)
 
 	// Check that the graph has been flattened correctly
-	assert.Equal(t, len(flatGraph[0].Nodes), 8)
+	assert.Len(t, flatGraph[0].Nodes, 8)
 	set := datastructures.MakeSet[string]()
 	for _, node := range flatGraph[0].Nodes {
 		assert.Len(t, node.Nodes, 0)
@@ -73,17 +78,21 @@ func TestFlattenGraph(t *testing.T) {
 	}
 }
 
-func generateTreeWithIDs(remainingIDs []string) *xrayUtils.GraphNode {
+func generateTreeWithIDs(remainingIDs []string, seed *rand.Rand) *xrayUtils.GraphNode {
 	if len(remainingIDs) == 0 {
 		return nil
 	}
+	// Shuffle IDs
+	seed.Shuffle(len(remainingIDs), func(i, j int) {
+		remainingIDs[i], remainingIDs[j] = remainingIDs[j], remainingIDs[i]
+	})
 
 	nodeID, remainingIDs := remainingIDs[0], remainingIDs[1:]
 	node := &xrayUtils.GraphNode{Id: nodeID}
 
-	numChildren := rand.Intn(5) + 1
+	numChildren := seed.Intn(5) + 1
 	for i := 0; i < numChildren; i++ {
-		child := generateTreeWithIDs(remainingIDs)
+		child := generateTreeWithIDs(remainingIDs, seed)
 		if child != nil {
 			node.Nodes = append(node.Nodes, child)
 		}
