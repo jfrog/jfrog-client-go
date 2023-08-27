@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/gofrog/datastructures"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/stretchr/testify/assert"
+	"math/rand"
 	"testing"
 )
 
@@ -52,27 +53,14 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 }
 
 func TestFlattenGraph(t *testing.T) {
-	nodeA := &xrayUtils.GraphNode{Id: "A"}
-	nodeB := &xrayUtils.GraphNode{Id: "B"}
-	nodeC := &xrayUtils.GraphNode{Id: "C"}
-	nodeD := &xrayUtils.GraphNode{Id: "D"}
-	nodeE := &xrayUtils.GraphNode{Id: "E"}
-	nodeF := &xrayUtils.GraphNode{Id: "F"}
-	nodeG := &xrayUtils.GraphNode{Id: "G"}
-	nodeGNoChildren := &xrayUtils.GraphNode{Id: "G"}
-	nodeH := &xrayUtils.GraphNode{Id: "H"}
-
-	// Set dependencies
-	nodeA.Nodes = []*xrayUtils.GraphNode{nodeB, nodeC}
-	nodeB.Nodes = []*xrayUtils.GraphNode{nodeC, nodeD}
-	nodeC.Nodes = []*xrayUtils.GraphNode{nodeD}
-	nodeD.Nodes = []*xrayUtils.GraphNode{nodeE, nodeF}
-	nodeF.Nodes = []*xrayUtils.GraphNode{nodeGNoChildren, nodeA, nodeB, nodeC, nodeG}
-	nodeG.Nodes = []*xrayUtils.GraphNode{nodeH}
+	// Create random trees with the following 8 IDs
+	depIds := []string{"dep1", "dep2", "dep3", "dep4", "dep5", "dep6", "dep7", "dep8"}
+	tree1 := generateTreeWithIDs(depIds)
+	tree2 := generateTreeWithIDs(depIds)
+	tree3 := generateTreeWithIDs(depIds)
 
 	// Create graph
-	graph := []*xrayUtils.GraphNode{nodeA, nodeB, nodeC}
-	flatGraph, err := FlattenGraph(graph)
+	flatGraph, err := FlattenGraph([]*xrayUtils.GraphNode{tree1, tree2, tree3})
 	assert.NoError(t, err)
 
 	// Check that the graph has been flattened correctly
@@ -83,4 +71,23 @@ func TestFlattenGraph(t *testing.T) {
 		assert.False(t, set.Exists(node.Id))
 		set.Add(node.Id)
 	}
+}
+
+func generateTreeWithIDs(remainingIDs []string) *xrayUtils.GraphNode {
+	if len(remainingIDs) == 0 {
+		return nil
+	}
+
+	nodeID, remainingIDs := remainingIDs[0], remainingIDs[1:]
+	node := &xrayUtils.GraphNode{Id: nodeID}
+
+	numChildren := rand.Intn(5) + 1
+	for i := 0; i < numChildren; i++ {
+		child := generateTreeWithIDs(remainingIDs)
+		if child != nil {
+			node.Nodes = append(node.Nodes, child)
+		}
+	}
+
+	return node
 }

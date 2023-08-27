@@ -34,13 +34,7 @@ type GraphNode struct {
 	// List of subcomponents.
 	Nodes []*GraphNode `json:"nodes,omitempty"`
 	// Node parent (for internal use)
-	Parent *ParentNode `json:"-"`
-}
-
-type ParentNode struct {
-	Id string
-	// Node parent (for internal use)
-	Parent *ParentNode
+	Parent *GraphNode `json:"-"`
 }
 
 func (currNode *GraphNode) NodeHasLoop() bool {

@@ -181,6 +181,7 @@ type XrayGraphScanParams struct {
 func FlattenGraph(graph []*xrayUtils.GraphNode) ([]*xrayUtils.GraphNode, error) {
 	allDependencies := map[string]*xrayUtils.GraphNode{}
 	for _, node := range graph {
+		allDependencies[node.Id] = &xrayUtils.GraphNode{Id: node.Id}
 		populateUniqueDependencies(node, allDependencies)
 	}
 	if log.GetLogger().GetLogLevel() == log.DEBUG {
@@ -194,12 +195,13 @@ func FlattenGraph(graph []*xrayUtils.GraphNode) ([]*xrayUtils.GraphNode, error) 
 	return []*xrayUtils.GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}, nil
 }
 
-func populateUniqueDependencies(node *xrayUtils.GraphNode, allDependencies map[string]*xrayUtils.GraphNode) {
-	if _, exist := allDependencies[node.Id]; exist && len(node.Nodes) == 0 {
-		return
-	}
-	allDependencies[node.Id] = &xrayUtils.GraphNode{Id: node.Id}
-	for _, dependency := range node.Nodes {
+func populateUniqueDependencies(currNode *xrayUtils.GraphNode, allDependencies map[string]*xrayUtils.GraphNode) {
+	for _, dependency := range currNode.Nodes {
+		dependency.Parent = currNode
+		if dependency.NodeHasLoop() {
+			continue
+		}
+		allDependencies[dependency.Id] = &xrayUtils.GraphNode{Id: dependency.Id}
 		populateUniqueDependencies(dependency, allDependencies)
 	}
 }
