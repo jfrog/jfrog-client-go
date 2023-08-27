@@ -66,12 +66,12 @@ func (lcs *LifecycleServicesManager) DeleteReleaseBundle(rbDetails lifecycle.Rel
 	return rbService.DeleteReleaseBundle(rbDetails, params)
 }
 
-func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution.DistributionParams, autoCreateRepo bool, optionalPathMapping lifecycle.OptionalPathMapping) error {
+func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution.DistributionParams, autoCreateRepo bool, pathMapping lifecycle.PathMapping) error {
 	distributeBundleService := lifecycle.NewDistributeReleaseBundleService(lcs.client)
 	distributeBundleService.LcDetails = lcs.config.GetServiceDetails()
 	distributeBundleService.DryRun = lcs.config.IsDryRun()
 	distributeBundleService.AutoCreateRepo = autoCreateRepo
 	distributeBundleService.DistributeParams = params
-	distributeBundleService.OptionalPathMapping = optionalPathMapping
+	distributeBundleService.PathMapping = pathMapping
 	return distributeBundleService.Distribute()
 }

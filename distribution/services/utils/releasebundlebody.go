@@ -23,7 +23,7 @@ type BundleSpec struct {
 
 type BundleQuery struct {
 	QueryName    string                     `json:"query_name,omitempty"`
-	Aql          string                     `json:"aql"`
+	Aql          string                     `json:"aql,omitempty"`
 	PathMappings []distribution.PathMapping `json:"mappings,omitempty"`
 	AddedProps   []AddedProps               `json:"added_props,omitempty"`
 }

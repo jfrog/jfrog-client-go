@@ -12,7 +12,7 @@ type DistributeReleaseBundleService struct {
 	DryRun           bool
 	AutoCreateRepo   bool
 	DistributeParams distribution.DistributionParams
-	OptionalPathMapping
+	PathMapping
 }
 
 func (dr *DistributeReleaseBundleService) GetHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -56,7 +56,7 @@ func (dr *DistributeReleaseBundleService) createDistributeBody() ReleaseBundleDi
 	return ReleaseBundleDistributeBody{
 		ReleaseBundleDistributeV1Body: distribution.CreateDistributeV1Body(dr.DistributeParams, dr.DryRun, dr.AutoCreateRepo),
 		Modifications: Modifications{
-			PathMappings: distribution.CreatePathMappings(dr.OptionalPathMapping.Pattern, dr.OptionalPathMapping.Target),
+			PathMappings: distribution.CreatePathMappings(dr.Pattern, dr.Target),
 		},
 	}
 }
@@ -70,7 +70,7 @@ type Modifications struct {
 	PathMappings []distribution.PathMapping `json:"mappings"`
 }
 
-type OptionalPathMapping struct {
+type PathMapping struct {
 	Pattern string
 	Target  string
 }
