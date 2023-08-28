@@ -3,13 +3,12 @@ package usage
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/xray"
+	"github.com/jfrog/jfrog-client-go/xray/manager"
+	"net/http"
 )
 
 const (
@@ -33,7 +32,7 @@ type ReportXrayEventData struct {
 	Origin     string            `json:"origin,omitempty"`
 }
 
-func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...ReportXrayEventData) error {
+func SendXrayUsageEvents(serviceManager manager.SecurityServiceManager, events ...ReportXrayEventData) error {
 	if len(events) == 0 {
 		return errorutils.CheckErrorf("Nothing to send.")
 	}
