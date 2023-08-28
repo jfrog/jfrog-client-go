@@ -152,11 +152,16 @@ func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunI
 		}
 		pipeRunIDs := make([]PipelinesRunID, 0)
 		err = json.Unmarshal(body, &pipeRunIDs)
+		if err != nil {
+			return false, body, errors.New("Failed to parse response to get run status")
+		}
 		for i := range pipeRunIDs {
+			if i > 0 {
+				break
+			}
 			if pipeRunIDs[i].LatestRunID == 0 {
 				return false, body, errors.New("Pipeline didnt start running yet")
 			}
-			break
 		}
 		return true, body, err
 	}
@@ -259,13 +264,15 @@ func (ws *WorkspaceService) WorkspacePollSyncStatus() ([]WorkspacesResponse, err
 			return true, body, err
 		}
 		for i := range wsStatusResp {
+			if i > 0 {
+				break
+			}
 			if *wsStatusResp[i].IsSyncing {
 				fmt.Printf("%+v \n", wsStatusResp)
 				return false, body, err
 			} else if wsStatusResp[i].LastSyncStatusCode == 4003 || wsStatusResp[i].LastSyncStatusCode == 4004 {
 				return true, body, err
 			}
-			break
 		}
 		return true, body, err
 	}
