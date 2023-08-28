@@ -43,7 +43,7 @@ func (ws *WorkspaceService) getHttpDetails() httputils.HttpClientDetails {
 func (ws *WorkspaceService) GetWorkspace() ([]WorkspacesResponse, error) {
 	httpDetails := ws.getHttpDetails()
 	// Query params
-	queryParams := make(map[string]string, 0)
+	queryParams := make(map[string]string)
 	// URL construction
 	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), workspaces)
 	if err != nil {
@@ -86,14 +86,14 @@ func (ws *WorkspaceService) DeleteWorkspace(projectName string) error {
 func (ws *WorkspaceService) ValidateWorkspace(data []byte) error {
 	httpDetails := ws.getHttpDetails()
 	// Query params
-	queryParams := make(map[string]string, 0)
+	queryParams := make(map[string]string)
 	// URL construction
 	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), validateWorkspace)
 	if err != nil {
 		return err
 	}
 	// Headers
-	headers := make(map[string]string, 0)
+	headers := make(map[string]string)
 	headers["Content-Type"] = "application/json"
 	headers["User-Agent"] = "jfrog-client-go/1.24.3"
 	httpDetails.Headers = headers
@@ -109,7 +109,7 @@ func (ws *WorkspaceService) ValidateWorkspace(data []byte) error {
 func (ws *WorkspaceService) WorkspaceSync(project string) error {
 	httpDetails := ws.getHttpDetails()
 	// Query params
-	queryParams := make(map[string]string, 0)
+	queryParams := make(map[string]string)
 	queryParams["projectName"] = project
 	syncWorkspaceAPI := strings.Replace(workspaceSync, ":project", project, 1)
 	// URL construction
@@ -152,7 +152,7 @@ func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunI
 		}
 		pipeRunIDs := make([]PipelinesRunID, 0)
 		err = json.Unmarshal(body, &pipeRunIDs)
-		if pipeRunIDs[0].LatestRunID == 0 {
+		if len(pipeRunIDs) > 0 && pipeRunIDs[0].LatestRunID == 0 {
 			return false, body, errors.New("Pipeline didnt start running yet")
 		}
 		return true, body, err
@@ -255,11 +255,13 @@ func (ws *WorkspaceService) WorkspacePollSyncStatus() ([]WorkspacesResponse, err
 			log.Error("failed to unmarshal validation response")
 			return true, body, err
 		}
-		if len(wsStatusResp) > 0 && *wsStatusResp[0].IsSyncing {
-			fmt.Printf("%+v \n", wsStatusResp)
-			return false, body, err
-		} else if wsStatusResp[0].LastSyncStatusCode == 4003 || wsStatusResp[0].LastSyncStatusCode == 4004 {
-			return true, body, err
+		if len(wsStatusResp) > 0 {
+			if *wsStatusResp[0].IsSyncing {
+				fmt.Printf("%+v \n", wsStatusResp)
+				return false, body, err
+			} else if wsStatusResp[0].LastSyncStatusCode == 4003 || wsStatusResp[0].LastSyncStatusCode == 4004 {
+				return true, body, err
+			}
 		}
 		return true, body, err
 	}

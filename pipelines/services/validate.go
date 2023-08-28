@@ -43,7 +43,7 @@ func (vs *ValidateService) ValidatePipeline(data []byte) error {
 	uri := vs.constructValidateAPIURL(m, validatePipResourcePath)
 
 	// Headers
-	headers := make(map[string]string, 0)
+	headers := make(map[string]string)
 	headers["Content-Type"] = "application/json"
 	httpDetails.Headers = headers
 	log.Debug(string(data))
