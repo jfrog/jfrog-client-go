@@ -1,7 +1,7 @@
 package services
 
 import (
-	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/http"
 	"path"
@@ -12,7 +12,7 @@ func (rbs *ReleaseBundlesService) DeleteReleaseBundle(rbDetails ReleaseBundleDet
 	queryParams := getProjectQueryParam(params.ProjectKey)
 	queryParams[async] = strconv.FormatBool(params.Async)
 	restApi := path.Join(releaseBundleBaseApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
-	requestFullUrl, err := rtUtils.BuildArtifactoryUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, queryParams)
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, queryParams)
 	if err != nil {
 		return err
 	}

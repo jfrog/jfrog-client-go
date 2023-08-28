@@ -6,9 +6,10 @@ import (
 	"path"
 	"strings"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -41,7 +42,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 
 	distributeUrl := ds.ArtDetails.GetUrl()
 	restApi := path.Join("api/build/distribute/", params.GetBuildName(), params.GetBuildNumber())
-	requestFullUrl, err := utils.BuildArtifactoryUrl(distributeUrl, restApi, make(map[string]string))
+	requestFullUrl, err := utils.BuildUrl(distributeUrl, restApi, make(map[string]string))
 	if err != nil {
 		return err
 	}
@@ -70,7 +71,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	}
 
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryutils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {

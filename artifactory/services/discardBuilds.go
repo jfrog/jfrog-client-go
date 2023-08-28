@@ -2,16 +2,18 @@ package services
 
 import (
 	"encoding/json"
-	buildinfo "github.com/jfrog/build-info-go/entities"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	buildinfo "github.com/jfrog/build-info-go/entities"
+
+	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -30,7 +32,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 
 	discardUrl := ds.ArtDetails.GetUrl()
 	restApi := path.Join("api/build/retention/", params.GetBuildName())
-	requestFullUrl, err := utils.BuildArtifactoryUrl(discardUrl, restApi, make(map[string]string))
+	requestFullUrl, err := utils.BuildUrl(discardUrl, restApi, make(map[string]string))
 	if err != nil {
 		return err
 	}
@@ -63,7 +65,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 	}
 
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryutils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
