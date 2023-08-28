@@ -19,7 +19,7 @@ const (
 	workspaces         = "api/v1/workspaces"
 	deleteWorkspace    = "api/v1/workspaces/:project"
 	validateWorkspace  = "api/v1/validateWorkspace"
-	workspaceSync      = "api/v1/syncWorkspace/:project"
+	workspaceSync      = "api/v1/syncWorkspace"
 	workspacePipelines = "api/v1/pipelines"
 	workspaceRuns      = "api/v1/runs"
 	workspaceSteps     = "api/v1/steps"
@@ -110,6 +110,7 @@ func (ws *WorkspaceService) WorkspaceSync(project string) error {
 	httpDetails := ws.getHttpDetails()
 	// Query params
 	queryParams := make(map[string]string, 0)
+	queryParams["projectName"] = project
 	syncWorkspaceAPI := strings.Replace(workspaceSync, ":project", project, 1)
 	// URL construction
 	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), syncWorkspaceAPI)
