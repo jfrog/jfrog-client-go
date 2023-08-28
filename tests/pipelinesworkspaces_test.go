@@ -95,17 +95,16 @@ func TestWorkspaceValidationFailureAndSucceedsWhenValidIntegrationCreated(t *tes
 	if len(wsResp) < 1 {
 		assert.Fail(t, "No workspace created")
 	}
-	var syncStatusResp []services.WorkspacesResponse
-	syncStatusResp, err = testPipelinesWorkspaceService.WorkspacePollSyncStatus()
+	_, err = testPipelinesWorkspaceService.WorkspacePollSyncStatus()
 	if !assert.NoError(t, err) {
 		return
 	}
 
 	err = testPipelinesWorkspaceService.WorkspaceSync("default")
 	assert.NoError(t, err)
-	syncStatusResp, err = testPipelinesWorkspaceService.WorkspacePollSyncStatus()
+	syncStatusRespSuccess, err := testPipelinesWorkspaceService.WorkspacePollSyncStatus()
 	assert.NoError(t, err)
-	for _, ws := range syncStatusResp {
+	for _, ws := range syncStatusRespSuccess {
 		fmt.Printf("%+v \n", ws)
 		err = testPipelinesWorkspaceService.DeleteWorkspace("default")
 	}

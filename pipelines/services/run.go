@@ -122,7 +122,7 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 	}
 	// Polling execution
 	_, err = pollingExecutor.Execute()
-	return nil
+	return err
 }
 
 func (rs *RunService) CancelRun(runID int) error {

@@ -163,9 +163,12 @@ func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunI
 		PollingAction:   pollingAction,
 		MsgPrefix:       "Get pipeline workspace sync status...",
 	}
+	pipeRunIDs := make([]PipelinesRunID, 0)
 	// Polling execution
 	body, err := pollingExecutor.Execute()
-	pipeRunIDs := make([]PipelinesRunID, 0)
+	if err != nil {
+		return pipeRunIDs, err
+	}
 	err = json.Unmarshal(body, &pipeRunIDs)
 	return pipeRunIDs, err
 }
