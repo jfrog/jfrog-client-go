@@ -8,9 +8,10 @@ import (
 	"github.com/jfrog/gofrog/version"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
@@ -37,8 +38,8 @@ func (gpc *GoPublishCommand) verifyCompatibleVersion(artifactoryVersion string) 
 	return nil
 }
 
-func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, artDetails auth.ServiceDetails) (*utils.OperationSummary, error) {
-	goApiUrl, err := utils.BuildArtifactoryUrl(artDetails.GetUrl(), "api/go/", make(map[string]string))
+func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpclient.JfrogHttpClient, artDetails auth.ServiceDetails) (*artifactoryutils.OperationSummary, error) {
+	goApiUrl, err := utils.BuildUrl(artDetails.GetUrl(), "api/go/", make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +73,7 @@ func (gpc *GoPublishCommand) PublishPackage(params GoParams, client *jfroghttpcl
 		return nil, err
 	}
 
-	return &utils.OperationSummary{TotalSucceeded: totalSucceed, TotalFailed: totalFailed, TransferDetailsReader: content.NewContentReader(fileTransferDetailsTempFile, "files")}, nil
+	return &artifactoryutils.OperationSummary{TotalSucceeded: totalSucceed, TotalFailed: totalFailed, TransferDetailsReader: content.NewContentReader(fileTransferDetailsTempFile, "files")}, nil
 }
 
 func (gpc *GoPublishCommand) uploadFile(params GoParams, filePath string, moduleId, ext, goApiUrl string, filesDetails *[]clientutils.FileTransferDetails, pwa *GoPublishCommand) (success, failed int, err error) {
@@ -108,7 +109,7 @@ func (gpc *GoPublishCommand) upload(localPath, pathInArtifactory, version, props
 	if err != nil {
 		return nil, err
 	}
-	utils.AddChecksumHeaders(gpc.clientDetails.Headers, details)
+	artifactoryutils.AddChecksumHeaders(gpc.clientDetails.Headers, details)
 	resp, body, err := gpc.client.UploadFile(localPath, goApiUrl, "", &gpc.clientDetails, nil)
 	if err != nil {
 		return nil, err

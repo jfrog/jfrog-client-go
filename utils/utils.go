@@ -16,6 +16,7 @@ import (
 
 	"github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/gofrog/stringutils"
+	"github.com/jfrog/gofrog/version"
 
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 
@@ -26,7 +27,19 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.31.5"
+	Version     = "1.31.6"
+)
+
+type MinVersionProduct string
+
+const (
+	Artifactory  MinVersionProduct = "JFrog Artifactory"
+	Xray         MinVersionProduct = "JFrog Xray"
+	DataTransfer MinVersionProduct = "Data Transfer"
+	DockerApi    MinVersionProduct = "Docker API"
+	Projects     MinVersionProduct = "JFrog Projects"
+
+	MinimumVersionMsg = "You are using %s version %s, while this operation requires version %s or higher."
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
@@ -50,6 +63,13 @@ func SetUserAgent(newUserAgent string) {
 
 func getDefaultUserAgent() string {
 	return fmt.Sprintf("%s/%s", Agent, getVersion())
+}
+
+func ValidateMinimumVersion(product MinVersionProduct, currentVersion, minimumVersion string) error {
+	if !version.NewVersion(currentVersion).AtLeast(minimumVersion) {
+		return errorutils.CheckErrorf(MinimumVersionMsg, product, currentVersion, minimumVersion)
+	}
+	return nil
 }
 
 // Get the local root path, from which to start collecting artifacts to be used for:
@@ -208,6 +228,25 @@ func cleanPath(path string) string {
 		path = strings.ReplaceAll(path, `\\\\`, `\\`)
 	}
 	return path
+}
+
+// Builds a URL for Artifactory/Xray requests.
+// Pay attention: semicolons are escaped!
+func BuildUrl(baseUrl, path string, params map[string]string) (string, error) {
+	u := url.URL{Path: path}
+	parsedUrl, err := url.Parse(baseUrl + u.String())
+	if err = errorutils.CheckError(err); err != nil {
+		return "", err
+	}
+	q := parsedUrl.Query()
+	for k, v := range params {
+		q.Set(k, v)
+	}
+	parsedUrl.RawQuery = q.Encode()
+
+	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
+	encodedUrl := strings.ReplaceAll(parsedUrl.String(), ";", url.QueryEscape(";"))
+	return encodedUrl, nil
 }
 
 // BuildTargetPath Replaces matched regular expression from path to corresponding placeholder {i} at target.
