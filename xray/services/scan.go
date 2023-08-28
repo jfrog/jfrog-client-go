@@ -2,10 +2,8 @@ package services
 
 import (
 	"encoding/json"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
-	"golang.org/x/exp/maps"
 	"net/http"
 	"strings"
 	"time"
@@ -175,37 +173,6 @@ type XrayGraphScanParams struct {
 	BinaryGraph            *xrayUtils.BinaryGraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
-}
-
-// FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
-func FlattenGraph(graph []*xrayUtils.GraphNode) (*xrayUtils.GraphNode, error) {
-	allDependencies := map[string]*xrayUtils.GraphNode{}
-	for _, node := range graph {
-		allDependencies[node.Id] = &xrayUtils.GraphNode{Id: node.Id}
-		populateUniqueDependencies(node, allDependencies)
-	}
-	if log.GetLogger().GetLogLevel() == log.DEBUG {
-		// Print dependencies list only on DEBUG mode.
-		jsonList, err := json.Marshal(maps.Keys(allDependencies))
-		if err != nil {
-			return nil, errorutils.CheckError(err)
-		}
-		log.Debug("Flat dependencies list:\n" + clientutils.IndentJsonArray(jsonList))
-	}
-	return &xrayUtils.GraphNode{Id: "root", Nodes: maps.Values(allDependencies)}, nil
-}
-
-func populateUniqueDependencies(currNode *xrayUtils.GraphNode, allDependencies map[string]*xrayUtils.GraphNode) {
-	for _, dependency := range currNode.Nodes {
-		dependency.Parent = currNode
-		if dependency.NodeHasLoop() {
-			continue
-		}
-		if _, exist := allDependencies[dependency.Id]; !exist {
-			allDependencies[dependency.Id] = &xrayUtils.GraphNode{Id: dependency.Id}
-		}
-		populateUniqueDependencies(dependency, allDependencies)
-	}
 }
 
 type RequestScanResponse struct {
