@@ -28,7 +28,7 @@ func TestIsVersionCompatible(t *testing.T) {
 			if test.expectedResult {
 				assert.NoError(t, err)
 			} else {
-				assert.Error(t, err)
+				assert.ErrorContains(t, err, fmt.Sprintf(utils.MinimumVersionMsg, utils.Xray, test.artifactoryVersion, minArtifactoryVersion))
 			}
 		})
 	}

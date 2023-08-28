@@ -30,18 +30,11 @@ func SendEcosystemUsageReports(reports ...ReportEcosystemUsageData) error {
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	if err != nil {
-		return err
-	}
 	resp, body, err := sendRequestToEcosystemService(bodyContent)
 	if err != nil {
 		return errors.New("Couldn't send usage info to Ecosystem. Error: " + err.Error())
 	}
-
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
-		return err
-	}
-	return nil
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 }
 
 func CreateUsageData(productId, accountId, clientId string, features ...string) (reportInfo ReportEcosystemUsageData, err error) {

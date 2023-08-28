@@ -235,8 +235,7 @@ func cleanPath(path string) string {
 func BuildUrl(baseUrl, path string, params map[string]string) (string, error) {
 	u := url.URL{Path: path}
 	parsedUrl, err := url.Parse(baseUrl + u.String())
-	err = errorutils.CheckError(err)
-	if err != nil {
+	if err = errorutils.CheckError(err); err != nil {
 		return "", err
 	}
 	q := parsedUrl.Query()

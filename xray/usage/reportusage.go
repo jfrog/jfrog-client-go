@@ -68,11 +68,7 @@ func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...Repo
 	if err != nil {
 		return errors.New("Couldn't send usage info. Error: " + err.Error())
 	}
-	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
-	if err != nil {
-		return err
-	}
-	return nil
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 }
 
 func CreateUsageEvent(productId, featureId string, additionalAttributes ...ReportUsageAttribute) (event ReportXrayEventData) {
