@@ -45,10 +45,7 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 		return
 	}
 	defer func() {
-		e := dirsToBeDeletedReader.Close()
-		if err == nil {
-			err = e
-		}
+		err = errors.Join(err, dirsToBeDeletedReader.Close())
 	}()
 	var candidateDirToBeDeletedPath string
 	var itemNotToBeDeletedLocation string

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,6 +31,7 @@ const (
 	lastRelease                  = "LAST_RELEASE"
 	buildRepositoriesSuffix      = "-build-info"
 	defaultBuildRepositoriesName = "artifactory"
+	defaultProjectKey            = "default"
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -82,6 +84,10 @@ func SetContentType(contentType string, headers *map[string]string) {
 
 func DisableAccelBuffering(headers *map[string]string) {
 	AddHeader("X-Accel-Buffering", "no", headers)
+}
+
+func AddSigningKeyNameHeader(keyName string, headers *map[string]string) {
+	AddHeader("X-JFrog-Signing-Key-Name", keyName, headers)
 }
 
 func AddHeader(headerName, headerValue string, headers *map[string]string) {
@@ -164,7 +170,15 @@ func getBuildNameAndNumberFromBuildIdentifier(buildIdentifier, projectKey string
 
 func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
 	if buildNumber == LatestBuildNumberKey || buildNumber == lastRelease {
-		return getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
+		foundBuildNumber, err := GetLatestBuildNumberFromArtifactory(buildName, projectKey, flags)
+		if err != nil {
+			return "", "", err
+		}
+		if foundBuildNumber == "" {
+			log.Debug(fmt.Sprintf("A build-name: <%s> with a build-number: <%s> could not be found in Artifactory.", buildName, buildNumber))
+			return "", "", nil
+		}
+		return buildName, foundBuildNumber, nil
 	}
 	return buildName, buildNumber, nil
 }
@@ -237,27 +251,31 @@ type Build struct {
 	BuildNumber string `json:"buildNumber"`
 }
 
-func getLatestBuildNumberFromArtifactory(buildName, buildNumber, projectKey string, flags CommonConf) (string, string, error) {
-	buildRepo := defaultBuildRepositoriesName
-	if projectKey != "" {
-		buildRepo = projectKey
-	}
-	buildRepo += buildRepositoriesSuffix
+func GetLatestBuildNumberFromArtifactory(buildName, projectKey string, flags CommonConf) (buildNumber string, err error) {
+	buildRepo := GetBuildInfoRepositoryByProject(projectKey)
 	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, buildName)
 	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	defer reader.Close()
+	defer func() {
+		err = errors.Join(err, reader.Close())
+	}()
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if i := strings.LastIndex(resultItem.Name, "-"); i != -1 {
 			// Remove the timestamp and .json to get the build number
-			buildNumber = resultItem.Name[:i]
-			return buildName, buildNumber, nil
+			return resultItem.Name[:i], nil
 		}
 	}
-	log.Debug(fmt.Sprintf("A build-name: <%s> with a build-number: <%s> could not be found in Artifactory.", buildName, buildNumber))
-	return "", "", nil
+	return "", nil
+}
+
+func GetBuildInfoRepositoryByProject(projectKey string) string {
+	buildRepo := defaultBuildRepositoriesName
+	if projectKey != "" && projectKey != defaultProjectKey {
+		buildRepo = projectKey
+	}
+	return buildRepo + buildRepositoriesSuffix
 }
 
 func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.ContentReader, flags CommonConf, itemsAlreadyContainProperties bool) (*content.ContentReader, error) {
