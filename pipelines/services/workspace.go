@@ -152,8 +152,10 @@ func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunI
 		}
 		pipeRunIDs := make([]PipelinesRunID, 0)
 		err = json.Unmarshal(body, &pipeRunIDs)
-		if len(pipeRunIDs) > 0 && pipeRunIDs[0].LatestRunID == 0 {
-			return false, body, errors.New("Pipeline didnt start running yet")
+		for range pipeRunIDs {
+			if pipeRunIDs[0].LatestRunID == 0 {
+				return false, body, errors.New("Pipeline didnt start running yet")
+			}
 		}
 		return true, body, err
 	}
@@ -255,7 +257,7 @@ func (ws *WorkspaceService) WorkspacePollSyncStatus() ([]WorkspacesResponse, err
 			log.Error("failed to unmarshal validation response")
 			return true, body, err
 		}
-		if len(wsStatusResp) > 0 {
+		for range wsStatusResp {
 			if *wsStatusResp[0].IsSyncing {
 				fmt.Printf("%+v \n", wsStatusResp)
 				return false, body, err
