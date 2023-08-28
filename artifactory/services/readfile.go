@@ -4,9 +4,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
@@ -39,7 +39,7 @@ func (ds *ReadFileService) SetDryRun(isDryRun bool) {
 }
 
 func (ds *ReadFileService) ReadRemoteFile(downloadPath string) (io.ReadCloser, error) {
-	readPath, err := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), downloadPath, make(map[string]string))
+	readPath, err := utils.BuildUrl(ds.GetArtifactoryDetails().GetUrl(), downloadPath, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}

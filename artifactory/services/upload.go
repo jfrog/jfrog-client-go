@@ -4,6 +4,16 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/jfrog/build-info-go/entities"
 	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/gofrog/parallel"
@@ -18,15 +28,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 type UploadService struct {
@@ -742,7 +743,7 @@ func (us *UploadService) postUpload(uploadResult *utils.Result, threadId int, ar
 }
 
 func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
-	url, err := utils.BuildArtifactoryUrl(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, make(map[string]string))
+	url, err := clientutils.BuildUrl(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, make(map[string]string))
 	url = clientutils.AddTrailingSlashIfNeeded(url)
 	if err != nil {
 		return err
@@ -912,7 +913,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 }
 
 func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string, targetProps *utils.Properties) (targetUrlWithProps string, err error) {
-	targetUrl, err := utils.BuildArtifactoryUrl(artifactoryUrl, targetPath, make(map[string]string))
+	targetUrl, err := clientutils.BuildUrl(artifactoryUrl, targetPath, make(map[string]string))
 	if err != nil {
 		return
 	}

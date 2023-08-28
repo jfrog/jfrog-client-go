@@ -3,7 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"net/http"
@@ -52,7 +52,7 @@ func (rbs *ReleaseBundlesService) getReleaseBundleOperationStatus(restApi string
 }
 
 func (rbs *ReleaseBundlesService) getReleaseBundleStatus(restApi string, projectKey string) (statusResp ReleaseBundleStatusResponse, body []byte, err error) {
-	requestFullUrl, err := rtUtils.BuildArtifactoryUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, getProjectQueryParam(projectKey))
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, getProjectQueryParam(projectKey))
 	if err != nil {
 		return
 	}

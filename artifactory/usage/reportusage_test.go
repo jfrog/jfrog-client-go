@@ -24,9 +24,11 @@ func TestIsVersionCompatible(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.artifactoryVersion, func(t *testing.T) {
-			result := isVersionCompatible(test.artifactoryVersion)
-			if test.expectedResult != result {
-				t.Error(fmt.Errorf("expected %t, got %t", test.expectedResult, result))
+			err := utils.ValidateMinimumVersion(utils.Xray, test.artifactoryVersion, minArtifactoryVersion)
+			if test.expectedResult {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorContains(t, err, fmt.Sprintf(utils.MinimumVersionMsg, utils.Xray, test.artifactoryVersion, minArtifactoryVersion))
 			}
 		})
 	}
