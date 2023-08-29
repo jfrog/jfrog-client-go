@@ -82,8 +82,8 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var err error
 	var requestBody []byte
-	if scanParams.AuditGraph != nil {
-		requestBody, err = json.Marshal(scanParams.AuditGraph)
+	if scanParams.DependenciesGraph != nil {
+		requestBody, err = json.Marshal(scanParams.DependenciesGraph)
 	} else {
 		requestBody, err = json.Marshal(scanParams.BinaryGraph)
 	}
@@ -165,11 +165,13 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 type XrayGraphScanParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
-	RepoPath               string
-	ProjectKey             string
-	Watches                []string
-	ScanType               ScanType
-	AuditGraph             *xrayUtils.GraphNode
+	RepoPath   string
+	ProjectKey string
+	Watches    []string
+	ScanType   ScanType
+	// Dependencies Tree
+	DependenciesGraph *xrayUtils.GraphNode
+	// Binary tree received from indexer-app
 	BinaryGraph            *xrayUtils.BinaryGraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool

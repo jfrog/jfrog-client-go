@@ -139,10 +139,10 @@ func ChangeDirAndAssert(t *testing.T, dirPath string) {
 }
 
 // ChangeDirWithCallback changes working directory to the given path and return function that change working directory back to the original path.
-func ChangeDirWithCallback(t *testing.T, callbackDir, chdirPath string) func() {
-	ChangeDirAndAssert(t, chdirPath)
+func ChangeDirWithCallback(t *testing.T, originWd, destinationWd string) func() {
+	ChangeDirAndAssert(t, destinationWd)
 	return func() {
-		ChangeDirAndAssert(t, callbackDir)
+		ChangeDirAndAssert(t, originWd)
 	}
 }
 
