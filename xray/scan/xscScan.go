@@ -20,7 +20,7 @@ const (
 
 	scanTechQueryParam = "tech="
 
-	XscVersionAPI = "/api/v1/system/version"
+	XscVersionAPI = "api/v1/system/version"
 )
 
 type XscScanService struct {
