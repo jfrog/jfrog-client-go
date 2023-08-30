@@ -368,7 +368,7 @@ func archiveUpload(t *testing.T) {
 	}
 
 	// Check for timezone offset for each file in the zip
-	r, err := zip.OpenReader(downloadTarget+"test.zip")
+	r, err := zip.OpenReader(downloadTarget + "test.zip")
 	assert.NoError(t, err)
 	defer func() { assert.NoError(t, r.Close()) }()
 	_, sysTimezoneOffset := time.Now().Zone()

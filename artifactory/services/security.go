@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -34,7 +33,7 @@ func (ss *SecurityService) getArtifactoryDetails() auth.ServiceDetails {
 // Create an API key for the current user. Returns an error if API key already exists - use regenerate API key instead.
 func (ss *SecurityService) CreateAPIKey() (string, error) {
 	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
+	reqURL, err := clientutils.BuildUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +54,7 @@ func (ss *SecurityService) CreateAPIKey() (string, error) {
 func (ss *SecurityService) RegenerateAPIKey() (string, error) {
 	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
 
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
+	reqURL, err := clientutils.BuildUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +74,7 @@ func (ss *SecurityService) RegenerateAPIKey() (string, error) {
 // Returns empty string if API Key wasn't generated.
 func (ss *SecurityService) GetAPIKey() (string, error) {
 	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
+	reqURL, err := clientutils.BuildUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
 	if err != nil {
 		return "", err
 	}

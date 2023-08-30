@@ -237,7 +237,7 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 	} else {
 		log.Info(logMsgPrefix + message)
 	}
-	requestFullUrl, err := utils.BuildArtifactoryUrl(moveUrl, restApi, params)
+	requestFullUrl, err := clientutils.BuildUrl(moveUrl, restApi, params)
 	if err != nil {
 		return false, err
 	}
@@ -268,7 +268,7 @@ func (mc *MoveCopyService) createPathForMoveAction(destPath, logMsgPrefix string
 
 func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string) (bool, error) {
 	rtUrl := mc.GetArtifactoryDetails().GetUrl()
-	requestFullUrl, err := utils.BuildArtifactoryUrl(rtUrl, destPath, map[string]string{})
+	requestFullUrl, err := clientutils.BuildUrl(rtUrl, destPath, map[string]string{})
 	if err != nil {
 		return false, err
 	}
