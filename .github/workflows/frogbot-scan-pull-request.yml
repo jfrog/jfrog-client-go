@@ -23,14 +23,6 @@ jobs:
           # JFrog access token with 'read' permissions on Xray service
           JF_ACCESS_TOKEN: ${{ secrets.FROGBOT_ACCESS_TOKEN }}
 
-          # [Mandatory if JF_ACCESS_TOKEN is not provided]
-          # JFrog username with 'read' permissions for Xray. Must be provided with JF_PASSWORD
-          # JF_USER: ${{ secrets.JF_USER }}
-
-          # [Mandatory if JF_ACCESS_TOKEN is not provided]
-          # JFrog password. Must be provided with JF_USER
-          # JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
-
           # [Mandatory]
           # The GitHub token is automatically generated for the job
           JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -67,6 +59,12 @@ jobs:
           # [Mandatory if JF_SMTP_SERVER is set]
           # The password associated with the username required for authentication with the SMTP server.
           JF_SMTP_PASSWORD: ${{ secrets.JF_SMTP_PASSWORD }}
+
+          # [Optional]
+          # List of comma separated email addresses to receive email notifications about secrets
+          # detected during pull request scanning. The notification is also sent to the email set
+          # in the committer git profile regardless of whether this variable is set or not.
+          JF_EMAIL_RECEIVERS: "eco-system@jfrog.com"
 
           ##########################################################################
           ##   If your project uses a 'frogbot-config.yml' file, you can define   ##
@@ -119,9 +117,3 @@ jobs:
           # Set the minimum severity for vulnerabilities that should be fixed and commented on in pull requests
           # The following values are accepted: Low, Medium, High or Critical
           # JF_MIN_SEVERITY: ""
-
-          # [Optional]
-          # List of comma separated email addresses to receive email notifications about secrets
-          # detected during pull request scanning. The notification is also sent to the email set
-          # in the committer git profile regardless of whether this variable is set or not.
-          # JF_EMAIL_RECEIVERS: ""
