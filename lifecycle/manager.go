@@ -4,6 +4,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	lifecycle "github.com/jfrog/jfrog-client-go/lifecycle/services"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 )
 
 type LifecycleServicesManager struct {
@@ -63,4 +64,14 @@ func (lcs *LifecycleServicesManager) GetReleaseBundlePromotionStatus(rbDetails l
 func (lcs *LifecycleServicesManager) DeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, params lifecycle.ReleaseBundleQueryParams) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.DeleteReleaseBundle(rbDetails, params)
+}
+
+func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution.DistributionParams, autoCreateRepo bool, pathMapping lifecycle.PathMapping) error {
+	distributeBundleService := lifecycle.NewDistributeReleaseBundleService(lcs.client)
+	distributeBundleService.LcDetails = lcs.config.GetServiceDetails()
+	distributeBundleService.DryRun = lcs.config.IsDryRun()
+	distributeBundleService.AutoCreateRepo = autoCreateRepo
+	distributeBundleService.DistributeParams = params
+	distributeBundleService.PathMapping = pathMapping
+	return distributeBundleService.Distribute()
 }
