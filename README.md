@@ -1614,9 +1614,9 @@ summary, err := distManager.SignReleaseBundle(params)
 #### Async Distributing a Release Bundle v1
 
 ```go
-params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
-distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
-params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+params := distribution.NewDistributeReleaseBundleParams("bundle-name", "1")
+distributionRules := distribution.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*distribution.DistributionCommonParams{distributionRules}
 // Auto-creating repository if it does not exist
 autoCreateRepo := true
 err := distManager.DistributeReleaseBundle(params, autoCreateRepo)
@@ -1625,9 +1625,9 @@ err := distManager.DistributeReleaseBundle(params, autoCreateRepo)
 #### Sync Distributing a Release Bundle v1
 
 ```go
-params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
-distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
-params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+params := distribution.NewDistributeReleaseBundleParams("bundle-name", "1")
+distributionRules := distribution.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*distribution.DistributionCommonParams{distributionRules}
 // Auto-creating repository if it does not exist
 autoCreateRepo := true
 // Wait up to 120 minutes for the release bundle v1 distribution
@@ -1654,8 +1654,8 @@ status, err := distributeBundleService.GetStatus(params)
 ```go
 params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
 params.DeleteFromDistribution = true
-distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
-params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+distributionRules := distribution.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*distribution.DistributionCommonParams{distributionRules}
 // Set to true to enable sync deletion (the command execution will end when the deletion process ends).
 param.Sync = true
 // Max minutes to wait for sync deletion.
