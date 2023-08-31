@@ -104,7 +104,7 @@ var (
 	testsBundleCreateService             *distributionServices.CreateReleaseBundleService
 	testsBundleUpdateService             *distributionServices.UpdateReleaseBundleService
 	testsBundleSignService               *distributionServices.SignBundleService
-	testsBundleDistributeService         *distributionServices.DistributeReleaseBundleService
+	testsBundleDistributeService         *distributionServices.DistributeReleaseBundleV1Service
 	testsBundleDistributionStatusService *distributionServices.DistributionStatusService
 	testsBundleDeleteLocalService        *distributionServices.DeleteLocalReleaseBundleService
 	testsBundleDeleteRemoteService       *distributionServices.DeleteReleaseBundleService
@@ -263,7 +263,7 @@ func createDistributionManager() {
 	testsBundleCreateService = distributionServices.NewCreateReleaseBundleService(client)
 	testsBundleUpdateService = distributionServices.NewUpdateReleaseBundleService(client)
 	testsBundleSignService = distributionServices.NewSignBundleService(client)
-	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleService(client)
+	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleV1Service(client)
 	testsBundleDistributionStatusService = distributionServices.NewDistributionStatusService(client)
 	testsBundleDeleteLocalService = distributionServices.NewDeleteLocalDistributionService(client)
 	testsBundleSetSigningKeyService = distributionServices.NewSetSigningKeyService(client)
