@@ -25,9 +25,13 @@ func (xsc *XscServicesManger) SetClient(client *jfroghttpclient.JfrogHttpClient)
 func (xsc *XscServicesManger) ScanGraph(params *scan.XrayGraphScanParams) (scanId string, err error) {
 	log.Debug("Scanning graph using XSC service...")
 	scanService := scan.NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
-	if params.MultiScanId, err = scanService.SendScanContext(params.XscGitInfoContext); err != nil {
+	multiScanId, err := scanService.SendScanContext(params.XscGitInfoContext)
+	if err != nil {
 		// Don't fail the entire scan when failed to send XscGitInfoContext
 		log.Warn("failed to send xsc git info context with the following error: ", err.Error())
+	}
+	if multiScanId != "" {
+		params.MultiScanId = multiScanId
 	}
 	return scanService.ScanGraph(params)
 }
