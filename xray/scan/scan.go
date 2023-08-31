@@ -168,10 +168,9 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 				params = append(params, watchesQueryParam+watch)
 			}
 		}
+	case scanParams.MultiScanId != "":
+		params = append(params, multiScanIdParam+scanParams.MultiScanId)
 	case scanParams.XscGitInfoContext != nil:
-		if scanParams.MultiScanId != "" {
-			params = append(params, multiScanIdParam+scanParams.MultiScanId)
-		}
 		if len(scanParams.XscGitInfoContext.Technologies) > 0 {
 			params = append(params, scanTechQueryParam+scanParams.XscGitInfoContext.Technologies[0])
 		}
