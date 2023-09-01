@@ -74,12 +74,12 @@ func reportAll(t *testing.T) {
 			report, err = testXrayReportService.Licenses(licensesReportRequestParams)
 		}
 		assert.NoError(t, err)
-		validateResponse(t, string(xray.MapResponse[xray.MapReportIdEndpoint[report.ReportId]]["XrayReportRequest"]), report)
+		validateResponse(t, xray.MapResponse[xray.MapReportIdEndpoint[report.ReportId]]["XrayReportRequest"], report)
 
 		var reportId = strconv.Itoa(report.ReportId)
 		details, err := testXrayReportService.Details(reportId)
 		assert.NoError(t, err)
-		validateResponse(t, string(xray.MapResponse[xray.MapReportIdEndpoint[report.ReportId]]["ReportStatus"]), details)
+		validateResponse(t, xray.MapResponse[xray.MapReportIdEndpoint[report.ReportId]]["ReportStatus"], details)
 
 		reportReqCont := services.ReportContentRequestParams{
 			ReportType: ep,
@@ -95,7 +95,7 @@ func reportAll(t *testing.T) {
 		}
 		content, err := testXrayReportService.Content(reportReqCont)
 		assert.NoError(t, err)
-		validateResponse(t, string(xray.MapResponse[ep]["ReportDetails"]), content)
+		validateResponse(t, xray.MapResponse[ep]["ReportDetails"], content)
 
 		err = testXrayReportService.Delete(reportId)
 		assert.NoError(t, err)

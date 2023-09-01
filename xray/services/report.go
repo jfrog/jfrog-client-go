@@ -58,7 +58,7 @@ type ReportContent struct {
 
 // Row defines an entry of the report content
 type Row struct {
-	//Vulnerability Report field
+	// Vulnerability Report field
 	Cves                     []ReportCve `json:"cves,omitempty"`
 	Cvsv2MaxScore            float64     `json:"cvss2_max_score,omitempty"`
 	Cvsv3MaxScore            float64     `json:"cvss3_max_score,omitempty"`
@@ -76,7 +76,7 @@ type Row struct {
 	Description              string      `json:"description,omitempty"`
 	ExternalAdvisorySource   string      `json:"external_advisory_source,omitempty"`
 	ExternalAdvisorySeverity string      `json:"external_advisory_severity,omitempty"`
-	//Licenses field
+	// Licenses Report field
 	License                  string      `json:"license,omitempty"`
 	LicenseName              string      `json:"license_name,omitempty"`
 	Component				 string      `json:"component,omitempty"`
@@ -85,7 +85,7 @@ type Row struct {
 	Unknown         		 *bool       `json:"unknown,omitempty"`
 	Unrecognized    		 *bool       `json:"unrecognized,omitempty"`
 	Custom    		 		 *bool       `json:"custom,omitempty"`
-	//Common field
+	// Common field
 	Path                     string      `json:"path,omitempty"`
 	References               []string    `json:"references,omitempty"`
 }
