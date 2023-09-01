@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"path"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -36,7 +37,7 @@ func (ps *DockerPromoteService) IsDryRun() bool {
 func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error {
 	// Create URL
 	restApi := path.Join("api/docker", params.SourceRepo, "v2", "promote")
-	url, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restApi, nil)
+	url, err := utils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restApi, nil)
 	if err != nil {
 		return err
 	}
@@ -57,7 +58,7 @@ func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error 
 
 	// Send POST request
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryutils.SetContentType("application/json", &httpClientsDetails.Headers)
 	resp, body, err := ps.client.SendPost(url, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
