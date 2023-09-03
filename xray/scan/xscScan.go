@@ -64,7 +64,7 @@ func (xsc *XscScanService) SendScanContext(details *XscGitInfoContext) (multiSca
 func (xsc *XscScanService) ScanGraph(scanParams *XrayGraphScanParams) (string, error) {
 	httpClientsDetails := xsc.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	requestBody, err := json.Marshal(scanParams.Graph)
+	requestBody, err := json.Marshal(scanParams.DependenciesGraph)
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
