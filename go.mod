@@ -3,13 +3,13 @@ module github.com/jfrog/jfrog-client-go
 go 1.20
 
 require (
-	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
+	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371
 	github.com/buger/jsonparser v1.1.1
 	github.com/forPelevin/gomoji v1.1.8
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.4
-	github.com/jfrog/build-info-go v1.9.8
+	github.com/jfrog/build-info-go v1.9.9
 	github.com/jfrog/gofrog v1.3.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.4
@@ -21,7 +21,7 @@ require (
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/CycloneDX/cyclonedx-go v0.7.1 // indirect
+	github.com/CycloneDX/cyclonedx-go v0.7.2 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/andybalholm/brotli v1.0.1 // indirect
@@ -57,6 +57,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.8.9-0.20230803131422-8230595ceb86
+replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.8.9-0.20230831151231-e5e7bd035ddc
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog dev

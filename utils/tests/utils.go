@@ -3,6 +3,7 @@ package tests
 import (
 	"bufio"
 	"errors"
+	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
@@ -107,13 +108,13 @@ func exitOnErr(err error) {
 
 func InitVcsSubmoduleTestDir(t *testing.T, srcPath, tmpDir string) (submodulePath string) {
 	var err error
-	assert.NoError(t, fileutils.CopyDir(srcPath, tmpDir, true, nil))
+	assert.NoError(t, biutils.CopyDir(srcPath, tmpDir, true, nil))
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
 		assert.NoError(t, err)
 		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git")))
 	}
 	submoduleDst := filepath.Join(tmpDir, "subdir", "submodule")
-	assert.NoError(t, fileutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData")))
+	assert.NoError(t, biutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData")))
 	assert.NoError(t, fileutils.MoveFile(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git")))
 	submodulePath, err = filepath.Abs(submoduleDst)
 	assert.NoError(t, err)
@@ -122,7 +123,7 @@ func InitVcsSubmoduleTestDir(t *testing.T, srcPath, tmpDir string) (submodulePat
 
 func InitVcsWorktreeTestDir(t *testing.T, srcPath, tmpDir string) (worktreePath string) {
 	var err error
-	assert.NoError(t, fileutils.CopyDir(srcPath, tmpDir, true, nil))
+	assert.NoError(t, biutils.CopyDir(srcPath, tmpDir, true, nil))
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
 		assert.NoError(t, err)
 		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, "bare.git")))
@@ -139,10 +140,10 @@ func ChangeDirAndAssert(t *testing.T, dirPath string) {
 }
 
 // ChangeDirWithCallback changes working directory to the given path and return function that change working directory back to the original path.
-func ChangeDirWithCallback(t *testing.T, wd, dirPath string) func() {
-	ChangeDirAndAssert(t, dirPath)
+func ChangeDirWithCallback(t *testing.T, originWd, destinationWd string) func() {
+	ChangeDirAndAssert(t, destinationWd)
 	return func() {
-		ChangeDirAndAssert(t, wd)
+		ChangeDirAndAssert(t, originWd)
 	}
 }
 
