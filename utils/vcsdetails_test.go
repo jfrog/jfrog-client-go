@@ -1,6 +1,7 @@
 package utils
 
 import (
+	biutils "github.com/jfrog/build-info-go/utils"
 	testsutils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
 	"path/filepath"
@@ -42,7 +43,7 @@ func TestVcsDetails(t *testing.T) {
 
 func initVcsTestDir(t *testing.T, srcPath, tmpDir string) (projectPath string) {
 	var err error
-	assert.NoError(t, fileutils.CopyDir(srcPath, tmpDir, true, nil))
+	assert.NoError(t, biutils.CopyDir(srcPath, tmpDir, true, nil))
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
 		assert.NoError(t, err)
 		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git")))
