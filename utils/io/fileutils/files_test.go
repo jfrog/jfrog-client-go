@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io"
 	"os"
 	"path/filepath"
@@ -262,7 +263,7 @@ func TestRemoveDirContents(t *testing.T) {
 	defer func() {
 		assert.NoError(t, RemoveTempDir(tmpDirPath))
 	}()
-	err = CopyDir(filepath.Join("testdata", "removedircontents"), tmpDirPath, true, nil)
+	err = biutils.CopyDir(filepath.Join("testdata", "removedircontents"), tmpDirPath, true, nil)
 	assert.NoError(t, err)
 
 	// Run the function

@@ -32,10 +32,9 @@ func TestXrayReport(t *testing.T) {
 	t.Run("reportAll", reportAll)
 }
 
-func reportAll(t *testing.T) {
-	request := services.ReportRequestParams{
+var vulnerabilitiesReportRequestParams = services.VulnerabilitiesReportRequestParams {
 		Name: "test-report",
-		Filters: services.Filter{
+		Filters: services.VulnerabilitiesFilter{
 			HasRemediation: &trueValue,
 			Severity:       []string{"high"},
 		},
@@ -47,28 +46,60 @@ func reportAll(t *testing.T) {
 			},
 		},
 	}
-	report, err := testXrayReportService.Vulnerabilities(request)
-	assert.NoError(t, err)
-	validateResponse(t, xray.VulnerabilityRequestResponse, report)
-
-	var reportId = strconv.Itoa(report.ReportId)
-	details, err := testXrayReportService.Details(reportId)
-	assert.NoError(t, err)
-	validateResponse(t, xray.VulnerabilityReportStatusResponse, details)
-
-	reportReqCont := services.ReportContentRequestParams{
-		ReportId:  reportId,
-		Direction: "asc",
-		PageNum:   0,
-		NumRows:   7,
-		OrderBy:   "severity",
+var licensesReportRequestParams = services.LicensesReportRequestParams {
+		Name: "test-report",
+		Filters: services.LicensesFilter{
+			LicensePatterns: []string{"*"},
+		},
+		Resources: services.Resource{
+			Repositories: []services.Repository{
+				{
+					Name: "dummy-repo",
+				},
+			},
+		},
 	}
-	content, err := testXrayReportService.Content(reportReqCont)
-	assert.NoError(t, err)
-	validateResponse(t, xray.VulnerabilityReportDetailsResponse, content)
+var reportTypes = []string {
+	xray.VulnerabilitiesEndpoint,
+	xray.LicensesEndpoint,
+}
 
-	err = testXrayReportService.Delete(reportId)
-	assert.NoError(t, err)
+func reportAll(t *testing.T) {
+	for _, ep := range reportTypes {
+		var report *services.ReportResponse
+		var err error
+		if ep == xray.VulnerabilitiesEndpoint {
+			report, err = testXrayReportService.Vulnerabilities(vulnerabilitiesReportRequestParams)
+		} else if ep == xray.LicensesEndpoint {
+			report, err = testXrayReportService.Licenses(licensesReportRequestParams)
+		}
+		assert.NoError(t, err)
+		validateResponse(t, xray.MapResponse[xray.MapReportIdEndpoint[report.ReportId]]["XrayReportRequest"], report)
+
+		var reportId = strconv.Itoa(report.ReportId)
+		details, err := testXrayReportService.Details(reportId)
+		assert.NoError(t, err)
+		validateResponse(t, xray.MapResponse[xray.MapReportIdEndpoint[report.ReportId]]["ReportStatus"], details)
+
+		reportReqCont := services.ReportContentRequestParams{
+			ReportType: ep,
+			ReportId:  reportId,
+			Direction: "asc",
+			PageNum:   0,
+			NumRows:   7,
+		}
+		if ep == xray.VulnerabilitiesEndpoint {
+			reportReqCont.OrderBy =  "severity"
+		} else if ep == xray.LicensesEndpoint {
+			reportReqCont.OrderBy =  "license"
+		}
+		content, err := testXrayReportService.Content(reportReqCont)
+		assert.NoError(t, err)
+		validateResponse(t, xray.MapResponse[ep]["ReportDetails"], content)
+
+		err = testXrayReportService.Delete(reportId)
+		assert.NoError(t, err)
+	}
 }
 
 func validateResponse(t *testing.T, expects string, payload interface{}) {

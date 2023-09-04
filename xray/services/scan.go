@@ -2,10 +2,8 @@ package services
 
 import (
 	"encoding/json"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
-	"golang.org/x/exp/maps"
 	"net/http"
 	"strings"
 	"time"
@@ -82,7 +80,13 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	requestBody, err := json.Marshal(scanParams.Graph)
+	var err error
+	var requestBody []byte
+	if scanParams.DependenciesGraph != nil {
+		requestBody, err = json.Marshal(scanParams.DependenciesGraph)
+	} else {
+		requestBody, err = json.Marshal(scanParams.BinaryGraph)
+	}
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
@@ -161,52 +165,16 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 type XrayGraphScanParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
-	RepoPath               string
-	ProjectKey             string
-	Watches                []string
-	ScanType               ScanType
-	Graph                  *xrayUtils.GraphNode
+	RepoPath   string
+	ProjectKey string
+	Watches    []string
+	ScanType   ScanType
+	// Dependencies Tree
+	DependenciesGraph *xrayUtils.GraphNode
+	// Binary tree received from indexer-app
+	BinaryGraph            *xrayUtils.BinaryGraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
-}
-
-// FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
-func FlattenGraph(graph []*xrayUtils.GraphNode) ([]*xrayUtils.GraphNode, error) {
-	allDependencies := map[string]*xrayUtils.GraphNode{}
-	for _, node := range graph {
-		populateUniqueDependencies(node, allDependencies)
-	}
-	if log.GetLogger().GetLogLevel() == log.DEBUG {
-		// Print dependencies list only on DEBUG mode.
-		jsonList, err := json.Marshal(maps.Keys(allDependencies))
-		if err != nil {
-			return nil, errorutils.CheckError(err)
-		}
-		log.Debug("Flat dependencies list:\n" + clientutils.IndentJsonArray(jsonList))
-	}
-	return []*xrayUtils.GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}, nil
-}
-
-func populateUniqueDependencies(node *xrayUtils.GraphNode, allDependencies map[string]*xrayUtils.GraphNode) {
-	if value, exist := allDependencies[node.Id]; exist &&
-		(len(node.Nodes) == 0 || value.ChildrenExist) {
-		return
-	}
-	allDependencies[node.Id] = &xrayUtils.GraphNode{Id: node.Id}
-	if len(node.Nodes) > 0 {
-		// In some cases node can appear twice, with or without children, this because of the depth limit when creating the graph.
-		// If the node was covered with its children, we mark that, so we won't cover it again.
-		// If its without children, we want to cover it again when it comes with its children.
-		allDependencies[node.Id].ChildrenExist = true
-	}
-	for _, dependency := range node.Nodes {
-		populateUniqueDependencies(dependency, allDependencies)
-	}
-}
-
-type OtherComponentIds struct {
-	Id     string `json:"component_id,omitempty"`
-	Origin int    `json:"origin,omitempty"`
 }
 
 type RequestScanResponse struct {

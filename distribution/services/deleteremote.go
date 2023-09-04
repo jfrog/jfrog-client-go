@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
@@ -43,9 +44,9 @@ func (dr *DeleteReleaseBundleService) IsDryRun() bool {
 }
 
 func (dr *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParams DeleteDistributionParams) error {
-	var distributionRules []DistributionRulesBody
+	var distributionRules []distribution.DistributionRulesBody
 	for _, rule := range deleteDistributionParams.DistributionRules {
-		distributionRule := DistributionRulesBody{
+		distributionRule := distribution.DistributionRulesBody{
 			SiteName:     rule.GetSiteName(),
 			CityName:     rule.GetCityName(),
 			CountryCodes: rule.GetCountryCodes(),
@@ -61,7 +62,7 @@ func (dr *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParam
 	}
 
 	deleteDistribution := DeleteRemoteDistributionBody{
-		DistributionBody: DistributionBody{
+		ReleaseBundleDistributeV1Body: distribution.ReleaseBundleDistributeV1Body{
 			DryRun:            dr.DryRun,
 			DistributionRules: distributionRules,
 		},
@@ -133,12 +134,12 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 }
 
 type DeleteRemoteDistributionBody struct {
-	DistributionBody
+	distribution.ReleaseBundleDistributeV1Body
 	OnSuccess OnSuccess `json:"on_success"`
 }
 
 type DeleteDistributionParams struct {
-	DistributionParams
+	distribution.DistributionParams
 	DeleteFromDistribution bool
 	Sync                   bool
 	// Max time in minutes to wait for sync distribution to finish.
@@ -147,7 +148,7 @@ type DeleteDistributionParams struct {
 
 func NewDeleteReleaseBundleParams(name, version string) DeleteDistributionParams {
 	return DeleteDistributionParams{
-		DistributionParams: DistributionParams{
+		DistributionParams: distribution.DistributionParams{
 			Name:    name,
 			Version: version,
 		},

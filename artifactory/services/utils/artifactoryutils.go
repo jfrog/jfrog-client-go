@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"path"
 	"strings"
 	"sync"
@@ -95,26 +94,6 @@ func AddHeader(headerName, headerValue string, headers *map[string]string) {
 		*headers = make(map[string]string)
 	}
 	(*headers)[headerName] = headerValue
-}
-
-// Builds a URL for Artifactory requests.
-// Pay attention: semicolons are escaped!
-func BuildArtifactoryUrl(baseUrl, path string, params map[string]string) (string, error) {
-	u := url.URL{Path: path}
-	parsedUrl, err := url.Parse(baseUrl + u.String())
-	err = errorutils.CheckError(err)
-	if err != nil {
-		return "", err
-	}
-	q := parsedUrl.Query()
-	for k, v := range params {
-		q.Set(k, v)
-	}
-	parsedUrl.RawQuery = q.Encode()
-
-	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
-	encodedUrl := strings.ReplaceAll(parsedUrl.String(), ";", url.QueryEscape(";"))
-	return encodedUrl, nil
 }
 
 func IsWildcardPattern(pattern string) bool {
@@ -580,7 +559,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 		queryParams["project"] = projectKey
 	}
 
-	requestFullUrl, err := BuildArtifactoryUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, queryParams)
+	requestFullUrl, err := utils.BuildUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, queryParams)
 	if err != nil {
 		return nil, false, err
 	}
