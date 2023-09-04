@@ -87,7 +87,10 @@ func parseValidateSignedPipelinesResponse(body []byte) error {
 	}
 	if !signedPipelinesValidationResponse.Result {
 		log.Output("Validation failed with below message/messages")
-		log.Output(signedPipelinesValidationResponse.Messages, signedPipelinesValidationResponse.Message)
+		for _, message := range signedPipelinesValidationResponse.Messages {
+			log.Output(message)
+		}
+		log.Output(signedPipelinesValidationResponse.Message)
 		return errorutils.CheckError(errors.New("Signed pipelines validation failed"))
 	}
 	log.Output("Validation is completed successfully")
