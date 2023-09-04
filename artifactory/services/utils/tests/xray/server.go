@@ -19,6 +19,7 @@ const (
 	FatalScanBuildName          = "fatalBuildName"
 	VulnerableBuildName         = "vulnerableBuildName"
 	VulnerabilitiesEndpoint     = "vulnerabilities"
+	LicensesEndpoint            = "licenses"
 	ContextualAnalysisFeatureId = "contextual_analysis"
 	BadFeatureId                = "unknown"
 )
@@ -73,22 +74,23 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		if numSegments == 1 {
-			_, err := strconv.Atoi(addlSegments[0])
+			id, err := strconv.Atoi(addlSegments[0])
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			_, err = fmt.Fprint(w, VulnerabilityReportStatusResponse)
+			_, err = fmt.Fprint(w, MapResponse[MapReportIdEndpoint[id]]["ReportStatus"])
 			if err != nil {
 				log.Error(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
+
 			return
 		}
 	case http.MethodPost:
 		if numSegments == 1 {
-			if addlSegments[0] == VulnerabilitiesEndpoint {
-				_, err := fmt.Fprint(w, VulnerabilityRequestResponse)
+			if addlSegments[0] == VulnerabilitiesEndpoint || addlSegments[0] == LicensesEndpoint {
+				_, err := fmt.Fprint(w, MapResponse[addlSegments[0]]["XrayReportRequest"])
 				if err != nil {
 					log.Error(err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -101,8 +103,8 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			if addlSegments[0] == VulnerabilitiesEndpoint {
-				_, err := fmt.Fprint(w, VulnerabilityReportDetailsResponse)
+			if addlSegments[0] == VulnerabilitiesEndpoint || addlSegments[0] == LicensesEndpoint {
+				_, err := fmt.Fprint(w, MapResponse[addlSegments[0]]["ReportDetails"])
 				if err != nil {
 					log.Error(err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -112,7 +114,7 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case http.MethodDelete:
 		if numSegments == 0 {
-			_, err := fmt.Fprint(w, VulnerabilityReportDeleteResponse)
+			_, err := fmt.Fprint(w, XrayReportDeleteResponse)
 			if err != nil {
 				log.Error(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
