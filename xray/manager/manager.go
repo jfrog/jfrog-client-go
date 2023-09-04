@@ -31,7 +31,9 @@ type SecurityServiceManager interface {
 	GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*scan.ScanResponse, error)
 	BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error)
 	// Report
-	GenerateVulnerabilitiesReport(params services.ReportRequestParams) (resp *services.ReportResponse, err error)
+	GenerateVulnerabilitiesReport(params services.VulnerabilitiesReportRequestParams) (resp *services.ReportResponse, err error)
+	GenerateLicensesReport(params services.LicensesReportRequestParams) (resp *services.ReportResponse, err error)
+	GenerateViolationsReport(params services.ViolationsReportRequestParams) (resp *services.ReportResponse, err error)
 	ReportDetails(reportId string) (details *services.ReportDetails, err error)
 	ReportContent(params services.ReportContentRequestParams) (content *services.ReportContent, err error)
 	DeleteReport(reportId string) error
