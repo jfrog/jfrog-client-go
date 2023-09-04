@@ -134,3 +134,9 @@ func (sm *PipelinesServicesManager) CancelRun(runID int) error {
 	runService.ServiceDetails = sm.config.GetServiceDetails()
 	return runService.CancelRun(runID)
 }
+
+func (sm *PipelinesServicesManager) ValidateSignedPipelines(artifactType, buildName, buildNumber, projectKey, artifactPath, rbName, rbVersion string) error {
+	signedPipelinesService := services.NewSignedPipelinesService(sm.client)
+	signedPipelinesService.ServiceDetails = sm.config.GetServiceDetails()
+	return signedPipelinesService.ValidateSignedPipelines(artifactType, buildName, buildNumber, projectKey, artifactPath, rbName, rbVersion)
+}

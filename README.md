@@ -2129,6 +2129,18 @@ runID := 234 // run id of pipeline
 err := pipelinesManager.CancelRun(runID)
 ```
 
+#### Validate Signed Pipelines
+```go
+artifactType := "buildInfo"
+buildName := "appBuild"
+buildNumber := "31"
+projectKey := "default"
+artifactPath := "go-app/myApp"
+rbName := "artifactory"
+rbVersion := "7.53.1"
+err := pipelinesManager.ValidateSignedPipelines(artifactType, buildName, buildNumber, projectKey, artifactPath, rbName, rbVersion)
+```
+
 ## Lifecycle APIs
 
 ### Creating Lifecycle Service Manager
