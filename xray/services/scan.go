@@ -274,6 +274,12 @@ type JfrogResearchSeverityReason struct {
 	IsPositive  bool   `json:"is_positive,omitempty"`
 }
 
+type DockerCommandDetails struct {
+	LayerHash           string
+	DockerfileCommand   string
+	DockerfileLineRange string
+}
+
 func (gp *XrayGraphScanParams) GetProjectKey() string {
 	return gp.ProjectKey
 }
