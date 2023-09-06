@@ -277,7 +277,8 @@ type JfrogResearchSeverityReason struct {
 type DockerfileCommandDetails struct {
 	LayerHash string
 	Command   string
-	Line      string
+	// The Same command could appear in more than one place,especially in a FROM commands.
+	Line []string
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
