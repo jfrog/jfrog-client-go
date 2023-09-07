@@ -1134,8 +1134,7 @@ func createSecurityServiceManager() {
 	xrayUrl := clientutils.AddTrailingSlashIfNeeded(*XrayUrl)
 	xrayDetails.SetUrl(xrayUrl)
 	xrayDetails.SetXscUrl(strings.Replace(xrayUrl, "/xray/", "/xsc/", 1))
-	// Xsv version is used to determine if XSC in enabled or not, in the case we want to
-	// test XSC, set the version.
+	// XSC version is used to determine if XSC in enabled or not.
 	if *TestXsc {
 		xrayDetails.SetXscVersion("0.0.0")
 	}
@@ -1143,7 +1142,7 @@ func createSecurityServiceManager() {
 	initSecurityManagerByServerDetails(xrayDetails)
 }
 
-// Init securityServiceManager to be XSC or Xray depends on the server details.
+// Init securityServiceManager as XSC or Xray manager depends on the server details.
 func initSecurityManagerByServerDetails(xrayDetails *xrayAuth.XrayDetails) {
 	xsc := auth.ServiceDetails(xrayDetails)
 	serviceConfig, err := config.NewConfigBuilder().
