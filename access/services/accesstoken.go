@@ -21,11 +21,14 @@ type TokenService struct {
 
 type CreateTokenParams struct {
 	auth.CommonTokenParams
-	IncludeReferenceToken *bool `json:"include_reference_token,omitempty"`
+	IncludeReferenceToken *bool  `json:"include_reference_token,omitempty"`
+	Username              string `json:"username,omitempty"`
+	ProjectKey            string `json:"project_key,omitempty"`
+	Description           string `json:"description,omitempty"`
 }
 
-func NewCreateTokenParams(params CreateTokenParams) CreateTokenParams {
-	return CreateTokenParams{CommonTokenParams: params.CommonTokenParams, IncludeReferenceToken: params.IncludeReferenceToken}
+func NewCreateTokenParams() CreateTokenParams {
+	return CreateTokenParams{}
 }
 
 func NewTokenService(client *jfroghttpclient.JfrogHttpClient) *TokenService {
@@ -36,22 +39,18 @@ func (ps *TokenService) CreateAccessToken(params CreateTokenParams) (auth.Create
 	return ps.createAccessToken(params)
 }
 
-func (ps *TokenService) RefreshAccessToken(token CreateTokenParams) (auth.CreateTokenResponseData, error) {
-	param, err := createRefreshTokenRequestParams(token)
-	if err != nil {
+func (ps *TokenService) RefreshAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
+	if err := prepareForRefresh(&params); err != nil {
 		return auth.CreateTokenResponseData{}, err
 	}
-	return ps.createAccessToken(*param)
+	return ps.createAccessToken(params)
 }
 
 // createAccessToken is used to create & refresh access tokens.
-func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
-	// Set the request headers
-	tokenInfo := auth.CreateTokenResponseData{}
+func (ps *TokenService) createAccessToken(params CreateTokenParams) (tokenInfo auth.CreateTokenResponseData, err error) {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpDetails.Headers)
-	err := ps.addAccessTokenAuthorizationHeader(params, &httpDetails)
-	if err != nil {
+	if err = ps.handleUnauthenticated(params, &httpDetails); err != nil {
 		return tokenInfo, err
 	}
 	requestContent, err := json.Marshal(params)
@@ -70,27 +69,29 @@ func (ps *TokenService) createAccessToken(params CreateTokenParams) (auth.Create
 	return tokenInfo, errorutils.CheckError(err)
 }
 
-func (ps *TokenService) addAccessTokenAuthorizationHeader(params CreateTokenParams, httpDetails *httputils.HttpClientDetails) error {
-	access := ps.ServiceDetails.GetAccessToken()
-	if access == "" {
-		access = params.AccessToken
+func (ps *TokenService) handleUnauthenticated(params CreateTokenParams, httpDetails *httputils.HttpClientDetails) error {
+	// Creating access tokens using username and password is available since Artifactory 7.63.2,
+	// by enabling "Enable Token Generation via API" in the UI.
+	if httpDetails.AccessToken != "" || (httpDetails.User != "" && httpDetails.Password != "") {
+		return nil
 	}
-	if access == "" {
-		return errorutils.CheckErrorf("failed: adding accessToken authorization, but No accessToken was provided. ")
+	// Use token from params if provided.
+	if params.AccessToken != "" {
+		httpDetails.AccessToken = params.AccessToken
+		return nil
 	}
-	utils.AddHeader("Authorization", fmt.Sprintf("Bearer %s", access), &httpDetails.Headers)
-	return nil
+	return errorutils.CheckErrorf("cannot create access token without credentials")
 }
 
-func createRefreshTokenRequestParams(p CreateTokenParams) (*CreateTokenParams, error) {
+func prepareForRefresh(p *CreateTokenParams) error {
 	var trueValue = true
 	// Validate provided parameters
 	if p.RefreshToken == "" {
-		return nil, errorutils.CheckErrorf("error: trying to refresh token, but 'refresh_token' field wasn't provided. ")
+		return errorutils.CheckErrorf("error: trying to refresh token, but 'refresh_token' field wasn't provided. ")
 	}
-	params := NewCreateTokenParams(p)
+
 	// Set refresh required parameters
-	params.GrantType = "refresh_token"
-	params.Refreshable = &trueValue
-	return &params, nil
+	p.GrantType = "refresh_token"
+	p.Refreshable = &trueValue
+	return nil
 }
