@@ -1415,22 +1415,23 @@ const BuildScanResultsResponse = `
 }
 `
 
-var MapReportIdEndpoint = map[int]string{
-	777: VulnerabilitiesEndpoint,
-	888: LicensesEndpoint,
+
+var MapReportIdEndpoint = map[int]string {
+  777: VulnerabilitiesEndpoint,
+  888: LicensesEndpoint,
 }
 
-var MapResponse = map[string]map[string]string{
-	VulnerabilitiesEndpoint: {
-		"XrayReportRequest": VulnerabilityXrayReportRequestResponse,
-		"ReportStatus":      VulnerabilityReportStatusResponse,
-		"ReportDetails":     VulnerabilityReportDetailsResponse,
-	},
-	LicensesEndpoint: {
-		"XrayReportRequest": LicensesXrayReportRequestResponse,
-		"ReportStatus":      LicensesReportStatusResponse,
-		"ReportDetails":     LicensesReportDetailsResponse,
-	},
+var MapResponse = map[string]map[string]string {
+  VulnerabilitiesEndpoint: {
+    "XrayReportRequest": VulnerabilityXrayReportRequestResponse,
+    "ReportStatus": VulnerabilityReportStatusResponse,
+    "ReportDetails": VulnerabilityReportDetailsResponse,
+  },
+  LicensesEndpoint: {
+    "XrayReportRequest": LicensesXrayReportRequestResponse,
+    "ReportStatus": LicensesReportStatusResponse,
+    "ReportDetails": LicensesReportDetailsResponse,
+  },
 }
 
 const gitInfoSentResponse = `{"multi_scan_id": "f2a8d4fe-40e6-11ee-84e4-02ee10c7f40e"}`

@@ -12,10 +12,11 @@ import (
 
 const (
 	// ReportsAPI refer to: https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-REPORTS
-	ReportsAPI      = "api/v1/reports"
-	Vulnerabilities = "vulnerabilities"
-	Licenses        = "licenses"
-	Violations      = "violations"
+	ReportsAPI         = "api/v1/reports"
+	Vulnerabilities    = "vulnerabilities"
+	Licenses           = "licenses"
+	Violations         = "violations"
+
 )
 
 // ReportService defines the Http client and Xray details
@@ -42,11 +43,11 @@ type ReportDetails struct {
 // ReportContentRequestParams defines a report content request
 type ReportContentRequestParams struct {
 	ReportType string
-	ReportId   string
-	Direction  string
-	PageNum    int
-	NumRows    int
-	OrderBy    string
+	ReportId  string
+	Direction string
+	PageNum   int
+	NumRows   int
+	OrderBy   string
 }
 
 // ReportContent defines a report content response
@@ -76,17 +77,17 @@ type Row struct {
 	ExternalAdvisorySource   string      `json:"external_advisory_source,omitempty"`
 	ExternalAdvisorySeverity string      `json:"external_advisory_severity,omitempty"`
 	// Licenses Report field
-	License          string `json:"license,omitempty"`
-	LicenseName      string `json:"license_name,omitempty"`
-	Component        string `json:"component,omitempty"`
-	Artifact         string `json:"artifact,omitempty"`
-	ArtifactScanTime string `json:"artifact_scan_time,omitempty"`
-	Unknown          *bool  `json:"unknown,omitempty"`
-	Unrecognized     *bool  `json:"unrecognized,omitempty"`
-	Custom           *bool  `json:"custom,omitempty"`
+	License                  string      `json:"license,omitempty"`
+	LicenseName              string      `json:"license_name,omitempty"`
+	Component				 string      `json:"component,omitempty"`
+	Artifact				 string      `json:"artifact,omitempty"`
+	ArtifactScanTime		 string      `json:"artifact_scan_time,omitempty"`
+	Unknown         		 *bool       `json:"unknown,omitempty"`
+	Unrecognized    		 *bool       `json:"unrecognized,omitempty"`
+	Custom    		 		 *bool       `json:"custom,omitempty"`
 	// Common field
-	Path       string   `json:"path,omitempty"`
-	References []string `json:"references,omitempty"`
+	Path                     string      `json:"path,omitempty"`
+	References               []string    `json:"references,omitempty"`
 }
 
 // For backwork compatibility keeping old struct name

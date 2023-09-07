@@ -179,10 +179,10 @@ type RequestBuildScanResponse struct {
 }
 
 type BuildScanResponse struct {
-	Status          string               `json:"status,omitempty"`
-	MoreDetailsUrl  string               `json:"more_details_url,omitempty"`
-	FailBuild       bool                 `json:"fail_build,omitempty"`
+	Status          string          `json:"status,omitempty"`
+	MoreDetailsUrl  string          `json:"more_details_url,omitempty"`
+	FailBuild       bool            `json:"fail_build,omitempty"`
 	Violations      []scan.Violation     `json:"violations,omitempty"`
 	Vulnerabilities []scan.Vulnerability `json:"vulnerabilities,omitempty"`
-	Info            string               `json:"info,omitempty"`
+	Info            string          `json:"info,omitempty"`
 }
