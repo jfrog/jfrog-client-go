@@ -197,19 +197,18 @@ func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion stri
 	if err != nil {
 		return
 	}
-	if resp.StatusCode != http.StatusOK {
-		log.Debug("XSC service is not enabled for this server")
-		return false, "", nil
+	log.Debug("XSC response:", resp.Status)
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNotFound); err != nil {
+		return
+	}
+	// When XSC is disabled,404 is expected. Don't return error as this is optional.
+	if resp.StatusCode == http.StatusNotFound {
+		return
 	}
 	versionResponse := scan.XscVersionResponse{}
 	if err = json.Unmarshal(body, &versionResponse); err != nil {
-		err = errorutils.CheckErrorf("couldn't parse Xray server response: " + err.Error())
+		err = errorutils.CheckErrorf("failed to unmarshal XSC server response: " + err.Error())
 		return
 	}
-	if versionResponse.Version != "" {
-		xscEntitled = true
-		xsxVersion = versionResponse.Version
-		return
-	}
-	return
+	return true, versionResponse.Version, nil
 }
