@@ -512,6 +512,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 // The caller is responsible to check that resp.StatusCode is http.StatusOK
 func (jc *HttpClient) GetRemoteFileDetails(downloadUrl string, httpClientsDetails httputils.HttpClientDetails) (*fileutils.FileDetails, *http.Response, error) {
+	log.Debug("Sending HEAD request to", downloadUrl)
 	resp, body, err := jc.SendHead(downloadUrl, httpClientsDetails, "")
 	if err != nil {
 		return nil, nil, err
