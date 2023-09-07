@@ -119,7 +119,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [ xsc ]
         os: [ ubuntu-latest, macos-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -141,7 +140,7 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: ${{ matrix.suite }} tests
-        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --xr.url=${{ secrets.PLATFORM_URL }}/xray --access.url=${{ secrets.PLATFORM_URL }}/access --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.xsc --xr.url=${{ secrets.PLATFORM_URL }}/xray --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}_xsc
 
   JFrog-Client-Go-Pipelines-Tests:
     needs: Pretest
