@@ -46,9 +46,8 @@ func TestXscScanGraph(t *testing.T) {
 
 func TestXscEnabled(t *testing.T) {
 	initXscTest(t)
-	enabled, version, err := securityServiceManager.IsXscEnabled()
+	version, err := securityServiceManager.IsXscEnabled()
 	assert.NoError(t, err)
-	assert.Equal(t, true, enabled)
 	assert.Equal(t, "0.0.0", version)
 }
 
