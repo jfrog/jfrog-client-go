@@ -1,9 +1,8 @@
-package manager
+package services
 
 import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/xray/scan"
 )
 
 type XscServicesManger struct {
@@ -22,9 +21,9 @@ func (xsc *XscServicesManger) SetClient(client *jfroghttpclient.JfrogHttpClient)
 // XscGitInfoContext allows linking of scans and other data to the corresponding git repository.
 // By passing multi-scan-id in the api calls.
 // Returns a string represents the scan ID.
-func (xsc *XscServicesManger) ScanGraph(params *scan.XrayGraphScanParams) (scanId string, err error) {
+func (xsc *XscServicesManger) ScanGraph(params *XrayGraphScanParams) (scanId string, err error) {
 	log.Debug("Scanning graph using XSC service...")
-	scanService := scan.NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
+	scanService := NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
 	multiScanId, err := scanService.SendScanContext(params.XscGitInfoContext)
 	if err != nil {
 		// Don't fail the entire scan when failed to send XscGitInfoContext
@@ -38,7 +37,7 @@ func (xsc *XscServicesManger) ScanGraph(params *scan.XrayGraphScanParams) (scanI
 
 // GetScanGraphResults returns an XSC scan output of the requested graph scan.
 // The scanId input should be received from ScanGraph request.
-func (xsc *XscServicesManger) GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*scan.ScanResponse, error) {
-	scanService := scan.NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
+func (xsc *XscServicesManger) GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
+	scanService := NewXscScanService(xsc.client, xsc.config.GetServiceDetails())
 	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses)
 }

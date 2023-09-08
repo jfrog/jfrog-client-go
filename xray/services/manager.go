@@ -1,10 +1,8 @@
-package manager
+package services
 
 import (
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/xray/scan"
-	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 )
 
@@ -27,19 +25,19 @@ type SecurityServiceManager interface {
 	UpdatePolicy(params utils.PolicyParams) error
 	DeletePolicy(policyName string) error
 	// Scan
-	ScanGraph(params *scan.XrayGraphScanParams) (scanId string, err error)
-	GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*scan.ScanResponse, error)
-	BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error)
+	ScanGraph(params *XrayGraphScanParams) (scanId string, err error)
+	GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error)
+	BuildScan(params XrayBuildParams, includeVulnerabilities bool) (scanResponse *BuildScanResponse, noFailBuildPolicy bool, err error)
 	// Report
-	GenerateVulnerabilitiesReport(params services.VulnerabilitiesReportRequestParams) (resp *services.ReportResponse, err error)
-	GenerateLicensesReport(params services.LicensesReportRequestParams) (resp *services.ReportResponse, err error)
-	GenerateViolationsReport(params services.ViolationsReportRequestParams) (resp *services.ReportResponse, err error)
-	ReportDetails(reportId string) (details *services.ReportDetails, err error)
-	ReportContent(params services.ReportContentRequestParams) (content *services.ReportContent, err error)
+	GenerateVulnerabilitiesReport(params VulnerabilitiesReportRequestParams) (resp *ReportResponse, err error)
+	GenerateLicensesReport(params LicensesReportRequestParams) (resp *ReportResponse, err error)
+	GenerateViolationsReport(params ViolationsReportRequestParams) (resp *ReportResponse, err error)
+	ReportDetails(reportId string) (details *ReportDetails, err error)
+	ReportContent(params ReportContentRequestParams) (content *ReportContent, err error)
 	DeleteReport(reportId string) error
 	// Utilities
 	AddBuildsToIndexing(buildNames []string) error
-	ArtifactSummary(params services.ArtifactSummaryParams) (*services.ArtifactSummaryResponse, error)
+	ArtifactSummary(params ArtifactSummaryParams) (*ArtifactSummaryResponse, error)
 	IsEntitled(featureId string) (bool, error)
 	IsXscEnabled() (bool, string, error)
 }

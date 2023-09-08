@@ -7,7 +7,7 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/xray/manager"
+	"github.com/jfrog/jfrog-client-go/xray/services"
 	"net/http"
 )
 
@@ -32,7 +32,7 @@ type ReportXrayEventData struct {
 	Origin     string            `json:"origin,omitempty"`
 }
 
-func SendXrayUsageEvents(serviceManager manager.SecurityServiceManager, events ...ReportXrayEventData) error {
+func SendXrayUsageEvents(serviceManager services.SecurityServiceManager, events ...ReportXrayEventData) error {
 	if len(events) == 0 {
 		return errorutils.CheckErrorf("Nothing to send.")
 	}

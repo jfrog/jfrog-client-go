@@ -1,4 +1,4 @@
-package scan
+package services
 
 import (
 	"encoding/json"

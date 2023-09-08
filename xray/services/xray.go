@@ -1,4 +1,4 @@
-package manager
+package services
 
 import (
 	"encoding/json"
@@ -6,8 +6,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jfrog/jfrog-client-go/xray/scan"
-	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"net/http"
 )
@@ -33,14 +31,14 @@ func (sm *XrayServicesManager) Config() config.Config {
 
 // GetVersion will return the Xray version
 func (sm *XrayServicesManager) GetVersion() (string, error) {
-	versionService := services.NewVersionService(sm.client)
+	versionService := NewVersionService(sm.client)
 	versionService.XrayDetails = sm.config.GetServiceDetails()
 	return versionService.GetVersion()
 }
 
 // CreateWatch will create a new Xray watch
 func (sm *XrayServicesManager) CreateWatch(params utils.WatchParams) error {
-	watchService := services.NewWatchService(sm.client)
+	watchService := NewWatchService(sm.client)
 	watchService.XrayDetails = sm.config.GetServiceDetails()
 	return watchService.Create(params)
 }
@@ -48,7 +46,7 @@ func (sm *XrayServicesManager) CreateWatch(params utils.WatchParams) error {
 // GetWatch retrieves the details about an Xray watch by name
 // It will error if no watch can be found by that name.
 func (sm *XrayServicesManager) GetWatch(watchName string) (*utils.WatchParams, error) {
-	watchService := services.NewWatchService(sm.client)
+	watchService := NewWatchService(sm.client)
 	watchService.XrayDetails = sm.config.GetServiceDetails()
 	return watchService.Get(watchName)
 }
@@ -56,7 +54,7 @@ func (sm *XrayServicesManager) GetWatch(watchName string) (*utils.WatchParams, e
 // UpdateWatch will update an existing Xray watch by name
 // It will error if no watch can be found by that name.
 func (sm *XrayServicesManager) UpdateWatch(params utils.WatchParams) error {
-	watchService := services.NewWatchService(sm.client)
+	watchService := NewWatchService(sm.client)
 	watchService.XrayDetails = sm.config.GetServiceDetails()
 	return watchService.Update(params)
 }
@@ -64,14 +62,14 @@ func (sm *XrayServicesManager) UpdateWatch(params utils.WatchParams) error {
 // DeleteWatch will delete an existing watch by name
 // It will error if no watch can be found by that name.
 func (sm *XrayServicesManager) DeleteWatch(watchName string) error {
-	watchService := services.NewWatchService(sm.client)
+	watchService := NewWatchService(sm.client)
 	watchService.XrayDetails = sm.config.GetServiceDetails()
 	return watchService.Delete(watchName)
 }
 
 // CreatePolicy will create a new Xray policy
 func (sm *XrayServicesManager) CreatePolicy(params utils.PolicyParams) error {
-	policyService := services.NewPolicyService(sm.client)
+	policyService := NewPolicyService(sm.client)
 	policyService.XrayDetails = sm.config.GetServiceDetails()
 	return policyService.Create(params)
 }
@@ -79,7 +77,7 @@ func (sm *XrayServicesManager) CreatePolicy(params utils.PolicyParams) error {
 // GetPolicy retrieves the details about an Xray policy by name
 // It will error if no policy can be found by that name.
 func (sm *XrayServicesManager) GetPolicy(policyName string) (*utils.PolicyParams, error) {
-	policyService := services.NewPolicyService(sm.client)
+	policyService := NewPolicyService(sm.client)
 	policyService.XrayDetails = sm.config.GetServiceDetails()
 	return policyService.Get(policyName)
 }
@@ -87,7 +85,7 @@ func (sm *XrayServicesManager) GetPolicy(policyName string) (*utils.PolicyParams
 // UpdatePolicy will update an existing Xray policy by name
 // It will error if no policy can be found by that name.
 func (sm *XrayServicesManager) UpdatePolicy(params utils.PolicyParams) error {
-	policyService := services.NewPolicyService(sm.client)
+	policyService := NewPolicyService(sm.client)
 	policyService.XrayDetails = sm.config.GetServiceDetails()
 	return policyService.Update(params)
 }
@@ -95,30 +93,30 @@ func (sm *XrayServicesManager) UpdatePolicy(params utils.PolicyParams) error {
 // DeletePolicy will delete an existing policy by name
 // It will error if no policy can be found by that name.
 func (sm *XrayServicesManager) DeletePolicy(policyName string) error {
-	policyService := services.NewPolicyService(sm.client)
+	policyService := NewPolicyService(sm.client)
 	policyService.XrayDetails = sm.config.GetServiceDetails()
 	return policyService.Delete(policyName)
 }
 
 // AddBuildsToIndexing will add builds to Xray indexing configuration
 func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
-	binMgrService := services.NewBinMgrService(sm.client)
+	binMgrService := NewBinMgrService(sm.client)
 	binMgrService.XrayDetails = sm.config.GetServiceDetails()
 	return binMgrService.AddBuildsToIndexing(buildNames)
 }
 
 // ScanGraph will send Xray the given graph for scan
 // Returns a string represents the scan ID.
-func (sm *XrayServicesManager) ScanGraph(params *scan.XrayGraphScanParams) (scanId string, err error) {
-	scanService := scan.NewScanService(sm.client)
+func (sm *XrayServicesManager) ScanGraph(params *XrayGraphScanParams) (scanId string, err error) {
+	scanService := NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.ScanGraph(params)
 }
 
 // GetScanGraphResults returns an Xray scan output of the requested graph scan.
 // The scanId input should be received from ScanGraph request.
-func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*scan.ScanResponse, error) {
-	scanService := scan.NewScanService(sm.client)
+func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
+	scanService := NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses)
 }
@@ -126,64 +124,64 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 // BuildScan scans a published build-info with Xray.
 // 'scanResponse' - Xray scan output of the requested build scan.
 // 'noFailBuildPolicy' - Indicates that the Xray API returned a "No Xray Fail build...." error
-func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
-	buildScanService := services.NewBuildScanService(sm.client)
+func (sm *XrayServicesManager) BuildScan(params XrayBuildParams, includeVulnerabilities bool) (scanResponse *BuildScanResponse, noFailBuildPolicy bool, err error) {
+	buildScanService := NewBuildScanService(sm.client)
 	buildScanService.XrayDetails = sm.config.GetServiceDetails()
 	return buildScanService.ScanBuild(params, includeVulnerabilities)
 }
 
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
-func (sm *XrayServicesManager) GenerateVulnerabilitiesReport(params services.VulnerabilitiesReportRequestParams) (resp *services.ReportResponse, err error) {
-	reportService := services.NewReportService(sm.client)
+func (sm *XrayServicesManager) GenerateVulnerabilitiesReport(params VulnerabilitiesReportRequestParams) (resp *ReportResponse, err error) {
+	reportService := NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
 	return reportService.Vulnerabilities(params)
 }
 
 // GenerateLicensesReport returns a Xray report response of the requested report
-func (sm *XrayServicesManager) GenerateLicensesReport(params services.LicensesReportRequestParams) (resp *services.ReportResponse, err error) {
-	reportService := services.NewReportService(sm.client)
+func (sm *XrayServicesManager) GenerateLicensesReport(params LicensesReportRequestParams) (resp *ReportResponse, err error) {
+	reportService := NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
 	return reportService.Licenses(params)
 }
 
 // GenerateVoilationsReport returns a Xray report response of the requested report
-func (sm *XrayServicesManager) GenerateViolationsReport(params services.ViolationsReportRequestParams) (resp *services.ReportResponse, err error) {
-	reportService := services.NewReportService(sm.client)
+func (sm *XrayServicesManager) GenerateViolationsReport(params ViolationsReportRequestParams) (resp *ReportResponse, err error) {
+	reportService := NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
 	return reportService.Violations(params)
 }
 
 // ReportDetails returns a Xray details response for the requested report
-func (sm *XrayServicesManager) ReportDetails(reportId string) (details *services.ReportDetails, err error) {
-	reportService := services.NewReportService(sm.client)
+func (sm *XrayServicesManager) ReportDetails(reportId string) (details *ReportDetails, err error) {
+	reportService := NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
 	return reportService.Details(reportId)
 }
 
 // ReportContent returns a Xray report content response for the requested report
-func (sm *XrayServicesManager) ReportContent(params services.ReportContentRequestParams) (content *services.ReportContent, err error) {
-	reportService := services.NewReportService(sm.client)
+func (sm *XrayServicesManager) ReportContent(params ReportContentRequestParams) (content *ReportContent, err error) {
+	reportService := NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
 	return reportService.Content(params)
 }
 
 // DeleteReport deletes a Xray report
 func (sm *XrayServicesManager) DeleteReport(reportId string) error {
-	reportService := services.NewReportService(sm.client)
+	reportService := NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
 	return reportService.Delete(reportId)
 }
 
 // ArtifactSummary returns Xray artifact summaries for the requested checksums and/or paths
-func (sm *XrayServicesManager) ArtifactSummary(params services.ArtifactSummaryParams) (*services.ArtifactSummaryResponse, error) {
-	summaryService := services.NewSummaryService(sm.client)
+func (sm *XrayServicesManager) ArtifactSummary(params ArtifactSummaryParams) (*ArtifactSummaryResponse, error) {
+	summaryService := NewSummaryService(sm.client)
 	summaryService.XrayDetails = sm.config.GetServiceDetails()
 	return summaryService.GetArtifactSummary(params)
 }
 
 // IsEntitled returns true if the user is entitled for the requested feature ID
 func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
-	entitlementsService := services.NewEntitlementsService(sm.client)
+	entitlementsService := NewEntitlementsService(sm.client)
 	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
 	return entitlementsService.IsEntitled(featureId)
 }
@@ -193,7 +191,7 @@ func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion stri
 	httpDetails := sm.config.GetServiceDetails().CreateHttpClientDetails()
 	serverDetails := sm.config.GetServiceDetails()
 
-	resp, body, _, err := sm.client.SendGet(serverDetails.GetXscUrl()+scan.XscVersionAPI, true, &httpDetails)
+	resp, body, _, err := sm.client.SendGet(serverDetails.GetXscUrl()+XscVersionAPI, true, &httpDetails)
 	if err != nil {
 		return
 	}
@@ -205,7 +203,7 @@ func (sm *XrayServicesManager) IsXscEnabled() (xscEntitled bool, xsxVersion stri
 	if resp.StatusCode == http.StatusNotFound {
 		return
 	}
-	versionResponse := scan.XscVersionResponse{}
+	versionResponse := XscVersionResponse{}
 	if err = json.Unmarshal(body, &versionResponse); err != nil {
 		err = errorutils.CheckErrorf("failed to unmarshal XSC server response: " + err.Error())
 		return

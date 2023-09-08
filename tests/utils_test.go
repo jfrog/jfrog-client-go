@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/config"
-	"github.com/jfrog/jfrog-client-go/xray/manager"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -113,7 +112,7 @@ var (
 	testsXrayWatchService  *xrayServices.WatchService
 	testsXrayPolicyService *xrayServices.PolicyService
 	testXrayBinMgrService  *xrayServices.BinMgrService
-	securityServiceManager manager.SecurityServiceManager
+	securityServiceManager xrayServices.SecurityServiceManager
 
 	// Pipelines Services
 	testsPipelinesIntegrationsService *pipelinesServices.IntegrationsService
@@ -1150,7 +1149,7 @@ func initSecurityManagerByServerDetails(xrayDetails *xrayAuth.XrayDetails) {
 		SetCertificatesPath(xsc.GetClientCertPath()).
 		Build()
 	failOnHttpClientCreation(err)
-	securityService, err := manager.New(serviceConfig)
+	securityService, err := xrayServices.New(serviceConfig)
 	if err != nil {
 		log.Error("failed to initialize securityServiceManager")
 		os.Exit(1)

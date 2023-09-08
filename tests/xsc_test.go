@@ -3,8 +3,7 @@ package tests
 import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
-	"github.com/jfrog/jfrog-client-go/xray/manager"
-	"github.com/jfrog/jfrog-client-go/xray/scan"
+	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
@@ -19,16 +18,16 @@ func TestXscScanGraph(t *testing.T) {
 
 	tests := []struct {
 		name                string
-		xrayGraphParams     *scan.XrayGraphScanParams
+		xrayGraphParams     *services.XrayGraphScanParams
 		expectedMultiScanId string
 	}{
 		{
 			name:                "XscScanWithContext",
-			xrayGraphParams:     &scan.XrayGraphScanParams{XscGitInfoContext: &scan.XscGitInfoContext{}},
+			xrayGraphParams:     &services.XrayGraphScanParams{XscGitInfoContext: &services.XscGitInfoContext{}},
 			expectedMultiScanId: mockMultiScanId,
 		}, {
 			name:                "XscScanNoContext",
-			xrayGraphParams:     &scan.XrayGraphScanParams{},
+			xrayGraphParams:     &services.XrayGraphScanParams{},
 			expectedMultiScanId: "",
 		},
 	}
@@ -79,7 +78,7 @@ func initializeTestSecurityManager(t *testing.T, xscDetails testXrayDetails) {
 		SetServiceDetails(cfp).
 		Build()
 	assert.NoError(t, err)
-	securityServiceManager, err = manager.New(serviceConfig)
+	securityServiceManager, err = services.New(serviceConfig)
 	assert.NoError(t, err)
 	// Assert correct security manager Xsc/Xray
 	assertSecurityManagerType(t)
@@ -87,9 +86,9 @@ func initializeTestSecurityManager(t *testing.T, xscDetails testXrayDetails) {
 
 func assertSecurityManagerType(t *testing.T) {
 	switch securityServiceManager.(type) {
-	case *manager.XscServicesManger:
+	case *services.XscServicesManger:
 		assert.Equal(t, true, *TestXsc)
-	case *manager.XrayServicesManager:
+	case *services.XrayServicesManager:
 		assert.Equal(t, false, *TestXsc)
 	}
 }

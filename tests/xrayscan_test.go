@@ -3,8 +3,7 @@ package tests
 import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
-	"github.com/jfrog/jfrog-client-go/xray/manager"
-	"github.com/jfrog/jfrog-client-go/xray/scan"
+	services2 "github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/stretchr/testify/assert"
 	"strconv"
 	"strings"
@@ -63,11 +62,11 @@ func TestXrayScanGraph(t *testing.T) {
 		SetServiceDetails(cfp).
 		Build()
 	assert.NoError(t, err)
-	securityServiceManager, err = manager.New(serviceConfig)
+	securityServiceManager, err = services2.New(serviceConfig)
 	assert.NoError(t, err)
 	assertSecurityManagerType(t)
 
-	scanId, err := securityServiceManager.ScanGraph(&scan.XrayGraphScanParams{})
+	scanId, err := securityServiceManager.ScanGraph(&services2.XrayGraphScanParams{})
 	assert.NoError(t, err)
 	assert.Equal(t, mockScanId, scanId)
 	_, err = securityServiceManager.GetScanGraphResults(scanId, false, false)
