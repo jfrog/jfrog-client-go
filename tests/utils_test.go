@@ -143,11 +143,11 @@ const (
 func init() {
 	ciRunId = flag.String("ci.runId", "", "A unique identifier used as a suffix to create repositories in the tests")
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
-	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
-	TestXray = flag.Bool("test.xray", false, "Test xray")
-	TestXsc = flag.Bool("test.xsc", false, "Test xsc")
-	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
-	TestAccess = flag.Bool("test.access", false, "Test access")
+	TestDistribution = flag.Bool("test.distribution", false, "Test Distribution")
+	TestXray = flag.Bool("test.xray", false, "Test Xray")
+	TestXsc = flag.Bool("test.xsc", false, "Test Xsc")
+	TestPipelines = flag.Bool("test.pipelines", false, "Test Pipelines")
+	TestAccess = flag.Bool("test.access", false, "Test Access")
 	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
 	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
@@ -548,16 +548,12 @@ func GetXrayDetails() auth.ServiceDetails {
 	xrayDetails := xrayAuth.NewXrayDetails()
 	xrayUrl := clientutils.AddTrailingSlashIfNeeded(*XrayUrl)
 	xrayDetails.SetUrl(xrayUrl)
-	setupXsc(xrayDetails, xrayUrl)
-	setAuthenticationDetail(xrayDetails)
-	return xrayDetails
-}
-
-func setupXsc(xrayDetails *xrayAuth.XrayDetails, xrayUrl string) {
 	if *TestXsc {
 		xrayDetails.SetXscUrl(strings.Replace(xrayUrl, "xray", "xsc", 1))
 		xrayDetails.SetXscVersion("0.0.0")
 	}
+	setAuthenticationDetail(xrayDetails)
+	return xrayDetails
 }
 
 func GetPipelinesDetails() auth.ServiceDetails {
