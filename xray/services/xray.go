@@ -196,7 +196,6 @@ func (sm *XrayServicesManager) IsXscEnabled() (xsxVersion string, err error) {
 		err = errorutils.CheckErrorf("failed to get XSC version, response: " + err.Error())
 		return
 	}
-	log.Debug("XSC response:", resp.Status)
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNotFound); err != nil {
 		return
 	}
@@ -209,5 +208,7 @@ func (sm *XrayServicesManager) IsXscEnabled() (xsxVersion string, err error) {
 		err = errorutils.CheckErrorf("failed to unmarshal XSC server response: " + err.Error())
 		return
 	}
-	return versionResponse.Version, err
+	xsxVersion = versionResponse.Version
+	log.Debug("XSC version:", xsxVersion)
+	return
 }
