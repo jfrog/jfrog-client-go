@@ -39,7 +39,7 @@ type SecurityServiceManager interface {
 	AddBuildsToIndexing(buildNames []string) error
 	ArtifactSummary(params ArtifactSummaryParams) (*ArtifactSummaryResponse, error)
 	IsEntitled(featureId string) (bool, error)
-	IsXscEnabled() (bool, string, error)
+	IsXscEnabled() (string, error)
 }
 
 // New creates a service manager to interact with Xray
