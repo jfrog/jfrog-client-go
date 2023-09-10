@@ -111,7 +111,6 @@ func initXrayTest(t *testing.T) {
 type testXrayDetails struct {
 	auth.ServiceDetails
 	version    string
-	xscVersion string
 }
 
 func newTestXrayDetails(serviceDetails auth.ServiceDetails) testXrayDetails {
