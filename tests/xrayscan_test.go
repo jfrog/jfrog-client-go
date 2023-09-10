@@ -64,7 +64,6 @@ func TestXrayScanGraph(t *testing.T) {
 	assert.NoError(t, err)
 	securityServiceManager, err = services2.New(serviceConfig)
 	assert.NoError(t, err)
-	assertSecurityManagerType(t)
 
 	scanId, err := securityServiceManager.ScanGraph(&services2.XrayGraphScanParams{})
 	assert.NoError(t, err)

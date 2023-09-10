@@ -548,10 +548,9 @@ func GetXrayDetails() auth.ServiceDetails {
 	xrayDetails := xrayAuth.NewXrayDetails()
 	xrayUrl := clientutils.AddTrailingSlashIfNeeded(*XrayUrl)
 	xrayDetails.SetUrl(xrayUrl)
-	if *TestXsc {
-		xrayDetails.SetXscUrl(strings.Replace(xrayUrl, "xray", "xsc", 1))
-		xrayDetails.SetXscVersion("0.0.0")
-	}
+	xrayDetails.SetXscUrl(strings.Replace(xrayUrl, "xray", "xsc", 1))
+	xrayDetails.SetXscVersion("0.0.0")
+
 	setAuthenticationDetail(xrayDetails)
 	return xrayDetails
 }
@@ -1130,9 +1129,8 @@ func createSecurityServiceManager() {
 	xrayDetails.SetUrl(xrayUrl)
 	xrayDetails.SetXscUrl(strings.Replace(xrayUrl, "/xray/", "/xsc/", 1))
 	// XSC version is used to determine if XSC in enabled or not.
-	if *TestXsc {
-		xrayDetails.SetXscVersion("0.0.0")
-	}
+	xrayDetails.SetXscVersion("0.0.0")
+
 	setAuthenticationDetail(xrayDetails)
 	initSecurityManagerByServerDetails(xrayDetails)
 }

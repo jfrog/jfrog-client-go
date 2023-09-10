@@ -33,6 +33,7 @@ func TestXscScanGraph(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+
 			scanId, err := securityServiceManager.ScanGraph(test.xrayGraphParams)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedMultiScanId, test.xrayGraphParams.MultiScanId)
@@ -52,13 +53,6 @@ func TestXscEnabled(t *testing.T) {
 }
 
 func initXscTest(t *testing.T) {
-	if !*TestXsc {
-		t.Skip("Skipping xray test. To run xray test add the '-test.xsc=true' option.")
-	}
-	prepareXscTest(t)
-}
-
-func prepareXscTest(t *testing.T) {
 	initializeTestSecurityManager(t, initMockXscServer())
 }
 
@@ -80,14 +74,5 @@ func initializeTestSecurityManager(t *testing.T, xscDetails testXrayDetails) {
 	securityServiceManager, err = services.New(serviceConfig)
 	assert.NoError(t, err)
 	// Assert correct security manager Xsc/Xray
-	assertSecurityManagerType(t)
-}
-
-func assertSecurityManagerType(t *testing.T) {
-	switch securityServiceManager.(type) {
-	case *services.XscServicesManger:
-		assert.Equal(t, true, *TestXsc)
-	case *services.XrayServicesManager:
-		assert.Equal(t, false, *TestXsc)
-	}
+	assert.IsType(t, securityServiceManager,&services.XscServicesManger{})
 }
