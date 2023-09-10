@@ -251,7 +251,6 @@ content of this repository is deleted.
 | `-test.artifactory`  | Artifactory tests  | Artifactory Pro               |
 | `-test.distribution` | Distribution tests | Artifactory with Distribution |
 | `-test.xray`         | Xray tests         | Artifactory with Xray         |
-| `-test.xsc`          | Xsc tests          | Xray with XSC enabled         |
 | `-test.pipelines`    | Pipelines tests    | JFrog Pipelines               |
 | `-test.access`       | Access tests       | Artifactory Pro               |
 | `-test.repositories` | Access tests       | Artifactory Pro               |

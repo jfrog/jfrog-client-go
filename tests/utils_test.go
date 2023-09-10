@@ -49,7 +49,6 @@ var (
 	TestArtifactory          *bool
 	TestDistribution         *bool
 	TestXray                 *bool
-	TestXsc                  *bool
 	TestPipelines            *bool
 	TestAccess               *bool
 	TestRepositories         *bool
@@ -145,7 +144,6 @@ func init() {
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test Distribution")
 	TestXray = flag.Bool("test.xray", false, "Test Xray")
-	TestXsc = flag.Bool("test.xsc", false, "Test Xsc")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test Pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test Access")
 	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
