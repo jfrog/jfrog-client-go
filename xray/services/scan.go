@@ -254,7 +254,6 @@ func (ss *ScanService) XscScanGraph(params *XrayGraphScanParams) (scanId string,
 		err = fmt.Errorf("failed senind GitInfo to XSC service, error: %s ", err.Error())
 		return
 	}
-	log.Debug("multi-scan-id ", params.MultiScanId)
 	return ss.ScanGraph(params)
 }
 
