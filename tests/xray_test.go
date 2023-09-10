@@ -19,6 +19,7 @@ func TestXrayVersion(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	if version == "" {
 		t.Error("Expected a version, got empty string")
 	}
