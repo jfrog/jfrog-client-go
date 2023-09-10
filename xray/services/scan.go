@@ -77,7 +77,9 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 				params = append(params, watchesQueryParam+watch)
 			}
 		}
-	case scanParams.XscVersion!="":
+	}
+
+	if scanParams.XscVersion != "" {
 		params = append(params, multiScanIdParam+scanParams.MultiScanId)
 		if len(scanParams.XscGitInfoContext.Technologies) > 0 {
 			params = append(params, scanTechQueryParam+scanParams.XscGitInfoContext.Technologies[0])
@@ -94,7 +96,15 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	return "?" + strings.Join(params, "&")
 }
 
-func (ss *ScanService) ScanGraph(scanParams *XrayGraphScanParams) (string, error) {
+func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
+	if scanParams.XscVersion != "" && scanParams.XscGitInfoContext != nil {
+		multiScanId, err := ss.SendScanGitInfoContext(scanParams.XscGitInfoContext)
+		if err != nil {
+			return "", fmt.Errorf("failed senind GitInfo to XSC service, error: %s ", err.Error())
+		}
+		scanParams.MultiScanId = multiScanId
+	}
+
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var err error
@@ -107,16 +117,13 @@ func (ss *ScanService) ScanGraph(scanParams *XrayGraphScanParams) (string, error
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
-	serviceUrl := ss.XrayDetails.GetUrl()
-	graphApi := scanGraphAPI
+	url := ss.XrayDetails.GetUrl() + scanGraphAPI
 
 	// When XSC is enabled, modify the URL.
 	if scanParams.XscVersion != "" {
-		serviceUrl = ss.xrayToXscUrl()
-		graphApi = XscGraphAPI
+		url = ss.xrayToXscUrl() + XscGraphAPI
 	}
-	url := serviceUrl + graphApi
-	url += createScanGraphQueryParams(*scanParams)
+	url += createScanGraphQueryParams(scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err
@@ -189,14 +196,10 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 }
 
 func (ss *ScanService) xrayToXscUrl() string {
-	return strings.Replace(ss.XrayDetails.GetUrl(), "xray", "xsc", 1)
+	return strings.Replace(ss.XrayDetails.GetUrl(), "/xray", "/xsc", 1)
 }
 
 func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multiScanId string, err error) {
-	// XscGitInfoContext is optional
-	if details == nil {
-		return
-	}
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(details)
@@ -208,11 +211,7 @@ func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multi
 	if err != nil {
 		return
 	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
-		scanErrorJson := ScanErrorJson{}
-		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
-			return "", errorutils.CheckErrorf(scanErrorJson.Error)
-		}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
 		return
 	}
 	scanResponse := XscPostContextResponse{}
@@ -247,14 +246,6 @@ func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 	xsxVersion = versionResponse.Version
 	log.Debug("XSC version:", xsxVersion)
 	return
-}
-
-func (ss *ScanService) XscScanGraph(params *XrayGraphScanParams) (scanId string, err error) {
-	if params.MultiScanId, err = ss.SendScanGitInfoContext(params.XscGitInfoContext); err != nil {
-		err = fmt.Errorf("failed senind GitInfo to XSC service, error: %s ", err.Error())
-		return
-	}
-	return ss.ScanGraph(params)
 }
 
 type XrayGraphScanParams struct {
