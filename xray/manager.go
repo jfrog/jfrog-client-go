@@ -119,7 +119,7 @@ func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
 
 // ScanGraph will send Xray the given graph for scan
 // Returns a string represents the scan ID.
-func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (scanId string, err error) {
+func (sm *XrayServicesManager) ScanGraph(params *services.XrayGraphScanParams) (scanId string, err error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
 	return scanService.ScanGraph(params)
@@ -196,4 +196,16 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	entitlementsService := services.NewEntitlementsService(sm.client)
 	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
 	return entitlementsService.IsEntitled(featureId)
+}
+
+func (sm *XrayServicesManager) XscScanGraph(params *services.XrayGraphScanParams) (string, error) {
+	scanService := services.NewScanService(sm.client)
+	scanService.XrayDetails = sm.config.GetServiceDetails()
+	return scanService.XscScanGraph(params)
+}
+
+func (sm *XrayServicesManager) XscEnabled() (string, error) {
+	scanService := services.NewScanService(sm.client)
+	scanService.XrayDetails = sm.config.GetServiceDetails()
+	return scanService.IsXscEnabled()
 }

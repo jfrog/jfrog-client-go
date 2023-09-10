@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"net/http"
@@ -38,6 +39,17 @@ const (
 	Binary     ScanType = "binary"
 
 	xrayScanStatusFailed = "failed"
+
+	// Xsc consts
+	postScanContextAPI = "api/v1/gitinfo"
+
+	XscGraphAPI = "api/v1/sca/scan/graph"
+
+	multiScanIdParam = "multi_scan_id="
+
+	scanTechQueryParam = "tech="
+
+	XscVersionAPI = "api/v1/system/version"
 )
 
 type ScanType string
@@ -65,6 +77,11 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 				params = append(params, watchesQueryParam+watch)
 			}
 		}
+	case scanParams.XscVersion!="":
+		params = append(params, multiScanIdParam+scanParams.MultiScanId)
+		if len(scanParams.XscGitInfoContext.Technologies) > 0 {
+			params = append(params, scanTechQueryParam+scanParams.XscGitInfoContext.Technologies[0])
+		}
 	}
 
 	if scanParams.ScanType != "" {
@@ -77,7 +94,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	return "?" + strings.Join(params, "&")
 }
 
-func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
+func (ss *ScanService) ScanGraph(scanParams *XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var err error
@@ -90,8 +107,16 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
-	url := ss.XrayDetails.GetUrl() + scanGraphAPI
-	url += createScanGraphQueryParams(scanParams)
+	serviceUrl := ss.XrayDetails.GetUrl()
+	graphApi := scanGraphAPI
+
+	// When XSC is enabled, modify the URL.
+	if scanParams.XscVersion != "" {
+		serviceUrl = ss.xrayToXscUrl()
+		graphApi = XscGraphAPI
+	}
+	url := serviceUrl + graphApi
+	url += createScanGraphQueryParams(*scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err
@@ -116,7 +141,8 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
+	servicesUrl := ss.XrayDetails.GetUrl()
+	endPoint := servicesUrl + scanGraphAPI + "/" + scanId
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam
 		if includeLicenses {
@@ -162,6 +188,76 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	return &scanResponse, err
 }
 
+func (ss *ScanService) xrayToXscUrl() string {
+	return strings.Replace(ss.XrayDetails.GetUrl(), "xray", "xsc", 1)
+}
+
+func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multiScanId string, err error) {
+	// XscGitInfoContext is optional
+	if details == nil {
+		return
+	}
+	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	requestBody, err := json.Marshal(details)
+	if err != nil {
+		return "", errorutils.CheckError(err)
+	}
+	url := ss.xrayToXscUrl() + postScanContextAPI
+	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
+	if err != nil {
+		return
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+		scanErrorJson := ScanErrorJson{}
+		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
+			return "", errorutils.CheckErrorf(scanErrorJson.Error)
+		}
+		return
+	}
+	scanResponse := XscPostContextResponse{}
+	if err = json.Unmarshal(body, &scanResponse); err != nil {
+		return "", errorutils.CheckError(err)
+	}
+	return scanResponse.MultiScanId, err
+}
+
+// IsXscEnabled will try to get XSC version. If route is not available, user is not entitled for XSC.
+func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
+	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
+	serverDetails := ss.XrayDetails
+	xscUrl := strings.Replace(serverDetails.GetUrl(), "xray", "xsc", 1)
+	resp, body, _, err := ss.client.SendGet(xscUrl+XscVersionAPI, true, &httpClientsDetails)
+	if err != nil {
+		err = errorutils.CheckErrorf("failed to get XSC version, response: " + err.Error())
+		return
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNotFound); err != nil {
+		return
+	}
+	// When XSC is disabled,404 is expected. Don't return error as this is optional.
+	if resp.StatusCode == http.StatusNotFound {
+		return
+	}
+	versionResponse := XscVersionResponse{}
+	if err = json.Unmarshal(body, &versionResponse); err != nil {
+		err = errorutils.CheckErrorf("failed to unmarshal XSC server response: " + err.Error())
+		return
+	}
+	xsxVersion = versionResponse.Version
+	log.Debug("XSC version:", xsxVersion)
+	return
+}
+
+func (ss *ScanService) XscScanGraph(params *XrayGraphScanParams) (scanId string, err error) {
+	if params.MultiScanId, err = ss.SendScanGitInfoContext(params.XscGitInfoContext); err != nil {
+		err = fmt.Errorf("failed senind GitInfo to XSC service, error: %s ", err.Error())
+		return
+	}
+	log.Debug("multi-scan-id ", params.MultiScanId)
+	return ss.ScanGraph(params)
+}
+
 type XrayGraphScanParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
@@ -175,6 +271,9 @@ type XrayGraphScanParams struct {
 	BinaryGraph            *xrayUtils.BinaryGraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
+	XscGitInfoContext      *XscGitInfoContext
+	XscVersion             string
+	MultiScanId            string
 }
 
 type RequestScanResponse struct {
@@ -271,6 +370,28 @@ type JfrogResearchSeverityReason struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	IsPositive  bool   `json:"is_positive,omitempty"`
+}
+
+type XscPostContextResponse struct {
+	MultiScanId string `json:"multi_scan_id,omitempty"`
+}
+
+type XscVersionResponse struct {
+	Version string `json:"xsc_version"`
+}
+
+type XscGitInfoContext struct {
+	GitRepoUrl    string   `json:"git_repo_url"`
+	GitRepoName   string   `json:"git_repo_name"`
+	GitProject    string   `json:"git_project"`
+	GitProvider   string   `json:"git_provider"`
+	Technologies  []string `json:"technologies"`
+	BranchName    string   `json:"branch_name"`
+	LastCommit    string   `json:"last_commit"`
+	CommitHash    string   `json:"commit_hash"`
+	CommitMessage string   `json:"commit_message"`
+	CommitAuthor  string   `json:"commit_author"`
+	Date          string   `json:"date"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
