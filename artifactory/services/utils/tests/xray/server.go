@@ -84,7 +84,6 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 				log.Error(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-
 			return
 		}
 	case http.MethodPost:
