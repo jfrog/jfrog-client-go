@@ -151,8 +151,7 @@ func (m *GitManager) readUrl() {
 	m.url = originUrl
 
 	// Mask url if required
-	regExp := regexp.MustCompile(CredentialsInUrlRegexp)
-	matchedResult := regExp.FindString(originUrl)
+	matchedResult := regexp.MustCompile(CredentialsInUrlRegexp).FindString(originUrl)
 	if matchedResult == "" {
 		return
 	}
