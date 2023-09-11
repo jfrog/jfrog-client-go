@@ -84,9 +84,8 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		gitInfoContext := scanParams.XscGitInfoContext
 		if gitInfoContext != nil {
 			if len(gitInfoContext.Technologies) > 0 {
-				for _, tech := range gitInfoContext.Technologies {
-					params = append(params, scanTechQueryParam+tech)
-				}
+				// Append the tech type, each graph can contain only one tech type
+				params = append(params, scanTechQueryParam+gitInfoContext.Technologies[0])
 			}
 		}
 	}
@@ -391,7 +390,6 @@ type XscGitInfoContext struct {
 	CommitHash    string   `json:"commit_hash"`
 	CommitMessage string   `json:"commit_message"`
 	CommitAuthor  string   `json:"commit_author"`
-	Date          string   `json:"date"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
