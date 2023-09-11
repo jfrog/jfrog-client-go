@@ -51,9 +51,9 @@ const (
 
 	XscVersionAPI = "api/v1/system/version"
 
-	XraySuffix = "/xray"
+	XraySuffix = "/xray/"
 
-	XscSuffix = "/xsc"
+	XscSuffix = "/xsc/"
 )
 
 type ScanType string
@@ -240,10 +240,10 @@ func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 	url := ss.XrayDetails.GetUrl()
 	// If Xray suffix not found, Xsc is not supported.
 	if !strings.HasSuffix(url, XraySuffix) {
-		return "", nil
+		return
 	}
-	url = strings.Replace(url, XraySuffix, XscSuffix, 1)
-	resp, body, _, err := ss.client.SendGet(url+XscVersionAPI, true, &httpClientsDetails)
+	url = ss.xrayToXscUrl()
+	resp, body, _, err := ss.client.SendGet(url+XscVersionAPI, false, &httpClientsDetails)
 	if err != nil {
 		err = errorutils.CheckErrorf("failed to get XSC version, response: " + err.Error())
 		return
