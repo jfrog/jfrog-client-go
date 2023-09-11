@@ -208,14 +208,8 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	return &scanResponse, err
 }
 
-// Replace Xray suffix with Xsc.
-// If Xray suffix not found, return empty string.
 func (ss *ScanService) xrayToXscUrl() string {
-	xrayUrl := ss.XrayDetails.GetUrl()
-	if !strings.Contains(xrayUrl, XraySuffix) {
-		return ""
-	}
-	return strings.Replace(xrayUrl, XraySuffix, XscSuffix, 1)
+	return strings.Replace(ss.XrayDetails.GetUrl(), XraySuffix, XscSuffix, 1)
 }
 
 func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multiScanId string, err error) {
@@ -243,12 +237,14 @@ func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multi
 // IsXscEnabled will try to get XSC version. If route is not available, user is not entitled for XSC.
 func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	xscUrl := ss.xrayToXscUrl()
-	// Failed to replace Xray suffix, assume Xsc is disabled.
-	if xscUrl == "" {
-		return
+	url := ss.XrayDetails.GetUrl()
+	// If failed to replace Xray with Xsc suffix,
+	// return Xsc disabled without an error as this is optional.
+	if !strings.HasSuffix(url, XraySuffix) {
+		return "", nil
 	}
-	resp, body, _, err := ss.client.SendGet(xscUrl+XscVersionAPI, true, &httpClientsDetails)
+	url = strings.Replace(url, XraySuffix, XscSuffix, 1)
+	resp, body, _, err := ss.client.SendGet(url+XscVersionAPI, true, &httpClientsDetails)
 	if err != nil {
 		err = errorutils.CheckErrorf("failed to get XSC version, response: " + err.Error())
 		return
