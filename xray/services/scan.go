@@ -81,8 +81,13 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 
 	if scanParams.XscVersion != "" {
 		params = append(params, multiScanIdParam+scanParams.MultiScanId)
-		if len(scanParams.XscGitInfoContext.Technologies) > 0 {
-			params = append(params, scanTechQueryParam+scanParams.XscGitInfoContext.Technologies[0])
+		gitInfoContext := scanParams.XscGitInfoContext
+		if gitInfoContext != nil {
+			if len(gitInfoContext.Technologies) > 0 {
+				for _, tech := range gitInfoContext.Technologies {
+					params = append(params, scanTechQueryParam+tech)
+				}
+			}
 		}
 	}
 
@@ -100,7 +105,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	if scanParams.XscVersion != "" && scanParams.XscGitInfoContext != nil {
 		multiScanId, err := ss.SendScanGitInfoContext(scanParams.XscGitInfoContext)
 		if err != nil {
-			return "", fmt.Errorf("failed senind GitInfo to XSC service, error: %s ", err.Error())
+			return "", fmt.Errorf("failed senind Git Info to XSC service, error: %s ", err.Error())
 		}
 		scanParams.MultiScanId = multiScanId
 	}
@@ -143,13 +148,19 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	return scanResponse.ScanId, err
 }
 
-func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
+func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	servicesUrl := ss.XrayDetails.GetUrl()
-	endPoint := servicesUrl + scanGraphAPI + "/" + scanId
+	endPoint := servicesUrl + scanGraphAPI
+	// Modify endpoint if XSC is enabled
+	if xscEnabled {
+		endPoint = ss.xrayToXscUrl() + XscGraphAPI
+	}
+	endPoint += "/" + scanId
+
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam
 		if includeLicenses {
@@ -214,11 +225,11 @@ func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multi
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
 		return
 	}
-	scanResponse := XscPostContextResponse{}
-	if err = json.Unmarshal(body, &scanResponse); err != nil {
+	xscResponse := XscPostContextResponse{}
+	if err = json.Unmarshal(body, &xscResponse); err != nil {
 		return "", errorutils.CheckError(err)
 	}
-	return scanResponse.MultiScanId, err
+	return xscResponse.MultiScanId, err
 }
 
 // IsXscEnabled will try to get XSC version. If route is not available, user is not entitled for XSC.
@@ -234,13 +245,13 @@ func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNotFound); err != nil {
 		return
 	}
-	// When XSC is disabled,404 is expected. Don't return error as this is optional.
+	// When XSC is disabled, StatusNotFound is expected. Don't return error as this is optional.
 	if resp.StatusCode == http.StatusNotFound {
 		return
 	}
 	versionResponse := XscVersionResponse{}
 	if err = json.Unmarshal(body, &versionResponse); err != nil {
-		err = errorutils.CheckErrorf("failed to unmarshal XSC server response: " + err.Error())
+		err = errorutils.CheckErrorf("failed to parse XSC server response: " + err.Error())
 		return
 	}
 	xsxVersion = versionResponse.Version
