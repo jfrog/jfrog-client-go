@@ -238,7 +238,7 @@ func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multi
 func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	url := ss.XrayDetails.GetUrl()
-	// If Xray suffix not found, xsc is not supported.
+	// If Xray suffix not found, Xsc is not supported.
 	if !strings.HasSuffix(url, XraySuffix) {
 		return "", nil
 	}
