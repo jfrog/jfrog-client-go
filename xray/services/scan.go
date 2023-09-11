@@ -105,7 +105,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	if scanParams.XscVersion != "" && scanParams.XscGitInfoContext != nil {
 		multiScanId, err := ss.SendScanGitInfoContext(scanParams.XscGitInfoContext)
 		if err != nil {
-			return "", fmt.Errorf("failed senind Git Info to XSC service, error: %s ", err.Error())
+			return "", fmt.Errorf("failed sending Git Info to XSC service, error: %s ", err.Error())
 		}
 		scanParams.MultiScanId = multiScanId
 	}
@@ -153,8 +153,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	servicesUrl := ss.XrayDetails.GetUrl()
-	endPoint := servicesUrl + scanGraphAPI
+	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
 	// Modify endpoint if XSC is enabled
 	if xscEnabled {
 		endPoint = ss.xrayToXscUrl() + XscGraphAPI
