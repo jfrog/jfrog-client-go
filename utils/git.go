@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -150,12 +151,7 @@ func (m *GitManager) readUrl() {
 	m.url = originUrl
 
 	// Mask url if required
-	regExp, err := GetRegExp(CredentialsInUrlRegexp)
-	if err != nil {
-		m.err = err
-		return
-	}
-	matchedResult := regExp.FindString(originUrl)
+	matchedResult := regexp.MustCompile(CredentialsInUrlRegexp).FindString(originUrl)
 	if matchedResult == "" {
 		return
 	}
