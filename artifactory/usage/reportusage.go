@@ -10,7 +10,6 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const minArtifactoryVersion = "6.9.0"
@@ -42,12 +41,10 @@ func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryService
 		return
 	}
 	if e := clientutils.ValidateMinimumVersion(clientutils.Artifactory, artifactoryVersion, minArtifactoryVersion); e != nil {
-		log.Debug("Usage Report:", e.Error())
 		return
 	}
 	url, err = clientutils.BuildUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
 	if err != nil {
-		err = errors.New(err.Error())
 		return
 	}
 	clientDetails = rtDetails.CreateHttpClientDetails()
