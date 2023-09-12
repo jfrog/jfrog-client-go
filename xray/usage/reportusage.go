@@ -49,17 +49,18 @@ func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...Repo
 		return errors.New("Couldn't get Xray version. Error: " + err.Error())
 	}
 	if e := clientutils.ValidateMinimumVersion(clientutils.Xray, xrayVersion, minXrayReportUsageVersion); e != nil {
+		// Ignore minimum version error
 		return nil
 	}
 	url, err := clientutils.BuildUrl(xrDetails.GetUrl(), xrayReportUsageApiPath, make(map[string]string))
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	clientDetails := xrDetails.CreateHttpClientDetails()
 
 	bodyContent, err := json.Marshal(events)
 	if errorutils.CheckError(err) != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
