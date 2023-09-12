@@ -25,7 +25,7 @@ func TestIsXrayVersionCompatible(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.xrayVersion, func(t *testing.T) {
-			err := utils.ValidateMinimumVersion(utils.Xray, test.xrayVersion, minXrayUsageReportVersion)
+			err := utils.ValidateMinimumVersion(utils.Xray, test.xrayVersion, minXrayReportUsageVersion)
 			if test.compatible {
 				assert.NoError(t, err)
 			} else {
