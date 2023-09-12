@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"net/http"
 	"strings"
 
@@ -109,14 +110,14 @@ const (
 )
 
 type DistributionStatusResponse struct {
-	Id                json.Number              `json:"distribution_id"`
-	FriendlyId        json.Number              `json:"distribution_friendly_id,omitempty"`
-	Type              DistributionType         `json:"type,omitempty"`
-	Name              string                   `json:"release_bundle_name,omitempty"`
-	Version           string                   `json:"release_bundle_version,omitempty"`
-	Status            DistributionStatus       `json:"status,omitempty"`
-	DistributionRules []DistributionRulesBody  `json:"distribution_rules,omitempty"`
-	Sites             []DistributionSiteStatus `json:"sites,omitempty"`
+	Id                json.Number                          `json:"distribution_id"`
+	FriendlyId        json.Number                          `json:"distribution_friendly_id,omitempty"`
+	Type              DistributionType                     `json:"type,omitempty"`
+	Name              string                               `json:"release_bundle_name,omitempty"`
+	Version           string                               `json:"release_bundle_version,omitempty"`
+	Status            DistributionStatus                   `json:"status,omitempty"`
+	DistributionRules []distribution.DistributionRulesBody `json:"distribution_rules,omitempty"`
+	Sites             []DistributionSiteStatus             `json:"sites,omitempty"`
 }
 
 type DistributionSiteStatus struct {

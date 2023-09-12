@@ -17,7 +17,6 @@ import (
 	biutils "github.com/jfrog/build-info-go/utils"
 	gofrog "github.com/jfrog/gofrog/io"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -417,76 +416,15 @@ type FileDetails struct {
 	Size     int64
 }
 
-func CopyFile(dst, src string) (err error) {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return errorutils.CheckError(err)
-	}
-	defer func() {
-		err = errors.Join(err, errorutils.CheckError(srcFile.Close()))
-	}()
-	fileName, _ := GetFileAndDirFromPath(src)
-	dstPath, err := CreateFilePath(dst, fileName)
-	if err != nil {
-		return err
-	}
-	dstFile, err := os.Create(dstPath)
-	if err != nil {
-		return errorutils.CheckError(err)
-	}
-	defer func() {
-		err = errors.Join(err, errorutils.CheckError(dstFile.Close()))
-	}()
-	_, err = io.Copy(dstFile, srcFile)
-	return errorutils.CheckError(err)
-}
-
-// Copy directory content from one path to another.
-// includeDirs means to copy also the dirs if presented in the src folder.
-// excludeNames - Skip files/dirs in the src folder that match names in provided slice. ONLY excludes first layer (only in src folder).
-func CopyDir(fromPath, toPath string, includeDirs bool, excludeNames []string) error {
-	err := CreateDirIfNotExist(toPath)
-	if err != nil {
-		return err
-	}
-
-	files, err := ListFiles(fromPath, includeDirs)
-	if err != nil {
-		return err
-	}
-
-	for _, v := range files {
-		// Skip if excluded
-		if slices.Contains(excludeNames, filepath.Base(v)) {
-			continue
-		}
-
-		dir, err := IsDirExists(v, false)
-		if err != nil {
-			return err
-		}
-
-		if dir {
-			toPath := toPath + GetFileSeparator() + filepath.Base(v)
-			err := CopyDir(v, toPath, true, nil)
-			if err != nil {
-				return err
-			}
-			continue
-		}
-		err = CopyFile(toPath, v)
-		if err != nil {
-			return err
-		}
-	}
-	return err
-}
-
 // Removing the provided path from the filesystem
 func RemovePath(testPath string) error {
-	if _, err := os.Stat(testPath); err == nil {
+	if file, err := os.Stat(testPath); err == nil {
+		if file.IsDir() {
+			err = RemoveTempDir(testPath)
+		} else {
+			err = errorutils.CheckError(os.Remove(testPath))
+		}
 		// Delete the path
-		err = errors.Join(err, RemoveTempDir(testPath))
 		if err != nil {
 			return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())
 		}
@@ -496,7 +434,7 @@ func RemovePath(testPath string) error {
 
 // Renaming from old path to new path.
 func RenamePath(oldPath, newPath string) error {
-	err := CopyDir(oldPath, newPath, true, nil)
+	err := biutils.CopyDir(oldPath, newPath, true, nil)
 	if err != nil {
 		return errors.New("Error copying directory: " + oldPath + "to" + newPath + err.Error())
 	}
