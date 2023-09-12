@@ -49,7 +49,7 @@ func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...Repo
 		return errors.New("Couldn't get Xray version. Error: " + err.Error())
 	}
 	if clientutils.ValidateMinimumVersion(clientutils.Xray, xrayVersion, minXrayReportUsageVersion) != nil {
-		// Ignore minimum version error
+		//nolint:nilerr
 		return nil
 	}
 	url, err := clientutils.BuildUrl(xrDetails.GetUrl(), xrayReportUsageApiPath, make(map[string]string))
