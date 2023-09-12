@@ -48,7 +48,7 @@ func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...Repo
 	if err != nil {
 		return errors.New("Couldn't get Xray version. Error: " + err.Error())
 	}
-	if e := clientutils.ValidateMinimumVersion(clientutils.Xray, xrayVersion, minXrayReportUsageVersion); e != nil {
+	if clientutils.ValidateMinimumVersion(clientutils.Xray, xrayVersion, minXrayReportUsageVersion) != nil {
 		// Ignore minimum version error
 		return nil
 	}
