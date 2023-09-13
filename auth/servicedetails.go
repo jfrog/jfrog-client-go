@@ -239,7 +239,7 @@ func SshTokenRefreshPreRequestInterceptor(fields *CommonConfigFields, httpClient
 	}
 	curToken := httpClientDetails.Headers["Authorization"]
 	timeLeft, err := GetTokenMinutesLeft(curToken)
-	if err != nil || timeLeft > RefreshBeforeExpiryMinutes {
+	if err != nil || timeLeft > RefreshArtifactoryTokenBeforeExpiryMinutes {
 		return err
 	}
 
