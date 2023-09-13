@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	remoteDelete = "remote_delete"
+	remoteDeleteEndpoint = "remote_delete"
 )
 
 func (rbs *ReleaseBundlesService) DeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleQueryParams) error {
@@ -38,7 +38,7 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(params distribution.
 		return errorutils.CheckError(err)
 	}
 
-	restApi := path.Join(distributionBaseApi, remoteDelete, params.Name, params.Version)
+	restApi := path.Join(distributionBaseApi, remoteDeleteEndpoint, params.Name, params.Version)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
 	if err != nil {
 		return err

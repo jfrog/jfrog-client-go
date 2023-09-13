@@ -2490,5 +2490,5 @@ params.DistributionRules = append(params.DistributionRules, rules)
 
 dryRun := true
 
-resp, err := serviceManager.DistributeReleaseBundle(params, dryRun)
+resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
 ```
