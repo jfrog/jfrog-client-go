@@ -84,7 +84,7 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 				log.Error(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			
+
 			return
 		}
 	case http.MethodPost:
@@ -114,7 +114,7 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case http.MethodDelete:
 		if numSegments == 0 {
-			_, err := fmt.Fprint(w, XrayReportDeleteResponse) 
+			_, err := fmt.Fprint(w, XrayReportDeleteResponse)
 			if err != nil {
 				log.Error(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)

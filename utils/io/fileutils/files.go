@@ -418,9 +418,13 @@ type FileDetails struct {
 
 // Removing the provided path from the filesystem
 func RemovePath(testPath string) error {
-	if _, err := os.Stat(testPath); err == nil {
+	if file, err := os.Stat(testPath); err == nil {
+		if file.IsDir() {
+			err = RemoveTempDir(testPath)
+		} else {
+			err = errorutils.CheckError(os.Remove(testPath))
+		}
 		// Delete the path
-		err = errors.Join(err, RemoveTempDir(testPath))
 		if err != nil {
 			return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())
 		}
