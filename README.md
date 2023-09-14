@@ -54,11 +54,11 @@
       - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
       - [Executing AQLs](#executing-aqls)
       - [Reading Files in Artifactory](#reading-files-in-artifactory)
-      - [Creating an Access Token](#creating-an-access-token)
-      - [Fetching Access Tokens](#fetching-access-tokens)
-      - [Fetching Access Tokens of a User](#fetching-access-tokens-of-a-user)
-      - [Refreshing an Access Token](#refreshing-an-access-token)
-      - [Revoking an Access Token](#revoking-an-access-token)
+      - [Creating an Artifactory Access Token](#creating-an-artifactory-access-token)
+      - [Fetching Artifactory Access Tokens](#fetching-artifactory-access-tokens)
+      - [Fetching Artifactory Access Tokens of a User](#fetching-artifactory-access-tokens-of-a-user)
+      - [Refreshing an Artifactory Access Token](#refreshing-an-artifactory-access-token)
+      - [Revoking an Artifactory Access Token](#revoking-an-artifactory-access-token)
       - [Create API Key](#create-api-key)
       - [Regenerate API Key](#regenerate-api-key)
       - [Get API Key](#get-api-key)
@@ -111,13 +111,15 @@
       - [Getting a Project](#getting-a-project)
       - [Getting all Projects](#getting-all-projects)
       - [Assigning Repository to Project](#assigning-repository-to-project)
-      - [Unassigning Repository from Project](#unassigning-repository-from-project)
+      - [Un-assigning Repository from Project](#un-assigning-repository-from-project)
       - [Get all groups assigned to a project](#get-all-groups-assigned-to-a-project)
       - [Get a specific group assigned to a project](#get-a-specific-group-assigned-to-a-project)
       - [Add or update a group assigned to a project](#add-or-update-a-group-assigned-to-a-project)
       - [Remove a group from a project](#remove-a-group-from-a-project)
       - [Send Web Login Authentication Request](#send-web-login-authentication-request)
       - [Get Web Login Authentication Token](#get-web-login-authentication-token)
+      - [Creating an Access Token](#creating-an-access-token)
+      - [Refreshing an Access Token](#refreshing-an-access-token)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -723,7 +725,7 @@ rtManager.Aql(aql string)
 rtManager.ReadRemoteFile(FilePath string)
 ```
 
-#### Creating an Access Token
+#### Creating an Artifactory Access Token
 
 ```go
 params := services.NewCreateTokenParams()
@@ -737,19 +739,19 @@ params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
 results, err := rtManager.CreateToken(params)
 ```
 
-#### Fetching Access Tokens
+#### Fetching Artifactory Access Tokens
 
 ```go
 results, err := rtManager.GetTokens()
 ```
 
-#### Fetching Access Tokens of a User
+#### Fetching Artifactory Access Tokens of a User
 
 ```g
 results, err := rtManager.GetUserTokens(username)
 ```
 
-#### Refreshing an Access Token
+#### Refreshing an Artifactory Access Token
 
 ```go
 params := services.NewRefreshTokenParams()
@@ -760,7 +762,7 @@ params.Token.ExpiresIn = 3600
 results, err := rtManager.RefreshToken(params)
 ```
 
-#### Revoking an Access Token
+#### Revoking an Artifactory Access Token
 
 ```go
 params := services.NewRevokeTokenParams()
@@ -1465,7 +1467,7 @@ err = accessManager.GetAllProjects()
 err = accessManager.AssignRepoToProject("repoName", "tstprj", true)
 ```
 
-#### Unassigning Repository from Project
+#### Un-assigning Repository from Project
 
 ```go
 err = accessManager.AssignRepoToProject("repoName")
@@ -1511,6 +1513,32 @@ err = accessManager.SendLoginAuthenticationRequest(uuid)
 ```go
 uuid := "09b34617-b48a-455d-8b05-25a6989fb76a"
 err = accessManager.GetLoginAuthenticationToken(uuid)
+```
+
+#### Creating an Access Token
+
+```go
+params := CreateTokenParams{}
+params.Scope = "applied-permissions/user"
+params.Username = "my-user"
+params.ExpiresIn = 12345 // Leave empty to provide the system default.
+params.Refreshable = true
+params.Audience = "jfrt@<serviceID1>"
+reference := true
+params.IncludeReferenceToken = &reference
+params.ProjectKey = "my-project"
+params.Description = "my-token"
+
+results, err := accessManager.CreateToken(params)
+```
+
+#### Refreshing an Access Token
+
+```go
+params := accessServices.CreateTokenParams{}
+params.RefreshToken = "<refresh token>"
+
+results, err := accessManager.RefreshToken(params)
 ```
 
 ## Distribution APIs

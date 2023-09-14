@@ -27,8 +27,8 @@ type CreateTokenParams struct {
 	Description           string `json:"description,omitempty"`
 }
 
-func NewCreateTokenParams() CreateTokenParams {
-	return CreateTokenParams{}
+func NewCreateTokenParams(params CreateTokenParams) CreateTokenParams {
+	return CreateTokenParams{CommonTokenParams: params.CommonTokenParams, IncludeReferenceToken: params.IncludeReferenceToken}
 }
 
 func NewTokenService(client *jfroghttpclient.JfrogHttpClient) *TokenService {
@@ -40,10 +40,11 @@ func (ps *TokenService) CreateAccessToken(params CreateTokenParams) (auth.Create
 }
 
 func (ps *TokenService) RefreshAccessToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
-	if err := prepareForRefresh(&params); err != nil {
+	refreshParams, err := prepareForRefresh(params)
+	if err != nil {
 		return auth.CreateTokenResponseData{}, err
 	}
-	return ps.createAccessToken(params)
+	return ps.createAccessToken(*refreshParams)
 }
 
 // createAccessToken is used to create & refresh access tokens.
@@ -83,15 +84,16 @@ func (ps *TokenService) handleUnauthenticated(params CreateTokenParams, httpDeta
 	return errorutils.CheckErrorf("cannot create access token without credentials")
 }
 
-func prepareForRefresh(p *CreateTokenParams) error {
+func prepareForRefresh(p CreateTokenParams) (*CreateTokenParams, error) {
 	var trueValue = true
 	// Validate provided parameters
 	if p.RefreshToken == "" {
-		return errorutils.CheckErrorf("error: trying to refresh token, but 'refresh_token' field wasn't provided. ")
+		return nil, errorutils.CheckErrorf("trying to refresh token, but 'refresh_token' field wasn't provided")
 	}
 
+	params := NewCreateTokenParams(p)
 	// Set refresh required parameters
-	p.GrantType = "refresh_token"
-	p.Refreshable = &trueValue
-	return nil
+	params.GrantType = "refresh_token"
+	params.Refreshable = &trueValue
+	return &params, nil
 }
