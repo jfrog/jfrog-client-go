@@ -1523,7 +1523,7 @@ err = accessManager.GetLoginAuthenticationToken(uuid)
 params := CreateTokenParams{}
 params.Scope = "applied-permissions/user"
 params.Username = "my-user"
-params.ExpiresIn = 12345 // Leave empty to provide the system default.
+params.ExpiresIn = 12345 // nil = system default, 0 = no expiry.
 params.Refreshable = true
 params.Audience = "jfrt@<serviceID1>"
 reference := true
