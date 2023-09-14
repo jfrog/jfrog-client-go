@@ -75,3 +75,8 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution
 	distributeBundleService.PathMapping = pathMapping
 	return distributeBundleService.Distribute()
 }
+
+func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(params distribution.DistributionParams, dryRun bool) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.RemoteDeleteReleaseBundle(params, dryRun)
+}
