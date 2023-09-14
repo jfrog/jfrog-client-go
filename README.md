@@ -203,7 +203,9 @@
       - [Promoting a Release Bundle](#promoting-a-release-bundle)
       - [Get Release Bundle Creation Status](#get-release-bundle-creation-status)
       - [Get Release Bundle Promotion Status](#get-release-bundle-promotion-status)
+      - [Distribute Release Bundle](#distribute-release-bundle)
       - [Delete Release Bundle](#delete-release-bundle)
+      - [Remote Delete Release Bundle](#remote-delete-release-bundle)
 
 ## General
 
@@ -2468,6 +2470,27 @@ projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 ```
 
+#### Distribute Release Bundle
+
+```go
+rules := &distribution.DistributionCommonParams{
+SiteName:     "*",
+CityName:     "*",
+CountryCodes: []string{"*"},
+}
+params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
+params.DistributionRules = append(params.DistributionRules, rules)
+
+autoCreateRepo := true
+
+pathMapping := services.PathMapping{
+    Pattern: "(*)/(*)",
+    Target:  "{1}/target/{2}",
+}
+
+resp, err := serviceManager.DistributeReleaseBundle(params, autoCreateRepo, pathMapping)
+```
+
 #### Delete Release Bundle
 
 ```go
@@ -2480,4 +2503,20 @@ params.ProjectKey = "project"
 params.Async = true
 
 resp, err := serviceManager.DeleteReleaseBundle(rbDetails, params)
+```
+
+#### Remote Delete Release Bundle
+
+```go
+rules := &distribution.DistributionCommonParams{
+SiteName:     "*",
+CityName:     "*",
+CountryCodes: []string{"*"},
+}
+params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
+params.DistributionRules = append(params.DistributionRules, rules)
+
+dryRun := true
+
+resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
 ```

@@ -32,34 +32,34 @@ func TestXrayReport(t *testing.T) {
 	t.Run("reportAll", reportAll)
 }
 
-var vulnerabilitiesReportRequestParams = services.VulnerabilitiesReportRequestParams {
-		Name: "test-report",
-		Filters: services.VulnerabilitiesFilter{
-			HasRemediation: &trueValue,
-			Severity:       []string{"high"},
-		},
-		Resources: services.Resource{
-			Repositories: []services.Repository{
-				{
-					Name: "dummy-repo",
-				},
+var vulnerabilitiesReportRequestParams = services.VulnerabilitiesReportRequestParams{
+	Name: "test-report",
+	Filters: services.VulnerabilitiesFilter{
+		HasRemediation: &trueValue,
+		Severity:       []string{"high"},
+	},
+	Resources: services.Resource{
+		Repositories: []services.Repository{
+			{
+				Name: "dummy-repo",
 			},
 		},
-	}
-var licensesReportRequestParams = services.LicensesReportRequestParams {
-		Name: "test-report",
-		Filters: services.LicensesFilter{
-			LicensePatterns: []string{"*"},
-		},
-		Resources: services.Resource{
-			Repositories: []services.Repository{
-				{
-					Name: "dummy-repo",
-				},
+	},
+}
+var licensesReportRequestParams = services.LicensesReportRequestParams{
+	Name: "test-report",
+	Filters: services.LicensesFilter{
+		LicensePatterns: []string{"*"},
+	},
+	Resources: services.Resource{
+		Repositories: []services.Repository{
+			{
+				Name: "dummy-repo",
 			},
 		},
-	}
-var reportTypes = []string {
+	},
+}
+var reportTypes = []string{
 	xray.VulnerabilitiesEndpoint,
 	xray.LicensesEndpoint,
 }
@@ -83,15 +83,15 @@ func reportAll(t *testing.T) {
 
 		reportReqCont := services.ReportContentRequestParams{
 			ReportType: ep,
-			ReportId:  reportId,
-			Direction: "asc",
-			PageNum:   0,
-			NumRows:   7,
+			ReportId:   reportId,
+			Direction:  "asc",
+			PageNum:    0,
+			NumRows:    7,
 		}
 		if ep == xray.VulnerabilitiesEndpoint {
-			reportReqCont.OrderBy =  "severity"
+			reportReqCont.OrderBy = "severity"
 		} else if ep == xray.LicensesEndpoint {
-			reportReqCont.OrderBy =  "license"
+			reportReqCont.OrderBy = "license"
 		}
 		content, err := testXrayReportService.Content(reportReqCont)
 		assert.NoError(t, err)

@@ -8,13 +8,12 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/xray"
 )
 
 const (
-	minXrayVersion   = "3.81.4"
-	xrayUsageApiPath = "api/v1/usage/events/send"
+	minXrayReportUsageVersion = "3.81.4"
+	xrayReportUsageApiPath    = "api/v1/usage/events/send"
 )
 
 type ReportUsageAttribute struct {
@@ -49,19 +48,19 @@ func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...Repo
 	if err != nil {
 		return errors.New("Couldn't get Xray version. Error: " + err.Error())
 	}
-	if e := clientutils.ValidateMinimumVersion(clientutils.Xray, xrayVersion, minXrayVersion); e != nil {
-		log.Debug("Usage Report:", e.Error())
+	if clientutils.ValidateMinimumVersion(clientutils.Xray, xrayVersion, minXrayReportUsageVersion) != nil {
+		//nolint:nilerr
 		return nil
 	}
-	url, err := clientutils.BuildUrl(xrDetails.GetUrl(), xrayUsageApiPath, make(map[string]string))
+	url, err := clientutils.BuildUrl(xrDetails.GetUrl(), xrayReportUsageApiPath, make(map[string]string))
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	clientDetails := xrDetails.CreateHttpClientDetails()
 
 	bodyContent, err := json.Marshal(events)
 	if errorutils.CheckError(err) != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
