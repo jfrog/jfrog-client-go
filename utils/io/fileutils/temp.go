@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 var (
@@ -81,21 +80,22 @@ func CleanOldDirs() error {
 	// Get all files at temp dir
 	files, err := os.ReadDir(tempDirBase)
 	if err != nil {
-		log.Error(err)
 		return errorutils.CheckError(err)
 	}
 	now := time.Now()
 	// Search for files/dirs that match the template.
 	for _, file := range files {
-		if strings.HasPrefix(file.Name(), tempPrefix) {
-			timeStamp, err := extractTimestamp(file.Name())
+		fileName := file.Name()
+		if strings.HasPrefix(fileName, tempPrefix) {
+			var timeStamp time.Time
+			timeStamp, err = extractTimestamp(fileName)
 			if err != nil {
 				return err
 			}
 			// Delete old file/dirs.
 			if now.Sub(timeStamp).Hours() > maxFileAge {
-				if err := os.RemoveAll(path.Join(tempDirBase, file.Name())); err != nil {
-					return errorutils.CheckError(err)
+				if err = RemovePath(path.Join(tempDirBase, fileName)); err != nil {
+					return err
 				}
 			}
 		}

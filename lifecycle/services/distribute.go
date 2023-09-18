@@ -4,6 +4,12 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
+	"path"
+)
+
+const (
+	distributionBaseApi = "api/v2/distribution/"
+	distribute          = "distribute"
 )
 
 type DistributeReleaseBundleService struct {
@@ -32,7 +38,7 @@ func (dr *DistributeReleaseBundleService) IsAutoCreateRepo() bool {
 }
 
 func (dr *DistributeReleaseBundleService) GetRestApi(name, version string) string {
-	return "api/v2/distribution/distribute/" + name + "/" + version
+	return path.Join(distributionBaseApi, distribute, name, version)
 }
 
 func (dr *DistributeReleaseBundleService) GetDistributeBody() any {
