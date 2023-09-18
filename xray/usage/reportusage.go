@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	minXrayReportUsageVersion = "3.81.4"
+	minXrayReportUsageVersion = "3.83.0"
 	xrayReportUsageApiPath    = "api/v1/usage/events/send"
 )
 
