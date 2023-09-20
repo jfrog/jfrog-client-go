@@ -133,12 +133,14 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	err = createAndIndexBuild(t, build1Name)
 	assert.NoError(t, err)
 	defer func() {
+		assert.NoError(t, deleteBuildIndex(build1Name))
 		assert.NoError(t, deleteBuild(build1Name))
 	}()
 	build2Name := fmt.Sprintf("%s-%s", "build2", getRunId())
 	err = createAndIndexBuild(t, build2Name)
 	assert.NoError(t, err)
 	defer func() {
+		assert.NoError(t, deleteBuildIndex(build2Name))
 		assert.NoError(t, deleteBuild(build2Name))
 	}()
 	paramsSelectedRepos := utils.NewWatchParams()
