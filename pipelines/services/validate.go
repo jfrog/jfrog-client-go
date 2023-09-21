@@ -81,8 +81,6 @@ func processValidatePipResourceResponse(resp []byte) error {
 	}
 	for k, v := range validationResponse {
 		if v.IsValid != nil && *v.IsValid {
-			fileName := color.Green.Sprintf("%s", k)
-			log.Error(fileName)
 			log.Info("Validation of pipeline resources completed successfully ")
 			msg := color.Green.Sprintf("Validation completed")
 			log.Info(msg)
