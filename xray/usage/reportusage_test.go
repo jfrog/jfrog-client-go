@@ -18,9 +18,10 @@ func TestIsXrayVersionCompatible(t *testing.T) {
 		{"2.9.0", false},
 		{"2.0.0", false},
 		{"3.80.3", false},
-		{"3.81.4", true},
+		{"3.81.4", false},
 		{utils.Development, true},
-		{"3.83.2", true},
+		{"3.83.0", true},
+		{"3.83.3", true},
 		{"4.15.2", true},
 	}
 	for _, test := range tests {
