@@ -401,10 +401,10 @@ type XscGitInfoContext struct {
 	CommitAuthor  string   `json:"commit_author"`
 }
 
-type DockerfileCommandDetails struct {
+type DockerCommandDetails struct {
 	LayerHash string
 	Command   string
-	// The Same command could appear in more than one place,especially in a FROM commands.
+	// The Same command could appear in more than one place.
 	Line []string
 }
 
