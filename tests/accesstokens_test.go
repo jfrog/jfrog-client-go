@@ -3,6 +3,7 @@ package tests
 import (
 	"github.com/jfrog/jfrog-client-go/access/services"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -29,7 +30,7 @@ func testCreateRefreshableToken(t *testing.T) {
 
 func testAccessTokenWithReference(t *testing.T) {
 	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
-	tokenParams.IncludeReferenceToken = &trueValue
+	tokenParams.IncludeReferenceToken = utils.Pointer(true)
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
 	assert.NoError(t, err)
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
@@ -58,7 +59,7 @@ func testRefreshTokenTest(t *testing.T) {
 func createRefreshableAccessTokenParams(expiredIn int) services.CreateTokenParams {
 	tokenParams := services.CreateTokenParams{}
 	tokenParams.ExpiresIn = expiredIn
-	tokenParams.Refreshable = &trueValue
+	tokenParams.Refreshable = utils.Pointer(true)
 	tokenParams.Audience = "*@*"
 	return tokenParams
 }
@@ -66,7 +67,7 @@ func createRefreshableAccessTokenParams(expiredIn int) services.CreateTokenParam
 func createRefreshAccessTokenParams(token auth.CreateTokenResponseData) (refreshParams services.CreateTokenParams) {
 	refreshParams = services.CreateTokenParams{}
 	refreshParams.ExpiresIn = token.ExpiresIn
-	refreshParams.Refreshable = &trueValue
+	refreshParams.Refreshable = utils.Pointer(true)
 	refreshParams.GrantType = "refresh_token"
 	refreshParams.TokenType = "Bearer"
 	refreshParams.RefreshToken = token.RefreshToken
