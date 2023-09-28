@@ -597,3 +597,7 @@ func ExtractSha256FromResponseBody(body []byte) (string, error) {
 	}
 	return "", nil
 }
+
+func Pointer[K any](val K) *K {
+	return &val
+}

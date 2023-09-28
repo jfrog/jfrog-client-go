@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
 	"reflect"
 	"testing"
 
@@ -59,10 +60,10 @@ func testAccessProjectCreateUpdateDelete(t *testing.T) {
 	defer deleteProjectAndAssert(t, projectParams.ProjectDetails.ProjectKey)
 	projectParams.ProjectDetails.Description += "123"
 	projectParams.ProjectDetails.StorageQuotaBytes += 123
-	projectParams.ProjectDetails.SoftLimit = &trueValue
-	projectParams.ProjectDetails.AdminPrivileges.ManageMembers = &falseValue
-	projectParams.ProjectDetails.AdminPrivileges.ManageResources = &trueValue
-	projectParams.ProjectDetails.AdminPrivileges.IndexResources = &falseValue
+	projectParams.ProjectDetails.SoftLimit = utils.Pointer(true)
+	projectParams.ProjectDetails.AdminPrivileges.ManageMembers = utils.Pointer(false)
+	projectParams.ProjectDetails.AdminPrivileges.ManageResources = utils.Pointer(true)
+	projectParams.ProjectDetails.AdminPrivileges.IndexResources = utils.Pointer(false)
 	assert.NoError(t, testsAccessProjectService.Update(projectParams))
 	updatedProject, err := testsAccessProjectService.Get(projectParams.ProjectDetails.ProjectKey)
 	if assert.NoError(t, err) &&
@@ -83,9 +84,9 @@ func deleteProjectAndAssert(t *testing.T, projectKey string) {
 
 func getTestProjectParams(projectKey string, projectName string) services.ProjectParams {
 	adminPrivileges := services.AdminPrivileges{
-		ManageMembers:   &trueValue,
-		ManageResources: &falseValue,
-		IndexResources:  &trueValue,
+		ManageMembers:   utils.Pointer(true),
+		ManageResources: utils.Pointer(false),
+		IndexResources:  utils.Pointer(true),
 	}
 	runId := getRunId()
 	runNumberSuffix := runId[len(runId)-3:]
@@ -93,7 +94,7 @@ func getTestProjectParams(projectKey string, projectName string) services.Projec
 		DisplayName:       projectName + runNumberSuffix,
 		Description:       "My Test Project",
 		AdminPrivileges:   &adminPrivileges,
-		SoftLimit:         &falseValue,
+		SoftLimit:         utils.Pointer(false),
 		StorageQuotaBytes: 1073741825,                   // Needs to be higher than 1073741824
 		ProjectKey:        projectKey + runNumberSuffix, // Valid length: 2 <= ProjectKey <= 10
 	}
