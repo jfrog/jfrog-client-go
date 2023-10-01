@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/stretchr/testify/assert"
 	"strconv"
@@ -35,7 +36,7 @@ func TestXrayReport(t *testing.T) {
 var vulnerabilitiesReportRequestParams = services.VulnerabilitiesReportRequestParams{
 	Name: "test-report",
 	Filters: services.VulnerabilitiesFilter{
-		HasRemediation: &trueValue,
+		HasRemediation: utils.Pointer(true),
 		Severity:       []string{"high"},
 	},
 	Resources: services.Resource{
