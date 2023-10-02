@@ -14,6 +14,7 @@ import (
 type CreateTokenResponseData struct {
 	CommonTokenParams
 	ReferenceToken string `json:"reference_token,omitempty"`
+	TokenId        string `json:"token_id,omitempty"`
 }
 
 type CommonTokenParams struct {
