@@ -27,7 +27,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.32.2"
+	Version     = "1.32.3"
 )
 
 type MinVersionProduct string
@@ -596,4 +596,9 @@ func ExtractSha256FromResponseBody(body []byte) (string, error) {
 		return responseBody.Checksums.Sha256, nil
 	}
 	return "", nil
+}
+
+// Convert any value to a pointer to that value
+func Pointer[K any](val K) *K {
+	return &val
 }

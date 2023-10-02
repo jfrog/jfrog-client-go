@@ -176,13 +176,13 @@ type RemoteRepositoryBaseParams struct {
 	HardFail                          *bool                   `json:"hardFail,omitempty"`
 	Offline                           *bool                   `json:"offline,omitempty"`
 	StoreArtifactsLocally             *bool                   `json:"storeArtifactsLocally,omitempty"`
-	SocketTimeoutMillis               int                     `json:"socketTimeoutMillis,omitempty"`
+	SocketTimeoutMillis               *int                    `json:"socketTimeoutMillis,omitempty"`
 	LocalAddress                      string                  `json:"localAddress,omitempty"`
-	RetrievalCachePeriodSecs          int                     `json:"retrievalCachePeriodSecs,omitempty"`
-	MetadataRetrievalTimeoutSecs      int                     `json:"metadataRetrievalTimeoutSecs,omitempty"`
-	MissedRetrievalCachePeriodSecs    int                     `json:"missedRetrievalCachePeriodSecs,omitempty"`
-	UnusedArtifactsCleanupPeriodHours int                     `json:"unusedArtifactsCleanupPeriodHours,omitempty"`
-	AssumedOfflinePeriodSecs          int                     `json:"assumedOfflinePeriodSecs,omitempty"`
+	RetrievalCachePeriodSecs          *int                    `json:"retrievalCachePeriodSecs,omitempty"`
+	MetadataRetrievalTimeoutSecs      *int                    `json:"metadataRetrievalTimeoutSecs,omitempty"`
+	MissedRetrievalCachePeriodSecs    *int                    `json:"missedRetrievalCachePeriodSecs,omitempty"`
+	UnusedArtifactsCleanupPeriodHours *int                    `json:"unusedArtifactsCleanupPeriodHours,omitempty"`
+	AssumedOfflinePeriodSecs          *int                    `json:"assumedOfflinePeriodSecs,omitempty"`
 	ShareConfiguration                *bool                   `json:"shareConfiguration,omitempty"`
 	SynchronizeProperties             *bool                   `json:"synchronizeProperties,omitempty"`
 	BlockMismatchingMimeTypes         *bool                   `json:"blockMismatchingMimeTypes,omitempty"`
@@ -205,7 +205,7 @@ func NewRemoteRepositoryPackageParams(packageType string) RemoteRepositoryBasePa
 
 type JavaPackageManagersRemoteRepositoryParams struct {
 	RemoteRepoChecksumPolicyType string `json:"remoteRepoChecksumPolicyType,omitempty"`
-	MaxUniqueSnapshots           int    `json:"maxUniqueSnapshots,omitempty"`
+	MaxUniqueSnapshots           *int   `json:"maxUniqueSnapshots,omitempty"`
 	FetchJarsEagerly             *bool  `json:"fetchJarsEagerly,omitempty"`
 	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
 	FetchSourcesEagerly          *bool  `json:"fetchSourcesEagerly,omitempty"`

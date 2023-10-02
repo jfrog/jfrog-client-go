@@ -3,7 +3,7 @@ module github.com/jfrog/jfrog-client-go
 go 1.20
 
 require (
-	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371
+	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/buger/jsonparser v1.1.1
 	github.com/forPelevin/gomoji v1.1.8
 	github.com/go-git/go-git/v5 v5.9.0
@@ -58,6 +58,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.8.9-0.20230905120411-62d1bdd4eb38
+replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.8.9-0.20230928084830-478bd49f5d3e
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog dev

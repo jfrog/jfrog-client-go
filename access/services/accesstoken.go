@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"net/http"
@@ -85,7 +86,6 @@ func (ps *TokenService) handleUnauthenticated(params CreateTokenParams, httpDeta
 }
 
 func prepareForRefresh(p CreateTokenParams) (*CreateTokenParams, error) {
-	var trueValue = true
 	// Validate provided parameters
 	if p.RefreshToken == "" {
 		return nil, errorutils.CheckErrorf("trying to refresh token, but 'refresh_token' field wasn't provided")
@@ -94,6 +94,6 @@ func prepareForRefresh(p CreateTokenParams) (*CreateTokenParams, error) {
 	params := NewCreateTokenParams(p)
 	// Set refresh required parameters
 	params.GrantType = "refresh_token"
-	params.Refreshable = &trueValue
+	params.Refreshable = clientutils.Pointer(true)
 	return &params, nil
 }
