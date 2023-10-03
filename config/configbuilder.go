@@ -7,7 +7,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 func NewConfigBuilder() *servicesConfigBuilder {
