@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"sync"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -44,7 +45,8 @@ type ServiceDetails interface {
 	SetSshPassphrase(sshPassphrase string)
 	SetSshAuthHeaders(sshAuthHeaders map[string]string)
 	SetClient(client *jfroghttpclient.JfrogHttpClient)
-	SetHttpTimeout(httpTimeout time.Duration)
+	SetDialTimeout(dialTimeout time.Duration)
+	SetOverallRequestTimeout(overallRequestTimeout time.Duration)
 
 	IsSshAuthHeaderSet() bool
 	IsSshAuthentication() bool
@@ -71,7 +73,8 @@ type CommonConfigFields struct {
 	SshAuthHeaders         map[string]string              `json:"-"`
 	TokenMutex             sync.Mutex
 	client                 *jfroghttpclient.JfrogHttpClient
-	httpTimeout            time.Duration
+	dialTimeout            time.Duration
+	overallRequestTimeout  time.Duration
 }
 
 func (ccf *CommonConfigFields) GetUrl() string {
@@ -178,8 +181,12 @@ func (ccf *CommonConfigFields) SetClient(client *jfroghttpclient.JfrogHttpClient
 	ccf.client = client
 }
 
-func (ccf *CommonConfigFields) SetHttpTimeout(httpTimeout time.Duration) {
-	ccf.httpTimeout = httpTimeout
+func (ccf *CommonConfigFields) SetDialTimeout(dialTimeout time.Duration) {
+	ccf.dialTimeout = dialTimeout
+}
+
+func (ccf *CommonConfigFields) SetOverallRequestTimeout(overallRequestTimeout time.Duration) {
+	ccf.overallRequestTimeout = overallRequestTimeout
 }
 
 func (ccf *CommonConfigFields) IsSshAuthHeaderSet() bool {
@@ -267,9 +274,12 @@ func SshTokenRefreshPreRequestInterceptor(fields *CommonConfigFields, httpClient
 
 func (ccf *CommonConfigFields) CreateHttpClientDetails() httputils.HttpClientDetails {
 	return httputils.HttpClientDetails{
-		User:        ccf.User,
-		Password:    ccf.Password,
-		ApiKey:      ccf.ApiKey,
-		AccessToken: ccf.AccessToken,
-		Headers:     utils.CopyMap(ccf.GetSshAuthHeaders())}
+		User:                  ccf.User,
+		Password:              ccf.Password,
+		ApiKey:                ccf.ApiKey,
+		AccessToken:           ccf.AccessToken,
+		Headers:               utils.CopyMap(ccf.GetSshAuthHeaders()),
+		DialTimeout:           ccf.dialTimeout,
+		OverallRequestTimeout: ccf.overallRequestTimeout,
+	}
 }

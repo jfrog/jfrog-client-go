@@ -9,7 +9,7 @@
 </div>
 
 | Branch |                                                                                                                                                                              Status                                                                                                                                                                              |
-|:------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| :----: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | master | [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml) |
 |  dev   |    [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml)    |
 
@@ -251,7 +251,7 @@ content of this repository is deleted.
 #### Test Types
 
 | Type                 | Description        | Prerequisites                 |
-|----------------------|--------------------|-------------------------------|
+| -------------------- | ------------------ | ----------------------------- |
 | `-test.artifactory`  | Artifactory tests  | Artifactory Pro               |
 | `-test.distribution` | Distribution tests | Artifactory with Distribution |
 | `-test.xray`         | Xray tests         | Artifactory with Xray         |
@@ -262,7 +262,7 @@ content of this repository is deleted.
 #### Connection Details
 
 | Flag                | Description                                                                                            |
-|---------------------|--------------------------------------------------------------------------------------------------------|
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
@@ -357,8 +357,10 @@ serviceConfig, err := config.NewConfigBuilder().
     SetDryRun(false).
     // Add [Context](https://golang.org/pkg/context/)
     SetContext(ctx).
-    // Optionally overwrite the default HTTP timeout, which is set to 30 seconds.
-    SetHttpTimeout(180 * time.Second).
+    // Optionally overwrite the default dial timeout, which is set to 30 seconds.
+    SetDialTimeout(180 * time.Second).
+    // Optionally set the total HTTP request timeout.
+    SetOverallRequestTimeout(10 * time.Minute).
     // Optionally overwrite the default HTTP retries, which is set to 3.
     SetHttpRetries(8).
     Build()
@@ -1965,7 +1967,7 @@ vulnerabilitiesReportRequest := services.VulnerabilitiesReportRequestParams{
     Severity: []string{
         "High",
         "Medium"
-      },	
+      },
     CvssScore: services.CvssScore {
         MinScore: float64(6.3),
         MaxScore: float64(9)
@@ -2020,6 +2022,7 @@ reportContent, err := xrayManager.ReportContent(reportContentRequest)
 // The reportId argument value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
 err := xrayManager.DeleteReport(reportId)
 ```
+
 #### Generate Licences Report
 
 ```go
@@ -2119,7 +2122,7 @@ violationsReportRequest := services.ViolationsReportRequestParams{
       Severity: []string{
           "High",
           "Medium"
-        },	
+        },
       CvssScore: services.CvssScore {
           MinScore: float64(6.3),
           MaxScore: float64(9)
@@ -2132,7 +2135,7 @@ violationsReportRequest := services.ViolationsReportRequestParams{
           Start: "2020-06-29T12:22:16Z",
           End: "2020-06-29T12:22:16Z"
       },
-      SummaryContains: "kernel", 
+      SummaryContains: "kernel",
       HasRemediation: &falseValue,
     },
     LicenseFilters: services.LicensesFilter {
