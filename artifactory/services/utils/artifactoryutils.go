@@ -546,7 +546,7 @@ func createPrioritiesFiles() ([]*content.ContentWriter, error) {
 func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (pbi *buildinfo.PublishedBuildInfo, found bool, err error) {
 	// Resolve LATEST build number from Artifactory if required.
 	name, number, err := GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
-	if err != nil {
+	if err != nil || name == "" {
 		return nil, false, err
 	}
 

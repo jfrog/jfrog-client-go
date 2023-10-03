@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -48,9 +49,9 @@ func setLocalRepositoryBaseParams(params *services.LocalRepositoryBaseParams, is
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
 	if !isUpdate {
-		params.ArchiveBrowsingEnabled = &trueValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(true)
 	} else {
-		params.ArchiveBrowsingEnabled = &falseValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(false)
 	}
 }
 
@@ -667,8 +668,8 @@ func localYumTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&ylp.LocalRepositoryBaseParams, false)
 	yumRootDepth := 6
 	ylp.YumRootDepth = &yumRootDepth
-	ylp.CalculateYumMetadata = &trueValue
-	ylp.EnableFileListsIndexing = &trueValue
+	ylp.CalculateYumMetadata = utils.Pointer(true)
+	ylp.EnableFileListsIndexing = utils.Pointer(true)
 	ylp.YumGroupFileNames = "filename"
 
 	err := testsCreateLocalRepositoryService.Yum(ylp)
@@ -682,8 +683,8 @@ func localYumTest(t *testing.T) {
 
 	setLocalRepositoryBaseParams(&ylp.LocalRepositoryBaseParams, true)
 	*ylp.YumRootDepth = 18
-	ylp.CalculateYumMetadata = &falseValue
-	ylp.EnableFileListsIndexing = &falseValue
+	ylp.CalculateYumMetadata = utils.Pointer(false)
+	ylp.EnableFileListsIndexing = utils.Pointer(false)
 	ylp.YumGroupFileNames = ""
 
 	err = testsUpdateLocalRepositoryService.Yum(ylp)
