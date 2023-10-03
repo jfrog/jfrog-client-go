@@ -63,12 +63,6 @@ func (builder *servicesConfigBuilder) SetContext(ctx context.Context) *servicesC
 	return builder
 }
 
-// Deprecated
-func (builder *servicesConfigBuilder) SetHttpTimeout(dialTimeout time.Duration) *servicesConfigBuilder {
-	log.Warn("SetHttpTimeout is deprecated. Use SetDialTimeout instead.")
-	return builder.SetDialTimeout(dialTimeout)
-}
-
 func (builder *servicesConfigBuilder) SetDialTimeout(dialTimeout time.Duration) *servicesConfigBuilder {
 	builder.dialTimeout = dialTimeout
 	return builder
