@@ -24,7 +24,7 @@ func testCreateRefreshableToken(t *testing.T) {
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
 	assert.NotEqual(t, tokenParams.AccessToken, token.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, "", token.RefreshToken, "Refresh token is empty")
-	assert.Equal(t, testExpiredInSeconds, token.ExpiresIn)
+	assert.EqualValues(t, testExpiredInSeconds, *token.ExpiresIn)
 	assert.Empty(t, token.ReferenceToken)
 }
 
@@ -36,7 +36,7 @@ func testAccessTokenWithReference(t *testing.T) {
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
 	assert.NotEqual(t, tokenParams.AccessToken, token.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, "", token.RefreshToken, "Refresh token is empty")
-	assert.Equal(t, testExpiredInSeconds, token.ExpiresIn)
+	assert.EqualValues(t, testExpiredInSeconds, *token.ExpiresIn)
 	assert.NotEmpty(t, token.ReferenceToken)
 }
 
@@ -52,13 +52,13 @@ func testRefreshTokenTest(t *testing.T) {
 	// Validate
 	assert.NotEqual(t, token.AccessToken, newToken.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, token.RefreshToken, newToken.RefreshToken, "New refresh token is identical to original one")
-	assert.Equal(t, token.ExpiresIn, newToken.ExpiresIn, "New access token's expiration is different from original one")
+	assert.EqualValues(t, token.ExpiresIn, newToken.ExpiresIn, "New access token's expiration is different from original one")
 	assert.Empty(t, token.ReferenceToken)
 }
 
-func createRefreshableAccessTokenParams(expiredIn int) services.CreateTokenParams {
+func createRefreshableAccessTokenParams(expiredIn uint) services.CreateTokenParams {
 	tokenParams := services.CreateTokenParams{}
-	tokenParams.ExpiresIn = expiredIn
+	tokenParams.ExpiresIn = &expiredIn
 	tokenParams.Refreshable = utils.Pointer(true)
 	tokenParams.Audience = "*@*"
 	return tokenParams
