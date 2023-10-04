@@ -141,6 +141,10 @@ func (m *GitManager) readUrl() {
 			IsNextLineUrl = true
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		m.err = errorutils.CheckError(err)
+		return
+	}
 	if !strings.HasSuffix(originUrl, ".git") {
 		originUrl += ".git"
 	}
@@ -229,6 +233,10 @@ func (m *GitManager) readRevisionFromRef(refPath string) {
 		revision = strings.TrimSpace(text)
 		break
 	}
+	if err := scanner.Err(); err != nil {
+		m.err = errorutils.CheckError(err)
+		return
+	}
 	m.revision = revision
 }
 
@@ -262,6 +270,10 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 				}
 				return
 			}
+		}
+		if err = scanner.Err(); err != nil {
+			m.err = errorutils.CheckError(err)
+			return
 		}
 	}
 	log.Debug("No packed-refs file was found. Assuming git repository is empty")
