@@ -35,13 +35,16 @@ func (es *EntitlementsService) IsEntitled(featureId string) (entitled bool, err 
 		return
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return false, fmt.Errorf("got unexpected server response while attempting to get JFrog Xray entitlements response for %s:\n%s", featureId, err.Error())
+		err = fmt.Errorf("got unexpected server response while attempting to get JFrog Xray entitlements response for %s:\n%s", featureId, err.Error())
+		return
 	}
 	var userEntitlements entitlements
 	if err = json.Unmarshal(body, &userEntitlements); err != nil {
-		return false, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
+		err = errorutils.CheckErrorf("couldn't parse JFrog Xray server entitlements response: " + err.Error())
+		return
 	}
-	return userEntitlements.Entitled, nil
+	entitled = userEntitlements.Entitled
+	return
 }
 
 type entitlements struct {
