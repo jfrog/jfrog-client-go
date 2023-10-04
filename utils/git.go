@@ -141,8 +141,8 @@ func (m *GitManager) readUrl() {
 			IsNextLineUrl = true
 		}
 	}
-	if err != nil {
-		m.err = err
+	if err := scanner.Err(); err != nil {
+		m.err = errorutils.CheckError(err)
 		return
 	}
 	if !strings.HasSuffix(originUrl, ".git") {
@@ -233,8 +233,8 @@ func (m *GitManager) readRevisionFromRef(refPath string) {
 		revision = strings.TrimSpace(text)
 		break
 	}
-	if err != nil {
-		m.err = err
+	if err := scanner.Err(); err != nil {
+		m.err = errorutils.CheckError(err)
 		return
 	}
 	m.revision = revision
@@ -271,8 +271,8 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 				return
 			}
 		}
-		if err != nil {
-			m.err = err
+		if err = scanner.Err(); err != nil {
+			m.err = errorutils.CheckError(err)
 			return
 		}
 	}
