@@ -28,16 +28,16 @@ func (vs *VersionService) GetDistributionVersion() (string, error) {
 	httpDetails := vs.DistDetails.CreateHttpClientDetails()
 	resp, body, _, err := vs.client.SendGet(vs.DistDetails.GetUrl()+"api/v1/system/info", true, &httpDetails)
 	if err != nil {
-		return "", err
+		return "", errors.New("failed while attempting to get Distribution version: " + err.Error())
 	}
 
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", errors.New("failed while attempting to get Distribution version:\n" + err.Error())
+		return "", errors.New("failed while attempting to get JFrog Distribution version:\n" + err.Error())
 	}
 	var version distributionVersion
 	err = json.Unmarshal(body, &version)
 	if err != nil {
-		return "", errorutils.CheckErrorf("couldn't parse Distribution server response: " + err.Error())
+		return "", errorutils.CheckErrorf("couldn't parse JFrog Distribution server response: " + err.Error())
 	}
 	return strings.TrimSpace(version.Version), nil
 }

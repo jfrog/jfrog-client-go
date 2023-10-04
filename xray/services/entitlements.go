@@ -33,11 +33,11 @@ func (es *EntitlementsService) IsEntitled(featureId string) (entitled bool, err 
 		return
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return false, fmt.Errorf("failed while attempting to get Xray entitlements response for %s:\n%s", featureId, err.Error())
+		return false, fmt.Errorf("failed while attempting to get JFrog Xray entitlements response for %s:\n%s", featureId, err.Error())
 	}
 	var userEntitlements entitlements
 	if err = json.Unmarshal(body, &userEntitlements); err != nil {
-		return false, errorutils.CheckErrorf("couldn't parse Xray server response: " + err.Error())
+		return false, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
 	}
 	return userEntitlements.Entitled, nil
 }
