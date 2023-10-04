@@ -25,13 +25,13 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
 	resp, body, _, err := ss.client.SendGet(ss.ServiceDetails.GetUrl()+"api/v1/system/info", true, &httpDetails)
 	if err != nil {
-		return nil, errors.New("failed while attempting to get Pipelines version: " + err.Error())
+		return nil, errors.New("failed while attempting to get JFrog Pipelines version: " + err.Error())
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, &PipelinesNotAvailableError{InnerError: err}
 		}
-		return nil, errors.New("failed while attempting to get JFrog Pipelines version:\n" + err.Error())
+		return nil, errors.New("got unexpected server response while attempting to get JFrog Pipelines version:\n" + err.Error())
 	}
 	var sysInfo PipelinesSystemInfo
 	if err = json.Unmarshal(body, &sysInfo); err != nil {

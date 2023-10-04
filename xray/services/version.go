@@ -32,10 +32,10 @@ func (vs *VersionService) GetVersion() (string, error) {
 	httpDetails := vs.XrayDetails.CreateHttpClientDetails()
 	resp, body, _, err := vs.client.SendGet(vs.XrayDetails.GetUrl()+"api/v1/system/version", true, &httpDetails)
 	if err != nil {
-		return "", errors.New("failed while attempting to get Xray version: " + err.Error())
+		return "", errors.New("failed while attempting to get JFrog Xray version: " + err.Error())
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", errors.New("failed while attempting to get JFrog Xray version:\n" + err.Error())
+		return "", errors.New("got unexpected server response while attempting to get JFrog Xray version:\n" + err.Error())
 	}
 	var version xrayVersion
 	if err = json.Unmarshal(body, &version); err != nil {
