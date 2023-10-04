@@ -35,8 +35,7 @@ func (vs *VersionService) GetDistributionVersion() (string, error) {
 		return "", errors.New("failed while attempting to get JFrog Distribution version:\n" + err.Error())
 	}
 	var version distributionVersion
-	err = json.Unmarshal(body, &version)
-	if err != nil {
+	if err = json.Unmarshal(body, &version); err != nil {
 		return "", errorutils.CheckErrorf("couldn't parse JFrog Distribution server response: " + err.Error())
 	}
 	return strings.TrimSpace(version.Version), nil

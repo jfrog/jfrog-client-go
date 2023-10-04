@@ -44,8 +44,7 @@ func (ss *SystemService) GetVersion() (string, error) {
 		return "", err
 	}
 	var version artifactoryVersion
-	err = json.Unmarshal(body, &version)
-	if err != nil {
+	if err = json.Unmarshal(body, &version); err != nil {
 		return "", errorutils.CheckErrorf("couldn't parse JFrog Artifactory server response: " + err.Error())
 	}
 	return strings.TrimSpace(version.Version), nil

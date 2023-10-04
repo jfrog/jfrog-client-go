@@ -34,8 +34,7 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 		return nil, errors.New("failed while attempting to get JFrog Pipelines version:\n" + err.Error())
 	}
 	var sysInfo PipelinesSystemInfo
-	err = json.Unmarshal(body, &sysInfo)
-	if err != nil {
+	if err = json.Unmarshal(body, &sysInfo); err != nil {
 		return nil, errorutils.CheckErrorf("couldn't parse JFrog Pipelines server response: " + err.Error())
 	}
 	return &sysInfo, nil
