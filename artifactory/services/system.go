@@ -44,9 +44,8 @@ func (ss *SystemService) GetVersion() (string, error) {
 		return "", err
 	}
 	var version artifactoryVersion
-	err = json.Unmarshal(body, &version)
-	if err != nil {
-		return "", errorutils.CheckErrorf("couldn't parse Artifactory server response: " + err.Error())
+	if err = json.Unmarshal(body, &version); err != nil {
+		return "", errorutils.CheckErrorf("couldn't parse JFrog Artifactory server version response: " + err.Error())
 	}
 	return strings.TrimSpace(version.Version), nil
 }
@@ -123,7 +122,7 @@ func (ss *SystemService) sendGet(endpoint string) ([]byte, error) {
 		return nil, err
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
-		return nil, fmt.Errorf("failed while attempting to get Artifactory %s:\n%s", endpoint, err.Error())
+		return nil, fmt.Errorf("got unexpected server response while attempting to get JFrog Artifactory %s:\n%s", endpoint, err.Error())
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	return body, nil
