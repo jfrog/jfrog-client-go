@@ -269,6 +269,10 @@ func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.Conte
 	if err != nil {
 		return nil, err
 	}
+	if buildName == "" {
+		// If build was not found, return an empty reader to filter out all artifacts
+		return content.NewEmptyContentReader(content.DefaultKey), nil
+	}
 
 	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
 	if err != nil {
@@ -580,7 +584,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 
 	// Build BuildInfo struct from json.
 	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
-	if err := json.Unmarshal(body, publishedBuildInfo); err != nil {
+	if err = json.Unmarshal(body, publishedBuildInfo); err != nil {
 		return nil, true, err
 	}
 
