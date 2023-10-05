@@ -245,7 +245,7 @@ func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 	url = ss.xrayToXscUrl()
 	resp, body, _, err := ss.client.SendGet(url+XscVersionAPI, false, &httpClientsDetails)
 	if err != nil {
-		err = errorutils.CheckErrorf("failed to get XSC version, response: " + err.Error())
+		err = errorutils.CheckErrorf("failed to get JFrog XSC version, response: " + err.Error())
 		return
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNotFound); err != nil {
@@ -257,7 +257,7 @@ func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 	}
 	versionResponse := XscVersionResponse{}
 	if err = json.Unmarshal(body, &versionResponse); err != nil {
-		err = errorutils.CheckErrorf("failed to parse XSC server response: " + err.Error())
+		err = errorutils.CheckErrorf("failed to parse JFrog XSC server response: " + err.Error())
 		return
 	}
 	xsxVersion = versionResponse.Version
