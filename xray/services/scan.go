@@ -37,7 +37,6 @@ const (
 	// ScanType values
 	Dependency ScanType = "dependency"
 	Binary     ScanType = "binary"
-	DockerScan ScanType = "docker"
 
 	xrayScanStatusFailed = "failed"
 
