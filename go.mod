@@ -9,14 +9,14 @@ require (
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.4
-	github.com/jfrog/build-info-go v1.9.12
-	github.com/jfrog/gofrog v1.3.0
+	github.com/jfrog/build-info-go v1.9.13
+	github.com/jfrog/gofrog v1.3.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/ssh-agent v0.3.3
-	golang.org/x/crypto v0.13.0
+	golang.org/x/crypto v0.14.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	golang.org/x/term v0.12.0
+	golang.org/x/term v0.13.0
 )
 
 require (
@@ -51,13 +51,13 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.15.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.8.9-0.20230928084830-478bd49f5d3e
+// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go dev
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog dev
