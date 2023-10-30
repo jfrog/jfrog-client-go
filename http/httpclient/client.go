@@ -46,6 +46,10 @@ func (jc *HttpClient) GetRetries() int {
 	return jc.retries
 }
 
+func (jc *HttpClient) GetClient() *http.Client {
+	return jc.client
+}
+
 func (jc *HttpClient) GetRetryWaitTime() int {
 	return jc.retryWaitMilliSecs
 }
