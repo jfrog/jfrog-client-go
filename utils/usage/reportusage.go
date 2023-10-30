@@ -81,7 +81,7 @@ func createEcosystemRequestInfo(content []byte) (c *http.Client, req *http.Reque
 	if client, err = httpclient.ClientBuilder().Build(); err != nil {
 		return
 	}
-	if req, err = http.NewRequest("POST", ecosystemUsageApiPath, bytes.NewBuffer(content)); err != nil {
+	if req, err = http.NewRequest(http.MethodPost, ecosystemUsageApiPath, bytes.NewBuffer(content)); err != nil {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
