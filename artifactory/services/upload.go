@@ -306,7 +306,7 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	paths, err := fspatterns.ListFiles(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), uploadParams.IsSymlink(), excludePathPattern)
+	paths, err := fspatterns.ListFiles(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), false, uploadParams.IsSymlink(), excludePathPattern)
 	if err != nil {
 		return err
 	}
