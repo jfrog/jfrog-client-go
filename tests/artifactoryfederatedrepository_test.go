@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/jfrog/gofrog/version"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -56,14 +57,14 @@ func setFederatedRepositoryBaseParams(params *services.FederatedRepositoryBasePa
 	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
 	memberUrl := testsCreateFederatedRepositoryService.ArtDetails.GetUrl() + params.Key
 	if !isUpdate {
-		params.ArchiveBrowsingEnabled = &trueValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(true)
 		params.Members = []services.FederatedRepositoryMember{
-			{Url: memberUrl, Enabled: &trueValue},
+			{Url: memberUrl, Enabled: utils.Pointer(true)},
 		}
 	} else {
-		params.ArchiveBrowsingEnabled = &falseValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(false)
 		params.Members = []services.FederatedRepositoryMember{
-			{Url: memberUrl, Enabled: &trueValue},
+			{Url: memberUrl, Enabled: utils.Pointer(true)},
 		}
 	}
 }

@@ -101,7 +101,7 @@ var (
 	testsBundleCreateService             *distributionServices.CreateReleaseBundleService
 	testsBundleUpdateService             *distributionServices.UpdateReleaseBundleService
 	testsBundleSignService               *distributionServices.SignBundleService
-	testsBundleDistributeService         *distributionServices.DistributeReleaseBundleService
+	testsBundleDistributeService         *distributionServices.DistributeReleaseBundleV1Service
 	testsBundleDistributionStatusService *distributionServices.DistributionStatusService
 	testsBundleDeleteLocalService        *distributionServices.DeleteLocalReleaseBundleService
 	testsBundleDeleteRemoteService       *distributionServices.DeleteReleaseBundleService
@@ -127,8 +127,6 @@ var (
 
 	timestamp    = time.Now().Unix()
 	timestampStr = strconv.FormatInt(timestamp, 10)
-	trueValue    = true
-	falseValue   = false
 
 	// Tests configuration
 	RtTargetRepo = "client-go"
@@ -259,7 +257,7 @@ func createDistributionManager() {
 	testsBundleCreateService = distributionServices.NewCreateReleaseBundleService(client)
 	testsBundleUpdateService = distributionServices.NewUpdateReleaseBundleService(client)
 	testsBundleSignService = distributionServices.NewSignBundleService(client)
-	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleService(client)
+	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleV1Service(client)
 	testsBundleDistributionStatusService = distributionServices.NewDistributionStatusService(client)
 	testsBundleDeleteLocalService = distributionServices.NewDeleteLocalDistributionService(client)
 	testsBundleSetSigningKeyService = distributionServices.NewSetSigningKeyService(client)
@@ -416,11 +414,12 @@ func createArtifactoryStorageManager() {
 	testsStorageService = services.NewStorageService(artDetails, client)
 }
 
-func createJfrogHttpClient(artDetails *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+func createJfrogHttpClient(artDetailsPtr *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+	artDetails := *artDetailsPtr
 	return jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath((*artDetails).GetClientCertPath()).
-		SetClientCertKeyPath((*artDetails).GetClientCertKeyPath()).
-		AppendPreRequestInterceptor((*artDetails).RunPreRequestFunctions).
+		SetClientCertPath(artDetails.GetClientCertPath()).
+		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
 		Build()
 }
 
@@ -452,6 +451,7 @@ func createXrayBinMgrManager() {
 	xrayDetails := GetXrayDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xrayDetails.GetClientCertPath()).
+		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
 		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
 		Build()
@@ -724,34 +724,34 @@ func setRepositoryBaseParams(params *services.RepositoryBaseParams, isUpdate boo
 
 func setAdditionalRepositoryBaseParams(params *services.AdditionalRepositoryBaseParams, isUpdate bool) {
 	if !isUpdate {
-		params.BlackedOut = &trueValue
-		params.XrayIndex = &trueValue
+		params.BlackedOut = clientutils.Pointer(true)
+		params.XrayIndex = clientutils.Pointer(true)
 		params.PropertySets = []string{"artifactory"}
-		params.DownloadRedirect = &trueValue
-		params.PriorityResolution = &trueValue
+		params.DownloadRedirect = clientutils.Pointer(true)
+		params.PriorityResolution = clientutils.Pointer(true)
 	} else {
-		params.BlackedOut = &falseValue
-		params.XrayIndex = &falseValue
+		params.BlackedOut = clientutils.Pointer(false)
+		params.XrayIndex = clientutils.Pointer(false)
 		params.PropertySets = nil
-		params.DownloadRedirect = &falseValue
-		params.PriorityResolution = &falseValue
+		params.DownloadRedirect = clientutils.Pointer(false)
+		params.PriorityResolution = clientutils.Pointer(false)
 	}
 }
 
 func setCargoRepositoryParams(params *services.CargoRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.CargoAnonymousAccess = &trueValue
+		params.CargoAnonymousAccess = clientutils.Pointer(true)
 	} else {
-		params.CargoAnonymousAccess = &falseValue
+		params.CargoAnonymousAccess = clientutils.Pointer(false)
 	}
 }
 
 func setDebianRepositoryParams(params *services.DebianRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.DebianTrivialLayout = &trueValue
+		params.DebianTrivialLayout = clientutils.Pointer(true)
 		params.OptionalIndexCompressionFormats = []string{"bz2", "lzma"}
 	} else {
-		params.DebianTrivialLayout = &falseValue
+		params.DebianTrivialLayout = clientutils.Pointer(false)
 		params.OptionalIndexCompressionFormats = nil
 	}
 }
@@ -763,14 +763,14 @@ func setDockerRepositoryParams(params *services.DockerRepositoryParams, isUpdate
 		dockerTagRetention := 10
 		params.DockerTagRetention = &dockerTagRetention
 		params.DockerApiVersion = "V1"
-		params.BlockPushingSchema1 = &falseValue
+		params.BlockPushingSchema1 = clientutils.Pointer(false)
 	} else {
 		maxUniqueTags := 36
 		params.MaxUniqueTags = &maxUniqueTags
 		dockerTagRetention := 0
 		params.DockerTagRetention = &dockerTagRetention
 		params.DockerApiVersion = "V2"
-		params.BlockPushingSchema1 = &trueValue
+		params.BlockPushingSchema1 = clientutils.Pointer(true)
 	}
 }
 
@@ -778,17 +778,17 @@ func setJavaPackageManagersRepositoryParams(params *services.JavaPackageManagers
 	if !isUpdate {
 		maxUniqueTags := 18
 		params.MaxUniqueSnapshots = &maxUniqueTags
-		params.HandleReleases = &trueValue
-		params.HandleSnapshots = &trueValue
-		params.SuppressPomConsistencyChecks = &trueValue
+		params.HandleReleases = clientutils.Pointer(true)
+		params.HandleSnapshots = clientutils.Pointer(true)
+		params.SuppressPomConsistencyChecks = clientutils.Pointer(true)
 		params.SnapshotVersionBehavior = "non-unique"
 		params.ChecksumPolicyType = "server-generated-checksums"
 	} else {
 		maxUniqueTags := 36
 		params.MaxUniqueSnapshots = &maxUniqueTags
-		params.HandleReleases = &falseValue
-		params.HandleSnapshots = &falseValue
-		params.SuppressPomConsistencyChecks = &falseValue
+		params.HandleReleases = clientutils.Pointer(false)
+		params.HandleSnapshots = clientutils.Pointer(false)
+		params.SuppressPomConsistencyChecks = clientutils.Pointer(false)
 		params.SnapshotVersionBehavior = "unique"
 		params.ChecksumPolicyType = "client-checksums"
 	}
@@ -798,11 +798,11 @@ func setNugetRepositoryParams(params *services.NugetRepositoryParams, isUpdate b
 	if !isUpdate {
 		maxUniqueTags := 24
 		params.MaxUniqueSnapshots = &maxUniqueTags
-		params.ForceNugetAuthentication = &trueValue
+		params.ForceNugetAuthentication = clientutils.Pointer(true)
 	} else {
 		maxUniqueTags := 18
 		params.MaxUniqueSnapshots = &maxUniqueTags
-		params.ForceNugetAuthentication = &falseValue
+		params.ForceNugetAuthentication = clientutils.Pointer(false)
 	}
 }
 
@@ -810,14 +810,14 @@ func setRpmRepositoryParams(params *services.RpmRepositoryParams, isUpdate bool)
 	if !isUpdate {
 		yumRootDepth := 6
 		params.YumRootDepth = &yumRootDepth
-		params.CalculateYumMetadata = &trueValue
-		params.EnableFileListsIndexing = &trueValue
+		params.CalculateYumMetadata = clientutils.Pointer(true)
+		params.EnableFileListsIndexing = clientutils.Pointer(true)
 		params.YumGroupFileNames = "filename"
 	} else {
 		yumRootDepth := 18
 		params.YumRootDepth = &yumRootDepth
-		params.CalculateYumMetadata = &falseValue
-		params.EnableFileListsIndexing = &falseValue
+		params.CalculateYumMetadata = clientutils.Pointer(false)
+		params.EnableFileListsIndexing = clientutils.Pointer(false)
 		params.YumGroupFileNames = ""
 	}
 }

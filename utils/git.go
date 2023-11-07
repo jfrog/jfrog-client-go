@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -140,8 +141,8 @@ func (m *GitManager) readUrl() {
 			IsNextLineUrl = true
 		}
 	}
-	if err != nil {
-		m.err = err
+	if err := scanner.Err(); err != nil {
+		m.err = errorutils.CheckError(err)
 		return
 	}
 	if !strings.HasSuffix(originUrl, ".git") {
@@ -150,12 +151,7 @@ func (m *GitManager) readUrl() {
 	m.url = originUrl
 
 	// Mask url if required
-	regExp, err := GetRegExp(CredentialsInUrlRegexp)
-	if err != nil {
-		m.err = err
-		return
-	}
-	matchedResult := regExp.FindString(originUrl)
+	matchedResult := regexp.MustCompile(CredentialsInUrlRegexp).FindString(originUrl)
 	if matchedResult == "" {
 		return
 	}
@@ -237,8 +233,8 @@ func (m *GitManager) readRevisionFromRef(refPath string) {
 		revision = strings.TrimSpace(text)
 		break
 	}
-	if err != nil {
-		m.err = err
+	if err := scanner.Err(); err != nil {
+		m.err = errorutils.CheckError(err)
 		return
 	}
 	m.revision = revision
@@ -275,8 +271,8 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 				return
 			}
 		}
-		if err != nil {
-			m.err = err
+		if err = scanner.Err(); err != nil {
+			m.err = errorutils.CheckError(err)
 			return
 		}
 	}

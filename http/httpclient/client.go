@@ -46,6 +46,10 @@ func (jc *HttpClient) GetRetries() int {
 	return jc.retries
 }
 
+func (jc *HttpClient) GetClient() *http.Client {
+	return jc.client
+}
+
 func (jc *HttpClient) GetRetryWaitTime() int {
 	return jc.retryWaitMilliSecs
 }
@@ -114,7 +118,8 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 		LogMsgPrefix:             logMsgPrefix,
 		ErrorMessage:             fmt.Sprintf("Failure occurred while sending %s request to %s", method, url),
 		ExecutionHandler: func() (bool, error) {
-			req, err := jc.createReq(method, url, content)
+			var req *http.Request
+			req, err = jc.createReq(method, url, content)
 			if err != nil {
 				return true, err
 			}

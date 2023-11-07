@@ -394,16 +394,17 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 	}
 
 	concurrentDownloadFlags := httpclient.ConcurrentDownloadFlags{
-		FileName:      downloadFileDetails.FileName,
-		DownloadPath:  downloadFileDetails.DownloadPath,
-		RelativePath:  downloadFileDetails.RelativePath,
-		LocalFileName: downloadFileDetails.LocalFileName,
-		LocalPath:     downloadFileDetails.LocalPath,
-		ExpectedSha1:  downloadFileDetails.ExpectedSha1,
-		FileSize:      downloadFileDetails.Size,
-		SplitCount:    downloadParams.SplitCount,
-		Explode:       downloadParams.IsExplode(),
-		SkipChecksum:  downloadParams.SkipChecksum}
+		FileName:                downloadFileDetails.FileName,
+		DownloadPath:            downloadFileDetails.DownloadPath,
+		RelativePath:            downloadFileDetails.RelativePath,
+		LocalFileName:           downloadFileDetails.LocalFileName,
+		LocalPath:               downloadFileDetails.LocalPath,
+		ExpectedSha1:            downloadFileDetails.ExpectedSha1,
+		FileSize:                downloadFileDetails.Size,
+		SplitCount:              downloadParams.SplitCount,
+		Explode:                 downloadParams.Explode,
+		BypassArchiveInspection: downloadParams.BypassArchiveInspection,
+		SkipChecksum:            downloadParams.SkipChecksum}
 
 	resp, err := ds.client.DownloadFileConcurrently(concurrentDownloadFlags, logMsgPrefix, &httpClientsDetails, ds.Progress)
 	if err != nil {
@@ -502,7 +503,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 	return func(downloadData DownloadData) parallel.TaskFunc {
 		return func(threadId int) error {
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ds.DryRun)
-			downloadPath, e := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), downloadData.Dependency.GetItemRelativePath(), make(map[string]string))
+			downloadPath, e := clientutils.BuildUrl(ds.GetArtifactoryDetails().GetUrl(), downloadData.Dependency.GetItemRelativePath(), make(map[string]string))
 			if e != nil {
 				return e
 			}
