@@ -9,7 +9,7 @@ require (
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.4
-	github.com/jfrog/build-info-go v1.9.13
+	github.com/jfrog/build-info-go v1.9.15
 	github.com/jfrog/gofrog v1.3.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.8.4
