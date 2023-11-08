@@ -1,14 +1,16 @@
 package usage
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -51,11 +53,37 @@ func CreateUsageData(productId, accountId, clientId string, features ...string) 
 }
 
 func sendRequestToEcosystemService(content []byte) (resp *http.Response, respBody []byte, err error) {
+	client, req, err := createEcosystemRequestInfo(content)
+	if err != nil {
+		return
+	}
+	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", req.Method, req.URL))
+	resp, err = client.Do(req)
+	err = errorutils.CheckError(err)
+	if err != nil {
+		return
+	}
+	if resp == nil {
+		err = errorutils.CheckErrorf("Ecosystem-Usage Received empty response from server")
+		return
+	}
+	defer func() {
+		if resp.Body != nil {
+			err = errors.Join(err, errorutils.CheckError(resp.Body.Close()))
+		}
+	}()
+	respBody, _ = io.ReadAll(resp.Body)
+	return
+}
+
+func createEcosystemRequestInfo(content []byte) (c *http.Client, req *http.Request, err error) {
 	var client *httpclient.HttpClient
 	if client, err = httpclient.ClientBuilder().Build(); err != nil {
 		return
 	}
-	details := httputils.HttpClientDetails{}
-	utils.AddHeader("Content-Type", "application/json", &details.Headers)
-	return client.SendPost(ecosystemUsageApiPath, content, details, "Ecosystem-Usage")
+	if req, err = http.NewRequest(http.MethodPost, ecosystemUsageApiPath, bytes.NewBuffer(content)); err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return client.GetClient(), req, errorutils.CheckError(err)
 }
