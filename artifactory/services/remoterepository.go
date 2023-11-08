@@ -193,6 +193,7 @@ type RemoteRepositoryBaseParams struct {
 	ClientTlsCertificate              string                  `json:"clientTlsCertificate,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
 	QueryParams                       string                  `json:"queryParams,omitempty"`
+	CdnRedirect                       *bool                   `json:"cdnRedirect,omitempty"`
 }
 
 func NewRemoteRepositoryBaseParams() RemoteRepositoryBaseParams {
