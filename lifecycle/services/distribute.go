@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
@@ -73,7 +74,7 @@ type ReleaseBundleDistributeBody struct {
 }
 
 type Modifications struct {
-	PathMappings []distribution.PathMapping `json:"mappings"`
+	PathMappings []utils.PathMapping `json:"mappings"`
 }
 
 type PathMapping struct {

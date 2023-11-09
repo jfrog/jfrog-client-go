@@ -2,19 +2,20 @@ package distribution
 
 import (
 	"github.com/jfrog/gofrog/stringutils"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"regexp"
 )
 
 var fileSpecCaptureGroup = regexp.MustCompile(`({\d})`)
 
 // Create the path mapping from the input spec
-func CreatePathMappings(pattern, target string) []PathMapping {
+func CreatePathMappings(pattern, target string) []utils.PathMapping {
 	if len(target) == 0 {
-		return []PathMapping{}
+		return []utils.PathMapping{}
 	}
 
 	// Convert the file spec pattern and target to match the path mapping input and output specifications, respectfully.
-	return []PathMapping{{
+	return []utils.PathMapping{{
 		// The file spec pattern is wildcard based. Convert it to Regex:
 		Input: stringutils.WildcardPatternToRegExp(pattern),
 		// The file spec target contain placeholders-style matching groups, like {1}.
@@ -24,9 +25,4 @@ func CreatePathMappings(pattern, target string) []PathMapping {
 			return "$" + s[1:2]
 		}),
 	}}
-}
-
-type PathMapping struct {
-	Input  string `json:"input"`
-	Output string `json:"output"`
 }
