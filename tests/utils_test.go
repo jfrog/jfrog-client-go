@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -95,6 +96,7 @@ var (
 	testsFederationService                *services.FederationService
 	testsSystemService                    *services.SystemService
 	testsStorageService                   *services.StorageService
+	testsAqlService                       *services.AqlService
 
 	// Distribution services
 	testsBundleSetSigningKeyService      *distributionServices.SetSigningKeyService
@@ -133,6 +135,8 @@ var (
 
 const (
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
+	buildNumber                      = "1.0.0"
+	buildTimestamp                   = "1412067619893"
 )
 
 func init() {
@@ -411,6 +415,13 @@ func createArtifactoryStorageManager() {
 	client, err := createJfrogHttpClient(&artDetails)
 	failOnHttpClientCreation(err)
 	testsStorageService = services.NewStorageService(artDetails, client)
+}
+
+func createArtifactoryAqlManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsAqlService = services.NewAqlService(artDetails, client)
 }
 
 func createJfrogHttpClient(artDetailsPtr *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
@@ -938,7 +949,7 @@ func isRepoExists(t *testing.T, repoKey string) bool {
 func createDummyBuild(buildName string) error {
 	dataArtifactoryBuild := &buildinfo.BuildInfo{
 		Name:    buildName,
-		Number:  "1.0.0",
+		Number:  buildNumber,
 		Started: "2014-09-30T12:00:19.893+0300",
 		Modules: []buildinfo.Module{{
 			Id: "example-module",
@@ -959,11 +970,6 @@ func createDummyBuild(buildName string) error {
 }
 
 func deleteBuild(buildName string) error {
-	err := deleteBuildIndex(buildName)
-	if err != nil {
-		return err
-	}
-
 	artDetails := GetRtDetails()
 	artHTTPDetails := artDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
@@ -971,12 +977,13 @@ func deleteBuild(buildName string) error {
 		return err
 	}
 
-	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails, "")
+	buildName = url.PathEscape(buildName)
+	resp, _, err := client.SendDelete(artDetails.GetUrl()+"artifactory-build-info/"+buildName, nil, artHTTPDetails, "")
 
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		return errors.New("failed to delete build " + resp.Status)
 	}
 
