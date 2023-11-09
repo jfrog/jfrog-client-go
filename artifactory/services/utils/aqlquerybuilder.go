@@ -2,13 +2,29 @@ package utils
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 	"strconv"
 	"strings"
+	"unicode"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
+
+const spaceEncoding = "%20"
+
+var specialAqlCharacters = map[rune]string{
+	'/':  "%2F",
+	'\\': "%5C",
+	'|':  "%7C",
+	'*':  "%2A",
+	'?':  "%3F",
+	'\'': "%22",
+	':':  "%3A",
+	';':  "%3B",
+	'%':  "%25",
+}
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
@@ -147,6 +163,44 @@ func CreateAqlQueryForPypi(repo, file string) string {
 			`}]` +
 			`})%s`
 	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256"}))
+}
+
+// noinspection GoUnusedExportedFunction
+func CreateAqlQueryForBuildInfoJson(project, buildName, buildNumber, timestamp string) string {
+	if project == "" {
+		project = "artifactory"
+	} else {
+		project = encodeForBuildInfoRepository(project)
+	}
+	itemsPart :=
+		`items.find({
+			"repo": "%s",
+			"path": {
+				"$match": "%s"
+			},
+			"name": {
+				"$match": "%s-%s.json"
+			}
+		})%s`
+	return fmt.Sprintf(itemsPart, project+"-build-info", encodeForBuildInfoRepository(buildName), encodeForBuildInfoRepository(buildNumber), timestamp, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
+}
+
+func encodeForBuildInfoRepository(value string) string {
+	results := ""
+	for _, char := range value {
+		if unicode.IsSpace(char) {
+			char = ' '
+		}
+		if encoding, exist := specialAqlCharacters[char]; exist {
+			results += encoding
+		} else {
+			results += string(char)
+		}
+	}
+	slashEncoding := specialAqlCharacters['/']
+	results = strings.ReplaceAll(results, slashEncoding+" ", slashEncoding+spaceEncoding)
+	results = strings.ReplaceAll(results, " "+slashEncoding, spaceEncoding+slashEncoding)
+	return results
 }
 
 func CreateAqlQueryForLatestCreated(repo, path string) string {
