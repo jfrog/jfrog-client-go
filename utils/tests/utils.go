@@ -3,10 +3,7 @@ package tests
 import (
 	"bufio"
 	"errors"
-	biutils "github.com/jfrog/build-info-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/stretchr/testify/assert"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -14,6 +11,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	biutils "github.com/jfrog/build-info-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/stretchr/testify/assert"
 )
 
 type HttpServerHandlers map[string]func(w http.ResponseWriter, r *http.Request)
@@ -183,4 +185,15 @@ func GetLocalArtifactoryTokenIfNeeded(url string) (adminToken string) {
 		adminToken = os.Getenv("JFROG_TESTS_LOCAL_ACCESS_TOKEN")
 	}
 	return
+}
+
+// Set new logger with output redirection to a null logger. This is useful for negative tests.
+// Caller is responsible to set the old log back.
+func RedirectLogOutputToNil() (previousLog log.Log) {
+	previousLog = log.Logger
+	newLog := log.NewLogger(log.INFO, nil)
+	newLog.SetOutputWriter(io.Discard)
+	newLog.SetLogsWriter(io.Discard, 0)
+	log.SetLogger(newLog)
+	return previousLog
 }

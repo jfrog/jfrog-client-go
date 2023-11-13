@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -95,6 +96,7 @@ var (
 	testsFederationService                *services.FederationService
 	testsSystemService                    *services.SystemService
 	testsStorageService                   *services.StorageService
+	testsAqlService                       *services.AqlService
 
 	// Distribution services
 	testsBundleSetSigningKeyService      *distributionServices.SetSigningKeyService
@@ -126,8 +128,6 @@ var (
 
 	timestamp    = time.Now().Unix()
 	timestampStr = strconv.FormatInt(timestamp, 10)
-	trueValue    = true
-	falseValue   = false
 
 	// Tests configuration
 	RtTargetRepo = "client-go"
@@ -135,6 +135,8 @@ var (
 
 const (
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
+	buildNumber                      = "1.0.0"
+	buildTimestamp                   = "1412067619893"
 )
 
 func init() {
@@ -415,11 +417,19 @@ func createArtifactoryStorageManager() {
 	testsStorageService = services.NewStorageService(artDetails, client)
 }
 
-func createJfrogHttpClient(artDetails *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+func createArtifactoryAqlManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsAqlService = services.NewAqlService(artDetails, client)
+}
+
+func createJfrogHttpClient(artDetailsPtr *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+	artDetails := *artDetailsPtr
 	return jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath((*artDetails).GetClientCertPath()).
-		SetClientCertKeyPath((*artDetails).GetClientCertKeyPath()).
-		AppendPreRequestInterceptor((*artDetails).RunPreRequestFunctions).
+		SetClientCertPath(artDetails.GetClientCertPath()).
+		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
 		Build()
 }
 
@@ -451,6 +461,7 @@ func createXrayBinMgrManager() {
 	xrayDetails := GetXrayDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xrayDetails.GetClientCertPath()).
+		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
 		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
 		Build()
@@ -711,34 +722,34 @@ func setRepositoryBaseParams(params *services.RepositoryBaseParams, isUpdate boo
 
 func setAdditionalRepositoryBaseParams(params *services.AdditionalRepositoryBaseParams, isUpdate bool) {
 	if !isUpdate {
-		params.BlackedOut = &trueValue
-		params.XrayIndex = &trueValue
+		params.BlackedOut = clientutils.Pointer(true)
+		params.XrayIndex = clientutils.Pointer(true)
 		params.PropertySets = []string{"artifactory"}
-		params.DownloadRedirect = &trueValue
-		params.PriorityResolution = &trueValue
+		params.DownloadRedirect = clientutils.Pointer(true)
+		params.PriorityResolution = clientutils.Pointer(true)
 	} else {
-		params.BlackedOut = &falseValue
-		params.XrayIndex = &falseValue
+		params.BlackedOut = clientutils.Pointer(false)
+		params.XrayIndex = clientutils.Pointer(false)
 		params.PropertySets = nil
-		params.DownloadRedirect = &falseValue
-		params.PriorityResolution = &falseValue
+		params.DownloadRedirect = clientutils.Pointer(false)
+		params.PriorityResolution = clientutils.Pointer(false)
 	}
 }
 
 func setCargoRepositoryParams(params *services.CargoRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.CargoAnonymousAccess = &trueValue
+		params.CargoAnonymousAccess = clientutils.Pointer(true)
 	} else {
-		params.CargoAnonymousAccess = &falseValue
+		params.CargoAnonymousAccess = clientutils.Pointer(false)
 	}
 }
 
 func setDebianRepositoryParams(params *services.DebianRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.DebianTrivialLayout = &trueValue
+		params.DebianTrivialLayout = clientutils.Pointer(true)
 		params.OptionalIndexCompressionFormats = []string{"bz2", "lzma"}
 	} else {
-		params.DebianTrivialLayout = &falseValue
+		params.DebianTrivialLayout = clientutils.Pointer(false)
 		params.OptionalIndexCompressionFormats = nil
 	}
 }
@@ -750,14 +761,14 @@ func setDockerRepositoryParams(params *services.DockerRepositoryParams, isUpdate
 		dockerTagRetention := 10
 		params.DockerTagRetention = &dockerTagRetention
 		params.DockerApiVersion = "V1"
-		params.BlockPushingSchema1 = &falseValue
+		params.BlockPushingSchema1 = clientutils.Pointer(false)
 	} else {
 		maxUniqueTags := 36
 		params.MaxUniqueTags = &maxUniqueTags
 		dockerTagRetention := 0
 		params.DockerTagRetention = &dockerTagRetention
 		params.DockerApiVersion = "V2"
-		params.BlockPushingSchema1 = &trueValue
+		params.BlockPushingSchema1 = clientutils.Pointer(true)
 	}
 }
 
@@ -765,17 +776,17 @@ func setJavaPackageManagersRepositoryParams(params *services.JavaPackageManagers
 	if !isUpdate {
 		maxUniqueTags := 18
 		params.MaxUniqueSnapshots = &maxUniqueTags
-		params.HandleReleases = &trueValue
-		params.HandleSnapshots = &trueValue
-		params.SuppressPomConsistencyChecks = &trueValue
+		params.HandleReleases = clientutils.Pointer(true)
+		params.HandleSnapshots = clientutils.Pointer(true)
+		params.SuppressPomConsistencyChecks = clientutils.Pointer(true)
 		params.SnapshotVersionBehavior = "non-unique"
 		params.ChecksumPolicyType = "server-generated-checksums"
 	} else {
 		maxUniqueTags := 36
 		params.MaxUniqueSnapshots = &maxUniqueTags
-		params.HandleReleases = &falseValue
-		params.HandleSnapshots = &falseValue
-		params.SuppressPomConsistencyChecks = &falseValue
+		params.HandleReleases = clientutils.Pointer(false)
+		params.HandleSnapshots = clientutils.Pointer(false)
+		params.SuppressPomConsistencyChecks = clientutils.Pointer(false)
 		params.SnapshotVersionBehavior = "unique"
 		params.ChecksumPolicyType = "client-checksums"
 	}
@@ -785,11 +796,11 @@ func setNugetRepositoryParams(params *services.NugetRepositoryParams, isUpdate b
 	if !isUpdate {
 		maxUniqueTags := 24
 		params.MaxUniqueSnapshots = &maxUniqueTags
-		params.ForceNugetAuthentication = &trueValue
+		params.ForceNugetAuthentication = clientutils.Pointer(true)
 	} else {
 		maxUniqueTags := 18
 		params.MaxUniqueSnapshots = &maxUniqueTags
-		params.ForceNugetAuthentication = &falseValue
+		params.ForceNugetAuthentication = clientutils.Pointer(false)
 	}
 }
 
@@ -797,14 +808,14 @@ func setRpmRepositoryParams(params *services.RpmRepositoryParams, isUpdate bool)
 	if !isUpdate {
 		yumRootDepth := 6
 		params.YumRootDepth = &yumRootDepth
-		params.CalculateYumMetadata = &trueValue
-		params.EnableFileListsIndexing = &trueValue
+		params.CalculateYumMetadata = clientutils.Pointer(true)
+		params.EnableFileListsIndexing = clientutils.Pointer(true)
 		params.YumGroupFileNames = "filename"
 	} else {
 		yumRootDepth := 18
 		params.YumRootDepth = &yumRootDepth
-		params.CalculateYumMetadata = &falseValue
-		params.EnableFileListsIndexing = &falseValue
+		params.CalculateYumMetadata = clientutils.Pointer(false)
+		params.EnableFileListsIndexing = clientutils.Pointer(false)
 		params.YumGroupFileNames = ""
 	}
 }
@@ -938,7 +949,7 @@ func isRepoExists(t *testing.T, repoKey string) bool {
 func createDummyBuild(buildName string) error {
 	dataArtifactoryBuild := &buildinfo.BuildInfo{
 		Name:    buildName,
-		Number:  "1.0.0",
+		Number:  buildNumber,
 		Started: "2014-09-30T12:00:19.893+0300",
 		Modules: []buildinfo.Module{{
 			Id: "example-module",
@@ -959,11 +970,6 @@ func createDummyBuild(buildName string) error {
 }
 
 func deleteBuild(buildName string) error {
-	err := deleteBuildIndex(buildName)
-	if err != nil {
-		return err
-	}
-
 	artDetails := GetRtDetails()
 	artHTTPDetails := artDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
@@ -971,12 +977,13 @@ func deleteBuild(buildName string) error {
 		return err
 	}
 
-	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails, "")
+	buildName = url.PathEscape(buildName)
+	resp, _, err := client.SendDelete(artDetails.GetUrl()+"artifactory-build-info/"+buildName, nil, artHTTPDetails, "")
 
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		return errors.New("failed to delete build " + resp.Status)
 	}
 

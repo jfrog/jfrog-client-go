@@ -9,7 +9,7 @@
 </div>
 
 | Branch |                                                                                                                                                                              Status                                                                                                                                                                              |
-|:------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| :----: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | master | [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml) |
 |  dev   |    [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml)    |
 
@@ -54,11 +54,11 @@
       - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
       - [Executing AQLs](#executing-aqls)
       - [Reading Files in Artifactory](#reading-files-in-artifactory)
-      - [Creating an Access Token](#creating-an-access-token)
-      - [Fetching Access Tokens](#fetching-access-tokens)
-      - [Fetching Access Tokens of a User](#fetching-access-tokens-of-a-user)
-      - [Refreshing an Access Token](#refreshing-an-access-token)
-      - [Revoking an Access Token](#revoking-an-access-token)
+      - [Creating an Artifactory Access Token](#creating-an-artifactory-access-token)
+      - [Fetching Artifactory Access Tokens](#fetching-artifactory-access-tokens)
+      - [Fetching Artifactory Access Tokens of a User](#fetching-artifactory-access-tokens-of-a-user)
+      - [Refreshing an Artifactory Access Token](#refreshing-an-artifactory-access-token)
+      - [Revoking an Artifactory Access Token](#revoking-an-artifactory-access-token)
       - [Create API Key](#create-api-key)
       - [Regenerate API Key](#regenerate-api-key)
       - [Get API Key](#get-api-key)
@@ -111,13 +111,15 @@
       - [Getting a Project](#getting-a-project)
       - [Getting all Projects](#getting-all-projects)
       - [Assigning Repository to Project](#assigning-repository-to-project)
-      - [Unassigning Repository from Project](#unassigning-repository-from-project)
+      - [Un-assigning Repository from Project](#un-assigning-repository-from-project)
       - [Get all groups assigned to a project](#get-all-groups-assigned-to-a-project)
       - [Get a specific group assigned to a project](#get-a-specific-group-assigned-to-a-project)
       - [Add or update a group assigned to a project](#add-or-update-a-group-assigned-to-a-project)
       - [Remove a group from a project](#remove-a-group-from-a-project)
       - [Send Web Login Authentication Request](#send-web-login-authentication-request)
       - [Get Web Login Authentication Token](#get-web-login-authentication-token)
+      - [Creating an Access Token](#creating-an-access-token)
+      - [Refreshing an Access Token](#refreshing-an-access-token)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -157,6 +159,14 @@
       - [Get Vulnerabilities Report Details](#get-vulnerabilities-report-details)
       - [Get Vulnerabilities Report Content](#get-vulnerabilities-report-content)
       - [Delete Vulnerabilities Report](#delete-vulnerabilities-report)
+      - [Generate Licences Report](#generate-licences-report)
+      - [Get Licences Report Details](#get-licences-report-details)
+      - [Get Licences Report Content](#get-licences-report-content)
+      - [Delete Licences Report](#delete-licences-report)
+      - [Generate Violations Report](#generate-violations-report)
+      - [Get Violations Report Details](#get-violations-report-details)
+      - [Get Violations Report Content](#get-violations-report-content)
+      - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
       - [Get Entitlement info](#get-entitlement-info)
   - [Pipelines APIs](#pipelines-apis)
@@ -193,7 +203,9 @@
       - [Promoting a Release Bundle](#promoting-a-release-bundle)
       - [Get Release Bundle Creation Status](#get-release-bundle-creation-status)
       - [Get Release Bundle Promotion Status](#get-release-bundle-promotion-status)
+      - [Distribute Release Bundle](#distribute-release-bundle)
       - [Delete Release Bundle](#delete-release-bundle)
+      - [Remote Delete Release Bundle](#remote-delete-release-bundle)
 
 ## General
 
@@ -239,7 +251,7 @@ content of this repository is deleted.
 #### Test Types
 
 | Type                 | Description        | Prerequisites                 |
-|----------------------|--------------------|-------------------------------|
+| -------------------- | ------------------ | ----------------------------- |
 | `-test.artifactory`  | Artifactory tests  | Artifactory Pro               |
 | `-test.distribution` | Distribution tests | Artifactory with Distribution |
 | `-test.xray`         | Xray tests         | Artifactory with Xray         |
@@ -250,7 +262,7 @@ content of this repository is deleted.
 #### Connection Details
 
 | Flag                | Description                                                                                            |
-|---------------------|--------------------------------------------------------------------------------------------------------|
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
@@ -345,8 +357,10 @@ serviceConfig, err := config.NewConfigBuilder().
     SetDryRun(false).
     // Add [Context](https://golang.org/pkg/context/)
     SetContext(ctx).
-    // Optionally overwrite the default HTTP timeout, which is set to 30 seconds.
-    SetHttpTimeout(180 * time.Second).
+    // Optionally overwrite the default dial timeout, which is set to 30 seconds.
+    SetDialTimeout(180 * time.Second).
+    // Optionally set the total HTTP request timeout.
+    SetOverallRequestTimeout(10 * time.Minute).
     // Optionally overwrite the default HTTP retries, which is set to 3.
     SetHttpRetries(8).
     Build()
@@ -715,7 +729,7 @@ rtManager.Aql(aql string)
 rtManager.ReadRemoteFile(FilePath string)
 ```
 
-#### Creating an Access Token
+#### Creating an Artifactory Access Token
 
 ```go
 params := services.NewCreateTokenParams()
@@ -729,19 +743,19 @@ params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
 results, err := rtManager.CreateToken(params)
 ```
 
-#### Fetching Access Tokens
+#### Fetching Artifactory Access Tokens
 
 ```go
 results, err := rtManager.GetTokens()
 ```
 
-#### Fetching Access Tokens of a User
+#### Fetching Artifactory Access Tokens of a User
 
 ```g
 results, err := rtManager.GetUserTokens(username)
 ```
 
-#### Refreshing an Access Token
+#### Refreshing an Artifactory Access Token
 
 ```go
 params := services.NewRefreshTokenParams()
@@ -752,7 +766,7 @@ params.Token.ExpiresIn = 3600
 results, err := rtManager.RefreshToken(params)
 ```
 
-#### Revoking an Access Token
+#### Revoking an Artifactory Access Token
 
 ```go
 params := services.NewRevokeTokenParams()
@@ -1457,7 +1471,7 @@ err = accessManager.GetAllProjects()
 err = accessManager.AssignRepoToProject("repoName", "tstprj", true)
 ```
 
-#### Unassigning Repository from Project
+#### Un-assigning Repository from Project
 
 ```go
 err = accessManager.AssignRepoToProject("repoName")
@@ -1503,6 +1517,32 @@ err = accessManager.SendLoginAuthenticationRequest(uuid)
 ```go
 uuid := "09b34617-b48a-455d-8b05-25a6989fb76a"
 err = accessManager.GetLoginAuthenticationToken(uuid)
+```
+
+#### Creating an Access Token
+
+```go
+params := CreateTokenParams{}
+params.Scope = "applied-permissions/user"
+params.Username = "my-user"
+params.ExpiresIn = 12345 // nil = system default, 0 = no expiry.
+params.Refreshable = true
+params.Audience = "jfrt@<serviceID1>"
+reference := true
+params.IncludeReferenceToken = &reference
+params.ProjectKey = "my-project"
+params.Description = "my-token"
+
+results, err := accessManager.CreateToken(params)
+```
+
+#### Refreshing an Access Token
+
+```go
+params := accessServices.CreateTokenParams{}
+params.RefreshToken = "<refresh token>"
+
+results, err := accessManager.RefreshToken(params)
 ```
 
 ## Distribution APIs
@@ -1916,11 +1956,30 @@ scanResults, err := xrayManager.GetScanGraphResults(scanId)
 #### Generate Vulnerabilities Report
 
 ```go
-reportRequest := services.ReportRequestParams{
+vulnerabilitiesReportRequest := services.VulnerabilitiesReportRequestParams{
   Name: "example-report",
-  Filters: services.Filter{
-    HasRemediation: &trueValue,
-    Severity:       []string{ "High" },
+  Filters: services.VulnerabilitiesFilter{
+    VulnerableComponent: "*vulnerable:component*",
+    ImpactedArtifact: "some://impacted*artifact",
+    HasRemediation: &falseValue,
+    Cve: "CVE-1234-1234",
+    IssueId: "XRAY-1234",
+    Severity: []string{
+        "High",
+        "Medium"
+      },
+    CvssScore: services.CvssScore {
+        MinScore: float64(6.3),
+        MaxScore: float64(9)
+    },
+    Published: services.DateTimeRange {
+        Start: "2020-06-29T12:22:16Z",
+        End: "2020-06-29T12:22:16Z"
+    },
+    ScanDate: services.DateTimeRange {
+        Start: "2020-06-29T12:22:16Z",
+        End: "2020-06-29T12:22:16Z"
+    }
   },
   Resources: services.Resource{
     IncludePathPatterns: []string{ "/example-sub-dir/**" },
@@ -1933,7 +1992,7 @@ reportRequest := services.ReportRequestParams{
 }
 
 // The reportRequestResponse will contain the report ID to use in subsequent requests
-reportRequestResponse, err := xrayManager.GenerateVulnerabilitiesReport(reportRequest)
+reportRequestResponse, err := xrayManager.GenerateVulnerabilitiesReport(vulnerabilitiesReportRequest)
 ```
 
 #### Get Vulnerabilities Report Details
@@ -1961,6 +2020,176 @@ reportContent, err := xrayManager.ReportContent(reportContentRequest)
 
 ```go
 // The reportId argument value is returned as part of the xrayManager.GenerateVulnerabilitiesReport API response.
+err := xrayManager.DeleteReport(reportId)
+```
+
+#### Generate Licences Report
+
+```go
+licensesReportRequest := services.LicensesReportRequestParams{
+  Name: "example-report",
+  Filters: services.LicensesFilter{
+    Component: "*gav:component*",
+    Artifact: "some://impacted*artifact",
+    Unknown: &falseValue,
+    Unrecognized: &trueValue,
+    LicenseNames: []string{
+        "Apache",
+        "MIT",
+        "AFL"
+    },
+    LicensePatterns: []string{
+        "*Apache*",
+        "The Apache*",
+        "AFL*"
+    },
+    ScanDate: services.DateTimeRange {
+        Start: "2020-06-29T12:22:16Z",
+        End: "2020-06-29T12:22:16Z"
+    }
+  },
+  Resources: services.Resource{
+    IncludePathPatterns: []string{ "/example-sub-dir/**" },
+    Repositories: []services.Repository{
+      {
+        Name: "example-repository",
+      },
+    },
+  },
+}
+
+// The reportRequestResponse will contain the report ID to use in subsequent requests
+reportRequestResponse, err := xrayManager.GenerateLicencesReport(licensesReportRequest)
+```
+
+#### Get Licences Report Details
+
+```go
+// The reportId argument value is returned as part of the xrayManager.GenerateLicencesReport API response.
+reportDetails, err := xrayManager.ReportDetails(reportId)
+```
+
+#### Get Licences Report Content
+
+```go
+// The ReportId value is returned as part of the xrayManager.GenerateLicencesReport API response.
+reportContentRequest := services.ReportContentRequestParams{
+  ReportId:  "example-report-id",
+  Direction: "asc",
+  PageNum:   0,
+  NumRows:   0,
+  OrderBy:   "severity",
+}
+reportContent, err := xrayManager.ReportContent(reportContentRequest)
+```
+
+#### Delete Licences Report
+
+```go
+// The reportId argument value is returned as part of the xrayManager.GenerateLicencesReport API response.
+err := xrayManager.DeleteReport(reportId)
+```
+
+#### Generate Violations Report
+
+```go
+violationsReportRequest := services.ViolationsReportRequestParams{
+  Name: "example-report",
+  Filters: 		Type: "security|license|operational_risk",
+    WatchNames: []string{
+      "NameOfWatch1",
+      "NameOfWatch2"
+    },
+    WatchPatterns: []string{
+      "WildcardWatch*"
+    },
+    Component: "*vulnerable:component*",
+    Artifact: "some://impacted*artifact",
+    PolicyNames: []string{
+      "NameOfPolicy"
+    },
+    Severities: []string{
+      "High",
+      "Medium"
+    },
+    Updated: services.DateTimeRange {
+      Start: "2020-01-02T15:00:00Z",
+      End: "2020-12-15T00:00:00Z"
+    },
+    SecurityFilters: services.VulnerabilitiesFilter{
+      Cve: "CVE-2020-10693",
+      IssueId: "XRAY-87343",
+      Severity: []string{
+          "High",
+          "Medium"
+        },
+      CvssScore: services.CvssScore {
+          MinScore: float64(6.3),
+          MaxScore: float64(9)
+      },
+      Published: services.DateTimeRange {
+          Start: "2020-06-29T12:22:16Z",
+          End: "2020-06-29T12:22:16Z"
+      },
+      ScanDate: services.DateTimeRange {
+          Start: "2020-06-29T12:22:16Z",
+          End: "2020-06-29T12:22:16Z"
+      },
+      SummaryContains: "kernel",
+      HasRemediation: &falseValue,
+    },
+    LicenseFilters: services.LicensesFilter {
+      Unknown: &falseValue,
+      Unrecognized: &trueValue,
+		LicenseNames: []string{
+	    "Apache",
+	    "MIT",
+	    "AFL"
+		},
+    LicensePatterns: []string{
+      "*Apache*",
+      "AFL*"
+    },
+  }
+  Resources: services.Resource{
+    IncludePathPatterns: []string{ "/example-sub-dir/**" },
+    Repositories: []services.Repository{
+      {
+        Name: "example-repository",
+      },
+    },
+  },
+}
+
+// The reportRequestResponse will contain the report ID to use in subsequent requests
+reportRequestResponse, err := xrayManager.GenerateViolationsReport(violationsReportRequest)
+```
+
+#### Get Violations Report Details
+
+```go
+// The reportId argument value is returned as part of the xrayManager.GenerateViolationsReport API response.
+reportDetails, err := xrayManager.ReportDetails(reportId)
+```
+
+#### Get Violations Report Content
+
+```go
+// The ReportId value is returned as part of the xrayManager.GenerateViolationsReport API response.
+reportContentRequest := services.ReportContentRequestParams{
+  ReportId:  "example-report-id",
+  Direction: "asc",
+  PageNum:   0,
+  NumRows:   0,
+  OrderBy:   "severity",
+}
+reportContent, err := xrayManager.ReportContent(reportContentRequest)
+```
+
+#### Delete Violations Report
+
+```go
+// The reportId argument value is returned as part of the xrayManager.GenerateViolationsReport API response.
 err := xrayManager.DeleteReport(reportId)
 ```
 
@@ -2256,6 +2485,27 @@ projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 ```
 
+#### Distribute Release Bundle
+
+```go
+rules := &distribution.DistributionCommonParams{
+SiteName:     "*",
+CityName:     "*",
+CountryCodes: []string{"*"},
+}
+params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
+params.DistributionRules = append(params.DistributionRules, rules)
+
+autoCreateRepo := true
+
+pathMapping := services.PathMapping{
+    Pattern: "(*)/(*)",
+    Target:  "{1}/target/{2}",
+}
+
+resp, err := serviceManager.DistributeReleaseBundle(params, autoCreateRepo, pathMapping)
+```
+
 #### Delete Release Bundle
 
 ```go
@@ -2268,4 +2518,20 @@ params.ProjectKey = "project"
 params.Async = true
 
 resp, err := serviceManager.DeleteReleaseBundle(rbDetails, params)
+```
+
+#### Remote Delete Release Bundle
+
+```go
+rules := &distribution.DistributionCommonParams{
+SiteName:     "*",
+CityName:     "*",
+CountryCodes: []string{"*"},
+}
+params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
+params.DistributionRules = append(params.DistributionRules, rules)
+
+dryRun := true
+
+resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
 ```

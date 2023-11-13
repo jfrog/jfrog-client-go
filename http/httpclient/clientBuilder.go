@@ -11,24 +11,25 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-var DefaultHttpTimeout = 30 * time.Second
+var DefaultDialTimeout = 30 * time.Second
 
 func ClientBuilder() *httpClientBuilder {
 	builder := &httpClientBuilder{}
-	builder.SetTimeout(DefaultHttpTimeout)
+	builder.SetDialTimeout(DefaultDialTimeout)
 	return builder
 }
 
 type httpClientBuilder struct {
-	certificatesDirPath string
-	clientCertPath      string
-	clientCertKeyPath   string
-	insecureTls         bool
-	ctx                 context.Context
-	timeout             time.Duration
-	retries             int
-	retryWaitMilliSecs  int
-	httpClient          *http.Client
+	certificatesDirPath   string
+	clientCertPath        string
+	clientCertKeyPath     string
+	insecureTls           bool
+	ctx                   context.Context
+	dialTimeout           time.Duration
+	overallRequestTimeout time.Duration
+	retries               int
+	retryWaitMilliSecs    int
+	httpClient            *http.Client
 }
 
 func (builder *httpClientBuilder) SetCertificatesPath(certificatesPath string) *httpClientBuilder {
@@ -61,8 +62,13 @@ func (builder *httpClientBuilder) SetContext(ctx context.Context) *httpClientBui
 	return builder
 }
 
-func (builder *httpClientBuilder) SetTimeout(timeout time.Duration) *httpClientBuilder {
-	builder.timeout = timeout
+func (builder *httpClientBuilder) SetDialTimeout(dialTimeout time.Duration) *httpClientBuilder {
+	builder.dialTimeout = dialTimeout
+	return builder
+}
+
+func (builder *httpClientBuilder) SetOverallRequestTimeout(overallRequestTimeout time.Duration) *httpClientBuilder {
+	builder.overallRequestTimeout = overallRequestTimeout
 	return builder
 }
 
@@ -107,14 +113,14 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 		}
 	}
 	err = builder.AddClientCertToTransport(transport)
-	return &HttpClient{client: &http.Client{Transport: transport}, ctx: builder.ctx, retries: builder.retries, retryWaitMilliSecs: builder.retryWaitMilliSecs}, err
+	return &HttpClient{client: &http.Client{Transport: transport, Timeout: builder.overallRequestTimeout}, ctx: builder.ctx, retries: builder.retries, retryWaitMilliSecs: builder.retryWaitMilliSecs}, err
 }
 
 func (builder *httpClientBuilder) createDefaultHttpTransport() *http.Transport {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
-			Timeout:   builder.timeout,
+			Timeout:   builder.dialTimeout,
 			KeepAlive: 20 * time.Second,
 			DualStack: true,
 		}).DialContext,
