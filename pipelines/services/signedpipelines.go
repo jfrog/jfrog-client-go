@@ -2,19 +2,25 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
 )
 
 type SignedPipelinesService struct {
 	client *jfroghttpclient.JfrogHttpClient
 	auth.ServiceDetails
 }
+
+const (
+	Artifact = iota
+	BuildInfo
+	ReleaseBundle
+)
 
 const (
 	validatePipelines           = "api/v1/pipeinfo/verify"
@@ -35,45 +41,45 @@ func NewSignedPipelinesService(client *jfroghttpclient.JfrogHttpClient) *SignedP
 	return &SignedPipelinesService{client: client}
 }
 
-func (sp *SignedPipelinesService) ValidateSignedPipelines(artifactType, buildName, buildNumber, projectKey, artifactPath, rbName, rbVersion string) error {
+func (sp *SignedPipelinesService) ValidateSignedPipelines(artifactTypeInfo ArtifactTypeInfo, artifactType int) error {
 	// Fetch pipeline resource to retrieve resource ID
-	log.Info("Validating signed pipelines for ", artifactType)
+	log.Info("Validating signed pipelines for", artifactType)
 	httpDetails := sp.getHttpDetails()
-	queryParams := sp.constructQueryParamsBasedOnArtifactType(artifactType, buildName, buildNumber, projectKey, artifactPath, rbName, rbVersion)
-	uriVal, err := constructPipelinesURL(queryParams, sp.ServiceDetails.GetUrl(), validatePipelines)
+	queryParams := sp.constructQueryParamsBasedOnArtifactType(artifactTypeInfo, artifactType)
+	uriVal, err := constructPipelinesURL(queryParams, sp.GetUrl(), validatePipelines)
 	if err != nil {
 		return err
 	}
 	resp, body, _, httpErr := sp.client.SendGet(uriVal, true, &httpDetails)
 	if httpErr != nil {
-		return errorutils.CheckError(httpErr)
+		return httpErr
 	}
 	if err := errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return errorutils.CheckError(err)
+		return err
 	}
 	return parseValidateSignedPipelinesResponse(body)
 }
 
-func (sp *SignedPipelinesService) constructQueryParamsBasedOnArtifactType(artifactType, buildName, buildNumber, projectKey, artifactPath, rbName, rbVersion string) map[string]string {
+func (sp *SignedPipelinesService) constructQueryParamsBasedOnArtifactType(artifactTypeInfo ArtifactTypeInfo, artifactType int) map[string]string {
 	queryParams := map[string]string{}
 	switch artifactType {
-	case "buildInfo":
+	case BuildInfo:
 		queryParams = map[string]string{
-			signedPipelinesArtifactType: artifactType,
-			"buildName":                 buildName,
-			"buildNumber":               buildNumber,
-			"projectKey":                projectKey,
+			signedPipelinesArtifactType: "buildInfo",
+			"buildName":                 artifactTypeInfo.BuildName,
+			"buildNumber":               artifactTypeInfo.BuildNumber,
+			"projectKey":                artifactTypeInfo.ProjectKey,
 		}
-	case "artifact":
+	case Artifact:
 		queryParams = map[string]string{
-			signedPipelinesArtifactType: artifactType,
-			"artifactPath":              artifactPath,
+			signedPipelinesArtifactType: "artifact",
+			"artifactPath":              artifactTypeInfo.ArtifactPath,
 		}
-	case "releaseBundle":
+	case ReleaseBundle:
 		queryParams = map[string]string{
-			signedPipelinesArtifactType: artifactType,
-			"rbName":                    rbName,
-			"rbVersion":                 rbVersion,
+			signedPipelinesArtifactType: "releaseBundle",
+			"rbName":                    artifactTypeInfo.RbName,
+			"rbVersion":                 artifactTypeInfo.RbVersion,
 		}
 	}
 	return queryParams
@@ -86,13 +92,13 @@ func parseValidateSignedPipelinesResponse(body []byte) error {
 		return errorutils.CheckError(jsonErr)
 	}
 	if !signedPipelinesValidationResponse.Result {
-		log.Output("Validation failed with below message/messages")
+		log.Output("Signed Pipelines validation failed with below message/messages")
 		for _, message := range signedPipelinesValidationResponse.Messages {
 			log.Output(message)
 		}
 		log.Output(signedPipelinesValidationResponse.Message)
-		return errorutils.CheckError(errors.New("Signed pipelines validation failed"))
+		return errorutils.CheckErrorf("signed pipelines validation failed")
 	}
-	log.Output("Validation is completed successfully")
+	log.Output("Signed Pipelines validation is completed successfully")
 	return nil
 }

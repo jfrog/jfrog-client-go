@@ -137,8 +137,8 @@ func (sm *PipelinesServicesManager) CancelRun(runID int) error {
 	return runService.CancelRun(runID)
 }
 
-func (sm *PipelinesServicesManager) ValidateSignedPipelines(artifactType, buildName, buildNumber, projectKey, artifactPath, rbName, rbVersion string) error {
+func (sm *PipelinesServicesManager) ValidateSignedPipelines(artifactTypeInfo services.ArtifactTypeInfo, artifactType int) error {
 	signedPipelinesService := services.NewSignedPipelinesService(sm.client)
 	signedPipelinesService.ServiceDetails = sm.config.GetServiceDetails()
-	return signedPipelinesService.ValidateSignedPipelines(artifactType, buildName, buildNumber, projectKey, artifactPath, rbName, rbVersion)
+	return signedPipelinesService.ValidateSignedPipelines(artifactTypeInfo, artifactType)
 }

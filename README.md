@@ -36,7 +36,7 @@
     - [Using Artifactory Services](#using-artifactory-services)
       - [Uploading Files to Artifactory](#uploading-files-to-artifactory)
       - [Downloading Files from Artifactory](#downloading-files-from-artifactory)
-      - [Downloading Release Bundles from Artifactory](#downloading-release-bundles-v1-from-artifactory)
+      - [Downloading Release Bundles v1 from Artifactory](#downloading-release-bundles-v1-from-artifactory)
       - [Uploading and Downloading Files with Summary](#uploading-and-downloading-files-with-summary)
       - [Copying Files in Artifactory](#copying-files-in-artifactory)
       - [Moving Files in Artifactory](#moving-files-in-artifactory)
@@ -127,14 +127,14 @@
       - [Creating New Distribution Service Manager](#creating-new-distribution-service-manager)
     - [Using Distribution Services](#using-distribution-services)
       - [Setting Distribution Signing Key](#setting-distribution-signing-key)
-      - [Creating a Release Bundle](#creating-a-release-bundle-v1)
-      - [Updating a Release Bundle](#updating-a-release-bundle-v1)
-      - [Signing a Release Bundle](#signing-a-release-bundle-v1)
-      - [Async Distributing a Release Bundle](#async-distributing-a-release-bundle-v1)
-      - [Sync Distributing a Release Bundle](#sync-distributing-a-release-bundle-v1)
+      - [Creating a Release Bundle v1](#creating-a-release-bundle-v1)
+      - [Updating a Release Bundle v1](#updating-a-release-bundle-v1)
+      - [Signing a Release Bundle v1](#signing-a-release-bundle-v1)
+      - [Async Distributing a Release Bundle v1](#async-distributing-a-release-bundle-v1)
+      - [Sync Distributing a Release Bundle v1](#sync-distributing-a-release-bundle-v1)
       - [Getting Distribution Status](#getting-distribution-status)
-      - [Deleting a Remote Release Bundle](#deleting-a-remote-release-bundle-v1)
-      - [Deleting a Local Release Bundle](#deleting-a-local-release-bundle-v1)
+      - [Deleting a Remote Release Bundle v1](#deleting-a-remote-release-bundle-v1)
+      - [Deleting a Local Release Bundle v1](#deleting-a-local-release-bundle-v1)
   - [Using ContentReader](#using-contentreader)
   - [Xray APIs](#xray-apis)
     - [Creating Xray Service Manager](#creating-xray-service-manager)
@@ -168,7 +168,7 @@
       - [Get Violations Report Content](#get-violations-report-content)
       - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
-      - [Get Entitlement info](#get-entitlement-info)
+      - [Get Entitlement Info](#get-entitlement-info)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -192,12 +192,13 @@
       - [Trigger Pipeline Sync](#trigger-pipeline-sync)
       - [Get Pipeline Sync Status](#get-pipeline-sync-status)
       - [Cancel Run](#cancel-run)
+      - [Validate Signed Pipelines](#validate-signed-pipelines)
   - [Lifecycle APIs](#lifecycle-apis)
-    - [Creating Lifecycle Service Manager](#creating-lifeCycle-service-manager)
-      - [Creating Lifecycle Details](#creating-lifeCycle-details)
-      - [Creating Lifecycle Service Config](#creating-lifeCycle-service-config)
-      - [Creating New Lifecycle Service Manager](#creating-new-lifeCycle-service-manager)
-    - [Using Lifecycle Services](#using-lifeCycle-services)
+    - [Creating Lifecycle Service Manager](#creating-lifecycle-service-manager)
+      - [Creating Lifecycle Details](#creating-lifecycle-details)
+      - [Creating Lifecycle Service Config](#creating-lifecycle-service-config)
+      - [Creating New Lifecycle Service Manager](#creating-new-lifecycle-service-manager)
+    - [Using Lifecycle Services](#using-lifecycle-services)
       - [Creating a Release Bundle From Published Builds](#creating-a-release-bundle-from-published-builds)
       - [Creating a Release Bundle From Release Bundles](#creating-a-release-bundle-from-release-bundles)
       - [Promoting a Release Bundle](#promoting-a-release-bundle)
@@ -2359,15 +2360,19 @@ err := pipelinesManager.CancelRun(runID)
 ```
 
 #### Validate Signed Pipelines
+
 ```go
-artifactType := "buildInfo"
-buildName := "appBuild"
-buildNumber := "31"
-projectKey := "default"
-artifactPath := "go-app/myApp"
-rbName := "artifactory"
-rbVersion := "7.53.1"
-err := pipelinesManager.ValidateSignedPipelines(artifactType, buildName, buildNumber, projectKey, artifactPath, rbName, rbVersion)
+// artifactType describes how is the artifact information stored in artifactory
+// artifactType can be artifact, buildInfo, releaseBundle
+artifactTypeInfo := ArtifactTypeInfo{}
+artifactTypeInfo.ArtifactType := "buildInfo"
+artifactTypeInfo.BuildName := "appBuild"
+artifactTypeInfo.BuildNumber := "31"
+artifactTypeInfo.ProjectKey := "default"
+artifactTypeInfo.ArtifactPath := "go-app/myApp"
+artifactTypeInfo.RbName := "artifactory"
+artifactTypeInfo.RbVersion := "7.53.1"
+err := pipelinesManager.ValidateSignedPipelines(artifactTypeInfo, artifactType)
 ```
 
 ## Lifecycle APIs
