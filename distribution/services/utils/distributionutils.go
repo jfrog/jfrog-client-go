@@ -3,6 +3,7 @@ package utils
 import (
 	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type ReleaseNotesSyntax string
@@ -34,6 +35,7 @@ func NewReleaseBundleParams(name, version string) ReleaseBundleParams {
 
 func CreateBundleBody(releaseBundleParams ReleaseBundleParams, dryRun bool) (*ReleaseBundleBody, error) {
 	var bundleQueries []BundleQuery
+	log.Debug("test")
 	// Create release bundle queries
 	for _, specFile := range releaseBundleParams.SpecFiles {
 		// Create AQL
