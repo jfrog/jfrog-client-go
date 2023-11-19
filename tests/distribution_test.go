@@ -505,6 +505,7 @@ func waitForDistribution(t *testing.T, bundleName string) {
 				// Wait
 			}
 			t.Log("Waiting for " + bundleName + "/" + bundleVersion + "...")
+			t.Log("test")
 			time.Sleep(time.Second)
 		}
 	}
