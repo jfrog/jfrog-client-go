@@ -46,6 +46,10 @@ func (jc *HttpClient) GetRetries() int {
 	return jc.retries
 }
 
+func (jc *HttpClient) GetClient() *http.Client {
+	return jc.client
+}
+
 func (jc *HttpClient) GetRetryWaitTime() int {
 	return jc.retryWaitMilliSecs
 }
@@ -114,7 +118,8 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 		LogMsgPrefix:             logMsgPrefix,
 		ErrorMessage:             fmt.Sprintf("Failure occurred while sending %s request to %s", method, url),
 		ExecutionHandler: func() (bool, error) {
-			req, err := jc.createReq(method, url, content)
+			var req *http.Request
+			req, err = jc.createReq(method, url, content)
 			if err != nil {
 				return true, err
 			}
@@ -126,8 +131,8 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 			if resp == nil {
 				return false, errorutils.CheckErrorf("%sReceived empty response from server", logMsgPrefix)
 			}
-			// If response-code < 500, should not retry
-			if resp.StatusCode < 500 {
+			// If response-code < 500 and it is not 429, should not retry
+			if resp.StatusCode < 500 && resp.StatusCode != http.StatusTooManyRequests {
 				return false, nil
 			}
 			// Perform retry
@@ -744,7 +749,7 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 	if httpClientsDetails.AccessToken != "" {
 		if IsApiKey(httpClientsDetails.AccessToken) {
 			log.Warn("The provided Access Token is an API key and will be used as a password in username/password authentication.\n" +
-				"To avoid this message in the future please use it a a password.")
+				"To avoid this message in the future please use it as a password.")
 			req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.AccessToken)
 		} else {
 			req.Header.Set("Authorization", "Bearer "+httpClientsDetails.AccessToken)

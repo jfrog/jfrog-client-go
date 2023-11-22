@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -46,11 +47,11 @@ func setVirtualRepositoryBaseParams(params *services.VirtualRepositoryBaseParams
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	if !isUpdate {
 		params.Repositories = []string{getRtTargetRepoKey()}
-		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &trueValue
+		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = utils.Pointer(true)
 		params.DefaultDeploymentRepo = getRtTargetRepoKey()
 	} else {
 		params.Repositories = nil
-		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
+		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = utils.Pointer(false)
 		params.DefaultDeploymentRepo = ""
 	}
 }
@@ -102,7 +103,7 @@ func virtualBowerTest(t *testing.T) {
 	bvp := services.NewBowerVirtualRepositoryParams()
 	bvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&bvp.VirtualRepositoryBaseParams, false)
-	bvp.ExternalDependenciesEnabled = &trueValue
+	bvp.ExternalDependenciesEnabled = utils.Pointer(true)
 	bvp.ExternalDependenciesPatterns = []string{"**/*github*/**"}
 	bvp.ExternalDependenciesRemoteRepo = ""
 
@@ -114,7 +115,7 @@ func virtualBowerTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, bvp)
 
 	setVirtualRepositoryBaseParams(&bvp.VirtualRepositoryBaseParams, true)
-	bvp.ExternalDependenciesEnabled = &falseValue
+	bvp.ExternalDependenciesEnabled = utils.Pointer(false)
 	bvp.ExternalDependenciesPatterns = nil
 	bvp.ExternalDependenciesRemoteRepo = ""
 
@@ -270,7 +271,7 @@ func virtualDockerTest(t *testing.T) {
 	dvp := services.NewDockerVirtualRepositoryParams()
 	dvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&dvp.VirtualRepositoryBaseParams, false)
-	dvp.ResolveDockerTagsByTimestamp = &trueValue
+	dvp.ResolveDockerTagsByTimestamp = utils.Pointer(true)
 
 	err := testsCreateVirtualRepositoryService.Docker(dvp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -280,7 +281,7 @@ func virtualDockerTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, dvp)
 
 	setVirtualRepositoryBaseParams(&dvp.VirtualRepositoryBaseParams, true)
-	dvp.ResolveDockerTagsByTimestamp = &falseValue
+	dvp.ResolveDockerTagsByTimestamp = utils.Pointer(false)
 
 	err = testsUpdateVirtualRepositoryService.Docker(dvp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
@@ -356,7 +357,7 @@ func virtualGoTest(t *testing.T) {
 	gvp := services.NewGoVirtualRepositoryParams()
 	gvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
-	gvp.ExternalDependenciesEnabled = &trueValue
+	gvp.ExternalDependenciesEnabled = utils.Pointer(true)
 	gvp.ExternalDependenciesPatterns = []string{"**/*microsoft*/**", "**/*github*/**"}
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)
@@ -367,7 +368,7 @@ func virtualGoTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
-	gvp.ExternalDependenciesEnabled = &falseValue
+	gvp.ExternalDependenciesEnabled = utils.Pointer(false)
 	gvp.ExternalDependenciesPatterns = nil
 
 	err = testsUpdateVirtualRepositoryService.Go(gvp)
@@ -474,7 +475,7 @@ func virtualNpmTest(t *testing.T) {
 	nvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, false)
 	setCacheVirtualRepositoryParams(&nvp.CommonCacheVirtualRepositoryParams, false)
-	nvp.ExternalDependenciesEnabled = &trueValue
+	nvp.ExternalDependenciesEnabled = utils.Pointer(true)
 	nvp.ExternalDependenciesPatterns = []string{"**/*microsoft*/**"}
 	nvp.ExternalDependenciesRemoteRepo = ""
 
@@ -487,7 +488,7 @@ func virtualNpmTest(t *testing.T) {
 
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, true)
 	setCacheVirtualRepositoryParams(&nvp.CommonCacheVirtualRepositoryParams, true)
-	nvp.ExternalDependenciesEnabled = &falseValue
+	nvp.ExternalDependenciesEnabled = utils.Pointer(false)
 	nvp.ExternalDependenciesPatterns = nil
 	nvp.ExternalDependenciesRemoteRepo = ""
 
@@ -502,7 +503,7 @@ func virtualNugetTest(t *testing.T) {
 	nvp := services.NewNugetVirtualRepositoryParams()
 	nvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, false)
-	nvp.ForceNugetAuthentication = &trueValue
+	nvp.ForceNugetAuthentication = utils.Pointer(true)
 
 	err := testsCreateVirtualRepositoryService.Nuget(nvp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -512,7 +513,7 @@ func virtualNugetTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, nvp)
 
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, true)
-	nvp.ForceNugetAuthentication = &falseValue
+	nvp.ForceNugetAuthentication = utils.Pointer(false)
 
 	err = testsUpdateVirtualRepositoryService.Nuget(nvp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {

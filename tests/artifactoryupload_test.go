@@ -1,12 +1,15 @@
 package tests
 
 import (
+	"archive/zip"
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
@@ -31,6 +34,7 @@ func TestArtifactoryUpload(t *testing.T) {
 	t.Run("explode", explodeUpload)
 	t.Run("props", propsUpload)
 	t.Run("summary", summaryUpload)
+	t.Run("archive", archiveUpload)
 }
 
 func flatUpload(t *testing.T) {
@@ -335,6 +339,43 @@ func summaryUpload(t *testing.T) {
 	}
 	assert.Len(t, artifacts, 1)
 	assert.Equal(t, getRtTargetRepo()+"a.in", artifacts[0].ArtifactoryPath)
+	artifactoryCleanup(t)
+}
+
+func archiveUpload(t *testing.T) {
+	// Upload zip
+	uploadPattern := filepath.Join("testdata", "a", "a.in")
+	downloadPattern := path.Join(getRtTargetRepo(), "test.zip")
+	targetProps, err := utils.ParseProperties("key1=val1")
+	assert.NoError(t, err)
+	up := services.NewUploadParams()
+	up.CommonParams = &utils.CommonParams{Pattern: uploadPattern, Target: downloadPattern, TargetProps: targetProps}
+	up.Archive = "zip"
+	up.Flat = true
+	_, err = testsUploadService.UploadFiles(up)
+	assert.NoError(t, err)
+
+	// Download zip
+	workingDir, err := os.MkdirTemp("", "downloadTests")
+	if err != nil {
+		t.Error(err)
+	}
+	defer testutils.RemoveAllAndAssert(t, workingDir)
+	downloadTarget := workingDir + string(filepath.Separator)
+	_, err = testsDownloadService.DownloadFiles(services.DownloadParams{CommonParams: &utils.CommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}})
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check for timezone offset for each file in the zip
+	r, err := zip.OpenReader(downloadTarget + "test.zip")
+	assert.NoError(t, err)
+	defer func() { assert.NoError(t, r.Close()) }()
+	_, sysTimezoneOffset := time.Now().Zone()
+	for _, file := range r.File {
+		_, fileTimezoneOffset := file.Modified.Zone()
+		assert.Equal(t, sysTimezoneOffset, fileTimezoneOffset)
+	}
 	artifactoryCleanup(t)
 }
 

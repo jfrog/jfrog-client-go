@@ -108,7 +108,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
 
 				restAPI := path.Join("api", "storage", relativePath)
-				setPropertiesURL, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+				setPropertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 				if err != nil {
 					return err
 				}
@@ -165,8 +165,8 @@ func NewPropsParams() PropsParams {
 }
 
 func (ps *PropsService) GetItemProperties(relativePath string) (*utils.ItemProperties, error) {
-	restAPI := path.Join("api", "storage", relativePath)
-	propertiesURL, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+	restAPI := path.Join("api", "storage", path.Clean(relativePath))
+	propertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}

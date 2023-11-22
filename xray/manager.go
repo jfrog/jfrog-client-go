@@ -22,7 +22,8 @@ func New(config config.Config) (*XrayServicesManager, error) {
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetContext(config.GetContext()).
-		SetTimeout(config.GetHttpTimeout()).
+		SetDialTimeout(config.GetDialTimeout()).
+		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
 		SetClientCertPath(details.GetClientCertPath()).
 		SetClientCertKeyPath(details.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
@@ -127,10 +128,10 @@ func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (s
 
 // GetScanGraphResults returns an Xray scan output of the requested graph scan.
 // The scanId input should be received from ScanGraph request.
-func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses bool) (*services.ScanResponse, error) {
+func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*services.ScanResponse, error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
-	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses)
+	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses, xscEnabled)
 }
 
 // BuildScan scans a published build-info with Xray.
@@ -143,10 +144,24 @@ func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includ
 }
 
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
-func (sm *XrayServicesManager) GenerateVulnerabilitiesReport(params services.ReportRequestParams) (resp *services.ReportResponse, err error) {
+func (sm *XrayServicesManager) GenerateVulnerabilitiesReport(params services.VulnerabilitiesReportRequestParams) (resp *services.ReportResponse, err error) {
 	reportService := services.NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
 	return reportService.Vulnerabilities(params)
+}
+
+// GenerateLicensesReport returns a Xray report response of the requested report
+func (sm *XrayServicesManager) GenerateLicensesReport(params services.LicensesReportRequestParams) (resp *services.ReportResponse, err error) {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Licenses(params)
+}
+
+// GenerateVoilationsReport returns a Xray report response of the requested report
+func (sm *XrayServicesManager) GenerateViolationsReport(params services.ViolationsReportRequestParams) (resp *services.ReportResponse, err error) {
+	reportService := services.NewReportService(sm.client)
+	reportService.XrayDetails = sm.config.GetServiceDetails()
+	return reportService.Violations(params)
 }
 
 // ReportDetails returns a Xray details response for the requested report
@@ -182,4 +197,10 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	entitlementsService := services.NewEntitlementsService(sm.client)
 	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
 	return entitlementsService.IsEntitled(featureId)
+}
+
+func (sm *XrayServicesManager) XscEnabled() (string, error) {
+	scanService := services.NewScanService(sm.client)
+	scanService.XrayDetails = sm.config.GetServiceDetails()
+	return scanService.IsXscEnabled()
 }

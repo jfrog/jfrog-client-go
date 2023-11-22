@@ -5,6 +5,7 @@ import (
 	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
@@ -36,7 +37,7 @@ type ReleaseBundleOperation interface {
 func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation) ([]byte, error) {
 	queryParams := getProjectQueryParam(operation.getOperationParams().ProjectKey)
 	queryParams[async] = strconv.FormatBool(operation.getOperationParams().Async)
-	requestFullUrl, err := rtUtils.BuildArtifactoryUrl(rbs.GetLifecycleDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
 	if err != nil {
 		return []byte{}, err
 	}

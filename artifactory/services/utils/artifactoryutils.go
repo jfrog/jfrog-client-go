@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"path"
 	"strings"
 	"sync"
@@ -95,26 +94,6 @@ func AddHeader(headerName, headerValue string, headers *map[string]string) {
 		*headers = make(map[string]string)
 	}
 	(*headers)[headerName] = headerValue
-}
-
-// Builds a URL for Artifactory requests.
-// Pay attention: semicolons are escaped!
-func BuildArtifactoryUrl(baseUrl, path string, params map[string]string) (string, error) {
-	u := url.URL{Path: path}
-	parsedUrl, err := url.Parse(baseUrl + u.String())
-	err = errorutils.CheckError(err)
-	if err != nil {
-		return "", err
-	}
-	q := parsedUrl.Query()
-	for k, v := range params {
-		q.Set(k, v)
-	}
-	parsedUrl.RawQuery = q.Encode()
-
-	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
-	encodedUrl := strings.ReplaceAll(parsedUrl.String(), ";", url.QueryEscape(";"))
-	return encodedUrl, nil
 }
 
 func IsWildcardPattern(pattern string) bool {
@@ -289,6 +268,10 @@ func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.Conte
 	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err
+	}
+	if buildName == "" {
+		// If build was not found, return an empty reader to filter out all artifacts
+		return content.NewEmptyContentReader(content.DefaultKey), nil
 	}
 
 	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
@@ -567,7 +550,7 @@ func createPrioritiesFiles() ([]*content.ContentWriter, error) {
 func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (pbi *buildinfo.PublishedBuildInfo, found bool, err error) {
 	// Resolve LATEST build number from Artifactory if required.
 	name, number, err := GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey, flags)
-	if err != nil {
+	if err != nil || name == "" {
 		return nil, false, err
 	}
 
@@ -580,7 +563,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 		queryParams["project"] = projectKey
 	}
 
-	requestFullUrl, err := BuildArtifactoryUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, queryParams)
+	requestFullUrl, err := utils.BuildUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, queryParams)
 	if err != nil {
 		return nil, false, err
 	}
@@ -601,7 +584,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 
 	// Build BuildInfo struct from json.
 	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
-	if err := json.Unmarshal(body, publishedBuildInfo); err != nil {
+	if err = json.Unmarshal(body, publishedBuildInfo); err != nil {
 		return nil, true, err
 	}
 

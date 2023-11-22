@@ -4,6 +4,16 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/jfrog/build-info-go/entities"
 	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/gofrog/parallel"
@@ -18,15 +28,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 type UploadService struct {
@@ -300,12 +301,12 @@ func addEscapingParenthesesForUpload(pattern, target, targetPathInArchive string
 }
 
 func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
-	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams)
+	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams.Exclusions, uploadParams.GetPatternType(), uploadParams.IsRecursive())
 	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	paths, err := fspatterns.ListFiles(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), uploadParams.IsSymlink(), excludePathPattern)
+	paths, err := fspatterns.ListFiles(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), false, uploadParams.IsSymlink(), excludePathPattern)
 	if err != nil {
 		return err
 	}
@@ -742,7 +743,7 @@ func (us *UploadService) postUpload(uploadResult *utils.Result, threadId int, ar
 }
 
 func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
-	url, err := utils.BuildArtifactoryUrl(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, make(map[string]string))
+	url, err := clientutils.BuildUrl(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, make(map[string]string))
 	url = clientutils.AddTrailingSlashIfNeeded(url)
 	if err != nil {
 		return err
@@ -871,6 +872,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		header.Name = artifact.TargetPathInArchive
 	}
 	header.Method = zip.Deflate
+	header.Modified = info.ModTime()
 
 	// If this is a directory, add it to the writer with a trailing slash.
 	if info.IsDir() {
@@ -911,7 +913,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 }
 
 func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string, targetProps *utils.Properties) (targetUrlWithProps string, err error) {
-	targetUrl, err := utils.BuildArtifactoryUrl(artifactoryUrl, targetPath, make(map[string]string))
+	targetUrl, err := clientutils.BuildUrl(artifactoryUrl, targetPath, make(map[string]string))
 	if err != nil {
 		return
 	}
