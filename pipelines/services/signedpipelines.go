@@ -16,8 +16,9 @@ type SignedPipelinesService struct {
 	auth.ServiceDetails
 }
 
+type ArtifactType int
 const (
-	Artifact = iota
+	Artifact ArtifactType = iota
 	BuildInfo
 	ReleaseBundle
 )
@@ -41,7 +42,7 @@ func NewSignedPipelinesService(client *jfroghttpclient.JfrogHttpClient) *SignedP
 	return &SignedPipelinesService{client: client}
 }
 
-func (sp *SignedPipelinesService) ValidateSignedPipelines(artifactTypeInfo ArtifactTypeInfo, artifactType int) error {
+func (sp *SignedPipelinesService) ValidateSignedPipelines(artifactTypeInfo ArtifactTypeInfo, artifactType ArtifactType) error {
 	// Fetch pipeline resource to retrieve resource ID
 	log.Info("Validating signed pipelines for", artifactType)
 	httpDetails := sp.getHttpDetails()
@@ -60,26 +61,26 @@ func (sp *SignedPipelinesService) ValidateSignedPipelines(artifactTypeInfo Artif
 	return parseValidateSignedPipelinesResponse(body)
 }
 
-func (sp *SignedPipelinesService) constructQueryParamsBasedOnArtifactType(artifactTypeInfo ArtifactTypeInfo, artifactType int) map[string]string {
+func (sp *SignedPipelinesService) constructQueryParamsBasedOnArtifactType(artifactTypeInfo ArtifactTypeInfo, artifactType ArtifactType) map[string]string {
 	queryParams := map[string]string{}
 	switch artifactType {
 	case BuildInfo:
 		queryParams = map[string]string{
+			"buildName":   artifactTypeInfo.BuildName,
+			"buildNumber": artifactTypeInfo.BuildNumber,
+			"projectKey":  artifactTypeInfo.ProjectKey,
 			signedPipelinesArtifactType: "buildInfo",
-			"buildName":                 artifactTypeInfo.BuildName,
-			"buildNumber":               artifactTypeInfo.BuildNumber,
-			"projectKey":                artifactTypeInfo.ProjectKey,
 		}
 	case Artifact:
 		queryParams = map[string]string{
+			"artifactPath": artifactTypeInfo.ArtifactPath,
 			signedPipelinesArtifactType: "artifact",
-			"artifactPath":              artifactTypeInfo.ArtifactPath,
 		}
 	case ReleaseBundle:
 		queryParams = map[string]string{
+			"rbName":    artifactTypeInfo.RbName,
+			"rbVersion": artifactTypeInfo.RbVersion,
 			signedPipelinesArtifactType: "releaseBundle",
-			"rbName":                    artifactTypeInfo.RbName,
-			"rbVersion":                 artifactTypeInfo.RbVersion,
 		}
 	}
 	return queryParams
