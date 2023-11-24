@@ -17,6 +17,7 @@ type SignedPipelinesService struct {
 }
 
 type ArtifactType int
+
 const (
 	Artifact ArtifactType = iota
 	BuildInfo
