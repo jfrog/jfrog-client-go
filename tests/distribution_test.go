@@ -45,17 +45,17 @@ func TestDistributionServices(t *testing.T) {
 	sendGpgKeys(t)
 
 	// Local release bundle tests
-	//t.Run("createDelete", createDelete)
-	//t.Run("createUpdate", createUpdate)
-	//t.Run("createWithProps", createWithProps)
+	t.Run("createDelete", createDelete)
+	t.Run("createUpdate", createUpdate)
+	t.Run("createWithProps", createWithProps)
 
 	// Remote release bundle tests
-	//t.Run("createSignDistributeDelete", createSignDistributeDelete)
-	//t.Run("createSignSyncDistributeDelete", createSignSyncDistributeDelete)
+	t.Run("createSignDistributeDelete", createSignDistributeDelete)
+	t.Run("createSignSyncDistributeDelete", createSignSyncDistributeDelete)
 	t.Run("createDistributeMapping", createDistributeMapping)
-	//t.Run("createDistributeMappingFromPatternAndTarget", createDistributeMappingFromPatternAndTarget)
-	//t.Run("createDistributeMappingWithPlaceholder", createDistributeMappingWithPlaceholder)
-	//t.Run("createDistributeMappingFromPatternAndTargetWithPlaceholder", createDistributeMappingFromPatternAndTargetWithPlaceholder)
+	t.Run("createDistributeMappingFromPatternAndTarget", createDistributeMappingFromPatternAndTarget)
+	t.Run("createDistributeMappingWithPlaceholder", createDistributeMappingWithPlaceholder)
+	t.Run("createDistributeMappingFromPatternAndTargetWithPlaceholder", createDistributeMappingFromPatternAndTargetWithPlaceholder)
 
 	artifactoryCleanup(t)
 	deleteGpgKeys(t)
