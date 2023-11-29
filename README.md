@@ -2363,13 +2363,21 @@ err := pipelinesManager.CancelRun(runID)
 
 ```go
 // artifactType describes how is the artifact information stored in artifactory
-// artifactType can be artifact, buildInfo, releaseBundle
+// artifactType can be one of Artifact, BuildInfo, or ReleaseBundle
 artifactTypeInfo := ArtifactTypeInfo{}
-artifactTypeInfo.ArtifactType := "buildInfo"
+
+// Option 1: Artifact
+artifactType := services.Artifact
+artifactTypeInfo.ArtifactPath := "go-app/myApp"
+
+// Option 2: Build Info
+artifactType := services.BuildInfo
 artifactTypeInfo.BuildName := "appBuild"
 artifactTypeInfo.BuildNumber := "31"
 artifactTypeInfo.ProjectKey := "default"
-artifactTypeInfo.ArtifactPath := "go-app/myApp"
+
+// Option 3: Release Bundle
+artifactType := services.ReleaseBundle
 artifactTypeInfo.RbName := "artifactory"
 artifactTypeInfo.RbVersion := "7.53.1"
 err := pipelinesManager.ValidateSignedPipelines(artifactTypeInfo, artifactType)
