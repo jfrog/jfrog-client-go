@@ -35,6 +35,18 @@ type SignedPipelinesValidation struct {
 	Message  string   `json:"message"`
 }
 
+func (a ArtifactType) String() string {
+	switch a {
+	case Artifact:
+		return "artifact"
+	case BuildInfo:
+		return "buildInfo"
+	case ReleaseBundle:
+		return "releaseBundle"
+	}
+	return ""
+}
+
 func (sp *SignedPipelinesService) getHttpDetails() httputils.HttpClientDetails {
 	return sp.ServiceDetails.CreateHttpClientDetails()
 }
@@ -67,21 +79,21 @@ func (sp *SignedPipelinesService) constructQueryParamsBasedOnArtifactType(artifa
 	switch artifactType {
 	case BuildInfo:
 		queryParams = map[string]string{
-			"buildName":   artifactTypeInfo.BuildName,
-			"buildNumber": artifactTypeInfo.BuildNumber,
-			"projectKey":  artifactTypeInfo.ProjectKey,
-			signedPipelinesArtifactType: "buildInfo",
+			"buildName":                 artifactTypeInfo.BuildName,
+			"buildNumber":               artifactTypeInfo.BuildNumber,
+			"projectKey":                artifactTypeInfo.ProjectKey,
+			signedPipelinesArtifactType: BuildInfo.String(),
 		}
 	case Artifact:
 		queryParams = map[string]string{
-			"artifactPath": artifactTypeInfo.ArtifactPath,
-			signedPipelinesArtifactType: "artifact",
+			"artifactPath":              artifactTypeInfo.ArtifactPath,
+			signedPipelinesArtifactType: Artifact.String(),
 		}
 	case ReleaseBundle:
 		queryParams = map[string]string{
-			"rbName":    artifactTypeInfo.RbName,
-			"rbVersion": artifactTypeInfo.RbVersion,
-			signedPipelinesArtifactType: "releaseBundle",
+			"rbName":                    artifactTypeInfo.RbName,
+			"rbVersion":                 artifactTypeInfo.RbVersion,
+			signedPipelinesArtifactType: ReleaseBundle.String(),
 		}
 	}
 	return queryParams
