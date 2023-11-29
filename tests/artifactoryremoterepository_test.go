@@ -1,9 +1,10 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils"
 	"strings"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
@@ -818,7 +819,9 @@ func remoteTerraformTest(t *testing.T) {
 
 	err = testsUpdateRemoteRepositoryService.Terraform(srp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, srp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, srp)
+	}
 }
 
 func remoteVcsTest(t *testing.T) {

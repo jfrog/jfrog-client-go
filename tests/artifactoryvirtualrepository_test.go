@@ -1,8 +1,9 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
@@ -167,7 +168,9 @@ func virtualComposerTest(t *testing.T) {
 
 	err = testsUpdateVirtualRepositoryService.Composer(cvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cvp)
+	}
 }
 
 func virtualConanTest(t *testing.T) {
@@ -672,6 +675,9 @@ func virtualTerraformTest(t *testing.T) {
 	err = testsUpdateVirtualRepositoryService.Terraform(avp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
 	validateRepoConfig(t, repoKey, avp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, avp)
+	}
 }
 
 func virtualYumTest(t *testing.T) {
