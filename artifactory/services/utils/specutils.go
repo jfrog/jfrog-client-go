@@ -18,8 +18,14 @@ type Aql struct {
 	ItemsFind string `json:"items.find"`
 }
 
+type PathMapping struct {
+	Input  string `json:"input"`
+	Output string `json:"output"`
+}
+
 type CommonParams struct {
 	Aql              Aql
+	PathMapping      PathMapping
 	Pattern          string
 	Exclusions       []string
 	Target           string

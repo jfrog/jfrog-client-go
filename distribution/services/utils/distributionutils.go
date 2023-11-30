@@ -34,16 +34,22 @@ func NewReleaseBundleParams(name, version string) ReleaseBundleParams {
 
 func CreateBundleBody(releaseBundleParams ReleaseBundleParams, dryRun bool) (*ReleaseBundleBody, error) {
 	var bundleQueries []BundleQuery
+	var pathMappings []rtUtils.PathMapping
+
 	// Create release bundle queries
 	for _, specFile := range releaseBundleParams.SpecFiles {
+		// Create path mapping
+		if specFile.GetSpecType() == rtUtils.AQL {
+			pathMappings = distribution.CreatePathMappings(specFile.PathMapping.Input, specFile.PathMapping.Output)
+		} else {
+			pathMappings = distribution.CreatePathMappingsFromPatternAndTarget(specFile.Pattern, specFile.Target)
+		}
+
 		// Create AQL
 		aql, err := createAql(specFile)
 		if err != nil {
 			return nil, err
 		}
-
-		// Create path mapping
-		pathMappings := distribution.CreatePathMappings(specFile.Pattern, specFile.Target)
 
 		// Create added properties
 		addedProps := createAddedProps(specFile)

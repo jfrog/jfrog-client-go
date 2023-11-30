@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -52,7 +53,9 @@ func TestDistributionServices(t *testing.T) {
 	t.Run("createSignDistributeDelete", createSignDistributeDelete)
 	t.Run("createSignSyncDistributeDelete", createSignSyncDistributeDelete)
 	t.Run("createDistributeMapping", createDistributeMapping)
-	t.Run("createDistributeMappingPlaceholder", createDistributeMappingPlaceholder)
+	t.Run("createDistributeMappingFromPatternAndTarget", createDistributeMappingFromPatternAndTarget)
+	t.Run("createDistributeMappingWithPlaceholder", createDistributeMappingWithPlaceholder)
+	t.Run("createDistributeMappingFromPatternAndTargetWithPlaceholder", createDistributeMappingFromPatternAndTargetWithPlaceholder)
 
 	artifactoryCleanup(t)
 	deleteGpgKeys(t)
@@ -123,6 +126,9 @@ func createUpdate(t *testing.T) {
 	// Verify was not created.
 	getLocalBundle(t, bundleName, false)
 
+	// Redefine specFiles to create params from scratch
+	createBundleParams.SpecFiles[0] = &utils.CommonParams{Pattern: getRtTargetRepo() + "b.in"}
+
 	// Create unsigned release bundle
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
 	if !assert.NoError(t, err) {
@@ -146,6 +152,9 @@ func createUpdate(t *testing.T) {
 	}
 	// Verify the release bundle was not updated.
 	assertCreatedLocalBundle(t, bundleName, createBundleParams)
+
+	// Redefine specFiles to create params from scratch
+	updateBundleParams.SpecFiles[0] = &utils.CommonParams{Pattern: getRtTargetRepo() + "test/a.in"}
 
 	summary, err = testsBundleUpdateService.UpdateReleaseBundle(updateBundleParams)
 	if !assert.NoError(t, err) {
@@ -357,12 +366,21 @@ func createDistributeMapping(t *testing.T) {
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
 	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
-	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in", Target: getRtTargetRepo() + "b.out"}}
+	createBundleParams.SpecFiles = []*utils.CommonParams{
+		{
+			Aql: utils.Aql{
+				ItemsFind: "{\"$or\":[{\"$and\":[{\"repo\":{\"$match\":\"" + strings.TrimSuffix(getRtTargetRepo(), "/") + "\"},\"name\":{\"$match\":\"b.in\"}}]}]}",
+			},
+			PathMapping: utils.PathMapping{
+				Input:  getRtTargetRepo() + "b.in",
+				Output: getRtTargetRepo() + "b.out",
+			},
+		},
+	}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	if !assert.NoError(t, err) {
-		return
-	}
+	assert.NoError(t, err)
+
 	defer deleteRemoteAndLocalBundle(t, bundleName)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
@@ -377,18 +395,67 @@ func createDistributeMapping(t *testing.T) {
 	err = testsBundleDistributeService.Distribute()
 	assert.NoError(t, err)
 
+	// Distribute release bundle
+	assertReleaseBundleDistribution(t, bundleName)
+
 	// Make sure <RtTargetRepo>/b.out does exist in Artifactory
-	searchParams := artifactoryServices.NewSearchParams()
-	searchParams.Pattern = getRtTargetRepo() + "b.out"
-	reader, err := testsSearchService.Search(searchParams)
-	assert.NoError(t, err)
-	readerCloseAndAssert(t, reader)
-	length, err := reader.Length()
-	assert.NoError(t, err)
-	assert.Equal(t, 1, length)
+	assertFileExistsInArtifactory(t, getRtTargetRepo()+"b.out")
 }
 
-func createDistributeMappingPlaceholder(t *testing.T) {
+func createDistributeMappingFromPatternAndTarget(t *testing.T) {
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
+
+	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
+	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
+	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: getRtTargetRepo() + "b.in", Target: getRtTargetRepo() + "b.out"}}
+	createBundleParams.SignImmediately = true
+	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	assert.NoError(t, err)
+
+	defer deleteRemoteAndLocalBundle(t, bundleName)
+	assert.NotNil(t, summary)
+	verifyValidSha256(t, summary.GetSha256())
+
+	// Distribute release bundle
+	assertReleaseBundleDistribution(t, bundleName)
+
+	// Make sure <RtTargetRepo>/b.out does exist in Artifactory
+	assertFileExistsInArtifactory(t, getRtTargetRepo()+"b.out")
+}
+
+func createDistributeMappingWithPlaceholder(t *testing.T) {
+	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
+
+	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
+	createBundleParams := services.NewCreateReleaseBundleParams(bundleName, bundleVersion)
+	createBundleParams.SpecFiles = []*utils.CommonParams{
+		{
+			Aql: utils.Aql{
+				ItemsFind: "{\"$or\":[{\"$and\":[{\"repo\":{\"$match\":\"" + strings.TrimSuffix(getRtTargetRepo(), "/") + "\"},\"name\":{\"$match\":\"*.in\"}}]}]}",
+			},
+			PathMapping: utils.PathMapping{
+				Input:  "(" + getRtTargetRepo() + ")" + "(.*).in",
+				Output: "$1$2.out",
+			},
+		},
+	}
+
+	createBundleParams.SignImmediately = true
+	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
+	assert.NoError(t, err)
+
+	defer deleteRemoteAndLocalBundle(t, bundleName)
+	assert.NotNil(t, summary)
+	verifyValidSha256(t, summary.GetSha256())
+
+	// Distribute release bundle
+	assertReleaseBundleDistribution(t, bundleName)
+
+	// Make sure <RtTargetRepo>/b.out does exist in Artifactory
+	assertFileExistsInArtifactory(t, getRtTargetRepo()+"b.out")
+}
+
+func createDistributeMappingFromPatternAndTargetWithPlaceholder(t *testing.T) {
 	bundleName := initRemoteDistributionTest(t, "client-test-bundle-"+getRunId())
 
 	// Create release bundle with path mapping from <RtTargetRepo>/b.in to <RtTargetRepo>/b.out
@@ -396,32 +463,17 @@ func createDistributeMappingPlaceholder(t *testing.T) {
 	createBundleParams.SpecFiles = []*utils.CommonParams{{Pattern: "(" + getRtTargetRepo() + ")" + "(*).in", Target: "{1}{2}.out"}}
 	createBundleParams.SignImmediately = true
 	summary, err := testsBundleCreateService.CreateReleaseBundle(createBundleParams)
-	if !assert.NoError(t, err) {
-		return
-	}
+	assert.NoError(t, err)
+
 	defer deleteRemoteAndLocalBundle(t, bundleName)
 	assert.NotNil(t, summary)
 	verifyValidSha256(t, summary.GetSha256())
 
 	// Distribute release bundle
-	distributeBundleParams := distribution.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
-	distributeBundleParams.DistributionRules = []*distribution.DistributionCommonParams{{SiteName: "*"}}
-	testsBundleDistributeService.Sync = true
-	// On distribution with path mapping, the target repository cannot be auto-created
-	testsBundleDistributeService.AutoCreateRepo = false
-	testsBundleDistributeService.DistributeParams = distributeBundleParams
-	err = testsBundleDistributeService.Distribute()
-	assert.NoError(t, err)
+	assertReleaseBundleDistribution(t, bundleName)
 
 	// Make sure <RtTargetRepo>/b.out does exist in Artifactory
-	searchParams := artifactoryServices.NewSearchParams()
-	searchParams.Pattern = getRtTargetRepo() + "b.out"
-	reader, err := testsSearchService.Search(searchParams)
-	assert.NoError(t, err)
-	readerCloseAndAssert(t, reader)
-	length, err := reader.Length()
-	assert.NoError(t, err)
-	assert.Equal(t, 1, length)
+	assertFileExistsInArtifactory(t, getRtTargetRepo()+"b.out")
 }
 
 // Send GPG keys to Distribution and Artifactory to allow signing of release bundles
@@ -565,5 +617,28 @@ func deleteRemoteAndLocalBundle(t *testing.T, bundleName string) {
 	deleteBundleParams.Sync = true
 	err := testsBundleDeleteRemoteService.DeleteDistribution(deleteBundleParams)
 	artifactoryCleanup(t)
+	assert.NoError(t, err)
+}
+
+func assertFileExistsInArtifactory(t *testing.T, filePath string) {
+	searchParams := artifactoryServices.NewSearchParams()
+	searchParams.Pattern = filePath
+	reader, err := testsSearchService.Search(searchParams)
+	assert.NoError(t, err)
+	readerCloseAndAssert(t, reader)
+	length, err := reader.Length()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, length)
+}
+
+func assertReleaseBundleDistribution(t *testing.T, bundleName string) {
+	// Distribute release bundle
+	distributeBundleParams := distribution.NewDistributeReleaseBundleParams(bundleName, bundleVersion)
+	distributeBundleParams.DistributionRules = []*distribution.DistributionCommonParams{{SiteName: "*"}}
+	testsBundleDistributeService.Sync = true
+	// On distribution with path mapping, the target repository cannot be auto-created
+	testsBundleDistributeService.AutoCreateRepo = false
+	testsBundleDistributeService.DistributeParams = distributeBundleParams
+	err := testsBundleDistributeService.Distribute()
 	assert.NoError(t, err)
 }
