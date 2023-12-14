@@ -37,7 +37,7 @@ func NewWorkspaceService(client *jfroghttpclient.JfrogHttpClient) *WorkspaceServ
 }
 
 func (ws *WorkspaceService) getHttpDetails() httputils.HttpClientDetails {
-	return ws.ServiceDetails.CreateHttpClientDetails()
+	return ws.CreateHttpClientDetails()
 }
 
 func (ws *WorkspaceService) GetWorkspace() ([]WorkspacesResponse, error) {
@@ -60,7 +60,7 @@ func (ws *WorkspaceService) GetWorkspace() ([]WorkspacesResponse, error) {
 	}
 	wsStatusResp := make([]WorkspacesResponse, 0)
 	err = json.Unmarshal(body, &wsStatusResp)
-	return wsStatusResp, err
+	return wsStatusResp, errorutils.CheckError(err)
 }
 
 func (ws *WorkspaceService) DeleteWorkspace(projectName string) error {
@@ -69,7 +69,7 @@ func (ws *WorkspaceService) DeleteWorkspace(projectName string) error {
 	// Query params
 	queryParams := make(map[string]string, 0)
 	// URL construction
-	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), deleteWorkspaceAPI)
+	uri, err := constructPipelinesURL(queryParams, ws.GetUrl(), deleteWorkspaceAPI)
 	if err != nil {
 		return err
 	}
@@ -88,13 +88,13 @@ func (ws *WorkspaceService) ValidateWorkspace(data []byte) error {
 	// Query params
 	queryParams := make(map[string]string)
 	// URL construction
-	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), validateWorkspace)
+	uri, err := constructPipelinesURL(queryParams, ws.GetUrl(), validateWorkspace)
 	if err != nil {
 		return err
 	}
 	// Headers
 	headers := make(map[string]string)
-	headers["Content-Type"] = "application/json"
+	utils.SetContentType("application/json", &headers)
 	headers["User-Agent"] = "jfrog-client-go/1.24.3"
 	httpDetails.Headers = headers
 	// Prepare request
@@ -113,7 +113,7 @@ func (ws *WorkspaceService) WorkspaceSync(project string) error {
 	queryParams["projectName"] = project
 	syncWorkspaceAPI := strings.Replace(workspaceSync, ":project", project, 1)
 	// URL construction
-	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), syncWorkspaceAPI)
+	uri, err := constructPipelinesURL(queryParams, ws.GetUrl(), syncWorkspaceAPI)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (ws *WorkspaceService) WorkspaceSync(project string) error {
 	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
-func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunID, error) {
+func (ws *WorkspaceService) GetWorkspaceRunIDs(pipelines []string) ([]PipelinesRunID, error) {
 	httpDetails := ws.getHttpDetails()
 	pipelineFilter := strings.Join(pipelines, ",")
 	// Query params
@@ -136,7 +136,7 @@ func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunI
 		"include": "latestRunId,name",
 	}
 	// URL construction
-	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), workspacePipelines)
+	uri, err := constructPipelinesURL(queryParams, ws.GetUrl(), workspacePipelines)
 	if err != nil {
 		return nil, err
 	}
@@ -153,14 +153,14 @@ func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunI
 		pipeRunIDs := make([]PipelinesRunID, 0)
 		err = json.Unmarshal(body, &pipeRunIDs)
 		if err != nil {
-			return false, body, errors.New("Failed to parse response to get run status")
+			return false, body, errorutils.CheckErrorf("failed to parse response to get run status")
 		}
 		for i := range pipeRunIDs {
 			if i > 0 {
 				break
 			}
 			if pipeRunIDs[i].LatestRunID == 0 {
-				return false, body, errors.New("Pipeline didnt start running yet")
+				return false, body, errorutils.CheckErrorf("pipeline didn't start running yet")
 			}
 		}
 		return true, body, err
@@ -178,10 +178,10 @@ func (ws *WorkspaceService) WorkspaceRunIDs(pipelines []string) ([]PipelinesRunI
 		return pipeRunIDs, err
 	}
 	err = json.Unmarshal(body, &pipeRunIDs)
-	return pipeRunIDs, err
+	return pipeRunIDs, errorutils.CheckError(err)
 }
 
-func (ws *WorkspaceService) WorkspaceRunStatus(pipelinesRunID int) ([]byte, error) {
+func (ws *WorkspaceService) GetWorkspaceRunStatus(pipelinesRunID int) ([]byte, error) {
 	httpDetails := ws.getHttpDetails()
 	// Query params
 	// TODO ADD include in query param if needed
@@ -201,7 +201,7 @@ func (ws *WorkspaceService) WorkspaceRunStatus(pipelinesRunID int) ([]byte, erro
 	return body, err
 }
 
-func (ws *WorkspaceService) WorkspaceStepStatus(pipelinesRunID int) ([]byte, error) {
+func (ws *WorkspaceService) GetWorkspaceStepStatus(pipelinesRunID int) ([]byte, error) {
 	httpDetails := ws.getHttpDetails()
 	// Query params
 	queryParams := map[string]string{
@@ -223,7 +223,7 @@ func (ws *WorkspaceService) WorkspaceStepStatus(pipelinesRunID int) ([]byte, err
 	return body, err
 }
 
-func (ws *WorkspaceService) GetWorkspacePipelines(workspaces []WorkspacesResponse) (map[string]string, error) {
+func (ws *WorkspaceService) GetWorkspacePipelines(workspaces []WorkspacesResponse) map[string]string {
 	pipelineNames := make(map[string]string, 1)
 	log.Info("Collecting pipeline names configured")
 	// Validate and return pipeline names and branch as map
@@ -241,12 +241,11 @@ func (ws *WorkspaceService) WorkspacePollSyncStatus() ([]WorkspacesResponse, err
 	// Query params
 	queryParams := make(map[string]string, 0)
 	// URL construction
-	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), workspaces)
+	uri, err := constructPipelinesURL(queryParams, ws.GetUrl(), workspaces)
 	if err != nil {
 		return nil, err
 	}
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		log.Info("Polling for pipeline resource sync")
 		// Prepare request
 		resp, body, _, err := ws.client.SendGet(uri, true, &httpDetails)
 		if err != nil {
@@ -260,8 +259,7 @@ func (ws *WorkspaceService) WorkspacePollSyncStatus() ([]WorkspacesResponse, err
 		wsStatusResp := make([]WorkspacesResponse, 0)
 		err = json.Unmarshal(body, &wsStatusResp)
 		if err != nil {
-			log.Error("failed to unmarshal validation response")
-			return true, body, err
+			return true, body, errorutils.CheckError(err)
 		}
 		for i := range wsStatusResp {
 			if i > 0 {
@@ -289,7 +287,7 @@ func (ws *WorkspaceService) WorkspacePollSyncStatus() ([]WorkspacesResponse, err
 	}
 	workspaceStatusResponse := make([]WorkspacesResponse, 0)
 	err = json.Unmarshal(body, &workspaceStatusResponse)
-	return workspaceStatusResponse, err
+	return workspaceStatusResponse, errorutils.CheckError(err)
 }
 
 // GetStepLogsUsingStepID retrieve steps logs using step id
@@ -299,7 +297,7 @@ func (ws *WorkspaceService) GetStepLogsUsingStepID(stepID string) (map[string][]
 	// Query params
 	queryParams := make(map[string]string, 0)
 	// URL construction
-	uri, err := constructPipelinesURL(queryParams, ws.ServiceDetails.GetUrl(), stepConsolesAPI)
+	uri, err := constructPipelinesURL(queryParams, ws.GetUrl(), stepConsolesAPI)
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +312,7 @@ func (ws *WorkspaceService) GetStepLogsUsingStepID(stepID string) (map[string][]
 	}
 	consoles := make(map[string][]Console)
 	err = json.Unmarshal(body, &consoles)
-	return consoles, err
+	return consoles, errorutils.CheckError(err)
 }
 
 // GetStepletLogsUsingStepID retrieve steps logs using step id
@@ -339,5 +337,5 @@ func (ws *WorkspaceService) GetStepletLogsUsingStepID(stepID string) (map[string
 	}
 	consoles := make(map[string][]Console)
 	err = json.Unmarshal(body, &consoles)
-	return consoles, err
+	return consoles, errorutils.CheckError(err)
 }

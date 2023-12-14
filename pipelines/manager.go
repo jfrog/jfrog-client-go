@@ -155,7 +155,7 @@ func (sm *PipelinesServicesManager) WorkspacePollSyncStatus() ([]services.Worksp
 	return workspaceService.WorkspacePollSyncStatus()
 }
 
-func (sm *PipelinesServicesManager) WorkspacePipelines() (map[string]string, error) {
+func (sm *PipelinesServicesManager) GetWorkspacePipelines() (map[string]string, error) {
 	workspaceService := services.NewWorkspaceService(sm.client)
 	workspaceService.ServiceDetails = sm.config.GetServiceDetails()
 	workspacesResponseStatus, err := sm.WorkspacePollSyncStatus()
@@ -171,19 +171,19 @@ func (sm *PipelinesServicesManager) WorkspaceTriggerPipelines(branch, pipName st
 	return sm.TriggerPipelineRun(branch, pipName, isMultiBranch)
 }
 
-func (sm *PipelinesServicesManager) WorkspaceRunIDs(pipelineNames []string) ([]services.PipelinesRunID, error) {
+func (sm *PipelinesServicesManager) GetWorkspaceRunIDs(pipelineNames []string) ([]services.PipelinesRunID, error) {
 	workspaceService := services.NewWorkspaceService(sm.client)
 	workspaceService.ServiceDetails = sm.config.GetServiceDetails()
 	return workspaceService.WorkspaceRunIDs(pipelineNames)
 }
 
-func (sm *PipelinesServicesManager) WorkspaceRunStatus(pipeRunID int) ([]byte, error) {
+func (sm *PipelinesServicesManager) GetWorkspaceRunStatus(pipeRunID int) ([]byte, error) {
 	workspaceService := services.NewWorkspaceService(sm.client)
 	workspaceService.ServiceDetails = sm.config.GetServiceDetails()
 	return workspaceService.WorkspaceRunStatus(pipeRunID)
 }
 
-func (sm *PipelinesServicesManager) WorkspaceStepStatus(pipeRunID int) ([]byte, error) {
+func (sm *PipelinesServicesManager) GetWorkspaceStepStatus(pipeRunID int) ([]byte, error) {
 	workspaceService := services.NewWorkspaceService(sm.client)
 	workspaceService.ServiceDetails = sm.config.GetServiceDetails()
 	return workspaceService.WorkspaceStepStatus(pipeRunID)

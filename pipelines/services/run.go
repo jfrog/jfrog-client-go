@@ -111,7 +111,7 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 		if err := errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 			return false, body, err
 		}
-		log.Info(fmt.Sprintf("Triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch))
+		log.Info(fmt.Sprintf("Triggered successfully\n%s %s \n%14s %s", "PipelineName:", pipeline, "Branch:", branch))
 		return true, body, err
 	}
 	pollingExecutor := &httputils.PollingExecutor{

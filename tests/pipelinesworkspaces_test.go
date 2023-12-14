@@ -27,7 +27,6 @@ func TestWorkspaceValidationWhenPipelinesResourcesAreNotValid(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	fmt.Printf("Bytes received : %s \n", pipelineRes)
 	if !assert.NoError(t, err) {
 		return
 	}

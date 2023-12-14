@@ -145,7 +145,6 @@ type Console struct {
 }
 
 // Validation Types
-
 type ValidationResponse struct {
 	IsValid *bool              `json:"isValid,omitempty"`
 	Errors  []ValidationErrors `json:"errors,omitempty"`

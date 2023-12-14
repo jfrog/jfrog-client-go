@@ -28,7 +28,7 @@ func NewValidateService(client *jfroghttpclient.JfrogHttpClient) *ValidateServic
 }
 
 func (vs *ValidateService) getHttpDetails() httputils.HttpClientDetails {
-	httpDetails := vs.ServiceDetails.CreateHttpClientDetails()
+	httpDetails := vs.CreateHttpClientDetails()
 	return httpDetails
 }
 
@@ -44,9 +44,8 @@ func (vs *ValidateService) ValidatePipeline(data []byte) error {
 
 	// Headers
 	headers := make(map[string]string)
-	headers["Content-Type"] = "application/json"
+	utils.SetContentType("application/json", &headers)
 	httpDetails.Headers = headers
-	log.Debug(string(data))
 
 	// Send post request
 	resp, body, err := vs.client.SendPost(uri, data, &httpDetails)
@@ -74,14 +73,14 @@ func processValidatePipResourceResponse(resp []byte) error {
 	validationResponse := make(map[string]ValidationResponse)
 	err := json.Unmarshal(resp, &validationResponse)
 	if err != nil {
-		return err
+		return errorutils.CheckError(err)
 	}
 	if len(validationResponse) == 0 {
-		return errors.New("pipelines not found")
+		return errorutils.CheckErrorf("pipelines not found")
 	}
 	for k, v := range validationResponse {
 		if v.IsValid != nil && *v.IsValid {
-			log.Info("Validation of pipeline resources completed successfully ")
+			log.Info("Validation of pipeline resources completed successfully")
 			msg := color.Green.Sprintf("Validation completed")
 			log.Info(msg)
 		} else {
