@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"math/rand"
 	"os"
 	"path"
 	"strconv"
@@ -30,8 +31,7 @@ func CreateTempDir() (string, error) {
 	if tempDirBase == "" {
 		return "", errorutils.CheckErrorf("Temp dir cannot be created in an empty base dir.")
 	}
-	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	dirPath, err := os.MkdirTemp(tempDirBase, tempPrefix+"-"+timestamp+"-")
+	dirPath, err := os.MkdirTemp(tempDirBase, tempPrefix+"-"+generateRandomName()+"-")
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
@@ -69,9 +69,12 @@ func CreateTempFile() (*os.File, error) {
 	if tempDirBase == "" {
 		return nil, errorutils.CheckErrorf("Temp File cannot be created in an empty base dir.")
 	}
-	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	fd, err := os.CreateTemp(tempDirBase, tempPrefix+"-"+timestamp+"-")
+	fd, err := os.CreateTemp(tempDirBase, tempPrefix+"-"+generateRandomName()+"-")
 	return fd, err
+}
+
+func generateRandomName() string {
+	return strconv.FormatInt(time.Now().Unix(), 10) + strconv.Itoa(rand.Intn(100000))
 }
 
 // Old runs/tests may leave junk at temp dir.
