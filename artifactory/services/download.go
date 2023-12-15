@@ -94,20 +94,30 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (oper
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	expectedChan := make(chan int, 1)
 	successCounters := make([]int, ds.GetThreads())
+
+	// These two flags are used to ensure we do not attempt to close
+	// the writers more than once.
+	filesTransfersWriterClosed := false
+	artifactsDetailsWriterClosed := false
+
 	if ds.saveSummary {
 		ds.filesTransfersWriter, err = content.NewContentWriter(content.DefaultKey, true, false)
 		if err != nil {
 			return nil, err
 		}
 		defer func() {
-			err = errors.Join(err, ds.filesTransfersWriter.Close())
+			if !filesTransfersWriterClosed {
+				err = errors.Join(err, ds.filesTransfersWriter.Close())
+			}
 		}()
 		ds.artifactsDetailsWriter, err = content.NewContentWriter(content.DefaultKey, true, false)
 		if err != nil {
 			return nil, err
 		}
 		defer func() {
-			err = errors.Join(err, ds.artifactsDetailsWriter.Close())
+			if !artifactsDetailsWriterClosed {
+				err = errors.Join(err, ds.artifactsDetailsWriter.Close())
+			}
 		}()
 	}
 	ds.prepareTasks(producerConsumer, expectedChan, successCounters, errorsQueue, downloadParams...)
@@ -117,6 +127,21 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (oper
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
+
+	// It is important to close the two writers now, before proceeding
+	// to the operational summary generation. This is due to the fact that the
+	// operational summary generation flow reads the source files of the writers.
+	if err = ds.filesTransfersWriter.Close(); err != nil {
+		return
+	}
+	// This is done to avoid attempting to close the writer again inside the defer clause.
+	filesTransfersWriterClosed = true
+	if err = ds.artifactsDetailsWriter.Close(); err != nil {
+		return
+	}
+	// This is done to avoid attempting to close the writer again inside the defer clause.
+	artifactsDetailsWriterClosed = true
+
 	opertaionSummary = ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess)
 	return
 }
