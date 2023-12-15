@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -255,6 +256,34 @@ func TestReplacePlaceHolders(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equalf(t, tt.expected, result, "ReplacePlaceHolders(%v, %v, %v)", tt.args.groups, tt.args.toReplace, tt.args.isRegexp)
 			assert.Equalf(t, tt.expectedBoolean, replaceOccurred, "ReplacePlaceHolders(%v, %v, %v)", tt.args.groups, tt.args.toReplace, tt.args.isRegexp)
+		})
+	}
+}
+
+func TestValidateMinimumVersion(t *testing.T) {
+	minTestVersion := "6.9.0"
+	tests := []struct {
+		artifactoryVersion string
+		expectedResult     bool
+	}{
+		{"6.5.0", false},
+		{"6.2.0", false},
+		{"5.9.0", false},
+		{"6.0.0", false},
+		{"6.6.0", false},
+		{"6.9.0", true},
+		{Development, true},
+		{"6.10.2", true},
+		{"6.15.2", true},
+	}
+	for _, test := range tests {
+		t.Run(test.artifactoryVersion, func(t *testing.T) {
+			err := ValidateMinimumVersion(Xray, test.artifactoryVersion, minTestVersion)
+			if test.expectedResult {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorContains(t, err, fmt.Sprintf(MinimumVersionMsg, Xray, test.artifactoryVersion, minTestVersion))
+			}
 		})
 	}
 }

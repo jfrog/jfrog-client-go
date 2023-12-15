@@ -14,12 +14,13 @@ import (
 type CreateTokenResponseData struct {
 	CommonTokenParams
 	ReferenceToken string `json:"reference_token,omitempty"`
+	TokenId        string `json:"token_id,omitempty"`
 }
 
 type CommonTokenParams struct {
 	Scope        string `json:"scope,omitempty"`
 	AccessToken  string `json:"access_token,omitempty"`
-	ExpiresIn    int    `json:"expires_in,omitempty"`
+	ExpiresIn    *uint  `json:"expires_in,omitempty"`
 	TokenType    string `json:"token_type,omitempty"`
 	Refreshable  *bool  `json:"refreshable,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
@@ -158,11 +159,10 @@ type TokenPayload struct {
 }
 
 // Refreshable Tokens Constants.
+// Artifactory's refresh token mechanism creates tokens that expire in 60 minutes. We want to refresh them when 10 minutes are left.
+var RefreshArtifactoryTokenBeforeExpiryMinutes = int64(10)
 
-// RefreshBeforeExpiryMinutes Artifactory's refresh token mechanism creates tokens that expired in 60 minutes. We want to refresh them after 50 minutes (when 10 minutes left)
-var RefreshBeforeExpiryMinutes = int64(10)
-
-// InviteRefreshBeforeExpiryMinutes Invitations mechanism creates tokens that are valid for 1 year. We want to refresh the token every 50 minutes.
-var InviteRefreshBeforeExpiryMinutes = int64(365*24*60 - 50)
+// Platform's access token are created with 1 year expiry. We want to refresh the token a week before expiry.
+var RefreshPlatformTokenBeforeExpiryMinutes = int64(7 * 24 * 60)
 
 const WaitBeforeRefreshSeconds = 15

@@ -77,6 +77,7 @@ type AdditionalRepositoryBaseParams struct {
 	PropertySets       []string `json:"propertySets,omitempty"`
 	DownloadRedirect   *bool    `json:"downloadRedirect,omitempty"`
 	PriorityResolution *bool    `json:"priorityResolution,omitempty"`
+	CdnRedirect        *bool    `json:"cdnRedirect,omitempty"`
 }
 
 type CargoRepositoryParams struct {

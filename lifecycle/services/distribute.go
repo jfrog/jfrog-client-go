@@ -1,9 +1,16 @@
 package services
 
 import (
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
+	"path"
+)
+
+const (
+	distributionBaseApi = "api/v2/distribution/"
+	distribute          = "distribute"
 )
 
 type DistributeReleaseBundleService struct {
@@ -32,7 +39,7 @@ func (dr *DistributeReleaseBundleService) IsAutoCreateRepo() bool {
 }
 
 func (dr *DistributeReleaseBundleService) GetRestApi(name, version string) string {
-	return "api/v2/distribution/distribute/" + name + "/" + version
+	return path.Join(distributionBaseApi, distribute, name, version)
 }
 
 func (dr *DistributeReleaseBundleService) GetDistributeBody() any {
@@ -56,7 +63,7 @@ func (dr *DistributeReleaseBundleService) createDistributeBody() ReleaseBundleDi
 	return ReleaseBundleDistributeBody{
 		ReleaseBundleDistributeV1Body: distribution.CreateDistributeV1Body(dr.DistributeParams, dr.DryRun, dr.AutoCreateRepo),
 		Modifications: Modifications{
-			PathMappings: distribution.CreatePathMappings(dr.Pattern, dr.Target),
+			PathMappings: distribution.CreatePathMappingsFromPatternAndTarget(dr.Pattern, dr.Target),
 		},
 	}
 }
@@ -67,7 +74,7 @@ type ReleaseBundleDistributeBody struct {
 }
 
 type Modifications struct {
-	PathMappings []distribution.PathMapping `json:"mappings"`
+	PathMappings []utils.PathMapping `json:"mappings"`
 }
 
 type PathMapping struct {

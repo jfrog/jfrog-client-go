@@ -12,12 +12,19 @@ func TestFilterFiles(t *testing.T) {
 	data := []struct {
 		files          []string
 		ExcludePattern string
+		root           string
 		result         []string
 	}{
-		{[]string{"file1", filepath.Join("dir", "file1"), "file2.zip"}, "^*.zip$", []string{"file1", filepath.Join("dir", "file1")}},
+		{[]string{"file1", filepath.Join("dir", "file1"), "file2.zip"}, "^*.zip$", "", []string{"file1", filepath.Join("dir", "file1")}},
+		{[]string{
+			"file1",
+			"test.zip",
+			filepath.Join("test", "file1"),
+			filepath.Join("dir", "test", "should-be-filter"),
+		}, "(^.*test.*$)", "test", []string{"file1", "test.zip", filepath.Join("test", "file1")}},
 	}
 	for _, d := range data {
-		got, err := filterFiles(d.files, d.ExcludePattern)
+		got, err := filterFiles(d.root, d.files, d.ExcludePattern)
 		assert.NoError(t, err)
 		assert.Len(t, got, len(d.result))
 		assert.Contains(t, got, d.files[0])

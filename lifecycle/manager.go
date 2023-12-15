@@ -23,6 +23,8 @@ func New(config config.Config) (*LifecycleServicesManager, error) {
 		SetClientCertKeyPath(details.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
+		SetDialTimeout(config.GetDialTimeout()).
+		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
 		SetRetries(config.GetHttpRetries()).
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
 		Build()
@@ -74,4 +76,9 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution
 	distributeBundleService.DistributeParams = params
 	distributeBundleService.PathMapping = pathMapping
 	return distributeBundleService.Distribute()
+}
+
+func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(params distribution.DistributionParams, dryRun bool) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.RemoteDeleteReleaseBundle(params, dryRun)
 }

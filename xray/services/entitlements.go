@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -30,16 +31,20 @@ func (es *EntitlementsService) IsEntitled(featureId string) (entitled bool, err 
 	httpDetails := es.XrayDetails.CreateHttpClientDetails()
 	resp, body, _, err := es.client.SendGet(es.XrayDetails.GetUrl()+"api/v1/entitlements/feature/"+featureId, true, &httpDetails)
 	if err != nil {
+		err = errors.New("failed while attempting to get JFrog Xray entitlements response: " + err.Error())
 		return
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return false, fmt.Errorf("failed while attempting to get Xray entitlements response for %s:\n%s", featureId, err.Error())
+		err = fmt.Errorf("got unexpected server response while attempting to get JFrog Xray entitlements response for %s:\n%s", featureId, err.Error())
+		return
 	}
 	var userEntitlements entitlements
 	if err = json.Unmarshal(body, &userEntitlements); err != nil {
-		return false, errorutils.CheckErrorf("couldn't parse Xray server response: " + err.Error())
+		err = errorutils.CheckErrorf("couldn't parse JFrog Xray server entitlements response: " + err.Error())
+		return
 	}
-	return userEntitlements.Entitled, nil
+	entitled = userEntitlements.Entitled
+	return
 }
 
 type entitlements struct {

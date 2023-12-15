@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -48,10 +49,10 @@ func testUpdateUser(t *testing.T) {
 	assert.NoError(t, err)
 
 	UserParams.UserDetails.Email = "changed@mail.com"
-	UserParams.UserDetails.Admin = &falseValue
-	UserParams.UserDetails.ProfileUpdatable = &falseValue
-	UserParams.UserDetails.DisableUIAccess = &trueValue
-	UserParams.UserDetails.InternalPasswordDisabled = &trueValue
+	UserParams.UserDetails.Admin = utils.Pointer(false)
+	UserParams.UserDetails.ProfileUpdatable = utils.Pointer(false)
+	UserParams.UserDetails.DisableUIAccess = utils.Pointer(true)
+	UserParams.UserDetails.InternalPasswordDisabled = utils.Pointer(true)
 	err = testUserService.UpdateUser(UserParams)
 	assert.NoError(t, err)
 	user, err := testUserService.GetUser(UserParams)
@@ -97,15 +98,15 @@ func getTestUserParams(replaceIfExists bool, nameSuffix string) services.UserPar
 		Name:                     fmt.Sprintf("test%s%s", nameSuffix, timestampStr),
 		Email:                    "christianb@jfrog.com",
 		Password:                 "Password1*",
-		Admin:                    &trueValue,
+		Admin:                    utils.Pointer(true),
 		Realm:                    "internal",
-		ShouldInvite:             &falseValue,
-		ProfileUpdatable:         &trueValue,
-		DisableUIAccess:          &falseValue,
-		InternalPasswordDisabled: &falseValue,
-		WatchManager:             &falseValue,
-		ReportsManager:           &falseValue,
-		PolicyManager:            &falseValue,
+		ShouldInvite:             utils.Pointer(false),
+		ProfileUpdatable:         utils.Pointer(true),
+		DisableUIAccess:          utils.Pointer(false),
+		InternalPasswordDisabled: utils.Pointer(false),
+		WatchManager:             utils.Pointer(false),
+		ReportsManager:           utils.Pointer(false),
+		PolicyManager:            utils.Pointer(false),
 	}
 	return services.UserParams{
 		UserDetails:     userDetails,

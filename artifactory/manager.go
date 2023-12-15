@@ -37,7 +37,8 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetContext(config.GetContext()).
-		SetTimeout(config.GetHttpTimeout()).
+		SetDialTimeout(config.GetDialTimeout()).
+		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
 		SetClientCertPath(artDetails.GetClientCertPath()).
 		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).

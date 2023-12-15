@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/jfrog/gofrog/version"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -29,9 +30,9 @@ func localConvertLocalToFederatedTest(t *testing.T) {
 	glp.Key = repoKey
 	glp.RepoLayoutRef = "simple-default"
 	glp.Description = "Generic Repo for jfrog-client-go federation-test"
-	glp.XrayIndex = &trueValue
-	glp.DownloadRedirect = &falseValue
-	glp.ArchiveBrowsingEnabled = &falseValue
+	glp.XrayIndex = utils.Pointer(true)
+	glp.DownloadRedirect = utils.Pointer(false)
+	glp.ArchiveBrowsingEnabled = utils.Pointer(false)
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
