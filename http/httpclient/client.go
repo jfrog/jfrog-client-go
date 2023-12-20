@@ -46,6 +46,10 @@ func (jc *HttpClient) GetRetries() int {
 	return jc.retries
 }
 
+func (jc *HttpClient) GetClient() *http.Client {
+	return jc.client
+}
+
 func (jc *HttpClient) GetRetryWaitTime() int {
 	return jc.retryWaitMilliSecs
 }
@@ -127,8 +131,8 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 			if resp == nil {
 				return false, errorutils.CheckErrorf("%sReceived empty response from server", logMsgPrefix)
 			}
-			// If response-code < 500, should not retry
-			if resp.StatusCode < 500 {
+			// If response-code < 500 and it is not 429, should not retry
+			if resp.StatusCode < 500 && resp.StatusCode != http.StatusTooManyRequests {
 				return false, nil
 			}
 			// Perform retry
