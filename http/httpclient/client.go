@@ -131,7 +131,7 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 			if resp == nil {
 				return false, errorutils.CheckErrorf("%sReceived empty response from server", logMsgPrefix)
 			}
-			if shouldRetry := jc.shouldRetry(resp, &httpClientsDetails); !shouldRetry {
+			if !jc.shouldRetry(resp, &httpClientsDetails) {
 				return false, nil
 			}
 			// Perform retry

@@ -16,7 +16,8 @@ type HttpClientDetails struct {
 	Transport             *http.Transport
 	DialTimeout           time.Duration
 	OverallRequestTimeout time.Duration
-	PreRetryInterceptors  []PreRetryInterceptor
+	// Prior to each retry attempt, the list of PreRetryInterceptors is invoked sequentially. If any of these interceptors yields a 'false' response, the retry process stops instantly.
+	PreRetryInterceptors []PreRetryInterceptor
 }
 
 type PreRetryInterceptor func() (shouldRetry bool)
