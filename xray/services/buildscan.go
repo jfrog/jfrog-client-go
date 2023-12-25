@@ -97,7 +97,7 @@ func (bs *BuildScanService) prepareGetResultsRequest(params XrayBuildParams, par
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	if version.NewVersion(xrayVer).AtLeast(buildScanResultsPostApiMinXrayVersion) {
-		getResultsReqFunc = bs.getResultsPostRequestFunc(paramsBytes, &httpClientsDetails, queryParams)
+		getResultsReqFunc = bs.getResultsPostRequestFunc(params, paramsBytes, &httpClientsDetails, queryParams)
 		return
 	}
 	getResultsReqFunc = bs.getResultsGetRequestFunc(params, &httpClientsDetails, queryParams)
@@ -155,8 +155,11 @@ func (bs *BuildScanService) getResultsGetRequestFunc(params XrayBuildParams, htt
 	}
 }
 
-func (bs *BuildScanService) getResultsPostRequestFunc(paramsBytes []byte, httpClientsDetails *httputils.HttpClientDetails, queryParams []string) func() (*http.Response, []byte, error) {
+func (bs *BuildScanService) getResultsPostRequestFunc(params XrayBuildParams, paramsBytes []byte, httpClientsDetails *httputils.HttpClientDetails, queryParams []string) func() (*http.Response, []byte, error) {
 	endPoint := fmt.Sprintf("%s%s/%s", bs.XrayDetails.GetUrl(), BuildScanAPI, buildScanResultsPostApi)
+	if params.Project != "" {
+		queryParams = append(queryParams, projectKeyQueryParam+params.Project)
+	}
 	if len(queryParams) > 0 {
 		endPoint += "?" + strings.Join(queryParams, "&")
 	}
