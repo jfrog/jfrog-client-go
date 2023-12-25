@@ -13,6 +13,7 @@ import (
 	urlutil "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -108,6 +109,7 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 				return nil
 			}
 			httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
+			httpClientsDetails.AddPreRetryInterceptor(ds.createPreRetryInterceptor(deletePath, logMsgPrefix+"Checking existence of "+resultItem.GetItemRelativePath()))
 			resp, body, err := ds.client.SendDelete(deletePath, nil, &httpClientsDetails)
 			if err != nil {
 				log.Error(err)
@@ -120,6 +122,14 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 			result.SuccessCount[threadId]++
 			return nil
 		}
+	}
+}
+
+func (ds *DeleteService) createPreRetryInterceptor(deletePath, retryLog string) httputils.PreRetryInterceptor {
+	return func() (shouldRetry bool) {
+		retryHttpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
+		_, _, nonExistErr := ds.client.GetHttpClient().SendHead(deletePath, retryHttpClientsDetails, retryLog)
+		return nonExistErr == nil
 	}
 }
 
