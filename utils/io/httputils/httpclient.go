@@ -16,7 +16,11 @@ type HttpClientDetails struct {
 	Transport             *http.Transport
 	DialTimeout           time.Duration
 	OverallRequestTimeout time.Duration
+	// Prior to each retry attempt, the list of PreRetryInterceptors is invoked sequentially. If any of these interceptors yields a 'false' response, the retry process stops instantly.
+	PreRetryInterceptors []PreRetryInterceptor
 }
+
+type PreRetryInterceptor func() (shouldRetry bool)
 
 func (httpClientDetails HttpClientDetails) Clone() *HttpClientDetails {
 	headers := make(map[string]string)
@@ -34,5 +38,10 @@ func (httpClientDetails HttpClientDetails) Clone() *HttpClientDetails {
 		Transport:             transport,
 		DialTimeout:           httpClientDetails.DialTimeout,
 		OverallRequestTimeout: httpClientDetails.OverallRequestTimeout,
+		PreRetryInterceptors:  httpClientDetails.PreRetryInterceptors,
 	}
+}
+
+func (httpClientDetails *HttpClientDetails) AddPreRetryInterceptor(preRetryInterceptors PreRetryInterceptor) {
+	httpClientDetails.PreRetryInterceptors = append(httpClientDetails.PreRetryInterceptors, preRetryInterceptors)
 }
