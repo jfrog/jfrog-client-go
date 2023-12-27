@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -111,6 +112,10 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 			return "", fmt.Errorf("failed sending Git Info to XSC service, error: %s ", err.Error())
 		}
 		scanParams.MultiScanId = multiScanId
+		err = os.Setenv("JF_MSI", multiScanId)
+		if err != nil {
+			return "", fmt.Errorf("failed setting msi as environment variable")
+		}
 	}
 
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
