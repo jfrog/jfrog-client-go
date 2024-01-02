@@ -36,7 +36,7 @@ type GraphNode struct {
 	// Node parent (for internal use)
 	Parent *GraphNode `json:"-"`
 	// Node file types (tar, jar, zip, pom)
-	Types []string `json:"_"`
+	Types []string `json:"-"`
 }
 
 func (currNode *GraphNode) NodeHasLoop() bool {
