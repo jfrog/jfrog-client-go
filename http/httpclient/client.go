@@ -131,8 +131,7 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 			if resp == nil {
 				return false, errorutils.CheckErrorf("%sReceived empty response from server", logMsgPrefix)
 			}
-			// If response-code < 500 and it is not 429, should not retry
-			if resp.StatusCode < 500 && resp.StatusCode != http.StatusTooManyRequests {
+			if !jc.shouldRetry(resp, &httpClientsDetails) {
 				return false, nil
 			}
 			// Perform retry
@@ -143,6 +142,20 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 
 	err = retryExecutor.Execute()
 	return
+}
+
+func (jc *HttpClient) shouldRetry(resp *http.Response, httpClientsDetails *httputils.HttpClientDetails) bool {
+	// If response-code < 500 and it is not 429, should not retry
+	if resp.StatusCode < 500 && resp.StatusCode != http.StatusTooManyRequests {
+		return false
+	}
+	// If any of the preretry interceptors is false - return false
+	for _, shouldRetry := range httpClientsDetails.PreRetryInterceptors {
+		if !shouldRetry() {
+			return false
+		}
+	}
+	return true
 }
 
 func (jc *HttpClient) createReq(method, url string, content []byte) (req *http.Request, err error) {
