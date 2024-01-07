@@ -28,6 +28,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 
+	"github.com/jfrog/archiver/v3"
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -41,7 +42,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayAuth "github.com/jfrog/jfrog-client-go/xray/auth"
 	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
-	"github.com/mholt/archiver/v3"
 	"github.com/stretchr/testify/assert"
 )
 
