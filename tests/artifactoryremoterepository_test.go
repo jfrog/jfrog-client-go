@@ -1,9 +1,10 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils"
 	"strings"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
@@ -41,6 +42,7 @@ func TestArtifactoryRemoteRepository(t *testing.T) {
 	t.Run("remoteRpmTest", remoteRpmTest)
 	t.Run("remoteSbtTest", remoteSbtTest)
 	t.Run("remoteSwiftTest", remoteSwiftTest)
+	t.Run("remoteTerraformTest", remoteTerraformTest)
 	t.Run("remoteVcsTest", remoteVcsTest)
 	t.Run("remoteYumTest", remoteYumTest)
 	t.Run("remoteGenericSmartRemoteTest", remoteGenericSmartRemoteTest)
@@ -794,6 +796,29 @@ func remoteSwiftTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Swift(srp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, srp)
+	}
+}
+
+func remoteTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	srp := services.NewTerraformRemoteRepositoryParams()
+	srp.Key = repoKey
+	srp.Url = "https://github.com"
+	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, false)
+
+	err := testsCreateRemoteRepositoryService.Terraform(srp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, srp)
+
+	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
+
+	err = testsUpdateRemoteRepositoryService.Terraform(srp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, srp)
 	}
