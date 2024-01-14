@@ -416,7 +416,7 @@ func TestUploadFilesWithFailure(t *testing.T) {
 	dir, err := os.Getwd()
 	assert.NoError(t, err)
 	params.Pattern = filepath.Join(dir, "testdata", "upload", "folder*")
-	params.Target = "/generic"
+	params.Target = "generic"
 	params.Flat = true
 	params.Recursive = true
 	service := services.NewUploadService(client)
