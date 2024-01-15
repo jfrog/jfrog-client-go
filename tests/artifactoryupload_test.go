@@ -428,8 +428,8 @@ func TestUploadFilesWithFailure(t *testing.T) {
 
 	// Check for expected results
 	assert.Error(t, err)
-	assert.Equal(t, summary.TotalSucceeded, 1)
-	assert.Equal(t, summary.TotalFailed, 1)
+	assert.Equal(t, 1, summary.TotalSucceeded)
+	assert.Equal(t, 1, summary.TotalFailed)
 }
 
 // Creates handlers for TestUploadFilesWithFailure mock server.
@@ -438,7 +438,7 @@ func createUploadFilesWithFailureHandlers() *testutils.HttpServerHandlers {
 	handlers := testutils.HttpServerHandlers{}
 	counter := 0
 	//nolint:unparam
-	handlers["generic"] = func(w http.ResponseWriter, r *http.Request) {
+	handlers["/generic/"] = func(w http.ResponseWriter, r *http.Request) {
 		if counter == 0 {
 			fmt.Fprintln(w, "{\"checksums\":{\"sha256\":\"123\"}}")
 			w.WriteHeader(http.StatusOK)
