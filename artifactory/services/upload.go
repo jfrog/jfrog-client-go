@@ -267,15 +267,14 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
 		incGeneralProgressTotal(progressMgr, uploadParams)
 		dataHandlerFunc(uploadData)
-		return err
+		return nil
 	}
 	if uploadParams.Ant {
 		convertAntPatternToRegexp(&uploadParams)
 	} else {
 		convertPatternToRegexp(&uploadParams)
 	}
-	err = scanFilesByPattern(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
-	return err
+	return scanFilesByPattern(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
 }
 
 // convertAntPatternToRegexp converts a given Ant pattern to a regular expression.
