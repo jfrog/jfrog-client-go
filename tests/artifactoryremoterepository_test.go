@@ -56,6 +56,7 @@ func setRemoteRepositoryBaseParams(params *services.RemoteRepositoryBaseParams, 
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
 	if !isUpdate {
+		// Original repo params assigned on creation
 		params.HardFail = utils.Pointer(true)
 		params.Offline = utils.Pointer(true)
 		params.StoreArtifactsLocally = utils.Pointer(true)
@@ -74,6 +75,7 @@ func setRemoteRepositoryBaseParams(params *services.RemoteRepositoryBaseParams, 
 		params.BypassHeadRequests = utils.Pointer(true)
 		params.ClientTlsCertificate = ""
 	} else {
+		// Repo params assigned on update
 		params.HardFail = utils.Pointer(false)
 		params.Offline = utils.Pointer(false)
 		params.StoreArtifactsLocally = utils.Pointer(false)
@@ -818,7 +820,6 @@ func remoteTerraformTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Terraform(srp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, srp)
 	}
