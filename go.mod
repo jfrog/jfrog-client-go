@@ -9,9 +9,9 @@ require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.4
-	github.com/jfrog/build-info-go v1.9.19
-	github.com/jfrog/gofrog v1.4.0
-	github.com/mholt/archiver/v3 v3.5.1
+	github.com/jfrog/archiver/v3 v3.5.3
+	github.com/jfrog/build-info-go v1.9.20
+	github.com/jfrog/gofrog v1.4.1
 	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/ssh-agent v0.3.3
 	golang.org/x/crypto v0.17.0

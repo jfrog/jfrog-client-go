@@ -30,11 +30,13 @@ type OtherComponentIds struct {
 
 // Audit Graph Node
 type GraphNode struct {
-	Id string `json:"component_id,omitempty"`
-	// List of subcomponents.
-	Nodes []*GraphNode `json:"nodes,omitempty"`
 	// Node parent (for internal use)
 	Parent *GraphNode `json:"-"`
+	// Node file types (tar, jar, zip, pom)
+	Types *[]string `json:"-"`
+	Id    string    `json:"component_id,omitempty"`
+	// List of subcomponents.
+	Nodes []*GraphNode `json:"nodes,omitempty"`
 }
 
 func (currNode *GraphNode) NodeHasLoop() bool {
