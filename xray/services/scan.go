@@ -113,7 +113,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		}
 		scanParams.MultiScanId = multiScanId
 		if err = os.Setenv("JF_MSI", multiScanId); err != nil {
-			log.Warn(errorutils.CheckErrorf("failed setting msi as environment variable. Cause: %s", err.Error()))
+			log.Debug(errorutils.CheckErrorf("failed setting msi as environment variable. Cause: %s", err.Error()))
 		}
 	}
 
