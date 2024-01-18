@@ -3,7 +3,7 @@ module github.com/jfrog/jfrog-client-go
 go 1.20
 
 require (
-	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
+	github.com/ProtonMail/go-crypto v1.0.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/forPelevin/gomoji v1.1.8
 	github.com/go-git/go-git/v5 v5.11.0
@@ -11,7 +11,7 @@ require (
 	github.com/gookit/color v1.5.4
 	github.com/jfrog/archiver/v3 v3.6.0
 	github.com/jfrog/build-info-go v1.9.20
-	github.com/jfrog/gofrog v1.5.0
+	github.com/jfrog/gofrog v1.5.1
 	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/ssh-agent v0.3.3
 	golang.org/x/crypto v0.18.0
@@ -27,7 +27,7 @@ require (
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
+	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
