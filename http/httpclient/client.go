@@ -286,6 +286,7 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	} else {
 		reader = reqContent
 	}
+
 	resp, body, err = jc.UploadFileFromReader(reader, url, httpClientsDetails, size)
 	return
 }
@@ -481,7 +482,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 	var downloadProgressId int
 	if progress != nil {
-		downloadProgress := progress.NewProgressReader(flags.FileSize, "Downloading", flags.RelativePath)
+		downloadProgress := progress.NewProgressReader(flags.FileSize, "Multipart download", flags.RelativePath)
 		downloadProgressId = downloadProgress.GetId()
 		// Aborting order matters. mergingProgress depends on the existence of downloadingProgress
 		defer progress.RemoveProgress(downloadProgressId)
@@ -511,7 +512,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 		}
 	}
 	if progress != nil {
-		progress.SetProgressState(downloadProgressId, "Merging")
+		progress.SetMergingState(downloadProgressId, true)
 	}
 	err = mergeChunks(chunksPaths, flags)
 	if errorutils.CheckError(err) != nil {

@@ -251,14 +251,15 @@ content of this repository is deleted.
 
 #### Test Types
 
-| Type                 | Description        | Prerequisites                 |
-| -------------------- | ------------------ | ----------------------------- |
-| `-test.artifactory`  | Artifactory tests  | Artifactory Pro               |
-| `-test.distribution` | Distribution tests | Artifactory with Distribution |
-| `-test.xray`         | Xray tests         | Artifactory with Xray         |
-| `-test.pipelines`    | Pipelines tests    | JFrog Pipelines               |
-| `-test.access`       | Access tests       | Artifactory Pro               |
-| `-test.repositories` | Access tests       | Artifactory Pro               |
+| Type                 | Description            | Prerequisites                   |
+| -------------------- | ---------------------- | ------------------------------- |
+| `-test.artifactory`  | Artifactory tests      | Artifactory Pro                 |
+| `-test.distribution` | Distribution tests     | Artifactory with Distribution   |
+| `-test.xray`         | Xray tests             | Artifactory with Xray           |
+| `-test.pipelines`    | Pipelines tests        | JFrog Pipelines                 |
+| `-test.access`       | Access tests           | Artifactory Pro                 |
+| `-test.repositories` | Repositories tests     | Artifactory Pro                 |
+| `-test.mpu`          | Multipart upload tests | Artifactory Pro with S3 storage |
 
 #### Connection Details
 
@@ -397,6 +398,12 @@ params.Symlink = false
 params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
+// The maximum number of file parts in multipart upload.
+// SplitCount default value: 10
+params.SplitCount = 5
+// The min file size in MiB for multipart upload.
+// MinSplitSize default value: 100
+params.MinSplitSize = 200
 // The min file size in bytes for "checksum deploy".
 // "Checksum deploy" is the action of calculating the file checksum locally, before
 // the upload, and skipping the actual file transfer if the file already
