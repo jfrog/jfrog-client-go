@@ -404,7 +404,7 @@ func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*Conte
 				// Expect to receive 'SortableContentItem'.
 				contentItem, ok := (temp).(SortableContentItem)
 				if !ok {
-					return nil, errorutils.CheckErrorf("Attempting to sort a content-reader with unsortable items.")
+					return nil, errorutils.CheckErrorf("attempting to sort a content-reader with unsortable items.")
 				}
 				currentContentItem[i] = &contentItem
 			}
