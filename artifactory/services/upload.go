@@ -227,6 +227,10 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, up
 
 func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
 	// Target Specifies the target path in Artifactory in the following format: <repository name>/<repository path>, so it cannot start with a slash.
+	// Remove leading slash if exists
+	uploadParams.SetTarget(strings.TrimPrefix(uploadParams.GetTarget(), "/"))
+
+	// Target Specifies the target path in Artifactory in the following format: <repository name>/<repository path>, so it cannot start with a slash.
 	// If the received target path has no slashes then we assume that it's '<repository name>/' and we add the missing slash.
 	if !strings.Contains(uploadParams.GetTarget(), "/") {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")

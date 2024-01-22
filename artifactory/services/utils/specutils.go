@@ -91,9 +91,7 @@ func (params *CommonParams) SetPattern(pattern string) {
 }
 
 func (params *CommonParams) SetTarget(target string) {
-	// Target Specifies the target path in Artifactory in the following format: <repository name>/<repository path>, so it cannot start with a slash.
-	// Remove leading slash if exists
-	params.Target = strings.TrimPrefix(target, "/")
+	params.Target = target
 }
 
 func (params *CommonParams) GetTarget() string {
