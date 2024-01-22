@@ -33,7 +33,7 @@ func (gpc *GoPublishCommand) verifyCompatibleVersion(artifactoryVersion string) 
 	ver := version.NewVersion(artifactoryVersion)
 	gpc.artifactoryVersion = artifactoryVersion
 	if !ver.AtLeast(propertiesApi) {
-		return errorutils.CheckErrorf("Unsupported version of Artifactory: %s\nSupports Artifactory version %s and above", artifactoryVersion, propertiesApi)
+		return errorutils.CheckErrorf("unsupported version of Artifactory: %s\nSupports Artifactory version %s and above", artifactoryVersion, propertiesApi)
 	}
 	return nil
 }

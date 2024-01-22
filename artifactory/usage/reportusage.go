@@ -26,7 +26,7 @@ func (rua *ReportUsageAttribute) isEmpty() bool {
 func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryServicesManager) (url string, clientDetails httputils.HttpClientDetails, err error) {
 	config := serviceManager.GetConfig()
 	if config == nil {
-		err = errorutils.CheckErrorf("Expected full config, but no configuration exists.")
+		err = errorutils.CheckErrorf("expected full config, but no configuration exists.")
 		return
 	}
 	rtDetails := config.GetServiceDetails()

@@ -167,7 +167,6 @@ func virtualComposerTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Composer(cvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, cvp)
 	}
