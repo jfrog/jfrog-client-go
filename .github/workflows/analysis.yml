@@ -35,8 +35,7 @@ jobs:
         with:
           go-version: 1.20.x
 
-      # Temporarily set version 2.18.0 to workaround https://github.com/securego/gosec/issues/1046
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@v2.18.0
+        uses: securego/gosec@master
         with:
           args: -exclude G204,G301,G302,G304,G306 -tests -exclude-dir \.*test\.* ./...
