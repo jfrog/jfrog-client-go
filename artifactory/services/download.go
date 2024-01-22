@@ -438,7 +438,7 @@ func removeIfSymlink(localSymlinkPath string) error {
 func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlinkChecksum bool, symlinkContentChecksum string, logMsgPrefix string) (err error) {
 	if symlinkChecksum && symlinkContentChecksum != "" {
 		if !fileutils.IsPathExists(symlinkArtifact, false) {
-			return errorutils.CheckErrorf("Symlink validation failed, target doesn't exist: " + symlinkArtifact)
+			return errorutils.CheckErrorf("symlink validation failed, target doesn't exist: " + symlinkArtifact)
 		}
 		file, err := os.Open(symlinkArtifact)
 		if err = errorutils.CheckError(err); err != nil {
@@ -453,7 +453,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		}
 		sha1 := checksumInfo[biutils.SHA1]
 		if sha1 != symlinkContentChecksum {
-			return errorutils.CheckErrorf("Symlink validation failed for target: " + symlinkArtifact)
+			return errorutils.CheckErrorf("symlink validation failed for target: " + symlinkArtifact)
 		}
 	}
 	localSymlinkPath := filepath.Join(localPath, localFileName)

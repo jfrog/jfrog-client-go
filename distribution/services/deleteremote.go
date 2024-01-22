@@ -126,11 +126,11 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 			return nil
 		}
 		if resp.StatusCode != http.StatusOK {
-			return errorutils.CheckErrorf("Error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + ".")
+			return errorutils.CheckErrorf("error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + ".")
 		}
 		time.Sleep(time.Second * DefaultDistributeSyncSleepIntervalSeconds)
 	}
-	return errorutils.CheckErrorf("Timeout for sync deletion. ")
+	return errorutils.CheckErrorf("timeout for sync deletion. ")
 }
 
 type DeleteRemoteDistributionBody struct {

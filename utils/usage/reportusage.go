@@ -26,7 +26,7 @@ type ReportEcosystemUsageData struct {
 
 func SendEcosystemUsageReports(reports ...ReportEcosystemUsageData) error {
 	if len(reports) == 0 {
-		return errorutils.CheckErrorf("Nothing to send.")
+		return errorutils.CheckErrorf("nothing to send.")
 	}
 	bodyContent, err := json.Marshal(reports)
 	if err != nil {
