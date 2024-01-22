@@ -109,7 +109,7 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	} else {
 		transport, err = cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, builder.createDefaultHttpTransport())
 		if err != nil {
-			return nil, errorutils.CheckErrorf("Failed creating HttpClient: " + err.Error())
+			return nil, errorutils.CheckErrorf("failed creating HttpClient: " + err.Error())
 		}
 	}
 	err = builder.AddClientCertToTransport(transport)

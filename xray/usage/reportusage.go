@@ -34,11 +34,11 @@ type ReportXrayEventData struct {
 
 func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...ReportXrayEventData) error {
 	if len(events) == 0 {
-		return errorutils.CheckErrorf("Nothing to send.")
+		return errorutils.CheckErrorf("nothing to send.")
 	}
 	config := serviceManager.Config()
 	if config == nil {
-		return errorutils.CheckErrorf("Expected full config, but no configuration exists.")
+		return errorutils.CheckErrorf("expected full config, but no configuration exists.")
 	}
 	xrDetails := config.GetServiceDetails()
 	if xrDetails == nil {

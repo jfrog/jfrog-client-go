@@ -292,7 +292,7 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 
 func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails httputils.HttpClientDetails,
 	size int64) (resp *http.Response, body []byte, err error) {
-	req, err := jc.newRequest("PUT", url, reader)
+	req, err := jc.newRequest(http.MethodPut, url, reader)
 	if err != nil {
 		return
 	}

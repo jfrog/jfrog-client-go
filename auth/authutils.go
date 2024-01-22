@@ -45,7 +45,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	var tokenPayload TokenPayload
 	err = json.Unmarshal(payload, &tokenPayload)
 	if err != nil {
-		return TokenPayload{}, errorutils.CheckErrorf("failed extracting payload from the provided access-token. " + err.Error())
+		return TokenPayload{}, errorutils.CheckErrorf("failed extracting payload from the provided access-token: " + err.Error())
 	}
 	err = setAudienceManually(&tokenPayload, payload)
 	return tokenPayload, err
@@ -56,7 +56,7 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 	allValuesMap := make(map[string]interface{})
 	err := json.Unmarshal(payload, &allValuesMap)
 	if err != nil {
-		return errorutils.CheckErrorf("Failed extracting audience from payload. " + err.Error())
+		return errorutils.CheckErrorf("failed extracting audience from payload: " + err.Error())
 	}
 	aud, exists := allValuesMap["aud"]
 	if !exists {

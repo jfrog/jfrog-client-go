@@ -1,9 +1,10 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils"
 	"strings"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
@@ -41,6 +42,7 @@ func TestArtifactoryRemoteRepository(t *testing.T) {
 	t.Run("remoteRpmTest", remoteRpmTest)
 	t.Run("remoteSbtTest", remoteSbtTest)
 	t.Run("remoteSwiftTest", remoteSwiftTest)
+	t.Run("remoteTerraformTest", remoteTerraformTest)
 	t.Run("remoteVcsTest", remoteVcsTest)
 	t.Run("remoteYumTest", remoteYumTest)
 	t.Run("remoteGenericSmartRemoteTest", remoteGenericSmartRemoteTest)
@@ -54,6 +56,7 @@ func setRemoteRepositoryBaseParams(params *services.RemoteRepositoryBaseParams, 
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
 	if !isUpdate {
+		// Original repo params assigned on creation
 		params.HardFail = utils.Pointer(true)
 		params.Offline = utils.Pointer(true)
 		params.StoreArtifactsLocally = utils.Pointer(true)
@@ -72,6 +75,7 @@ func setRemoteRepositoryBaseParams(params *services.RemoteRepositoryBaseParams, 
 		params.BypassHeadRequests = utils.Pointer(true)
 		params.ClientTlsCertificate = ""
 	} else {
+		// Repo params assigned on update
 		params.HardFail = utils.Pointer(false)
 		params.Offline = utils.Pointer(false)
 		params.StoreArtifactsLocally = utils.Pointer(false)
@@ -794,6 +798,29 @@ func remoteSwiftTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
 
 	err = testsUpdateRemoteRepositoryService.Swift(srp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, srp)
+	}
+}
+
+func remoteTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	srp := services.NewTerraformRemoteRepositoryParams()
+	srp.Key = repoKey
+	srp.Url = "https://github.com"
+	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, false)
+
+	err := testsCreateRemoteRepositoryService.Terraform(srp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, srp)
+
+	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
+	// Due to a bug on Artifactory side that prevents the update of "bypassHeadRequests" field to false on terraform we leave it unchanged.
+	srp.BypassHeadRequests = utils.Pointer(true)
+	err = testsUpdateRemoteRepositoryService.Terraform(srp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, srp)
 	}

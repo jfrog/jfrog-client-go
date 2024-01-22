@@ -222,7 +222,7 @@ func configureRepositories(payloadBody *WatchBody, params WatchParams) error {
 	case "":
 		// Empty is fine
 	default:
-		return errorutils.CheckErrorf("Invalid Repository Type. Must be " + string(WatchRepositoriesAll) + " or " + string(WatchRepositoriesByName))
+		return errorutils.CheckErrorf("invalid Repository Type. Must be " + string(WatchRepositoriesAll) + " or " + string(WatchRepositoriesByName))
 	}
 
 	return nil
@@ -324,7 +324,7 @@ func configureBuilds(payloadBody *WatchBody, params WatchParams) error {
 	case "":
 		// Empty is fine
 	default:
-		return errorutils.CheckErrorf("Invalid Build Type. Must be " + string(WatchBuildAll) + " or " + string(WatchBuildByName))
+		return errorutils.CheckErrorf("invalid Build Type. Must be " + string(WatchBuildAll) + " or " + string(WatchBuildByName))
 	}
 
 	return nil

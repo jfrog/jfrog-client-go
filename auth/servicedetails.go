@@ -130,7 +130,7 @@ func (ccf *CommonConfigFields) GetClient() *jfroghttpclient.JfrogHttpClient {
 }
 
 func (ccf *CommonConfigFields) SetUrl(url string) {
-	ccf.Url = url
+	ccf.Url = utils.AddTrailingSlashIfNeeded(url)
 }
 
 func (ccf *CommonConfigFields) SetUser(user string) {

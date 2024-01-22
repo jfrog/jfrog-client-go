@@ -49,7 +49,7 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 		return nil, errorutils.CheckError(err)
 	}
 	if summaryResponse.Errors != nil && len(summaryResponse.Errors) > 0 {
-		return nil, errorutils.CheckErrorf("Getting build-summary for build: %s failed with error: %s", summaryResponse.Errors[0].Identifier, summaryResponse.Errors[0].Error)
+		return nil, errorutils.CheckErrorf("getting build-summary for build: %s failed with error: %s", summaryResponse.Errors[0].Identifier, summaryResponse.Errors[0].Error)
 	}
 	return &summaryResponse, nil
 }
@@ -77,7 +77,7 @@ func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*Art
 		return nil, errorutils.CheckError(err)
 	}
 	if response.Errors != nil && len(response.Errors) > 0 {
-		return nil, errorutils.CheckErrorf("Getting artifact-summary for artifact: %s failed with error: %s", response.Errors[0].Identifier, response.Errors[0].Error)
+		return nil, errorutils.CheckErrorf("getting artifact-summary for artifact: %s failed with error: %s", response.Errors[0].Identifier, response.Errors[0].Error)
 	}
 	return &response, nil
 }
