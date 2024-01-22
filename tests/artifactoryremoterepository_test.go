@@ -134,7 +134,7 @@ func remoteAlpineTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	arp := services.NewAlpineRemoteRepositoryParams()
 	arp.Key = repoKey
-	arp.Url = "http://dl-cdn.alpinelinux.org/alpine"
+	arp.Url = "https://dl-cdn.alpinelinux.org/alpine"
 	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Alpine(arp)
@@ -344,7 +344,7 @@ func remoteDebianTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	drp := services.NewDebianRemoteRepositoryParams()
 	drp.Key = repoKey
-	drp.Url = "http://archive.ubuntu.com/ubuntu/"
+	drp.Url = "https://archive.ubuntu.com/ubuntu/"
 	setRemoteRepositoryBaseParams(&drp.RemoteRepositoryBaseParams, false)
 	drp.ListRemoteFolderItems = utils.Pointer(true)
 
@@ -737,7 +737,7 @@ func remoteRpmTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	rrp := services.NewRpmRemoteRepositoryParams()
 	rrp.Key = repoKey
-	rrp.Url = "http://mirror.centos.org/centos/"
+	rrp.Url = "https://mirror.centos.org/centos/"
 	setRemoteRepositoryBaseParams(&rrp.RemoteRepositoryBaseParams, false)
 	rrp.ListRemoteFolderItems = utils.Pointer(true)
 
@@ -805,24 +805,24 @@ func remoteSwiftTest(t *testing.T) {
 
 func remoteTerraformTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
-	srp := services.NewTerraformRemoteRepositoryParams()
-	srp.Key = repoKey
-	srp.Url = "https://github.com"
-	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, false)
+	trp := services.NewTerraformRemoteRepositoryParams()
+	trp.Key = repoKey
+	trp.Url = "https://github.com"
+	setRemoteRepositoryBaseParams(&trp.RemoteRepositoryBaseParams, false)
 
-	err := testsCreateRemoteRepositoryService.Terraform(srp)
+	err := testsCreateRemoteRepositoryService.Terraform(trp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, srp)
+	validateRepoConfig(t, repoKey, trp)
 
-	setRemoteRepositoryBaseParams(&srp.RemoteRepositoryBaseParams, true)
+	setRemoteRepositoryBaseParams(&trp.RemoteRepositoryBaseParams, true)
 	// Due to a bug on Artifactory side that prevents the update of "bypassHeadRequests" field to false on terraform we leave it unchanged.
-	srp.BypassHeadRequests = utils.Pointer(true)
-	err = testsUpdateRemoteRepositoryService.Terraform(srp)
+	trp.BypassHeadRequests = utils.Pointer(true)
+	err = testsUpdateRemoteRepositoryService.Terraform(trp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
-		validateRepoConfig(t, repoKey, srp)
+		validateRepoConfig(t, repoKey, trp)
 	}
 }
 
@@ -856,7 +856,7 @@ func remoteYumTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	yrp := services.NewYumRemoteRepositoryParams()
 	yrp.Key = repoKey
-	yrp.Url = "http://mirror.centos.org/centos/"
+	yrp.Url = "https://mirror.centos.org/centos/"
 	setRemoteRepositoryBaseParams(&yrp.RemoteRepositoryBaseParams, false)
 	yrp.ListRemoteFolderItems = utils.Pointer(true)
 

@@ -656,26 +656,26 @@ func virtualSwiftTest(t *testing.T) {
 
 func virtualTerraformTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
-	avp := services.NewTerraformVirtualRepositoryParams()
-	avp.Key = repoKey
-	setVirtualRepositoryBaseParams(&avp.VirtualRepositoryBaseParams, false)
-	setCacheVirtualRepositoryParams(&avp.CommonCacheVirtualRepositoryParams, false)
+	tvp := services.NewTerraformVirtualRepositoryParams()
+	tvp.Key = repoKey
+	setVirtualRepositoryBaseParams(&tvp.VirtualRepositoryBaseParams, false)
+	setCacheVirtualRepositoryParams(&tvp.CommonCacheVirtualRepositoryParams, false)
 
-	err := testsCreateVirtualRepositoryService.Terraform(avp)
+	err := testsCreateVirtualRepositoryService.Terraform(tvp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, avp)
+	validateRepoConfig(t, repoKey, tvp)
 
-	setVirtualRepositoryBaseParams(&avp.VirtualRepositoryBaseParams, true)
-	setCacheVirtualRepositoryParams(&avp.CommonCacheVirtualRepositoryParams, true)
+	setVirtualRepositoryBaseParams(&tvp.VirtualRepositoryBaseParams, true)
+	setCacheVirtualRepositoryParams(&tvp.CommonCacheVirtualRepositoryParams, true)
 
-	err = testsUpdateVirtualRepositoryService.Terraform(avp)
+	err = testsUpdateVirtualRepositoryService.Terraform(tvp)
 	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, avp)
+	validateRepoConfig(t, repoKey, tvp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
-		validateRepoConfig(t, repoKey, avp)
+		validateRepoConfig(t, repoKey, tvp)
 	}
 }
 

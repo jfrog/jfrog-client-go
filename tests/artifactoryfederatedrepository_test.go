@@ -657,22 +657,22 @@ func federatedSwiftTest(t *testing.T) {
 
 func federatedTerraformTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
-	sfp := services.NewTerraformFederatedRepositoryParams()
-	sfp.Key = repoKey
-	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, false)
+	tfp := services.NewTerraformFederatedRepositoryParams()
+	tfp.Key = repoKey
+	setFederatedRepositoryBaseParams(&tfp.FederatedRepositoryBaseParams, false)
 
-	err := testsCreateFederatedRepositoryService.Terraform(sfp)
+	err := testsCreateFederatedRepositoryService.Terraform(tfp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
 		return
 	}
 	defer deleteRepo(t, repoKey)
-	validateRepoConfig(t, repoKey, sfp)
+	validateRepoConfig(t, repoKey, tfp)
 
-	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, true)
+	setFederatedRepositoryBaseParams(&tfp.FederatedRepositoryBaseParams, true)
 
-	err = testsUpdateFederatedRepositoryService.Terraform(sfp)
+	err = testsUpdateFederatedRepositoryService.Terraform(tfp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
-		validateRepoConfig(t, repoKey, sfp)
+		validateRepoConfig(t, repoKey, tfp)
 	}
 }
 
