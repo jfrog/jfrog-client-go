@@ -45,6 +45,7 @@ func TestArtifactoryFederatedRepository(t *testing.T) {
 	t.Run("federatedRpmTest", federatedRpmTest)
 	t.Run("federatedSbtTest", federatedSbtTest)
 	t.Run("federatedSwiftTest", federatedSwiftTest)
+	t.Run("federatedTerraformTest", federatedTerraformTest)
 	t.Run("federatedVagrantTest", federatedVagrantTest)
 	t.Run("federatedYumTest", federatedYumTest)
 	t.Run("federatedCreateWithParamTest", federatedCreateWithParamTest)
@@ -649,6 +650,27 @@ func federatedSwiftTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Swift(sfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, sfp)
+	}
+}
+
+func federatedTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	sfp := services.NewTerraformFederatedRepositoryParams()
+	sfp.Key = repoKey
+	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, false)
+
+	err := testsCreateFederatedRepositoryService.Terraform(sfp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, sfp)
+
+	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, true)
+
+	err = testsUpdateFederatedRepositoryService.Terraform(sfp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, sfp)
 	}
