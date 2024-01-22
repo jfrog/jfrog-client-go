@@ -109,7 +109,8 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 			return "", fmt.Errorf("failed sending Git Info to XSC service, error: %s ", err.Error())
 		}
 		if err = os.Setenv("JF_MSI", multiScanId); err != nil {
-			log.Debug(errorutils.CheckErrorf("failed setting MSI as environment variable. Cause: %s", err.Error()))
+			// Not a fatal error, if not set the scan will not be shown at the XSC UI, should not fail the scan.
+			log.Debug(fmt.Sprintf("failed setting MSI as environment variable. Cause: %s", err.Error()))
 		}
 	}
 
