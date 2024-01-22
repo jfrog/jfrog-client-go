@@ -46,8 +46,6 @@ const (
 
 	XscGraphAPI = "api/v1/sca/scan/graph"
 
-	multiScanIdParam = "multi_scan_id="
-
 	scanTechQueryParam = "tech="
 
 	XscVersionAPI = "api/v1/system/version"
@@ -85,7 +83,6 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	}
 
 	if scanParams.XscVersion != "" {
-		params = append(params, multiScanIdParam+scanParams.MultiScanId)
 		gitInfoContext := scanParams.XscGitInfoContext
 		if gitInfoContext != nil {
 			if len(gitInfoContext.Technologies) > 0 {
@@ -111,9 +108,8 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		if err != nil {
 			return "", fmt.Errorf("failed sending Git Info to XSC service, error: %s ", err.Error())
 		}
-		scanParams.MultiScanId = multiScanId
 		if err = os.Setenv("JF_MSI", multiScanId); err != nil {
-			log.Debug(errorutils.CheckErrorf("failed setting msi as environment variable. Cause: %s", err.Error()))
+			log.Debug(errorutils.CheckErrorf("failed setting MSI as environment variable. Cause: %s", err.Error()))
 		}
 	}
 
@@ -284,7 +280,6 @@ type XrayGraphScanParams struct {
 	IncludeLicenses        bool
 	XscGitInfoContext      *XscGitInfoContext
 	XscVersion             string
-	MultiScanId            string
 }
 
 type RequestScanResponse struct {
