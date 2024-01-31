@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"path"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -35,7 +36,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	log.Info(message)
 
 	promoteUrl := ps.ArtDetails.GetUrl()
-	restApi := path.Join("api/build/promote/", promotionParams.GetBuildName(), promotionParams.GetBuildNumber())
+	restApi := path.Join("api/build/promote/", url.PathEscape(promotionParams.GetBuildName()), url.PathEscape(promotionParams.GetBuildNumber()))
 
 	queryParams := make(map[string]string)
 	if promotionParams.ProjectKey != "" {
