@@ -40,11 +40,7 @@ func (p *promoteOperation) getSigningKeyName() string {
 
 func (rbs *ReleaseBundlesService) Promote(rbDetails ReleaseBundleDetails, queryParams CommonOptionalQueryParams, signingKeyName string, promotionParams RbPromotionParams) (RbPromotionResp, error) {
 	operation := promoteOperation{
-		reqBody: RbPromotionBody{
-			Environment:            promotionParams.Environment,
-			IncludedRepositoryKeys: promotionParams.IncludedRepositoryKeys,
-			ExcludedRepositoryKeys: promotionParams.ExcludedRepositoryKeys,
-		},
+		reqBody:        RbPromotionBody(promotionParams),
 		rbDetails:      rbDetails,
 		queryParams:    queryParams,
 		signingKeyName: signingKeyName,
