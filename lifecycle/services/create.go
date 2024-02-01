@@ -67,9 +67,10 @@ type CreateFromBuildsSource struct {
 }
 
 type BuildSource struct {
-	BuildName       string `json:"build_name,omitempty"`
-	BuildNumber     string `json:"build_number,omitempty"`
-	BuildRepository string `json:"build_repository,omitempty"`
+	BuildName           string `json:"build_name,omitempty"`
+	BuildNumber         string `json:"build_number,omitempty"`
+	BuildRepository     string `json:"build_repository,omitempty"`
+	IncludeDependencies bool   `json:"include_dependencies,omitempty"`
 }
 
 type CreateFromReleaseBundlesSource struct {
