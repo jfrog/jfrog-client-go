@@ -2305,6 +2305,12 @@ integration, err := pipelinesManager.GetIntegrationByName("integrationName")
 integrations, err := pipelinesManager.GetAllIntegrations()
 ```
 
+#### Get All Raw Integrations
+
+```go
+integrations, err := pipelinesManager.GetAllRawIntegrations()
+```
+
 #### Delete Integration
 
 ```go
