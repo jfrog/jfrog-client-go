@@ -185,6 +185,7 @@
       - [Get Integration by Id](#get-integration-by-id)
       - [Get Integration by Name](#get-integration-by-name)
       - [Get All Integrations](#get-all-integrations)
+      - [Get All Raw Integrations](#get-all-raw-integrations)
       - [Delete Integration](#delete-integration)
       - [Add Pipeline Source](#add-pipeline-source)
       - [Get Recent Pipeline Run Status](#get-recent-pipeline-run-status)
@@ -2303,6 +2304,12 @@ integration, err := pipelinesManager.GetIntegrationByName("integrationName")
 
 ```go
 integrations, err := pipelinesManager.GetAllIntegrations()
+```
+
+#### Get All Raw Integrations
+
+```go
+integrations, err := pipelinesManager.GetAllRawIntegrations()
 ```
 
 #### Delete Integration
