@@ -1,6 +1,7 @@
 package xray
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -183,11 +184,53 @@ func buildScanHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid reports request", http.StatusBadRequest)
 }
 
+func xscGetVersionHandler(w http.ResponseWriter, r *http.Request) {
+	_, err := fmt.Fprint(w, xscVersionResponse)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	return
+}
+
+func xscGitInfoHandler(w http.ResponseWriter, r *http.Request) {
+	req, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var reqBody services.XscGitInfoContext
+	err = json.Unmarshal(req, &reqBody)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if reqBody.GitRepoUrl == "" || reqBody.BranchName == "" || reqBody.CommitHash == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_, err := fmt.Fprint(w, XscGitInfoBadResponse)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	} else {
+		w.WriteHeader(http.StatusCreated)
+		_, err := fmt.Fprint(w, XscGitInfoResponse)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+}
+
 func StartXrayMockServer() int {
 	handlers := clienttests.HttpServerHandlers{}
 	handlers["/api/xray/scanBuild"] = scanBuildHandler
 	handlers["/api/v2/summary/artifact"] = artifactSummaryHandler
 	handlers["/api/v1/entitlements/feature/"] = entitlementsHandler
+	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandler
+	handlers["/xsc/api/v1/gitinfo"] = xscGitInfoHandler
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	handlers[fmt.Sprintf("/%s/", services.BuildScanAPI)] = buildScanHandler
 	handlers["/"] = http.NotFound

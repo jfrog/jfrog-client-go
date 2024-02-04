@@ -2,11 +2,9 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -42,7 +40,7 @@ const (
 	xrayScanStatusFailed = "failed"
 
 	// Xsc consts
-	postScanContextAPI = "api/v1/gitinfo"
+	postXscGitInfoContextAPI = "api/v1/gitinfo"
 
 	XscGraphAPI = "api/v1/sca/scan/graph"
 
@@ -106,18 +104,6 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 }
 
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
-	if scanParams.XscVersion != "" && scanParams.XscGitInfoContext != nil {
-		multiScanId, err := ss.SendScanGitInfoContext(scanParams.XscGitInfoContext)
-		if err != nil {
-			return "", fmt.Errorf("failed sending Git Info to XSC service, error: %s ", err.Error())
-		}
-		scanParams.MultiScanId = multiScanId
-		if err = os.Setenv("JF_MSI", multiScanId); err != nil {
-			// Not a fatal error, if not set the scan will not be shown at the XSC UI, should not fail the scan.
-			log.Debug(fmt.Sprintf("failed setting MSI as environment variable. Cause: %s", err.Error()))
-		}
-	}
-
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var err error
@@ -224,7 +210,7 @@ func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multi
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
-	url := ss.xrayToXscUrl() + postScanContextAPI
+	url := ss.xrayToXscUrl() + postXscGitInfoContextAPI
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return
@@ -394,15 +380,15 @@ type XscVersionResponse struct {
 
 type XscGitInfoContext struct {
 	GitRepoUrl    string   `json:"git_repo_url"`
-	GitRepoName   string   `json:"git_repo_name"`
-	GitProject    string   `json:"git_project"`
-	GitProvider   string   `json:"git_provider"`
-	Technologies  []string `json:"technologies"`
+	GitRepoName   string   `json:"git_repo_name,omitempty"`
+	GitProject    string   `json:"git_project,omitempty"`
+	GitProvider   string   `json:"git_provider,omitempty"`
+	Technologies  []string `json:"technologies,omitempty"`
 	BranchName    string   `json:"branch_name"`
-	LastCommit    string   `json:"last_commit"`
+	LastCommit    string   `json:"last_commit,omitempty"`
 	CommitHash    string   `json:"commit_hash"`
-	CommitMessage string   `json:"commit_message"`
-	CommitAuthor  string   `json:"commit_author"`
+	CommitMessage string   `json:"commit_message,omitempty"`
+	CommitAuthor  string   `json:"commit_author,omitempty"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
