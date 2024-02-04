@@ -87,3 +87,12 @@ type PipelineResources struct {
 	CreatedAt                time.Time   `json:"createdAt,omitempty"`
 	UpdatedAt                time.Time   `json:"updatedAt,omitempty"`
 }
+
+type ArtifactTypeInfo struct {
+	BuildName    string
+	BuildNumber  string
+	ProjectKey   string
+	ArtifactPath string
+	RbName       string
+	RbVersion    string
+}
