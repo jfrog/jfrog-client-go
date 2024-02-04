@@ -24,6 +24,7 @@ func TestPipelinesIntegrations(t *testing.T) {
 	t.Run(services.BitbucketServerName, testCreateBitbucketServerIntegration)
 	t.Run(services.GitlabName, testCreateGitlabIntegration)
 	t.Run(services.ArtifactoryName, testCreateArtifactoryIntegration)
+	t.Run("GetAllIntegrations", getAllIntegrationAndAssert)
 }
 
 func testCreateGithubIntegrationAndGetByName(t *testing.T) {
@@ -102,6 +103,31 @@ func getIntegrationAndAssert(t *testing.T, id int, name, integrationType string)
 	assert.NotNil(t, integration)
 	assert.Equal(t, name, integration.Name)
 	assert.Equal(t, integrationType, integration.MasterIntegrationName)
+}
+
+func getAllIntegrationAndAssert(t *testing.T) {
+	// Create Artifactory Integration
+	name := getUniqueIntegrationName(services.ArtifactoryName)
+	id, err := testsPipelinesIntegrationsService.CreateArtifactoryIntegration(name, testsDummyRtUrl, testsDummyUser, testsDummyApiKey)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer deleteIntegrationAndAssert(t, id)
+
+	// Create Gitlab Integration
+	name = getUniqueIntegrationName(services.GitlabName)
+	gitlabIntegrationId, err := testsPipelinesIntegrationsService.CreateGitlabIntegration(name, testsDummyVcsUrl, testsDummyToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer deleteIntegrationAndAssert(t, gitlabIntegrationId)
+
+	integrations, err := testsPipelinesIntegrationsService.GetAllIntegrations()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.NotNil(t, integrations)
+	assert.True(t, len(integrations) > 2)
 }
 
 func getUniqueIntegrationName(integrationType string) string {
