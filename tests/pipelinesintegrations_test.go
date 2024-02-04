@@ -130,7 +130,7 @@ func getAllIntegrationAndAssert(t *testing.T) {
 	assert.NotNil(t, integrations)
 	assert.Equal(t, 2, len(integrations))
 	assert.Equal(t, services.ArtifactoryName, integrations[0].MasterIntegrationName)
-	assert.Equal(t, services.GitlabName, integrations[0].MasterIntegrationName)
+	assert.Equal(t, services.GitlabName, integrations[1].MasterIntegrationName)
 }
 
 func getUniqueIntegrationName(integrationType string) string {
