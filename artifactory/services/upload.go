@@ -322,7 +322,7 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 	// 'uploadedDirs' will contain only local directories paths that have been uploaded to Artifactory.
 	var uploadedDirs []string
 	if len(paths) == 0 && uploadParams.Archive != "" {
-		// If all files were filtered out but archive flag is set we create an empty archive.
+		// If all files were filtered out but archive flag is set we proceed with a single empty path to upload an empty archive.
 		paths = []string{""}
 	}
 	for _, path := range paths {
