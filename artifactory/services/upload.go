@@ -321,6 +321,10 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 	// 'uploadedDirs' is in use only when we need to upload folders with flat=true.
 	// 'uploadedDirs' will contain only local directories paths that have been uploaded to Artifactory.
 	var uploadedDirs []string
+	if len(paths) == 0 && uploadParams.Archive != "" {
+		// If all files were filtered out but archive flag is set we create an empty archive.
+		paths = []string{""}
+	}
 	for _, path := range paths {
 		matches, isDir, err := fspatterns.SearchPatterns(path, uploadParams.IsSymlink(), uploadParams.IsIncludeDirs(), patternRegex)
 		if err != nil {
@@ -834,9 +838,11 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 			}
 		}()
 		for uploadData := new(UploadData); archiveDataReader.NextRecord(uploadData) == nil; uploadData = new(UploadData) {
-			e = us.addFileToZip(&uploadData.Artifact, progressPrefix, flat, symlink, zipWriter)
-			if e != nil {
-				errorsQueue.AddError(e)
+			if uploadData.Artifact.LocalPath != "" {
+				e = us.addFileToZip(&uploadData.Artifact, progressPrefix, flat, symlink, zipWriter)
+				if e != nil {
+					errorsQueue.AddError(e)
+				}
 			}
 			if saveFilesPathsFunc != nil {
 				e = saveFilesPathsFunc(uploadData.Artifact.LocalPath)
