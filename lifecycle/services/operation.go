@@ -31,7 +31,8 @@ type ReleaseBundleOperation interface {
 	getOperationRestApi() string
 	getRequestBody() any
 	getOperationSuccessfulMsg() string
-	getOperationParams() CreateOrPromoteReleaseBundleParams
+	getOperationParams() CommonOptionalQueryParams
+	getSigningKeyName() string
 }
 
 func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation) ([]byte, error) {
@@ -43,7 +44,7 @@ func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation) 
 	}
 
 	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
-	rtUtils.AddSigningKeyNameHeader(operation.getOperationParams().SigningKeyName, &httpClientDetails.Headers)
+	rtUtils.AddSigningKeyNameHeader(operation.getSigningKeyName(), &httpClientDetails.Headers)
 	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
 
 	content, err := json.Marshal(operation.getRequestBody())
@@ -79,13 +80,7 @@ type ReleaseBundleDetails struct {
 	ReleaseBundleVersion string `json:"release_bundle_version,omitempty"`
 }
 
-type CreateOrPromoteReleaseBundleParams struct {
-	ReleaseBundleQueryParams
-	// Header:
-	SigningKeyName string
-}
-
-type ReleaseBundleQueryParams struct {
+type CommonOptionalQueryParams struct {
 	ProjectKey string
 	Async      bool
 }
