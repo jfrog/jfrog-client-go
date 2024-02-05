@@ -184,13 +184,12 @@ func buildScanHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid reports request", http.StatusBadRequest)
 }
 
-func xscGetVersionHandler(w http.ResponseWriter, r *http.Request) {
+func xscGetVersionHandler(w http.ResponseWriter, _ *http.Request) {
 	_, err := fmt.Fprint(w, xscVersionResponse)
 	if err != nil {
 		log.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	return
 }
 
 func xscGitInfoHandler(w http.ResponseWriter, r *http.Request) {
