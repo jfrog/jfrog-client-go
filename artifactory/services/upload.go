@@ -321,8 +321,9 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 	// 'uploadedDirs' is in use only when we need to upload folders with flat=true.
 	// 'uploadedDirs' will contain only local directories paths that have been uploaded to Artifactory.
 	var uploadedDirs []string
-	if len(paths) == 0 && uploadParams.Archive != "" {
-		// If all files were filtered out but archive flag is set we proceed with a single empty path to upload an empty archive.
+	if shouldUploadAnEmptyArchive(uploadParams.Archive, paths) {
+		// If all files were filtered out but archive flag is set together with JFROG_CLI_UPLOAD_EMPTY_ARCHIVE env,
+		// We proceed with a single empty path to upload an empty archive.
 		paths = []string{""}
 	}
 	for _, path := range paths {
@@ -352,6 +353,15 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 		}
 	}
 	return nil
+}
+
+func shouldUploadAnEmptyArchive(archive string, paths []string) bool {
+	if len(paths) == 0 &&
+		archive != "" &&
+		strings.ToLower(os.Getenv("JFROG_CLI_UPLOAD_EMPTY_ARCHIVE")) == "true" {
+		return true
+	}
+	return false
 }
 
 // targetFiles - Paths in Artifactory of the files that were uploaded.
