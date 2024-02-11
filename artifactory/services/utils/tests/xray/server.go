@@ -185,8 +185,7 @@ func buildScanHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func xscGetVersionHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
+	if r.Method == http.MethodGet {
 		_, err := fmt.Fprint(w, xscVersionResponse)
 		if err != nil {
 			log.Error(err)
@@ -203,8 +202,7 @@ func xscGitInfoHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	switch r.Method {
-	case http.MethodPost:
+	if r.Method == http.MethodPost {
 		var reqBody services.XscGitInfoContext
 		err = json.Unmarshal(req, &reqBody)
 		if err != nil {
