@@ -169,6 +169,9 @@
       - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
       - [Get Entitlement info](#get-entitlement-info)
+    - [Using XSC Service](#using-xsc-service)
+      - [Check if xsc is enabled](#check-if-xsc-is-enabled)
+      - [Send git info details to xsc](#send-git-info-details-to-xsc)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -2210,6 +2213,23 @@ artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
     // The featureId is the requested feature ID to check, for instance: "contextual_analysis"
     isEntitled, err := xrayManager.IsEntitled(featureId)
 ```
+
+### Using XSC Service
+
+#### Check if xsc is enabled
+
+```go
+// Will try to get XSC version. If route is not available, user is not entitled for XSC.
+xscVersion, err := scanService.IsXscEnabled()
+```
+
+#### Send git info details to xsc
+
+```go
+// Details are the git info details (gitRepoUrl, branchName, commitHash are required fields). Returns multi scan id.
+multiScanId, err := scanService.SendScanGitInfoContext(details)
+```
+
 
 ## Pipelines APIs
 

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/stretchr/testify/assert"
 	"strconv"
 	"strings"
@@ -14,17 +15,6 @@ import (
 
 var testsXrayScanService *services.XrayScanService
 var testsScanService *xrayServices.ScanService
-var gitInfoContextWithMinimalRequiredFields = xrayServices.XscGitInfoContext{
-	GitRepoUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
-	BranchName: "feature/XRAY-123-cool-feature",
-	CommitHash: "acc5e24e69a-d3c1-4022-62eb-69e4a1e5",
-}
-var gitInfoContextWithMissingFields = xrayServices.XscGitInfoContext{
-	GitRepoUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
-	BranchName: "feature/XRAY-123-cool-feature",
-}
-var testMultiScanId = "3472b4e2-bddc-11ee-a9c9-acde48001122"
-var testXscVersion = "1.0.0"
 
 func TestNewXrayScanService(t *testing.T) {
 	initXrayTest(t)
@@ -76,17 +66,7 @@ func scanBuild(t *testing.T, buildName, buildNumber, expected string) {
 }
 
 func TestIsXscEnabled(t *testing.T) {
-	initXrayTest(t)
-	xrayServerPort := xray.StartXrayMockServer()
-	xrayDetails := GetXrayDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(xrayDetails.GetClientCertPath()).
-		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
-		Build()
-	if err != nil {
-		t.Error(err)
-	}
+	xrayServerPort, xrayDetails, client := initXrayScanTest(t)
 	testsScanService = xrayServices.NewScanService(client)
 	testsScanService.XrayDetails = xrayDetails
 	testsScanService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
@@ -96,23 +76,13 @@ func TestIsXscEnabled(t *testing.T) {
 		t.Error(err)
 	}
 
-	if result != testXscVersion {
-		t.Error("Expected:", testXscVersion, "Got: ", result)
+	if result != xray.TestXscVersion {
+		t.Error("Expected:", xray.TestXscVersion, "Got: ", result)
 	}
 }
 
 func TestSendScanGitInfoContext(t *testing.T) {
-	initXrayTest(t)
-	xrayServerPort := xray.StartXrayMockServer()
-	xrayDetails := GetXrayDetails()
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath(xrayDetails.GetClientCertPath()).
-		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
-		Build()
-	if err != nil {
-		t.Error(err)
-	}
+	xrayServerPort, xrayDetails, client := initXrayScanTest(t)
 	testsScanService = xrayServices.NewScanService(client)
 	testsScanService.XrayDetails = xrayDetails
 	testsScanService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
@@ -123,8 +93,8 @@ func TestSendScanGitInfoContext(t *testing.T) {
 		gitInfoContext *xrayServices.XscGitInfoContext
 		expected       string
 	}{
-		{name: "ValidGitInfoContext", gitInfoContext: &gitInfoContextWithMinimalRequiredFields, expected: testMultiScanId},
-		{name: "InvalidGitInfoContext", gitInfoContext: &gitInfoContextWithMissingFields, expected: xray.XscGitInfoBadResponse},
+		{name: "ValidGitInfoContext", gitInfoContext: &xray.GitInfoContextWithMinimalRequiredFields, expected: xray.TestMultiScanId},
+		{name: "InvalidGitInfoContext", gitInfoContext: &xray.GitInfoContextWithMissingFields, expected: xray.XscGitInfoBadResponse},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -143,4 +113,20 @@ func sendGitInfoContext(t *testing.T, gitInfoContext *xrayServices.XscGitInfoCon
 	if result != expected {
 		t.Error("Expected:", expected, "Got: ", result)
 	}
+}
+
+func initXrayScanTest(t *testing.T) (xrayServerPort int, xrayDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
+	var err error
+	initXrayTest(t)
+	xrayServerPort = xray.StartXrayMockServer()
+	xrayDetails = GetXrayDetails()
+	client, err = jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(xrayDetails.GetClientCertPath()).
+		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
+		Build()
+	if err != nil {
+		t.Error(err)
+	}
+	return
 }

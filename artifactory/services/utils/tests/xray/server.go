@@ -184,12 +184,17 @@ func buildScanHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid reports request", http.StatusBadRequest)
 }
 
-func xscGetVersionHandler(w http.ResponseWriter, _ *http.Request) {
-	_, err := fmt.Fprint(w, xscVersionResponse)
-	if err != nil {
-		log.Error(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func xscGetVersionHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		_, err := fmt.Fprint(w, xscVersionResponse)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
 	}
+	http.Error(w, "Invalid xsc request", http.StatusBadRequest)
 }
 
 func xscGitInfoHandler(w http.ResponseWriter, r *http.Request) {
@@ -198,29 +203,32 @@ func xscGitInfoHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	var reqBody services.XscGitInfoContext
-	err = json.Unmarshal(req, &reqBody)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if reqBody.GitRepoUrl == "" || reqBody.BranchName == "" || reqBody.CommitHash == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		_, err := fmt.Fprint(w, XscGitInfoBadResponse)
+	switch r.Method {
+	case http.MethodPost:
+		var reqBody services.XscGitInfoContext
+		err = json.Unmarshal(req, &reqBody)
 		if err != nil {
-			log.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		return
-	} else {
+		if reqBody.GitRepoUrl == "" || reqBody.BranchName == "" || reqBody.CommitHash == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			_, err := fmt.Fprint(w, XscGitInfoBadResponse)
+			if err != nil {
+				log.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
 		w.WriteHeader(http.StatusCreated)
-		_, err := fmt.Fprint(w, XscGitInfoResponse)
+		_, err = fmt.Fprint(w, XscGitInfoResponse)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
+	http.Error(w, "Invalid xsc request", http.StatusBadRequest)
 }
 
 func StartXrayMockServer() int {

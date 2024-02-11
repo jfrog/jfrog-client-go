@@ -205,6 +205,7 @@ func (sm *XrayServicesManager) XscEnabled() (string, error) {
 	return scanService.IsXscEnabled()
 }
 
+// SendXscGitInfoRequest sends git info details to xsc service and gets multi scan id
 func (sm *XrayServicesManager) SendXscGitInfoRequest(details *services.XscGitInfoContext) (multiScanId string, err error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
