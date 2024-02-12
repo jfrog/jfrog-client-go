@@ -8,6 +8,7 @@ import (
 type ReleaseBundleBody struct {
 	DryRun            bool          `json:"dry_run"`
 	SignImmediately   *bool         `json:"sign_immediately,omitempty"`
+	SigningKeyAlias   string        `json:"signing_key_alias,omitempty"`
 	StoringRepository string        `json:"storing_repository,omitempty"`
 	Description       string        `json:"description,omitempty"`
 	ReleaseNotes      *ReleaseNotes `json:"release_notes,omitempty"`
