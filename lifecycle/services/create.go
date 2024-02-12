@@ -7,6 +7,7 @@ const (
 type sourceType string
 
 const (
+	artifacts      sourceType = "artifacts"
 	builds         sourceType = "builds"
 	releaseBundles sourceType = "release_bundles"
 )
@@ -30,6 +31,18 @@ func (c *createOperation) getOperationSuccessfulMsg() string {
 
 func (c *createOperation) getOperationParams() CreateOrPromoteReleaseBundleParams {
 	return c.params
+}
+
+func (rbs *ReleaseBundlesService) CreateFromArtifacts(rbDetails ReleaseBundleDetails, params CreateOrPromoteReleaseBundleParams, sourceArtifacts CreateFromArtifacts) error {
+	operation := createOperation{
+		reqBody: RbCreationBody{
+			ReleaseBundleDetails: rbDetails,
+			SourceType:           artifacts,
+			Source:               sourceArtifacts},
+		params: params,
+	}
+	_, err := rbs.doOperation(&operation)
+	return err
 }
 
 func (rbs *ReleaseBundlesService) CreateFromBuilds(rbDetails ReleaseBundleDetails, params CreateOrPromoteReleaseBundleParams, sourceBuilds CreateFromBuildsSource) error {
@@ -62,8 +75,17 @@ type SourceBuildDetails struct {
 	ProjectKey  string
 }
 
+type CreateFromArtifacts struct {
+	Artifacts []ArtifactSource `json:"artifacts,omitempty"`
+}
+
 type CreateFromBuildsSource struct {
 	Builds []BuildSource `json:"builds,omitempty"`
+}
+
+type ArtifactSource struct {
+	Path   string `json:"path,omitempty"`
+	SHA256 string `json:"sha256,omitempty"`
 }
 
 type BuildSource struct {

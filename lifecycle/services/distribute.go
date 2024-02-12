@@ -19,6 +19,7 @@ type DistributeReleaseBundleService struct {
 	DryRun           bool
 	AutoCreateRepo   bool
 	DistributeParams distribution.DistributionParams
+	Modifications
 	PathMapping
 }
 
@@ -60,11 +61,11 @@ func (dr *DistributeReleaseBundleService) Distribute() error {
 }
 
 func (dr *DistributeReleaseBundleService) createDistributeBody() ReleaseBundleDistributeBody {
+	m := &dr.Modifications.PathMappings
+	*m = append(*m, distribution.CreatePathMappingsFromPatternAndTarget(dr.Pattern, dr.Target)...)
 	return ReleaseBundleDistributeBody{
 		ReleaseBundleDistributeV1Body: distribution.CreateDistributeV1Body(dr.DistributeParams, dr.DryRun, dr.AutoCreateRepo),
-		Modifications: Modifications{
-			PathMappings: distribution.CreatePathMappingsFromPatternAndTarget(dr.Pattern, dr.Target),
-		},
+		Modifications:                 dr.Modifications,
 	}
 }
 

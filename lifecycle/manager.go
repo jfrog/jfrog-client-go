@@ -36,6 +36,12 @@ func (lcs *LifecycleServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return lcs.client
 }
 
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromArtifacts(rbDetails lifecycle.ReleaseBundleDetails,
+	params lifecycle.CreateOrPromoteReleaseBundleParams, sourceArtifacts lifecycle.CreateFromArtifacts) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.CreateFromArtifacts(rbDetails, params, sourceArtifacts)
+}
+
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromBuilds(rbDetails lifecycle.ReleaseBundleDetails,
 	params lifecycle.CreateOrPromoteReleaseBundleParams, sourceBuilds lifecycle.CreateFromBuildsSource) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
@@ -75,6 +81,22 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution
 	distributeBundleService.AutoCreateRepo = autoCreateRepo
 	distributeBundleService.DistributeParams = params
 	distributeBundleService.PathMapping = pathMapping
+	return distributeBundleService.Distribute()
+}
+
+func (lcs *LifecycleServicesManager) DistributeReleaseBundleWithMultiplePathMappings(params distribution.DistributionParams, autoCreateRepo bool, pathMappings []lifecycle.PathMapping) error {
+	distributeBundleService := lifecycle.NewDistributeReleaseBundleService(lcs.client)
+	distributeBundleService.LcDetails = lcs.config.GetServiceDetails()
+	distributeBundleService.DryRun = lcs.config.IsDryRun()
+	distributeBundleService.AutoCreateRepo = autoCreateRepo
+	distributeBundleService.DistributeParams = params
+
+	m := &distributeBundleService.Modifications.PathMappings
+	for _, pathMapping := range pathMappings {
+		*m = append(*m,
+			distribution.CreatePathMappingsFromPatternAndTarget(pathMapping.Pattern, pathMapping.Target)...)
+	}
+
 	return distributeBundleService.Distribute()
 }
 
