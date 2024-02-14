@@ -73,10 +73,7 @@ func TestIsXscEnabled(t *testing.T) {
 
 	result, err := testsScanService.IsXscEnabled()
 	assert.NoError(t, err)
-
-	if result != xray.TestXscVersion {
-		assert.Equal(t, xray.TestXscVersion, result)
-	}
+	assert.Equal(t, xray.TestXscVersion, result)
 }
 
 func TestSendScanGitInfoContext(t *testing.T) {
@@ -103,11 +100,7 @@ func TestSendScanGitInfoContext(t *testing.T) {
 
 func sendGitInfoContext(t *testing.T, gitInfoContext *xrayServices.XscGitInfoContext, expected string) {
 	result, err := testsScanService.SendScanGitInfoContext(gitInfoContext)
-	if err != nil {
-		assert.ErrorContains(t, err, expected)
-		return
-	}
-
+	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }
 
