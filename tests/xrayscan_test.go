@@ -18,7 +18,7 @@ var testsScanService *xrayServices.ScanService
 
 func TestNewXrayScanService(t *testing.T) {
 	initXrayTest(t)
-	xrayServerPort := xray.StartXrayMockServer()
+	xrayServerPort := xray.StartXrayMockServer(t)
 	artDetails := GetRtDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(artDetails.GetClientCertPath()).
@@ -118,7 +118,7 @@ func sendGitInfoContext(t *testing.T, gitInfoContext *xrayServices.XscGitInfoCon
 func initXrayScanTest(t *testing.T) (xrayServerPort int, xrayDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
 	var err error
 	initXrayTest(t)
-	xrayServerPort = xray.StartXrayMockServer()
+	xrayServerPort = xray.StartXrayMockServer(t)
 	xrayDetails = GetXrayDetails()
 	client, err = jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xrayDetails.GetClientCertPath()).
