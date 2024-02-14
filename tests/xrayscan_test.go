@@ -72,12 +72,10 @@ func TestIsXscEnabled(t *testing.T) {
 	testsScanService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
 
 	result, err := testsScanService.IsXscEnabled()
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
 
 	if result != xray.TestXscVersion {
-		t.Error("Expected:", xray.TestXscVersion, "Got: ", result)
+		assert.Equal(t, xray.TestXscVersion, result)
 	}
 }
 
@@ -110,9 +108,7 @@ func sendGitInfoContext(t *testing.T, gitInfoContext *xrayServices.XscGitInfoCon
 		return
 	}
 
-	if result != expected {
-		t.Error("Expected:", expected, "Got: ", result)
-	}
+	assert.Equal(t, expected, result)
 }
 
 func initXrayScanTest(t *testing.T) (xrayServerPort int, xrayDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
@@ -125,8 +121,6 @@ func initXrayScanTest(t *testing.T) (xrayServerPort int, xrayDetails auth.Servic
 		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
 		Build()
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
 	return
 }
