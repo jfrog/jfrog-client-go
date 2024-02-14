@@ -356,12 +356,9 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 }
 
 func shouldUploadAnEmptyArchive(archive string, paths []string) bool {
-	if len(paths) == 0 &&
+	return len(paths) == 0 &&
 		archive != "" &&
-		strings.ToLower(os.Getenv("JFROG_CLI_UPLOAD_EMPTY_ARCHIVE")) == "true" {
-		return true
-	}
-	return false
+		strings.ToLower(os.Getenv("JFROG_CLI_UPLOAD_EMPTY_ARCHIVE")) == "true" 
 }
 
 // targetFiles - Paths in Artifactory of the files that were uploaded.
