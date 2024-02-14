@@ -17,7 +17,7 @@ var testsXraySummaryService *services.SummaryService
 
 func TestNewXraySummaryService(t *testing.T) {
 	initXrayTest(t)
-	xrayServerPort := xray.StartXrayMockServer()
+	xrayServerPort := xray.StartXrayMockServer(t)
 	xrayDetails := GetXrayDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xrayDetails.GetClientCertPath()).
