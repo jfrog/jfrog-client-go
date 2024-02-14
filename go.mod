@@ -11,12 +11,12 @@ require (
 	github.com/gookit/color v1.5.4
 	github.com/jfrog/archiver/v3 v3.6.0
 	github.com/jfrog/build-info-go v1.9.21
-	github.com/jfrog/gofrog v1.5.1
+	github.com/jfrog/gofrog v1.6.0
 	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/ssh-agent v0.3.3
-	golang.org/x/crypto v0.18.0
-	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
-	golang.org/x/term v0.16.0
+	golang.org/x/crypto v0.19.0
+	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
+	golang.org/x/term v0.17.0
 )
 
 require (
@@ -24,7 +24,7 @@ require (
 	github.com/CycloneDX/cyclonedx-go v0.7.2 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
@@ -49,10 +49,10 @@ require (
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
-	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.20.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/tools v0.17.0 // indirect
+	golang.org/x/mod v0.15.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/tools v0.18.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
