@@ -40,6 +40,8 @@ type UploadService struct {
 	resultsManager *resultsManager
 }
 
+const JfrogCliUploadEmptyArchiveEnv = "JFROG_CLI_UPLOAD_EMPTY_ARCHIVE"
+
 func NewUploadService(client *jfroghttpclient.JfrogHttpClient) *UploadService {
 	return &UploadService{client: client}
 }
@@ -317,15 +319,17 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 	}
 	// Longest files path first
 	sort.Sort(sort.Reverse(sort.StringSlice(paths)))
-	var uploadedTargets []string
+
 	// 'uploadedDirs' is in use only when we need to upload folders with flat=true.
 	// 'uploadedDirs' will contain only local directories paths that have been uploaded to Artifactory.
-	var uploadedDirs []string
+	var uploadedTargets, uploadedDirs []string
+
 	if shouldUploadAnEmptyArchive(uploadParams.Archive, paths) {
-		// If all files were filtered out but archive flag is set together with JFROG_CLI_UPLOAD_EMPTY_ARCHIVE env,
-		// We proceed with a single empty path to upload an empty archive.
+		log.Info("All files were filtered out by the exclusion pattern, but the archive flag is set together with JFROG_CLI_UPLOAD_EMPTY_ARCHIVE environment variable. " +
+			"Proceeding with an empty archive.")
 		paths = []string{""}
 	}
+
 	for _, path := range paths {
 		matches, isDir, err := fspatterns.SearchPatterns(path, uploadParams.IsSymlink(), uploadParams.IsIncludeDirs(), patternRegex)
 		if err != nil {
@@ -356,12 +360,9 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 }
 
 func shouldUploadAnEmptyArchive(archive string, paths []string) bool {
-	if len(paths) == 0 &&
+	return len(paths) == 0 &&
 		archive != "" &&
-		strings.ToLower(os.Getenv("JFROG_CLI_UPLOAD_EMPTY_ARCHIVE")) == "true" {
-		return true
-	}
-	return false
+		strings.ToLower(os.Getenv("JFROG_CLI_UPLOAD_EMPTY_ARCHIVE")) == "true"
 }
 
 // targetFiles - Paths in Artifactory of the files that were uploaded.
