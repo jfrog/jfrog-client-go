@@ -32,8 +32,11 @@ const (
 	minArtifactoryVersion = "7.0.0"
 
 	// Supported status
-	beforeCheck supportedStatus = iota
+	// Multipart upload support is not yet determined
+	undetermined supportedStatus = iota
+	// Multipart upload is supported
 	multipartSupported
+	// Multipart upload is not supported
 	multipartNotSupported
 
 	// Completion status
@@ -70,18 +73,17 @@ type MultipartUpload struct {
 	httpClientsDetails *httputils.HttpClientDetails
 	artifactoryUrl     string
 	supportedStatus    supportedStatus
-	retries            uint
 }
 
 func NewMultipartUpload(client *jfroghttpclient.JfrogHttpClient, httpClientsDetails *httputils.HttpClientDetails, artifactoryUrl string) *MultipartUpload {
-	retries := uint(client.GetHttpClient().GetRetries())
-	return &MultipartUpload{client, httpClientsDetails, strings.TrimSuffix(artifactoryUrl, "/"), beforeCheck, retries}
+	return &MultipartUpload{client, httpClientsDetails, strings.TrimSuffix(artifactoryUrl, "/"), undetermined}
 }
 
 func (mu *MultipartUpload) IsSupported(serviceDetails auth.ServiceDetails) (supported bool, err error) {
 	supportedMutex.Lock()
 	defer supportedMutex.Unlock()
-	if mu.supportedStatus != beforeCheck {
+	if mu.supportedStatus != undetermined {
+		// If the supported status was determined earlier, return true if multipart upload is supported or false if not
 		return mu.supportedStatus == multipartSupported, nil
 	}
 
@@ -107,7 +109,7 @@ func (mu *MultipartUpload) IsSupported(serviceDetails auth.ServiceDetails) (supp
 	}
 
 	var getConfigResponse getConfigResponse
-	err = json.Unmarshal(body, &getConfigResponse)
+	err = errorutils.CheckError(json.Unmarshal(body, &getConfigResponse))
 	if getConfigResponse.Supported {
 		mu.supportedStatus = multipartSupported
 	} else {
@@ -167,9 +169,9 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 		progressReader = progress.SetMergingState(progressReader.GetId(), false)
 	}
 
-	log.Info(logMsgPrefix + "Starting merging parts...")
+	log.Info(logMsgPrefix + "Starting parts merge...")
 	// The total number of attempts is determined by the number of retries + 1
-	return mu.completeAndPollForStatus(logMsgPrefix, mu.retries+1, sha1, multipartUploadClient, progressReader)
+	return mu.completeAndPollForStatus(logMsgPrefix, uint(mu.client.GetHttpClient().GetRetries())+1, sha1, multipartUploadClient, progressReader)
 }
 
 func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize int64, splitCount int, localPath string, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails) (err error) {
@@ -180,7 +182,7 @@ func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize
 	wg := new(sync.WaitGroup)
 	wg.Add(int(numberOfParts))
 	attemptsAllowed := new(atomic.Uint64)
-	attemptsAllowed.Add(uint64(numberOfParts) * uint64(mu.retries))
+	attemptsAllowed.Add(uint64(numberOfParts) * uint64(mu.client.GetHttpClient().GetRetries()))
 	go func() {
 		for i := 0; i < int(numberOfParts); i++ {
 			if err = mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, numberOfParts, int64(i), progressReader, multipartUploadClient, attemptsAllowed, wg); err != nil {
@@ -200,7 +202,7 @@ func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize
 }
 
 func (mu *MultipartUpload) produceUploadTask(producerConsumer parallel.Runner, logMsgPrefix, localPath string, fileSize, numberOfParts, partId int64, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails, attemptsAllowed *atomic.Uint64, wg *sync.WaitGroup) (retErr error) {
-	_, taskErr := producerConsumer.AddTaskWithError(func(int) error {
+	_, retErr = producerConsumer.AddTaskWithError(func(int) error {
 		uploadErr := mu.uploadPart(logMsgPrefix, localPath, fileSize, partId, progressReader, multipartUploadClient)
 		if uploadErr == nil {
 			log.Info(fmt.Sprintf("%sCompleted uploading part %d/%d", logMsgPrefix, partId+1, numberOfParts))
@@ -217,14 +219,10 @@ func (mu *MultipartUpload) produceUploadTask(producerConsumer parallel.Runner, l
 
 		// Sleep before trying again
 		time.Sleep(retriesInterval)
-		err := mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, numberOfParts, partId, progressReader, multipartUploadClient, attemptsAllowed, wg)
-		if err != nil {
+		if err := mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, numberOfParts, partId, progressReader, multipartUploadClient, attemptsAllowed, wg); err != nil {
 			retErr = err
 		}
 	})
-	if taskErr != nil {
-		retErr = taskErr
-	}
 	return
 }
 
@@ -236,8 +234,7 @@ func (mu *MultipartUpload) uploadPart(logMsgPrefix, localPath string, fileSize, 
 	defer func() {
 		err = errors.Join(err, errorutils.CheckError(file.Close()))
 	}()
-	_, err = file.Seek(partId*uploadPartSize, io.SeekStart)
-	if err != nil {
+	if _, err = file.Seek(partId*uploadPartSize, io.SeekStart); err != nil {
 		return errorutils.CheckError(err)
 	}
 	partSize := calculatePartSize(fileSize, partId)
@@ -341,7 +338,7 @@ func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionA
 			// Rerun complete if needed
 			if shouldRerunComplete {
 				if completionAttemptsLeft == 0 {
-					return false, errorutils.CheckErrorf("multipart upload failed after %d attempts", mu.retries)
+					return false, errorutils.CheckErrorf("multipart upload failed after %d attempts", mu.client.GetHttpClient().GetRetries())
 				}
 				err = mu.completeAndPollForStatus(logMsgPrefix, completionAttemptsLeft-1, sha1, multipartUploadClient, progressReader)
 			}
