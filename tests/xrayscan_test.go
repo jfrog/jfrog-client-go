@@ -100,7 +100,10 @@ func TestSendScanGitInfoContext(t *testing.T) {
 
 func sendGitInfoContext(t *testing.T, gitInfoContext *xrayServices.XscGitInfoContext, expected string) {
 	result, err := testsScanService.SendScanGitInfoContext(gitInfoContext)
-	assert.NoError(t, err)
+	if err != nil {
+		assert.ErrorContains(t, err, expected)
+		return
+	}
 	assert.Equal(t, expected, result)
 }
 
