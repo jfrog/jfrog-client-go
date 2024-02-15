@@ -169,6 +169,9 @@
       - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
       - [Get Entitlement info](#get-entitlement-info)
+    - [Using XSC Service](#using-xsc-service)
+      - [Check if xsc is enabled](#check-if-xsc-is-enabled)
+      - [Send git info details to xsc](#send-git-info-details-to-xsc)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -185,6 +188,7 @@
       - [Get Integration by Id](#get-integration-by-id)
       - [Get Integration by Name](#get-integration-by-name)
       - [Get All Integrations](#get-all-integrations)
+      - [Get All Raw Integrations](#get-all-raw-integrations)
       - [Delete Integration](#delete-integration)
       - [Add Pipeline Source](#add-pipeline-source)
       - [Get Recent Pipeline Run Status](#get-recent-pipeline-run-status)
@@ -2210,6 +2214,23 @@ artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
     isEntitled, err := xrayManager.IsEntitled(featureId)
 ```
 
+### Using XSC Service
+
+#### Check if xsc is enabled
+
+```go
+// Will try to get XSC version. If route is not available, user is not entitled for XSC.
+xscVersion, err := scanService.IsXscEnabled()
+```
+
+#### Send git info details to xsc
+
+```go
+// Details are the git info details (gitRepoUrl, branchName, commitHash are required fields). Returns multi scan id.
+multiScanId, err := scanService.SendScanGitInfoContext(details)
+```
+
+
 ## Pipelines APIs
 
 ### Creating Pipelines Service Manager
@@ -2305,6 +2326,12 @@ integration, err := pipelinesManager.GetIntegrationByName("integrationName")
 integrations, err := pipelinesManager.GetAllIntegrations()
 ```
 
+#### Get All Raw Integrations
+
+```go
+integrations, err := pipelinesManager.GetAllRawIntegrations()
+```
+
 #### Delete Integration
 
 ```go
@@ -2396,13 +2423,12 @@ lifecycleManager, err := lifecycle.New(serviceConfig)
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-params := CreateOrPromoteReleaseBundleParams{}
-// The GPG/RSA key-pair name given in Artifactory.
-params.SigningKeyName = "key-pair"
-// Optional:
-params.ProjectKey = "project"
-params.Async = true
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
 
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
 
 source := CreateFromBuildsSource{Builds: []BuildSource{
     {
@@ -2412,19 +2438,19 @@ source := CreateFromBuildsSource{Builds: []BuildSource{
         BuildRepository: "artifactory-build-info",
     },
 }}
-serviceManager.CreateReleaseBundleFromBuilds(rbDetails, params, source)
+serviceManager.CreateReleaseBundleFromBuilds(rbDetails, queryParams, signingKeyName, source)
 ```
 
 #### Creating a Release Bundle From Release Bundles
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-params := CreateOrPromoteReleaseBundleParams{}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
 // The GPG/RSA key-pair name given in Artifactory.
-params.SigningKeyName = "key-pair"
-// Optional:
-params.ProjectKey = "project"
-params.Async = true
+signingKeyName = "key-pair"
 
 source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
     {
@@ -2433,23 +2459,25 @@ source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
        ProjectKey:           "default",
     },
 }}
-serviceManager.CreateReleaseBundleFromBundles(rbDetails, params, source)
+serviceManager.CreateReleaseBundleFromBundles(rbDetails, params, signingKeyName, source)
 ```
 
 #### Promoting a Release Bundle
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-params := CreateOrPromoteReleaseBundleParams{}
-// The GPG/RSA key-pair name given in Artifactory.
-params.SigningKeyName = "key-pair"
-// Optional:
-params.ProjectKey = "project"
-params.Async = true
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
 
-environment := "target-env"
-overwrite:=true
-resp, err := serviceManager.PromoteReleaseBundle(rbDetails, params, environment, overwrite)
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+promotionParams := RbPromotionParams{}
+promotionParams.Environment := "target-env"
+promotionParams.IncludedRepositoryKeys := []string{"generic-local"}
+
+resp, err := serviceManager.PromoteReleaseBundle(rbDetails, queryParams, signingKeyName, promotionParams)
 ```
 
 #### Get Release Bundle Creation Status
@@ -2498,14 +2526,11 @@ resp, err := serviceManager.DistributeReleaseBundle(params, autoCreateRepo, path
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-params := CreateOrPromoteReleaseBundleParams{}
-// The GPG/RSA key-pair name given in Artifactory.
-params.SigningKeyName = "key-pair"
-// Optional:
-params.ProjectKey = "project"
-params.Async = true
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
 
-resp, err := serviceManager.DeleteReleaseBundle(rbDetails, params)
+resp, err := serviceManager.DeleteReleaseBundle(rbDetails, queryParams)
 ```
 
 #### Remote Delete Release Bundle

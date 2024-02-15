@@ -12,8 +12,9 @@ const (
 )
 
 type createOperation struct {
-	reqBody RbCreationBody
-	params  CreateOrPromoteReleaseBundleParams
+	reqBody        RbCreationBody
+	params         CommonOptionalQueryParams
+	signingKeyName string
 }
 
 func (c *createOperation) getOperationRestApi() string {
@@ -28,29 +29,35 @@ func (c *createOperation) getOperationSuccessfulMsg() string {
 	return "Release Bundle successfully created"
 }
 
-func (c *createOperation) getOperationParams() CreateOrPromoteReleaseBundleParams {
+func (c *createOperation) getOperationParams() CommonOptionalQueryParams {
 	return c.params
 }
 
-func (rbs *ReleaseBundlesService) CreateFromBuilds(rbDetails ReleaseBundleDetails, params CreateOrPromoteReleaseBundleParams, sourceBuilds CreateFromBuildsSource) error {
+func (c *createOperation) getSigningKeyName() string {
+	return c.signingKeyName
+}
+
+func (rbs *ReleaseBundlesService) CreateFromBuilds(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceBuilds CreateFromBuildsSource) error {
 	operation := createOperation{
 		reqBody: RbCreationBody{
 			ReleaseBundleDetails: rbDetails,
 			SourceType:           builds,
 			Source:               sourceBuilds},
-		params: params,
+		params:         params,
+		signingKeyName: signingKeyName,
 	}
 	_, err := rbs.doOperation(&operation)
 	return err
 }
 
-func (rbs *ReleaseBundlesService) CreateFromBundles(rbDetails ReleaseBundleDetails, params CreateOrPromoteReleaseBundleParams, sourceReleaseBundles CreateFromReleaseBundlesSource) error {
+func (rbs *ReleaseBundlesService) CreateFromBundles(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceReleaseBundles CreateFromReleaseBundlesSource) error {
 	operation := createOperation{
 		reqBody: RbCreationBody{
 			ReleaseBundleDetails: rbDetails,
 			SourceType:           releaseBundles,
 			Source:               sourceReleaseBundles},
-		params: params,
+		params:         params,
+		signingKeyName: signingKeyName,
 	}
 	_, err := rbs.doOperation(&operation)
 	return err
@@ -67,9 +74,10 @@ type CreateFromBuildsSource struct {
 }
 
 type BuildSource struct {
-	BuildName       string `json:"build_name,omitempty"`
-	BuildNumber     string `json:"build_number,omitempty"`
-	BuildRepository string `json:"build_repository,omitempty"`
+	BuildName           string `json:"build_name,omitempty"`
+	BuildNumber         string `json:"build_number,omitempty"`
+	BuildRepository     string `json:"build_repository,omitempty"`
+	IncludeDependencies bool   `json:"include_dependencies,omitempty"`
 }
 
 type CreateFromReleaseBundlesSource struct {
