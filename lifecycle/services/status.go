@@ -4,15 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"path"
 	"time"
+
+	dsServices "github.com/jfrog/jfrog-client-go/distribution/services"
 )
 
 const (
 	statusesApi              = "statuses"
+	trackersApi              = "trackers"
 	defaultMaxWait           = 60 * time.Minute
 	DefaultSyncSleepInterval = 10 * time.Second
 )
@@ -68,6 +73,23 @@ func (rbs *ReleaseBundlesService) getReleaseBundleStatus(restApi string, project
 	return
 }
 
+func (dbs *DistributeReleaseBundleService) getReleaseBundleDistributionStatus(restApi string, projectKey string) (statusResp *dsServices.DistributionStatusResponse, body []byte, err error) {
+	requestFullUrl, err := utils.BuildUrl(dbs.LcDetails.GetUrl(), restApi, getProjectQueryParam(projectKey))
+	if err != nil {
+		return
+	}
+	httpClientsDetails := dbs.LcDetails.CreateHttpClientDetails()
+	resp, body, _, err := dbs.client.SendGet(requestFullUrl, true, &httpClientsDetails)
+	if err != nil {
+		return
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return
+	}
+	err = errorutils.CheckError(json.Unmarshal(body, &statusResp))
+	return
+}
+
 func getStatusResponse(respBody []byte) (ReleaseBundleStatusResponse, error) {
 	var rbStatusResponse ReleaseBundleStatusResponse
 	err := json.Unmarshal(respBody, &rbStatusResponse)
@@ -101,6 +123,55 @@ func (rbs *ReleaseBundlesService) waitForRbOperationCompletion(restApi, projectK
 		return ReleaseBundleStatusResponse{}, err
 	}
 	return getStatusResponse(finalRespBody)
+}
+
+func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletion(distributeParams *distribution.DistributionParams, trackerId json.Number, maxWaitMinutes int) error {
+	maxWait := defaultMaxWait
+	if maxWaitMinutes >= 1 {
+		maxWait = time.Duration(maxWaitMinutes) * time.Minute
+	}
+
+	restApi := path.Join(distributionBaseApi, trackersApi, distributeParams.Name, distributeParams.Version, trackerId.String())
+	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
+		statusResponse, responseBody, err := dbs.getReleaseBundleDistributionStatus(restApi, "")
+		if err != nil {
+			return true, nil, err
+		}
+
+		switch statusResponse.Status {
+		case dsServices.NotDistributed, dsServices.InProgress:
+			return false, nil, nil
+		case dsServices.Failed, dsServices.Completed:
+			return true, responseBody, nil
+		default:
+			return true, nil, errorutils.CheckErrorf("received unexpected status: '%s'", statusResponse.Status)
+		}
+	}
+	pollingExecutor := &httputils.PollingExecutor{
+		Timeout:         maxWait,
+		PollingInterval: SyncSleepInterval,
+		PollingAction:   pollingAction,
+		MsgPrefix:       fmt.Sprintf("Sync: Distributing %s/%s...", distributeParams.Name, distributeParams.Version),
+	}
+	finalRespBody, err := pollingExecutor.Execute()
+	if err != nil {
+		return err
+	}
+
+	var dsStatusResponse dsServices.DistributionStatusResponse
+	err = json.Unmarshal(finalRespBody, &dsStatusResponse)
+	if err != nil {
+		return err
+	}
+
+	if dsStatusResponse.Status != dsServices.Completed {
+		for _, st := range dsStatusResponse.Sites {
+			log.Error(fmt.Sprintf("target %s name: %s error: %s", st.TargetArtifactory.Type, st.TargetArtifactory.Name, st.Error))
+		}
+		return errorutils.CheckErrorf("Distribution did not complete - status:%s", dsStatusResponse.Status)
+	}
+	log.Info("Distribution Completed!")
+	return err
 }
 
 type ReleaseBundleStatusResponse struct {

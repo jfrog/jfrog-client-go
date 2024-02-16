@@ -18,6 +18,8 @@ type DistributeReleaseBundleService struct {
 	LcDetails        auth.ServiceDetails
 	DryRun           bool
 	AutoCreateRepo   bool
+	Sync             bool
+	MaxWaitMinutes   int
 	DistributeParams distribution.DistributionParams
 	Modifications
 	PathMapping
@@ -33,6 +35,14 @@ func (dr *DistributeReleaseBundleService) ServiceDetails() auth.ServiceDetails {
 
 func (dr *DistributeReleaseBundleService) IsDryRun() bool {
 	return dr.DryRun
+}
+
+func (dr *DistributeReleaseBundleService) IsSync() bool {
+	return dr.Sync
+}
+
+func (dr *DistributeReleaseBundleService) GetMaxWaitMinutes() int {
+	return dr.MaxWaitMinutes
 }
 
 func (dr *DistributeReleaseBundleService) IsAutoCreateRepo() bool {
@@ -56,8 +66,13 @@ func NewDistributeReleaseBundleService(client *jfroghttpclient.JfrogHttpClient) 
 }
 
 func (dr *DistributeReleaseBundleService) Distribute() error {
-	_, err := distribution.DoDistribute(dr)
-	return err
+	trackerId, err := distribution.DoDistribute(dr)
+	if err != nil || !dr.IsSync() || dr.IsDryRun() {
+		return err
+	}
+
+	// Sync distribution
+	return dr.waitForDistributionOperationCompletion(&dr.DistributeParams, trackerId, dr.MaxWaitMinutes)
 }
 
 func (dr *DistributeReleaseBundleService) createDistributeBody() ReleaseBundleDistributeBody {

@@ -84,12 +84,14 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution
 	return distributeBundleService.Distribute()
 }
 
-func (lcs *LifecycleServicesManager) DistributeReleaseBundleWithMultiplePathMappings(params distribution.DistributionParams, autoCreateRepo bool, pathMappings []lifecycle.PathMapping) error {
+func (lcs *LifecycleServicesManager) DistributeReleaseBundleSync(params distribution.DistributionParams, maxWaitMinutes int, autoCreateRepo bool, pathMappings []lifecycle.PathMapping) error {
 	distributeBundleService := lifecycle.NewDistributeReleaseBundleService(lcs.client)
 	distributeBundleService.LcDetails = lcs.config.GetServiceDetails()
 	distributeBundleService.DryRun = lcs.config.IsDryRun()
 	distributeBundleService.AutoCreateRepo = autoCreateRepo
 	distributeBundleService.DistributeParams = params
+	distributeBundleService.Sync = true
+	distributeBundleService.MaxWaitMinutes = maxWaitMinutes
 
 	m := &distributeBundleService.Modifications.PathMappings
 	for _, pathMapping := range pathMappings {
