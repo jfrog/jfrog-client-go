@@ -16,7 +16,7 @@ var testXrayReportService *services.ReportService
 
 func TestXrayReport(t *testing.T) {
 	initXrayTest(t)
-	xrayServerPort := xray.StartXrayMockServer()
+	xrayServerPort := xray.StartXrayMockServer(t)
 	xrayDetails := GetXrayDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xrayDetails.GetClientCertPath()).
