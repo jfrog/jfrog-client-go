@@ -33,9 +33,9 @@ import (
 const (
 	// 10 KiB
 	DefaultMinChecksumDeploy = utils.SizeKib * 10
-	// The default minimum file size for attempting multipart upload
+	// The default minimum file size for attempting multi-part upload
 	defaultUploadMinSplit = utils.SizeMiB * 200
-	// The default number of concurrent parts to upload in a multipart upload
+	// The default maximum number of parts that can be concurrently uploaded per file during a multi-part upload
 	defaultUploadSplitCount = 5
 )
 

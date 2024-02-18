@@ -401,10 +401,10 @@ params.Symlink = false
 params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
-// The number of concurrent parts to upload in a multipart upload.
+// The maximum number of parts that can be concurrently uploaded per file during a multi-part upload. Set to 0 to disable multi-part upload.
 // SplitCount default value: 5
 params.SplitCount = 10
-// The min file size in MiB for attempting multipart upload.
+// The minimum file size in MiB required to attempt a multi-part upload.
 // MinSplitSize default value: 200
 params.MinSplitSize = 100
 // The min file size in bytes for "checksum deploy".
@@ -2236,7 +2236,6 @@ xscVersion, err := scanService.IsXscEnabled()
 // Details are the git info details (gitRepoUrl, branchName, commitHash are required fields). Returns multi scan id.
 multiScanId, err := scanService.SendScanGitInfoContext(details)
 ```
-
 
 ## Pipelines APIs
 
