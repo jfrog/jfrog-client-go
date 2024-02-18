@@ -33,8 +33,9 @@ import (
 const (
 	// 10 KiB
 	DefaultMinChecksumDeploy = utils.SizeKib * 10
-	// 100 MiB
-	defaultUploadMinSplit   = utils.SizeMiB * 200
+	// The default minimum file size for attempting multipart upload
+	defaultUploadMinSplit = utils.SizeMiB * 200
+	// The default number of concurrent parts to upload in a multipart upload
 	defaultUploadSplitCount = 3
 )
 
@@ -591,7 +592,7 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 	// Get local file details
 	details, err = fileutils.GetFileDetails(artifact.Artifact.LocalPath, uploadParams.ChecksumsCalcEnabled)
 	if err != nil {
-		return resp, details, body, checksumDeployed, err
+		return
 	}
 
 	// Return if dry run
@@ -613,15 +614,14 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 
 	// Try multipart upload
 	var shouldTryMultipart bool
-	shouldTryMultipart, err = us.shouldDoMultipartUpload(fileInfo.Size(), uploadParams)
-	if err != nil {
+	if shouldTryMultipart, err = us.shouldDoMultipartUpload(fileInfo.Size(), uploadParams); err != nil {
 		return
 	}
 	if shouldTryMultipart {
 		if err = us.MultipartUpload.UploadFileConcurrently(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, fileInfo.Size(), details.Checksum.Sha1, us.Progress, uploadParams.SplitCount); err != nil {
 			return
 		}
-		// Complete multipart upload by checksum deploy
+		// Once the file is uploaded to the storage, we finalize the multipart upload by performing a checksum deployment to save the file in Artifactory.
 		resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
 		return
 	}
