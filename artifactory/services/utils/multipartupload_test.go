@@ -20,18 +20,17 @@ import (
 )
 
 const (
-	fileContent = "Why did the robot bring a ladder to the bar? It heard the drinks were on the house."
-	localPath   = "localPath"
-	repoKey     = "repoKey"
-	repoPath    = "repoPath"
-	partSize    = SizeGiB
-	partSizeMB  = 1024
-	partNumber  = 2
-	splitCount  = 3
-	token       = "token"
-	partUrl     = "http://dummy-url-part"
-	sha1        = "sha1"
-	nodeId      = "nodeId"
+	localPath  = "localPath"
+	repoKey    = "repoKey"
+	repoPath   = "repoPath"
+	partSize   = SizeGiB
+	partSizeMB = 1024
+	partNumber = 2
+	splitCount = 3
+	token      = "token"
+	partUrl    = "http://dummy-url-part"
+	sha1       = "sha1"
+	nodeId     = "nodeId"
 )
 
 func TestIsSupported(t *testing.T) {
@@ -335,21 +334,6 @@ func TestParseMultipartUploadStatus(t *testing.T) {
 			assert.Equal(t, testCase.shouldRerunComplete, shouldRerunComplete)
 		})
 	}
-}
-
-func TestCalculateSha1(t *testing.T) {
-	// Create a temporary file
-	tempFile, cleanUp := createTempFile(t)
-	defer cleanUp()
-
-	// Write something to the file
-	_, err := tempFile.Write([]byte(fileContent))
-	assert.NoError(t, err)
-
-	// Calculate sha1 and match
-	actualSha1, err := calculateSha1(tempFile.Name())
-	assert.NoError(t, err)
-	assert.Equal(t, "8c3578ac814c9f02803001a5d3e5d78a7fd0f9cc", actualSha1)
 }
 
 func createTempFile(t *testing.T) (tempFile *os.File, cleanUp func()) {

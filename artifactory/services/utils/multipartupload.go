@@ -159,8 +159,7 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 	}
 
 	if sha1 == "" {
-		sha1, err = calculateSha1(localPath)
-		if err != nil {
+		if _, sha1, _, err = biUtils.GetFileChecksums(localPath); errorutils.CheckError(err) != nil {
 			return
 		}
 	}
@@ -198,7 +197,7 @@ func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize
 	if attemptsAllowed.Load() == 0 {
 		return errorutils.CheckError(errTooManyAttempts)
 	}
-	return nil
+	return
 }
 
 func (mu *MultipartUpload) produceUploadTask(producerConsumer parallel.Runner, logMsgPrefix, localPath string, fileSize, numberOfParts, partId int64, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails, attemptsAllowed *atomic.Uint64, wg *sync.WaitGroup) (retErr error) {
@@ -255,20 +254,16 @@ func (mu *MultipartUpload) uploadPart(logMsgPrefix, localPath string, fileSize, 
 		return
 	}
 	log.Debug("Artifactory response:", string(body), resp.Status)
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return
-	}
-
-	return nil
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
 func (mu *MultipartUpload) createMultipartUpload(repoKey, repoPath string, partSize int64) (token string, err error) {
 	url := fmt.Sprintf("%s%screate?repoKey=%s&repoPath=%s&partSizeMB=%d", mu.artifactoryUrl, uploadsApi, repoKey, repoPath, partSize/SizeMiB)
 	resp, body, err := mu.client.SendPost(url, []byte{}, mu.httpClientsDetails)
 	if err != nil {
-		return "", err
+		return
 	}
-	// We don't print the response body because it includes credentials
+	// We don't log the response body because it includes credentials
 
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return
@@ -289,7 +284,7 @@ func (mu *MultipartUpload) generateUrlPart(logMsgPrefix string, partNumber int64
 	if err != nil {
 		return "", err
 	}
-	// We don't print the response body because it includes credentials
+	// We don't log the response body because it includes credentials
 
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return
@@ -436,21 +431,4 @@ func parseMultipartUploadStatus(status statusResponse) (shouldKeepPolling, shoul
 		// Unexpected status - stop the entire process
 		return false, false, errorutils.CheckErrorf("received unexpected status upon multipart upload completion process: '%s', error: '%s'", status.Status, status.Error)
 	}
-}
-
-func calculateSha1(localPath string) (sha1 string, err error) {
-	file, err := os.Open(localPath)
-	if err != nil {
-		return "", errorutils.CheckError(err)
-	}
-	defer func() {
-		err = errors.Join(err, errorutils.CheckError(file.Close()))
-	}()
-
-	checksumInfo, err := biUtils.CalcChecksums(file, biUtils.SHA1)
-	if err != nil {
-		return
-	}
-	sha1 = checksumInfo[biUtils.SHA1]
-	return
 }

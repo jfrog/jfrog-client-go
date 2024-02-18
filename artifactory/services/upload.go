@@ -188,18 +188,10 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 			}
 			// If Symlink target exists -> get SHA1 if isn't a directory
 		} else if !fileInfo.IsDir() {
-			file, err := os.Open(artifact.LocalPath)
+			_, sha1, _, err := biutils.GetFileChecksums(artifact.LocalPath, biutils.SHA1)
 			if err != nil {
 				return nil, errorutils.CheckError(err)
 			}
-			defer func() {
-				err = errors.Join(err, errorutils.CheckError(file.Close()))
-			}()
-			checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
-			if err != nil {
-				return nil, errorutils.CheckError(err)
-			}
-			sha1 := checksumInfo[biutils.SHA1]
 			artifactProps.AddProperty(utils.SymlinkSha1, sha1)
 		}
 		artifactProps.AddProperty(utils.ArtifactorySymlink, artifactSymlink)
