@@ -813,7 +813,7 @@ apiKey, err := rtManager.GetAPIKey()
 You can create and update a local repository for the following package types:
 
 Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle,
-Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Swift, Vagrant, and Yum.
+Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vagrant, and Yum.
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>LocalRepositoryParams()`.
@@ -856,7 +856,7 @@ err = servicesManager.UpdateLocalRepository().Generic(params)
 You can create and update a remote repository for the following package types:
 
 Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle,
-Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Swift, Vcs, and Yum.
+Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vcs, and Yum.
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>RemoteRepositoryParams()`.
@@ -900,7 +900,7 @@ err := servicesManager.CreateRemoteRepository(params)
 You can create and update a virtual repository for the following package types:
 
 Alpine, Bower, Cran, Chef, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm,
-Nuget, P2, Puppet, Pypi, Rpm, Sbt, Swift and Yum.
+Nuget, P2, Puppet, Pypi, Rpm, Sbt, Swift, Terraform and Yum.
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>VirtualRepositoryParams()`.
@@ -942,7 +942,7 @@ err = servicesManager.UpdateVirtualRepository().Go(params)
 You can create and update a federated repository for the following package types:
 
 Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle,
-Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Swift Vagrant and Yum
+Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vagrant and Yum
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>FederatedRepositoryParams()`.
