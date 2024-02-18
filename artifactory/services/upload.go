@@ -36,7 +36,7 @@ const (
 	// The default minimum file size for attempting multipart upload
 	defaultUploadMinSplit = utils.SizeMiB * 200
 	// The default number of concurrent parts to upload in a multipart upload
-	defaultUploadSplitCount = 3
+	defaultUploadSplitCount = 5
 )
 
 type UploadService struct {

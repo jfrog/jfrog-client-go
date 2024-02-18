@@ -401,12 +401,12 @@ params.Symlink = false
 params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
-// The maximum number of file parts in multipart upload.
-// SplitCount default value: 10
-params.SplitCount = 5
-// The min file size in MiB for multipart upload.
-// MinSplitSize default value: 100
-params.MinSplitSize = 200
+// The number of concurrent parts to upload in a multipart upload.
+// SplitCount default value: 5
+params.SplitCount = 10
+// The min file size in MiB for attempting multipart upload.
+// MinSplitSize default value: 200
+params.MinSplitSize = 100
 // The min file size in bytes for "checksum deploy".
 // "Checksum deploy" is the action of calculating the file checksum locally, before
 // the upload, and skipping the actual file transfer if the file already
