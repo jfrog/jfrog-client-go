@@ -37,26 +37,26 @@ func (lcs *LifecycleServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 }
 
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromArtifacts(rbDetails lifecycle.ReleaseBundleDetails,
-	params lifecycle.CreateOrPromoteReleaseBundleParams, sourceArtifacts lifecycle.CreateFromArtifacts) error {
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceArtifacts lifecycle.CreateFromArtifacts) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.CreateFromArtifacts(rbDetails, params, sourceArtifacts)
+	return rbService.CreateFromArtifacts(rbDetails, queryParams, signingKeyName, sourceArtifacts)
 }
 
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromBuilds(rbDetails lifecycle.ReleaseBundleDetails,
-	params lifecycle.CreateOrPromoteReleaseBundleParams, sourceBuilds lifecycle.CreateFromBuildsSource) error {
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceBuilds lifecycle.CreateFromBuildsSource) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.CreateFromBuilds(rbDetails, params, sourceBuilds)
+	return rbService.CreateFromBuilds(rbDetails, queryParams, signingKeyName, sourceBuilds)
 }
 
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromBundles(rbDetails lifecycle.ReleaseBundleDetails,
-	params lifecycle.CreateOrPromoteReleaseBundleParams, sourceReleaseBundles lifecycle.CreateFromReleaseBundlesSource) error {
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceReleaseBundles lifecycle.CreateFromReleaseBundlesSource) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.CreateFromBundles(rbDetails, params, sourceReleaseBundles)
+	return rbService.CreateFromBundles(rbDetails, queryParams, signingKeyName, sourceReleaseBundles)
 }
 
-func (lcs *LifecycleServicesManager) PromoteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, params lifecycle.CreateOrPromoteReleaseBundleParams, environment string, overwrite bool) (lifecycle.RbPromotionResp, error) {
+func (lcs *LifecycleServicesManager) PromoteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, promotionParams lifecycle.RbPromotionParams) (lifecycle.RbPromotionResp, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.Promote(rbDetails, params, environment, overwrite)
+	return rbService.Promote(rbDetails, queryParams, signingKeyName, promotionParams)
 }
 
 func (lcs *LifecycleServicesManager) GetReleaseBundleCreationStatus(rbDetails lifecycle.ReleaseBundleDetails, projectKey string, sync bool) (lifecycle.ReleaseBundleStatusResponse, error) {
@@ -69,9 +69,9 @@ func (lcs *LifecycleServicesManager) GetReleaseBundlePromotionStatus(rbDetails l
 	return rbService.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 }
 
-func (lcs *LifecycleServicesManager) DeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, params lifecycle.ReleaseBundleQueryParams) error {
+func (lcs *LifecycleServicesManager) DeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.DeleteReleaseBundle(rbDetails, params)
+	return rbService.DeleteReleaseBundle(rbDetails, queryParams)
 }
 
 func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution.DistributionParams, autoCreateRepo bool, pathMapping lifecycle.PathMapping) error {

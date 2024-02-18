@@ -125,6 +125,9 @@ func isPathExcluded(path string, excludePathPattern string) (excludedPath bool, 
 
 // If filePath is path to a symlink we should return the link content e.g where the link points
 func GetFileSymlinkPath(filePath string) (string, error) {
+	if filePath == "" {
+		return "", nil
+	}
 	fileInfo, e := os.Lstat(filePath)
 	if errorutils.CheckError(e) != nil {
 		return "", e

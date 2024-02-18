@@ -135,6 +135,10 @@ func (frs *FederatedRepositoryService) Swift(params SwiftFederatedRepositoryPara
 	return frs.performRequest(params, params.Key)
 }
 
+func (frs *FederatedRepositoryService) Terraform(params TerraformFederatedRepositoryParams) error {
+	return frs.performRequest(params, params.Key)
+}
+
 func (frs *FederatedRepositoryService) Vagrant(params VagrantFederatedRepositoryParams) error {
 	return frs.performRequest(params, params.Key)
 }
@@ -387,6 +391,14 @@ type SwiftFederatedRepositoryParams struct {
 
 func NewSwiftFederatedRepositoryParams() SwiftFederatedRepositoryParams {
 	return SwiftFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("swift")}
+}
+
+type TerraformFederatedRepositoryParams struct {
+	FederatedRepositoryBaseParams
+}
+
+func NewTerraformFederatedRepositoryParams() TerraformFederatedRepositoryParams {
+	return TerraformFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("terraform")}
 }
 
 type VagrantFederatedRepositoryParams struct {
