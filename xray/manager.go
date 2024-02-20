@@ -262,3 +262,10 @@ func (sm *XrayServicesManager) Xsc() *xsc.XscInnerService {
 	xscService.ScopeProjectKey = sm.scopeProjectKey
 	return xscService
 }
+
+// SendXscGitInfoRequest sends git info details to xsc service and gets multi scan id
+func (sm *XrayServicesManager) SendXscGitInfoRequest(details *services.XscGitInfoContext) (multiScanId string, err error) {
+	scanService := services.NewScanService(sm.client)
+	scanService.XrayDetails = sm.config.GetServiceDetails()
+	return scanService.SendScanGitInfoContext(details)
+}
