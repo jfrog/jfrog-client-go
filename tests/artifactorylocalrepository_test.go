@@ -37,6 +37,7 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localRpmTest", localRpmTest)
 	t.Run("localSbtTest", localSbtTest)
 	t.Run("localSwiftTest", localSwiftTest)
+	t.Run("localTerraformTest", localTerraformTest)
 	t.Run("localVagrantTest", localVagrantTest)
 	t.Run("localYumTest", localYumTest)
 	t.Run("localCreateWithParamTest", localCreateWithParamTest)
@@ -637,6 +638,27 @@ func localSwiftTest(t *testing.T) {
 	err = testsUpdateLocalRepositoryService.Swift(slp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, slp)
+	}
+}
+
+func localTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	tlp := services.NewTerraformLocalRepositoryParams()
+	tlp.Key = repoKey
+	setLocalRepositoryBaseParams(&tlp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Terraform(tlp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, tlp)
+
+	setLocalRepositoryBaseParams(&tlp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Terraform(tlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, tlp)
 	}
 }
 

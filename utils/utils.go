@@ -27,7 +27,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.36.1"
+	Version     = "1.37.0"
 )
 
 type MinVersionProduct string

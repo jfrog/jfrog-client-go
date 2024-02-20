@@ -481,10 +481,9 @@ func NewSwiftRemoteRepositoryParams() SwiftRemoteRepositoryParams {
 
 type TerraformRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
+	VcsGitRemoteRepositoryParams
 	TerraformRegistryUrl  string `json:"terraformRegistryUrl,omitempty"`
 	TerraformProvidersUrl string `json:"terraformProvidersUrl,omitempty"`
-	VcsType               string `json:"vcsType,omitempty"`
-	VcsGitProvider        string `json:"vcsGitProvider,omitempty"`
 }
 
 func NewTerraformRemoteRepositoryParams() TerraformRemoteRepositoryParams {
