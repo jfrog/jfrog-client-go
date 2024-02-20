@@ -15,7 +15,7 @@ const (
 	remoteDeleteEndpoint = "remote_delete"
 )
 
-func (rbs *ReleaseBundlesService) DeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleQueryParams) error {
+func (rbs *ReleaseBundlesService) DeleteReleaseBundle(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams) error {
 	queryParams := getProjectQueryParam(params.ProjectKey)
 	queryParams[async] = strconv.FormatBool(params.Async)
 	restApi := path.Join(releaseBundleBaseApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)

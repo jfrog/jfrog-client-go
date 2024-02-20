@@ -12,9 +12,10 @@ const (
 )
 
 type promoteOperation struct {
-	reqBody   RbPromotionBody
-	rbDetails ReleaseBundleDetails
-	params    CreateOrPromoteReleaseBundleParams
+	reqBody        RbPromotionBody
+	rbDetails      ReleaseBundleDetails
+	queryParams    CommonOptionalQueryParams
+	signingKeyName string
 }
 
 func (p *promoteOperation) getOperationRestApi() string {
@@ -29,18 +30,20 @@ func (p *promoteOperation) getOperationSuccessfulMsg() string {
 	return "Release Bundle successfully promoted"
 }
 
-func (p *promoteOperation) getOperationParams() CreateOrPromoteReleaseBundleParams {
-	return p.params
+func (p *promoteOperation) getOperationParams() CommonOptionalQueryParams {
+	return p.queryParams
 }
 
-func (rbs *ReleaseBundlesService) Promote(rbDetails ReleaseBundleDetails, params CreateOrPromoteReleaseBundleParams, environment string, overwrite bool) (RbPromotionResp, error) {
+func (p *promoteOperation) getSigningKeyName() string {
+	return p.signingKeyName
+}
+
+func (rbs *ReleaseBundlesService) Promote(rbDetails ReleaseBundleDetails, queryParams CommonOptionalQueryParams, signingKeyName string, promotionParams RbPromotionParams) (RbPromotionResp, error) {
 	operation := promoteOperation{
-		reqBody: RbPromotionBody{
-			Environment: environment,
-			Overwrite:   overwrite,
-		},
-		rbDetails: rbDetails,
-		params:    params,
+		reqBody:        RbPromotionBody(promotionParams),
+		rbDetails:      rbDetails,
+		queryParams:    queryParams,
+		signingKeyName: signingKeyName,
 	}
 	respBody, err := rbs.doOperation(&operation)
 	if err != nil {
@@ -51,9 +54,14 @@ func (rbs *ReleaseBundlesService) Promote(rbDetails ReleaseBundleDetails, params
 	return promotionResp, errorutils.CheckError(err)
 }
 
+type RbPromotionParams struct {
+	Environment            string
+	IncludedRepositoryKeys []string
+	ExcludedRepositoryKeys []string
+}
+
 type RbPromotionBody struct {
 	Environment            string   `json:"environment,omitempty"`
-	Overwrite              bool     `json:"overwrite_existing_artifacts,omitempty"`
 	IncludedRepositoryKeys []string `json:"included_repository_keys,omitempty"`
 	ExcludedRepositoryKeys []string `json:"excluded_repository_keys,omitempty"`
 }
