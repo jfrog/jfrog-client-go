@@ -94,6 +94,12 @@ func (sm *PipelinesServicesManager) GetAllIntegrations() ([]services.Integration
 	return integrationsService.GetAllIntegrations()
 }
 
+func (sm *PipelinesServicesManager) GetAllRawIntegrations() ([]byte, error) {
+	integrationsService := services.NewIntegrationsService(sm.client)
+	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
+	return integrationsService.GetAllRawIntegrations()
+}
+
 func (sm *PipelinesServicesManager) DeleteIntegration(integrationId int) error {
 	integrationsService := services.NewIntegrationsService(sm.client)
 	integrationsService.ServiceDetails = sm.config.GetServiceDetails()

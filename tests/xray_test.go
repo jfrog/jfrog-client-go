@@ -27,7 +27,7 @@ func TestXrayVersion(t *testing.T) {
 
 func TestXrayEntitlementsService(t *testing.T) {
 	initXrayTest(t)
-	xrayServerPort := xray.StartXrayMockServer()
+	xrayServerPort := xray.StartXrayMockServer(t)
 	xrayDetails := GetXrayDetails()
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xrayDetails.GetClientCertPath()).
@@ -69,7 +69,7 @@ func testEntitlements(t *testing.T, featureId string, expected bool) {
 
 func TestScanBuild(t *testing.T) {
 	initXrayTest(t)
-	xrayServerPort := xray.StartXrayMockServer()
+	xrayServerPort := xray.StartXrayMockServer(t)
 	xrayDetails := newTestXrayDetails(GetXrayDetails())
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xrayDetails.GetClientCertPath()).

@@ -40,6 +40,8 @@ type UploadService struct {
 	resultsManager *resultsManager
 }
 
+const JfrogCliUploadEmptyArchiveEnv = "JFROG_CLI_UPLOAD_EMPTY_ARCHIVE"
+
 func NewUploadService(client *jfroghttpclient.JfrogHttpClient) *UploadService {
 	return &UploadService{client: client}
 }
@@ -317,10 +319,17 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 	}
 	// Longest files path first
 	sort.Sort(sort.Reverse(sort.StringSlice(paths)))
-	var uploadedTargets []string
+
 	// 'uploadedDirs' is in use only when we need to upload folders with flat=true.
 	// 'uploadedDirs' will contain only local directories paths that have been uploaded to Artifactory.
-	var uploadedDirs []string
+	var uploadedTargets, uploadedDirs []string
+
+	if shouldUploadAnEmptyArchive(uploadParams.Archive, paths) {
+		log.Info("All files were filtered out by the exclusion pattern, but the archive flag is set together with JFROG_CLI_UPLOAD_EMPTY_ARCHIVE environment variable. " +
+			"Proceeding with an empty archive.")
+		paths = []string{""}
+	}
+
 	for _, path := range paths {
 		matches, isDir, err := fspatterns.SearchPatterns(path, uploadParams.IsSymlink(), uploadParams.IsIncludeDirs(), patternRegex)
 		if err != nil {
@@ -348,6 +357,12 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 		}
 	}
 	return nil
+}
+
+func shouldUploadAnEmptyArchive(archive string, paths []string) bool {
+	return len(paths) == 0 &&
+		archive != "" &&
+		strings.ToLower(os.Getenv(JfrogCliUploadEmptyArchiveEnv)) == "true"
 }
 
 // targetFiles - Paths in Artifactory of the files that were uploaded.
@@ -834,9 +849,11 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 			}
 		}()
 		for uploadData := new(UploadData); archiveDataReader.NextRecord(uploadData) == nil; uploadData = new(UploadData) {
-			e = us.addFileToZip(&uploadData.Artifact, progressPrefix, flat, symlink, zipWriter)
-			if e != nil {
-				errorsQueue.AddError(e)
+			if uploadData.Artifact.LocalPath != "" {
+				e = us.addFileToZip(&uploadData.Artifact, progressPrefix, flat, symlink, zipWriter)
+				if e != nil {
+					errorsQueue.AddError(e)
+				}
 			}
 			if saveFilesPathsFunc != nil {
 				e = saveFilesPathsFunc(uploadData.Artifact.LocalPath)
