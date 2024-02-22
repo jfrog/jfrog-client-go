@@ -29,7 +29,7 @@ type completionStatus string
 
 const (
 	// TODO - Update version
-	minArtifactoryVersion = "7.0.0"
+	minArtifactoryVersion = "8.0.0"
 
 	// Supported status
 	// Multipart upload support is not yet determined
