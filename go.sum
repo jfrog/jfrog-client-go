@@ -52,6 +52,8 @@ github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOl
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jfrog/archiver/v3 v3.6.0 h1:OVZ50vudkIQmKMgA8mmFF9S0gA47lcag22N13iV3F1w=
 github.com/jfrog/archiver/v3 v3.6.0/go.mod h1:fCAof46C3rAXgZurS8kNRNdSVMKBbZs+bNNhPYxLldI=
+github.com/jfrog/build-info-go v1.8.9-0.20240222124058-bd9687a8666e h1:NzB2yvEojIhP5KIX9SeCqSljZmoiE98hBzXYvvi52D0=
+github.com/jfrog/build-info-go v1.8.9-0.20240222124058-bd9687a8666e/go.mod h1:QHcKuesY4MrBVBuEwwBz4uIsX6mwYuMEDV09ng4AvAU=
 github.com/jfrog/gofrog v1.6.0 h1:jOwb37nHY2PnxePNFJ6e6279Pgkr3di05SbQQw47Mq8=
 github.com/jfrog/gofrog v1.6.0/go.mod h1:SZ1EPJUruxrVGndOzHd+LTiwWYKMlHqhKD+eu+v5Hqg=
 github.com/kevinburke/ssh_config v1.2.0 h1:x584FjTGwHzMwvHx18PXxbBVzfnxogHaAReU4gf13a4=
@@ -108,8 +110,6 @@ github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 h1:nIPpBwaJSVYIxUFsDv3M8ofm
 github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMxjDjgmT5uz5wzYJKVo23qUhYTos=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 h1:QldyIu/L63oPpyvQmHgvgickp1Yw510KJOqX7H24mg8=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778/go.mod h1:2MuV+tbUrU1zIOPMxZ5EncGwgmMJsa+9ucAQZXxsObs=
-github.com/yahavi/build-info-go v0.1.2-0.20240222090732-b6d5a7ddf73b h1:WDbXmXdZnD3ffPlijVluglSH/+54RjYpTRrVM9DPTeY=
-github.com/yahavi/build-info-go v0.1.2-0.20240222090732-b6d5a7ddf73b/go.mod h1:QHcKuesY4MrBVBuEwwBz4uIsX6mwYuMEDV09ng4AvAU=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
