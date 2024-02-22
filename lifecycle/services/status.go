@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
@@ -165,9 +166,9 @@ func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletio
 
 	if dsStatusResponse.Status != dsServices.Completed {
 		for _, st := range dsStatusResponse.Sites {
-			log.Error(fmt.Sprintf("target %s name: %s error: %s", st.TargetArtifactory.Type, st.TargetArtifactory.Name, st.Error))
+			err = errors.Join(err, fmt.Errorf("target %s name:%s error:%s", st.TargetArtifactory.Type, st.TargetArtifactory.Name, st.Error))
 		}
-		return errorutils.CheckErrorf("Distribution did not complete - status:%s", dsStatusResponse.Status)
+		return errorutils.CheckError(err)
 	}
 	log.Info("Distribution Completed!")
 	return nil
