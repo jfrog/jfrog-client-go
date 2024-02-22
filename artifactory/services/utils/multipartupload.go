@@ -159,9 +159,11 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 	}
 
 	if sha1 == "" {
-		if _, sha1, _, err = biUtils.GetFileChecksums(localPath); errorutils.CheckError(err) != nil {
+		var checksums map[biUtils.Algorithm]string
+		if checksums, err = biUtils.GetFileChecksums(localPath); errorutils.CheckError(err) != nil {
 			return
 		}
+		sha1 = checksums[biUtils.SHA1]
 	}
 
 	if progress != nil {
