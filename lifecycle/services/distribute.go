@@ -22,7 +22,14 @@ type DistributeReleaseBundleService struct {
 	MaxWaitMinutes   int
 	DistributeParams distribution.DistributionParams
 	Modifications
-	PathMapping
+}
+
+type DistributeReleaseBundleParams struct {
+	Sync              bool
+	AutoCreateRepo    bool
+	MaxWaitMinutes    int
+	DistributionRules []*distribution.DistributionCommonParams
+	PathMappings      []PathMapping
 }
 
 func (dr *DistributeReleaseBundleService) GetHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -72,12 +79,10 @@ func (dr *DistributeReleaseBundleService) Distribute() error {
 	}
 
 	// Sync distribution
-	return dr.waitForDistributionOperationCompletion(&dr.DistributeParams, trackerId, dr.MaxWaitMinutes)
+	return dr.waitForDistributionOperationCompletion(&dr.DistributeParams, trackerId)
 }
 
 func (dr *DistributeReleaseBundleService) createDistributeBody() ReleaseBundleDistributeBody {
-	m := &dr.Modifications.PathMappings
-	*m = append(*m, distribution.CreatePathMappingsFromPatternAndTarget(dr.Pattern, dr.Target)...)
 	return ReleaseBundleDistributeBody{
 		ReleaseBundleDistributeV1Body: distribution.CreateDistributeV1Body(dr.DistributeParams, dr.DryRun, dr.AutoCreateRepo),
 		Modifications:                 dr.Modifications,

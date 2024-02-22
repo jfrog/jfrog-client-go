@@ -74,31 +74,25 @@ func (lcs *LifecycleServicesManager) DeleteReleaseBundle(rbDetails lifecycle.Rel
 	return rbService.DeleteReleaseBundle(rbDetails, queryParams)
 }
 
-func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution.DistributionParams, autoCreateRepo bool, pathMapping lifecycle.PathMapping) error {
+func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, distributeParams lifecycle.DistributeReleaseBundleParams) error {
 	distributeBundleService := lifecycle.NewDistributeReleaseBundleService(lcs.client)
 	distributeBundleService.LcDetails = lcs.config.GetServiceDetails()
 	distributeBundleService.DryRun = lcs.config.IsDryRun()
-	distributeBundleService.AutoCreateRepo = autoCreateRepo
-	distributeBundleService.DistributeParams = params
-	distributeBundleService.PathMapping = pathMapping
-	return distributeBundleService.Distribute()
-}
 
-func (lcs *LifecycleServicesManager) DistributeReleaseBundleSync(params distribution.DistributionParams, maxWaitMinutes int, autoCreateRepo bool, pathMappings []lifecycle.PathMapping) error {
-	distributeBundleService := lifecycle.NewDistributeReleaseBundleService(lcs.client)
-	distributeBundleService.LcDetails = lcs.config.GetServiceDetails()
-	distributeBundleService.DryRun = lcs.config.IsDryRun()
-	distributeBundleService.AutoCreateRepo = autoCreateRepo
-	distributeBundleService.DistributeParams = params
-	distributeBundleService.Sync = true
-	distributeBundleService.MaxWaitMinutes = maxWaitMinutes
+	distributeBundleService.DistributeParams = distribution.DistributionParams{
+		Name:              rbDetails.ReleaseBundleName,
+		Version:           rbDetails.ReleaseBundleVersion,
+		DistributionRules: distributeParams.DistributionRules,
+	}
+	distributeBundleService.AutoCreateRepo = distributeParams.AutoCreateRepo
+	distributeBundleService.Sync = distributeParams.Sync
+	distributeBundleService.MaxWaitMinutes = distributeParams.MaxWaitMinutes
 
 	m := &distributeBundleService.Modifications.PathMappings
-	for _, pathMapping := range pathMappings {
+	for _, pathMapping := range distributeParams.PathMappings {
 		*m = append(*m,
 			distribution.CreatePathMappingsFromPatternAndTarget(pathMapping.Pattern, pathMapping.Target)...)
 	}
-
 	return distributeBundleService.Distribute()
 }
 

@@ -44,8 +44,8 @@ func (rbs *ReleaseBundlesService) CreateFromArtifacts(rbDetails ReleaseBundleDet
 			ReleaseBundleDetails: rbDetails,
 			SourceType:           artifacts,
 			Source:               sourceArtifacts},
-		params: params,
-    signingKeyName: signingKeyName,
+		params:         params,
+		signingKeyName: signingKeyName,
 	}
 	_, err := rbs.doOperation(&operation)
 	return err
@@ -93,7 +93,7 @@ type CreateFromBuildsSource struct {
 
 type ArtifactSource struct {
 	Path   string `json:"path,omitempty"`
-	SHA256 string `json:"sha256,omitempty"`
+	Sha256 string `json:"sha256,omitempty"`
 }
 
 type BuildSource struct {

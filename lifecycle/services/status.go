@@ -73,8 +73,9 @@ func (rbs *ReleaseBundlesService) getReleaseBundleStatus(restApi string, project
 	return
 }
 
-func (dbs *DistributeReleaseBundleService) getReleaseBundleDistributionStatus(restApi string, projectKey string) (statusResp *dsServices.DistributionStatusResponse, body []byte, err error) {
-	requestFullUrl, err := utils.BuildUrl(dbs.LcDetails.GetUrl(), restApi, getProjectQueryParam(projectKey))
+func (dbs *DistributeReleaseBundleService) getReleaseBundleDistributionStatus(distributeParams *distribution.DistributionParams, trackerId json.Number) (statusResp *dsServices.DistributionStatusResponse, body []byte, err error) {
+	restApi := path.Join(distributionBaseApi, trackersApi, distributeParams.Name, distributeParams.Version, trackerId.String())
+	requestFullUrl, err := utils.BuildUrl(dbs.LcDetails.GetUrl(), restApi, nil)
 	if err != nil {
 		return
 	}
@@ -125,15 +126,14 @@ func (rbs *ReleaseBundlesService) waitForRbOperationCompletion(restApi, projectK
 	return getStatusResponse(finalRespBody)
 }
 
-func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletion(distributeParams *distribution.DistributionParams, trackerId json.Number, maxWaitMinutes int) error {
-	maxWait := defaultMaxWait
-	if maxWaitMinutes >= 1 {
-		maxWait = time.Duration(maxWaitMinutes) * time.Minute
+func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletion(distributeParams *distribution.DistributionParams, trackerId json.Number) error {
+	maxWait := time.Duration(dbs.GetMaxWaitMinutes()) * time.Minute
+	if maxWait.Minutes() < 1 {
+		maxWait = defaultMaxWait
 	}
 
-	restApi := path.Join(distributionBaseApi, trackersApi, distributeParams.Name, distributeParams.Version, trackerId.String())
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		statusResponse, responseBody, err := dbs.getReleaseBundleDistributionStatus(restApi, "")
+		statusResponse, responseBody, err := dbs.getReleaseBundleDistributionStatus(distributeParams, trackerId)
 		if err != nil {
 			return true, nil, err
 		}
@@ -159,9 +159,8 @@ func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletio
 	}
 
 	var dsStatusResponse dsServices.DistributionStatusResponse
-	err = json.Unmarshal(finalRespBody, &dsStatusResponse)
-	if err != nil {
-		return err
+	if err = json.Unmarshal(finalRespBody, &dsStatusResponse); err != nil {
+		return errorutils.CheckError(err)
 	}
 
 	if dsStatusResponse.Status != dsServices.Completed {
@@ -171,7 +170,7 @@ func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletio
 		return errorutils.CheckErrorf("Distribution did not complete - status:%s", dsStatusResponse.Status)
 	}
 	log.Info("Distribution Completed!")
-	return err
+	return nil
 }
 
 type ReleaseBundleStatusResponse struct {
