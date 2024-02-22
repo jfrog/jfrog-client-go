@@ -36,6 +36,12 @@ func (lcs *LifecycleServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return lcs.client
 }
 
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromArtifacts(rbDetails lifecycle.ReleaseBundleDetails,
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceArtifacts lifecycle.CreateFromArtifacts) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.CreateFromArtifacts(rbDetails, queryParams, signingKeyName, sourceArtifacts)
+}
+
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromBuilds(rbDetails lifecycle.ReleaseBundleDetails,
 	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceBuilds lifecycle.CreateFromBuildsSource) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
@@ -68,13 +74,25 @@ func (lcs *LifecycleServicesManager) DeleteReleaseBundle(rbDetails lifecycle.Rel
 	return rbService.DeleteReleaseBundle(rbDetails, queryParams)
 }
 
-func (lcs *LifecycleServicesManager) DistributeReleaseBundle(params distribution.DistributionParams, autoCreateRepo bool, pathMapping lifecycle.PathMapping) error {
+func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, distributeParams lifecycle.DistributeReleaseBundleParams) error {
 	distributeBundleService := lifecycle.NewDistributeReleaseBundleService(lcs.client)
 	distributeBundleService.LcDetails = lcs.config.GetServiceDetails()
 	distributeBundleService.DryRun = lcs.config.IsDryRun()
-	distributeBundleService.AutoCreateRepo = autoCreateRepo
-	distributeBundleService.DistributeParams = params
-	distributeBundleService.PathMapping = pathMapping
+
+	distributeBundleService.DistributeParams = distribution.DistributionParams{
+		Name:              rbDetails.ReleaseBundleName,
+		Version:           rbDetails.ReleaseBundleVersion,
+		DistributionRules: distributeParams.DistributionRules,
+	}
+	distributeBundleService.AutoCreateRepo = distributeParams.AutoCreateRepo
+	distributeBundleService.Sync = distributeParams.Sync
+	distributeBundleService.MaxWaitMinutes = distributeParams.MaxWaitMinutes
+
+	m := &distributeBundleService.Modifications.PathMappings
+	for _, pathMapping := range distributeParams.PathMappings {
+		*m = append(*m,
+			distribution.CreatePathMappingsFromPatternAndTarget(pathMapping.Pattern, pathMapping.Target)...)
+	}
 	return distributeBundleService.Distribute()
 }
 

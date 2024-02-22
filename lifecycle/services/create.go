@@ -7,6 +7,7 @@ const (
 type sourceType string
 
 const (
+	artifacts      sourceType = "artifacts"
 	builds         sourceType = "builds"
 	releaseBundles sourceType = "release_bundles"
 )
@@ -35,6 +36,19 @@ func (c *createOperation) getOperationParams() CommonOptionalQueryParams {
 
 func (c *createOperation) getSigningKeyName() string {
 	return c.signingKeyName
+}
+
+func (rbs *ReleaseBundlesService) CreateFromArtifacts(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceArtifacts CreateFromArtifacts) error {
+	operation := createOperation{
+		reqBody: RbCreationBody{
+			ReleaseBundleDetails: rbDetails,
+			SourceType:           artifacts,
+			Source:               sourceArtifacts},
+		params:         params,
+		signingKeyName: signingKeyName,
+	}
+	_, err := rbs.doOperation(&operation)
+	return err
 }
 
 func (rbs *ReleaseBundlesService) CreateFromBuilds(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceBuilds CreateFromBuildsSource) error {
@@ -69,8 +83,17 @@ type SourceBuildDetails struct {
 	ProjectKey  string
 }
 
+type CreateFromArtifacts struct {
+	Artifacts []ArtifactSource `json:"artifacts,omitempty"`
+}
+
 type CreateFromBuildsSource struct {
 	Builds []BuildSource `json:"builds,omitempty"`
+}
+
+type ArtifactSource struct {
+	Path   string `json:"path,omitempty"`
+	Sha256 string `json:"sha256,omitempty"`
 }
 
 type BuildSource struct {

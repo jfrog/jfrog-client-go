@@ -2510,22 +2510,30 @@ resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKe
 #### Distribute Release Bundle
 
 ```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+pathMappings := []services.PathMapping{
+    {
+        Pattern: "(*)/(*)",
+        Target:  "{1}/target/{2}",
+    },
+}
+
 rules := &distribution.DistributionCommonParams{
-SiteName:     "*",
-CityName:     "*",
-CountryCodes: []string{"*"},
+    SiteName:     "*",
+    CityName:     "*",
+    CountryCodes: []string{"*"},
 }
-params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
-params.DistributionRules = append(params.DistributionRules, rules)
-
-autoCreateRepo := true
-
-pathMapping := services.PathMapping{
-    Pattern: "(*)/(*)",
-    Target:  "{1}/target/{2}",
+dsParams := DistributeReleaseBundleParams{
+    Sync:           true,
+    AutoCreateRepo: true,
+    MaxWaitMinutes: 60,
+    PathMappings:   pathMappings,
+    DistributionRules: []*dmUtils.DistributionCommonParams{
+        rules,
+    },
 }
 
-resp, err := serviceManager.DistributeReleaseBundle(params, autoCreateRepo, pathMapping)
+resp, err := serviceManager.DistributeReleaseBundle(rbDetails, dsParams)
 ```
 
 #### Delete Release Bundle
@@ -2543,9 +2551,9 @@ resp, err := serviceManager.DeleteReleaseBundle(rbDetails, queryParams)
 
 ```go
 rules := &distribution.DistributionCommonParams{
-SiteName:     "*",
-CityName:     "*",
-CountryCodes: []string{"*"},
+    SiteName:     "*",
+    CityName:     "*",
+    CountryCodes: []string{"*"},
 }
 params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
 params.DistributionRules = append(params.DistributionRules, rules)
