@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	recordsApi               = "records"
 	statusesApi              = "statuses"
 	trackersApi              = "trackers"
 	defaultMaxWait           = 60 * time.Minute
@@ -71,6 +72,24 @@ func (rbs *ReleaseBundlesService) getReleaseBundleStatus(restApi string, project
 		return
 	}
 	err = errorutils.CheckError(json.Unmarshal(body, &statusResp))
+	return
+}
+
+func (rbs *ReleaseBundlesService) GetReleaseBundleSpec(rbDetails ReleaseBundleDetails) (specResp ReleaseBundleSpecResponse, body []byte, err error) {
+	restApi := path.Join(releaseBundleBaseApi, recordsApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
+	if err != nil {
+		return
+	}
+	httpClientsDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
+	resp, body, _, err := rbs.client.SendGet(requestFullUrl, true, &httpClientsDetails)
+	if err != nil {
+		return
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return
+	}
+	err = errorutils.CheckError(json.Unmarshal(body, &specResp))
 	return
 }
 
@@ -177,6 +196,23 @@ func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletio
 type ReleaseBundleStatusResponse struct {
 	Status   RbStatus  `json:"status,omitempty"`
 	Messages []Message `json:"messages,omitempty"`
+}
+
+type ReleaseBundleSpecResponse struct {
+	CreatedBy     string    `json:"created_by,omitempty"`
+	Created       time.Time `json:"created"`
+	CreatedMillis int       `json:"created_millis,omitempty"`
+	Artifacts     []struct {
+		Path                string `json:"path,omitempty"`
+		Checksum            string `json:"checksum,omitempty"`
+		SourceRepositoryKey string `json:"source_repository_key,omitempty"`
+		PackageType         string `json:"package_type,omitempty"`
+		Size                int    `json:"size,omitempty"`
+		Properties          []struct {
+			Key   string `json:"key"`
+			Value string `json:"value"`
+		} `json:"properties,omitempty"`
+	} `json:"artifacts,omitempty"`
 }
 
 type Message struct {
