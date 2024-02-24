@@ -2507,6 +2507,13 @@ projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 ```
 
+#### Get Release Bundle Specification
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+resp, err := serviceManager.GetReleaseBundleSpecification(rbDetails)
+```
+
 #### Distribute Release Bundle
 
 ```go
