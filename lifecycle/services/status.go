@@ -45,6 +45,10 @@ func GetReleaseBundleCreationStatusRestApi(rbDetails ReleaseBundleDetails) strin
 	return path.Join(releaseBundleBaseApi, statusesApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 
+func GetReleaseBundleSpecificationRestApi(rbDetails ReleaseBundleDetails) string {
+	return path.Join(releaseBundleBaseApi, recordsApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+}
+
 func (rbs *ReleaseBundlesService) GetReleaseBundlePromotionStatus(rbDetails ReleaseBundleDetails, projectKey, createdMillis string, sync bool) (ReleaseBundleStatusResponse, error) {
 	restApi := path.Join(promotionBaseApi, statusesApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion, createdMillis)
 	return rbs.getReleaseBundleOperationStatus(restApi, projectKey, sync, "promotion")
@@ -75,8 +79,8 @@ func (rbs *ReleaseBundlesService) getReleaseBundleStatus(restApi string, project
 	return
 }
 
-func (rbs *ReleaseBundlesService) GetReleaseBundleSpec(rbDetails ReleaseBundleDetails) (specResp ReleaseBundleSpecResponse, body []byte, err error) {
-	restApi := path.Join(releaseBundleBaseApi, recordsApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+func (rbs *ReleaseBundlesService) GetReleaseBundleSpecification(rbDetails ReleaseBundleDetails) (specResp ReleaseBundleSpecResponse, err error) {
+	restApi := GetReleaseBundleSpecificationRestApi(rbDetails)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
 	if err != nil {
 		return
@@ -159,7 +163,7 @@ func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletio
 		}
 
 		switch statusResponse.Status {
-		case dsServices.NotDistributed, dsServices.InProgress:
+		case dsServices.NotDistributed, dsServices.InProgress, dsServices.InQueue:
 			return false, nil, nil
 		case dsServices.Failed, dsServices.Completed:
 			return true, responseBody, nil
@@ -209,8 +213,8 @@ type ReleaseBundleSpecResponse struct {
 		PackageType         string `json:"package_type,omitempty"`
 		Size                int    `json:"size,omitempty"`
 		Properties          []struct {
-			Key   string `json:"key"`
-			Value string `json:"value"`
+			Key    string   `json:"key"`
+			Values []string `json:"values"`
 		} `json:"properties,omitempty"`
 	} `json:"artifacts,omitempty"`
 }
