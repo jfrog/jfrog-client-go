@@ -1,6 +1,7 @@
 package lifecycle
 
 import (
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	lifecycle "github.com/jfrog/jfrog-client-go/lifecycle/services"
@@ -89,6 +90,7 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	distributeBundleService.MaxWaitMinutes = distributeParams.MaxWaitMinutes
 
 	m := &distributeBundleService.Modifications.PathMappings
+	*m = []utils.PathMapping{}
 	for _, pathMapping := range distributeParams.PathMappings {
 		*m = append(*m,
 			distribution.CreatePathMappingsFromPatternAndTarget(pathMapping.Pattern, pathMapping.Target)...)
