@@ -50,7 +50,7 @@ func (dr *DistributeReleaseBundleV1Service) GetRestApi(name, version string) str
 }
 
 func (dr *DistributeReleaseBundleV1Service) GetDistributeBody() any {
-	return distribution.CreateDistributeV1Body(dr.DistributeParams, dr.DryRun, dr.AutoCreateRepo)
+	return distribution.CreateDistributeV1Body(dr.DistributeParams.DistributionRules, dr.DryRun, dr.AutoCreateRepo)
 }
 
 func (dr *DistributeReleaseBundleV1Service) GetDistributionParams() distribution.DistributionParams {

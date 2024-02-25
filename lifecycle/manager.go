@@ -1,6 +1,7 @@
 package lifecycle
 
 import (
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	lifecycle "github.com/jfrog/jfrog-client-go/lifecycle/services"
@@ -69,9 +70,19 @@ func (lcs *LifecycleServicesManager) GetReleaseBundlePromotionStatus(rbDetails l
 	return rbService.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 }
 
-func (lcs *LifecycleServicesManager) DeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams) error {
+func (lcs *LifecycleServicesManager) GetReleaseBundleVersionPromotions(rbDetails lifecycle.ReleaseBundleDetails, optionalQueryParams lifecycle.GetPromotionsOptionalQueryParams) (lifecycle.RbPromotionsResponse, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.DeleteReleaseBundle(rbDetails, queryParams)
+	return rbService.GetReleaseBundleVersionPromotions(rbDetails, optionalQueryParams)
+}
+
+func (lcs *LifecycleServicesManager) DeleteReleaseBundleVersion(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.DeleteReleaseBundleVersion(rbDetails, queryParams)
+}
+
+func (lcs *LifecycleServicesManager) DeleteReleaseBundleVersionPromotion(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, created string) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.DeleteReleaseBundleVersionPromotion(rbDetails, queryParams, created)
 }
 
 func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, distributeParams lifecycle.DistributeReleaseBundleParams) error {
@@ -89,6 +100,7 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	distributeBundleService.MaxWaitMinutes = distributeParams.MaxWaitMinutes
 
 	m := &distributeBundleService.Modifications.PathMappings
+	*m = []utils.PathMapping{}
 	for _, pathMapping := range distributeParams.PathMappings {
 		*m = append(*m,
 			distribution.CreatePathMappingsFromPatternAndTarget(pathMapping.Pattern, pathMapping.Target)...)
@@ -96,7 +108,7 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	return distributeBundleService.Distribute()
 }
 
-func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(params distribution.DistributionParams, dryRun bool) error {
+func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, params lifecycle.ReleaseBundleRemoteDeleteParams) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.RemoteDeleteReleaseBundle(params, dryRun)
+	return rbService.RemoteDeleteReleaseBundle(rbDetails, params)
 }
