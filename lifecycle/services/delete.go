@@ -16,7 +16,7 @@ const (
 )
 
 func (rbs *ReleaseBundlesService) DeleteReleaseBundle(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams) error {
-	queryParams := getProjectQueryParam(params.ProjectKey)
+	queryParams := distribution.GetProjectQueryParam(params.ProjectKey)
 	queryParams[async] = strconv.FormatBool(params.Async)
 	restApi := path.Join(releaseBundleBaseApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, queryParams)

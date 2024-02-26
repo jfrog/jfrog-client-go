@@ -93,6 +93,7 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	distributeBundleService.AutoCreateRepo = distributeParams.AutoCreateRepo
 	distributeBundleService.Sync = distributeParams.Sync
 	distributeBundleService.MaxWaitMinutes = distributeParams.MaxWaitMinutes
+	distributeBundleService.ProjectKey = distributeParams.ProjectKey
 
 	m := &distributeBundleService.Modifications.PathMappings
 	*m = []utils.PathMapping{}

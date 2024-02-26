@@ -22,6 +22,7 @@ type DistributeReleaseBundleService struct {
 	MaxWaitMinutes   int
 	DistributeParams distribution.DistributionParams
 	Modifications
+	ProjectKey string
 }
 
 type DistributeReleaseBundleParams struct {
@@ -30,6 +31,7 @@ type DistributeReleaseBundleParams struct {
 	MaxWaitMinutes    int
 	DistributionRules []*distribution.DistributionCommonParams
 	PathMappings      []PathMapping
+	ProjectKey        string
 }
 
 func (dr *DistributeReleaseBundleService) GetHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -52,10 +54,6 @@ func (dr *DistributeReleaseBundleService) GetMaxWaitMinutes() int {
 	return dr.MaxWaitMinutes
 }
 
-func (dr *DistributeReleaseBundleService) IsAutoCreateRepo() bool {
-	return dr.AutoCreateRepo
-}
-
 func (dr *DistributeReleaseBundleService) GetRestApi(name, version string) string {
 	return path.Join(distributionBaseApi, distribute, name, version)
 }
@@ -66,6 +64,10 @@ func (dr *DistributeReleaseBundleService) GetDistributeBody() any {
 
 func (dr *DistributeReleaseBundleService) GetDistributionParams() distribution.DistributionParams {
 	return dr.DistributeParams
+}
+
+func (dr *DistributeReleaseBundleService) GetProjectKey() string {
+	return dr.ProjectKey
 }
 
 func NewDistributeReleaseBundleService(client *jfroghttpclient.JfrogHttpClient) *DistributeReleaseBundleService {
