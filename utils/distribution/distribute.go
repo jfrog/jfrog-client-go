@@ -89,6 +89,17 @@ type DistributionParams struct {
 	Version           string
 }
 
+type ExportMappings struct {
+	input  string
+	output string
+}
+
+type ReleaseBundleExportParams struct {
+	Name     string
+	Version  string
+	mappings []ExportMappings
+}
+
 type ReleaseBundleDistributeV1Body struct {
 	DryRun            bool                    `json:"dry_run"`
 	DistributionRules []DistributionRulesBody `json:"distribution_rules"`
