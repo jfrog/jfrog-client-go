@@ -56,9 +56,13 @@ func execDistribute(dr DistributeReleaseBundleExecutor, name, version string) (j
 	}
 	log.Info(dryRunStr + "Distributing: " + name + "/" + version)
 
+	requestFullUrl, err := clientUtils.BuildUrl(dr.ServiceDetails().GetUrl(), dr.GetRestApi(name, version), GetProjectQueryParam(dr.GetProjectKey()))
+	if err != nil {
+		return "", err
+	}
+
 	httpClientsDetails := dr.ServiceDetails().CreateHttpClientDetails()
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	requestFullUrl, err := clientUtils.BuildUrl(dr.ServiceDetails().GetUrl(), dr.GetRestApi(name, version), GetProjectQueryParam(dr.GetProjectKey()))
 	resp, body, err := dr.GetHttpClient().SendPost(requestFullUrl, content, &httpClientsDetails)
 	if err != nil {
 		return "", err
