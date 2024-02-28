@@ -52,6 +52,7 @@ var (
 	TestPipelines            *bool
 	TestAccess               *bool
 	TestRepositories         *bool
+	TestMultipartUpload      *bool
 	RtUrl                    *string
 	DistUrl                  *string
 	XrayUrl                  *string
@@ -147,6 +148,7 @@ func init() {
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
 	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
+	TestMultipartUpload = flag.Bool("test.mpu", false, "Test Artifactory multipart upload")
 	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
@@ -216,6 +218,8 @@ func createArtifactoryUploadManager() {
 	testsUploadService = services.NewUploadService(client)
 	testsUploadService.ArtDetails = artDetails
 	testsUploadService.Threads = 3
+	httpClientDetails := testsUploadService.ArtDetails.CreateHttpClientDetails()
+	testsUploadService.MultipartUpload = utils.NewMultipartUpload(client, &httpClientDetails, testsUploadService.ArtDetails.GetUrl())
 }
 
 func createArtifactoryUserManager() {
@@ -427,6 +431,7 @@ func createArtifactoryAqlManager() {
 func createJfrogHttpClient(artDetailsPtr *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
 	artDetails := *artDetailsPtr
 	return jfroghttpclient.JfrogClientBuilder().
+		SetRetries(3).
 		SetClientCertPath(artDetails.GetClientCertPath()).
 		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
@@ -667,7 +672,7 @@ func artifactoryCleanup(t *testing.T) {
 }
 
 func createRepo() error {
-	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload) {
 		return nil
 	}
 	var err error
@@ -684,7 +689,7 @@ func createRepo() error {
 }
 
 func teardownIntegrationTests() {
-	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload) {
 		return
 	}
 	repo := getRtTargetRepoKey()

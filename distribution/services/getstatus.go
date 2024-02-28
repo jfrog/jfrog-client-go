@@ -105,6 +105,7 @@ type DistributionStatus string
 const (
 	NotDistributed DistributionStatus = "Not distributed"
 	InProgress     DistributionStatus = "In progress"
+	InQueue        DistributionStatus = "In queue"
 	Completed      DistributionStatus = "Completed"
 	Failed         DistributionStatus = "Failed"
 )
