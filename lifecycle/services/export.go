@@ -3,17 +3,10 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"net/http"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/url"
-	"os"
-	"path"
-	"strings"
 )
 
 const (
@@ -36,29 +29,98 @@ type ReleaseBundleExportedStatusResponse struct {
 	DownloadUrl string           `json:"download_url,omitempty"`
 }
 
-func (rbs *ReleaseBundlesService) ExportReleaseBundle(params distribution.ReleaseBundleExportParams) (err error) {
+type ReleaseBundleExportParams struct {
+	ReleaseBundleDetails
+	Modifications `json:"modifications"`
+}
+
+type RbExportBody struct {
+	ReleaseBundleExportParams
+}
+
+type exportStatusOperation struct {
+	reqBody     RbExportBody
+	queryParams CommonOptionalQueryParams
+}
+
+func (exs *exportStatusOperation) getOperationRestApi() string {
+	fullUrl, err := url.JoinPath(distributionBaseApi, exportReleaseBundleStatusEndpoint, exs.reqBody.ReleaseBundleName, exs.reqBody.ReleaseBundleVersion)
+	if err != nil {
+		panic(err)
+	}
+	return fullUrl
+}
+
+func (exs *exportStatusOperation) getRequestBody() any {
+	return exs.reqBody
+}
+
+func (exs *exportStatusOperation) getOperationSuccessfulMsg() string {
+	return "Successfully received Release Bundle export status"
+}
+
+func (exs *exportStatusOperation) getOperationParams() CommonOptionalQueryParams {
+	return exs.queryParams
+}
+
+func (exs *exportStatusOperation) getSigningKeyName() string {
+	return ""
+}
+
+type exportOperation struct {
+	reqBody     RbExportBody
+	queryParams CommonOptionalQueryParams
+}
+
+func (exp *exportOperation) getOperationRestApi() string {
+	fullUrl, err := url.JoinPath(distributionBaseApi, exportReleaseBundleEndpoint, exp.reqBody.ReleaseBundleName, exp.reqBody.ReleaseBundleVersion)
+	if err != nil {
+		panic(err)
+	}
+	return fullUrl
+}
+
+func (exp *exportOperation) getRequestBody() any {
+	return exp.reqBody
+}
+
+func (exp *exportOperation) getOperationSuccessfulMsg() string {
+	return "Release Bundle successfully exported"
+}
+
+func (exp *exportOperation) getOperationParams() CommonOptionalQueryParams {
+	return exp.queryParams
+}
+
+func (exp *exportOperation) getSigningKeyName() string {
+	return ""
+}
+
+func (rbs *ReleaseBundlesService) ExportReleaseBundle(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (err error) {
 	var rlExportedResponse ReleaseBundleExportedStatusResponse
-	// Check the current status
-	if rlExportedResponse, _, err = rbs.getExportedReleaseBundleStatus(params); err != nil {
+	//Check the current status
+	if rlExportedResponse, _, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams); err != nil {
 		return
 	}
 	// Trigger export if needed
 	if rlExportedResponse.Status == ExportNotTriggered {
-		if err = rbs.triggerRlExport(params); err != nil {
-			return
-		}
-		// Wait for export to finish
-		if rlExportedResponse, err = rbs.checkExportedStatusWithRetries(params); err != nil {
+		if err = rbs.triggerRlExport(rlExportParams, queryParams); err != nil {
 			return
 		}
 	}
-	// Download the archive
-	return rbs.downloadExportedReleaseBundle(rlExportedResponse, params)
+	// Wait for export to finish
+	// TODO what if the status is on different state? like failure? check this issue.
+	if rlExportedResponse.Status == ExportProcessing {
+		if rlExportedResponse, err = rbs.checkExportedStatusWithRetries(rlExportParams, queryParams); err != nil {
+			return
+		}
+	}
+	return
 }
 
-func (rbs *ReleaseBundlesService) checkExportedStatusWithRetries(params distribution.ReleaseBundleExportParams) (response ReleaseBundleExportedStatusResponse, err error) {
+func (rbs *ReleaseBundlesService) checkExportedStatusWithRetries(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (response ReleaseBundleExportedStatusResponse, err error) {
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		response, responseBody, err = rbs.getExportedReleaseBundleStatus(params)
+		response, responseBody, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams)
 		if err != nil {
 			return
 		}
@@ -78,67 +140,29 @@ func (rbs *ReleaseBundlesService) checkExportedStatusWithRetries(params distribu
 		Timeout:         defaultMaxWait,
 		PollingInterval: SyncSleepInterval,
 		PollingAction:   pollingAction,
-		MsgPrefix:       fmt.Sprintf("Getting Exported Release Bundle %s/%s status...", params.Name, params.Version),
+		MsgPrefix:       fmt.Sprintf("Getting Exported Release Bundle %s/%s status...", rlExportParams.ReleaseBundleName, rlExportParams.ReleaseBundleVersion),
 	}
 	_, err = pollingExecutor.Execute()
 	return
 }
 
-func (rbs *ReleaseBundlesService) triggerRlExport(params distribution.ReleaseBundleExportParams) error {
-
-	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), GetReleaseBundleExportRestApi(params), nil)
-	if err != nil {
-		return err
+func (rbs *ReleaseBundlesService) triggerRlExport(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (err error) {
+	operation := &exportOperation{
+		reqBody:     RbExportBody{*rlExportParams},
+		queryParams: queryParams,
 	}
-
-	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
-	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
-	resp, body, err := rbs.client.SendPost(requestFullUrl, nil, &httpClientDetails)
-	if err != nil {
-		return err
-	}
-	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
-}
-
-func (rbs *ReleaseBundlesService) getExportedReleaseBundleStatus(params distribution.ReleaseBundleExportParams) (exportedStatusResponse ReleaseBundleExportedStatusResponse, body []byte, err error) {
-
-	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
-	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
-	resp, body, _, err := rbs.client.SendGet(rbs.GetLifecycleDetails().GetUrl()+GetReleaseBundleExportStatusRestApi(params), false, &httpClientDetails)
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return
-	}
-	err = errorutils.CheckError(json.Unmarshal(body, &exportedStatusResponse))
-	return
-}
-func (rbs *ReleaseBundlesService) downloadExportedReleaseBundle(rlExportedResponse ReleaseBundleExportedStatusResponse, params distribution.ReleaseBundleExportParams) (err error) {
-	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
-	// Build download URL while replacing endpoint of lifecycle to artifactory
-	downloadUrl := strings.Replace(rbs.GetLifecycleDetails().GetUrl(), "lifecycle", "artifactory", 1)
-	downloadPath, err := url.JoinPath(downloadUrl, rlExportedResponse.RelativeUrl)
-	if err != nil {
-		return
-	}
-	// Download file into current working dir
-	fileName := fmt.Sprintf("%s-%s.zip", params.Name, params.Version)
-	wd, err := os.Getwd()
-	if err != nil {
-		return
-	}
-	fileDetails := httpclient.DownloadFileDetails{
-		FileName:      fileName,
-		DownloadPath:  downloadPath,
-		LocalPath:     wd,
-		LocalFileName: fileName,
-	}
-	_, err = rbs.client.DownloadFileWithProgress(&fileDetails, "Download Exported Bundle", &httpClientDetails, false, false, nil)
+	log.Debug("Triggering Release Bundle Export process...")
+	_, err = rbs.doOperation(operation)
 	return
 }
 
-func GetReleaseBundleExportRestApi(rbDetails distribution.ReleaseBundleExportParams) string {
-	return path.Join(distributionBaseApi, exportReleaseBundleEndpoint, rbDetails.Name, rbDetails.Version)
-}
-
-func GetReleaseBundleExportStatusRestApi(rbDetails distribution.ReleaseBundleExportParams) string {
-	return path.Join(distributionBaseApi, exportReleaseBundleStatusEndpoint, rbDetails.Name, rbDetails.Version)
+func (rbs *ReleaseBundlesService) getExportedReleaseBundleStatus(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (exportedStatusResponse ReleaseBundleExportedStatusResponse, body []byte, err error) {
+	operation := &exportStatusOperation{
+		reqBody:     RbExportBody{*rlExportParams},
+		queryParams: queryParams,
+	}
+	log.Debug("Getting Release Bundle Export status...")
+	respBody, err := rbs.doGetOperation(operation)
+	err = json.Unmarshal(respBody, &exportedStatusResponse)
+	return
 }

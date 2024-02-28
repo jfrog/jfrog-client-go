@@ -64,7 +64,35 @@ func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation) 
 		return body, nil
 	}
 
-	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
+	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
+}
+
+func (rbs *ReleaseBundlesService) doGetOperation(operation ReleaseBundleOperation) ([]byte, error) {
+	queryParams := getProjectQueryParam(operation.getOperationParams().ProjectKey)
+	queryParams[async] = strconv.FormatBool(operation.getOperationParams().Async)
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
+	rtUtils.AddSigningKeyNameHeader(operation.getSigningKeyName(), &httpClientDetails.Headers)
+	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
+
+	resp, body, _, err := rbs.client.SendGet(requestFullUrl, false, &httpClientDetails)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	if !operation.getOperationParams().Async {
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
+			return []byte{}, err
+		}
+		log.Info(operation.getOperationSuccessfulMsg())
+		return body, nil
+	}
+
+	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 }
 
 func getProjectQueryParam(projectKey string) map[string]string {
