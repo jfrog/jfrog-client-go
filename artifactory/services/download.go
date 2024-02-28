@@ -440,19 +440,11 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		if !fileutils.IsPathExists(symlinkArtifact, false) {
 			return errorutils.CheckErrorf("symlink validation failed, target doesn't exist: " + symlinkArtifact)
 		}
-		file, err := os.Open(symlinkArtifact)
-		if err = errorutils.CheckError(err); err != nil {
-			return err
+		var checksums map[biutils.Algorithm]string
+		if checksums, err = biutils.GetFileChecksums(symlinkArtifact, biutils.SHA1); err != nil {
+			return errorutils.CheckError(err)
 		}
-		defer func() {
-			err = errors.Join(err, errorutils.CheckError(file.Close()))
-		}()
-		checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
-		if err = errorutils.CheckError(err); err != nil {
-			return err
-		}
-		sha1 := checksumInfo[biutils.SHA1]
-		if sha1 != symlinkContentChecksum {
+		if checksums[biutils.SHA1] != symlinkContentChecksum {
 			return errorutils.CheckErrorf("symlink validation failed for target: " + symlinkArtifact)
 		}
 	}

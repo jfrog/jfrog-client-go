@@ -5,6 +5,13 @@ import (
 	"errors"
 )
 
+const (
+	SizeKib int64 = 1 << 10
+	SizeMiB int64 = 1 << 20
+	SizeGiB int64 = 1 << 30
+	SizeTiB int64 = 1 << 40
+)
+
 type FileInfo struct {
 	Uri          string `json:"uri,omitempty"`
 	DownloadUri  string `json:"downloadUri,omitempty"`

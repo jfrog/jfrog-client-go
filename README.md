@@ -254,14 +254,15 @@ content of this repository is deleted.
 
 #### Test Types
 
-| Type                 | Description        | Prerequisites                 |
-| -------------------- | ------------------ | ----------------------------- |
-| `-test.artifactory`  | Artifactory tests  | Artifactory Pro               |
-| `-test.distribution` | Distribution tests | Artifactory with Distribution |
-| `-test.xray`         | Xray tests         | Artifactory with Xray         |
-| `-test.pipelines`    | Pipelines tests    | JFrog Pipelines               |
-| `-test.access`       | Access tests       | Artifactory Pro               |
-| `-test.repositories` | Access tests       | Artifactory Pro               |
+| Type                 | Description            | Prerequisites                   |
+| -------------------- | ---------------------- | ------------------------------- |
+| `-test.artifactory`  | Artifactory tests      | Artifactory Pro                 |
+| `-test.distribution` | Distribution tests     | Artifactory with Distribution   |
+| `-test.xray`         | Xray tests             | Artifactory with Xray           |
+| `-test.pipelines`    | Pipelines tests        | JFrog Pipelines                 |
+| `-test.access`       | Access tests           | Artifactory Pro                 |
+| `-test.repositories` | Repositories tests     | Artifactory Pro                 |
+| `-test.mpu`          | Multipart upload tests | Artifactory Pro with S3 storage |
 
 #### Connection Details
 
@@ -400,6 +401,12 @@ params.Symlink = false
 params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
+// The maximum number of parts that can be concurrently uploaded per file during a multi-part upload. Set to 0 to disable multi-part upload.
+// SplitCount default value: 5
+params.SplitCount = 10
+// The minimum file size in MiB required to attempt a multi-part upload.
+// MinSplitSize default value: 200
+params.MinSplitSize = 100
 // The min file size in bytes for "checksum deploy".
 // "Checksum deploy" is the action of calculating the file checksum locally, before
 // the upload, and skipping the actual file transfer if the file already
@@ -2230,7 +2237,6 @@ xscVersion, err := scanService.IsXscEnabled()
 multiScanId, err := scanService.SendScanGitInfoContext(details)
 ```
 
-
 ## Pipelines APIs
 
 ### Creating Pipelines Service Manager
@@ -2501,25 +2507,40 @@ projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 ```
 
+#### Get Release Bundle Specification
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+resp, err := serviceManager.GetReleaseBundleSpecification(rbDetails)
+```
+
 #### Distribute Release Bundle
 
 ```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+pathMappings := []services.PathMapping{
+    {
+        Pattern: "(*)/(*)",
+        Target:  "{1}/target/{2}",
+    },
+}
+
 rules := &distribution.DistributionCommonParams{
-SiteName:     "*",
-CityName:     "*",
-CountryCodes: []string{"*"},
+    SiteName:     "*",
+    CityName:     "*",
+    CountryCodes: []string{"*"},
 }
-params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
-params.DistributionRules = append(params.DistributionRules, rules)
-
-autoCreateRepo := true
-
-pathMapping := services.PathMapping{
-    Pattern: "(*)/(*)",
-    Target:  "{1}/target/{2}",
+dsParams := DistributeReleaseBundleParams{
+    Sync:           true,
+    AutoCreateRepo: true,
+    MaxWaitMinutes: 60,
+    PathMappings:   pathMappings,
+    DistributionRules: []*dmUtils.DistributionCommonParams{
+        rules,
+    },
 }
 
-resp, err := serviceManager.DistributeReleaseBundle(params, autoCreateRepo, pathMapping)
+resp, err := serviceManager.DistributeReleaseBundle(rbDetails, dsParams)
 ```
 
 #### Delete Release Bundle
@@ -2537,9 +2558,9 @@ resp, err := serviceManager.DeleteReleaseBundle(rbDetails, queryParams)
 
 ```go
 rules := &distribution.DistributionCommonParams{
-SiteName:     "*",
-CityName:     "*",
-CountryCodes: []string{"*"},
+    SiteName:     "*",
+    CityName:     "*",
+    CountryCodes: []string{"*"},
 }
 params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
 params.DistributionRules = append(params.DistributionRules, rules)

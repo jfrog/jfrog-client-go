@@ -321,6 +321,8 @@ func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadSer
 	uploadService.ArtDetails = sm.config.GetServiceDetails()
 	uploadService.DryRun = sm.config.IsDryRun()
 	uploadService.Progress = sm.progress
+	httpClientDetails := uploadService.ArtDetails.CreateHttpClientDetails()
+	uploadService.MultipartUpload = utils.NewMultipartUpload(sm.client, &httpClientDetails, uploadService.ArtDetails.GetUrl())
 	return uploadService
 }
 
