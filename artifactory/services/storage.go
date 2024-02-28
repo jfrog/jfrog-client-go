@@ -33,6 +33,29 @@ func (s *StorageService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return s.client
 }
 
+func (s *StorageService) FileInfo(relativePath string) (*utils.FileInfo, error) {
+	client := s.GetJfrogHttpClient()
+	restAPI := path.Join(StorageRestApi, path.Clean(relativePath))
+	folderUrl, err := clientutils.BuildUrl(s.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+	if err != nil {
+		return nil, err
+	}
+
+	httpClientsDetails := s.GetArtifactoryDetails().CreateHttpClientDetails()
+	resp, body, _, err := client.SendGet(folderUrl, true, &httpClientsDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+	log.Debug("Artifactory response:", resp.Status)
+
+	result := &utils.FileInfo{}
+	err = json.Unmarshal(body, result)
+	return result, errorutils.CheckError(err)
+}
+
 func (s *StorageService) FolderInfo(relativePath string) (*utils.FolderInfo, error) {
 	client := s.GetJfrogHttpClient()
 	restAPI := path.Join(StorageRestApi, path.Clean(relativePath))
