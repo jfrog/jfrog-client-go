@@ -37,6 +37,12 @@ func (lcs *LifecycleServicesManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return lcs.client
 }
 
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromAql(rbDetails lifecycle.ReleaseBundleDetails,
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, aqlQuery string) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.CreateFromAql(rbDetails, queryParams, signingKeyName, aqlQuery)
+}
+
 func (lcs *LifecycleServicesManager) CreateReleaseBundleFromArtifacts(rbDetails lifecycle.ReleaseBundleDetails,
 	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceArtifacts lifecycle.CreateFromArtifacts) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
