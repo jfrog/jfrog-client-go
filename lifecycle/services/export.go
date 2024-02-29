@@ -96,22 +96,20 @@ func (exp *exportOperation) getSigningKeyName() string {
 	return ""
 }
 
-func (rbs *ReleaseBundlesService) ExportReleaseBundle(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (err error) {
-	var rlExportedResponse *ReleaseBundleExportedStatusResponse
-
+func (rbs *ReleaseBundlesService) ExportReleaseBundle(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (exportResponse *ReleaseBundleExportedStatusResponse, err error) {
 	//Check the current status
-	if rlExportedResponse, _, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams); err != nil {
+	if exportResponse, _, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams); err != nil {
 		return
 	}
 	// Trigger export if needed
-	if rlExportedResponse.Status == ExportNotTriggered || rlExportedResponse.Status == ExportFailed {
+	if exportResponse.Status == ExportNotTriggered || exportResponse.Status == ExportFailed {
 		if err = rbs.triggerReleaseBundleExportProcess(rlExportParams, queryParams); err != nil {
 			return
 		}
 	}
 	// Wait for export to finish
-	if rlExportedResponse.Status == ExportProcessing {
-		if rlExportedResponse, err = rbs.checkExportedStatusWithRetries(rlExportParams, queryParams); err != nil {
+	if exportResponse.Status == ExportProcessing {
+		if exportResponse, err = rbs.checkExportedStatusWithRetries(rlExportParams, queryParams); err != nil {
 			return
 		}
 	}
