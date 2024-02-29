@@ -97,8 +97,8 @@ func (exp *exportOperation) getSigningKeyName() string {
 }
 
 func (rbs *ReleaseBundlesService) ExportReleaseBundle(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (exportResponse *ReleaseBundleExportedStatusResponse, err error) {
-	//Check the current status
-	if exportResponse, _, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams); err != nil {
+	// Check the current status
+	if exportResponse, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams); err != nil {
 		return
 	}
 	// Trigger export if needed
@@ -118,7 +118,7 @@ func (rbs *ReleaseBundlesService) ExportReleaseBundle(rlExportParams *ReleaseBun
 
 func (rbs *ReleaseBundlesService) checkExportedStatusWithRetries(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (response *ReleaseBundleExportedStatusResponse, err error) {
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		response, responseBody, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams)
+		response, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams)
 		if err != nil {
 			return
 		}
@@ -154,13 +154,16 @@ func (rbs *ReleaseBundlesService) triggerReleaseBundleExportProcess(rlExportPara
 	return
 }
 
-func (rbs *ReleaseBundlesService) getExportedReleaseBundleStatus(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (exportedStatusResponse *ReleaseBundleExportedStatusResponse, body []byte, err error) {
+func (rbs *ReleaseBundlesService) getExportedReleaseBundleStatus(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (exportedStatusResponse *ReleaseBundleExportedStatusResponse, err error) {
 	operation := &exportStatusOperation{
 		reqBody:     RbExportBody{*rlExportParams},
 		queryParams: queryParams,
 	}
 	log.Debug("Getting Release Bundle Export status...")
 	respBody, err := rbs.doGetOperation(operation)
+	if err != nil {
+		return
+	}
 	err = json.Unmarshal(respBody, &exportedStatusResponse)
 	return
 }
