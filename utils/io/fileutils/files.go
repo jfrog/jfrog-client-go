@@ -404,11 +404,11 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details 
 }
 
 func calcChecksumDetailsFromReader(reader io.Reader) (entities.Checksum, error) {
-	checksumInfo, err := biutils.CalcChecksums(reader)
+	checksums, err := biutils.CalcChecksums(reader)
 	if err != nil {
 		return entities.Checksum{}, errorutils.CheckError(err)
 	}
-	return entities.Checksum{Md5: checksumInfo[biutils.MD5], Sha1: checksumInfo[biutils.SHA1], Sha256: checksumInfo[biutils.SHA256]}, nil
+	return entities.Checksum{Md5: checksums[biutils.MD5], Sha1: checksums[biutils.SHA1], Sha256: checksums[biutils.SHA256]}, nil
 }
 
 type FileDetails struct {

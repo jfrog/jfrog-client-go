@@ -5,6 +5,33 @@ import (
 	"errors"
 )
 
+const (
+	SizeKib int64 = 1 << 10
+	SizeMiB int64 = 1 << 20
+	SizeGiB int64 = 1 << 30
+	SizeTiB int64 = 1 << 40
+)
+
+type FileInfo struct {
+	Uri          string `json:"uri,omitempty"`
+	DownloadUri  string `json:"downloadUri,omitempty"`
+	Repo         string `json:"repo,omitempty"`
+	Path         string `json:"path,omitempty"`
+	RemoteUrl    string `json:"remoteUrl,omitempty"`
+	Created      string `json:"created,omitempty"`
+	CreatedBy    string `json:"createdBy,omitempty"`
+	LastModified string `json:"lastModified,omitempty"`
+	ModifiedBy   string `json:"modifiedBy,omitempty"`
+	LastUpdated  string `json:"lastUpdated,omitempty"`
+	Size         string `json:"size,omitempty"`
+	MimeType     string `json:"mimeType,omitempty"`
+	Checksums    struct {
+		Sha1   string `json:"sha1,omitempty"`
+		Sha256 string `json:"sha256,omitempty"`
+		Md5    string `json:"md5,omitempty"`
+	} `json:"checksums,omitempty"`
+}
+
 type FolderInfo struct {
 	Uri          string               `json:"uri,omitempty"`
 	Repo         string               `json:"repo,omitempty"`
