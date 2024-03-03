@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
 	"net/url"
 )
 
@@ -159,8 +160,12 @@ func (rbs *ReleaseBundlesService) getExportedReleaseBundleStatus(rlExportParams 
 		reqBody:     RbExportBody{*rlExportParams},
 		queryParams: queryParams,
 	}
+	operationExtraParams := operationParams{
+		httpMethod:  http.MethodGet,
+		contentType: "application/json",
+	}
 	log.Debug("Getting Release Bundle Export status...")
-	respBody, err := rbs.doGetOperation(operation)
+	respBody, err := rbs.doOperation(operation, operationExtraParams)
 	if err != nil {
 		return
 	}
