@@ -41,7 +41,7 @@ type operationParams struct {
 	contentType string
 }
 
-func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation, operationParams ...operationParams) ([]byte, error) {
+func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation, operationParams ...operationParams) (body []byte, err error) {
 	httpMethod, contentType := setOperationVariables(operationParams)
 	queryParams := getProjectQueryParam(operation.getOperationParams().ProjectKey)
 	queryParams[async] = strconv.FormatBool(operation.getOperationParams().Async)
@@ -55,12 +55,12 @@ func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation, 
 	rtUtils.SetContentType(contentType, &httpClientDetails.Headers)
 
 	var resp *http.Response
-	var body []byte
 	switch httpMethod {
 	case http.MethodGet:
 		resp, body, _, err = rbs.client.SendGet(requestFullUrl, false, &httpClientDetails)
 	case http.MethodPost:
-		content, err := json.Marshal(operation.getRequestBody())
+		var content []byte
+		content, err = json.Marshal(operation.getRequestBody())
 		if err != nil {
 			return []byte{}, errorutils.CheckError(err)
 		}
