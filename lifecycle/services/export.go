@@ -96,7 +96,7 @@ func (exp *exportOperation) getSigningKeyName() string {
 	return ""
 }
 
-func (rbs *ReleaseBundlesService) ExportReleaseBundle(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (exportResponse *ReleaseBundleExportedStatusResponse, err error) {
+func (rbs *ReleaseBundlesService) ExportReleaseBundle(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (exportResponse ReleaseBundleExportedStatusResponse, err error) {
 	// Check the current status
 	if exportResponse, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams); err != nil {
 		return
@@ -108,7 +108,7 @@ func (rbs *ReleaseBundlesService) ExportReleaseBundle(rlExportParams *ReleaseBun
 		}
 	}
 	// Wait for export to finish
-	if exportResponse.Status == ExportProcessing {
+	if exportResponse.Status != ExportCompleted {
 		if exportResponse, err = rbs.checkExportedStatusWithRetries(rlExportParams, queryParams); err != nil {
 			return
 		}
@@ -116,7 +116,7 @@ func (rbs *ReleaseBundlesService) ExportReleaseBundle(rlExportParams *ReleaseBun
 	return
 }
 
-func (rbs *ReleaseBundlesService) checkExportedStatusWithRetries(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (response *ReleaseBundleExportedStatusResponse, err error) {
+func (rbs *ReleaseBundlesService) checkExportedStatusWithRetries(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (response ReleaseBundleExportedStatusResponse, err error) {
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		response, err = rbs.getExportedReleaseBundleStatus(rlExportParams, queryParams)
 		if err != nil {
@@ -154,7 +154,7 @@ func (rbs *ReleaseBundlesService) triggerReleaseBundleExportProcess(rlExportPara
 	return
 }
 
-func (rbs *ReleaseBundlesService) getExportedReleaseBundleStatus(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (exportedStatusResponse *ReleaseBundleExportedStatusResponse, err error) {
+func (rbs *ReleaseBundlesService) getExportedReleaseBundleStatus(rlExportParams *ReleaseBundleExportParams, queryParams CommonOptionalQueryParams) (exportedStatusResponse ReleaseBundleExportedStatusResponse, err error) {
 	operation := &exportStatusOperation{
 		reqBody:     RbExportBody{*rlExportParams},
 		queryParams: queryParams,
