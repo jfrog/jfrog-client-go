@@ -49,8 +49,8 @@ const (
 	aborted           completionStatus = "ABORTED"
 
 	// API constants
-	uploadsApi              = "/api/v1/uploads/"
-	artifactoryNodeIdHeader = "X-Artifactory-Node-Id"
+	uploadsApi    = "/api/v1/uploads/"
+	routeToHeader = "X-JFrog-Route-To"
 
 	// Sizes and limits constants
 	MaxMultipartUploadFileSize       = SizeTiB * 5
@@ -312,7 +312,7 @@ func (mu *MultipartUpload) completeAndPollForStatus(logMsgPrefix string, complet
 
 func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1, nodeId string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) error {
 	multipartUploadClientWithNodeId := multipartUploadClient.Clone()
-	multipartUploadClientWithNodeId.Headers = map[string]string{artifactoryNodeIdHeader: nodeId}
+	multipartUploadClientWithNodeId.Headers = map[string]string{routeToHeader: nodeId}
 
 	lastMergeLog := time.Now()
 	pollingExecutor := &utils.RetryExecutor{
@@ -363,7 +363,7 @@ func (mu *MultipartUpload) completeMultipartUpload(logMsgPrefix, sha1 string, mu
 		return "", err
 	}
 	log.Debug("Artifactory response:", string(body), resp.Status)
-	return resp.Header.Get(artifactoryNodeIdHeader), errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
+	return resp.Header.Get(routeToHeader), errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
 }
 
 func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClientWithNodeId *httputils.HttpClientDetails) (status statusResponse, err error) {
