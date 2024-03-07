@@ -28,16 +28,6 @@ type ReleaseBundleExportedStatusResponse struct {
 	RelativeUrl string           `json:"relative_download_url,omitempty"`
 	DownloadUrl string           `json:"download_url,omitempty"`
 }
-
-type ReleaseBundleExportParams struct {
-	ReleaseBundleDetails
-	Modifications `json:"modifications"`
-}
-
-type RbExportBody struct {
-	ReleaseBundleExportParams
-}
-
 type exportStatusOperation struct {
 	ReleaseBundleDetails
 	queryParams CommonOptionalQueryParams
