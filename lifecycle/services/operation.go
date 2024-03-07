@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -36,13 +35,7 @@ type ReleaseBundleOperation interface {
 	getSigningKeyName() string
 }
 
-type operationParams struct {
-	httpMethod  string
-	contentType string
-}
-
-func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation, operationParams ...operationParams) (body []byte, err error) {
-	httpMethod, contentType := setOperationVariables(operationParams)
+func (rbs *ReleaseBundlesService) doPostOperation(operation ReleaseBundleOperation) ([]byte, error) {
 	queryParams := getProjectQueryParam(operation.getOperationParams().ProjectKey)
 	queryParams[async] = strconv.FormatBool(operation.getOperationParams().Async)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
@@ -52,23 +45,13 @@ func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation, 
 
 	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
 	rtUtils.AddSigningKeyNameHeader(operation.getSigningKeyName(), &httpClientDetails.Headers)
-	rtUtils.SetContentType(contentType, &httpClientDetails.Headers)
+	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
 
-	var resp *http.Response
-	switch httpMethod {
-	case http.MethodGet:
-		resp, body, _, err = rbs.client.SendGet(requestFullUrl, false, &httpClientDetails)
-	case http.MethodPost:
-		var content []byte
-		content, err = json.Marshal(operation.getRequestBody())
-		if err != nil {
-			return []byte{}, errorutils.CheckError(err)
-		}
-		resp, body, err = rbs.client.SendPost(requestFullUrl, content, &httpClientDetails)
-	default:
-		return []byte{}, fmt.Errorf("unsupported HTTP method: %s", httpMethod)
+	content, err := json.Marshal(operation.getRequestBody())
+	if err != nil {
+		return []byte{}, errorutils.CheckError(err)
 	}
-
+	resp, body, err := rbs.client.SendPost(requestFullUrl, content, &httpClientDetails)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -81,21 +64,35 @@ func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation, 
 		return body, nil
 	}
 
-	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
+	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
-func setOperationVariables(operationParams []operationParams) (string, string) {
-	var httpMethod string
-	var contentType string
-	if len(operationParams) > 0 {
-		httpMethod = operationParams[0].httpMethod
-		contentType = operationParams[0].contentType
-	} else {
-		// Set default values
-		httpMethod = http.MethodPost
-		contentType = "application/json"
+func (rbs *ReleaseBundlesService) doGetOperation(operation ReleaseBundleOperation) ([]byte, error) {
+	queryParams := getProjectQueryParam(operation.getOperationParams().ProjectKey)
+	queryParams[async] = strconv.FormatBool(operation.getOperationParams().Async)
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
+	if err != nil {
+		return []byte{}, err
 	}
-	return httpMethod, contentType
+
+	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
+	rtUtils.AddSigningKeyNameHeader(operation.getSigningKeyName(), &httpClientDetails.Headers)
+	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
+
+	resp, body, _, err := rbs.client.SendGet(requestFullUrl, false, &httpClientDetails)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	if !operation.getOperationParams().Async {
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
+			return []byte{}, err
+		}
+		log.Info(operation.getOperationSuccessfulMsg())
+		return body, nil
+	}
+
+	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
 func getProjectQueryParam(projectKey string) map[string]string {

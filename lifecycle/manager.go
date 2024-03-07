@@ -108,7 +108,7 @@ func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(params distributi
 	return rbService.RemoteDeleteReleaseBundle(params, dryRun)
 }
 
-func (lcs *LifecycleServicesManager) ExportReleaseBundle(releaseBundleExportParams *lifecycle.ReleaseBundleExportParams, queryParams lifecycle.CommonOptionalQueryParams) (exportResponse lifecycle.ReleaseBundleExportedStatusResponse, err error) {
+func (lcs *LifecycleServicesManager) ExportReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, modifications lifecycle.Modifications, queryParams lifecycle.CommonOptionalQueryParams) (exportResponse lifecycle.ReleaseBundleExportedStatusResponse, err error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.ExportReleaseBundle(releaseBundleExportParams, queryParams)
+	return rbService.ExportReleaseBundle(rbDetails, modifications, queryParams)
 }

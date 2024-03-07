@@ -47,7 +47,7 @@ func (rbs *ReleaseBundlesService) CreateFromArtifacts(rbDetails ReleaseBundleDet
 		params:         params,
 		signingKeyName: signingKeyName,
 	}
-	_, err := rbs.doOperation(&operation)
+	_, err := rbs.doPostOperation(&operation)
 	return err
 }
 
@@ -60,7 +60,7 @@ func (rbs *ReleaseBundlesService) CreateFromBuilds(rbDetails ReleaseBundleDetail
 		params:         params,
 		signingKeyName: signingKeyName,
 	}
-	_, err := rbs.doOperation(&operation)
+	_, err := rbs.doPostOperation(&operation)
 	return err
 }
 
@@ -73,7 +73,7 @@ func (rbs *ReleaseBundlesService) CreateFromBundles(rbDetails ReleaseBundleDetai
 		params:         params,
 		signingKeyName: signingKeyName,
 	}
-	_, err := rbs.doOperation(&operation)
+	_, err := rbs.doPostOperation(&operation)
 	return err
 }
 
