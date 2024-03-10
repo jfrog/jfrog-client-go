@@ -208,6 +208,7 @@
       - [Get Release Bundle Creation Status](#get-release-bundle-creation-status)
       - [Get Release Bundle Promotion Status](#get-release-bundle-promotion-status)
       - [Distribute Release Bundle](#distribute-release-bundle)
+      - [Export Release Bundle](#export-release-bundle)
       - [Delete Release Bundle](#delete-release-bundle)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
 
@@ -2542,6 +2543,25 @@ dsParams := DistributeReleaseBundleParams{
 
 resp, err := serviceManager.DistributeReleaseBundle(rbDetails, dsParams)
 ```
+
+#### Export Release Bundle Archive
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+// Specifies the path mapping for the artifacts
+// in the form of input and output regular expressions.
+// These expressions define where the artifacts are located
+// and where they should be exported.
+modifictions:= []utils.PathMapping{{
+            Input:  "(.*)/(.*)",
+            Output: "$1/mapping/$2",
+}}
+// Export & Download
+res,err:= serviceManager.ExportReleaseBundle(rbDetails, modifications, queryParams)
+```
+
 
 #### Delete Release Bundle
 
