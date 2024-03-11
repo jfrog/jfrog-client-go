@@ -49,8 +49,9 @@ const (
 	aborted           completionStatus = "ABORTED"
 
 	// API constants
-	uploadsApi    = "/api/v1/uploads/"
-	routeToHeader = "X-JFrog-Route-To"
+	uploadsApi        = "/api/v1/uploads/"
+	routeToHeader     = "X-JFrog-Route-To"
+	artifactoryNodeId = "X-Artifactory-Node-Id"
 
 	// Sizes and limits constants
 	MaxMultipartUploadFileSize       = SizeTiB * 5
@@ -363,7 +364,7 @@ func (mu *MultipartUpload) completeMultipartUpload(logMsgPrefix, sha1 string, mu
 		return "", err
 	}
 	log.Debug("Artifactory response:", string(body), resp.Status)
-	return resp.Header.Get(routeToHeader), errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
+	return resp.Header.Get(artifactoryNodeId), errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
 }
 
 func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClientWithNodeId *httputils.HttpClientDetails) (status statusResponse, err error) {
@@ -426,7 +427,7 @@ func parseMultipartUploadStatus(status statusResponse) (shouldKeepPolling, shoul
 		return true, false, nil
 	case retryableError:
 		// Retryable error was received - stop polling and rerun the /complete API again
-		log.Warn("received error upon multipart upload completion process: '%s', retrying...", status.Error)
+		log.Warn(fmt.Printf("received error upon multipart upload completion process: '%s', retrying...", status.Error))
 		return false, true, nil
 	case finished, aborted:
 		// Upload finished or aborted
