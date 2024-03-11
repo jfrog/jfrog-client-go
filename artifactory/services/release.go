@@ -55,7 +55,7 @@ func (rs *ReleaseService) ImportReleaseBundle(filePath string) (err error) {
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
 
 	// TODO replace URL when artifactory bug is fixed
-	//url := rs.ArtDetails.GetUrl() + importRestApiEndpoint
+	// url := rs.ArtDetails.GetUrl() + importRestApiEndpoint
 	tempUrl := strings.TrimSuffix(rs.ArtDetails.GetUrl(), "/artifactory/") + "/" + tempImportRestApiEndpoint
 
 	utils.SetContentType(octetStream, &httpClientsDetails.Headers)
