@@ -605,3 +605,8 @@ func (sm *ArtifactoryServicesManagerImp) CalculateStorageInfo() error {
 	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
 	return storageService.StorageInfoRefresh()
 }
+
+func (sm *ArtifactoryServicesManagerImp) ReleaseBundleImport(filePath string) error {
+	releaseService := services.NewReleaseService(sm.config.GetServiceDetails(), sm.client)
+	return releaseService.ImportReleaseBundle(filePath)
+}

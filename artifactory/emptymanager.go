@@ -105,6 +105,7 @@ type ArtifactoryServicesManager interface {
 	FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error)
 	GetStorageInfo() (*utils.StorageInfo, error)
 	CalculateStorageInfo() error
+	ReleaseBundleImport(string) error
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -462,6 +463,10 @@ func (esm *EmptyArtifactoryServicesManager) GetStorageInfo() (*utils.StorageInfo
 }
 
 func (esm *EmptyArtifactoryServicesManager) CalculateStorageInfo() error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) ReleaseBundleImport(string) error {
 	panic("Failed: Method is not implemented")
 }
 
