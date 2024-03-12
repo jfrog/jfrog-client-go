@@ -106,7 +106,7 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 			}
 			log.Info(logMsgPrefix+"Deleting", resultItem.GetItemRelativePath())
 			if ds.DryRun {
-				// Mock delete count
+				// Mock success count on dry run
 				result.SuccessCount[threadId]++
 				return nil
 			}
