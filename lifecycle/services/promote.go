@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"path"
 	"strconv"
@@ -111,7 +112,7 @@ func buildGetPromotionsQueryParams(optionalQueryParams GetPromotionsOptionalQuer
 }
 
 func (rbs *ReleaseBundlesService) GetReleaseBundleVersionPromotions(rbDetails ReleaseBundleDetails, optionalQueryParams GetPromotionsOptionalQueryParams) (response RbPromotionsResponse, err error) {
-	restApi := path.Join(promotionBaseApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+	restApi := GetGetReleaseBundleVersionPromotionsApi(rbDetails)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetPromotionsQueryParams(optionalQueryParams))
 	if err != nil {
 		return
@@ -121,11 +122,16 @@ func (rbs *ReleaseBundlesService) GetReleaseBundleVersionPromotions(rbDetails Re
 	if err != nil {
 		return
 	}
+	log.Debug("Artifactory response:", resp.Status)
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return
 	}
 	err = errorutils.CheckError(json.Unmarshal(body, &response))
 	return
+}
+
+func GetGetReleaseBundleVersionPromotionsApi(rbDetails ReleaseBundleDetails) string {
+	return path.Join(promotionBaseApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 
 type RbPromotionParams struct {

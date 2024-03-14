@@ -60,7 +60,7 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 		return errorutils.CheckError(err)
 	}
 
-	restApi := path.Join(distributionBaseApi, remoteDeleteEndpoint, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
 	if err != nil {
 		return err
@@ -73,6 +73,7 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 		return err
 	}
 
+	log.Debug("Artifactory response:", resp.Status)
 	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
 	if err != nil || params.Async || params.DryRun {
 		return err
@@ -81,9 +82,13 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	return rbs.waitForRemoteDeletion(rbDetails, params)
 }
 
+func GetRemoteDeleteReleaseBundleApi(rbDetails ReleaseBundleDetails) string {
+	return path.Join(distributionBaseApi, remoteDeleteEndpoint, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+}
+
 func (rbs *ReleaseBundlesService) waitForRemoteDeletion(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams) error {
 	maxWaitTime := defaultMaxWait
-	if params.MaxWaitMinutes > 1 {
+	if params.MaxWaitMinutes > 0 {
 		maxWaitTime = time.Duration(params.MaxWaitMinutes) * time.Minute
 	}
 

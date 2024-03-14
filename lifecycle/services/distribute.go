@@ -8,6 +8,7 @@ import (
 	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"path"
 )
@@ -109,7 +110,7 @@ type PathMapping struct {
 }
 
 func (rbs *ReleaseBundlesService) getReleaseBundleDistributions(rbDetails ReleaseBundleDetails, projectKey string) (distributionsResp GetDistributionsResponse, body []byte, err error) {
-	restApi := path.Join(distributionBaseApi, trackers, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+	restApi := GetReleaseBundleDistributionsApi(rbDetails)
 	requestFullUrl, err := clientUtils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, getProjectQueryParam(projectKey))
 	if err != nil {
 		return
@@ -119,11 +120,16 @@ func (rbs *ReleaseBundlesService) getReleaseBundleDistributions(rbDetails Releas
 	if err != nil {
 		return
 	}
+	log.Debug("Artifactory response:", resp.Status)
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted, http.StatusOK); err != nil {
 		return
 	}
 	err = errorutils.CheckError(json.Unmarshal(body, &distributionsResp))
 	return
+}
+
+func GetReleaseBundleDistributionsApi(rbDetails ReleaseBundleDetails) string {
+	return path.Join(distributionBaseApi, trackers, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 
 type GetDistributionsResponse []struct {
