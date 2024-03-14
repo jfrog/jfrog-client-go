@@ -21,8 +21,8 @@ type DistributeReleaseBundleService struct {
 	Sync             bool
 	MaxWaitMinutes   int
 	DistributeParams distribution.DistributionParams
+	ProjectKey       string
 	Modifications
-	ProjectKey string
 }
 
 type DistributeReleaseBundleParams struct {
