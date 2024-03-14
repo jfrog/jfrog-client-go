@@ -187,7 +187,7 @@ func TestCompleteMultipartUpload(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("sha1=%s", sha1), r.URL.RawQuery)
 
 		// Add the "X-Artifactory-Node-Id" header to the response
-		w.Header().Add(artifactoryNodeIdHeader, nodeId)
+		w.Header().Add(artifactoryNodeId, nodeId)
 
 		// Send response 202 Accepted
 		w.WriteHeader(http.StatusAccepted)
@@ -211,8 +211,8 @@ func TestStatus(t *testing.T) {
 		// Check URL
 		assert.Equal(t, "/api/v1/uploads/status", r.URL.Path)
 
-		// Check "X-Artifactory-Node-Id" header
-		assert.Equal(t, nodeId, r.Header.Get(artifactoryNodeIdHeader))
+		// Check "X-JFrog-Route-To" header
+		assert.Equal(t, nodeId, r.Header.Get(routeToHeader))
 
 		// Send response 200 OK
 		w.WriteHeader(http.StatusOK)
@@ -227,10 +227,35 @@ func TestStatus(t *testing.T) {
 	defer cleanUp()
 
 	// Execute status
-	clientDetails := &httputils.HttpClientDetails{Headers: map[string]string{artifactoryNodeIdHeader: nodeId}}
+	clientDetails := &httputils.HttpClientDetails{Headers: map[string]string{routeToHeader: nodeId}}
 	status, err := multipartUpload.status("", clientDetails)
 	assert.NoError(t, err)
 	assert.Equal(t, statusResponse{Status: finished, Progress: utils.Pointer(100)}, status)
+}
+
+func TestStatusServiceUnavailable(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check method
+		assert.Equal(t, http.MethodPost, r.Method)
+
+		// Check URL
+		assert.Equal(t, "/api/v1/uploads/status", r.URL.Path)
+
+		// Send response 503 Service unavailable
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, err := w.Write([]byte("Service unavailable"))
+		assert.NoError(t, err)
+	})
+
+	// Create mock multipart upload with server
+	multipartUpload, cleanUp := createMockMultipartUpload(t, handler)
+	defer cleanUp()
+
+	// Execute status
+	clientDetails := &httputils.HttpClientDetails{Headers: map[string]string{routeToHeader: nodeId}}
+	status, err := multipartUpload.status("", clientDetails)
+	assert.NoError(t, err)
+	assert.Equal(t, statusResponse{Status: retryableError, Error: "The Artifactory node ID 'nodeId' is unavailable."}, status)
 }
 
 func TestAbort(t *testing.T) {
