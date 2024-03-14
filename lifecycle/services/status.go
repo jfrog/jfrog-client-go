@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	recordsApi               = "records"
 	statusesApi              = "statuses"
 	trackersApi              = "trackers"
 	defaultMaxWait           = 60 * time.Minute
@@ -43,6 +44,10 @@ func (rbs *ReleaseBundlesService) GetReleaseBundleCreationStatus(rbDetails Relea
 
 func GetReleaseBundleCreationStatusRestApi(rbDetails ReleaseBundleDetails) string {
 	return path.Join(releaseBundleBaseApi, statusesApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+}
+
+func GetReleaseBundleSpecificationRestApi(rbDetails ReleaseBundleDetails) string {
+	return path.Join(releaseBundleBaseApi, recordsApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 
 func (rbs *ReleaseBundlesService) GetReleaseBundlePromotionStatus(rbDetails ReleaseBundleDetails, projectKey, createdMillis string, sync bool) (ReleaseBundleStatusResponse, error) {
@@ -72,6 +77,24 @@ func (rbs *ReleaseBundlesService) getReleaseBundleStatus(restApi string, project
 		return
 	}
 	err = errorutils.CheckError(json.Unmarshal(body, &statusResp))
+	return
+}
+
+func (rbs *ReleaseBundlesService) GetReleaseBundleSpecification(rbDetails ReleaseBundleDetails) (specResp ReleaseBundleSpecResponse, err error) {
+	restApi := GetReleaseBundleSpecificationRestApi(rbDetails)
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
+	if err != nil {
+		return
+	}
+	httpClientsDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
+	resp, body, _, err := rbs.client.SendGet(requestFullUrl, true, &httpClientsDetails)
+	if err != nil {
+		return
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return
+	}
+	err = errorutils.CheckError(json.Unmarshal(body, &specResp))
 	return
 }
 
@@ -141,7 +164,7 @@ func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletio
 		}
 
 		switch statusResponse.Status {
-		case dsServices.NotDistributed, dsServices.InProgress:
+		case dsServices.NotDistributed, dsServices.InProgress, dsServices.InQueue:
 			return false, nil, nil
 		case dsServices.Failed, dsServices.Completed:
 			return true, responseBody, nil
@@ -178,6 +201,23 @@ func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletio
 type ReleaseBundleStatusResponse struct {
 	Status   RbStatus  `json:"status,omitempty"`
 	Messages []Message `json:"messages,omitempty"`
+}
+
+type ReleaseBundleSpecResponse struct {
+	CreatedBy     string    `json:"created_by,omitempty"`
+	Created       time.Time `json:"created"`
+	CreatedMillis int       `json:"created_millis,omitempty"`
+	Artifacts     []struct {
+		Path                string `json:"path,omitempty"`
+		Checksum            string `json:"checksum,omitempty"`
+		SourceRepositoryKey string `json:"source_repository_key,omitempty"`
+		PackageType         string `json:"package_type,omitempty"`
+		Size                int    `json:"size,omitempty"`
+		Properties          []struct {
+			Key    string   `json:"key"`
+			Values []string `json:"values"`
+		} `json:"properties,omitempty"`
+	} `json:"artifacts,omitempty"`
 }
 
 type Message struct {

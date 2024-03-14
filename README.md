@@ -96,6 +96,7 @@
       - [Deleting a Group](#deleting-a-group)
       - [Generating Full System Export](#generating-full-system-export)
       - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
+      - [Getting Info of a File in Artifactory](#getting-info-of-a-file-in-artifactory)
       - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
       - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
       - [Triggering Storage Info Recalculation in Artifactory](#triggering-storage-info-recalculation-in-artifactory)
@@ -1353,6 +1354,12 @@ err := serviceManager.Export(params)
 serviceManager.FolderInfo("repo/path/")
 ```
 
+#### Getting Info of a File in Artifactory
+
+```go
+serviceManager.FileInfo("repo/path/file")
+```
+
 #### Getting a listing of files and folders within a folder in Artifactory
 
 ```go
@@ -2505,6 +2512,13 @@ sync := true
 // Optional:
 projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
+```
+
+#### Get Release Bundle Specification
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+resp, err := serviceManager.GetReleaseBundleSpecification(rbDetails)
 ```
 
 #### Distribute Release Bundle
