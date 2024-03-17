@@ -31,6 +31,7 @@ type RbStatus string
 const (
 	Completed  RbStatus = "COMPLETED"
 	Processing RbStatus = "PROCESSING"
+	InProgress RbStatus = "IN_PROGRESS"
 	Pending    RbStatus = "PENDING"
 	Failed     RbStatus = "FAILED"
 	Rejected   RbStatus = "REJECTED"
