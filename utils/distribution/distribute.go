@@ -21,13 +21,13 @@ type DistributeReleaseBundleExecutor interface {
 	GetProjectKey() string
 }
 
-func CreateDistributeV1Body(distributeParams DistributionParams, dryRun, isAutoCreateRepo bool) ReleaseBundleDistributeV1Body {
+func CreateDistributeV1Body(distCommonParams []*DistributionCommonParams, dryRun, isAutoCreateRepo bool) ReleaseBundleDistributeV1Body {
 	var distributionRules []DistributionRulesBody
-	for _, spec := range distributeParams.DistributionRules {
+	for i := range distCommonParams {
 		distributionRule := DistributionRulesBody{
-			SiteName:     spec.GetSiteName(),
-			CityName:     spec.GetCityName(),
-			CountryCodes: spec.GetCountryCodes(),
+			SiteName:     distCommonParams[i].GetSiteName(),
+			CityName:     distCommonParams[i].GetCityName(),
+			CountryCodes: distCommonParams[i].GetCountryCodes(),
 		}
 		distributionRules = append(distributionRules, distributionRule)
 	}

@@ -96,6 +96,7 @@
       - [Deleting a Group](#deleting-a-group)
       - [Generating Full System Export](#generating-full-system-export)
       - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
+      - [Getting Info of a File in Artifactory](#getting-info-of-a-file-in-artifactory)
       - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
       - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
       - [Triggering Storage Info Recalculation in Artifactory](#triggering-storage-info-recalculation-in-artifactory)
@@ -207,8 +208,10 @@
       - [Promoting a Release Bundle](#promoting-a-release-bundle)
       - [Get Release Bundle Creation Status](#get-release-bundle-creation-status)
       - [Get Release Bundle Promotion Status](#get-release-bundle-promotion-status)
+      - [Get Release Bundle Promotions](#get-release-bundle-promotions)
       - [Distribute Release Bundle](#distribute-release-bundle)
-      - [Delete Release Bundle](#delete-release-bundle)
+      - [Delete Release Bundle Version](#delete-release-bundle-version)
+      - [Delete Release Bundle Version Promotion](#delete-release-bundle-version-promotion)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
 
 ## General
@@ -1351,6 +1354,12 @@ err := serviceManager.Export(params)
 
 ```go
 serviceManager.FolderInfo("repo/path/")
+```
+
+#### Getting Info of a File in Artifactory
+
+```go
+serviceManager.FileInfo("repo/path/file")
 ```
 
 #### Getting a listing of files and folders within a folder in Artifactory
@@ -2507,6 +2516,24 @@ projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 ```
 
+#### Get Release Bundle Promotions
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
+optionalQueryParams := lifecycle.GetPromotionsOptionalQueryParams{
+    Include:    "MSG",
+    Offset:     1,
+    Limit:      10,
+    FilterBy:   "DEV",
+    OrderBy:    "created",
+    OrderAsc:   true,
+    ProjectKey: "default",
+}
+
+resp, err := serviceManager.GetReleaseBundleVersionPromotions(rbDetails, optionalQueryParams)
+```
+
 #### Get Release Bundle Specification
 
 ```go
@@ -2543,7 +2570,7 @@ dsParams := DistributeReleaseBundleParams{
 resp, err := serviceManager.DistributeReleaseBundle(rbDetails, dsParams)
 ```
 
-#### Delete Release Bundle
+#### Delete Release Bundle Version
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
@@ -2551,7 +2578,20 @@ queryParams := CommonOptionalQueryParams{}
 queryParams.ProjectKey = "project"
 queryParams.Async = true
 
-resp, err := serviceManager.DeleteReleaseBundle(rbDetails, queryParams)
+resp, err := serviceManager.DeleteReleaseBundleVersion(rbDetails, queryParams)
+```
+
+#### Delete Release Bundle Version Promotion
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+created := "1708612052952"
+resp, err := serviceManager.DeleteReleaseBundleVersionPromotion(rbDetails, queryParams, created)
 ```
 
 #### Remote Delete Release Bundle
