@@ -113,7 +113,7 @@ type PathMapping struct {
 
 func (rbs *ReleaseBundlesService) getReleaseBundleDistributions(rbDetails ReleaseBundleDetails, projectKey string) (distributionsResp GetDistributionsResponse, body []byte, err error) {
 	restApi := GetReleaseBundleDistributionsApi(rbDetails)
-	requestFullUrl, err := clientUtils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, getProjectQueryParam(projectKey))
+	requestFullUrl, err := clientUtils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, distribution.GetProjectQueryParam(projectKey))
 	if err != nil {
 		return
 	}
