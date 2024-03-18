@@ -79,7 +79,7 @@ func (sm *DistributionServicesManager) DistributeReleaseBundleSync(params distri
 	return distributeBundleService.Distribute()
 }
 
-func (sm *DistributionServicesManager) GetDistributionStatus(params services.DistributionStatusParams) (*[]services.DistributionStatusResponse, error) {
+func (sm *DistributionServicesManager) GetDistributionStatus(params services.DistributionStatusParams) (*[]distribution.DistributionStatusResponse, error) {
 	distributeBundleService := services.NewDistributionStatusService(sm.client)
 	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
 	return distributeBundleService.GetStatus(params)

@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-type ExecutionHandlerFunc func() (bool, error)
+type ExecutionHandlerFunc func() (shouldRetry bool, err error)
 
 type RetryExecutor struct {
 	// The context

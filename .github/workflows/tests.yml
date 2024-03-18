@@ -83,13 +83,13 @@ jobs:
       - name: artifactory tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
-  JFrog-Client-Go-Ds-Xr-Tests:
+  JFrog-Client-Go-Ds-Xr-MPU-Tests:
     needs: Pretest
     name: ${{ matrix.suite }} ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        suite: [ distribution, xray ]
+        suite: [ distribution, xray, mpu ]
         os: [ ubuntu, windows, macos ]
     runs-on: ${{ matrix.os }}-latest
     steps:

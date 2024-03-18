@@ -96,6 +96,7 @@
       - [Deleting a Group](#deleting-a-group)
       - [Generating Full System Export](#generating-full-system-export)
       - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
+      - [Getting Info of a File in Artifactory](#getting-info-of-a-file-in-artifactory)
       - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
       - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
       - [Triggering Storage Info Recalculation in Artifactory](#triggering-storage-info-recalculation-in-artifactory)
@@ -202,13 +203,17 @@
       - [Creating Lifecycle Service Config](#creating-lifeCycle-service-config)
       - [Creating New Lifecycle Service Manager](#creating-new-lifeCycle-service-manager)
     - [Using Lifecycle Services](#using-lifeCycle-services)
+      - [Creating a Release Bundle From AQL](#creating-a-release-bundle-from-aql)
+      - [Creating a Release Bundle From Artifacts](#creating-a-release-bundle-from-artifacts)
       - [Creating a Release Bundle From Published Builds](#creating-a-release-bundle-from-published-builds)
       - [Creating a Release Bundle From Release Bundles](#creating-a-release-bundle-from-release-bundles)
       - [Promoting a Release Bundle](#promoting-a-release-bundle)
       - [Get Release Bundle Creation Status](#get-release-bundle-creation-status)
       - [Get Release Bundle Promotion Status](#get-release-bundle-promotion-status)
+      - [Get Release Bundle Promotions](#get-release-bundle-promotions)
       - [Distribute Release Bundle](#distribute-release-bundle)
-      - [Delete Release Bundle](#delete-release-bundle)
+      - [Delete Release Bundle Version](#delete-release-bundle-version)
+      - [Delete Release Bundle Version Promotion](#delete-release-bundle-version-promotion)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
 
 ## General
@@ -254,14 +259,15 @@ content of this repository is deleted.
 
 #### Test Types
 
-| Type                 | Description        | Prerequisites                 |
-| -------------------- | ------------------ | ----------------------------- |
-| `-test.artifactory`  | Artifactory tests  | Artifactory Pro               |
-| `-test.distribution` | Distribution tests | Artifactory with Distribution |
-| `-test.xray`         | Xray tests         | Artifactory with Xray         |
-| `-test.pipelines`    | Pipelines tests    | JFrog Pipelines               |
-| `-test.access`       | Access tests       | Artifactory Pro               |
-| `-test.repositories` | Access tests       | Artifactory Pro               |
+| Type                 | Description            | Prerequisites                   |
+| -------------------- | ---------------------- | ------------------------------- |
+| `-test.artifactory`  | Artifactory tests      | Artifactory Pro                 |
+| `-test.distribution` | Distribution tests     | Artifactory with Distribution   |
+| `-test.xray`         | Xray tests             | Artifactory with Xray           |
+| `-test.pipelines`    | Pipelines tests        | JFrog Pipelines                 |
+| `-test.access`       | Access tests           | Artifactory Pro                 |
+| `-test.repositories` | Repositories tests     | Artifactory Pro                 |
+| `-test.mpu`          | Multipart upload tests | Artifactory Pro with S3 storage |
 
 #### Connection Details
 
@@ -400,6 +406,12 @@ params.Symlink = false
 params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
+// The maximum number of parts that can be concurrently uploaded per file during a multi-part upload. Set to 0 to disable multi-part upload.
+// SplitCount default value: 5
+params.SplitCount = 10
+// The minimum file size in MiB required to attempt a multi-part upload.
+// MinSplitSize default value: 200
+params.MinSplitSize = 100
 // The min file size in bytes for "checksum deploy".
 // "Checksum deploy" is the action of calculating the file checksum locally, before
 // the upload, and skipping the actual file transfer if the file already
@@ -1346,6 +1358,12 @@ err := serviceManager.Export(params)
 serviceManager.FolderInfo("repo/path/")
 ```
 
+#### Getting Info of a File in Artifactory
+
+```go
+serviceManager.FileInfo("repo/path/file")
+```
+
 #### Getting a listing of files and folders within a folder in Artifactory
 
 ```go
@@ -2230,7 +2248,6 @@ xscVersion, err := scanService.IsXscEnabled()
 multiScanId, err := scanService.SendScanGitInfoContext(details)
 ```
 
-
 ## Pipelines APIs
 
 ### Creating Pipelines Service Manager
@@ -2419,6 +2436,42 @@ lifecycleManager, err := lifecycle.New(serviceConfig)
 
 ### Using Lifecycle Services
 
+#### Creating a Release Bundle From AQL
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+aqlQuery := `items.find({"repo": "my-repo","path": ".","name": "a2.in"})`
+serviceManager.CreateReleaseBundleFromAql(rbDetails, queryParams, signingKeyName, aqlQuery)
+```
+
+#### Creating a Release Bundle From Artifacts
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+artifacts := CreateFromArtifacts{Artifacts: []ArtifactSource{
+	{
+        Path:   "repo/path/file",
+        Sha256: "3e3deb6628658a48cf0d280a2210211f9d977ec2e10a4619b95d5fb85cb10450",
+	},
+}}
+
+serviceManager.CreateReleaseBundleFromArtifacts(rbDetails, queryParams, signingKeyName, artifacts)
+```
+
 #### Creating a Release Bundle From Published Builds
 
 ```go
@@ -2501,28 +2554,61 @@ projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 ```
 
+#### Get Release Bundle Promotions
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
+optionalQueryParams := lifecycle.GetPromotionsOptionalQueryParams{
+    Include:    "MSG",
+    Offset:     1,
+    Limit:      10,
+    FilterBy:   "DEV",
+    OrderBy:    "created",
+    OrderAsc:   true,
+    ProjectKey: "default",
+}
+
+resp, err := serviceManager.GetReleaseBundleVersionPromotions(rbDetails, optionalQueryParams)
+```
+
+#### Get Release Bundle Specification
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+resp, err := serviceManager.GetReleaseBundleSpecification(rbDetails)
+```
+
 #### Distribute Release Bundle
 
 ```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+pathMappings := []services.PathMapping{
+    {
+        Pattern: "(*)/(*)",
+        Target:  "{1}/target/{2}",
+    },
+}
+
 rules := &distribution.DistributionCommonParams{
-SiteName:     "*",
-CityName:     "*",
-CountryCodes: []string{"*"},
+    SiteName:     "*",
+    CityName:     "*",
+    CountryCodes: []string{"*"},
 }
-params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
-params.DistributionRules = append(params.DistributionRules, rules)
-
-autoCreateRepo := true
-
-pathMapping := services.PathMapping{
-    Pattern: "(*)/(*)",
-    Target:  "{1}/target/{2}",
+dsParams := DistributeReleaseBundleParams{
+    Sync:           true,
+    AutoCreateRepo: true,
+    MaxWaitMinutes: 60,
+    PathMappings:   pathMappings,
+    DistributionRules: []*dmUtils.DistributionCommonParams{
+        rules,
+    },
 }
 
-resp, err := serviceManager.DistributeReleaseBundle(params, autoCreateRepo, pathMapping)
+resp, err := serviceManager.DistributeReleaseBundle(rbDetails, dsParams)
 ```
 
-#### Delete Release Bundle
+#### Delete Release Bundle Version
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
@@ -2530,16 +2616,29 @@ queryParams := CommonOptionalQueryParams{}
 queryParams.ProjectKey = "project"
 queryParams.Async = true
 
-resp, err := serviceManager.DeleteReleaseBundle(rbDetails, queryParams)
+resp, err := serviceManager.DeleteReleaseBundleVersion(rbDetails, queryParams)
+```
+
+#### Delete Release Bundle Version Promotion
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+created := "1708612052952"
+resp, err := serviceManager.DeleteReleaseBundleVersionPromotion(rbDetails, queryParams, created)
 ```
 
 #### Remote Delete Release Bundle
 
 ```go
 rules := &distribution.DistributionCommonParams{
-SiteName:     "*",
-CityName:     "*",
-CountryCodes: []string{"*"},
+    SiteName:     "*",
+    CityName:     "*",
+    CountryCodes: []string{"*"},
 }
 params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
 params.DistributionRules = append(params.DistributionRules, rules)

@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
@@ -36,7 +37,7 @@ type ReleaseBundleOperation interface {
 }
 
 func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation) ([]byte, error) {
-	queryParams := getProjectQueryParam(operation.getOperationParams().ProjectKey)
+	queryParams := distribution.GetProjectQueryParam(operation.getOperationParams().ProjectKey)
 	queryParams[async] = strconv.FormatBool(operation.getOperationParams().Async)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
 	if err != nil {
@@ -65,14 +66,6 @@ func (rbs *ReleaseBundlesService) doOperation(operation ReleaseBundleOperation) 
 	}
 
 	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
-}
-
-func getProjectQueryParam(projectKey string) map[string]string {
-	queryParams := make(map[string]string)
-	if projectKey != "" {
-		queryParams["project"] = projectKey
-	}
-	return queryParams
 }
 
 type ReleaseBundleDetails struct {

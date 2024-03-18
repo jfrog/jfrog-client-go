@@ -50,11 +50,15 @@ func (dr *DistributeReleaseBundleV1Service) GetRestApi(name, version string) str
 }
 
 func (dr *DistributeReleaseBundleV1Service) GetDistributeBody() any {
-	return distribution.CreateDistributeV1Body(dr.DistributeParams, dr.DryRun, dr.AutoCreateRepo)
+	return distribution.CreateDistributeV1Body(dr.DistributeParams.DistributionRules, dr.DryRun, dr.AutoCreateRepo)
 }
 
 func (dr *DistributeReleaseBundleV1Service) GetDistributionParams() distribution.DistributionParams {
 	return dr.DistributeParams
+}
+
+func (dr *DistributeReleaseBundleV1Service) GetProjectKey() string {
+	return ""
 }
 
 func NewDistributeReleaseBundleV1Service(client *jfroghttpclient.JfrogHttpClient) *DistributeReleaseBundleV1Service {
@@ -94,14 +98,14 @@ func (dr *DistributeReleaseBundleV1Service) waitForDistribution(distributeParams
 			if err != nil {
 				return false, errorutils.CheckError(err)
 			}
-			if (*response)[0].Status == Failed {
+			if (*response)[0].Status == distribution.Failed {
 				bytes, err := json.Marshal(response)
 				if err != nil {
 					return false, errorutils.CheckError(err)
 				}
 				return false, errorutils.CheckErrorf("Distribution failed: " + clientUtils.IndentJson(bytes))
 			}
-			if (*response)[0].Status == Completed {
+			if (*response)[0].Status == distribution.Completed {
 				log.Info("Distribution Completed!")
 				return false, nil
 			}
