@@ -27,7 +27,7 @@ func (ds *DistributionStatusService) GetDistDetails() auth.ServiceDetails {
 	return ds.DistDetails
 }
 
-func (ds *DistributionStatusService) GetStatus(distributionStatusParams DistributionStatusParams) (*[]DistributionStatusResponse, error) {
+func (ds *DistributionStatusService) GetStatus(distributionStatusParams DistributionStatusParams) (*[]distribution.DistributionStatusResponse, error) {
 	if err := ds.checkParameters(distributionStatusParams); err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (ds *DistributionStatusService) checkParameters(distributionStatusParams Di
 	return errorutils.CheckError(err)
 }
 
-func (ds *DistributionStatusService) execGetStatus(name, version, trackerId string) (*[]DistributionStatusResponse, error) {
+func (ds *DistributionStatusService) execGetStatus(name, version, trackerId string) (*[]distribution.DistributionStatusResponse, error) {
 	httpClientsDetails := ds.DistDetails.CreateHttpClientDetails()
 	url := ds.BuildUrlForGetStatus(ds.DistDetails.GetUrl(), name, version, trackerId)
 
@@ -58,7 +58,7 @@ func (ds *DistributionStatusService) execGetStatus(name, version, trackerId stri
 	}
 	log.Debug("Distribution response:", resp.Status)
 	log.Debug(utils.IndentJson(body))
-	var distributionStatusResponse []DistributionStatusResponse
+	var distributionStatusResponse []distribution.DistributionStatusResponse
 	stringBody := string(body)
 	if !strings.HasPrefix(stringBody, "[") {
 		stringBody = "[" + stringBody + "]"
@@ -91,50 +91,4 @@ type DistributionStatusParams struct {
 
 func NewDistributionStatusParams() DistributionStatusParams {
 	return DistributionStatusParams{}
-}
-
-type DistributionType string
-
-const (
-	Distribute                 DistributionType = "distribute"
-	DeleteReleaseBundleVersion DistributionType = "delete_release_bundle_version"
-)
-
-type DistributionStatus string
-
-const (
-	NotDistributed DistributionStatus = "Not distributed"
-	InProgress     DistributionStatus = "In progress"
-	InQueue        DistributionStatus = "In queue"
-	Completed      DistributionStatus = "Completed"
-	Failed         DistributionStatus = "Failed"
-)
-
-type DistributionStatusResponse struct {
-	Id                json.Number                          `json:"distribution_id"`
-	FriendlyId        json.Number                          `json:"distribution_friendly_id,omitempty"`
-	Type              DistributionType                     `json:"type,omitempty"`
-	Name              string                               `json:"release_bundle_name,omitempty"`
-	Version           string                               `json:"release_bundle_version,omitempty"`
-	Status            DistributionStatus                   `json:"status,omitempty"`
-	DistributionRules []distribution.DistributionRulesBody `json:"distribution_rules,omitempty"`
-	Sites             []DistributionSiteStatus             `json:"sites,omitempty"`
-}
-
-type DistributionSiteStatus struct {
-	Status            string            `json:"status,omitempty"`
-	Error             string            `json:"general_error,omitempty"`
-	TargetArtifactory TargetArtifactory `json:"target_artifactory,omitempty"`
-	TotalFiles        json.Number       `json:"total_files,omitempty"`
-	TotalBytes        json.Number       `json:"total_bytes,omitempty"`
-	DistributedBytes  json.Number       `json:"distributed_bytes,omitempty"`
-	DistributedFiles  json.Number       `json:"distributed_files,omitempty"`
-	FileErrors        []string          `json:"file_errors,omitempty"`
-	FilesInProgress   []string          `json:"files_in_progress,omitempty"`
-}
-
-type TargetArtifactory struct {
-	ServiceId string `json:"service_id"`
-	Name      string `json:"name"`
-	Type      string `json:"type"`
 }

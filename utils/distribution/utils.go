@@ -38,3 +38,11 @@ func CreatePathMappings(input, output string) []utils.PathMapping {
 		Output: output,
 	}}
 }
+
+func GetProjectQueryParam(projectKey string) map[string]string {
+	queryParams := make(map[string]string)
+	if projectKey != "" {
+		queryParams["project"] = projectKey
+	}
+	return queryParams
+}
