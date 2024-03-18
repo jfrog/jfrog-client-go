@@ -30,7 +30,7 @@ func (rbs *ReleaseBundlesService) DeleteReleaseBundleVersionPromotion(rbDetails 
 }
 
 func (rbs *ReleaseBundlesService) deleteReleaseBundle(params CommonOptionalQueryParams, restApi string) error {
-	queryParams := getProjectQueryParam(params.ProjectKey)
+	queryParams := distribution.GetProjectQueryParam(params.ProjectKey)
 	queryParams[async] = strconv.FormatBool(params.Async)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, queryParams)
 	if err != nil {

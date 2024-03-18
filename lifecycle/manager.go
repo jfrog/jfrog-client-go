@@ -103,11 +103,12 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	distributeBundleService.AutoCreateRepo = distributeParams.AutoCreateRepo
 	distributeBundleService.Sync = distributeParams.Sync
 	distributeBundleService.MaxWaitMinutes = distributeParams.MaxWaitMinutes
+	distributeBundleService.ProjectKey = distributeParams.ProjectKey
 
-	m := &distributeBundleService.Modifications.PathMappings
-	*m = []utils.PathMapping{}
+	mappings := &distributeBundleService.Modifications.PathMappings
+	*mappings = []utils.PathMapping{}
 	for _, pathMapping := range distributeParams.PathMappings {
-		*m = append(*m,
+		*mappings = append(*mappings,
 			distribution.CreatePathMappingsFromPatternAndTarget(pathMapping.Pattern, pathMapping.Target)...)
 	}
 	return distributeBundleService.Distribute()

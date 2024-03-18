@@ -311,7 +311,7 @@ func createSignDistributeDelete(t *testing.T) {
 	// Assert release bundle in "completed" status
 	response, err = testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
 	if assert.NoError(t, err) && assert.NotEmpty(t, *response) {
-		assert.Equal(t, services.Completed, (*response)[0].Status)
+		assert.Equal(t, distribution.Completed, (*response)[0].Status)
 	}
 }
 
@@ -357,7 +357,7 @@ func createSignSyncDistributeDelete(t *testing.T) {
 	}
 	response, err := testsBundleDistributionStatusService.GetStatus(distributionStatusParams)
 	if assert.NoError(t, err) && assert.NotEmpty(t, *response) {
-		assert.Equal(t, services.Completed, (*response)[0].Status)
+		assert.Equal(t, distribution.Completed, (*response)[0].Status)
 	}
 }
 
@@ -548,12 +548,12 @@ func waitForDistribution(t *testing.T, bundleName string) {
 			assert.Len(t, *response, 1)
 
 			switch (*response)[0].Status {
-			case services.Completed:
+			case distribution.Completed:
 				return
-			case services.Failed:
+			case distribution.Failed:
 				t.Error("Distribution failed for " + bundleName + "/" + bundleVersion)
 				return
-			case services.InProgress, services.NotDistributed:
+			case distribution.InProgress, distribution.NotDistributed:
 				// Wait
 			}
 			t.Log("Waiting for " + bundleName + "/" + bundleVersion + "...")

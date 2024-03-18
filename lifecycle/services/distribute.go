@@ -27,6 +27,7 @@ type DistributeReleaseBundleService struct {
 	Sync             bool
 	MaxWaitMinutes   int
 	DistributeParams distribution.DistributionParams
+	ProjectKey       string
 	Modifications
 }
 
@@ -36,6 +37,7 @@ type DistributeReleaseBundleParams struct {
 	MaxWaitMinutes    int
 	DistributionRules []*distribution.DistributionCommonParams
 	PathMappings      []PathMapping
+	ProjectKey        string
 }
 
 func (dr *DistributeReleaseBundleService) GetHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -58,10 +60,6 @@ func (dr *DistributeReleaseBundleService) GetMaxWaitMinutes() int {
 	return dr.MaxWaitMinutes
 }
 
-func (dr *DistributeReleaseBundleService) IsAutoCreateRepo() bool {
-	return dr.AutoCreateRepo
-}
-
 func (dr *DistributeReleaseBundleService) GetRestApi(name, version string) string {
 	return path.Join(distributionBaseApi, distribute, name, version)
 }
@@ -72,6 +70,10 @@ func (dr *DistributeReleaseBundleService) GetDistributeBody() any {
 
 func (dr *DistributeReleaseBundleService) GetDistributionParams() distribution.DistributionParams {
 	return dr.DistributeParams
+}
+
+func (dr *DistributeReleaseBundleService) GetProjectKey() string {
+	return dr.ProjectKey
 }
 
 func NewDistributeReleaseBundleService(client *jfroghttpclient.JfrogHttpClient) *DistributeReleaseBundleService {
@@ -111,7 +113,7 @@ type PathMapping struct {
 
 func (rbs *ReleaseBundlesService) getReleaseBundleDistributions(rbDetails ReleaseBundleDetails, projectKey string) (distributionsResp GetDistributionsResponse, body []byte, err error) {
 	restApi := GetReleaseBundleDistributionsApi(rbDetails)
-	requestFullUrl, err := clientUtils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, getProjectQueryParam(projectKey))
+	requestFullUrl, err := clientUtils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, distribution.GetProjectQueryParam(projectKey))
 	if err != nil {
 		return
 	}
