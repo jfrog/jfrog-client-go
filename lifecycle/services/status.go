@@ -12,8 +12,6 @@ import (
 	"net/http"
 	"path"
 	"time"
-
-	dsServices "github.com/jfrog/jfrog-client-go/distribution/services"
 )
 
 const (
@@ -31,6 +29,7 @@ type RbStatus string
 const (
 	Completed  RbStatus = "COMPLETED"
 	Processing RbStatus = "PROCESSING"
+	InProgress RbStatus = "IN_PROGRESS"
 	Pending    RbStatus = "PENDING"
 	Failed     RbStatus = "FAILED"
 	Rejected   RbStatus = "REJECTED"
@@ -63,7 +62,7 @@ func (rbs *ReleaseBundlesService) getReleaseBundleOperationStatus(restApi string
 }
 
 func (rbs *ReleaseBundlesService) getReleaseBundleStatus(restApi string, projectKey string) (statusResp ReleaseBundleStatusResponse, body []byte, err error) {
-	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, getProjectQueryParam(projectKey))
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, distribution.GetProjectQueryParam(projectKey))
 	if err != nil {
 		return
 	}
@@ -97,14 +96,14 @@ func (rbs *ReleaseBundlesService) GetReleaseBundleSpecification(rbDetails Releas
 	return
 }
 
-func (dbs *DistributeReleaseBundleService) getReleaseBundleDistributionStatus(distributeParams *distribution.DistributionParams, trackerId json.Number) (statusResp *dsServices.DistributionStatusResponse, body []byte, err error) {
+func (dr *DistributeReleaseBundleService) getReleaseBundleDistributionStatus(distributeParams *distribution.DistributionParams, trackerId json.Number) (statusResp *distribution.DistributionStatusResponse, body []byte, err error) {
 	restApi := path.Join(distributionBaseApi, trackersApi, distributeParams.Name, distributeParams.Version, trackerId.String())
-	requestFullUrl, err := utils.BuildUrl(dbs.LcDetails.GetUrl(), restApi, nil)
+	requestFullUrl, err := utils.BuildUrl(dr.LcDetails.GetUrl(), restApi, distribution.GetProjectQueryParam(dr.GetProjectKey()))
 	if err != nil {
 		return
 	}
-	httpClientsDetails := dbs.LcDetails.CreateHttpClientDetails()
-	resp, body, _, err := dbs.client.SendGet(requestFullUrl, true, &httpClientsDetails)
+	httpClientsDetails := dr.LcDetails.CreateHttpClientDetails()
+	resp, body, _, err := dr.client.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -150,22 +149,22 @@ func (rbs *ReleaseBundlesService) waitForRbOperationCompletion(restApi, projectK
 	return getStatusResponse(finalRespBody)
 }
 
-func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletion(distributeParams *distribution.DistributionParams, trackerId json.Number) error {
-	maxWait := time.Duration(dbs.GetMaxWaitMinutes()) * time.Minute
+func (dr *DistributeReleaseBundleService) waitForDistributionOperationCompletion(distributeParams *distribution.DistributionParams, trackerId json.Number) error {
+	maxWait := time.Duration(dr.GetMaxWaitMinutes()) * time.Minute
 	if maxWait.Minutes() < 1 {
 		maxWait = defaultMaxWait
 	}
 
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		statusResponse, responseBody, err := dbs.getReleaseBundleDistributionStatus(distributeParams, trackerId)
+		statusResponse, responseBody, err := dr.getReleaseBundleDistributionStatus(distributeParams, trackerId)
 		if err != nil {
 			return true, nil, err
 		}
 
 		switch statusResponse.Status {
-		case dsServices.NotDistributed, dsServices.InProgress, dsServices.InQueue:
+		case distribution.NotDistributed, distribution.InProgress, distribution.InQueue:
 			return false, nil, nil
-		case dsServices.Failed, dsServices.Completed:
+		case distribution.Failed, distribution.Completed:
 			return true, responseBody, nil
 		default:
 			return true, nil, errorutils.CheckErrorf("received unexpected status: '%s'", statusResponse.Status)
@@ -182,14 +181,16 @@ func (dbs *DistributeReleaseBundleService) waitForDistributionOperationCompletio
 		return err
 	}
 
-	var dsStatusResponse dsServices.DistributionStatusResponse
+	var dsStatusResponse distribution.DistributionStatusResponse
 	if err = json.Unmarshal(finalRespBody, &dsStatusResponse); err != nil {
 		return errorutils.CheckError(err)
 	}
 
-	if dsStatusResponse.Status != dsServices.Completed {
+	if dsStatusResponse.Status != distribution.Completed {
 		for _, st := range dsStatusResponse.Sites {
-			err = errors.Join(err, fmt.Errorf("target %s name:%s error:%s", st.TargetArtifactory.Type, st.TargetArtifactory.Name, st.Error))
+			if st.Status != distribution.Completed {
+				err = errors.Join(err, fmt.Errorf("target %s name:%s error:%s", st.TargetArtifactory.Type, st.TargetArtifactory.Name, st.Error))
+			}
 		}
 		return errorutils.CheckError(err)
 	}

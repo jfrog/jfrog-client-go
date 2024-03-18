@@ -166,8 +166,8 @@ func createMockServer(t *testing.T, testHandler http.HandlerFunc) (*httptest.Ser
 	return testServer, lifecycle.NewReleaseBundlesService(rtDetails, client)
 }
 
-func writeMockStatusResponse(t *testing.T, w http.ResponseWriter, statusResp lifecycle.ReleaseBundleStatusResponse) {
-	content, err := json.Marshal(statusResp)
+func writeMockStatusResponse(t *testing.T, w http.ResponseWriter, resp interface{}) {
+	content, err := json.Marshal(resp)
 	assert.NoError(t, err)
 	_, err = w.Write(content)
 	assert.NoError(t, err)
@@ -182,4 +182,76 @@ func createDefaultHandlerFunc(t *testing.T, status lifecycle.RbStatus) (http.Han
 			writeMockStatusResponse(t, w, lifecycle.ReleaseBundleStatusResponse{Status: status})
 		}
 	}, &requestNum
+}
+
+func TestRemoteDeleteReleaseBundle(t *testing.T) {
+	lifecycle.SyncSleepInterval = 1 * time.Second
+	defer func() { lifecycle.SyncSleepInterval = lifecycle.DefaultSyncSleepInterval }()
+
+	requestNum := 0
+	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
+		switch r.RequestURI {
+		case "/" + lifecycle.GetReleaseBundleDistributionsApi(testRb):
+			w.WriteHeader(http.StatusOK)
+			var rbStatus lifecycle.RbStatus
+			switch requestNum {
+			case 0:
+				rbStatus = lifecycle.InProgress
+			case 1:
+				rbStatus = lifecycle.InProgress
+			case 2:
+				rbStatus = lifecycle.Completed
+			}
+			requestNum++
+			writeMockStatusResponse(t, w, lifecycle.GetDistributionsResponse{{Status: rbStatus}})
+		case "/" + lifecycle.GetRemoteDeleteReleaseBundleApi(testRb):
+			w.WriteHeader(http.StatusAccepted)
+		}
+	}
+
+	mockServer, rbService := createMockServer(t, handlerFunc)
+	defer mockServer.Close()
+
+	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}))
+}
+
+func TestGetReleaseBundleVersionPromotions(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetGetReleaseBundleVersionPromotionsApi(testRb) {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(`{
+    "promotions": [
+        {
+            "status": "COMPLETED",
+            "repository_key": "release-bundles-v2",
+            "release_bundle_name": "bundle-test",
+            "release_bundle_version": "1.2.3",
+            "environment": "PROD",
+            "service_id": "jfrt@012345r6315rxa03z99nec1zns",
+            "created_by": "admin",
+            "created": "2024-03-14T15:26:46.637Z",
+            "created_millis": 1710430006637
+        }
+    ]
+}`))
+			assert.NoError(t, err)
+		}
+	})
+	defer mockServer.Close()
+
+	resp, err := rbService.GetReleaseBundleVersionPromotions(testRb, lifecycle.GetPromotionsOptionalQueryParams{})
+	assert.NoError(t, err)
+	if !assert.Len(t, resp.Promotions, 1) {
+		return
+	}
+	promotion := resp.Promotions[0]
+	assert.Equal(t, lifecycle.Completed, promotion.Status)
+	assert.Equal(t, "release-bundles-v2", promotion.RepositoryKey)
+	assert.Equal(t, testRb.ReleaseBundleName, promotion.ReleaseBundleName)
+	assert.Equal(t, testRb.ReleaseBundleVersion, promotion.ReleaseBundleVersion)
+	assert.Equal(t, "PROD", promotion.Environment)
+	assert.Equal(t, "jfrt@012345r6315rxa03z99nec1zns", promotion.ServiceId)
+	assert.Equal(t, "admin", promotion.CreatedBy)
+	assert.Equal(t, "2024-03-14T15:26:46.637Z", promotion.Created)
+	assert.Equal(t, "1710430006637", promotion.CreatedMillis.String())
 }
