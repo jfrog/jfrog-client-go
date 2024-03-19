@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	exportReleaseBundleEndpoint       = "export"
-	exportReleaseBundleStatusEndpoint = "export/status"
+	releaseBundleExportEndpoint = "export"
+	releaseBundleStatusEndpoint = "status"
 )
 
 type RlExportedStatus string
@@ -34,10 +34,10 @@ type exportStatusOperation struct {
 }
 
 func (exs *exportStatusOperation) getOperationRestApi() string {
-	return path.Join(distributionBaseApi, exportReleaseBundleStatusEndpoint, exs.ReleaseBundleName, exs.ReleaseBundleVersion)
+	return path.Join(distributionBaseApi, releaseBundleExportEndpoint, releaseBundleStatusEndpoint, exs.ReleaseBundleName, exs.ReleaseBundleVersion)
 }
 
-func (exs *exportStatusOperation) getRequestBody() any { return exs.ReleaseBundleDetails }
+func (exs *exportStatusOperation) getRequestBody() any { return nil }
 
 func (exs *exportStatusOperation) getOperationSuccessfulMsg() string {
 	return "Successfully received Release Bundle export status"
@@ -58,7 +58,7 @@ type exportOperation struct {
 }
 
 func (exp *exportOperation) getOperationRestApi() string {
-	return path.Join(distributionBaseApi, exportReleaseBundleEndpoint, exp.ReleaseBundleName, exp.ReleaseBundleVersion)
+	return path.Join(distributionBaseApi, releaseBundleExportEndpoint, exp.ReleaseBundleName, exp.ReleaseBundleVersion)
 }
 
 func (exp *exportOperation) getRequestBody() any { return exp.modifications }
