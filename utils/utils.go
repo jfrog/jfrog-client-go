@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -560,11 +561,9 @@ func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (fil
 		return "", err
 	}
 	defer func() {
-		e := tempFile.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(tempFile.Close()))
 	}()
+
 	filePath = tempFile.Name()
 	return filePath, SaveFileTransferDetailsInFile(filePath, filesDetails)
 }
