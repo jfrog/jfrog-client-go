@@ -91,7 +91,7 @@ func handleResponse(operation ReleaseBundleOperation, resp *http.Response, body 
 		return body, nil
 	}
 
-	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
+	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
 }
 
 type ReleaseBundleDetails struct {
