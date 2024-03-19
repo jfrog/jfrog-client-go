@@ -203,6 +203,8 @@
       - [Creating Lifecycle Service Config](#creating-lifeCycle-service-config)
       - [Creating New Lifecycle Service Manager](#creating-new-lifeCycle-service-manager)
     - [Using Lifecycle Services](#using-lifeCycle-services)
+      - [Creating a Release Bundle From AQL](#creating-a-release-bundle-from-aql)
+      - [Creating a Release Bundle From Artifacts](#creating-a-release-bundle-from-artifacts)
       - [Creating a Release Bundle From Published Builds](#creating-a-release-bundle-from-published-builds)
       - [Creating a Release Bundle From Release Bundles](#creating-a-release-bundle-from-release-bundles)
       - [Promoting a Release Bundle](#promoting-a-release-bundle)
@@ -2434,6 +2436,42 @@ lifecycleManager, err := lifecycle.New(serviceConfig)
 ```
 
 ### Using Lifecycle Services
+
+#### Creating a Release Bundle From AQL
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+aqlQuery := `items.find({"repo": "my-repo","path": ".","name": "a2.in"})`
+serviceManager.CreateReleaseBundleFromAql(rbDetails, queryParams, signingKeyName, aqlQuery)
+```
+
+#### Creating a Release Bundle From Artifacts
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+artifacts := CreateFromArtifacts{Artifacts: []ArtifactSource{
+	{
+        Path:   "repo/path/file",
+        Sha256: "3e3deb6628658a48cf0d280a2210211f9d977ec2e10a4619b95d5fb85cb10450",
+	},
+}}
+
+serviceManager.CreateReleaseBundleFromArtifacts(rbDetails, queryParams, signingKeyName, artifacts)
+```
 
 #### Creating a Release Bundle From Published Builds
 
