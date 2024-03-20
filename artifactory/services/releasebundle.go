@@ -58,7 +58,8 @@ func (rs *releaseService) ImportReleaseBundle(filePath string) (err error) {
 	if resp, body, err = rs.client.SendPost(url, content, &httpClientsDetails); err != nil {
 		return
 	}
-	// When a release bundle already exists, don't return an error message of failure.
+	// When a release bundle already exists, the API returns 400.
+	// Check the error message, and if it's a conflict, don't fail the operation.
 	if resp.StatusCode == http.StatusBadRequest {
 		response := ErrorResponseWithMessage{}
 		if err = json.Unmarshal(body, &response); err != nil {
