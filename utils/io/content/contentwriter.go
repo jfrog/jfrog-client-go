@@ -3,6 +3,7 @@ package content
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -106,7 +107,11 @@ func (rw *ContentWriter) startWritingWorker() {
 func (rw *ContentWriter) run() {
 	var err error
 	if !rw.useStdout {
-		defer rw.outputFile.Close()
+		defer func() {
+			if err = errors.Join(rw.outputFile.Sync(), rw.outputFile.Close()); err != nil {
+				rw.errorsQueue.AddError(errorutils.CheckError(err))
+			}
+		}()
 	}
 	openString := jsonArrayPrefixPattern
 	closeString := ""
@@ -144,7 +149,7 @@ func (rw *ContentWriter) run() {
 			firstRecord = false
 		}
 	}
-	closeString = closeString + jsonArraySuffix
+	closeString += jsonArraySuffix
 	if rw.isCompleteFile {
 		closeString += "}\n"
 	}
@@ -152,7 +157,6 @@ func (rw *ContentWriter) run() {
 	if err != nil {
 		rw.errorsQueue.AddError(errorutils.CheckError(err))
 	}
-	return
 }
 
 // Finish writing to the file.

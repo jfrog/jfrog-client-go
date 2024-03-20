@@ -1,19 +1,26 @@
 package utils
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-type ExecutionHandlerFunc func() (bool, error)
+type ExecutionHandlerFunc func() (shouldRetry bool, err error)
 
 type RetryExecutor struct {
+	// The context
+	Context context.Context
+
 	// The amount of retries to perform.
 	MaxRetries int
 
-	// Number of seconds to sleep between retries.
-	RetriesInterval int
+	// Number of milliseconds to sleep between retries.
+	RetriesIntervalMilliSecs int
 
 	// Message to display when retrying.
 	ErrorMessage string
@@ -32,25 +39,71 @@ func (runner *RetryExecutor) Execute() error {
 		// Run ExecutionHandler
 		shouldRetry, err = runner.ExecutionHandler()
 
-		// If should not retry, return
+		// If we should not retry, return.
 		if !shouldRetry {
 			return err
 		}
+		if cancelledErr := runner.checkCancelled(); cancelledErr != nil {
+			return cancelledErr
+		}
 
-		log.Warn(runner.getLogRetryMessage(i, err))
-		// Going to sleep for RetryInterval seconds
-		if runner.RetriesInterval > 0 && i < runner.MaxRetries {
-			time.Sleep(time.Second * time.Duration(runner.RetriesInterval))
+		// Print retry log message
+		runner.LogRetry(i, err)
+
+		// Going to sleep for RetryInterval milliseconds
+		if runner.RetriesIntervalMilliSecs > 0 && i < runner.MaxRetries {
+			time.Sleep(time.Millisecond * time.Duration(runner.RetriesIntervalMilliSecs))
 		}
 	}
-
-	return err
+	// If the error is not nil, return it and log the timeout message. Otherwise, generate new error.
+	if err != nil {
+		log.Info(runner.getTimeoutErrorMsg())
+		return err
+	}
+	return errorutils.CheckError(RetryExecutorTimeoutError{runner.getTimeoutErrorMsg()})
 }
 
-func (runner *RetryExecutor) getLogRetryMessage(attemptNumber int, err error) (message string) {
-	message = fmt.Sprintf("%sAttempt %v - %s", runner.LogMsgPrefix, attemptNumber, runner.ErrorMessage)
-	if err != nil {
-		message = fmt.Sprintf("%s - %s", message, err.Error())
+// Error of this type will be returned if the executor reaches timeout and no other error is returned by the execution handler.
+type RetryExecutorTimeoutError struct {
+	errMsg string
+}
+
+func (retryErr RetryExecutorTimeoutError) Error() string {
+	return retryErr.errMsg
+}
+
+func (runner *RetryExecutor) getTimeoutErrorMsg() string {
+	prefix := ""
+	if runner.LogMsgPrefix != "" {
+		prefix = runner.LogMsgPrefix + " "
 	}
-	return
+	return fmt.Sprintf("%sexecutor timeout after %v attempts with %v milliseconds wait intervals", prefix, runner.MaxRetries, runner.RetriesIntervalMilliSecs)
+}
+
+func (runner *RetryExecutor) LogRetry(attemptNumber int, err error) {
+	message := fmt.Sprintf("%s(Attempt %v)", runner.LogMsgPrefix, attemptNumber+1)
+	if runner.ErrorMessage != "" {
+		message = fmt.Sprintf("%s - %s", message, runner.ErrorMessage)
+	}
+	if err != nil {
+		message = fmt.Sprintf("%s: %s", message, err.Error())
+	}
+
+	if err != nil || runner.ErrorMessage != "" {
+		log.Warn(message)
+	} else {
+		log.Debug(message)
+	}
+}
+
+func (runner *RetryExecutor) checkCancelled() error {
+	if runner.Context == nil {
+		return nil
+	}
+	contextErr := runner.Context.Err()
+	if errors.Is(contextErr, context.Canceled) {
+		log.Info("Retry executor was cancelled")
+		return contextErr
+	}
+	return nil
 }

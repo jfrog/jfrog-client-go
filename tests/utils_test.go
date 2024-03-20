@@ -5,14 +5,19 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/buger/jsonparser"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	testUtils "github.com/jfrog/jfrog-client-go/utils/tests"
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
@@ -23,6 +28,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 
+	"github.com/jfrog/archiver/v3"
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -37,7 +43,6 @@ import (
 	xrayAuth "github.com/jfrog/jfrog-client-go/xray/auth"
 	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
 	xscAuth "github.com/jfrog/jfrog-client-go/xsc/auth"
-	"github.com/mholt/archiver/v3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,7 +53,8 @@ var (
 	TestXsc                  *bool
 	TestPipelines            *bool
 	TestAccess               *bool
-	TestRepository           *bool
+	TestRepositories         *bool
+	TestMultipartUpload      *bool
 	RtUrl                    *string
 	DistUrl                  *string
 	XrayUrl                  *string
@@ -59,7 +65,6 @@ var (
 	RtApiKey                 *string
 	RtSshKeyPath             *string
 	RtSshPassphrase          *string
-	RtAccessToken            *string
 	PipelinesAccessToken     *string
 	PipelinesVcsToken        *string
 	PipelinesVcsRepoFullPath *string
@@ -93,13 +98,16 @@ var (
 	testGroupService                      *services.GroupService
 	testBuildInfoService                  *services.BuildInfoService
 	testsFederationService                *services.FederationService
+	testsSystemService                    *services.SystemService
+	testsStorageService                   *services.StorageService
+	testsAqlService                       *services.AqlService
 
 	// Distribution services
 	testsBundleSetSigningKeyService      *distributionServices.SetSigningKeyService
 	testsBundleCreateService             *distributionServices.CreateReleaseBundleService
 	testsBundleUpdateService             *distributionServices.UpdateReleaseBundleService
 	testsBundleSignService               *distributionServices.SignBundleService
-	testsBundleDistributeService         *distributionServices.DistributeReleaseBundleService
+	testsBundleDistributeService         *distributionServices.DistributeReleaseBundleV1Service
 	testsBundleDistributionStatusService *distributionServices.DistributionStatusService
 	testsBundleDeleteLocalService        *distributionServices.DeleteLocalReleaseBundleService
 	testsBundleDeleteRemoteService       *distributionServices.DeleteReleaseBundleService
@@ -112,24 +120,27 @@ var (
 	// Pipelines Services
 	testsPipelinesIntegrationsService *pipelinesServices.IntegrationsService
 	testsPipelinesSourcesService      *pipelinesServices.SourcesService
+	testPipelinesRunService           *pipelinesServices.RunService
+	testPipelinesSyncService          *pipelinesServices.SyncService
+	testPipelinesSyncStatusService    *pipelinesServices.SyncStatusService
 
 	// Access Services
+	testsAccessPingService    *accessServices.PingService
 	testsAccessProjectService *accessServices.ProjectService
+	testsAccessInviteService  *accessServices.InviteService
+	testsAccessTokensService  *accessServices.TokenService
 
 	timestamp    = time.Now().Unix()
-	timestampStr = strconv.FormatInt(int64(timestamp), 10)
-	trueValue    = true
-	falseValue   = false
+	timestampStr = strconv.FormatInt(timestamp, 10)
 
 	// Tests configuration
-	RtTargetRepo    = "client-go"
-	RtTargetRepoKey = RtTargetRepo
+	RtTargetRepo = "client-go"
 )
 
 const (
-	SpecsTestRepositoryConfig        = "specs_test_repository_config.json"
-	RepoDetailsUrl                   = "api/repositories/"
 	HttpClientCreationFailureMessage = "Failed while attempting to create HttpClient: %s"
+	buildNumber                      = "1.0.0"
+	buildTimestamp                   = "1412067619893"
 )
 
 func init() {
@@ -140,23 +151,23 @@ func init() {
 	TestXsc = flag.Bool("test.xsc", true, "Test xsc")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
-	TestRepository = flag.Bool("test.repository", false, "Test repositories in Artifactory")
-	RtUrl = flag.String("rt.url", "", "Artifactory url")
+	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
+	TestMultipartUpload = flag.Bool("test.mpu", false, "Test Artifactory multipart upload")
+	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	RtUser = flag.String("rt.user", "", "Artifactory username")
-	RtPassword = flag.String("rt.password", "", "Artifactory password")
+	AccessUrl = flag.String("access.url", "http://localhost:8081/access", "Access url")
+	RtUser = flag.String("rt.user", "admin", "Artifactory username")
+	RtPassword = flag.String("rt.password", "password", "Artifactory password")
+	AccessToken = flag.String("access.token", testUtils.GetLocalArtifactoryTokenIfNeeded(*RtUrl), "Access token")
 	RtApiKey = flag.String("rt.apikey", "", "Artifactory user API key")
 	RtSshKeyPath = flag.String("rt.sshKeyPath", "", "Ssh key file path")
 	RtSshPassphrase = flag.String("rt.sshPassphrase", "", "Ssh key passphrase")
-	RtAccessToken = flag.String("rt.accessToken", "", "Artifactory access token")
 	PipelinesAccessToken = flag.String("pipe.accessToken", "", "Pipelines access token")
 	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
 	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
-	AccessUrl = flag.String("access.url", "", "Access url")
-	AccessToken = flag.String("access.token", "", "Access token")
 }
 
 func getRtTargetRepoKey() string {
@@ -167,9 +178,16 @@ func getRtTargetRepo() string {
 	return getRtTargetRepoKey() + "/"
 }
 
+// Get a run ID string used in the generated tests resources to prevent using same resources names in the test.
+// Examples - Repository names, build-info names, Docker image names, Release Bundle names.
 func getRunId() string {
+	return getCustomRunId('-')
+}
+
+// Get a run ID string using a custom character. We use '-' for most of the resources names and '_' for JFrog Pipelines integration names.
+func getCustomRunId(separator rune) string {
 	if ciRunId != nil && *ciRunId != "" {
-		return *ciRunId + "-" + timestampStr
+		return *ciRunId + string(separator) + timestampStr
 	}
 	return timestampStr
 }
@@ -204,6 +222,8 @@ func createArtifactoryUploadManager() {
 	testsUploadService = services.NewUploadService(client)
 	testsUploadService.ArtDetails = artDetails
 	testsUploadService.Threads = 3
+	httpClientDetails := testsUploadService.ArtDetails.CreateHttpClientDetails()
+	testsUploadService.MultipartUpload = utils.NewMultipartUpload(client, &httpClientDetails, testsUploadService.ArtDetails.GetUrl())
 }
 
 func createArtifactoryUserManager() {
@@ -248,7 +268,7 @@ func createDistributionManager() {
 	testsBundleCreateService = distributionServices.NewCreateReleaseBundleService(client)
 	testsBundleUpdateService = distributionServices.NewUpdateReleaseBundleService(client)
 	testsBundleSignService = distributionServices.NewSignBundleService(client)
-	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleService(client)
+	testsBundleDistributeService = distributionServices.NewDistributeReleaseBundleV1Service(client)
 	testsBundleDistributionStatusService = distributionServices.NewDistributionStatusService(client)
 	testsBundleDeleteLocalService = distributionServices.NewDeleteLocalDistributionService(client)
 	testsBundleSetSigningKeyService = distributionServices.NewSetSigningKeyService(client)
@@ -391,11 +411,34 @@ func createArtifactoryFederationManager() {
 	testsFederationService.ArtDetails = artDetails
 }
 
-func createJfrogHttpClient(artDetails *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+func createArtifactorySystemManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsSystemService = services.NewSystemService(artDetails, client)
+}
+
+func createArtifactoryStorageManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsStorageService = services.NewStorageService(artDetails, client)
+}
+
+func createArtifactoryAqlManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsAqlService = services.NewAqlService(artDetails, client)
+}
+
+func createJfrogHttpClient(artDetailsPtr *auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+	artDetails := *artDetailsPtr
 	return jfroghttpclient.JfrogClientBuilder().
-		SetClientCertPath((*artDetails).GetClientCertPath()).
-		SetClientCertKeyPath((*artDetails).GetClientCertKeyPath()).
-		AppendPreRequestInterceptor((*artDetails).RunPreRequestFunctions).
+		SetRetries(3).
+		SetClientCertPath(artDetails.GetClientCertPath()).
+		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
 		Build()
 }
 
@@ -428,6 +471,7 @@ func createXrayBinMgrManager() {
 	client, err := jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xrayDetails.GetClientCertPath()).
 		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
+		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
 		Build()
 	failOnHttpClientCreation(err)
@@ -457,6 +501,42 @@ func createPipelinesSourcesManager() {
 	failOnHttpClientCreation(err)
 	testsPipelinesSourcesService = pipelinesServices.NewSourcesService(client)
 	testsPipelinesSourcesService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesRunManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesRunService = pipelinesServices.NewRunService(client)
+	testPipelinesRunService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesSyncManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesSyncService = pipelinesServices.NewSyncService(client)
+	testPipelinesSyncService.ServiceDetails = pipelinesDetails
+}
+
+func createPipelinesSyncStatusManager() {
+	pipelinesDetails := GetPipelinesDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(pipelinesDetails.GetClientCertPath()).
+		SetClientCertKeyPath(pipelinesDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(pipelinesDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testPipelinesSyncStatusService = pipelinesServices.NewSyncStatusService(client)
+	testPipelinesSyncStatusService.ServiceDetails = pipelinesDetails
 }
 
 func failOnHttpClientCreation(err error) {
@@ -503,11 +583,12 @@ func GetPipelinesDetails() auth.ServiceDetails {
 
 func setAuthenticationDetail(details auth.ServiceDetails) {
 	if !fileutils.IsSshUrl(details.GetUrl()) {
-		if *RtApiKey != "" {
+		switch {
+		case *RtApiKey != "":
 			details.SetApiKey(*RtApiKey)
-		} else if *RtAccessToken != "" {
-			details.SetAccessToken(*RtAccessToken)
-		} else {
+		case *AccessToken != "":
+			details.SetAccessToken(*AccessToken)
+		default:
 			details.SetUser(*RtUser)
 			details.SetPassword(*RtPassword)
 		}
@@ -527,10 +608,14 @@ func uploadDummyFile(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer os.RemoveAll(workingDir)
+	defer testUtils.RemoveAllAndAssert(t, workingDir)
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/"}
+	targetProps, err := utils.ParseProperties("dummy=yes")
+	if err != nil {
+		t.Error(err)
+	}
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/", TargetProps: targetProps}
 	up.Flat = true
 	summary, err := testsUploadService.UploadFiles(up)
 	if summary.TotalSucceeded != 1 {
@@ -545,6 +630,7 @@ func uploadDummyFile(t *testing.T) {
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "b.in"}
 	up.Flat = true
 	summary, err = testsUploadService.UploadFiles(up)
+	assert.NoError(t, err)
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -577,7 +663,9 @@ func artifactoryCleanup(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	defer toDelete.Close()
+	defer func() {
+		assert.NoError(t, toDelete.Close())
+	}()
 	NumberOfItemToDelete, err := toDelete.Length()
 	if err != nil {
 		t.Error(err)
@@ -595,7 +683,7 @@ func artifactoryCleanup(t *testing.T) {
 }
 
 func createRepo() error {
-	if !(*TestArtifactory || *TestDistribution || *TestXray) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload) {
 		return nil
 	}
 	var err error
@@ -612,59 +700,15 @@ func createRepo() error {
 }
 
 func teardownIntegrationTests() {
-	if !(*TestArtifactory || *TestDistribution || *TestXray) {
+	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload) {
 		return
 	}
 	repo := getRtTargetRepoKey()
 	err := testsDeleteRepositoryService.Delete(repo)
 	if err != nil {
-		fmt.Printf("teardownIntegrationTests failed for:" + err.Error())
+		fmt.Print("teardownIntegrationTests failed for:" + err.Error())
 		os.Exit(1)
 	}
-}
-
-func isRepoExist(repoName string) bool {
-	artDetails := GetRtDetails()
-	artHttpDetails := artDetails.CreateHttpClientDetails()
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
-	resp, _, _, err := client.SendGet(artDetails.GetUrl()+RepoDetailsUrl+repoName, true, artHttpDetails, "")
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
-
-	if resp.StatusCode != http.StatusBadRequest {
-		return true
-	}
-	return false
-}
-
-func execCreateRepoRest(repoConfig, repoName string) error {
-	content, err := ioutil.ReadFile(repoConfig)
-	if err != nil {
-		return err
-	}
-	artDetails := GetRtDetails()
-	artHttpDetails := artDetails.CreateHttpClientDetails()
-
-	artHttpDetails.Headers = map[string]string{"Content-Type": "application/json"}
-	client, err := httpclient.ClientBuilder().Build()
-	if err != nil {
-		return err
-	}
-	resp, _, err := client.SendPut(artDetails.GetUrl()+"api/repositories/"+repoName, content, artHttpDetails, "")
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return errors.New("Fail to create repository. Reason local repository with key: " + repoName + " already exist\n")
-	}
-	log.Info("Repository", repoName, "created.")
-	return nil
 }
 
 func getTestDataPath() string {
@@ -694,65 +738,71 @@ func setRepositoryBaseParams(params *services.RepositoryBaseParams, isUpdate boo
 
 func setAdditionalRepositoryBaseParams(params *services.AdditionalRepositoryBaseParams, isUpdate bool) {
 	if !isUpdate {
-		params.BlackedOut = &trueValue
-		params.XrayIndex = &trueValue
+		params.BlackedOut = clientutils.Pointer(true)
+		params.XrayIndex = clientutils.Pointer(true)
 		params.PropertySets = []string{"artifactory"}
-		params.DownloadRedirect = &trueValue
-		params.PriorityResolution = &trueValue
+		params.DownloadRedirect = clientutils.Pointer(true)
+		params.PriorityResolution = clientutils.Pointer(true)
 	} else {
-		params.BlackedOut = &falseValue
-		params.XrayIndex = &falseValue
+		params.BlackedOut = clientutils.Pointer(false)
+		params.XrayIndex = clientutils.Pointer(false)
 		params.PropertySets = nil
-		params.DownloadRedirect = &falseValue
-		params.PriorityResolution = &falseValue
+		params.DownloadRedirect = clientutils.Pointer(false)
+		params.PriorityResolution = clientutils.Pointer(false)
 	}
 }
 
 func setCargoRepositoryParams(params *services.CargoRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.CargoAnonymousAccess = &trueValue
+		params.CargoAnonymousAccess = clientutils.Pointer(true)
 	} else {
-		params.CargoAnonymousAccess = &falseValue
+		params.CargoAnonymousAccess = clientutils.Pointer(false)
 	}
 }
 
 func setDebianRepositoryParams(params *services.DebianRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.DebianTrivialLayout = &trueValue
+		params.DebianTrivialLayout = clientutils.Pointer(true)
 		params.OptionalIndexCompressionFormats = []string{"bz2", "lzma"}
 	} else {
-		params.DebianTrivialLayout = &falseValue
+		params.DebianTrivialLayout = clientutils.Pointer(false)
 		params.OptionalIndexCompressionFormats = nil
 	}
 }
 
 func setDockerRepositoryParams(params *services.DockerRepositoryParams, isUpdate bool) {
 	if !isUpdate {
+		maxUniqueTags := 18
+		params.MaxUniqueTags = &maxUniqueTags
+		dockerTagRetention := 10
+		params.DockerTagRetention = &dockerTagRetention
 		params.DockerApiVersion = "V1"
-		params.MaxUniqueTags = 18
-		params.BlockPushingSchema1 = &falseValue
-		params.DockerTagRetention = 10
+		params.BlockPushingSchema1 = clientutils.Pointer(false)
 	} else {
+		maxUniqueTags := 36
+		params.MaxUniqueTags = &maxUniqueTags
+		dockerTagRetention := 0
+		params.DockerTagRetention = &dockerTagRetention
 		params.DockerApiVersion = "V2"
-		params.MaxUniqueTags = 36
-		params.BlockPushingSchema1 = &trueValue
-		params.DockerTagRetention = 0
+		params.BlockPushingSchema1 = clientutils.Pointer(true)
 	}
 }
 
 func setJavaPackageManagersRepositoryParams(params *services.JavaPackageManagersRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.MaxUniqueSnapshots = 18
-		params.HandleReleases = &trueValue
-		params.HandleSnapshots = &trueValue
-		params.SuppressPomConsistencyChecks = &trueValue
+		maxUniqueTags := 18
+		params.MaxUniqueSnapshots = &maxUniqueTags
+		params.HandleReleases = clientutils.Pointer(true)
+		params.HandleSnapshots = clientutils.Pointer(true)
+		params.SuppressPomConsistencyChecks = clientutils.Pointer(true)
 		params.SnapshotVersionBehavior = "non-unique"
 		params.ChecksumPolicyType = "server-generated-checksums"
 	} else {
-		params.MaxUniqueSnapshots = 36
-		params.HandleReleases = &falseValue
-		params.HandleSnapshots = &falseValue
-		params.SuppressPomConsistencyChecks = &falseValue
+		maxUniqueTags := 36
+		params.MaxUniqueSnapshots = &maxUniqueTags
+		params.HandleReleases = clientutils.Pointer(false)
+		params.HandleSnapshots = clientutils.Pointer(false)
+		params.SuppressPomConsistencyChecks = clientutils.Pointer(false)
 		params.SnapshotVersionBehavior = "unique"
 		params.ChecksumPolicyType = "client-checksums"
 	}
@@ -760,79 +810,121 @@ func setJavaPackageManagersRepositoryParams(params *services.JavaPackageManagers
 
 func setNugetRepositoryParams(params *services.NugetRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.ForceNugetAuthentication = &trueValue
-		params.MaxUniqueSnapshots = 24
+		maxUniqueTags := 24
+		params.MaxUniqueSnapshots = &maxUniqueTags
+		params.ForceNugetAuthentication = clientutils.Pointer(true)
 	} else {
-		params.ForceNugetAuthentication = &falseValue
-		params.MaxUniqueSnapshots = 18
+		maxUniqueTags := 18
+		params.MaxUniqueSnapshots = &maxUniqueTags
+		params.ForceNugetAuthentication = clientutils.Pointer(false)
 	}
 }
 
 func setRpmRepositoryParams(params *services.RpmRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.YumRootDepth = 6
-		params.CalculateYumMetadata = &trueValue
-		params.EnableFileListsIndexing = &trueValue
+		yumRootDepth := 6
+		params.YumRootDepth = &yumRootDepth
+		params.CalculateYumMetadata = clientutils.Pointer(true)
+		params.EnableFileListsIndexing = clientutils.Pointer(true)
 		params.YumGroupFileNames = "filename"
 	} else {
-		params.YumRootDepth = 18
-		params.CalculateYumMetadata = &falseValue
-		params.EnableFileListsIndexing = &falseValue
+		yumRootDepth := 18
+		params.YumRootDepth = &yumRootDepth
+		params.CalculateYumMetadata = clientutils.Pointer(false)
+		params.EnableFileListsIndexing = clientutils.Pointer(false)
 		params.YumGroupFileNames = ""
 	}
 }
 
-func getRepoConfig(repoKey string) (body []byte, err error) {
+func getRepoConfig(repoKey string) ([]byte, error) {
 	artDetails := GetRtDetails()
 	artHttpDetails := artDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
-		return
+		return nil, err
 	}
 	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/repositories/"+repoKey, false, artHttpDetails, "")
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return
+	if err != nil {
+		return nil, err
 	}
-	return
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
+func isEnterprisePlus() (bool, error) {
+	artDetails := GetRtDetails()
+	artHttpDetails := artDetails.CreateHttpClientDetails()
+	client, err := httpclient.ClientBuilder().Build()
+	if err != nil {
+		return false, err
+	}
+	resp, body, _, err := client.SendGet(artDetails.GetUrl()+"api/system/license", false, artHttpDetails, "")
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return false, err
+	}
+	value, err := jsonparser.GetString(body, "type")
+	if err != nil {
+		return false, err
+	}
+	return value == "Enterprise Plus", nil
 }
 
 func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) clientutils.ExecutionHandlerFunc {
 	return func() (shouldRetry bool, err error) {
 		config, err := getRepoConfig(repoKey)
 		if err != nil || config == nil {
-			return true, errors.New("failed reading repository config for " + repoKey)
+			err = errors.New("failed reading repository config for " + repoKey)
+			return
 		}
 		var confMap, expectedConfigMap map[string]interface{}
 		if err = json.Unmarshal(config, &confMap); err != nil {
-			return false, errors.New("failed unmarshalling repository config for " + repoKey)
+			err = errors.New("failed unmarshalling repository config for " + repoKey)
+			return
 		}
 		tmpJson, err := json.Marshal(expectedConfig)
 		if err != nil {
-			return false, errors.New("failed marshalling expected config for " + repoKey)
+			err = errors.New("failed marshalling expected config for " + repoKey)
+			return
 		}
 		if err = json.Unmarshal(tmpJson, &expectedConfigMap); err != nil {
-			return false, errors.New("failed unmarshalling expected config for " + repoKey)
+			err = errors.New("failed unmarshalling expected config for " + repoKey)
+			return
 		}
 		for key, expectedValue := range expectedConfigMap {
 			// The password field may be encrypted and won't match the value set, need to handle this during validation
 			if key == "password" {
 				continue
 			}
+			// Download Redirect is only supported on Enterprise Plus. Expect false otherwise.
+			if key == "downloadRedirect" {
+				var eplus bool
+				eplus, err = isEnterprisePlus()
+				if err != nil {
+					return
+				}
+				if !eplus {
+					expectedValue = false
+				}
+			}
 			if !assert.ObjectsAreEqual(confMap[key], expectedValue) {
-				errMsg := fmt.Sprintf("config validation for %s failed. key: %s expected: %s actual: %s", repoKey, key, expectedValue, confMap[key])
-				return true, errors.New(errMsg)
+				err = fmt.Errorf("config validation for '%s' failed. key: '%s'\nexpected: '%s'\nactual: '%s'", repoKey, key, expectedValue, confMap[key])
+				shouldRetry = true
+				return
 			}
 		}
-		return false, nil
+		return
 	}
 }
 
 func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	retryExecutor := &clientutils.RetryExecutor{
-		MaxRetries:       12,
-		RetriesInterval:  10,
-		ErrorMessage:     "Waiting for Artifactory to evaluate repository operation...",
-		ExecutionHandler: createRepoConfigValidationFunc(repoKey, params),
+		MaxRetries: 30,
+		// RetriesIntervalMilliSecs in milliseconds
+		RetriesIntervalMilliSecs: 10 * 1000,
+		ErrorMessage:             "Waiting for Artifactory to evaluate repository operation...",
+		ExecutionHandler:         createRepoConfigValidationFunc(repoKey, params),
 	}
 	err := retryExecutor.Execute()
 	assert.NoError(t, err)
@@ -855,19 +947,25 @@ func getRepo(t *testing.T, repoKey string) *services.RepositoryDetails {
 	return &data
 }
 
-func getAllRepos(t *testing.T, repoType, packageType string) *[]services.RepositoryDetails {
+func getAllRepos(t *testing.T, repoType string) *[]services.RepositoryDetails {
 	params := services.NewRepositoriesFilterParams()
 	params.RepoType = repoType
-	params.PackageType = packageType
+	params.PackageType = ""
 	data, err := testsRepositoriesService.GetWithFilter(params)
 	assert.NoError(t, err, "Failed to get all repositories details")
 	return data
 }
 
+func isRepoExists(t *testing.T, repoKey string) bool {
+	exists, err := testsRepositoriesService.IsExists(repoKey)
+	assert.NoError(t, err, "Failed to check if "+repoKey+" exists")
+	return exists
+}
+
 func createDummyBuild(buildName string) error {
 	dataArtifactoryBuild := &buildinfo.BuildInfo{
 		Name:    buildName,
-		Number:  "1.0.0",
+		Number:  buildNumber,
 		Started: "2014-09-30T12:00:19.893+0300",
 		Modules: []buildinfo.Module{{
 			Id: "example-module",
@@ -875,7 +973,7 @@ func createDummyBuild(buildName string) error {
 				{
 					Type: "gz",
 					Name: "c.tar.gz",
-					Checksum: &buildinfo.Checksum{
+					Checksum: buildinfo.Checksum{
 						Sha1: "9d4336ff7bc2d2348aee4e27ad55e42110df4a80",
 						Md5:  "b4918187cc9b3bf1b0772546d9398d7d",
 					},
@@ -888,11 +986,6 @@ func createDummyBuild(buildName string) error {
 }
 
 func deleteBuild(buildName string) error {
-	err := deleteBuildIndex(buildName)
-	if err != nil {
-		return err
-	}
-
 	artDetails := GetRtDetails()
 	artHTTPDetails := artDetails.CreateHttpClientDetails()
 	client, err := httpclient.ClientBuilder().Build()
@@ -900,12 +993,13 @@ func deleteBuild(buildName string) error {
 		return err
 	}
 
-	resp, _, err := client.SendDelete(artDetails.GetUrl()+"api/build/"+buildName+"?deleteAll=1", nil, artHTTPDetails, "")
+	buildName = url.PathEscape(buildName)
+	resp, _, err := client.SendDelete(artDetails.GetUrl()+"artifactory-build-info/"+buildName, nil, artHTTPDetails, "")
 
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		return errors.New("failed to delete build " + resp.Status)
 	}
 
@@ -962,6 +1056,9 @@ func deleteBuildIndex(buildName string) error {
 
 	dataIndexBuild := indexedBuildsPayload{IndexedBuilds: indexedBuilds}
 	requestContentIndexBuild, err := json.Marshal(dataIndexBuild)
+	if err != nil {
+		return err
+	}
 
 	resp, _, err := client.SendPut(xrayDetails.GetUrl()+"api/v1/binMgr/default/builds", requestContentIndexBuild, artHTTPDetails, "")
 	if err != nil {
@@ -1007,4 +1104,40 @@ func createAccessProjectManager() {
 	failOnHttpClientCreation(err)
 	testsAccessProjectService = accessServices.NewProjectService(client)
 	testsAccessProjectService.ServiceDetails = accessDetails
+
+	artDetails := GetRtDetails()
+	rtclient, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testGroupService = services.NewGroupService(rtclient)
+	testGroupService.SetArtifactoryDetails(artDetails)
+}
+
+func createAccessInviteManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessInviteService = accessServices.NewInviteService(client)
+	testsAccessInviteService.ServiceDetails = accessDetails
+	// To test "invite" flow we first have to create new "invited user" using ArtifactoryUserManager and Artifactory's API.
+	createArtifactoryUserManager()
+}
+
+func createAccessTokensManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessTokensService = accessServices.NewTokenService(client)
+	testsAccessTokensService.ServiceDetails = accessDetails
+}
+
+func createAccessPingManager() {
+	accessDetails := GetAccessDetails()
+	client, err := createJfrogHttpClient(&accessDetails)
+	failOnHttpClientCreation(err)
+	testsAccessPingService = accessServices.NewPingService(client)
+	testsAccessPingService.ServiceDetails = accessDetails
+}
+
+func getUniqueField(prefix string) string {
+	return strings.Join([]string{prefix, strconv.FormatInt(time.Now().Unix(), 10), runtime.GOOS}, "-")
 }

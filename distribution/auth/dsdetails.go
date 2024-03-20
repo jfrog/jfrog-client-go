@@ -22,7 +22,7 @@ func (ds *distributionDetails) GetVersion() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Debug("The Distribution version is:", ds.Version)
+		log.Debug("JFrog Distribution version is:", ds.Version)
 	}
 	return ds.Version, nil
 }
@@ -33,6 +33,9 @@ func (ds *distributionDetails) getDistributionVersion() (string, error) {
 		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
+	if err != nil {
+		return "", err
+	}
 	sm, err := distribution.New(serviceConfig)
 	if err != nil {
 		return "", err

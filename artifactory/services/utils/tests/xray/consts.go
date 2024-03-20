@@ -1,5 +1,7 @@
 package xray
 
+import xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
+
 const FatalErrorXrayScanResponse = `
 {
  "errors": [{"status":-1}, {"status":500}]
@@ -1105,9 +1107,16 @@ const VulnerableXrayScanResponse = `{
 }
 `
 
-const VulnerabilityRequestResponse = `
+const VulnerabilityXrayReportRequestResponse = `
 {
   "report_id": 777,
+  "status": "pending"
+}
+`
+
+const LicensesXrayReportRequestResponse = `
+{
+  "report_id": 888,
   "status": "pending"
 }
 `
@@ -1128,7 +1137,23 @@ const VulnerabilityReportStatusResponse = `
 }
 `
 
-const VulnerabilityReportDeleteResponse = `
+const LicensesReportStatusResponse = `
+{
+  "id": 301,
+  "name": "test-generic",
+  "report_type": "license",
+  "status": "completed",
+  "total_artifacts": 4,
+  "num_of_processed_artifacts": 4,
+  "progress": 100,
+  "number_of_rows": 64,
+  "start_time": "2021-09-03T21:17:41Z",
+  "end_time": "2021-09-03T21:17:42Z",
+  "author": "test"
+}
+`
+
+const XrayReportDeleteResponse = `
 {
   "info": "report deleted successfully"
 }
@@ -1144,9 +1169,9 @@ const VulnerabilityReportDetailsResponse = `
           "cve": "CVE-2021-37136"
         },
         {
-          "cvss_v2_score": "7.1",
+          "cvss_v2_score": 7.1,
           "cvss_v2_vector": "CVSS:2.0/AV:N/AC:M/Au:N/C:N/I:N/A:C",
-          "cvss_v3_score": "7.5",
+          "cvss_v3_score": 7.5,
           "cvss_v3_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
         }
       ],
@@ -1184,9 +1209,9 @@ const VulnerabilityReportDetailsResponse = `
           "cve": "CVE-2021-37136"
         },
         {
-          "cvss_v2_score": "7.1",
+          "cvss_v2_score": 7.1,
           "cvss_v2_vector": "CVSS:2.0/AV:N/AC:M/Au:N/C:N/I:N/A:C",
-          "cvss_v3_score": "7.5",
+          "cvss_v3_score": 7.5,
           "cvss_v3_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
         }
       ],
@@ -1220,3 +1245,211 @@ const VulnerabilityReportDetailsResponse = `
   ]
 }
 `
+
+const LicensesReportDetailsResponse = `
+{
+  "total_rows": 1,
+  "rows" :[
+      {
+          "license": "MIT",
+          "license_name" : "The MIT License",
+          "component": "deb://debian:buster:glibc:2.28-10",
+          "artifact": "docker://redis:latest-07142020122937",
+          "path": "repo1/folder1/artifact",
+          "artifact_scan_time": "2020-07-14T09:32:00Z",
+          "unknown" : false,
+          "unrecognized" : false,
+          "custom" : false,
+          "references": [
+              "https://spdx.org/licenses/AFL-1.1.html",
+              "https://spdx.org/licenses/AFL-1.1"
+          ]
+      }
+  ]
+}
+`
+
+const VulnerableXraySummaryArtifactResponse = `
+{
+  "artifacts": [
+    {
+      "general": {
+        "component_id": "foo/bar:84a28a42",
+        "name": "foo/bar:84a28a42",
+        "path": "default/foo/bar/84a28a42/",
+        "pkg_type": "Docker",
+        "sha256": "c255cbe29c2da2935b4433a54e4ce6a3710490ee1d2c47bc68a7fa1732a3be24"
+      },
+      "issues": [
+        {
+          "issue_id": "XRAY-189376",
+          "summary": "ImportedSymbols in debug/macho (for Open or OpenFat) in Go before 1.16.10 and 1.17.x before 1.17.3 Accesses a Memory Location After the End of a Buffer, aka an out-of-bounds slice situation.",
+          "description": "ImportedSymbols in debug/macho (for Open or OpenFat) in Go before 1.16.10 and 1.17.x before 1.17.3 Accesses a Memory Location After the End of a Buffer, aka an out-of-bounds slice situation.",
+          "issue_type": "security",
+          "severity": "High",
+          "provider": "JFrog",
+          "cves": [
+            {
+              "cve": "CVE-2021-41771",
+              "cvss_v2": "5.0/CVSS:2.0/AV:N/AC:L/Au:N/C:N/I:N/A:P",
+              "cvss_v3": "7.5/CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "cwe": [
+                "CWE-119"
+              ]
+            }
+          ],
+          "created": "2021-11-09T00:00:00.702Z",
+          "impact_path": [
+            "default/foo/bar/84a28a42/sha256__fc66940af1388789585cf7128aeb3edc547723e307b53e59b75ad2797ac1c765.tar.gz/bar/github.com/lang/go/go"
+          ],
+          "components": [
+            {
+              "component_id": "github.com/golang/go",
+              "fixed_versions": [
+                "[1.16.10]",
+                "[1.17.3]"
+              ]
+            },
+            {
+              "component_id": "github.com/golang/go/src",
+              "fixed_versions": [
+                "[1.16.10]",
+                "[1.17.3]"
+              ]
+            }
+          ],
+          "component_physical_paths": [
+            "sha256__fc66940af1388789585cf7128aeb3edc547723e307b53e59b75ad2797ac1c765.tar.gz/bar/github.com/lang/go/go"
+          ]
+        }
+      ],
+      "licenses": [
+        {
+          "components": [
+            "go://github.com/golang/go:1.15.8"
+          ],
+          "full_name": "Unknown license",
+          "more_info_url": [
+            "Unknown link"
+          ],
+          "name": "Unknown"
+        }
+      ]
+    }
+  ]
+}
+`
+
+const EntitledResponse = `
+{
+  "entitled": true,
+  "feature_id": "contextual_analysis"
+}
+`
+
+const NotEntitledResponse = `
+{
+  "entitled": false,
+  "feature_id": "unknown"
+}
+`
+
+const TriggerBuildScanResponse = `
+{
+  "info":"No Xray “Fail build in case of a violation” policy rule has been defined on this build. The Xray scan will run in parallel to the deployment of the build and will not obstruct the build. To review the Xray scan results, see the Xray Violations tab in the UI."
+}
+`
+
+const BuildScanResultsResponse = `
+{
+  "build_name": "test-%[1]s",
+  "build_number": "3",
+  "status": "completed",
+  "more_details_url": "http://localhost:8046/xray/ui/builds/test-%[1]s/3/1/xrayData?buildRepo=artifactory-build-info",
+  "fail_build": false,
+  "violations": [],
+  "vulnerabilities": [
+    {
+      "cves": [
+        {
+          "cve": "CVE-2022-41853",
+          "cvss_v3_score": "9.8",
+          "cvss_v3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "summary": "Those using java.sql.Statement or java.sql.PreparedStatement in hsqldb (HyperSQL DataBase) to process untrusted input may be vulnerable to a remote code execution attack. By default it is allowed to call any static method of any Java class in the classpath resulting in code execution. The issue can be prevented by updating to 2.7.1 or by setting the system property \"hsqldb.method_class_names\" to classes which are allowed to be called. For example, System.setProperty(\"hsqldb.method_class_names\", \"abc\") or Java argument -Dhsqldb.method_class_names=\"abc\" can be used. From version 2.7.1 all classes by default are not accessible except those in java.lang.Math and need to be manually enabled.",
+      "severity": "Critical",
+      "components": {
+        "gav://org.hsqldb:hsqldb:1.8.0.10": {
+          "package_name": "org.hsqldb:hsqldb",
+          "package_version": "1.8.0.10",
+          "package_type": "maven",
+          "fixed_versions": [
+            "[2.7.1]"
+          ],
+          "infected_versions": [
+            "(,2.7.1)"
+          ],
+          "impact_paths": [
+            [
+              {
+                "component_id": "build://test-%[1]s:3"
+              },
+              {
+                "component_id": "gav://org.hsqldb:hsqldb:1.8.0.10"
+              }
+            ]
+          ]
+        }
+      },
+      "issue_id": "XRAY-256683",
+      "references": [
+        "http://hsqldb.org/doc/2.0/guide/sqlroutines-chapt.html#src_jrt_access_control",
+        "https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=50212#c7",
+        "https://lists.debian.org/debian-lts-announce/2022/12/msg00020.html"
+      ],
+      "is_high_profile": false,
+      "provider": "JFrog",
+      "edited": "0001-01-01T00:00:00Z",
+      "applicability":null
+    }
+  ]
+}
+`
+const xscVersionResponse = `{"xsc_version": "1.0.0"}`
+
+const XscGitInfoResponse = `{"multi_scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122"}`
+
+const XscGitInfoBadResponse = `"failed create git info request: git_repo_url field must contain value"`
+
+var GitInfoContextWithMinimalRequiredFields = xrayServices.XscGitInfoContext{
+	GitRepoUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
+	BranchName: "feature/XRAY-123-cool-feature",
+	CommitHash: "acc5e24e69a-d3c1-4022-62eb-69e4a1e5",
+}
+
+var GitInfoContextWithMissingFields = xrayServices.XscGitInfoContext{
+	GitRepoUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
+	BranchName: "feature/XRAY-123-cool-feature",
+}
+
+const TestMultiScanId = "3472b4e2-bddc-11ee-a9c9-acde48001122"
+const TestXscVersion = "1.0.0"
+
+var MapReportIdEndpoint = map[int]string{
+	777: VulnerabilitiesEndpoint,
+	888: LicensesEndpoint,
+}
+
+var MapResponse = map[string]map[string]string{
+	VulnerabilitiesEndpoint: {
+		"XrayReportRequest": VulnerabilityXrayReportRequestResponse,
+		"ReportStatus":      VulnerabilityReportStatusResponse,
+		"ReportDetails":     VulnerabilityReportDetailsResponse,
+	},
+	LicensesEndpoint: {
+		"XrayReportRequest": LicensesXrayReportRequestResponse,
+		"ReportStatus":      LicensesReportStatusResponse,
+		"ReportDetails":     LicensesReportDetailsResponse,
+	},
+}

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -42,8 +43,7 @@ func (glc *GitLfsCleanService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpCl
 	return glc.client
 }
 
-func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitLfsCleanParams) (*content.ContentReader, error) {
-	var err error
+func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitLfsCleanParams) (filesToDeleteReader *content.ContentReader, err error) {
 	repo := gitLfsCleanParams.GetRepo()
 	gitPath := gitLfsCleanParams.GetGitPath()
 	if gitPath == "" {
@@ -52,7 +52,7 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 			return nil, errorutils.CheckError(err)
 		}
 	}
-	if len(repo) <= 0 {
+	if len(repo) == 0 {
 		repo, err = detectRepo(gitPath, glc.GetArtifactoryDetails().GetUrl())
 		if err != nil {
 			return nil, err
@@ -64,13 +64,15 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	defer artifactoryLfsFilesReader.Close()
+	defer func() {
+		err = errors.Join(err, artifactoryLfsFilesReader.Close())
+	}()
 	log.Info("Collecting files to preserve from Git references matching the pattern", gitLfsCleanParams.GetRef(), "...")
 	gitLfsFiles, err := getLfsFilesFromGit(gitPath, refsRegex)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	filesToDeleteReader, err := findFilesToDelete(artifactoryLfsFilesReader, gitLfsFiles)
+	filesToDeleteReader, err = findFilesToDelete(artifactoryLfsFilesReader, gitLfsFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -79,22 +81,25 @@ func (glc *GitLfsCleanService) GetUnreferencedGitLfsFiles(gitLfsCleanParams GitL
 		return nil, err
 	}
 	log.Info("Found", len(gitLfsFiles), "files to keep, and", length, "to clean")
-	return filesToDeleteReader, nil
+	return
 }
 
-func findFilesToDelete(artifactoryLfsFilesReader *content.ContentReader, gitLfsFiles map[string]struct{}) (*content.ContentReader, error) {
+func findFilesToDelete(artifactoryLfsFilesReader *content.ContentReader, gitLfsFiles map[string]struct{}) (contentReader *content.ContentReader, err error) {
 	cw, err := content.NewContentWriter("results", true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer cw.Close()
+	defer func() {
+		err = errors.Join(err, cw.Close())
+	}()
 	for resultItem := new(utils.ResultItem); artifactoryLfsFilesReader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 		if _, keepFile := gitLfsFiles[resultItem.Name]; !keepFile {
 			cw.Write(*resultItem)
 		}
 	}
 	artifactoryLfsFilesReader.Reset()
-	return content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey()), nil
+	contentReader = content.NewContentReader(cw.GetFilePath(), cw.GetArrayKey())
+	return
 }
 
 func lfsConfigUrlExtractor(conf *gitconfig.Config) (*url.URL, error) {
@@ -130,25 +135,26 @@ func extractRepo(gitPath, configFile, rtUrl string, lfsUrlExtractor lfsUrlExtrac
 		return "", err
 	}
 	if artifactoryConfiguredUrl.Scheme != lfsUrl.Scheme || artifactoryConfiguredUrl.Host != lfsUrl.Host {
-		return "", fmt.Errorf("Configured Git LFS URL %q does not match provided URL %q", lfsUrl.String(), artifactoryConfiguredUrl.String())
+		return "", fmt.Errorf("configured Git LFS URL %q does not match provided URL %q", lfsUrl.String(), artifactoryConfiguredUrl.String())
 	}
 	artifactoryConfiguredUrlPath := path.Clean("/"+artifactoryConfiguredUrl.Path+"/api/lfs") + "/"
 	lfsUrlPath := path.Clean(lfsUrl.Path)
 	if strings.HasPrefix(lfsUrlPath, artifactoryConfiguredUrlPath) {
 		return lfsUrlPath[len(artifactoryConfiguredUrlPath):], nil
 	}
-	return "", fmt.Errorf("Configured Git LFS URL %q does not match provided URL %q", lfsUrl.String(), artifactoryConfiguredUrl.String())
+	return "", fmt.Errorf("configured Git LFS URL %q does not match provided URL %q", lfsUrl.String(), artifactoryConfiguredUrl.String())
 }
 
 type lfsUrlExtractorFunc func(conf *gitconfig.Config) (*url.URL, error)
 
-func getLfsUrl(gitPath, configFile string, lfsUrlExtractor lfsUrlExtractorFunc) (*url.URL, error) {
-	var lfsUrl *url.URL
+func getLfsUrl(gitPath, configFile string, lfsUrlExtractor lfsUrlExtractorFunc) (lfsUrl *url.URL, err error) {
 	lfsConf, err := os.Open(path.Join(gitPath, configFile))
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	defer lfsConf.Close()
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(lfsConf.Close()))
+	}()
 	conf := gitconfig.New()
 	err = gitconfig.NewDecoder(lfsConf).Decode(conf)
 	if err != nil {
@@ -194,9 +200,13 @@ func getLfsFilesFromGit(path, refMatch string) (map[string]struct{}, error) {
 		if err != nil || !match {
 			return errorutils.CheckError(err)
 		}
-		commit, err := repo.CommitObject(ref.Hash())
+		var commit *object.Commit
+		commit, err = repo.CommitObject(ref.Hash())
 		if err != nil {
-			return errorutils.CheckError(err)
+			commit, err = checkAnnotatedTag(ref, repo)
+			if err != nil {
+				return err
+			}
 		}
 		files, err := commit.Files()
 		if err != nil {
@@ -208,6 +218,18 @@ func getLfsFilesFromGit(path, refMatch string) (map[string]struct{}, error) {
 		return errorutils.CheckError(err)
 	})
 	return results, errorutils.CheckError(err)
+}
+
+// checkAnnotatedTag checks the case of an annotated tag in which the commit is within the tag object
+func checkAnnotatedTag(ref *plumbing.Reference, repo *git.Repository) (*object.Commit, error) {
+	// Get the annotated tag object.
+	annotatedTag, err := repo.TagObject(ref.Hash())
+	if err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+	// Find the commit object associated with the annotated tag.
+	commit, err := repo.CommitObject(annotatedTag.Target)
+	return commit, errorutils.CheckError(err)
 }
 
 func collectLfsFileFromGit(results map[string]struct{}, file *object.File) error {

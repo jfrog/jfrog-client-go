@@ -2,9 +2,8 @@ package tests
 
 import (
 	"bufio"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/stretchr/testify/assert"
+	"errors"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -12,6 +11,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	biutils "github.com/jfrog/build-info-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/stretchr/testify/assert"
 )
 
 type HttpServerHandlers map[string]func(w http.ResponseWriter, r *http.Request)
@@ -31,7 +35,11 @@ func StartHttpServer(handlers HttpServerHandlers) (int, error) {
 			panic(err)
 		}
 	}()
-	return listener.Addr().(*net.TCPAddr).Port, nil
+	tcpAddr, ok := listener.Addr().(*net.TCPAddr)
+	if !ok {
+		return 0, errors.New("couldn't assert listener address to tcpAddr")
+	}
+	return tcpAddr.Port, nil
 }
 
 func GetTestPackages(searchPattern string) []string {
@@ -65,12 +73,12 @@ func RunTests(testsPackages []string, hideUnitTestsLog bool) error {
 	if len(testsPackages) == 0 {
 		return nil
 	}
-	testsPackages = append([]string{"test", "-v"}, testsPackages...)
+	testsPackages = append([]string{"test", "-v", "-p", "1"}, testsPackages...)
 	cmd := exec.Command("go", testsPackages...)
 
 	if hideUnitTestsLog {
-		tempDirPath, err := getTestsLogsDir()
-		exitOnErr(err)
+		tempDirPath := filepath.Join(os.TempDir(), "jfrog_tests_logs")
+		exitOnErr(fileutils.CreateDirIfNotExist(tempDirPath))
 
 		f, err := os.Create(filepath.Join(tempDirPath, "unit_tests.log"))
 		exitOnErr(err)
@@ -93,11 +101,6 @@ func RunTests(testsPackages []string, hideUnitTestsLog bool) error {
 	return nil
 }
 
-func getTestsLogsDir() (string, error) {
-	tempDirPath := filepath.Join(os.TempDir(), "jfrog_tests_logs")
-	return tempDirPath, fileutils.CreateDirIfNotExist(tempDirPath)
-}
-
 func exitOnErr(err error) {
 	if err != nil {
 		log.Error(err)
@@ -105,24 +108,92 @@ func exitOnErr(err error) {
 	}
 }
 
-func InitVcsSubmoduleTestDir(t *testing.T, srcPath string) (submodulePath, tmpDir string) {
+func InitVcsSubmoduleTestDir(t *testing.T, srcPath, tmpDir string) (submodulePath string) {
 	var err error
-	tmpDir, err = fileutils.CreateTempDir()
-	assert.NoError(t, err)
-
-	err = fileutils.CopyDir(srcPath, tmpDir, true, nil)
-	assert.NoError(t, err)
+	assert.NoError(t, biutils.CopyDir(srcPath, tmpDir, true, nil))
 	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
 		assert.NoError(t, err)
-		err := fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git"))
-		assert.NoError(t, err)
+		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, ".git")))
 	}
 	submoduleDst := filepath.Join(tmpDir, "subdir", "submodule")
-	err = fileutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData"))
-	assert.NoError(t, err)
-	err = fileutils.MoveFile(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git"))
-	assert.NoError(t, err)
+	assert.NoError(t, biutils.CopyFile(submoduleDst, filepath.Join(tmpDir, "gitSubmoduleData")))
+	assert.NoError(t, fileutils.MoveFile(filepath.Join(submoduleDst, "gitSubmoduleData"), filepath.Join(submoduleDst, ".git")))
 	submodulePath, err = filepath.Abs(submoduleDst)
 	assert.NoError(t, err)
-	return submodulePath, tmpDir
+	return submodulePath
+}
+
+func InitVcsWorktreeTestDir(t *testing.T, srcPath, tmpDir string) (worktreePath string) {
+	var err error
+	assert.NoError(t, biutils.CopyDir(srcPath, tmpDir, true, nil))
+	if found, err := fileutils.IsDirExists(filepath.Join(tmpDir, "gitdata"), false); found {
+		assert.NoError(t, err)
+		assert.NoError(t, fileutils.RenamePath(filepath.Join(tmpDir, "gitdata"), filepath.Join(tmpDir, "bare.git")))
+	}
+	worktreeDst := filepath.Join(tmpDir, "worktree_repo")
+	worktreePath, err = filepath.Abs(worktreeDst)
+	assert.NoError(t, fileutils.MoveFile(filepath.Join(worktreeDst, "gitWorktreeData"), filepath.Join(worktreeDst, ".git")))
+	assert.NoError(t, err)
+	return worktreePath
+}
+
+func ChangeDirAndAssert(t *testing.T, dirPath string) {
+	assert.NoError(t, os.Chdir(dirPath), "Couldn't change dir to "+dirPath)
+}
+
+// ChangeDirWithCallback changes working directory to the given path and return function that change working directory back to the original path.
+func ChangeDirWithCallback(t *testing.T, originWd, destinationWd string) func() {
+	ChangeDirAndAssert(t, destinationWd)
+	return func() {
+		ChangeDirAndAssert(t, originWd)
+	}
+}
+
+func RemoveAndAssert(t *testing.T, path string) {
+	assert.NoError(t, os.Remove(path), "Couldn't remove: "+path)
+}
+
+func RemoveAllAndAssert(t *testing.T, path string) {
+	assert.NoError(t, fileutils.RemoveTempDir(path), "Couldn't removeAll: "+path)
+}
+
+func SetEnvAndAssert(t *testing.T, key, value string) {
+	assert.NoError(t, os.Setenv(key, value), "Failed to set env: "+key)
+}
+
+func SetEnvWithCallbackAndAssert(t *testing.T, key, value string) func() {
+	oldValue, exist := os.LookupEnv(key)
+	SetEnvAndAssert(t, key, value)
+
+	if exist {
+		return func() {
+			SetEnvAndAssert(t, key, oldValue)
+		}
+	}
+
+	return func() {
+		UnSetEnvAndAssert(t, key)
+	}
+}
+
+func UnSetEnvAndAssert(t *testing.T, key string) {
+	assert.NoError(t, os.Unsetenv(key), "Failed to unset env: "+key)
+}
+
+func GetLocalArtifactoryTokenIfNeeded(url string) (adminToken string) {
+	if strings.Contains(url, "localhost:8081") {
+		adminToken = os.Getenv("JFROG_TESTS_LOCAL_ACCESS_TOKEN")
+	}
+	return
+}
+
+// Set new logger with output redirection to a null logger. This is useful for negative tests.
+// Caller is responsible to set the old log back.
+func RedirectLogOutputToNil() (previousLog log.Log) {
+	previousLog = log.Logger
+	newLog := log.NewLogger(log.INFO, nil)
+	newLog.SetOutputWriter(io.Discard)
+	newLog.SetLogsWriter(io.Discard, 0)
+	log.SetLogger(newLog)
+	return previousLog
 }

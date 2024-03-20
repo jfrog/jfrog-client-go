@@ -2,12 +2,11 @@ package utils
 
 import (
 	"fmt"
-	jwt "github.com/golang-jwt/jwt/v4"
+	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"golang.org/x/crypto/openpgp"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -95,7 +94,7 @@ func (r *RbGpgValidator) VerifyArtifact(artifactPath, sha256 string) error {
 func (r *RbGpgValidator) verifyJwtToken(bundleTokenStr string) (*ReleaseBundleModel, error) {
 	model := &ReleaseBundleModel{}
 	token, err := jwt.ParseWithClaims(bundleTokenStr, model, func(token *jwt.Token) (interface{}, error) {
-		key, err := ioutil.ReadFile(filepath.Join(r.publicKeyFilePath))
+		key, err := os.ReadFile(r.publicKeyFilePath)
 		if err != nil {
 			return nil, errorutils.CheckError(err)
 		}

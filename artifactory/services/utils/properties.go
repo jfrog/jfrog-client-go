@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -47,12 +48,24 @@ func (props *Properties) ParseAndAddProperties(propStr string) error {
 		}
 
 		splitValues := splitWhileIgnoringBackslashPrefixSeparators(value, multiValuesSeparator)
-		for _, val := range splitValues {
-			props.properties[key] = append(props.properties[key], val)
-		}
+		props.properties[key] = append(props.properties[key], splitValues...)
 	}
 	props.removeDuplicateValues()
 	return nil
+}
+
+// Creates an array containing the keys sorted in increasing order.
+func (props *Properties) getSortedKeys() []string {
+	// Sort the keys to create a predictable order
+	keys := make([]string, 0, len(props.properties))
+	for k := range props.properties {
+		keys = append(keys, k)
+	}
+
+	// sort the slice by keys
+	sort.Strings(keys)
+
+	return keys
 }
 
 // Searches for the first "=" instance, and split str into 2 substrings.
@@ -98,15 +111,17 @@ func (props *Properties) AddProperty(key, value string) {
 // Otherwise, each value of the property will be written with its key separately. For example: key=val1;key=val2;...
 func (props *Properties) ToEncodedString(concatValues bool) string {
 	encodedProps := ""
-	for key, values := range props.properties {
+	for _, key := range props.getSortedKeys() {
 		var jointProp string
+
+		values := props.properties[key]
 
 		if concatValues {
 			jointProp = fmt.Sprintf("%s=", url.QueryEscape(key))
 		}
 		for _, value := range values {
 			if concatValues {
-				propValue := strings.Replace(value, multiValuesSeparator, fmt.Sprintf("\\%s", multiValuesSeparator), -1)
+				propValue := strings.ReplaceAll(value, multiValuesSeparator, fmt.Sprintf("\\%s", multiValuesSeparator))
 				jointProp = fmt.Sprintf("%s%s%s", jointProp, url.QueryEscape(propValue), url.QueryEscape(multiValuesSeparator))
 			} else {
 				jointProp = fmt.Sprintf("%s%s=%s%s", jointProp, url.QueryEscape(key), url.QueryEscape(value), propsSeparator)
@@ -173,4 +188,9 @@ func MergeProperties(properties []*Properties) *Properties {
 	}
 	mergedProps.removeDuplicateValues()
 	return mergedProps
+}
+
+type ItemProperties struct {
+	Properties map[string][]string `json:"properties,omitempty"`
+	Uri        string              `json:"uri,omitempty"`
 }

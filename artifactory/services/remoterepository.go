@@ -13,7 +13,6 @@ type RemoteRepositoryService struct {
 func NewRemoteRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *RemoteRepositoryService {
 	return &RemoteRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: RemoteRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
@@ -136,6 +135,14 @@ func (rrs *RemoteRepositoryService) Sbt(params SbtRemoteRepositoryParams) error 
 	return rrs.performRequest(params, params.Key)
 }
 
+func (rrs *RemoteRepositoryService) Swift(params SwiftRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
+func (rrs *RemoteRepositoryService) Terraform(params TerraformRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
 func (rrs *RemoteRepositoryService) Vcs(params VcsRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
@@ -173,13 +180,13 @@ type RemoteRepositoryBaseParams struct {
 	HardFail                          *bool                   `json:"hardFail,omitempty"`
 	Offline                           *bool                   `json:"offline,omitempty"`
 	StoreArtifactsLocally             *bool                   `json:"storeArtifactsLocally,omitempty"`
-	SocketTimeoutMillis               int                     `json:"socketTimeoutMillis,omitempty"`
+	SocketTimeoutMillis               *int                    `json:"socketTimeoutMillis,omitempty"`
 	LocalAddress                      string                  `json:"localAddress,omitempty"`
-	RetrievalCachePeriodSecs          int                     `json:"retrievalCachePeriodSecs,omitempty"`
-	MetadataRetrievalTimeoutSecs      int                     `json:"metadataRetrievalTimeoutSecs,omitempty"`
-	MissedRetrievalCachePeriodSecs    int                     `json:"missedRetrievalCachePeriodSecs,omitempty"`
-	UnusedArtifactsCleanupPeriodHours int                     `json:"unusedArtifactsCleanupPeriodHours,omitempty"`
-	AssumedOfflinePeriodSecs          int                     `json:"assumedOfflinePeriodSecs,omitempty"`
+	RetrievalCachePeriodSecs          *int                    `json:"retrievalCachePeriodSecs,omitempty"`
+	MetadataRetrievalTimeoutSecs      *int                    `json:"metadataRetrievalTimeoutSecs,omitempty"`
+	MissedRetrievalCachePeriodSecs    *int                    `json:"missedRetrievalCachePeriodSecs,omitempty"`
+	UnusedArtifactsCleanupPeriodHours *int                    `json:"unusedArtifactsCleanupPeriodHours,omitempty"`
+	AssumedOfflinePeriodSecs          *int                    `json:"assumedOfflinePeriodSecs,omitempty"`
 	ShareConfiguration                *bool                   `json:"shareConfiguration,omitempty"`
 	SynchronizeProperties             *bool                   `json:"synchronizeProperties,omitempty"`
 	BlockMismatchingMimeTypes         *bool                   `json:"blockMismatchingMimeTypes,omitempty"`
@@ -189,6 +196,7 @@ type RemoteRepositoryBaseParams struct {
 	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
 	ClientTlsCertificate              string                  `json:"clientTlsCertificate,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
+	QueryParams                       string                  `json:"queryParams,omitempty"`
 }
 
 func NewRemoteRepositoryBaseParams() RemoteRepositoryBaseParams {
@@ -201,7 +209,7 @@ func NewRemoteRepositoryPackageParams(packageType string) RemoteRepositoryBasePa
 
 type JavaPackageManagersRemoteRepositoryParams struct {
 	RemoteRepoChecksumPolicyType string `json:"remoteRepoChecksumPolicyType,omitempty"`
-	MaxUniqueSnapshots           int    `json:"maxUniqueSnapshots,omitempty"`
+	MaxUniqueSnapshots           *int   `json:"maxUniqueSnapshots,omitempty"`
 	FetchJarsEagerly             *bool  `json:"fetchJarsEagerly,omitempty"`
 	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
 	FetchSourcesEagerly          *bool  `json:"fetchSourcesEagerly,omitempty"`
@@ -310,7 +318,7 @@ type DockerRemoteRepositoryParams struct {
 	ExternalDependenciesEnabled  *bool    `json:"externalDependenciesEnabled,omitempty"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
 	EnableTokenAuthentication    *bool    `json:"enableTokenAuthentication,omitempty"`
-	BlockPullingSchema1          *bool    `json:"blockPushingSchema1,omitempty"`
+	BlockPushingSchema1          *bool    `json:"blockPushingSchema1,omitempty"`
 }
 
 func NewDockerRemoteRepositoryParams() DockerRemoteRepositoryParams {
@@ -363,7 +371,9 @@ func NewGradleRemoteRepositoryParams() GradleRemoteRepositoryParams {
 
 type HelmRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ChartsBaseUrl string `json:"chartsBaseUrl,omitempty"`
+	ChartsBaseUrl                string   `json:"chartsBaseUrl,omitempty"`
+	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
 }
 
 func NewHelmRemoteRepositoryParams() HelmRemoteRepositoryParams {
@@ -459,6 +469,25 @@ type SbtRemoteRepositoryParams struct {
 
 func NewSbtRemoteRepositoryParams() SbtRemoteRepositoryParams {
 	return SbtRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("sbt")}
+}
+
+type SwiftRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewSwiftRemoteRepositoryParams() SwiftRemoteRepositoryParams {
+	return SwiftRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("swift")}
+}
+
+type TerraformRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+	VcsGitRemoteRepositoryParams
+	TerraformRegistryUrl  string `json:"terraformRegistryUrl,omitempty"`
+	TerraformProvidersUrl string `json:"terraformProvidersUrl,omitempty"`
+}
+
+func NewTerraformRemoteRepositoryParams() TerraformRemoteRepositoryParams {
+	return TerraformRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("terraform")}
 }
 
 type VcsRemoteRepositoryParams struct {

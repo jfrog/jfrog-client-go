@@ -1,27 +1,34 @@
 package xray
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/buger/jsonparser"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	clienttests "github.com/jfrog/jfrog-client-go/utils/tests"
-	"github.com/jfrog/jfrog-client-go/xray/services"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"testing"
+
+	"github.com/buger/jsonparser"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	clienttests "github.com/jfrog/jfrog-client-go/utils/tests"
+	"github.com/jfrog/jfrog-client-go/xray/services"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
-	CleanScanBuildName      = "cleanBuildName"
-	FatalScanBuildName      = "fatalBuildName"
-	VulnerableBuildName     = "vulnerableBuildName"
-	VulnerabilitiesEndpoint = "vulnerabilities"
+	CleanScanBuildName          = "cleanBuildName"
+	FatalScanBuildName          = "fatalBuildName"
+	VulnerableBuildName         = "vulnerableBuildName"
+	VulnerabilitiesEndpoint     = "vulnerabilities"
+	LicensesEndpoint            = "licenses"
+	ContextualAnalysisFeatureId = "contextual_analysis"
+	BadFeatureId                = "unknown"
 )
 
 func scanBuildHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -35,16 +42,30 @@ func scanBuildHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch buildName {
 	case CleanScanBuildName:
-		fmt.Fprint(w, CleanXrayScanResponse)
-		return
+		_, err = fmt.Fprint(w, CleanXrayScanResponse)
 	case FatalScanBuildName:
-		fmt.Fprint(w, FatalErrorXrayScanResponse)
-		return
+		_, err = fmt.Fprint(w, FatalErrorXrayScanResponse)
 	case VulnerableBuildName:
-		fmt.Fprint(w, VulnerableXrayScanResponse)
+		_, err = fmt.Fprint(w, VulnerableXrayScanResponse)
+	}
+	if err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func artifactSummaryHandler(w http.ResponseWriter, r *http.Request) {
+	_, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+
+	_, err = fmt.Fprint(w, VulnerableXraySummaryArtifactResponse)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func reportHandler(w http.ResponseWriter, r *http.Request) {
@@ -56,18 +77,27 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		if numSegments == 1 {
-			_, err := strconv.Atoi(addlSegments[0])
+			id, err := strconv.Atoi(addlSegments[0])
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			_, _ = fmt.Fprint(w, VulnerabilityReportStatusResponse)
+			_, err = fmt.Fprint(w, MapResponse[MapReportIdEndpoint[id]]["ReportStatus"])
+			if err != nil {
+				log.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+
 			return
 		}
 	case http.MethodPost:
 		if numSegments == 1 {
-			if addlSegments[0] == VulnerabilitiesEndpoint {
-				_, _ = fmt.Fprint(w, VulnerabilityRequestResponse)
+			if addlSegments[0] == VulnerabilitiesEndpoint || addlSegments[0] == LicensesEndpoint {
+				_, err := fmt.Fprint(w, MapResponse[addlSegments[0]]["XrayReportRequest"])
+				if err != nil {
+					log.Error(err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				}
 				return
 			}
 		} else if numSegments == 2 {
@@ -76,24 +106,129 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			if addlSegments[0] == VulnerabilitiesEndpoint {
-				_, _ = fmt.Fprint(w, VulnerabilityReportDetailsResponse)
+			if addlSegments[0] == VulnerabilitiesEndpoint || addlSegments[0] == LicensesEndpoint {
+				_, err := fmt.Fprint(w, MapResponse[addlSegments[0]]["ReportDetails"])
+				if err != nil {
+					log.Error(err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				}
 				return
 			}
 		}
 	case http.MethodDelete:
 		if numSegments == 0 {
-			_, _ = fmt.Fprint(w, VulnerabilityReportDeleteResponse)
+			_, err := fmt.Fprint(w, XrayReportDeleteResponse)
+			if err != nil {
+				log.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 	}
 	http.Error(w, "Invalid reports request", http.StatusBadRequest)
 }
 
-func StartXrayMockServer() int {
+func entitlementsHandler(w http.ResponseWriter, r *http.Request) {
+	var err error
+	featureId := r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
+	switch featureId {
+	case ContextualAnalysisFeatureId:
+		_, err = fmt.Fprint(w, EntitledResponse)
+	case BadFeatureId:
+		_, err = fmt.Fprint(w, NotEntitledResponse)
+	}
+	if err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func buildScanHandler(w http.ResponseWriter, r *http.Request) {
+	argsSegment := strings.Split(r.URL.Path, services.BuildScanAPI)[1]
+	switch r.Method {
+	case http.MethodGet:
+		if argsSegment == "/test-get/3" {
+			_, err := fmt.Fprintf(w, BuildScanResultsResponse, "get")
+			if err != nil {
+				log.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+	case http.MethodPost:
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		buildName, err := jsonparser.GetString(body, "build_name")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if argsSegment == "/" && strings.HasPrefix(buildName, "test-") {
+			_, err = fmt.Fprint(w, TriggerBuildScanResponse)
+			if err != nil {
+				log.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+		if argsSegment == "/scanResult" && buildName == "test-post" {
+			_, err = fmt.Fprintf(w, BuildScanResultsResponse, "post")
+			if err != nil {
+				log.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+	}
+	http.Error(w, "Invalid reports request", http.StatusBadRequest)
+}
+
+func xscGetVersionHandlerFunc(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			_, err := fmt.Fprint(w, xscVersionResponse)
+			assert.NoError(t, err)
+			return
+		}
+		http.Error(w, "Invalid xsc request", http.StatusBadRequest)
+	}
+}
+
+func xscGitInfoHandlerFunc(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req, err := io.ReadAll(r.Body)
+		assert.NoError(t, err)
+		if r.Method == http.MethodPost {
+			var reqBody services.XscGitInfoContext
+			err = json.Unmarshal(req, &reqBody)
+			assert.NoError(t, err)
+			if reqBody.GitRepoUrl == "" || reqBody.BranchName == "" || reqBody.CommitHash == "" {
+				w.WriteHeader(http.StatusBadRequest)
+				_, err := fmt.Fprint(w, XscGitInfoBadResponse)
+				assert.NoError(t, err)
+				return
+			}
+			w.WriteHeader(http.StatusCreated)
+			_, err = fmt.Fprint(w, XscGitInfoResponse)
+			assert.NoError(t, err)
+			return
+		}
+		http.Error(w, "Invalid xsc request", http.StatusBadRequest)
+	}
+}
+
+func StartXrayMockServer(t *testing.T) int {
 	handlers := clienttests.HttpServerHandlers{}
 	handlers["/api/xray/scanBuild"] = scanBuildHandler
+	handlers["/api/v2/summary/artifact"] = artifactSummaryHandler
+	handlers["/api/v1/entitlements/feature/"] = entitlementsHandler
+	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t)
+	handlers["/xsc/api/v1/gitinfo"] = xscGitInfoHandlerFunc(t)
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
+	handlers[fmt.Sprintf("/%s/", services.BuildScanAPI)] = buildScanHandler
 	handlers["/"] = http.NotFound
 
 	port, err := clienttests.StartHttpServer(handlers)

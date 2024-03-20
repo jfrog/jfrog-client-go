@@ -8,14 +8,16 @@ type ProgressMgr interface {
 	// Input: 'total' - file size, 'label' - the title of the operation, 'path' - the path of the file being processed.
 	// Output: progress indicator id
 	NewProgressReader(total int64, label, path string) (progress Progress)
-	// Changes progress indicator state.
-	SetProgressState(id int, state string)
+	// Changes progress indicator state to merging.
+	SetMergingState(id int, useSpinner bool) (bar Progress)
 	// Returns the requested progress indicator.
 	GetProgress(id int) (progress Progress)
 	// Aborts a progress indicator. Called on both successful and unsuccessful operations.
 	RemoveProgress(id int)
+	// Increments the general progress by 1
+	IncrementGeneralProgress()
 	// Quits the whole progress mechanism.
-	Quit()
+	Quit() (err error)
 	// Increments the general progress total count by given n.
 	IncGeneralProgressTotalBy(n int64)
 	// Replace the headline progress indicator message with new one.
@@ -30,6 +32,8 @@ type ProgressMgr interface {
 type Progress interface {
 	// Used for updating the progress indicator progress.
 	ActionWithProgress(reader io.Reader) (results io.Reader)
+	// Used for setting the progress indicator progress.
+	SetProgress(progress int64)
 	// Aborts a progress indicator. Called on both successful and unsuccessful operations
 	Abort()
 	// Returns the Progress ID

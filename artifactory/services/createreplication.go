@@ -7,7 +7,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -25,7 +24,7 @@ func (rs *CreateReplicationService) GetJfrogHttpClient() *jfroghttpclient.JfrogH
 	return rs.client
 }
 
-func (rs *CreateReplicationService) performRequest(params *utils.ReplicationBody) error {
+func (rs *CreateReplicationService) performRequest(params *utils.UpdateReplicationBody) error {
 	content, err := json.Marshal(params)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -33,24 +32,21 @@ func (rs *CreateReplicationService) performRequest(params *utils.ReplicationBody
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.replications.ReplicationConfigRequest+json", &httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/replications/" + params.RepoKey
-	var resp *http.Response
-	var body []byte
-	log.Info("Creating replication..")
-	operationString := "creating"
-	resp, body, err = rs.client.SendPut(url, content, &httpClientsDetails)
+	log.Info("Creating replication...")
+	resp, body, err := rs.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+		return err
 	}
 	log.Debug("Artifactory response:", resp.Status)
-	log.Info("Done " + operationString + " repository.")
+	log.Info("Done creating replication.")
 	return nil
 }
 
 func (rs *CreateReplicationService) CreateReplication(params CreateReplicationParams) error {
-	return rs.performRequest(utils.CreateReplicationBody(params.ReplicationParams))
+	return rs.performRequest(utils.CreateUpdateReplicationBody(params.ReplicationParams))
 }
 
 func NewCreateReplicationParams() CreateReplicationParams {

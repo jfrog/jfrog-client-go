@@ -13,7 +13,6 @@ type LocalRepositoryService struct {
 func NewLocalRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *LocalRepositoryService {
 	return &LocalRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: LocalRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
@@ -129,6 +128,14 @@ func (lrs *LocalRepositoryService) Rpm(params RpmLocalRepositoryParams) error {
 }
 
 func (lrs *LocalRepositoryService) Sbt(params SbtLocalRepositoryParams) error {
+	return lrs.performRequest(params, params.Key)
+}
+
+func (lrs *LocalRepositoryService) Swift(params SwiftLocalRepositoryParams) error {
+	return lrs.performRequest(params, params.Key)
+}
+
+func (lrs *LocalRepositoryService) Terraform(params TerraformLocalRepositoryParams) error {
 	return lrs.performRequest(params, params.Key)
 }
 
@@ -370,6 +377,22 @@ type SbtLocalRepositoryParams struct {
 
 func NewSbtLocalRepositoryParams() SbtLocalRepositoryParams {
 	return SbtLocalRepositoryParams{LocalRepositoryBaseParams: NewLocalRepositoryPackageParams("sbt")}
+}
+
+type SwiftLocalRepositoryParams struct {
+	LocalRepositoryBaseParams
+}
+
+func NewSwiftLocalRepositoryParams() SwiftLocalRepositoryParams {
+	return SwiftLocalRepositoryParams{LocalRepositoryBaseParams: NewLocalRepositoryPackageParams("swift")}
+}
+
+type TerraformLocalRepositoryParams struct {
+	LocalRepositoryBaseParams
+}
+
+func NewTerraformLocalRepositoryParams() TerraformLocalRepositoryParams {
+	return TerraformLocalRepositoryParams{LocalRepositoryBaseParams: NewLocalRepositoryPackageParams("terraform")}
 }
 
 type VagrantLocalRepositoryParams struct {

@@ -12,14 +12,13 @@ import (
 
 func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 	if !strings.HasSuffix(deletePattern, "/") {
-		return "", errors.New("Delete pattern must end with \"/\"")
+		return "", errors.New("delete pattern must end with \"/\"")
 	}
 
-	regexpPattern := "^" + strings.Replace(deletePattern, "*", "([^/]*|.*)", -1)
+	regexpPattern := "^" + strings.ReplaceAll(deletePattern, "*", "([^/]*|.*)")
 	r, err := regexp.Compile(regexpPattern)
-	errorutils.CheckError(err)
 	if err != nil {
-		return "", err
+		return "", errorutils.CheckError(err)
 	}
 
 	groups := r.FindStringSubmatch(searchResult)
@@ -45,7 +44,9 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 	if err != nil {
 		return
 	}
-	defer dirsToBeDeletedReader.Close()
+	defer func() {
+		err = errors.Join(err, dirsToBeDeletedReader.Close())
+	}()
 	var candidateDirToBeDeletedPath string
 	var itemNotToBeDeletedLocation string
 	var candidateDirToBeDeleted, artifactNotToBeDeleted *ResultItem
@@ -59,7 +60,7 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 			if candidateDirToBeDeleted.Name == "." {
 				continue
 			}
-			candidateDirToBeDeletedPath = strings.ToLower(candidateDirToBeDeleted.GetItemRelativePath())
+			candidateDirToBeDeletedPath = candidateDirToBeDeleted.GetItemRelativePath()
 		}
 		// Fetch the next 'artifactNotToBeDelete'.
 		if artifactNotToBeDeleted == nil {
@@ -70,7 +71,7 @@ func WriteCandidateDirsToBeDeleted(candidateDirsReaders []*content.ContentReader
 				writeRemainCandidate(resultWriter, dirsToBeDeletedReader)
 				break
 			}
-			itemNotToBeDeletedLocation = strings.ToLower(artifactNotToBeDeleted.GetItemRelativeLocation())
+			itemNotToBeDeletedLocation = artifactNotToBeDeleted.GetItemRelativeLocation()
 		}
 		// Found an 'artifact not to be deleted' in 'dir to be deleted', therefore skip writing the dir to the result file.
 		if strings.HasPrefix(itemNotToBeDeletedLocation, candidateDirToBeDeletedPath) {

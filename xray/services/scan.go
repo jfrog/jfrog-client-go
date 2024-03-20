@@ -2,7 +2,8 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"net/http"
 	"strings"
 	"time"
@@ -10,10 +11,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const (
@@ -39,6 +38,21 @@ const (
 	Binary     ScanType = "binary"
 
 	xrayScanStatusFailed = "failed"
+
+	// Xsc consts
+	postXscGitInfoContextAPI = "api/v1/gitinfo"
+
+	XscGraphAPI = "api/v1/sca/scan/graph"
+
+	multiScanIdParam = "multi_scan_id="
+
+	scanTechQueryParam = "tech="
+
+	XscVersionAPI = "api/v1/system/version"
+
+	XraySuffix = "/xray/"
+
+	XscSuffix = "/xsc/"
 )
 
 type ScanType string
@@ -55,14 +69,26 @@ func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 
 func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	var params []string
-	if scanParams.ProjectKey != "" {
+	switch {
+	case scanParams.ProjectKey != "":
 		params = append(params, projectQueryParam+scanParams.ProjectKey)
-	} else if scanParams.RepoPath != "" {
+	case scanParams.RepoPath != "":
 		params = append(params, repoPathQueryParam+scanParams.RepoPath)
-	} else if len(scanParams.Watches) > 0 {
+	case len(scanParams.Watches) > 0:
 		for _, watch := range scanParams.Watches {
 			if watch != "" {
 				params = append(params, watchesQueryParam+watch)
+			}
+		}
+	}
+
+	if scanParams.XscVersion != "" {
+		params = append(params, multiScanIdParam+scanParams.MultiScanId)
+		gitInfoContext := scanParams.XscGitInfoContext
+		if gitInfoContext != nil {
+			if len(gitInfoContext.Technologies) > 0 {
+				// Append the tech type, each graph can contain only one tech type
+				params = append(params, scanTechQueryParam+gitInfoContext.Technologies[0])
 			}
 		}
 	}
@@ -71,7 +97,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
-	if params == nil || len(params) == 0 {
+	if len(params) == 0 {
 		return ""
 	}
 	return "?" + strings.Join(params, "&")
@@ -80,19 +106,34 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	requestBody, err := json.Marshal(scanParams.Graph)
+	var err error
+	var requestBody []byte
+	if scanParams.DependenciesGraph != nil {
+		requestBody, err = json.Marshal(scanParams.DependenciesGraph)
+	} else {
+		requestBody, err = json.Marshal(scanParams.BinaryGraph)
+	}
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
 	url := ss.XrayDetails.GetUrl() + scanGraphAPI
+
+	// When XSC is enabled, modify the URL.
+	if scanParams.XscVersion != "" {
+		url = ss.xrayToXscUrl() + XscGraphAPI
+	}
 	url += createScanGraphQueryParams(scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+		scanErrorJson := ScanErrorJson{}
+		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
+			return "", errorutils.CheckErrorf(scanErrorJson.Error)
+		}
+		return "", err
 	}
 	scanResponse := RequestScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
@@ -101,13 +142,18 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	return scanResponse.ScanId, err
 }
 
-func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
+func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	message := fmt.Sprintf("Sync: Get Scan Graph results. Scan ID:%s...", scanId)
-	//The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
+	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
+	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
+	// Modify endpoint if XSC is enabled
+	if xscEnabled {
+		endPoint = ss.xrayToXscUrl() + XscGraphAPI
+	}
+	endPoint += "/" + scanId
+
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam
 		if includeLicenses {
@@ -116,15 +162,13 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	} else if includeLicenses {
 		endPoint += includeLicensesParam
 	}
-
+	log.Info("Waiting for scan to complete on JFrog Xray...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		log.Debug(message)
 		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
 		if err != nil {
 			return true, nil, err
 		}
-		if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
-			err = errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
 			return true, nil, err
 		}
 		// Got the full valid response.
@@ -137,6 +181,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
 		PollingAction:   pollingAction,
+		MsgPrefix:       "Get Dependencies Scan results... ",
 	}
 
 	body, err := pollingExecutor.Execute()
@@ -145,12 +190,70 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 	scanResponse := ScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckError(err)
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
 	}
-	if &scanResponse == nil || scanResponse.ScannedStatus == xrayScanStatusFailed {
-		return nil, errorutils.CheckErrorf("Xray scan failed")
+	if scanResponse.ScannedStatus == xrayScanStatusFailed {
+		// Failed due to an internal Xray error
+		return nil, errorutils.CheckErrorf("received a failure status from JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
 	}
 	return &scanResponse, err
+}
+
+func (ss *ScanService) xrayToXscUrl() string {
+	return strings.Replace(ss.XrayDetails.GetUrl(), XraySuffix, XscSuffix, 1)
+}
+
+func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multiScanId string, err error) {
+	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
+	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	requestBody, err := json.Marshal(details)
+	if err != nil {
+		return "", errorutils.CheckError(err)
+	}
+	url := ss.xrayToXscUrl() + postXscGitInfoContextAPI
+	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
+	if err != nil {
+		return
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
+		return
+	}
+	xscResponse := XscPostContextResponse{}
+	if err = json.Unmarshal(body, &xscResponse); err != nil {
+		return "", errorutils.CheckError(err)
+	}
+	return xscResponse.MultiScanId, err
+}
+
+// IsXscEnabled will try to get XSC version. If route is not available, user is not entitled for XSC.
+func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
+	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
+	url := ss.XrayDetails.GetUrl()
+	// If Xray suffix not found, Xsc is not supported.
+	if !strings.HasSuffix(url, XraySuffix) {
+		return
+	}
+	url = ss.xrayToXscUrl()
+	resp, body, _, err := ss.client.SendGet(url+XscVersionAPI, false, &httpClientsDetails)
+	if err != nil {
+		err = errorutils.CheckErrorf("failed to get JFrog XSC version, response: " + err.Error())
+		return
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNotFound); err != nil {
+		return
+	}
+	// When XSC is disabled, StatusNotFound is expected. Don't return error as this is optional.
+	if resp.StatusCode == http.StatusNotFound {
+		return
+	}
+	versionResponse := XscVersionResponse{}
+	if err = json.Unmarshal(body, &versionResponse); err != nil {
+		err = errorutils.CheckErrorf("failed to parse JFrog XSC server response: " + err.Error())
+		return
+	}
+	xsxVersion = versionResponse.Version
+	log.Debug("XSC version:", xsxVersion)
+	return
 }
 
 type XrayGraphScanParams struct {
@@ -160,37 +263,28 @@ type XrayGraphScanParams struct {
 	ProjectKey string
 	Watches    []string
 	ScanType   ScanType
-	Graph      *GraphNode
-}
-
-type GraphNode struct {
-	// Component Id in the JFrog standard.
-	// For instance, for maven: gav://<groupId>:<artifactId>:<version>
-	// For detailed format examples please see:
-	// https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-ComponentIdentifiers
-	Id string `json:"component_id,omitempty"`
-	// Sha of the binary representing the component.
-	Sha256 string `json:"sha256,omitempty"`
-	Sha1   string `json:"sha1,omitempty"`
-	// For root file shall be the file name.
-	// For internal components shall be the internal path. (Relevant only for binary scan).
-	Path string `json:"path,omitempty"`
-	// List of license names
-	Licenses []string `json:"licenses,omitempty"`
-	// Component properties
-	Properties map[string]string `json:"properties,omitempty"`
-	// List of sub components.
-	Nodes []*GraphNode `json:"nodes,omitempty"`
-	// Node parent (for internal use)
-	Parent *GraphNode `json:"-"`
+	// Dependencies Tree
+	DependenciesGraph *xrayUtils.GraphNode
+	// Binary tree received from indexer-app
+	BinaryGraph            *xrayUtils.BinaryGraphNode
+	IncludeVulnerabilities bool
+	IncludeLicenses        bool
+	XscGitInfoContext      *XscGitInfoContext
+	XscVersion             string
+	MultiScanId            string
 }
 
 type RequestScanResponse struct {
 	ScanId string `json:"scan_id,omitempty"`
 }
 
+type ScanErrorJson struct {
+	Error string `json:"error"`
+}
+
 type ScanResponse struct {
 	ScanId             string          `json:"scan_id,omitempty"`
+	XrayDataUrl        string          `json:"xray_data_url,omitempty"`
 	Violations         []Violation     `json:"violations,omitempty"`
 	Vulnerabilities    []Vulnerability `json:"vulnerabilities,omitempty"`
 	Licenses           []License       `json:"licenses,omitempty"`
@@ -200,27 +294,39 @@ type ScanResponse struct {
 }
 
 type Violation struct {
-	Summary       string               `json:"summary,omitempty"`
-	Severity      string               `json:"severity,omitempty"`
-	ViolationType string               `json:"type,omitempty"`
-	Components    map[string]Component `json:"components,omitempty"`
-	WatchName     string               `json:"watch_name,omitempty"`
-	IssueId       string               `json:"issue_id,omitempty"`
-	Cves          []Cve                `json:"cves,omitempty"`
-	References    []string             `json:"references,omitempty"`
-	FailBuild     bool                 `json:"fail_build,omitempty"`
-	LicenseKey    string               `json:"license_key,omitempty"`
-	LicenseName   string               `json:"license_name,omitempty"`
-	IgnoreUrl     string               `json:"ignore_url,omitempty"`
+	Summary             string               `json:"summary,omitempty"`
+	Severity            string               `json:"severity,omitempty"`
+	ViolationType       string               `json:"type,omitempty"`
+	Components          map[string]Component `json:"components,omitempty"`
+	WatchName           string               `json:"watch_name,omitempty"`
+	IssueId             string               `json:"issue_id,omitempty"`
+	Cves                []Cve                `json:"cves,omitempty"`
+	References          []string             `json:"references,omitempty"`
+	FailBuild           bool                 `json:"fail_build,omitempty"`
+	LicenseKey          string               `json:"license_key,omitempty"`
+	LicenseName         string               `json:"license_name,omitempty"`
+	IgnoreUrl           string               `json:"ignore_url,omitempty"`
+	RiskReason          string               `json:"risk_reason,omitempty"`
+	IsEol               *bool                `json:"is_eol,omitempty"`
+	EolMessage          string               `json:"eol_message,omitempty"`
+	LatestVersion       string               `json:"latest_version,omitempty"`
+	NewerVersions       *int                 `json:"newer_versions,omitempty"`
+	Cadence             *float64             `json:"cadence,omitempty"`
+	Commits             *int64               `json:"commits,omitempty"`
+	Committers          *int                 `json:"committers,omitempty"`
+	ExtendedInformation *ExtendedInformation `json:"extended_information,omitempty"`
+	Technology          string               `json:"-"`
 }
 
 type Vulnerability struct {
-	Cves                 []Cve                `json:"cves,omitempty"`
-	Summary              string               `json:"summary,omitempty"`
-	Severity             string               `json:"severity,omitempty"`
-	VulnerableComponents []string             `json:"vulnerable_components,omitempty"`
-	Components           map[string]Component `json:"components,omitempty"`
-	IssueId              string               `json:"issue_id,omitempty"`
+	Cves                []Cve                `json:"cves,omitempty"`
+	Summary             string               `json:"summary,omitempty"`
+	Severity            string               `json:"severity,omitempty"`
+	Components          map[string]Component `json:"components,omitempty"`
+	IssueId             string               `json:"issue_id,omitempty"`
+	References          []string             `json:"references,omitempty"`
+	ExtendedInformation *ExtendedInformation `json:"extended_information,omitempty"`
+	Technology          string               `json:"-"`
 }
 
 type License struct {
@@ -234,6 +340,7 @@ type License struct {
 type Component struct {
 	FixedVersions []string           `json:"fixed_versions,omitempty"`
 	ImpactPaths   [][]ImpactPathNode `json:"impact_paths,omitempty"`
+	Cpes          []string           `json:"cpes,omitempty"`
 }
 
 type ImpactPathNode struct {
@@ -249,17 +356,41 @@ type Cve struct {
 	CvssV3Vector string `json:"cvss_v3_vector,omitempty"`
 }
 
-func (gp *XrayGraphScanParams) GetProjectKey() string {
-	return gp.ProjectKey
+type ExtendedInformation struct {
+	ShortDescription             string                        `json:"short_description,omitempty"`
+	FullDescription              string                        `json:"full_description,omitempty"`
+	JfrogResearchSeverity        string                        `json:"jfrog_research_severity,omitempty"`
+	JfrogResearchSeverityReasons []JfrogResearchSeverityReason `json:"jfrog_research_severity_reasons,omitempty"`
+	Remediation                  string                        `json:"remediation,omitempty"`
 }
 
-func (currNode *GraphNode) NodeHasLoop() bool {
-	parent := currNode.Parent
-	for parent != nil {
-		if currNode.Id == parent.Id {
-			return true
-		}
-		parent = parent.Parent
-	}
-	return false
+type JfrogResearchSeverityReason struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	IsPositive  bool   `json:"is_positive,omitempty"`
+}
+
+type XscPostContextResponse struct {
+	MultiScanId string `json:"multi_scan_id,omitempty"`
+}
+
+type XscVersionResponse struct {
+	Version string `json:"xsc_version"`
+}
+
+type XscGitInfoContext struct {
+	GitRepoUrl    string   `json:"git_repo_url"`
+	GitRepoName   string   `json:"git_repo_name,omitempty"`
+	GitProject    string   `json:"git_project,omitempty"`
+	GitProvider   string   `json:"git_provider,omitempty"`
+	Technologies  []string `json:"technologies,omitempty"`
+	BranchName    string   `json:"branch_name"`
+	LastCommit    string   `json:"last_commit,omitempty"`
+	CommitHash    string   `json:"commit_hash"`
+	CommitMessage string   `json:"commit_message,omitempty"`
+	CommitAuthor  string   `json:"commit_author,omitempty"`
+}
+
+func (gp *XrayGraphScanParams) GetProjectKey() string {
+	return gp.ProjectKey
 }

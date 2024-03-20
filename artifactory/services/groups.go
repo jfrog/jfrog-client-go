@@ -8,7 +8,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
@@ -26,11 +25,15 @@ func NewGroupParams() GroupParams {
 type Group struct {
 	Name            string   `json:"name,omitempty"`
 	Description     string   `json:"description,omitempty"`
-	AutoJoin        bool     `json:"autoJoin,omitempty"`
-	AdminPrivileges bool     `json:"adminPrivileges,omitempty"`
+	AutoJoin        *bool    `json:"autoJoin,omitempty"`
+	AdminPrivileges *bool    `json:"adminPrivileges,omitempty"`
 	Realm           string   `json:"realm,omitempty"`
 	RealmAttributes string   `json:"realmAttributes,omitempty"`
 	UsersNames      []string `json:"userNames,omitempty"`
+}
+
+type groupName struct {
+	Name string `json:"name"`
 }
 
 type GroupService struct {
@@ -46,22 +49,47 @@ func (gs *GroupService) SetArtifactoryDetails(rt auth.ServiceDetails) {
 	gs.ArtDetails = rt
 }
 
-func (gs *GroupService) GetGroup(params GroupParams) (g *Group, err error) {
+func (gs *GroupService) GetAllGroups() (*[]string, error) {
+	httpDetails := gs.ArtDetails.CreateHttpClientDetails()
+	url := fmt.Sprintf("%sapi/security/groups", gs.ArtDetails.GetUrl())
+	resp, body, _, err := gs.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, err
+	}
+	var groupNames []groupName
+	if err = json.Unmarshal(body, &groupNames); err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+
+	// Flatten the output
+	var groups []string
+	for _, group := range groupNames {
+		groups = append(groups, group.Name)
+	}
+
+	return &groups, nil
+}
+
+func (gs *GroupService) GetGroup(params GroupParams) (*Group, error) {
 	httpDetails := gs.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/groups/%s?includeUsers=%t", gs.ArtDetails.GetUrl(), params.GroupDetails.Name, params.IncludeUsers)
 	resp, body, _, err := gs.client.SendGet(url, true, &httpDetails)
 	if err != nil {
 		return nil, err
 	}
-	// If the requseted group doesn't exists.
+	// If the requested group doesn't exist.
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	var group Group
-	if err := json.Unmarshal(body, &group); err != nil {
+	if err = json.Unmarshal(body, &group); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
 	return &group, nil
@@ -87,10 +115,7 @@ func (gs *GroupService) CreateGroup(params GroupParams) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated)
 }
 
 type GroupAlreadyExistsError struct {
@@ -110,10 +135,7 @@ func (gs *GroupService) UpdateGroup(params GroupParams) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
 func (gs *GroupService) createOrUpdateGroupRequest(group Group) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
@@ -135,11 +157,11 @@ func (gs *GroupService) DeleteGroup(name string) error {
 	httpDetails := gs.ArtDetails.CreateHttpClientDetails()
 	url := fmt.Sprintf("%sapi/security/groups/%s", gs.ArtDetails.GetUrl(), name)
 	resp, body, err := gs.client.SendDelete(url, nil, &httpDetails)
+	if err != nil {
+		return err
+	}
 	if resp == nil {
 		return errorutils.CheckErrorf("no response provided (including status code)")
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
-	}
-	return err
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }

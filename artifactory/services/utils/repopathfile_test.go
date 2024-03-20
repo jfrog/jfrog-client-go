@@ -6,13 +6,13 @@ import (
 	"testing"
 )
 
-type CreateRepoPathFileTest struct {
-	pattern   string
-	recursive bool
-	expected  []RepoPathFile
+type createPathFilePairsTest struct {
+	pattern         string
+	recursive       bool
+	expectedTriples []RepoPathFile
 }
 
-var pathFilesDataProvider = []CreateRepoPathFileTest{
+var pathFilesDataProvider = []createPathFilePairsTest{
 	{"a", true,
 		[]RepoPathFile{{"r", ".", "a"}}},
 	{"a/*", true,
@@ -43,47 +43,54 @@ var pathFilesDataProvider = []CreateRepoPathFileTest{
 		[]RepoPathFile{{"r", "*b*", "*"}, {"r", "*", "*b*"}}},
 }
 
-var repoPathFilesDataProvider = []CreateRepoPathFileTest{
+type createRepoPathFileTriplesTest struct {
+	pattern            string
+	recursive          bool
+	expectedTriples    []RepoPathFile
+	expectedSingleRepo bool
+}
+
+var repoPathFilesDataProvider = []createRepoPathFileTriplesTest{
 	{"a/*", true,
-		[]RepoPathFile{{"a", "*", "*"}}},
+		[]RepoPathFile{{"a", "*", "*"}}, true},
 	{"a/a*b", true,
-		[]RepoPathFile{{"a", "a*", "*b"}, {"a", ".", "a*b"}}},
+		[]RepoPathFile{{"a", "a*", "*b"}, {"a", ".", "a*b"}}, true},
 	{"a/a*b*", true,
-		[]RepoPathFile{{"a", "a*b*", "*"}, {"a", "a*", "*b*"}, {"a", ".", "a*b*"}}},
+		[]RepoPathFile{{"a", "a*b*", "*"}, {"a", "a*", "*b*"}, {"a", ".", "a*b*"}}, true},
 	{"a/a*b*/a/b", true,
-		[]RepoPathFile{{"a", "a*b*/a", "b"}}},
+		[]RepoPathFile{{"a", "a*b*/a", "b"}}, true},
 	{"*a/b*/*c*d*", true,
 		[]RepoPathFile{{"*", "*a/b*/*c*d*", "*"}, {"*", "*a/b*/*c*", "*d*"}, {"*", "*a/b*/*", "*c*d*"}, {"*", "*a/b*", "*c*d*"},
-			{"*a", "b*", "*c*d*"}, {"*a", "b*/*c*", "*d*"}, {"*a", "b*/*", "*c*d*"}, {"*a", "b*/*c*d*", "*"}}},
+			{"*a", "b*", "*c*d*"}, {"*a", "b*/*c*", "*d*"}, {"*a", "b*/*", "*c*d*"}, {"*a", "b*/*c*d*", "*"}}, false},
 	{"*aa/b*/*c*d*", true,
 		[]RepoPathFile{{"*", "*aa/b*/*c*d*", "*"}, {"*", "*aa/b*/*c*", "*d*"}, {"*", "*aa/b*/*", "*c*d*"}, {"*", "*aa/b*", "*c*d*"},
-			{"*aa", "b*", "*c*d*"}, {"*aa", "b*/*c*", "*d*"}, {"*aa", "b*/*", "*c*d*"}, {"*aa", "b*/*c*d*", "*"}}},
+			{"*aa", "b*", "*c*d*"}, {"*aa", "b*/*c*", "*d*"}, {"*aa", "b*/*", "*c*d*"}, {"*aa", "b*/*c*d*", "*"}}, false},
 	{"*/a*/*b*a*", true,
-		[]RepoPathFile{{"*", "*a*/*b*a*", "*"}, {"*", "*a*", "*b*a*"}, {"*", "*a*/*b*", "*a*"}, {"*", "*a*/*", "*b*a*"}}},
+		[]RepoPathFile{{"*", "*a*/*b*a*", "*"}, {"*", "*a*", "*b*a*"}, {"*", "*a*/*b*", "*a*"}, {"*", "*a*/*", "*b*a*"}}, false},
 	{"*", true,
-		[]RepoPathFile{{"*", "*", "*"}}},
+		[]RepoPathFile{{"*", "*", "*"}}, false},
 	{"*/*", true,
-		[]RepoPathFile{{"*", "*", "*"}}},
+		[]RepoPathFile{{"*", "*", "*"}}, false},
 	{"*/a.z", true,
-		[]RepoPathFile{{"*", "*", "a.z"}}},
+		[]RepoPathFile{{"*", "*", "a.z"}}, false},
 	{"a/b", true,
-		[]RepoPathFile{{"a", ".", "b"}}},
+		[]RepoPathFile{{"a", ".", "b"}}, true},
 	{"a/b", false,
-		[]RepoPathFile{{"a", ".", "b"}}},
+		[]RepoPathFile{{"a", ".", "b"}}, true},
 	{"a//*", false,
-		[]RepoPathFile{{"a", "", "*"}}},
+		[]RepoPathFile{{"a", "", "*"}}, true},
 	{"r//a*b", false,
-		[]RepoPathFile{{"r", "", "a*b"}}},
+		[]RepoPathFile{{"r", "", "a*b"}}, true},
 	{"a*b", true,
-		[]RepoPathFile{{"a*", "*", "*b"}, {"a*b", "*", "*"}}},
+		[]RepoPathFile{{"a*", "*", "*b"}, {"a*b", "*", "*"}}, false},
 	{"a*b*", true,
-		[]RepoPathFile{{"a*", "*b*", "*"}, {"a*", "*", "*b*"}, {"a*b*", "*", "*"}}},
+		[]RepoPathFile{{"a*", "*b*", "*"}, {"a*", "*", "*b*"}, {"a*b*", "*", "*"}}, false},
 }
 
 func TestCreatePathFilePairs(t *testing.T) {
 	for _, sample := range pathFilesDataProvider {
 		t.Run(sample.pattern+"_recursive_"+strconv.FormatBool(sample.recursive), func(t *testing.T) {
-			validateRepoPathFile(createPathFilePairs("r", sample.pattern, sample.recursive), sample.expected, sample.pattern, t)
+			validateRepoPathFile(t, createPathFilePairs("r", sample.pattern, sample.recursive), sample.expectedTriples, sample.pattern)
 		})
 	}
 }
@@ -91,14 +98,15 @@ func TestCreatePathFilePairs(t *testing.T) {
 func TestCreateRepoPathFileTriples(t *testing.T) {
 	for _, sample := range repoPathFilesDataProvider {
 		t.Run(sample.pattern+"_recursive_"+strconv.FormatBool(sample.recursive), func(t *testing.T) {
-			repoPathFileTriples, err := createRepoPathFileTriples(sample.pattern, sample.recursive)
+			repoPathFileTriples, singleRepo, err := createRepoPathFileTriples(sample.pattern, sample.recursive)
 			assert.NoError(t, err)
-			validateRepoPathFile(repoPathFileTriples, sample.expected, sample.pattern, t)
+			assert.Equal(t, sample.expectedSingleRepo, singleRepo)
+			validateRepoPathFile(t, repoPathFileTriples, sample.expectedTriples, sample.pattern)
 		})
 	}
 }
 
-func validateRepoPathFile(actual, expected []RepoPathFile, pattern string, t *testing.T) {
+func validateRepoPathFile(t *testing.T, actual, expected []RepoPathFile, pattern string) {
 	if len(actual) != len(expected) {
 		t.Errorf("Wrong triple.\nPattern:  %v\nExpected: %v\nActual:   %v", pattern, expected, actual)
 	}

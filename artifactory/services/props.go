@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"path"
@@ -87,10 +88,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 			encodedParam += url.QueryEscape(prop) + ","
 		}
 		// Remove trailing comma
-		if strings.HasSuffix(encodedParam, ",") {
-			encodedParam = encodedParam[:len(encodedParam)-1]
-		}
-
+		encodedParam = strings.TrimSuffix(encodedParam, ",")
 	}
 	var action func(string, string, string) (*http.Response, []byte, error)
 	if isDelete {
@@ -110,26 +108,26 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
 
 				restAPI := path.Join("api", "storage", relativePath)
-				setPropertiesURL, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+				setPropertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 				if err != nil {
 					return err
 				}
 				// Because we do set/delete props on search results that took into account the
 				// recursive flag, we do not want the action itself to be recursive.
 				setPropertiesURL += "?properties=" + encodedParam + "&recursive=0"
-				resp, _, err := action(logMsgPrefix, relativePath, setPropertiesURL)
+				resp, body, err := action(logMsgPrefix, relativePath, setPropertiesURL)
 
 				if err != nil {
 					return err
 				}
-				if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
-					return errorutils.CheckError(err)
+				if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent); err != nil {
+					return err
 				}
 				successCounters[threadId]++
 				return nil
 			}
 
-			producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
+			_, _ = producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
 		}
 		defer producerConsumer.Done()
 		if err := reader.GetError(); err != nil {
@@ -164,4 +162,30 @@ func (ps *PropsService) sendPutRequest(logMsgPrefix, relativePath, setProperties
 
 func NewPropsParams() PropsParams {
 	return PropsParams{}
+}
+
+func (ps *PropsService) GetItemProperties(relativePath string) (*utils.ItemProperties, error) {
+	restAPI := path.Join("api", "storage", path.Clean(relativePath))
+	propertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+	if err != nil {
+		return nil, err
+	}
+	propertiesURL += "?properties"
+
+	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
+	resp, body, _, err := ps.client.SendGet(propertiesURL, true, &httpClientsDetails)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), "No properties could be found") {
+		return nil, nil
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+	log.Debug("Artifactory response:", resp.Status)
+
+	result := &utils.ItemProperties{}
+	err = json.Unmarshal(body, result)
+	return result, errorutils.CheckError(err)
 }

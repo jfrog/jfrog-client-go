@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -28,13 +29,14 @@ const (
 	sourceAlreadyExistsResponseString = "source already exists"
 )
 
-func (ss *SourcesService) AddSource(projectIntegrationId int, repositoryFullName, branch, fileFilter string) (id int, err error) {
+func (ss *SourcesService) AddSource(projectIntegrationId int, repositoryFullName, branch, fileFilter, name string) (id int, err error) {
 	source := Source{
 		ProjectId:            defaultProjectId,
 		ProjectIntegrationId: projectIntegrationId,
 		RepositoryFullName:   repositoryFullName,
 		Branch:               branch,
 		FileFilter:           fileFilter,
+		Name:                 name,
 	}
 	return ss.doAddSource(source)
 }
@@ -57,12 +59,11 @@ func (ss *SourcesService) doAddSource(source Source) (id int, err error) {
 	if err != nil {
 		return -1, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		err := errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		if resp.StatusCode == http.StatusNotFound && strings.Contains(string(body), sourceAlreadyExistsResponseString) {
-			return -1, errorutils.CheckError(&SourceAlreadyExistsError{InnerError: err})
+			return -1, &SourceAlreadyExistsError{InnerError: err}
 		}
-		return -1, errorutils.CheckError(err)
+		return -1, err
 	}
 
 	created := &Source{}
@@ -77,11 +78,34 @@ func (ss *SourcesService) GetSource(sourceId int) (*Source, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	source := &Source{}
 	err = json.Unmarshal(body, source)
+	return source, errorutils.CheckError(err)
+}
+
+func (ss *SourcesService) GetSourceByFilter(queryParams map[string]string) ([]Source, error) {
+	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
+	pipelineSourcesURL, err := constructPipelinesURL(queryParams, ss.ServiceDetails.GetUrl(), SourcesRestApi)
+	if err != nil {
+		return nil, err
+	}
+	source, err := ss.sendRequestAndParseResponse(pipelineSourcesURL, httpDetails)
+	return source, err
+}
+
+func (ss *SourcesService) sendRequestAndParseResponse(url string, httpDetails httputils.HttpClientDetails) ([]Source, error) {
+	resp, body, _, err := ss.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+	source := make([]Source, 0)
+	err = json.Unmarshal(body, &source)
 	return source, errorutils.CheckError(err)
 }
 
@@ -91,10 +115,7 @@ func (ss *SourcesService) DeleteSource(sourceId int) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
-	}
-	return nil
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
 type Source struct {
@@ -103,12 +124,13 @@ type Source struct {
 	RepositoryFullName   string `json:"repositoryFullName,omitempty"`
 	Branch               string `json:"branch,omitempty"`
 	FileFilter           string `json:"fileFilter,omitempty"`
-	// For multibranch pipelines only:
+	// For multibranch pipelines only
 	IsMultiBranch        bool   `json:"isMultiBranch,omitempty"`
 	BranchExcludePattern string `json:"branchExcludePattern,omitempty"`
 	BranchIncludePattern string `json:"branchIncludePattern,omitempty"`
 
-	Id int `json:"id,omitempty"`
+	Id   int    `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type SourceAlreadyExistsError struct {

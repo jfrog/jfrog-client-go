@@ -2,6 +2,11 @@
   "results": [
     {
       "repo": "a",
+      "path": "b/c/d",
+      "type": "folder"
+    },
+    {
+      "repo": "a",
       "path": "e",
       "type": "folder"
     },

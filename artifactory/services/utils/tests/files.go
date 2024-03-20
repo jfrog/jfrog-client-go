@@ -1,14 +1,13 @@
 package tests
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
 func CreateFileWithContent(fileName, relativePath string) (string, string, error) {
 	var err error
-	tempDirPath, err := ioutil.TempDir("", "tests")
+	tempDirPath, err := os.MkdirTemp("", "tests")
 	if err != nil {
 		return tempDirPath, "", err
 	}

@@ -3,10 +3,30 @@ package auth
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"strings"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
+
+type CreateTokenResponseData struct {
+	CommonTokenParams
+	ReferenceToken string `json:"reference_token,omitempty"`
+	TokenId        string `json:"token_id,omitempty"`
+}
+
+type CommonTokenParams struct {
+	Scope        string `json:"scope,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"`
+	ExpiresIn    *uint  `json:"expires_in,omitempty"`
+	TokenType    string `json:"token_type,omitempty"`
+	Refreshable  *bool  `json:"refreshable,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	GrantType    string `json:"grant_type,omitempty"`
+	Audience     string `json:"audience,omitempty"`
+}
 
 func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	// Separate token parts.
@@ -14,7 +34,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 
 	// Decode the payload.
 	if len(tokenParts) != 3 {
-		return TokenPayload{}, errorutils.CheckErrorf("received invalid access-token")
+		return TokenPayload{}, errorutils.CheckErrorf("couldn't extract payload from Access Token")
 	}
 	payload, err := base64.RawStdEncoding.DecodeString(tokenParts[1])
 	if err != nil {
@@ -25,7 +45,7 @@ func extractPayloadFromAccessToken(token string) (TokenPayload, error) {
 	var tokenPayload TokenPayload
 	err = json.Unmarshal(payload, &tokenPayload)
 	if err != nil {
-		return TokenPayload{}, errorutils.CheckErrorf("Failed extracting payload from the provided access-token." + err.Error())
+		return TokenPayload{}, errorutils.CheckErrorf("failed extracting payload from the provided access-token: " + err.Error())
 	}
 	err = setAudienceManually(&tokenPayload, payload)
 	return tokenPayload, err
@@ -36,7 +56,7 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 	allValuesMap := make(map[string]interface{})
 	err := json.Unmarshal(payload, &allValuesMap)
 	if err != nil {
-		return errorutils.CheckErrorf("Failed extracting audience from payload. " + err.Error())
+		return errorutils.CheckErrorf("failed extracting audience from payload: " + err.Error())
 	}
 	aud, exists := allValuesMap["aud"]
 	if !exists {
@@ -57,24 +77,41 @@ func setAudienceManually(tokenPayload *TokenPayload, payload []byte) error {
 	return errorutils.CheckErrorf("failed extracting audience from payload. Audience is of unexpected type")
 }
 
-func ExtractUsernameFromAccessToken(token string) (string, error) {
+func ExtractUsernameFromAccessToken(token string) (username string) {
+	if httpclient.IsApiKey(token) {
+		log.Warn("The provided access token is an API key which should be used as password.")
+		return
+	}
+	var err error
+	defer func() {
+		if err != nil {
+			log.Warn(err.Error() + ".\n" +
+				"The provided access token is not a valid JWT, probably a reference token.\n" +
+				"Some package managers only support basic authentication which requires also a username.\n" +
+				"If you plan to work with one of those package managers, please provide a username.")
+		}
+	}()
 	tokenPayload, err := extractPayloadFromAccessToken(token)
 	if err != nil {
-		return "", err
+		return
 	}
 	// Extract subject.
 	if tokenPayload.Subject == "" {
-		return "", errorutils.CheckErrorf("could not extract subject from the provided access-token")
+		err = errorutils.CheckErrorf("couldn't extract subject from the provided access-token")
+		return
 	}
 
 	// Extract username from subject.
 	usernameStartIndex := strings.LastIndex(tokenPayload.Subject, "/")
 	if usernameStartIndex < 0 {
-		return "", errorutils.CheckErrorf("Could not extract username from access-token's subject: %s", tokenPayload.Subject)
+		err = errorutils.CheckErrorf("couldn't extract username from access-token's subject: %s", tokenPayload.Subject)
+		return
 	}
-	username := tokenPayload.Subject[usernameStartIndex+1:]
-
-	return username, nil
+	username = tokenPayload.Subject[usernameStartIndex+1:]
+	if username == "" {
+		err = errorutils.CheckErrorf("empty username extracted from access-token's subject: %s", tokenPayload.Subject)
+	}
+	return
 }
 
 // Extracts the expiry from an access token, in seconds
@@ -100,6 +137,15 @@ func GetTokenMinutesLeft(token string) (int64, error) {
 	return left / 60, nil
 }
 
+// Extracts the subject from an access token
+func ExtractSubjectFromAccessToken(token string) (string, error) {
+	tokenPayload, err := extractPayloadFromAccessToken(token)
+	if err != nil {
+		return "", err
+	}
+	return tokenPayload.Subject, nil
+}
+
 type TokenPayload struct {
 	Subject        string `json:"sub,omitempty"`
 	Scope          string `json:"scp,omitempty"`
@@ -113,6 +159,10 @@ type TokenPayload struct {
 }
 
 // Refreshable Tokens Constants.
-var RefreshBeforeExpiryMinutes = int64(10)
+// Artifactory's refresh token mechanism creates tokens that expire in 60 minutes. We want to refresh them when 10 minutes are left.
+var RefreshArtifactoryTokenBeforeExpiryMinutes = int64(10)
+
+// Platform's access token are created with 1 year expiry. We want to refresh the token a week before expiry.
+var RefreshPlatformTokenBeforeExpiryMinutes = int64(7 * 24 * 60)
 
 const WaitBeforeRefreshSeconds = 15

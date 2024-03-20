@@ -1,10 +1,11 @@
 package tests
 
 import (
+	"github.com/jfrog/gofrog/version"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/utils/version"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,6 +44,8 @@ func TestArtifactoryFederatedRepository(t *testing.T) {
 	t.Run("federatedPypiTest", federatedPypiTest)
 	t.Run("federatedRpmTest", federatedRpmTest)
 	t.Run("federatedSbtTest", federatedSbtTest)
+	t.Run("federatedSwiftTest", federatedSwiftTest)
+	t.Run("federatedTerraformTest", federatedTerraformTest)
 	t.Run("federatedVagrantTest", federatedVagrantTest)
 	t.Run("federatedYumTest", federatedYumTest)
 	t.Run("federatedCreateWithParamTest", federatedCreateWithParamTest)
@@ -55,14 +58,14 @@ func setFederatedRepositoryBaseParams(params *services.FederatedRepositoryBasePa
 	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
 	memberUrl := testsCreateFederatedRepositoryService.ArtDetails.GetUrl() + params.Key
 	if !isUpdate {
-		params.ArchiveBrowsingEnabled = &trueValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(true)
 		params.Members = []services.FederatedRepositoryMember{
-			{Url: memberUrl, Enabled: &trueValue},
+			{Url: memberUrl, Enabled: utils.Pointer(true)},
 		}
 	} else {
-		params.ArchiveBrowsingEnabled = &falseValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(false)
 		params.Members = []services.FederatedRepositoryMember{
-			{Url: memberUrl, Enabled: &falseValue},
+			{Url: memberUrl, Enabled: utils.Pointer(true)},
 		}
 	}
 }
@@ -74,15 +77,18 @@ func federatedAlpineTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&afp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Alpine(afp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, afp)
 
 	setFederatedRepositoryBaseParams(&afp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Alpine(afp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, afp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, afp)
+	}
 }
 
 func federatedBowerTest(t *testing.T) {
@@ -92,15 +98,18 @@ func federatedBowerTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&bfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Bower(bfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, bfp)
 
 	setFederatedRepositoryBaseParams(&bfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Bower(bfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, bfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, bfp)
+	}
 }
 
 func federatedCargoTest(t *testing.T) {
@@ -111,7 +120,9 @@ func federatedCargoTest(t *testing.T) {
 	setCargoRepositoryParams(&cfp.CargoRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Cargo(cfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cfp)
 
@@ -119,8 +130,9 @@ func federatedCargoTest(t *testing.T) {
 	setCargoRepositoryParams(&cfp.CargoRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Cargo(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedChefTest(t *testing.T) {
@@ -130,15 +142,18 @@ func federatedChefTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Chef(cfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cfp)
 
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Chef(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedCocoapodsTest(t *testing.T) {
@@ -148,15 +163,18 @@ func federatedCocoapodsTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Cocoapods(cfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cfp)
 
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Cocoapods(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedComposerTest(t *testing.T) {
@@ -166,15 +184,18 @@ func federatedComposerTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Composer(cfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cfp)
 
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Composer(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedConanTest(t *testing.T) {
@@ -184,15 +205,18 @@ func federatedConanTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Conan(cfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cfp)
 
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Conan(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedCondaTest(t *testing.T) {
@@ -202,15 +226,18 @@ func federatedCondaTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Conda(cfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cfp)
 
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Conda(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedCranTest(t *testing.T) {
@@ -220,15 +247,18 @@ func federatedCranTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Cran(cfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cfp)
 
 	setFederatedRepositoryBaseParams(&cfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Cran(cfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cfp)
+	}
 }
 
 func federatedDebianTest(t *testing.T) {
@@ -239,7 +269,9 @@ func federatedDebianTest(t *testing.T) {
 	setDebianRepositoryParams(&dfp.DebianRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Debian(dfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dfp)
 
@@ -247,8 +279,9 @@ func federatedDebianTest(t *testing.T) {
 	setDebianRepositoryParams(&dfp.DebianRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Debian(dfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, dfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, dfp)
+	}
 }
 
 func federatedDockerTest(t *testing.T) {
@@ -259,7 +292,9 @@ func federatedDockerTest(t *testing.T) {
 	setDockerRepositoryParams(&dfp.DockerRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Docker(dfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dfp)
 
@@ -267,8 +302,9 @@ func federatedDockerTest(t *testing.T) {
 	setDockerRepositoryParams(&dfp.DockerRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Docker(dfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, dfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, dfp)
+	}
 }
 
 func federatedGemsTest(t *testing.T) {
@@ -278,15 +314,18 @@ func federatedGemsTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Gems(gfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gfp)
 
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Gems(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedGenericTest(t *testing.T) {
@@ -296,15 +335,18 @@ func federatedGenericTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Generic(gfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gfp)
 
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Generic(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedGitlfsTest(t *testing.T) {
@@ -314,15 +356,18 @@ func federatedGitlfsTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Gitlfs(gfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gfp)
 
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Gitlfs(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedGoTest(t *testing.T) {
@@ -332,15 +377,18 @@ func federatedGoTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Go(gfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gfp)
 
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Go(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedGradleTest(t *testing.T) {
@@ -351,7 +399,9 @@ func federatedGradleTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&gfp.JavaPackageManagersRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Gradle(gfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gfp)
 
@@ -359,8 +409,9 @@ func federatedGradleTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&gfp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Gradle(gfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gfp)
+	}
 }
 
 func federatedHelmTest(t *testing.T) {
@@ -370,15 +421,18 @@ func federatedHelmTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&hfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Helm(hfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, hfp)
 
 	setFederatedRepositoryBaseParams(&hfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Helm(hfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, hfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, hfp)
+	}
 }
 
 func federatedIvyTest(t *testing.T) {
@@ -389,7 +443,9 @@ func federatedIvyTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&ifp.JavaPackageManagersRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Ivy(ifp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, ifp)
 
@@ -397,8 +453,9 @@ func federatedIvyTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&ifp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Ivy(ifp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, ifp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, ifp)
+	}
 }
 
 func federatedMavenTest(t *testing.T) {
@@ -409,7 +466,9 @@ func federatedMavenTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&mfp.JavaPackageManagersRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Maven(mfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, mfp)
 
@@ -417,8 +476,9 @@ func federatedMavenTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&mfp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Maven(mfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, mfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, mfp)
+	}
 }
 
 func federatedNpmTest(t *testing.T) {
@@ -428,15 +488,18 @@ func federatedNpmTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&nfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Npm(nfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nfp)
 
 	setFederatedRepositoryBaseParams(&nfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Npm(nfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nfp)
+	}
 }
 
 func federatedNugetTest(t *testing.T) {
@@ -447,7 +510,9 @@ func federatedNugetTest(t *testing.T) {
 	setNugetRepositoryParams(&nfp.NugetRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Nuget(nfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nfp)
 
@@ -455,8 +520,9 @@ func federatedNugetTest(t *testing.T) {
 	setNugetRepositoryParams(&nfp.NugetRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Nuget(nfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nfp)
+	}
 }
 
 func federatedOpkgTest(t *testing.T) {
@@ -466,15 +532,18 @@ func federatedOpkgTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&ofp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Opkg(ofp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, ofp)
 
 	setFederatedRepositoryBaseParams(&ofp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Opkg(ofp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, ofp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, ofp)
+	}
 }
 
 func federatedPuppetTest(t *testing.T) {
@@ -484,15 +553,18 @@ func federatedPuppetTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&pfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Puppet(pfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pfp)
 
 	setFederatedRepositoryBaseParams(&pfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Puppet(pfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, pfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, pfp)
+	}
 }
 
 func federatedPypiTest(t *testing.T) {
@@ -502,15 +574,18 @@ func federatedPypiTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&pfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Pypi(pfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pfp)
 
 	setFederatedRepositoryBaseParams(&pfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Pypi(pfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, pfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, pfp)
+	}
 }
 
 func federatedRpmTest(t *testing.T) {
@@ -521,7 +596,9 @@ func federatedRpmTest(t *testing.T) {
 	setRpmRepositoryParams(&rfp.RpmRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Rpm(rfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, rfp)
 
@@ -529,8 +606,9 @@ func federatedRpmTest(t *testing.T) {
 	setRpmRepositoryParams(&rfp.RpmRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Rpm(rfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, rfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, rfp)
+	}
 }
 
 func federatedSbtTest(t *testing.T) {
@@ -541,7 +619,9 @@ func federatedSbtTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&sfp.JavaPackageManagersRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Sbt(sfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, sfp)
 
@@ -549,8 +629,51 @@ func federatedSbtTest(t *testing.T) {
 	setJavaPackageManagersRepositoryParams(&sfp.JavaPackageManagersRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Sbt(sfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, sfp)
+	}
+}
+
+func federatedSwiftTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	sfp := services.NewSwiftFederatedRepositoryParams()
+	sfp.Key = repoKey
+	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, false)
+
+	err := testsCreateFederatedRepositoryService.Swift(sfp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, sfp)
+
+	setFederatedRepositoryBaseParams(&sfp.FederatedRepositoryBaseParams, true)
+
+	err = testsUpdateFederatedRepositoryService.Swift(sfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, sfp)
+	}
+}
+
+func federatedTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	tfp := services.NewTerraformFederatedRepositoryParams()
+	tfp.Key = repoKey
+	setFederatedRepositoryBaseParams(&tfp.FederatedRepositoryBaseParams, false)
+
+	err := testsCreateFederatedRepositoryService.Terraform(tfp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, tfp)
+
+	setFederatedRepositoryBaseParams(&tfp.FederatedRepositoryBaseParams, true)
+
+	err = testsUpdateFederatedRepositoryService.Terraform(tfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, tfp)
+	}
 }
 
 func federatedVagrantTest(t *testing.T) {
@@ -560,17 +683,19 @@ func federatedVagrantTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&vfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Vagrant(vfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, vfp)
 
 	setFederatedRepositoryBaseParams(&vfp.FederatedRepositoryBaseParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Vagrant(vfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, vfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, vfp)
+	}
 }
-
 func federatedYumTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	yfp := services.NewYumFederatedRepositoryParams()
@@ -579,7 +704,9 @@ func federatedYumTest(t *testing.T) {
 	setRpmRepositoryParams(&yfp.RpmRepositoryParams, false)
 
 	err := testsCreateFederatedRepositoryService.Yum(yfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	yfp.PackageType = "rpm"
@@ -589,16 +716,18 @@ func federatedYumTest(t *testing.T) {
 	setRpmRepositoryParams(&yfp.RpmRepositoryParams, true)
 
 	err = testsUpdateFederatedRepositoryService.Yum(yfp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, yfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, yfp)
+	}
 }
-
 func federatedCreateWithParamTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	params := services.NewFederatedRepositoryBaseParams()
 	params.Key = repoKey
-	err := testsRepositoriesService.CreateFederated(params)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	err := testsRepositoriesService.Create(params, params.Key)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, params)
 }
@@ -611,7 +740,9 @@ func getFederatedRepoDetailsTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Generic(gfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
 	data := getRepo(t, repoKey)
@@ -631,15 +762,18 @@ func getAllFederatedRepoDetailsTest(t *testing.T) {
 	setFederatedRepositoryBaseParams(&gfp.FederatedRepositoryBaseParams, false)
 
 	err := testsCreateFederatedRepositoryService.Generic(gfp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t, "federated", "")
+	data := getAllRepos(t, "federated")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {
 		if v.Key == repoKey {
-			repo = &v
+			fRepo := v
+			repo = &fRepo
 			break
 		}
 	}

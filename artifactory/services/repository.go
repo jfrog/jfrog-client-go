@@ -4,25 +4,22 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type RepositoryService struct {
-	repoType   string
 	isUpdate   bool
 	client     *jfroghttpclient.JfrogHttpClient
 	ArtDetails auth.ServiceDetails
 }
 
-func NewRepositoryService(repoType string, client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *RepositoryService {
-	return &RepositoryService{repoType: repoType, client: client, isUpdate: isUpdate}
+func NewRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *RepositoryService {
+	return &RepositoryService{client: client, isUpdate: isUpdate}
 }
 
 func (rs *RepositoryService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
@@ -35,25 +32,25 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 		return err
 	}
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/vnd.org.jfrog.artifactory.repositories."+strings.ToTitle(rs.repoType)+"RepositoryConfiguration+json", &httpClientsDetails.Headers)
+	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/repositories/" + url.PathEscape(repoKey)
 	var operationString string
 	var resp *http.Response
 	var body []byte
 	if rs.isUpdate {
-		log.Info("Updating " + strings.ToLower(rs.repoType) + " repository...")
+		log.Info("Updating repository '" + repoKey + "'...")
 		operationString = "updating"
 		resp, body, err = rs.client.SendPost(url, content, &httpClientsDetails)
 	} else {
-		log.Info("Creating " + strings.ToLower(rs.repoType) + " repository...")
+		log.Info("Creating repository '" + repoKey + "'...")
 		operationString = "creating"
 		resp, body, err = rs.client.SendPut(url, content, &httpClientsDetails)
 	}
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
@@ -62,7 +59,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 }
 
 type RepositoryBaseParams struct {
-	Rclass          string   `json:"rclass"`
+	Rclass          string   `json:"rclass,omitempty"`
 	Key             string   `json:"key,omitempty"`
 	ProjectKey      string   `json:"projectKey,omitempty"`
 	Environments    []string `json:"environments,omitempty"`
@@ -80,6 +77,7 @@ type AdditionalRepositoryBaseParams struct {
 	PropertySets       []string `json:"propertySets,omitempty"`
 	DownloadRedirect   *bool    `json:"downloadRedirect,omitempty"`
 	PriorityResolution *bool    `json:"priorityResolution,omitempty"`
+	CdnRedirect        *bool    `json:"cdnRedirect,omitempty"`
 }
 
 type CargoRepositoryParams struct {
@@ -92,14 +90,14 @@ type DebianRepositoryParams struct {
 }
 
 type DockerRepositoryParams struct {
-	MaxUniqueTags       int    `json:"maxUniqueTags,omitempty"`
+	MaxUniqueTags       *int   `json:"maxUniqueTags,omitempty"`
 	DockerApiVersion    string `json:"dockerApiVersion,omitempty"`
 	BlockPushingSchema1 *bool  `json:"blockPushingSchema1,omitempty"`
-	DockerTagRetention  int    `json:"dockerTagRetention,omitempty"`
+	DockerTagRetention  *int   `json:"dockerTagRetention,omitempty"`
 }
 
 type JavaPackageManagersRepositoryParams struct {
-	MaxUniqueSnapshots           int    `json:"maxUniqueSnapshots,omitempty"`
+	MaxUniqueSnapshots           *int   `json:"maxUniqueSnapshots,omitempty"`
 	HandleReleases               *bool  `json:"handleReleases,omitempty"`
 	HandleSnapshots              *bool  `json:"handleSnapshots,omitempty"`
 	SuppressPomConsistencyChecks *bool  `json:"suppressPomConsistencyChecks,omitempty"`
@@ -113,12 +111,12 @@ type KeyPairRefsRepositoryParams struct {
 }
 
 type NugetRepositoryParams struct {
-	MaxUniqueSnapshots       int   `json:"maxUniqueSnapshots,omitempty"`
+	MaxUniqueSnapshots       *int  `json:"maxUniqueSnapshots,omitempty"`
 	ForceNugetAuthentication *bool `json:"forceNugetAuthentication,omitempty"`
 }
 
 type RpmRepositoryParams struct {
-	YumRootDepth            int    `json:"yumRootDepth,omitempty"`
+	YumRootDepth            *int   `json:"yumRootDepth,omitempty"`
 	CalculateYumMetadata    *bool  `json:"calculateYumMetadata,omitempty"`
 	EnableFileListsIndexing *bool  `json:"enableFileListsIndexing,omitempty"`
 	YumGroupFileNames       string `json:"yumGroupFileNames,omitempty"`

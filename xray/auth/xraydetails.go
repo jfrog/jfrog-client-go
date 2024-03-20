@@ -23,7 +23,7 @@ func (ds *xrayDetails) GetVersion() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Debug("The Xray version is:", ds.Version)
+		log.Debug("JFrog Xray version is:", ds.Version)
 	}
 	return ds.Version, nil
 }
@@ -34,6 +34,9 @@ func (ds *xrayDetails) getXrayVersion() (string, error) {
 		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
+	if err != nil {
+		return "", err
+	}
 	sm, err := xray.New(serviceConfig)
 	if err != nil {
 		return "", err

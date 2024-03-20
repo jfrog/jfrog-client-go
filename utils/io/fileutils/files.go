@@ -5,9 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"os/user"
@@ -15,14 +13,17 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/jfrog/build-info-go/entities"
+	biutils "github.com/jfrog/build-info-go/utils"
+	gofrog "github.com/jfrog/gofrog/io"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 const (
-	SYMLINK_FILE_CONTENT          = ""
-	File                 ItemType = "file"
-	Dir                  ItemType = "dir"
-	Any                  ItemType = "any"
+	SymlinkFileContent          = ""
+	File               ItemType = "file"
+	Dir                ItemType = "dir"
+	Any                ItemType = "any"
 )
 
 func GetFileSeparator() string {
@@ -74,21 +75,26 @@ func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err e
 		fileInfo, err = os.Stat(path)
 	}
 	// We should not do CheckError here, because the error is checked by the calling functions.
-	return fileInfo, err
+	return
 }
 
-func IsDirEmpty(path string) (bool, error) {
+func IsDirEmpty(path string) (isEmpty bool, err error) {
 	dir, err := os.Open(path)
-	if err != nil {
-		return false, errorutils.CheckError(err)
+	if errorutils.CheckError(err) != nil {
+		return
 	}
-	defer dir.Close()
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(dir.Close()))
+	}()
 
 	_, err = dir.Readdirnames(1)
 	if err == io.EOF {
-		return true, nil
+		isEmpty = true
+		err = nil
+		return
 	}
-	return false, errorutils.CheckError(err)
+	err = errorutils.CheckError(err)
+	return
 }
 
 func IsPathSymlink(path string) bool {
@@ -133,7 +139,7 @@ func GetFileAndDirFromPath(path string) (fileName, dir string) {
 func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat bool, placeholdersUsed bool) (localTargetPath, fileName string) {
 	targetFileName, targetDirPath := GetFileAndDirFromPath(targetPath)
 	// Remove double slashes and double backslashes that may appear in the path
-	localTargetPath = filepath.Join(targetDirPath)
+	localTargetPath = filepath.Clean(targetDirPath)
 	// When placeholders are used, the file path shouldn't be taken into account (or in other words, flat = true).
 	if !flat && !placeholdersUsed {
 		localTargetPath = filepath.Join(targetDirPath, relativePath)
@@ -150,7 +156,7 @@ func GetLocalPathAndFile(originalFileName, relativePath, targetPath string, flat
 // Return the recursive list of files and directories in the specified path
 func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) (fileList []string, err error) {
 	fileList = []string{}
-	err = Walk(path, func(path string, f os.FileInfo, err error) error {
+	err = gofrog.Walk(path, func(path string, f os.FileInfo, err error) error {
 		fileList = append(fileList, path)
 		return nil
 	}, walkIntoDirSymlink)
@@ -165,7 +171,7 @@ func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, 
 		path += sep
 	}
 	var fileList []string
-	files, _ := ioutil.ReadDir(path)
+	files, _ := os.ReadDir(path)
 	path = strings.TrimPrefix(path, "."+sep)
 
 	for _, f := range files {
@@ -209,7 +215,7 @@ func ListFiles(path string, includeDirs bool) ([]string, error) {
 		path += sep
 	}
 	fileList := []string{}
-	files, _ := ioutil.ReadDir(path)
+	files, _ := os.ReadDir(path)
 	path = strings.TrimPrefix(path, "."+sep)
 
 	for _, f := range files {
@@ -235,7 +241,7 @@ func ListFiles(path string, includeDirs bool) ([]string, error) {
 
 func GetUploadRequestContent(file *os.File) io.Reader {
 	if file == nil {
-		return bytes.NewBuffer([]byte(SYMLINK_FILE_CONTENT))
+		return bytes.NewBuffer([]byte(SymlinkFileContent))
 	}
 	return bufio.NewReader(file)
 }
@@ -274,16 +280,14 @@ func CreateDirIfNotExist(path string) error {
 
 // Reads the content of the file in the source path and appends it to
 // the file in the destination path.
-func AppendFile(srcPath string, destFile *os.File) error {
+func AppendFile(srcPath string, destFile *os.File) (err error) {
 	srcFile, err := os.Open(srcPath)
-	err = errorutils.CheckError(err)
-	if err != nil {
-		return err
+	if errorutils.CheckError(err) != nil {
+		return
 	}
 
-	defer func() error {
-		err := srcFile.Close()
-		return errorutils.CheckError(err)
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(srcFile.Close()))
 	}()
 
 	reader := bufio.NewReader(srcFile)
@@ -291,7 +295,8 @@ func AppendFile(srcPath string, destFile *os.File) error {
 	writer := bufio.NewWriter(destFile)
 	buf := make([]byte, 1024000)
 	for {
-		n, err := reader.Read(buf)
+		var n int
+		n, err = reader.Read(buf)
 		if err != io.EOF {
 			err = errorutils.CheckError(err)
 			if err != nil {
@@ -320,9 +325,9 @@ func GetHomeDir() string {
 	if home != "" {
 		return home
 	}
-	user, err := user.Current()
+	currentUser, err := user.Current()
 	if err == nil {
-		return user.HomeDir
+		return currentUser.HomeDir
 	}
 	return ""
 }
@@ -336,157 +341,90 @@ func IsSshUrl(urlPath string) bool {
 }
 
 func ReadFile(filePath string) ([]byte, error) {
-	content, err := ioutil.ReadFile(filePath)
-	err = errorutils.CheckError(err)
-	return content, err
+	content, err := os.ReadFile(filePath)
+	return content, errorutils.CheckError(err)
 }
 
-func GetFileDetails(filePath string, includeChecksums bool) (*FileDetails, error) {
-	var err error
-	details := new(FileDetails)
+func GetFileDetails(filePath string, includeChecksums bool) (details *FileDetails, err error) {
+	details = new(FileDetails)
 	if includeChecksums {
 		details.Checksum, err = calcChecksumDetails(filePath)
 		if err != nil {
 			return details, err
 		}
 	} else {
-		details.Checksum = ChecksumDetails{}
+		details.Checksum = entities.Checksum{}
 	}
 
 	file, err := os.Open(filePath)
-	defer file.Close()
-	if errorutils.CheckError(err) != nil {
-		return nil, err
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(file.Close()))
+	}()
+	if err != nil {
+		return nil, errorutils.CheckError(err)
 	}
 	fileInfo, err := file.Stat()
-	if errorutils.CheckError(err) != nil {
-		return nil, err
+	if err != nil {
+		return nil, errorutils.CheckError(err)
 	}
 	details.Size = fileInfo.Size()
 	return details, nil
 }
 
-func calcChecksumDetails(filePath string) (ChecksumDetails, error) {
+func calcChecksumDetails(filePath string) (checksum entities.Checksum, err error) {
 	file, err := os.Open(filePath)
-	defer file.Close()
-	if errorutils.CheckError(err) != nil {
-		return ChecksumDetails{}, err
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(file.Close()))
+	}()
+	if err != nil {
+		return entities.Checksum{}, errorutils.CheckError(err)
 	}
 	return calcChecksumDetailsFromReader(file)
 }
 
-func GetFileDetailsFromReader(reader io.Reader, includeChecksusms bool) (*FileDetails, error) {
-	var err error
-	details := new(FileDetails)
+func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details *FileDetails, err error) {
+	details = new(FileDetails)
 
 	pr, pw := io.Pipe()
-	defer pr.Close()
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(pr.Close()))
+	}()
 
 	go func() {
-		defer pw.Close()
+		defer func() {
+			err = errors.Join(err, errorutils.CheckError(pw.Close()))
+		}()
 		details.Size, err = io.Copy(pw, reader)
 	}()
 
-	if includeChecksusms {
+	if includeChecksums {
 		details.Checksum, err = calcChecksumDetailsFromReader(pr)
 	}
-	return details, err
+	return
 }
 
-func calcChecksumDetailsFromReader(reader io.Reader) (ChecksumDetails, error) {
-	checksumInfo, err := biutils.CalcChecksums(reader)
+func calcChecksumDetailsFromReader(reader io.Reader) (entities.Checksum, error) {
+	checksums, err := biutils.CalcChecksums(reader)
 	if err != nil {
-		return ChecksumDetails{}, errorutils.CheckError(err)
+		return entities.Checksum{}, errorutils.CheckError(err)
 	}
-	return ChecksumDetails{Md5: checksumInfo[biutils.MD5], Sha1: checksumInfo[biutils.SHA1], Sha256: checksumInfo[biutils.SHA256]}, nil
+	return entities.Checksum{Md5: checksums[biutils.MD5], Sha1: checksums[biutils.SHA1], Sha256: checksums[biutils.SHA256]}, nil
 }
 
 type FileDetails struct {
-	Checksum ChecksumDetails
+	Checksum entities.Checksum
 	Size     int64
-}
-
-type ChecksumDetails struct {
-	Md5    string
-	Sha1   string
-	Sha256 string
-}
-
-func CopyFile(dst, src string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-	fileName, _ := GetFileAndDirFromPath(src)
-	dstPath, err := CreateFilePath(dst, fileName)
-	if err != nil {
-		return err
-	}
-	dstFile, err := os.Create(dstPath)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-	io.Copy(dstFile, srcFile)
-	return nil
-}
-
-// Copy directory content from one path to another.
-// includeDirs means to copy also the dirs if presented in the src folder.
-// excludeNames - Skip files/dirs in the src folder that match names in provided slice. ONLY excludes first layer (only in src folder).
-func CopyDir(fromPath, toPath string, includeDirs bool, excludeNames []string) error {
-	err := CreateDirIfNotExist(toPath)
-	if err != nil {
-		return err
-	}
-
-	files, err := ListFiles(fromPath, includeDirs)
-	if err != nil {
-		return err
-	}
-
-	for _, v := range files {
-		// Skip if excluded
-		if IsStringInSlice(filepath.Base(v), excludeNames) {
-			continue
-		}
-
-		dir, err := IsDirExists(v, false)
-		if err != nil {
-			return err
-		}
-
-		if dir {
-			toPath := toPath + GetFileSeparator() + filepath.Base(v)
-			err := CopyDir(v, toPath, true, nil)
-			if err != nil {
-				return err
-			}
-			continue
-		}
-		err = CopyFile(toPath, v)
-		if err != nil {
-			return err
-		}
-	}
-	return err
-}
-
-func IsStringInSlice(string string, strings []string) bool {
-	for _, v := range strings {
-		if v == string {
-			return true
-		}
-	}
-	return false
 }
 
 // Removing the provided path from the filesystem
 func RemovePath(testPath string) error {
-	if _, err := os.Stat(testPath); err == nil {
+	if file, err := os.Stat(testPath); err == nil {
+		if file.IsDir() {
+			err = RemoveTempDir(testPath)
+		} else {
+			err = errorutils.CheckError(os.Remove(testPath))
+		}
 		// Delete the path
-		err = os.RemoveAll(testPath)
 		if err != nil {
 			return errors.New("Cannot remove path: " + testPath + " due to: " + err.Error())
 		}
@@ -496,12 +434,11 @@ func RemovePath(testPath string) error {
 
 // Renaming from old path to new path.
 func RenamePath(oldPath, newPath string) error {
-	err := CopyDir(oldPath, newPath, true, nil)
+	err := biutils.CopyDir(oldPath, newPath, true, nil)
 	if err != nil {
 		return errors.New("Error copying directory: " + oldPath + "to" + newPath + err.Error())
 	}
-	RemovePath(oldPath)
-	return nil
+	return RemovePath(oldPath)
 }
 
 // Returns the path to the directory in which itemToFind is located.
@@ -515,8 +452,10 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 	if err != nil {
 		return
 	}
-	defer os.Chdir(wd)
-
+	origWd := wd
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(os.Chdir(origWd)))
+	}()
 	// Get the OS root.
 	osRoot := os.Getenv("SYSTEMDRIVE")
 	if osRoot != "" {
@@ -553,7 +492,10 @@ func FindUpstream(itemToFInd string, itemType ItemType) (wd string, exists bool,
 		visitedPaths[wd] = true
 		// CD to the parent directory.
 		wd = filepath.Dir(wd)
-		os.Chdir(wd)
+		err = os.Chdir(wd)
+		if err != nil {
+			return "", false, err
+		}
 
 		// If we already visited this directory, it means that there's a loop and we can stop.
 		if visitedPaths[wd] {
@@ -580,17 +522,21 @@ func FilesIdentical(file1 string, file2 string) (bool, error) {
 }
 
 // JSONEqual compares the JSON from two files.
-func JsonEqual(filePath1, filePath2 string) (bool, error) {
+func JsonEqual(filePath1, filePath2 string) (isEqual bool, err error) {
 	reader1, err := os.Open(filePath1)
 	if err != nil {
 		return false, err
 	}
-	defer reader1.Close()
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(reader1.Close()))
+	}()
 	reader2, err := os.Open(filePath2)
 	if err != nil {
 		return false, err
 	}
-	defer reader2.Close()
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(reader2.Close()))
+	}()
 	var j, j2 interface{}
 	d := json.NewDecoder(reader1)
 	if err := d.Decode(&j); err != nil {
@@ -665,11 +611,7 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	}
 	defer func() {
 		if inputFileOpen {
-			e := inputFile.Close()
-			if err == nil {
-				err = e
-				errorutils.CheckError(err)
-			}
+			err = errors.Join(err, errorutils.CheckError(inputFile.Close()))
 		}
 	}()
 	inputFileInfo, err := inputFile.Stat()
@@ -683,11 +625,7 @@ func MoveFile(sourcePath, destPath string) (err error) {
 		return errorutils.CheckError(err)
 	}
 	defer func() {
-		e := outputFile.Close()
-		if err == nil {
-			err = e
-			errorutils.CheckError(err)
-		}
+		err = errors.Join(err, errorutils.CheckError(outputFile.Close()))
 	}()
 
 	_, err = io.Copy(outputFile, inputFile)
@@ -707,4 +645,27 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	inputFileOpen = false
 	err = os.Remove(sourcePath)
 	return errorutils.CheckError(err)
+}
+
+// RemoveDirContents removes the contents of the directory, without removing the directory itself.
+// If it encounters an error before removing all the files, it stops and returns that error.
+func RemoveDirContents(dirPath string) (err error) {
+	d, err := os.Open(dirPath)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(d.Close()))
+	}()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dirPath, name))
+		if err != nil {
+			return errorutils.CheckError(err)
+		}
+	}
+	return nil
 }

@@ -20,11 +20,11 @@ func TestCreateBundleBody(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, releaseBundleBody)
 	assert.Equal(t, true, releaseBundleBody.DryRun)
-	assert.Equal(t, true, releaseBundleBody.SignImmediately)
+	assert.Equal(t, true, *releaseBundleBody.SignImmediately)
 	assert.Equal(t, "storing-repo", releaseBundleBody.StoringRepository)
 	assert.Equal(t, "Release bundle description", releaseBundleBody.Description)
 	assert.Equal(t, "Release notes", releaseBundleBody.ReleaseNotes.Content)
-	assert.Equal(t, ReleaseNotesSyntax(Asciidoc), releaseBundleBody.ReleaseNotes.Syntax)
+	assert.Equal(t, Asciidoc, releaseBundleBody.ReleaseNotes.Syntax)
 	assert.Len(t, releaseBundleBody.BundleSpec.Queries, 0)
 }
 
@@ -53,39 +53,5 @@ func TestCreateBundleBodyQuery(t *testing.T) {
 		default:
 			assert.Fail(t, "Unexpected key "+prop.Key)
 		}
-	}
-}
-
-func TestCreatePathMappings(t *testing.T) {
-	tests := []struct {
-		specPattern           string
-		specTarget            string
-		expectedMappingInput  string
-		expectedMappingOutput string
-	}{
-		{"", "", "", ""},
-		{"repo/path/file.in", "", "", ""},
-		{"a/b/c", "a/b/x", "^a/b/c$", "a/b/x"},
-		{"a/(b)/c", "a/d/c", "^a/(b)/c$", "a/d/c"},
-		{"a/(*)/c", "a/d/c", "^a/(.*)/c$", "a/d/c"},
-		{"a/(b)/c", "a/(d)/c", "^a/(b)/c$", "a/(d)/c"},
-		{"a/(b)/c", "a/b/c/{1}", "^a/(b)/c$", "a/b/c/$1"},
-		{"a/(b)/(c)", "a/b/c/{1}/{2}", "^a/(b)/(c)$", "a/b/c/$1/$2"},
-		{"a/(b)/(c)", "a/b/c/{2}/{1}", "^a/(b)/(c)$", "a/b/c/$2/$1"},
-	}
-
-	for _, test := range tests {
-		t.Run(test.specPattern, func(t *testing.T) {
-			specFile := &utils.CommonParams{Pattern: test.specPattern, Target: test.specTarget}
-			pathMappings := createPathMappings(specFile)
-			if test.expectedMappingInput == "" {
-				assert.Empty(t, pathMappings)
-				return
-			}
-			assert.Len(t, pathMappings, 1)
-			actualPathMapping := pathMappings[0]
-			assert.Equal(t, test.expectedMappingInput, actualPathMapping.Input)
-			assert.Equal(t, test.expectedMappingOutput, actualPathMapping.Output)
-		})
 	}
 }

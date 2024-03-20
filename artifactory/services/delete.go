@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -9,8 +10,10 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	urlutil "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -60,7 +63,9 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		if err != nil {
 			return
 		}
-		defer tempResultItems.Close()
+		defer func() {
+			err = errors.Join(err, tempResultItems.Close())
+		}()
 		toBeDeletedDirs, err = removeNotToBeDeletedDirs(deleteParams.GetFile(), ds, tempResultItems)
 		if err != nil {
 			return
@@ -70,7 +75,9 @@ func (ds *DeleteService) GetPathsToDelete(deleteParams DeleteParams) (resultItem
 		if toBeDeletedDirs == nil {
 			toBeDeletedDirs = tempResultItems
 		}
-		defer toBeDeletedDirs.Close()
+		defer func() {
+			err = errors.Join(err, toBeDeletedDirs.Close())
+		}()
 		resultItems, err = utils.ReduceTopChainDirResult(utils.ResultItem{}, toBeDeletedDirs)
 		if err != nil {
 			return
@@ -93,28 +100,38 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 		return func(threadId int) error {
 			result.TotalCount[threadId]++
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ds.DryRun)
-			deletePath, e := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), resultItem.GetItemRelativePath(), make(map[string]string))
+			deletePath, e := urlutil.BuildUrl(ds.GetArtifactoryDetails().GetUrl(), resultItem.GetItemRelativePath(), make(map[string]string))
 			if e != nil {
 				return e
 			}
 			log.Info(logMsgPrefix+"Deleting", resultItem.GetItemRelativePath())
 			if ds.DryRun {
+				// Mock success count on dry run
+				result.SuccessCount[threadId]++
 				return nil
 			}
 			httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
+			httpClientsDetails.AddPreRetryInterceptor(ds.createPreRetryInterceptor(deletePath, logMsgPrefix+"Checking existence of "+resultItem.GetItemRelativePath()))
 			resp, body, err := ds.client.SendDelete(deletePath, nil, &httpClientsDetails)
 			if err != nil {
 				log.Error(err)
 				return err
 			}
-			if err = errorutils.CheckResponseStatus(resp, http.StatusNoContent); err != nil {
-				err = errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body))
-				log.Error(errorutils.CheckError(err))
+			if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent); err != nil {
+				log.Error(err)
 				return err
 			}
 			result.SuccessCount[threadId]++
 			return nil
 		}
+	}
+}
+
+func (ds *DeleteService) createPreRetryInterceptor(deletePath, retryLog string) httputils.PreRetryInterceptor {
+	return func() (shouldRetry bool) {
+		retryHttpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
+		_, _, nonExistErr := ds.client.GetHttpClient().SendHead(deletePath, retryHttpClientsDetails, retryLog)
+		return nonExistErr == nil
 	}
 }
 
@@ -126,7 +143,7 @@ func (ds *DeleteService) DeleteFiles(deleteItems *content.ContentReader) (int, e
 		defer producerConsumer.Done()
 		for deleteItem := new(utils.ResultItem); deleteItems.NextRecord(deleteItem) == nil; deleteItem = new(utils.ResultItem) {
 			fileDeleteHandlerFunc := ds.createFileHandlerFunc(&result)
-			producerConsumer.AddTaskWithError(fileDeleteHandlerFunc(*deleteItem), errorsQueue.AddError)
+			_, _ = producerConsumer.AddTaskWithError(fileDeleteHandlerFunc(*deleteItem), errorsQueue.AddError)
 		}
 		if err := deleteItems.GetError(); err != nil {
 			errorsQueue.AddError(err)
@@ -183,12 +200,12 @@ func NewDeleteParams() DeleteParams {
 // These directories must be removed, because they include files, which should not be deleted, because of the excludeProps params.
 // These directories must not be deleted from Artifactory.
 // In case of no excludeProps filed in the file spec, nil will be return so all deleteCandidates will get deleted.
-func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (*content.ContentReader, error) {
+func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, deleteCandidates *content.ContentReader) (contentReader *content.ContentReader, err error) {
 	length, err := deleteCandidates.Length()
 	if err != nil || specFile.ExcludeProps == "" || length == 0 {
 		return nil, err
 	}
-	// Send AQL to get all artifacts that includes the exclude props.
+	// Send AQL to get all artifacts that include the exclude props.
 	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
@@ -197,17 +214,20 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 	if len(bufferFiles) > 0 {
 		defer func() {
 			for _, file := range bufferFiles {
-				file.Close()
+				err = errors.Join(err, file.Close())
 			}
 		}()
 		if err != nil {
 			return nil, err
 		}
+		var artifactNotToBeDeleteReader *content.ContentReader
 		artifactNotToBeDeleteReader, err := getSortedArtifactsToNotDelete(specFile, ds)
 		if err != nil {
 			return nil, err
 		}
-		defer artifactNotToBeDeleteReader.Close()
+		defer func() {
+			err = errors.Join(err, artifactNotToBeDeleteReader.Close())
+		}()
 		if err = utils.WriteCandidateDirsToBeDeleted(bufferFiles, artifactNotToBeDeleteReader, resultWriter); err != nil {
 			return nil, err
 		}

@@ -7,7 +7,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -30,10 +29,16 @@ func (drs *GetReplicationService) GetReplication(repoKey string) ([]utils.Replic
 	if err != nil {
 		return nil, err
 	}
-	var replicationConf []utils.ReplicationParams
-	if err := json.Unmarshal(body, &replicationConf); err != nil {
+	var replicationBody []utils.GetReplicationBody
+	if err := json.Unmarshal(body, &replicationBody); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
+
+	var replicationConf = make([]utils.ReplicationParams, len(replicationBody))
+	for i, body := range replicationBody {
+		replicationConf[i] = *utils.CreateReplicationParams(body)
+	}
+
 	return replicationConf, nil
 }
 
@@ -44,8 +49,8 @@ func (drs *GetReplicationService) preform(repoKey string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
 	}
 	log.Debug("Artifactory response:", resp.Status)
 	log.Info("Done retrieve replication job.")

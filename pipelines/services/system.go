@@ -2,11 +2,11 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -25,18 +25,19 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
 	resp, body, _, err := ss.client.SendGet(ss.ServiceDetails.GetUrl()+"api/v1/system/info", true, &httpDetails)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed while attempting to get JFrog Pipelines version: " + err.Error())
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		err := errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		if resp.StatusCode == http.StatusNotFound {
-			return nil, errorutils.CheckError(&PipelinesNotAvailableError{InnerError: err})
+			return nil, &PipelinesNotAvailableError{InnerError: err}
 		}
-		return nil, errorutils.CheckError(err)
+		return nil, errors.New("got unexpected server response while attempting to get JFrog Pipelines version:\n" + err.Error())
 	}
 	var sysInfo PipelinesSystemInfo
-	err = json.Unmarshal(body, &sysInfo)
-	return &sysInfo, errorutils.CheckError(err)
+	if err = json.Unmarshal(body, &sysInfo); err != nil {
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Pipelines server response: " + err.Error())
+	}
+	return &sysInfo, nil
 }
 
 type PipelinesSystemInfo struct {
@@ -49,5 +50,5 @@ type PipelinesNotAvailableError struct {
 }
 
 func (*PipelinesNotAvailableError) Error() string {
-	return "Pipelines: Pipelines is not aviable at the moment."
+	return "Pipelines: Pipelines is not available at the moment."
 }

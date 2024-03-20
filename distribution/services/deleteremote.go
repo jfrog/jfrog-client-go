@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
@@ -17,7 +18,7 @@ type OnSuccess string
 
 const (
 	Keep   OnSuccess = "keep"
-	Delete           = "delete"
+	Delete OnSuccess = "delete"
 )
 
 // Delete received release bundles from the edge nodes. On success, keep or delete the release bundle from the distribution service.
@@ -43,9 +44,9 @@ func (dr *DeleteReleaseBundleService) IsDryRun() bool {
 }
 
 func (dr *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParams DeleteDistributionParams) error {
-	var distributionRules []DistributionRulesBody
+	var distributionRules []distribution.DistributionRulesBody
 	for _, rule := range deleteDistributionParams.DistributionRules {
-		distributionRule := DistributionRulesBody{
+		distributionRule := distribution.DistributionRulesBody{
 			SiteName:     rule.GetSiteName(),
 			CityName:     rule.GetCityName(),
 			CountryCodes: rule.GetCountryCodes(),
@@ -61,7 +62,7 @@ func (dr *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParam
 	}
 
 	deleteDistribution := DeleteRemoteDistributionBody{
-		DistributionBody: DistributionBody{
+		ReleaseBundleDistributeV1Body: distribution.ReleaseBundleDistributeV1Body{
 			DryRun:            dr.DryRun,
 			DistributionRules: distributionRules,
 		},
@@ -90,13 +91,16 @@ func (dr *DeleteReleaseBundleService) execDeleteDistribute(name, version string,
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusAccepted); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
+		return err
 	}
 	if dr.Sync {
-		dr.waitForDeletion(name, version)
+		err := dr.waitForDeletion(name, version)
+		if err != nil {
+			return err
+		}
 	}
-	log.Debug("Distribution response: ", resp.Status)
+	log.Debug("Distribution response:", resp.Status)
 	log.Debug(utils.IndentJson(body))
 	return errorutils.CheckError(err)
 }
@@ -109,7 +113,7 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 	if dr.MaxWaitMinutes >= 1 {
 		maxWaitMinutes = dr.MaxWaitMinutes
 	}
-	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += defaultSyncSleepIntervalSeconds {
+	for timeElapsed := 0; timeElapsed < maxWaitMinutes*60; timeElapsed += DefaultDistributeSyncSleepIntervalSeconds {
 		if timeElapsed%60 == 0 {
 			log.Info(fmt.Sprintf("Performing sync deletion of release bundle %s/%s...", name, version))
 		}
@@ -122,20 +126,20 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 			return nil
 		}
 		if resp.StatusCode != http.StatusOK {
-			return errorutils.CheckErrorf("Error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + ".")
+			return errorutils.CheckErrorf("error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + ".")
 		}
-		time.Sleep(time.Second * defaultSyncSleepIntervalSeconds)
+		time.Sleep(time.Second * DefaultDistributeSyncSleepIntervalSeconds)
 	}
-	return errorutils.CheckErrorf("Timeout for sync deletion. ")
+	return errorutils.CheckErrorf("timeout for sync deletion. ")
 }
 
 type DeleteRemoteDistributionBody struct {
-	DistributionBody
+	distribution.ReleaseBundleDistributeV1Body
 	OnSuccess OnSuccess `json:"on_success"`
 }
 
 type DeleteDistributionParams struct {
-	DistributionParams
+	distribution.DistributionParams
 	DeleteFromDistribution bool
 	Sync                   bool
 	// Max time in minutes to wait for sync distribution to finish.
@@ -144,7 +148,7 @@ type DeleteDistributionParams struct {
 
 func NewDeleteReleaseBundleParams(name, version string) DeleteDistributionParams {
 	return DeleteDistributionParams{
-		DistributionParams: DistributionParams{
+		DistributionParams: distribution.DistributionParams{
 			Name:    name,
 			Version: version,
 		},

@@ -1,12 +1,13 @@
 package utils
 
 import (
-	"path/filepath"
+	"fmt"
 	"reflect"
-	"regexp"
 	"sort"
-	"strings"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRemoveRepoFromPath(t *testing.T) {
@@ -46,12 +47,8 @@ func TestBuildTargetPath(t *testing.T) {
 
 func assertBuildTargetPath(regexp, source, dest, expected string, ignoreRepo bool, t *testing.T) {
 	result, _, err := BuildTargetPath(regexp, source, dest, ignoreRepo)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if expected != result {
-		t.Error("Unexpected target string built. Expected: `" + expected + "` Got `" + result + "`")
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
 }
 
 func TestSplitWithEscape(t *testing.T) {
@@ -74,8 +71,24 @@ func assertSplitWithEscape(str string, expected []string, t *testing.T) {
 	}
 }
 
+func TestConvertLocalPatternToRegexp(t *testing.T) {
+	var tests = []struct {
+		localPath string
+		expected  string
+	}{
+		{"./", "^.*$"},
+		{".\\\\", "^.*$"},
+		{".\\", "^.*$"},
+		{"./abc", "abc"},
+		{".\\\\abc", "abc"},
+		{".\\abc", "abc"},
+	}
+	for _, test := range tests {
+		assert.Equal(t, test.expected, ConvertLocalPatternToRegexp(test.localPath, RegExp))
+	}
+}
 func TestCleanPath(t *testing.T) {
-	if IsWindows() {
+	if io.IsWindows() {
 		parameter := "\\\\foo\\\\baz\\\\..\\\\bar\\\\*"
 		got := cleanPath(parameter)
 		want := "\\\\foo\\\\bar\\\\*"
@@ -156,8 +169,8 @@ func TestCleanPath(t *testing.T) {
 func TestIsWildcardParentheses(t *testing.T) {
 	strA := "/tmp/cache/download/(github.com/)"
 	strB := "/tmp/cache/download/(github.com/*)"
-	parenthesesA := NewParenthesesSlice(strA, "")
-	parenthesesB := NewParenthesesSlice(strA, "{1}")
+	parenthesesA := CreateParenthesesSlice(strA, "")
+	parenthesesB := CreateParenthesesSlice(strA, "{1}")
 
 	got := isWildcardParentheses(strA, parenthesesA)
 	want := false
@@ -172,84 +185,6 @@ func TestIsWildcardParentheses(t *testing.T) {
 	}
 }
 
-func TestAntPathToRegExp(t *testing.T) {
-	var fileSystemPaths []string = []string{
-		filepath.Join("dev", "a", "b.txt"),
-		filepath.Join("dev", "a", "bb.txt"),
-		filepath.Join("dev", "a", "bc.txt"),
-		filepath.Join("dev", "aa", "b.txt"),
-		filepath.Join("dev", "aa", "bb.txt"),
-		filepath.Join("dev", "aa", "bc.txt"),
-		filepath.Join("dev", "aa", "b.zip"),
-		filepath.Join("dev", "aa", "bc.zip"),
-		filepath.Join("dev", "a1", "a2", "a3", "b.txt"),
-		filepath.Join("dev", "a1", "a2", "b.txt"),
-		filepath.Join("dev", "a1", "a2", "a3", "bc.txt"),
-		filepath.Join("dev", "a1", "a2", "bc.txt"),
-
-		filepath.Join("test", "a", "b.txt"),
-		filepath.Join("test", "a", "bb.txt"),
-		filepath.Join("test", "a", "bc.txt"),
-		filepath.Join("test", "aa", "b.txt"),
-		filepath.Join("test", "aa", "bb.txt"),
-		filepath.Join("test", "aa", "bc.txt"),
-		filepath.Join("test", "aa", "b.zip"),
-		filepath.Join("test", "aa", "bc.zip"),
-
-		filepath.Join("test2", "a", "b", "c.zip"),
-		filepath.Join("test2", "a", "bb", "c.zip"),
-		filepath.Join("test2", "b.zip"),
-		filepath.Join("b.zip"),
-		filepath.Join("tmp", "foo", "a"),
-		filepath.Join("tmp", "foo5", "a"),
-	}
-	tests := []struct {
-		name               string
-		antPattern         string
-		allFileSystemPaths []string
-		matchedPaths       []string
-	}{
-		{"check '?' in file's name", filepath.Join("dev", "a", "b?.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt")}},
-		{"check '?' in directory's name", filepath.Join("dev", "a?", "b.txt"), fileSystemPaths, []string{filepath.Join("dev", "aa", "b.txt")}},
-		{"check '*' in file's name", filepath.Join("dev", "a", "b*.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "b.txt"), filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt")}},
-		{"check '*' in directory's name", filepath.Join("dev", "*", "b.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "b.txt"), filepath.Join("dev", "aa", "b.txt")}},
-		{"check '*' in directory's name", filepath.Join("dev", "*", "a", "b.txt"), fileSystemPaths, nil},
-		{"check '**' in directory path", filepath.Join("**", "b.txt"), fileSystemPaths, []string{filepath.Join("dev", "a", "b.txt"), filepath.Join("dev", "aa", "b.txt"), filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("test", "a", "b.txt"), filepath.Join("test", "aa", "b.txt")}},
-		{"check '**' in the beginning and the end of path", filepath.Join("**", "a2", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
-		{"check '**' in the beginning and the end of path", filepath.Join("**a2**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
-		{"check double '**'", filepath.Join("**", "a2", "**", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
-		{"check '**' in the beginning and the end of file", filepath.Join("**", "b.zip", "**"), fileSystemPaths, []string{filepath.Join("dev", "aa", "b.zip"), filepath.Join("test", "aa", "b.zip"), filepath.Join("b.zip"), filepath.Join("test2", "b.zip")}},
-		{"combine '**' and '*'", filepath.Join("**", "a2", "*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
-		{"combine '**' and '*'", filepath.Join("**", "a2", "*", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "b.txt"), filepath.Join("dev", "a1", "a2", "b.txt"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt")}},
-		{"combine all signs", filepath.Join("**", "b?.*"), fileSystemPaths, []string{filepath.Join("dev", "a", "bb.txt"), filepath.Join("dev", "a", "bc.txt"), filepath.Join("dev", "aa", "bb.txt"), filepath.Join("dev", "aa", "bc.txt"), filepath.Join("dev", "aa", "bc.zip"), filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "bc.txt"), filepath.Join("test", "a", "bb.txt"), filepath.Join("test", "a", "bc.txt"), filepath.Join("test", "aa", "bb.txt"), filepath.Join("test", "aa", "bc.txt"), filepath.Join("test", "aa", "bc.zip")}},
-		{"'**' all files", filepath.Join("**"), fileSystemPaths, fileSystemPaths},
-		{"test2/**/b/**", filepath.Join("test2", "**", "b", "**"), fileSystemPaths, []string{filepath.Join("test2", "a", "b", "c.zip")}},
-		{"*/b.zip", filepath.Join("*", "b.zip"), fileSystemPaths, []string{filepath.Join("test2", "b.zip")}},
-		{"**/dev/**/a3/*c*", filepath.Join("dev", "**", "a3", "*c*"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "bc.txt")}},
-		{"**/dev/**/a3/**", filepath.Join("dev", "**", "a3", "**"), fileSystemPaths, []string{filepath.Join("dev", "a1", "a2", "a3", "bc.txt"), filepath.Join("dev", "a1", "a2", "a3", "b.txt")}},
-		{"exclude 'temp/foo5/a'", filepath.Join("**", "foo", "**"), fileSystemPaths, []string{filepath.Join("tmp", "foo", "a")}},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			regExpStr := antPatternToRegExp(cleanPath(test.antPattern))
-			var matches []string
-			for _, checkedPath := range fileSystemPaths {
-				match, _ := regexp.MatchString(regExpStr, checkedPath)
-				if match {
-					matches = append(matches, checkedPath)
-				}
-			}
-			if !equalSlicesIgnoreOrder(matches, test.matchedPaths) {
-				t.Error("Unmatched! : ant pattern `" + test.antPattern + "` matches paths:\n[" + strings.Join(test.matchedPaths, ",") + "]\nbut got:\n[" + strings.Join(matches, ",") + "]")
-			}
-		})
-	}
-}
-
-func addRegExpPrefixAndSuffix(str string) string {
-	return "^" + str + "$"
-}
-
 func equalSlicesIgnoreOrder(s1, s2 []string) bool {
 	if len(s1) != len(s2) {
 		return false
@@ -257,4 +192,98 @@ func equalSlicesIgnoreOrder(s1, s2 []string) bool {
 	sort.Strings(s1)
 	sort.Strings(s2)
 	return reflect.DeepEqual(s1, s2)
+}
+
+func TestGetMaxPlaceholderIndex(t *testing.T) {
+	type args struct {
+		toReplace string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{"empty", args{""}, 0, nil},
+		{"empty", args{"{}"}, 0, nil},
+		{"basic", args{"{1}{5}{3}"}, 5, nil},
+		{"basic", args{"}5{{3}"}, 3, nil},
+		{"basic", args{"{1}}5}{3}"}, 3, nil},
+		{"basic", args{"{1}5{}}{3}"}, 3, nil},
+		{"special characters", args{"!@#$%^&*abc(){}}{{2}!@#$%^&*abc(){}}{{1}!@#$%^&*abc(){}}{"}, 2, nil},
+		{"multiple digits", args{"{2}{100}fdsff{101}d#%{99}"}, 101, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getMaxPlaceholderIndex(tt.args.toReplace)
+			assert.NoError(t, err)
+			assert.Equalf(t, tt.want, got, "getMaxPlaceholderIndex(%v)", tt.args.toReplace)
+		})
+	}
+}
+
+func TestReplacePlaceHolders(t *testing.T) {
+	type args struct {
+		groups    []string
+		toReplace string
+		isRegexp  bool
+	}
+	tests := []struct {
+		name            string
+		args            args
+		expected        string
+		expectedBoolean bool
+	}{
+		// First element in the group isn't relevant cause the matching loop starts from index 1.
+		{"non regexp, empty group", args{[]string{}, "{1}-{2}-{3}", false}, "{1}-{2}-{3}", false},
+		{"non regexp, empty group", args{[]string{""}, "{1}-{2}-{3}", false}, "{1}-{2}-{3}", false},
+		{"regexp, empty group", args{[]string{}, "{1}-{2}-{3}", true}, "{1}-{2}-{3}", false},
+		{"regexp, empty group", args{[]string{""}, "{1}-{2}-{3}", true}, "{1}-{2}-{3}", false},
+		// Non regular expressions
+		{"basic", args{[]string{"", "a", "b", "c"}, "{1}-{2}-{3}", false}, "a-b-c", true},
+		{"opposite order", args{[]string{"", "a", "b", "c"}, "{3}-{2}-{1}-{4}", false}, "c-b-a-{4}", true},
+		{"double", args{[]string{"", "a", "b"}, "{2}-{2}-{1}-{1}", false}, "b-b-a-a", true},
+		{"skip placeholders indexes", args{[]string{"", "a", "b"}, "{4}-{1}", false}, "b-a", true},
+		// Regular expressions
+		{"basic", args{[]string{"", "a", "b", "c"}, "{1}-{2}-{3}", true}, "a-b-c", true},
+		{"opposite order", args{[]string{"", "a", "b", "c"}, "{4}-{3}-{2}-{5}", true}, "{4}-c-b-{5}", true},
+		{"double", args{[]string{"", "a", "b"}, "{2}-{2}-{1}-{1}", true}, "b-b-a-a", true},
+		{"skip placeholders indexes", args{[]string{"", "a", "b"}, "{3}-{1}", true}, "{3}-a", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, replaceOccurred, err := ReplacePlaceHolders(tt.args.groups, tt.args.toReplace, tt.args.isRegexp)
+			assert.NoError(t, err)
+			assert.Equalf(t, tt.expected, result, "ReplacePlaceHolders(%v, %v, %v)", tt.args.groups, tt.args.toReplace, tt.args.isRegexp)
+			assert.Equalf(t, tt.expectedBoolean, replaceOccurred, "ReplacePlaceHolders(%v, %v, %v)", tt.args.groups, tt.args.toReplace, tt.args.isRegexp)
+		})
+	}
+}
+
+func TestValidateMinimumVersion(t *testing.T) {
+	minTestVersion := "6.9.0"
+	tests := []struct {
+		artifactoryVersion string
+		expectedResult     bool
+	}{
+		{"6.5.0", false},
+		{"6.2.0", false},
+		{"5.9.0", false},
+		{"6.0.0", false},
+		{"6.6.0", false},
+		{"6.9.0", true},
+		{Development, true},
+		{"6.10.2", true},
+		{"6.15.2", true},
+	}
+	for _, test := range tests {
+		t.Run(test.artifactoryVersion, func(t *testing.T) {
+			err := ValidateMinimumVersion(Xray, test.artifactoryVersion, minTestVersion)
+			if test.expectedResult {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorContains(t, err, fmt.Sprintf(MinimumVersionMsg, Xray, test.artifactoryVersion, minTestVersion))
+			}
+		})
+	}
 }

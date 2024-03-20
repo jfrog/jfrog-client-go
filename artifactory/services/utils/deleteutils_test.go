@@ -14,53 +14,52 @@ import (
 func TestMatchingDelete(t *testing.T) {
 	var actual string
 	actual, _ = WildcardToDirsPath("s/*/path/", "s/a/path/b.zip")
-	assertDeletePattern("s/a/path/", actual, t)
+	assertDeletePattern(t, "s/a/path/", actual)
 	actual, _ = WildcardToDirsPath("s/*/path/", "s/a/b/c/path/b.zip")
-	assertDeletePattern("s/a/b/c/path/", actual, t)
+	assertDeletePattern(t, "s/a/b/c/path/", actual)
 	actual, _ = WildcardToDirsPath("s/a/*/", "s/a/b/path/b.zip")
-	assertDeletePattern("s/a/b/", actual, t)
+	assertDeletePattern(t, "s/a/b/", actual)
 	actual, _ = WildcardToDirsPath("s/*/path/*/", "s/a/path/a/b.zip")
-	assertDeletePattern("s/a/path/a/", actual, t)
+	assertDeletePattern(t, "s/a/path/a/", actual)
 	actual, _ = WildcardToDirsPath("s/*/path/*/", "s/a/a/path/a/b/c/d/b.zip")
-	assertDeletePattern("s/a/a/path/a/", actual, t)
+	assertDeletePattern(t, "s/a/a/path/a/", actual)
 	actual, _ = WildcardToDirsPath("s/*/", "s/a/a/path/a/b/c/d/b.zip")
-	assertDeletePattern("s/a/", actual, t)
+	assertDeletePattern(t, "s/a/", actual)
 	actual, _ = WildcardToDirsPath("s/*/a/*/", "s/a/a/path/k/b/c/d/b.zip")
-	assertDeletePattern("s/a/a/path/", actual, t)
+	assertDeletePattern(t, "s/a/a/path/", actual)
 	actual, _ = WildcardToDirsPath("s/*/a/*/*/", "s/a/a/path/k/b/c/d/b.zip")
-	assertDeletePattern("s/a/a/path/k/", actual, t)
+	assertDeletePattern(t, "s/a/a/path/k/", actual)
 	actual, _ = WildcardToDirsPath("s/*/*l*/*/*/", "s/a/l/path/k/b/c/d/b.zip")
-	assertDeletePattern("s/a/l/path/k/", actual, t)
+	assertDeletePattern(t, "s/a/l/path/k/", actual)
 	actual, _ = WildcardToDirsPath("s/*/a*/", "s/a/a/path/k/b/c/d/b.zip")
-	assertDeletePattern("s/a/a/", actual, t)
+	assertDeletePattern(t, "s/a/a/", actual)
 	actual, _ = WildcardToDirsPath("s/a*/", "s/a/a/path/k/b/c/d/b.zip")
-	assertDeletePattern("s/a/", actual, t)
+	assertDeletePattern(t, "s/a/", actual)
 	actual, _ = WildcardToDirsPath("s/*/", "s/a/a/path/k/b/c/d/b.zip")
-	assertDeletePattern("s/a/", actual, t)
+	assertDeletePattern(t, "s/a/", actual)
 	actual, _ = WildcardToDirsPath("s/*/*path*/", "s/a/h/path/k/b/c/d/b.zip")
-	assertDeletePattern("s/a/h/path/", actual, t)
+	assertDeletePattern(t, "s/a/h/path/", actual)
 	actual, _ = WildcardToDirsPath("a/b/*********/*******/", "a/b/c/d/e.zip")
-	assertDeletePattern("a/b/c/d/", actual, t)
-	actual, err := WildcardToDirsPath("s/*/a/*/*", "s/a/a/path/k/b/c/d/b.zip")
-	assertDeletePatternErr(err.Error(), "Delete pattern must end with \"/\"", t)
+	assertDeletePattern(t, "a/b/c/d/", actual)
+	_, err := WildcardToDirsPath("s/*/a/*/*", "s/a/a/path/k/b/c/d/b.zip")
+	assertDeletePatternErr(t, "delete pattern must end with \"/\"", err.Error())
 }
 
-func assertDeletePattern(expected, actual string, t *testing.T) {
+func assertDeletePattern(t *testing.T, expected, actual string) {
 	if expected != actual {
 		t.Error("Wrong matching expected: `" + expected + "` Got `" + actual + "`")
 	}
 }
 
-func assertDeletePatternErr(expected, actual string, t *testing.T) {
+func assertDeletePatternErr(t *testing.T, expected, actual string) {
 	if expected != actual {
 		t.Error("Wrong err message expected: `" + expected + "` Got `" + actual + "`")
 	}
 }
 
 func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
-	testPath, err := getBaseTestDir()
+	testPath := getBaseTestDir(t)
 	{
-		assert.NoError(t, err)
 		var bufferFiles []*content.ContentReader
 		for i := 1; i <= 3; i++ {
 			bufferFiles = append(bufferFiles, content.NewContentReader(filepath.Join(testPath, "buffer_file_ascending_order_"+strconv.Itoa(i)+".json"), content.DefaultKey))
@@ -89,8 +88,7 @@ func TestWriteCandidateDirsToBeDeleted(t *testing.T) {
 }
 
 func TestFilterCandidateToBeDeleted(t *testing.T) {
-	testPath, err := getBaseTestDir()
-	assert.NoError(t, err)
+	testPath := getBaseTestDir(t)
 	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 	assert.NoError(t, err)
 	deleteCandidates := content.NewContentReader(filepath.Join(testPath, "prebuffer_file.json"), content.DefaultKey)

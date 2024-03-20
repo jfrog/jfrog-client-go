@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -34,7 +33,7 @@ func (ss *SecurityService) getArtifactoryDetails() auth.ServiceDetails {
 // Create an API key for the current user. Returns an error if API key already exists - use regenerate API key instead.
 func (ss *SecurityService) CreateAPIKey() (string, error) {
 	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
+	reqURL, err := clientutils.BuildUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +54,7 @@ func (ss *SecurityService) CreateAPIKey() (string, error) {
 func (ss *SecurityService) RegenerateAPIKey() (string, error) {
 	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
 
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
+	reqURL, err := clientutils.BuildUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +74,7 @@ func (ss *SecurityService) RegenerateAPIKey() (string, error) {
 // Returns empty string if API Key wasn't generated.
 func (ss *SecurityService) GetAPIKey() (string, error) {
 	httpClientDetails := ss.ArtDetails.CreateHttpClientDetails()
-	reqURL, err := utils.BuildArtifactoryUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
+	reqURL, err := clientutils.BuildUrl(ss.ArtDetails.GetUrl(), APIKeyPath, nil)
 	if err != nil {
 		return "", err
 	}
@@ -85,8 +84,8 @@ func (ss *SecurityService) GetAPIKey() (string, error) {
 		return "", err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return "", err
 	}
 
 	return getApiKeyFromBody(body)
@@ -101,21 +100,24 @@ func getApiKeyFromBody(body []byte) (string, error) {
 	if len(data) == 0 {
 		return "", nil
 	}
-	apiKey := data["apiKey"].(string)
+	apiKey, ok := data["apiKey"].(string)
+	if !ok {
+		return "", errorutils.CheckErrorf("unable to assert apiKey string value")
+	}
 	return apiKey, nil
 }
 
-func (ss *SecurityService) CreateToken(params CreateTokenParams) (CreateTokenResponseData, error) {
+func (ss *SecurityService) CreateToken(params CreateTokenParams) (auth.CreateTokenResponseData, error) {
 	artifactoryUrl := ss.ArtDetails.GetUrl()
 	data := buildCreateTokenUrlValues(params)
 	httpClientsDetails := ss.getArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err := ss.client.SendPostForm(artifactoryUrl+tokenPath, data, &httpClientsDetails)
-	tokenInfo := CreateTokenResponseData{}
+	tokenInfo := auth.CreateTokenResponseData{}
 	if err != nil {
 		return tokenInfo, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return tokenInfo, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return tokenInfo, err
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
 		return tokenInfo, errorutils.CheckError(err)
@@ -131,8 +133,8 @@ func (ss *SecurityService) GetTokens() (GetTokensResponseData, error) {
 	if err != nil {
 		return tokens, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return tokens, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return tokens, err
 	}
 	if err = json.Unmarshal(body, &tokens); err != nil {
 		return tokens, errorutils.CheckError(err)
@@ -154,17 +156,17 @@ func (ss *SecurityService) GetUserTokens(username string) ([]string, error) {
 	return tokens, nil
 }
 
-func (ss *SecurityService) RefreshToken(params RefreshTokenParams) (CreateTokenResponseData, error) {
+func (ss *SecurityService) RefreshToken(params ArtifactoryRefreshTokenParams) (auth.CreateTokenResponseData, error) {
 	artifactoryUrl := ss.ArtDetails.GetUrl()
 	data := buildRefreshTokenUrlValues(params)
 	httpClientsDetails := ss.getArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err := ss.client.SendPostForm(artifactoryUrl+tokenPath, data, &httpClientsDetails)
-	tokenInfo := CreateTokenResponseData{}
+	tokenInfo := auth.CreateTokenResponseData{}
 	if err != nil {
 		return tokenInfo, err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return tokenInfo, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return tokenInfo, err
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
 		return tokenInfo, errorutils.CheckError(err)
@@ -181,8 +183,8 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 	if err != nil {
 		return "", err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return "", err
 	}
 	return string(body), err
 }
@@ -208,7 +210,7 @@ func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
 	return data
 }
 
-func buildRefreshTokenUrlValues(params RefreshTokenParams) url.Values {
+func buildRefreshTokenUrlValues(params ArtifactoryRefreshTokenParams) url.Values {
 	data := buildCreateTokenUrlValues(params.Token)
 
 	// <grant_type> is used to tell the rest api whether to create or refresh a token.
@@ -235,14 +237,6 @@ func buildRevokeTokenUrlValues(params RevokeTokenParams) url.Values {
 	return data
 }
 
-type CreateTokenResponseData struct {
-	Scope        string `json:"scope,omitempty"`
-	AccessToken  string `json:"access_token,omitempty"`
-	ExpiresIn    int    `json:"expires_in,omitempty"`
-	TokenType    string `json:"token_type,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-}
-
 type GetTokensResponseData struct {
 	Tokens []Token
 }
@@ -264,7 +258,7 @@ type CreateTokenParams struct {
 	Audience    string
 }
 
-type RefreshTokenParams struct {
+type ArtifactoryRefreshTokenParams struct {
 	Token        CreateTokenParams
 	RefreshToken string
 	AccessToken  string
@@ -279,8 +273,8 @@ func NewCreateTokenParams() CreateTokenParams {
 	return CreateTokenParams{ExpiresIn: -1}
 }
 
-func NewRefreshTokenParams() RefreshTokenParams {
-	return RefreshTokenParams{Token: NewCreateTokenParams()}
+func NewArtifactoryRefreshTokenParams() ArtifactoryRefreshTokenParams {
+	return ArtifactoryRefreshTokenParams{Token: NewCreateTokenParams()}
 }
 
 func NewRevokeTokenParams() RevokeTokenParams {

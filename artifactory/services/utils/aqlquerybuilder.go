@@ -4,18 +4,37 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"golang.org/x/exp/slices"
 
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-// Returns an AQL body string to search file in Artifactory by pattern, according the the specified arguments requirements.
+const spaceEncoding = "%20"
+
+var specialAqlCharacters = map[rune]string{
+	'/':  "%2F",
+	'\\': "%5C",
+	'|':  "%7C",
+	'*':  "%2A",
+	'?':  "%3F",
+	'\'': "%22",
+	':':  "%3A",
+	';':  "%3B",
+	'%':  "%25",
+}
+
+// Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
-	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target, true)
-	repoPathFileTriples, err := createRepoPathFileTriples(searchPattern, params.Recursive)
+	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target)
+	repoPathFileTriples, singleRepo, err := createRepoPathFileTriples(searchPattern, params.Recursive)
 	if err != nil {
 		return "", err
+	}
+	if params.Transitive && !singleRepo {
+		return "", errorutils.CheckErrorf("when searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash.")
 	}
 	includeRoot := strings.Count(searchPattern, "/") < 2
 	triplesSize := len(repoPathFileTriples)
@@ -118,18 +137,18 @@ func createAqlQueryForBuild(includeQueryPart string, artifactsQuery bool, builds
 	return fmt.Sprintf(itemsPart, queryBody, includeQueryPart)
 }
 
-//noinspection GoUnusedExportedFunction
-func CreateAqlQueryForNpm(npmName, npmVersion string) string {
+// noinspection GoUnusedExportedFunction
+func CreateAqlQueryForYarn(npmName, npmVersion string) string {
 	itemsPart :=
 		`items.find({` +
 			`"@npm.name":"%s",` +
 			`"$or": [` +
-				// sometimes the npm.version in the repository is written with "v" prefix, so we search both syntaxes
-				`{"@npm.version":"%[2]s"},` +
-				`{"@npm.version":"v%[2]s"}` +
+			// sometimes the npm.version in the repository is written with "v" prefix, so we search both syntaxes
+			`{"@npm.version":"%[2]s"},` +
+			`{"@npm.version":"v%[2]s"}` +
 			`]` +
 			`})%s`
-	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
+	return fmt.Sprintf(itemsPart, npmName, npmVersion, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5", "sha256"}))
 }
 
 func CreateAqlQueryForPypi(repo, file string) string {
@@ -143,7 +162,45 @@ func CreateAqlQueryForPypi(repo, file string) string {
 			`}]` +
 			`}]` +
 			`})%s`
-	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1"}))
+	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256"}))
+}
+
+// noinspection GoUnusedExportedFunction
+func CreateAqlQueryForBuildInfoJson(project, buildName, buildNumber, timestamp string) string {
+	if project == "" {
+		project = "artifactory"
+	} else {
+		project = encodeForBuildInfoRepository(project)
+	}
+	itemsPart :=
+		`items.find({
+			"repo": "%s",
+			"path": {
+				"$match": "%s"
+			},
+			"name": {
+				"$match": "%s-%s.json"
+			}
+		})%s`
+	return fmt.Sprintf(itemsPart, project+"-build-info", encodeForBuildInfoRepository(buildName), encodeForBuildInfoRepository(buildNumber), timestamp, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
+}
+
+func encodeForBuildInfoRepository(value string) string {
+	results := ""
+	for _, char := range value {
+		if unicode.IsSpace(char) {
+			char = ' '
+		}
+		if encoding, exist := specialAqlCharacters[char]; exist {
+			results += encoding
+		} else {
+			results += string(char)
+		}
+	}
+	slashEncoding := specialAqlCharacters['/']
+	results = strings.ReplaceAll(results, slashEncoding+" ", slashEncoding+spaceEncoding)
+	results = strings.ReplaceAll(results, " "+slashEncoding, spaceEncoding+slashEncoding)
+	return results
 }
 
 func CreateAqlQueryForLatestCreated(repo, path string) string {
@@ -160,8 +217,8 @@ func CreateAqlQueryForLatestCreated(repo, path string) string {
 func prepareSearchPattern(pattern string, repositoryExists bool) string {
 	addWildcardIfNeeded(&pattern, repositoryExists)
 	// Remove parenthesis
-	pattern = strings.Replace(pattern, "(", "", -1)
-	pattern = strings.Replace(pattern, ")", "", -1)
+	pattern = strings.ReplaceAll(pattern, "(", "")
+	pattern = strings.ReplaceAll(pattern, ")", "")
 	return pattern
 }
 
@@ -253,7 +310,7 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (
 	excludeQuery := ""
 	var excludeTriples []RepoPathFile
 	for _, exclusion := range params.GetExclusions() {
-		repoPathFileTriples, err := createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)
+		repoPathFileTriples, _, err := createRepoPathFileTriples(prepareSearchPattern(exclusion, true), recursive)
 		if err != nil {
 			return "", err
 		}
@@ -293,14 +350,36 @@ func buildReleaseBundleQuery(params *CommonParams) (string, error) {
 // If requiredArtifactProps is NONE or 'includePropertiesInAqlForSpec' return false,
 // "property" field won't be included due to a limitation in the AQL implementation in Artifactory.
 func getQueryReturnFields(specFile *CommonParams, requiredArtifactProps RequiredArtifactProps) []string {
-	returnFields := []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "modified", "created"}
+	var returnFields []string
+	if len(specFile.Include) > 0 {
+		returnFields = getQueryReturnFieldsWithInclude(specFile.Include)
+	} else {
+		returnFields = []string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "type", "modified", "created"}
+	}
 	if !includePropertiesInAqlForSpec(specFile) {
-		// Sort dose not work when property is in the include section. in this case we will append properties in later stage.
+		// Sort does not work when property is in the include section. in this case we will append properties in later stage.
 		return appendMissingFields(specFile.SortBy, returnFields)
 	}
 	if requiredArtifactProps != NONE {
 		// If any prop is needed we just add all the properties to the result.
 		return append(returnFields, "property")
+	}
+	return returnFields
+}
+
+func getQueryReturnFieldsWithInclude(includedQuery []string) []string {
+	returnFields := []string{"name", "repo", "path"}
+	for i := range includedQuery {
+		equal := false
+		for j := range returnFields {
+			if includedQuery[i] == returnFields[j] {
+				equal = true
+				break
+			}
+		}
+		if !equal {
+			returnFields = append(returnFields, includedQuery[i])
+		}
 	}
 	return returnFields
 }
@@ -314,7 +393,7 @@ func includePropertiesInAqlForSpec(specFile *CommonParams) bool {
 
 func appendMissingFields(fields []string, defaultFields []string) []string {
 	for _, field := range fields {
-		if !fileutils.IsStringInSlice(field, defaultFields) {
+		if !slices.Contains(defaultFields, field) {
 			defaultFields = append(defaultFields, field)
 		}
 	}
@@ -337,8 +416,8 @@ func BuildQueryFromSpecFile(specFile *CommonParams, requiredArtifactProps Requir
 	query := fmt.Sprintf(`items.find(%s)%s`, aqlBody, buildIncludeQueryPart(getQueryReturnFields(specFile, requiredArtifactProps)))
 	query = appendSortQueryPart(specFile, query)
 	query = appendOffsetQueryPart(specFile, query)
-	query = appendLimitQueryPart(specFile, query)
 	query = appendTransitiveQueryPart(specFile, query)
+	query = appendLimitQueryPart(specFile, query)
 	return query
 }
 
@@ -402,8 +481,8 @@ func getAqlValue(val string) string {
 	return fmt.Sprintf(aqlValuePattern, val)
 }
 
-func prepareSourceSearchPattern(pattern, target string, repositoryExists bool) string {
-	addWildcardIfNeeded(&pattern, repositoryExists)
+func prepareSourceSearchPattern(pattern, target string) string {
+	addWildcardIfNeeded(&pattern, true)
 	pattern = utils.RemovePlaceholderParentheses(pattern, target)
 	return pattern
 }

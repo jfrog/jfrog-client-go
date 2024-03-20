@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"net/http"
 	"path"
 	"strconv"
@@ -50,7 +51,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	moveReaders := []*ReaderSpecTuple{}
 	defer func() {
 		for _, readerSpec := range moveReaders {
-			readerSpec.Reader.Close()
+			err = errors.Join(err, errorutils.CheckError(readerSpec.Reader.Close()))
 		}
 	}()
 	for i, moveSpec := range moveSpecs {
@@ -68,8 +69,9 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 	if err != nil {
 		return
 	}
-	defer tempAggregatedReader.Close()
-
+	defer func() {
+		err = errors.Join(err, tempAggregatedReader.Close())
+	}()
 	aggregatedReader := tempAggregatedReader
 	if mc.moveType == MOVE {
 		// If move command, reduce top dir chain results.
@@ -78,8 +80,9 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 			return
 		}
 	}
-
-	defer aggregatedReader.Close()
+	defer func() {
+		err = errors.Join(err, aggregatedReader.Close())
+	}()
 	successCount, failedCount, err = mc.moveFiles(aggregatedReader, moveSpecs)
 	if err != nil {
 		return
@@ -107,8 +110,11 @@ func (mc *MoveCopyService) getPathsToMove(moveSpec MoveCopyParams) (resultItems 
 		if err != nil {
 			return
 		}
-		defer tempResultItems.Close()
-		resultItems, err = reduceMovePaths(utils.ResultItem{}, tempResultItems, moveSpec.IsFlat(), clientutils.PlaceholdersUserd(moveSpec.Pattern, moveSpec.Target))
+		defer func() {
+			err = errors.Join(err, tempResultItems.Close())
+		}()
+
+		resultItems, err = reduceMovePaths(utils.ResultItem{}, tempResultItems, moveSpec.IsFlat(), clientutils.IsPlaceholdersUsed(moveSpec.Pattern, moveSpec.Target))
 		if err != nil {
 			return
 		}
@@ -139,7 +145,7 @@ func (mc *MoveCopyService) moveFiles(reader *content.ContentReader, params []Mov
 		defer producerConsumer.Done()
 		for resultItem := new(MoveResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(MoveResultItem) {
 			fileMoveCopyHandlerFunc := mc.createMoveCopyFileHandlerFunc(&result)
-			producerConsumer.AddTaskWithError(fileMoveCopyHandlerFunc(resultItem.ResultItem, &params[resultItem.FileSpecId]),
+			_, _ = producerConsumer.AddTaskWithError(fileMoveCopyHandlerFunc(resultItem.ResultItem, &params[resultItem.FileSpecId]),
 				errorsQueue.AddError)
 		}
 		if err := reader.GetError(); err != nil {
@@ -175,7 +181,10 @@ func (mc *MoveCopyService) createMoveCopyFileHandlerFunc(result *utils.Result) f
 				if resultItem.Type != "folder" {
 					destFile += resultItem.Name
 				} else {
-					mc.createPathForMoveAction(destFile, logMsgPrefix)
+					_, err = mc.createPathForMoveAction(destFile, logMsgPrefix)
+					if err != nil {
+						return err
+					}
 				}
 			}
 
@@ -228,7 +237,7 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 	} else {
 		log.Info(logMsgPrefix + message)
 	}
-	requestFullUrl, err := utils.BuildArtifactoryUrl(moveUrl, restApi, params)
+	requestFullUrl, err := clientutils.BuildUrl(moveUrl, restApi, params)
 	if err != nil {
 		return false, err
 	}
@@ -239,8 +248,8 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 		return false, err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		log.Error(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		log.Error(err)
 	}
 
 	log.Debug(logMsgPrefix+"Artifactory response:", resp.Status)
@@ -249,7 +258,7 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 
 // Create destPath in Artifactory
 func (mc *MoveCopyService) createPathForMoveAction(destPath, logMsgPrefix string) (bool, error) {
-	if mc.IsDryRun() == true {
+	if mc.IsDryRun() {
 		log.Info(logMsgPrefix+"[Dry run]", "Create path:", destPath)
 		return true, nil
 	}
@@ -259,7 +268,7 @@ func (mc *MoveCopyService) createPathForMoveAction(destPath, logMsgPrefix string
 
 func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string) (bool, error) {
 	rtUrl := mc.GetArtifactoryDetails().GetUrl()
-	requestFullUrl, err := utils.BuildArtifactoryUrl(rtUrl, destPath, map[string]string{})
+	requestFullUrl, err := clientutils.BuildUrl(rtUrl, destPath, map[string]string{})
 	if err != nil {
 		return false, err
 	}
@@ -269,8 +278,8 @@ func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string
 		return false, err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated); err != nil {
-		log.Error(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
+		log.Error(err)
 	}
 
 	log.Debug(logMsgPrefix+"Artifactory response:", resp.Status)
@@ -279,12 +288,17 @@ func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string
 
 // Receives multiple 'ReaderSpecTuple' items and merge them into a single 'ContentReader' of 'MoveResultItem'.
 // Each item in the reader, keeps the index of its corresponding MoveSpec.
-func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (*content.ContentReader, error) {
+func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (contentReader *content.ContentReader, err error) {
 	cw, err := content.NewContentWriter(arrayKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer cw.Close()
+	defer func() {
+		e := cw.Close()
+		if err == nil {
+			err = e
+		}
+	}()
 	for _, tuple := range arr {
 		cr := tuple.Reader
 		for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
@@ -295,7 +309,8 @@ func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (*content.ContentRead
 			return nil, err
 		}
 	}
-	return content.NewContentReader(cw.GetFilePath(), arrayKey), nil
+	contentReader = content.NewContentReader(cw.GetFilePath(), arrayKey)
+	return contentReader, nil
 }
 
 func promptMoveCopyMessage(reader *content.ContentReader, moveType MoveType) {

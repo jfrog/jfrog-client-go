@@ -13,7 +13,6 @@ type VirtualRepositoryService struct {
 func NewVirtualRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *VirtualRepositoryService {
 	return &VirtualRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: VirtualRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
@@ -37,6 +36,10 @@ func (vrs *VirtualRepositoryService) Bower(params BowerVirtualRepositoryParams) 
 }
 
 func (vrs *VirtualRepositoryService) Chef(params ChefVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Composer(params ComposerVirtualRepositoryParams) error {
 	return vrs.performRequest(params, params.Key)
 }
 
@@ -120,6 +123,14 @@ func (vrs *VirtualRepositoryService) Sbt(params SbtVirtualRepositoryParams) erro
 	return vrs.performRequest(params, params.Key)
 }
 
+func (vrs *VirtualRepositoryService) Swift(params SwiftVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
+func (vrs *VirtualRepositoryService) Terraform(params TerraformVirtualRepositoryParams) error {
+	return vrs.performRequest(params, params.Key)
+}
+
 func (vrs *VirtualRepositoryService) Yum(params YumVirtualRepositoryParams) error {
 	return vrs.performRequest(params, params.Key)
 }
@@ -176,6 +187,15 @@ type ChefVirtualRepositoryParams struct {
 
 func NewChefVirtualRepositoryParams() ChefVirtualRepositoryParams {
 	return ChefVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("chef")}
+}
+
+type ComposerVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
+}
+
+func NewComposerVirtualRepositoryParams() ComposerVirtualRepositoryParams {
+	return ComposerVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("composer")}
 }
 
 type ConanVirtualRepositoryParams struct {
@@ -358,6 +378,23 @@ type SbtVirtualRepositoryParams struct {
 
 func NewSbtVirtualRepositoryParams() SbtVirtualRepositoryParams {
 	return SbtVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("sbt")}
+}
+
+type SwiftVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+}
+
+func NewSwiftVirtualRepositoryParams() SwiftVirtualRepositoryParams {
+	return SwiftVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("swift")}
+}
+
+type TerraformVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonCacheVirtualRepositoryParams
+}
+
+func NewTerraformVirtualRepositoryParams() TerraformVirtualRepositoryParams {
+	return TerraformVirtualRepositoryParams{VirtualRepositoryBaseParams: NewVirtualRepositoryPackageParams("terraform")}
 }
 
 type YumVirtualRepositoryParams struct {

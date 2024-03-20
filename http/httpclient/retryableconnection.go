@@ -15,9 +15,9 @@ type ErrorHandler func([]byte) error
 
 // Retryable connection specific errors
 var (
-	timeoutErr         = errors.New("read timeout")
-	exhaustedErr       = errors.New("connection error: exhausted retries")
-	missingRespBodyErr = errors.New("missing response body")
+	errTimeout         = errors.New("read timeout")
+	errExhausted       = errors.New("connection error: exhausted retries")
+	errMissingRespBody = errors.New("missing response body")
 )
 
 type RetryableConnection struct {
@@ -85,7 +85,7 @@ func (rt *RetryableConnection) Do() ([]byte, error) {
 
 		return result, err
 	}
-	return []byte{}, exhaustedErr
+	return []byte{}, errExhausted
 }
 
 type monitor struct {
@@ -98,13 +98,21 @@ type monitor struct {
 	lastRead       time.Time
 }
 
-func (m *monitor) start() ([]byte, bool, error) {
+func (m *monitor) start() (result []byte, stable bool, err error) {
 	if m.resp == nil || m.resp.Body == nil {
-		return []byte{}, false, errorutils.CheckError(missingRespBodyErr)
+		err = errorutils.CheckError(errMissingRespBody)
+		return
 	}
-	defer m.resp.Body.Close()
+	defer func() {
+		if m.resp != nil && m.resp.Body != nil {
+			e := m.resp.Body.Close()
+			if err == nil {
+				err = errorutils.CheckError(e)
+			}
+		}
+	}()
 
-	result := []byte{}
+	result = []byte{}
 	errChan := make(chan error, 1)
 	bodyReader := bufio.NewReader(m.resp.Body)
 	go func() {
@@ -129,23 +137,23 @@ func (m *monitor) start() ([]byte, bool, error) {
 		for {
 			// If last read exceeded the timeout signal for timeout error.
 			if m.lastRead.Add(m.readTimeout).Before(time.Now()) {
-				errChan <- timeoutErr
+				errChan <- errTimeout
 			} else {
 				// Sleep the remaining time until another timeout check is required
-				time.Sleep(m.readTimeout - time.Now().Sub(m.lastRead))
+				time.Sleep(m.readTimeout - time.Since(m.lastRead))
 			}
 		}
 	}()
 
 	// Receive error or nil for successful connection.
-	err := <-errChan
+	err = <-errChan
 
 	// Check whether connection time is longer the provided stableConnectionWindow duration.
 	// If so the connection was stable.
-	stable := false
 	if m.stableConnectionWindow > 0 && m.stableConnectionWindow < m.lastRead.Sub(m.connectionTime) {
 		stable = true
 	}
 	// receive the data or fail on timeout or error
-	return result, stable, errorutils.CheckError(err)
+	err = errorutils.CheckError(err)
+	return
 }

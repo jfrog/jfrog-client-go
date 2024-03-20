@@ -1,12 +1,9 @@
 package utils
 
 import (
-	"bytes"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -14,41 +11,31 @@ import (
 	"time"
 )
 
-type gitManager struct {
-	dotGitPath string
+type gitExecutor struct {
+	gitManager GitManager
 }
 
-func GitExecutor(dotGitPath string) *gitManager {
-	return &gitManager{dotGitPath: dotGitPath}
+func NewGitExecutor(dotGitPath string) *gitExecutor {
+	return &gitExecutor{gitManager: *NewGitManager(dotGitPath)}
 }
 
-func (m *gitManager) GetUrl() (string, string, error) {
+func (m *gitExecutor) execGit(args ...string) (string, string, error) {
+	return m.gitManager.ExecGit(args...)
+}
+func (m *gitExecutor) GetUrl() (string, string, error) {
 	return m.execGit("config", "--get", "remote.origin.url")
 }
 
-func (m *gitManager) GetRevision() (string, string, error) {
+func (m *gitExecutor) GetRevision() (string, string, error) {
 	return m.execGit("show", "-s", "--format=%H", "HEAD")
 }
 
-func (m *gitManager) GetBranch() (string, string, error) {
+func (m *gitExecutor) GetBranch() (string, string, error) {
 	return m.execGit("branch", "--show-current")
 }
 
-func (m *gitManager) GetMessage(revision string) (string, string, error) {
+func (m *gitExecutor) GetMessage(revision string) (string, string, error) {
 	return m.execGit("show", "-s", "--format=%B", revision)
-}
-
-func (m *gitManager) execGit(args ...string) (string, string, error) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd := exec.Command("git", args...)
-	cmd.Dir = m.dotGitPath
-	cmd.Stdin = nil
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	errorutils.CheckError(err)
-	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
 func TestReadConfig(t *testing.T) {
@@ -56,15 +43,19 @@ func TestReadConfig(t *testing.T) {
 }
 
 // Open a git repo using 'go-git' package fails when:
-//	1. OS is Windows.
+//  1. OS is Windows.
 //  2. using go-git v4.7.0.
 //  3. .git/config file contains path with backslashes.
 func TestReadConfigWithBackslashes(t *testing.T) {
 	dotGitPath := getDotGitPath(t)
-	gitExec := GitExecutor(dotGitPath)
+	gitExec := NewGitExecutor(dotGitPath)
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	gitExec.execGit("config", "--local", "--add", "http.https://github.com.sslCAInfo"+timestamp, dotGitPath)
-	defer gitExec.execGit("config", "--local", "--unset", "http.https://github.com.sslCAInfo"+timestamp)
+	_, _, err := gitExec.execGit("config", "--local", "--add", "http.https://github.com.sslCAInfo"+timestamp, dotGitPath)
+	assert.NoError(t, err)
+	defer func() {
+		_, _, err = gitExec.execGit("config", "--local", "--unset", "http.https://github.com.sslCAInfo"+timestamp)
+		assert.NoError(t, err)
+	}()
 	testReadConfig(t)
 }
 
@@ -72,8 +63,9 @@ func testReadConfig(t *testing.T) {
 	dotGitPath := getDotGitPath(t)
 	gitManager := NewGitManager(dotGitPath)
 	err := gitManager.ReadConfig()
+	assert.NoError(t, err)
 
-	gitExecutor := GitExecutor(dotGitPath)
+	gitExecutor := NewGitExecutor(dotGitPath)
 	url, _, err := gitExecutor.GetUrl()
 	assert.NoError(t, err)
 	if !strings.HasSuffix(url, ".git") {
@@ -93,7 +85,7 @@ func testReadConfig(t *testing.T) {
 
 func getDotGitPath(t *testing.T) string {
 	dotGitPath, err := os.Getwd()
-	assert.NoError(t, err, "Failed to get current dir.")
+	assert.NoError(t, err, "Failed to get current dir")
 	dotGitPath = filepath.Dir(dotGitPath)
 	dotGitExists, err := fileutils.IsDirExists(filepath.Join(dotGitPath, ".git"), false)
 	assert.NoError(t, err)

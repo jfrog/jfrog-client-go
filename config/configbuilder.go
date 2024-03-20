@@ -2,30 +2,34 @@ package config
 
 import (
 	"context"
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"net/http"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 )
 
 func NewConfigBuilder() *servicesConfigBuilder {
 	configBuilder := &servicesConfigBuilder{}
 	configBuilder.threads = 3
-	configBuilder.httpTimeout = httpclient.DefaultHttpTimeout
+	configBuilder.dialTimeout = httpclient.DefaultDialTimeout
 	configBuilder.httpRetries = 3
+	configBuilder.httpRetryWaitMilliSecs = 0
 	return configBuilder
 }
 
 type servicesConfigBuilder struct {
 	auth.ServiceDetails
-	certificatesPath string
-	threads          int
-	isDryRun         bool
-	insecureTls      bool
-	ctx              context.Context
-	httpTimeout      time.Duration
-	httpRetries      int
-	httpClient       *http.Client
+	certificatesPath       string
+	threads                int
+	isDryRun               bool
+	insecureTls            bool
+	ctx                    context.Context
+	dialTimeout            time.Duration
+	overallRequestTimeout  time.Duration
+	httpRetries            int
+	httpRetryWaitMilliSecs int
+	httpClient             *http.Client
 }
 
 func (builder *servicesConfigBuilder) SetServiceDetails(artDetails auth.ServiceDetails) *servicesConfigBuilder {
@@ -58,13 +62,23 @@ func (builder *servicesConfigBuilder) SetContext(ctx context.Context) *servicesC
 	return builder
 }
 
-func (builder *servicesConfigBuilder) SetHttpTimeout(httpTimeout time.Duration) *servicesConfigBuilder {
-	builder.httpTimeout = httpTimeout
+func (builder *servicesConfigBuilder) SetDialTimeout(dialTimeout time.Duration) *servicesConfigBuilder {
+	builder.dialTimeout = dialTimeout
+	return builder
+}
+
+func (builder *servicesConfigBuilder) SetOverallRequestTimeout(overallRequestTimeout time.Duration) *servicesConfigBuilder {
+	builder.overallRequestTimeout = overallRequestTimeout
 	return builder
 }
 
 func (builder *servicesConfigBuilder) SetHttpRetries(httpRetries int) *servicesConfigBuilder {
 	builder.httpRetries = httpRetries
+	return builder
+}
+
+func (builder *servicesConfigBuilder) SetHttpRetryWaitMilliSecs(httpRetryWaitMilliSecs int) *servicesConfigBuilder {
+	builder.httpRetryWaitMilliSecs = httpRetryWaitMilliSecs
 	return builder
 }
 
@@ -81,8 +95,10 @@ func (builder *servicesConfigBuilder) Build() (Config, error) {
 	c.dryRun = builder.isDryRun
 	c.insecureTls = builder.insecureTls
 	c.ctx = builder.ctx
-	c.httpTimeout = builder.httpTimeout
+	c.dialTimeout = builder.dialTimeout
+	c.overallRequestTimeout = builder.overallRequestTimeout
 	c.httpRetries = builder.httpRetries
+	c.httpRetryWaitMilliSecs = builder.httpRetryWaitMilliSecs
 	c.httpClient = builder.httpClient
 	return c, nil
 }

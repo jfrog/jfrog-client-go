@@ -3,52 +3,56 @@ package tests
 import (
 	"testing"
 
+	"github.com/jfrog/jfrog-client-go/utils"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
 )
 
-// Temporarily disabled
-
-// func TestArtifactoryVirtualRepository(t *testing.T) {
-// 	initRepositoryTest(t)
-// 	t.Run("virtualAlpineTest", virtualAlpineTest)
-// 	t.Run("virtualBowerTest", virtualBowerTest)
-// 	t.Run("virtualChefTest", virtualChefTest)
-// 	t.Run("virtualConanTest", virtualConanTest)
-// 	t.Run("virtualCondaTest", virtualCondaTest)
-// 	t.Run("virtualCranTest", virtualCranTest)
-// 	t.Run("virtualDebianTest", virtualDebianTest)
-// 	t.Run("virtualDockerTest", virtualDockerTest)
-// 	t.Run("virtualGemsTest", virtualGemsTest)
-// 	t.Run("virtualGenericTest", virtualGenericTest)
-// 	t.Run("virtualGitlfsTest", virtualGitlfsTest)
-// 	t.Run("virtualGoTest", virtualGoTest)
-// 	t.Run("virtualGradleTest", virtualGradleTest)
-// 	t.Run("virtualHelmTest", virtualHelmTest)
-// 	t.Run("virtualIvyTest", virtualIvyTest)
-// 	t.Run("virtualMavenTest", virtualMavenTest)
-// 	t.Run("virtualNpmTest", virtualNpmTest)
-// 	t.Run("virtualNugetTest", virtualNugetTest)
-// 	t.Run("virtualP2Test", virtualP2Test)
-// 	t.Run("virtualPuppetTest", virtualPuppetTest)
-// 	t.Run("virtualPypiTest", virtualPypiTest)
-// 	t.Run("virtualRpmTest", virtualRpmTest)
-// 	t.Run("virtualSbtTest", virtualSbtTest)
-// 	t.Run("virtualYumTest", virtualYumTest)
-// 	t.Run("virtualCreateWithParamTest", virtualCreateWithParamTest)
-// 	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
-// 	t.Run("getAllVirtualRepoDetailsTest", getAllVirtualRepoDetailsTest)
-// }
+func TestArtifactoryVirtualRepository(t *testing.T) {
+	initRepositoryTest(t)
+	t.Run("virtualAlpineTest", virtualAlpineTest)
+	t.Run("virtualBowerTest", virtualBowerTest)
+	t.Run("virtualChefTest", virtualChefTest)
+	t.Run("virtualComposerTest", virtualComposerTest)
+	t.Run("virtualConanTest", virtualConanTest)
+	t.Run("virtualCondaTest", virtualCondaTest)
+	t.Run("virtualCranTest", virtualCranTest)
+	t.Run("virtualDebianTest", virtualDebianTest)
+	t.Run("virtualDockerTest", virtualDockerTest)
+	t.Run("virtualGemsTest", virtualGemsTest)
+	t.Run("virtualGenericTest", virtualGenericTest)
+	t.Run("virtualGitlfsTest", virtualGitlfsTest)
+	t.Run("virtualGoTest", virtualGoTest)
+	t.Run("virtualGradleTest", virtualGradleTest)
+	t.Run("virtualHelmTest", virtualHelmTest)
+	t.Run("virtualIvyTest", virtualIvyTest)
+	t.Run("virtualMavenTest", virtualMavenTest)
+	t.Run("virtualNpmTest", virtualNpmTest)
+	t.Run("virtualNugetTest", virtualNugetTest)
+	t.Run("virtualP2Test", virtualP2Test)
+	t.Run("virtualPuppetTest", virtualPuppetTest)
+	t.Run("virtualPypiTest", virtualPypiTest)
+	t.Run("virtualRpmTest", virtualRpmTest)
+	t.Run("virtualSbtTest", virtualSbtTest)
+	t.Run("virtualSwiftTest", virtualSwiftTest)
+	t.Run("virtualTerraformTest", virtualTerraformTest)
+	t.Run("virtualYumTest", virtualYumTest)
+	t.Run("virtualCreateWithParamTest", virtualCreateWithParamTest)
+	t.Run("getVirtualRepoDetailsTest", getVirtualRepoDetailsTest)
+	t.Run("getAllVirtualRepoDetailsTest", getAllVirtualRepoDetailsTest)
+	t.Run("isVirtualRepoExistsTest", isVirtualRepoExistsTest)
+}
 
 func setVirtualRepositoryBaseParams(params *services.VirtualRepositoryBaseParams, isUpdate bool) {
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	if !isUpdate {
 		params.Repositories = []string{getRtTargetRepoKey()}
-		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &trueValue
+		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = utils.Pointer(true)
 		params.DefaultDeploymentRepo = getRtTargetRepoKey()
 	} else {
 		params.Repositories = nil
-		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = &falseValue
+		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = utils.Pointer(false)
 		params.DefaultDeploymentRepo = ""
 	}
 }
@@ -80,7 +84,9 @@ func virtualAlpineTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&avp.CommonCacheVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Alpine(avp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, avp)
 
@@ -88,8 +94,9 @@ func virtualAlpineTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&avp.CommonCacheVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Alpine(avp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, avp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, avp)
+	}
 }
 
 func virtualBowerTest(t *testing.T) {
@@ -97,23 +104,26 @@ func virtualBowerTest(t *testing.T) {
 	bvp := services.NewBowerVirtualRepositoryParams()
 	bvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&bvp.VirtualRepositoryBaseParams, false)
-	bvp.ExternalDependenciesEnabled = &trueValue
+	bvp.ExternalDependenciesEnabled = utils.Pointer(true)
 	bvp.ExternalDependenciesPatterns = []string{"**/*github*/**"}
 	bvp.ExternalDependenciesRemoteRepo = ""
 
 	err := testsCreateVirtualRepositoryService.Bower(bvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, bvp)
 
 	setVirtualRepositoryBaseParams(&bvp.VirtualRepositoryBaseParams, true)
-	bvp.ExternalDependenciesEnabled = &falseValue
+	bvp.ExternalDependenciesEnabled = utils.Pointer(false)
 	bvp.ExternalDependenciesPatterns = nil
 	bvp.ExternalDependenciesRemoteRepo = ""
 
 	err = testsUpdateVirtualRepositoryService.Bower(bvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, bvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, bvp)
+	}
 }
 
 func virtualChefTest(t *testing.T) {
@@ -124,7 +134,9 @@ func virtualChefTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Chef(cvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
@@ -132,8 +144,32 @@ func virtualChefTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Chef(cvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cvp)
+	}
+}
+
+func virtualComposerTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	cvp := services.NewComposerVirtualRepositoryParams()
+	cvp.Key = repoKey
+	setVirtualRepositoryBaseParams(&cvp.VirtualRepositoryBaseParams, false)
+	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, false)
+
+	err := testsCreateVirtualRepositoryService.Composer(cvp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
+
+	setVirtualRepositoryBaseParams(&cvp.VirtualRepositoryBaseParams, true)
+	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, true)
+
+	err = testsUpdateVirtualRepositoryService.Composer(cvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cvp)
+	}
 }
 
 func virtualConanTest(t *testing.T) {
@@ -144,7 +180,9 @@ func virtualConanTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Conan(cvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
@@ -152,8 +190,9 @@ func virtualConanTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Conan(cvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cvp)
+	}
 }
 
 func virtualCondaTest(t *testing.T) {
@@ -164,7 +203,9 @@ func virtualCondaTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Conda(cvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
@@ -172,8 +213,9 @@ func virtualCondaTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Conda(cvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cvp)
+	}
 }
 
 func virtualCranTest(t *testing.T) {
@@ -184,7 +226,9 @@ func virtualCranTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Cran(cvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, cvp)
 
@@ -192,8 +236,9 @@ func virtualCranTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&cvp.CommonCacheVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Cran(cvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, cvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, cvp)
+	}
 }
 
 func virtualDebianTest(t *testing.T) {
@@ -206,7 +251,9 @@ func virtualDebianTest(t *testing.T) {
 	dvp.OptionalIndexCompressionFormats = []string{"bz2", "lzma"}
 
 	err := testsCreateVirtualRepositoryService.Debian(dvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
@@ -216,8 +263,9 @@ func virtualDebianTest(t *testing.T) {
 	dvp.OptionalIndexCompressionFormats = nil
 
 	err = testsUpdateVirtualRepositoryService.Debian(dvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, dvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, dvp)
+	}
 }
 
 func virtualDockerTest(t *testing.T) {
@@ -225,19 +273,22 @@ func virtualDockerTest(t *testing.T) {
 	dvp := services.NewDockerVirtualRepositoryParams()
 	dvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&dvp.VirtualRepositoryBaseParams, false)
-	dvp.ResolveDockerTagsByTimestamp = &trueValue
+	dvp.ResolveDockerTagsByTimestamp = utils.Pointer(true)
 
 	err := testsCreateVirtualRepositoryService.Docker(dvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, dvp)
 
 	setVirtualRepositoryBaseParams(&dvp.VirtualRepositoryBaseParams, true)
-	dvp.ResolveDockerTagsByTimestamp = &falseValue
+	dvp.ResolveDockerTagsByTimestamp = utils.Pointer(false)
 
 	err = testsUpdateVirtualRepositoryService.Docker(dvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, dvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, dvp)
+	}
 }
 
 func virtualGemsTest(t *testing.T) {
@@ -247,15 +298,18 @@ func virtualGemsTest(t *testing.T) {
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
 
 	err := testsCreateVirtualRepositoryService.Gems(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Gems(gvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gvp)
+	}
 }
 
 func virtualGenericTest(t *testing.T) {
@@ -265,15 +319,18 @@ func virtualGenericTest(t *testing.T) {
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
 
 	err := testsCreateVirtualRepositoryService.Generic(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Generic(gvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gvp)
+	}
 }
 
 func virtualGitlfsTest(t *testing.T) {
@@ -283,15 +340,18 @@ func virtualGitlfsTest(t *testing.T) {
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
 
 	err := testsCreateVirtualRepositoryService.Gitlfs(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Gitlfs(gvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gvp)
+	}
 }
 
 func virtualGoTest(t *testing.T) {
@@ -299,21 +359,24 @@ func virtualGoTest(t *testing.T) {
 	gvp := services.NewGoVirtualRepositoryParams()
 	gvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
-	gvp.ExternalDependenciesEnabled = &trueValue
+	gvp.ExternalDependenciesEnabled = utils.Pointer(true)
 	gvp.ExternalDependenciesPatterns = []string{"**/*microsoft*/**", "**/*github*/**"}
 
 	err := testsCreateVirtualRepositoryService.Go(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, true)
-	gvp.ExternalDependenciesEnabled = &falseValue
+	gvp.ExternalDependenciesEnabled = utils.Pointer(false)
 	gvp.ExternalDependenciesPatterns = nil
 
 	err = testsUpdateVirtualRepositoryService.Go(gvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gvp)
+	}
 }
 
 func virtualGradleTest(t *testing.T) {
@@ -324,7 +387,9 @@ func virtualGradleTest(t *testing.T) {
 	setJavaPackageManagersVirtualRepositoryParams(&gvp.CommonJavaVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Gradle(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, gvp)
 
@@ -332,8 +397,9 @@ func virtualGradleTest(t *testing.T) {
 	setJavaPackageManagersVirtualRepositoryParams(&gvp.CommonJavaVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Gradle(gvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, gvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, gvp)
+	}
 }
 
 func virtualHelmTest(t *testing.T) {
@@ -344,7 +410,9 @@ func virtualHelmTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&hvp.CommonCacheVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Helm(hvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, hvp)
 
@@ -352,8 +420,9 @@ func virtualHelmTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&hvp.CommonCacheVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Helm(hvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, hvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, hvp)
+	}
 }
 
 func virtualIvyTest(t *testing.T) {
@@ -364,7 +433,9 @@ func virtualIvyTest(t *testing.T) {
 	setJavaPackageManagersVirtualRepositoryParams(&ivp.CommonJavaVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Ivy(ivp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, ivp)
 
@@ -372,8 +443,9 @@ func virtualIvyTest(t *testing.T) {
 	setJavaPackageManagersVirtualRepositoryParams(&ivp.CommonJavaVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Ivy(ivp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, ivp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, ivp)
+	}
 }
 
 func virtualMavenTest(t *testing.T) {
@@ -384,7 +456,9 @@ func virtualMavenTest(t *testing.T) {
 	setJavaPackageManagersVirtualRepositoryParams(&mvp.CommonJavaVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Maven(mvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, mvp)
 
@@ -392,8 +466,9 @@ func virtualMavenTest(t *testing.T) {
 	setJavaPackageManagersVirtualRepositoryParams(&mvp.CommonJavaVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Maven(mvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, mvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, mvp)
+	}
 }
 
 func virtualNpmTest(t *testing.T) {
@@ -402,24 +477,27 @@ func virtualNpmTest(t *testing.T) {
 	nvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, false)
 	setCacheVirtualRepositoryParams(&nvp.CommonCacheVirtualRepositoryParams, false)
-	nvp.ExternalDependenciesEnabled = &trueValue
+	nvp.ExternalDependenciesEnabled = utils.Pointer(true)
 	nvp.ExternalDependenciesPatterns = []string{"**/*microsoft*/**"}
 	nvp.ExternalDependenciesRemoteRepo = ""
 
 	err := testsCreateVirtualRepositoryService.Npm(nvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, true)
 	setCacheVirtualRepositoryParams(&nvp.CommonCacheVirtualRepositoryParams, true)
-	nvp.ExternalDependenciesEnabled = &falseValue
+	nvp.ExternalDependenciesEnabled = utils.Pointer(false)
 	nvp.ExternalDependenciesPatterns = nil
 	nvp.ExternalDependenciesRemoteRepo = ""
 
 	err = testsUpdateVirtualRepositoryService.Npm(nvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nvp)
+	}
 }
 
 func virtualNugetTest(t *testing.T) {
@@ -427,19 +505,22 @@ func virtualNugetTest(t *testing.T) {
 	nvp := services.NewNugetVirtualRepositoryParams()
 	nvp.Key = repoKey
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, false)
-	nvp.ForceNugetAuthentication = &trueValue
+	nvp.ForceNugetAuthentication = utils.Pointer(true)
 
 	err := testsCreateVirtualRepositoryService.Nuget(nvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, nvp)
 
 	setVirtualRepositoryBaseParams(&nvp.VirtualRepositoryBaseParams, true)
-	nvp.ForceNugetAuthentication = &falseValue
+	nvp.ForceNugetAuthentication = utils.Pointer(false)
 
 	err = testsUpdateVirtualRepositoryService.Nuget(nvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, nvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, nvp)
+	}
 }
 
 func virtualP2Test(t *testing.T) {
@@ -449,7 +530,9 @@ func virtualP2Test(t *testing.T) {
 	setVirtualRepositoryBaseParams(&pvp.VirtualRepositoryBaseParams, false)
 
 	err := testsCreateVirtualRepositoryService.P2(pvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
@@ -457,8 +540,9 @@ func virtualP2Test(t *testing.T) {
 	pvp.Repositories = nil
 
 	err = testsUpdateVirtualRepositoryService.P2(pvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, pvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, pvp)
+	}
 }
 
 func virtualPuppetTest(t *testing.T) {
@@ -468,15 +552,18 @@ func virtualPuppetTest(t *testing.T) {
 	setVirtualRepositoryBaseParams(&pvp.VirtualRepositoryBaseParams, false)
 
 	err := testsCreateVirtualRepositoryService.Puppet(pvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
 	setVirtualRepositoryBaseParams(&pvp.VirtualRepositoryBaseParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Puppet(pvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, pvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, pvp)
+	}
 }
 
 func virtualPypiTest(t *testing.T) {
@@ -486,15 +573,18 @@ func virtualPypiTest(t *testing.T) {
 	setVirtualRepositoryBaseParams(&pvp.VirtualRepositoryBaseParams, false)
 
 	err := testsCreateVirtualRepositoryService.Pypi(pvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, pvp)
 
 	setVirtualRepositoryBaseParams(&pvp.VirtualRepositoryBaseParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Pypi(pvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, pvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, pvp)
+	}
 }
 
 func virtualRpmTest(t *testing.T) {
@@ -505,7 +595,9 @@ func virtualRpmTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&rvp.CommonCacheVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Rpm(rvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, rvp)
 
@@ -513,8 +605,9 @@ func virtualRpmTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&rvp.CommonCacheVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Rpm(rvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, rvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, rvp)
+	}
 }
 
 func virtualSbtTest(t *testing.T) {
@@ -525,7 +618,9 @@ func virtualSbtTest(t *testing.T) {
 	setJavaPackageManagersVirtualRepositoryParams(&svp.CommonJavaVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Sbt(svp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, svp)
 
@@ -533,8 +628,55 @@ func virtualSbtTest(t *testing.T) {
 	setJavaPackageManagersVirtualRepositoryParams(&svp.CommonJavaVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Sbt(svp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, svp)
+	}
+}
+
+func virtualSwiftTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	svp := services.NewSwiftVirtualRepositoryParams()
+	svp.Key = repoKey
+	setVirtualRepositoryBaseParams(&svp.VirtualRepositoryBaseParams, false)
+
+	err := testsCreateVirtualRepositoryService.Swift(svp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, svp)
+
+	setVirtualRepositoryBaseParams(&svp.VirtualRepositoryBaseParams, true)
+
+	err = testsUpdateVirtualRepositoryService.Swift(svp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, svp)
+	}
+}
+
+func virtualTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	tvp := services.NewTerraformVirtualRepositoryParams()
+	tvp.Key = repoKey
+	setVirtualRepositoryBaseParams(&tvp.VirtualRepositoryBaseParams, false)
+	setCacheVirtualRepositoryParams(&tvp.CommonCacheVirtualRepositoryParams, false)
+
+	err := testsCreateVirtualRepositoryService.Terraform(tvp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, tvp)
+
+	setVirtualRepositoryBaseParams(&tvp.VirtualRepositoryBaseParams, true)
+	setCacheVirtualRepositoryParams(&tvp.CommonCacheVirtualRepositoryParams, true)
+
+	err = testsUpdateVirtualRepositoryService.Terraform(tvp)
+	assert.NoError(t, err, "Failed to update "+repoKey)
+	validateRepoConfig(t, repoKey, tvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, tvp)
+	}
 }
 
 func virtualYumTest(t *testing.T) {
@@ -545,7 +687,9 @@ func virtualYumTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&yvp.CommonCacheVirtualRepositoryParams, false)
 
 	err := testsCreateVirtualRepositoryService.Yum(yvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// "yum" package type is converted to "rpm" by Artifactory, so we have to change it too to pass the validation.
 	yvp.PackageType = "rpm"
@@ -555,16 +699,19 @@ func virtualYumTest(t *testing.T) {
 	setCacheVirtualRepositoryParams(&yvp.CommonCacheVirtualRepositoryParams, true)
 
 	err = testsUpdateVirtualRepositoryService.Yum(yvp)
-	assert.NoError(t, err, "Failed to update "+repoKey)
-	validateRepoConfig(t, repoKey, yvp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, yvp)
+	}
 }
 
 func virtualCreateWithParamTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	params := services.NewVirtualRepositoryBaseParams()
 	params.Key = repoKey
-	err := testsRepositoriesService.CreateVirtual(params)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	err := testsRepositoriesService.Create(params, params.Key)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	validateRepoConfig(t, repoKey, params)
 }
@@ -577,7 +724,9 @@ func getVirtualRepoDetailsTest(t *testing.T) {
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
 
 	err := testsCreateVirtualRepositoryService.Generic(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
 	data := getRepo(t, repoKey)
@@ -597,18 +746,41 @@ func getAllVirtualRepoDetailsTest(t *testing.T) {
 	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
 
 	err := testsCreateVirtualRepositoryService.Generic(gvp)
-	assert.NoError(t, err, "Failed to create "+repoKey)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
 	defer deleteRepo(t, repoKey)
 	// Get repo details
-	data := getAllRepos(t, "virtual", "")
+	data := getAllRepos(t, "virtual")
 	assert.NotNil(t, data)
 	repo := &services.RepositoryDetails{}
 	for _, v := range *data {
 		if v.Key == repoKey {
-			repo = &v
+			vRepo := v
+			repo = &vRepo
 			break
 		}
 	}
 	// Validate
 	assert.NotNil(t, repo, "Repo "+repoKey+" not found")
+}
+
+func isVirtualRepoExistsTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+
+	// Validate repo doesn't exist
+	exists := isRepoExists(t, repoKey)
+	assert.False(t, exists)
+
+	// Create Repo
+	gvp := services.NewGenericVirtualRepositoryParams()
+	gvp.Key = repoKey
+	setVirtualRepositoryBaseParams(&gvp.VirtualRepositoryBaseParams, false)
+	err := testsCreateVirtualRepositoryService.Generic(gvp)
+	assert.NoError(t, err)
+	defer deleteRepo(t, repoKey)
+
+	// Validate repo exists
+	exists = isRepoExists(t, repoKey)
+	assert.True(t, exists)
 }

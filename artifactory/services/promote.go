@@ -23,8 +23,8 @@ func NewPromotionService(client *jfroghttpclient.JfrogHttpClient) *PromoteServic
 	return &PromoteService{client: client}
 }
 
-func (ps *PromoteService) isDryRun() bool {
-	return ps.DryRun
+func (ps *PromoteService) isDryRun() *bool {
+	return &ps.DryRun
 }
 
 func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
@@ -42,7 +42,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 		queryParams["project"] = promotionParams.ProjectKey
 	}
 
-	requestFullUrl, err := utils.BuildArtifactoryUrl(promoteUrl, restApi, queryParams)
+	requestFullUrl, err := clientutils.BuildUrl(promoteUrl, restApi, queryParams)
 	if err != nil {
 		return err
 	}
@@ -74,11 +74,13 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 		return err
 	}
 
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
-		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, clientutils.IndentJson(body)))
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return err
 	}
-
 	log.Debug("Artifactory response:", resp.Status)
+	if !data.FailFast {
+		log.Info(string(body))
+	}
 	log.Info("Promoted build", promotionParams.GetBuildName()+"/"+promotionParams.GetBuildNumber(), "to:", promotionParams.GetTargetRepo(), "repository.")
 	return nil
 }
@@ -88,11 +90,11 @@ type BuildPromotionBody struct {
 	SourceRepo          string `json:"sourceRepo,omitempty"`
 	TargetRepo          string `json:"targetRepo,omitempty"`
 	Status              string `json:"status,omitempty"`
-	IncludeDependencies bool   `json:"dependencies,omitempty"`
-	Copy                bool   `json:"copy,omitempty"`
-	// FailFast options default is true. We need to avoid omitempty, otherwise, it would be forced to false if omitted.
+	IncludeDependencies *bool  `json:"dependencies,omitempty"`
+	Copy                *bool  `json:"copy,omitempty"`
+	// Notice that FailFast is boolean and therfore if not assigned, FailFast is false.
 	FailFast   bool                `json:"failFast"`
-	DryRun     bool                `json:"dryRun,omitempty"`
+	DryRun     *bool               `json:"dryRun,omitempty"`
 	Properties map[string][]string `json:"properties,omitempty"`
 }
 
@@ -134,16 +136,16 @@ func (bp *PromotionParams) GetComment() string {
 	return bp.Comment
 }
 
-func (bp *PromotionParams) IsCopy() bool {
-	return bp.Copy
+func (bp *PromotionParams) IsCopy() *bool {
+	return &bp.Copy
 }
 
 func (bp *PromotionParams) IsFailFast() bool {
 	return bp.FailFast
 }
 
-func (bp *PromotionParams) IsIncludeDependencies() bool {
-	return bp.IncludeDependencies
+func (bp *PromotionParams) IsIncludeDependencies() *bool {
+	return &bp.IncludeDependencies
 }
 
 func (bp *PromotionParams) GetSourceRepo() string {

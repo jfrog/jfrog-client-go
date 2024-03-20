@@ -1,15 +1,27 @@
 package tests
 
 import (
+	"archive/zip"
+	"fmt"
+	"net/http"
 	"os"
+	"path"
 	"path/filepath"
+	"strconv"
 	"testing"
+	"time"
 
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	testutils "github.com/jfrog/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,11 +34,12 @@ func TestArtifactoryUpload(t *testing.T) {
 	t.Run("explode", explodeUpload)
 	t.Run("props", propsUpload)
 	t.Run("summary", summaryUpload)
+	t.Run("archive", archiveUpload)
 }
 
 func flatUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
-	defer os.RemoveAll(workingDir)
+	defer testutils.RemoveAllAndAssert(t, workingDir)
 
 	pattern := filepath.Join(workingDir, "out", "*")
 	up := services.NewUploadParams()
@@ -46,7 +59,7 @@ func flatUpload(t *testing.T) {
 	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = getRtTargetRepo()
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.Close()
+	defer readerCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -55,7 +68,7 @@ func flatUpload(t *testing.T) {
 			t.Error("Expected path to be root due to using the flat flag.", "Got:", item.Path)
 		}
 	}
-	assert.NoError(t, reader.GetError())
+	readerGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length > 1 {
@@ -66,7 +79,7 @@ func flatUpload(t *testing.T) {
 
 func recursiveUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
-	defer os.RemoveAll(workingDir)
+	defer testutils.RemoveAllAndAssert(t, workingDir)
 
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
@@ -86,7 +99,7 @@ func recursiveUpload(t *testing.T) {
 	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = getRtTargetRepo()
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.Close()
+	defer readerCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -98,7 +111,7 @@ func recursiveUpload(t *testing.T) {
 			t.Error("Missing File a.in")
 		}
 	}
-	assert.NoError(t, reader.GetError())
+	readerGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length > 1 {
@@ -109,7 +122,7 @@ func recursiveUpload(t *testing.T) {
 
 func placeholderUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
-	defer os.RemoveAll(workingDir)
+	defer testutils.RemoveAllAndAssert(t, workingDir)
 
 	pattern := filepath.Join(workingDir, "(*).in")
 	up := services.NewUploadParams()
@@ -129,7 +142,7 @@ func placeholderUpload(t *testing.T) {
 	searchParams.CommonParams = &utils.CommonParams{}
 	searchParams.Pattern = getRtTargetRepo()
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.Close()
+	defer readerCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -141,7 +154,7 @@ func placeholderUpload(t *testing.T) {
 			t.Error("Missing File a")
 		}
 	}
-	assert.NoError(t, reader.GetError())
+	readerGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length > 1 {
@@ -152,7 +165,7 @@ func placeholderUpload(t *testing.T) {
 
 func includeDirsUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
-	defer os.RemoveAll(workingDir)
+	defer testutils.RemoveAllAndAssert(t, workingDir)
 
 	pattern := filepath.Join(workingDir, "*")
 	up := services.NewUploadParams()
@@ -162,7 +175,7 @@ func includeDirsUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if summary.TotalSucceeded != 0 {
+	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
 	if summary.TotalFailed != 0 {
@@ -173,7 +186,7 @@ func includeDirsUpload(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo()
 	searchParams.IncludeDirs = true
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.Close()
+	defer readerCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -188,7 +201,7 @@ func includeDirsUpload(t *testing.T) {
 			t.Error("Missing directory out.")
 		}
 	}
-	assert.NoError(t, reader.GetError())
+	readerGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length < 2 {
@@ -199,7 +212,7 @@ func includeDirsUpload(t *testing.T) {
 
 func explodeUpload(t *testing.T) {
 	workingDir, filePath := createWorkingDir(t)
-	defer os.RemoveAll(workingDir)
+	defer testutils.RemoveAllAndAssert(t, workingDir)
 
 	err := fileutils.ZipFolderFiles(filePath, filepath.Join(workingDir, "zipFile.zip"))
 	if err != nil {
@@ -229,7 +242,7 @@ func explodeUpload(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo()
 	searchParams.IncludeDirs = true
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.Close()
+	defer readerCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -241,7 +254,7 @@ func explodeUpload(t *testing.T) {
 			t.Error("Missing file a.in")
 		}
 	}
-	assert.NoError(t, reader.GetError())
+	readerGetErrorAndAssert(t, reader)
 	length, err := reader.Length()
 	assert.NoError(t, err)
 	if length < 2 {
@@ -252,7 +265,7 @@ func explodeUpload(t *testing.T) {
 
 func propsUpload(t *testing.T) {
 	workingDir, _ := createWorkingDir(t)
-	defer os.RemoveAll(workingDir)
+	defer testutils.RemoveAllAndAssert(t, workingDir)
 
 	// Upload a.in with property key1=val1
 	pattern := filepath.Join(workingDir, "out", "*")
@@ -272,7 +285,7 @@ func propsUpload(t *testing.T) {
 	searchParams.Pattern = getRtTargetRepo()
 	searchParams.Props = "key1=val1"
 	reader, err := testsSearchService.Search(searchParams)
-	defer reader.Close()
+	defer readerCloseAndAssert(t, reader)
 	if err != nil {
 		t.Error(err)
 	}
@@ -302,7 +315,9 @@ func summaryUpload(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer summary.Close()
+	defer func() {
+		assert.NoError(t, summary.Close())
+	}()
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -316,7 +331,7 @@ func summaryUpload(t *testing.T) {
 	expectedSha256 := "4eb341b5d2762a853d79cc25e622aa8b978eb6e12c3259e2d99dc9dc60d82c5d"
 	assert.Len(t, transfers, 1)
 	assert.Equal(t, filepath.Join("testdata", "a", "a.in"), transfers[0].SourcePath)
-	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+getRtTargetRepo()+"a.in", transfers[0].TargetPath)
+	assert.Equal(t, testsUploadService.ArtDetails.GetUrl()+getRtTargetRepo()+"a.in", transfers[0].RtUrl+transfers[0].TargetPath)
 	assert.Equal(t, expectedSha256, transfers[0].Sha256)
 	var artifacts []utils.ArtifactDetails
 	for item := new(utils.ArtifactDetails); summary.ArtifactsDetailsReader.NextRecord(item) == nil; item = new(utils.ArtifactDetails) {
@@ -327,6 +342,43 @@ func summaryUpload(t *testing.T) {
 	artifactoryCleanup(t)
 }
 
+func archiveUpload(t *testing.T) {
+	// Upload zip
+	uploadPattern := filepath.Join("testdata", "a", "a.in")
+	downloadPattern := path.Join(getRtTargetRepo(), "test.zip")
+	targetProps, err := utils.ParseProperties("key1=val1")
+	assert.NoError(t, err)
+	up := services.NewUploadParams()
+	up.CommonParams = &utils.CommonParams{Pattern: uploadPattern, Target: downloadPattern, TargetProps: targetProps}
+	up.Archive = "zip"
+	up.Flat = true
+	_, err = testsUploadService.UploadFiles(up)
+	assert.NoError(t, err)
+
+	// Download zip
+	workingDir, err := os.MkdirTemp("", "downloadTests")
+	if err != nil {
+		t.Error(err)
+	}
+	defer testutils.RemoveAllAndAssert(t, workingDir)
+	downloadTarget := workingDir + string(filepath.Separator)
+	_, err = testsDownloadService.DownloadFiles(services.DownloadParams{CommonParams: &utils.CommonParams{Pattern: downloadPattern, Recursive: true, Target: downloadTarget}})
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check for timezone offset for each file in the zip
+	r, err := zip.OpenReader(downloadTarget + "test.zip")
+	assert.NoError(t, err)
+	defer func() { assert.NoError(t, r.Close()) }()
+	_, sysTimezoneOffset := time.Now().Zone()
+	for _, file := range r.File {
+		_, fileTimezoneOffset := file.Modified.Zone()
+		assert.Equal(t, sysTimezoneOffset, fileTimezoneOffset)
+	}
+	artifactoryCleanup(t)
+}
+
 func createWorkingDir(t *testing.T) (string, string) {
 	workingDir, relativePath, err := tests.CreateFileWithContent("a.in", "/out/")
 	if err != nil {
@@ -334,4 +386,75 @@ func createWorkingDir(t *testing.T) (string, string) {
 		t.FailNow()
 	}
 	return workingDir, relativePath
+}
+
+func readerCloseAndAssert(t *testing.T, reader *content.ContentReader) {
+	assert.NoError(t, reader.Close(), "Couldn't close reader")
+}
+
+func readerGetErrorAndAssert(t *testing.T, reader *content.ContentReader) {
+	assert.NoError(t, reader.GetError(), "Couldn't get reader error")
+}
+
+func TestUploadFilesWithFailure(t *testing.T) {
+	// Create Artifactory mock server
+	port := startArtifactoryMockServer(createUploadFilesWithFailureHandlers())
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		Build()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Create Artifactory mock details
+	rtDetails := auth.NewArtifactoryDetails()
+	rtDetails.SetUrl("http://localhost:" + strconv.Itoa(port))
+	rtDetails.SetUser("user")
+	rtDetails.SetPassword("password")
+
+	// Create upload service
+	params := services.NewUploadParams()
+	dir, err := os.Getwd()
+	assert.NoError(t, err)
+	params.Pattern = filepath.Join(dir, "testdata", "upload", "folder*")
+	params.Target = "generic"
+	params.Flat = true
+	params.Recursive = true
+	service := services.NewUploadService(client)
+	service.Threads = 1
+	service.SetServiceDetails(rtDetails)
+
+	// Upload files
+	summary, err := service.UploadFiles(params)
+
+	// Check for expected results
+	assert.Error(t, err)
+	assert.Equal(t, 1, summary.TotalSucceeded)
+	assert.Equal(t, 1, summary.TotalFailed)
+}
+
+// Creates handlers for TestUploadFilesWithFailure mock server.
+// The first upload request returns 200, and the rest return 404.
+func createUploadFilesWithFailureHandlers() *testutils.HttpServerHandlers {
+	handlers := testutils.HttpServerHandlers{}
+	counter := 0
+	//nolint:unparam
+	handlers["/generic/"] = func(w http.ResponseWriter, r *http.Request) {
+		if counter == 0 {
+			fmt.Fprintln(w, "{\"checksums\":{\"sha256\":\"123\"}}")
+			w.WriteHeader(http.StatusOK)
+			counter++
+		} else {
+			http.Error(w, "404 page not found", http.StatusNotFound)
+		}
+	}
+	return &handlers
+}
+
+func startArtifactoryMockServer(handlers *testutils.HttpServerHandlers) int {
+	port, err := testutils.StartHttpServer(*handlers)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+	return port
 }

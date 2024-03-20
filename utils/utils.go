@@ -4,17 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 
+	"github.com/jfrog/jfrog-client-go/utils/io"
+
+	"github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/gofrog/stringutils"
+	"github.com/jfrog/gofrog/version"
 
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 
@@ -25,13 +27,27 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.6.6"
+	Version     = "1.38.0"
+)
+
+type MinVersionProduct string
+
+const (
+	Artifactory  MinVersionProduct = "JFrog Artifactory"
+	Xray         MinVersionProduct = "JFrog Xray"
+	DataTransfer MinVersionProduct = "Data Transfer"
+	DockerApi    MinVersionProduct = "Docker API"
+	Projects     MinVersionProduct = "JFrog Projects"
+
+	MinimumVersionMsg = "You are using %s version %s, while this operation requires version %s or higher."
 )
 
 // In order to limit the number of items loaded from a reader into the memory, we use a buffers with this size limit.
-var MaxBufferSize = 50000
-
-var userAgent = getDefaultUserAgent()
+var (
+	MaxBufferSize          = 50000
+	userAgent              = getDefaultUserAgent()
+	curlyParenthesesRegexp = regexp.MustCompile(`\{(\d+?)}`)
+)
 
 func getVersion() string {
 	return Version
@@ -49,6 +65,13 @@ func getDefaultUserAgent() string {
 	return fmt.Sprintf("%s/%s", Agent, getVersion())
 }
 
+func ValidateMinimumVersion(product MinVersionProduct, currentVersion, minimumVersion string) error {
+	if !version.NewVersion(currentVersion).AtLeast(minimumVersion) {
+		return errorutils.CheckErrorf(MinimumVersionMsg, product, currentVersion, minimumVersion)
+	}
+	return nil
+}
+
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
@@ -58,7 +81,11 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 	sections := strings.Split(path, separator)
 	if len(sections) == 1 {
 		separator = "\\"
-		sections = strings.Split(path, separator)
+		if strings.Contains(path, "\\\\") {
+			sections = strings.Split(path, "\\\\")
+		} else {
+			sections = strings.Split(path, separator)
+		}
 	}
 
 	// Now we start building the root path, making sure to leave out the sub-directory that includes the pattern.
@@ -68,21 +95,21 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 			continue
 		}
 		if patternType == RegExp {
-			if strings.Index(section, "(") != -1 {
+			if strings.Contains(section, "(") {
 				break
 			}
 		} else {
-			if strings.Index(section, "*") != -1 {
+			if strings.Contains(section, "*") {
 				break
 			}
-			if strings.Index(section, "(") != -1 {
+			if strings.Contains(section, "(") {
 				temp := rootPath + section
 				if isWildcardParentheses(temp, parentheses) {
 					break
 				}
 			}
 			if patternType == AntPattern {
-				if strings.Index(section, "?") != -1 {
+				if strings.Contains(section, "?") {
 					break
 				}
 			}
@@ -105,7 +132,7 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 	return rootPath
 }
 
-// Return true if the ‘str’ argument contains open parentasis, that is related to a placeholder.
+// Return true if the ‘str’ argument contains open parenthesis, that is related to a placeholder.
 // The ‘parentheses’ argument contains all the indexes of placeholder parentheses.
 func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 	toFind := "("
@@ -127,8 +154,7 @@ func isWildcardParentheses(str string, parentheses ParenthesesSlice) bool {
 func StringToBool(boolVal string, defaultValue bool) (bool, error) {
 	if len(boolVal) > 0 {
 		result, err := strconv.ParseBool(boolVal)
-		errorutils.CheckError(err)
-		return result, err
+		return result, errorutils.CheckError(err)
 	}
 	return defaultValue, nil
 }
@@ -172,17 +198,17 @@ func CopyMap(src map[string]string) (dst map[string]string) {
 }
 
 func ConvertLocalPatternToRegexp(localPath string, patternType PatternType) string {
-	if localPath == "./" || localPath == ".\\" {
+	if localPath == "./" || localPath == ".\\" || localPath == ".\\\\" {
 		return "^.*$"
 	}
-	if strings.HasPrefix(localPath, "./") {
-		localPath = localPath[2:]
-	} else if strings.HasPrefix(localPath, ".\\") {
-		localPath = localPath[3:]
-	}
-	if patternType == AntPattern {
-		localPath = antPatternToRegExp(cleanPath(localPath))
-	} else if patternType == WildCardPattern {
+	localPath = strings.TrimPrefix(localPath, ".\\\\")
+	localPath = strings.TrimPrefix(localPath, "./")
+	localPath = strings.TrimPrefix(localPath, ".\\")
+
+	switch patternType {
+	case AntPattern:
+		localPath = AntToRegex(cleanPath(localPath))
+	case WildCardPattern:
 		localPath = stringutils.WildcardPatternToRegExp(cleanPath(localPath))
 	}
 
@@ -196,55 +222,44 @@ func cleanPath(path string) string {
 	if temp == `\` || temp == "/" {
 		path += temp
 	}
-	// Since filepath.Clean replaces \\ with \, we revert this action.
-	path = strings.Replace(path, `\`, `\\`, -1)
+	if io.IsWindows() {
+		// Since filepath.Clean replaces \\ with \, we revert this action.
+		path = strings.ReplaceAll(path, `\`, `\\`)
+		path = strings.ReplaceAll(path, `\\\\`, `\\`)
+	}
 	return path
 }
 
-func antPatternToRegExp(localPath string) string {
-	localPath = stringutils.EscapeSpecialChars(localPath)
-	separator := getFileSeparator()
-	var wildcard = ".*"
-	// ant `*` ~ regexp `([^/]*)` : `*` matches zero or more characters except from `/`.
-	var regAsterisk = "([^" + separator + "]*)"
-	// ant `**` ~ regexp `(.*)?` : `**` matches zero or more 'directories' in a path.
-	var doubleRegAsterisk = "(" + wildcard + ")?"
-	var doubleRegAsteriskWithSeperatorPrefix = "(" + wildcard + separator + ")?"
-	var doubleRegAsteriskWithSeperatorSuffix = "(" + separator + wildcard + ")?"
-
-	// `?` => `.{1}` : `?` matches one character.
-	localPath = strings.Replace(localPath, `?`, ".{1}", -1)
-	// `*` => `([^/]*)`
-	localPath = strings.Replace(localPath, `*`, regAsterisk, -1)
-	// `**` => `(.*)?`
-	localPath = strings.Replace(localPath, regAsterisk+regAsterisk, doubleRegAsterisk, -1)
-	// `(.*)?/` => `(.*/)?`
-	localPath = strings.Replace(localPath, doubleRegAsterisk+separator, doubleRegAsteriskWithSeperatorPrefix, -1)
-	// Convert the last '/**' in the expression if exist : `/(.*)?` => `(/.*)?`
-	if strings.HasSuffix(localPath, separator+doubleRegAsterisk) {
-		localPath = strings.TrimSuffix(localPath, separator+doubleRegAsterisk) + doubleRegAsteriskWithSeperatorSuffix
+// Builds a URL for Artifactory/Xray requests.
+// Pay attention: semicolons are escaped!
+func BuildUrl(baseUrl, path string, params map[string]string) (string, error) {
+	u := url.URL{Path: path}
+	parsedUrl, err := url.Parse(baseUrl + u.String())
+	if err = errorutils.CheckError(err); err != nil {
+		return "", err
 	}
-
-	if strings.HasSuffix(localPath, "/") || strings.HasSuffix(localPath, "\\") {
-		localPath += wildcard
+	q := parsedUrl.Query()
+	for k, v := range params {
+		q.Set(k, v)
 	}
-	return "^" + localPath + "$"
+	parsedUrl.RawQuery = q.Encode()
+
+	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
+	encodedUrl := strings.ReplaceAll(parsedUrl.String(), ";", url.QueryEscape(";"))
+	return encodedUrl, nil
 }
 
-func getFileSeparator() string {
-	if IsWindows() {
-		return "\\\\"
-	}
-	return "/"
-}
-
-// Replaces matched regular expression from path to corresponding placeholder {i} at target.
+// BuildTargetPath Replaces matched regular expression from path to corresponding placeholder {i} at target.
 // Example 1:
-//      pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
-//      returns "hello"
+//
+//	pattern = "repoA/1(.*)234" ; path = "repoA/1hello234" ; target = "{1}" ; ignoreRepo = false
+//	returns "hello"
+//
 // Example 2:
-//      pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
-//      returns "hello"
+//
+//	pattern = "repoA/1(.*)234" ; path = "repoB/1hello234" ; target = "{1}" ; ignoreRepo = true
+//	returns "hello"
+//
 // return (parsed target, placeholders replaced in target, error)
 func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, bool, error) {
 	asteriskIndex := strings.Index(pattern, "*")
@@ -273,23 +288,63 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 
 	groups := r.FindStringSubmatch(path)
 	if len(groups) > 0 {
-		target, replaceOccurred := ReplacePlaceHolders(groups, target)
+		target, replaceOccurred, err := ReplacePlaceHolders(groups, target, false)
+		if err != nil {
+			return "", false, err
+		}
 		return target, replaceOccurred, nil
 	}
 	return target, false, nil
 }
 
-// group - regular expression matched group to replace with placeholders
-// toReplace - target pattern to replace
-// Return - (parsed placeholders string, placeholders were  replaced)
-func ReplacePlaceHolders(groups []string, toReplace string) (string, bool) {
+// ReplacePlaceHolders replace placeholders with their matching regular expressions.
+// group - Regular expression matched group to replace with placeholders.
+// toReplace - Target pattern to replace.
+// isRegexp - When using a regular expression, all parentheses content in the target will be at the given group parameter.
+// A non-regular expression will, however, allow us to consider the parentheses as literal characters.
+// The size of the group (containing the parentheses content) can be smaller than the maximum placeholder indexer - in this case, special treatment is required.
+// Example : pattern: (a)/(b)/(c), target: "target/{1}{3}" => '(a)' and '(c)' will be considered as placeholders, and '(b)' will be treated as the directory's actual name.
+// In this case, the index of '(c)' in the group is 2, but its placeholder indexer is 3.
+// Return - The parsed placeholders string, along with a boolean to indicate whether they have been replaced or not.
+func ReplacePlaceHolders(groups []string, toReplace string, isRegexp bool) (string, bool, error) {
+	maxPlaceholderIndex, err := getMaxPlaceholderIndex(toReplace)
+	if err != nil {
+		return "", false, err
+	}
 	preReplaced := toReplace
+	// Index for the placeholder number.
+	placeHolderIndexer := 1
 	for i := 1; i < len(groups); i++ {
-		group := strings.Replace(groups[i], "\\", "/", -1)
-		toReplace = strings.Replace(toReplace, "{"+strconv.Itoa(i)+"}", group, -1)
+		group := strings.ReplaceAll(groups[i], "\\", "/")
+		// Handling non-regular expression cases
+		for !isRegexp && !strings.Contains(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}") {
+			placeHolderIndexer++
+			if placeHolderIndexer > maxPlaceholderIndex {
+				break
+			}
+		}
+		toReplace = strings.ReplaceAll(toReplace, "{"+strconv.Itoa(placeHolderIndexer)+"}", group)
+		placeHolderIndexer++
 	}
 	replaceOccurred := preReplaced != toReplace
-	return toReplace, replaceOccurred
+	return toReplace, replaceOccurred, nil
+}
+
+// Returns the higher index between all placeHolders target instances.
+// Example: for input "{1}{5}{3}" returns 5.
+func getMaxPlaceholderIndex(toReplace string) (int, error) {
+	placeholders := curlyParenthesesRegexp.FindAllString(toReplace, -1)
+	max := 0
+	for _, placeholder := range placeholders {
+		num, err := strconv.Atoi(strings.TrimPrefix(strings.TrimSuffix(placeholder, "}"), "{"))
+		if err != nil {
+			return 0, errorutils.CheckError(err)
+		}
+		if num > max {
+			max = num
+		}
+	}
+	return max, nil
 }
 
 func GetLogMsgPrefix(threadId int, dryRun bool) string {
@@ -301,10 +356,10 @@ func GetLogMsgPrefix(threadId int, dryRun bool) string {
 }
 
 func TrimPath(path string) string {
-	path = strings.Replace(path, "\\", "/", -1)
-	path = strings.Replace(path, "//", "/", -1)
-	path = strings.Replace(path, "../", "", -1)
-	path = strings.Replace(path, "./", "", -1)
+	path = strings.ReplaceAll(path, "\\", "/")
+	path = strings.ReplaceAll(path, "//", "/")
+	path = strings.ReplaceAll(path, "../", "")
+	path = strings.ReplaceAll(path, "./", "")
 	return path
 }
 
@@ -323,12 +378,12 @@ func ReplaceTildeWithUserHome(path string) string {
 }
 
 func GetUserHomeDir() string {
-	if IsWindows() {
+	if io.IsWindows() {
 		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 		if home == "" {
 			home = os.Getenv("USERPROFILE")
 		}
-		return strings.Replace(home, "\\", "\\\\", -1)
+		return strings.ReplaceAll(home, "\\", "\\\\")
 	}
 	return os.Getenv("HOME")
 }
@@ -386,15 +441,16 @@ func SplitWithEscape(str string, separator rune) []string {
 	var current bytes.Buffer
 	escaped := false
 	for _, char := range str {
-		if char == '\\' {
+		switch {
+		case char == '\\':
 			if escaped {
 				current.WriteRune(char)
 			}
 			escaped = true
-		} else if char == separator && !escaped {
+		case char == separator && !escaped:
 			parts = append(parts, current.String())
 			current.Reset()
-		} else {
+		default:
 			escaped = false
 			current.WriteRune(char)
 		}
@@ -410,18 +466,11 @@ func AddProps(oldProps, additionalProps string) string {
 	return oldProps + additionalProps
 }
 
-func IsWindows() bool {
-	return runtime.GOOS == "windows"
-}
-
-func IsMacOS() bool {
-	return runtime.GOOS == "darwin"
-}
-
 type Artifact struct {
-	LocalPath         string
-	TargetPath        string
-	SymlinkTargetPath string
+	LocalPath           string
+	TargetPath          string
+	SymlinkTargetPath   string
+	TargetPathInArchive string
 }
 
 const (
@@ -475,11 +524,12 @@ func (bps *Sha256Summary) SetSha256(sha256 string) *Sha256Summary {
 }
 
 // Represents a file transfer from SourcePath to TargetPath.
-// Each of the paths can be on the local machine (full or relative) or in Artifactory (full URL).
+// Each of the paths can be on the local machine (full or relative) or in Artifactory (without Artifactory URL).
 // The file's Sha256 is calculated by Artifactory during the upload. we read the sha256 from the HTTP's response body.
 type FileTransferDetails struct {
 	SourcePath string `json:"sourcePath,omitempty"`
 	TargetPath string `json:"targetPath,omitempty"`
+	RtUrl      string `json:"rtUrl,omitempty"`
 	Sha256     string `json:"sha256,omitempty"`
 }
 
@@ -493,35 +543,29 @@ type DeployableArtifactDetails struct {
 }
 
 func (details *DeployableArtifactDetails) CreateFileTransferDetails(rtUrl, targetRepository string) (FileTransferDetails, error) {
-	// The function path.Join expects a path, not a URL.
-	// Therefore we first parse the URL to get a path.
-	url, err := url.Parse(rtUrl + targetRepository)
+	targetUrl, err := url.Parse(path.Join(targetRepository, details.ArtifactDest))
 	if err != nil {
 		return FileTransferDetails{}, err
 	}
-	// The path.join will always use a single slash (forward) to separate between the two vars.
-	url.Path = path.Join(url.Path, details.ArtifactDest)
-	targetPath := url.String()
-
-	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetPath, Sha256: details.Sha256}, nil
+	return FileTransferDetails{SourcePath: details.SourcePath, TargetPath: targetUrl.String(), Sha256: details.Sha256, RtUrl: rtUrl}, nil
 }
 
 type UploadResponseBody struct {
-	Checksums ChecksumDetails `json:"checksums,omitempty"`
+	Checksums entities.Checksum `json:"checksums,omitempty"`
 }
 
-type ChecksumDetails struct {
-	Md5    string
-	Sha1   string
-	Sha256 string
-}
-
-func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (string, error) {
+func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (filePath string, err error) {
 	tempFile, err := fileutils.CreateTempFile()
 	if err != nil {
 		return "", err
 	}
-	filePath := tempFile.Name()
+	defer func() {
+		e := tempFile.Close()
+		if err == nil {
+			err = errorutils.CheckError(e)
+		}
+	}()
+	filePath = tempFile.Name()
 	return filePath, SaveFileTransferDetailsInFile(filePath, filesDetails)
 }
 
@@ -536,7 +580,7 @@ func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetai
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	return errorutils.CheckError(ioutil.WriteFile(filePath, files, 0700))
+	return errorutils.CheckError(os.WriteFile(filePath, files, 0700))
 }
 
 // Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
@@ -552,4 +596,9 @@ func ExtractSha256FromResponseBody(body []byte) (string, error) {
 		return responseBody.Checksums.Sha256, nil
 	}
 	return "", nil
+}
+
+// Convert any value to a pointer to that value
+func Pointer[K any](val K) *K {
+	return &val
 }

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/xray/services/utils"
@@ -98,13 +99,13 @@ func createPolicyActions(t *testing.T) {
 		Priority: 1,
 		Actions: &utils.PolicyAction{
 			BlockDownload: utils.PolicyBlockDownload{
-				Active:    true,
-				Unscanned: true,
+				Active:    clientutils.Pointer(true),
+				Unscanned: clientutils.Pointer(true),
 			},
-			BlockReleaseBundleDistribution: true,
-			FailBuild:                      true,
-			NotifyDeployer:                 true,
-			NotifyWatchRecipients:          true,
+			BlockReleaseBundleDistribution: clientutils.Pointer(true),
+			FailBuild:                      clientutils.Pointer(true),
+			NotifyDeployer:                 clientutils.Pointer(true),
+			NotifyWatchRecipients:          clientutils.Pointer(true),
 			CustomSeverity:                 utils.Information,
 		},
 	}

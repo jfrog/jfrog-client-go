@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 func setupIntegrationTests() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
-	if *TestArtifactory || *TestDistribution || *TestXray || *TestRepository {
+	if *TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload {
 		createArtifactoryUploadManager()
 		createArtifactorySearchManager()
 		createArtifactoryDeleteManager()
@@ -53,6 +53,9 @@ func setupIntegrationTests() {
 		createArtifactoryGroupManager()
 		createArtifactoryBuildInfoManager()
 		createArtifactoryFederationManager()
+		createArtifactorySystemManager()
+		createArtifactoryStorageManager()
+		createArtifactoryAqlManager()
 	}
 
 	if *TestDistribution {
@@ -67,9 +70,15 @@ func setupIntegrationTests() {
 	if *TestPipelines {
 		createPipelinesIntegrationsManager()
 		createPipelinesSourcesManager()
+		createPipelinesRunManager()
+		createPipelinesSyncManager()
+		createPipelinesSyncStatusManager()
 	}
 	if *TestAccess {
+		createAccessPingManager()
 		createAccessProjectManager()
+		createAccessInviteManager()
+		createAccessTokensManager()
 	}
 	if err := createRepo(); err != nil {
 		log.Error(err.Error())
@@ -89,7 +98,7 @@ func TestUnitTests(t *testing.T) {
 	packages = tests.ExcludeTestsPackage(packages, CliIntegrationTests)
 	err = tests.RunTests(packages, false)
 	assert.NoError(t, err)
-	cleanUnitTestsJfrogHome(homePath)
+	cleanUnitTestsJfrogHome(t, homePath)
 }
 
 func setJfrogHome(homePath string) {
@@ -99,11 +108,8 @@ func setJfrogHome(homePath string) {
 	}
 }
 
-func cleanUnitTestsJfrogHome(homePath string) {
-	err := os.RemoveAll(homePath)
-	if err != nil {
-		log.Error(err.Error())
-	}
+func cleanUnitTestsJfrogHome(t *testing.T, homePath string) {
+	tests.RemoveAllAndAssert(t, homePath)
 	if err := os.Unsetenv(JfrogHomeEnv); err != nil {
 		os.Exit(1)
 	}

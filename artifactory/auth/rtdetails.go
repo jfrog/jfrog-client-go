@@ -22,7 +22,7 @@ func (rt *artifactoryDetails) GetVersion() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Debug("The Artifactory version is:", rt.Version)
+		log.Debug("JFrog Artifactory version is:", rt.Version)
 	}
 	return rt.Version, nil
 }
@@ -33,7 +33,9 @@ func (rt *artifactoryDetails) getArtifactoryVersion() (string, error) {
 		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
-
+	if err != nil {
+		return "", err
+	}
 	var sm artifactory.ArtifactoryServicesManager
 	client := rt.GetClient()
 	if client != nil {

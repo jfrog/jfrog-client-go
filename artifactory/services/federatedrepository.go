@@ -13,7 +13,6 @@ type FederatedRepositoryService struct {
 func NewFederatedRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate bool) *FederatedRepositoryService {
 	return &FederatedRepositoryService{
 		RepositoryService: RepositoryService{
-			repoType: FederatedRepositoryRepoType,
 			client:   client,
 			isUpdate: isUpdate,
 		},
@@ -129,6 +128,14 @@ func (frs *FederatedRepositoryService) Rpm(params RpmFederatedRepositoryParams) 
 }
 
 func (frs *FederatedRepositoryService) Sbt(params SbtFederatedRepositoryParams) error {
+	return frs.performRequest(params, params.Key)
+}
+
+func (frs *FederatedRepositoryService) Swift(params SwiftFederatedRepositoryParams) error {
+	return frs.performRequest(params, params.Key)
+}
+
+func (frs *FederatedRepositoryService) Terraform(params TerraformFederatedRepositoryParams) error {
 	return frs.performRequest(params, params.Key)
 }
 
@@ -376,6 +383,22 @@ type SbtFederatedRepositoryParams struct {
 
 func NewSbtFederatedRepositoryParams() SbtFederatedRepositoryParams {
 	return SbtFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("sbt")}
+}
+
+type SwiftFederatedRepositoryParams struct {
+	FederatedRepositoryBaseParams
+}
+
+func NewSwiftFederatedRepositoryParams() SwiftFederatedRepositoryParams {
+	return SwiftFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("swift")}
+}
+
+type TerraformFederatedRepositoryParams struct {
+	FederatedRepositoryBaseParams
+}
+
+func NewTerraformFederatedRepositoryParams() TerraformFederatedRepositoryParams {
+	return TerraformFederatedRepositoryParams{FederatedRepositoryBaseParams: NewFederatedRepositoryPackageParams("terraform")}
 }
 
 type VagrantFederatedRepositoryParams struct {
