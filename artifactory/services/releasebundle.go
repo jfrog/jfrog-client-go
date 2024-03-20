@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	conflictErrorMessage  = "Bundle already exists"
-	importRestApiEndpoint = "api/release/import"
-	octetStream           = "application/octet-stream"
+	conflictErrorMessage               = "Bundle already exists"
+	ReleaseBundleImportRestApiEndpoint = "api/release/import/"
+	octetStream                        = "application/octet-stream"
 )
 
 type releaseService struct {
@@ -49,7 +49,7 @@ func (rs *releaseService) ImportReleaseBundle(filePath string) (err error) {
 	// Upload file
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
 
-	url := utils2.AddTrailingSlashIfNeeded(rs.ArtDetails.GetUrl() + importRestApiEndpoint)
+	url := utils2.AddTrailingSlashIfNeeded(rs.ArtDetails.GetUrl() + ReleaseBundleImportRestApiEndpoint)
 
 	utils.SetContentType(octetStream, &httpClientsDetails.Headers)
 	var resp *http.Response
