@@ -606,7 +606,7 @@ func (sm *ArtifactoryServicesManagerImp) CalculateStorageInfo() error {
 	return storageService.StorageInfoRefresh()
 }
 
-func (sm *ArtifactoryServicesManagerImp) ReleaseBundleImport(filePath string) error {
+func (sm *ArtifactoryServicesManagerImp) ImportReleaseBundle(filePath string) error {
 	releaseService := services.NewReleaseService(sm.config.GetServiceDetails(), sm.client)
 	return releaseService.ImportReleaseBundle(filePath)
 }
