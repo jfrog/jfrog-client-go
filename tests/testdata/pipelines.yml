@@ -1,0 +1,22 @@
+pipelines:
+  - name: pipelines_run_int_test
+    steps:
+      - name: prepare_env
+        type: Bash
+        execution:
+          onExecute:
+            - cd /tmp
+            - mkdir -p "jfrog-cli"
+            - touch test-pilines.yaml
+            - echo "test" >> test-pipelines.yaml
+      - name: build_binary
+        type: Bash
+        configuration:
+          inputSteps:
+            - name: prepare_env
+        execution:
+          onExecute:
+            - cd /tmp
+            - mkdir -p "target/pipelines"
+            - cd target/pipelines
+            - touch make_data

@@ -87,3 +87,70 @@ type PipelineResources struct {
 	CreatedAt                time.Time   `json:"createdAt,omitempty"`
 	UpdatedAt                time.Time   `json:"updatedAt,omitempty"`
 }
+
+type WorkspacesResponse struct {
+	ValuesYmlPropertyBag    interface{}             `json:"valuesYmlPropertyBag,omitempty"`
+	PipelinesYmlPropertyBag PipelinesYmlPropertyBag `json:"pipelinesYmlPropertyBag,omitempty"`
+	ID                      int                     `json:"id,omitempty"`
+	Name                    string                  `json:"name,omitempty"`
+	ProjectID               int                     `json:"projectId,omitempty"`
+	IsSyncing               *bool                   `json:"isSyncing,omitempty"`
+	LastSyncStatusCode      int                     `json:"lastSyncStatusCode,omitempty"`
+	LastSyncStartedAt       time.Time               `json:"lastSyncStartedAt,omitempty"`
+	LastSyncEndedAt         interface{}             `json:"lastSyncEndedAt,omitempty"`
+	LastSyncLogs            string                  `json:"lastSyncLogs,omitempty"`
+	CreatedBy               int                     `json:"createdBy,omitempty"`
+}
+
+type PipelinesYmlPropertyBag struct {
+	Resources []Resources `json:"resources,omitempty"`
+	Pipelines []Pipelines `json:"pipelines,omitempty"`
+}
+
+type Resources struct {
+	Configuration Configuration `json:"configuration,omitempty"`
+	Name          string        `json:"name,omitempty"`
+	Type          string        `json:"type,omitempty"`
+}
+
+type Configuration struct {
+	Branches    Branches `json:"branches,omitempty"`
+	GitProvider string   `json:"gitProvider,omitempty"`
+	Path        string   `json:"path,omitempty"`
+}
+
+type Branches struct {
+	Include string `json:"include,omitempty"`
+}
+
+type PipelinesRunID struct {
+	LatestRunID   int    `json:"latestRunId,omitempty"`
+	Name          string `json:"name,omitempty"`
+	SyntaxVersion string `json:"syntaxVersion,omitempty"`
+}
+
+type Console struct {
+	ConsoleID        string      `json:"consoleId,omitempty"`
+	IsSuccess        *bool       `json:"isSuccess,omitempty"`
+	IsShown          interface{} `json:"isShown,omitempty"`
+	ParentConsoleID  string      `json:"parentConsoleId,omitempty"`
+	StepletID        int         `json:"stepletId,omitempty"`
+	PipelineID       int         `json:"pipelineId,omitempty"`
+	Timestamp        int64       `json:"timestamp,omitempty"`
+	TimestampEndedAt interface{} `json:"timestampEndedAt,omitempty"`
+	Type             string      `json:"type,omitempty"`
+	Message          string      `json:"message,omitempty"`
+	CreatedAt        time.Time   `json:"createdAt,omitempty"`
+	UpdatedAt        time.Time   `json:"updatedAt,omitempty"`
+}
+
+// Validation Types
+type ValidationResponse struct {
+	IsValid *bool              `json:"isValid,omitempty"`
+	Errors  []ValidationErrors `json:"errors,omitempty"`
+}
+
+type ValidationErrors struct {
+	Text       string `json:"text,omitempty"`
+	LineNumber int    `json:"lineNumber,omitempty"`
+}

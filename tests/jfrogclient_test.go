@@ -72,6 +72,7 @@ func setupIntegrationTests() {
 		createPipelinesRunManager()
 		createPipelinesSyncManager()
 		createPipelinesSyncStatusManager()
+		createPipelinesWorkspaceServiceManager()
 	}
 	if *TestAccess {
 		createAccessPingManager()
