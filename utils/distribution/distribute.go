@@ -18,15 +18,16 @@ type DistributeReleaseBundleExecutor interface {
 	GetRestApi(name, version string) string
 	GetDistributeBody() any
 	GetDistributionParams() DistributionParams
+	GetProjectKey() string
 }
 
-func CreateDistributeV1Body(distributeParams DistributionParams, dryRun, isAutoCreateRepo bool) ReleaseBundleDistributeV1Body {
+func CreateDistributeV1Body(distCommonParams []*DistributionCommonParams, dryRun, isAutoCreateRepo bool) ReleaseBundleDistributeV1Body {
 	var distributionRules []DistributionRulesBody
-	for _, spec := range distributeParams.DistributionRules {
+	for i := range distCommonParams {
 		distributionRule := DistributionRulesBody{
-			SiteName:     spec.GetSiteName(),
-			CityName:     spec.GetCityName(),
-			CountryCodes: spec.GetCountryCodes(),
+			SiteName:     distCommonParams[i].GetSiteName(),
+			CityName:     distCommonParams[i].GetCityName(),
+			CountryCodes: distCommonParams[i].GetCountryCodes(),
 		}
 		distributionRules = append(distributionRules, distributionRule)
 	}
@@ -44,7 +45,6 @@ func DoDistribute(dr DistributeReleaseBundleExecutor) (trackerId json.Number, er
 }
 
 func execDistribute(dr DistributeReleaseBundleExecutor, name, version string) (json.Number, error) {
-	httpClientsDetails := dr.ServiceDetails().CreateHttpClientDetails()
 	content, err := json.Marshal(dr.GetDistributeBody())
 	if err != nil {
 		return "", errorutils.CheckError(err)
@@ -56,9 +56,14 @@ func execDistribute(dr DistributeReleaseBundleExecutor, name, version string) (j
 	}
 	log.Info(dryRunStr + "Distributing: " + name + "/" + version)
 
-	url := dr.ServiceDetails().GetUrl() + dr.GetRestApi(name, version)
+	requestFullUrl, err := clientUtils.BuildUrl(dr.ServiceDetails().GetUrl(), dr.GetRestApi(name, version), GetProjectQueryParam(dr.GetProjectKey()))
+	if err != nil {
+		return "", err
+	}
+
+	httpClientsDetails := dr.ServiceDetails().CreateHttpClientDetails()
 	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
-	resp, body, err := dr.GetHttpClient().SendPost(url, content, &httpClientsDetails)
+	resp, body, err := dr.GetHttpClient().SendPost(requestFullUrl, content, &httpClientsDetails)
 	if err != nil {
 		return "", err
 	}
@@ -103,4 +108,50 @@ type DistributionRulesBody struct {
 
 type DistributionResponseBody struct {
 	TrackerId json.Number `json:"id"`
+}
+
+type DistributionStatus string
+
+const (
+	NotDistributed DistributionStatus = "Not distributed"
+	InProgress     DistributionStatus = "In progress"
+	InQueue        DistributionStatus = "In queue"
+	Completed      DistributionStatus = "Completed"
+	Failed         DistributionStatus = "Failed"
+)
+
+type DistributionStatusResponse struct {
+	Id                json.Number              `json:"distribution_id"`
+	FriendlyId        json.Number              `json:"distribution_friendly_id,omitempty"`
+	Type              DistributionType         `json:"type,omitempty"`
+	Name              string                   `json:"release_bundle_name,omitempty"`
+	Version           string                   `json:"release_bundle_version,omitempty"`
+	Status            DistributionStatus       `json:"status,omitempty"`
+	DistributionRules []DistributionRulesBody  `json:"distribution_rules,omitempty"`
+	Sites             []DistributionSiteStatus `json:"sites,omitempty"`
+}
+
+type DistributionType string
+
+const (
+	Distribute                 DistributionType = "distribute"
+	DeleteReleaseBundleVersion DistributionType = "delete_release_bundle_version"
+)
+
+type DistributionSiteStatus struct {
+	Status            DistributionStatus `json:"status,omitempty"`
+	Error             string             `json:"general_error,omitempty"`
+	TargetArtifactory TargetArtifactory  `json:"target_artifactory,omitempty"`
+	TotalFiles        json.Number        `json:"total_files,omitempty"`
+	TotalBytes        json.Number        `json:"total_bytes,omitempty"`
+	DistributedBytes  json.Number        `json:"distributed_bytes,omitempty"`
+	DistributedFiles  json.Number        `json:"distributed_files,omitempty"`
+	FileErrors        []string           `json:"file_errors,omitempty"`
+	FilesInProgress   []string           `json:"files_in_progress,omitempty"`
+}
+
+type TargetArtifactory struct {
+	ServiceId string `json:"service_id"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
 }

@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -27,7 +28,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.37.1"
+	Version     = "1.38.0"
 )
 
 type MinVersionProduct string
@@ -560,11 +561,9 @@ func SaveFileTransferDetailsInTempFile(filesDetails *[]FileTransferDetails) (fil
 		return "", err
 	}
 	defer func() {
-		e := tempFile.Close()
-		if err == nil {
-			err = errorutils.CheckError(e)
-		}
+		err = errors.Join(err, errorutils.CheckError(tempFile.Close()))
 	}()
+
 	filePath = tempFile.Name()
 	return filePath, SaveFileTransferDetailsInFile(filePath, filesDetails)
 }

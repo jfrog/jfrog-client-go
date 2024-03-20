@@ -96,6 +96,7 @@
       - [Deleting a Group](#deleting-a-group)
       - [Generating Full System Export](#generating-full-system-export)
       - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
+      - [Getting Info of a File in Artifactory](#getting-info-of-a-file-in-artifactory)
       - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
       - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
       - [Triggering Storage Info Recalculation in Artifactory](#triggering-storage-info-recalculation-in-artifactory)
@@ -202,13 +203,18 @@
       - [Creating Lifecycle Service Config](#creating-lifeCycle-service-config)
       - [Creating New Lifecycle Service Manager](#creating-new-lifeCycle-service-manager)
     - [Using Lifecycle Services](#using-lifeCycle-services)
+      - [Creating a Release Bundle From AQL](#creating-a-release-bundle-from-aql)
+      - [Creating a Release Bundle From Artifacts](#creating-a-release-bundle-from-artifacts)
       - [Creating a Release Bundle From Published Builds](#creating-a-release-bundle-from-published-builds)
       - [Creating a Release Bundle From Release Bundles](#creating-a-release-bundle-from-release-bundles)
       - [Promoting a Release Bundle](#promoting-a-release-bundle)
       - [Get Release Bundle Creation Status](#get-release-bundle-creation-status)
       - [Get Release Bundle Promotion Status](#get-release-bundle-promotion-status)
+      - [Get Release Bundle Promotions](#get-release-bundle-promotions)
       - [Distribute Release Bundle](#distribute-release-bundle)
-      - [Delete Release Bundle](#delete-release-bundle)
+      - [Delete Release Bundle Version](#delete-release-bundle-version)
+      - [Delete Release Bundle Version Promotion](#delete-release-bundle-version-promotion)
+      - [Export Release Bundle](#export-release-bundle)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
 
 ## General
@@ -1353,6 +1359,12 @@ err := serviceManager.Export(params)
 serviceManager.FolderInfo("repo/path/")
 ```
 
+#### Getting Info of a File in Artifactory
+
+```go
+serviceManager.FileInfo("repo/path/file")
+```
+
 #### Getting a listing of files and folders within a folder in Artifactory
 
 ```go
@@ -2425,6 +2437,42 @@ lifecycleManager, err := lifecycle.New(serviceConfig)
 
 ### Using Lifecycle Services
 
+#### Creating a Release Bundle From AQL
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+aqlQuery := `items.find({"repo": "my-repo","path": ".","name": "a2.in"})`
+serviceManager.CreateReleaseBundleFromAql(rbDetails, queryParams, signingKeyName, aqlQuery)
+```
+
+#### Creating a Release Bundle From Artifacts
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+artifacts := CreateFromArtifacts{Artifacts: []ArtifactSource{
+	{
+        Path:   "repo/path/file",
+        Sha256: "3e3deb6628658a48cf0d280a2210211f9d977ec2e10a4619b95d5fb85cb10450",
+	},
+}}
+
+serviceManager.CreateReleaseBundleFromArtifacts(rbDetails, queryParams, signingKeyName, artifacts)
+```
+
 #### Creating a Release Bundle From Published Builds
 
 ```go
@@ -2507,6 +2555,24 @@ projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 ```
 
+#### Get Release Bundle Promotions
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
+optionalQueryParams := lifecycle.GetPromotionsOptionalQueryParams{
+    Include:    "MSG",
+    Offset:     1,
+    Limit:      10,
+    FilterBy:   "DEV",
+    OrderBy:    "created",
+    OrderAsc:   true,
+    ProjectKey: "default",
+}
+
+resp, err := serviceManager.GetReleaseBundleVersionPromotions(rbDetails, optionalQueryParams)
+```
+
 #### Get Release Bundle Specification
 
 ```go
@@ -2543,7 +2609,25 @@ dsParams := DistributeReleaseBundleParams{
 resp, err := serviceManager.DistributeReleaseBundle(rbDetails, dsParams)
 ```
 
-#### Delete Release Bundle
+#### Export Release Bundle Archive
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+// Specifies the path mapping for the artifacts
+// in the form of input and output regular expressions.
+// These expressions define where the artifacts are located
+// and where they should be exported.
+modifictions:= []utils.PathMapping{{
+            Input:  "(.*)/(.*)",
+            Output: "$1/mapping/$2",
+}}
+// Export & Download
+res,err:= serviceManager.ExportReleaseBundle(rbDetails, modifications, queryParams)
+```
+
+#### Delete Release Bundle Version
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
@@ -2551,7 +2635,20 @@ queryParams := CommonOptionalQueryParams{}
 queryParams.ProjectKey = "project"
 queryParams.Async = true
 
-resp, err := serviceManager.DeleteReleaseBundle(rbDetails, queryParams)
+resp, err := serviceManager.DeleteReleaseBundleVersion(rbDetails, queryParams)
+```
+
+#### Delete Release Bundle Version Promotion
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+created := "1708612052952"
+resp, err := serviceManager.DeleteReleaseBundleVersionPromotion(rbDetails, queryParams, created)
 ```
 
 #### Remote Delete Release Bundle

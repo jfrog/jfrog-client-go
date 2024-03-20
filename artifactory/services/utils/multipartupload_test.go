@@ -186,8 +186,8 @@ func TestCompleteMultipartUpload(t *testing.T) {
 		assert.Equal(t, "/api/v1/uploads/complete", r.URL.Path)
 		assert.Equal(t, fmt.Sprintf("sha1=%s", sha1), r.URL.RawQuery)
 
-		// Add the "X-JFrog-Route-To" header to the response
-		w.Header().Add(routeToHeader, nodeId)
+		// Add the "X-Artifactory-Node-Id" header to the response
+		w.Header().Add(artifactoryNodeId, nodeId)
 
 		// Send response 202 Accepted
 		w.WriteHeader(http.StatusAccepted)
