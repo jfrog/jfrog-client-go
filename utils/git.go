@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	ioutils "github.com/jfrog/gofrog/io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -164,9 +165,7 @@ func (m *GitManager) getRevisionAndBranchPath() (revision, refUrl string, err er
 	if errorutils.CheckError(err) != nil {
 		return
 	}
-	defer func() {
-		err = errors.Join(err, file.Close())
-	}()
+	defer ioutils.Close(file, &err)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {

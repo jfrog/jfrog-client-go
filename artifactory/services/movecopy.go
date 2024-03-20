@@ -2,11 +2,7 @@ package services
 
 import (
 	"errors"
-	"net/http"
-	"path"
-	"strconv"
-	"strings"
-
+	ioutils "github.com/jfrog/gofrog/io"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -16,6 +12,10 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
+	"path"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -293,12 +293,7 @@ func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (contentReader *conte
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		e := cw.Close()
-		if err == nil {
-			err = e
-		}
-	}()
+	defer ioutils.Close(cw, &err)
 	for _, tuple := range arr {
 		cr := tuple.Reader
 		for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {
