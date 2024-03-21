@@ -215,6 +215,7 @@
       - [Delete Release Bundle Version](#delete-release-bundle-version)
       - [Delete Release Bundle Version Promotion](#delete-release-bundle-version-promotion)
       - [Export Release Bundle](#export-release-bundle)
+      - [Import Release Bundle](#import-release-bundle)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
 
 ## General
@@ -2625,6 +2626,13 @@ modifictions:= []utils.PathMapping{{
 }}
 // Export & Download
 res,err:= serviceManager.ExportReleaseBundle(rbDetails, modifications, queryParams)
+```
+
+#### Import Release Bundle Archive
+
+```go
+// Imports an exported release bundle archive
+res,err:= serviceManager.releaseService.ImportReleaseBundle(filePath)
 ```
 
 #### Delete Release Bundle Version
