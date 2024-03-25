@@ -180,8 +180,9 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	}
 
 	resp, err = jc.client.Do(req)
-	jc.client.CheckRedirect = nil
-
+	if jc.client.CheckRedirect != nil {
+		jc.client.CheckRedirect = nil
+	}
 	if err != nil && redirectUrl != "" {
 		if !followRedirect {
 			log.Debug("Blocking HTTP redirect to", redirectUrl)
