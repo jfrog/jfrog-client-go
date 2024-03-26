@@ -29,7 +29,7 @@ func TestXscPostEvent(t *testing.T) {
 		AnalyzerManagerVersion: "1.1.1",  //add
 		JpdVersion:             "1.5",    //?,
 	}
-	msi, err := testsEventService.PostEvent(event)
+	msi, err := testsEventService.PostEvent(services.XscAddGeneralEventRequest{XscGeneralEvent: event})
 	assert.NoError(t, err)
 	assert.True(t, isValidUUID(msi))
 }
