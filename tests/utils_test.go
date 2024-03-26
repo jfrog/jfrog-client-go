@@ -148,7 +148,7 @@ func init() {
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
-	TestXsc = flag.Bool("test.xsc", true, "Test xsc")
+	TestXsc = flag.Bool("test.xsc", false, "Test xsc")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
 	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")

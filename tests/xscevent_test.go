@@ -9,27 +9,26 @@ import (
 	"testing"
 )
 
-var testsEventService *services.EventService
+var testsEventService *services.AnalyticsEventService
 
 func TestXscPostEvent(t *testing.T) {
 	xscDetails, client := initXscEventTest(t)
-	testsEventService = services.NewEventService(client)
+	testsEventService = services.NewAnalyticsEventService(client)
 	testsEventService.XscDetails = xscDetails
 
-	event := services.XscGeneralEvent{
-		EventType:              1, // ?
+	event := services.XscAnalyticsBasicGeneralEvent{
+		EventType:              1,
 		EventStatus:            "started",
 		Product:                "cli",
-		ProductVersion:         "2.53.1", // add cli version call
-		IsDefaultConfig:        false,    // what is this?
-		JfrogUser:              "gail",   // add cli user
-		OsPlatform:             "mac",    // add
-		OsArchitecture:         "arm",    // add
-		MachineId:              "",       //?
-		AnalyzerManagerVersion: "1.1.1",  //add
-		JpdVersion:             "1.5",    //?,
+		ProductVersion:         "2.53.1",
+		IsDefaultConfig:        false,
+		JfrogUser:              "gail",
+		OsPlatform:             "mac",
+		OsArchitecture:         "arm64",
+		MachineId:              "id",
+		AnalyzerManagerVersion: "1.1.1",
 	}
-	msi, err := testsEventService.PostEvent(services.XscAddGeneralEventRequest{XscGeneralEvent: event})
+	msi, err := testsEventService.AddGeneralEvent(services.XscAnalyticsGeneralEvent{XscAnalyticsBasicGeneralEvent: event})
 	assert.NoError(t, err)
 	assert.True(t, isValidUUID(msi))
 }
