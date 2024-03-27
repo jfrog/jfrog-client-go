@@ -47,5 +47,5 @@ func (vs *VersionService) GetVersion() (string, error) {
 
 type xscVersion struct {
 	Version  string `json:"xsc_version,omitempty"`
-	Revision string `json:"xsc_revision,omitempty"`
+	Revision string `json:"xray_version,omitempty"`
 }
