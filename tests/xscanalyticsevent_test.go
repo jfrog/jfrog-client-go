@@ -11,7 +11,7 @@ import (
 
 var testsEventService *services.AnalyticsEventService
 
-func TestXscPostEvent(t *testing.T) {
+func TestXscAddAndUpdateGeneralEvent(t *testing.T) {
 	xscDetails, client := initXscEventTest(t)
 	testsEventService = services.NewAnalyticsEventService(client)
 	testsEventService.XscDetails = xscDetails
@@ -31,6 +31,16 @@ func TestXscPostEvent(t *testing.T) {
 	msi, err := testsEventService.AddGeneralEvent(services.XscAnalyticsGeneralEvent{XscAnalyticsBasicGeneralEvent: event})
 	assert.NoError(t, err)
 	assert.True(t, isValidUUID(msi))
+
+	event = services.XscAnalyticsBasicGeneralEvent{
+		EventStatus:          "started",
+		TotalFindings:        10,
+		TotalIgnoredFindings: 5,
+		TotalScanDuration:    "15s",
+	}
+
+	err = testsEventService.UpdateGeneralEvent(services.XscAnalyticsGeneralEventFinalize{XscAnalyticsBasicGeneralEvent: event, MultiScanId: msi})
+	assert.NoError(t, err)
 }
 
 func isValidUUID(str string) bool {
