@@ -2,8 +2,12 @@ package services
 
 import (
 	"encoding/json"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
 	"path"
+	"strconv"
 )
 
 const (
@@ -45,13 +49,89 @@ func (rbs *ReleaseBundlesService) Promote(rbDetails ReleaseBundleDetails, queryP
 		queryParams:    queryParams,
 		signingKeyName: signingKeyName,
 	}
-	respBody, err := rbs.doOperation(&operation)
+	respBody, err := rbs.doPostOperation(&operation)
 	if err != nil {
 		return RbPromotionResp{}, err
 	}
 	var promotionResp RbPromotionResp
 	err = json.Unmarshal(respBody, &promotionResp)
 	return promotionResp, errorutils.CheckError(err)
+}
+
+type RbPromotionsResponse struct {
+	Promotions []RbPromotion `json:"promotions,omitempty"`
+}
+
+type RbPromotion struct {
+	Status               RbStatus    `json:"status,omitempty"`
+	RepositoryKey        string      `json:"repository_key,omitempty"`
+	ReleaseBundleName    string      `json:"release_bundle_name,omitempty"`
+	ReleaseBundleVersion string      `json:"release_bundle_version,omitempty"`
+	Environment          string      `json:"environment,omitempty"`
+	ServiceId            string      `json:"service_id,omitempty"`
+	CreatedBy            string      `json:"created_by,omitempty"`
+	Created              string      `json:"created,omitempty"`
+	CreatedMillis        json.Number `json:"created_millis,omitempty"`
+	Messages             []Message   `json:"messages,omitempty"`
+}
+
+type GetPromotionsOptionalQueryParams struct {
+	Include    string
+	Offset     int
+	Limit      int
+	FilterBy   string
+	OrderBy    string
+	OrderAsc   bool
+	ProjectKey string
+}
+
+func buildGetPromotionsQueryParams(optionalQueryParams GetPromotionsOptionalQueryParams) map[string]string {
+	params := make(map[string]string)
+	if optionalQueryParams.ProjectKey != "" {
+		params["project"] = optionalQueryParams.ProjectKey
+	}
+	if optionalQueryParams.Include != "" {
+		params["include"] = optionalQueryParams.Include
+	}
+	if optionalQueryParams.Offset > 0 {
+		params["offset"] = strconv.Itoa(optionalQueryParams.Offset)
+	}
+	if optionalQueryParams.Limit > 0 {
+		params["limit"] = strconv.Itoa(optionalQueryParams.Limit)
+	}
+	if optionalQueryParams.FilterBy != "" {
+		params["filter_by"] = optionalQueryParams.FilterBy
+	}
+	if optionalQueryParams.OrderBy != "" {
+		params["order_by"] = optionalQueryParams.OrderBy
+	}
+	if optionalQueryParams.OrderAsc {
+		params["order_asc"] = strconv.FormatBool(optionalQueryParams.OrderAsc)
+	}
+	return params
+}
+
+func (rbs *ReleaseBundlesService) GetReleaseBundleVersionPromotions(rbDetails ReleaseBundleDetails, optionalQueryParams GetPromotionsOptionalQueryParams) (response RbPromotionsResponse, err error) {
+	restApi := GetGetReleaseBundleVersionPromotionsApi(rbDetails)
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetPromotionsQueryParams(optionalQueryParams))
+	if err != nil {
+		return
+	}
+	httpClientsDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
+	resp, body, _, err := rbs.client.SendGet(requestFullUrl, true, &httpClientsDetails)
+	if err != nil {
+		return
+	}
+	log.Debug("Artifactory response:", resp.Status)
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return
+	}
+	err = errorutils.CheckError(json.Unmarshal(body, &response))
+	return
+}
+
+func GetGetReleaseBundleVersionPromotionsApi(rbDetails ReleaseBundleDetails) string {
+	return path.Join(promotionBaseApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 
 type RbPromotionParams struct {

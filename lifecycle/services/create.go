@@ -4,12 +4,13 @@ const (
 	releaseBundleBaseApi = "api/v2/release_bundle"
 )
 
-type sourceType string
+type SourceType string
 
 const (
-	artifacts      sourceType = "artifacts"
-	builds         sourceType = "builds"
-	releaseBundles sourceType = "release_bundles"
+	Aql            SourceType = "aql"
+	Artifacts      SourceType = "artifacts"
+	Builds         SourceType = "builds"
+	ReleaseBundles SourceType = "release_bundles"
 )
 
 type createOperation struct {
@@ -38,43 +39,38 @@ func (c *createOperation) getSigningKeyName() string {
 	return c.signingKeyName
 }
 
+func (rbs *ReleaseBundlesService) CreateFromAql(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, aqlQuery string) error {
+	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Aql, CreateFromAqlSource{Aql: aqlQuery})
+}
+
 func (rbs *ReleaseBundlesService) CreateFromArtifacts(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceArtifacts CreateFromArtifacts) error {
-	operation := createOperation{
-		reqBody: RbCreationBody{
-			ReleaseBundleDetails: rbDetails,
-			SourceType:           artifacts,
-			Source:               sourceArtifacts},
-		params:         params,
-		signingKeyName: signingKeyName,
-	}
-	_, err := rbs.doOperation(&operation)
-	return err
+	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Artifacts, sourceArtifacts)
 }
 
 func (rbs *ReleaseBundlesService) CreateFromBuilds(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceBuilds CreateFromBuildsSource) error {
-	operation := createOperation{
-		reqBody: RbCreationBody{
-			ReleaseBundleDetails: rbDetails,
-			SourceType:           builds,
-			Source:               sourceBuilds},
-		params:         params,
-		signingKeyName: signingKeyName,
-	}
-	_, err := rbs.doOperation(&operation)
-	return err
+	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Builds, sourceBuilds)
 }
 
 func (rbs *ReleaseBundlesService) CreateFromBundles(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceReleaseBundles CreateFromReleaseBundlesSource) error {
+	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, ReleaseBundles, sourceReleaseBundles)
+}
+
+func (rbs *ReleaseBundlesService) CreateReleaseBundle(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
+	signingKeyName string, rbSourceType SourceType, source interface{}) error {
 	operation := createOperation{
 		reqBody: RbCreationBody{
 			ReleaseBundleDetails: rbDetails,
-			SourceType:           releaseBundles,
-			Source:               sourceReleaseBundles},
+			SourceType:           rbSourceType,
+			Source:               source},
 		params:         params,
 		signingKeyName: signingKeyName,
 	}
-	_, err := rbs.doOperation(&operation)
+	_, err := rbs.doPostOperation(&operation)
 	return err
+}
+
+type CreateFromAqlSource struct {
+	Aql string `json:"aql,omitempty"`
 }
 
 type SourceBuildDetails struct {
@@ -115,6 +111,6 @@ type ReleaseBundleSource struct {
 
 type RbCreationBody struct {
 	ReleaseBundleDetails
-	SourceType sourceType  `json:"source_type,omitempty"`
+	SourceType SourceType  `json:"source_type,omitempty"`
 	Source     interface{} `json:"source,omitempty"`
 }
