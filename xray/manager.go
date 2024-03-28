@@ -198,16 +198,3 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
 	return entitlementsService.IsEntitled(featureId)
 }
-
-func (sm *XrayServicesManager) XscEnabled() (string, error) {
-	scanService := services.NewScanService(sm.client)
-	scanService.XrayDetails = sm.config.GetServiceDetails()
-	return scanService.IsXscEnabled()
-}
-
-// SendXscGitInfoRequest sends git info details to xsc service and gets multi scan id
-func (sm *XrayServicesManager) SendXscGitInfoRequest(details *services.XscGitInfoContext) (multiScanId string, err error) {
-	scanService := services.NewScanService(sm.client)
-	scanService.XrayDetails = sm.config.GetServiceDetails()
-	return scanService.SendScanGitInfoContext(details)
-}
