@@ -29,10 +29,11 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Install Go
-        uses: actions/setup-go@v3
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: 1.20.x
+          cache: false
 
       - name: Go Cache
         uses: actions/cache@v4
@@ -54,10 +55,11 @@ jobs:
         os: [ ubuntu, windows, macos ]
     runs-on: ${{ matrix.os }}-latest
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v3
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: 1.20.x
+          cache: false
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -98,10 +100,11 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Install Go
-        uses: actions/setup-go@v3
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: 1.20.x
+          cache: false
 
       - name: Go Cache
         uses: actions/cache@v4
@@ -123,10 +126,11 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Install Go
-        uses: actions/setup-go@v3
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: 1.20.x
+          cache: false
 
       - name: Go Cache
         uses: actions/cache@v4
@@ -143,10 +147,11 @@ jobs:
     name: repositories ubuntu-latest
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v3
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: 1.20.x
+          cache: false
 
       - name: Checkout code
         uses: actions/checkout@v4
