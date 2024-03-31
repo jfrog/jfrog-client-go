@@ -65,7 +65,7 @@ func (rbs *ReleaseBundlesService) CreateReleaseBundle(rbDetails ReleaseBundleDet
 		params:         params,
 		signingKeyName: signingKeyName,
 	}
-	_, err := rbs.doOperation(&operation)
+	_, err := rbs.doPostOperation(&operation)
 	return err
 }
 

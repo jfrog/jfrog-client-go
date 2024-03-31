@@ -49,7 +49,7 @@ func (rbs *ReleaseBundlesService) Promote(rbDetails ReleaseBundleDetails, queryP
 		queryParams:    queryParams,
 		signingKeyName: signingKeyName,
 	}
-	respBody, err := rbs.doOperation(&operation)
+	respBody, err := rbs.doPostOperation(&operation)
 	if err != nil {
 		return RbPromotionResp{}, err
 	}
