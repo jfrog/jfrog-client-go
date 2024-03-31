@@ -101,5 +101,6 @@ type EventStatus string
 const (
 	Started   EventStatus = "started"
 	Completed EventStatus = "completed"
+	Cancelled EventStatus = "cancelled"
 	Failed    EventStatus = "failed"
 )
