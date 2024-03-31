@@ -60,6 +60,21 @@ func (vs *AnalyticsEventService) UpdateGeneralEvent(event XscAnalyticsGeneralEve
 	return nil
 }
 
+// GetGeneralEvent returns event's data matching the provided multi scan id.
+func (vs *AnalyticsEventService) GetGeneralEvent(msi string) (*XscAnalyticsGeneralEvent, error) {
+	httpDetails := vs.XscDetails.CreateHttpClientDetails()
+	resp, body, _, err := vs.client.SendGet(vs.XscDetails.GetUrl()+"api/v1/event/"+msi, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		return nil, errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	}
+	var response XscAnalyticsGeneralEvent
+	err = json.Unmarshal(body, &response)
+	return &response, errorutils.CheckError(err)
+}
+
 // XscAnalyticsGeneralEvent extend the basic struct with Frogbot related info.
 type XscAnalyticsGeneralEvent struct {
 	XscAnalyticsBasicGeneralEvent
