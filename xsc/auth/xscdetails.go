@@ -34,6 +34,9 @@ func (ds *XscDetails) getXscVersion() (string, error) {
 		SetServiceDetails(cd).
 		SetCertificatesPath(cd.GetClientCertPath()).
 		Build()
+	if err != nil {
+		return "", err
+	}
 	sm, err := xsc.New(serviceConfig)
 	if err != nil {
 		return "", err

@@ -261,10 +261,11 @@ content of this repository is deleted.
 #### Test Types
 
 | Type                 | Description            | Prerequisites                   |
-| -------------------- | ---------------------- | ------------------------------- |
+|----------------------|------------------------|---------------------------------|
 | `-test.artifactory`  | Artifactory tests      | Artifactory Pro                 |
 | `-test.distribution` | Distribution tests     | Artifactory with Distribution   |
 | `-test.xray`         | Xray tests             | Artifactory with Xray           |
+| `-test.xsc`          | Xsc tests              | Xray with Xsc                   |
 | `-test.pipelines`    | Pipelines tests        | JFrog Pipelines                 |
 | `-test.access`       | Access tests           | Artifactory Pro                 |
 | `-test.repositories` | Repositories tests     | Artifactory Pro                 |
@@ -273,10 +274,11 @@ content of this repository is deleted.
 #### Connection Details
 
 | Flag                | Description                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------ |
+|---------------------|--------------------------------------------------------------------------------------------------------|
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
+| `-xsc.url`          | [Optional] JFrog Xsc URL.                                                                              |
 | `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
 | `-access.url`       | [Optional] JFrog Access URL.                                                                           |
 | `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
