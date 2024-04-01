@@ -156,7 +156,7 @@ func init() {
 	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
-	XscUrl = flag.String("xsc.url", "", "Xray url")
+	XscUrl = flag.String("xsc.url", "", "Xsc url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
 	AccessUrl = flag.String("access.url", "http://localhost:8081/access", "Access url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")

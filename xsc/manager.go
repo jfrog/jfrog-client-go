@@ -55,6 +55,12 @@ func (sm *XscServicesManager) AddAnalyticsGeneralEvent(event services.XscAnalyti
 	return eventService.AddGeneralEvent(event)
 }
 
+func (sm *XscServicesManager) SendXscLogErrorRequest(errorLog *services.ExternalErrorLog) error {
+	logErrorService := services.NewLogErrorEventService(sm.client)
+	logErrorService.XscDetails = sm.config.GetServiceDetails()
+	return logErrorService.SendLogErrorEvent(errorLog)
+}
+
 // UpdateAnalyticsGeneralEvent Upon completion of the scan and we have all the results to report on,
 // we send a finalized analytics metrics event with information matching an existing event's msi.
 func (sm *XscServicesManager) UpdateAnalyticsGeneralEvent(event services.XscAnalyticsGeneralEventFinalize) error {
