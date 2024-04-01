@@ -602,3 +602,26 @@ func ExtractSha256FromResponseBody(body []byte) (string, error) {
 func Pointer[K any](val K) *K {
 	return &val
 }
+
+func SetEnvWithResetCallback(key, value string) func() {
+	oldValue, exist := os.LookupEnv(key)
+	errMsg := "failed %s %s as environment variable. Cause: %s"
+
+	if err := os.Setenv(key, value); err != nil {
+		log.Debug(fmt.Sprintf(errMsg, "setting", key, err.Error()))
+		return func() {}
+	}
+
+	if exist {
+		return func() {
+			if err := os.Setenv(key, oldValue); err != nil {
+				log.Debug(fmt.Sprintf(errMsg, "setting", key, err.Error()))
+			}
+		}
+	}
+	return func() {
+		if err := os.Unsetenv(key); err != nil {
+			log.Debug(fmt.Sprintf(errMsg, "unsetting", key, err.Error()))
+		}
+	}
+}
