@@ -170,9 +170,17 @@
       - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
       - [Get Entitlement info](#get-entitlement-info)
-    - [Using XSC Service](#using-xsc-service)
-      - [Check if xsc is enabled](#check-if-xsc-is-enabled)
-      - [Send git info details to xsc](#send-git-info-details-to-xsc)
+    - [XSC API](#xsc-apis)
+      - [Creating XSC Service Manager](#creating-xray-service-manager)
+      - [Creating XSC Details](#creating-xsc-details)
+      - [Creating XSC Service Config](#creating-xsc-service-config)
+      - [Creating New XSC Service Manager](#creating-new-xsc-service-manager)
+      - [Using XSC Services](#using-xsc-services)
+      - [Fetching XSC's Version](#fetching-xscs-version)
+      - [Report XSC analytics metrics](#report-xsc-analytics-metrics)
+        - [Add analytics general event](#add-analytics-general-event)
+        - [Update analytics general event](#update-analytics-general-event)
+        - [Get analytics general event](#get-analytics-general-event)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -261,7 +269,7 @@ content of this repository is deleted.
 #### Test Types
 
 | Type                 | Description            | Prerequisites                   |
-|----------------------|------------------------|---------------------------------|
+| -------------------- | ---------------------- | ------------------------------- |
 | `-test.artifactory`  | Artifactory tests      | Artifactory Pro                 |
 | `-test.distribution` | Distribution tests     | Artifactory with Distribution   |
 | `-test.xray`         | Xray tests             | Artifactory with Xray           |
@@ -274,7 +282,7 @@ content of this repository is deleted.
 #### Connection Details
 
 | Flag                | Description                                                                                            |
-|---------------------|--------------------------------------------------------------------------------------------------------|
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
@@ -2235,20 +2243,88 @@ artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
     isEntitled, err := xrayManager.IsEntitled(featureId)
 ```
 
-### Using XSC Service
 
-#### Check if xsc is enabled
+## XSC APIs
+
+### Creating XSC Service Manager
+
+#### Creating XSC Details
 
 ```go
-// Will try to get XSC version. If route is not available, user is not entitled for XSC.
-xscVersion, err := scanService.IsXscEnabled()
+xscDetails := auth.NewXscDetails()
+xscDetails.SetUrl("http://localhost:8081/xsc")
+xscDetails.SetSshKeyPath("path/to/.ssh/")
+xscDetails.SetApiKey("apikey")
+xscDetails.SetUser("user")
+xscDetails.SetPassword("password")
+xscDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+xscDetails.SetClientCertPath("path/to/.cer")
+xscDetails.SetClientCertKeyPath("path/to/.key")
 ```
 
-#### Send git info details to xsc
+#### Creating XSC Service Config
 
 ```go
-// Details are the git info details (gitRepoUrl, branchName, commitHash are required fields). Returns multi scan id.
-multiScanId, err := scanService.SendScanGitInfoContext(details)
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(xscDetails).
+    SetCertificatesPath(certPath).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(8).
+    Build()
+```
+
+#### Creating New XSC Service Manager
+
+```go
+xscManager, err := xsc.New(serviceConfig)
+```
+
+### Using XSC Services
+
+#### Fetching XSC's Version
+
+```go
+version, err := xscManager.GetVersion()
+```
+
+#### Report XSC analytics metrics
+#### Add analytics general event
+Sent XSC a new event which contains analytics data, and get multi-scan id back from XSC.
+```go
+event := services.XscAnalyticsGeneralEvent{
+	XscAnalyticsBasicGeneralEvent: services.XscAnalyticsBasicGeneralEvent{
+            EventType:              services.CliEventType,
+            Product:                services.CliProduct,
+            ProductVersion:         "2.53.1",
+            IsDefaultConfig:        false,
+            JfrogUser:              "gail",
+            OsPlatform:             "mac",
+            OsArchitecture:         "arm64",
+            AnalyzerManagerVersion: "1.1.1",
+            EventStatus:            services.Started,
+}}
+msi, err := xscManager.AddAnalyticsGeneralEvent(event)
+```
+#### Update analytics general event
+Sent XSC a finalized analytics metrics event with information matching an existing event's msi.
+```go
+finalizeEvent := services.XscAnalyticsGeneralEventFinalize{
+    MultiScanId: msi,
+    XscAnalyticsBasicGeneralEvent: services.XscAnalyticsBasicGeneralEvent{
+        EventStatus:          services.Completed,
+        TotalFindings:        10,
+        TotalIgnoredFindings: 5,
+        TotalScanDuration:    "15s",
+    },
+}
+err := xscManager.UpdateAnalyticsGeneralEvent(finalizeEvent)
+```
+
+#### Get analytics general event
+Get a general event from XSC matching the provided msi.
+```go
+event, err := xscManager.GetAnalyticsGeneralEvent(msi)
 ```
 
 ## Pipelines APIs
