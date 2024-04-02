@@ -84,8 +84,8 @@ func (vs *AnalyticsEventService) GetGeneralEvent(msi string) (*XscAnalyticsGener
 // XscAnalyticsGeneralEvent extend the basic struct with Frogbot related info.
 type XscAnalyticsGeneralEvent struct {
 	XscAnalyticsBasicGeneralEvent
-	GitInfo       *services.XscGitInfoContext
-	IsGitInfoFlow bool `json:"is_gitinfo_flow,omitempty"`
+	GitInfo       *services.XscGitInfoContext `json:"gitinfo,omitempty"`
+	IsGitInfoFlow bool                        `json:"is_gitinfo_flow,omitempty"`
 }
 
 type XscAnalyticsGeneralEventFinalize struct {
@@ -108,7 +108,6 @@ type XscAnalyticsBasicGeneralEvent struct {
 	AnalyzerManagerVersion string      `json:"analyzer_manager_version,omitempty"`
 	JpdVersion             string      `json:"jpd_version,omitempty"`
 	TotalScanDuration      string      `json:"total_scan_duration,omitempty"`
-	FrogbotSourceMsi       string      `json:"frogbot_source_msi,omitempty"`
 	FrogbotScanType        string      `json:"frogbot_scan_type,omitempty"`
 	FrogbotCiProvider      string      `json:"frogbot_ci_provider,omitempty"`
 }
