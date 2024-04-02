@@ -2,12 +2,18 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"net/http"
+)
+
+const (
+	AnalyticsMetricsMinXscVersion = "1.7.1"
+	xscEventApi                   = "api/v1/event"
 )
 
 type AnalyticsEventService struct {
@@ -31,7 +37,7 @@ func (vs *AnalyticsEventService) AddGeneralEvent(event XscAnalyticsGeneralEvent)
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
-	resp, body, err := vs.client.SendPost(vs.XscDetails.GetUrl()+"api/v1/event", requestContent, &httpDetails)
+	resp, body, err := vs.client.SendPost(vs.XscDetails.GetUrl()+xscEventApi, requestContent, &httpDetails)
 	if err != nil {
 		return "", err
 	}
@@ -50,7 +56,7 @@ func (vs *AnalyticsEventService) UpdateGeneralEvent(event XscAnalyticsGeneralEve
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	resp, body, err := vs.client.SendPut(vs.XscDetails.GetUrl()+"api/v1/event", requestContent, &httpDetails)
+	resp, body, err := vs.client.SendPut(vs.XscDetails.GetUrl()+xscEventApi, requestContent, &httpDetails)
 	if err != nil {
 		return err
 	}
@@ -63,7 +69,7 @@ func (vs *AnalyticsEventService) UpdateGeneralEvent(event XscAnalyticsGeneralEve
 // GetGeneralEvent returns event's data matching the provided multi scan id.
 func (vs *AnalyticsEventService) GetGeneralEvent(msi string) (*XscAnalyticsGeneralEvent, error) {
 	httpDetails := vs.XscDetails.CreateHttpClientDetails()
-	resp, body, _, err := vs.client.SendGet(vs.XscDetails.GetUrl()+"api/v1/event/"+msi, true, &httpDetails)
+	resp, body, _, err := vs.client.SendGet(fmt.Sprintf("%s%s/%s", vs.XscDetails.GetUrl(), xscEventApi, msi), true, &httpDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +94,9 @@ type XscAnalyticsGeneralEventFinalize struct {
 }
 
 type XscAnalyticsBasicGeneralEvent struct {
-	EventType              int         `json:"event_type,omitempty"`
+	EventType              EventType   `json:"event_type,omitempty"`
 	EventStatus            EventStatus `json:"event_status,omitempty"`
-	Product                string      `json:"product,omitempty"`
+	Product                ProductName `json:"product,omitempty"`
 	ProductVersion         string      `json:"product_version,omitempty"`
 	TotalFindings          int         `json:"total_findings,omitempty"`
 	TotalIgnoredFindings   int         `json:"total_ignored_findings,omitempty"`
@@ -118,4 +124,18 @@ const (
 	Completed EventStatus = "completed"
 	Cancelled EventStatus = "cancelled"
 	Failed    EventStatus = "failed"
+)
+
+type ProductName string
+
+const (
+	CliProduct     ProductName = "cli"
+	FrogbotProduct ProductName = "frogbot"
+)
+
+type EventType int
+
+const (
+	CliEventType EventType = 1
+	FrogbotType  EventType = 8
 )

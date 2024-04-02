@@ -17,9 +17,9 @@ func TestXscAddAndUpdateGeneralEvent(t *testing.T) {
 	testsEventService.XscDetails = xscDetails
 
 	event := services.XscAnalyticsGeneralEvent{XscAnalyticsBasicGeneralEvent: services.XscAnalyticsBasicGeneralEvent{
-		EventType:              1,
+		EventType:              services.CliEventType,
 		EventStatus:            services.Started,
-		Product:                "cli",
+		Product:                services.CliProduct,
 		ProductVersion:         "2.53.1",
 		IsDefaultConfig:        false,
 		JfrogUser:              "gail",
@@ -67,7 +67,7 @@ func isValidUUID(str string) bool {
 
 func initXscEventTest(t *testing.T) (xscDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
 	var err error
-	initXscTest(t)
+	initXscTest(t, services.AnalyticsMetricsMinXscVersion)
 	xscDetails = GetXscDetails()
 	client, err = jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xscDetails.GetClientCertPath()).
