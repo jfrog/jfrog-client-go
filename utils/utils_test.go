@@ -325,9 +325,10 @@ func TestSetEnvWithResetCallback(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.init()
-			resetCallback := SetEnvWithResetCallback(tt.args.key, tt.args.value)
+			resetCallback, err := SetEnvWithResetCallback(tt.args.key, tt.args.value)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.args.value, os.Getenv(tt.args.key))
-			resetCallback()
+			assert.NoError(t, resetCallback())
 			tt.finish()
 		})
 	}
