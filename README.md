@@ -2289,7 +2289,7 @@ version, err := xscManager.GetVersion()
 ```
 
 #### Report XSC analytics metrics
-#### Add analytics general event
+##### Add analytics general event
 Sent XSC a new event which contains analytics data, and get multi-scan id back from XSC.
 ```go
 event := services.XscAnalyticsGeneralEvent{
@@ -2306,7 +2306,7 @@ event := services.XscAnalyticsGeneralEvent{
 }}
 msi, err := xscManager.AddAnalyticsGeneralEvent(event)
 ```
-#### Update analytics general event
+##### Update analytics general event
 Sent XSC a finalized analytics metrics event with information matching an existing event's msi.
 ```go
 finalizeEvent := services.XscAnalyticsGeneralEventFinalize{
@@ -2321,7 +2321,7 @@ finalizeEvent := services.XscAnalyticsGeneralEventFinalize{
 err := xscManager.UpdateAnalyticsGeneralEvent(finalizeEvent)
 ```
 
-#### Get analytics general event
+##### Get analytics general event
 Get a general event from XSC matching the provided msi.
 ```go
 event, err := xscManager.GetAnalyticsGeneralEvent(msi)
