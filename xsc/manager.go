@@ -61,10 +61,17 @@ func (sm *XscServicesManager) SendXscLogErrorRequest(errorLog *services.External
 	return logErrorService.SendLogErrorEvent(errorLog)
 }
 
-// UpdateAnalyticsGeneralEvent Upon completion of the scan and we have all the results to report on,
+// UpdateAnalyticsGeneralEvent upon completion of the scan and we have all the results to report on,
 // we send a finalized analytics metrics event with information matching an existing event's msi.
 func (sm *XscServicesManager) UpdateAnalyticsGeneralEvent(event services.XscAnalyticsGeneralEventFinalize) error {
 	eventService := services.NewAnalyticsEventService(sm.client)
 	eventService.XscDetails = sm.config.GetServiceDetails()
 	return eventService.UpdateGeneralEvent(event)
+}
+
+// GetAnalyticsGeneralEvent returns general event that match the msi provided.
+func (sm *XscServicesManager) GetAnalyticsGeneralEvent(msi string) (*services.XscAnalyticsGeneralEvent, error) {
+	eventService := services.NewAnalyticsEventService(sm.client)
+	eventService.XscDetails = sm.config.GetServiceDetails()
+	return eventService.GetGeneralEvent(msi)
 }
