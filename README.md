@@ -170,9 +170,17 @@
       - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
       - [Get Entitlement info](#get-entitlement-info)
-    - [Using XSC Service](#using-xsc-service)
-      - [Check if xsc is enabled](#check-if-xsc-is-enabled)
-      - [Send git info details to xsc](#send-git-info-details-to-xsc)
+    - [XSC API](#xsc-apis)
+      - [Creating XSC Service Manager](#creating-xray-service-manager)
+      - [Creating XSC Details](#creating-xsc-details)
+      - [Creating XSC Service Config](#creating-xsc-service-config)
+      - [Creating New XSC Service Manager](#creating-new-xsc-service-manager)
+      - [Using XSC Services](#using-xsc-services)
+      - [Fetching XSC's Version](#fetching-xscs-version)
+      - [Report XSC analytics metrics](#report-xsc-analytics-metrics)
+        - [Add analytics general event](#add-analytics-general-event)
+        - [Update analytics general event](#update-analytics-general-event)
+        - [Get analytics general event](#get-analytics-general-event)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -261,7 +269,7 @@ content of this repository is deleted.
 #### Test Types
 
 | Type                 | Description            | Prerequisites                   |
-|----------------------|------------------------|---------------------------------|
+| -------------------- | ---------------------- | ------------------------------- |
 | `-test.artifactory`  | Artifactory tests      | Artifactory Pro                 |
 | `-test.distribution` | Distribution tests     | Artifactory with Distribution   |
 | `-test.xray`         | Xray tests             | Artifactory with Xray           |
@@ -274,7 +282,7 @@ content of this repository is deleted.
 #### Connection Details
 
 | Flag                | Description                                                                                            |
-|---------------------|--------------------------------------------------------------------------------------------------------|
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
