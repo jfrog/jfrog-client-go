@@ -36,6 +36,7 @@ type MinVersionProduct string
 const (
 	Artifactory  MinVersionProduct = "JFrog Artifactory"
 	Xray         MinVersionProduct = "JFrog Xray"
+	Xsc          MinVersionProduct = "JFrog Xsc"
 	DataTransfer MinVersionProduct = "Data Transfer"
 	DockerApi    MinVersionProduct = "Docker API"
 	Projects     MinVersionProduct = "JFrog Projects"
@@ -600,4 +601,19 @@ func ExtractSha256FromResponseBody(body []byte) (string, error) {
 // Convert any value to a pointer to that value
 func Pointer[K any](val K) *K {
 	return &val
+}
+
+func SetEnvWithResetCallback(key, value string) (func() error, error) {
+	oldValue, exist := os.LookupEnv(key)
+	if err := os.Setenv(key, value); err != nil {
+		return func() error { return nil }, errorutils.CheckError(err)
+	}
+	if exist {
+		return func() error {
+			return errorutils.CheckError(os.Setenv(key, oldValue))
+		}, nil
+	}
+	return func() error {
+		return errorutils.CheckError(os.Unsetenv(key))
+	}, nil
 }
