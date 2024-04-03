@@ -605,27 +605,15 @@ func Pointer[K any](val K) *K {
 
 func SetEnvWithResetCallback(key, value string) (func() error, error) {
 	oldValue, exist := os.LookupEnv(key)
-	errMsg := "failed %s %s as environment variable. Cause: %s"
-
 	if err := os.Setenv(key, value); err != nil {
-		log.Debug(fmt.Sprintf(errMsg, "setting", key, err.Error()))
-		return func() error { return nil }, err
+		return func() error { return nil }, errorutils.CheckError(err)
 	}
-
 	if exist {
 		return func() error {
-			err := os.Setenv(key, oldValue)
-			if err != nil {
-				log.Debug(fmt.Sprintf(errMsg, "setting", key, err.Error()))
-			}
-			return err
+			return errorutils.CheckError(os.Setenv(key, oldValue))
 		}, nil
 	}
 	return func() error {
-		err := os.Unsetenv(key)
-		if err != nil {
-			log.Debug(fmt.Sprintf(errMsg, "unsetting", key, err.Error()))
-		}
-		return err
+		return errorutils.CheckError(os.Unsetenv(key))
 	}, nil
 }

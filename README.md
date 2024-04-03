@@ -170,7 +170,7 @@
       - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
       - [Get Entitlement info](#get-entitlement-info)
-    - [XSC API](#xsc-apis)
+    - [XSC APIs](#xsc-apis)
       - [Creating XSC Service Manager](#creating-xray-service-manager)
       - [Creating XSC Details](#creating-xsc-details)
       - [Creating XSC Service Config](#creating-xsc-service-config)
