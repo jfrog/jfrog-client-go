@@ -10,7 +10,10 @@ import (
 	"net/http"
 )
 
-const postLogErrorAPI = "api/v1/event/logMessage"
+const (
+	postLogErrorAPI       = "api/v1/event/logMessage"
+	LogErrorMinXscVersion = AnalyticsMetricsMinXscVersion
+)
 
 type LogErrorEventService struct {
 	client     *jfroghttpclient.JfrogHttpClient
