@@ -42,6 +42,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayAuth "github.com/jfrog/jfrog-client-go/xray/auth"
 	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
+	xscAuth "github.com/jfrog/jfrog-client-go/xsc/auth"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,6 +50,7 @@ var (
 	TestArtifactory          *bool
 	TestDistribution         *bool
 	TestXray                 *bool
+	TestXsc                  *bool
 	TestPipelines            *bool
 	TestAccess               *bool
 	TestRepositories         *bool
@@ -56,6 +58,7 @@ var (
 	RtUrl                    *string
 	DistUrl                  *string
 	XrayUrl                  *string
+	XscUrl                   *string
 	PipelinesUrl             *string
 	RtUser                   *string
 	RtPassword               *string
@@ -145,6 +148,7 @@ func init() {
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
+	TestXsc = flag.Bool("test.xsc", false, "Test xsc")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
 	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
@@ -152,6 +156,7 @@ func init() {
 	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
+	XscUrl = flag.String("xsc.url", "", "Xsc url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
 	AccessUrl = flag.String("access.url", "http://localhost:8081/access", "Access url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
@@ -561,6 +566,13 @@ func GetXrayDetails() auth.ServiceDetails {
 	xrayDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*XrayUrl))
 	setAuthenticationDetail(xrayDetails)
 	return xrayDetails
+}
+
+func GetXscDetails() auth.ServiceDetails {
+	xscDetails := xscAuth.NewXscDetails()
+	xscDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*XscUrl))
+	setAuthenticationDetail(xscDetails)
+	return xscDetails
 }
 
 func GetPipelinesDetails() auth.ServiceDetails {
