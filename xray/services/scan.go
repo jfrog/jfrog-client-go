@@ -2,11 +2,12 @@ package services
 
 import (
 	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -349,11 +350,24 @@ type ImpactPathNode struct {
 }
 
 type Cve struct {
-	Id           string `json:"cve,omitempty"`
-	CvssV2Score  string `json:"cvss_v2_score,omitempty"`
-	CvssV2Vector string `json:"cvss_v2_vector,omitempty"`
-	CvssV3Score  string `json:"cvss_v3_score,omitempty"`
-	CvssV3Vector string `json:"cvss_v3_vector,omitempty"`
+	Id           string         `json:"cve,omitempty"`
+	CvssV2Score  string         `json:"cvss_v2_score,omitempty"`
+	CvssV2Vector string         `json:"cvss_v2_vector,omitempty"`
+	CvssV3Score  string         `json:"cvss_v3_score,omitempty"`
+	CvssV3Vector string         `json:"cvss_v3_vector,omitempty"`
+	Cwe          []string       `json:"cwe,omitempty"`
+	CweDetails   map[string]Cwe `json:"cwe_details,omitempty"`
+}
+
+type Cwe struct {
+	Name        string        `json:"name,omitempty"`
+	Description string        `json:"description,omitempty"`
+	Categories  []CweCategory `json:"categories,omitempty"`
+}
+
+type CweCategory struct {
+	Category string `json:"category,omitempty"`
+	Rank     string `json:"rank,omitempty"`
 }
 
 type ExtendedInformation struct {
