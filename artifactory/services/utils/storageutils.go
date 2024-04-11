@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 const (
@@ -125,4 +126,25 @@ type FileStoreSummary struct {
 	TotalSpace       string `json:"totalSpace,omitempty"`
 	UsedSpace        string `json:"usedSpace,omitempty"`
 	FreeSpace        string `json:"freeSpace,omitempty"`
+}
+
+func ConvertIntToStorageSizeString(num int64) string {
+	if num > SizeTiB {
+		newNum := float64(num) / float64(SizeTiB)
+		stringNum := fmt.Sprintf("%.1f", newNum)
+		return stringNum + "TB"
+	}
+	if num > SizeGiB {
+		newNum := float64(num) / float64(SizeGiB)
+		stringNum := fmt.Sprintf("%.1f", newNum)
+		return stringNum + "GB"
+	}
+	if num > SizeMiB {
+		newNum := float64(num) / float64(SizeMiB)
+		stringNum := fmt.Sprintf("%.1f", newNum)
+		return stringNum + "MB"
+	}
+	newNum := float64(num) / float64(SizeKib)
+	stringNum := fmt.Sprintf("%.1f", newNum)
+	return stringNum + "KB"
 }
