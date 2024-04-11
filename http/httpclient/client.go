@@ -36,7 +36,13 @@ type HttpClient struct {
 const (
 	apiKeyPrefix        = "AKCp8"
 	apiKeyMinimalLength = 73
+	uberTraceIdHeader   = "uber-trace-id"
 )
+
+// If set, the Trace ID token will be used to generate an Uber Trace ID header which will be attached to every request.
+// This allows users to easily identify which logs on the server side are related to requests sent from this client.
+// The expected token value is 16 hexadecimal characters.
+var TraceIdToken string
 
 func IsApiKey(key string) bool {
 	return strings.HasPrefix(key, apiKeyPrefix) && len(key) >= apiKeyMinimalLength
@@ -171,6 +177,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	setAuthentication(req, httpClientsDetails)
 	addUserAgentHeader(req)
 	copyHeaders(httpClientsDetails, req)
+	addUberTraceIdHeaderIfSet(req)
 
 	if !followRedirect || (followRedirect && req.Method == http.MethodPost) {
 		jc.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -218,6 +225,16 @@ func copyHeaders(httpClientsDetails httputils.HttpClientDetails, req *http.Reque
 			req.Header.Set(name, httpClientsDetails.Headers[name])
 		}
 	}
+}
+
+// If a trace ID is set, this function will generate an Uber Trace ID header and will attach it to every request.
+// Format of the header: {trace-id}:{span-id}:{parent-span-id}:{flags}
+// We set the trace-id and span-id to the same value, and the rest to 0.
+func addUberTraceIdHeaderIfSet(req *http.Request) {
+	if TraceIdToken == "" {
+		return
+	}
+	req.Header.Set(uberTraceIdHeader, fmt.Sprintf("%s:%s:0:0", TraceIdToken, TraceIdToken))
 }
 
 func setRequestHeaders(httpClientsDetails httputils.HttpClientDetails, size int64, req *http.Request) {
