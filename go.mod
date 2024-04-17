@@ -1,6 +1,6 @@
 module github.com/jfrog/jfrog-client-go
 
-go 1.20
+go 1.22
 
 require (
 	github.com/ProtonMail/go-crypto v1.0.0
