@@ -35,12 +35,12 @@ jobs:
           go-version: 1.22.x
           cache: false
 
-      - name: Go Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
+#      - name: Go Cache
+#        uses: actions/cache@v4
+#        with:
+#          path: ~/go/pkg/mod
+#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+#          restore-keys: ${{ runner.os }}-go-
 
       - name: Lint
         run: go vet -v ./...
