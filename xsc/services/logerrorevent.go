@@ -43,3 +43,7 @@ func (les *LogErrorEventService) SendLogErrorEvent(errorLog *ExternalErrorLog) e
 	}
 	return errorutils.CheckResponseStatusWithBody(response, body, http.StatusCreated)
 }
+
+func (les *LogErrorEventService) FunctionToDelete() (string, error) {
+	return "", nil
+}
