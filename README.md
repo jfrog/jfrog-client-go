@@ -424,6 +424,8 @@ params.SplitCount = 10
 // The minimum file size in MiB required to attempt a multi-part upload.
 // MinSplitSize default value: 200
 params.MinSplitSize = 100
+// The upload chunk size in MiB that can be concurrently uploaded during a multi-part upload.
+params.ChunkSize = 5
 // The min file size in bytes for "checksum deploy".
 // "Checksum deploy" is the action of calculating the file checksum locally, before
 // the upload, and skipping the actual file transfer if the file already
