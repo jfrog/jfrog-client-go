@@ -109,7 +109,7 @@ func TestUploadPartsConcurrentlyTooManyAttempts(t *testing.T) {
 	defer cleanUp()
 
 	// Write something to the file
-	buf := make([]byte, uploadPartSize*3)
+	buf := make([]byte, DefaultUploadChunkSize*3)
 	_, err := rand.Read(buf)
 	assert.NoError(t, err)
 	_, err = tempFile.Write(buf)
@@ -146,7 +146,7 @@ func TestUploadPartsConcurrentlyTooManyAttempts(t *testing.T) {
 
 	// Execute uploadPartsConcurrently
 	fileSize := int64(len(buf))
-	err = multipartUpload.uploadPartsConcurrently("", fileSize, splitCount, tempFile.Name(), nil, &httputils.HttpClientDetails{})
+	err = multipartUpload.uploadPartsConcurrently("", fileSize, DefaultUploadChunkSize, splitCount, tempFile.Name(), nil, &httputils.HttpClientDetails{})
 	assert.ErrorIs(t, err, errTooManyAttempts)
 }
 
@@ -285,19 +285,19 @@ var calculatePartSizeProvider = []struct {
 	partNumber       int64
 	expectedPartSize int64
 }{
-	{uploadPartSize - 1, 0, uploadPartSize - 1},
-	{uploadPartSize, 0, uploadPartSize},
-	{uploadPartSize + 1, 0, uploadPartSize},
+	{DefaultUploadChunkSize - 1, 0, DefaultUploadChunkSize - 1},
+	{DefaultUploadChunkSize, 0, DefaultUploadChunkSize},
+	{DefaultUploadChunkSize + 1, 0, DefaultUploadChunkSize},
 
-	{uploadPartSize*2 - 1, 1, uploadPartSize - 1},
-	{uploadPartSize * 2, 1, uploadPartSize},
-	{uploadPartSize*2 + 1, 1, uploadPartSize},
+	{DefaultUploadChunkSize*2 - 1, 1, DefaultUploadChunkSize - 1},
+	{DefaultUploadChunkSize * 2, 1, DefaultUploadChunkSize},
+	{DefaultUploadChunkSize*2 + 1, 1, DefaultUploadChunkSize},
 }
 
 func TestCalculatePartSize(t *testing.T) {
 	for _, testCase := range calculatePartSizeProvider {
 		t.Run(fmt.Sprintf("fileSize: %d partNumber: %d", testCase.fileSize, testCase.partNumber), func(t *testing.T) {
-			assert.Equal(t, testCase.expectedPartSize, calculatePartSize(testCase.fileSize, testCase.partNumber))
+			assert.Equal(t, testCase.expectedPartSize, calculatePartSize(testCase.fileSize, testCase.partNumber, DefaultUploadChunkSize))
 		})
 	}
 }
@@ -308,19 +308,19 @@ var calculateNumberOfPartsProvider = []struct {
 }{
 	{0, 0},
 	{1, 1},
-	{uploadPartSize - 1, 1},
-	{uploadPartSize, 1},
-	{uploadPartSize + 1, 2},
+	{DefaultUploadChunkSize - 1, 1},
+	{DefaultUploadChunkSize, 1},
+	{DefaultUploadChunkSize + 1, 2},
 
-	{uploadPartSize*2 - 1, 2},
-	{uploadPartSize * 2, 2},
-	{uploadPartSize*2 + 1, 3},
+	{DefaultUploadChunkSize*2 - 1, 2},
+	{DefaultUploadChunkSize * 2, 2},
+	{DefaultUploadChunkSize*2 + 1, 3},
 }
 
 func TestCalculateNumberOfParts(t *testing.T) {
 	for _, testCase := range calculateNumberOfPartsProvider {
 		t.Run(fmt.Sprintf("fileSize: %d", testCase.fileSize), func(t *testing.T) {
-			assert.Equal(t, testCase.expectedNumberOfParts, calculateNumberOfParts(testCase.fileSize))
+			assert.Equal(t, testCase.expectedNumberOfParts, calculateNumberOfParts(testCase.fileSize, DefaultUploadChunkSize))
 		})
 	}
 }
