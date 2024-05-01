@@ -32,6 +32,8 @@ type OtherComponentIds struct {
 type GraphNode struct {
 	// Node parent (for internal use)
 	Parent *GraphNode `json:"-"`
+	// The "classifier" attribute in a Maven pom.xml specifies an additional qualifier for a dependency
+	Classifier *string `json:"-"`
 	// Node file types (tar, jar, zip, pom)
 	Types *[]string `json:"-"`
 	Id    string    `json:"component_id,omitempty"`
