@@ -54,7 +54,7 @@ const (
 
 	// Sizes and limits constants
 	MaxMultipartUploadFileSize       = SizeTiB * 5
-	uploadPartSize             int64 = SizeMiB * 20
+	DefaultUploadChunkSize     int64 = SizeMiB * 20
 
 	// Retries and polling constants
 	retriesInterval = time.Second * 5
@@ -122,13 +122,14 @@ type getConfigResponse struct {
 	Supported bool `json:"supported,omitempty"`
 }
 
-func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, fileSize int64, sha1 string, progress ioutils.ProgressMgr, splitCount int) (err error) {
+func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, fileSize int64, sha1 string,
+	progress ioutils.ProgressMgr, splitCount int, chunkSize int64) (err error) {
 	repoAndPath := strings.SplitN(targetPath, "/", 2)
 	repoKey := repoAndPath[0]
 	repoPath := repoAndPath[1]
 	logMsgPrefix := fmt.Sprintf("[Multipart upload %s] ", repoPath)
 
-	token, err := mu.createMultipartUpload(repoKey, repoPath, calculatePartSize(fileSize, 0))
+	token, err := mu.createMultipartUpload(repoKey, repoPath, calculatePartSize(fileSize, 0, chunkSize))
 	if err != nil {
 		return
 	}
@@ -154,7 +155,7 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 		}
 	}()
 
-	if err = mu.uploadPartsConcurrently(logMsgPrefix, fileSize, splitCount, localPath, progressReader, multipartUploadClient); err != nil {
+	if err = mu.uploadPartsConcurrently(logMsgPrefix, fileSize, chunkSize, splitCount, localPath, progressReader, multipartUploadClient); err != nil {
 		return
 	}
 
@@ -175,9 +176,9 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 	return mu.completeAndPollForStatus(logMsgPrefix, uint(mu.client.GetHttpClient().GetRetries())+1, sha1, multipartUploadClient, progressReader)
 }
 
-func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize int64, splitCount int, localPath string, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails) (err error) {
-	numberOfParts := calculateNumberOfParts(fileSize)
-	log.Info(fmt.Sprintf("%sSplitting file to %d parts, using %d working threads for uploading...", logMsgPrefix, numberOfParts, splitCount))
+func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize, chunkSize int64, splitCount int, localPath string, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails) (err error) {
+	numberOfParts := calculateNumberOfParts(fileSize, chunkSize)
+	log.Info(fmt.Sprintf("%sSplitting file to %d parts of %s each, using %d working threads for uploading...", logMsgPrefix, numberOfParts, ConvertIntToStorageSizeString(chunkSize), splitCount))
 	producerConsumer := parallel.NewRunner(splitCount, uint(numberOfParts), false)
 
 	wg := new(sync.WaitGroup)
@@ -186,7 +187,7 @@ func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize
 	attemptsAllowed.Add(uint64(numberOfParts) * uint64(mu.client.GetHttpClient().GetRetries()))
 	go func() {
 		for i := 0; i < int(numberOfParts); i++ {
-			if err = mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, numberOfParts, int64(i), progressReader, multipartUploadClient, attemptsAllowed, wg); err != nil {
+			if err = mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, numberOfParts, int64(i), chunkSize, progressReader, multipartUploadClient, attemptsAllowed, wg); err != nil {
 				return
 			}
 		}
@@ -202,9 +203,9 @@ func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize
 	return
 }
 
-func (mu *MultipartUpload) produceUploadTask(producerConsumer parallel.Runner, logMsgPrefix, localPath string, fileSize, numberOfParts, partId int64, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails, attemptsAllowed *atomic.Uint64, wg *sync.WaitGroup) (retErr error) {
+func (mu *MultipartUpload) produceUploadTask(producerConsumer parallel.Runner, logMsgPrefix, localPath string, fileSize, numberOfParts, partId, chunkSize int64, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails, attemptsAllowed *atomic.Uint64, wg *sync.WaitGroup) (retErr error) {
 	_, retErr = producerConsumer.AddTaskWithError(func(int) error {
-		uploadErr := mu.uploadPart(logMsgPrefix, localPath, fileSize, partId, progressReader, multipartUploadClient)
+		uploadErr := mu.uploadPart(logMsgPrefix, localPath, fileSize, partId, chunkSize, progressReader, multipartUploadClient)
 		if uploadErr == nil {
 			log.Info(fmt.Sprintf("%sCompleted uploading part %d/%d", logMsgPrefix, partId+1, numberOfParts))
 			wg.Done()
@@ -220,14 +221,14 @@ func (mu *MultipartUpload) produceUploadTask(producerConsumer parallel.Runner, l
 
 		// Sleep before trying again
 		time.Sleep(retriesInterval)
-		if err := mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, numberOfParts, partId, progressReader, multipartUploadClient, attemptsAllowed, wg); err != nil {
+		if err := mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, numberOfParts, partId, chunkSize, progressReader, multipartUploadClient, attemptsAllowed, wg); err != nil {
 			retErr = err
 		}
 	})
 	return
 }
 
-func (mu *MultipartUpload) uploadPart(logMsgPrefix, localPath string, fileSize, partId int64, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails) (err error) {
+func (mu *MultipartUpload) uploadPart(logMsgPrefix, localPath string, fileSize, partId, chunkSize int64, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails) (err error) {
 	file, err := os.Open(localPath)
 	if err != nil {
 		return errorutils.CheckError(err)
@@ -235,10 +236,10 @@ func (mu *MultipartUpload) uploadPart(logMsgPrefix, localPath string, fileSize, 
 	defer func() {
 		err = errors.Join(err, errorutils.CheckError(file.Close()))
 	}()
-	if _, err = file.Seek(partId*uploadPartSize, io.SeekStart); err != nil {
+	if _, err = file.Seek(partId*chunkSize, io.SeekStart); err != nil {
 		return errorutils.CheckError(err)
 	}
-	partSize := calculatePartSize(fileSize, partId)
+	partSize := calculatePartSize(fileSize, partId, chunkSize)
 
 	limitReader := io.LimitReader(file, partSize)
 	limitReader = bufio.NewReader(limitReader)
@@ -402,21 +403,22 @@ func (mu *MultipartUpload) abort(logMsgPrefix string, multipartUploadClient *htt
 	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent)
 }
 
-// Calculates the part size based on the file size and the part number.
+// Calculates the part size based on the file size, the part number and the requested chunk size.
 // fileSize - the file size
 // partNumber - the current part number
-func calculatePartSize(fileSize int64, partNumber int64) int64 {
-	partOffset := partNumber * uploadPartSize
-	if partOffset+uploadPartSize > fileSize {
+// requestedChunkSize - chunk size requested by the user, or default.
+func calculatePartSize(fileSize, partNumber, requestedChunkSize int64) int64 {
+	partOffset := partNumber * requestedChunkSize
+	if partOffset+requestedChunkSize > fileSize {
 		return fileSize - partOffset
 	}
-	return uploadPartSize
+	return requestedChunkSize
 }
 
-// Calculates the number of parts based on the file size and the default part size.
+// Calculates the number of parts based on the file size and the requested chunks size.
 // fileSize - the file size
-func calculateNumberOfParts(fileSize int64) int64 {
-	return (fileSize + uploadPartSize - 1) / uploadPartSize
+func calculateNumberOfParts(fileSize, chunkSize int64) int64 {
+	return (fileSize + chunkSize - 1) / chunkSize
 }
 
 func parseMultipartUploadStatus(status statusResponse) (shouldKeepPolling, shouldRerunComplete bool, err error) {
