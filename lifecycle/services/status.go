@@ -34,6 +34,7 @@ const (
 	Failed     RbStatus = "FAILED"
 	Rejected   RbStatus = "REJECTED"
 	Deleting   RbStatus = "DELETING"
+	Started    RbStatus = "STARTED"
 )
 
 func (rbs *ReleaseBundlesService) GetReleaseBundleCreationStatus(rbDetails ReleaseBundleDetails, projectKey string, sync bool) (ReleaseBundleStatusResponse, error) {
@@ -128,7 +129,7 @@ func (rbs *ReleaseBundlesService) waitForRbOperationCompletion(restApi, projectK
 			return true, nil, err
 		}
 		switch rbStatusResponse.Status {
-		case Pending, Processing:
+		case Pending, Processing, Started:
 			return false, nil, nil
 		case Completed, Rejected, Failed, Deleting:
 			return true, responseBody, nil
