@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"testing"
@@ -284,6 +285,51 @@ func TestValidateMinimumVersion(t *testing.T) {
 			} else {
 				assert.ErrorContains(t, err, fmt.Sprintf(MinimumVersionMsg, Xray, test.artifactoryVersion, minTestVersion))
 			}
+		})
+	}
+}
+
+func TestSetEnvWithResetCallback(t *testing.T) {
+	type args struct {
+		key   string
+		value string
+	}
+	tests := []struct {
+		name   string
+		args   args
+		init   func()
+		finish func()
+	}{
+		{
+			name: "existing environment variable",
+			args: args{key: "TEST_KEY", value: "test_value"},
+			init: func() {
+				assert.NoError(t, os.Setenv("TEST_KEY", "test-init-value"))
+			},
+			finish: func() {
+				assert.Equal(t, os.Getenv("TEST_KEY"), "test-init-value")
+			},
+		},
+		{
+			name: "non-existing environment variable",
+			args: args{key: "NEW_TEST_KEY", value: "test_value"},
+			init: func() {
+
+			},
+			finish: func() {
+				_, exist := os.LookupEnv("NEW_TEST_KEY")
+				assert.False(t, exist)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.init()
+			resetCallback, err := SetEnvWithResetCallback(tt.args.key, tt.args.value)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.args.value, os.Getenv(tt.args.key))
+			assert.NoError(t, resetCallback())
+			tt.finish()
 		})
 	}
 }
