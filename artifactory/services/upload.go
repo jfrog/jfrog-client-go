@@ -665,7 +665,7 @@ func logUploadResponse(logMsgPrefix string, resp *http.Response, body []byte, ch
 		} else {
 			strChecksumDeployed = ""
 		}
-		log.Debug(logMsgPrefix, "Artifactory response:", resp.Status, strChecksumDeployed)
+		log.Debug(logMsgPrefix+"Artifactory response:", resp.Status, strChecksumDeployed)
 	}
 }
 
