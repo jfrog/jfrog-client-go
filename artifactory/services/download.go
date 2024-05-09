@@ -389,7 +389,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 			return err
 		}
 
-		log.Debug(logMsgPrefix, "Artifactory response:", resp.Status)
+		log.Debug(logMsgPrefix+"Artifactory response:", resp.Status)
 		return errorutils.CheckResponseStatus(resp, http.StatusOK)
 	}
 
@@ -468,7 +468,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	log.Debug(logMsgPrefix, "Creating symlink file.")
+	log.Debug(logMsgPrefix + "Creating symlink file.")
 	return nil
 }
 
@@ -537,7 +537,7 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 		return e
 	}
 	if isEqual {
-		log.Debug(logMsgPrefix, "File already exists locally.")
+		log.Debug(logMsgPrefix + "File already exists locally.")
 		if ds.Progress != nil {
 			ds.Progress.IncrementGeneralProgress()
 		}
