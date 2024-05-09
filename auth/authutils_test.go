@@ -3,6 +3,8 @@ package auth
 import (
 	"testing"
 
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,6 +17,8 @@ var (
 	token3 = "eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJIcnU2VHctZk1yOTV3dy12TDNjV3ZBVjJ3Qm9FSHpHdGlwUEFwOE1JdDljIn0"
 	// #nosec G101
 	token4 = "eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJsS0NYXzFvaTBQbTZGdF9XRklkejZLZ1g4U0FULUdOY0lJWXRjTC1KM084In0.eyJzdWIiOiJqZmZlQDAwMFwvdXNlcnNcL3RlbXB1c2VyIiwic2NwIjoiYXBwbGllZC1wZXJtaXNzaW9uc1wvYWRtaW4gYXBpOioiLCJhdWQiOlsiamZydEAqIiwiamZtZEAqIiwiamZldnRAKiIsImpmYWNAKiJdLCJpc3MiOiJqZmZlQDAwMCIsImV4cCI6MTYxNjQ4OTU4NSwiaWF0IjoxNjE2NDg1OTg1LCJqdGkiOiI0OTBlYWEzOS1mMzYxLTQxYjAtOTA5Ni1kNjg5NmQ0ZWQ3YjEifQ.J5P8Pu5tqEjgnLFLEoCdh1LJHWiMmEHht95v0EFuixwO-osq7sfXua_UCGBkKbmqVSGKew9kl_LTcbq_uMe281_5q2yYxT74iqc2wQ1K0uovEUeIU6E65oi70JwUWUwcF3sNJ2gFatnvgSu-2Kv6m-DtSIW36WS3Mh8uMZQ19ob4fmueVmMFyQsp0EEG6xFYeOK6SB8OUd0gAd_XvXiSRuF0eLabhKmXM2pVBLYfd2KIMlkFckEOGGOzeglvA62xmP4Ik7UsF487NAo0LeS_Pd79owr0jtgTYkCTrLlFhUzUMDVmD_LsCMyf_S4CJxhwkCRhhy9SYSs1WPgknL3--w"
+	// #nosec G101
+	token5 = "eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJDRlVIRER4UXZaM1VNWEZxS0ZWUlFiOEFROEd6VWxSZkZJMEt4TmIzdk1jIn0.eyJzdWIiOiJ5YWhhdi90ZXN0LXJlcG8iLCJzY3AiOiJhcHBsaWVkLXBlcm1pc3Npb25zL2dyb3VwczpcImFkbWluLWdyb3VwXCIsIiwiYXVkIjoiKkAqIiwiaXNzIjoiamZhY0AwMWdnbXFxcDc0MzZuOTB3d3I4Ym5nMXp5OSIsImV4cCI6MTcxNTE4MzA3MiwiaWF0IjoxNzE1MTgzMDEyLCJqdGkiOiJmN2IxMmIzMi0xMmNkLTQ1Y2ItYWZjYS1iNTYyMjc2YjY0YmQifQ.I6df8E0_1t7uYzSQkiQBNh9GIGyr541rIRQ8BDD401N4DV98dWsqACmdlYTOAaxn_el4Lz7_OaK0GnVNGf9hiZz9QKaXbe-HnL9jG-TobpOlyhkc6iBpnizuZ9T9YiveCG_NgDMWn5syiZ912t6PuZqNN2JmwswqfE9QDm6xCH8fu7h0Rs1qDNkahtgQvO99e5d7LnuOS9VfkXBxLDZ5AeUbd89zmujgDB4hMXB3J-dQ3QxGHRPS_KUo7sf7lRvn4PydYkhbhrhg6GP6ss6rMmEJM5v8azMTrkLwksoCWtK9YpD5S70f7AoE5U5j5BttZ0S5dPGagKWZJiA1egna-w"
 )
 
 func TestExtractUsernameFromAccessToken(t *testing.T) {
@@ -27,7 +31,13 @@ func TestExtractUsernameFromAccessToken(t *testing.T) {
 		{"", token2, true},
 		{"", token3, true},
 		{"tempuser", token4, false},
+		{"yahav/test-repo", token5, false},
 	}
+	// Discard output logging to prevent negative logs
+	previousLog := tests.RedirectLogOutputToNil()
+	defer func() {
+		log.SetLogger(previousLog)
+	}()
 
 	for _, testCase := range testCases {
 		username := ExtractUsernameFromAccessToken(testCase.inputToken)
@@ -46,6 +56,7 @@ func TestExtractSubjectFromAccessToken(t *testing.T) {
 		{"jfrt@001c3gffhg2e8w6149e3a2q0w97", token2, false},
 		{"", token3, true},
 		{"jffe@000/users/tempuser", token4, false},
+		{"yahav/test-repo", token5, false},
 	}
 
 	for _, testCase := range testCases {
