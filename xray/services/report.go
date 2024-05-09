@@ -152,8 +152,8 @@ type LicensesFilter struct {
 
 type ViolationsFilter struct {
 	Type            string                `json:"type,omitempty"`
-	WatchNames      string                `json:"watch_names,omitempty"`
-	WatchPatterns   string                `json:"watch_patterns,omitempty"`
+	WatchNames      []string              `json:"watch_names,omitempty"`
+	WatchPatterns   []string              `json:"watch_patterns,omitempty"`
 	Component       string                `json:"component,omitempty"`
 	Artifact        string                `json:"artifact,omitempty"`
 	PolicyNames     []string              `json:"policy_names,omitempty"`
