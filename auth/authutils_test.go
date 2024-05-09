@@ -33,6 +33,7 @@ func TestExtractUsernameFromAccessToken(t *testing.T) {
 		{"tempuser", token4, false},
 		{"yahav/test-repo", token5, false},
 	}
+	// Discard output logging to prevent negative logs
 	previousLog := tests.RedirectLogOutputToNil()
 	defer func() {
 		log.SetLogger(previousLog)
