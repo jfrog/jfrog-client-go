@@ -619,7 +619,8 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 		return
 	}
 	if shouldTryMultipart {
-		if err = us.MultipartUpload.UploadFileConcurrently(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath, fileInfo.Size(), details.Checksum.Sha1, us.Progress, uploadParams.SplitCount); err != nil {
+		if err = us.MultipartUpload.UploadFileConcurrently(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath,
+			fileInfo.Size(), details.Checksum.Sha1, us.Progress, uploadParams.SplitCount, uploadParams.ChunkSize); err != nil {
 			return
 		}
 		// Once the file is uploaded to the storage, we finalize the multipart upload by performing a checksum deployment to save the file in Artifactory.
@@ -664,7 +665,7 @@ func logUploadResponse(logMsgPrefix string, resp *http.Response, body []byte, ch
 		} else {
 			strChecksumDeployed = ""
 		}
-		log.Debug(logMsgPrefix, "Artifactory response:", resp.Status, strChecksumDeployed)
+		log.Debug(logMsgPrefix+"Artifactory response:", resp.Status, strChecksumDeployed)
 	}
 }
 
@@ -709,6 +710,7 @@ type UploadParams struct {
 	MinChecksumDeploy    int64
 	MinSplitSize         int64
 	SplitCount           int
+	ChunkSize            int64
 	ChecksumsCalcEnabled bool
 	Archive              string
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
@@ -716,7 +718,8 @@ type UploadParams struct {
 }
 
 func NewUploadParams() UploadParams {
-	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: DefaultMinChecksumDeploy, ChecksumsCalcEnabled: true, MinSplitSize: defaultUploadMinSplit, SplitCount: defaultUploadSplitCount}
+	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: DefaultMinChecksumDeploy,
+		ChecksumsCalcEnabled: true, MinSplitSize: defaultUploadMinSplit, SplitCount: defaultUploadSplitCount, ChunkSize: utils.DefaultUploadChunkSize}
 }
 
 func DeepCopyUploadParams(params *UploadParams) UploadParams {

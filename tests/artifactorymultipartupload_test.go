@@ -79,6 +79,7 @@ func createBigFile(t *testing.T) (bigFile *os.File, cleanUp func()) {
 	assert.NoError(t, err)
 
 	cleanUp = func() {
+		assert.NoError(t, bigFile.Close())
 		assert.NoError(t, os.Remove(bigFile.Name()))
 	}
 
