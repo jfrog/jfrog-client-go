@@ -869,7 +869,7 @@ func isEnterprisePlus() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return value == "Enterprise Plus", nil
+	return strings.Contains(value, "Enterprise Plus"), nil
 }
 
 func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) clientutils.ExecutionHandlerFunc {
@@ -921,7 +921,7 @@ func createRepoConfigValidationFunc(repoKey string, expectedConfig interface{}) 
 
 func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	retryExecutor := &clientutils.RetryExecutor{
-		MaxRetries: 30,
+		MaxRetries: 5,
 		// RetriesIntervalMilliSecs in milliseconds
 		RetriesIntervalMilliSecs: 10 * 1000,
 		ErrorMessage:             "Waiting for Artifactory to evaluate repository operation...",
