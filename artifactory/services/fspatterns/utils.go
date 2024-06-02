@@ -14,6 +14,11 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
+type SizeLimit struct {
+	Max int64
+	Min int64
+}
+
 // Return all the existing paths of the provided root path
 func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string) ([]string, error) {
 	var paths []string
@@ -23,6 +28,27 @@ func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePat
 	} else {
 		paths, err = fileutils.ListFiles(rootPath, includeDirs)
 	}
+
+	if err != nil {
+		return paths, err
+	}
+	var rootFilter string
+	if excludeWithRelativePath {
+		rootFilter = rootPath
+	}
+	return filterFiles(rootFilter, paths, excludePathPattern)
+}
+
+// Return all the existing paths of the provided root path
+func ListFilesWithSizeLimit(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string, maxSize, minSize int64) ([]string, error) {
+	var paths []string
+	var err error
+	if isRecursive {
+		paths, err = fileutils.ListFilesRecursiveWalkIntoDirSymlinkWithSizeLimit(rootPath, !isSymlink, maxSize, minSize)
+	} else {
+		paths, err = fileutils.ListFiles(rootPath, includeDirs)
+	}
+
 	if err != nil {
 		return paths, err
 	}

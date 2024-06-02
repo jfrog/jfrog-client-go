@@ -316,7 +316,8 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	paths, err := fspatterns.ListFiles(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), false, uploadParams.IsSymlink(), excludePathPattern)
+
+	paths, err := fspatterns.ListFilesWithSizeLimit(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), false, uploadParams.IsSymlink(), excludePathPattern, uploadParams.GetMaxSize(), uploadParams.GetMinSize())
 	if err != nil {
 		return err
 	}
@@ -715,6 +716,8 @@ type UploadParams struct {
 	Archive              string
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
 	TargetPathInArchive string
+	MaxSize             int64
+	MinSize             int64
 }
 
 func NewUploadParams() UploadParams {
@@ -747,6 +750,14 @@ func (up *UploadParams) IsExplodeArchive() bool {
 
 func (up *UploadParams) GetDebian() string {
 	return up.Deb
+}
+
+func (up *UploadParams) GetMaxSize() int64 {
+	return up.MaxSize
+}
+
+func (up *UploadParams) GetMinSize() int64 {
+	return up.MinSize
 }
 
 type UploadData struct {

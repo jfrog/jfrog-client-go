@@ -164,6 +164,19 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 	return
 }
 
+// Return the recursive list of files and directories in the specified path
+func ListFilesRecursiveWalkIntoDirSymlinkWithSizeLimit(path string, walkIntoDirSymlink bool, maxSize, minSize int64) (fileList []string, err error) {
+	fileList = []string{}
+	err = gofrog.Walk(path, func(path string, f os.FileInfo, err error) error {
+		if f.Size() <= maxSize && f.Size() >= minSize {
+			fileList = append(fileList, path)
+		}
+		return nil
+	}, walkIntoDirSymlink)
+	err = errorutils.CheckError(err)
+	return
+}
+
 // Return all files in the specified path who satisfy the filter func. Not recursive.
 func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, error)) ([]string, error) {
 	sep := GetFileSeparator()
