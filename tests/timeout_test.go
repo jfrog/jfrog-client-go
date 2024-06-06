@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"github.com/jfrog/jfrog-client-go/evidence"
+	"github.com/jfrog/jfrog-client-go/evidence/services"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,6 +20,7 @@ import (
 
 	distributionAuth "github.com/jfrog/jfrog-client-go/distribution/auth"
 	distributionServices "github.com/jfrog/jfrog-client-go/distribution/services"
+	evidenceAuth "github.com/jfrog/jfrog-client-go/evidence/auth"
 	lifecycleAuth "github.com/jfrog/jfrog-client-go/lifecycle/auth"
 	lifecycleServices "github.com/jfrog/jfrog-client-go/lifecycle/services"
 	pipelinesAuth "github.com/jfrog/jfrog-client-go/pipelines/auth"
@@ -44,6 +47,7 @@ func TestTimeout(t *testing.T) {
 	t.Run("testLifecycleTimeout", testLifecycleTimeout)
 	t.Run("testPipelinesTimeout", testPipelinesTimeout)
 	t.Run("testXrayTimeout", testXrayTimeout)
+	t.Run("testEvidenceTimeout", testEvidenceTimeout)
 }
 
 func testAccessTimeout(t *testing.T) {
@@ -107,6 +111,28 @@ func testLifecycleTimeout(t *testing.T) {
 
 	// Expect timeout
 	_, err = servicesManager.GetReleaseBundleCreationStatus(lifecycleServices.ReleaseBundleDetails{}, "", false)
+	assert.ErrorContains(t, err, "context deadline exceeded")
+}
+
+func testEvidenceTimeout(t *testing.T) {
+	// Create mock server
+	url, cleanup := createSleepyRequestServer()
+	defer cleanup()
+
+	// Create services manager configuring to work with the mock server
+	details := evidenceAuth.NewEvidenceDetails()
+	details.SetUrl(url)
+	servicesManager, err := evidence.New(createServiceConfigWithTimeout(t, details))
+	assert.NoError(t, err)
+
+	dsseFile := []byte("dsse file")
+	serviceDetails := services.EvidenceDetails{
+		SubjectUri:  "repository/path/to/file.txt",
+		DSSEFileRaw: dsseFile,
+	}
+
+	// Expect timeout
+	_, err = servicesManager.UploadEvidence(serviceDetails)
 	assert.ErrorContains(t, err, "context deadline exceeded")
 }
 
