@@ -2246,6 +2246,60 @@ artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
     isEntitled, err := xrayManager.IsEntitled(featureId)
 ```
 
+#### Create Ignore Rule
+
+```go
+    rule := services.IgnoreRule{
+        Notes:     "This is a Test",
+        ExpiresAt: timePtr(time.Now().Add(time.Hour * 24)),
+        Filters: services.IgnoreFilters{
+            ReleaseBundles: nil,
+            Builds:         nil,
+            Components:     nil,
+            Artifacts: []services.ArtifactDescriptor{{
+                NameVersion: services.NameVersion{
+                    Name:    "docker://test-container",
+                    Version: "v1.2.3",
+                },
+            }},
+            Policies:        nil,
+            DockerLayers:    nil,
+            Vulnerabilities: nil,
+            Licenses:        nil,
+            CVEs:            nil, //[]string{"CVE-2023-29404"},
+            Watches:         nil,
+            OperationalRisk: nil,
+        },
+    }
+    ruleId, err := xrayManager.CreateIgnoreRule(rule)
+```
+
+#### Get Ignore Rule
+    
+```go
+	rule, err := xrayManager.GetIgnoreRule(ruleId)
+```
+
+#### Get All Ignore Rules / Query Ignore Rules
+
+```go
+    allIgnoreRules, err := xrayManager.GetAllIgnoreRules(nil)
+    
+	queriedRules, err := xrayManager.GetAllIgnoreRules(&services.IgnoreRulesGetAllParams{
+        ArtifactName:    "docker://test-container",
+        ArtifactVersion: "v1.2.3",
+    })
+```
+
+#### Delete Ignore Rule
+
+```go
+    for _, rule := range queriedRules.Data {
+        err := s.XRayClient.DeleteIgnoreRule(rule.ID)
+    }
+
+```
+
 
 ## XSC APIs
 

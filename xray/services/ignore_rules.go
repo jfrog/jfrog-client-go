@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	ignoreRulesUrl = "api/v1/ignore_rules"
-	uuidRegEx      = "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+	ignoreRulesUrl            = "api/v1/ignore_rules"
+	uuidRegEx                 = "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+	minXrayIgnoreRulesVersion = "3.11"
 )
 
 // IgnoreRulesService defines the http client and Xray details
@@ -54,6 +55,19 @@ func (irs *IgnoreRulesService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpCl
 	return irs.client
 }
 
+func (irs *IgnoreRulesService) CheckMinimumVersion() error {
+	xrDetails := irs.GetXrayDetails()
+	if xrDetails == nil {
+		return errorutils.CheckErrorf("Xray details not configured.")
+	}
+	version, err := xrDetails.GetVersion()
+	if err != nil {
+		return fmt.Errorf("couldn't get Xray version. Error: %w", err)
+	}
+
+	return clientUtils.ValidateMinimumVersion(clientUtils.Xray, version, minXrayIgnoreRulesVersion)
+}
+
 func (irs *IgnoreRulesService) getIgnoreRulesURL() string {
 	return fmt.Sprintf("%s%s", irs.XrayDetails.GetUrl(), ignoreRulesUrl)
 }
@@ -61,6 +75,9 @@ func (irs *IgnoreRulesService) getIgnoreRulesURL() string {
 // Delete will delete an existing ignore rule by ruleId
 // It will error if no ignore rule can be found by that ruleId.
 func (irs *IgnoreRulesService) Delete(ruleId string) error {
+	if err := irs.CheckMinimumVersion(); err != nil {
+		return err
+	}
 	httpClientsDetails := irs.XrayDetails.CreateHttpClientDetails()
 	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
 
@@ -80,9 +97,12 @@ func (irs *IgnoreRulesService) Delete(ruleId string) error {
 
 // Create will create a new Xray ignore rule
 func (irs *IgnoreRulesService) Create(ignoreRule IgnoreRule) (string, error) {
+	if err := irs.CheckMinimumVersion(); err != nil {
+		return "", err
+	}
 	content, err := json.Marshal(ignoreRule)
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return "", errorutils.CheckErrorf("error unmarshalling ignore rule %w", err)
 	}
 
 	httpClientsDetails := irs.XrayDetails.CreateHttpClientDetails()
@@ -112,6 +132,9 @@ func (irs *IgnoreRulesService) Create(ignoreRule IgnoreRule) (string, error) {
 // Get retrieves the details about an Xray ignore rule by its id
 // It will error if no policy can be found by that name.
 func (irs *IgnoreRulesService) Get(ruleId string) (ignoreRule *IgnoreRuleDetail, err error) {
+	if err = irs.CheckMinimumVersion(); err != nil {
+		return nil, err
+	}
 	httpClientsDetails := irs.XrayDetails.CreateHttpClientDetails()
 	resp, body, _, err := irs.client.SendGet(irs.getRuleIdUrl(ruleId), true, &httpClientsDetails)
 	ignoreRule = &IgnoreRuleDetail{}
@@ -133,8 +156,11 @@ func (irs *IgnoreRulesService) Get(ruleId string) (ignoreRule *IgnoreRuleDetail,
 
 // GetAll retrieves the details about all Xray ignore rules that match the given parameters
 func (irs *IgnoreRulesService) GetAll(params *IgnoreRulesGetAllParams) (ignoreRules *IgnoreRuleResponse, err error) {
+	if err = irs.CheckMinimumVersion(); err != nil {
+		return nil, err
+	}
 	httpClientsDetails := irs.XrayDetails.CreateHttpClientDetails()
-	url, err := clientUtils.BuildUrl(irs.XrayDetails.GetUrl(), ignoreRulesUrl, params.GetParamMap())
+	url, err := clientUtils.BuildUrl(irs.XrayDetails.GetUrl(), ignoreRulesUrl, params.getParamMap())
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +185,7 @@ func (irs *IgnoreRulesService) getRuleIdUrl(ruleId string) string {
 	return fmt.Sprintf("%s/%s", irs.getIgnoreRulesURL(), ruleId)
 }
 
-func (p *IgnoreRulesGetAllParams) GetParamMap() map[string]string {
+func (p *IgnoreRulesGetAllParams) getParamMap() map[string]string {
 	params := make(map[string]string)
 	if p == nil {
 		return params
