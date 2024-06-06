@@ -118,7 +118,7 @@ func (sm *PipelinesServicesManager) GetPipelineRunStatusByBranch(branch, pipelin
 	return runService.GetRunStatus(branch, pipeline, isMultiBranch)
 }
 
-func (sm *PipelinesServicesManager) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) error {
+func (sm *PipelinesServicesManager) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) (int, error) {
 	runService := services.NewRunService(sm.client)
 	runService.ServiceDetails = sm.config.GetServiceDetails()
 	return runService.TriggerPipelineRun(branch, pipeline, isMultiBranch)

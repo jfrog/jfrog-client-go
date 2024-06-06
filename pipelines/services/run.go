@@ -4,20 +4,25 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 type RunService struct {
 	client *jfroghttpclient.JfrogHttpClient
 	auth.ServiceDetails
+}
+
+type triggerRunResponse struct {
+	triggerID int `json:"triggerID"`
 }
 
 func NewRunService(client *jfroghttpclient.JfrogHttpClient) *RunService {
@@ -70,7 +75,7 @@ func (rs *RunService) getHttpDetails() httputils.HttpClientDetails {
 	return rs.ServiceDetails.CreateHttpClientDetails()
 }
 
-func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) error {
+func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch bool) (int, error) {
 	httpDetails := rs.getHttpDetails()
 	queryParams := make(map[string]string, 0)
 
@@ -89,29 +94,35 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(payload)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return 0, errorutils.CheckError(err)
 	}
 
 	// URL Construction
 	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
 	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), triggerpipeline)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Prepare Request
 	resp, body, err := rs.client.SendPost(uri, buf.Bytes(), &httpDetails)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Response Analysis
 	if err := errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return err
+		return 0, err
 	}
 	log.Info(fmt.Sprintf("Triggered successfully\n%s %s \n%14s %s", "PipelineName :", pipeline, "Branch :", branch))
 
-	return nil
+	var triggerID triggerRunResponse
+
+	if err := json.Unmarshal(body, &triggerID); err != nil {
+		return 0, err
+	}
+
+	return triggerID.triggerID, nil
 }
 
 func (rs *RunService) CancelRun(runID int) error {
