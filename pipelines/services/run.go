@@ -22,7 +22,7 @@ type RunService struct {
 }
 
 type triggerRunResponse struct {
-	triggerID int `json:"triggerID"`
+	TriggerID int `json:"triggerID"`
 }
 
 func NewRunService(client *jfroghttpclient.JfrogHttpClient) *RunService {
@@ -122,7 +122,7 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 		return 0, err
 	}
 
-	return triggerID.triggerID, nil
+	return triggerID.TriggerID, nil
 }
 
 func (rs *RunService) CancelRun(runID int) error {
