@@ -17,8 +17,7 @@ func (ss *ScanService) ImportGraph(scanParams XrayGraphImportParams) (string, er
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 	var err error
-	var requestBody []byte
-	requestBody = []byte(scanParams.SBOMJson)
+	requestBody := []byte(scanParams.SBOMJson)
 	url := ss.XrayDetails.GetUrl() + importGraph
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
