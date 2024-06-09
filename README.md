@@ -225,6 +225,20 @@
       - [Export Release Bundle](#export-release-bundle)
       - [Import Release Bundle](#import-release-bundle)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
+  - [Lifecycle APIs](#lifecycle-apis)
+    - [Creating Lifecycle Service Manager](#creating-lifeCycle-service-manager)
+      - [Creating Lifecycle Details](#creating-lifeCycle-details)
+      - [Creating Lifecycle Service Config](#creating-lifeCycle-service-config)
+      - [Creating New Lifecycle Service Manager](#creating-new-lifeCycle-service-manager)
+    - [Using Lifecycle Services](#using-lifeCycle-services)
+      - [Creating a Release Bundle From AQL](#creating-a-release-bundle-from-aql)
+  - [Evidence APIs](#evidence-apis)
+    - [Creating Evidence Service Manager](#creating-evidence-service-manager)
+      - [Creating Evidence Details](#creating-evidence-details)
+      - [Creating Evidence Service Config](#creating-evidence-service-config)
+      - [Creating New Evidence Service Manager](#creating-new-evidence-service-manager)
+    - [Using Evidence Services](#using-evidence-services)
+      - [Upload Evidence](#upload-evidence)
 
 ## General
 
@@ -2753,4 +2767,49 @@ params.DistributionRules = append(params.DistributionRules, rules)
 dryRun := true
 
 resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
+```
+## Evidence APIs
+
+### Creating Evidence Service Manager
+
+#### Creating Evidence Details
+
+```go
+evdDetails := auth.NewEvidenceDetails()
+evdDetails.SetUrl("http://localhost:8081/evidence")
+evdDetails.SetAccessToken("access-token")
+// if client certificates are required
+evdDetails.SetClientCertPath("path/to/.cer")
+evdDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Evidence Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(evdDetails).
+    SetCertificatesPath(evdDetails.GetClientCertPath()).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(3).
+    Build()
+```
+
+#### Creating New Evidence Service Manager
+
+```go
+evidenceManager, err := evidence.New(serviceConfig)
+```
+
+### Using Evidence Services
+
+#### Upload Evidence
+
+```go
+envelopeBytes := []byte("envelope")
+
+evidenceDetails := evidenceService.EvidenceDetails{
+  SubjectUri:  "subjectUri",
+  DSSEFileRaw: &envelopeBytes,
+}
+body, err = evideceManager.UploadEvidence(evidenceDetails)
 ```
