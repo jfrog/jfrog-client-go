@@ -1,6 +1,6 @@
 module github.com/jfrog/jfrog-client-go
 
-go 1.22.3
+go 1.22
 
 require (
 	github.com/ProtonMail/go-crypto v1.0.0
@@ -58,6 +58,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go dev
+replace github.com/jfrog/build-info-go => github.com/eyalbe4/build-info-go v1.8.6-0.20240610015232-844595d5a4f3
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog dev
