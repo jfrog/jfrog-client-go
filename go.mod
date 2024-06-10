@@ -2,8 +2,6 @@ module github.com/jfrog/jfrog-client-go
 
 go 1.22.3
 
-toolchain go1.22.4
-
 require (
 	github.com/ProtonMail/go-crypto v1.0.0
 	github.com/buger/jsonparser v1.1.1
