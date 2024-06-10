@@ -10,8 +10,8 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.4
 	github.com/jfrog/archiver/v3 v3.6.0
-	github.com/jfrog/build-info-go v1.9.28
-	github.com/jfrog/gofrog v1.7.3
+	github.com/jfrog/build-info-go v1.9.29
+	github.com/jfrog/gofrog v1.7.2
 	github.com/stretchr/testify v1.9.0
 	github.com/xanzy/ssh-agent v0.3.3
 	golang.org/x/crypto v0.23.0
@@ -58,6 +58,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/jfrog/build-info-go => github.com/eyalbe4/build-info-go v1.8.6-0.20240610015232-844595d5a4f3
+// replace github.com/jfrog/build-info-go => github.com/eyalbe4/build-info-go v1.8.6-0.20240610015232-844595d5a4f3
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog dev
