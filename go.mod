@@ -1,6 +1,8 @@
 module github.com/jfrog/jfrog-client-go
 
-go 1.20
+go 1.22.3
+
+toolchain go1.22.4
 
 require (
 	github.com/ProtonMail/go-crypto v1.0.0
@@ -10,8 +12,8 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.4
 	github.com/jfrog/archiver/v3 v3.6.0
-	github.com/jfrog/build-info-go v1.9.26
-	github.com/jfrog/gofrog v1.7.2
+	github.com/jfrog/build-info-go v1.9.28
+	github.com/jfrog/gofrog v1.7.3
 	github.com/stretchr/testify v1.9.0
 	github.com/xanzy/ssh-agent v0.3.3
 	golang.org/x/crypto v0.23.0
