@@ -2,13 +2,14 @@ package tests
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+	"time"
+
 	pipelinesServices "github.com/jfrog/jfrog-client-go/pipelines/services"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestPipelinesRunService(t *testing.T) {
@@ -94,7 +95,7 @@ func testGetRunStatus(t *testing.T) {
 
 	assert.NoError(t, resourceErr)
 	pipelineName := "pipelines_run_int_test"
-	trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, *res.IsMultiBranch)
+	_, trigErr := testPipelinesRunService.TriggerPipelineRun(*PipelinesVcsBranch, pipelineName, *res.IsMultiBranch)
 	assert.NoError(t, trigErr)
 
 	pollGetRunStatus(t, pipelineName)
