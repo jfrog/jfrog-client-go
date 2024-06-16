@@ -2,7 +2,6 @@ package fspatterns
 
 import (
 	"fmt"
-	"math"
 	"path/filepath"
 	"regexp"
 	"testing"
@@ -40,7 +39,7 @@ func TestFilterFilesFunc(t *testing.T) {
 	for _, tc := range data {
 		t.Run(fmt.Sprintf("File: %s, Pattern: %s, Root: %s", tc.file, tc.ExcludePattern, tc.root), func(t *testing.T) {
 			// Create the filter function with the mocked isPathExcluded
-			filterFunc := filterFilesFunc(tc.root, tc.ExcludePattern, math.MaxInt64, 0)
+			filterFunc := filterFilesFunc(tc.root, tc.ExcludePattern, nil)
 			excluded, err := filterFunc(tc.file)
 			assert.NoError(t, err)
 			assert.True(t, excluded == tc.included, "Expected included = %v, but got %v", tc.included, excluded)
