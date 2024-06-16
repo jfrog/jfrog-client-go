@@ -3,6 +3,8 @@ package fspatterns
 import (
 	"bytes"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"math"
 	"os"
 	"regexp"
 	"strings"
@@ -11,7 +13,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type SizeLimit struct {
@@ -20,43 +21,22 @@ type SizeLimit struct {
 }
 
 // Return all the existing paths of the provided root path
-func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string) ([]string, error) {
-	var paths []string
-	var err error
-	if isRecursive {
-		paths, err = fileutils.ListFilesRecursiveWalkIntoDirSymlink(rootPath, !isSymlink)
-	} else {
-		paths, err = fileutils.ListFiles(rootPath, includeDirs)
-	}
-
-	if err != nil {
-		return paths, err
-	}
-	var rootFilter string
-	if excludeWithRelativePath {
-		rootFilter = rootPath
-	}
-	return filterFiles(rootFilter, paths, excludePathPattern)
+func ListFilesFilterPattern(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string) ([]string, error) {
+	return ListFilesFilterPatternAndSize(rootPath, isRecursive, includeDirs, excludeWithRelativePath, isSymlink, excludePathPattern, math.MaxInt64, 0)
 }
 
 // Return all the existing paths of the provided root path
-func ListFilesWithSizeLimit(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string, maxSize, minSize int64) ([]string, error) {
-	var paths []string
-	var err error
-	if isRecursive {
-		paths, err = fileutils.ListFilesRecursiveWalkIntoDirSymlinkWithSizeLimit(rootPath, !isSymlink, maxSize, minSize)
-	} else {
-		paths, err = fileutils.ListFiles(rootPath, includeDirs)
-	}
-
-	if err != nil {
-		return paths, err
-	}
+func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string, maxSize, minSize int64) ([]string, error) {
 	var rootFilter string
 	if excludeWithRelativePath {
 		rootFilter = rootPath
 	}
-	return filterFiles(rootFilter, paths, excludePathPattern)
+	filterFunc := filterFilesFunc(rootFilter, excludePathPattern, maxSize, minSize)
+	if isRecursive {
+		return fileutils.ListFilesRecursiveWalkIntoDirSymlinkByFilterFunc(rootPath, !isSymlink, filterFunc)
+	} else {
+		return fileutils.ListFilesByFilterFunc(rootPath, includeDirs, filterFunc)
+	}
 }
 
 // Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
@@ -79,23 +59,35 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 	return excludePathPattern
 }
 
-func filterFiles(rootPath string, files []string, excludePathPattern string) (filteredFiles []string, err error) {
-	var excludedPath bool
-	for i := 0; i < len(files); i++ {
-		if files[i] == "." {
-			continue
+func filterFilesFunc(rootPath string, excludePathPattern string, maxSize, minSize int64) func(filePath string) (excluded bool, err error) {
+	return func(path string) (excluded bool, err error) {
+		if path == "." {
+			return false, nil
 		}
-		excludedPath, err = isPathExcluded(strings.TrimPrefix(files[i], rootPath), excludePathPattern)
+		excludedPath, err := isPathExcluded(strings.TrimPrefix(path, rootPath), excludePathPattern)
 		if err != nil {
-			return
+			return false, err
 		}
-		if !excludedPath {
-			filteredFiles = append(filteredFiles, files[i])
-		} else {
-			log.Debug(fmt.Sprintf("The path '%s' is excluded", files[i]))
+		if excludedPath {
+			log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+			return false, nil
 		}
+
+		if maxSize != math.MaxInt64 || minSize != 0 {
+			// Check if the file size is within the limits
+			fileInfo, err := os.Stat(path)
+			if err != nil {
+				return false, err
+			}
+			if !fileInfo.IsDir() {
+				fileSize := fileInfo.Size()
+				if fileSize > maxSize || fileSize < minSize {
+					return false, nil
+				}
+			}
+		}
+		return true, nil
 	}
-	return
 }
 
 // Return the actual sub-paths that match the regex provided.

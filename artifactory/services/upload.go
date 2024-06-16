@@ -317,7 +317,7 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 		return err
 	}
 
-	paths, err := fspatterns.ListFilesWithSizeLimit(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), false, uploadParams.IsSymlink(), excludePathPattern, uploadParams.GetMaxSize(), uploadParams.GetMinSize())
+	paths, err := fspatterns.ListFilesFilterPatternAndSize(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), false, uploadParams.IsSymlink(), excludePathPattern, uploadParams.GetMaxSize(), uploadParams.GetMinSize())
 	if err != nil {
 		return err
 	}

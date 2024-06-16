@@ -165,10 +165,17 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 }
 
 // Return the recursive list of files and directories in the specified path
-func ListFilesRecursiveWalkIntoDirSymlinkWithSizeLimit(path string, walkIntoDirSymlink bool, maxSize, minSize int64) (fileList []string, err error) {
+func ListFilesRecursiveWalkIntoDirSymlinkByFilterFunc(path string, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) (fileList []string, err error) {
 	fileList = []string{}
 	err = gofrog.Walk(path, func(path string, f os.FileInfo, err error) error {
-		if f.Size() <= maxSize && f.Size() >= minSize {
+		if err != nil {
+			return err
+		}
+		satisfy, err := filterFunc(path)
+		if err != nil {
+			return err
+		}
+		if satisfy {
 			fileList = append(fileList, path)
 		}
 		return nil
@@ -178,12 +185,12 @@ func ListFilesRecursiveWalkIntoDirSymlinkWithSizeLimit(path string, walkIntoDirS
 }
 
 // Return all files in the specified path who satisfy the filter func. Not recursive.
-func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, error)) ([]string, error) {
+func ListFilesByFilterFunc(path string, includeDirs bool, filterFunc func(filePath string) (bool, error)) ([]string, error) {
 	sep := GetFileSeparator()
 	if !strings.HasSuffix(path, sep) {
 		path += sep
 	}
-	var fileList []string
+	fileList := []string{}
 	files, _ := os.ReadDir(path)
 	path = strings.TrimPrefix(path, "."+sep)
 
@@ -200,20 +207,14 @@ func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, 
 		if err != nil {
 			return nil, err
 		}
-		if exists {
+		if exists || IsPathSymlink(filePath) {
 			fileList = append(fileList, filePath)
-			continue
-		}
-
-		// Checks if the filepath is a symlink.
-		if IsPathSymlink(filePath) {
-			// Gets the file info of the symlink.
-			file, err := GetFileInfo(filePath, false)
-			if errorutils.CheckError(err) != nil {
+		} else if includeDirs {
+			isDir, err := IsDirExists(filePath, false)
+			if err != nil {
 				return nil, err
 			}
-			// Checks if the symlink is a file.
-			if !file.IsDir() {
+			if isDir {
 				fileList = append(fileList, filePath)
 			}
 		}
