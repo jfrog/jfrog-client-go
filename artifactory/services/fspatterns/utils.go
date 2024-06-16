@@ -59,8 +59,8 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 	return excludePathPattern
 }
 
-func filterFilesFunc(rootPath string, excludePathPattern string, maxSize, minSize int64) func(filePath string) (excluded bool, err error) {
-	return func(path string) (excluded bool, err error) {
+func filterFilesFunc(rootPath string, excludePathPattern string, maxSize, minSize int64) func(filePath string) (included bool, err error) {
+	return func(path string) (included bool, err error) {
 		if path == "." {
 			return false, nil
 		}

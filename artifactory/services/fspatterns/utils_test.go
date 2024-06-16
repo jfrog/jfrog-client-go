@@ -1,6 +1,8 @@
 package fspatterns
 
 import (
+	"fmt"
+	"math"
 	"path/filepath"
 	"regexp"
 	"testing"
@@ -8,27 +10,41 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFilterFiles(t *testing.T) {
+func TestFilterFilesFunc(t *testing.T) {
+	// Test data
 	data := []struct {
-		files          []string
+		file           string
 		ExcludePattern string
 		root           string
-		result         []string
+		included       bool
 	}{
-		{[]string{"file1", filepath.Join("dir", "file1"), "file2.zip"}, "^*.zip$", "", []string{"file1", filepath.Join("dir", "file1")}},
-		{[]string{
-			"file1",
-			"test.zip",
-			filepath.Join("test", "file1"),
-			filepath.Join("dir", "test", "should-be-filter"),
-		}, "(^.*test.*$)", "test", []string{"file1", "test.zip", filepath.Join("test", "file1")}},
+		// Patterns with regex
+		{"file1", "^*.zip$", "", true},
+		{"file2.zip", "^*.zip$", "", false},
+		{"dir/file1", "^*.zip$", "", true},
+		{"dir/dir2/file1.zip", "^*.zip$", "", false},
+
+		{"test/file1", "(^.*test.*$)", "test", true},
+		{"dir/test/should-be-filter", "(^.*test.*$)", "test", false},
+		{"file1", "(^.*test.*$)", "", true},
+		{"file2.zip", "(^.*test.*$)", "", true},
+
+		// Patterns without regex (exact match)
+		{"file1", "file1", "", false},
+		{"file2.zip", "file1", "", true},
+		// No pattern
+		{"file1", "", "", true},
+		{"file2.zip", "", "", true},
 	}
-	for _, d := range data {
-		got, err := filterFiles(d.root, d.files, d.ExcludePattern)
-		assert.NoError(t, err)
-		assert.Len(t, got, len(d.result))
-		assert.Contains(t, got, d.files[0])
-		assert.Contains(t, got, d.files[1])
+
+	for _, tc := range data {
+		t.Run(fmt.Sprintf("File: %s, Pattern: %s, Root: %s", tc.file, tc.ExcludePattern, tc.root), func(t *testing.T) {
+			// Create the filter function with the mocked isPathExcluded
+			filterFunc := filterFilesFunc(tc.root, tc.ExcludePattern, math.MaxInt64, 0)
+			excluded, err := filterFunc(tc.file)
+			assert.NoError(t, err)
+			assert.True(t, excluded == tc.included, "Expected included = %v, but got %v", tc.included, excluded)
+		})
 	}
 }
 
