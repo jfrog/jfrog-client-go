@@ -182,6 +182,7 @@ func (xws *WatchService) Get(watchName string) (watchResp *utils.WatchParams, er
 		ByNames: map[string]utils.WatchBuildsByNameParams{},
 	}
 	result.Policies = watch.AssignedPolicies
+	result.WatchRecipients = watch.WatchRecipients
 
 	utils.UnpackWatchBody(&result, &watch)
 

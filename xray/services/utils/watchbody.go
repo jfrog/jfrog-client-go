@@ -47,7 +47,8 @@ func NewWatchParams() WatchParams {
 		Builds: WatchBuildsParams{
 			ByNames: make(map[string]WatchBuildsByNameParams, 0),
 		},
-		Policies: make([]AssignedPolicy, 0),
+		Policies:        make([]AssignedPolicy, 0),
+		WatchRecipients: make([]string, 0),
 	}
 }
 
@@ -61,6 +62,8 @@ type WatchParams struct {
 
 	Builds   WatchBuildsParams
 	Policies []AssignedPolicy
+
+	WatchRecipients []string
 }
 
 // WatchRepositoriesParams is a struct that stores the repository configuration for watch
@@ -120,6 +123,7 @@ type WatchBody struct {
 	GeneralData      watchGeneralParams    `json:"general_data"`
 	ProjectResources watchProjectResources `json:"project_resources,omitempty"`
 	AssignedPolicies []AssignedPolicy      `json:"assigned_policies,omitempty"`
+	WatchRecipients  []string              `json:"watch_recipients"`
 }
 
 // These structs are internal
@@ -175,6 +179,7 @@ func CreateBody(params WatchParams) (*WatchBody, error) {
 			Resources: []watchProjectResourcesElement{},
 		},
 		AssignedPolicies: params.Policies,
+		WatchRecipients:  params.WatchRecipients,
 	}
 
 	err := configureRepositories(&payloadBody, params)
