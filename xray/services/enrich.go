@@ -18,11 +18,9 @@ func (ss *ScanService) ImportGraph(scanParams XrayGraphImportParams) (string, er
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	var v interface{}
 	err := json.Unmarshal(scanParams.SBOMInput, &v)
-	url := ""
-	if err == nil {
-		utils.SetContentType("application/json", &httpClientsDetails.Headers)
-		url = ss.XrayDetails.GetUrl() + importGraph
-	} else {
+	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	url := ss.XrayDetails.GetUrl() + importGraph
+	if err != nil {
 		utils.SetContentType("application/xml", &httpClientsDetails.Headers)
 		url = ss.XrayDetails.GetUrl() + importGraphXML
 	}
