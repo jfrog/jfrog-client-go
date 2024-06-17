@@ -10,20 +10,27 @@ import (
 )
 
 const (
-	importGraph = "api/v1/scan/import"
+	importGraph    = "api/v1/scan/import"
+	importGraphXML = "api/v1/scan/import_xml"
 )
 
 func (ss *ScanService) ImportGraph(scanParams XrayGraphImportParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	var err error
-	requestBody := []byte(scanParams.SBOMInput)
-	url := ss.XrayDetails.GetUrl() + importGraph
+	var v interface{}
+	err := json.Unmarshal(scanParams.SBOMInput, &v)
+	url := ""
+	if err == nil {
+		utils.SetContentType("application/json", &httpClientsDetails.Headers)
+		url = ss.XrayDetails.GetUrl() + importGraph
+	} else {
+		utils.SetContentType("application/xml", &httpClientsDetails.Headers)
+		url = ss.XrayDetails.GetUrl() + importGraphXML
+	}
+	requestBody := scanParams.SBOMInput
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err
 	}
-
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
 		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
@@ -88,7 +95,7 @@ type XrayGraphImportParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
 	ScanType          ScanType
-	SBOMInput         string
+	SBOMInput         []byte
 	XscGitInfoContext *XscGitInfoContext
 	XscVersion        string
 }
