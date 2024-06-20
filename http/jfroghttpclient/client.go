@@ -16,13 +16,14 @@ type JfrogHttpClient struct {
 	preRequestInterceptors []PreRequestInterceptorFunc
 }
 
-// Implement this function and append it to create an interceptor that will run before sending the request
+// PreRequestInterceptorFunc Implement this function and append it to create an interceptor that will run before sending the request
 type PreRequestInterceptorFunc func(clientDetails *httputils.HttpClientDetails) error
 
 func (rtc *JfrogHttpClient) GetHttpClient() *httpclient.HttpClient {
 	return rtc.httpClient
 }
 
+// SendGet will return error if resp is nil
 func (rtc *JfrogHttpClient) SendGet(url string, followRedirect bool, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
@@ -31,6 +32,7 @@ func (rtc *JfrogHttpClient) SendGet(url string, followRedirect bool, httpClients
 	return rtc.httpClient.SendGet(url, followRedirect, *httpClientsDetails, "")
 }
 
+// SendPost will return error if resp is nil
 func (rtc *JfrogHttpClient) SendPost(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
@@ -39,6 +41,7 @@ func (rtc *JfrogHttpClient) SendPost(url string, content []byte, httpClientsDeta
 	return rtc.httpClient.SendPost(url, content, *httpClientsDetails, "")
 }
 
+// SendPostLeaveBodyOpen will return error if resp is nil
 func (rtc *JfrogHttpClient) SendPostLeaveBodyOpen(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (*http.Response, error) {
 	if err := rtc.runPreRequestInterceptors(httpClientsDetails); err != nil {
 		return nil, err
@@ -46,11 +49,13 @@ func (rtc *JfrogHttpClient) SendPostLeaveBodyOpen(url string, content []byte, ht
 	return rtc.httpClient.SendPostLeaveBodyOpen(url, content, *httpClientsDetails, "")
 }
 
+// SendPostForm will return error if resp is nil
 func (rtc *JfrogHttpClient) SendPostForm(url string, data url.Values, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	httpClientsDetails.Headers["Content-Type"] = "application/x-www-form-urlencoded"
 	return rtc.SendPost(url, []byte(data.Encode()), httpClientsDetails)
 }
 
+// SendPatch will return error if resp is nil
 func (rtc *JfrogHttpClient) SendPatch(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
@@ -59,6 +64,7 @@ func (rtc *JfrogHttpClient) SendPatch(url string, content []byte, httpClientsDet
 	return rtc.httpClient.SendPatch(url, content, *httpClientsDetails, "")
 }
 
+// SendDelete will return error if resp is nil
 func (rtc *JfrogHttpClient) SendDelete(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
@@ -67,6 +73,7 @@ func (rtc *JfrogHttpClient) SendDelete(url string, content []byte, httpClientsDe
 	return rtc.httpClient.SendDelete(url, content, *httpClientsDetails, "")
 }
 
+// SendHead will return error if resp is nil
 func (rtc *JfrogHttpClient) SendHead(url string, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
@@ -75,6 +82,7 @@ func (rtc *JfrogHttpClient) SendHead(url string, httpClientsDetails *httputils.H
 	return rtc.httpClient.SendHead(url, *httpClientsDetails, "")
 }
 
+// SendPut will return error if resp is nil
 func (rtc *JfrogHttpClient) SendPut(url string, content []byte, httpClientsDetails *httputils.HttpClientDetails) (resp *http.Response, body []byte, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)
 	if err != nil {
@@ -83,6 +91,7 @@ func (rtc *JfrogHttpClient) SendPut(url string, content []byte, httpClientsDetai
 	return rtc.httpClient.SendPut(url, content, *httpClientsDetails, "")
 }
 
+// Send will return error if resp is nil
 func (rtc *JfrogHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool,
 	httpClientsDetails *httputils.HttpClientDetails, logMsgPrefix string) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	err = rtc.runPreRequestInterceptors(httpClientsDetails)

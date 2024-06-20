@@ -157,7 +157,7 @@ func (sm *XrayServicesManager) GenerateLicensesReport(params services.LicensesRe
 	return reportService.Licenses(params)
 }
 
-// GenerateVoilationsReport returns a Xray report response of the requested report
+// GenerateViolationsReport returns a Xray report response of the requested report
 func (sm *XrayServicesManager) GenerateViolationsReport(params services.ViolationsReportRequestParams) (resp *services.ReportResponse, err error) {
 	reportService := services.NewReportService(sm.client)
 	reportService.XrayDetails = sm.config.GetServiceDetails()
@@ -197,4 +197,28 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	entitlementsService := services.NewEntitlementsService(sm.client)
 	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
 	return entitlementsService.IsEntitled(featureId)
+}
+
+func (sm *XrayServicesManager) CreateIgnoreRule(rule services.IgnoreRule) (string, error) {
+	ignoreRuleService := services.NewIgnoreRulesService(sm.client)
+	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
+	return ignoreRuleService.Create(rule)
+}
+
+func (sm *XrayServicesManager) DeleteIgnoreRule(ruleId string) error {
+	ignoreRuleService := services.NewIgnoreRulesService(sm.client)
+	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
+	return ignoreRuleService.Delete(ruleId)
+}
+
+func (sm *XrayServicesManager) GetIgnoreRule(ruleId string) (*services.IgnoreRuleDetail, error) {
+	ignoreRuleService := services.NewIgnoreRulesService(sm.client)
+	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
+	return ignoreRuleService.Get(ruleId)
+}
+
+func (sm *XrayServicesManager) GetAllIgnoreRules(params *services.IgnoreRulesGetAllParams) (*services.IgnoreRuleResponse, error) {
+	ignoreRuleService := services.NewIgnoreRulesService(sm.client)
+	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
+	return ignoreRuleService.GetAll(params)
 }
