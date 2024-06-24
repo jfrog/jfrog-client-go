@@ -406,7 +406,10 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details 
 
 	go func() {
 		defer func() {
-			err = errors.Join(err, errorutils.CheckError(pw.Close()))
+			cErr := errorutils.CheckError(pr.Close())
+			if cErr != nil {
+				err = errors.Join(err, cErr)
+			}
 		}()
 		details.Size, err = io.Copy(pw, reader)
 	}()
