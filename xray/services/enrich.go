@@ -17,13 +17,17 @@ const (
 func (ss *ScanService) ImportGraph(scanParams XrayGraphImportParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	var v interface{}
+	// There's an option to run on XML or JSON file so we need to call the correct API accordingly.
 	err := json.Unmarshal(scanParams.SBOMInput, &v)
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	url := ss.XrayDetails.GetUrl() + importGraph
+	var url string
 	if err != nil {
 		utils.SetContentType("application/xml", &httpClientsDetails.Headers)
 		url = ss.XrayDetails.GetUrl() + importGraphXML
+	} else {
+		utils.SetContentType("application/json", &httpClientsDetails.Headers)
+		url = ss.XrayDetails.GetUrl() + importGraph
 	}
+
 	requestBody := scanParams.SBOMInput
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
@@ -47,11 +51,8 @@ func (ss *ScanService) GetImportGraphResults(scanId string) (*ScanResponse, erro
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
-	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
-	// Modify endpoint if XSC is enabled
-	endPoint += "/" + scanId
-	endPoint += includeVulnerabilitiesParam
+	// Getting the import graph results is from the same api but with some parameters always initialized.
+	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + scanId + includeVulnerabilitiesParam
 	log.Info("Waiting for enrich process to complete on JFrog Xray...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
