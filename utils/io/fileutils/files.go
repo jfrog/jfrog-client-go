@@ -401,14 +401,17 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details 
 
 	pr, pw := io.Pipe()
 	defer func() {
-		err = errors.Join(err, errorutils.CheckError(pr.Close()))
+		prErr := errorutils.CheckError(pr.Close())
+		if prErr != nil {
+			err = errors.Join(err, prErr)
+		}
 	}()
 
 	go func() {
 		defer func() {
-			cErr := errorutils.CheckError(pr.Close())
-			if cErr != nil {
-				err = errors.Join(err, cErr)
+			pwErr := errorutils.CheckError(pw.Close())
+			if pwErr != nil {
+				err = errors.Join(err, pwErr)
 			}
 		}()
 		details.Size, err = io.Copy(pw, reader)
