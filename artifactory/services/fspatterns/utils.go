@@ -14,9 +14,19 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
-type SizeLimit struct {
-	Max int64
-	Min int64
+// ThresholdCondition represents whether the threshold is for files above or below a specified size.
+type ThresholdCondition int
+
+const (
+	// GreaterThan is greater & equal
+	GreaterEqualThan ThresholdCondition = iota
+	// LessThan is only less
+	LessThan
+)
+
+type SizeThreshold struct {
+	Size      int64
+	Condition ThresholdCondition
 }
 
 // Return all the existing paths of the provided root path
@@ -25,12 +35,12 @@ func ListFilesFilterPattern(rootPath string, isRecursive, includeDirs, excludeWi
 }
 
 // Return all the existing paths of the provided root path
-func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string, sizeLimit *SizeLimit) ([]string, error) {
+func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string, sizeThreshold *SizeThreshold) ([]string, error) {
 	var rootFilter string
 	if excludeWithRelativePath {
 		rootFilter = rootPath
 	}
-	filterFunc := filterFilesFunc(rootFilter, excludePathPattern, sizeLimit)
+	filterFunc := filterFilesFunc(rootFilter, excludePathPattern, sizeThreshold)
 	if isRecursive {
 		return fileutils.ListFilesRecursiveWalkIntoDirSymlinkByFilterFunc(rootPath, !isSymlink, filterFunc)
 	} else {
@@ -58,7 +68,7 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 	return excludePathPattern
 }
 
-func filterFilesFunc(rootPath string, excludePathPattern string, sizeLimit *SizeLimit) func(filePath string) (included bool, err error) {
+func filterFilesFunc(rootPath string, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
 	return func(path string) (included bool, err error) {
 		if path == "." {
 			return false, nil
@@ -72,7 +82,7 @@ func filterFilesFunc(rootPath string, excludePathPattern string, sizeLimit *Size
 			return false, nil
 		}
 
-		if sizeLimit != nil {
+		if sizeThreshold != nil {
 			// Check if the file size is within the limits
 			fileInfo, err := os.Stat(path)
 			if err != nil {
@@ -80,7 +90,9 @@ func filterFilesFunc(rootPath string, excludePathPattern string, sizeLimit *Size
 			}
 			if !fileInfo.IsDir() {
 				fileSize := fileInfo.Size()
-				if fileSize > sizeLimit.Max || fileSize < sizeLimit.Min {
+				// If the file size is not within the limits, exclude it
+				if sizeThreshold.Condition == GreaterEqualThan && fileSize < sizeThreshold.Size ||
+					sizeThreshold.Condition == LessThan && fileSize >= sizeThreshold.Size {
 					return false, nil
 				}
 			}

@@ -35,7 +35,7 @@ const (
 	DefaultMinChecksumDeploy = utils.SizeKib * 10
 	// The default minimum file size for attempting multi-part upload
 	defaultUploadMinSplit = utils.SizeMiB * 200
-	// The default maximum number of parts that can be concurrently uploaded per file during a multi-part upload
+	// The default maximum number of parts that can be concurrently uploaded per file during a multipart upload
 	defaultUploadSplitCount = 5
 )
 
@@ -716,7 +716,7 @@ type UploadParams struct {
 	Archive              string
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
 	TargetPathInArchive string
-	SizeLimit           *fspatterns.SizeLimit
+	SizeLimit           *fspatterns.SizeThreshold
 }
 
 func NewUploadParams() UploadParams {
@@ -751,7 +751,7 @@ func (up *UploadParams) GetDebian() string {
 	return up.Deb
 }
 
-func (up *UploadParams) GetSizeLimit() *fspatterns.SizeLimit {
+func (up *UploadParams) GetSizeLimit() *fspatterns.SizeThreshold {
 	return up.SizeLimit
 }
 
