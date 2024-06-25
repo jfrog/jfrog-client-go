@@ -83,7 +83,7 @@ jobs:
           ~/go/bin/local-rt-setup
 
       - name: artifactory tests
-        run: go test -v -race github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Ds-Xr-MPU-Tests:
     needs: Pretest
@@ -114,7 +114,7 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: ${{ matrix.suite }} tests
-        run: go test -v -race github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --ds.url=${{ secrets.PLATFORM_URL }}/distribution --xr.url=${{ secrets.PLATFORM_URL }}/xray --xsc.url=${{ secrets.PLATFORM_URL }}/xsc --access.url=${{ secrets.PLATFORM_URL }}/access --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --ds.url=${{ secrets.PLATFORM_URL }}/distribution --xr.url=${{ secrets.PLATFORM_URL }}/xray --xsc.url=${{ secrets.PLATFORM_URL }}/xsc --access.url=${{ secrets.PLATFORM_URL }}/access --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Pipelines-Tests:
     needs: Pretest
@@ -140,7 +140,7 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: pipelines tests
-        run: go test -v -race github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --pipe.url=${{ secrets.PLATFORM_URL }}/pipelines --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --pipe.accessToken=${{ secrets.PLATFORM_ADMIN_TOKEN }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }} --ci.runId=${{ runner.os }}_pipe
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --pipe.url=${{ secrets.PLATFORM_URL }}/pipelines --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --pipe.accessToken=${{ secrets.PLATFORM_ADMIN_TOKEN }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }} --ci.runId=${{ runner.os }}_pipe
         
   JFrog-Client-Go-Repositories-Tests:
     needs: Pretest
@@ -175,4 +175,4 @@ jobs:
           ~/go/bin/local-rt-setup
 
       - name: Repositories tests
-        run: go test -v -race github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories
