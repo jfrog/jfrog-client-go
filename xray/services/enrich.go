@@ -52,7 +52,7 @@ func (ss *ScanService) GetImportGraphResults(scanId string) (*ScanResponse, erro
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	// Getting the import graph results is from the same api but with some parameters always initialized.
-	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + scanId + includeVulnerabilitiesParam
+	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId + includeVulnerabilitiesParam
 	log.Info("Waiting for enrich process to complete on JFrog Xray...")
 	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
 		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
