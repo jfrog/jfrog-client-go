@@ -179,16 +179,22 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	copyHeaders(httpClientsDetails, req)
 	addUberTraceIdHeaderIfSet(req)
 
+	client := jc.client
+
 	if !followRedirect || (followRedirect && req.Method == http.MethodPost) {
-		jc.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-			redirectUrl = req.URL.String()
-			return errors.New("redirect")
+		// The jc.client is a shared resource between go routines, so to handle this override we clone it.
+		client = &http.Client{
+			Transport: jc.client.Transport,
+			Timeout:   jc.client.Timeout,
+			Jar:       jc.client.Jar,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				redirectUrl = req.URL.String()
+				return errors.New("redirect")
+			},
 		}
 	}
 
-	resp, err = jc.client.Do(req)
-	jc.client.CheckRedirect = nil
-
+	resp, err = client.Do(req)
 	if err != nil && redirectUrl != "" {
 		if !followRedirect {
 			log.Debug("Blocking HTTP redirect to", redirectUrl)
@@ -203,9 +209,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 			return
 		}
 	}
-
-	err = errorutils.CheckError(err)
-	if err != nil {
+	if errorutils.CheckError(err) != nil {
 		return
 	}
 	if closeBody {
