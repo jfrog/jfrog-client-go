@@ -331,14 +331,14 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	if errorutils.CheckError(err) != nil || resp == nil {
 		return
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusOK, http.StatusAccepted); err != nil {
-		return
-	}
 	defer func() {
 		if resp != nil && resp.Body != nil {
 			err = errors.Join(err, errorutils.CheckError(resp.Body.Close()))
 		}
 	}()
+	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusOK, http.StatusAccepted); err != nil {
+		return
+	}
 	body, err = io.ReadAll(resp.Body)
 	err = errorutils.CheckError(err)
 	return
