@@ -23,7 +23,7 @@ const (
 
 // Write a JSON file in small chunks. Only a single JSON key can be written to the file, and array as its value.
 // The array's values could be any JSON value types (number, string, etc...).
-// Once the first 'Write" call is made, the file will stay open, waiting for the next struct to be written (thread-safe).
+// Once the first 'Write' call is made, the file will stay open, waiting for the next struct to be written (thread-safe).
 // Finally, 'Close' will fill the end of the JSON file and the operation will be completed.
 type ContentWriter struct {
 	// arrayKey = JSON object key to be written.
