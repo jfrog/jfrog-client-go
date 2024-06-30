@@ -56,7 +56,7 @@ func (xirs *IgnoreRuleService) Delete(ignoreRuleId string) error {
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent); err != nil {
 		return err
 	}
 	log.Debug("Xray response:", resp.Status)
