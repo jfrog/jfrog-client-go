@@ -59,18 +59,18 @@ func (xirs *IgnoreRuleService) Delete(ignoreRuleId string) error {
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent); err != nil {
 		return err
 	}
-	log.Debug("Xray response:", resp.Status)
+	log.Debug("Xray response status:", resp.Status)
 	log.Info("Done deleting ignore rule.")
 	return nil
 }
 
 // Create will create a new Xray ignore rule
 // The function creates the ignore rule and returns its id which is recieved after post
-func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams, ignoreRuleId *string) error {
+func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRuleId string, err error) {
 	ignoreRuleBody := utils.CreateIgnoreRuleBody(params)
 	content, err := json.Marshal(ignoreRuleBody)
 	if err != nil {
-		return errorutils.CheckError(err)
+		return "", errorutils.CheckError(err)
 	}
 
 	httpClientsDetails := xirs.XrayDetails.CreateHttpClientDetails()
@@ -80,37 +80,43 @@ func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams, ignoreRuleI
 	log.Info("Create new ignore rule...")
 	resp, body, err := xirs.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
-		return err
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
+		return "", err
+	}
+	log.Debug("Xray response status:", resp.Status)
+
+	ignoreRuleId, err = getIgnoreRuleIdFromBody(body)
+	if err != nil {
+		return "", err
 	}
 
-	*ignoreRuleId = getIgnoreRuleIdFromBody(body)
-	log.Debug("Xray response:", resp.Status)
 	log.Info("Done creating ignore rule.")
-	return nil
+
+	return ignoreRuleId, nil
 }
 
-func getIgnoreRuleIdFromBody(body []byte) string {
+func getIgnoreRuleIdFromBody(body []byte) (string, error) {
 	str := string(body)
 
 	re := regexp.MustCompile(`id:\s*([a-f0-9-]+)`)
 	match := re.FindStringSubmatch(str)
 
-	if len(match) != 0 {
-		return match[1]
+	if len(match) <= 1 {
+		err := errors.New("couldn't find id for ignore rule")
+		return "", err
 	}
 
-	return ""
+	return match[1], nil
 }
 
 // Get retrieves the details about an Xray ignore rule by its id
 // It will error if no ignore rule can be found by that id.
 func (xirs *IgnoreRuleService) Get(ignoreRuleId string) (ignoreRuleResp *utils.IgnoreRuleParams, err error) {
 	httpClientsDetails := xirs.XrayDetails.CreateHttpClientDetails()
-	log.Info("Getting ignore rule...")
+	log.Info("Getting ignore rule '%s'...", ignoreRuleId)
 	resp, body, _, err := xirs.client.SendGet(xirs.getIgnoreRuleURL()+"/"+ignoreRuleId, true, &httpClientsDetails)
 	ignoreRule := &utils.IgnoreRuleBody{}
 
@@ -121,13 +127,11 @@ func (xirs *IgnoreRuleService) Get(ignoreRuleId string) (ignoreRuleResp *utils.I
 		return &utils.IgnoreRuleParams{}, err
 	}
 
-	err = json.Unmarshal(body, ignoreRule)
-
-	if err != nil {
+	if err = json.Unmarshal(body, ignoreRule); err != nil {
 		return &utils.IgnoreRuleParams{}, errors.New("failed unmarshalling ignore rule " + ignoreRuleId)
 	}
 
-	log.Debug("Xray response:", resp.Status)
+	log.Debug("Xray response status:", resp.Status)
 	log.Info("Done getting ignore rule.")
 
 	return &utils.IgnoreRuleParams{

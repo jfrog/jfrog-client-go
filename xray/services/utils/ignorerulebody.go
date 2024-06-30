@@ -9,13 +9,11 @@ type IgnoreRuleParams struct {
 }
 
 type IgnoreRuleBody struct {
-	Id            string        `json:"id,omitempty"`
-	Author        string        `json:"author,omitempty"`
-	Created       time.Time     `json:"created,omitempty"`
-	IsExpired     bool          `json:"is_expired,omitempty"`
-	Notes         string        `json:"notes"`
-	ExpiresAt     time.Time     `json:"expires_at,omitempty"`
-	IgnoreFilters IgnoreFilters `json:"ignore_filters"`
+	Id        string    `json:"id,omitempty"`
+	Author    string    `json:"author,omitempty"`
+	Created   time.Time `json:"created,omitempty"`
+	IsExpired bool      `json:"is_expired,omitempty"`
+	IgnoreRuleParams
 }
 
 type IgnoreFilters struct {
@@ -58,8 +56,10 @@ type ExposuresCatagories struct {
 
 func CreateIgnoreRuleBody(ignoreRuleParams IgnoreRuleParams) IgnoreRuleBody {
 	return IgnoreRuleBody{
-		Notes:         ignoreRuleParams.Notes,
-		ExpiresAt:     ignoreRuleParams.ExpiresAt,
-		IgnoreFilters: ignoreRuleParams.IgnoreFilters,
+		IgnoreRuleParams: IgnoreRuleParams{
+			Notes:         ignoreRuleParams.Notes,
+			ExpiresAt:     ignoreRuleParams.ExpiresAt,
+			IgnoreFilters: ignoreRuleParams.IgnoreFilters,
+		},
 	}
 }

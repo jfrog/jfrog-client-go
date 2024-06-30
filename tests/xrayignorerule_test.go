@@ -38,17 +38,17 @@ func createCveIgnoreRule(t *testing.T) {
 		Components: components,
 	}
 
-	createIgnoreRule(t, &ignoreRuleId, ignoreRuleFilter)
+	ignoreRuleId = createIgnoreRule(t, ignoreRuleFilter)
 }
 
-func createIgnoreRule(t *testing.T, ignoreRuleId *string, ignoreRuleFilter utils.IgnoreFilters) *utils.IgnoreRuleParams {
+func createIgnoreRule(t *testing.T, ignoreRuleFilter utils.IgnoreFilters) (ignoreRuleId string) {
 	ignoreRuleParams := utils.IgnoreRuleParams{
 		Notes:         "Create new ignore rule" + getRunId(),
 		ExpiresAt:     time.Date(2025, time.June, 28, 14, 30, 0, 0, time.UTC),
 		IgnoreFilters: ignoreRuleFilter,
 	}
 
-	err := testsXrayIgnoreRuleService.Create(ignoreRuleParams, ignoreRuleId)
+	ignoreRuleId, err := testsXrayIgnoreRuleService.Create(ignoreRuleParams)
 	assert.NoError(t, err)
-	return &ignoreRuleParams
+	return ignoreRuleId
 }
