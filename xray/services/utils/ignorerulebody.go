@@ -25,7 +25,7 @@ type IgnoreFilters struct {
 	DockerLayers     []string                      `json:"docker-layers,omitempty"`
 	OperationalRisks []string                      `json:"operational_risk,omitempty"`
 	Exposures        []ExposuresFilterName         `json:"exposures,omitempty"`
-	ReleaseBundles   []IgnoreFilterNameVersion     `json:"release_bundles,omitempty"`
+	ReleaseBundles   []IgnoreFilterNameVersion     `json:"release-bundles,omitempty"`
 	Builds           []IgnoreFilterNameVersion     `json:"builds,omitempty"`
 	Components       []IgnoreFilterNameVersion     `json:"components,omitempty"`
 	Artifacts        []IgnoreFilterNameVersionPath `json:"artifacts,omitempty"`

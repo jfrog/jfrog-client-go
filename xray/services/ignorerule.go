@@ -94,6 +94,7 @@ func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRule
 	}
 
 	log.Info("Done creating ignore rule.")
+	log.Debug("Ignore rule id is: ", ignoreRuleId)
 
 	return ignoreRuleId, nil
 }

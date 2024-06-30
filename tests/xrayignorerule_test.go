@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,6 +12,8 @@ import (
 func TestXrayIgnoreRule(t *testing.T) {
 	initXrayTest(t)
 	t.Run("createCveIgnoreRule", createCveIgnoreRule)
+	t.Run("createVulnerabilitesAndLicensesIgnoreRule", createVulnerabilitesAndLicensesIgnoreRule)
+	t.Run("createIgnoreRuleOnWatch", createIgnoreRuleOnWatch)
 }
 
 func deleteIgnoreRule(t *testing.T, ignoreRuleId string) {
@@ -41,14 +44,87 @@ func createCveIgnoreRule(t *testing.T) {
 	ignoreRuleId = createIgnoreRule(t, ignoreRuleFilter)
 }
 
+func createVulnerabilitesAndLicensesIgnoreRule(t *testing.T) {
+	var ignoreRuleId string
+	defer func() {
+		if ignoreRuleId != "" {
+			deleteIgnoreRule(t, ignoreRuleId)
+		}
+	}()
+
+	vulnerabilities := []string{"any"}
+	licenses := []string{"any"}
+	releaseBundle := utils.IgnoreFilterNameVersion{
+		Name: "testRB",
+	}
+	releaseBundles := []utils.IgnoreFilterNameVersion{releaseBundle}
+	ignoreRuleFilter := utils.IgnoreFilters{
+		Vulnerabilities: vulnerabilities,
+		Licenses:        licenses,
+		ReleaseBundles:  releaseBundles,
+	}
+
+	ignoreRuleId = createIgnoreRule(t, ignoreRuleFilter)
+}
+
+func createIgnoreRuleOnWatch(t *testing.T) {
+	cve := []string{"CVE-2022-31197"}
+	policyName := fmt.Sprintf("%s-%s", "test-policy-for-dummy-watch", getRunId())
+	watchName := fmt.Sprintf("%s-%s", "test-watch-for-ignore-rule", getRunId())
+	err := createDummyWatch(policyName, watchName)
+	defer func() {
+		assert.NoError(t, testsXrayWatchService.Delete(watchName))
+		assert.NoError(t, testsXrayPolicyService.Delete(policyName))
+	}()
+	assert.NoError(t, err)
+	watches := []string{watchName}
+
+	var ignoreRuleId string
+	defer func() {
+		if ignoreRuleId != "" {
+			deleteIgnoreRule(t, ignoreRuleId)
+		}
+	}()
+
+	ignoreRuleFilter := utils.IgnoreFilters{
+		CVEs:    cve,
+		Watches: watches,
+	}
+
+	ignoreRuleId = createIgnoreRule(t, ignoreRuleFilter)
+
+}
+
 func createIgnoreRule(t *testing.T, ignoreRuleFilter utils.IgnoreFilters) (ignoreRuleId string) {
 	ignoreRuleParams := utils.IgnoreRuleParams{
 		Notes:         "Create new ignore rule" + getRunId(),
-		ExpiresAt:     time.Date(2025, time.June, 28, 14, 30, 0, 0, time.UTC),
+		ExpiresAt:     time.Now().AddDate(0, 0, 1),
 		IgnoreFilters: ignoreRuleFilter,
 	}
 
 	ignoreRuleId, err := testsXrayIgnoreRuleService.Create(ignoreRuleParams)
 	assert.NoError(t, err)
 	return ignoreRuleId
+}
+
+func createDummyWatch(policyName string, watchName string) error {
+	err := createDummyPolicy(policyName)
+	if err != nil {
+		return err
+	}
+	params := utils.WatchParams{
+		Name:   watchName,
+		Active: true,
+		Repositories: utils.WatchRepositoriesParams{
+			Type: utils.WatchRepositoriesAll,
+		},
+		Policies: []utils.AssignedPolicy{
+			{
+				Name: policyName,
+				Type: "security",
+			},
+		},
+	}
+	err = testsXrayWatchService.Create(params)
+	return err
 }
