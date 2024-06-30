@@ -44,7 +44,7 @@ type IgnoreFilterNameVersionPath struct {
 type ExposuresFilterName struct {
 	Catagories []ExposuresCatagories `json:"catagories,omitempty"`
 	Scanners   []string              `json:"scanners,omitempty"`
-	FilePath   string                `json:"file_path,omitempty"`
+	FilePath   []string              `json:"file_path,omitempty"`
 }
 
 type ExposuresCatagories struct {
@@ -52,6 +52,10 @@ type ExposuresCatagories struct {
 	Services     bool `json:"services,omitempty"`
 	Applications bool `json:"applications,omitempty"`
 	Iac          bool `json:"iac,omitempty"`
+}
+
+func NewIgnoreRuleParams() IgnoreRuleParams {
+	return IgnoreRuleParams{}
 }
 
 func CreateIgnoreRuleBody(ignoreRuleParams IgnoreRuleParams) IgnoreRuleBody {
