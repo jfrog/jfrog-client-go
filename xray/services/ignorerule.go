@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 
@@ -117,7 +118,7 @@ func getIgnoreRuleIdFromBody(body []byte) (string, error) {
 // It will error if no ignore rule can be found by that id.
 func (xirs *IgnoreRuleService) Get(ignoreRuleId string) (ignoreRuleResp *utils.IgnoreRuleParams, err error) {
 	httpClientsDetails := xirs.XrayDetails.CreateHttpClientDetails()
-	log.Info("Getting ignore rule '%s'...", ignoreRuleId)
+	log.Info(fmt.Sprintf("Getting ignore rule '%s'...", ignoreRuleId))
 	resp, body, _, err := xirs.client.SendGet(xirs.getIgnoreRuleURL()+"/"+ignoreRuleId, true, &httpClientsDetails)
 	ignoreRule := &utils.IgnoreRuleBody{}
 
@@ -135,9 +136,5 @@ func (xirs *IgnoreRuleService) Get(ignoreRuleId string) (ignoreRuleResp *utils.I
 	log.Debug("Xray response status:", resp.Status)
 	log.Info("Done getting ignore rule.")
 
-	return &utils.IgnoreRuleParams{
-		Notes:         ignoreRule.Notes,
-		ExpiresAt:     ignoreRule.ExpiresAt,
-		IgnoreFilters: ignoreRule.IgnoreFilters,
-	}, nil
+	return &ignoreRule.IgnoreRuleParams, nil
 }

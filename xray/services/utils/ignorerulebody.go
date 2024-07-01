@@ -60,10 +60,6 @@ func NewIgnoreRuleParams() IgnoreRuleParams {
 
 func CreateIgnoreRuleBody(ignoreRuleParams IgnoreRuleParams) IgnoreRuleBody {
 	return IgnoreRuleBody{
-		IgnoreRuleParams: IgnoreRuleParams{
-			Notes:         ignoreRuleParams.Notes,
-			ExpiresAt:     ignoreRuleParams.ExpiresAt,
-			IgnoreFilters: ignoreRuleParams.IgnoreFilters,
-		},
+		IgnoreRuleParams: ignoreRuleParams,
 	}
 }
