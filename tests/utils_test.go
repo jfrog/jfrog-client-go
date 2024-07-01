@@ -113,9 +113,10 @@ var (
 	testsBundleDeleteRemoteService       *distributionServices.DeleteReleaseBundleService
 
 	// Xray Services
-	testsXrayWatchService  *xrayServices.WatchService
-	testsXrayPolicyService *xrayServices.PolicyService
-	testXrayBinMgrService  *xrayServices.BinMgrService
+	testsXrayWatchService      *xrayServices.WatchService
+	testsXrayPolicyService     *xrayServices.PolicyService
+	testXrayBinMgrService      *xrayServices.BinMgrService
+	testsXrayIgnoreRuleService *xrayServices.IgnoreRuleService
 
 	// Pipelines Services
 	testsPipelinesIntegrationsService *pipelinesServices.IntegrationsService
@@ -478,6 +479,18 @@ func createXrayBinMgrManager() {
 	failOnHttpClientCreation(err)
 	testXrayBinMgrService = xrayServices.NewBinMgrService(client)
 	testXrayBinMgrService.XrayDetails = xrayDetails
+}
+
+func createXrayIgnoreRuleManager() {
+	xrayDetails := GetXrayDetails()
+	client, err := jfroghttpclient.JfrogClientBuilder().
+		SetClientCertPath(xrayDetails.GetClientCertPath()).
+		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
+		Build()
+	failOnHttpClientCreation(err)
+	testsXrayIgnoreRuleService = xrayServices.NewIgnoreRuleService(client)
+	testsXrayIgnoreRuleService.XrayDetails = xrayDetails
 }
 
 func createPipelinesIntegrationsManager() {

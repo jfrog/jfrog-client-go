@@ -65,6 +65,7 @@ func setupIntegrationTests() {
 		createXrayWatchManager()
 		createXrayPolicyManager()
 		createXrayBinMgrManager()
+		createXrayIgnoreRuleManager()
 	}
 	if *TestPipelines {
 		createPipelinesIntegrationsManager()
