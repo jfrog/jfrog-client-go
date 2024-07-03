@@ -89,7 +89,7 @@ func (ds *DownloadService) getOperationSummary(totalSucceeded, totalFailed int) 
 	return operationSummary
 }
 
-func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (opertaionSummary *utils.OperationSummary, err error) {
+func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (operationSummary *utils.OperationSummary, err error) {
 	producerConsumer := parallel.NewRunner(ds.GetThreads(), 20000, false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	expectedChan := make(chan int, 1)
@@ -117,7 +117,7 @@ func (ds *DownloadService) DownloadFiles(downloadParams ...DownloadParams) (oper
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
-	opertaionSummary = ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess)
+	operationSummary = ds.getOperationSummary(totalSuccess, <-expectedChan-totalSuccess)
 	return
 }
 
@@ -236,7 +236,7 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 		return tasksCount
 	}
 	defer func() {
-		if err := sortedReader.Close(); err != nil {
+		if err = sortedReader.Close(); err != nil {
 			log.Warn("Could not close sortedReader. Error: " + err.Error())
 		}
 	}()
