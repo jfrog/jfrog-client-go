@@ -3,16 +3,13 @@ package services
 import (
 	"errors"
 	"github.com/jfrog/build-info-go/entities"
-	ioutils "github.com/jfrog/gofrog/io"
+	biutils "github.com/jfrog/build-info-go/utils"
+	"github.com/jfrog/gofrog/version"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
-	"strings"
-
-	biutils "github.com/jfrog/build-info-go/utils"
-	"github.com/jfrog/gofrog/version"
 
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 
@@ -200,31 +197,9 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 
 func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) (*content.ContentReader, error) {
 	if downloadParams.IsAvoidAql() {
-		writer, err := content.NewContentWriter(content.DefaultKey, true, false)
-		if err != nil {
-			return nil, err
-		}
-		defer ioutils.Close(writer, &err)
-		repo, path, name := splitPattern(downloadParams.Pattern)
-		resultItem := &utils.ResultItem{
-			Type: "file",
-			Repo: repo,
-			Path: path,
-			Name: name,
-		}
-		writer.Write(*resultItem)
-		return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
+		return utils.CreateFileResultItemReader(downloadParams.Pattern)
 	}
 	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
-}
-
-func splitPattern(pattern string) (repo string, path string, name string) {
-	// Split the path into parts
-	parts := strings.Split(pattern, "/")
-	repo = parts[0]
-	path = strings.Join(parts[1:len(parts)-1], "/")
-	name = parts[len(parts)-1]
-	return
 }
 
 func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
