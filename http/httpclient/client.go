@@ -664,14 +664,24 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 		writer = io.MultiWriter(destFile)
 	}
 	for i := 0; i < flags.SplitCount; i++ {
-		reader, err := os.Open(chunksPaths[i])
-		if err != nil {
-			return err
-		}
-		defer func() {
-			err = errors.Join(err, errorutils.CheckError(reader.Close()))
+		// Wrapping the loop body in an anonymous function to ensure deferred calls
+		// are executed at the end of each iteration, not at the end of the enclosing function.
+		err = func() (e error) {
+			reader, e := os.Open(chunksPaths[i])
+			if errorutils.CheckError(e) != nil {
+				return e
+			}
+			defer func() {
+				e = errors.Join(e, errorutils.CheckError(reader.Close()))
+			}()
+
+			_, e = io.Copy(writer, reader)
+			if errorutils.CheckError(e) != nil {
+				return e
+			}
+
+			return nil
 		}()
-		_, err = io.Copy(writer, reader)
 		if err != nil {
 			return err
 		}
