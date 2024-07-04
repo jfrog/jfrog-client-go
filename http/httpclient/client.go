@@ -479,7 +479,7 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 		}
 
 		if hex.EncodeToString(actualSha1.Sum(nil)) != downloadFileDetails.ExpectedSha1 {
-			err = errorutils.CheckErrorf("checksum mismatch for " + fileName + ", expected: " + downloadFileDetails.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
+			err = errors.New("checksum mismatch for " + fileName + ", expected: " + downloadFileDetails.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
 		}
 	} else {
 		_, err = io.Copy(out, reader)
