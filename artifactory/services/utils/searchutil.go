@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	ioutils "github.com/jfrog/gofrog/io"
 	"io"
 	"net/http"
 	"os"
@@ -552,21 +551,4 @@ func appendFolderSuffix(folderPath string) string {
 		folderPath += "/"
 	}
 	return folderPath
-}
-
-func CreateFileResultItemReader(repoPath string) (*content.ContentReader, error) {
-	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
-	if err != nil {
-		return nil, err
-	}
-	defer ioutils.Close(writer, &err)
-	parts := strings.Split(repoPath, "/")
-	resultItem := &ResultItem{
-		Type: "file",
-		Repo: parts[0],
-		Path: strings.Join(parts[1:len(parts)-1], "/"),
-		Name: parts[len(parts)-1],
-	}
-	writer.Write(*resultItem)
-	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
 }
