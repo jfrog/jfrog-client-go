@@ -854,7 +854,6 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		if err != nil {
 			return
 		}
-		zipReadersWg.Wait()
 		log.Info(logMsgPrefix+"Uploading artifact:", targetPath)
 
 		getReaderFunc := func() (io.Reader, error) {
