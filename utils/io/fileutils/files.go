@@ -396,30 +396,24 @@ func calcChecksumDetails(filePath string) (checksum entities.Checksum, err error
 	return calcChecksumDetailsFromReader(file)
 }
 
-func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details FileDetails, err error) {
-	if !includeChecksums {
-		details.Size, err = io.Copy(io.Discard, reader)
-		return
-	}
+func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details *FileDetails, err error) {
+	details = new(FileDetails)
+
 	pr, pw := io.Pipe()
 	defer func() {
-		prErr := errorutils.CheckError(pr.Close())
-		if prErr != nil {
-			err = errors.Join(err, prErr)
-		}
+		err = errors.Join(err, errorutils.CheckError(pr.Close()))
 	}()
 
 	go func() {
 		defer func() {
-			pwErr := errorutils.CheckError(pw.Close())
-			if pwErr != nil {
-				err = errors.Join(err, pwErr)
-			}
+			err = errors.Join(err, errorutils.CheckError(pw.Close()))
 		}()
 		details.Size, err = io.Copy(pw, reader)
 	}()
 
-	details.Checksum, err = calcChecksumDetailsFromReader(pr)
+	if includeChecksums {
+		details.Checksum, err = calcChecksumDetailsFromReader(pr)
+	}
 	return
 }
 
