@@ -861,7 +861,7 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat,
 				archiveData.uploadParams.Symlink, nil, errorsQueue, &zipReadersWg), nil
 		}
-		uploaded, err := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, &details)
+		uploaded, err := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, details)
 
 		if uploaded {
 			uploadResult.SuccessCount[threadId]++
