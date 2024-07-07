@@ -163,7 +163,7 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 	}
 	for dec.More() {
 		var ResultItem map[string]interface{}
-		err := dec.Decode(&ResultItem)
+		err = dec.Decode(&ResultItem)
 		if err != nil {
 			log.Error(err)
 			cr.errorsQueue.AddError(errorutils.CheckError(err))
