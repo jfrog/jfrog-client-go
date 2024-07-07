@@ -848,15 +848,13 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		}
 		// Make sure all go routines in readFilesAsZip calls were done.
 		var zipReadersWg sync.WaitGroup
-		var details *fileutils.FileDetails
-		if archiveData.uploadParams.ChecksumsCalcEnabled {
-			checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums",
-				archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue, &zipReadersWg)
-			details, err = fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
-			if err != nil {
-				return
-			}
+		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums",
+			archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue, &zipReadersWg)
+		details, err := fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
+		if err != nil {
+			return
 		}
+		zipReadersWg.Wait()
 		log.Info(logMsgPrefix+"Uploading artifact:", targetPath)
 
 		getReaderFunc := func() (io.Reader, error) {
@@ -864,7 +862,7 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat,
 				archiveData.uploadParams.Symlink, nil, errorsQueue, &zipReadersWg), nil
 		}
-		uploaded, err := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, details)
+		uploaded, err := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, &details)
 
 		if uploaded {
 			uploadResult.SuccessCount[threadId]++

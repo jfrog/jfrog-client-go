@@ -396,9 +396,7 @@ func calcChecksumDetails(filePath string) (checksum entities.Checksum, err error
 	return calcChecksumDetailsFromReader(file)
 }
 
-func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details *FileDetails, err error) {
-	details = new(FileDetails)
-
+func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details FileDetails, err error) {
 	pr, pw := io.Pipe()
 	defer func() {
 		prErr := errorutils.CheckError(pr.Close())
