@@ -179,16 +179,18 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	copyHeaders(httpClientsDetails, req)
 	addUberTraceIdHeaderIfSet(req)
 
+	client := jc.client
+
 	if !followRedirect || (followRedirect && req.Method == http.MethodPost) {
-		jc.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		// The jc.client is a shared resource between go routines, so to handle this override we clone it.
+		client = cloneHttpClient(jc.client)
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			redirectUrl = req.URL.String()
 			return errors.New("redirect")
 		}
 	}
 
-	resp, err = jc.client.Do(req)
-	jc.client.CheckRedirect = nil
-
+	resp, err = client.Do(req)
 	if err != nil && redirectUrl != "" {
 		if !followRedirect {
 			log.Debug("Blocking HTTP redirect to", redirectUrl)
@@ -203,9 +205,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 			return
 		}
 	}
-
-	err = errorutils.CheckError(err)
-	if err != nil {
+	if errorutils.CheckError(err) != nil {
 		return
 	}
 	if closeBody {
@@ -217,6 +217,15 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 		respBody, _ = io.ReadAll(resp.Body)
 	}
 	return
+}
+
+func cloneHttpClient(httpClient *http.Client) *http.Client {
+	return &http.Client{
+		Transport:     httpClient.Transport,
+		Timeout:       httpClient.Timeout,
+		Jar:           httpClient.Jar,
+		CheckRedirect: httpClient.CheckRedirect,
+	}
 }
 
 func copyHeaders(httpClientsDetails httputils.HttpClientDetails, req *http.Request) {
@@ -475,7 +484,7 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 		}
 
 		if hex.EncodeToString(actualSha1.Sum(nil)) != downloadFileDetails.ExpectedSha1 {
-			err = errors.New("Checksum mismatch for " + fileName + ", expected: " + downloadFileDetails.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
+			err = errors.New("checksum mismatch for " + fileName + ", expected: " + downloadFileDetails.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
 		}
 	} else {
 		_, err = io.Copy(out, reader)
@@ -660,21 +669,31 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 		writer = io.MultiWriter(destFile)
 	}
 	for i := 0; i < flags.SplitCount; i++ {
-		reader, err := os.Open(chunksPaths[i])
-		if err != nil {
-			return err
-		}
-		defer func() {
-			err = errors.Join(err, errorutils.CheckError(reader.Close()))
+		// Wrapping the loop body in an anonymous function to ensure deferred calls
+		// are executed at the end of each iteration, not at the end of the enclosing function.
+		err = func() (e error) {
+			reader, e := os.Open(chunksPaths[i])
+			if errorutils.CheckError(e) != nil {
+				return e
+			}
+			defer func() {
+				e = errors.Join(e, errorutils.CheckError(reader.Close()))
+			}()
+
+			_, e = io.Copy(writer, reader)
+			if errorutils.CheckError(e) != nil {
+				return e
+			}
+
+			return nil
 		}()
-		_, err = io.Copy(writer, reader)
 		if err != nil {
 			return err
 		}
 	}
 	if len(flags.ExpectedSha1) > 0 && !flags.SkipChecksum {
 		if hex.EncodeToString(actualSha1.Sum(nil)) != flags.ExpectedSha1 {
-			err = errors.New("Checksum mismatch for  " + flags.LocalFileName + ", expected: " + flags.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
+			err = errorutils.CheckErrorf("checksum mismatch for  " + flags.LocalFileName + ", expected: " + flags.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
 		}
 	}
 	return err
