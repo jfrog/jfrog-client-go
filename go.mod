@@ -14,9 +14,9 @@ require (
 	github.com/jfrog/gofrog v1.7.3
 	github.com/stretchr/testify v1.9.0
 	github.com/xanzy/ssh-agent v0.3.3
-	golang.org/x/crypto v0.24.0
+	golang.org/x/crypto v0.25.0
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
-	golang.org/x/term v0.21.0
+	golang.org/x/term v0.22.0
 )
 
 require (
@@ -52,7 +52,7 @@ require (
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
