@@ -183,14 +183,10 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 
 	if !followRedirect || (followRedirect && req.Method == http.MethodPost) {
 		// The jc.client is a shared resource between go routines, so to handle this override we clone it.
-		client = &http.Client{
-			Transport: jc.client.Transport,
-			Timeout:   jc.client.Timeout,
-			Jar:       jc.client.Jar,
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				redirectUrl = req.URL.String()
-				return errors.New("redirect")
-			},
+		client = cloneHttpClient(jc.client)
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			redirectUrl = req.URL.String()
+			return errors.New("redirect")
 		}
 	}
 
@@ -221,6 +217,15 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 		respBody, _ = io.ReadAll(resp.Body)
 	}
 	return
+}
+
+func cloneHttpClient(httpClient *http.Client) *http.Client {
+	return &http.Client{
+		Transport:     httpClient.Transport,
+		Timeout:       httpClient.Timeout,
+		Jar:           httpClient.Jar,
+		CheckRedirect: httpClient.CheckRedirect,
+	}
 }
 
 func copyHeaders(httpClientsDetails httputils.HttpClientDetails, req *http.Request) {
