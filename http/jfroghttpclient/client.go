@@ -80,7 +80,8 @@ func (rtc *JfrogHttpClient) SendPut(url string, content []byte, httpClientsDetai
 	if err != nil {
 		return
 	}
-	return rtc.httpClient.SendPut(url, content, *httpClientsDetails, "")
+	testClient, err := httpclient.ClientBuilder().Build()
+	return testClient.SendPut(url, content, *httpClientsDetails, "")
 }
 
 func (rtc *JfrogHttpClient) Send(method string, url string, content []byte, followRedirect bool, closeBody bool,

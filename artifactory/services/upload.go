@@ -585,7 +585,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, nil)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, us.Progress)
 	return
 }
 
@@ -610,6 +610,9 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 		}
 		if isSuccessfulUploadStatusCode(resp.StatusCode) {
 			checksumDeployed = true
+			if us.Progress != nil {
+				us.Progress.IncrementGeneralProgress()
+			}
 			return
 		}
 	}
@@ -778,6 +781,9 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 				err = us.createFolderInArtifactory(artifact)
 				if err != nil {
 					return
+				}
+				if us.Progress != nil {
+					us.Progress.IncrementGeneralProgress()
 				}
 				uploaded = true
 			} else {
