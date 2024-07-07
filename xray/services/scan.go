@@ -143,6 +143,24 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	return scanResponse.ScanId, err
 }
 
+func (ss *ScanService) PollingAction(endPoint string, httpClientDetails httputils.HttpClientDetails) (action func() (shouldStop bool, responseBody []byte, err error)) {
+	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
+		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientDetails)
+		if err != nil {
+			return true, nil, err
+		}
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
+			return true, nil, err
+		}
+		// Got the full valid response.
+		if resp.StatusCode == http.StatusOK {
+			return true, body, nil
+		}
+		return false, nil, nil
+	}
+	return pollingAction
+}
+
 func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
@@ -164,24 +182,11 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		endPoint += includeLicensesParam
 	}
 	log.Info("Waiting for scan to complete on JFrog Xray...")
-	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
-		if err != nil {
-			return true, nil, err
-		}
-		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
-			return true, nil, err
-		}
-		// Got the full valid response.
-		if resp.StatusCode == http.StatusOK {
-			return true, body, nil
-		}
-		return false, nil, nil
-	}
+
 	pollingExecutor := &httputils.PollingExecutor{
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
-		PollingAction:   pollingAction,
+		PollingAction:   ss.PollingAction(endPoint, httpClientsDetails),
 		MsgPrefix:       "Get Dependencies Scan results... ",
 	}
 

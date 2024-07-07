@@ -54,27 +54,12 @@ func (ss *ScanService) GetImportGraphResults(scanId string) (*ScanResponse, erro
 	// Getting the import graph results is from the same api but with some parameters always initialized.
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId + includeVulnerabilitiesParam
 	log.Info("Waiting for enrich process to complete on JFrog Xray...")
-	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
-		if err != nil {
-			return true, nil, err
-		}
-		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
-			return true, nil, err
-		}
-		// Got the full valid response.
-		if resp.StatusCode == http.StatusOK {
-			return true, body, nil
-		}
-		return false, nil, nil
-	}
 	pollingExecutor := &httputils.PollingExecutor{
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
-		PollingAction:   pollingAction,
+		PollingAction:   ss.PollingAction(endPoint, httpClientsDetails),
 		MsgPrefix:       "Get Dependencies Scan results... ",
 	}
-
 	body, err := pollingExecutor.Execute()
 	if err != nil {
 		return nil, err
