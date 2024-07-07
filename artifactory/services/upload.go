@@ -848,11 +848,14 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		}
 		// Make sure all go routines in readFilesAsZip calls were done.
 		var zipReadersWg sync.WaitGroup
-		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums",
-			archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue, &zipReadersWg)
-		details, err := fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
-		if err != nil {
-			return
+		var details *fileutils.FileDetails
+		if archiveData.uploadParams.ChecksumsCalcEnabled {
+			checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums",
+				archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue, &zipReadersWg)
+			details, err = fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
+			if err != nil {
+				return
+			}
 		}
 		log.Info(logMsgPrefix+"Uploading artifact:", targetPath)
 
