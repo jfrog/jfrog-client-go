@@ -199,7 +199,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 }
 
 func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) (*content.ContentReader, error) {
-	if downloadParams.Sha256 != "" && downloadParams.Size != 0 {
+	if downloadParams.Sha256 != "" {
 		return createResultsItemWithoutAql(downloadParams)
 	}
 	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
