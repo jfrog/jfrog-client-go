@@ -178,7 +178,7 @@ func (mc *MoveCopyService) createMoveCopyFileHandlerFunc(result *utils.Result) f
 				return err
 			}
 			if strings.HasSuffix(destFile, "/") {
-				if resultItem.Type != "folder" {
+				if resultItem.Type != string(utils.Folder) {
 					destFile += resultItem.Name
 				} else {
 					_, err = mc.createPathForMoveAction(destFile, logMsgPrefix)

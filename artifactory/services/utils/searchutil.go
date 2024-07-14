@@ -340,6 +340,13 @@ type SearchBasedContentItem interface {
 	GetType() string
 }
 
+type ResultItemType string
+
+const (
+	File   ResultItemType = "file"
+	Folder ResultItemType = "folder"
+)
+
 type ResultItem struct {
 	Repo        string     `json:"repo,omitempty"`
 	Path        string     `json:"path,omitempty"`
@@ -368,7 +375,7 @@ type Stat struct {
 }
 
 func (item ResultItem) GetSortKey() string {
-	if item.Type == "folder" {
+	if item.Type == string(Folder) {
 		return appendFolderSuffix(item.GetItemRelativePath())
 	}
 	return item.GetItemRelativePath()
@@ -389,7 +396,7 @@ func (item ResultItem) GetItemRelativePath() string {
 
 	url := item.Repo
 	url = path.Join(url, item.Path, item.Name)
-	if item.Type == "folder" {
+	if item.Type == string(Folder) {
 		url = appendFolderSuffix(url)
 	}
 	return url
@@ -498,12 +505,12 @@ func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.
 			continue
 		}
 		rPath := resultItem.GetItemRelativePath()
-		if resultItem.GetType() == "folder" && !strings.HasSuffix(rPath, "/") {
+		if resultItem.GetType() == string(Folder) && !strings.HasSuffix(rPath, "/") {
 			rPath += "/"
 		}
 		if prevFolder == "" || !strings.HasPrefix(rPath, prevFolder) {
 			writer.Write(resultItem)
-			if resultItem.GetType() == "folder" {
+			if resultItem.GetType() == string(Folder) {
 				prevFolder = rPath
 			}
 		}

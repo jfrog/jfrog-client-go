@@ -104,7 +104,7 @@ func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultW
 	for candidate := new(ResultItem); deleteCandidates.NextRecord(candidate) == nil; candidate = new(ResultItem) {
 		// Save all candidates, of the requested type, to a different temp file.
 		if candidate.Type == candidateType {
-			if candidateType == "folder" && candidate.Name == "." {
+			if candidateType == string(Folder) && candidate.Name == "." {
 				continue
 			}
 			pathsKeys = append(pathsKeys, candidate.GetItemRelativePath())
