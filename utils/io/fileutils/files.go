@@ -407,6 +407,7 @@ func calcChecksumDetails(filePath string) (checksum entities.Checksum, err error
 func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details *FileDetails, err error) {
 	details = new(FileDetails)
 	if !includeChecksums {
+		// io.Copy copies from the reader to io.Discard and returns the number of bytes copied
 		details.Size, err = io.Copy(io.Discard, reader)
 		return
 	}
@@ -422,9 +423,7 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details 
 		details.Size, err = io.Copy(pw, reader)
 	}()
 
-	if includeChecksums {
-		details.Checksum, err = calcChecksumDetailsFromReader(pr)
-	}
+	details.Checksum, err = calcChecksumDetailsFromReader(pr)
 	return
 }
 
