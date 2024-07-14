@@ -1,46 +1,72 @@
 package services
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
-func BreakFileDownloadPathToParts_WithSingleLevelPath_ReturnsCorrectParts(t *testing.T) {
-	downloadPath := "repo/file.txt"
-	expectedRepo, expectedPath, expectedName := "repo", "", "file.txt"
-	repo, path, name, err := breakFileDownloadPathToParts(downloadPath)
-	if err != nil || repo != expectedRepo || path != expectedPath || name != expectedName {
-		t.Errorf("Expected (%s, %s, %s), got (%s, %s, %s, %v)", expectedRepo, expectedPath, expectedName, repo, path, name, err)
+func TestBreakFileDownloadPathToParts(t *testing.T) {
+	tests := []struct {
+		name         string
+		downloadPath string
+		expectedRepo string
+		expectedPath string
+		expectedName string
+		expectError  bool
+	}{
+		{
+			name:         "Single level path",
+			downloadPath: "repo/file.txt",
+			expectedRepo: "repo",
+			expectedPath: "",
+			expectedName: "file.txt",
+			expectError:  false,
+		},
+		{
+			name:         "Multi-level path",
+			downloadPath: "repo/folder/subfolder/file.txt",
+			expectedRepo: "repo",
+			expectedPath: "folder/subfolder",
+			expectedName: "file.txt",
+			expectError:  false,
+		},
+		{
+			name:         "Root level file",
+			downloadPath: "repo/",
+			expectedRepo: "repo",
+			expectedPath: "",
+			expectedName: "",
+			expectError:  false,
+		},
+		{
+			name:         "Empty path",
+			downloadPath: "",
+			expectedRepo: "",
+			expectedPath: "",
+			expectedName: "",
+			expectError:  true,
+		},
+		{
+			name:         "Invalid path",
+			downloadPath: "file.txt",
+			expectedRepo: "",
+			expectedPath: "",
+			expectedName: "",
+			expectError:  true,
+		},
 	}
-}
 
-func BreakFileDownloadPathToParts_WithMultiLevelPath_ReturnsCorrectParts(t *testing.T) {
-	downloadPath := "repo/folder/subfolder/file.txt"
-	expectedRepo, expectedPath, expectedName := "repo", "folder/subfolder", "file.txt"
-	repo, path, name, err := breakFileDownloadPathToParts(downloadPath)
-	if err != nil || repo != expectedRepo || path != expectedPath || name != expectedName {
-		t.Errorf("Expected (%s, %s, %s), got (%s, %s, %s, %v)", expectedRepo, expectedPath, expectedName, repo, path, name, err)
-	}
-}
-
-func BreakFileDownloadPathToParts_WithRootLevelFile_ReturnsEmptyPathAndName(t *testing.T) {
-	downloadPath := "repo/"
-	expectedRepo, expectedPath, expectedName := "repo", "", ""
-	repo, path, name, err := breakFileDownloadPathToParts(downloadPath)
-	if err != nil || repo != expectedRepo || path != expectedPath || name != expectedName {
-		t.Errorf("Expected (%s, %s, %s), got (%s, %s, %s, %v)", expectedRepo, expectedPath, expectedName, repo, path, name, err)
-	}
-}
-
-func BreakFileDownloadPathToParts_WithEmptyPath_ReturnsError(t *testing.T) {
-	downloadPath := ""
-	_, _, _, err := breakFileDownloadPathToParts(downloadPath)
-	if err == nil {
-		t.Errorf("Expected error for empty download path, got nil")
-	}
-}
-
-func BreakFileDownloadPathToParts_WithInvalidPath_ReturnsError(t *testing.T) {
-	downloadPath := "file.txt"
-	_, _, _, err := breakFileDownloadPathToParts(downloadPath)
-	if err == nil {
-		t.Errorf("Expected error for invalid download path, got nil")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, path, name, err := breakFileDownloadPathToParts(tt.downloadPath)
+			if tt.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tt.expectedRepo, repo)
+			assert.Equal(t, tt.expectedPath, path)
+			assert.Equal(t, tt.expectedName, name)
+		})
 	}
 }
