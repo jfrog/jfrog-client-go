@@ -36,6 +36,7 @@ const (
 // Use this function when searching by build without pattern or aql.
 // Collect build artifacts and build dependencies separately, then merge the results into one reader.
 func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerContent *content.ContentReader, err error) {
+	log.Info("Searching items related to a build...")
 	buildName, buildNumber, err := GetBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err

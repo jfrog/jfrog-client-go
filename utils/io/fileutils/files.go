@@ -575,8 +575,8 @@ func JsonEqual(filePath1, filePath2 string) (isEqual bool, err error) {
 
 // Compares provided Md5 and Sha1 to those of a local file.
 func IsEqualToLocalFile(localFilePath, md5, sha1 string) (bool, error) {
-	if md5 == "" && sha1 == "" {
-		// If both checksums are empty, no need to compare.
+	if md5 == "" || sha1 == "" {
+		// If not received checksums from downloaded file, no need to calculate local ones
 		return false, nil
 	}
 	exists, err := IsFileExists(localFilePath, false)
