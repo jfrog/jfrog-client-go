@@ -3,6 +3,7 @@ package httpclient
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"strings"
 
 	//#nosec G505 -- sha1 is supported by Artifactory.
@@ -473,7 +474,16 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 		reader = resp.Body
 	}
 
-	if len(downloadFileDetails.ExpectedSha1) > 0 && !downloadFileDetails.SkipChecksum {
+	expectedSha := ""
+	var actualSha hash.Hash
+	if downloadFileDetails.ExpectedSha1 != "" {
+		expectedSha = downloadFileDetails.ExpectedSha1
+		actualSha = sha1.New()
+	} else if downloadFileDetails.ExpectedSha256 != "" {
+		expectedSha = downloadFileDetails.ExpectedSha256
+		actualSha = sha256.New()
+	}
+	if len(expectedSha) > 0 && !downloadFileDetails.SkipChecksum {
 		//#nosec G401 -- sha1 is supported by Artifactory.
 		actualSha1 := sha1.New()
 		writer := io.MultiWriter(actualSha1, out)
@@ -483,8 +493,8 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 			return err
 		}
 
-		if hex.EncodeToString(actualSha1.Sum(nil)) != downloadFileDetails.ExpectedSha1 {
-			err = errors.New("checksum mismatch for " + fileName + ", expected: " + downloadFileDetails.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
+		if hex.EncodeToString(actualSha.Sum(nil)) != expectedSha {
+			err = errors.New("checksum mismatch for " + fileName + ", expected: " + expectedSha + ", actual: " + hex.EncodeToString(actualSha.Sum(nil)))
 		}
 	} else {
 		_, err = io.Copy(out, reader)
@@ -660,11 +670,17 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 		err = errors.Join(err, errorutils.CheckError(destFile.Close()))
 	}()
 	var writer io.Writer
-	var actualSha1 hash.Hash
+	var actualSha hash.Hash
+	expectedSha := ""
 	if len(flags.ExpectedSha1) > 0 {
+		expectedSha = flags.ExpectedSha1
 		//#nosec G401 -- Sha1 is supported by Artifactory.
-		actualSha1 = sha1.New()
-		writer = io.MultiWriter(actualSha1, destFile)
+		actualSha = sha1.New()
+		writer = io.MultiWriter(actualSha, destFile)
+	} else if len(flags.ExpectedSha256) > 0 {
+		expectedSha = flags.ExpectedSha256
+		actualSha = sha256.New()
+		writer = io.MultiWriter(actualSha, destFile)
 	} else {
 		writer = io.MultiWriter(destFile)
 	}
@@ -691,9 +707,9 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 			return err
 		}
 	}
-	if len(flags.ExpectedSha1) > 0 && !flags.SkipChecksum {
-		if hex.EncodeToString(actualSha1.Sum(nil)) != flags.ExpectedSha1 {
-			err = errorutils.CheckErrorf("checksum mismatch for  " + flags.LocalFileName + ", expected: " + flags.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
+	if len(expectedSha) > 0 && !flags.SkipChecksum {
+		if hex.EncodeToString(actualSha.Sum(nil)) != expectedSha {
+			err = errorutils.CheckErrorf("checksum mismatch for  " + flags.LocalFileName + ", expected: " + expectedSha + ", actual: " + hex.EncodeToString(actualSha.Sum(nil)))
 		}
 	}
 	return err
@@ -821,14 +837,15 @@ func addUserAgentHeader(req *http.Request) {
 }
 
 type DownloadFileDetails struct {
-	FileName      string `json:"FileName,omitempty"`
-	DownloadPath  string `json:"DownloadPath,omitempty"`
-	RelativePath  string `json:"RelativePath,omitempty"`
-	LocalPath     string `json:"LocalPath,omitempty"`
-	LocalFileName string `json:"LocalFileName,omitempty"`
-	ExpectedSha1  string `json:"ExpectedSha1,omitempty"`
-	Size          int64  `json:"Size,omitempty"`
-	SkipChecksum  bool   `json:"SkipChecksum,omitempty"`
+	FileName       string `json:"FileName,omitempty"`
+	DownloadPath   string `json:"DownloadPath,omitempty"`
+	RelativePath   string `json:"RelativePath,omitempty"`
+	LocalPath      string `json:"LocalPath,omitempty"`
+	LocalFileName  string `json:"LocalFileName,omitempty"`
+	ExpectedSha1   string `json:"ExpectedSha1,omitempty"`
+	ExpectedSha256 string `json:"-"`
+	Size           int64  `json:"Size,omitempty"`
+	SkipChecksum   bool   `json:"SkipChecksum,omitempty"`
 }
 
 type ConcurrentDownloadFlags struct {
@@ -838,6 +855,7 @@ type ConcurrentDownloadFlags struct {
 	LocalFileName           string
 	LocalPath               string
 	ExpectedSha1            string
+	ExpectedSha256          string
 	FileSize                int64
 	SplitCount              int
 	Explode                 bool

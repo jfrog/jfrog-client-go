@@ -438,6 +438,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		LocalFileName:           downloadFileDetails.LocalFileName,
 		LocalPath:               downloadFileDetails.LocalPath,
 		ExpectedSha1:            downloadFileDetails.ExpectedSha1,
+		ExpectedSha256:          downloadFileDetails.ExpectedSha256,
 		FileSize:                downloadFileDetails.Size,
 		SplitCount:              downloadParams.SplitCount,
 		Explode:                 downloadParams.Explode,
