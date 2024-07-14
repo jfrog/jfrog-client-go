@@ -169,8 +169,8 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
 
-			if downloadParams.Sha256 != "" && utils.IsWildcardPattern(downloadParams.GetPattern()) {
-				// If sha256 is provided and the pattern is an exact file path, we will create a result item without running AQL.
+			if downloadParams.Sha256 != "" {
+				// If sha256 is provided, we can avoid using AQL to get the file's info.
 				reader, err = createResultsItemWithoutAql(downloadParams)
 			} else {
 				// Search items using AQL and get their details (size/checksum/etc.) from Artifactory.
@@ -234,6 +234,9 @@ func createResultsItemWithoutAql(downloadParams DownloadParams) (*content.Conten
 }
 
 func breakFileDownloadPathToParts(downloadPath string) (repo, path, name string, err error) {
+	if utils.IsWildcardPattern(downloadPath) {
+		return "", "", "", errors.New("downloading without AQL is not supported for the provided wildcard pattern: " + downloadPath)
+	}
 	downloadPath = strings.TrimSuffix(downloadPath, "/")
 	parts := strings.Split(downloadPath, "/")
 	if len(parts) < 2 {
