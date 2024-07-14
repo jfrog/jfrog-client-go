@@ -30,7 +30,7 @@ type SizeThreshold struct {
 }
 
 // Return all the existing paths of the provided root path
-func ListFilesFilterPattern(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string) ([]string, error) {
+func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string) ([]string, error) {
 	return ListFilesFilterPatternAndSize(rootPath, isRecursive, includeDirs, excludeWithRelativePath, isSymlink, excludePathPattern, nil)
 }
 

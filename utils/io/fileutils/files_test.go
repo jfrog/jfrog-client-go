@@ -225,7 +225,7 @@ func TestListFilesByFilterFunc(t *testing.T) {
 		ext := strings.TrimLeft(filepath.Ext(filePath), ".")
 		return regexp.MatchString(`.*proj$`, ext)
 	}
-	files, err := ListFilesByFilterFunc(testDir, false, filterFunc)
+	files, err := listFilesRecursiveWithFilterFunc(testDir, false, filterFunc)
 	if err != nil {
 		assert.NoError(t, err)
 		return
