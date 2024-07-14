@@ -33,10 +33,10 @@ func TestBreakFileDownloadPathToParts(t *testing.T) {
 		{
 			name:         "Root level file",
 			downloadPath: "repo/",
-			expectedRepo: "repo",
+			expectedRepo: "",
 			expectedPath: "",
 			expectedName: "",
-			expectError:  false,
+			expectError:  true,
 		},
 		{
 			name:         "Empty path",
