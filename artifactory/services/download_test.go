@@ -6,7 +6,7 @@ import (
 )
 
 func TestBreakFileDownloadPathToParts(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name         string
 		downloadPath string
 		expectedRepo string
@@ -14,49 +14,15 @@ func TestBreakFileDownloadPathToParts(t *testing.T) {
 		expectedName string
 		expectError  bool
 	}{
-		{
-			name:         "Single level path",
-			downloadPath: "repo/file.txt",
-			expectedRepo: "repo",
-			expectedPath: "",
-			expectedName: "file.txt",
-			expectError:  false,
-		},
-		{
-			name:         "Multi-level path",
-			downloadPath: "repo/folder/subfolder/file.txt",
-			expectedRepo: "repo",
-			expectedPath: "folder/subfolder",
-			expectedName: "file.txt",
-			expectError:  false,
-		},
-		{
-			name:         "Root level file",
-			downloadPath: "repo/",
-			expectedRepo: "",
-			expectedPath: "",
-			expectedName: "",
-			expectError:  true,
-		},
-		{
-			name:         "Empty path",
-			downloadPath: "",
-			expectedRepo: "",
-			expectedPath: "",
-			expectedName: "",
-			expectError:  true,
-		},
-		{
-			name:         "Invalid path",
-			downloadPath: "file.txt",
-			expectedRepo: "",
-			expectedPath: "",
-			expectedName: "",
-			expectError:  true,
-		},
+		{"Single level path", "repo/file.txt", "repo", "", "file.txt", false},
+		{"Multi-level path", "repo/folder/subfolder/file.txt", "repo", "folder/subfolder", "file.txt", false},
+		{"Root level file", "repo/", "", "", "", true},
+		{"Empty path", "", "", "", "", true},
+		{"Invalid path", "file.txt", "", "", "", true},
+		{"Wildcard path", "repo/*.txt", "", "", "", true},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			repo, path, name, err := breakFileDownloadPathToParts(tt.downloadPath)
 			if tt.expectError {

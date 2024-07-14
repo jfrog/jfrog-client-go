@@ -179,11 +179,11 @@ func listFilesRecursiveWithFilterFunc(path string, walkIntoDirSymlink bool, filt
 		if err != nil {
 			return err
 		}
-		satisfy, err := filterFunc(path)
+		include, err := filterFunc(path)
 		if err != nil {
 			return err
 		}
-		if satisfy {
+		if include {
 			fileList = append(fileList, path)
 		}
 		return nil
@@ -194,16 +194,14 @@ func listFilesRecursiveWithFilterFunc(path string, walkIntoDirSymlink bool, filt
 
 // Return all files in the specified path who satisfy the filter func. Not recursive.
 func listFilesNonRecursiveWithFilterFunc(path string, includeDirs bool, filterFunc func(filePath string) (bool, error)) ([]string, error) {
-	sep := GetFileSeparator()
-	if !strings.HasSuffix(path, sep) {
-		path += sep
+	files, err := os.ReadDir(path)
+	if err != nil {
+		return nil, err
 	}
+	path = strings.TrimPrefix(path, "."+GetFileSeparator())
 	fileList := []string{}
-	files, _ := os.ReadDir(path)
-	path = strings.TrimPrefix(path, "."+sep)
-
 	for _, f := range files {
-		filePath := path + f.Name()
+		filePath := filepath.Join(path, f.Name())
 		satisfy, err := filterFunc(filePath)
 		if err != nil {
 			return nil, err

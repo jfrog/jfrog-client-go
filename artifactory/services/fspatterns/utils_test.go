@@ -10,8 +10,7 @@ import (
 )
 
 func TestFilterFilesFunc(t *testing.T) {
-	// Test data
-	data := []struct {
+	testCases := []struct {
 		file           string
 		ExcludePattern string
 		root           string
@@ -36,7 +35,7 @@ func TestFilterFilesFunc(t *testing.T) {
 		{"file2.zip", "", "", true},
 	}
 
-	for _, tc := range data {
+	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("File: %s, Pattern: %s, Root: %s", tc.file, tc.ExcludePattern, tc.root), func(t *testing.T) {
 			// Create the filter function with the mocked isPathExcluded
 			filterFunc := filterFilesFunc(tc.root, tc.ExcludePattern, nil)
@@ -48,7 +47,7 @@ func TestFilterFilesFunc(t *testing.T) {
 }
 
 func TestSearchPatterns(t *testing.T) {
-	data := []struct {
+	testCases := []struct {
 		path    string
 		pattern string
 		result  []string
@@ -56,7 +55,7 @@ func TestSearchPatterns(t *testing.T) {
 		{filepath.Join("testdata", "a", "a3.zip"), "^*.zip$", []string{filepath.Join("testdata", "a", "a3")}},
 		{filepath.Join("testdata", "a", "a3"), "^*.zip$", []string{}},
 	}
-	for _, d := range data {
+	for _, d := range testCases {
 		patternRegex, err := regexp.Compile(d.pattern)
 		assert.NoError(t, err)
 

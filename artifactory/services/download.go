@@ -168,9 +168,15 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
-
-			if downloadParams.Sha256 != "" {
-				// If sha256 is provided, we can avoid using AQL to get the file's info.
+			// Check if we can avoid using AQL to get the file's info.
+			avoidAql, err := isFieldsProvidedToAvoidAql(downloadParams)
+			// Check for search errors.
+			if err != nil {
+				log.Error(err)
+				errorsQueue.AddError(err)
+				continue
+			}
+			if avoidAql {
 				reader, err = createResultsItemWithoutAql(downloadParams)
 			} else {
 				// Search items using AQL and get their details (size/checksum/etc.) from Artifactory.
@@ -204,11 +210,19 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 }
 
 func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) (*content.ContentReader, error) {
-	if downloadParams.Sha256 != "" {
-		// If the sha256 is provided, we will create a result item without aql.
-		return createResultsItemWithoutAql(downloadParams)
-	}
 	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
+}
+
+func isFieldsProvidedToAvoidAql(downloadParams DownloadParams) (bool, error) {
+	if downloadParams.Sha256 != "" && downloadParams.Size != nil {
+		// If sha256 and size is provided, we can avoid using AQL to get the file's info.
+		return true, nil
+	} else if downloadParams.Sha256 == "" && downloadParams.Size == nil {
+		// If sha256 and size is missing, we can't avoid using AQL to get the file's info.
+		return false, nil
+	}
+	// If only one of the fields is provided, return an error.
+	return false, errors.New("both sha256 and size must be provided in order to avoid using AQL")
 }
 
 func createResultsItemWithoutAql(downloadParams DownloadParams) (*content.ContentReader, error) {
@@ -226,7 +240,7 @@ func createResultsItemWithoutAql(downloadParams DownloadParams) (*content.Conten
 		Repo:   repo,
 		Path:   path,
 		Name:   name,
-		Size:   downloadParams.Size,
+		Size:   *downloadParams.Size,
 		Sha256: downloadParams.Sha256,
 	}
 	writer.Write(*resultItem)
@@ -235,13 +249,9 @@ func createResultsItemWithoutAql(downloadParams DownloadParams) (*content.Conten
 
 func breakFileDownloadPathToParts(downloadPath string) (repo, path, name string, err error) {
 	if utils.IsWildcardPattern(downloadPath) {
-		return "", "", "", errors.New("downloading without AQL is not supported for the provided wildcard pattern: " + downloadPath)
+		return "", "", "", errorutils.CheckErrorf("downloading without AQL is not supported for the provided wildcard pattern: " + downloadPath)
 	}
-	downloadPath = strings.TrimSuffix(downloadPath, "/")
 	parts := strings.Split(downloadPath, "/")
-	if len(parts) < 2 {
-		return "", "", "", errors.New("downloading without AQL is not supported for the provided pattern: " + downloadPath)
-	}
 	repo = parts[0]
 	path = strings.Join(parts[1:len(parts)-1], "/")
 	name = parts[len(parts)-1]
@@ -642,7 +652,7 @@ type DownloadParams struct {
 	SkipChecksum            bool
 	// Optional fields to avoid AQL request
 	Sha256 string
-	Size   int64
+	Size   *int64
 }
 
 func (ds *DownloadParams) IsFlat() bool {

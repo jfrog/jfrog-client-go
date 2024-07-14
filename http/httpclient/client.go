@@ -3,9 +3,8 @@ package httpclient
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
+	"github.com/minio/sha256-simd"
 	"strings"
-
 	//#nosec G505 -- sha1 is supported by Artifactory.
 	"crypto/sha1"
 	"encoding/hex"

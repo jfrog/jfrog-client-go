@@ -65,12 +65,13 @@ func filterFilesFunc(rootPath string, excludePathPattern string, sizeThreshold *
 		}
 
 		if sizeThreshold != nil {
-			fileInfo, err := os.Stat(path)
+			fileInfo, err := fileutils.GetFileInfo(path, false)
 			if err != nil {
-				return false, err
+				return false, errorutils.CheckError(err)
 			}
 			// Check if the file size is within the limits
 			if !fileInfo.IsDir() && !sizeThreshold.IsSizeWithinThreshold(fileInfo.Size()) {
+				log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
 				return false, nil
 			}
 		}
@@ -125,6 +126,7 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifa
 func isPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {
 	if len(excludePathPattern) > 0 {
 		excludedPath, err = regexp.MatchString(excludePathPattern, path)
+		err = errorutils.CheckError(err)
 	}
 	return
 }
