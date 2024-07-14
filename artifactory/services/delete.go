@@ -210,7 +210,7 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 	if err != nil {
 		return nil, err
 	}
-	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter, "folder")
+	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter, utils.Folder)
 	if len(bufferFiles) > 0 {
 		defer func() {
 			for _, file := range bufferFiles {
@@ -256,7 +256,7 @@ func getSortedArtifactsToNotDelete(specFile *utils.CommonParams, ds *DeleteServi
 	// 1. Go sorts strings differently from Artifactory's database, when the strings include special chars, such as dashes.
 	// 2. Artifactory sorts by database columns, so directories will be sorted differently than files,
 	//    because the path and name cols have different values.
-	sortedResults, err := utils.FilterCandidateToBeDeleted(tempResults, resultWriter, "file")
+	sortedResults, err := utils.FilterCandidateToBeDeleted(tempResults, resultWriter, utils.File)
 	if err != nil {
 		return nil, err
 	}

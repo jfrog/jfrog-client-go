@@ -97,14 +97,14 @@ func writeRemainCandidate(cw *content.ContentWriter, mergeResult *content.Conten
 	}
 }
 
-func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultWriter *content.ContentWriter, candidateType string) ([]*content.ContentReader, error) {
+func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultWriter *content.ContentWriter, candidateType ResultItemType) ([]*content.ContentReader, error) {
 	paths := make(map[string]content.SortableContentItem)
 	pathsKeys := make([]string, 0, utils.MaxBufferSize)
 	toBeDeleted := []*content.ContentReader{}
 	for candidate := new(ResultItem); deleteCandidates.NextRecord(candidate) == nil; candidate = new(ResultItem) {
 		// Save all candidates, of the requested type, to a different temp file.
-		if candidate.Type == candidateType {
-			if candidateType == "folder" && candidate.Name == "." {
+		if candidate.Type == string(candidateType) {
+			if candidateType == Folder && candidate.Name == "." {
 				continue
 			}
 			pathsKeys = append(pathsKeys, candidate.GetItemRelativePath())
