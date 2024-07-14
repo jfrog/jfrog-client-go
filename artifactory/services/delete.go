@@ -210,7 +210,7 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 	if err != nil {
 		return nil, err
 	}
-	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter, string(utils.Folder))
+	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter, utils.Folder)
 	if len(bufferFiles) > 0 {
 		defer func() {
 			for _, file := range bufferFiles {
