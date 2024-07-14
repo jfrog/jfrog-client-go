@@ -168,7 +168,6 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
 			// Search items.
-			log.Info("Searching items to download...")
 			switch downloadParams.GetSpecType() {
 			case utils.WILDCARD:
 				reader, err = ds.collectFilesUsingWildcardPattern(downloadParams)
