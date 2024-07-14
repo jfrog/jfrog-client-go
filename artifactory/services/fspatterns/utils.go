@@ -14,21 +14,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 )
 
-// ThresholdCondition represents whether the threshold is for files above or below a specified size.
-type ThresholdCondition int
-
-const (
-	// GreaterThan is greater & equal
-	GreaterEqualThan ThresholdCondition = iota
-	// LessThan is only less
-	LessThan
-)
-
-type SizeThreshold struct {
-	Size      int64
-	Condition ThresholdCondition
-}
-
 // Return all the existing paths of the provided root path
 func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string) ([]string, error) {
 	return ListFilesFilterPatternAndSize(rootPath, isRecursive, includeDirs, excludeWithRelativePath, isSymlink, excludePathPattern, nil)
@@ -64,6 +49,7 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 	return excludePathPattern
 }
 
+// Returns a function that filters files according to the provided parameters
 func filterFilesFunc(rootPath string, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
 	return func(path string) (included bool, err error) {
 		if path == "." {
@@ -79,18 +65,13 @@ func filterFilesFunc(rootPath string, excludePathPattern string, sizeThreshold *
 		}
 
 		if sizeThreshold != nil {
-			// Check if the file size is within the limits
 			fileInfo, err := os.Stat(path)
 			if err != nil {
 				return false, err
 			}
-			if !fileInfo.IsDir() {
-				fileSize := fileInfo.Size()
-				// If the file size is not within the limits, exclude it
-				if sizeThreshold.Condition == GreaterEqualThan && fileSize < sizeThreshold.Size ||
-					sizeThreshold.Condition == LessThan && fileSize >= sizeThreshold.Size {
-					return false, nil
-				}
+			// Check if the file size is within the limits
+			if !fileInfo.IsDir() && !sizeThreshold.IsSizeWithinThreshold(fileInfo.Size()) {
+				return false, nil
 			}
 		}
 		return true, nil
