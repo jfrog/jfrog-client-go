@@ -170,7 +170,7 @@ func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, 
 	if !strings.HasSuffix(path, sep) {
 		path += sep
 	}
-	var fileList []string
+	fileList := []string{}
 	files, _ := os.ReadDir(path)
 	path = strings.TrimPrefix(path, "."+sep)
 
