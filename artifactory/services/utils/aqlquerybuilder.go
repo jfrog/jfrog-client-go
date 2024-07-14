@@ -204,14 +204,14 @@ func encodeForBuildInfoRepository(value string) string {
 }
 
 func CreateAqlQueryForLatestCreated(repo, path string) string {
-	return createAqlQueryForLatestCreated("file", repo, path)
+	return createAqlQueryForLatestCreated(File, repo, path)
 }
 
 func CreateAqlQueryForLatestCreatedFolder(repo, path string) string {
-	return createAqlQueryForLatestCreated("folder", repo, path)
+	return createAqlQueryForLatestCreated(Folder, repo, path)
 }
 
-func createAqlQueryForLatestCreated(itemType, repo, path string) string {
+func createAqlQueryForLatestCreated(itemType ResultItemType, repo, path string) string {
 	itemsPart :=
 		`items.find({` +
 			`"type": "%s",` +
