@@ -164,8 +164,16 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 	return
 }
 
+func ListFilesWithFilterFunc(rootPath string, isRecursive, includeDirs, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) ([]string, error) {
+	if isRecursive {
+		return listFilesRecursiveWithFilterFunc(rootPath, walkIntoDirSymlink, filterFunc)
+	} else {
+		return listFilesNonRecursiveWithFilterFunc(rootPath, includeDirs, filterFunc)
+	}
+}
+
 // Return the recursive list of files and directories in the specified path
-func ListFilesRecursiveWalkIntoDirSymlinkByFilterFunc(path string, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) (fileList []string, err error) {
+func listFilesRecursiveWithFilterFunc(path string, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) (fileList []string, err error) {
 	fileList = []string{}
 	err = gofrog.Walk(path, func(path string, f os.FileInfo, err error) error {
 		if err != nil {
@@ -185,7 +193,7 @@ func ListFilesRecursiveWalkIntoDirSymlinkByFilterFunc(path string, walkIntoDirSy
 }
 
 // Return all files in the specified path who satisfy the filter func. Not recursive.
-func ListFilesByFilterFunc(path string, includeDirs bool, filterFunc func(filePath string) (bool, error)) ([]string, error) {
+func listFilesNonRecursiveWithFilterFunc(path string, includeDirs bool, filterFunc func(filePath string) (bool, error)) ([]string, error) {
 	sep := GetFileSeparator()
 	if !strings.HasSuffix(path, sep) {
 		path += sep

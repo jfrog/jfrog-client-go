@@ -41,11 +41,7 @@ func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, ex
 		rootFilter = rootPath
 	}
 	filterFunc := filterFilesFunc(rootFilter, excludePathPattern, sizeThreshold)
-	if isRecursive {
-		return fileutils.ListFilesRecursiveWalkIntoDirSymlinkByFilterFunc(rootPath, !isSymlink, filterFunc)
-	} else {
-		return fileutils.ListFilesByFilterFunc(rootPath, includeDirs, filterFunc)
-	}
+	return fileutils.ListFilesWithFilterFunc(rootPath, isRecursive, includeDirs, !isSymlink, filterFunc)
 }
 
 // Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.

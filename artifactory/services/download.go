@@ -169,7 +169,6 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
 			// Search items.
-			log.Info("Searching items to download...")
 			switch downloadParams.GetSpecType() {
 			case utils.WILDCARD:
 				reader, err = ds.collectFilesUsingWildcardPattern(downloadParams)
@@ -200,6 +199,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 
 func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) (*content.ContentReader, error) {
 	if downloadParams.Sha256 != "" {
+		// If the sha256 is provided, we will create a result item without aql.
 		return createResultsItemWithoutAql(downloadParams)
 	}
 	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
