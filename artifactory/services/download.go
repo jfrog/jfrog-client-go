@@ -211,17 +211,32 @@ func createResultsItemWithoutAql(downloadParams DownloadParams) (*content.Conten
 		return nil, err
 	}
 	defer ioutils.Close(writer, &err)
-	parts := strings.Split(downloadParams.Pattern, "/")
+	repo, path, name, err := breakFileDownloadPathToParts(downloadParams.GetPattern())
+	if err != nil {
+		return nil, err
+	}
 	resultItem := &utils.ResultItem{
-		Type:   "file",
-		Repo:   parts[0],
-		Path:   strings.Join(parts[1:len(parts)-1], "/"),
-		Name:   parts[len(parts)-1],
+		Type:   string(utils.File),
+		Repo:   repo,
+		Path:   path,
+		Name:   name,
 		Size:   downloadParams.Size,
 		Sha256: downloadParams.Sha256,
 	}
 	writer.Write(*resultItem)
 	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
+}
+
+func breakFileDownloadPathToParts(downloadPath string) (repo, path, name string, err error) {
+	downloadPath = strings.TrimSuffix(downloadPath, "/")
+	parts := strings.Split(downloadPath, "/")
+	if len(parts) < 2 {
+		return "", "", "", errors.New("downloading without AQL is not supported for the provided pattern: " + downloadPath)
+	}
+	repo = parts[0]
+	path = strings.Join(parts[1:len(parts)-1], "/")
+	name = parts[len(parts)-1]
+	return
 }
 
 func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
