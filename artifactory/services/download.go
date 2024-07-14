@@ -182,7 +182,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 				// Search items using AQL and get their details (size/checksum/etc.) from Artifactory.
 				switch downloadParams.GetSpecType() {
 				case utils.WILDCARD:
-					reader, err = ds.collectFilesUsingWildcardPattern(downloadParams)
+					reader, err = utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
 				case utils.BUILD:
 					reader, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
 				case utils.AQL:
@@ -207,10 +207,6 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			}
 		}
 	}()
-}
-
-func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) (*content.ContentReader, error) {
-	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
 }
 
 func isFieldsProvidedToAvoidAql(downloadParams DownloadParams) (bool, error) {

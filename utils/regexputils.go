@@ -11,8 +11,8 @@ const CredentialsInUrlRegexp = `(http|https|git)://.+@`
 
 func GetRegExp(regex string) (*regexp.Regexp, error) {
 	regExp, err := regexp.Compile(regex)
-	if errorutils.CheckError(err) != nil {
-		return nil, err
+	if err != nil {
+		return nil, errorutils.CheckErrorf("Failed to compile regex '%s' : %s", regex, err.Error())
 	}
 	return regExp, nil
 }
