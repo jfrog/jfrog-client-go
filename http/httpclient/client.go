@@ -698,13 +698,14 @@ func validateChecksum(expectedSha string, actualSha hash.Hash, fileName string) 
 	}
 	return
 }
-func handleExpectedSha(expectedSha1, ExpectedSha2 string) (expectedSha string, actualSha hash.Hash) {
+
+func handleExpectedSha(expectedSha1, expectedSha2 string) (expectedSha string, actualSha hash.Hash) {
 	if len(expectedSha1) > 0 {
 		expectedSha = expectedSha1
 		//#nosec G401 -- Sha1 is supported by Artifactory.
 		actualSha = sha1.New()
-	} else if len(ExpectedSha2) > 0 {
-		expectedSha = ExpectedSha2
+	} else if len(expectedSha2) > 0 {
+		expectedSha = expectedSha2
 		actualSha = sha256.New()
 	}
 	return
