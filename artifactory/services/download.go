@@ -173,7 +173,7 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 				// If sha256 is provided and the pattern is an exact file path, we will create a result item without running AQL.
 				reader, err = createResultsItemWithoutAql(downloadParams)
 			} else {
-				// Search items info using AQL
+				// Search items using AQL and get their details (size/checksum/etc.) from Artifactory.
 				switch downloadParams.GetSpecType() {
 				case utils.WILDCARD:
 					reader, err = ds.collectFilesUsingWildcardPattern(downloadParams)
