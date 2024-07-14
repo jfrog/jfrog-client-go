@@ -122,7 +122,7 @@ func assertSortBody(t *testing.T, actual, expected string) {
 func TestCreateAqlQueryForLatestCreated(t *testing.T) {
 	actual := CreateAqlQueryForLatestCreated("repo", "name")
 	expected := `items.find({` +
-		`"type": ` + string(File) + `,` +
+		`"type": "` + string(File) + `",` +
 		`"repo": "repo",` +
 		`"path": {"$match": "name"}` +
 		`})` +
@@ -136,7 +136,7 @@ func TestCreateAqlQueryForLatestCreated(t *testing.T) {
 func TestCreateAqlQueryForLatestCreatedFolder(t *testing.T) {
 	actual := CreateAqlQueryForLatestCreatedFolder("repo", "name")
 	expected := `items.find({` +
-		`"type": ` + string(Folder) + `,` +
+		`"type": "` + string(Folder) + `",` +
 		`"repo": "repo",` +
 		`"path": {"$match": "name"}` +
 		`})` +
