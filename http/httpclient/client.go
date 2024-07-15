@@ -692,19 +692,20 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 	return err
 }
 func validateChecksum(expectedSha string, actualSha hash.Hash, fileName string) (err error) {
-	if hex.EncodeToString(actualSha.Sum(nil)) != expectedSha {
-		err = errorutils.CheckErrorf("checksum mismatch for  " + fileName + ", expected: " + expectedSha + ", actual: " + hex.EncodeToString(actualSha.Sum(nil)))
+	actualShaString := hex.EncodeToString(actualSha.Sum(nil))
+	if actualShaString != expectedSha {
+		err = errorutils.CheckErrorf("checksum mismatch for  " + fileName + ", expected: " + expectedSha + ", actual: " + actualShaString)
 	}
 	return
 }
 
-func handleExpectedSha(expectedSha1, expectedSha2 string) (expectedSha string, actualSha hash.Hash) {
+func handleExpectedSha(expectedSha1, expectedSha256 string) (expectedSha string, actualSha hash.Hash) {
 	if len(expectedSha1) > 0 {
 		expectedSha = expectedSha1
 		//#nosec G401 -- Sha1 is supported by Artifactory.
 		actualSha = sha1.New()
-	} else if len(expectedSha2) > 0 {
-		expectedSha = expectedSha2
+	} else if len(expectedSha256) > 0 {
+		expectedSha = expectedSha256
 		actualSha = sha256.New()
 	}
 	return
