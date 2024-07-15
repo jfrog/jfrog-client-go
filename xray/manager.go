@@ -134,6 +134,20 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 	return scanService.GetScanGraphResults(scanID, includeVulnerabilities, includeLicenses, xscEnabled)
 }
 
+func (sm *XrayServicesManager) ImportGraph(params services.XrayGraphImportParams) (scanId string, err error) {
+	enrichService := services.NewEnrichService(sm.client)
+	enrichService.XrayDetails = sm.config.GetServiceDetails()
+	return enrichService.ImportGraph(params)
+}
+
+// GetScanGraphResults returns an Xray scan output of the requested graph scan.
+// The scanId input should be received from ScanGraph request.
+func (sm *XrayServicesManager) GetImportGraphResults(scanID string) (*services.ScanResponse, error) {
+	enrichService := services.NewEnrichService(sm.client)
+	enrichService.XrayDetails = sm.config.GetServiceDetails()
+	return enrichService.GetImportGraphResults(scanID)
+}
+
 // BuildScan scans a published build-info with Xray.
 // 'scanResponse' - Xray scan output of the requested build scan.
 // 'noFailBuildPolicy' - Indicates that the Xray API returned a "No Xray Fail build...." error
