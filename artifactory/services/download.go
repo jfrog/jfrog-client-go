@@ -168,7 +168,6 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
 			// Search items.
-			log.Info("Searching items to download...")
 			switch downloadParams.GetSpecType() {
 			case utils.WILDCARD:
 				reader, err = ds.collectFilesUsingWildcardPattern(downloadParams)
@@ -247,7 +246,7 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 			Target:       downloadParams.GetTarget(),
 			Flat:         flat,
 		}
-		if resultItem.Type != "folder" {
+		if resultItem.Type != string(utils.Folder) {
 			if len(ds.rbGpgValidationMap) != 0 {
 				// Gpg validation to the downloaded artifact
 				err = rbGpgValidate(ds.rbGpgValidationMap, downloadParams.GetBundle(), resultItem)
@@ -509,7 +508,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				return err
 			}
 			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat, placeholdersUsed)
-			if downloadData.Dependency.Type == "folder" {
+			if downloadData.Dependency.Type == string(utils.Folder) {
 				return createDir(localPath, localFileName, logMsgPrefix)
 			}
 			if err = removeIfSymlink(filepath.Join(localPath, localFileName)); err != nil {
