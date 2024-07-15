@@ -50,30 +50,6 @@ type CommonParams struct {
 	Include          []string
 }
 
-type FileGetter interface {
-	GetAql() Aql
-	GetPattern() string
-	SetPattern(pattern string)
-	GetExclusions() []string
-	GetTarget() string
-	SetTarget(target string)
-	IsExplode() bool
-	GetProps() string
-	GetSortOrder() string
-	GetSortBy() []string
-	GetOffset() int
-	GetLimit() int
-	GetBuild() string
-	GetProject() string
-	GetBundle() string
-	GetSpecType() (specType SpecType)
-	IsRecursive() bool
-	IsIncludeDirs() bool
-	GetArchiveEntries() string
-	SetArchiveEntries(archiveEntries string)
-	GetPatternType() clientutils.PatternType
-}
-
 func (params CommonParams) GetArchiveEntries() string {
 	return params.ArchiveEntries
 }
@@ -108,10 +84,6 @@ func (params *CommonParams) GetTargetProps() *Properties {
 
 func (params *CommonParams) GetExcludeProps() string {
 	return params.ExcludeProps
-}
-
-func (params *CommonParams) IsExplode() bool {
-	return params.Recursive
 }
 
 func (params *CommonParams) IsRecursive() bool {
