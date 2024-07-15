@@ -25,8 +25,8 @@ func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, ex
 	if excludeWithRelativePath {
 		rootFilter = rootPath
 	}
-	filterFunc := filterFilesFunc(rootFilter, excludePathPattern, sizeThreshold)
-	return fileutils.ListFilesWithFilterFunc(rootPath, isRecursive, includeDirs, !isSymlink, filterFunc)
+	filterFunc := filterFilesFunc(rootFilter, includeDirs, excludePathPattern, sizeThreshold)
+	return fileutils.ListFilesWithFilterFunc(rootPath, isRecursive, !isSymlink, filterFunc)
 }
 
 // Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
@@ -50,10 +50,16 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 }
 
 // Returns a function that filters files according to the provided parameters
-func filterFilesFunc(rootPath string, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
+func filterFilesFunc(rootPath string, includeDirs bool, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
 	return func(path string) (included bool, err error) {
 		if path == "." {
 			return false, nil
+		}
+		if !includeDirs {
+			isDir, err := fileutils.IsDirExists(path, false)
+			if err != nil || isDir {
+				return false, err
+			}
 		}
 		excludedPath, err := isPathExcluded(strings.TrimPrefix(path, rootPath), excludePathPattern)
 		if err != nil {

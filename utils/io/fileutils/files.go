@@ -164,20 +164,15 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 	return
 }
 
-func ListFilesWithFilterFunc(rootPath string, isRecursive, includeDirs, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) ([]string, error) {
-	if isRecursive {
-		return listFilesRecursiveWithFilterFunc(rootPath, walkIntoDirSymlink, filterFunc)
-	} else {
-		return listFilesNonRecursiveWithFilterFunc(rootPath, includeDirs, filterFunc)
-	}
-}
-
 // Return the recursive list of files and directories in the specified path
-func listFilesRecursiveWithFilterFunc(path string, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) (fileList []string, err error) {
+func ListFilesWithFilterFunc(rootPath string, isRecursive, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) (fileList []string, err error) {
 	fileList = []string{}
-	err = gofrog.Walk(path, func(path string, f os.FileInfo, err error) error {
+	err = gofrog.Walk(rootPath, func(path string, f os.FileInfo, err error) error {
 		if err != nil {
 			return err
+		}
+		if !isRecursive && rootPath != path {
+			return gofrog.ErrSkipDir
 		}
 		include, err := filterFunc(path)
 		if err != nil {
@@ -190,42 +185,6 @@ func listFilesRecursiveWithFilterFunc(path string, walkIntoDirSymlink bool, filt
 	}, walkIntoDirSymlink)
 	err = errorutils.CheckError(err)
 	return
-}
-
-// Return all files in the specified path who satisfy the filter func. Not recursive.
-func listFilesNonRecursiveWithFilterFunc(path string, includeDirs bool, filterFunc func(filePath string) (bool, error)) ([]string, error) {
-	files, err := os.ReadDir(path)
-	if err != nil {
-		return nil, err
-	}
-	path = strings.TrimPrefix(path, "."+GetFileSeparator())
-	fileList := []string{}
-	for _, f := range files {
-		filePath := filepath.Join(path, f.Name())
-		satisfy, err := filterFunc(filePath)
-		if err != nil {
-			return nil, err
-		}
-		if !satisfy {
-			continue
-		}
-		exists, err := IsFileExists(filePath, false)
-		if err != nil {
-			return nil, err
-		}
-		if exists || IsPathSymlink(filePath) {
-			fileList = append(fileList, filePath)
-		} else if includeDirs {
-			isDir, err := IsDirExists(filePath, false)
-			if err != nil {
-				return nil, err
-			}
-			if isDir {
-				fileList = append(fileList, filePath)
-			}
-		}
-	}
-	return fileList, nil
 }
 
 // Return the list of files and directories in the specified path
