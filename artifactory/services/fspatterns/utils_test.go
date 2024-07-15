@@ -39,7 +39,7 @@ func TestFilterFilesFunc(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("File: %s, Pattern: %s, Root: %s", tc.file, tc.ExcludePattern, tc.root), func(t *testing.T) {
 			// Create the filter function with the mocked isPathExcluded
-			filterFunc := filterFilesFunc(tc.root, true, false, false, tc.ExcludePattern, nil)
+			filterFunc := filterFilesFunc(tc.root, true, true, false, tc.ExcludePattern, nil)
 			excluded, err := filterFunc(tc.file)
 			assert.NoError(t, err)
 			assert.True(t, excluded == tc.included, "Expected included = %v, but got %v", tc.included, excluded)
