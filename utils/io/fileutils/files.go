@@ -168,7 +168,7 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 func ListFilesWithFilterFunc(rootPath string, isRecursive, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) (fileList []string, err error) {
 	fileList = []string{}
 	err = gofrog.Walk(rootPath, func(path string, f os.FileInfo, err error) error {
-		if err != nil {
+		if err != nil || path == rootPath {
 			return err
 		}
 		include, err := filterFunc(path)
@@ -178,7 +178,7 @@ func ListFilesWithFilterFunc(rootPath string, isRecursive, walkIntoDirSymlink bo
 		if include {
 			fileList = append(fileList, path)
 		}
-		if !isRecursive && path != rootPath {
+		if !isRecursive {
 			// If the path is not in the root directory, and it's a directory we should skip it and not walk into it.
 			isDir, err := IsDirExists(path, false)
 			if err != nil {
