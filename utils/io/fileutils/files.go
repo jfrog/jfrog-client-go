@@ -171,8 +171,11 @@ func ListFilesWithFilterFunc(rootPath string, isRecursive, walkIntoDirSymlink bo
 		if err != nil {
 			return err
 		}
-		if !isRecursive && rootPath != path {
-			return nil
+		if !isRecursive {
+			isInRoot, err := isFileInRootDir(rootPath, path)
+			if err != nil || !isInRoot {
+				return err
+			}
 		}
 		include, err := filterFunc(path)
 		if err != nil {
@@ -185,6 +188,17 @@ func ListFilesWithFilterFunc(rootPath string, isRecursive, walkIntoDirSymlink bo
 	}, walkIntoDirSymlink)
 	err = errorutils.CheckError(err)
 	return
+}
+
+func isFileInRootDir(rootPath, path string) (bool, error) {
+	relPath, err := filepath.Rel(rootPath, path)
+	if err != nil {
+		return false, err
+	}
+	if filepath.Dir(relPath) != "." {
+		return false, nil
+	}
+	return true, nil
 }
 
 // Return the list of files and directories in the specified path
