@@ -45,5 +45,6 @@ func TestGetImportResults(t *testing.T) {
 	result, err := testsEnrichService.GetImportGraphResults(xray.TestMultiScanId)
 	assert.NoError(t, err)
 	assert.Equal(t, result.ScanId, xray.TestMultiScanId)
-	assert.Equal(t, len(result.Vulnerabilities), 1)
+	assert.Len(t, result.Vulnerabilities, 1)
+
 }
