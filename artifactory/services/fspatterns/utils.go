@@ -57,7 +57,7 @@ func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, pres
 				return false, err
 			}
 		}
-		isExcludedByPattern := false
+		var isExcludedByPattern bool
 		if excludeWithRelativePath {
 			isExcludedByPattern, err = isPathExcluded(strings.TrimPrefix(path, rootPath), excludePathPattern)
 		} else {
