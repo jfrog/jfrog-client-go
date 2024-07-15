@@ -486,7 +486,7 @@ params.SplitCount = 2
 // MinSplitSize default value: 5120
 params.MinSplitSize = 7168
 // Optional fields to avoid AQL request
-Sha256 = "aaaaabbbbbcccccc"
+Sha256 = "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
 Size = 1000
 totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 ```
