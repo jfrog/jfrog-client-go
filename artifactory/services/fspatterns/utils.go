@@ -22,11 +22,7 @@ func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePat
 
 // Return all the existing paths of the provided root path
 func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string, sizeThreshold *SizeThreshold) ([]string, error) {
-	var rootFilter string
-	if excludeWithRelativePath {
-		rootFilter = rootPath
-	}
-	filterFunc := filterFilesFunc(rootFilter, isRecursive, includeDirs, excludePathPattern, sizeThreshold)
+	filterFunc := filterFilesFunc(rootPath, isRecursive, includeDirs, excludeWithRelativePath, excludePathPattern, sizeThreshold)
 	return fileutils.ListFilesWithFilterFunc(rootPath, !isSymlink, filterFunc)
 }
 
@@ -51,7 +47,7 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 }
 
 // Returns a function that filters files according to the provided parameters
-func filterFilesFunc(rootPath string, isRecursive, includeDirs bool, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
+func filterFilesFunc(rootPath string, isRecursive, includeDirs, excludeWithRelativePath bool, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
 	return func(path string) (included bool, err error) {
 		if path == "." {
 			return false, nil
@@ -66,11 +62,16 @@ func filterFilesFunc(rootPath string, isRecursive, includeDirs bool, excludePath
 				return false, err
 			}
 		}
-		excludedPath, err := isPathExcluded(strings.TrimPrefix(path, rootPath), excludePathPattern)
+		isExcludedByPattern := false
+		if excludeWithRelativePath {
+			isExcludedByPattern, err = isPathExcluded(strings.TrimPrefix(path, rootPath), excludePathPattern)
+		} else {
+			isExcludedByPattern, err = isPathExcluded(path, excludePathPattern)
+		}
 		if err != nil {
 			return false, err
 		}
-		if excludedPath {
+		if isExcludedByPattern {
 			log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
 			return false, nil
 		}
@@ -88,17 +89,6 @@ func filterFilesFunc(rootPath string, isRecursive, includeDirs bool, excludePath
 		}
 		return true, nil
 	}
-}
-
-func isFileInRootDir(rootPath, path string) (bool, error) {
-	relPath, err := filepath.Rel(rootPath, path)
-	if err != nil {
-		return false, err
-	}
-	if filepath.Dir(relPath) != "." {
-		return false, nil
-	}
-	return true, nil
 }
 
 // Return the actual sub-paths that match the regex provided.
