@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -16,14 +15,14 @@ import (
 )
 
 // Return all the existing paths of the provided root path
-func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string) ([]string, error) {
-	return ListFilesFilterPatternAndSize(rootPath, isRecursive, includeDirs, excludeWithRelativePath, isSymlink, excludePathPattern, nil)
+func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, preserveSymlink bool, excludePathPattern string) ([]string, error) {
+	return ListFilesFilterPatternAndSize(rootPath, isRecursive, includeDirs, excludeWithRelativePath, preserveSymlink, excludePathPattern, nil)
 }
 
 // Return all the existing paths of the provided root path
-func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string, sizeThreshold *SizeThreshold) ([]string, error) {
-	filterFunc := filterFilesFunc(rootPath, isRecursive, includeDirs, excludeWithRelativePath, excludePathPattern, sizeThreshold)
-	return fileutils.ListFilesWithFilterFunc(rootPath, !isSymlink, filterFunc)
+func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, preserveSymlink bool, excludePathPattern string, sizeThreshold *SizeThreshold) ([]string, error) {
+	filterFunc := filterFilesFunc(rootPath, includeDirs, excludeWithRelativePath, preserveSymlink, excludePathPattern, sizeThreshold)
+	return fileutils.ListFilesWithFilterFunc(rootPath, isRecursive, !preserveSymlink, filterFunc)
 }
 
 // Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
@@ -47,17 +46,13 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 }
 
 // Returns a function that filters files according to the provided parameters
-func filterFilesFunc(rootPath string, isRecursive, includeDirs, excludeWithRelativePath bool, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
+func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, preserveSymlink bool, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
 	return func(path string) (included bool, err error) {
 		if path == "." {
 			return false, nil
 		}
-		if !isRecursive && filepath.Dir(path) != rootPath {
-			// If the path is not in the root directory, we should not include it.
-			return false, nil
-		}
 		if !includeDirs {
-			isDir, err := fileutils.IsDirExists(path, false)
+			isDir, err := fileutils.IsDirExists(path, preserveSymlink)
 			if err != nil || isDir {
 				return false, err
 			}
