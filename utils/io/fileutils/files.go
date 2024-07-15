@@ -168,11 +168,8 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 func ListFilesWithFilterFunc(rootPath string, isRecursive, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) (fileList []string, err error) {
 	fileList = []string{}
 	err = gofrog.Walk(rootPath, func(path string, f os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
 		if !isRecursive && rootPath != path {
-			return gofrog.ErrSkipDir
+			return nil
 		}
 		include, err := filterFunc(path)
 		if err != nil {
