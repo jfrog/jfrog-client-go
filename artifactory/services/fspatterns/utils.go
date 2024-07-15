@@ -56,11 +56,9 @@ func filterFilesFunc(rootPath string, isRecursive, includeDirs bool, excludePath
 		if path == "." {
 			return false, nil
 		}
-		if !isRecursive {
-			isInRoot, err := isFileInRootDir(rootPath, path)
-			if err != nil || !isInRoot {
-				return false, err
-			}
+		if !isRecursive && filepath.Dir(path) != rootPath {
+			// If the path is not in the root directory, we should not include it.
+			return false, nil
 		}
 		if !includeDirs {
 			isDir, err := fileutils.IsDirExists(path, false)

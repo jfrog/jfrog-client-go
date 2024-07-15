@@ -2,7 +2,6 @@ package fspatterns
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -40,7 +39,7 @@ func TestFilterFilesFunc(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("File: %s, Pattern: %s, Root: %s", tc.file, tc.ExcludePattern, tc.root), func(t *testing.T) {
 			// Create the filter function with the mocked isPathExcluded
-			filterFunc := filterFilesFunc(tc.root, true, tc.ExcludePattern, nil)
+			filterFunc := filterFilesFunc(tc.root, true, true, tc.ExcludePattern, nil)
 			excluded, err := filterFunc(tc.file)
 			assert.NoError(t, err)
 			assert.True(t, excluded == tc.included, "Expected included = %v, but got %v", tc.included, excluded)
@@ -84,7 +83,7 @@ func TestFilterFilesFuncWithSizeThreshold(t *testing.T) {
 
 	for _, file := range files {
 		dir := filepath.Dir(file.path)
-		assert.NoError(t, fileutils.CreateDirIfNotExist(dir))
+		assert.NoError(t, os.MkdirAll(dir, 0755))
 		f, err := os.Create(file.path)
 		assert.NoError(t, err)
 		assert.NoError(t, f.Truncate(file.size))
@@ -95,23 +94,27 @@ func TestFilterFilesFuncWithSizeThreshold(t *testing.T) {
 		name          string
 		path          string
 		sizeThreshold *SizeThreshold
+		isRecursive   bool
 		includeDirs   bool
 		expectInclude bool
 	}{
-		{"Include file within size threshold", "file.txt", &SizeThreshold{SizeInBytes: 1024, Condition: LessThan}, true, true},
-		{"Exclude file exceeding size threshold", "largefile.txt", &SizeThreshold{SizeInBytes: 1024, Condition: LessThan}, true, false},
-		{"Include directory", "dir", nil, true, true},
-		{"Include file in subdirectory within size threshold", filepath.Join("dir", "subfile.txt"), &SizeThreshold{SizeInBytes: 1024, Condition: LessThan}, true, true},
-		{"Include file with size equal to threshold", "equalfile.txt", &SizeThreshold{SizeInBytes: 1024, Condition: GreaterEqualThan}, true, true},
-		{"Exclude file below threshold with GreaterEqualThan", "file.txt", &SizeThreshold{SizeInBytes: 150, Condition: GreaterEqualThan}, true, false},
-		{"Include file above threshold with GreaterEqualThan", "largefile.txt", &SizeThreshold{SizeInBytes: 150, Condition: GreaterEqualThan}, true, true},
-		{"Exclude directory when includeDirs is false", "dir", nil, false, false},
-		{"Include file when includeDirs is false", "file.txt", nil, false, true},
+		{"Include file within size threshold", "file.txt", &SizeThreshold{SizeInBytes: 1024, Condition: LessThan}, true, true, true},
+		{"Exclude file exceeding size threshold", "largefile.txt", &SizeThreshold{SizeInBytes: 1024, Condition: LessThan}, true, true, false},
+		{"Include directory", "dir", nil, true, true, true},
+		{"Include file in subdirectory within size threshold", filepath.Join("dir", "subfile.txt"), &SizeThreshold{SizeInBytes: 1024, Condition: LessThan}, true, true, true},
+		{"Include file with size equal to threshold", "equalfile.txt", &SizeThreshold{SizeInBytes: 1024, Condition: GreaterEqualThan}, true, true, true},
+		{"Exclude file below threshold with GreaterEqualThan", "file.txt", &SizeThreshold{SizeInBytes: 150, Condition: GreaterEqualThan}, true, true, false},
+		{"Include file above threshold with GreaterEqualThan", "largefile.txt", &SizeThreshold{SizeInBytes: 150, Condition: GreaterEqualThan}, true, true, true},
+		{"Exclude directory when includeDirs is false", "dir", nil, true, false, false},
+		{"Include file when includeDirs is false", "file.txt", nil, true, false, true},
+		{"Include root level file when not recursive", "file.txt", nil, false, true, true},
+		{"Exclude subdirectory file when not recursive", filepath.Join("dir", "subfile.txt"), nil, false, true, false},
+		{"Include root level file when not recursive and includeDirs false", "file.txt", nil, false, false, true},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			filterFunc := filterFilesFunc(rootPath, tc.includeDirs, "", tc.sizeThreshold)
+			filterFunc := filterFilesFunc(rootPath, tc.isRecursive, tc.includeDirs, "", tc.sizeThreshold)
 			included, err := filterFunc(filepath.Join(rootPath, tc.path))
 			assert.Equal(t, tc.expectInclude, included)
 			assert.NoError(t, err)
