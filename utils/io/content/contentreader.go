@@ -163,7 +163,7 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 	}
 	for dec.More() {
 		var ResultItem map[string]interface{}
-		err := dec.Decode(&ResultItem)
+		err = dec.Decode(&ResultItem)
 		if err != nil {
 			log.Error(err)
 			cr.errorsQueue.AddError(errorutils.CheckError(err))
@@ -397,7 +397,7 @@ func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*Conte
 		for i := 0; i < len(sortedFilesClone); i++ {
 			if currentContentItem[i] == nil && sortedFilesClone[i] != nil {
 				temp := (reflect.New(valueType)).Interface()
-				if err := sortedFilesClone[i].NextRecord(temp); nil != err {
+				if err = sortedFilesClone[i].NextRecord(temp); nil != err {
 					sortedFilesClone[i] = nil
 					continue
 				}

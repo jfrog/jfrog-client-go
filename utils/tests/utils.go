@@ -84,7 +84,7 @@ func RunTests(testsPackages []string, hideUnitTestsLog bool) error {
 		exitOnErr(err)
 
 		cmd.Stdout, cmd.Stderr = f, f
-		if err := cmd.Run(); err != nil {
+		if err = cmd.Run(); err != nil {
 			log.Error("Unit tests failed, full report available at the following path:", f.Name())
 			exitOnErr(err)
 		}

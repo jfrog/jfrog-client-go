@@ -170,7 +170,7 @@ func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, 
 	if !strings.HasSuffix(path, sep) {
 		path += sep
 	}
-	var fileList []string
+	fileList := []string{}
 	files, _ := os.ReadDir(path)
 	path = strings.TrimPrefix(path, "."+sep)
 
@@ -384,7 +384,11 @@ func calcChecksumDetails(filePath string) (checksum entities.Checksum, err error
 
 func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details *FileDetails, err error) {
 	details = new(FileDetails)
-
+	if !includeChecksums {
+		// io.Copy copies from the reader to io.Discard and returns the number of bytes copied
+		details.Size, err = io.Copy(io.Discard, reader)
+		return
+	}
 	pr, pw := io.Pipe()
 	defer func() {
 		err = errors.Join(err, errorutils.CheckError(pr.Close()))
@@ -397,9 +401,7 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details 
 		details.Size, err = io.Copy(pw, reader)
 	}()
 
-	if includeChecksums {
-		details.Checksum, err = calcChecksumDetailsFromReader(pr)
-	}
+	details.Checksum, err = calcChecksumDetailsFromReader(pr)
 	return
 }
 
@@ -551,6 +553,10 @@ func JsonEqual(filePath1, filePath2 string) (isEqual bool, err error) {
 
 // Compares provided Md5 and Sha1 to those of a local file.
 func IsEqualToLocalFile(localFilePath, md5, sha1 string) (bool, error) {
+	if md5 == "" || sha1 == "" {
+		// If not received checksums from downloaded file, no need to calculate local ones
+		return false, nil
+	}
 	exists, err := IsFileExists(localFilePath, false)
 	if err != nil {
 		return false, err
