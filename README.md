@@ -224,7 +224,7 @@
       - [Distribute Release Bundle](#distribute-release-bundle)
       - [Delete Release Bundle Version](#delete-release-bundle-version)
       - [Delete Release Bundle Version Promotion](#delete-release-bundle-version-promotion)
-      - [Export Release Bundle](#export-release-bundle)
+      - [Export Release Bundle Archive](#export-release-bundle-archive)
       - [Import Release Bundle](#import-release-bundle)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
   - [Lifecycle APIs](#lifecycle-apis)
@@ -455,7 +455,10 @@ params.ChecksumsCalcEnabled = false
 targetProps := utils.NewProperties()
 targetProps.AddProperty("key1", "val1")
 params.TargetProps = targetProps
-
+// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
+TargetPathInArchive := "archive/path/"
+// Size limit for files to be uploaded.
+SizeLimit= &fspatterns.SizeThreshold{SizeInBytes: 10000, Condition: fspatterns.LessThan}
 totalUploaded, totalFailed, err := rtManager.UploadFiles(params)
 ```
 
@@ -484,7 +487,9 @@ params.Retries = 5
 params.SplitCount = 2
 // MinSplitSize default value: 5120
 params.MinSplitSize = 7168
-
+// Optional fields to avoid AQL request
+Sha256 = "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+Size = 1000
 totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 ```
 

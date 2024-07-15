@@ -164,48 +164,34 @@ func ListFilesRecursiveWalkIntoDirSymlink(path string, walkIntoDirSymlink bool) 
 	return
 }
 
-// Return all files in the specified path who satisfy the filter func. Not recursive.
-func ListFilesByFilterFunc(path string, filterFunc func(filePath string) (bool, error)) ([]string, error) {
-	sep := GetFileSeparator()
-	if !strings.HasSuffix(path, sep) {
-		path += sep
-	}
-	fileList := []string{}
-	files, _ := os.ReadDir(path)
-	path = strings.TrimPrefix(path, "."+sep)
-
-	for _, f := range files {
-		filePath := path + f.Name()
-		satisfy, err := filterFunc(filePath)
+// Return the recursive list of files and directories in the specified path
+func ListFilesWithFilterFunc(rootPath string, isRecursive, walkIntoDirSymlink bool, filterFunc func(filePath string) (bool, error)) (fileList []string, err error) {
+	fileList = []string{}
+	err = gofrog.Walk(rootPath, func(path string, f os.FileInfo, err error) error {
+		if err != nil || path == rootPath {
+			return err
+		}
+		include, err := filterFunc(path)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		if !satisfy {
-			continue
+		if include {
+			fileList = append(fileList, path)
 		}
-		exists, err := IsFileExists(filePath, false)
-		if err != nil {
-			return nil, err
-		}
-		if exists {
-			fileList = append(fileList, filePath)
-			continue
-		}
-
-		// Checks if the filepath is a symlink.
-		if IsPathSymlink(filePath) {
-			// Gets the file info of the symlink.
-			file, err := GetFileInfo(filePath, false)
-			if errorutils.CheckError(err) != nil {
-				return nil, err
+		if !isRecursive {
+			// If the path is not in the root directory, and it's a directory we should skip it and not walk into it.
+			isDir, err := IsDirExists(path, false)
+			if err != nil {
+				return err
 			}
-			// Checks if the symlink is a file.
-			if !file.IsDir() {
-				fileList = append(fileList, filePath)
+			if isDir {
+				return gofrog.ErrSkipDir
 			}
 		}
-	}
-	return fileList, nil
+		return nil
+	}, walkIntoDirSymlink)
+	err = errorutils.CheckError(err)
+	return
 }
 
 // Return the list of files and directories in the specified path
