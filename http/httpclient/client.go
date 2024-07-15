@@ -839,7 +839,7 @@ type DownloadFileDetails struct {
 	LocalFileName  string `json:"LocalFileName,omitempty"`
 	ExpectedSha1   string `json:"ExpectedSha1,omitempty"`
 	ExpectedSha256 string `json:"-"`
-	Size           int64  `json:"Size,omitempty"`
+	Size           int64  `json:"SizeInBytes,omitempty"`
 	SkipChecksum   bool   `json:"SkipChecksum,omitempty"`
 }
 

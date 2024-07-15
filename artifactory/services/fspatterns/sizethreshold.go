@@ -11,16 +11,16 @@ const (
 )
 
 type SizeThreshold struct {
-	Size      int64
-	Condition ThresholdCondition
+	SizeInBytes int64
+	Condition   ThresholdCondition
 }
 
 func (st SizeThreshold) IsSizeWithinThreshold(actualSize int64) bool {
 	switch st.Condition {
 	case GreaterEqualThan:
-		return actualSize >= st.Size
+		return actualSize >= st.SizeInBytes
 	case LessThan:
-		return actualSize < st.Size
+		return actualSize < st.SizeInBytes
 	default:
 		return false
 	}

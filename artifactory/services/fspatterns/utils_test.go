@@ -2,6 +2,7 @@ package fspatterns
 
 import (
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -39,7 +40,7 @@ func TestFilterFilesFunc(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("File: %s, Pattern: %s, Root: %s", tc.file, tc.ExcludePattern, tc.root), func(t *testing.T) {
 			// Create the filter function with the mocked isPathExcluded
-			filterFunc := filterFilesFunc(tc.root, tc.ExcludePattern, nil)
+			filterFunc := filterFilesFunc(tc.root, true, tc.ExcludePattern, nil)
 			excluded, err := filterFunc(tc.file)
 			assert.NoError(t, err)
 			assert.True(t, excluded == tc.included, "Expected included = %v, but got %v", tc.included, excluded)
@@ -83,34 +84,34 @@ func TestFilterFilesFuncWithSizeThreshold(t *testing.T) {
 
 	for _, file := range files {
 		dir := filepath.Dir(file.path)
-		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			assert.NoError(t, os.MkdirAll(dir, 0755))
-		}
+		assert.NoError(t, fileutils.CreateDirIfNotExist(dir))
 		f, err := os.Create(file.path)
 		assert.NoError(t, err)
 		assert.NoError(t, f.Truncate(file.size))
 		assert.NoError(t, f.Close())
 	}
 
-	// Test cases
 	testCases := []struct {
 		name          string
 		path          string
 		sizeThreshold *SizeThreshold
+		includeDirs   bool
 		expectInclude bool
 	}{
-		{"Include file within size threshold", "file.txt", &SizeThreshold{Size: 1024, Condition: LessThan}, true},
-		{"Exclude file exceeding size threshold", "largefile.txt", &SizeThreshold{Size: 1024, Condition: LessThan}, false},
-		{"Include directory", "dir", nil, true},
-		{"Include file in subdirectory within size threshold", filepath.Join("dir", "subfile.txt"), &SizeThreshold{Size: 1024, Condition: LessThan}, true},
-		{"Include file with size equal to threshold", "equalfile.txt", &SizeThreshold{Size: 1024, Condition: GreaterEqualThan}, true},
-		{"Exclude file below threshold with GreaterEqualThan", "file.txt", &SizeThreshold{Size: 150, Condition: GreaterEqualThan}, false},
-		{"Include file above threshold with GreaterEqualThan", "largefile.txt", &SizeThreshold{Size: 150, Condition: GreaterEqualThan}, true},
+		{"Include file within size threshold", "file.txt", &SizeThreshold{SizeInBytes: 1024, Condition: LessThan}, true, true},
+		{"Exclude file exceeding size threshold", "largefile.txt", &SizeThreshold{SizeInBytes: 1024, Condition: LessThan}, true, false},
+		{"Include directory", "dir", nil, true, true},
+		{"Include file in subdirectory within size threshold", filepath.Join("dir", "subfile.txt"), &SizeThreshold{SizeInBytes: 1024, Condition: LessThan}, true, true},
+		{"Include file with size equal to threshold", "equalfile.txt", &SizeThreshold{SizeInBytes: 1024, Condition: GreaterEqualThan}, true, true},
+		{"Exclude file below threshold with GreaterEqualThan", "file.txt", &SizeThreshold{SizeInBytes: 150, Condition: GreaterEqualThan}, true, false},
+		{"Include file above threshold with GreaterEqualThan", "largefile.txt", &SizeThreshold{SizeInBytes: 150, Condition: GreaterEqualThan}, true, true},
+		{"Exclude directory when includeDirs is false", "dir", nil, false, false},
+		{"Include file when includeDirs is false", "file.txt", nil, false, true},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			filterFunc := filterFilesFunc(rootPath, "", tc.sizeThreshold)
+			filterFunc := filterFilesFunc(rootPath, tc.includeDirs, "", tc.sizeThreshold)
 			included, err := filterFunc(filepath.Join(rootPath, tc.path))
 			assert.Equal(t, tc.expectInclude, included)
 			assert.NoError(t, err)

@@ -19,7 +19,7 @@ type (
 		// Value - Reference to a struct, storing the URL and revision from the upstream .git. Can also include nil, if there's no upstream .git.
 		vcsDir sync.Map
 		// The current size of vcsDir
-		vcsDirSize *int32 // Size of vcs folders entries
+		vcsDirSize *int32 // SizeInBytes of vcs folders entries
 	}
 	vcsDetails struct {
 		url      string
