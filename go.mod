@@ -12,6 +12,7 @@ require (
 	github.com/jfrog/archiver/v3 v3.6.1
 	github.com/jfrog/build-info-go v1.9.29
 	github.com/jfrog/gofrog v1.7.3
+	github.com/minio/sha256-simd v1.0.1
 	github.com/stretchr/testify v1.9.0
 	github.com/xanzy/ssh-agent v0.3.3
 	golang.org/x/crypto v0.25.0
@@ -38,7 +39,6 @@ require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.3 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
-	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/nwaples/rardecode v1.1.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
