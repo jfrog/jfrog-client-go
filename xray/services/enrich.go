@@ -3,9 +3,12 @@ package services
 import (
 	"encoding/json"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"net/http"
 )
 
@@ -14,22 +17,32 @@ const (
 	importGraphXML = "api/v1/scan/import_xml"
 )
 
-func (ss *ScanService) ImportGraph(scanParams XrayGraphImportParams) (string, error) {
-	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
+type EnrichService struct {
+	client      *jfroghttpclient.JfrogHttpClient
+	XrayDetails auth.ServiceDetails
+}
+
+// NewEnrichService creates a new service to enrich CycloneDX xml and jsons.
+func NewEnrichService(client *jfroghttpclient.JfrogHttpClient) *EnrichService {
+	return &EnrichService{client: client}
+}
+
+func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string, error) {
+	httpClientsDetails := es.XrayDetails.CreateHttpClientDetails()
 	var v interface{}
 	// There's an option to run on XML or JSON file so we need to call the correct API accordingly.
-	err := json.Unmarshal(scanParams.SBOMInput, &v)
+	err := json.Unmarshal(importParams.SBOMInput, &v)
 	var url string
 	if err != nil {
 		utils.SetContentType("application/xml", &httpClientsDetails.Headers)
-		url = ss.XrayDetails.GetUrl() + importGraphXML
+		url = es.XrayDetails.GetUrl() + importGraphXML
 	} else {
 		utils.SetContentType("application/json", &httpClientsDetails.Headers)
-		url = ss.XrayDetails.GetUrl() + importGraph
+		url = es.XrayDetails.GetUrl() + importGraph
 	}
 
-	requestBody := scanParams.SBOMInput
-	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
+	requestBody := importParams.SBOMInput
+	resp, body, err := es.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err
 	}
@@ -47,17 +60,17 @@ func (ss *ScanService) ImportGraph(scanParams XrayGraphImportParams) (string, er
 	return scanResponse.ScanId, err
 }
 
-func (ss *ScanService) GetImportGraphResults(scanId string) (*ScanResponse, error) {
-	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
+func (es *EnrichService) GetImportGraphResults(scanId string) (*ScanResponse, error) {
+	httpClientsDetails := es.XrayDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
 
 	// Getting the import graph results is from the same api but with some parameters always initialized.
-	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId + includeVulnerabilitiesParam
+	endPoint := es.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId + includeVulnerabilitiesParam
 	log.Info("Waiting for enrich process to complete on JFrog Xray...")
 	pollingExecutor := &httputils.PollingExecutor{
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
-		PollingAction:   ss.PollingAction(endPoint, httpClientsDetails),
+		PollingAction:   xrayUtils.PollingAction(es.client, endPoint, httpClientsDetails),
 		MsgPrefix:       "Get Dependencies Scan results... ",
 	}
 	body, err := pollingExecutor.Execute()

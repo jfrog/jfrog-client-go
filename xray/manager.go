@@ -135,17 +135,17 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID string, includeVulnera
 }
 
 func (sm *XrayServicesManager) ImportGraph(params services.XrayGraphImportParams) (scanId string, err error) {
-	scanService := services.NewScanService(sm.client)
-	scanService.XrayDetails = sm.config.GetServiceDetails()
-	return scanService.ImportGraph(params)
+	enrichService := services.NewEnrichService(sm.client)
+	enrichService.XrayDetails = sm.config.GetServiceDetails()
+	return enrichService.ImportGraph(params)
 }
 
 // GetScanGraphResults returns an Xray scan output of the requested graph scan.
 // The scanId input should be received from ScanGraph request.
 func (sm *XrayServicesManager) GetImportGraphResults(scanID string) (*services.ScanResponse, error) {
-	scanService := services.NewScanService(sm.client)
-	scanService.XrayDetails = sm.config.GetServiceDetails()
-	return scanService.GetImportGraphResults(scanID)
+	enrichService := services.NewEnrichService(sm.client)
+	enrichService.XrayDetails = sm.config.GetServiceDetails()
+	return enrichService.GetImportGraphResults(scanID)
 }
 
 // BuildScan scans a published build-info with Xray.
