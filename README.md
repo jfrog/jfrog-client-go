@@ -156,6 +156,8 @@
       - [Add Builds to Indexing Configuration](#add-builds-to-indexing-configuration)
       - [Request Graph Scan](#request-graph-scan)
       - [Retrieve the Graph Scan Results](#retrieve-the-graph-scan-results)
+      - [Request Graph Enrich](#request-graph-enrich)
+      - [Retrieve the Graph Enrich Results](#retrieve-the-graph-enrich-results)
       - [Generate Vulnerabilities Report](#generate-vulnerabilities-report)
       - [Get Vulnerabilities Report Details](#get-vulnerabilities-report-details)
       - [Get Vulnerabilities Report Content](#get-vulnerabilities-report-content)
@@ -2007,6 +2009,62 @@ scanId, err := xrayManager.ScanGraph(graphScanParams)
 // scanId should be received from xrayManager.ScanGraph(graphScanParams) request.
 scanResults, err := xrayManager.GetScanGraphResults(scanId)
 ```
+
+#### Request Graph Enrich
+
+```go
+graphImportParams := &XrayGraphImportParams{}
+// Dependency tree. Each node must have a component identifier, see https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-ComponentIdentifiers.
+graphScanParams.SBOMInput = "{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.4",
+  "serialNumber": "urn:uuid:3c94db59-0dbf-41cd-49e8-c4518ac2ef3c",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2024-05-22T14:52:40Z",
+    "tools": [
+      {
+      "vendor": "JFrog Inc.",
+      "name": "Xray",
+      "version": "3.95.7"
+      }
+    ],
+    "component": {
+      "type": "container",
+      "name": "jfrog/artifactory-pro:sha256",
+      "version": "2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251"
+	}
+  },
+  "components": [
+    {
+    "bom-ref": "pkg:Oci/jfrog%2Fartifactory-pro:sha256@2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251",
+    "type": "application",
+    "name": "jfrog/artifactory-pro:sha256",
+    "version": "2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251",
+    "hashes": [
+      {
+      "alg": "SHA-256",
+      "content": "2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251"
+      }
+    ],
+    "licenses": [],
+    "purl": "pkg:Oci/jfrog%2Fartifactory-pro:sha256@2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251"
+    }
+  ],
+  "dependencies": []
+  }
+
+"
+scanId, err := xrayManager.ImportGraph(graphImportParams)
+```
+
+#### Retrieve the Graph Enrich Results
+
+```go
+// scanId should be received from xrayManager.ImportGraph(graphImportParams) request.
+enrichResults, err := xrayManager.GetImportGraphResults(scanId)
+```
+
 
 #### Generate Vulnerabilities Report
 
