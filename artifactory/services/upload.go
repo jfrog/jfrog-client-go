@@ -718,7 +718,8 @@ type UploadParams struct {
 	Archive              string
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
 	TargetPathInArchive string
-	SizeLimit           *fspatterns.SizeThreshold
+	// Size limit for files to be uploaded.
+	SizeLimit *fspatterns.SizeThreshold
 }
 
 func NewUploadParams() UploadParams {
