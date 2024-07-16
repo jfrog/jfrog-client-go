@@ -29,18 +29,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.22.2
-          cache: false
-
-      - name: Go Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
+      - uses: jfrog/jfrog-cli/.github/common-steps/install-go-with-cache
 
       - name: Lint
         run: go vet -v ./...
@@ -55,32 +44,16 @@ jobs:
         os: [ ubuntu, windows, macos ]
     runs-on: ${{ matrix.os }}-latest
     steps:
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.22.2
-          cache: false
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Go Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
+      - uses: jfrog/jfrog-cli/.github/common-steps/install-go-with-cache
 
-      - name: Setup Artifactory
-        env:
-          setup-url: github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
-          RTLIC: ${{secrets.RTLIC}}
-          GOPROXY: direct
-        run: |
-          go install ${{ env.setup-url }} || go install ${{ env.setup-url }}
-          ~/go/bin/local-rt-setup
+      - uses: jfrog/jfrog-cli/.github/common-steps/install-local-artifactory
+        with:
+          RTLIC: ${{ secrets.RTLIC }}
 
       - name: artifactory tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
@@ -100,18 +73,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.22.2
-          cache: false
-
-      - name: Go Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
+      - uses: jfrog/jfrog-cli/.github/common-steps/install-go-with-cache
 
       - name: ${{ matrix.suite }} tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --ds.url=${{ secrets.PLATFORM_URL }}/distribution --xr.url=${{ secrets.PLATFORM_URL }}/xray --xsc.url=${{ secrets.PLATFORM_URL }}/xsc --access.url=${{ secrets.PLATFORM_URL }}/access --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
@@ -126,18 +88,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.22.2
-          cache: false
-
-      - name: Go Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
+      - uses: jfrog/jfrog-cli/.github/common-steps/install-go-with-cache
 
       - name: pipelines tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --pipe.url=${{ secrets.PLATFORM_URL }}/pipelines --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --pipe.accessToken=${{ secrets.PLATFORM_ADMIN_TOKEN }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }} --ci.runId=${{ runner.os }}_pipe
@@ -147,32 +98,16 @@ jobs:
     name: repositories ubuntu-latest
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.22.2
-          cache: false
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
             ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Go Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
+      - uses: jfrog/jfrog-cli/.github/common-steps/install-go-with-cache
 
-      - name: Setup Artifactory
-        env:
-          setup-url: github.com/jfrog/jfrog-testing-infra/local-rt-setup@latest
-          RTLIC: ${{secrets.RTLIC}}
-          GOPROXY: direct
-        run: |
-          go install ${{ env.setup-url }} || go install ${{ env.setup-url }}
-          ~/go/bin/local-rt-setup
+      - uses: jfrog/jfrog-cli/.github/common-steps/install-local-artifactory
+        with:
+          RTLIC: ${{ secrets.RTLIC }}
 
       - name: Repositories tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories

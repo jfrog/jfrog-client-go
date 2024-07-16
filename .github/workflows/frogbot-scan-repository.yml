@@ -10,12 +10,15 @@ permissions:
   security-events: write
 jobs:
   scan-repository:
+    name: Scan Repository (${{ matrix.branch }} branch)
     runs-on: ubuntu-latest
     strategy:
       matrix:
         # The repository scanning will be triggered periodically on the following branches.
         branch: [ "dev" ]
     steps:
+      - uses: jfrog/jfrog-cli/.github/common-steps/install-go-with-cache
+
       - uses: jfrog/frogbot@v2
         env:
           JFROG_CLI_LOG_LEVEL: "DEBUG"
