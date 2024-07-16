@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Go with cache
-        uses: jfrog/.github/.github/actions/install-go-with-cache
+        uses: jfrog/.github/.github/actions/install-go-with-cache@main
 
       - name: Lint
         run: go vet -v ./...
@@ -51,10 +51,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Go with cache
-        uses: jfrog/.github/.github/actions/install-go-with-cache
+        uses: jfrog/.github/.github/actions/install-go-with-cache@main
 
       - name: Install local Artifactory
-        uses: jfrog/.github/.github/actions/install-local-artifactory
+        uses: jfrog/.github/.github/actions/install-local-artifactory@main
         with:
           RTLIC: ${{ secrets.RTLIC }}
 
@@ -77,7 +77,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Go with cache
-        uses: jfrog/.github/.github/actions/install-go-with-cache
+        uses: jfrog/.github/.github/actions/install-go-with-cache@main
 
       - name: ${{ matrix.suite }} tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --ds.url=${{ secrets.PLATFORM_URL }}/distribution --xr.url=${{ secrets.PLATFORM_URL }}/xray --xsc.url=${{ secrets.PLATFORM_URL }}/xsc --access.url=${{ secrets.PLATFORM_URL }}/access --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
@@ -93,7 +93,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Go with cache
-        uses: jfrog/.github/.github/actions/install-go-with-cache
+        uses: jfrog/.github/.github/actions/install-go-with-cache@main
 
       - name: pipelines tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.pipelines --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --pipe.url=${{ secrets.PLATFORM_URL }}/pipelines --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --pipe.accessToken=${{ secrets.PLATFORM_ADMIN_TOKEN }} --pipe.vcsToken=${{ secrets.CLI_PIPE_VCS_TOKEN }} --pipe.vcsRepo=${{ secrets.CLI_PIPE_VCS_REPO }} --pipe.vcsBranch=${{ secrets.CLI_PIPE_VCS_BRANCH }} --ci.runId=${{ runner.os }}_pipe
@@ -109,10 +109,10 @@ jobs:
             ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Go with cache
-        uses: jfrog/.github/.github/actions/install-go-with-cache
+        uses: jfrog/.github/.github/actions/install-go-with-cache@main
 
       - name: Install local Artifactory
-        uses: jfrog/.github/.github/actions/install-local-artifactory
+        uses: jfrog/.github/.github/actions/install-local-artifactory@main
         with:
           RTLIC: ${{ secrets.RTLIC }}
 
