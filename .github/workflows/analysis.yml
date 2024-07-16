@@ -13,15 +13,19 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - uses: jfrog/.github/.github/actions/install-go-with-cache
+      - name: Setup Go with cache
+        uses: jfrog/.github/.github/actions/install-go-with-cache
 
-      - uses: jfrog/.github/.github/actions/golangci-lint
+      - name: Run golangci lint
+        uses: jfrog/.github/.github/actions/golangci-lint
   Go-Sec:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - uses: jfrog/.github/.github/actions/install-go-with-cache
+      - name: Setup Go with cache
+        uses: jfrog/.github/.github/actions/install-go-with-cache
 
-      - uses: jfrog/.github/.github/actions/gosec-scanner
+      - name: Run Go-Sec scanner
+        uses: jfrog/.github/.github/actions/gosec-scanner
