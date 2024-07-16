@@ -13,11 +13,6 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Greet someone
-        uses: yankeexe/actions-combined/actions/greetings@main
-        with:
-          who-to-greet: "everyone"
-          
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
 
