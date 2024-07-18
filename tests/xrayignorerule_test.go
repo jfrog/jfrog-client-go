@@ -24,9 +24,7 @@ func deleteIgnoreRule(t *testing.T, ignoreRuleId string) {
 func createCveIgnoreRule(t *testing.T) {
 	var ignoreRuleId string
 	defer func() {
-		if ignoreRuleId != "" {
-			deleteIgnoreRule(t, ignoreRuleId)
-		}
+		deleteIgnoreRule(t, ignoreRuleId)
 	}()
 
 	component := utils.IgnoreFilterNameVersion{
@@ -42,14 +40,13 @@ func createCveIgnoreRule(t *testing.T) {
 	}
 
 	ignoreRuleId = createIgnoreRule(t, ignoreRuleFilter)
+	assert.NotEmpty(t, ignoreRuleId)
 }
 
 func createVulnerabilitesAndLicensesIgnoreRule(t *testing.T) {
 	var ignoreRuleId string
 	defer func() {
-		if ignoreRuleId != "" {
-			deleteIgnoreRule(t, ignoreRuleId)
-		}
+		deleteIgnoreRule(t, ignoreRuleId)
 	}()
 
 	vulnerabilities := []string{"any"}
@@ -65,6 +62,7 @@ func createVulnerabilitesAndLicensesIgnoreRule(t *testing.T) {
 	}
 
 	ignoreRuleId = createIgnoreRule(t, ignoreRuleFilter)
+	assert.NotEmpty(t, ignoreRuleId)
 }
 
 func createIgnoreRuleOnWatch(t *testing.T) {
@@ -81,9 +79,7 @@ func createIgnoreRuleOnWatch(t *testing.T) {
 
 	var ignoreRuleId string
 	defer func() {
-		if ignoreRuleId != "" {
-			deleteIgnoreRule(t, ignoreRuleId)
-		}
+		deleteIgnoreRule(t, ignoreRuleId)
 	}()
 
 	ignoreRuleFilter := utils.IgnoreFilters{
@@ -92,7 +88,7 @@ func createIgnoreRuleOnWatch(t *testing.T) {
 	}
 
 	ignoreRuleId = createIgnoreRule(t, ignoreRuleFilter)
-
+	assert.NotEmpty(t, ignoreRuleId)
 }
 
 func createIgnoreRule(t *testing.T, ignoreRuleFilter utils.IgnoreFilters) (ignoreRuleId string) {
@@ -108,8 +104,7 @@ func createIgnoreRule(t *testing.T, ignoreRuleFilter utils.IgnoreFilters) (ignor
 }
 
 func createDummyWatch(policyName string, watchName string) error {
-	err := createDummyPolicy(policyName)
-	if err != nil {
+	if err := createDummyPolicy(policyName); err != nil {
 		return err
 	}
 	params := utils.WatchParams{
@@ -125,6 +120,5 @@ func createDummyWatch(policyName string, watchName string) error {
 			},
 		},
 	}
-	err = testsXrayWatchService.Create(params)
-	return err
+	return testsXrayWatchService.Create(params)
 }
