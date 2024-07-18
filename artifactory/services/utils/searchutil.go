@@ -36,6 +36,7 @@ const (
 // Use this function when searching by build without pattern or aql.
 // Collect build artifacts and build dependencies separately, then merge the results into one reader.
 func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerContent *content.ContentReader, err error) {
+	log.Info("Searching items related to a build...")
 	buildName, buildNumber, err := GetBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err
@@ -189,6 +190,7 @@ func SearchBySpecWithPattern(specFile *CommonParams, flags CommonConf, requiredA
 
 // Use this function when running Aql with pattern
 func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (reader *content.ContentReader, err error) {
+	log.Info("Searching for items in Artifactory...")
 	// Execute the search according to provided aql in specFile.
 	var fetchedProps *content.ContentReader
 	query := BuildQueryFromSpecFile(specFile, requiredArtifactProps)
@@ -340,6 +342,13 @@ type SearchBasedContentItem interface {
 	GetType() string
 }
 
+type ResultItemType string
+
+const (
+	File   ResultItemType = "file"
+	Folder ResultItemType = "folder"
+)
+
 type ResultItem struct {
 	Repo        string     `json:"repo,omitempty"`
 	Path        string     `json:"path,omitempty"`
@@ -368,7 +377,7 @@ type Stat struct {
 }
 
 func (item ResultItem) GetSortKey() string {
-	if item.Type == "folder" {
+	if item.Type == string(Folder) {
 		return appendFolderSuffix(item.GetItemRelativePath())
 	}
 	return item.GetItemRelativePath()
@@ -389,7 +398,7 @@ func (item ResultItem) GetItemRelativePath() string {
 
 	url := item.Repo
 	url = path.Join(url, item.Path, item.Name)
-	if item.Type == "folder" {
+	if item.Type == string(Folder) {
 		url = appendFolderSuffix(url)
 	}
 	return url
@@ -498,12 +507,12 @@ func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.
 			continue
 		}
 		rPath := resultItem.GetItemRelativePath()
-		if resultItem.GetType() == "folder" && !strings.HasSuffix(rPath, "/") {
+		if resultItem.GetType() == string(Folder) && !strings.HasSuffix(rPath, "/") {
 			rPath += "/"
 		}
 		if prevFolder == "" || !strings.HasPrefix(rPath, prevFolder) {
 			writer.Write(resultItem)
-			if resultItem.GetType() == "folder" {
+			if resultItem.GetType() == string(Folder) {
 				prevFolder = rPath
 			}
 		}
