@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -107,15 +106,14 @@ func getIgnoreRuleIdFromBody(body []byte) (string, error) {
 	match := re.FindStringSubmatch(str)
 
 	if len(match) <= 1 {
-		err := errors.New("couldn't find id for ignore rule")
-		return "", err
+		return "", errorutils.CheckErrorf("couldn't find id for ignore rule in str: %s", str)
 	}
 
 	return match[1], nil
 }
 
 // Get retrieves the details about an Xray ignore rule by its id
-// It will error if no ignore rule can be found by that id.
+// It will error if the ignore rule id can't be found.
 func (xirs *IgnoreRuleService) Get(ignoreRuleId string) (ignoreRuleResp *utils.IgnoreRuleParams, err error) {
 	httpClientsDetails := xirs.XrayDetails.CreateHttpClientDetails()
 	log.Info(fmt.Sprintf("Getting ignore rule '%s'...", ignoreRuleId))
@@ -130,7 +128,7 @@ func (xirs *IgnoreRuleService) Get(ignoreRuleId string) (ignoreRuleResp *utils.I
 	}
 
 	if err = json.Unmarshal(body, ignoreRule); err != nil {
-		return &utils.IgnoreRuleParams{}, errors.New("failed unmarshalling ignore rule " + ignoreRuleId)
+		return &utils.IgnoreRuleParams{}, errorutils.CheckErrorf("failed unmarshalling ignore rule %s", ignoreRuleId)
 	}
 
 	log.Debug("Xray response status:", resp.Status)
