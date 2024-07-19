@@ -58,11 +58,7 @@ func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, pres
 			}
 		}
 		var isExcludedByPattern bool
-		if excludeWithRelativePath {
-			isExcludedByPattern, err = isPathExcluded(strings.TrimPrefix(path, rootPath), excludePathPattern)
-		} else {
-			isExcludedByPattern, err = isPathExcluded(path, excludePathPattern)
-		}
+		isExcludedByPattern, err = isPathExcluded(path, excludePathPattern, rootPath, excludeWithRelativePath)
 		if err != nil {
 			return false, err
 		}
@@ -72,7 +68,7 @@ func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, pres
 		}
 
 		if sizeThreshold != nil {
-			fileInfo, err := fileutils.GetFileInfo(path, false)
+			fileInfo, err := fileutils.GetFileInfo(path, preserveSymlink)
 			if err != nil {
 				return false, errorutils.CheckError(err)
 			}
@@ -130,8 +126,11 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifa
 	return utils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, SymlinkTargetPath: symlinkPath}, nil
 }
 
-func isPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {
+func isPathExcluded(path, excludePathPattern, rootPath string, excludeWithRelativePath bool) (excludedPath bool, err error) {
 	if len(excludePathPattern) > 0 {
+		if excludeWithRelativePath {
+			path = strings.TrimPrefix(path, rootPath)
+		}
 		excludedPath, err = regexp.MatchString(excludePathPattern, path)
 		err = errorutils.CheckError(err)
 	}
