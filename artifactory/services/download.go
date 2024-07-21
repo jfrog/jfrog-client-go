@@ -2,16 +2,16 @@ package services
 
 import (
 	"errors"
+	"github.com/jfrog/build-info-go/entities"
+	biutils "github.com/jfrog/build-info-go/utils"
+	ioutils "github.com/jfrog/gofrog/io"
+	"github.com/jfrog/gofrog/version"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
-
-	biutils "github.com/jfrog/build-info-go/utils"
-	"github.com/jfrog/gofrog/version"
-
-	"github.com/jfrog/build-info-go/entities"
+	"strings"
 
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 
@@ -164,18 +164,30 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 					errorsQueue.AddError(err)
 				}
 			}
+
 			var reader *content.ContentReader
 			// Create handler function for the current group.
 			fileHandlerFunc := ds.createFileHandlerFunc(downloadParams, successCounters)
-			// Search items.
-			log.Info("Searching items to download...")
-			switch downloadParams.GetSpecType() {
-			case utils.WILDCARD:
-				reader, err = ds.collectFilesUsingWildcardPattern(downloadParams)
-			case utils.BUILD:
-				reader, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
-			case utils.AQL:
-				reader, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
+			// Check if we can avoid using AQL to get the file's info.
+			avoidAql, err := isFieldsProvidedToAvoidAql(downloadParams)
+			// Check for search errors.
+			if err != nil {
+				log.Error(err)
+				errorsQueue.AddError(err)
+				continue
+			}
+			if avoidAql {
+				reader, err = createResultsItemWithoutAql(downloadParams)
+			} else {
+				// Search items using AQL and get their details (size/checksum/etc.) from Artifactory.
+				switch downloadParams.GetSpecType() {
+				case utils.WILDCARD:
+					reader, err = utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
+				case utils.BUILD:
+					reader, err = utils.SearchBySpecWithBuild(downloadParams.GetFile(), ds)
+				case utils.AQL:
+					reader, err = utils.SearchBySpecWithAql(downloadParams.GetFile(), ds, utils.SYMLINK)
+				}
 			}
 			// Check for search errors.
 			if err != nil {
@@ -197,8 +209,49 @@ func (ds *DownloadService) prepareTasks(producer parallel.Runner, expectedChan c
 	}()
 }
 
-func (ds *DownloadService) collectFilesUsingWildcardPattern(downloadParams DownloadParams) (*content.ContentReader, error) {
-	return utils.SearchBySpecWithPattern(downloadParams.GetFile(), ds, utils.SYMLINK)
+func isFieldsProvidedToAvoidAql(downloadParams DownloadParams) (bool, error) {
+	if downloadParams.Sha256 != "" && downloadParams.Size != nil {
+		// If sha256 and size is provided, we can avoid using AQL to get the file's info.
+		return true, nil
+	} else if downloadParams.Sha256 == "" && downloadParams.Size == nil {
+		// If sha256 and size is missing, we can't avoid using AQL to get the file's info.
+		return false, nil
+	}
+	// If only one of the fields is provided, return an error.
+	return false, errors.New("both sha256 and size must be provided in order to avoid using AQL")
+}
+
+func createResultsItemWithoutAql(downloadParams DownloadParams) (*content.ContentReader, error) {
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	defer ioutils.Close(writer, &err)
+	repo, path, name, err := breakFileDownloadPathToParts(downloadParams.GetPattern())
+	if err != nil {
+		return nil, err
+	}
+	resultItem := &utils.ResultItem{
+		Type:   string(utils.File),
+		Repo:   repo,
+		Path:   path,
+		Name:   name,
+		Size:   *downloadParams.Size,
+		Sha256: downloadParams.Sha256,
+	}
+	writer.Write(*resultItem)
+	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
+}
+
+func breakFileDownloadPathToParts(downloadPath string) (repo, path, name string, err error) {
+	if utils.IsWildcardPattern(downloadPath) {
+		return "", "", "", errorutils.CheckErrorf("downloading without AQL is not supported for the provided wildcard pattern: " + downloadPath)
+	}
+	parts := strings.Split(downloadPath, "/")
+	repo = parts[0]
+	path = strings.Join(parts[1:len(parts)-1], "/")
+	name = parts[len(parts)-1]
+	return
 }
 
 func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadParams DownloadParams, producer parallel.Runner, fileHandler fileHandlerFunc, errorsQueue *clientutils.ErrorsQueue) int {
@@ -247,7 +300,7 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 			Target:       downloadParams.GetTarget(),
 			Flat:         flat,
 		}
-		if resultItem.Type != "folder" {
+		if resultItem.Type != string(utils.Folder) {
 			if len(ds.rbGpgValidationMap) != 0 {
 				// Gpg validation to the downloaded artifact
 				err = rbGpgValidate(ds.rbGpgValidationMap, downloadParams.GetBundle(), resultItem)
@@ -400,6 +453,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		LocalFileName:           downloadFileDetails.LocalFileName,
 		LocalPath:               downloadFileDetails.LocalPath,
 		ExpectedSha1:            downloadFileDetails.ExpectedSha1,
+		ExpectedSha256:          downloadFileDetails.ExpectedSha256,
 		FileSize:                downloadFileDetails.Size,
 		SplitCount:              downloadParams.SplitCount,
 		Explode:                 downloadParams.Explode,
@@ -509,15 +563,15 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				return err
 			}
 			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat, placeholdersUsed)
-			if downloadData.Dependency.Type == "folder" {
+			if downloadData.Dependency.Type == string(utils.Folder) {
 				return createDir(localPath, localFileName, logMsgPrefix)
 			}
 			if err = removeIfSymlink(filepath.Join(localPath, localFileName)); err != nil {
 				return err
 			}
 			if downloadParams.IsSymlink() {
-				if isSymlink, e := ds.createSymlinkIfNeeded(ds.GetArtifactoryDetails().GetUrl(), localPath, localFileName, logMsgPrefix, downloadData, successCounters, threadId, downloadParams); isSymlink {
-					return e
+				if isSymlink, err := ds.createSymlinkIfNeeded(ds.GetArtifactoryDetails().GetUrl(), localPath, localFileName, logMsgPrefix, downloadData, successCounters, threadId, downloadParams); isSymlink {
+					return err
 				}
 			}
 			if err = ds.downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix, downloadData, downloadParams); err != nil {
@@ -592,6 +646,9 @@ type DownloadParams struct {
 	SplitCount              int
 	PublicGpgKey            string
 	SkipChecksum            bool
+	// Optional fields to avoid AQL request
+	Sha256 string
+	Size   *int64
 }
 
 func (ds *DownloadParams) IsFlat() bool {

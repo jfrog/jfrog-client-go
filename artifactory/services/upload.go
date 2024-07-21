@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -312,11 +311,12 @@ func addEscapingParenthesesForUpload(pattern, target, targetPathInArchive string
 
 func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams.Exclusions, uploadParams.GetPatternType(), uploadParams.IsRecursive())
-	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
-	if errorutils.CheckError(err) != nil {
+	patternRegex, err := clientutils.GetRegExp(uploadParams.GetPattern())
+	if err != nil {
 		return err
 	}
-	paths, err := fspatterns.ListFiles(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), false, uploadParams.IsSymlink(), excludePathPattern)
+
+	paths, err := fspatterns.ListFilesFilterPatternAndSize(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), false, uploadParams.IsSymlink(), excludePathPattern, uploadParams.GetSizeLimit())
 	if err != nil {
 		return err
 	}
@@ -584,7 +584,7 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, nil)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, us.Progress)
 	return
 }
 
@@ -609,6 +609,9 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 		}
 		if isSuccessfulUploadStatusCode(resp.StatusCode) {
 			checksumDeployed = true
+			if us.Progress != nil {
+				us.Progress.IncrementGeneralProgress()
+			}
 			return
 		}
 	}
@@ -715,6 +718,8 @@ type UploadParams struct {
 	Archive              string
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
 	TargetPathInArchive string
+	// Size limit for files to be uploaded.
+	SizeLimit *fspatterns.SizeThreshold
 }
 
 func NewUploadParams() UploadParams {
@@ -749,6 +754,10 @@ func (up *UploadParams) GetDebian() string {
 	return up.Deb
 }
 
+func (up *UploadParams) GetSizeLimit() *fspatterns.SizeThreshold {
+	return up.SizeLimit
+}
+
 type UploadData struct {
 	Artifact      clientutils.Artifact
 	TargetProps   *utils.Properties
@@ -772,6 +781,9 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 				err = us.createFolderInArtifactory(artifact)
 				if err != nil {
 					return
+				}
+				if us.Progress != nil {
+					us.Progress.IncrementGeneralProgress()
 				}
 				uploaded = true
 			} else {

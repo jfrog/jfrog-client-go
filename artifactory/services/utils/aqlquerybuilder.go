@@ -204,14 +204,23 @@ func encodeForBuildInfoRepository(value string) string {
 }
 
 func CreateAqlQueryForLatestCreated(repo, path string) string {
+	return createAqlQueryForLatestCreated(File, repo, path)
+}
+
+func CreateAqlQueryForLatestCreatedFolder(repo, path string) string {
+	return createAqlQueryForLatestCreated(Folder, repo, path)
+}
+
+func createAqlQueryForLatestCreated(itemType ResultItemType, repo, path string) string {
 	itemsPart :=
 		`items.find({` +
+			`"type": "%s",` +
 			`"repo": "%s",` +
 			`"path": {"$match": "%s"}` +
 			`})` +
 			`.sort({%s})` +
 			`.limit(1)`
-	return fmt.Sprintf(itemsPart, repo, path, buildSortQueryPart([]string{"created"}, "desc"))
+	return fmt.Sprintf(itemsPart, itemType, repo, path, buildSortQueryPart([]string{"created"}, "desc"))
 }
 
 func prepareSearchPattern(pattern string, repositoryExists bool) string {

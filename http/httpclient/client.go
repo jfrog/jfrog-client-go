@@ -3,8 +3,8 @@ package httpclient
 import (
 	"bytes"
 	"context"
+	"github.com/minio/sha256-simd"
 	"strings"
-
 	//#nosec G505 -- sha1 is supported by Artifactory.
 	"crypto/sha1"
 	"encoding/hex"
@@ -466,26 +466,23 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 
 	var reader io.Reader
 	if progress != nil {
-		readerProgress := progress.NewProgressReader(resp.ContentLength, "Downloading", downloadFileDetails.RelativePath)
+		readerProgress := progress.NewProgressReader(resp.ContentLength, "", downloadFileDetails.RelativePath)
 		reader = readerProgress.ActionWithProgress(resp.Body)
 		defer progress.RemoveProgress(readerProgress.GetId())
 	} else {
 		reader = resp.Body
 	}
 
-	if len(downloadFileDetails.ExpectedSha1) > 0 && !downloadFileDetails.SkipChecksum {
-		//#nosec G401 -- sha1 is supported by Artifactory.
-		actualSha1 := sha1.New()
-		writer := io.MultiWriter(actualSha1, out)
+	expectedSha, actualSha := handleExpectedSha(downloadFileDetails.ExpectedSha1, downloadFileDetails.ExpectedSha256)
+	if len(expectedSha) > 0 && !downloadFileDetails.SkipChecksum {
+		writer := io.MultiWriter(actualSha, out)
 
 		_, err = io.Copy(writer, reader)
 		if errorutils.CheckError(err) != nil {
 			return err
 		}
 
-		if hex.EncodeToString(actualSha1.Sum(nil)) != downloadFileDetails.ExpectedSha1 {
-			err = errors.New("checksum mismatch for " + fileName + ", expected: " + downloadFileDetails.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
-		}
+		err = validateChecksum(expectedSha, actualSha, downloadFileDetails.LocalFileName)
 	} else {
 		_, err = io.Copy(out, reader)
 	}
@@ -513,7 +510,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 	var downloadProgressId int
 	if progress != nil {
-		downloadProgress := progress.NewProgressReader(flags.FileSize, "Multipart download", flags.RelativePath)
+		downloadProgress := progress.NewProgressReader(flags.FileSize, "", flags.RelativePath)
 		downloadProgressId = downloadProgress.GetId()
 		// Aborting order matters. mergingProgress depends on the existence of downloadingProgress
 		defer progress.RemoveProgress(downloadProgressId)
@@ -660,11 +657,9 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 		err = errors.Join(err, errorutils.CheckError(destFile.Close()))
 	}()
 	var writer io.Writer
-	var actualSha1 hash.Hash
-	if len(flags.ExpectedSha1) > 0 {
-		//#nosec G401 -- Sha1 is supported by Artifactory.
-		actualSha1 = sha1.New()
-		writer = io.MultiWriter(actualSha1, destFile)
+	expectedSha, actualSha := handleExpectedSha(flags.ExpectedSha1, flags.ExpectedSha256)
+	if len(expectedSha) > 0 {
+		writer = io.MultiWriter(actualSha, destFile)
 	} else {
 		writer = io.MultiWriter(destFile)
 	}
@@ -691,12 +686,29 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 			return err
 		}
 	}
-	if len(flags.ExpectedSha1) > 0 && !flags.SkipChecksum {
-		if hex.EncodeToString(actualSha1.Sum(nil)) != flags.ExpectedSha1 {
-			err = errorutils.CheckErrorf("checksum mismatch for  " + flags.LocalFileName + ", expected: " + flags.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
-		}
+	if len(expectedSha) > 0 && !flags.SkipChecksum {
+		err = validateChecksum(expectedSha, actualSha, flags.LocalFileName)
 	}
 	return err
+}
+func validateChecksum(expectedSha string, actualSha hash.Hash, fileName string) (err error) {
+	actualShaString := hex.EncodeToString(actualSha.Sum(nil))
+	if actualShaString != expectedSha {
+		err = errorutils.CheckErrorf("checksum mismatch for  " + fileName + ", expected: " + expectedSha + ", actual: " + actualShaString)
+	}
+	return
+}
+
+func handleExpectedSha(expectedSha1, expectedSha256 string) (expectedSha string, actualSha hash.Hash) {
+	if len(expectedSha1) > 0 {
+		expectedSha = expectedSha1
+		//#nosec G401 -- Sha1 is supported by Artifactory.
+		actualSha = sha1.New()
+	} else if len(expectedSha256) > 0 {
+		expectedSha = expectedSha256
+		actualSha = sha256.New()
+	}
+	return
 }
 
 func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
@@ -821,14 +833,15 @@ func addUserAgentHeader(req *http.Request) {
 }
 
 type DownloadFileDetails struct {
-	FileName      string `json:"FileName,omitempty"`
-	DownloadPath  string `json:"DownloadPath,omitempty"`
-	RelativePath  string `json:"RelativePath,omitempty"`
-	LocalPath     string `json:"LocalPath,omitempty"`
-	LocalFileName string `json:"LocalFileName,omitempty"`
-	ExpectedSha1  string `json:"ExpectedSha1,omitempty"`
-	Size          int64  `json:"Size,omitempty"`
-	SkipChecksum  bool   `json:"SkipChecksum,omitempty"`
+	FileName       string `json:"FileName,omitempty"`
+	DownloadPath   string `json:"DownloadPath,omitempty"`
+	RelativePath   string `json:"RelativePath,omitempty"`
+	LocalPath      string `json:"LocalPath,omitempty"`
+	LocalFileName  string `json:"LocalFileName,omitempty"`
+	ExpectedSha1   string `json:"ExpectedSha1,omitempty"`
+	ExpectedSha256 string `json:"-"`
+	Size           int64  `json:"Size,omitempty"`
+	SkipChecksum   bool   `json:"SkipChecksum,omitempty"`
 }
 
 type ConcurrentDownloadFlags struct {
@@ -838,6 +851,7 @@ type ConcurrentDownloadFlags struct {
 	LocalFileName           string
 	LocalPath               string
 	ExpectedSha1            string
+	ExpectedSha256          string
 	FileSize                int64
 	SplitCount              int
 	Explode                 bool
