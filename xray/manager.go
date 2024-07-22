@@ -111,6 +111,30 @@ func (sm *XrayServicesManager) DeletePolicy(policyName string) error {
 	return policyService.Delete(policyName)
 }
 
+// CreatePolicy will create a new Xray ignore rule
+// The function returns the ignore rule id if succeeded or empty string and error message if fails
+func (sm *XrayServicesManager) CreateIgnoreRule(params utils.IgnoreRuleParams) (string, error) {
+	ignoreRuleService := services.NewIgnoreRuleService(sm.client)
+	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
+	return ignoreRuleService.Create(params)
+}
+
+// CreatePolicy will create a new Xray ignore rule
+// The function returns the ignore rule id if succeeded or empty string and error message if fails
+func (sm *XrayServicesManager) GetIgnoreRule(ignoreRuleId string) (*utils.IgnoreRuleParams, error) {
+	ignoreRuleService := services.NewIgnoreRuleService(sm.client)
+	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
+	return ignoreRuleService.Get(ignoreRuleId)
+}
+
+// CreatePolicy will create a new Xray ignore rule
+// The function returns the ignore rule id if succeeded or empty string and error message if fails
+func (sm *XrayServicesManager) DeleteIgnoreRule(ignoreRuleId string) error {
+	ignoreRuleService := services.NewIgnoreRuleService(sm.client)
+	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
+	return ignoreRuleService.Delete(ignoreRuleId)
+}
+
 // AddBuildsToIndexing will add builds to Xray indexing configuration
 func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
 	binMgrService := services.NewBinMgrService(sm.client)
