@@ -144,7 +144,8 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 	var progressReader ioutils.Progress
 	if progress != nil {
 		progressReader = progress.NewProgressReader(fileSize, "Multipart upload", targetPath)
-		defer progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer progress.RemoveProgress(progressId)
 	}
 
 	defer func() {

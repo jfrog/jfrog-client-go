@@ -93,7 +93,7 @@ func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (summary *uti
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	if us.saveSummary {
 		us.resultsManager, err = newResultManager()
-		if err != nil {
+		if err != nil || us.resultsManager == nil {
 			return nil, err
 		}
 		defer func() {
@@ -644,7 +644,8 @@ func (us *UploadService) doUploadFromReader(fileReader io.Reader, targetUrlWithP
 	if us.Progress != nil {
 		progressReader := us.Progress.NewProgressReader(details.Size, "Uploading", targetUrlWithProps)
 		reader = progressReader.ActionWithProgress(fileReader)
-		defer us.Progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer us.Progress.RemoveProgress(progressId)
 	} else {
 		reader = fileReader
 	}
@@ -960,7 +961,8 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	if us.Progress != nil {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)
-		defer us.Progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer us.Progress.RemoveProgress(progressId)
 	} else {
 		reader = file
 	}
