@@ -124,11 +124,12 @@ func (xirs *IgnoreRuleService) Get(ignoreRuleId string) (ignoreRuleResp *utils.I
 		return &utils.IgnoreRuleParams{}, err
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		log.Debug("Xray response:", string(body), resp.Status)
 		return &utils.IgnoreRuleParams{}, err
 	}
 
 	if err = json.Unmarshal(body, ignoreRule); err != nil {
-		return &utils.IgnoreRuleParams{}, errorutils.CheckErrorf("failed unmarshalling ignore rule %s", ignoreRuleId)
+		return &utils.IgnoreRuleParams{}, errorutils.CheckErrorf("failed unmarshalling %s for ignore rule %s", string(body), ignoreRuleId)
 	}
 
 	log.Debug("Xray response status:", resp.Status)
