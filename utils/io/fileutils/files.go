@@ -358,7 +358,9 @@ func GetFileDetails(filePath string, includeChecksums bool) (details *FileDetail
 
 	file, err := os.Open(filePath)
 	defer func() {
-		err = errors.Join(err, errorutils.CheckError(file.Close()))
+		if file != nil {
+			err = errors.Join(err, errorutils.CheckError(file.Close()))
+		}
 	}()
 	if err != nil {
 		return nil, errorutils.CheckError(err)
@@ -374,7 +376,9 @@ func GetFileDetails(filePath string, includeChecksums bool) (details *FileDetail
 func calcChecksumDetails(filePath string) (checksum entities.Checksum, err error) {
 	file, err := os.Open(filePath)
 	defer func() {
-		err = errors.Join(err, errorutils.CheckError(file.Close()))
+		if file != nil {
+			err = errors.Join(err, errorutils.CheckError(file.Close()))
+		}
 	}()
 	if err != nil {
 		return entities.Checksum{}, errorutils.CheckError(err)
