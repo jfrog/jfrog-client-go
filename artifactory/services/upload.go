@@ -965,7 +965,9 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		return err
 	}
 	defer func() {
-		err = errors.Join(err, errorutils.CheckError(file.Close()))
+		if file != nil {
+			err = errors.Join(err, errorutils.CheckError(file.Close()))
+		}
 	}()
 	if us.Progress != nil {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)

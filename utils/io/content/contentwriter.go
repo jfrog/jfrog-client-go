@@ -108,7 +108,7 @@ func (rw *ContentWriter) run() {
 	var err error
 	if !rw.useStdout {
 		defer func() {
-			if err = errors.Join(rw.outputFile.Sync(), rw.outputFile.Close()); err != nil {
+			if err = errors.Join(err, rw.outputFile.Sync(), rw.outputFile.Close()); err != nil {
 				rw.errorsQueue.AddError(errorutils.CheckError(err))
 			}
 		}()
