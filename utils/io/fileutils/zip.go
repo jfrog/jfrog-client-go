@@ -30,7 +30,7 @@ func ZipFolderFiles(source, target string) (err error) {
 			return
 		}
 
-		if currentErr = errors.Join(err, currentErr); currentErr != nil {
+		if currentErr = errors.Join(currentErr, err); currentErr != nil {
 			return
 		}
 
