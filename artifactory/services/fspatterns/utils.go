@@ -3,6 +3,7 @@ package fspatterns
 import (
 	"bytes"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"regexp"
 	"strings"
@@ -11,26 +12,17 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 // Return all the existing paths of the provided root path
-func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, isSymlink bool, excludePathPattern string) ([]string, error) {
-	var paths []string
-	var err error
-	if isRecursive {
-		paths, err = fileutils.ListFilesRecursiveWalkIntoDirSymlink(rootPath, !isSymlink)
-	} else {
-		paths, err = fileutils.ListFiles(rootPath, includeDirs)
-	}
-	if err != nil {
-		return paths, err
-	}
-	var rootFilter string
-	if excludeWithRelativePath {
-		rootFilter = rootPath
-	}
-	return filterFiles(rootFilter, paths, excludePathPattern)
+func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, preserveSymlink bool, excludePathPattern string) ([]string, error) {
+	return ListFilesFilterPatternAndSize(rootPath, isRecursive, includeDirs, excludeWithRelativePath, preserveSymlink, excludePathPattern, nil)
+}
+
+// Return all the existing paths of the provided root path
+func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, preserveSymlink bool, excludePathPattern string, sizeThreshold *SizeThreshold) ([]string, error) {
+	filterFunc := filterFilesFunc(rootPath, includeDirs, excludeWithRelativePath, preserveSymlink, excludePathPattern, sizeThreshold)
+	return fileutils.ListFilesWithFilterFunc(rootPath, isRecursive, !preserveSymlink, filterFunc)
 }
 
 // Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
@@ -53,23 +45,41 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 	return excludePathPattern
 }
 
-func filterFiles(rootPath string, files []string, excludePathPattern string) (filteredFiles []string, err error) {
-	var excludedPath bool
-	for i := 0; i < len(files); i++ {
-		if files[i] == "." {
-			continue
+// Returns a function that filters files according to the provided parameters
+func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, preserveSymlink bool, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
+	return func(path string) (included bool, err error) {
+		if path == "." {
+			return false, nil
 		}
-		excludedPath, err = isPathExcluded(strings.TrimPrefix(files[i], rootPath), excludePathPattern)
+		if !includeDirs {
+			isDir, err := fileutils.IsDirExists(path, preserveSymlink)
+			if err != nil || isDir {
+				return false, err
+			}
+		}
+		var isExcludedByPattern bool
+		isExcludedByPattern, err = isPathExcluded(path, excludePathPattern, rootPath, excludeWithRelativePath)
 		if err != nil {
-			return
+			return false, err
 		}
-		if !excludedPath {
-			filteredFiles = append(filteredFiles, files[i])
-		} else {
-			log.Debug(fmt.Sprintf("The path '%s' is excluded", files[i]))
+		if isExcludedByPattern {
+			log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+			return false, nil
 		}
+
+		if sizeThreshold != nil {
+			fileInfo, err := fileutils.GetFileInfo(path, preserveSymlink)
+			if err != nil {
+				return false, errorutils.CheckError(err)
+			}
+			// Check if the file size is within the limits
+			if !fileInfo.IsDir() && !sizeThreshold.IsSizeWithinThreshold(fileInfo.Size()) {
+				log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+				return false, nil
+			}
+		}
+		return true, nil
 	}
-	return
 }
 
 // Return the actual sub-paths that match the regex provided.
@@ -116,9 +126,13 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifa
 	return utils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, SymlinkTargetPath: symlinkPath}, nil
 }
 
-func isPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {
+func isPathExcluded(path, excludePathPattern, rootPath string, excludeWithRelativePath bool) (excludedPath bool, err error) {
 	if len(excludePathPattern) > 0 {
+		if excludeWithRelativePath {
+			path = strings.TrimPrefix(path, rootPath)
+		}
 		excludedPath, err = regexp.MatchString(excludePathPattern, path)
+		err = errorutils.CheckError(err)
 	}
 	return
 }

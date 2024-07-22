@@ -197,6 +197,28 @@ func xscGetVersionHandlerFunc(t *testing.T) func(w http.ResponseWriter, r *http.
 	}
 }
 
+func enrichGetScanId(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			_, err := fmt.Fprint(w, scanIdResponse)
+			assert.NoError(t, err)
+			return
+		}
+		http.Error(w, "Invalid enrich get scan id request", http.StatusBadRequest)
+	}
+}
+
+func enrichGetResults(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			_, err := fmt.Fprint(w, ScanResponse)
+			assert.NoError(t, err)
+			return
+		}
+		http.Error(w, "Invalid enrich get results request", http.StatusBadRequest)
+	}
+}
+
 func xscGitInfoHandlerFunc(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := io.ReadAll(r.Body)
@@ -227,6 +249,9 @@ func StartXrayMockServer(t *testing.T) int {
 	handlers["/api/v1/entitlements/feature/"] = entitlementsHandler
 	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t)
 	handlers["/xsc/api/v1/gitinfo"] = xscGitInfoHandlerFunc(t)
+	handlers["/xray/api/v1/scan/import_xml"] = enrichGetScanId(t)
+	getEnrichResults := fmt.Sprintf("/xray/api/v1/scan/graph/%s", TestMultiScanId)
+	handlers[getEnrichResults] = enrichGetResults(t)
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	handlers[fmt.Sprintf("/%s/", services.BuildScanAPI)] = buildScanHandler
 	handlers["/"] = http.NotFound
