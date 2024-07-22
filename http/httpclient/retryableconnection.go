@@ -105,10 +105,7 @@ func (m *monitor) start() (result []byte, stable bool, err error) {
 	}
 	defer func() {
 		if m.resp != nil && m.resp.Body != nil {
-			e := m.resp.Body.Close()
-			if err == nil {
-				err = errorutils.CheckError(e)
-			}
+			err = errors.Join(err, m.resp.Body.Close())
 		}
 	}()
 
@@ -117,7 +114,8 @@ func (m *monitor) start() (result []byte, stable bool, err error) {
 	bodyReader := bufio.NewReader(m.resp.Body)
 	go func() {
 		for {
-			line, _, err := bodyReader.ReadLine()
+			var line []byte
+			line, _, err = bodyReader.ReadLine()
 			if err == io.EOF {
 				errChan <- nil
 				break

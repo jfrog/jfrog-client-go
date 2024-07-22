@@ -2,6 +2,15 @@ package xray
 
 import xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
 
+const ScanResponse = `
+{
+"scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122",
+	"vulnerabilities": [{
+		"summary": "test",
+		"severity": "high"
+	}]
+}
+`
 const FatalErrorXrayScanResponse = `
 {
  "errors": [{"status":-1}, {"status":500}]
@@ -1417,6 +1426,8 @@ const BuildScanResultsResponse = `
 }
 `
 const xscVersionResponse = `{"xsc_version": "1.0.0"}`
+
+const scanIdResponse = `{"scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122"}`
 
 const XscGitInfoResponse = `{"multi_scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122"}`
 
