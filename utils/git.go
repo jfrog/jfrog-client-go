@@ -124,7 +124,9 @@ func (m *GitManager) readUrl() {
 		return
 	}
 	defer func() {
-		m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+		if file != nil {
+			m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+		}
 	}()
 
 	scanner := bufio.NewScanner(file)
@@ -223,7 +225,9 @@ func (m *GitManager) readRevisionFromRef(refPath string) {
 		return
 	}
 	defer func() {
-		m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+		if file != nil {
+			m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+		}
 	}()
 
 	scanner := bufio.NewScanner(file)
@@ -253,7 +257,9 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 			return
 		}
 		defer func() {
-			m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+			if file != nil {
+				m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+			}
 		}()
 
 		scanner := bufio.NewScanner(file)
