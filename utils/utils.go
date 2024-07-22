@@ -28,7 +28,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.41.2"
+	Version     = "1.42.0"
 )
 
 type MinVersionProduct string
@@ -282,8 +282,7 @@ func BuildTargetPath(pattern, path, target string, ignoreRepo bool) (string, boo
 		pattern += "(/.*)?$"
 	}
 
-	r, err := regexp.Compile(pattern)
-	err = errorutils.CheckError(err)
+	r, err := GetRegExp(pattern)
 	if err != nil {
 		return "", false, err
 	}

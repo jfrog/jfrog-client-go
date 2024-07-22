@@ -2,11 +2,9 @@ package utils
 
 import (
 	"errors"
-	"regexp"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
 
@@ -16,9 +14,9 @@ func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 	}
 
 	regexpPattern := "^" + strings.ReplaceAll(deletePattern, "*", "([^/]*|.*)")
-	r, err := regexp.Compile(regexpPattern)
+	r, err := utils.GetRegExp(regexpPattern)
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return "", err
 	}
 
 	groups := r.FindStringSubmatch(searchResult)
