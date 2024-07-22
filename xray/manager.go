@@ -111,7 +111,7 @@ func (sm *XrayServicesManager) DeletePolicy(policyName string) error {
 	return policyService.Delete(policyName)
 }
 
-// CreatePolicy will create a new Xray ignore rule
+// CreateIgnoreRule will create a new Xray ignore rule
 // The function returns the ignore rule id if succeeded or empty string and error message if fails
 func (sm *XrayServicesManager) CreateIgnoreRule(params utils.IgnoreRuleParams) (string, error) {
 	ignoreRuleService := services.NewIgnoreRuleService(sm.client)
@@ -119,20 +119,28 @@ func (sm *XrayServicesManager) CreateIgnoreRule(params utils.IgnoreRuleParams) (
 	return ignoreRuleService.Create(params)
 }
 
-// CreatePolicy will create a new Xray ignore rule
-// The function returns the ignore rule id if succeeded or empty string and error message if fails
-func (sm *XrayServicesManager) GetIgnoreRule(ignoreRuleId string) (*utils.IgnoreRuleParams, error) {
+// GetIgnoreRule will get an Xray ignore rule for the provided ignore rule id.
+// The function returns a pointer to the utils.IgnoreRuleBody or nil and error message if fails
+func (sm *XrayServicesManager) GetIgnoreRule(ignoreRuleId string) (*utils.IgnoreRuleBody, error) {
 	ignoreRuleService := services.NewIgnoreRuleService(sm.client)
 	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
 	return ignoreRuleService.Get(ignoreRuleId)
 }
 
-// CreatePolicy will create a new Xray ignore rule
-// The function returns the ignore rule id if succeeded or empty string and error message if fails
+// DeleteIgnoreRule will delete the Xray ignore rule matching the id provided.
+// The function returns a nil error if it succeeds, and an error if fails
 func (sm *XrayServicesManager) DeleteIgnoreRule(ignoreRuleId string) error {
 	ignoreRuleService := services.NewIgnoreRuleService(sm.client)
 	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
 	return ignoreRuleService.Delete(ignoreRuleId)
+}
+
+// GetAllIgnoreRules Returns all Ignore Rules by specific filters.
+// The function returns a pointer to utils.IgnoreRuleResponse or nil and error message if fails
+func (sm *XrayServicesManager) GetAllIgnoreRules(params *utils.IgnoreRulesGetAllParams) (*utils.IgnoreRuleResponse, error) {
+	ignoreRuleService := services.NewIgnoreRuleService(sm.client)
+	ignoreRuleService.XrayDetails = sm.config.GetServiceDetails()
+	return ignoreRuleService.GetAll(params)
 }
 
 // AddBuildsToIndexing will add builds to Xray indexing configuration
