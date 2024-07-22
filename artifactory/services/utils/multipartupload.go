@@ -49,8 +49,6 @@ const (
 
 	// API constants
 	uploadsApi        = "/api/v1/uploads/"
-	routeToHeader     = "X-JFrog-Route-To"
-	artifactoryNodeId = "X-Artifactory-Node-Id"
 
 	// Sizes and limits constants
 	MaxMultipartUploadFileSize       = SizeTiB * 5
@@ -302,18 +300,17 @@ type urlPartResponse struct {
 }
 
 func (mu *MultipartUpload) completeAndPollForStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1 string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) (err error) {
-	nodeId, err := mu.completeMultipartUpload(logMsgPrefix, sha1, multipartUploadClient)
+	err := mu.completeMultipartUpload(logMsgPrefix, sha1, multipartUploadClient)
 	if err != nil {
 		return
 	}
 
-	err = mu.pollCompletionStatus(logMsgPrefix, completionAttemptsLeft, sha1, nodeId, multipartUploadClient, progressReader)
+	err = mu.pollCompletionStatus(logMsgPrefix, completionAttemptsLeft, sha1, multipartUploadClient, progressReader)
 	return
 }
 
-func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1, nodeId string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) error {
-	multipartUploadClientWithNodeId := multipartUploadClient.Clone()
-	multipartUploadClientWithNodeId.Headers = map[string]string{routeToHeader: nodeId}
+func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) error {
+	multipartUploadClient := multipartUploadClient.Clone()
 
 	lastMergeLog := time.Now()
 	pollingExecutor := &utils.RetryExecutor{
@@ -322,7 +319,7 @@ func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionA
 		LogMsgPrefix:             logMsgPrefix,
 		ExecutionHandler: func() (shouldRetry bool, err error) {
 			// Get completion status
-			status, err := mu.status(logMsgPrefix, multipartUploadClientWithNodeId)
+			status, err := mu.status(logMsgPrefix, multipartUploadClient)
 			if err != nil {
 				return false, err
 			}
@@ -364,15 +361,15 @@ func (mu *MultipartUpload) completeMultipartUpload(logMsgPrefix, sha1 string, mu
 		return "", err
 	}
 	log.Debug("Artifactory response:", string(body), resp.Status)
-	return resp.Header.Get(artifactoryNodeId), errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
 }
 
-func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClientWithNodeId *httputils.HttpClientDetails) (status statusResponse, err error) {
+func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClient *httputils.HttpClientDetails) (status statusResponse, err error) {
 	url := fmt.Sprintf("%s%sstatus", mu.artifactoryUrl, uploadsApi)
-	resp, body, err := mu.client.GetHttpClient().SendPost(url, []byte{}, *multipartUploadClientWithNodeId, logMsgPrefix)
+	resp, body, err := mu.client.GetHttpClient().SendPost(url, []byte{}, *multipartUploadClient, logMsgPrefix)
 	// If the Artifactory node returns a "Service unavailable" error (status 503), attempt to retry the upload completion process on a different node.
 	if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
-		unavailableNodeErr := fmt.Sprintf(logMsgPrefix + fmt.Sprintf("The Artifactory node ID '%s' is unavailable.", multipartUploadClientWithNodeId.Headers[routeToHeader]))
+		unavailableNodeErr := fmt.Sprintf(logMsgPrefix + "Artifactory is unavailable.")
 		return statusResponse{Status: retryableError, Error: unavailableNodeErr}, nil
 	}
 	if err != nil {
