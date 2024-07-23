@@ -33,8 +33,6 @@ github.com/elazarl/goproxy v0.0.0-20230808193330-2592e75ae04a h1:mATvB/9r/3gvcej
 github.com/elazarl/goproxy v0.0.0-20230808193330-2592e75ae04a/go.mod h1:Ro8st/ElPeALwNFlcTpWmkr6IoMFfkjXAvTHpevnDsM=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
-github.com/eyalbe4/build-info-go v1.8.9-0.20240723132035-980d2c84b738 h1:T8PG1nz/6AiXZYGAHaPs3aXSrdt08scqptLm+yg5xKc=
-github.com/eyalbe4/build-info-go v1.8.9-0.20240723132035-980d2c84b738/go.mod h1:fxSfpp+kQ8qln/0y7pgV3tg2exWe5OM1np5FF2LlSDg=
 github.com/forPelevin/gomoji v1.2.0 h1:9k4WVSSkE1ARO/BWywxgEUBvR/jMnao6EZzrql5nxJ8=
 github.com/forPelevin/gomoji v1.2.0/go.mod h1:8+Z3KNGkdslmeGZBC3tCrwMrcPy5GRzAD+gL9NAwMXg=
 github.com/gliderlabs/ssh v0.3.7 h1:iV3Bqi942d9huXnzEF2Mt+CY9gLu8DNM4Obd+8bODRE=
@@ -61,6 +59,8 @@ github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOl
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jfrog/archiver/v3 v3.6.1 h1:LOxnkw9pOn45DzCbZNFV6K0+6dCsQ0L8mR3ZcujO5eI=
 github.com/jfrog/archiver/v3 v3.6.1/go.mod h1:VgR+3WZS4N+i9FaDwLZbq+jeU4B4zctXL+gL4EMzfLw=
+github.com/jfrog/build-info-go v1.9.30 h1:RmK3NuDGUoyCjCNJJBlHaCm4vWzO8BLjkuAkMzj6PGE=
+github.com/jfrog/build-info-go v1.9.30/go.mod h1:fxSfpp+kQ8qln/0y7pgV3tg2exWe5OM1np5FF2LlSDg=
 github.com/jfrog/gofrog v1.7.4 h1:on4AeWef5LJUhGCigSjTS4Ez3n9l8+NiZlXH6UYp05c=
 github.com/jfrog/gofrog v1.7.4/go.mod h1:jyGiCgiqSSR7k86hcUSu67XVvmvkkgWTmPsH25wI298=
 github.com/kevinburke/ssh_config v1.2.0 h1:x584FjTGwHzMwvHx18PXxbBVzfnxogHaAReU4gf13a4=
