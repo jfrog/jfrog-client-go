@@ -153,6 +153,9 @@
       - [Get an Xray Policy](#get-an-xray-policy)
       - [Update an Xray Policy](#update-an-xray-policy)
       - [Delete an Xray Policy](#delete-an-xray-policy)
+      - [Create an Xray Ignore Rule](#create-an-xray-ignore-rule)
+      - [Get an Xray Ignore Rule](#get-an-xray-ignore-rule)
+      - [Delete an Xray Ignore Rule](#delete-an-xray-ignore-rule)
       - [Add Builds to Indexing Configuration](#add-builds-to-indexing-configuration)
       - [Request Graph Scan](#request-graph-scan)
       - [Retrieve the Graph Scan Results](#retrieve-the-graph-scan-results)
@@ -1983,6 +1986,91 @@ err := xrayManager.UpdatePolicy(*policy)
 
 ```go
 err := xrayManager.DeletePolicy("example-policy")
+```
+
+#### Create an Xray Ignore Rule
+
+```go
+params := utils.NewIgnoreRuleParams()
+params.Notes := "random-notes-for-ignore-rules"
+params.ExpiredAt := time.Date(year int, month Month, day, hour, min, sec, nsec int, loc *Location)
+params.IgnoreFilters := IgnoreFilters{
+  Vulnerabilities: []string{"XRAY-12345", "XRAY-67891"},
+  Licenses: []string{"MIT", "BSD"},
+  CVEs: []string{"CVE-2021-1234", "CVE-2022-5678"},
+  Policies: []string{"policy-name-1", "policy-name-2"},
+  Watches: []string{"watch-name-1", "watch-name-2"},
+  DockerLayers: []string{"0503825856099e6adb39c8297af09547f69684b7016b7f3680ed801aa310baaa"},
+  OperationalRisks: []string{"any"},
+  Exposures: []ExposuresFilterName{
+    {
+      FilePath: []string{"/path/to/file1", "/path/to/file2"},
+      Scanners: []string{"EXP-12345"},
+      Catagories: []ExposuresCatagories{
+        {
+          Secrets: true,
+          Services: true,
+          Applications: true,
+          Iac: true,
+        },
+      },
+    },
+  },
+  ReleaseBundles: []IgnoreFilterNameVersion{
+    {
+      Name: "RB-name",
+      Version: "0.0.0",
+    },
+    {
+      Name: "RB-name-2",
+      Version: "1.2.3",
+    },
+  },
+  Builds: []IgnoreFilterNameVersion{
+    {
+      Name: "build-name",
+      Version: "0.0.0",
+    },
+    {
+      Name: "build-name-2",
+      Version: "1.2.3",
+    },
+  },
+  Components: []IgnoreFilterNameVersion{
+    {
+      Name: "component-name",
+      Version: "0.0.0",
+    },
+    {
+      Name: "component-name-2",
+      Version: "1.2.3",
+    },
+  },
+  Arti: []IgnoreFilterNameVersion{
+    {
+      Name: "artifact-name",
+      Version: "0.0.0",
+    },
+    {
+      Name: "artifact-name-2",
+      Version: "1.2.3",
+    },
+  },
+}
+
+ignoreRuleIgnoreId, err := xrayManager.CreateIgnoreRule(params)
+```
+
+#### Get an Xray Ignore Rule
+
+```go
+ignoreRule, err := xrayManager.GetIgnoreRule("ignore-rule-id")
+```
+
+#### Delete an Xray Ignore Rule
+
+```go
+err := xrayManager.DeleteIgnoreRule("ignore-rule-id")
 ```
 
 #### Add Builds to Indexing Configuration

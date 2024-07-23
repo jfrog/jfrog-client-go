@@ -234,7 +234,9 @@ func (mu *MultipartUpload) uploadPart(logMsgPrefix, localPath string, fileSize, 
 		return errorutils.CheckError(err)
 	}
 	defer func() {
-		err = errors.Join(err, errorutils.CheckError(file.Close()))
+		if file != nil {
+			err = errors.Join(err, errorutils.CheckError(file.Close()))
+		}
 	}()
 	if _, err = file.Seek(partId*chunkSize, io.SeekStart); err != nil {
 		return errorutils.CheckError(err)
