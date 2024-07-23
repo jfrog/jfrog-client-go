@@ -3,11 +3,12 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
 )
 
 const (
@@ -76,7 +77,7 @@ type Row struct {
 	ExternalAdvisorySource   string      `json:"external_advisory_source,omitempty"`
 	ExternalAdvisorySeverity string      `json:"external_advisory_severity,omitempty"`
 	// Licenses Report field
-	License          string `json:"license,omitempty"`
+	License          string `json:"license_key,omitempty"`
 	LicenseName      string `json:"license_name,omitempty"`
 	Component        string `json:"component,omitempty"`
 	Artifact         string `json:"artifact,omitempty"`
