@@ -36,6 +36,8 @@ const (
 	defaultUploadMinSplit = utils.SizeMiB * 200
 	// The default maximum number of parts that can be concurrently uploaded per file during a multipart upload
 	defaultUploadSplitCount = 5
+	// Minimal file size to show progress bar
+	minFileSizeForProgressInKb = 250 * utils.SizeKib
 )
 
 type UploadService struct {
@@ -971,7 +973,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		}
 	}()
 	// Show progress bar only for files larger than 250Kb to avoid polluting the terminal with endless progress bars.
-	if us.Progress != nil && info.Size() > 250*utils.SizeKib {
+	if us.Progress != nil && info.Size() > minFileSizeForProgressInKb {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)
 		progressId := progressReader.GetId()

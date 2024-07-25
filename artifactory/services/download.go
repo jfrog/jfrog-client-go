@@ -523,7 +523,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	log.Debug(fmt.Sprintf("%sCreating symlink file: %q >> %q", logMsgPrefix, localSymlinkPath, symlinkArtifact))
+	log.Debug(fmt.Sprintf("%sCreated symlink: %q -> %q", logMsgPrefix, localSymlinkPath, symlinkArtifact))
 	return nil
 }
 
