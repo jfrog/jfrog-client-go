@@ -528,13 +528,13 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 	var resp *http.Response
 	var body []byte
 	var checksumDeployed = false
-	var e error
+	var err error
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
 	if !us.DryRun {
 		if us.shouldTryChecksumDeploy(details.Size, uploadParams) {
-			resp, body, e = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
-			if e != nil {
-				return false, e
+			resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
+			if err != nil {
+				return false, err
 			}
 			checksumDeployed = isSuccessfulUploadStatusCode(resp.StatusCode)
 		}
@@ -568,9 +568,9 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 				},
 			}
 
-			e = retryExecutor.Execute()
-			if e != nil {
-				return false, e
+			err = retryExecutor.Execute()
+			if err != nil {
+				return false, err
 			}
 		}
 	}
@@ -970,7 +970,8 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 			err = errors.Join(err, errorutils.CheckError(file.Close()))
 		}
 	}()
-	if us.Progress != nil {
+	// Show progress bar only for files larger than 100km to avoid polluting the terminal with endless progress bars.
+	if us.Progress != nil && info.Size() > 100*utils.SizeKib {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)
 		progressId := progressReader.GetId()
