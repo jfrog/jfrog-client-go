@@ -417,8 +417,7 @@ func (item *ResultItem) ToArtifact() buildinfo.Artifact {
 			Md5:    item.Actual_Md5,
 			Sha256: item.Sha256,
 		},
-		Path:         path.Join(item.Path, item.Name),
-		OriginalRepo: item.Repo,
+		Path: path.Join(item.Path, item.Name),
 	}
 }
 
