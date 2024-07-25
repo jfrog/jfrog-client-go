@@ -603,11 +603,6 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 
 	// Try checksum deploy
 	if us.shouldTryChecksumDeploy(fileInfo.Size(), uploadParams) {
-		if us.Progress != nil {
-			progressReader := us.Progress.NewProgressReader(fileInfo.Size(), "Checksum Deploy", artifact.Artifact.LocalPath)
-			progressId := progressReader.GetId()
-			defer us.Progress.RemoveProgress(progressId)
-		}
 		resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
@@ -975,8 +970,8 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 			err = errors.Join(err, errorutils.CheckError(file.Close()))
 		}
 	}()
-	// Show progress bar only for files larger than 100kb to avoid polluting the terminal with endless progress bars.
-	if us.Progress != nil && info.Size() > 100*utils.SizeKib {
+	// Show progress bar only for files larger than 250Kb to avoid polluting the terminal with endless progress bars.
+	if us.Progress != nil && info.Size() > 250*utils.SizeKib {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)
 		progressId := progressReader.GetId()
