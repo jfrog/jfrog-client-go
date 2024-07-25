@@ -3,6 +3,7 @@ package httpclient
 import (
 	"bytes"
 	"context"
+	servicesutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/minio/sha256-simd"
 	"strings"
 	//#nosec G505 -- sha1 is supported by Artifactory.
@@ -543,7 +544,8 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 			return
 		}
 	}
-	if progress != nil {
+	// Show merging progress bar only for files larger than 100mb to avoid polluting the progress
+	if progress != nil && flags.FileSize > 100*servicesutils.SizeMiB {
 		progress.SetMergingState(downloadProgressId, true)
 	}
 	err = mergeChunks(chunksPaths, flags)

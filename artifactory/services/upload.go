@@ -970,7 +970,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 			err = errors.Join(err, errorutils.CheckError(file.Close()))
 		}
 	}()
-	// Show progress bar only for files larger than 100km to avoid polluting the terminal with endless progress bars.
+	// Show progress bar only for files larger than 100kb to avoid polluting the terminal with endless progress bars.
 	if us.Progress != nil && info.Size() > 100*utils.SizeKib {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)

@@ -427,7 +427,7 @@ func (ds *DownloadService) downloadFile(downloadFileDetails *httpclient.Download
 		ds.Progress.IncrementGeneralProgress()
 	}
 	httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
-	bulkDownload := downloadParams.SplitCount == 0 || downloadParams.MinSplitSize < 0 || downloadParams.MinSplitSize*1000 > downloadFileDetails.Size
+	bulkDownload := downloadParams.SplitCount == 0 || downloadParams.MinSplitSizeKb < 0 || downloadParams.MinSplitSizeKb*1000 > downloadFileDetails.Size
 	if !bulkDownload {
 		acceptRange, err := ds.isFileAcceptRange(downloadFileDetails)
 		if err != nil {
@@ -523,7 +523,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	log.Info(fmt.Sprintf("%sCreating symlink file: %q >> %q", logMsgPrefix, localSymlinkPath, symlinkArtifact))
+	log.Debug(fmt.Sprintf("%sCreating symlink file: %q >> %q", logMsgPrefix, localSymlinkPath, symlinkArtifact))
 	return nil
 }
 
@@ -644,7 +644,7 @@ type DownloadParams struct {
 	Flat                    bool
 	Explode                 bool
 	BypassArchiveInspection bool
-	MinSplitSize            int64
+	MinSplitSizeKb          int64
 	SplitCount              int
 	PublicGpgKey            string
 	SkipChecksum            bool
@@ -686,5 +686,5 @@ func (ds *DownloadParams) GetPublicGpgKey() string {
 }
 
 func NewDownloadParams() DownloadParams {
-	return DownloadParams{CommonParams: &utils.CommonParams{}, MinSplitSize: 5120, SplitCount: 3}
+	return DownloadParams{CommonParams: &utils.CommonParams{}, MinSplitSizeKb: 5120, SplitCount: 3}
 }
