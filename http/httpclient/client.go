@@ -469,7 +469,7 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 
 	var reader io.Reader
 	if progress != nil {
-		progressReader := progress.NewProgressReader(resp.ContentLength, "Downloading", downloadFileDetails.RelativePath)
+		progressReader := progress.NewProgressReader(resp.ContentLength, "", downloadFileDetails.RelativePath)
 		reader = progressReader.ActionWithProgress(resp.Body)
 		progressId := progressReader.GetId()
 		defer progress.RemoveProgress(progressId)
@@ -514,7 +514,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 	var downloadProgressId int
 	if progress != nil {
-		downloadProgress := progress.NewProgressReader(flags.FileSize, "Downloading", flags.RelativePath)
+		downloadProgress := progress.NewProgressReader(flags.FileSize, "", flags.RelativePath)
 		downloadProgressId = downloadProgress.GetId()
 		// Aborting order matters. mergingProgress depends on the existence of downloadingProgress
 		defer progress.RemoveProgress(downloadProgressId)
