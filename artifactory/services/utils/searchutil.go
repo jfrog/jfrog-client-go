@@ -429,6 +429,7 @@ func (item *ResultItem) ToDependency() buildinfo.Dependency {
 			Md5:    item.Actual_Md5,
 			Sha256: item.Sha256,
 		},
+		OriginalRepo: item.Repo,
 	}
 }
 
