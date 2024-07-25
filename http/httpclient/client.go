@@ -514,7 +514,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 	var downloadProgressId int
 	if progress != nil {
-		downloadProgress := progress.NewProgressReader(flags.FileSize, "", flags.RelativePath)
+		downloadProgress := progress.NewProgressReader(flags.FileSize, "Downloading", flags.RelativePath)
 		downloadProgressId = downloadProgress.GetId()
 		// Aborting order matters. mergingProgress depends on the existence of downloadingProgress
 		defer progress.RemoveProgress(downloadProgressId)
