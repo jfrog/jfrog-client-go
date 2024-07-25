@@ -603,6 +603,11 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 
 	// Try checksum deploy
 	if us.shouldTryChecksumDeploy(fileInfo.Size(), uploadParams) {
+		if us.Progress != nil {
+			progressReader := us.Progress.NewProgressReader(fileInfo.Size(), "Checksum Deploy", artifact.Artifact.LocalPath)
+			progressId := progressReader.GetId()
+			defer us.Progress.RemoveProgress(progressId)
+		}
 		resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
