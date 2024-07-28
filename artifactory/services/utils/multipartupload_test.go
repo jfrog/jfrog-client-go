@@ -186,9 +186,6 @@ func TestCompleteMultipartUpload(t *testing.T) {
 		assert.Equal(t, "/api/v1/uploads/complete", r.URL.Path)
 		assert.Equal(t, fmt.Sprintf("sha1=%s", sha1), r.URL.RawQuery)
 
-		// Add the "X-Artifactory-Node-Id" header to the response
-		w.Header().Add(artifactoryNodeId, nodeId)
-
 		// Send response 202 Accepted
 		w.WriteHeader(http.StatusAccepted)
 	})
@@ -198,9 +195,8 @@ func TestCompleteMultipartUpload(t *testing.T) {
 	defer cleanUp()
 
 	// Execute completeMultipartUpload
-	actualNodeId, err := multipartUpload.completeMultipartUpload("", sha1, &httputils.HttpClientDetails{})
+	err := multipartUpload.completeMultipartUpload("", sha1, &httputils.HttpClientDetails{})
 	assert.NoError(t, err)
-	assert.Equal(t, nodeId, actualNodeId)
 }
 
 func TestStatus(t *testing.T) {
@@ -210,9 +206,6 @@ func TestStatus(t *testing.T) {
 
 		// Check URL
 		assert.Equal(t, "/api/v1/uploads/status", r.URL.Path)
-
-		// Check "X-JFrog-Route-To" header
-		assert.Equal(t, nodeId, r.Header.Get(routeToHeader))
 
 		// Send response 200 OK
 		w.WriteHeader(http.StatusOK)
@@ -227,8 +220,7 @@ func TestStatus(t *testing.T) {
 	defer cleanUp()
 
 	// Execute status
-	clientDetails := &httputils.HttpClientDetails{Headers: map[string]string{routeToHeader: nodeId}}
-	status, err := multipartUpload.status("", clientDetails)
+	status, err := multipartUpload.status("", &httputils.HttpClientDetails{})
 	assert.NoError(t, err)
 	assert.Equal(t, statusResponse{Status: finished, Progress: utils.Pointer(100)}, status)
 }
@@ -252,10 +244,9 @@ func TestStatusServiceUnavailable(t *testing.T) {
 	defer cleanUp()
 
 	// Execute status
-	clientDetails := &httputils.HttpClientDetails{Headers: map[string]string{routeToHeader: nodeId}}
-	status, err := multipartUpload.status("", clientDetails)
+	status, err := multipartUpload.status("", &httputils.HttpClientDetails{})
 	assert.NoError(t, err)
-	assert.Equal(t, statusResponse{Status: retryableError, Error: "The Artifactory node ID 'nodeId' is unavailable."}, status)
+	assert.Equal(t, statusResponse{Status: retryableError, Error: "Artifactory is unavailable."}, status)
 }
 
 func TestAbort(t *testing.T) {

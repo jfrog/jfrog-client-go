@@ -36,6 +36,8 @@ const (
 	defaultUploadMinSplit = utils.SizeMiB * 200
 	// The default maximum number of parts that can be concurrently uploaded per file during a multipart upload
 	defaultUploadSplitCount = 5
+	// Minimal file size to show progress bar
+	minFileSizeForProgressInKb = 250 * utils.SizeKib
 )
 
 type UploadService struct {
@@ -92,7 +94,7 @@ func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (summary *uti
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	if us.saveSummary {
 		us.resultsManager, err = newResultManager()
-		if err != nil {
+		if err != nil || us.resultsManager == nil {
 			return nil, err
 		}
 		defer func() {
@@ -528,13 +530,13 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 	var resp *http.Response
 	var body []byte
 	var checksumDeployed = false
-	var e error
+	var err error
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
 	if !us.DryRun {
 		if us.shouldTryChecksumDeploy(details.Size, uploadParams) {
-			resp, body, e = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
-			if e != nil {
-				return false, e
+			resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
+			if err != nil {
+				return false, err
 			}
 			checksumDeployed = isSuccessfulUploadStatusCode(resp.StatusCode)
 		}
@@ -568,9 +570,9 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 				},
 			}
 
-			e = retryExecutor.Execute()
-			if e != nil {
-				return false, e
+			err = retryExecutor.Execute()
+			if err != nil {
+				return false, err
 			}
 		}
 	}
@@ -647,7 +649,8 @@ func (us *UploadService) doUploadFromReader(fileReader io.Reader, targetUrlWithP
 	if us.Progress != nil {
 		progressReader := us.Progress.NewProgressReader(details.Size, "Uploading", targetUrlWithProps)
 		reader = progressReader.ActionWithProgress(fileReader)
-		defer us.Progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer us.Progress.RemoveProgress(progressId)
 	} else {
 		reader = fileReader
 	}
@@ -969,10 +972,12 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 			err = errors.Join(err, errorutils.CheckError(file.Close()))
 		}
 	}()
-	if us.Progress != nil {
+	// Show progress bar only for files larger than 250Kb to avoid polluting the terminal with endless progress bars.
+	if us.Progress != nil && info.Size() > minFileSizeForProgressInKb {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)
-		defer us.Progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer us.Progress.RemoveProgress(progressId)
 	} else {
 		reader = file
 	}
