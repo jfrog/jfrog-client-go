@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"github.com/jfrog/build-info-go/entities"
 	biutils "github.com/jfrog/build-info-go/utils"
 	ioutils "github.com/jfrog/gofrog/io"
@@ -359,7 +360,7 @@ func addCreateDirsTasks(directoriesDataKeys []string, alreadyCreatedDirs map[str
 	sort.Sort(sort.Reverse(sort.StringSlice(directoriesDataKeys)))
 	for index, v := range directoriesDataKeys {
 		// In order to avoid duplication we need to check the path wasn't already created by the previous action.
-		if v != "." && // For some files the returned path can be the root path, ".", in that case we doing need to create any directory.
+		if v != "." && // For some files the returned path can be the root path, ".", in that case we don't need to create any directory.
 			(index == 0 || !utils.IsSubPath(directoriesDataKeys, index, "/")) { // directoriesDataKeys store all the path which might needed to be created, that's include duplicated paths.
 			// By sorting the directoriesDataKeys we can assure that the longest path was created and therefore no need to create all it's sub paths.
 
@@ -522,7 +523,7 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	log.Debug(logMsgPrefix + "Creating symlink file.")
+	log.Debug(fmt.Sprintf("%sCreated symlink: %q -> %q", logMsgPrefix, localSymlinkPath, symlinkArtifact))
 	return nil
 }
 
@@ -553,7 +554,6 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 			if err != nil {
 				return err
 			}
-			log.Info(logMsgPrefix+"Downloading", downloadData.Dependency.GetItemRelativePath())
 			if ds.DryRun {
 				successCounters[threadId]++
 				return nil
@@ -563,10 +563,11 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 				return err
 			}
 			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat, placeholdersUsed)
+			localFullPath := filepath.Join(localPath, localFileName)
 			if downloadData.Dependency.Type == string(utils.Folder) {
-				return createDir(localPath, localFileName, logMsgPrefix)
+				return createDir(localFullPath, logMsgPrefix)
 			}
-			if err = removeIfSymlink(filepath.Join(localPath, localFileName)); err != nil {
+			if err = removeIfSymlink(localFullPath); err != nil {
 				return err
 			}
 			if downloadParams.IsSymlink() {
@@ -574,6 +575,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 					return err
 				}
 			}
+			log.Info(fmt.Sprintf("%sDownloading %q to %q", logMsgPrefix, downloadData.Dependency.GetItemRelativePath(), localFullPath))
 			if err = ds.downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix, downloadData, downloadParams); err != nil {
 				log.Error(logMsgPrefix, "Received an error: "+err.Error())
 				return err
@@ -586,12 +588,13 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 }
 
 func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix string, downloadData DownloadData, downloadParams DownloadParams) error {
-	isEqual, err := fileutils.IsEqualToLocalFile(filepath.Join(localPath, localFileName), downloadData.Dependency.Actual_Md5, downloadData.Dependency.Actual_Sha1)
+	localFilePath := filepath.Join(localPath, localFileName)
+	isEqual, err := fileutils.IsEqualToLocalFile(localFilePath, downloadData.Dependency.Actual_Md5, downloadData.Dependency.Actual_Sha1)
 	if err != nil {
 		return err
 	}
 	if isEqual {
-		log.Debug(logMsgPrefix + "File already exists locally.")
+		log.Debug(logMsgPrefix+"File already exists locally:", localFilePath)
 		if ds.Progress != nil {
 			ds.Progress.IncrementGeneralProgress()
 		}
@@ -604,8 +607,7 @@ func (ds *DownloadService) downloadFileIfNeeded(downloadPath, localPath, localFi
 	return ds.downloadFile(downloadFileDetails, logMsgPrefix, downloadParams)
 }
 
-func createDir(localPath, localFileName, logMsgPrefix string) error {
-	folderPath := filepath.Join(localPath, localFileName)
+func createDir(folderPath, logMsgPrefix string) error {
 	if err := fileutils.CreateDirIfNotExist(folderPath); err != nil {
 		return err
 	}
@@ -642,13 +644,16 @@ type DownloadParams struct {
 	Flat                    bool
 	Explode                 bool
 	BypassArchiveInspection bool
-	MinSplitSize            int64
-	SplitCount              int
-	PublicGpgKey            string
-	SkipChecksum            bool
-	// Optional fields to avoid AQL request
+	// Min split size in Kilobytes
+	MinSplitSize int64
+	SplitCount   int
+	PublicGpgKey string
+	SkipChecksum bool
+
+	// Optional fields (Sha256,Size) to avoid AQL request:
 	Sha256 string
-	Size   *int64
+	// Size in bytes
+	Size *int64
 }
 
 func (ds *DownloadParams) IsFlat() bool {
