@@ -22,7 +22,7 @@ require (
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/CycloneDX/cyclonedx-go v0.8.0 // indirect
+	github.com/CycloneDX/cyclonedx-go v0.9.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
@@ -57,6 +57,8 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/jfrog/build-info-go => github.com/omerzi/build-info-go v1.3.1-0.20240729113940-052cd7532760
 
 // replace github.com/jfrog/build-info-go => github.com/eyalbe4/build-info-go v1.8.6-0.20240610015232-844595d5a4f3
 
