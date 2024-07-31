@@ -68,6 +68,12 @@ func AddChecksumHeaders(headers map[string]string, fileDetails *fileutils.FileDe
 	}
 }
 
+// Add the checksum token header to the headers map.
+// This header enables Artifactory to accept the Checksum Deployment of a file uploaded via multipart upload.
+func AddChecksumTokenHeader(headers map[string]string, checksumToken string) {
+	AddHeader("X-Checksum-Deploy-Token", checksumToken, &headers)
+}
+
 func AddAuthHeaders(headers map[string]string, artifactoryDetails auth.ServiceDetails) {
 	if headers == nil {
 		headers = make(map[string]string)
