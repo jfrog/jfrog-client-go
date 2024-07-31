@@ -48,9 +48,7 @@ const (
 	aborted           completionStatus = "ABORTED"
 
 	// API constants
-	uploadsApi        = "/api/v1/uploads/"
-	routeToHeader     = "X-JFrog-Route-To"
-	artifactoryNodeId = "X-Artifactory-Node-Id"
+	uploadsApi = "/api/v1/uploads/"
 
 	// Sizes and limits constants
 	MaxMultipartUploadFileSize       = SizeTiB * 5
@@ -123,7 +121,7 @@ type getConfigResponse struct {
 }
 
 func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, fileSize int64, sha1 string,
-	progress ioutils.ProgressMgr, splitCount int, chunkSize int64) (err error) {
+	progress ioutils.ProgressMgr, splitCount int, chunkSize int64) (checksumToken string, err error) {
 	repoAndPath := strings.SplitN(targetPath, "/", 2)
 	repoKey := repoAndPath[0]
 	repoPath := repoAndPath[1]
@@ -144,7 +142,8 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 	var progressReader ioutils.Progress
 	if progress != nil {
 		progressReader = progress.NewProgressReader(fileSize, "Multipart upload", targetPath)
-		defer progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer progress.RemoveProgress(progressId)
 	}
 
 	defer func() {
@@ -303,19 +302,18 @@ type urlPartResponse struct {
 	Url string `json:"url,omitempty"`
 }
 
-func (mu *MultipartUpload) completeAndPollForStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1 string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) (err error) {
-	nodeId, err := mu.completeMultipartUpload(logMsgPrefix, sha1, multipartUploadClient)
+func (mu *MultipartUpload) completeAndPollForStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1 string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) (checksumToken string, err error) {
+	err = mu.completeMultipartUpload(logMsgPrefix, sha1, multipartUploadClient)
 	if err != nil {
 		return
 	}
 
-	err = mu.pollCompletionStatus(logMsgPrefix, completionAttemptsLeft, sha1, nodeId, multipartUploadClient, progressReader)
+	checksumToken, err = mu.pollCompletionStatus(logMsgPrefix, completionAttemptsLeft, sha1, multipartUploadClient, progressReader)
 	return
 }
 
-func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1, nodeId string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) error {
+func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1 string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) (checksumToken string, err error) {
 	multipartUploadClientWithNodeId := multipartUploadClient.Clone()
-	multipartUploadClientWithNodeId.Headers = map[string]string{routeToHeader: nodeId}
 
 	lastMergeLog := time.Now()
 	pollingExecutor := &utils.RetryExecutor{
@@ -340,7 +338,7 @@ func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionA
 				if completionAttemptsLeft == 0 {
 					return false, errorutils.CheckErrorf("multipart upload failed after %d attempts", mu.client.GetHttpClient().GetRetries())
 				}
-				err = mu.completeAndPollForStatus(logMsgPrefix, completionAttemptsLeft-1, sha1, multipartUploadClient, progressReader)
+				checksumToken, err = mu.completeAndPollForStatus(logMsgPrefix, completionAttemptsLeft-1, sha1, multipartUploadClient, progressReader)
 			}
 
 			// Log status
@@ -353,20 +351,21 @@ func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionA
 					lastMergeLog = time.Now()
 				}
 			}
+			checksumToken = status.ChecksumToken
 			return
 		},
 	}
-	return pollingExecutor.Execute()
+	return checksumToken, pollingExecutor.Execute()
 }
 
-func (mu *MultipartUpload) completeMultipartUpload(logMsgPrefix, sha1 string, multipartUploadClient *httputils.HttpClientDetails) (string, error) {
+func (mu *MultipartUpload) completeMultipartUpload(logMsgPrefix, sha1 string, multipartUploadClient *httputils.HttpClientDetails) error {
 	url := fmt.Sprintf("%s%scomplete?sha1=%s", mu.artifactoryUrl, uploadsApi, sha1)
 	resp, body, err := mu.client.GetHttpClient().SendPost(url, []byte{}, *multipartUploadClient, logMsgPrefix)
 	if err != nil {
-		return "", err
+		return err
 	}
 	log.Debug("Artifactory response:", string(body), resp.Status)
-	return resp.Header.Get(artifactoryNodeId), errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
 }
 
 func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClientWithNodeId *httputils.HttpClientDetails) (status statusResponse, err error) {
@@ -374,7 +373,7 @@ func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClientWith
 	resp, body, err := mu.client.GetHttpClient().SendPost(url, []byte{}, *multipartUploadClientWithNodeId, logMsgPrefix)
 	// If the Artifactory node returns a "Service unavailable" error (status 503), attempt to retry the upload completion process on a different node.
 	if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
-		unavailableNodeErr := fmt.Sprintf(logMsgPrefix + fmt.Sprintf("The Artifactory node ID '%s' is unavailable.", multipartUploadClientWithNodeId.Headers[routeToHeader]))
+		unavailableNodeErr := fmt.Sprintf(logMsgPrefix + "Artifactory is unavailable.")
 		return statusResponse{Status: retryableError, Error: unavailableNodeErr}, nil
 	}
 	if err != nil {
@@ -389,9 +388,10 @@ func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClientWith
 }
 
 type statusResponse struct {
-	Status   completionStatus `json:"status,omitempty"`
-	Error    string           `json:"error,omitempty"`
-	Progress *int             `json:"progress,omitempty"`
+	Status        completionStatus `json:"status,omitempty"`
+	Error         string           `json:"error,omitempty"`
+	Progress      *int             `json:"progress,omitempty"`
+	ChecksumToken string           `json:"checksumToken,omitempty"`
 }
 
 func (mu *MultipartUpload) abort(logMsgPrefix string, multipartUploadClient *httputils.HttpClientDetails) (err error) {

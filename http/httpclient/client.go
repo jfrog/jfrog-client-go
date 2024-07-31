@@ -315,7 +315,8 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	if file != nil && progress != nil {
 		progressReader := progress.NewProgressReader(size, "Uploading", url)
 		reader = progressReader.ActionWithProgress(reqContent)
-		defer progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer progress.RemoveProgress(progressId)
 	} else {
 		reader = reqContent
 	}
@@ -468,9 +469,10 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 
 	var reader io.Reader
 	if progress != nil {
-		readerProgress := progress.NewProgressReader(resp.ContentLength, "", downloadFileDetails.RelativePath)
-		reader = readerProgress.ActionWithProgress(resp.Body)
-		defer progress.RemoveProgress(readerProgress.GetId())
+		progressReader := progress.NewProgressReader(resp.ContentLength, "", downloadFileDetails.RelativePath)
+		reader = progressReader.ActionWithProgress(resp.Body)
+		progressId := progressReader.GetId()
+		defer progress.RemoveProgress(progressId)
 	} else {
 		reader = resp.Body
 	}

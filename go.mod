@@ -10,13 +10,13 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gookit/color v1.5.4
 	github.com/jfrog/archiver/v3 v3.6.1
-	github.com/jfrog/build-info-go v1.9.30
-	github.com/jfrog/gofrog v1.7.4
+	github.com/jfrog/build-info-go v1.9.31
+	github.com/jfrog/gofrog v1.7.5
 	github.com/minio/sha256-simd v1.0.1
 	github.com/stretchr/testify v1.9.0
 	github.com/xanzy/ssh-agent v0.3.3
 	golang.org/x/crypto v0.25.0
-	golang.org/x/exp v0.0.0-20240707233637-46b078467d37
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/term v0.22.0
 )
 
@@ -58,6 +58,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/jfrog/build-info-go => github.com/eyalbe4/build-info-go v1.8.9-0.20240723132035-980d2c84b738
+// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.8.9-0.20240729133409-38a2c49a0d75
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog dev
