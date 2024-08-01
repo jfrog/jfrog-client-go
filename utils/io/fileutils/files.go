@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
 	"net/url"
 	"os"
@@ -14,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/jfrog/build-info-go/entities"
-	biutils "github.com/jfrog/build-info-go/utils"
+	"github.com/jfrog/gofrog/crypto"
 	gofrog "github.com/jfrog/gofrog/io"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
@@ -396,11 +397,11 @@ func GetFileDetailsFromReader(reader io.Reader, includeChecksums bool) (details 
 }
 
 func calcChecksumDetailsFromReader(reader io.Reader) (entities.Checksum, error) {
-	checksums, err := biutils.CalcChecksums(reader)
+	checksums, err := crypto.CalcChecksums(reader)
 	if err != nil {
 		return entities.Checksum{}, errorutils.CheckError(err)
 	}
-	return entities.Checksum{Md5: checksums[biutils.MD5], Sha1: checksums[biutils.SHA1], Sha256: checksums[biutils.SHA256]}, nil
+	return entities.Checksum{Md5: checksums[crypto.MD5], Sha1: checksums[crypto.SHA1], Sha256: checksums[crypto.SHA256]}, nil
 }
 
 type FileDetails struct {
