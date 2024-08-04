@@ -88,13 +88,13 @@ func CleanOldDirs() error {
 	for _, file := range files {
 		fileName := file.Name()
 		if strings.HasPrefix(fileName, tempPrefix) {
-			var timeStamp time.Time
-			timeStamp, err := extractTimestamp(fileName)
+			var timestamp time.Time
+			timestamp, err = extractTimestamp(fileName)
 			if err != nil {
 				return errorutils.CheckErrorf("could not extract timestamp from file %s: %q", fileName, err)
 			}
 			// Delete old file/dirs.
-			if now.Sub(timeStamp).Hours() > maxFileAge {
+			if now.Sub(timestamp).Hours() > maxFileAge {
 				if err = RemovePath(path.Join(tempDirBase, fileName)); err != nil {
 					return err
 				}
@@ -124,10 +124,10 @@ func extractTimestamp(item string) (time.Time, error) {
 	}
 
 	// Convert to int
-	timeStampInt, err := strconv.ParseInt(timestampStr, 10, 64)
+	timestampInt, err := strconv.ParseInt(timestampStr, 10, 64)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("error parsing timestamp: %v", err)
 	}
 	// Convert to time type
-	return time.Unix(timeStampInt, 0), nil
+	return time.Unix(timestampInt, 0), nil
 }
