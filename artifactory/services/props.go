@@ -44,21 +44,11 @@ func (ps *PropsService) GetThreads() int {
 }
 
 func (ps *PropsService) SetProps(propsParams PropsParams) (int, error) {
-	log.Info("Setting properties...")
-	totalSuccess, err := ps.performRequest(propsParams, false)
-	if err == nil {
-		log.Info("Done setting properties.")
-	}
-	return totalSuccess, err
+	return ps.performRequest(propsParams, false)
 }
 
 func (ps *PropsService) DeleteProps(propsParams PropsParams) (int, error) {
-	log.Info("Deleting properties...")
-	totalSuccess, err := ps.performRequest(propsParams, true)
-	if err == nil {
-		log.Info("Done deleting properties.")
-	}
-	return totalSuccess, err
+	return ps.performRequest(propsParams, true)
 }
 
 type PropsParams struct {
@@ -100,8 +90,16 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	reader := propsParams.GetReader()
+	num, err := reader.Length()
+	if err != nil {
+		log.Info("Failed to set properties:", err)
+	}
+	if num == 0 {
+		log.Info("No items to set properties on.")
+	}
 	go func() {
 		for resultItem := new(utils.ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
+			log.Info("testt test test")
 			relativePath := resultItem.GetItemRelativePath()
 			setPropsTask := func(threadId int) error {
 				var err error
@@ -146,7 +144,6 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 
 func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
 	log.Info(logMsgPrefix+"Deleting properties on:", relativePath)
-	log.Debug(logMsgPrefix+"Sending delete properties request:", setPropertiesUrl)
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err = ps.client.SendDelete(setPropertiesUrl, nil, &httpClientsDetails)
 	return
@@ -154,7 +151,6 @@ func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropert
 
 func (ps *PropsService) sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
 	log.Info(logMsgPrefix+"Setting properties on:", relativePath)
-	log.Debug(logMsgPrefix+"Sending set properties request:", setPropertiesUrl)
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err = ps.client.SendPut(setPropertiesUrl, nil, &httpClientsDetails)
 	return
