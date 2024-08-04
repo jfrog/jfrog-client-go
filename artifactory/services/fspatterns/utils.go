@@ -3,12 +3,12 @@ package fspatterns
 import (
 	"bytes"
 	"fmt"
+	"github.com/jfrog/gofrog/crypto"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"regexp"
 	"strings"
 
-	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -192,15 +192,15 @@ func GetRootPath(pattern, target, archiveTarget string, patternType utils.Patter
 
 // When handling symlink we want to simulate the creation of empty file
 func CreateSymlinkFileDetails() (*fileutils.FileDetails, error) {
-	checksums, err := biutils.CalcChecksums(bytes.NewBuffer([]byte(fileutils.SymlinkFileContent)))
+	checksums, err := crypto.CalcChecksums(bytes.NewBuffer([]byte(fileutils.SymlinkFileContent)))
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
 
 	details := new(fileutils.FileDetails)
-	details.Checksum.Md5 = checksums[biutils.MD5]
-	details.Checksum.Sha1 = checksums[biutils.SHA1]
-	details.Checksum.Sha256 = checksums[biutils.SHA256]
+	details.Checksum.Md5 = checksums[crypto.MD5]
+	details.Checksum.Sha1 = checksums[crypto.SHA1]
+	details.Checksum.Sha256 = checksums[crypto.SHA256]
 	details.Size = int64(0)
 	return details, nil
 }

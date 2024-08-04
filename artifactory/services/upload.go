@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
+	"github.com/jfrog/gofrog/crypto"
 	"io"
 	"net/http"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"sync"
 
 	"github.com/jfrog/build-info-go/entities"
-	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -190,12 +190,12 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 			}
 			// If Symlink target exists -> get SHA1 if isn't a directory
 		} else if !fileInfo.IsDir() {
-			var checksums map[biutils.Algorithm]string
-			checksums, err := biutils.GetFileChecksums(artifact.LocalPath, biutils.SHA1)
+			var checksums map[crypto.Algorithm]string
+			checksums, err := crypto.GetFileChecksums(artifact.LocalPath, crypto.SHA1)
 			if err != nil {
 				return nil, errorutils.CheckError(err)
 			}
-			artifactProps.AddProperty(utils.SymlinkSha1, checksums[biutils.SHA1])
+			artifactProps.AddProperty(utils.SymlinkSha1, checksums[crypto.SHA1])
 		}
 		artifactProps.AddProperty(utils.ArtifactorySymlink, artifactSymlink)
 	}
