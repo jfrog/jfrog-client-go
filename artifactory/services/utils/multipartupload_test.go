@@ -78,30 +78,50 @@ func TestUnsupportedVersion(t *testing.T) {
 }
 
 func TestCreateMultipartUpload(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check method
-		assert.Equal(t, http.MethodPost, r.Method)
+	testCases := []struct {
+		name                string
+		repoKey             string
+		repoPath            string
+		urlExpectedRepoKey  string
+		urlExpectedRepoPath string
+	}{
+		{"Single word names", repoKey, repoPath, repoKey, repoPath},
+		{"Spaced names", "repo with space", "path with space", "repo+with+space", "path+with+space"},
+		{"Names contains _", "repo_name", "path_name", "repo_name", "path_name"},
+		{"Names contains %", "repo%name", "path%name", "repo%25name", "path%25name"},
+		{"Names contains &", "repo&name", "path&name", "repo%26name", "path%26name"},
+	}
 
-		// Check URL
-		assert.Equal(t, "/api/v1/uploads/create", r.URL.Path)
-		assert.Equal(t, fmt.Sprintf("repoKey=%s&repoPath=%s&partSizeMB=%d", repoKey, repoPath, partSizeMB), r.URL.RawQuery)
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				println(r.URL.Path)
+				println(r.URL.RawQuery)
+				// Check method
+				assert.Equal(t, http.MethodPost, r.Method)
 
-		// Send response 200 OK
-		w.WriteHeader(http.StatusOK)
-		response, err := json.Marshal(createMultipartUploadResponse{Token: token})
-		assert.NoError(t, err)
-		_, err = w.Write(response)
-		assert.NoError(t, err)
-	})
+				// Check URL
+				assert.Equal(t, "/api/v1/uploads/create", r.URL.Path)
+				assert.Equal(t, fmt.Sprintf("repoKey=%s&repoPath=%s&partSizeMB=%d", tt.urlExpectedRepoKey, tt.urlExpectedRepoPath, partSizeMB), r.URL.RawQuery)
 
-	// Create mock multipart upload with server
-	multipartUpload, cleanUp := createMockMultipartUpload(t, handler)
-	defer cleanUp()
+				// Send response 200 OK
+				w.WriteHeader(http.StatusOK)
+				response, err := json.Marshal(createMultipartUploadResponse{Token: token})
+				assert.NoError(t, err)
+				_, err = w.Write(response)
+				assert.NoError(t, err)
+			})
 
-	// Execute CreateMultipartUpload
-	actualToken, err := multipartUpload.createMultipartUpload(repoKey, repoPath, partSize)
-	assert.NoError(t, err)
-	assert.Equal(t, token, actualToken)
+			// Create mock multipart upload with server
+			multipartUpload, cleanUp := createMockMultipartUpload(t, handler)
+			defer cleanUp()
+
+			// Execute CreateMultipartUpload
+			actualToken, err := multipartUpload.createMultipartUpload(tt.repoKey, tt.repoPath, partSize)
+			assert.NoError(t, err)
+			assert.Equal(t, token, actualToken)
+		})
+	}
 }
 
 func TestUploadPartsConcurrentlyTooManyAttempts(t *testing.T) {

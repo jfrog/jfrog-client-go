@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -262,8 +263,9 @@ func (mu *MultipartUpload) uploadPart(logMsgPrefix, localPath string, fileSize, 
 }
 
 func (mu *MultipartUpload) createMultipartUpload(repoKey, repoPath string, partSize int64) (token string, err error) {
-	url := fmt.Sprintf("%s%screate?repoKey=%s&repoPath=%s&partSizeMB=%d", mu.artifactoryUrl, uploadsApi, repoKey, repoPath, partSize/SizeMiB)
-	resp, body, err := mu.client.SendPost(url, []byte{}, mu.httpClientsDetails)
+	requestUrl := fmt.Sprintf("%s%screate?repoKey=%s&repoPath=%s&partSizeMB=%d", mu.artifactoryUrl, uploadsApi, url.QueryEscape(repoKey), url.QueryEscape(repoPath), partSize/SizeMiB)
+	log.Debug("Request final url", requestUrl)
+	resp, body, err := mu.client.SendPost(requestUrl, []byte{}, mu.httpClientsDetails)
 	if err != nil {
 		return
 	}
