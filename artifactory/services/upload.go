@@ -624,11 +624,13 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 		return
 	}
 	if shouldTryMultipart {
-		if err = us.MultipartUpload.UploadFileConcurrently(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath,
+		var checksumToken string
+		if checksumToken, err = us.MultipartUpload.UploadFileConcurrently(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath,
 			fileInfo.Size(), details.Checksum.Sha1, us.Progress, uploadParams.SplitCount, uploadParams.ChunkSize); err != nil {
 			return
 		}
 		// Once the file is uploaded to the storage, we finalize the multipart upload by performing a checksum deployment to save the file in Artifactory.
+		utils.AddChecksumTokenHeader(httpClientsDetails.Headers, checksumToken)
 		resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
 		return
 	}
