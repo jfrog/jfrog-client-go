@@ -2623,7 +2623,7 @@ response, err := pipelinesManager.GetPipelineRunStatusByBranch(branch, pipeline)
 ```go
 branch := "master"
 pipeline := "pipeline_name"
-status, err := pipelinesManager.TriggerPipelineRun(branch, pipeline)
+triggerId, err := pipelinesManager.TriggerPipelineRun(branch, pipeline)
 ```
 
 #### Trigger Pipeline Sync
