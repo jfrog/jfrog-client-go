@@ -65,6 +65,7 @@ func (ad *ArtifactDetails) ToBuildInfoArtifact() (buildinfo.Artifact, error) {
 	// The 'path' property in the build-info should not include the repository. We therefore remove the repository from the path.
 	if i := strings.Index(ad.ArtifactoryPath, "/"); i != -1 {
 		artifact.Path = ad.ArtifactoryPath[i+1:]
+		artifact.OriginalDeploymentRepo = ad.ArtifactoryPath[0:i]
 	} else {
 		return artifact, errorutils.CheckErrorf("artifact path:' " + ad.ArtifactoryPath + "' lacks repository name")
 	}
