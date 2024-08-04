@@ -287,8 +287,6 @@ func TestListFilesRecursiveWalkIntoDirSymlink(t *testing.T) {
 	}
 
 	parentTempDir := createSymlinksTreeForTest(t)
-	defer func() { assert.NoError(t, os.RemoveAll(parentTempDir)) }()
-
 	expectedFileList := generateExpectedSymlinksFileList(parentTempDir)
 
 	// This directory and its subdirectories contain a symlink to a parent directory and a symlink to a sibling directory.
@@ -297,18 +295,16 @@ func TestListFilesRecursiveWalkIntoDirSymlink(t *testing.T) {
 	assert.True(t, reflect.DeepEqual(expectedFileList, filesList))
 }
 
-// Creates the following tree structure in a temp directory:
-// ├── d1
-// │	├── File_F1
-// │	└── linkToParent -> ../
-// └── d2
-//
-//	└── linkToD1 -> ../d1/
-//
-// Returns the path of the parent temp directory.
+// Creates the following tree structure in a temp directory, and returns its path:
+/*
+├── d1
+│	├── File_F1
+│	└── linkToParent -> ../
+└── d2
+	└── linkToD1 -> ../d1/
+*/
 func createSymlinksTreeForTest(t *testing.T) string {
-	parentTempDir, err := os.MkdirTemp("", "dirSymlinks")
-	assert.NoError(t, err)
+	parentTempDir := t.TempDir()
 
 	// Create the "d1" directory
 	d1Path := filepath.Join(parentTempDir, "d1")
