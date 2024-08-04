@@ -20,17 +20,18 @@ import (
 )
 
 const (
-	localPath  = "localPath"
-	repoKey    = "repoKey"
-	repoPath   = "repoPath"
-	partSize   = SizeGiB
-	partSizeMB = 1024
-	partNumber = 2
-	splitCount = 3
-	token      = "token"
-	partUrl    = "http://dummy-url-part"
-	sha1       = "sha1"
-	nodeId     = "nodeId"
+	localPath     = "localPath"
+	repoKey       = "repoKey"
+	repoPath      = "repoPath"
+	partSize      = SizeGiB
+	partSizeMB    = 1024
+	partNumber    = 2
+	splitCount    = 3
+	token         = "token"
+	partUrl       = "http://dummy-url-part"
+	sha1          = "sha1"
+	nodeId        = "nodeId"
+	checksumToken = "checksumToken"
 )
 
 func TestIsSupported(t *testing.T) {
@@ -209,7 +210,7 @@ func TestStatus(t *testing.T) {
 
 		// Send response 200 OK
 		w.WriteHeader(http.StatusOK)
-		response, err := json.Marshal(statusResponse{Status: finished, Progress: utils.Pointer(100)})
+		response, err := json.Marshal(statusResponse{Status: finished, Progress: utils.Pointer(100), ChecksumToken: checksumToken})
 		assert.NoError(t, err)
 		_, err = w.Write(response)
 		assert.NoError(t, err)
@@ -222,7 +223,7 @@ func TestStatus(t *testing.T) {
 	// Execute status
 	status, err := multipartUpload.status("", &httputils.HttpClientDetails{})
 	assert.NoError(t, err)
-	assert.Equal(t, statusResponse{Status: finished, Progress: utils.Pointer(100)}, status)
+	assert.Equal(t, statusResponse{Status: finished, Progress: utils.Pointer(100), ChecksumToken: checksumToken}, status)
 }
 
 func TestStatusServiceUnavailable(t *testing.T) {
