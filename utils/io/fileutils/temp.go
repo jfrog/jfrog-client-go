@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -87,13 +88,13 @@ func CleanOldDirs() error {
 	for _, file := range files {
 		fileName := file.Name()
 		if strings.HasPrefix(fileName, tempPrefix) {
-			var timeStamp time.Time
-			timeStamp, err = extractTimestamp(fileName)
+			var timestamp time.Time
+			timestamp, err = extractTimestamp(fileName)
 			if err != nil {
-				return err
+				return errorutils.CheckErrorf("could not extract timestamp from file %s: %q", fileName, err)
 			}
 			// Delete old file/dirs.
-			if now.Sub(timeStamp).Hours() > maxFileAge {
+			if now.Sub(timestamp).Hours() > maxFileAge {
 				if err = RemovePath(path.Join(tempDirBase, fileName)); err != nil {
 					return err
 				}
@@ -104,15 +105,29 @@ func CleanOldDirs() error {
 }
 
 func extractTimestamp(item string) (time.Time, error) {
-	// Get timestamp from file/dir.
+	// Get the index of the last dash
 	endTimestampIdx := strings.LastIndex(item, "-")
-	beginningTimestampIdx := strings.LastIndex(item[:endTimestampIdx], "-")
-	timestampStr := item[beginningTimestampIdx+1 : endTimestampIdx]
-	// Convert to int.
-	timeStampInt, err := strconv.ParseInt(timestampStr, 10, 64)
-	if err != nil {
-		return time.Time{}, errorutils.CheckError(err)
+	if endTimestampIdx == -1 {
+		return time.Time{}, fmt.Errorf("invalid format: no dash found")
 	}
-	// Convert to time type.
-	return time.Unix(timeStampInt, 0), nil
+
+	// Get the index of the dash before the last dash
+	beginningTimestampIdx := strings.LastIndex(item[:endTimestampIdx], "-")
+	if beginningTimestampIdx == -1 {
+		return time.Time{}, fmt.Errorf("invalid format: only one dash found")
+	}
+
+	// Extract the timestamp string
+	timestampStr := item[beginningTimestampIdx+1 : endTimestampIdx]
+	if len(timestampStr) == 0 {
+		return time.Time{}, fmt.Errorf("invalid format: empty timestamp")
+	}
+
+	// Convert to int
+	timestampInt, err := strconv.ParseInt(timestampStr, 10, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error parsing timestamp: %v", err)
+	}
+	// Convert to time type
+	return time.Unix(timestampInt, 0), nil
 }

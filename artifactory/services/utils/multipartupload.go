@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jfrog/gofrog/crypto"
 	"io"
 	"net/http"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	biUtils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -159,11 +159,11 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 	}
 
 	if sha1 == "" {
-		var checksums map[biUtils.Algorithm]string
-		if checksums, err = biUtils.GetFileChecksums(localPath); errorutils.CheckError(err) != nil {
+		var checksums map[crypto.Algorithm]string
+		if checksums, err = crypto.GetFileChecksums(localPath); errorutils.CheckError(err) != nil {
 			return
 		}
-		sha1 = checksums[biUtils.SHA1]
+		sha1 = checksums[crypto.SHA1]
 	}
 
 	if progress != nil {
