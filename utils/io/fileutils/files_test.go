@@ -285,22 +285,72 @@ func TestListFilesRecursiveWalkIntoDirSymlink(t *testing.T) {
 	if io.IsWindows() {
 		t.Skip("Running on windows, skipping...")
 	}
-	expectedFileList := []string{
-		"testdata/dirsymlinks",
-		"testdata/dirsymlinks/d1",
-		"testdata/dirsymlinks/d1/File_F1",
-		"testdata/dirsymlinks/d1/linktoparent",
-		"testdata/dirsymlinks/d1/linktoparent/d1",
-		"testdata/dirsymlinks/d1/linktoparent/d1/File_F1",
-		"testdata/dirsymlinks/d1/linktoparent/d2",
-		"testdata/dirsymlinks/d1/linktoparent/d2/d1link",
-		"testdata/dirsymlinks/d1/linktoparent/d2/d1link/File_F1",
-		"testdata/dirsymlinks/d2",
-	}
+
+	parentTempDir := createSymlinksTreeForTest(t)
+	defer func() { assert.NoError(t, os.RemoveAll(parentTempDir)) }()
+
+	expectedFileList := generateExpectedSymlinksFileList(parentTempDir)
 
 	// This directory and its subdirectories contain a symlink to a parent directory and a symlink to a sibling directory.
-	testDirPath := filepath.Join("testdata", "dirsymlinks")
-	filesList, err := ListFilesRecursiveWalkIntoDirSymlink(testDirPath, true)
+	filesList, err := ListFilesRecursiveWalkIntoDirSymlink(parentTempDir, true)
 	assert.NoError(t, err)
 	assert.True(t, reflect.DeepEqual(expectedFileList, filesList))
+}
+
+// Creates the following tree structure in a temp directory:
+// ├── d1
+// │	├── File_F1
+// │	└── linkToParent -> ../
+// └── d2
+//
+//	└── linkToD1 -> ../d1/
+//
+// Returns the path of the parent temp directory.
+func createSymlinksTreeForTest(t *testing.T) string {
+	parentTempDir, err := os.MkdirTemp("", "dirSymlinks")
+	assert.NoError(t, err)
+
+	// Create the "d1" directory
+	d1Path := filepath.Join(parentTempDir, "d1")
+	assert.NoError(t, os.Mkdir(d1Path, 0755))
+
+	// Create "File_F1" inside "d1"
+	fileF1, err := os.Create(filepath.Join(d1Path, "File_F1"))
+	assert.NoError(t, err)
+	assert.NoError(t, fileF1.Close())
+
+	// Create symlink "linkToParent" in "d1" pointing to the parent temp directory
+	linkToParentPath := filepath.Join(d1Path, "linkToParent")
+	assert.NoError(t, os.Symlink(parentTempDir, linkToParentPath))
+
+	// Create the "d2" directory
+	d2Path := filepath.Join(parentTempDir, "d2")
+	assert.NoError(t, os.Mkdir(d2Path, 0755))
+
+	// Create symlink "linkToD1" in "d2" pointing to the "d1" directory
+	d1LinkPath := filepath.Join(d2Path, "linkToD1")
+	assert.NoError(t, os.Symlink(d1Path, d1LinkPath))
+
+	return parentTempDir
+}
+
+// Generates the expected output of file list based on the provided parent dir.
+func generateExpectedSymlinksFileList(parentDir string) []string {
+	expectedFileList := []string{
+		"",
+		"/d1",
+		"/d1/File_F1",
+		"/d1/linkToParent",
+		"/d1/linkToParent/d1",
+		"/d1/linkToParent/d1/File_F1",
+		"/d1/linkToParent/d2",
+		"/d1/linkToParent/d2/linkToD1",
+		"/d1/linkToParent/d2/linkToD1/File_F1",
+		"/d2",
+	}
+
+	for i, filePath := range expectedFileList {
+		expectedFileList[i] = parentDir + filePath
+	}
+	return expectedFileList
 }
