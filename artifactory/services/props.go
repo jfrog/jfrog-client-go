@@ -90,13 +90,6 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	reader := propsParams.GetReader()
-	num, err := reader.Length()
-	if err != nil {
-		log.Info("Failed to set properties:", err)
-	}
-	if num == 0 {
-		log.Info("No items to set properties on.")
-	}
 	go func() {
 		for resultItem := new(utils.ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
 			log.Info("testt test test")

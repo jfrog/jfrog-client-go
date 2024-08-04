@@ -232,7 +232,7 @@ func createResultsItemWithoutAql(downloadParams DownloadParams) (*content.Conten
 	if err != nil {
 		return nil, err
 	}
-	resultItem := utils.ResultItem{
+	resultItem := &utils.ResultItem{
 		Type:   string(utils.File),
 		Repo:   repo,
 		Path:   path,
@@ -240,7 +240,7 @@ func createResultsItemWithoutAql(downloadParams DownloadParams) (*content.Conten
 		Size:   *downloadParams.Size,
 		Sha256: downloadParams.Sha256,
 	}
-	writer.Write(resultItem)
+	writer.Write(*resultItem)
 	return content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey()), nil
 }
 
