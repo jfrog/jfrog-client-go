@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jfrog/build-info-go/entities"
-	biutils "github.com/jfrog/build-info-go/utils"
+	"github.com/jfrog/gofrog/crypto"
 	ioutils "github.com/jfrog/gofrog/io"
 	"github.com/jfrog/gofrog/version"
 	"net/http"
@@ -495,11 +495,11 @@ func createLocalSymlink(localPath, localFileName, symlinkArtifact string, symlin
 		if !fileutils.IsPathExists(symlinkArtifact, false) {
 			return errorutils.CheckErrorf("symlink validation failed, target doesn't exist: " + symlinkArtifact)
 		}
-		var checksums map[biutils.Algorithm]string
-		if checksums, err = biutils.GetFileChecksums(symlinkArtifact, biutils.SHA1); err != nil {
+		var checksums map[crypto.Algorithm]string
+		if checksums, err = crypto.GetFileChecksums(symlinkArtifact, crypto.SHA1); err != nil {
 			return errorutils.CheckError(err)
 		}
-		if checksums[biutils.SHA1] != symlinkContentChecksum {
+		if checksums[crypto.SHA1] != symlinkContentChecksum {
 			return errorutils.CheckErrorf("symlink validation failed for target: " + symlinkArtifact)
 		}
 	}
