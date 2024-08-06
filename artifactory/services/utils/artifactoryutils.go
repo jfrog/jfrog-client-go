@@ -89,7 +89,7 @@ func SetContentType(contentType string, headers *map[string]string) {
 }
 
 func SetContentTypeApplicationJson(headers *map[string]string) {
-	AddHeader(httpclient.ContentTypeHeader, httpclient.ApplicationJsonContentType, headers)
+	SetContentType(httpclient.ApplicationJsonContentType, headers)
 }
 
 func DisableAccelBuffering(headers *map[string]string) {
