@@ -46,7 +46,7 @@ func (hcd *HttpClientDetails) AddPreRetryInterceptor(preRetryInterceptors PreRet
 	hcd.PreRetryInterceptors = append(hcd.PreRetryInterceptors, preRetryInterceptors)
 }
 
-func (hcd *HttpClientDetails) AddContentTypeApplicationJson() {
+func (hcd *HttpClientDetails) SetContentTypeApplicationJson() {
 	hcd.AddHeader("Content-Type", "application/json")
 }
 

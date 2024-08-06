@@ -50,7 +50,7 @@ func (ps *TokenService) RefreshAccessToken(params CreateTokenParams) (auth.Creat
 // createAccessToken is used to create & refresh access tokens.
 func (ps *TokenService) createAccessToken(params CreateTokenParams) (tokenInfo auth.CreateTokenResponseData, err error) {
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
-	httpDetails.AddContentTypeApplicationJson()
+	httpDetails.SetContentTypeApplicationJson()
 	if err = ps.handleUnauthenticated(params, &httpDetails); err != nil {
 		return tokenInfo, err
 	}

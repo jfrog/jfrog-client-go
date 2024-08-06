@@ -61,7 +61,7 @@ func execDistribute(dr DistributeReleaseBundleExecutor, name, version string) (j
 	}
 
 	httpClientsDetails := dr.ServiceDetails().CreateHttpClientDetails()
-	httpClientsDetails.AddContentTypeApplicationJson()
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := dr.GetHttpClient().SendPost(requestFullUrl, content, &httpClientsDetails)
 	if err != nil {
 		return "", err

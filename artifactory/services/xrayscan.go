@@ -106,7 +106,7 @@ func checkForXrayResponseError(content []byte, ignoreFatalError bool) error {
 
 func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Response, error) {
 	httpClientsDetails := ps.ArtDetails.CreateHttpClientDetails()
-	httpClientsDetails.AddContentTypeApplicationJson()
+	httpClientsDetails.SetContentTypeApplicationJson()
 
 	// The scan build operation can take a long time to finish.
 	// To keep the connection open, when Xray starts scanning the build, it starts sending new-lines

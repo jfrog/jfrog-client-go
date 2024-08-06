@@ -66,7 +66,7 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	}
 
 	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
-	httpClientDetails.AddContentTypeApplicationJson()
+	httpClientDetails.SetContentTypeApplicationJson()
 	resp, body, err := rbs.client.SendPost(requestFullUrl, content, &httpClientDetails)
 	if err != nil {
 		return err

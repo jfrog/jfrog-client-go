@@ -58,7 +58,7 @@ func (bs *BuildScanService) ScanBuild(params XrayBuildParams, includeVulnerabili
 
 func (bs *BuildScanService) triggerScan(paramsBytes []byte) error {
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.AddContentTypeApplicationJson()
+	httpClientsDetails.SetContentTypeApplicationJson()
 	url := bs.XrayDetails.GetUrl() + BuildScanAPI
 
 	resp, body, err := bs.client.SendPost(url, paramsBytes, &httpClientsDetails)
@@ -94,7 +94,7 @@ func (bs *BuildScanService) prepareGetResultsRequest(params XrayBuildParams, par
 		queryParams = append(queryParams, includeVulnerabilitiesQueryParam+"true")
 	}
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.AddContentTypeApplicationJson()
+	httpClientsDetails.SetContentTypeApplicationJson()
 	if version.NewVersion(xrayVer).AtLeast(buildScanResultsPostApiMinXrayVersion) {
 		getResultsReqFunc = bs.getResultsPostRequestFunc(params, paramsBytes, &httpClientsDetails, queryParams)
 		return

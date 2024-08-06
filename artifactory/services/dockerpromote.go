@@ -57,7 +57,7 @@ func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error 
 
 	// Send POST request
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
-	httpClientsDetails.AddContentTypeApplicationJson()
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := ps.client.SendPost(url, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err

@@ -51,7 +51,7 @@ func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryService
 }
 
 func sendReport(url string, serviceManager artifactory.ArtifactoryServicesManager, clientDetails httputils.HttpClientDetails, bodyContent []byte) error {
-	clientDetails.AddContentTypeApplicationJson()
+	clientDetails.SetContentTypeApplicationJson()
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
 		return errors.New("Couldn't send usage info. Error: " + err.Error())

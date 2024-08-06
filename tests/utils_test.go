@@ -1023,7 +1023,7 @@ func deleteBuild(buildName string) error {
 func getIndexedBuilds() ([]string, error) {
 	xrayDetails := GetXrayDetails()
 	artHTTPDetails := xrayDetails.CreateHttpClientDetails()
-	artHTTPDetails.AddContentTypeApplicationJson()
+	artHTTPDetails.SetContentTypeApplicationJson()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return []string{}, err
@@ -1062,7 +1062,7 @@ func deleteBuildIndex(buildName string) error {
 	// Delete build index
 	xrayDetails := GetXrayDetails()
 	artHTTPDetails := xrayDetails.CreateHttpClientDetails()
-	artHTTPDetails.AddContentTypeApplicationJson()
+	artHTTPDetails.SetContentTypeApplicationJson()
 	client, err := httpclient.ClientBuilder().Build()
 	if err != nil {
 		return err

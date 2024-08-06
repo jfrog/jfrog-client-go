@@ -50,7 +50,7 @@ func (ls *LoginService) SendLoginAuthenticationRequest(uuid string) error {
 		return errorutils.CheckError(err)
 	}
 	httpClientsDetails := ls.ServiceDetails.CreateHttpClientDetails()
-	httpClientsDetails.AddContentTypeApplicationJson()
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := ls.client.SendPost(fullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
