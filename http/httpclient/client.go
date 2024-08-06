@@ -34,11 +34,9 @@ type HttpClient struct {
 }
 
 const (
-	apiKeyPrefix               = "AKCp8"
-	apiKeyMinimalLength        = 73
-	uberTraceIdHeader          = "uber-trace-id"
-	ContentTypeHeader          = "Content-Type"
-	ApplicationJsonContentType = "application/json"
+	apiKeyPrefix        = "AKCp8"
+	apiKeyMinimalLength = 73
+	uberTraceIdHeader   = "uber-trace-id"
 )
 
 // If set, the Uber Trace ID header will be attached to every request.

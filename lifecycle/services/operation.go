@@ -77,8 +77,8 @@ func prepareRequest(operation ReleaseBundleOperation, rbs *ReleaseBundlesService
 		return
 	}
 	httpClientDetails = rbs.GetLifecycleDetails().CreateHttpClientDetails()
-	rtUtils.AddSigningKeyNameHeader(operation.getSigningKeyName(), &httpClientDetails.Headers)
-	rtUtils.SetContentTypeApplicationJson(&httpClientDetails.Headers)
+	rtUtils.AddSigningKeyNameHeader(operation.getSigningKeyName(), &httpClientDetails)
+	httpClientDetails.AddContentTypeApplicationJson()
 	return
 }
 
