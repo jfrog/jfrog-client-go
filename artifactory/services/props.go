@@ -92,7 +92,6 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	reader := propsParams.GetReader()
 	go func() {
 		for resultItem := new(utils.ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(utils.ResultItem) {
-			log.Info("testt test test")
 			relativePath := resultItem.GetItemRelativePath()
 			setPropsTask := func(threadId int) error {
 				var err error

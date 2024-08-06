@@ -38,7 +38,6 @@ const (
 	apiKeyMinimalLength        = 73
 	uberTraceIdHeader          = "uber-trace-id"
 	ContentTypeHeader          = "Content-Type"
-	AcceptHeader               = "Accept"
 	ApplicationJsonContentType = "application/json"
 )
 
