@@ -51,7 +51,7 @@ func (ls *LoginService) SendLoginAuthenticationRequest(uuid string) error {
 		return errorutils.CheckError(err)
 	}
 	httpClientsDetails := ls.ServiceDetails.CreateHttpClientDetails()
-	artifactoryutils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryutils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := ls.client.SendPost(fullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err

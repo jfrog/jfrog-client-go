@@ -42,7 +42,7 @@ func (drs *ExportService) Export(exportParams ExportParams) error {
 	}
 	log.Info(exportMessage)
 
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := drs.client.SendPost(drs.artDetails.GetUrl()+"api/export/system", requestContent, &httpClientsDetails)
 	if err != nil {
 		return err

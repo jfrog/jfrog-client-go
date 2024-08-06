@@ -71,7 +71,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	}
 
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
-	artifactoryutils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryutils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {

@@ -59,7 +59,7 @@ func (xps *PolicyService) getPolicyURL() string {
 // It will error if no policy can be found by that name.
 func (xps *PolicyService) Delete(policyName string) error {
 	httpClientsDetails := xps.XrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	log.Info("Deleting policy...")
 	resp, body, err := xps.client.SendDelete(xps.getPolicyURL()+"/"+policyName, nil, &httpClientsDetails)
@@ -83,7 +83,7 @@ func (xps *PolicyService) Create(params utils.PolicyParams) error {
 	}
 
 	httpClientsDetails := xps.XrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	var url = xps.getPolicyURL()
 
 	log.Info(fmt.Sprintf("Creating a new Policy named %s on JFrog Xray....", params.Name))
@@ -113,7 +113,7 @@ func (xps *PolicyService) Update(params utils.PolicyParams) error {
 	}
 
 	httpClientsDetails := xps.XrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	var url = xps.getPolicyURL() + "/" + params.Name
 
 	log.Info("Updating policy...")

@@ -40,7 +40,7 @@ func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase 
 		return summary, errorutils.CheckError(err)
 	}
 	url := sb.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version + "/sign"
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	distributionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
 	resp, body, err := sb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {

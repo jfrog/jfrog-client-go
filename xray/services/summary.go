@@ -56,7 +56,7 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 
 func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*ArtifactSummaryResponse, error) {
 	httpDetails := ss.XrayDetails.CreateHttpClientDetails()
-	servicesutils.SetContentType("application/json", &httpDetails.Headers)
+	servicesutils.SetContentTypeApplicationJson(&httpDetails.Headers)
 
 	requestBody, err := json.Marshal(params)
 	if err != nil {

@@ -59,7 +59,7 @@ func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase stri
 
 	url := cb.DistDetails.GetUrl() + "api/v1/release_bundle"
 	distributionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := cb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return summary, err

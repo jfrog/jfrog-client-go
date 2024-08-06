@@ -40,7 +40,7 @@ func (us *InviteService) InviteUser(email, source string) error {
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	utils.SetContentType("application/json", &httpDetails.Headers)
+	utils.SetContentTypeApplicationJson(&httpDetails.Headers)
 	resp, body, err := us.client.SendPost(url, requestContent, &httpDetails)
 	if err != nil {
 		return err

@@ -40,7 +40,7 @@ func (ssk *SetSigningKeyService) execSetSigningKey(setSigningKeyBody *SetSigning
 		return errorutils.CheckError(err)
 	}
 	url := ssk.DistDetails.GetUrl() + "/api/v1/keys/pgp"
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := ssk.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
 		return err

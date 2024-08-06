@@ -78,7 +78,7 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 		return errorutils.CheckError(err)
 	}
 	httpClientsDetails := pts.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	var url = pts.ArtDetails.GetUrl() + "api/v2/security/permissions/" + params.Name
 	var operationString string
 	var resp *http.Response

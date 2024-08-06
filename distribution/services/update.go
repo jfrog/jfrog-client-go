@@ -55,7 +55,7 @@ func (ur *UpdateReleaseBundleService) execUpdateReleaseBundle(name, version, gpg
 
 	url := ur.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version
 	distributionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := ur.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
 		return summary, err

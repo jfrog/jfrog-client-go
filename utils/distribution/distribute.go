@@ -62,7 +62,7 @@ func execDistribute(dr DistributeReleaseBundleExecutor, name, version string) (j
 	}
 
 	httpClientsDetails := dr.ServiceDetails().CreateHttpClientDetails()
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := dr.GetHttpClient().SendPost(requestFullUrl, content, &httpClientsDetails)
 	if err != nil {
 		return "", err

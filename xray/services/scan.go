@@ -106,7 +106,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	var err error
 	var requestBody []byte
 	if scanParams.DependenciesGraph != nil {
@@ -145,7 +145,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 
 func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
@@ -193,7 +193,7 @@ func (ss *ScanService) xrayToXscUrl() string {
 
 func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multiScanId string, err error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(details)
 	if err != nil {
 		return "", errorutils.CheckError(err)

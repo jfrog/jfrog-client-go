@@ -49,7 +49,7 @@ func (xirs *IgnoreRuleService) getIgnoreRuleURL() string {
 // Delete will delete an ignore rule by id
 func (xirs *IgnoreRuleService) Delete(ignoreRuleId string) error {
 	httpClientsDetails := xirs.XrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	log.Info("Deleting ignore rule...")
 	resp, body, err := xirs.client.SendDelete(xirs.getIgnoreRuleURL()+"/"+ignoreRuleId, nil, &httpClientsDetails)
@@ -74,7 +74,7 @@ func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRule
 	}
 
 	httpClientsDetails := xirs.XrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	var url = xirs.getIgnoreRuleURL()
 
 	log.Info("Create new ignore rule...")

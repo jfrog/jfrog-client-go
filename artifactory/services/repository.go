@@ -32,7 +32,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 		return err
 	}
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/repositories/" + url.PathEscape(repoKey)
 	var operationString string
 	var resp *http.Response

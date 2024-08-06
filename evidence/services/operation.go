@@ -35,7 +35,7 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 	}
 
 	httpClientDetails := es.GetEvidenceDetails().CreateHttpClientDetails()
-	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
+	rtUtils.SetContentTypeApplicationJson(&httpClientDetails.Headers)
 
 	resp, body, err := es.client.SendPost(requestFullUrl.String(), operation.getRequestBody(), &httpClientDetails)
 	if err != nil {

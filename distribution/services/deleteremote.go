@@ -86,7 +86,7 @@ func (dr *DeleteReleaseBundleService) execDeleteDistribute(name, version string,
 		return errorutils.CheckError(err)
 	}
 	url := dr.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version + "/delete"
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	artifactoryUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := dr.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err

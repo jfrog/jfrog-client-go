@@ -93,7 +93,7 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 	}
 
 	// URL Construction
-	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
+	utils.SetContentTypeApplicationJson(&httpDetails.Headers)
 	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), triggerpipeline)
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func (rs *RunService) CancelRun(runID int) error {
 	}
 
 	// URL Construction
-	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
+	utils.SetContentTypeApplicationJson(&httpDetails.Headers)
 	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), cancelRun)
 	if err != nil {
 		return err

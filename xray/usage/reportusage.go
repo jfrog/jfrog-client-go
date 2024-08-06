@@ -62,7 +62,7 @@ func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...Repo
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	utils.AddHeader("Content-Type", "application/json", &clientDetails.Headers)
+	utils.SetContentTypeApplicationJson(&clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
 		return errors.New("Couldn't send usage info. Error: " + err.Error())
