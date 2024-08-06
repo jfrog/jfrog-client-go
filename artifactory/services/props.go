@@ -146,7 +146,6 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 
 func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
 	log.Info(logMsgPrefix+"Deleting properties on:", relativePath)
-	log.Debug(logMsgPrefix+"Sending delete properties request:", setPropertiesUrl)
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err = ps.client.SendDelete(setPropertiesUrl, nil, &httpClientsDetails)
 	return
@@ -154,7 +153,6 @@ func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropert
 
 func (ps *PropsService) sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
 	log.Info(logMsgPrefix+"Setting properties on:", relativePath)
-	log.Debug(logMsgPrefix+"Sending set properties request:", setPropertiesUrl)
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err = ps.client.SendPut(setPropertiesUrl, nil, &httpClientsDetails)
 	return
