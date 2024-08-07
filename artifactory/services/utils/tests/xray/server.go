@@ -208,6 +208,17 @@ func enrichGetScanId(t *testing.T) func(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+func getJasConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			_, err := fmt.Fprint(w, JasConfigResponse)
+			assert.NoError(t, err)
+			return
+		}
+		http.Error(w, "Invalid enrich get scan id request", http.StatusBadRequest)
+	}
+}
+
 func enrichGetResults(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
@@ -250,6 +261,7 @@ func StartXrayMockServer(t *testing.T) int {
 	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t)
 	handlers["/xsc/api/v1/gitinfo"] = xscGitInfoHandlerFunc(t)
 	handlers["/xray/api/v1/scan/import_xml"] = enrichGetScanId(t)
+	handlers["/xray/api/v1/configuration/jas"] = getJasConfig(t)
 	getEnrichResults := fmt.Sprintf("/xray/api/v1/scan/graph/%s", TestMultiScanId)
 	handlers[getEnrichResults] = enrichGetResults(t)
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler

@@ -142,6 +142,12 @@ func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
 	return binMgrService.AddBuildsToIndexing(buildNames)
 }
 
+func (sm *XrayServicesManager) IsTokenValidationEnabled() (isEnabled bool, err error) {
+	jasConfigService := services.NewJasConfigService(sm.client)
+	jasConfigService.XrayDetails = sm.config.GetServiceDetails()
+	return jasConfigService.GetJasConfigTokenValidation()
+}
+
 // ScanGraph will send Xray the given graph for scan
 // Returns a string represents the scan ID.
 func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (scanId string, err error) {

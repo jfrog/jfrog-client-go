@@ -1429,6 +1429,8 @@ const xscVersionResponse = `{"xsc_version": "1.0.0"}`
 
 const scanIdResponse = `{"scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122"}`
 
+const JasConfigResponse = `{"enable_token_validation_scanning": true}`
+
 const XscGitInfoResponse = `{"multi_scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122"}`
 
 const XscGitInfoBadResponse = `"failed create git info request: git_repo_url field must contain value"`
