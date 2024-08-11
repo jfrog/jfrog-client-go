@@ -9,8 +9,10 @@ import (
 	"net/url"
 )
 
+const queryUrl = "api/v1/query"
+
 type Service interface {
-	Query(query QueryDetails) ([]byte, error)
+	Query(query []byte) ([]byte, error)
 }
 
 type metadataService struct {
@@ -22,26 +24,18 @@ func NewMetadataService(serviceDetails auth.ServiceDetails, client *jfroghttpcli
 	return &metadataService{serviceDetails: &serviceDetails, client: client}
 }
 
-func (m *metadataService) GetMetaDataDetails() auth.ServiceDetails {
+func (m *metadataService) GetMetadataDetails() auth.ServiceDetails {
 	return *m.serviceDetails
 }
 
-func (m *metadataService) Query(query QueryDetails) ([]byte, error) {
-	graphiqlUrl, err := url.Parse(m.GetMetaDataDetails().GetUrl() + "api/v1/query")
-	if err != nil {
-		return []byte{}, errorutils.CheckError(err)
-	}
-
-	httpClientDetails := m.GetMetaDataDetails().CreateHttpClientDetails()
+func (m *metadataService) Query(query []byte) ([]byte, error) {
+	graphiqlUrl, err := url.Parse(m.GetMetadataDetails().GetUrl() + queryUrl)
+	httpClientDetails := m.GetMetadataDetails().CreateHttpClientDetails()
 	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
 
-	resp, body, err := m.client.SendPost(graphiqlUrl.String(), query.Body, &httpClientDetails)
+	resp, body, err := m.client.SendPost(graphiqlUrl.String(), query, &httpClientDetails)
 	if err != nil {
 		return []byte{}, err
 	}
 	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
-}
-
-type QueryDetails struct {
-	Body []byte
 }

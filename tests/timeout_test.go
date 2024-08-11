@@ -19,8 +19,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/lifecycle"
 	"github.com/jfrog/jfrog-client-go/pipelines"
 
-	metadataServices "github.com/jfrog/jfrog-client-go/metadata/services"
-
 	distributionAuth "github.com/jfrog/jfrog-client-go/distribution/auth"
 	distributionServices "github.com/jfrog/jfrog-client-go/distribution/services"
 	evidenceAuth "github.com/jfrog/jfrog-client-go/evidence/auth"
@@ -153,12 +151,8 @@ func testMetadataTimeout(t *testing.T) {
 	assert.NoError(t, err)
 
 	query := []byte("query body")
-	serviceDetails := metadataServices.QueryDetails{
-		Body: query,
-	}
-
 	// Expect timeout
-	_, err = servicesManager.GraphiqlQuery(serviceDetails)
+	_, err = servicesManager.GraphqlQuery(query)
 	assert.ErrorContains(t, err, "context deadline exceeded")
 }
 

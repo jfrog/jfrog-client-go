@@ -244,13 +244,13 @@
       - [Creating New Evidence Service Manager](#creating-new-evidence-service-manager)
     - [Using Evidence Services](#using-evidence-services)
       - [Upload Evidence](#upload-evidence)
-  - [Evidence APIs](#evidence-apis)
-    - [Creating Evidence Service Manager](#creating-evidence-service-manager)
-      - [Creating Evidence Details](#creating-evidence-details)
-      - [Creating Evidence Service Config](#creating-evidence-service-config)
-      - [Creating New Evidence Service Manager](#creating-new-evidence-service-manager)
-    - [Using Evidence Services](#using-evidence-services)
-      - [Upload Evidence](#upload-evidence)
+  - [Metadata APIs](#metadata-apis)
+    - [Creating Metadata Service Manager](#creating-metadata-service-manager)
+      - [Creating Metadata Details](#creating-metadata-details)
+      - [Creating Metadata Service Config](#creating-metadata-service-config)
+      - [Creating New Metadata Service Manager](#creating-new-metadata-service-manager)
+    - [Using Metadata Services](#using-metadata-services)
+      - [Graphql query](#graphql-query)
 
 ## General
 

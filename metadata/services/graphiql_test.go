@@ -10,9 +10,7 @@ import (
 	"testing"
 )
 
-var queryData = QueryDetails{
-	Body: []byte(`{"query":"someGraphqlQuery"}`),
-}
+const queryData = `{"query":"someGraphqlQuery"}`
 
 func TestMetadataService_Query(t *testing.T) {
 	handlerFunc, requestNum := createMetadataHandlerFunc(t)
@@ -20,7 +18,7 @@ func TestMetadataService_Query(t *testing.T) {
 	mockServer, metadataService := createMockMetadataServer(t, handlerFunc)
 	defer mockServer.Close()
 
-	_, err := metadataService.Query(queryData)
+	_, err := metadataService.Query([]byte(queryData))
 	assert.NoError(t, err)
 	assert.Equal(t, 1, *requestNum)
 }
@@ -39,12 +37,12 @@ func createMockMetadataServer(t *testing.T, testHandler http.HandlerFunc) (*http
 func createMetadataHandlerFunc(t *testing.T) (http.HandlerFunc, *int) {
 	requestNum := 0
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/api/v1/query" {
+		if r.RequestURI == queryUrl {
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
 			w.WriteHeader(http.StatusOK)
 			requestNum++
-			writeMockMetadataResponse(t, w, queryData.Body)
+			writeMockMetadataResponse(t, w, []byte(queryData))
 		}
 	}, &requestNum
 }

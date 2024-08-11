@@ -7,7 +7,7 @@ import (
 )
 
 type Manager interface {
-	GraphiqlQuery(query services.QueryDetails) ([]byte, error)
+	GraphqlQuery(query []byte) ([]byte, error)
 }
 
 type metadataManager struct {
@@ -39,7 +39,7 @@ func (mm *metadataManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return mm.client
 }
 
-func (mm *metadataManager) GraphiqlQuery(query services.QueryDetails) ([]byte, error) {
+func (mm *metadataManager) GraphqlQuery(query []byte) ([]byte, error) {
 	evidenceService := services.NewMetadataService(mm.config.GetServiceDetails(), mm.client)
 	return evidenceService.Query(query)
 }
