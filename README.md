@@ -3014,5 +3014,5 @@ queryDetails := metadataService.QueryDetails{
   Body:  queryBytes,
 }
 
-body, err = metadataManager.GraphiqlQuery(queryDetails)
+body, err = metadataManager.GraphqlQuery(queryDetails)
 ```

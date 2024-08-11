@@ -30,14 +30,14 @@ func (m *metadataService) GetMetadataDetails() auth.ServiceDetails {
 }
 
 func (m *metadataService) Query(query []byte) ([]byte, error) {
-	graphiqlUrl, err := url.Parse(m.GetMetadataDetails().GetUrl() + queryUrl)
+	graphqlUrl, err := url.Parse(m.GetMetadataDetails().GetUrl() + queryUrl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse URL: %w", err)
 	}
 	httpClientDetails := m.GetMetadataDetails().CreateHttpClientDetails()
 	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
 
-	resp, body, err := m.client.SendPost(graphiqlUrl.String(), query, &httpClientDetails)
+	resp, body, err := m.client.SendPost(graphqlUrl.String(), query, &httpClientDetails)
 	if err != nil {
 		return []byte{}, err
 	}

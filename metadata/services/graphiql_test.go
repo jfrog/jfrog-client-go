@@ -37,7 +37,7 @@ func createMockMetadataServer(t *testing.T, testHandler http.HandlerFunc) (*http
 func createMetadataHandlerFunc(t *testing.T) (http.HandlerFunc, *int) {
 	requestNum := 0
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == queryUrl {
+		if r.RequestURI == "/api/v1/query" {
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
 			w.WriteHeader(http.StatusOK)
