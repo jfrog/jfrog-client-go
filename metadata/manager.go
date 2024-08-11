@@ -40,6 +40,6 @@ func (mm *metadataManager) Client() *jfroghttpclient.JfrogHttpClient {
 }
 
 func (mm *metadataManager) GraphqlQuery(query []byte) ([]byte, error) {
-	evidenceService := services.NewMetadataService(mm.config.GetServiceDetails(), mm.client)
-	return evidenceService.Query(query)
+	metadataService := services.NewMetadataService(mm.config.GetServiceDetails(), mm.client)
+	return metadataService.Query(query)
 }
