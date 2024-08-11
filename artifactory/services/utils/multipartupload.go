@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jfrog/gofrog/crypto"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	biUtils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -121,7 +122,7 @@ type getConfigResponse struct {
 }
 
 func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, fileSize int64, sha1 string,
-	progress ioutils.ProgressMgr, splitCount int, chunkSize int64) (err error) {
+	progress ioutils.ProgressMgr, splitCount int, chunkSize int64) (checksumToken string, err error) {
 	repoAndPath := strings.SplitN(targetPath, "/", 2)
 	repoKey := repoAndPath[0]
 	repoPath := repoAndPath[1]
@@ -159,11 +160,11 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 	}
 
 	if sha1 == "" {
-		var checksums map[biUtils.Algorithm]string
-		if checksums, err = biUtils.GetFileChecksums(localPath); errorutils.CheckError(err) != nil {
+		var checksums map[crypto.Algorithm]string
+		if checksums, err = crypto.GetFileChecksums(localPath); errorutils.CheckError(err) != nil {
 			return
 		}
-		sha1 = checksums[biUtils.SHA1]
+		sha1 = checksums[crypto.SHA1]
 	}
 
 	if progress != nil {
@@ -262,8 +263,8 @@ func (mu *MultipartUpload) uploadPart(logMsgPrefix, localPath string, fileSize, 
 }
 
 func (mu *MultipartUpload) createMultipartUpload(repoKey, repoPath string, partSize int64) (token string, err error) {
-	url := fmt.Sprintf("%s%screate?repoKey=%s&repoPath=%s&partSizeMB=%d", mu.artifactoryUrl, uploadsApi, repoKey, repoPath, partSize/SizeMiB)
-	resp, body, err := mu.client.SendPost(url, []byte{}, mu.httpClientsDetails)
+	requestUrl := fmt.Sprintf("%s%screate?repoKey=%s&repoPath=%s&partSizeMB=%d", mu.artifactoryUrl, uploadsApi, url.QueryEscape(repoKey), url.QueryEscape(repoPath), partSize/SizeMiB)
+	resp, body, err := mu.client.SendPost(requestUrl, []byte{}, mu.httpClientsDetails)
 	if err != nil {
 		return
 	}
@@ -302,17 +303,17 @@ type urlPartResponse struct {
 	Url string `json:"url,omitempty"`
 }
 
-func (mu *MultipartUpload) completeAndPollForStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1 string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) (err error) {
+func (mu *MultipartUpload) completeAndPollForStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1 string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) (checksumToken string, err error) {
 	err = mu.completeMultipartUpload(logMsgPrefix, sha1, multipartUploadClient)
 	if err != nil {
 		return
 	}
 
-	err = mu.pollCompletionStatus(logMsgPrefix, completionAttemptsLeft, sha1, multipartUploadClient, progressReader)
+	checksumToken, err = mu.pollCompletionStatus(logMsgPrefix, completionAttemptsLeft, sha1, multipartUploadClient, progressReader)
 	return
 }
 
-func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1 string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) error {
+func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionAttemptsLeft uint, sha1 string, multipartUploadClient *httputils.HttpClientDetails, progressReader ioutils.Progress) (checksumToken string, err error) {
 	multipartUploadClientWithNodeId := multipartUploadClient.Clone()
 
 	lastMergeLog := time.Now()
@@ -338,7 +339,7 @@ func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionA
 				if completionAttemptsLeft == 0 {
 					return false, errorutils.CheckErrorf("multipart upload failed after %d attempts", mu.client.GetHttpClient().GetRetries())
 				}
-				err = mu.completeAndPollForStatus(logMsgPrefix, completionAttemptsLeft-1, sha1, multipartUploadClient, progressReader)
+				checksumToken, err = mu.completeAndPollForStatus(logMsgPrefix, completionAttemptsLeft-1, sha1, multipartUploadClient, progressReader)
 			}
 
 			// Log status
@@ -351,10 +352,11 @@ func (mu *MultipartUpload) pollCompletionStatus(logMsgPrefix string, completionA
 					lastMergeLog = time.Now()
 				}
 			}
+			checksumToken = status.ChecksumToken
 			return
 		},
 	}
-	return pollingExecutor.Execute()
+	return checksumToken, pollingExecutor.Execute()
 }
 
 func (mu *MultipartUpload) completeMultipartUpload(logMsgPrefix, sha1 string, multipartUploadClient *httputils.HttpClientDetails) error {
@@ -387,9 +389,10 @@ func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClientWith
 }
 
 type statusResponse struct {
-	Status   completionStatus `json:"status,omitempty"`
-	Error    string           `json:"error,omitempty"`
-	Progress *int             `json:"progress,omitempty"`
+	Status        completionStatus `json:"status,omitempty"`
+	Error         string           `json:"error,omitempty"`
+	Progress      *int             `json:"progress,omitempty"`
+	ChecksumToken string           `json:"checksumToken,omitempty"`
 }
 
 func (mu *MultipartUpload) abort(logMsgPrefix string, multipartUploadClient *httputils.HttpClientDetails) (err error) {

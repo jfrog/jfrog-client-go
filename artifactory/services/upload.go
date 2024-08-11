@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
+	"github.com/jfrog/gofrog/crypto"
 	"io"
 	"net/http"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"sync"
 
 	"github.com/jfrog/build-info-go/entities"
-	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -190,12 +190,12 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 			}
 			// If Symlink target exists -> get SHA1 if isn't a directory
 		} else if !fileInfo.IsDir() {
-			var checksums map[biutils.Algorithm]string
-			checksums, err := biutils.GetFileChecksums(artifact.LocalPath, biutils.SHA1)
+			var checksums map[crypto.Algorithm]string
+			checksums, err := crypto.GetFileChecksums(artifact.LocalPath, crypto.SHA1)
 			if err != nil {
 				return nil, errorutils.CheckError(err)
 			}
-			artifactProps.AddProperty(utils.SymlinkSha1, checksums[biutils.SHA1])
+			artifactProps.AddProperty(utils.SymlinkSha1, checksums[crypto.SHA1])
 		}
 		artifactProps.AddProperty(utils.ArtifactorySymlink, artifactSymlink)
 	}
@@ -624,11 +624,13 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 		return
 	}
 	if shouldTryMultipart {
-		if err = us.MultipartUpload.UploadFileConcurrently(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath,
+		var checksumToken string
+		if checksumToken, err = us.MultipartUpload.UploadFileConcurrently(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath,
 			fileInfo.Size(), details.Checksum.Sha1, us.Progress, uploadParams.SplitCount, uploadParams.ChunkSize); err != nil {
 			return
 		}
 		// Once the file is uploaded to the storage, we finalize the multipart upload by performing a checksum deployment to save the file in Artifactory.
+		utils.AddChecksumTokenHeader(httpClientsDetails.Headers, checksumToken)
 		resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
 		return
 	}
@@ -677,14 +679,14 @@ func logUploadResponse(logMsgPrefix string, resp *http.Response, body []byte, ch
 
 func addExplodeHeader(httpClientsDetails *httputils.HttpClientDetails, isExplode bool) {
 	if isExplode {
-		utils.AddHeader("X-Explode-Archive", "true", &httpClientsDetails.Headers)
+		httpClientsDetails.AddHeader("X-Explode-Archive", "true")
 	}
 }
 
 func (us *UploadService) doChecksumDeploy(details *fileutils.FileDetails, targetPath string, httpClientsDetails httputils.HttpClientDetails,
 	client *jfroghttpclient.JfrogHttpClient) (resp *http.Response, body []byte, err error) {
 	requestClientDetails := httpClientsDetails.Clone()
-	utils.AddHeader("X-Checksum-Deploy", "true", &requestClientDetails.Headers)
+	httpClientsDetails.AddHeader("X-Checksum-Deploy", "true")
 	utils.AddChecksumHeaders(requestClientDetails.Headers, details)
 	utils.AddAuthHeaders(requestClientDetails.Headers, us.ArtDetails)
 

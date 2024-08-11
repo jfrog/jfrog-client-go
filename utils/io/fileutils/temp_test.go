@@ -43,9 +43,9 @@ func TestCleanOldDirs(t *testing.T) {
 
 func TestExtractTimestamp(t *testing.T) {
 	testCases := []struct {
-		item          string
-		expectedTime  time.Time
-		expectedError bool
+		item         string
+		expectedTime time.Time
+		expectError  bool
 	}{
 		// Valid cases
 		{"jfrog.cli.temp.prefix-1625097600-suffix", time.Unix(1625097600, 0), false},
@@ -63,8 +63,8 @@ func TestExtractTimestamp(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.item, func(t *testing.T) {
 			result, err := extractTimestamp(test.item)
-			if (err != nil) != test.expectedError {
-				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
+			if (err != nil) != test.expectError {
+				t.Errorf("expected error: %v, got: %v", test.expectError, err)
 			}
 			if !result.Equal(test.expectedTime) {
 				t.Errorf("expected time: %v, got: %v", test.expectedTime, result)

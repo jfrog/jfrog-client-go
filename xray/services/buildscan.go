@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jfrog/gofrog/version"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -59,7 +58,7 @@ func (bs *BuildScanService) ScanBuild(params XrayBuildParams, includeVulnerabili
 
 func (bs *BuildScanService) triggerScan(paramsBytes []byte) error {
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	url := bs.XrayDetails.GetUrl() + BuildScanAPI
 
 	resp, body, err := bs.client.SendPost(url, paramsBytes, &httpClientsDetails)
@@ -95,7 +94,7 @@ func (bs *BuildScanService) prepareGetResultsRequest(params XrayBuildParams, par
 		queryParams = append(queryParams, includeVulnerabilitiesQueryParam+"true")
 	}
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	if version.NewVersion(xrayVer).AtLeast(buildScanResultsPostApiMinXrayVersion) {
 		getResultsReqFunc = bs.getResultsPostRequestFunc(params, paramsBytes, &httpClientsDetails, queryParams)
 		return

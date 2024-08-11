@@ -6,7 +6,6 @@ import (
 	"path"
 	"strings"
 
-	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -71,7 +70,7 @@ func (ds *DistributeService) BuildDistribute(params BuildDistributionParams) err
 	}
 
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
-	artifactoryutils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 
 	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
