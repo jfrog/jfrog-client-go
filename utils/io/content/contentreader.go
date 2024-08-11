@@ -209,7 +209,7 @@ func MergeReaders(arr []*ContentReader, arrayKey string) (contentReader *Content
 		for item := new(interface{}); cr.NextRecord(item) == nil; item = new(interface{}) {
 			cw.Write(*item)
 		}
-		if err := cr.GetError(); err != nil {
+		if err = cr.GetError(); err != nil {
 			return nil, err
 		}
 	}
