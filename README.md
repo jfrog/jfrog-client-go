@@ -244,6 +244,13 @@
       - [Creating New Evidence Service Manager](#creating-new-evidence-service-manager)
     - [Using Evidence Services](#using-evidence-services)
       - [Upload Evidence](#upload-evidence)
+  - [Metadata APIs](#metadata-apis)
+    - [Creating Metadata Service Manager](#creating-metadata-service-manager)
+      - [Creating Metadata Details](#creating-metadata-details)
+      - [Creating Metadata Service Config](#creating-metadata-service-config)
+      - [Creating New Metadata Service Manager](#creating-new-metadata-service-manager)
+    - [Using Metadata Services](#using-metadata-services)
+      - [Graphql query](#graphql-query)
 
 ## General
 
@@ -2963,4 +2970,49 @@ evidenceDetails := evidenceService.EvidenceDetails{
   DSSEFileRaw: &envelopeBytes,
 }
 body, err = evideceManager.UploadEvidence(evidenceDetails)
+```
+## Metadata APIs
+
+### Creating Metadata Service Manager
+
+#### Creating Metadata Details
+
+```go
+mdDetails := auth.NewMetadataDetails()
+mdDetails.SetUrl("http://localhost:8081/metadata")
+mdDetails.SetAccessToken("access-token")
+// if client certificates are required
+mdDetails.SetClientCertPath("path/to/.cer")
+mdDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Metadata Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(mdDetails).
+    SetCertificatesPath(mdDetails.GetClientCertPath()).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(3).
+    Build()
+```
+
+#### Creating New Metadata Service Manager
+
+```go
+metadataManager, err := metadata.NewManager(serviceConfig)
+```
+
+### Using Metadata Services
+
+#### Graphql query
+
+```go
+queryBytes := []byte(`{"query":"someGraphqlQuery"}`)
+
+queryDetails := metadataService.QueryDetails{
+  Body:  queryBytes,
+}
+
+body, err = metadataManager.GraphqlQuery(queryDetails)
 ```
