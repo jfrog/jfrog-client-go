@@ -395,9 +395,7 @@ func (item ResultItem) GetItemRelativePath() string {
 	if item.Path == "." {
 		return path.Join(item.Repo, item.Name)
 	}
-
-	url := item.Repo
-	url = path.Join(url, item.Path, item.Name)
+	url := path.Join(item.Repo, item.Path, item.Name)
 	if item.Type == string(Folder) {
 		url = appendFolderSuffix(url)
 	}
