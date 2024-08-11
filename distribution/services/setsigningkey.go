@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -40,7 +39,7 @@ func (ssk *SetSigningKeyService) execSetSigningKey(setSigningKeyBody *SetSigning
 		return errorutils.CheckError(err)
 	}
 	url := ssk.DistDetails.GetUrl() + "/api/v1/keys/pgp"
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := ssk.client.SendPut(url, content, &httpClientsDetails)
 	if err != nil {
 		return err

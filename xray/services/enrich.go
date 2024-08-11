@@ -37,7 +37,7 @@ func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string
 		utils.SetContentType("application/xml", &httpClientsDetails.Headers)
 		url = es.XrayDetails.GetUrl() + importGraphXML
 	} else {
-		utils.SetContentType("application/json", &httpClientsDetails.Headers)
+		httpClientsDetails.SetContentTypeApplicationJson()
 		url = es.XrayDetails.GetUrl() + importGraph
 	}
 
@@ -62,7 +62,7 @@ func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string
 
 func (es *EnrichService) GetImportGraphResults(scanId string) (*ScanResponse, error) {
 	httpClientsDetails := es.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 
 	// Getting the import graph results is from the same api but with some parameters always initialized.
 	endPoint := es.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId + includeVulnerabilitiesParam

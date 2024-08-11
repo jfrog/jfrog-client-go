@@ -135,8 +135,8 @@ func (rw *ContentWriter) run() {
 			rw.errorsQueue.AddError(errorutils.CheckError(err))
 			continue
 		}
-		record := recordPrefix + string(bytes.TrimRight(buf.Bytes(), "\n"))
-		_, err = rw.outputFile.WriteString(record)
+		recordString := recordPrefix + string(bytes.TrimRight(buf.Bytes(), "\n"))
+		_, err = rw.outputFile.WriteString(recordString)
 		if err != nil {
 			rw.errorsQueue.AddError(errorutils.CheckError(err))
 			continue

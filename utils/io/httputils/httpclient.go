@@ -22,26 +22,37 @@ type HttpClientDetails struct {
 
 type PreRetryInterceptor func() (shouldRetry bool)
 
-func (httpClientDetails HttpClientDetails) Clone() *HttpClientDetails {
+func (hcd HttpClientDetails) Clone() *HttpClientDetails {
 	headers := make(map[string]string)
-	utils.MergeMaps(httpClientDetails.Headers, headers)
+	utils.MergeMaps(hcd.Headers, headers)
 	var transport *http.Transport
-	if httpClientDetails.Transport != nil {
-		transport = httpClientDetails.Transport.Clone()
+	if hcd.Transport != nil {
+		transport = hcd.Transport.Clone()
 	}
 	return &HttpClientDetails{
-		User:                  httpClientDetails.User,
-		Password:              httpClientDetails.Password,
-		ApiKey:                httpClientDetails.ApiKey,
-		AccessToken:           httpClientDetails.AccessToken,
+		User:                  hcd.User,
+		Password:              hcd.Password,
+		ApiKey:                hcd.ApiKey,
+		AccessToken:           hcd.AccessToken,
 		Headers:               headers,
 		Transport:             transport,
-		DialTimeout:           httpClientDetails.DialTimeout,
-		OverallRequestTimeout: httpClientDetails.OverallRequestTimeout,
-		PreRetryInterceptors:  httpClientDetails.PreRetryInterceptors,
+		DialTimeout:           hcd.DialTimeout,
+		OverallRequestTimeout: hcd.OverallRequestTimeout,
+		PreRetryInterceptors:  hcd.PreRetryInterceptors,
 	}
 }
 
-func (httpClientDetails *HttpClientDetails) AddPreRetryInterceptor(preRetryInterceptors PreRetryInterceptor) {
-	httpClientDetails.PreRetryInterceptors = append(httpClientDetails.PreRetryInterceptors, preRetryInterceptors)
+func (hcd *HttpClientDetails) AddPreRetryInterceptor(preRetryInterceptors PreRetryInterceptor) {
+	hcd.PreRetryInterceptors = append(hcd.PreRetryInterceptors, preRetryInterceptors)
+}
+
+func (hcd *HttpClientDetails) SetContentTypeApplicationJson() {
+	hcd.AddHeader("Content-Type", "application/json")
+}
+
+func (hcd *HttpClientDetails) AddHeader(headerName, headerValue string) {
+	if hcd.Headers == nil {
+		hcd.Headers = make(map[string]string)
+	}
+	hcd.Headers[headerName] = headerValue
 }

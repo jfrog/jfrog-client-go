@@ -8,7 +8,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 
-	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -86,7 +85,7 @@ func (xws *WatchService) Create(params utils.WatchParams) error {
 	}
 
 	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	var url = xws.getWatchURL()
 
 	log.Info(fmt.Sprintf("Creating a new Watch named %s on JFrog Xray....", params.Name))
@@ -128,7 +127,7 @@ func (xws *WatchService) Update(params utils.WatchParams) error {
 	}
 
 	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
-	artUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	var url = xws.getWatchURL() + "/" + params.Name
 
 	log.Info("Updating watch...")
