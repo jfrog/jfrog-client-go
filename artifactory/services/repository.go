@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -31,7 +32,7 @@ func (rs *RepositoryService) performRequest(params interface{}, repoKey string) 
 		return err
 	}
 	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	var url = rs.ArtDetails.GetUrl() + "api/repositories/" + url.PathEscape(repoKey)
 	var operationString string
 	var resp *http.Response

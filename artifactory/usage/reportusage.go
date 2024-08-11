@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/artifactory"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
@@ -51,7 +52,7 @@ func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryService
 }
 
 func sendReport(url string, serviceManager artifactory.ArtifactoryServicesManager, clientDetails httputils.HttpClientDetails, bodyContent []byte) error {
-	clientDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
 		return errors.New("Couldn't send usage info. Error: " + err.Error())

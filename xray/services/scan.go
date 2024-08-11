@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -105,7 +106,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	var err error
 	var requestBody []byte
 	if scanParams.DependenciesGraph != nil {
@@ -144,7 +145,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 
 func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
@@ -192,7 +193,7 @@ func (ss *ScanService) xrayToXscUrl() string {
 
 func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multiScanId string, err error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	requestBody, err := json.Marshal(details)
 	if err != nil {
 		return "", errorutils.CheckError(err)

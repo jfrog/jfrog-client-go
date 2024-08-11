@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -39,7 +40,7 @@ func (us *InviteService) InviteUser(email, source string) error {
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	httpDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpDetails.Headers)
 	resp, body, err := us.client.SendPost(url, requestContent, &httpDetails)
 	if err != nil {
 		return err

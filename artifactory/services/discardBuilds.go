@@ -10,6 +10,7 @@ import (
 
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
+	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -64,7 +65,7 @@ func (ds *DiscardBuildsService) DiscardBuilds(params DiscardBuildsParams) error 
 	}
 
 	httpClientsDetails := ds.getArtifactoryDetails().CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	artifactoryutils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	resp, body, err := ds.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
 	if err != nil {

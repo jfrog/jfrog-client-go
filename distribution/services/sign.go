@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	distributionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -39,7 +40,7 @@ func (sb *SignBundleService) execSignReleaseBundle(name, version, gpgPassphrase 
 		return summary, errorutils.CheckError(err)
 	}
 	url := sb.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version + "/sign"
-	httpClientsDetails.SetContentTypeApplicationJson()
+	artifactoryUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	distributionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
 	resp, body, err := sb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {

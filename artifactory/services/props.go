@@ -44,21 +44,11 @@ func (ps *PropsService) GetThreads() int {
 }
 
 func (ps *PropsService) SetProps(propsParams PropsParams) (int, error) {
-	log.Info("Setting properties...")
-	totalSuccess, err := ps.performRequest(propsParams, false)
-	if err == nil {
-		log.Info("Done setting properties.")
-	}
-	return totalSuccess, err
+	return ps.performRequest(propsParams, false)
 }
 
 func (ps *PropsService) DeleteProps(propsParams PropsParams) (int, error) {
-	log.Info("Deleting properties...")
-	totalSuccess, err := ps.performRequest(propsParams, true)
-	if err == nil {
-		log.Info("Done deleting properties.")
-	}
-	return totalSuccess, err
+	return ps.performRequest(propsParams, true)
 }
 
 type PropsParams struct {

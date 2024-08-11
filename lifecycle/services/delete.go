@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -66,7 +67,7 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	}
 
 	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
-	httpClientDetails.SetContentTypeApplicationJson()
+	rtUtils.SetContentTypeApplicationJson(&httpClientDetails.Headers)
 	resp, body, err := rbs.client.SendPost(requestFullUrl, content, &httpClientDetails)
 	if err != nil {
 		return err

@@ -6,6 +6,7 @@ import (
 	"path"
 	"time"
 
+	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -50,7 +51,7 @@ func (ls *LoginService) SendLoginAuthenticationRequest(uuid string) error {
 		return errorutils.CheckError(err)
 	}
 	httpClientsDetails := ls.ServiceDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	artifactoryutils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := ls.client.SendPost(fullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err

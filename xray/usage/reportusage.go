@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/xray"
@@ -61,7 +62,7 @@ func SendXrayUsageEvents(serviceManager xray.XrayServicesManager, events ...Repo
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
-	clientDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&clientDetails.Headers)
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
 		return errors.New("Couldn't send usage info. Error: " + err.Error())

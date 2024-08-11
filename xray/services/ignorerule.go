@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 
+	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -48,7 +49,7 @@ func (xirs *IgnoreRuleService) getIgnoreRuleURL() string {
 // Delete will delete an ignore rule by id
 func (xirs *IgnoreRuleService) Delete(ignoreRuleId string) error {
 	httpClientsDetails := xirs.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	artUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	log.Info("Deleting ignore rule...")
 	resp, body, err := xirs.client.SendDelete(xirs.getIgnoreRuleURL()+"/"+ignoreRuleId, nil, &httpClientsDetails)
@@ -73,7 +74,7 @@ func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRule
 	}
 
 	httpClientsDetails := xirs.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	artUtils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	var url = xirs.getIgnoreRuleURL()
 
 	log.Info("Create new ignore rule...")

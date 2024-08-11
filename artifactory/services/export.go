@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -41,7 +42,7 @@ func (drs *ExportService) Export(exportParams ExportParams) error {
 	}
 	log.Info(exportMessage)
 
-	httpClientsDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := drs.client.SendPost(drs.artDetails.GetUrl()+"api/export/system", requestContent, &httpClientsDetails)
 	if err != nil {
 		return err

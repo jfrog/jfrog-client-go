@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path"
 
+	artifactoryutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -57,7 +58,7 @@ func (ps *DockerPromoteService) PromoteDocker(params DockerPromoteParams) error 
 
 	// Send POST request
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	artifactoryutils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 	resp, body, err := ps.client.SendPost(url, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err

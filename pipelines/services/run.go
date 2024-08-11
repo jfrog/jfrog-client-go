@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -92,7 +93,7 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 	}
 
 	// URL Construction
-	httpDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpDetails.Headers)
 	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), triggerpipeline)
 	if err != nil {
 		return err
@@ -129,7 +130,7 @@ func (rs *RunService) CancelRun(runID int) error {
 	}
 
 	// URL Construction
-	httpDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpDetails.Headers)
 	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), cancelRun)
 	if err != nil {
 		return err

@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -206,7 +207,7 @@ func (rs *ReportService) Violations(req ViolationsReportRequestParams) (*ReportR
 func (rs *ReportService) requestReport(req any, reportType string) (*ReportResponse, error) {
 	retVal := ReportResponse{}
 	httpClientsDetails := rs.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	url := fmt.Sprintf("%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI+"/"+reportType)
 	content, err := json.Marshal(req)
@@ -234,7 +235,7 @@ func (rs *ReportService) requestReport(req any, reportType string) (*ReportRespo
 func (rs *ReportService) Details(reportId string) (*ReportDetails, error) {
 	retVal := ReportDetails{}
 	httpClientsDetails := rs.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI, reportId)
 	resp, body, _, err := rs.client.SendGet(url, true, &httpClientsDetails)
@@ -257,7 +258,7 @@ func (rs *ReportService) Details(reportId string) (*ReportDetails, error) {
 func (rs *ReportService) Content(request ReportContentRequestParams) (*ReportContent, error) {
 	retVal := ReportContent{}
 	httpClientsDetails := rs.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	url := fmt.Sprintf("%s/%s/%s/%s?direction=%s&page_num=%d&num_of_rows=%d&order_by=%s",
 		rs.XrayDetails.GetUrl(), ReportsAPI, request.ReportType, request.ReportId, request.Direction, request.PageNum, request.NumRows, request.OrderBy)
@@ -276,7 +277,7 @@ func (rs *ReportService) Content(request ReportContentRequestParams) (*ReportCon
 // Delete deletes the report that has an id matching reportId
 func (rs *ReportService) Delete(reportId string) error {
 	httpClientsDetails := rs.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
+	utils.SetContentTypeApplicationJson(&httpClientsDetails.Headers)
 
 	url := fmt.Sprintf("%s/%s/%s", rs.XrayDetails.GetUrl(), ReportsAPI, reportId)
 	resp, body, err := rs.client.SendDelete(url, nil, &httpClientsDetails)

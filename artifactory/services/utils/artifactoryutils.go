@@ -13,6 +13,7 @@ import (
 	buildinfo "github.com/jfrog/build-info-go/entities"
 
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -84,7 +85,11 @@ func AddAuthHeaders(headers map[string]string, artifactoryDetails auth.ServiceDe
 }
 
 func SetContentType(contentType string, headers *map[string]string) {
-	AddHeader("Content-Type", contentType, headers)
+	AddHeader(httpclient.ContentTypeHeader, contentType, headers)
+}
+
+func SetContentTypeApplicationJson(headers *map[string]string) {
+	AddHeader(httpclient.ContentTypeHeader, httpclient.ApplicationJsonContentType, headers)
 }
 
 func DisableAccelBuffering(headers *map[string]string) {

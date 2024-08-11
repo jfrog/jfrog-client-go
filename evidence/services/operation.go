@@ -1,6 +1,7 @@
 package services
 
 import (
+	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -34,7 +35,7 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 	}
 
 	httpClientDetails := es.GetEvidenceDetails().CreateHttpClientDetails()
-	httpClientDetails.SetContentTypeApplicationJson()
+	rtUtils.SetContentTypeApplicationJson(&httpClientDetails.Headers)
 
 	resp, body, err := es.client.SendPost(requestFullUrl.String(), operation.getRequestBody(), &httpClientDetails)
 	if err != nil {
