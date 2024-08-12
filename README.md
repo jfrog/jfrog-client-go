@@ -161,7 +161,7 @@
       - [Retrieve the Graph Scan Results](#retrieve-the-graph-scan-results)
       - [Request Graph Enrich](#request-graph-enrich)
       - [Retrieve the Graph Enrich Results](#retrieve-the-graph-enrich-results)
-      - [Get Token Validation Status](...)
+      - [Get Token Validation Status](#get-token-validation-status)
       - [Generate Vulnerabilities Report](#generate-vulnerabilities-report)
       - [Get Vulnerabilities Report Details](#get-vulnerabilities-report-details)
       - [Get Vulnerabilities Report Content](#get-vulnerabilities-report-content)
