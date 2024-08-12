@@ -3,6 +3,7 @@ package tests
 import (
 	"github.com/jfrog/jfrog-client-go/evidence"
 	"github.com/jfrog/jfrog-client-go/evidence/services"
+	"github.com/jfrog/jfrog-client-go/metadata"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,6 +24,7 @@ import (
 	evidenceAuth "github.com/jfrog/jfrog-client-go/evidence/auth"
 	lifecycleAuth "github.com/jfrog/jfrog-client-go/lifecycle/auth"
 	lifecycleServices "github.com/jfrog/jfrog-client-go/lifecycle/services"
+	metadataAuth "github.com/jfrog/jfrog-client-go/metadata/auth"
 	pipelinesAuth "github.com/jfrog/jfrog-client-go/pipelines/auth"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/utils/tests"
@@ -48,6 +50,7 @@ func TestTimeout(t *testing.T) {
 	t.Run("testPipelinesTimeout", testPipelinesTimeout)
 	t.Run("testXrayTimeout", testXrayTimeout)
 	t.Run("testEvidenceTimeout", testEvidenceTimeout)
+	t.Run("testMetadataTimeout", testMetadataTimeout)
 }
 
 func testAccessTimeout(t *testing.T) {
@@ -133,6 +136,23 @@ func testEvidenceTimeout(t *testing.T) {
 
 	// Expect timeout
 	_, err = servicesManager.UploadEvidence(serviceDetails)
+	assert.ErrorContains(t, err, "context deadline exceeded")
+}
+
+func testMetadataTimeout(t *testing.T) {
+	// Create mock server
+	url, cleanup := createSleepyRequestServer()
+	defer cleanup()
+
+	// Create services manager configuring to work with the mock server
+	details := metadataAuth.NewMetadataDetails()
+	details.SetUrl(url)
+	servicesManager, err := metadata.NewManager(createServiceConfigWithTimeout(t, details))
+	assert.NoError(t, err)
+
+	query := []byte("query body")
+	// Expect timeout
+	_, err = servicesManager.GraphqlQuery(query)
 	assert.ErrorContains(t, err, "context deadline exceeded")
 }
 
