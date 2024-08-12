@@ -2163,7 +2163,7 @@ enrichResults, err := xrayManager.GetImportGraphResults(scanId)
 
 #### Get Token Validation Status
 ```go
-is_enabled, err := xrayManager.IsTokenValidationEnabled()
+isEnabled, err := xrayManager.IsTokenValidationEnabled()
 ```
 
 #### Generate Vulnerabilities Report
