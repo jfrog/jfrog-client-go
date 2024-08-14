@@ -222,7 +222,7 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			name = identifier
 			version = LatestBuildNumberKey
 		} else {
-			return "", "", errorutils.CheckErrorf("no delimiter char (" + Delimiter + ") without escaping char was found in '" + identifier + "'")
+			return "", "", errorutils.CheckErrorf("no delimiter char (%s) without escaping char was found in %q", Delimiter, identifier)
 		}
 	}
 	// Remove escape chars.
