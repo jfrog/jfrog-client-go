@@ -103,7 +103,7 @@ func (dr *DistributeReleaseBundleV1Service) waitForDistribution(distributeParams
 				if err != nil {
 					return false, errorutils.CheckError(err)
 				}
-				return false, errorutils.CheckErrorf("Distribution failed: " + clientUtils.IndentJson(bytes))
+				return false, errorutils.CheckErrorf("distribution failed: %s", clientUtils.IndentJson(bytes))
 			}
 			if (*response)[0].Status == distribution.Completed {
 				log.Info("Distribution Completed!")
