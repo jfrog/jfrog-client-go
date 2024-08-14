@@ -12,18 +12,10 @@ import (
 )
 
 func TestGetConfigurationProfile(t *testing.T) {
-	// TODO should I work with a real server in this test or can I use a mock server?
-
 	initXscTest(t, services.ConfigProfileMinXscVersion)
-	//xscDetails, client := initXscEventTest(t) TODO if we need to work against a real server - create a function similar to this one, just for the config profile
 
 	mockServer, configProfileService := createXscMockServerForConfigProfile(t)
 	defer mockServer.Close()
-
-	/* todo this is the real server
-	configProfileService := services.NewConfigurationProfileService(client)
-	configProfileService.XscDetails = xscDetails
-	*/
 
 	configProfile, err := configProfileService.GetConfigurationProfile("default-test-profile")
 	assert.NoError(t, err)

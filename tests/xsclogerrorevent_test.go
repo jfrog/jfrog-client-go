@@ -14,7 +14,6 @@ const errorMessageContentForTest = "THIS IS NOT A REAL ERROR! This Error is post
 
 func TestXscSendLogErrorEvent(t *testing.T) {
 	initXscTest(t, services.LogErrorMinXscVersion)
-	// TODO should this be with a mock server????
 	mockServer, logErrorService := createXscMockServerForLogEvent(t)
 	defer mockServer.Close()
 
