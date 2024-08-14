@@ -35,7 +35,7 @@ func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 	}
 	var sysInfo PipelinesSystemInfo
 	if err = json.Unmarshal(body, &sysInfo); err != nil {
-		return nil, errorutils.CheckErrorf("couldn't parse JFrog Pipelines server response: " + err.Error())
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Pipelines server response: %s", err.Error())
 	}
 	return &sysInfo, nil
 }

@@ -374,7 +374,7 @@ func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClientWith
 	resp, body, err := mu.client.GetHttpClient().SendPost(url, []byte{}, *multipartUploadClientWithNodeId, logMsgPrefix)
 	// If the Artifactory node returns a "Service unavailable" error (status 503), attempt to retry the upload completion process on a different node.
 	if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
-		unavailableNodeErr := fmt.Sprintf(logMsgPrefix + "Artifactory is unavailable.")
+		unavailableNodeErr := logMsgPrefix + "Artifactory is unavailable."
 		return statusResponse{Status: retryableError, Error: unavailableNodeErr}, nil
 	}
 	if err != nil {

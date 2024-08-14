@@ -38,7 +38,7 @@ func LoadCertificate(clientCertPath, clientCertKeyPath string) (certificate tls.
 			err = errorutils.CheckErrorf("failed using the certificate located at %s. Reason: %s. Hint: A certificate key was not provided. Make sure that the certificate doesn't require a key", clientCertPath, err.Error())
 			return
 		}
-		err = errorutils.CheckErrorf("failed loading client certificate: " + err.Error())
+		err = errorutils.CheckErrorf("failed loading client certificate: %s", err.Error())
 	}
 	return
 }
