@@ -114,7 +114,7 @@ func GetProjectQueryParam(projectKey string) string {
 }
 
 // paths - Sorted array.
-// index - Index of the current path which we want to check if it a prefix of any of the other previous paths.
+// index - Index of the current path which we want to check if it is a prefix of any of the other previous paths.
 // separator - File separator.
 // Returns true paths[index] is a prefix of any of the paths[i] where i<index, otherwise returns false.
 func IsSubPath(paths []string, index int, separator string) bool {
@@ -205,7 +205,7 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 	identifiers := strings.Split(identifier, Delimiter)
 	// The delimiter must not be prefixed with escapeChar (if it is, it should be part of the version)
 	// the code below gets substring from before the last delimiter.
-	// If the new string ends with escape char it means the last delimiter was part of the version and we need
+	// If the new string ends with escape char it means the last delimiter was part of the version, and we need
 	// to go back to the previous delimiter.
 	// If no proper delimiter was found the full string will be the name.
 	for i := len(identifiers) - 1; i >= 1; i-- {
@@ -379,7 +379,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 		return nil, err
 	}
 	reader.Reset()
-	if err := updateProps(readerWithProps, resultFile, buffer, writeOrder); err != nil {
+	if err = updateProps(readerWithProps, resultFile, buffer, writeOrder); err != nil {
 		return nil, err
 	}
 	return content.NewContentReader(resultFile.GetFilePath(), content.DefaultKey), nil
@@ -387,7 +387,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 
 // Load the properties from readerWithProps into buffer's ResultItem and write its values into the resultWriter.
 // buffer - Search result buffer Key -> relative path, value -> ResultItem. We use this to load the props into the item by matching the uniqueness of relevant path.
-// crWithProps - File containing all the results with proprties.
+// crWithProps - File containing all the results with properties.
 // writeOrder - List of sorted buffer's searchResults(Map is an unordered collection).
 // resultWriter - Search results (sorted) with props.
 func updateProps(readerWithProps *content.ContentReader, resultWriter *content.ContentWriter, buffer map[string]*ResultItem, writeOrder []*ResultItem) error {
@@ -413,13 +413,15 @@ func updateProps(readerWithProps *content.ContentReader, resultWriter *content.C
 
 // Run AQL to retrieve artifacts or dependencies which are associated with a specific build.
 // Return a map of the items' SHA1.
-func fetchBuildArtifactsOrDependenciesSha1(flags CommonConf, artifacts bool, builds []Build) (map[string]int, error) {
+func fetchBuildArtifactsOrDependenciesSha1(flags CommonConf, artifacts bool, builds []Build) (buildArtifactsSha1 map[string]int, err error) {
 	buildQuery := createAqlQueryForBuild(buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1"}), artifacts, builds)
 	reader, err := aqlSearch(buildQuery, flags)
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
+	defer func() {
+		err = errors.Join(err, reader.Close())
+	}()
 	return extractSha1FromAqlResponse(reader)
 }
 

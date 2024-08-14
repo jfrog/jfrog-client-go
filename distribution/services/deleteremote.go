@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -86,7 +85,7 @@ func (dr *DeleteReleaseBundleService) execDeleteDistribute(name, version string,
 		return errorutils.CheckError(err)
 	}
 	url := dr.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version + "/delete"
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := dr.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err

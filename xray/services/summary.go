@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	servicesutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -48,7 +47,7 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	if summaryResponse.Errors != nil && len(summaryResponse.Errors) > 0 {
+	if len(summaryResponse.Errors) > 0 {
 		return nil, errorutils.CheckErrorf("getting build-summary for build: %s failed with error: %s", summaryResponse.Errors[0].Identifier, summaryResponse.Errors[0].Error)
 	}
 	return &summaryResponse, nil
@@ -56,8 +55,7 @@ func (ss *SummaryService) GetBuildSummary(params XrayBuildParams) (*SummaryRespo
 
 func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*ArtifactSummaryResponse, error) {
 	httpDetails := ss.XrayDetails.CreateHttpClientDetails()
-	servicesutils.SetContentType("application/json", &httpDetails.Headers)
-
+	httpDetails.SetContentTypeApplicationJson()
 	requestBody, err := json.Marshal(params)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
@@ -76,7 +74,7 @@ func (ss *SummaryService) GetArtifactSummary(params ArtifactSummaryParams) (*Art
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
-	if response.Errors != nil && len(response.Errors) > 0 {
+	if len(response.Errors) > 0 {
 		return nil, errorutils.CheckErrorf("getting artifact-summary for artifact: %s failed with error: %s", response.Errors[0].Identifier, response.Errors[0].Error)
 	}
 	return &response, nil

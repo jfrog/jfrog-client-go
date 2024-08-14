@@ -2,7 +2,6 @@ package distribution
 
 import (
 	"encoding/json"
-	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientUtils "github.com/jfrog/jfrog-client-go/utils"
@@ -62,7 +61,7 @@ func execDistribute(dr DistributeReleaseBundleExecutor, name, version string) (j
 	}
 
 	httpClientsDetails := dr.ServiceDetails().CreateHttpClientDetails()
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := dr.GetHttpClient().SendPost(requestFullUrl, content, &httpClientsDetails)
 	if err != nil {
 		return "", err
