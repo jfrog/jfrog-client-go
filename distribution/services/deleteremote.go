@@ -125,7 +125,7 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 			return nil
 		}
 		if resp.StatusCode != http.StatusOK {
-			return errorutils.CheckErrorf("error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + ".")
+			return errorutils.CheckErrorf("error while waiting to deletion: status code %d", resp.StatusCode)
 		}
 		time.Sleep(time.Second * DefaultDistributeSyncSleepIntervalSeconds)
 	}
