@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -49,7 +50,7 @@ func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
 		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
-			return "", errorutils.CheckErrorf(scanErrorJson.Error)
+			return "", errorutils.CheckError(errors.New(scanErrorJson.Error))
 		}
 		return "", err
 	}
@@ -79,7 +80,7 @@ func (es *EnrichService) GetImportGraphResults(scanId string) (*ScanResponse, er
 	}
 	scanResponse := ScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: %s", err.Error())
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
 		// Failed due to an internal Xray error

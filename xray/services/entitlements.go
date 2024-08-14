@@ -40,7 +40,7 @@ func (es *EntitlementsService) IsEntitled(featureId string) (entitled bool, err 
 	}
 	var userEntitlements entitlements
 	if err = json.Unmarshal(body, &userEntitlements); err != nil {
-		err = errorutils.CheckErrorf("couldn't parse JFrog Xray server entitlements response: " + err.Error())
+		err = errorutils.CheckErrorf("couldn't parse JFrog Xray server entitlements response: %s", err.Error())
 		return
 	}
 	entitled = userEntitlements.Entitled

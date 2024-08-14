@@ -91,7 +91,7 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		return
 	}
 	if !exists {
-		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + resolvedGitPath + "'")
+		m.err = errorutils.CheckErrorf("path found in .git file %q does not exist: %q", m.path, resolvedGitPath)
 		return
 	}
 	m.path = resolvedGitPath
@@ -271,7 +271,7 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 				if len(split) == 2 {
 					m.revision = split[0]
 				} else {
-					m.err = errors.Join(err, errorutils.CheckErrorf("failed fetching revision for ref :"+ref+" - Unexpected line structure in packed-refs file"))
+					m.err = errors.Join(err, errorutils.CheckErrorf("failed fetching revision for ref : %s - Unexpected line structure in packed-refs file", ref))
 				}
 				return
 			}

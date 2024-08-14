@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -131,7 +132,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
 		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
-			return "", errorutils.CheckErrorf(scanErrorJson.Error)
+			return "", errorutils.CheckError(errors.New(scanErrorJson.Error))
 		}
 		return "", err
 	}
@@ -177,7 +178,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	}
 	scanResponse := ScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: %s", err.Error())
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
 		// Failed due to an internal Xray error
@@ -223,7 +224,7 @@ func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 	url = ss.xrayToXscUrl()
 	resp, body, _, err := ss.client.SendGet(url+XscVersionAPI, false, &httpClientsDetails)
 	if err != nil {
-		err = errorutils.CheckErrorf("failed to get JFrog XSC version, response: " + err.Error())
+		err = errorutils.CheckErrorf("failed to get JFrog XSC version, response: %s", err.Error())
 		return
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNotFound); err != nil {
@@ -235,7 +236,7 @@ func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 	}
 	versionResponse := XscVersionResponse{}
 	if err = json.Unmarshal(body, &versionResponse); err != nil {
-		err = errorutils.CheckErrorf("failed to parse JFrog XSC server response: " + err.Error())
+		err = errorutils.CheckErrorf("failed to parse JFrog XSC server response: %s", err.Error())
 		return
 	}
 	xsxVersion = versionResponse.Version

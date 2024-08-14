@@ -154,7 +154,7 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
 	if err != nil {
 		if err == io.EOF {
-			cr.errorsQueue.AddError(errorutils.CheckErrorf(cr.arrayKey + " not found"))
+			cr.errorsQueue.AddError(errorutils.CheckErrorf("%s not found", cr.arrayKey))
 			return
 		}
 		cr.errorsQueue.AddError(err)

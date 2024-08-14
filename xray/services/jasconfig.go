@@ -41,7 +41,7 @@ func (jcs *JasConfigService) GetJasConfigTokenValidation() (bool, error) {
 	}
 	var jasConfig JasConfig
 	if err = json.Unmarshal(body, &jasConfig); err != nil {
-		return false, errorutils.CheckErrorf("couldn't parse JFrog Xray server Jas Configuration response: " + err.Error())
+		return false, errorutils.CheckErrorf("couldn't parse JFrog Xray server Jas Configuration response: %s", err.Error())
 	}
 	return *jasConfig.TokenValidationToggle, nil
 }
