@@ -75,3 +75,9 @@ func (sm *XscServicesManager) GetAnalyticsGeneralEvent(msi string) (*services.Xs
 	eventService.XscDetails = sm.config.GetServiceDetails()
 	return eventService.GetGeneralEvent(msi)
 }
+
+func (sm *XscServicesManager) GetConfigProfile(profileName string) (*services.ConfigProfile, error) {
+	configProfileService := services.NewConfigurationProfileService(sm.client)
+	configProfileService.XscDetails = sm.config.GetServiceDetails()
+	return configProfileService.GetConfigurationProfile(profileName)
+}
