@@ -197,7 +197,7 @@ func ParseNameAndVersion(identifier string, useLatestPolicy bool) (string, strin
 			log.Debug("No '" + Delimiter + "' is found in the build, build number is set to " + LatestBuildNumberKey)
 			return identifier, LatestBuildNumberKey, nil
 		} else {
-			return "", "", errorutils.CheckErrorf("no '" + Delimiter + "' is found in '" + identifier + "'")
+			return "", "", errorutils.CheckErrorf("no %q is found in %q", Delimiter, identifier)
 		}
 	}
 	name, version := "", ""

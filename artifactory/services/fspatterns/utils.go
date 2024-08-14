@@ -184,7 +184,7 @@ func GetRootPath(pattern, target, archiveTarget string, patternType utils.Patter
 	placeholderParentheses := getPlaceholderParentheses(pattern, target, archiveTarget)
 	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
-		return "", errorutils.CheckErrorf("path does not exist: " + rootPath)
+		return "", errorutils.CheckErrorf("path does not exist: %s", rootPath)
 	}
 
 	return rootPath, nil
