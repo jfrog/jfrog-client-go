@@ -119,7 +119,7 @@ func (ss *SystemService) sendGet(endpoint string) ([]byte, error) {
 	httpDetails := (*ss.artDetails).CreateHttpClientDetails()
 	resp, body, _, err := ss.client.SendGet((*ss.artDetails).GetUrl()+apiSystem+endpoint, true, &httpDetails)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error occurred while attempting to get JFrog Artifactory %s: %s", endpoint, err.Error())
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		return nil, fmt.Errorf("got unexpected server response while attempting to get JFrog Artifactory %s:\n%s", endpoint, err.Error())

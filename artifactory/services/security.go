@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -14,8 +15,13 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-const tokenPath = "api/security/token"
-const APIKeyPath = "api/security/apiKey"
+const (
+	tokenPath                  = "api/security/token"
+	APIKeyPath                 = "api/security/apiKey"
+	errorMsgPrefix             = "error occurred while attempting to"
+	unexpectedServerResponse   = "got unexpected server response while attempting to"
+	couldntParseServerResponse = "couldn't parse server response while attempting to"
+)
 
 type SecurityService struct {
 	client     *jfroghttpclient.JfrogHttpClient
@@ -114,15 +120,15 @@ func (ss *SecurityService) CreateToken(params CreateTokenParams) (auth.CreateTok
 	resp, body, err := ss.client.SendPostForm(artifactoryUrl+tokenPath, data, &httpClientsDetails)
 	tokenInfo := auth.CreateTokenResponseData{}
 	if err != nil {
-		return tokenInfo, err
+		return tokenInfo, fmt.Errorf("%s create token: %w", errorMsgPrefix, err)
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return tokenInfo, err
+		return tokenInfo, fmt.Errorf("%s create token: %w", unexpectedServerResponse, err)
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
-		return tokenInfo, errorutils.CheckError(err)
+		return tokenInfo, errorutils.CheckErrorf("%s create token: %w", couldntParseServerResponse, err.Error())
 	}
-	return tokenInfo, err
+	return tokenInfo, nil
 }
 
 func (ss *SecurityService) GetTokens() (GetTokensResponseData, error) {
@@ -131,15 +137,15 @@ func (ss *SecurityService) GetTokens() (GetTokensResponseData, error) {
 	resp, body, _, err := ss.client.SendGet(artifactoryUrl+tokenPath, true, &httpClientsDetails)
 	tokens := GetTokensResponseData{}
 	if err != nil {
-		return tokens, err
+		return tokens, fmt.Errorf("%s get tokens: %w", errorMsgPrefix, err)
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return tokens, err
+		return tokens, fmt.Errorf("%s get tokens: %w", unexpectedServerResponse, err)
 	}
 	if err = json.Unmarshal(body, &tokens); err != nil {
-		return tokens, errorutils.CheckError(err)
+		return tokens, errorutils.CheckErrorf("%s get tokens: %s", couldntParseServerResponse, err.Error())
 	}
-	return tokens, err
+	return tokens, nil
 }
 
 func (ss *SecurityService) GetUserTokens(username string) ([]string, error) {
@@ -163,15 +169,15 @@ func (ss *SecurityService) RefreshToken(params ArtifactoryRefreshTokenParams) (a
 	resp, body, err := ss.client.SendPostForm(artifactoryUrl+tokenPath, data, &httpClientsDetails)
 	tokenInfo := auth.CreateTokenResponseData{}
 	if err != nil {
-		return tokenInfo, err
+		return tokenInfo, fmt.Errorf("%s refresh token: %w", errorMsgPrefix, err)
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return tokenInfo, err
+		return tokenInfo, fmt.Errorf("%s refresh token: %w", unexpectedServerResponse, err)
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
-		return tokenInfo, errorutils.CheckError(err)
+		return tokenInfo, errorutils.CheckErrorf("%s refresh token: %s", couldntParseServerResponse, err.Error())
 	}
-	return tokenInfo, err
+	return tokenInfo, nil
 }
 
 func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error) {
@@ -181,12 +187,12 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 	data := buildRevokeTokenUrlValues(params)
 	resp, body, err := ss.client.SendPostForm(requestFullUrl, data, &httpClientsDetails)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s revoke token: %w", errorMsgPrefix, err)
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", err
+		return "", fmt.Errorf("%s revoke token: %w", unexpectedServerResponse, err)
 	}
-	return string(body), err
+	return string(body), nil
 }
 
 func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
