@@ -126,7 +126,7 @@ func (ss *SecurityService) CreateToken(params CreateTokenParams) (auth.CreateTok
 		return tokenInfo, fmt.Errorf("%s create token: %w", unexpectedServerResponsePrefix, err)
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
-		return tokenInfo, errorutils.CheckErrorf("%s create token: %w", couldntParseServerResponsePrefix, err.Error())
+		return tokenInfo, errorutils.CheckErrorf("%s create token: %s", couldntParseServerResponsePrefix, err.Error())
 	}
 	return tokenInfo, nil
 }
