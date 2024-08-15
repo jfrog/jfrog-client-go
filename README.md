@@ -2507,6 +2507,21 @@ Get a general event from XSC matching the provided msi.
 event, err := xscManager.GetAnalyticsGeneralEvent(msi)
 ```
 
+#### Send error log
+Sends an error log to Xsc
+```go
+err := xscManager.SendXscLogErrorRequest(&ExternalErrorLog {
+    Log_level: "error",
+    Source: "cli",
+    Message: "error message",
+})
+```
+
+#### Get Configuration Profile
+Gets a configuration profile by name. Possible after POSTing a valid config profile to Xsc
+```go
+configProfile, err := xscManager.GetConfigurationProfile(profileName)
+```
 ## Pipelines APIs
 
 ### Creating Pipelines Service Manager
