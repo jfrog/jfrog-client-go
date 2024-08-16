@@ -10,6 +10,7 @@ import (
 
 	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -22,6 +23,8 @@ func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
 	tempFile, err := os.CreateTemp("", "testfile")
 	assert.NoError(t, err)
 	defer func() {
+		log.Info("*********")
+		log.Info(symlinkCreated)
 		if symlinkCreated {
 			assert.NoError(t, os.Remove(symlinkPath))
 		}
