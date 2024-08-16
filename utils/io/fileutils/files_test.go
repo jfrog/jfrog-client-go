@@ -26,6 +26,7 @@ func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
 	assert.NoError(t, tempFile.Close())
 
 	defer func() {
+		// Close the symlink before closing the file it references.
 		if symlinkCreated {
 			assert.NoError(t, os.Remove(symlinkPath))
 		}
@@ -58,6 +59,9 @@ func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
 	symlinkPath = tempFile.Name() + "_symlink"
 	err = os.Symlink(tempFile.Name(), symlinkPath)
 	assert.NoError(t, err)
+	// It is best to close the symlink before closing the file it
+	// references. We use this variable to flag to the defer function
+	// to close the symlink.
 	symlinkCreated = true
 
 	assert.True(t, IsPathExists(symlinkPath, true))
