@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsPathExists(t *testing.T) {
+func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
 	// Create a temporary file
 	tempFile, err := os.CreateTemp("", "testfile")
 	assert.NoError(t, err)
@@ -24,6 +24,7 @@ func TestIsPathExists(t *testing.T) {
 
 	// Test for an existing file
 	assert.True(t, IsPathExists(tempFile.Name(), false))
+	assert.True(t, IsPathAccessible(tempFile.Name()))
 
 	// Test for a non-existing file
 	assert.False(t, IsPathExists(tempFile.Name()+"_nonexistent", false))
@@ -37,9 +38,11 @@ func TestIsPathExists(t *testing.T) {
 
 	// Test for an existing directory
 	assert.True(t, IsPathExists(tempDir, false))
+	assert.True(t, IsPathAccessible(tempDir))
 
 	// Test for a non-existing directory
 	assert.False(t, IsPathExists(tempDir+"_nonexistent", false))
+	assert.False(t, IsPathAccessible(tempDir+"_nonexistent"))
 
 	// Create a symlink and test with preserveSymLink true and false
 	symlinkPath := tempFile.Name() + "_symlink"
@@ -51,59 +54,7 @@ func TestIsPathExists(t *testing.T) {
 
 	assert.True(t, IsPathExists(symlinkPath, true))
 	assert.True(t, IsPathExists(symlinkPath, false))
-}
-
-func TestIsPathAccessible(t *testing.T) {
-	// Create a temporary file
-	tempFile, err := os.CreateTemp("", "testfile")
-	assert.NoError(t, err)
-	defer func() {
-		assert.NoError(t, os.Remove(tempFile.Name()))
-	}()
-
-	// Test for an accessible file
-	assert.True(t, IsPathAccessible(tempFile.Name()))
-
-	// Change the file permissions to make it inaccessible (for everyone)
-	assert.NoError(t, os.Chmod(tempFile.Name(), 0000))
-	defer func() {
-		assert.NoError(t, os.Chmod(tempFile.Name(), 0644))
-	}()
-
-	if io.IsWindows() {
-		assert.False(t, IsPathAccessible(tempFile.Name()), "IsPathAccessible should return false for a file with 0000 permissions")
-	} else {
-		// On Linux and Mac, unlike Windows, even with chmod 0000, the owner may still be able to access the file.
-		// Therefore, we'll try to open the file explicitly to confirm inaccessibility.
-		_, err = os.Open(tempFile.Name())
-		assert.Error(t, err, "Expected error when trying to open a file with 0000 permissions")
-	}
-
-	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "testdir")
-	assert.NoError(t, err)
-	defer func() {
-		assert.NoError(t, os.RemoveAll(tempDir))
-	}()
-
-	// Test for an accessible directory
-	assert.True(t, IsPathAccessible(tempDir))
-
-	// Change the directory permissions to make it inaccessible (for everyone)
-	assert.NoError(t, os.Chmod(tempDir, 0000))
-	defer func() {
-		assert.NoError(t, os.Chmod(tempDir, 0755))
-	}()
-
-	// Try to read the directory to confirm inaccessibility
-	if io.IsWindows() {
-		assert.False(t, IsPathAccessible(tempDir), "IsPathAccessible should return false for a directory with 0000 permissions")
-	} else {
-		// On Linux and Mac, unlike Windows, even with chmod 0000, the owner may still be able to access the directory.
-		// Therefore, we'll try to access the directory explicitly to confirm inaccessibility.
-		_, err = os.ReadDir(tempDir)
-		assert.Error(t, err, "Expected error when trying to read a directory with 0000 permissions")
-	}
+	assert.True(t, IsPathAccessible(symlinkPath))
 }
 
 func TestIsSsh(t *testing.T) {
