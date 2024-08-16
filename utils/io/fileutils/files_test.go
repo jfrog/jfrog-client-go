@@ -70,12 +70,13 @@ func TestIsPathAccessible(t *testing.T) {
 		assert.NoError(t, os.Chmod(tempFile.Name(), 0644))
 	}()
 
-	// On Linux and Mac, unlike Windows, even with chmod 0000, the owner may still be able to access the file.
-	// Therefore, we'll try to open the file explicitly to confirm inaccessibility.
-	_, err = os.Open(tempFile.Name())
-	assert.Error(t, err, "Expected error when trying to open a file with 0000 permissions")
 	if io.IsWindows() {
 		assert.False(t, IsPathAccessible(tempFile.Name()), "IsPathAccessible should return false for a file with 0000 permissions")
+	} else {
+		// On Linux and Mac, unlike Windows, even with chmod 0000, the owner may still be able to access the file.
+		// Therefore, we'll try to open the file explicitly to confirm inaccessibility.
+		_, err = os.Open(tempFile.Name())
+		assert.Error(t, err, "Expected error when trying to open a file with 0000 permissions")
 	}
 
 	// Create a temporary directory
@@ -95,11 +96,13 @@ func TestIsPathAccessible(t *testing.T) {
 	}()
 
 	// Try to read the directory to confirm inaccessibility
-	_, err = os.ReadDir(tempDir)
-	assert.Error(t, err, "Expected error when trying to read a directory with 0000 permissions")
-	// On Linux and Mac, unlike Windows, even with chmod 0000, the owner may still be able to access the directory.
 	if io.IsWindows() {
 		assert.False(t, IsPathAccessible(tempDir), "IsPathAccessible should return false for a directory with 0000 permissions")
+	} else {
+		// On Linux and Mac, unlike Windows, even with chmod 0000, the owner may still be able to access the directory.
+		// Therefore, we'll try to access the directory explicitly to confirm inaccessibility.
+		_, err = os.ReadDir(tempDir)
+		assert.Error(t, err, "Expected error when trying to read a directory with 0000 permissions")
 	}
 }
 
