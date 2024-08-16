@@ -92,8 +92,7 @@ func (vc *VcsCache) clearCacheIfExceedsMax() {
 }
 
 func tryGetGitDetails(path string) (string, string, string, error) {
-	exists := fileutils.IsPathAccessible(filepath.Join(path, ".git"))
-	if exists {
+	if fileutils.IsPathAccessible(filepath.Join(path, ".git")) {
 		return extractGitDetails(path)
 	}
 	return "", "", "", nil

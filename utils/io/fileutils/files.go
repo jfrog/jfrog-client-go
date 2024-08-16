@@ -43,7 +43,7 @@ func IsPathExists(path string, preserveSymLink bool) bool {
 // Checks if the path is accessible.
 func IsPathAccessible(path string) bool {
 	_, err := GetFileInfo(path, true)
-	return err != nil
+	return err == nil
 }
 
 // Check if path points at a file.
