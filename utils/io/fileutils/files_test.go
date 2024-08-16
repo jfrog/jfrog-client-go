@@ -1,8 +1,6 @@
 package fileutils
 
 import (
-	biutils "github.com/jfrog/build-info-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -10,8 +8,90 @@ import (
 	"strings"
 	"testing"
 
+	biutils "github.com/jfrog/build-info-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io"
+
 	"github.com/stretchr/testify/assert"
 )
+
+func TestIsPathExists(t *testing.T) {
+	// Create a temporary file
+	tempFile, err := os.CreateTemp("", "testfile")
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, os.Remove(tempFile.Name()))
+	}()
+
+	// Test for an existing file
+	assert.True(t, IsPathExists(tempFile.Name(), false))
+
+	// Test for a non-existing file
+	assert.False(t, IsPathExists(tempFile.Name()+"_nonexistent", false))
+
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "testdir")
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tempDir))
+	}()
+
+	// Test for an existing directory
+	assert.True(t, IsPathExists(tempDir, false))
+
+	// Test for a non-existing directory
+	assert.False(t, IsPathExists(tempDir+"_nonexistent", false))
+
+	// Create a symlink and test with preserveSymLink true and false
+	symlinkPath := tempFile.Name() + "_symlink"
+	err = os.Symlink(tempFile.Name(), symlinkPath)
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, os.Remove(symlinkPath))
+	}()
+
+	assert.True(t, IsPathExists(symlinkPath, true))
+	assert.True(t, IsPathExists(symlinkPath, false))
+}
+
+func TestIsPathAccessible(t *testing.T) {
+	// Create a temporary file
+	tempFile, err := os.CreateTemp("", "testfile")
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, os.Remove(tempFile.Name()))
+	}()
+
+	// Test for an accessible file
+	assert.True(t, IsPathAccessible(tempFile.Name()))
+
+	// Change the file permissions to make it inaccessible
+	assert.NoError(t, os.Chmod(tempFile.Name(), 0000))
+	defer func() {
+		assert.NoError(t, os.Chmod(tempFile.Name(), 0644))
+	}()
+
+	// Test for an inaccessible file
+	assert.False(t, IsPathAccessible(tempFile.Name()))
+
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "testdir")
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tempDir))
+	}()
+
+	// Test for an accessible directory
+	assert.True(t, IsPathAccessible(tempDir))
+
+	// Change the directory permissions to make it inaccessible
+	assert.NoError(t, os.Chmod(tempDir, 0000))
+	defer func() {
+		assert.NoError(t, os.Chmod(tempDir, 0755))
+	}()
+
+	// Test for an inaccessible directory
+	assert.False(t, IsPathAccessible(tempDir))
+}
 
 func TestIsSsh(t *testing.T) {
 	testRuns := []struct {
