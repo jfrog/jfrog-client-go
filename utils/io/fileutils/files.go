@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	biutils "github.com/jfrog/build-info-go/utils"
 	"io"
 	"net/url"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	biutils "github.com/jfrog/build-info-go/utils"
 
 	"github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/gofrog/crypto"
@@ -36,7 +37,7 @@ func GetFileSeparator() string {
 // function will return `true` regardless of the symlink target
 func IsPathExists(path string, preserveSymLink bool) bool {
 	_, err := GetFileInfo(path, preserveSymLink)
-	return !os.IsNotExist(err)
+	return err != nil
 }
 
 // Check if path points at a file.
