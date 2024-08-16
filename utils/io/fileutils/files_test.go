@@ -15,10 +15,16 @@ import (
 )
 
 func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
+	var symlinkPath string
+	symlinkCreated := false
+
 	// Create a temporary file
 	tempFile, err := os.CreateTemp("", "testfile")
 	assert.NoError(t, err)
 	defer func() {
+		if symlinkCreated {
+			assert.NoError(t, os.Remove(symlinkPath))
+		}
 		assert.NoError(t, os.Remove(tempFile.Name()))
 	}()
 
@@ -45,12 +51,10 @@ func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
 	assert.False(t, IsPathAccessible(tempDir+"_nonexistent"))
 
 	// Create a symlink and test with preserveSymLink true and false
-	symlinkPath := tempFile.Name() + "_symlink"
+	symlinkPath = tempFile.Name() + "_symlink"
 	err = os.Symlink(tempFile.Name(), symlinkPath)
 	assert.NoError(t, err)
-	defer func() {
-		assert.NoError(t, os.Remove(symlinkPath))
-	}()
+	symlinkCreated = true
 
 	assert.True(t, IsPathExists(symlinkPath, true))
 	assert.True(t, IsPathExists(symlinkPath, false))
