@@ -64,14 +64,17 @@ func TestIsPathAccessible(t *testing.T) {
 	// Test for an accessible file
 	assert.True(t, IsPathAccessible(tempFile.Name()))
 
-	// Change the file permissions to make it inaccessible
+	// Change the file permissions to make it inaccessible (for everyone)
 	assert.NoError(t, os.Chmod(tempFile.Name(), 0000))
 	defer func() {
 		assert.NoError(t, os.Chmod(tempFile.Name(), 0644))
 	}()
 
-	// Test for an inaccessible file
-	assert.False(t, IsPathAccessible(tempFile.Name()))
+	// On Linux, even with chmod 0000, the owner may still be able to access the file.
+	// Therefore, we'll try to open the file explicitly to confirm inaccessibility.
+	_, err = os.Open(tempFile.Name())
+	assert.Error(t, err, "Expected error when trying to open a file with 0000 permissions")
+	assert.False(t, IsPathAccessible(tempFile.Name()), "IsPathAccessible should return false for a file with 0000 permissions")
 
 	// Create a temporary directory
 	tempDir, err := os.MkdirTemp("", "testdir")
@@ -83,14 +86,16 @@ func TestIsPathAccessible(t *testing.T) {
 	// Test for an accessible directory
 	assert.True(t, IsPathAccessible(tempDir))
 
-	// Change the directory permissions to make it inaccessible
+	// Change the directory permissions to make it inaccessible (for everyone)
 	assert.NoError(t, os.Chmod(tempDir, 0000))
 	defer func() {
 		assert.NoError(t, os.Chmod(tempDir, 0755))
 	}()
 
-	// Test for an inaccessible directory
-	assert.False(t, IsPathAccessible(tempDir))
+	// Try to read the directory to confirm inaccessibility
+	_, err = os.ReadDir(tempDir)
+	assert.Error(t, err, "Expected error when trying to read a directory with 0000 permissions")
+	assert.False(t, IsPathAccessible(tempDir), "IsPathAccessible should return false for a directory with 0000 permissions")
 }
 
 func TestIsSsh(t *testing.T) {
