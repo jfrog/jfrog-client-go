@@ -26,7 +26,7 @@ func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
 	assert.NoError(t, tempFile.Close())
 
 	defer func() {
-		// Close the symlink before closing the file it references.
+		// Remove the symlink before removing the file it references.
 		if symlinkCreated {
 			assert.NoError(t, os.Remove(symlinkPath))
 		}
@@ -41,11 +41,7 @@ func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
 	assert.False(t, IsPathExists(tempFile.Name()+"_nonexistent", false))
 
 	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "testdir")
-	assert.NoError(t, err)
-	defer func() {
-		assert.NoError(t, os.RemoveAll(tempDir))
-	}()
+	tempDir := t.TempDir()
 
 	// Test for an existing directory
 	assert.True(t, IsPathExists(tempDir, false))
