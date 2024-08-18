@@ -25,9 +25,7 @@ func TestGetConfigurationProfile(t *testing.T) {
 	var configProfileForComparison services.ConfigProfile
 	err = json.Unmarshal(profileFileContent, &configProfileForComparison)
 	assert.NoError(t, err)
-
 	assert.Equal(t, &configProfileForComparison, configProfile)
-
 }
 
 func createXscMockServerForConfigProfile(t *testing.T) (mockServer *httptest.Server, configProfileService *services.ConfigurationProfileService) {
@@ -35,13 +33,9 @@ func createXscMockServerForConfigProfile(t *testing.T) (mockServer *httptest.Ser
 		if r.RequestURI == "/xsc/api/v1/profile/default-test-profile" && r.Method == http.MethodGet {
 			w.WriteHeader(http.StatusOK)
 			content, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
-			if err != nil {
-				return
-			}
+			assert.NoError(t, err)
 			_, err = w.Write(content)
-			if err != nil {
-				return
-			}
+			assert.NoError(t, err)
 		} else {
 			assert.Fail(t, "received an unexpected request")
 		}
