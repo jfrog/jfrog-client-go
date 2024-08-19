@@ -1,8 +1,6 @@
 package fileutils
 
 import (
-	biutils "github.com/jfrog/build-info-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -10,8 +8,62 @@ import (
 	"strings"
 	"testing"
 
+	biutils "github.com/jfrog/build-info-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/io"
+
 	"github.com/stretchr/testify/assert"
 )
+
+func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
+	var symlinkPath string
+	symlinkCreated := false
+
+	// Create a temporary file
+	tempFile, err := os.CreateTemp("", "testfile")
+	assert.NoError(t, err)
+
+	// Close the file immediately after creation to ensure it is not locked
+	assert.NoError(t, tempFile.Close())
+
+	defer func() {
+		// Remove the symlink before removing the file it references.
+		if symlinkCreated {
+			assert.NoError(t, os.Remove(symlinkPath))
+		}
+		assert.NoError(t, os.Remove(tempFile.Name()))
+	}()
+
+	// Test for an existing file
+	assert.True(t, IsPathExists(tempFile.Name(), false))
+	assert.True(t, IsPathAccessible(tempFile.Name()))
+
+	// Test for a non-existing file
+	assert.False(t, IsPathExists(tempFile.Name()+"_nonexistent", false))
+
+	// Create a temporary directory
+	tempDir := t.TempDir()
+
+	// Test for an existing directory
+	assert.True(t, IsPathExists(tempDir, false))
+	assert.True(t, IsPathAccessible(tempDir))
+
+	// Test for a non-existing directory
+	assert.False(t, IsPathExists(tempDir+"_nonexistent", false))
+	assert.False(t, IsPathAccessible(tempDir+"_nonexistent"))
+
+	// Create a symlink and test with preserveSymLink true and false
+	symlinkPath = tempFile.Name() + "_symlink"
+	err = os.Symlink(tempFile.Name(), symlinkPath)
+	assert.NoError(t, err)
+	// It is best to remove the symlink before removing the file it
+	// references. We use this variable to flag to the defer function
+	// to remove the symlink.
+	symlinkCreated = true
+
+	assert.True(t, IsPathExists(symlinkPath, true))
+	assert.True(t, IsPathExists(symlinkPath, false))
+	assert.True(t, IsPathAccessible(symlinkPath))
+}
 
 func TestIsSsh(t *testing.T) {
 	testRuns := []struct {
