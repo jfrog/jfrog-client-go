@@ -187,8 +187,6 @@
         - [Add Analytics General Event](#add-analytics-general-event)
         - [Update Analytics General Event](#update-analytics-general-event)
         - [Get Analytics General Event](#get-analytics-general-event)
-      - [Send Error Log](#send-error-log)
-      - [Get Configuration Profile](#get-configuration-profile)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -2509,21 +2507,6 @@ Get a general event from XSC matching the provided msi.
 event, err := xscManager.GetAnalyticsGeneralEvent(msi)
 ```
 
-#### Send Error Log
-Sends an error log to Xsc
-```go
-err := xscManager.SendXscLogErrorRequest(&ExternalErrorLog {
-    Log_level: "error",
-    Source: "cli",
-    Message: "error message",
-})
-```
-
-#### Get Configuration Profile
-Gets a configuration profile by name. Possible after POSTing a valid config profile to Xsc
-```go
-configProfile, err := xscManager.GetConfigurationProfile(profileName)
-```
 ## Pipelines APIs
 
 ### Creating Pipelines Service Manager
