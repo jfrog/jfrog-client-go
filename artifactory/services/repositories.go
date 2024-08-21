@@ -50,7 +50,6 @@ func (rs *RepositoriesService) GetAll() (*[]RepositoryDetails, error) {
 }
 
 func (rs *RepositoriesService) GetWithFilter(params RepositoriesFilterParams) (*[]RepositoryDetails, error) {
-	log.Info("Getting repositories with filter ...")
 	body, err := rs.sendGet(createWithFilterUrl(params))
 	if err != nil {
 		return nil, err
@@ -80,7 +79,7 @@ func createWithFilterUrl(params RepositoriesFilterParams) string {
 	}
 
 	if len(queryParams) > 0 {
-		log.Info("Getting repositories with filter: %s", queryParams.Encode())
+		log.Info("Getting repositories with filter: ", queryParams.Encode())
 	}
 	u.RawQuery = queryParams.Encode()
 	return u.String()
