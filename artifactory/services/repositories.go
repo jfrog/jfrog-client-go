@@ -79,7 +79,7 @@ func createWithFilterUrl(params RepositoriesFilterParams) string {
 	}
 
 	if len(queryParams) > 0 {
-		log.Info("Getting repositories with filter:", queryParams.Encode())
+		log.Debug("Getting repositories with filter:", queryParams.Encode())
 	}
 	u.RawQuery = queryParams.Encode()
 	return u.String()
