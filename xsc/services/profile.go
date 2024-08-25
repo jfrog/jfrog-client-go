@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	ConfigProfileMinXscVersion = "1.11.0"
+	ConfigProfileMinXscVersion = "1.7.1"
 	xscConfigProfileApi        = "api/v1/profile"
 )
 
