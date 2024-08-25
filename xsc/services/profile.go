@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	ConfigProfileMinXscVersion = "1.7.1" // TODO change to 1.11.0 at the end after we release the new endpoints to xsc
+	ConfigProfileMinXscVersion = "1.11.0"
 	xscConfigProfileApi        = "api/v1/profile"
 )
 
