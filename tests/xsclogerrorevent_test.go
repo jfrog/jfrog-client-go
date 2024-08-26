@@ -14,7 +14,7 @@ const errorMessageContentForTest = "THIS IS NOT A REAL ERROR! This Error is post
 
 func TestXscSendLogErrorEvent(t *testing.T) {
 	initXscTest(t, services.LogErrorMinXscVersion)
-	mockServer, logErrorService := createXscMockServer(t)
+	mockServer, logErrorService := createXscMockServerForLogEvent(t)
 	defer mockServer.Close()
 
 	event := &services.ExternalErrorLog{
@@ -26,7 +26,7 @@ func TestXscSendLogErrorEvent(t *testing.T) {
 	assert.NoError(t, logErrorService.SendLogErrorEvent(event))
 }
 
-func createXscMockServer(t *testing.T) (mockServer *httptest.Server, logErrorService *services.LogErrorEventService) {
+func createXscMockServerForLogEvent(t *testing.T) (mockServer *httptest.Server, logErrorService *services.LogErrorEventService) {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.RequestURI == "/xsc/api/v1/event/logMessage" && r.Method == http.MethodPost {
 			var reqBody services.ExternalErrorLog
@@ -42,8 +42,9 @@ func createXscMockServer(t *testing.T) (mockServer *httptest.Server, logErrorSer
 			assert.Equal(t, errorMessageContentForTest, reqBody.Message)
 			w.WriteHeader(http.StatusCreated)
 			return
+		} else {
+			assert.Fail(t, "received an unexpected request")
 		}
-		assert.Fail(t, "received an unexpected request")
 	}))
 
 	xscDetails := GetXscDetails()
