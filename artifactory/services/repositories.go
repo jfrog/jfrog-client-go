@@ -2,8 +2,8 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -46,18 +46,40 @@ func (rs *RepositoriesService) IsExists(repoKey string) (exists bool, err error)
 
 func (rs *RepositoriesService) GetAll() (*[]RepositoryDetails, error) {
 	log.Info("Getting all repositories ...")
-	return rs.GetWithFilter(RepositoriesFilterParams{RepoType: "", PackageType: ""})
+	return rs.GetWithFilter(RepositoriesFilterParams{})
 }
 
 func (rs *RepositoriesService) GetWithFilter(params RepositoriesFilterParams) (*[]RepositoryDetails, error) {
-	url := fmt.Sprintf("%s?type=%s&packageType=%s", apiRepositories, params.RepoType, params.PackageType)
-	body, err := rs.sendGet(url)
+	body, err := rs.sendGet(rs.createUrlWithFilter(params))
 	if err != nil {
 		return nil, err
 	}
 	repoDetails := &[]RepositoryDetails{}
 	err = json.Unmarshal(body, &repoDetails)
 	return repoDetails, errorutils.CheckError(err)
+}
+
+// This function is used to create the URL for the repositories API with the given filter params.
+// The function expects to get a RepositoriesFilterParams struct that contains the desired filter params.
+// The function returns the URL string.
+func (rs *RepositoriesService)createUrlWithFilter(params RepositoriesFilterParams) string {
+	u := url.URL{
+		Path: apiRepositories,
+	}
+
+	queryParams := url.Values{}
+	if params.RepoType != "" {
+		queryParams.Add("type", params.RepoType)
+	}
+	if params.PackageType != "" {
+		queryParams.Add("packageType", params.PackageType)
+	}
+	if params.ProjectKey != "" {
+		queryParams.Add("project", params.ProjectKey)
+	}
+
+	u.RawQuery = queryParams.Encode()
+	return u.String()
 }
 
 func (rs *RepositoriesService) sendGet(api string) ([]byte, error) {
@@ -113,6 +135,7 @@ func (rd RepositoryDetails) GetRepoType() string {
 type RepositoriesFilterParams struct {
 	RepoType    string
 	PackageType string
+	ProjectKey  string
 }
 
 func NewRepositoriesFilterParams() RepositoriesFilterParams {
