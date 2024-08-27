@@ -1081,6 +1081,7 @@ You can get all repositories from Artifactory filtered according to theirs type 
 params := services.NewRepositoriesFilterParams()
 params.RepoType = "remote"
 params.PackageType = "maven"
+params.ProjectKey = "project-key"
 err := servicesManager.GetAllRepositoriesFiltered(params)
 ```
 
