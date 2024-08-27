@@ -184,9 +184,9 @@
       - [Using XSC Services](#using-xsc-services)
       - [Fetching XSC's Version](#fetching-xscs-version)
       - [Report XSC analytics metrics](#report-xsc-analytics-metrics)
-        - [Add analytics general event](#add-analytics-general-event)
-        - [Update analytics general event](#update-analytics-general-event)
-        - [Get analytics general event](#get-analytics-general-event)
+        - [Add Analytics General Event](#add-analytics-general-event)
+        - [Update Analytics General Event](#update-analytics-general-event)
+        - [Get Analytics General Event](#get-analytics-general-event)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -2469,8 +2469,8 @@ xscManager, err := xsc.New(serviceConfig)
 version, err := xscManager.GetVersion()
 ```
 
-#### Report XSC analytics metrics
-##### Add analytics general event
+#### Report XSC Analytics Metrics
+##### Add Analytics General Event
 Sent XSC a new event which contains analytics data, and get multi-scan id back from XSC.
 ```go
 event := services.XscAnalyticsGeneralEvent{
@@ -2487,7 +2487,7 @@ event := services.XscAnalyticsGeneralEvent{
 }}
 msi, err := xscManager.AddAnalyticsGeneralEvent(event)
 ```
-##### Update analytics general event
+##### Update Analytics General Event
 Sent XSC a finalized analytics metrics event with information matching an existing event's msi.
 ```go
 finalizeEvent := services.XscAnalyticsGeneralEventFinalize{
@@ -2502,7 +2502,7 @@ finalizeEvent := services.XscAnalyticsGeneralEventFinalize{
 err := xscManager.UpdateAnalyticsGeneralEvent(finalizeEvent)
 ```
 
-##### Get analytics general event
+##### Get Analytics General Event
 Get a general event from XSC matching the provided msi.
 ```go
 event, err := xscManager.GetAnalyticsGeneralEvent(msi)
