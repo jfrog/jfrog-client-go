@@ -36,7 +36,7 @@ const (
 	defaultUploadMinSplit = utils.SizeMiB * 200
 	// The default maximum number of parts that can be concurrently uploaded per file during a multipart upload
 	defaultUploadSplitCount = 5
-	// Minimal file size to show progress bar
+	// Minimal file size to show progress bar (to avoid polluting the terminal with a lot of progress lines)
 	minFileSizeForProgressInKb = 500 * utils.SizeKib
 )
 
