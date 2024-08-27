@@ -6,8 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateWithFilterUrl(t *testing.T) {
-	tests := []struct {
+func TestCreateUrlWithFilter(t *testing.T) {
+	rs := RepositoriesService{}
+	testCases := []struct {
 		params   RepositoriesFilterParams
 		expected string
 	}{
@@ -19,8 +20,8 @@ func TestCreateWithFilterUrl(t *testing.T) {
 		{RepositoriesFilterParams{}, "api/repositories"},
 	}
 
-	for _, test := range tests {
-		result := createWithFilterUrl(test.params)
-		assert.Equal(t, test.expected, result, "For params %+v, expected %s, but got %s", test.params, test.expected, result)
+	for _, testCase := range testCases {
+		result := rs.createUrlWithFilter(testCase.params)
+		assert.Equal(t, testCase.expected, result, "For params %+v, expected %s, but got %s", testCase.params, testCase.expected, result)
 	}
 }

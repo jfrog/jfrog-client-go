@@ -50,7 +50,7 @@ func (rs *RepositoriesService) GetAll() (*[]RepositoryDetails, error) {
 }
 
 func (rs *RepositoriesService) GetWithFilter(params RepositoriesFilterParams) (*[]RepositoryDetails, error) {
-	body, err := rs.sendGet(createWithFilterUrl(params))
+	body, err := rs.sendGet(rs.createUrlWithFilter(params))
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (rs *RepositoriesService) GetWithFilter(params RepositoriesFilterParams) (*
 // This function is used to create the URL for the repositories API with the given filter params.
 // The function expects to get a RepositoriesFilterParams struct that contains the desired filter params.
 // The function returns the URL string.
-func createWithFilterUrl(params RepositoriesFilterParams) string {
+func (rs *RepositoriesService)createUrlWithFilter(params RepositoriesFilterParams) string {
 	u := url.URL{
 		Path: apiRepositories,
 	}
@@ -78,9 +78,6 @@ func createWithFilterUrl(params RepositoriesFilterParams) string {
 		queryParams.Add("project", params.ProjectKey)
 	}
 
-	if len(queryParams) > 0 {
-		log.Debug("Getting repositories with filter:", queryParams.Encode())
-	}
 	u.RawQuery = queryParams.Encode()
 	return u.String()
 }
