@@ -33,20 +33,7 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 	if err != nil {
 		return nil, err
 	}
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetCertificatesPath(config.GetCertificatesPath()).
-		SetInsecureTls(config.IsInsecureTls()).
-		SetContext(config.GetContext()).
-		SetDialTimeout(config.GetDialTimeout()).
-		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		SetContext(config.GetContext()).
-		SetRetries(config.GetHttpRetries()).
-		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
-		SetHttpClient(config.GetHttpClient()).
-		Build()
+	client, err := BuildJFrogHttpClient(config, artDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +46,23 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 	}
 	manager.progress = progress
 	return manager, err
+}
+
+func BuildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+	return jfroghttpclient.JfrogClientBuilder().
+		SetCertificatesPath(config.GetCertificatesPath()).
+		SetInsecureTls(config.IsInsecureTls()).
+		SetContext(config.GetContext()).
+		SetDialTimeout(config.GetDialTimeout()).
+		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
+		SetClientCertPath(authDetails.GetClientCertPath()).
+		SetClientCertKeyPath(authDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(authDetails.RunPreRequestFunctions).
+		SetContext(config.GetContext()).
+		SetRetries(config.GetHttpRetries()).
+		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
+		SetHttpClient(config.GetHttpClient()).
+		Build()
 }
 
 func NewWithClient(config config.Config, client *jfroghttpclient.JfrogHttpClient) (*ArtifactoryServicesManagerImp, error) {
