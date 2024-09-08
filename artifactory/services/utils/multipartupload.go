@@ -171,7 +171,7 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 		progressReader = progress.SetMergingState(progressReader.GetId(), false)
 	}
 
-	unsignedNumRetries, err := utils.ConvertIntToUint(mu.client.GetHttpClient().GetRetries())
+	unsignedNumRetries, err := utils.SafeIntToUint(mu.client.GetHttpClient().GetRetries())
 	if err != nil {
 		return "", fmt.Errorf("failed to convert number of retries to uint64: %w", err)
 	}
@@ -182,11 +182,11 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 
 func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize, chunkSize int64, splitCount int, localPath string, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails) (err error) {
 	numberOfParts := calculateNumberOfParts(fileSize, chunkSize)
-	unsignedNumOfParts, err := utils.ConvertInt64ToUint64(numberOfParts)
+	unsignedNumOfParts, err := utils.SafeInt64ToUint64(numberOfParts)
 	if err != nil {
 		return fmt.Errorf("failed to convert number of parts to uint64: %w", err)
 	}
-	unsignedNumRetries, err := utils.ConvertInt64ToUint64(int64(mu.client.GetHttpClient().GetRetries()))
+	unsignedNumRetries, err := utils.SafeInt64ToUint64(int64(mu.client.GetHttpClient().GetRetries()))
 	if err != nil {
 		return fmt.Errorf("failed to convert number of retries to uint64: %w", err)
 	}
