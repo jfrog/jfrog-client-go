@@ -190,7 +190,6 @@ func SearchBySpecWithPattern(specFile *CommonParams, flags CommonConf, requiredA
 
 // Use this function when running Aql with pattern
 func SearchBySpecWithAql(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (reader *content.ContentReader, err error) {
-	log.Info("Searching for items in Artifactory...")
 	// Execute the search according to provided aql in specFile.
 	var fetchedProps *content.ContentReader
 	query := BuildQueryFromSpecFile(specFile, requiredArtifactProps)
