@@ -171,20 +171,32 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 		progressReader = progress.SetMergingState(progressReader.GetId(), false)
 	}
 
+	unsignedNumRetries, err := utils.SafeIntToUint(mu.client.GetHttpClient().GetRetries())
+	if err != nil {
+		return "", fmt.Errorf("failed to convert number of retries to uint64: %w", err)
+	}
 	log.Info(logMsgPrefix + "Starting parts merge...")
 	// The total number of attempts is determined by the number of retries + 1
-	return mu.completeAndPollForStatus(logMsgPrefix, uint(mu.client.GetHttpClient().GetRetries())+1, sha1, multipartUploadClient, progressReader)
+	return mu.completeAndPollForStatus(logMsgPrefix, unsignedNumRetries+1, sha1, multipartUploadClient, progressReader)
 }
 
 func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize, chunkSize int64, splitCount int, localPath string, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails) (err error) {
 	numberOfParts := calculateNumberOfParts(fileSize, chunkSize)
+	unsignedNumOfParts, err := utils.SafeInt64ToUint64(numberOfParts)
+	if err != nil {
+		return fmt.Errorf("failed to convert number of parts to uint64: %w", err)
+	}
+	unsignedNumRetries, err := utils.SafeInt64ToUint64(int64(mu.client.GetHttpClient().GetRetries()))
+	if err != nil {
+		return fmt.Errorf("failed to convert number of retries to uint64: %w", err)
+	}
 	log.Info(fmt.Sprintf("%sSplitting file to %d parts of %s each, using %d working threads for uploading...", logMsgPrefix, numberOfParts, ConvertIntToStorageSizeString(chunkSize), splitCount))
-	producerConsumer := parallel.NewRunner(splitCount, uint(numberOfParts), false)
+	producerConsumer := parallel.NewRunner(splitCount, uint(unsignedNumOfParts), false)
 
 	wg := new(sync.WaitGroup)
 	wg.Add(int(numberOfParts))
 	attemptsAllowed := new(atomic.Uint64)
-	attemptsAllowed.Add(uint64(numberOfParts) * uint64(mu.client.GetHttpClient().GetRetries()))
+	attemptsAllowed.Add(unsignedNumOfParts * unsignedNumRetries)
 	go func() {
 		for i := 0; i < int(numberOfParts); i++ {
 			if err = mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, numberOfParts, int64(i), chunkSize, progressReader, multipartUploadClient, attemptsAllowed, wg); err != nil {
