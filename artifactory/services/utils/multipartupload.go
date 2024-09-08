@@ -181,13 +181,14 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 }
 
 func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize, chunkSize int64, splitCount int, localPath string, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails) (err error) {
-	numberOfParts, err := calculateNumberOfParts(fileSize, chunkSize)
+	numberOfParts := calculateNumberOfParts(fileSize, chunkSize)
+	unsignedNumOfParts, err := utils.ConvertInt64ToUint64(numberOfParts)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert number of parts to uint64: %w", err)
 	}
 	unsignedNumRetries, err := utils.ConvertInt64ToUint64(int64(mu.client.GetHttpClient().GetRetries()))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert number of retries to uint64: %w", err)
 	}
 	log.Info(fmt.Sprintf("%sSplitting file to %d parts of %s each, using %d working threads for uploading...", logMsgPrefix, numberOfParts, ConvertIntToStorageSizeString(chunkSize), splitCount))
 	producerConsumer := parallel.NewRunner(splitCount, uint(numberOfParts), false)
@@ -195,10 +196,10 @@ func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize
 	wg := new(sync.WaitGroup)
 	wg.Add(int(numberOfParts))
 	attemptsAllowed := new(atomic.Uint64)
-	attemptsAllowed.Add(numberOfParts * unsignedNumRetries)
+	attemptsAllowed.Add(unsignedNumOfParts * unsignedNumRetries)
 	go func() {
 		for i := 0; i < int(numberOfParts); i++ {
-			if err = mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, int64(numberOfParts), int64(i), chunkSize, progressReader, multipartUploadClient, attemptsAllowed, wg); err != nil {
+			if err = mu.produceUploadTask(producerConsumer, logMsgPrefix, localPath, fileSize, numberOfParts, int64(i), chunkSize, progressReader, multipartUploadClient, attemptsAllowed, wg); err != nil {
 				return
 			}
 		}
@@ -431,16 +432,8 @@ func calculatePartSize(fileSize, partNumber, requestedChunkSize int64) int64 {
 
 // Calculates the number of parts based on the file size and the requested chunks size.
 // fileSize - the file size
-func calculateNumberOfParts(fileSize, chunkSize int64) (uint64, error) {
-	unsignedFileSize, err := utils.ConvertInt64ToUint64(fileSize)
-	if err != nil {
-		return 0, err
-	}
-	unsignedChunkSize, err := utils.ConvertInt64ToUint64(chunkSize)
-	if err != nil {
-		return 0, err
-	}
-	return (unsignedFileSize + unsignedChunkSize - 1) / unsignedChunkSize, nil
+func calculateNumberOfParts(fileSize, chunkSize int64) int64 {
+	return (fileSize + chunkSize - 1) / chunkSize
 }
 
 func parseMultipartUploadStatus(status statusResponse) (shouldKeepPolling, shouldRerunComplete bool, err error) {
