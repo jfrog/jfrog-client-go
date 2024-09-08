@@ -191,7 +191,7 @@ func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize
 		return fmt.Errorf("failed to convert number of retries to uint64: %w", err)
 	}
 	log.Info(fmt.Sprintf("%sSplitting file to %d parts of %s each, using %d working threads for uploading...", logMsgPrefix, numberOfParts, ConvertIntToStorageSizeString(chunkSize), splitCount))
-	producerConsumer := parallel.NewRunner(splitCount, uint(numberOfParts), false)
+	producerConsumer := parallel.NewRunner(splitCount, uint(unsignedNumOfParts), false)
 
 	wg := new(sync.WaitGroup)
 	wg.Add(int(numberOfParts))
