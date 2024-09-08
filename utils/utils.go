@@ -616,3 +616,17 @@ func SetEnvWithResetCallback(key, value string) (func() error, error) {
 		return errorutils.CheckError(os.Unsetenv(key))
 	}, nil
 }
+
+func ConvertInt64ToUint64(val int64) (uint64, error) {
+	if val < 0 {
+		return 0, fmt.Errorf("value %d is negative", val)
+	}
+	return uint64(val), nil
+}
+
+func ConvertIntToUint(val int) (uint, error) {
+	if val < 0 {
+		return 0, fmt.Errorf("value %d is negative", val)
+	}
+	return uint(val), nil
+}
