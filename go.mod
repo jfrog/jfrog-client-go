@@ -11,7 +11,7 @@ require (
 	github.com/gookit/color v1.5.4
 	github.com/jfrog/archiver/v3 v3.6.1
 	github.com/jfrog/build-info-go v1.9.35
-	github.com/jfrog/gofrog v1.7.5
+	github.com/jfrog/gofrog v1.7.6
 	github.com/minio/sha256-simd v1.0.1
 	github.com/stretchr/testify v1.9.0
 	github.com/xanzy/ssh-agent v0.3.3
