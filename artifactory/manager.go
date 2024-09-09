@@ -33,20 +33,7 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 	if err != nil {
 		return nil, err
 	}
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetCertificatesPath(config.GetCertificatesPath()).
-		SetInsecureTls(config.IsInsecureTls()).
-		SetContext(config.GetContext()).
-		SetDialTimeout(config.GetDialTimeout()).
-		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		SetContext(config.GetContext()).
-		SetRetries(config.GetHttpRetries()).
-		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
-		SetHttpClient(config.GetHttpClient()).
-		Build()
+	client, err := buildJFrogHttpClient(config, artDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -327,12 +314,21 @@ func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadSer
 }
 
 func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
+	return sm.uploadFiles(sm.initUploadService(), params...)
+}
+
+func (sm *ArtifactoryServicesManagerImp) UploadFilesWithFailFast(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
 	uploadService := sm.initUploadService()
-	summary, e := uploadService.UploadFiles(params...)
+	uploadService.SetFailFast(true)
+	return sm.uploadFiles(uploadService, params...)
+}
+
+func (sm *ArtifactoryServicesManagerImp) uploadFiles(uploadService *services.UploadService, uploadParams ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
+	summary, err := uploadService.UploadFiles(uploadParams...)
 	if summary == nil {
-		return 0, 0, e
+		return 0, 0, err
 	}
-	return summary.TotalSucceeded, summary.TotalFailed, e
+	return summary.TotalSucceeded, summary.TotalFailed, err
 }
 
 func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
@@ -609,4 +605,21 @@ func (sm *ArtifactoryServicesManagerImp) CalculateStorageInfo() error {
 func (sm *ArtifactoryServicesManagerImp) ImportReleaseBundle(filePath string) error {
 	releaseService := services.NewReleaseService(sm.config.GetServiceDetails(), sm.client)
 	return releaseService.ImportReleaseBundle(filePath)
+}
+
+func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+	return jfroghttpclient.JfrogClientBuilder().
+		SetCertificatesPath(config.GetCertificatesPath()).
+		SetInsecureTls(config.IsInsecureTls()).
+		SetContext(config.GetContext()).
+		SetDialTimeout(config.GetDialTimeout()).
+		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
+		SetClientCertPath(authDetails.GetClientCertPath()).
+		SetClientCertKeyPath(authDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(authDetails.RunPreRequestFunctions).
+		SetContext(config.GetContext()).
+		SetRetries(config.GetHttpRetries()).
+		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
+		SetHttpClient(config.GetHttpClient()).
+		Build()
 }
