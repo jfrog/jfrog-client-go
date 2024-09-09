@@ -16,11 +16,11 @@ import (
 )
 
 const (
-	tokenPath                  = "api/security/token"
-	APIKeyPath                 = "api/security/apiKey"
-	errorMsgPrefix             = "error occurred while attempting to"
-	unexpectedServerResponse   = "got unexpected server response while attempting to"
-	couldntParseServerResponse = "couldn't parse server response while attempting to"
+	tokenPath                        = "api/security/token"
+	APIKeyPath                       = "api/security/apiKey"
+	errorMsgPrefix                   = "error occurred while attempting to"
+	unexpectedServerResponsePrefix   = "got unexpected server response while attempting to"
+	couldntParseServerResponsePrefix = "couldn't parse server response while attempting to"
 )
 
 type SecurityService struct {
@@ -100,7 +100,7 @@ func (ss *SecurityService) GetAPIKey() (string, error) {
 func getApiKeyFromBody(body []byte) (string, error) {
 	var data = make(map[string]interface{})
 	if err := json.Unmarshal(body, &data); err != nil {
-		return "", errorutils.CheckErrorf("unable to decode json. Error: %w Upstream response: %s", err, string(body))
+		return "", errorutils.CheckErrorf("unable to decode json. Error: %s Upstream response: %s", err.Error(), string(body))
 	}
 
 	if len(data) == 0 {
@@ -123,10 +123,10 @@ func (ss *SecurityService) CreateToken(params CreateTokenParams) (auth.CreateTok
 		return tokenInfo, fmt.Errorf("%s create token: %w", errorMsgPrefix, err)
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return tokenInfo, fmt.Errorf("%s create token: %w", unexpectedServerResponse, err)
+		return tokenInfo, fmt.Errorf("%s create token: %w", unexpectedServerResponsePrefix, err)
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
-		return tokenInfo, errorutils.CheckErrorf("%s create token: %w", couldntParseServerResponse, err.Error())
+		return tokenInfo, errorutils.CheckErrorf("%s create token: %s", couldntParseServerResponsePrefix, err.Error())
 	}
 	return tokenInfo, nil
 }
@@ -140,10 +140,10 @@ func (ss *SecurityService) GetTokens() (GetTokensResponseData, error) {
 		return tokens, fmt.Errorf("%s get tokens: %w", errorMsgPrefix, err)
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return tokens, fmt.Errorf("%s get tokens: %w", unexpectedServerResponse, err)
+		return tokens, fmt.Errorf("%s get tokens: %w", unexpectedServerResponsePrefix, err)
 	}
 	if err = json.Unmarshal(body, &tokens); err != nil {
-		return tokens, errorutils.CheckErrorf("%s get tokens: %s", couldntParseServerResponse, err.Error())
+		return tokens, errorutils.CheckErrorf("%s get tokens: %s", couldntParseServerResponsePrefix, err.Error())
 	}
 	return tokens, nil
 }
@@ -172,10 +172,10 @@ func (ss *SecurityService) RefreshToken(params ArtifactoryRefreshTokenParams) (a
 		return tokenInfo, fmt.Errorf("%s refresh token: %w", errorMsgPrefix, err)
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return tokenInfo, fmt.Errorf("%s refresh token: %w", unexpectedServerResponse, err)
+		return tokenInfo, fmt.Errorf("%s refresh token: %w", unexpectedServerResponsePrefix, err)
 	}
 	if err = json.Unmarshal(body, &tokenInfo); err != nil {
-		return tokenInfo, errorutils.CheckErrorf("%s refresh token: %s", couldntParseServerResponse, err.Error())
+		return tokenInfo, errorutils.CheckErrorf("%s refresh token: %s", couldntParseServerResponsePrefix, err.Error())
 	}
 	return tokenInfo, nil
 }
@@ -190,7 +190,7 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 		return "", fmt.Errorf("%s revoke token: %w", errorMsgPrefix, err)
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", fmt.Errorf("%s revoke token: %w", unexpectedServerResponse, err)
+		return "", fmt.Errorf("%s revoke token: %w", unexpectedServerResponsePrefix, err)
 	}
 	return string(body), nil
 }

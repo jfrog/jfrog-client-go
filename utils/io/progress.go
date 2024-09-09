@@ -27,6 +27,8 @@ type ProgressMgr interface {
 	// Specific initialization of reader progress indicators.
 	// Should be called before the first call to NewProgressReader.
 	InitProgressReaders()
+	// Clear tasks progress bar
+	ClearProgress()
 }
 
 type Progress interface {

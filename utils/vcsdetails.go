@@ -42,9 +42,10 @@ func (vc *VcsCache) getCacheSize() int32 {
 	return atomic.LoadInt32(vc.vcsDirSize)
 }
 
-// Search for '.git' directory inside 'path', incase there is one, extract the details and add a new entry to the cache(key:path in the file system ,value: git revision & url).
-// otherwise, search in the parent folder and try:
-// 1. search for .git, and save the details for the current dir and all subpath
+// Search for '.git' directory inside 'path'. In case there is one,
+// extract the details and add a new entry to the cache(key:path in the file system ,value: git revision & url).
+// Otherwise, move in the parent folder and do the following:
+// 1. Search for .git, and save the details for the current dir and all subpath
 // 2. .git not found, go to parent dir and repeat
 // 3. not found on the root directory, add all subpath to cache with nil as a value
 func (vc *VcsCache) GetVcsDetails(path string) (revision, refUrl, branch string, err error) {
@@ -91,8 +92,7 @@ func (vc *VcsCache) clearCacheIfExceedsMax() {
 }
 
 func tryGetGitDetails(path string) (string, string, string, error) {
-	exists := fileutils.IsPathExists(filepath.Join(path, ".git"), false)
-	if exists {
+	if fileutils.IsPathAccessible(filepath.Join(path, ".git")) {
 		return extractGitDetails(path)
 	}
 	return "", "", "", nil
