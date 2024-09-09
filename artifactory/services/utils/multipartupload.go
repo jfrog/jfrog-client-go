@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jfrog/gofrog/crypto"
+	"github.com/jfrog/gofrog/safeconvert"
 	"io"
 	"net/http"
 	"net/url"
@@ -171,7 +172,7 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 		progressReader = progress.SetMergingState(progressReader.GetId(), false)
 	}
 
-	unsignedNumRetries, err := utils.SafeIntToUint(mu.client.GetHttpClient().GetRetries())
+	unsignedNumRetries, err := safeconvert.IntToUint(mu.client.GetHttpClient().GetRetries())
 	if err != nil {
 		return "", fmt.Errorf("failed to convert number of retries to uint64: %w", err)
 	}
@@ -182,11 +183,11 @@ func (mu *MultipartUpload) UploadFileConcurrently(localPath, targetPath string, 
 
 func (mu *MultipartUpload) uploadPartsConcurrently(logMsgPrefix string, fileSize, chunkSize int64, splitCount int, localPath string, progressReader ioutils.Progress, multipartUploadClient *httputils.HttpClientDetails) (err error) {
 	numberOfParts := calculateNumberOfParts(fileSize, chunkSize)
-	unsignedNumOfParts, err := utils.SafeInt64ToUint64(numberOfParts)
+	unsignedNumOfParts, err := safeconvert.Int64ToUint64(numberOfParts)
 	if err != nil {
 		return fmt.Errorf("failed to convert number of parts to uint64: %w", err)
 	}
-	unsignedNumRetries, err := utils.SafeInt64ToUint64(int64(mu.client.GetHttpClient().GetRetries()))
+	unsignedNumRetries, err := safeconvert.Int64ToUint64(int64(mu.client.GetHttpClient().GetRetries()))
 	if err != nil {
 		return fmt.Errorf("failed to convert number of retries to uint64: %w", err)
 	}
