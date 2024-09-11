@@ -993,6 +993,10 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	if errorutils.CheckError(err) != nil {
 		return
 	}
+	// Increment general progress by 1 for each file added to the zip.
+	if us.Progress != nil {
+		us.Progress.IncrementGeneralProgress()
+	}
 	return
 }
 
