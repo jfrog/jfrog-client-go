@@ -577,7 +577,7 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 			}
 			log.Info(fmt.Sprintf("%sDownloading %q to %q", logMsgPrefix, downloadData.Dependency.GetItemRelativePath(), localFullPath))
 			if err = ds.downloadFileIfNeeded(downloadPath, localPath, localFileName, logMsgPrefix, downloadData, downloadParams); err != nil {
-				log.Error(logMsgPrefix, "Received an error: "+err.Error())
+				log.Error(logMsgPrefix + "Received an error: " + err.Error())
 				return err
 			}
 			successCounters[threadId]++
