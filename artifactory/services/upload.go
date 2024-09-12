@@ -867,6 +867,10 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		log.Info(logMsgPrefix+"Uploading artifact:", targetPath)
 
 		getReaderFunc := func() (io.Reader, error) {
+			// Increment general progress by 1 for each file added to the zip.
+			if us.Progress != nil {
+				defer us.Progress.IncrementGeneralProgress()
+			}
 			archiveDataReader.Reset()
 			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat,
 				archiveData.uploadParams.Symlink, nil, errorsQueue, &zipReadersWg), nil
@@ -992,10 +996,6 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 	_, err = io.Copy(writer, reader)
 	if errorutils.CheckError(err) != nil {
 		return
-	}
-	// Increment general progress by 1 for each file added to the zip.
-	if us.Progress != nil {
-		us.Progress.IncrementGeneralProgress()
 	}
 	return
 }
