@@ -473,6 +473,55 @@ SizeLimit= &fspatterns.SizeThreshold{SizeInBytes: 10000, Condition: fspatterns.L
 totalUploaded, totalFailed, err := rtManager.UploadFiles(params)
 ```
 
+#### Uploading Files to Artifactory with Fail Fast
+
+The `UploadFilesWithFailFast()` function, is similar to the `UploadFiles()` function, but it stops the upload process if an error occurs.
+
+```go
+params := services.NewUploadParams()
+params.Pattern = "repo/*/*.zip"
+params.Target = "repo/path/"
+params.AddVcsProps = false
+params.BuildProps = "build.name=buildName;build.number=17;build.timestamp=1600856623553"
+params.Recursive = true
+params.Regexp = false
+params.IncludeDirs = false
+params.Flat = true
+params.ExplodeArchive = false
+params.Archive = "zip"
+params.Deb = ""
+params.Symlink = false
+params.Exclusions = "(.*)a.zip"
+// Retries default value: 3
+params.Retries = 5
+// The maximum number of parts that can be concurrently uploaded per file during a multi-part upload. Set to 0 to disable multi-part upload.
+// SplitCount default value: 5
+params.SplitCount = 10
+// The minimum file size in MiB required to attempt a multi-part upload.
+// MinSplitSize default value: 200
+params.MinSplitSize = 100
+// The upload chunk size in MiB that can be concurrently uploaded during a multi-part upload.
+params.ChunkSize = 5
+// The min file size in bytes for "checksum deploy".
+// "Checksum deploy" is the action of calculating the file checksum locally, before
+// the upload, and skipping the actual file transfer if the file already
+// exists in Artifactory.
+// MinChecksumDeploy default value: 10400
+params.MinChecksumDeploy = 15360
+// Set to false to disable all checksum calculation, including "checksum deploy".
+// ChecksumsCalcEnabled default value: true
+params.ChecksumsCalcEnabled = false
+// Attach properties to the uploaded files
+targetProps := utils.NewProperties()
+targetProps.AddProperty("key1", "val1")
+params.TargetProps = targetProps
+// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
+TargetPathInArchive := "archive/path/"
+// Size limit for files to be uploaded.
+SizeLimit= &fspatterns.SizeThreshold{SizeInBytes: 10000, Condition: fspatterns.LessThan}
+totalUploaded, totalFailed, err := rtManager.UploadFilesWithFailFast(params)
+```
+
 #### Downloading Files from Artifactory
 
 Using the `DownloadFiles()` function, we can download files and get the general statistics of the action (The actual
