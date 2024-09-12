@@ -858,7 +858,8 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		}
 		// Make sure all go routines in readFilesAsZip calls were done.
 		var zipReadersWg sync.WaitGroup
-		// We execute readFilesAsZip twice. The first execution calculates the size and checksums of the generated zip file, which is necessary before starting the upload task.
+		// We execute readFilesAsZip twice. The first execution is a dry-run.
+		// It calculates the size and checksums of the generated zip file, which is necessary before starting the upload task.
 		// The second execution is part of the zip upload process running in parallel to the archiving of them files to the zip.
 		checksumZipReader := us.readFilesAsZip(archiveDataReader, true,
 			archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue, &zipReadersWg)
