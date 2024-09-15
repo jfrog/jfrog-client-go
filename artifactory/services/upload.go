@@ -889,15 +889,15 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 
 // Reads files and streams them as a ZIP to a Reader.
 // archiveDataReader is a ContentReader of UploadData items containing the details of the files to stream.
-// isZipDryRun - If true, this function is run as part of the dry-run process, to
+// zipDryRun - If true, this function is run as part of the dry-run process, to
 // saveFilesPathsFunc (optional) is a func that is called for each file that is written into the ZIP, and gets the file's local path as a parameter.
-func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader, isZipDryRun, flat, symlink bool,
+func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader, zipDryRun, flat, symlink bool,
 	saveFilesPathsFunc func(sourcePath string) error, errorsQueue *clientutils.ErrorsQueue, zipReadersWg *sync.WaitGroup) io.Reader {
 	pr, pw := io.Pipe()
 	zipReadersWg.Add(1)
 
 	progressPrefix := "Archiving"
-	if isZipDryRun {
+	if zipDryRun {
 		progressPrefix = "Calculating size / checksums"
 	}
 	go func() {
@@ -920,7 +920,7 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 				if e != nil {
 					errorsQueue.AddError(e)
 				}
-				if !isZipDryRun && us.Progress != nil {
+				if !zipDryRun && us.Progress != nil {
 					// Increment general progress by 1 for each file added to the zip if not in dry-run mode.
 					us.Progress.IncrementGeneralProgress()
 				}
