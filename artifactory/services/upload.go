@@ -47,7 +47,6 @@ type UploadService struct {
 	MultipartUpload *utils.MultipartUpload
 	DryRun          bool
 	saveSummary     bool
-	failFast        bool
 	Threads         int
 	resultsManager  *resultsManager
 }
@@ -78,10 +77,6 @@ func (us *UploadService) SetSaveSummary(saveSummary bool) {
 	us.saveSummary = saveSummary
 }
 
-func (us *UploadService) SetFailFast(failFast bool) {
-	us.failFast = failFast
-}
-
 func (us *UploadService) getOperationSummary(totalSucceeded, totalFailed int) *utils.OperationSummary {
 	if !us.saveSummary {
 		return &utils.OperationSummary{
@@ -92,10 +87,10 @@ func (us *UploadService) getOperationSummary(totalSucceeded, totalFailed int) *u
 	return us.resultsManager.getOperationSummary(totalSucceeded, totalFailed)
 }
 
-func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (summary *utils.OperationSummary, err error) {
+func (us *UploadService) UploadFiles(failFast bool, uploadParams ...UploadParams) (summary *utils.OperationSummary, err error) {
 	// Uploading threads are using this struct to report upload results.
 	uploadSummary := utils.NewResult(us.Threads)
-	producerConsumer := parallel.NewRunner(us.Threads, 20000, us.failFast)
+	producerConsumer := parallel.NewRunner(us.Threads, 20000, failFast)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	if us.saveSummary {
 		us.resultsManager, err = newResultManager()

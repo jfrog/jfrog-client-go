@@ -313,28 +313,19 @@ func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadSer
 	return uploadService
 }
 
-func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
-	return sm.uploadFiles(sm.initUploadService(), params...)
-}
-
-func (sm *ArtifactoryServicesManagerImp) UploadFilesWithFailFast(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
+func (sm *ArtifactoryServicesManagerImp) UploadFiles(failFast bool, params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
 	uploadService := sm.initUploadService()
-	uploadService.SetFailFast(true)
-	return sm.uploadFiles(uploadService, params...)
-}
-
-func (sm *ArtifactoryServicesManagerImp) uploadFiles(uploadService *services.UploadService, uploadParams ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
-	summary, err := uploadService.UploadFiles(uploadParams...)
+	summary, err := uploadService.UploadFiles(failFast, params...)
 	if summary == nil {
 		return 0, 0, err
 	}
 	return summary.TotalSucceeded, summary.TotalFailed, err
 }
 
-func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
+func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(failFast bool, params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
 	uploadService := sm.initUploadService()
 	uploadService.SetSaveSummary(true)
-	return uploadService.UploadFiles(params...)
+	return uploadService.UploadFiles(failFast, params...)
 }
 
 func (sm *ArtifactoryServicesManagerImp) Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {
