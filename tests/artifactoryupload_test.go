@@ -45,7 +45,7 @@ func flatUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo()}
 	up.Flat = true
-	summary, err := testsUploadService.UploadFiles(false, up)
+	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
 		t.Error(err)
 	}
@@ -85,7 +85,7 @@ func recursiveUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo()}
 	up.Flat = true
-	summary, err := testsUploadService.UploadFiles(false, up)
+	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
 		t.Error(err)
 	}
@@ -128,7 +128,7 @@ func placeholderUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "{1}"}
 	up.Flat = true
-	summary, err := testsUploadService.UploadFiles(false, up)
+	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
 		t.Error(err)
 	}
@@ -171,7 +171,7 @@ func includeDirsUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: getRtTargetRepo()}
 	up.Flat = true
-	summary, err := testsUploadService.UploadFiles(false, up)
+	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
 		t.Error(err)
 	}
@@ -227,7 +227,7 @@ func explodeUpload(t *testing.T) {
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, IncludeDirs: true, Recursive: false, Target: getRtTargetRepo()}
 	up.Flat = true
 	up.ExplodeArchive = true
-	summary, err := testsUploadService.UploadFiles(false, up)
+	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
 		t.Error(err)
 	}
@@ -274,7 +274,7 @@ func propsUpload(t *testing.T) {
 	up := services.NewUploadParams()
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Target: getRtTargetRepo(), TargetProps: targetProps}
 	up.Flat = true
-	summary, err := testsUploadService.UploadFiles(false, up)
+	summary, err := testsUploadService.UploadFiles(up)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, summary.TotalSucceeded)
 	assert.Equal(t, 0, summary.TotalFailed)
@@ -311,7 +311,7 @@ func summaryUpload(t *testing.T) {
 	up.Flat = true
 	testsUploadService.SetSaveSummary(true)
 	defer testsUploadService.SetSaveSummary(false)
-	summary, err := testsUploadService.UploadFiles(false, up)
+	summary, err := testsUploadService.UploadFiles(up)
 	if err != nil {
 		t.Error(err)
 	}
@@ -352,7 +352,7 @@ func archiveUpload(t *testing.T) {
 	up.CommonParams = &utils.CommonParams{Pattern: uploadPattern, Target: downloadPattern, TargetProps: targetProps}
 	up.Archive = "zip"
 	up.Flat = true
-	_, err = testsUploadService.UploadFiles(false, up)
+	_, err = testsUploadService.UploadFiles(up)
 	assert.NoError(t, err)
 
 	// Download zip
@@ -424,7 +424,7 @@ func TestUploadFilesWithFailure(t *testing.T) {
 	service.SetServiceDetails(rtDetails)
 
 	// Upload files
-	summary, err := service.UploadFiles(false, params)
+	summary, err := service.UploadFiles(params)
 
 	// Check for expected results
 	assert.Error(t, err)

@@ -631,7 +631,7 @@ func uploadDummyFile(t *testing.T) {
 	}
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/", TargetProps: targetProps}
 	up.Flat = true
-	summary, err := testsUploadService.UploadFiles(false, up)
+	summary, err := testsUploadService.UploadFiles(up)
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}
@@ -643,7 +643,7 @@ func uploadDummyFile(t *testing.T) {
 	}
 	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "b.in"}
 	up.Flat = true
-	summary, err = testsUploadService.UploadFiles(false, up)
+	summary, err = testsUploadService.UploadFiles(up)
 	assert.NoError(t, err)
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
@@ -658,7 +658,7 @@ func uploadDummyFile(t *testing.T) {
 	}
 	up.CommonParams = &utils.CommonParams{Pattern: archivePath, Recursive: true, Target: getRtTargetRepo()}
 	up.Flat = true
-	summary, err = testsUploadService.UploadFiles(false, up)
+	summary, err = testsUploadService.UploadFiles(up)
 	if summary.TotalSucceeded != 1 {
 		t.Error("Expected to upload 1 file.")
 	}

@@ -315,7 +315,8 @@ func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadSer
 
 func (sm *ArtifactoryServicesManagerImp) UploadFiles(failFast bool, params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
 	uploadService := sm.initUploadService()
-	summary, err := uploadService.UploadFiles(failFast, params...)
+	uploadService.SetFailFast(failFast)
+	summary, err := uploadService.UploadFiles(params...)
 	if summary == nil {
 		return 0, 0, err
 	}
@@ -325,7 +326,8 @@ func (sm *ArtifactoryServicesManagerImp) UploadFiles(failFast bool, params ...se
 func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(failFast bool, params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
 	uploadService := sm.initUploadService()
 	uploadService.SetSaveSummary(true)
-	return uploadService.UploadFiles(failFast, params...)
+	uploadService.SetFailFast(failFast)
+	return uploadService.UploadFiles(params...)
 }
 
 func (sm *ArtifactoryServicesManagerImp) Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error) {

@@ -48,7 +48,7 @@ func multipartUpload(t *testing.T) {
 	up.MinSplitSize = bigFileSize
 
 	// Upload file and verify success
-	summary, err := testsUploadService.UploadFiles(false, up)
+	summary, err := testsUploadService.UploadFiles(up)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, summary.TotalSucceeded)
 	assert.Zero(t, summary.TotalFailed)
