@@ -470,9 +470,13 @@ params.TargetProps = targetProps
 TargetPathInArchive := "archive/path/"
 // Size limit for files to be uploaded.
 SizeLimit= &fspatterns.SizeThreshold{SizeInBytes: 10000, Condition: fspatterns.LessThan}
+
+uploadServiceOptions := &UploadServiceOptions{
 // Set to true to fail the upload operation if any of the files fail to upload
-failFast := false
-totalUploaded, totalFailed, err := rtManager.UploadFiles(failFast, params)
+FailFast: false,
+}
+
+totalUploaded, totalFailed, err := rtManager.UploadFiles(uploadServiceOptions, params)
 ```
 
 #### Downloading Files from Artifactory
@@ -549,10 +553,12 @@ calling `Close()` on the OperationSummary struct.
 params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
-// Set to true to fail the upload operation if any of the files fail to upload
-failFast := false
+uploadServiceOptions := &UploadServiceOptions{
+    // Set to true to fail the upload operation if any of the files fail to upload
+	FailFast: false,
+}
 
-summary, err := rtManager.UploadFilesWithSummary(failFast, params)
+summary, err := rtManager.UploadFilesWithSummary(uploadServiceOptions, params)
 defer summary.Close()
 reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
 
