@@ -303,8 +303,8 @@ func (sm *ArtifactoryServicesManagerImp) GetItemProps(relativePath string) (*uti
 }
 
 type UploadServiceOptions struct {
-	failFast    bool
-	saveSummary bool
+	// Fail the operation immediately if an error occurs.
+	failFast bool
 }
 
 func (sm *ArtifactoryServicesManagerImp) initUploadService(uploadServiceOptions UploadServiceOptions) *services.UploadService {
