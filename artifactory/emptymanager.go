@@ -56,8 +56,8 @@ type ArtifactoryServicesManager interface {
 	SetProps(params services.PropsParams) (int, error)
 	DeleteProps(params services.PropsParams) (int, error)
 	GetItemProps(relativePath string) (*utils.ItemProperties, error)
-	UploadFiles(failFast bool, params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
-	UploadFilesWithSummary(failFast bool, params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error)
+	UploadFiles(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
+	UploadFilesWithSummary(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error)
 	Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error)
@@ -262,11 +262,11 @@ func (esm *EmptyArtifactoryServicesManager) GetItemProps(string) (*utils.ItemPro
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UploadFiles(_ bool, _ ...services.UploadParams) (int, int, error) {
+func (esm *EmptyArtifactoryServicesManager) UploadFiles(_ UploadServiceOptions, _ ...services.UploadParams) (int, int, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UploadFilesWithSummary(_ bool, _ ...services.UploadParams) (*utils.OperationSummary, error) {
+func (esm *EmptyArtifactoryServicesManager) UploadFilesWithSummary(_ UploadServiceOptions, _ ...services.UploadParams) (*utils.OperationSummary, error) {
 	panic("Failed: Method is not implemented")
 }
 
