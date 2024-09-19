@@ -858,19 +858,22 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		}
 		// Make sure all go routines in readFilesAsZip calls were done.
 		var zipReadersWg sync.WaitGroup
-		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums",
+		// We execute readFilesAsZip twice. The first execution is a dry-run.
+		// It calculates the size and checksums of the generated zip file, which is necessary before starting the upload task.
+		// The second execution is part of the zip upload process running in parallel to the archiving of them files to the zip.
+		checksumZipReader := us.readFilesAsZip(archiveDataReader, true,
 			archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue, &zipReadersWg)
 		details, err := fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
 		if err != nil {
 			return
 		}
-		log.Info(logMsgPrefix+"Uploading artifact:", targetPath)
-
 		getReaderFunc := func() (io.Reader, error) {
 			archiveDataReader.Reset()
-			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat,
+			return us.readFilesAsZip(archiveDataReader, false, archiveData.uploadParams.Flat,
 				archiveData.uploadParams.Symlink, nil, errorsQueue, &zipReadersWg), nil
 		}
+
+		log.Info(logMsgPrefix+"Uploading artifact:", targetPath)
 		uploaded, err := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, details)
 
 		if uploaded {
@@ -886,12 +889,17 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 
 // Reads files and streams them as a ZIP to a Reader.
 // archiveDataReader is a ContentReader of UploadData items containing the details of the files to stream.
+// zipDryRun - If true, this function is run as part of the dry-run process, to
 // saveFilesPathsFunc (optional) is a func that is called for each file that is written into the ZIP, and gets the file's local path as a parameter.
-func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader, progressPrefix string, flat, symlink bool,
+func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader, zipDryRun, flat, symlink bool,
 	saveFilesPathsFunc func(sourcePath string) error, errorsQueue *clientutils.ErrorsQueue, zipReadersWg *sync.WaitGroup) io.Reader {
 	pr, pw := io.Pipe()
 	zipReadersWg.Add(1)
 
+	progressPrefix := "Archiving"
+	if zipDryRun {
+		progressPrefix = "Calculating size / checksums"
+	}
 	go func() {
 		defer zipReadersWg.Done()
 		var e error
@@ -911,6 +919,10 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 				e = us.addFileToZip(&uploadData.Artifact, progressPrefix, flat, symlink, zipWriter)
 				if e != nil {
 					errorsQueue.AddError(e)
+				}
+				if !zipDryRun && us.Progress != nil {
+					// Increment general progress by 1 for each file added to the zip if not in dry-run mode.
+					us.Progress.IncrementGeneralProgress()
 				}
 			}
 			if saveFilesPathsFunc != nil {
@@ -979,7 +991,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 			err = errors.Join(err, errorutils.CheckError(file.Close()))
 		}
 	}()
-	// Show progress bar only for files larger than 250Kb to avoid polluting the terminal with endless progress bars.
+	// Show progress bar only for files larger than 500kb to avoid polluting the terminal with endless progress bars.
 	if us.Progress != nil && info.Size() > minFileSizeForProgressInKb {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)

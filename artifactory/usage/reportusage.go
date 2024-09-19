@@ -39,7 +39,7 @@ func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryService
 		err = errors.New("Couldn't get Artifactory version. Error: " + err.Error())
 		return
 	}
-	if e := clientutils.ValidateMinimumVersion(clientutils.Artifactory, artifactoryVersion, minArtifactoryVersion); e != nil {
+	if err = clientutils.ValidateMinimumVersion(clientutils.Artifactory, artifactoryVersion, minArtifactoryVersion); err != nil {
 		return
 	}
 	url, err = clientutils.BuildUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))

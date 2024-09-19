@@ -302,37 +302,34 @@ func (sm *ArtifactoryServicesManagerImp) GetItemProps(relativePath string) (*uti
 	return setPropsService.GetItemProperties(relativePath)
 }
 
-func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadService {
+type UploadServiceOptions struct {
+	// Fail the operation immediately if an error occurs.
+	failFast bool
+}
+
+func (sm *ArtifactoryServicesManagerImp) initUploadService(uploadServiceOptions UploadServiceOptions) *services.UploadService {
 	uploadService := services.NewUploadService(sm.client)
 	uploadService.Threads = sm.config.GetThreads()
 	uploadService.ArtDetails = sm.config.GetServiceDetails()
 	uploadService.DryRun = sm.config.IsDryRun()
+	uploadService.SetFailFast(uploadServiceOptions.failFast)
 	uploadService.Progress = sm.progress
 	httpClientDetails := uploadService.ArtDetails.CreateHttpClientDetails()
 	uploadService.MultipartUpload = utils.NewMultipartUpload(sm.client, &httpClientDetails, uploadService.ArtDetails.GetUrl())
 	return uploadService
 }
 
-func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
-	return sm.uploadFiles(sm.initUploadService(), params...)
-}
-
-func (sm *ArtifactoryServicesManagerImp) UploadFilesWithFailFast(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
-	uploadService := sm.initUploadService()
-	uploadService.SetFailFast(true)
-	return sm.uploadFiles(uploadService, params...)
-}
-
-func (sm *ArtifactoryServicesManagerImp) uploadFiles(uploadService *services.UploadService, uploadParams ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
-	summary, err := uploadService.UploadFiles(uploadParams...)
+func (sm *ArtifactoryServicesManagerImp) UploadFiles(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
+	uploadService := sm.initUploadService(uploadServiceOptions)
+	summary, err := uploadService.UploadFiles(params...)
 	if summary == nil {
 		return 0, 0, err
 	}
 	return summary.TotalSucceeded, summary.TotalFailed, err
 }
 
-func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
-	uploadService := sm.initUploadService()
+func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
+	uploadService := sm.initUploadService(uploadServiceOptions)
 	uploadService.SetSaveSummary(true)
 	return uploadService.UploadFiles(params...)
 }
