@@ -28,6 +28,7 @@ func New(config config.Config) (*LifecycleServicesManager, error) {
 		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
 		SetRetries(config.GetHttpRetries()).
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
+		SetHttpClient(config.GetHttpClient()).
 		Build()
 
 	return manager, err

@@ -20,14 +20,15 @@ func New(config config.Config) (*XscServicesManager, error) {
 	manager.client, err = jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
-		SetContext(config.GetContext()).
-		SetDialTimeout(config.GetDialTimeout()).
-		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
 		SetClientCertPath(details.GetClientCertPath()).
 		SetClientCertKeyPath(details.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
+		SetContext(config.GetContext()).
+		SetDialTimeout(config.GetDialTimeout()).
+		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
 		SetRetries(config.GetHttpRetries()).
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
+		SetHttpClient(config.GetHttpClient()).
 		Build()
 	return manager, err
 }
