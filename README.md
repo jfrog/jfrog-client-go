@@ -229,7 +229,7 @@
       - [Delete Release Bundle Version](#delete-release-bundle-version)
       - [Delete Release Bundle Version Promotion](#delete-release-bundle-version-promotion)
       - [Export Release Bundle Archive](#export-release-bundle-archive)
-      - [Import Release Bundle](#import-release-bundle)
+      - [Import Release Bundle Archive](#import-release-bundle-archive)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
   - [Lifecycle APIs](#lifecycle-apis)
     - [Creating Lifecycle Service Manager](#creating-lifeCycle-service-manager)
@@ -472,8 +472,8 @@ TargetPathInArchive := "archive/path/"
 SizeLimit= &fspatterns.SizeThreshold{SizeInBytes: 10000, Condition: fspatterns.LessThan}
 
 uploadServiceOptions := &UploadServiceOptions{
-// Set to true to fail the upload operation if any of the files fail to upload
-FailFast: false,
+    // Set to true to fail the upload operation if any of the files fail to upload
+    FailFast: false,
 }
 
 totalUploaded, totalFailed, err := rtManager.UploadFiles(uploadServiceOptions, params)

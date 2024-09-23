@@ -304,7 +304,7 @@ func (sm *ArtifactoryServicesManagerImp) GetItemProps(relativePath string) (*uti
 
 type UploadServiceOptions struct {
 	// Fail the operation immediately if an error occurs.
-	failFast bool
+	FailFast bool
 }
 
 func (sm *ArtifactoryServicesManagerImp) initUploadService(uploadServiceOptions UploadServiceOptions) *services.UploadService {
@@ -312,7 +312,7 @@ func (sm *ArtifactoryServicesManagerImp) initUploadService(uploadServiceOptions 
 	uploadService.Threads = sm.config.GetThreads()
 	uploadService.ArtDetails = sm.config.GetServiceDetails()
 	uploadService.DryRun = sm.config.IsDryRun()
-	uploadService.SetFailFast(uploadServiceOptions.failFast)
+	uploadService.SetFailFast(uploadServiceOptions.FailFast)
 	uploadService.Progress = sm.progress
 	httpClientDetails := uploadService.ArtDetails.CreateHttpClientDetails()
 	uploadService.MultipartUpload = utils.NewMultipartUpload(sm.client, &httpClientDetails, uploadService.ArtDetails.GetUrl())
