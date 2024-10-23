@@ -159,7 +159,7 @@ func init() {
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	XscUrl = flag.String("xsc.url", "", "Xsc url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	AccessUrl = flag.String("access.url", "http://localhost:8081/access", "Access url")
+	AccessUrl = flag.String("access.url", "http://127.0.0.1:8082/access", "Access url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
 	AccessToken = flag.String("access.token", testUtils.GetLocalArtifactoryTokenIfNeeded(*RtUrl), "Access token")
