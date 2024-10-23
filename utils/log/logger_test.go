@@ -20,6 +20,17 @@ func TestLoggerLeaveEmojis(t *testing.T) {
 	testLoggerWithEmojis(t, true, expected)
 }
 
+func TestLoggerForceEmojis(t *testing.T) {
+	// Force emojis
+	assert.False(t, allowEmojis)
+	testLoggerWithEmojis(t, true, expectedLogOutputWithEmojis)
+	callback := SetAllowEmojiFlagWithCallback(true)
+	assert.True(t, allowEmojis)
+	testLoggerWithEmojis(t, true, expectedLogOutputWithEmojis)
+	callback()
+	assert.False(t, allowEmojis)
+}
+
 func testLoggerWithEmojis(t *testing.T, mockIsTerminalFlags bool, expected string) {
 	previousLog := Logger
 	// Restore previous logger when the function returns.

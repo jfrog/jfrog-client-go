@@ -62,7 +62,7 @@ func (rs *RepositoriesService) GetWithFilter(params RepositoriesFilterParams) (*
 // This function is used to create the URL for the repositories API with the given filter params.
 // The function expects to get a RepositoriesFilterParams struct that contains the desired filter params.
 // The function returns the URL string.
-func (rs *RepositoriesService)createUrlWithFilter(params RepositoriesFilterParams) string {
+func (rs *RepositoriesService) createUrlWithFilter(params RepositoriesFilterParams) string {
 	u := url.URL{
 		Path: apiRepositories,
 	}
