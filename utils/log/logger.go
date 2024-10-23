@@ -31,6 +31,10 @@ var stdErrIsTerminal *bool
 // but through the 'colorsSupported' function.
 var colorsSupported *bool
 
+// Determines whether to not remove emojis from the output. This variable should not be accessed directly,
+// but through the 'IsEmojiAllow' function.
+var allowEmojis bool
+
 // defaultLogger is the default logger instance in case the user does not set one
 var defaultLogger = NewLogger(INFO, nil)
 
@@ -62,13 +66,12 @@ func NewLogger(logLevel LevelType, logToWriter io.Writer) *jfrogLogger {
 }
 
 type jfrogLogger struct {
-	LogLevel    LevelType
-	AllowEmojis bool
-	OutputLog   *log.Logger
-	DebugLog    *log.Logger
-	InfoLog     *log.Logger
-	WarnLog     *log.Logger
-	ErrorLog    *log.Logger
+	LogLevel  LevelType
+	OutputLog *log.Logger
+	DebugLog  *log.Logger
+	InfoLog   *log.Logger
+	WarnLog   *log.Logger
+	ErrorLog  *log.Logger
 }
 
 func SetLogger(newLogger Log) {
@@ -95,10 +98,6 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 	// Reset outIsTerminal flag
 	stdOutIsTerminal = nil
 	logger.OutputLog = log.New(outputWriter, "", 0)
-}
-
-func (logger *jfrogLogger) SetAllowEmojis(allow bool) {
-	logger.AllowEmojis = allow
 }
 
 // Set the logs' writer to Stderr unless an alternative one is provided.
@@ -198,7 +197,7 @@ func (logger *jfrogLogger) Println(log *log.Logger, isTerminal bool, values ...i
 	if !(IsColorsSupported() && isTerminal) {
 		for i, value := range values {
 			if str, ok := value.(string); ok {
-				if logger.AllowEmojis {
+				if allowEmojis {
 					values[i] = str
 				} else if gomoji.ContainsEmoji(str) {
 					values[i] = gomoji.RemoveEmojis(str)
@@ -253,6 +252,18 @@ func SetIsTerminalFlagsWithCallback(isTerminal bool) func() {
 	return func() {
 		stdOutIsTerminal = stdoutIsTerminalPrev
 		stdErrIsTerminal = stdErrIsTerminalPrev
+	}
+}
+
+func IsEmojiAllow() bool {
+	return allowEmojis
+}
+
+func SetAllowEmojiFlagWithCallback(allowEmoji bool) func() {
+	prevAllowEmoji := allowEmojis
+	allowEmojis = allowEmoji
+	return func() {
+		allowEmojis = prevAllowEmoji
 	}
 }
 
