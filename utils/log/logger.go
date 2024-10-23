@@ -62,12 +62,13 @@ func NewLogger(logLevel LevelType, logToWriter io.Writer) *jfrogLogger {
 }
 
 type jfrogLogger struct {
-	LogLevel  LevelType
-	OutputLog *log.Logger
-	DebugLog  *log.Logger
-	InfoLog   *log.Logger
-	WarnLog   *log.Logger
-	ErrorLog  *log.Logger
+	LogLevel    LevelType
+	AllowEmojis bool
+	OutputLog   *log.Logger
+	DebugLog    *log.Logger
+	InfoLog     *log.Logger
+	WarnLog     *log.Logger
+	ErrorLog    *log.Logger
 }
 
 func SetLogger(newLogger Log) {
@@ -94,6 +95,10 @@ func (logger *jfrogLogger) SetOutputWriter(writer io.Writer) {
 	// Reset outIsTerminal flag
 	stdOutIsTerminal = nil
 	logger.OutputLog = log.New(outputWriter, "", 0)
+}
+
+func (logger *jfrogLogger) SetAllowEmojis(allow bool) {
+	logger.AllowEmojis = allow
 }
 
 // Set the logs' writer to Stderr unless an alternative one is provided.
@@ -189,11 +194,13 @@ func (logger jfrogLogger) Output(a ...interface{}) {
 }
 
 func (logger *jfrogLogger) Println(log *log.Logger, isTerminal bool, values ...interface{}) {
-	// Remove emojis from all strings if it's not a terminal or if the terminal is not supporting colors
+	// If not requested, remove emojis from all strings if it's not a terminal or if the terminal is not supporting colors
 	if !(IsColorsSupported() && isTerminal) {
 		for i, value := range values {
 			if str, ok := value.(string); ok {
-				if gomoji.ContainsEmoji(str) {
+				if logger.AllowEmojis {
+					values[i] = str
+				} else if gomoji.ContainsEmoji(str) {
 					values[i] = gomoji.RemoveEmojis(str)
 				}
 			}
