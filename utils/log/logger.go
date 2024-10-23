@@ -259,11 +259,11 @@ func IsEmojiAllow() bool {
 	return allowEmojis
 }
 
-func SetAllowEmojiFlagWithCallback(allowEmoji bool) func() {
-	prevAllowEmoji := allowEmojis
-	allowEmojis = allowEmoji
+func SetAllowEmojiFlagWithCallback(allow bool) func() {
+	prevAllowEmojis := allowEmojis
+	allowEmojis = allow
 	return func() {
-		allowEmojis = prevAllowEmoji
+		allowEmojis = prevAllowEmojis
 	}
 }
 
