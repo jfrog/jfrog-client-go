@@ -479,16 +479,16 @@ func getUploadTarget(rootPath, target string, isFlat, placeholdersUsed bool) str
 
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) uploadFile(artifact UploadData, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
+func (us *UploadService) UploadFile(uploadData UploadData, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
 	var checksumDeployed = false
 	var resp *http.Response
 	var details *fileutils.FileDetails
 	var body []byte
-	targetPathWithProps, err := buildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
+	targetPathWithProps, err := buildUploadUrls(us.ArtDetails.GetUrl(), uploadData.Artifact.TargetPath, uploadData.BuildProps, uploadParams.GetDebian(), uploadData.TargetProps)
 	if err != nil {
 		return nil, false, err
 	}
-	fileInfo, err := os.Lstat(artifact.Artifact.LocalPath)
+	fileInfo, err := os.Lstat(uploadData.Artifact.LocalPath)
 	if errorutils.CheckError(err) != nil {
 		return nil, false, err
 	}
@@ -496,7 +496,7 @@ func (us *UploadService) uploadFile(artifact UploadData, uploadParams UploadPara
 	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileInfo) {
 		resp, details, body, err = us.uploadSymlink(targetPathWithProps, logMsgPrefix, httpClientsDetails, uploadParams)
 	} else {
-		resp, details, body, checksumDeployed, err = us.doUpload(artifact, targetPathWithProps, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
+		resp, details, body, checksumDeployed, err = us.doUpload(uploadData.Artifact, targetPathWithProps, logMsgPrefix, httpClientsDetails, uploadParams)
 	}
 	if err != nil {
 		return nil, false, err
@@ -595,10 +595,10 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	return
 }
 
-func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, fileInfo os.FileInfo, uploadParams UploadParams) (
+func (us *UploadService) doUpload(artifact clientutils.Artifact, targetUrlWithProps, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, uploadParams UploadParams) (
 	resp *http.Response, details *fileutils.FileDetails, body []byte, checksumDeployed bool, err error) {
 	// Get local file details
-	details, err = fileutils.GetFileDetails(artifact.Artifact.LocalPath, uploadParams.ChecksumsCalcEnabled)
+	details, err = fileutils.GetFileDetails(artifact.LocalPath, uploadParams.ChecksumsCalcEnabled)
 	if err != nil {
 		return
 	}
@@ -609,7 +609,7 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 	}
 
 	// Try checksum deploy
-	if us.shouldTryChecksumDeploy(fileInfo.Size(), uploadParams) {
+	if us.shouldTryChecksumDeploy(details.Size, uploadParams) {
 		resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
 		if err != nil {
 			return resp, details, body, checksumDeployed, err
@@ -625,13 +625,13 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 
 	// Try multipart upload
 	var shouldTryMultipart bool
-	if shouldTryMultipart, err = us.shouldDoMultipartUpload(fileInfo.Size(), uploadParams); err != nil {
+	if shouldTryMultipart, err = us.shouldDoMultipartUpload(details.Size, uploadParams); err != nil {
 		return
 	}
 	if shouldTryMultipart {
 		var checksumToken string
-		if checksumToken, err = us.MultipartUpload.UploadFileConcurrently(artifact.Artifact.LocalPath, artifact.Artifact.TargetPath,
-			fileInfo.Size(), details.Checksum.Sha1, us.Progress, uploadParams.SplitCount, uploadParams.ChunkSize); err != nil {
+		if checksumToken, err = us.MultipartUpload.UploadFileConcurrently(artifact.LocalPath, artifact.TargetPath,
+			details.Size, details.Checksum.Sha1, us.Progress, uploadParams.SplitCount, uploadParams.ChunkSize); err != nil {
 			return
 		}
 		// Once the file is uploaded to the storage, we finalize the multipart upload by performing a checksum deployment to save the file in Artifactory.
@@ -642,7 +642,7 @@ func (us *UploadService) doUpload(artifact UploadData, targetUrlWithProps, logMs
 
 	// Do regular upload
 	addExplodeHeader(&httpClientsDetails, uploadParams.IsExplodeArchive())
-	resp, body, err = utils.UploadFile(artifact.Artifact.LocalPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
+	resp, body, err = utils.UploadFile(artifact.LocalPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
 		httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, us.Progress)
 	return
 }
@@ -799,7 +799,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			} else {
 				// Upload file
 				var uploadFileDetails *fileutils.FileDetails
-				uploadFileDetails, uploaded, err = us.uploadFile(artifact, uploadParams, logMsgPrefix)
+				uploadFileDetails, uploaded, err = us.UploadFile(artifact, uploadParams, logMsgPrefix)
 				if err != nil {
 					return
 				}
@@ -1017,12 +1017,14 @@ func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string
 	return
 }
 
-func addPropsToTargetPath(targetPath, buildProps, debConfig string, props *utils.Properties) (string, error) {
+func addPropsToTargetPath(targetPath, buildProps, debConfig string, targetProps *utils.Properties) (string, error) {
 	pathParts := []string{targetPath}
 
-	encodedTargetProps := props.ToEncodedString(false)
-	if len(encodedTargetProps) > 0 {
-		pathParts = append(pathParts, encodedTargetProps)
+	if targetProps != nil {
+		encodedTargetProps := targetProps.ToEncodedString(false)
+		if len(encodedTargetProps) > 0 {
+			pathParts = append(pathParts, encodedTargetProps)
+		}
 	}
 
 	debianProps, err := utils.ParseProperties(getDebianProps(debConfig))
