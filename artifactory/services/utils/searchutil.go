@@ -242,10 +242,9 @@ func FilterResultsByBuild(specFile *CommonParams, flags CommonConf, requiredArti
 // AND
 // 2. Properties weren't fetched during 'build' filtering
 // Otherwise, nil will be returned
-func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (*content.ContentReader, error) {
+func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (r *content.ContentReader, err error) {
 	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" && requiredArtifactProps != NONE {
 		var readerWithProps *content.ContentReader
-		var err error
 		switch requiredArtifactProps {
 		case ALL:
 			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", []string{"*"}, flags)
@@ -253,14 +252,15 @@ func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps 
 			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "symlink.dest", []string{"*"}, flags)
 		}
 		if err != nil {
-			return nil, err
+			return
 		}
 		defer func() {
 			err = errors.Join(err, errorutils.CheckError(reader.Close()))
+			err = errors.Join(err, errorutils.CheckError(readerWithProps.Close()))
 		}()
-		return loadMissingProperties(reader, readerWithProps)
+		r, err = loadMissingProperties(reader, readerWithProps)
 	}
-	return nil, nil
+	return
 }
 
 func aqlSearch(aqlQuery string, flags CommonConf) (*content.ContentReader, error) {
