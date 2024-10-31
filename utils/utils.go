@@ -31,6 +31,8 @@ const (
 	Version     = "1.47.3"
 )
 
+const xrayDevVersion = "3.x-dev"
+
 type MinVersionProduct string
 
 const (
@@ -68,6 +70,10 @@ func getDefaultUserAgent() string {
 }
 
 func ValidateMinimumVersion(product MinVersionProduct, currentVersion, minimumVersion string) error {
+	if currentVersion == xrayDevVersion {
+		return nil
+	}
+
 	if !version.NewVersion(currentVersion).AtLeast(minimumVersion) {
 		return errorutils.CheckErrorf(MinimumVersionMsg, product, currentVersion, minimumVersion)
 	}
