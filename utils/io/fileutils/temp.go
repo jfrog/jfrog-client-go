@@ -25,10 +25,6 @@ func init() {
 	tempDirBase = os.TempDir()
 }
 
-func GetTempFilePrefix() string {
-	return tempPrefix
-}
-
 // Creates the temp dir at tempDirBase.
 // Set tempDirPath to the created directory path.
 func CreateTempDir() (string, error) {
