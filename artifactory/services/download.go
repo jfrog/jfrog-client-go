@@ -3,16 +3,17 @@ package services
 import (
 	"errors"
 	"fmt"
-	"github.com/jfrog/build-info-go/entities"
-	"github.com/jfrog/gofrog/crypto"
-	ioutils "github.com/jfrog/gofrog/io"
-	"github.com/jfrog/gofrog/version"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/jfrog/build-info-go/entities"
+	"github.com/jfrog/gofrog/crypto"
+	ioutils "github.com/jfrog/gofrog/io"
+	"github.com/jfrog/gofrog/version"
 
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 
