@@ -82,7 +82,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		}
 	}
 
-	if scanParams.XscVersion != "" {
+	if scanParams.XscVersion != "" && scanParams.MultiScanId != "" {
 		params = append(params, multiScanIdParam+scanParams.MultiScanId)
 		gitInfoContext := scanParams.XscGitInfoContext
 		if gitInfoContext != nil {
@@ -248,6 +248,7 @@ type XrayGraphScanParams struct {
 	// This will provide a way to extract the watches that should be applied on this graph
 	RepoPath   string
 	ProjectKey string
+	GitRepoUrl string
 	Watches    []string
 	ScanType   ScanType
 	// Dependencies Tree
