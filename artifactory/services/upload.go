@@ -355,9 +355,10 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 					continue
 				}
 				uploadedDirs = append(uploadedDirs, path)
+			} else {
+				// Increment the progress counter for each file
+				progressMgr.IncGeneralProgressTotalBy(1)
 			}
-			// Update progress
-			progressMgr.IncGeneralProgressTotalBy(1)
 			// Create upload task
 			err = createUploadTask(taskData, dataHandlerFunc, uploadParams.Regexp)
 			if err != nil {
@@ -781,9 +782,6 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 				err = us.createFolderInArtifactory(artifact)
 				if err != nil {
 					return
-				}
-				if us.Progress != nil {
-					us.Progress.IncrementGeneralProgress()
 				}
 				uploaded = true
 			} else {
