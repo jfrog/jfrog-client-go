@@ -280,7 +280,7 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 			buildProps += vcsProps
 		}
 		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
-		incGeneralProgressTotal(progressMgr, uploadParams)
+		progressMgr.IncGeneralProgressTotalBy(1)
 		dataHandlerFunc(uploadData)
 		return nil
 	}
@@ -357,7 +357,7 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 				uploadedDirs = append(uploadedDirs, path)
 			}
 			// Update progress
-			incGeneralProgressTotal(progressMgr, uploadParams)
+			progressMgr.IncGeneralProgressTotalBy(1)
 			// Create upload task
 			err = createUploadTask(taskData, dataHandlerFunc, uploadParams.Regexp)
 			if err != nil {
@@ -389,16 +389,6 @@ func skipDirUpload(targetFiles, sourceDirs []string, targetDir, sourceDir string
 		return true
 	}
 	return false
-}
-
-func incGeneralProgressTotal(progressMgr ioutils.ProgressMgr, uploadParams UploadParams) {
-	if progressMgr != nil {
-		if uploadParams.Archive != "" {
-			progressMgr.IncGeneralProgressTotalBy(2)
-		} else {
-			progressMgr.IncGeneralProgressTotalBy(1)
-		}
-	}
 }
 
 type uploadTaskData struct {
