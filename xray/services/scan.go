@@ -100,6 +100,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	}
 
 	if scanParams.GitRepoUrl != "" {
+		// Only from Xray version: 3.106.2
 		params = append(params, gitRepoUrlQueryParam+scanParams.GitRepoUrl)	
 	}
 
