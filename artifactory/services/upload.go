@@ -357,11 +357,9 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 					continue
 				}
 				uploadedDirs = append(uploadedDirs, path)
-			} else {
-				// Increment the progress counter for each file
-				if progressMgr != nil {
-					progressMgr.IncGeneralProgressTotalBy(1)
-				}
+			} else if progressMgr != nil {
+				// Increment the progress counter for each file (no
+				progressMgr.IncGeneralProgressTotalBy(1)
 			}
 			// Create upload task
 			err = createUploadTask(taskData, dataHandlerFunc, uploadParams.Regexp)
