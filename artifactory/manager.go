@@ -307,7 +307,7 @@ type UploadServiceOptions struct {
 	FailFast bool
 }
 
-func (sm *ArtifactoryServicesManagerImp) InitUploadService(uploadServiceOptions UploadServiceOptions) *services.UploadService {
+func (sm *ArtifactoryServicesManagerImp) initUploadService(uploadServiceOptions UploadServiceOptions) *services.UploadService {
 	uploadService := services.NewUploadService(sm.client)
 	uploadService.Threads = sm.config.GetThreads()
 	uploadService.ArtDetails = sm.config.GetServiceDetails()
@@ -320,7 +320,7 @@ func (sm *ArtifactoryServicesManagerImp) InitUploadService(uploadServiceOptions 
 }
 
 func (sm *ArtifactoryServicesManagerImp) UploadFiles(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
-	uploadService := sm.InitUploadService(uploadServiceOptions)
+	uploadService := sm.initUploadService(uploadServiceOptions)
 	summary, err := uploadService.UploadFiles(params...)
 	if summary == nil {
 		return 0, 0, err
@@ -329,7 +329,7 @@ func (sm *ArtifactoryServicesManagerImp) UploadFiles(uploadServiceOptions Upload
 }
 
 func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
-	uploadService := sm.InitUploadService(uploadServiceOptions)
+	uploadService := sm.initUploadService(uploadServiceOptions)
 	uploadService.SetSaveSummary(true)
 	return uploadService.UploadFiles(params...)
 }

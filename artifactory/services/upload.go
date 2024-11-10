@@ -469,7 +469,7 @@ func getUploadTarget(rootPath, target string, isFlat, placeholdersUsed bool) str
 
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) UploadFile(uploadData UploadData, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
+func (us *UploadService) uploadFile(uploadData UploadData, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
 	var checksumDeployed = false
 	var resp *http.Response
 	var details *fileutils.FileDetails
@@ -789,7 +789,7 @@ func (us *UploadService) createArtifactHandlerFunc(uploadResult *utils.Result, u
 			} else {
 				// Upload file
 				var uploadFileDetails *fileutils.FileDetails
-				uploadFileDetails, uploaded, err = us.UploadFile(artifact, uploadParams, logMsgPrefix)
+				uploadFileDetails, uploaded, err = us.uploadFile(artifact, uploadParams, logMsgPrefix)
 				if err != nil {
 					return
 				}
