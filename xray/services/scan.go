@@ -48,6 +48,8 @@ const (
 
 	scanTechQueryParam = "tech="
 
+	gitRepoUrlQueryParam = "git_repo="
+
 	XscVersionAPI = "api/v1/system/version"
 
 	XraySuffix = "/xray/"
@@ -95,6 +97,10 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 
 	if scanParams.ScanType != "" {
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
+	}
+
+	if scanParams.GitRepoUrl != "" {
+		params = append(params, gitRepoUrlQueryParam+scanParams.GitRepoUrl)	
 	}
 
 	if len(params) == 0 {
