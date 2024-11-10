@@ -397,16 +397,17 @@ type XscVersionResponse struct {
 }
 
 type XscGitInfoContext struct {
-	GitRepoUrl    string   `json:"git_repo_url"`
-	GitRepoName   string   `json:"git_repo_name,omitempty"`
-	GitProject    string   `json:"git_project,omitempty"`
-	GitProvider   string   `json:"git_provider,omitempty"`
-	Technologies  []string `json:"technologies,omitempty"`
-	BranchName    string   `json:"branch_name"`
-	LastCommit    string   `json:"last_commit,omitempty"`
-	CommitHash    string   `json:"commit_hash"`
-	CommitMessage string   `json:"commit_message,omitempty"`
-	CommitAuthor  string   `json:"commit_author,omitempty"`
+	GitRepoUrl        string   `json:"git_repo_url"`
+	GitRepoName       string   `json:"git_repo_name,omitempty"`
+	GitProject        string   `json:"git_project,omitempty"`
+	GitProvider       string   `json:"git_provider,omitempty"`
+	Technologies      []string `json:"technologies,omitempty"`
+	BranchName        string   `json:"branch_name"`
+	LastCommitUrl     string   `json:"last_commit,omitempty"`
+	LastCommitHash    string   `json:"commit_hash"`
+	LastCommitMessage string   `json:"commit_message,omitempty"`
+	LastCommitAuthor  string   `json:"commit_author,omitempty"`
+	IsClean           bool     `json:"is_clean,omitempty"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {

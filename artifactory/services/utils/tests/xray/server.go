@@ -238,7 +238,7 @@ func xscGitInfoHandlerFunc(t *testing.T) func(w http.ResponseWriter, r *http.Req
 			var reqBody services.XscGitInfoContext
 			err = json.Unmarshal(req, &reqBody)
 			assert.NoError(t, err)
-			if reqBody.GitRepoUrl == "" || reqBody.BranchName == "" || reqBody.CommitHash == "" {
+			if reqBody.GitRepoUrl == "" || reqBody.BranchName == "" || reqBody.LastCommitHash == "" {
 				w.WriteHeader(http.StatusBadRequest)
 				_, err := fmt.Fprint(w, XscGitInfoBadResponse)
 				assert.NoError(t, err)
