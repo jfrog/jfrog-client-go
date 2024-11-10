@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 
@@ -49,6 +50,7 @@ const (
 	scanTechQueryParam = "tech="
 
 	gitRepoUrlQueryParam = "git_repo="
+	gitRepoUrlMinVersion = "3.106.2"
 
 	XscVersionAPI = "api/v1/system/version"
 
@@ -69,7 +71,7 @@ func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 	return &ScanService{client: client}
 }
 
-func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
+func createScanGraphQueryParams(xrayVersion string, scanParams XrayGraphScanParams) string {
 	var params []string
 	switch {
 	case scanParams.ProjectKey != "":
@@ -99,15 +101,19 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
-	if scanParams.GitRepoUrl != "" {
+	if isGitRepoUrlSupported(xrayVersion) && scanParams.GitRepoUrl != "" {
 		// Only from Xray version: 3.106.2
-		params = append(params, gitRepoUrlQueryParam+scanParams.GitRepoUrl)	
+		params = append(params, gitRepoUrlQueryParam+scanParams.GitRepoUrl)
 	}
 
 	if len(params) == 0 {
 		return ""
 	}
 	return "?" + strings.Join(params, "&")
+}
+
+func isGitRepoUrlSupported(xrayVersion string) bool {
+	return clientUtils.ValidateMinimumVersion(clientUtils.Xray, xrayVersion, gitRepoUrlMinVersion) == nil
 }
 
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
@@ -129,7 +135,11 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	if scanParams.XscVersion != "" {
 		url = ss.xrayToXscUrl() + XscGraphAPI
 	}
-	url += createScanGraphQueryParams(scanParams)
+	xrayVersion, err := ss.XrayDetails.GetVersion()
+	if err != nil {
+		return "", err
+	}
+	url += createScanGraphQueryParams(xrayVersion, scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err
