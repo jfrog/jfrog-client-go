@@ -280,7 +280,9 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 			buildProps += vcsProps
 		}
 		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
-		progressMgr.IncGeneralProgressTotalBy(1)
+		if progressMgr != nil {
+			progressMgr.IncGeneralProgressTotalBy(1)
+		}
 		dataHandlerFunc(uploadData)
 		return nil
 	}
@@ -357,7 +359,9 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 				uploadedDirs = append(uploadedDirs, path)
 			} else {
 				// Increment the progress counter for each file
-				progressMgr.IncGeneralProgressTotalBy(1)
+				if progressMgr != nil {
+					progressMgr.IncGeneralProgressTotalBy(1)
+				}
 			}
 			// Create upload task
 			err = createUploadTask(taskData, dataHandlerFunc, uploadParams.Regexp)
