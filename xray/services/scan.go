@@ -407,7 +407,7 @@ type XscGitInfoContext struct {
 	LastCommitHash    string   `json:"commit_hash"`
 	LastCommitMessage string   `json:"commit_message,omitempty"`
 	LastCommitAuthor  string   `json:"commit_author,omitempty"`
-	IsClean           bool     `json:"is_clean,omitempty"`
+	IsDirty           bool     `json:"is_dirty,omitempty"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
