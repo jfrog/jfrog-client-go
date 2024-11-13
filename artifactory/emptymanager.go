@@ -471,7 +471,7 @@ func (esm *EmptyArtifactoryServicesManager) ImportReleaseBundle(string) error {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error) {
+func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(services.LeadFileParams) ([]byte, error) {
 	panic("Failed: Method is not implemented")
 }
 
