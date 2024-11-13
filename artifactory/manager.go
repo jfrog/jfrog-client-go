@@ -150,10 +150,10 @@ func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string, repoDetai
 	return repositoriesService.Get(repoKey, repoDetails)
 }
 
-func (sm *ArtifactoryServicesManagerImp) GetPackageLeadFile(LeadFileParams services.LeadFileParams) ([]byte, error) {
+func (sm *ArtifactoryServicesManagerImp) GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error) {
 	packageService := services.NewPackageService(sm.client)
 	packageService.ArtDetails = sm.config.GetServiceDetails()
-	return packageService.GetPackageLeadFile(LeadFileParams)
+	return packageService.GetPackageLeadFile(leadFileParams)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
