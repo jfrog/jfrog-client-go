@@ -1439,6 +1439,7 @@ serviceManager.FileList("repo/path/", optionalParams)
 ```go
 storageInfo, err := serviceManager.GetStorageInfo()
 ```
+
 #### Getting Package Artifact Lead File
 
 ```go
