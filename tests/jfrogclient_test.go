@@ -28,6 +28,7 @@ func TestMain(m *testing.M) {
 func setupIntegrationTests() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
+
 	if *TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload {
 		createArtifactoryUploadManager()
 		createArtifactorySearchManager()
@@ -44,6 +45,7 @@ func setupIntegrationTests() {
 		createArtifactoryUpdateFederatedRepositoryManager()
 		createArtifactoryDeleteRepositoryManager()
 		createArtifactoryGetRepositoryManager()
+		createArtifactoryGetPackageManager()
 		createArtifactoryReplicationCreateManager()
 		createArtifactoryReplicationUpdateManager()
 		createArtifactoryReplicationGetManager()
