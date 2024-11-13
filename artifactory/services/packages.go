@@ -6,7 +6,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 )
 
@@ -31,7 +30,6 @@ func (ps *PackageService) GetPackageLeadFile(leadFileRequest LeadFileParams) ([]
 		return nil, err
 	}
 
-	log.Info("Sending API request to get LeadFile for package: ", leadFileRequest.PackageName+" version: ", leadFileRequest.PackageVersion)
 	requestContent, err := json.Marshal(leadFileRequest)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
