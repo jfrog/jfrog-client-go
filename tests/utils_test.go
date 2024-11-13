@@ -89,6 +89,7 @@ var (
 	testsUpdateFederatedRepositoryService *services.FederatedRepositoryService
 	testsDeleteRepositoryService          *services.DeleteRepositoryService
 	testsRepositoriesService              *services.RepositoriesService
+	testsPackageService                   *services.PackageService
 	testsCreateReplicationService         *services.CreateReplicationService
 	testsUpdateReplicationService         *services.UpdateReplicationService
 	testsReplicationGetService            *services.GetReplicationService
@@ -363,6 +364,14 @@ func createArtifactoryGetRepositoryManager() {
 	failOnHttpClientCreation(err)
 	testsRepositoriesService = services.NewRepositoriesService(client)
 	testsRepositoriesService.ArtDetails = artDetails
+}
+
+func createArtifactoryGetPackageManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsPackageService = services.NewPackageService(client)
+	testsPackageService.ArtDetails = artDetails
 }
 
 func createArtifactoryReplicationCreateManager() {
