@@ -106,17 +106,13 @@ type ArtifactoryServicesManager interface {
 	GetStorageInfo() (*utils.StorageInfo, error)
 	CalculateStorageInfo() error
 	ImportReleaseBundle(string) error
-	GetPackageLeadFile(leadFileRequest services.LeadFileRequest) ([]byte, error)
+	GetPackageLeadFile(LeadFileParams services.LeadFileParams) ([]byte, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
 // interface's methods, but still implement this interface.
 // This comes in very handy for tests.
 type EmptyArtifactoryServicesManager struct {
-}
-
-func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(leadFileRequest services.LeadFileRequest) ([]byte, error) {
-	panic("Failed: Method is not implemented")
 }
 
 func (esm *EmptyArtifactoryServicesManager) CreateLocalRepository() *services.LocalRepositoryService {
@@ -472,6 +468,10 @@ func (esm *EmptyArtifactoryServicesManager) CalculateStorageInfo() error {
 }
 
 func (esm *EmptyArtifactoryServicesManager) ImportReleaseBundle(string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(LeadFileParams services.LeadFileParams) ([]byte, error) {
 	panic("Failed: Method is not implemented")
 }
 

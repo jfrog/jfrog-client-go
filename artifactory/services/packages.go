@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
@@ -24,10 +25,13 @@ func (ps *PackageService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient 
 	return ps.Client
 }
 
-func (ps *PackageService) GetPackageLeadFile(leadFileRequest LeadFileRequest) ([]byte, error) {
-	var url = ps.ArtDetails.GetUrl() + apiLeadFile
-	log.Info("Sending API request to get LeadFile for package: ", leadFileRequest.PackageName+" version: ", leadFileRequest.PackageVersion)
+func (ps *PackageService) GetPackageLeadFile(leadFileRequest LeadFileParams) ([]byte, error) {
+	requestUrl, err := clientUtils.BuildUrl(ps.ArtDetails.GetUrl(), apiLeadFile, nil)
+	if err != nil {
+		return nil, err
+	}
 
+	log.Info("Sending API request to get LeadFile for package: ", leadFileRequest.PackageName+" version: ", leadFileRequest.PackageVersion)
 	requestContent, err := json.Marshal(leadFileRequest)
 	if err != nil {
 		return nil, errorutils.CheckError(err)
@@ -36,14 +40,14 @@ func (ps *PackageService) GetPackageLeadFile(leadFileRequest LeadFileRequest) ([
 	httpClientsDetails := ps.ArtDetails.CreateHttpClientDetails()
 	httpClientsDetails.SetContentTypeApplicationJson()
 
-	resp, body, err := ps.Client.SendPost(url, requestContent, &httpClientsDetails)
+	resp, body, err := ps.Client.SendPost(requestUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return nil, err
 	}
 	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 }
 
-type LeadFileRequest struct {
+type LeadFileParams struct {
 	PackageVersion  string `json:"package_version"`
 	PackageName     string `json:"package_name"`
 	PackageRepoName string `json:"package_repo_name"`

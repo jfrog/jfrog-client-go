@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var leadFileRequest = services.LeadFileRequest{
+var leadFileRequest = services.LeadFileParams{
 	PackageVersion:  "1.0.0",
 	PackageName:     "test-package",
 	PackageRepoName: "test-repo",
@@ -23,7 +23,7 @@ func TestPackage(t *testing.T) {
 }
 
 func TestGetLeadFileSuccessfully(t *testing.T) {
-	handlerFunc, requestNum := createDefaultHandlerFunc(t)
+	handlerFunc := createDefaultHandlerFunc(t)
 	mockServer, packageService := createMockPackageServer(t, handlerFunc)
 
 	expectedLeadFile := "path/to/lead/file"
@@ -31,20 +31,20 @@ func TestGetLeadFileSuccessfully(t *testing.T) {
 
 	leadFilePath, err := packageService.GetPackageLeadFile(leadFileRequest)
 	assert.NoError(t, err)
-	assert.Equal(t, 1, *requestNum)
 	assert.Equal(t, expectedLeadFile, string(leadFilePath))
 }
 
-func createDefaultHandlerFunc(t *testing.T) (http.HandlerFunc, *int) {
-	requestNum := 0
+func createDefaultHandlerFunc(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.RequestURI == "/api/packagesSearch/leadFile" {
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 			w.WriteHeader(http.StatusOK)
-			requestNum++
 			writeMockLeadFileResponse(t, w, []byte("path/to/lead/file"))
+		} else {
+			t.Errorf("Unexpected URL: got %s, want %s", r.RequestURI, "/api/packagesSearch/leadFile")
+			http.Error(w, "Not Found", http.StatusNotFound)
 		}
-	}, &requestNum
+	}
 }
 
 func writeMockLeadFileResponse(t *testing.T, w http.ResponseWriter, payload []byte) {
