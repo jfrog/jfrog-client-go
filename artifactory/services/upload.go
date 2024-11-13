@@ -358,7 +358,7 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 				}
 				uploadedDirs = append(uploadedDirs, path)
 			} else if progressMgr != nil {
-				// Increment the progress counter for each file (no
+				// Increment the progress counter for each file (no increment for directories is needed)
 				progressMgr.IncGeneralProgressTotalBy(1)
 			}
 			// Create upload task
