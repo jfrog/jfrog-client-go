@@ -49,10 +49,6 @@ const (
 	scanTechQueryParam = "tech="
 
 	XscVersionAPI = "api/v1/system/version"
-
-	XraySuffix = "/xray/"
-
-	XscSuffix = "/xsc/"
 )
 
 type ScanType string
@@ -142,7 +138,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	return scanResponse.ScanId, err
 }
 
-func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
+func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	httpClientsDetails.SetContentTypeApplicationJson()
 
@@ -150,7 +146,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
 	// Modify endpoint if XSC is enabled
 	if xscEnabled {
-		endPoint = ss.xrayToXscUrl() + XscGraphAPI
+		endPoint = xsc.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
 	}
 	endPoint += "/" + scanId
 
@@ -184,32 +180,6 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		return nil, errorutils.CheckErrorf("received a failure status from JFrog Xray server:\n%s", errorutils.GenerateErrorString(body))
 	}
 	return &scanResponse, err
-}
-
-func (ss *ScanService) xrayToXscUrl() string {
-	return strings.Replace(ss.XrayDetails.GetUrl(), XraySuffix, XscSuffix, 1)
-}
-
-func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multiScanId string, err error) {
-	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
-	requestBody, err := json.Marshal(details)
-	if err != nil {
-		return "", errorutils.CheckError(err)
-	}
-	url := ss.xrayToXscUrl() + postXscGitInfoContextAPI
-	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
-	if err != nil {
-		return
-	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
-		return
-	}
-	xscResponse := XscPostContextResponse{}
-	if err = json.Unmarshal(body, &xscResponse); err != nil {
-		return "", errorutils.CheckError(err)
-	}
-	return xscResponse.MultiScanId, err
 }
 
 // IsXscEnabled will try to get XSC version. If route is not available, user is not entitled for XSC.

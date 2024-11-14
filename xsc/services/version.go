@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -36,6 +37,10 @@ func (vs *VersionService) GetVersion() (string, error) {
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
 		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	}
+	// When XSC is disabled, StatusNotFound is expected. Don't return error as this is optional.
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("Xsc is not available").Error(), nil
 	}
 	var version xscVersion
 	err = json.Unmarshal(body, &version)
