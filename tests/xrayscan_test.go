@@ -76,37 +76,6 @@ func TestIsXscEnabled(t *testing.T) {
 	assert.Equal(t, xray.TestXscVersion, result)
 }
 
-func TestSendScanGitInfoContext(t *testing.T) {
-	xrayServerPort, xrayDetails, client := initXrayScanTest(t)
-	testsScanService = xrayServices.NewScanService(client)
-	testsScanService.XrayDetails = xrayDetails
-	testsScanService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
-
-	// Run tests
-	tests := []struct {
-		name           string
-		gitInfoContext *xrayServices.XscGitInfoContext
-		expected       string
-	}{
-		{name: "ValidGitInfoContext", gitInfoContext: &xray.GitInfoContextWithMinimalRequiredFields, expected: xray.TestMultiScanId},
-		{name: "InvalidGitInfoContext", gitInfoContext: &xray.GitInfoContextWithMissingFields, expected: xray.XscGitInfoBadResponse},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			sendGitInfoContext(t, test.gitInfoContext, test.expected)
-		})
-	}
-}
-
-func sendGitInfoContext(t *testing.T, gitInfoContext *xrayServices.XscGitInfoContext, expected string) {
-	result, err := testsScanService.SendScanGitInfoContext(gitInfoContext)
-	if err != nil {
-		assert.ErrorContains(t, err, expected)
-		return
-	}
-	assert.Equal(t, expected, result)
-}
-
 func initXrayScanTest(t *testing.T) (xrayServerPort int, xrayDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
 	var err error
 	initXrayTest(t)

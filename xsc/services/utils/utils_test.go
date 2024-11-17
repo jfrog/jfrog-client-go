@@ -1,7 +1,6 @@
-package xsc
+package utils
 
 import "testing"
-
 
 func TestXrayUrlToXscUrl(t *testing.T) {
 	tests := []struct {

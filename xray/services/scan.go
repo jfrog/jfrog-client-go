@@ -8,6 +8,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
+	"github.com/jfrog/jfrog-client-go/xsc/services/utils"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -116,7 +117,11 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 
 	// When XSC is enabled, modify the URL.
 	if scanParams.XscVersion != "" {
-		url = ss.xrayToXscUrl() + XscGraphAPI
+		if xrayVersion, err := ss.XrayDetails.GetVersion(); err == nil {
+			url = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
+		} else {
+			return "", errorutils.CheckError(err)
+		}
 	}
 	url += createScanGraphQueryParams(scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
@@ -146,7 +151,7 @@ func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVu
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
 	// Modify endpoint if XSC is enabled
 	if xscEnabled {
-		endPoint = xsc.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
+		endPoint = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
 	}
 	endPoint += "/" + scanId
 
@@ -183,14 +188,18 @@ func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVu
 }
 
 // IsXscEnabled will try to get XSC version. If route is not available, user is not entitled for XSC.
-func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
+func (ss *ScanService) IsXscEnabled() (xscVersion string, err error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	url := ss.XrayDetails.GetUrl()
 	// If Xray suffix not found, Xsc is not supported.
-	if !strings.HasSuffix(url, XraySuffix) {
+	if !strings.HasSuffix(url, utils.XraySuffix) {
 		return
 	}
-	url = ss.xrayToXscUrl()
+	xrayVersion, err := ss.XrayDetails.GetVersion()
+	if err != nil {
+		return
+	}
+	url = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion)
 	resp, body, _, err := ss.client.SendGet(url+XscVersionAPI, false, &httpClientsDetails)
 	if err != nil {
 		err = errorutils.CheckErrorf("failed to get JFrog XSC version, response: " + err.Error())
@@ -208,8 +217,8 @@ func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
 		err = errorutils.CheckErrorf("failed to parse JFrog XSC server response: " + err.Error())
 		return
 	}
-	xsxVersion = versionResponse.Version
-	log.Debug("XSC version:", xsxVersion)
+	xscVersion = versionResponse.Version
+	log.Debug("XSC version:", xscVersion)
 	return
 }
 

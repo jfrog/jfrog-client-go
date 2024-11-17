@@ -1,15 +1,10 @@
 package xsc
 
 import (
-	"strings"
-
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/xsc/services"
 )
-
 
 // XscServicesManager defines the http client and general configuration
 type XscServicesManager struct {
