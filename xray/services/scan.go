@@ -40,9 +40,6 @@ const (
 
 	xrayScanStatusFailed = "failed"
 
-	// Xsc consts
-	postXscGitInfoContextAPI = "api/v1/gitinfo"
-
 	XscGraphAPI = "api/v1/sca/scan/graph"
 
 	multiScanIdParam = "multi_scan_id="
