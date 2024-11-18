@@ -1,7 +1,6 @@
 package xray
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
