@@ -187,9 +187,10 @@ func buildScanHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func xscGetVersionHandlerFunc(t *testing.T, version string) func(w http.ResponseWriter, r *http.Request) {
+	expectedResponse := fmt.Sprintf(xscVersionResponse, version)
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			_, err := fmt.Fprint(w, fmt.Sprintf(xscVersionResponse, version))
+			_, err := fmt.Fprint(w, expectedResponse)
 			assert.NoError(t, err)
 			return
 		}
@@ -198,9 +199,10 @@ func xscGetVersionHandlerFunc(t *testing.T, version string) func(w http.Response
 }
 
 func xrayGetVersionHandlerFunc(t *testing.T, version string) func(w http.ResponseWriter, r *http.Request) {
+	expectedResponse := fmt.Sprintf(xrayVersionResponse, version)
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			_, err := fmt.Fprint(w, fmt.Sprintf(xrayVersionResponse, version))
+			_, err := fmt.Fprint(w, expectedResponse)
 			assert.NoError(t, err)
 			return
 		}
