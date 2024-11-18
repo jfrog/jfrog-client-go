@@ -243,29 +243,6 @@ func enrichGetResults(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func xscGitInfoHandlerFunc(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		req, err := io.ReadAll(r.Body)
-		assert.NoError(t, err)
-		if r.Method == http.MethodPost {
-			var reqBody services.XscGitInfoContext
-			err = json.Unmarshal(req, &reqBody)
-			assert.NoError(t, err)
-			if reqBody.GitRepoUrl == "" || reqBody.BranchName == "" || reqBody.CommitHash == "" {
-				w.WriteHeader(http.StatusBadRequest)
-				_, err := fmt.Fprint(w, XscGitInfoBadResponse)
-				assert.NoError(t, err)
-				return
-			}
-			w.WriteHeader(http.StatusCreated)
-			_, err = fmt.Fprint(w, XscGitInfoResponse)
-			assert.NoError(t, err)
-			return
-		}
-		http.Error(w, "Invalid xsc request", http.StatusBadRequest)
-	}
-}
-
 type MockServerParams struct {
 	MSI         string
 	XrayVersion string
