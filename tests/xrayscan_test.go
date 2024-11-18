@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
+	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 )
 
 var testsXrayScanService *services.XrayScanService
@@ -66,7 +67,23 @@ func scanBuild(t *testing.T, buildName, buildNumber, expected string) {
 }
 
 func TestIsXscEnabled(t *testing.T) {
-	xrayServerPort, xrayDetails, client := initXrayScanTest(t)
+	testCases := []struct {
+		name   string
+		params xray.MockServerParams
+	}{
+		{name: "Old XSC API", params: xray.MockServerParams{XrayVersion: "3.0.0", XscVersion: xray.TestXscVersion}},
+		{name: "New XSC API", params: xray.MockServerParams{XrayVersion: xscutils.MinXrayVersionXscTransitionToXray, XscVersion: xray.TestXscVersion}},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			testIsXscEnabled(t, testCase.params)
+		})
+	}
+}
+
+func testIsXscEnabled(t *testing.T, params xray.MockServerParams) {
+	xrayServerPort, xrayDetails, client := initXrayScanTest(t, params)
 	testsScanService = xrayServices.NewScanService(client)
 	testsScanService.XrayDetails = xrayDetails
 	testsScanService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
@@ -76,10 +93,10 @@ func TestIsXscEnabled(t *testing.T) {
 	assert.Equal(t, xray.TestXscVersion, result)
 }
 
-func initXrayScanTest(t *testing.T) (xrayServerPort int, xrayDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
+func initXrayScanTest(t *testing.T, params xray.MockServerParams) (xrayServerPort int, xrayDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
 	var err error
 	initXrayTest(t)
-	xrayServerPort = xray.StartXrayMockServer(t)
+	xrayServerPort = xray.StartXrayMockServerWithParams(t, params)
 	xrayDetails = GetXrayDetails()
 	client, err = jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xrayDetails.GetClientCertPath()).

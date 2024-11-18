@@ -1425,7 +1425,9 @@ const BuildScanResultsResponse = `
   ]
 }
 `
-const xscVersionResponse = `{"xsc_version": "1.0.0"}`
+const xscVersionResponse = `{"xsc_version": "%s"}`
+
+const xrayVersionResponse = `{"xray_version":"%s","xray_revision":"5735964"}`
 
 const scanIdResponse = `{"scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122"}`
 
