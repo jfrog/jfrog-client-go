@@ -280,8 +280,6 @@ func StartXrayMockServer(t *testing.T) int {
 func StartXrayMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers := clienttests.HttpServerHandlers{}
 
-	handlers["/xsc/api/v1/gitinfo"] = xscGitInfoHandlerFunc(t)
-
 	handlers["/"] = http.NotFound
 	// Xray handlers
 	handlers["/xray/api/v1/system/version"] = xrayGetVersionHandlerFunc(t, params.XrayVersion)
@@ -295,7 +293,7 @@ func StartXrayMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	// Xsc handlers
 	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)
-	handlers["/xray/api/v1/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)
+	handlers["/xray/api/v1/xsc/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)
 
 	port, err := clienttests.StartHttpServer(handlers)
 	if err != nil {
