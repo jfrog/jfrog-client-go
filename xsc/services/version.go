@@ -10,12 +10,19 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
+)
+
+const (
+	xscVersionApiSuffix           = "system/version"
+	xscDeprecatedVersionApiSuffix = "api/v1/" + xscVersionApiSuffix
 )
 
 // VersionService returns the https client and Xsc details
 type VersionService struct {
-	client     *jfroghttpclient.JfrogHttpClient
-	XscDetails auth.ServiceDetails
+	client      *jfroghttpclient.JfrogHttpClient
+	XscDetails  auth.ServiceDetails
+	XrayDetails auth.ServiceDetails
 }
 
 // NewVersionService creates a new service to retrieve the version of Xsc
@@ -23,15 +30,26 @@ func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService 
 	return &VersionService{client: client}
 }
 
-// GetXscDetails returns the Xsc details
-func (vs *VersionService) GetXscDetails() auth.ServiceDetails {
-	return vs.XscDetails
+// // GetXscDetails returns the Xsc details
+// func (vs *VersionService) GetXscDetails() auth.ServiceDetails {
+// 	return vs.XscDetails
+// }
+
+func (vs *VersionService) sendVersionRequest() (resp *http.Response, body []byte, err error) {
+	if vs.XrayDetails != nil {
+		httpDetails := vs.XrayDetails.CreateHttpClientDetails()
+		resp, body, _, err = vs.client.SendGet(vs.XrayDetails.GetUrl()+xscutils.XscInXraySuffix+xscVersionApiSuffix, true, &httpDetails)
+		return
+	}
+	// Backward compatibility
+	httpDetails := vs.XscDetails.CreateHttpClientDetails()
+	resp, body, _, err = vs.client.SendGet(vs.XscDetails.GetUrl()+xscDeprecatedVersionApiSuffix, true, &httpDetails)
+	return
 }
 
 // GetVersion returns the version of Xsc
 func (vs *VersionService) GetVersion() (string, error) {
-	httpDetails := vs.XscDetails.CreateHttpClientDetails()
-	resp, body, _, err := vs.client.SendGet(vs.XscDetails.GetUrl()+"api/v1/system/version", true, &httpDetails)
+	resp, body, err := vs.sendVersionRequest()
 	if err != nil {
 		return "", err
 	}
@@ -40,7 +58,7 @@ func (vs *VersionService) GetVersion() (string, error) {
 	}
 	// When XSC is disabled, StatusNotFound is expected. Don't return error as this is optional.
 	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("Xsc is not available").Error(), nil
+		return fmt.Errorf("xsc is not available").Error(), nil
 	}
 	var version xscVersion
 	err = json.Unmarshal(body, &version)

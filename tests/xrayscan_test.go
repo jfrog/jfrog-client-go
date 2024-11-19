@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
-	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 )
 
 var testsXrayScanService *services.XrayScanService
@@ -72,7 +71,7 @@ func TestIsXscEnabled(t *testing.T) {
 		params xray.MockServerParams
 	}{
 		{name: "Old XSC API", params: xray.MockServerParams{XrayVersion: "3.0.0", XscVersion: xray.TestXscVersion}},
-		{name: "New XSC API", params: xray.MockServerParams{XrayVersion: xscutils.MinXrayVersionXscTransitionToXray, XscVersion: xray.TestXscVersion}},
+		{name: "New XSC API", params: xray.MockServerParams{XrayVersion: "3.108.0", XscVersion: xray.TestXscVersion}},
 	}
 
 	for _, testCase := range testCases {

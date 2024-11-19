@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
+	"github.com/jfrog/jfrog-client-go/xray/services/xsc"
 )
 
 // XrayServicesManager defines the http client and general configuration
@@ -241,4 +242,11 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	entitlementsService := services.NewEntitlementsService(sm.client)
 	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
 	return entitlementsService.IsEntitled(featureId)
+}
+
+// Xsc returns the Xsc service inside Xray
+func (sm *XrayServicesManager) Xsc() *xsc.XscInnerService {
+	xscService := xsc.NewXscService(sm.client)
+	xscService.XrayDetails = sm.config.GetServiceDetails()
+	return xscService
 }

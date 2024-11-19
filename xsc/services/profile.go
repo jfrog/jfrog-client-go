@@ -11,13 +11,15 @@ import (
 )
 
 const (
-	ConfigProfileMinXscVersion = "1.11.0"
-	xscConfigProfileApi        = "api/v1/profile"
+	ConfigProfileMinXscVersion          = "1.11.0"
+	xscConfigProfileApi                 = "profile"
+	xscDeprecatedConfigProfileApiSuffix = "api/v1/" + xscConfigProfileApi
 )
 
 type ConfigurationProfileService struct {
-	client     *jfroghttpclient.JfrogHttpClient
-	XscDetails auth.ServiceDetails
+	client      *jfroghttpclient.JfrogHttpClient
+	XscDetails  auth.ServiceDetails
+	XrayDetails auth.ServiceDetails
 }
 
 func NewConfigurationProfileService(client *jfroghttpclient.JfrogHttpClient) *ConfigurationProfileService {
@@ -96,10 +98,22 @@ type ServicesScannerConfig struct {
 	ExcludePatterns    []string `json:"exclude_patterns,omitempty"`
 }
 
-func (cp *ConfigurationProfileService) GetConfigurationProfile(profileName string) (*ConfigProfile, error) {
+func (cp *ConfigurationProfileService) sendConfigProfileRequest(profileName string) (url string, resp *http.Response, body []byte, err error) {
+	if cp.XrayDetails != nil {
+		httpDetails := cp.XrayDetails.CreateHttpClientDetails()
+		url = fmt.Sprintf("%s%s/%s", utils.AddTrailingSlashIfNeeded(cp.XrayDetails.GetUrl()), xscConfigProfileApi, profileName)
+		resp, body, _, err = cp.client.SendGet(url, true, &httpDetails)
+		return
+	}
+	// Backward compatibility
 	httpDetails := cp.XscDetails.CreateHttpClientDetails()
-	url := fmt.Sprintf("%s%s/%s", utils.AddTrailingSlashIfNeeded(cp.XscDetails.GetUrl()), xscConfigProfileApi, profileName)
-	res, body, _, err := cp.client.SendGet(url, true, &httpDetails)
+	url = fmt.Sprintf("%s%s/%s", utils.AddTrailingSlashIfNeeded(cp.XscDetails.GetUrl()), xscDeprecatedConfigProfileApiSuffix, profileName)
+	resp, body, _, err = cp.client.SendGet(url, true, &httpDetails)
+	return
+}
+
+func (cp *ConfigurationProfileService) GetConfigurationProfile(profileName string) (*ConfigProfile, error) {
+	url, res, body, err := cp.sendConfigProfileRequest(profileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send GET query to '%s': %q", url, err)
 	}
