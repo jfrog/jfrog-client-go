@@ -21,5 +21,5 @@ func XrayUrlToXscUrl(xrayUrl, xrayVersion string) string {
 		return strings.Replace(xrayUrl, XraySuffix, XscSuffix, 1)
 	}
 	// Newer versions of Xray will have XSC as an inner service.
-	return xrayUrl + XscSuffix
+	return xrayUrl + "api/v1" + XscSuffix
 }
