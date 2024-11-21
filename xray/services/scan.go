@@ -46,7 +46,7 @@ const (
 
 	scanTechQueryParam = "tech="
 
-	XscVersionAPI = "api/v1/system/version"
+	XscVersionAPI = "system/version"
 )
 
 type ScanType string
@@ -192,8 +192,7 @@ func (ss *ScanService) IsXscEnabled() (xscVersion string, err error) {
 	if err != nil {
 		return
 	}
-	url = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion)
-	resp, body, _, err := ss.client.SendGet(url+XscVersionAPI, false, &httpClientsDetails)
+	resp, body, _, err := ss.client.SendGet(utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion)+XscVersionAPI, false, &httpClientsDetails)
 	if err != nil {
 		err = errorutils.CheckErrorf("failed to get JFrog XSC version, response: " + err.Error())
 		return
