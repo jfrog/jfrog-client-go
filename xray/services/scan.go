@@ -32,7 +32,7 @@ const (
 
 	// Get scan results timeouts
 	defaultMaxWaitMinutes    = 45 * time.Minute // 45 minutes
-	defaultSyncSleepInterval = 3 * time.Minute  // 5 seconds
+	defaultSyncSleepInterval = 5 * time.Second  // 5 seconds
 
 	// ScanType values
 	Dependency ScanType = "dependency"
