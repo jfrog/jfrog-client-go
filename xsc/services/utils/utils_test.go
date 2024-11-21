@@ -10,7 +10,7 @@ func TestXrayUrlToXscUrl(t *testing.T) {
 		expectedValue string
 	}{
 		{"after transition", "http://platform.jfrog.io/xray/", "3.108.0", "http://platform.jfrog.io/xray/api/v1/xsc/"},
-		{"before transition", "http://platform.jfrog.io/xray/", "3.107.0", "http://platform.jfrog.io/xsc/"},
+		{"before transition", "http://platform.jfrog.io/xray/", "3.107.0", "http://platform.jfrog.io/xsc/api/v1/"},
 	}
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
