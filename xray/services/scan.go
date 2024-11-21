@@ -40,7 +40,7 @@ const (
 
 	xrayScanStatusFailed = "failed"
 
-	XscGraphAPI = "api/v1/sca/scan/graph"
+	XscGraphAPI = "sca/scan/graph"
 
 	multiScanIdParam = "multi_scan_id="
 
@@ -113,12 +113,8 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	url := ss.XrayDetails.GetUrl() + scanGraphAPI
 
 	// When XSC is enabled, modify the URL.
-	if scanParams.XscVersion != "" {
-		if xrayVersion, err := ss.XrayDetails.GetVersion(); err == nil {
-			url = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
-		} else {
-			return "", errorutils.CheckError(err)
-		}
+	if scanParams.XrayVersion != "" && scanParams.XscVersion != "" {
+		url = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), scanParams.XrayVersion) + XscGraphAPI
 	}
 	url += createScanGraphQueryParams(scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
@@ -234,6 +230,7 @@ type XrayGraphScanParams struct {
 	IncludeLicenses        bool
 	XscGitInfoContext      *XscGitInfoContext
 	XscVersion             string
+	XrayVersion            string
 	MultiScanId            string
 }
 

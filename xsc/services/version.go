@@ -54,11 +54,11 @@ func (vs *VersionService) GetVersion() (string, error) {
 		return "", err
 	}
 	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			// When XSC is disabled, StatusNotFound is expected. Don't GenerateResponseError in this case.
+			return "", fmt.Errorf("xsc is not available for this server")
+		}
 		return "", errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
-	}
-	// When XSC is disabled, StatusNotFound is expected. Don't GenerateResponseError in this case.
-	if resp.StatusCode == http.StatusNotFound {
-		return "", fmt.Errorf("xsc server is not available")
 	}
 	var version xscVersion
 	err = json.Unmarshal(body, &version)

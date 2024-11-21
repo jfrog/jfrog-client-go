@@ -11,15 +11,16 @@ import (
 const (
 	XraySuffix                        = "/xray/"
 	xscSuffix                         = "/xsc/"
-	XscInXraySuffix                   = "api/v1" + xscSuffix
+	apiV1Suffix                       = "api/v1"
+	XscInXraySuffix                   = apiV1Suffix + xscSuffix
 	MinXrayVersionXscTransitionToXray = "3.108.0"
 )
 
 // From Xray version 3.108.0, XSC is transitioning to Xray as inner service. This function will return the backward compatibility URL.
 func XrayUrlToXscUrl(xrayUrl, xrayVersion string) string {
-	if IsXscXrayInnerService(xrayVersion) {
+	if !IsXscXrayInnerService(xrayVersion) {
 		log.Debug(fmt.Sprintf("Xray version is lower than %s, XSC is not an inner service in Xray.", MinXrayVersionXscTransitionToXray))
-		return strings.Replace(xrayUrl, XraySuffix, xscSuffix, 1)
+		return strings.Replace(xrayUrl, XraySuffix, xscSuffix, 1) + apiV1Suffix + "/"
 	}
 	// Newer versions of Xray will have XSC as an inner service.
 	return xrayUrl + XscInXraySuffix
