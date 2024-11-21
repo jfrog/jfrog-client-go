@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/xray/services"
+	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 )
 
 const (
@@ -36,7 +37,7 @@ func NewAnalyticsEventService(client *jfroghttpclient.JfrogHttpClient) *Analytic
 func (vs *AnalyticsEventService) sendPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
 	if vs.XrayDetails != nil {
 		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()
-		resp, body, err = vs.client.SendPost(utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl())+xscEventApi, requestContent, &httpClientDetails)
+		resp, body, err = vs.client.SendPost(utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl())+xscutils.XscInXraySuffix+xscEventApi, requestContent, &httpClientDetails)
 		return
 	}
 	// Backward compatibility
@@ -48,7 +49,7 @@ func (vs *AnalyticsEventService) sendPostRequest(requestContent []byte) (resp *h
 func (vs *AnalyticsEventService) sendPutRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
 	if vs.XrayDetails != nil {
 		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()
-		resp, body, err = vs.client.SendPut(utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl())+xscEventApi, requestContent, &httpClientDetails)
+		resp, body, err = vs.client.SendPut(utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl())+xscutils.XscInXraySuffix+xscEventApi, requestContent, &httpClientDetails)
 		return
 	}
 	// Backward compatibility
@@ -60,7 +61,7 @@ func (vs *AnalyticsEventService) sendPutRequest(requestContent []byte) (resp *ht
 func (vs *AnalyticsEventService) sendGetRequest(msi string) (resp *http.Response, body []byte, err error) {
 	if vs.XrayDetails != nil {
 		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()
-		resp, body, _, err = vs.client.SendGet(fmt.Sprintf("%s%s/%s", vs.XrayDetails.GetUrl(), xscEventApi, msi), true, &httpClientDetails)
+		resp, body, _, err = vs.client.SendGet(fmt.Sprintf("%s%s%s/%s", vs.XrayDetails.GetUrl(), xscutils.XscInXraySuffix, xscEventApi, msi), true, &httpClientDetails)
 		return
 	}
 	// Backward compatibility

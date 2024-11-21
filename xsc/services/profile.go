@@ -3,11 +3,13 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
+	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 )
 
 const (
@@ -101,7 +103,7 @@ type ServicesScannerConfig struct {
 func (cp *ConfigurationProfileService) sendConfigProfileRequest(profileName string) (url string, resp *http.Response, body []byte, err error) {
 	if cp.XrayDetails != nil {
 		httpDetails := cp.XrayDetails.CreateHttpClientDetails()
-		url = fmt.Sprintf("%s%s/%s", utils.AddTrailingSlashIfNeeded(cp.XrayDetails.GetUrl()), xscConfigProfileApi, profileName)
+		url = fmt.Sprintf("%s%s%s/%s", utils.AddTrailingSlashIfNeeded(cp.XrayDetails.GetUrl()), xscutils.XscInXraySuffix, xscConfigProfileApi, profileName)
 		resp, body, _, err = cp.client.SendGet(url, true, &httpDetails)
 		return
 	}

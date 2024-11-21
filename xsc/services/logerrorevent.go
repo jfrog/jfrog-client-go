@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 	"net/http"
 )
 
@@ -35,7 +36,7 @@ func NewLogErrorEventService(client *jfroghttpclient.JfrogHttpClient) *LogErrorE
 func (les *LogErrorEventService) sendLogErrorRequest(requestContent []byte) (url string, resp *http.Response, body []byte, err error) {
 	if les.XrayDetails != nil {
 		httpClientDetails := les.XrayDetails.CreateHttpClientDetails()
-		url = utils.AddTrailingSlashIfNeeded(les.XrayDetails.GetUrl()) + xscLogErrorApiSuffix
+		url = utils.AddTrailingSlashIfNeeded(les.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + xscLogErrorApiSuffix
 		resp, body, err = les.client.SendPost(url, requestContent, &httpClientDetails)
 		return
 	}
