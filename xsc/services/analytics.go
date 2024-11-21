@@ -29,11 +29,6 @@ func NewAnalyticsEventService(client *jfroghttpclient.JfrogHttpClient) *Analytic
 	return &AnalyticsEventService{client: client}
 }
 
-// // GetXscDetails returns the Xsc details
-// func (vs *AnalyticsEventService) GetXscDetails() auth.ServiceDetails {
-// 	return vs.XscDetails
-// }
-
 func (vs *AnalyticsEventService) sendPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
 	if vs.XrayDetails != nil {
 		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()

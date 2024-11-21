@@ -30,11 +30,6 @@ func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService 
 	return &VersionService{client: client}
 }
 
-// // GetXscDetails returns the Xsc details
-// func (vs *VersionService) GetXscDetails() auth.ServiceDetails {
-// 	return vs.XscDetails
-// }
-
 func (vs *VersionService) sendVersionRequest() (resp *http.Response, body []byte, err error) {
 	if vs.XrayDetails != nil {
 		httpDetails := vs.XrayDetails.CreateHttpClientDetails()
