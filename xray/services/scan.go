@@ -9,6 +9,7 @@ import (
 	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
+	xscUtils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -101,9 +102,9 @@ func createScanGraphQueryParams(xrayVersion string, scanParams XrayGraphScanPara
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
-	if isGitRepoUrlSupported(xrayVersion) && scanParams.XscGitInfoContext != nil && scanParams.XscGitInfoContext.GitRepoKey != "" {
+	if isGitRepoUrlSupported(xrayVersion) && scanParams.XscGitInfoContext != nil && scanParams.XscGitInfoContext.GitRepoUrl != "" {
 		// Add git repo key to the query params to produce violations defined in the git repo policy
-		params = append(params, gitRepoKeyQueryParam+scanParams.XscGitInfoContext.GitRepoKey)
+		params = append(params, gitRepoKeyQueryParam+xscUtils.GetGitRepoUrlKey(scanParams.XscGitInfoContext.GitRepoUrl))
 	}
 
 	if len(params) == 0 {
@@ -396,7 +397,6 @@ type XscVersionResponse struct {
 }
 
 type XscGitInfoContext struct {
-	GitRepoKey        string   `json:"-"`
 	GitRepoUrl        string   `json:"git_repo_url"`
 	GitRepoName       string   `json:"git_repo_name,omitempty"`
 	GitProject        string   `json:"git_project,omitempty"`
