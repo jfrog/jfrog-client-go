@@ -28,7 +28,7 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 
 		{"without_scan_type", "", "", "", []string{"w1", "w2"}, "", "0.0.0", fmt.Sprintf("?%s%s&%s%s", watchesQueryParam, "w1", watchesQueryParam, "w2")},
 
-		{"with_git_repo_url", "", "", "some-url", nil, Dependency, gitRepoKeyMinVersion, fmt.Sprintf("?%s%s&%s%s", scanTypeQueryParam, Dependency, gitRepoKeyQueryParam, "some-url")},
+		{"with_git_repo_url", "", "", "http://some-url", nil, Dependency, gitRepoKeyMinVersion, fmt.Sprintf("?%s%s&%s%s", scanTypeQueryParam, Dependency, gitRepoKeyQueryParam, "some-url.git")},
 	}
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
