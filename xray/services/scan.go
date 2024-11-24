@@ -180,40 +180,6 @@ func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVu
 	return &scanResponse, err
 }
 
-// IsXscEnabled will try to get XSC version. If route is not available, user is not entitled for XSC.
-func (ss *ScanService) IsXscEnabled() (xscVersion string, err error) {
-	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	url := ss.XrayDetails.GetUrl()
-	// If Xray suffix not found, Xsc is not supported.
-	if !strings.HasSuffix(url, utils.XraySuffix) {
-		return
-	}
-	xrayVersion, err := ss.XrayDetails.GetVersion()
-	if err != nil {
-		return
-	}
-	resp, body, _, err := ss.client.SendGet(utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion)+XscVersionAPI, false, &httpClientsDetails)
-	if err != nil {
-		err = errorutils.CheckErrorf("failed to get JFrog XSC version, response: " + err.Error())
-		return
-	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNotFound); err != nil {
-		return
-	}
-	// When XSC is disabled, StatusNotFound is expected. Don't return error as this is optional.
-	if resp.StatusCode == http.StatusNotFound {
-		return
-	}
-	versionResponse := XscVersionResponse{}
-	if err = json.Unmarshal(body, &versionResponse); err != nil {
-		err = errorutils.CheckErrorf("failed to parse JFrog XSC server response: " + err.Error())
-		return
-	}
-	xscVersion = versionResponse.Version
-	log.Debug("XSC version:", xscVersion)
-	return
-}
-
 type XrayGraphScanParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
