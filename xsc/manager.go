@@ -7,6 +7,7 @@ import (
 )
 
 // XscServicesManager defines the http client and general configuration
+// Deprecated from Xray version 3.108.0, XSC is transitioning to Xray as inner service.
 type XscServicesManager struct {
 	client *jfroghttpclient.JfrogHttpClient
 	config config.Config

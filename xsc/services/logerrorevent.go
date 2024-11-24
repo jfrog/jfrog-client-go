@@ -7,17 +7,20 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 	"net/http"
 )
 
 const (
-	postLogErrorAPI       = "api/v1/event/logMessage"
-	LogErrorMinXscVersion = AnalyticsMetricsMinXscVersion
+	xscLogErrorApiSuffix           = "event/logMessage"
+	xscDeprecatedLogErrorApiSuffix = "api/v1/" + xscLogErrorApiSuffix
+	LogErrorMinXscVersion          = AnalyticsMetricsMinXscVersion
 )
 
 type LogErrorEventService struct {
-	client     *jfroghttpclient.JfrogHttpClient
-	XscDetails auth.ServiceDetails
+	client      *jfroghttpclient.JfrogHttpClient
+	XscDetails  auth.ServiceDetails
+	XrayDetails auth.ServiceDetails
 }
 
 type ExternalErrorLog struct {
@@ -30,14 +33,26 @@ func NewLogErrorEventService(client *jfroghttpclient.JfrogHttpClient) *LogErrorE
 	return &LogErrorEventService{client: client}
 }
 
-func (les *LogErrorEventService) SendLogErrorEvent(errorLog *ExternalErrorLog) error {
+func (les *LogErrorEventService) sendLogErrorRequest(requestContent []byte) (url string, resp *http.Response, body []byte, err error) {
+	if les.XrayDetails != nil {
+		httpClientDetails := les.XrayDetails.CreateHttpClientDetails()
+		url = utils.AddTrailingSlashIfNeeded(les.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + xscLogErrorApiSuffix
+		resp, body, err = les.client.SendPost(url, requestContent, &httpClientDetails)
+		return
+	}
+	// Backward compatibility
 	httpClientDetails := les.XscDetails.CreateHttpClientDetails()
+	url = utils.AddTrailingSlashIfNeeded(les.XscDetails.GetUrl()) + xscDeprecatedLogErrorApiSuffix
+	resp, body, err = les.client.SendPost(url, requestContent, &httpClientDetails)
+	return
+}
+
+func (les *LogErrorEventService) SendLogErrorEvent(errorLog *ExternalErrorLog) error {
 	requestContent, err := json.Marshal(errorLog)
 	if err != nil {
 		return fmt.Errorf("failed to convert POST request body's struct into JSON: %q", err)
 	}
-	url := utils.AddTrailingSlashIfNeeded(les.XscDetails.GetUrl()) + postLogErrorAPI
-	response, body, err := les.client.SendPost(url, requestContent, &httpClientDetails)
+	url, response, body, err := les.sendLogErrorRequest(requestContent)
 	if err != nil {
 		return fmt.Errorf("failed to send POST query to '%s': %s", url, err.Error())
 	}
