@@ -41,10 +41,7 @@ const (
 
 	xrayScanStatusFailed = "failed"
 
-	// Xsc consts
-	postXscGitInfoContextAPI = "api/v1/gitinfo"
-
-	XscGraphAPI = "api/v1/sca/scan/graph"
+	XscGraphAPI = "sca/scan/graph"
 
 	multiScanIdParam = "multi_scan_id="
 
@@ -53,11 +50,7 @@ const (
 	gitRepoKeyQueryParam = "git_repo="
 	gitRepoKeyMinVersion = "3.106.2"
 
-	XscVersionAPI = "api/v1/system/version"
-
-	XraySuffix = "/xray/"
-
-	XscSuffix = "/xsc/"
+	XscVersionAPI = "system/version"
 )
 
 type ScanType string
@@ -72,7 +65,7 @@ func NewScanService(client *jfroghttpclient.JfrogHttpClient) *ScanService {
 	return &ScanService{client: client}
 }
 
-func createScanGraphQueryParams(xrayVersion string, scanParams XrayGraphScanParams) string {
+func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	var params []string
 	switch {
 	case scanParams.ProjectKey != "":
@@ -102,7 +95,7 @@ func createScanGraphQueryParams(xrayVersion string, scanParams XrayGraphScanPara
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
-	if isGitRepoUrlSupported(xrayVersion) && scanParams.XscGitInfoContext != nil && scanParams.XscGitInfoContext.GitRepoUrl != "" {
+	if isGitRepoUrlSupported(scanParams.XrayVersion) && scanParams.XscGitInfoContext != nil && scanParams.XscGitInfoContext.GitRepoUrl != "" {
 		// Add git repo key to the query params to produce violations defined in the git repo policy
 		params = append(params, gitRepoKeyQueryParam+xscUtils.GetGitRepoUrlKey(scanParams.XscGitInfoContext.GitRepoUrl))
 	}
@@ -133,14 +126,10 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	url := ss.XrayDetails.GetUrl() + scanGraphAPI
 
 	// When XSC is enabled, modify the URL.
-	if scanParams.XscVersion != "" {
-		url = ss.xrayToXscUrl() + XscGraphAPI
+	if scanParams.XrayVersion != "" && scanParams.XscVersion != "" {
+		url = xscUtils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), scanParams.XrayVersion) + XscGraphAPI
 	}
-	xrayVersion, err := ss.XrayDetails.GetVersion()
-	if err != nil {
-		return "", err
-	}
-	url += createScanGraphQueryParams(xrayVersion, scanParams)
+	url += createScanGraphQueryParams(scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err
@@ -160,7 +149,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	return scanResponse.ScanId, err
 }
 
-func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
+func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
 	httpClientsDetails.SetContentTypeApplicationJson()
 
@@ -168,7 +157,7 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
 	// Modify endpoint if XSC is enabled
 	if xscEnabled {
-		endPoint = ss.xrayToXscUrl() + XscGraphAPI
+		endPoint = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
 	}
 	endPoint += "/" + scanId
 
@@ -204,63 +193,6 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 	return &scanResponse, err
 }
 
-func (ss *ScanService) xrayToXscUrl() string {
-	return strings.Replace(ss.XrayDetails.GetUrl(), XraySuffix, XscSuffix, 1)
-}
-
-func (ss *ScanService) SendScanGitInfoContext(details *XscGitInfoContext) (multiScanId string, err error) {
-	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	httpClientsDetails.SetContentTypeApplicationJson()
-	requestBody, err := json.Marshal(details)
-	if err != nil {
-		return "", errorutils.CheckError(err)
-	}
-	url := ss.xrayToXscUrl() + postXscGitInfoContextAPI
-	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
-	if err != nil {
-		return
-	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
-		return
-	}
-	xscResponse := XscPostContextResponse{}
-	if err = json.Unmarshal(body, &xscResponse); err != nil {
-		return "", errorutils.CheckError(err)
-	}
-	return xscResponse.MultiScanId, err
-}
-
-// IsXscEnabled will try to get XSC version. If route is not available, user is not entitled for XSC.
-func (ss *ScanService) IsXscEnabled() (xsxVersion string, err error) {
-	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	url := ss.XrayDetails.GetUrl()
-	// If Xray suffix not found, Xsc is not supported.
-	if !strings.HasSuffix(url, XraySuffix) {
-		return
-	}
-	url = ss.xrayToXscUrl()
-	resp, body, _, err := ss.client.SendGet(url+XscVersionAPI, false, &httpClientsDetails)
-	if err != nil {
-		err = errorutils.CheckErrorf("failed to get JFrog XSC version, response: " + err.Error())
-		return
-	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNotFound); err != nil {
-		return
-	}
-	// When XSC is disabled, StatusNotFound is expected. Don't return error as this is optional.
-	if resp.StatusCode == http.StatusNotFound {
-		return
-	}
-	versionResponse := XscVersionResponse{}
-	if err = json.Unmarshal(body, &versionResponse); err != nil {
-		err = errorutils.CheckErrorf("failed to parse JFrog XSC server response: " + err.Error())
-		return
-	}
-	xsxVersion = versionResponse.Version
-	log.Debug("XSC version:", xsxVersion)
-	return
-}
-
 type XrayGraphScanParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
@@ -276,6 +208,7 @@ type XrayGraphScanParams struct {
 	IncludeLicenses        bool
 	XscGitInfoContext      *XscGitInfoContext
 	XscVersion             string
+	XrayVersion            string
 	MultiScanId            string
 }
 
