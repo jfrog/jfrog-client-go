@@ -9,6 +9,7 @@ import (
 	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
+	xscUtils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -101,9 +102,9 @@ func createScanGraphQueryParams(xrayVersion string, scanParams XrayGraphScanPara
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
-	if isGitRepoUrlSupported(xrayVersion) && scanParams.GitRepoUrl != "" {
-		// Only from Xray version: 3.106.2
-		params = append(params, gitRepoUrlQueryParam+scanParams.GitRepoUrl)
+	if isGitRepoUrlSupported(xrayVersion) && scanParams.XscGitInfoContext != nil && scanParams.XscGitInfoContext.GitRepoUrl != "" {
+		// Add git context to the scan
+		params = append(params, gitRepoUrlQueryParam+xscUtils.GetGitRepoUrlKey(scanParams.XscGitInfoContext.GitRepoUrl))
 	}
 
 	if len(params) == 0 {
@@ -265,7 +266,6 @@ type XrayGraphScanParams struct {
 	// This will provide a way to extract the watches that should be applied on this graph
 	RepoPath   string
 	ProjectKey string
-	GitRepoUrl string
 	Watches    []string
 	ScanType   ScanType
 	// Dependencies Tree

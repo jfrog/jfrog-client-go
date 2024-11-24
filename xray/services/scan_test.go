@@ -37,7 +37,9 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 				Watches:    test.watches,
 				ProjectKey: test.projectKey,
 				ScanType:   test.scanType,
-				GitRepoUrl: test.gitRepoUrl,
+				XscGitInfoContext: &XscGitInfoContext{
+					GitRepoUrl: test.gitRepoUrl,
+				},
 			}
 			actualQuery := createScanGraphQueryParams(test.xrayVersion, params)
 			if actualQuery != test.expectedQuery {
