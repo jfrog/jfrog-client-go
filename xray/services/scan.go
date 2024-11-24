@@ -9,7 +9,6 @@ import (
 	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
-	xscUtils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -50,8 +49,8 @@ const (
 
 	scanTechQueryParam = "tech="
 
-	gitRepoUrlQueryParam = "git_repo="
-	gitRepoUrlMinVersion = "3.106.2"
+	gitRepoKeyQueryParam = "git_repo="
+	gitRepoKeyMinVersion = "3.106.2"
 
 	XscVersionAPI = "api/v1/system/version"
 
@@ -102,9 +101,9 @@ func createScanGraphQueryParams(xrayVersion string, scanParams XrayGraphScanPara
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
-	if isGitRepoUrlSupported(xrayVersion) && scanParams.XscGitInfoContext != nil && scanParams.XscGitInfoContext.GitRepoUrl != "" {
-		// Add git context to the scan
-		params = append(params, gitRepoUrlQueryParam+xscUtils.GetGitRepoUrlKey(scanParams.XscGitInfoContext.GitRepoUrl))
+	if isGitRepoUrlSupported(xrayVersion) && scanParams.XscGitInfoContext != nil && scanParams.XscGitInfoContext.GitRepoKey != "" {
+		// Add git repo key to the query params to produce violations defined in the git repo policy
+		params = append(params, gitRepoKeyQueryParam+scanParams.XscGitInfoContext.GitRepoKey)
 	}
 
 	if len(params) == 0 {
@@ -114,7 +113,7 @@ func createScanGraphQueryParams(xrayVersion string, scanParams XrayGraphScanPara
 }
 
 func isGitRepoUrlSupported(xrayVersion string) bool {
-	return clientUtils.ValidateMinimumVersion(clientUtils.Xray, xrayVersion, gitRepoUrlMinVersion) == nil
+	return clientUtils.ValidateMinimumVersion(clientUtils.Xray, xrayVersion, gitRepoKeyMinVersion) == nil
 }
 
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
@@ -397,6 +396,7 @@ type XscVersionResponse struct {
 }
 
 type XscGitInfoContext struct {
+	GitRepoKey        string   `json:"-"`
 	GitRepoUrl        string   `json:"git_repo_url"`
 	GitRepoName       string   `json:"git_repo_name,omitempty"`
 	GitProject        string   `json:"git_project,omitempty"`

@@ -22,13 +22,13 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 
 		{"with_watches", "", "", "", []string{"w1", "w2"}, Binary, "0.0.0", fmt.Sprintf("?%s%s&%s%s&%s%s", watchesQueryParam, "w1", watchesQueryParam, "w2", scanTypeQueryParam, Binary)},
 
-		{"with_empty_watch_string", "", "", "", []string{""}, "", gitRepoUrlMinVersion, ""},
+		{"with_empty_watch_string", "", "", "", []string{""}, "", gitRepoKeyMinVersion, ""},
 
-		{"without_context", "", "", "", nil, Dependency, gitRepoUrlMinVersion, fmt.Sprintf("?%s%s", scanTypeQueryParam, Dependency)},
+		{"without_context", "", "", "", nil, Dependency, gitRepoKeyMinVersion, fmt.Sprintf("?%s%s", scanTypeQueryParam, Dependency)},
 
 		{"without_scan_type", "", "", "", []string{"w1", "w2"}, "", "0.0.0", fmt.Sprintf("?%s%s&%s%s", watchesQueryParam, "w1", watchesQueryParam, "w2")},
 
-		{"with_git_repo_url", "", "", "some-url", nil, Dependency, gitRepoUrlMinVersion, fmt.Sprintf("?%s%s&%s%s", scanTypeQueryParam, Dependency, gitRepoUrlQueryParam, "some-url")},
+		{"with_git_repo_url", "", "", "some-url", nil, Dependency, gitRepoKeyMinVersion, fmt.Sprintf("?%s%s&%s%s", scanTypeQueryParam, Dependency, gitRepoKeyQueryParam, "some-url")},
 	}
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
