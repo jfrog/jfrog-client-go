@@ -157,7 +157,7 @@ func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVu
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
 	// Modify endpoint if XSC is enabled
 	if xscEnabled {
-		endPoint = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
+		endPoint = xscUtils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
 	}
 	endPoint += "/" + scanId
 

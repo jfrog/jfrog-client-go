@@ -33,15 +33,16 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
 			params := XrayGraphScanParams{
-				RepoPath:   test.repoPath,
-				Watches:    test.watches,
-				ProjectKey: test.projectKey,
-				ScanType:   test.scanType,
+				RepoPath:    test.repoPath,
+				Watches:     test.watches,
+				ProjectKey:  test.projectKey,
+				ScanType:    test.scanType,
+				XrayVersion: test.xrayVersion,
 				XscGitInfoContext: &XscGitInfoContext{
 					GitRepoUrl: test.gitRepoUrl,
 				},
 			}
-			actualQuery := createScanGraphQueryParams(test.xrayVersion, params)
+			actualQuery := createScanGraphQueryParams(params)
 			if actualQuery != test.expectedQuery {
 				t.Error(test.testName, "Expecting:", test.expectedQuery, "Got:", actualQuery)
 			}
