@@ -820,6 +820,8 @@ func remoteTerraformTest(t *testing.T) {
 	setRemoteRepositoryBaseParams(&trp.RemoteRepositoryBaseParams, true)
 	// Due to a bug on Artifactory side that prevents the update of "bypassHeadRequests" field to false on terraform we leave it unchanged.
 	trp.BypassHeadRequests = utils.Pointer(true)
+	// In terraform - Artifacts must be stored locally
+	trp.StoreArtifactsLocally = utils.Pointer(true)
 	err = testsUpdateRemoteRepositoryService.Terraform(trp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, trp)
