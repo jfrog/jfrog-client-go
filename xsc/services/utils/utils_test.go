@@ -7,15 +7,16 @@ import (
 )
 
 func TestGetGitRepoUrlKey(t *testing.T) {
-	expected := "github.com/jfrog/jfrog-client-go.git"
+	expected := "git.com/jfrog/jfrog-client-go.git"
 	tests := []struct {
 		testName   string
 		gitRepoUrl string
 	}{
-		{"with_http", "http://github.com/jfrog/jfrog-client-go.git"},
-		{"with_https", "https://github.com/jfrog/jfrog-client-go.git"},
-		{"with_ssh", "git@github.com:jfrog/jfrog-client-go.git"},
+		{"with_http", "http://git.com/jfrog/jfrog-client-go.git"},
+		{"with_https", "https://git.com/jfrog/jfrog-client-go.git"},
+		{"with_ssh", "git@git.com:jfrog/jfrog-client-go.git"},
 		{"with_ssh_bb", "ssh://git@git.com/jfrog/jfrog-client-go.git"},
+		{"without_protocol", "git.com/jfrog/jfrog-client-go"},
 	}
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
