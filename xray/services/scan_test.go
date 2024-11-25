@@ -41,7 +41,7 @@ func TestCreateScanGraphQueryParams(t *testing.T) {
 				ScanType:    test.scanType,
 				XrayVersion: test.xrayVersion,
 				XscGitInfoContext: &XscGitInfoContext{
-					GitRepoUrl: test.gitRepoUrl,
+					GitRepoHttpsCloneUrl: test.gitRepoUrl,
 				},
 			}
 			actualQuery := createScanGraphQueryParams(params)
