@@ -48,7 +48,6 @@ const (
 	scanTechQueryParam = "tech="
 
 	gitRepoKeyQueryParam = "git_repo="
-	gitRepoKeyMinVersion = "3.106.2"
 
 	XscVersionAPI = "system/version"
 )
@@ -107,7 +106,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 }
 
 func isGitRepoUrlSupported(xrayVersion string) bool {
-	return clientUtils.ValidateMinimumVersion(clientUtils.Xray, xrayVersion, gitRepoKeyMinVersion) == nil
+	return clientUtils.ValidateMinimumVersion(clientUtils.Xray, xrayVersion, xscUtils.MinXrayVersionXscTransitionToXray) == nil
 }
 
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
