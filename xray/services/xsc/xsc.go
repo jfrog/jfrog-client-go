@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/xsc/services"
 )
 
-// XscService is the Xray Source Control service in the Xray service, available from v3.108.0.
+// XscService is the Xray Source Control service in the Xray service, available from v3.107.13.
 // This service replaces the Xray Source Control service, which was available as a standalone service.
 type XscInnerService struct {
 	client      *jfroghttpclient.JfrogHttpClient
