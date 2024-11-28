@@ -76,7 +76,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		}
 	}
 
-	if scanParams.XscVersion != "" {
+	if scanParams.XscVersion != "" && scanParams.MultiScanId != "" {
 		params = append(params, multiScanIdParam+scanParams.MultiScanId)
 		gitInfoContext := scanParams.XscGitInfoContext
 		if gitInfoContext != nil {
@@ -112,8 +112,8 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	}
 	url := ss.XrayDetails.GetUrl() + scanGraphAPI
 
-	// When XSC is enabled, modify the URL.
-	if scanParams.XrayVersion != "" && scanParams.XscVersion != "" {
+	// When XSC is enabled and MultiScanId is provided, modify the URL to use XSC scan graph (analytics enabled)
+	if scanParams.XrayVersion != "" && scanParams.XscVersion != "" && scanParams.MultiScanId != "" {
 		url = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), scanParams.XrayVersion) + XscGraphAPI
 	}
 	url += createScanGraphQueryParams(scanParams)
