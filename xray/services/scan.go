@@ -76,7 +76,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		}
 	}
 
-	if scanParams.XscVersion != "" {
+	if scanParams.XscVersion != "" && scanParams.MultiScanId != "" {
 		params = append(params, multiScanIdParam+scanParams.MultiScanId)
 		gitInfoContext := scanParams.XscGitInfoContext
 		if gitInfoContext != nil {
