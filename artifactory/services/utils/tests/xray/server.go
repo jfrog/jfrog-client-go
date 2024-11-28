@@ -1,7 +1,6 @@
 package xray
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -186,14 +185,27 @@ func buildScanHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid reports request", http.StatusBadRequest)
 }
 
-func xscGetVersionHandlerFunc(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func xscGetVersionHandlerFunc(t *testing.T, version string) func(w http.ResponseWriter, r *http.Request) {
+	expectedResponse := fmt.Sprintf(xscVersionResponse, version)
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			_, err := fmt.Fprint(w, xscVersionResponse)
+			_, err := fmt.Fprint(w, expectedResponse)
 			assert.NoError(t, err)
 			return
 		}
 		http.Error(w, "Invalid xsc request", http.StatusBadRequest)
+	}
+}
+
+func xrayGetVersionHandlerFunc(t *testing.T, version string) func(w http.ResponseWriter, r *http.Request) {
+	expectedResponse := fmt.Sprintf(xrayVersionResponse, version)
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			_, err := fmt.Fprint(w, expectedResponse)
+			assert.NoError(t, err)
+			return
+		}
+		http.Error(w, "Invalid xray request", http.StatusBadRequest)
 	}
 }
 
@@ -230,43 +242,34 @@ func enrichGetResults(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func xscGitInfoHandlerFunc(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		req, err := io.ReadAll(r.Body)
-		assert.NoError(t, err)
-		if r.Method == http.MethodPost {
-			var reqBody services.XscGitInfoContext
-			err = json.Unmarshal(req, &reqBody)
-			assert.NoError(t, err)
-			if reqBody.GitRepoUrl == "" || reqBody.BranchName == "" || reqBody.CommitHash == "" {
-				w.WriteHeader(http.StatusBadRequest)
-				_, err := fmt.Fprint(w, XscGitInfoBadResponse)
-				assert.NoError(t, err)
-				return
-			}
-			w.WriteHeader(http.StatusCreated)
-			_, err = fmt.Fprint(w, XscGitInfoResponse)
-			assert.NoError(t, err)
-			return
-		}
-		http.Error(w, "Invalid xsc request", http.StatusBadRequest)
-	}
+type MockServerParams struct {
+	MSI         string
+	XrayVersion string
+	XscVersion  string
 }
 
 func StartXrayMockServer(t *testing.T) int {
+	params := MockServerParams{MSI: TestMultiScanId, XrayVersion: "3.0.0", XscVersion: "1.0.0"}
+	return StartXrayMockServerWithParams(t, params)
+}
+
+func StartXrayMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers := clienttests.HttpServerHandlers{}
+
+	handlers["/"] = http.NotFound
+	// Xray handlers
+	handlers["/xray/api/v1/system/version"] = xrayGetVersionHandlerFunc(t, params.XrayVersion)
 	handlers["/api/xray/scanBuild"] = scanBuildHandler
 	handlers["/api/v2/summary/artifact"] = artifactSummaryHandler
 	handlers["/api/v1/entitlements/feature/"] = entitlementsHandler
-	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t)
-	handlers["/xsc/api/v1/gitinfo"] = xscGitInfoHandlerFunc(t)
 	handlers["/xray/api/v1/scan/import_xml"] = enrichGetScanId(t)
+	handlers[fmt.Sprintf("/xray/api/v1/scan/graph/%s", params.MSI)] = enrichGetResults(t)
 	handlers["/xray/api/v1/configuration/jas"] = getJasConfig(t)
-	getEnrichResults := fmt.Sprintf("/xray/api/v1/scan/graph/%s", TestMultiScanId)
-	handlers[getEnrichResults] = enrichGetResults(t)
-	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	handlers[fmt.Sprintf("/%s/", services.BuildScanAPI)] = buildScanHandler
-	handlers["/"] = http.NotFound
+	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
+	// Xsc handlers
+	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)
+	handlers["/xray/api/v1/xsc/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)
 
 	port, err := clienttests.StartHttpServer(handlers)
 	if err != nil {
