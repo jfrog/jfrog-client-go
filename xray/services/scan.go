@@ -113,7 +113,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	url := ss.XrayDetails.GetUrl() + scanGraphAPI
 
 	// When XSC is enabled, modify the URL.
-	if scanParams.XrayVersion != "" && scanParams.XscVersion != "" {
+	if scanParams.XrayVersion != "" && scanParams.XscVersion != "" && scanParams.MultiScanId != "" {
 		url = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), scanParams.XrayVersion) + XscGraphAPI
 	}
 	url += createScanGraphQueryParams(scanParams)
