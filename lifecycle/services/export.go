@@ -105,7 +105,8 @@ func (rbs *ReleaseBundlesService) waitForExport(rbDetails ReleaseBundleDetails, 
 		case ExportFailed:
 			return true, responseBody, nil
 		case ExportCompleted:
-			if response.RelativeUrl != "" && response.RelativeUrl != "/" {
+			if response.RelativeUrl != "" && response.RelativeUrl != "/" &&
+				response.DownloadUrl != "" {
 				return true, responseBody, nil
 			}
 			return false, nil, nil
