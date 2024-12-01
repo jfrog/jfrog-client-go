@@ -3,10 +3,11 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"path"
+
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"path"
 )
 
 const (
@@ -101,8 +102,14 @@ func (rbs *ReleaseBundlesService) waitForExport(rbDetails ReleaseBundleDetails, 
 		switch response.Status {
 		case ExportProcessing:
 			return false, nil, nil
-		case ExportCompleted, ExportFailed:
+		case ExportFailed:
 			return true, responseBody, nil
+		case ExportCompleted:
+			if response.RelativeUrl != "" && response.RelativeUrl != "/" &&
+				response.DownloadUrl != "" {
+				return true, responseBody, nil
+			}
+			return false, nil, nil
 		default:
 			return true, nil, errorutils.CheckErrorf("received unexpected status: '%s'", response.Status)
 		}
