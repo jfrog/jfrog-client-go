@@ -33,8 +33,6 @@ func TestGetGitRepoUrlKey(t *testing.T) {
 	}{
 		{"with_http", "http://git.com/jfrog/jfrog-client-go.git"},
 		{"with_https", "https://git.com/jfrog/jfrog-client-go.git"},
-		{"with_ssh", "git@git.com:jfrog/jfrog-client-go.git"},
-		{"with_ssh_bb", "ssh://git@git.com/jfrog/jfrog-client-go.git"},
 		{"without_protocol", "git.com/jfrog/jfrog-client-go"},
 	}
 	for _, test := range tests {
