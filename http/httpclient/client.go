@@ -133,6 +133,10 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 			}
 			resp, respBody, redirectUrl, err = jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
 			if err != nil {
+				if strings.Contains(err.Error(), "unsupported protocol scheme") {
+					// Wrong URL, so no need to retry
+					return false, fmt.Errorf("%w\nThe recieved error indicats an invalid URL: %q, Please ensure the URL includes a valid scheme like 'http://' or 'https://'.", err, url)
+				}
 				return true, err
 			}
 			// Response must not be nil
