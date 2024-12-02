@@ -322,8 +322,11 @@ type JfrogResearchSeverityReason struct {
 }
 
 type Policy struct {
-	Policy string `json:"policy,omitempty"`
-	Rule   string `json:"rule,omitempty"`
+	Policy            string `json:"policy,omitempty"`
+	Rule              string `json:"rule,omitempty"`
+	IsBlocking        bool   `json:"is_blocking,omitempty"`
+	IgnoreRuleId      string `json:"ignore_rule_id,omitempty"`
+	SkipNotApplicable bool   `json:"is_skip_not_applicable,omitempty"`
 }
 
 type XscPostContextResponse struct {
