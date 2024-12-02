@@ -243,6 +243,7 @@ type Violation struct {
 	LicenseKey          string               `json:"license_key,omitempty"`
 	LicenseName         string               `json:"license_name,omitempty"`
 	IgnoreUrl           string               `json:"ignore_url,omitempty"`
+	Policies            []Policy             `json:"policies,omitempty"`
 	RiskReason          string               `json:"risk_reason,omitempty"`
 	IsEol               *bool                `json:"is_eol,omitempty"`
 	EolMessage          string               `json:"eol_message,omitempty"`
@@ -318,6 +319,11 @@ type JfrogResearchSeverityReason struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	IsPositive  bool   `json:"is_positive,omitempty"`
+}
+
+type Policy struct {
+	Policy string `json:"policy,omitempty"`
+	Rule   string `json:"rule,omitempty"`
 }
 
 type XscPostContextResponse struct {
