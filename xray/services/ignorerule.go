@@ -64,7 +64,7 @@ func (xirs *IgnoreRuleService) Delete(ignoreRuleId string) error {
 }
 
 // Create will create a new Xray ignore rule
-// The function creates the ignore rule and returns its id which is recieved after post
+// The function creates the ignore rule and returns its id which is received after post
 func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRuleId string, err error) {
 	ignoreRuleBody := utils.CreateIgnoreRuleBody(params)
 	content, err := json.Marshal(ignoreRuleBody)

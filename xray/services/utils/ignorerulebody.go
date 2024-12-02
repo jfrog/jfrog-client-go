@@ -20,6 +20,7 @@ type IgnoreFilters struct {
 	Vulnerabilities  []string                      `json:"vulnerabilities,omitempty"`
 	Licenses         []string                      `json:"licenses,omitempty"`
 	CVEs             []string                      `json:"cves,omitempty"`
+	GitRepositories  []string                      `json:"git_repositories,omitempty"`
 	Policies         []string                      `json:"policies,omitempty"`
 	Watches          []string                      `json:"watches,omitempty"`
 	DockerLayers     []string                      `json:"docker-layers,omitempty"`
@@ -42,12 +43,12 @@ type IgnoreFilterNameVersionPath struct {
 }
 
 type ExposuresFilterName struct {
-	Catagories []ExposuresCatagories `json:"catagories,omitempty"`
+	Categories []ExposuresCategories `json:"categories,omitempty"`
 	Scanners   []string              `json:"scanners,omitempty"`
 	FilePath   []string              `json:"file_path,omitempty"`
 }
 
-type ExposuresCatagories struct {
+type ExposuresCategories struct {
 	Secrets      bool `json:"secrets,omitempty"`
 	Services     bool `json:"services,omitempty"`
 	Applications bool `json:"applications,omitempty"`
