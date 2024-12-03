@@ -30,7 +30,7 @@ func createMinSeverity(t *testing.T) {
 
 	policyRule := utils.PolicyRule{
 		Name:     "min-severity" + getRunId(),
-		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low, false),
 		Priority: 1,
 	}
 	createAndCheckPolicy(t, policyName, true, utils.Security, policyRule)
@@ -78,12 +78,12 @@ func create2Priorities(t *testing.T) {
 
 	policyRule1 := utils.PolicyRule{
 		Name:     "priority-1" + getRunId(),
-		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low, false),
 		Priority: 1,
 	}
 	policyRule2 := utils.PolicyRule{
 		Name:     "priority-2" + getRunId(),
-		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium, false),
 		Priority: 2,
 	}
 	createAndCheckPolicy(t, policyName, true, utils.Security, policyRule1, policyRule2)
@@ -95,7 +95,7 @@ func createPolicyActions(t *testing.T) {
 
 	policyRule := utils.PolicyRule{
 		Name:     "policy-actions" + getRunId(),
-		Criteria: *utils.CreateSeverityPolicyCriteria(utils.High),
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.High, false),
 		Priority: 1,
 		Actions: &utils.PolicyAction{
 			BlockDownload: utils.PolicyBlockDownload{
@@ -118,14 +118,14 @@ func createUpdatePolicy(t *testing.T) {
 
 	policyRule := utils.PolicyRule{
 		Name:     "low-severity" + getRunId(),
-		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low),
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low, false),
 		Priority: 1,
 	}
 	createAndCheckPolicy(t, policyName, true, utils.Security, policyRule)
 
 	policyRule = utils.PolicyRule{
 		Name:     "medium-severity" + getRunId(),
-		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium, false),
 		Priority: 1,
 	}
 
