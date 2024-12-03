@@ -56,8 +56,9 @@ type PolicyRule struct {
 
 type PolicyCriteria struct {
 	// Security
-	MinSeverity Severity         `json:"min_severity,omitempty"`
-	CvssRange   *PolicyCvssRange `json:"cvss_range,omitempty"`
+	MinSeverity           Severity         `json:"min_severity,omitempty"`
+	CvssRange             *PolicyCvssRange `json:"cvss_range,omitempty"`
+	SkipNotApplicableCVEs bool             `json:"applicable_cves_only,omitempty"`
 
 	// License
 	AllowedLicenses        []string `json:"allowed_licenses,omitempty"`
@@ -87,9 +88,10 @@ type PolicyBlockDownload struct {
 }
 
 // Create security policy criteria with min severity
-func CreateSeverityPolicyCriteria(minSeverity Severity) *PolicyCriteria {
+func CreateSeverityPolicyCriteria(minSeverity Severity, skipNotApplicableCves bool) *PolicyCriteria {
 	return &PolicyCriteria{
-		MinSeverity: minSeverity,
+		MinSeverity:           minSeverity,
+		SkipNotApplicableCVEs: skipNotApplicableCves,
 	}
 }
 
