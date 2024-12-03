@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -401,4 +402,37 @@ func generateExpectedSymlinksFileList(parentDir string) []string {
 		expectedFileList[i] = parentDir + filePath
 	}
 	return expectedFileList
+}
+
+func TestReadNLineFromFile(t *testing.T) {
+	// Create a temporary test file
+	tempFile, err := os.CreateTemp("", "testfile_*.txt")
+	assert.NoError(t, err, "could not create temp file")
+
+	// Write some content to the temp file
+	content := "First Line\nSecond Line\nThird Line\n"
+	_, err = tempFile.Write([]byte(content))
+	assert.NoError(t, err, "could not write to temp file")
+	assert.NoError(t, tempFile.Close(), "could not close temp file")
+
+	// Tests
+	tests := []struct {
+		lineNum  int
+		expected string
+	}{
+		{1, "First Line"},
+		{2, "Second Line"},
+		{3, "Third Line"},
+		{4, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("Line %d", tt.lineNum), func(t *testing.T) {
+			line, err := ReadNLineFromFile(tempFile.Name(), tt.lineNum)
+			assert.NoError(t, err, "unexpected error")
+
+			// Check if the line content matches the expected value
+			assert.Equal(t, tt.expected, line, "line content mismatch")
+		})
+	}
 }

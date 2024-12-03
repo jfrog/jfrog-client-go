@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -672,4 +673,35 @@ func RemoveDirContents(dirPath string) (err error) {
 		}
 	}
 	return nil
+}
+
+// ReadNLineFromFile reads a specific line number from a file.
+// Returns the requested line and an empty string if the line doesn't exist.
+func ReadNLineFromFile(filePath string, lineNum int) (line string, err error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", errorutils.CheckErrorf("could not open file %s: %s", filePath, err.Error())
+	}
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(file.Close()))
+	}()
+
+	// Initialize the scanner
+	scanner := bufio.NewScanner(file)
+	var currentLine int
+
+	// Scan through the file
+	for scanner.Scan() {
+		currentLine++
+		if currentLine == lineNum {
+			// Return the requested line
+			return strings.TrimSpace(scanner.Text()), nil
+		}
+	}
+
+	// If the line doesn't exist, return an error
+	if err = scanner.Err(); err != nil {
+		return "", fmt.Errorf("error reading file %s: %w", filePath, err)
+	}
+	return "", nil
 }
