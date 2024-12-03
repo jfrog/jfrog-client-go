@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
+	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
-	"github.com/jfrog/jfrog-client-go/xsc/services/utils"
+	xscUtils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -45,6 +46,8 @@ const (
 	multiScanIdParam = "multi_scan_id="
 
 	scanTechQueryParam = "tech="
+
+	gitRepoKeyQueryParam = "git_repo="
 
 	XscVersionAPI = "system/version"
 )
@@ -91,10 +94,19 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
+	if isGitRepoUrlSupported(scanParams.XrayVersion) && scanParams.XscGitInfoContext != nil && scanParams.XscGitInfoContext.GitRepoHttpsCloneUrl != "" {
+		// Add git repo key to the query params to produce violations defined in the git repo policy
+		params = append(params, gitRepoKeyQueryParam+xscUtils.GetGitRepoUrlKey(scanParams.XscGitInfoContext.GitRepoHttpsCloneUrl))
+	}
+
 	if len(params) == 0 {
 		return ""
 	}
 	return "?" + strings.Join(params, "&")
+}
+
+func isGitRepoUrlSupported(xrayVersion string) bool {
+	return clientUtils.ValidateMinimumVersion(clientUtils.Xray, xrayVersion, xscUtils.MinXrayVersionXscTransitionToXray) == nil
 }
 
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
@@ -114,7 +126,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 
 	// When XSC is enabled and MultiScanId is provided, modify the URL to use XSC scan graph (analytics enabled)
 	if scanParams.XrayVersion != "" && scanParams.XscVersion != "" && scanParams.MultiScanId != "" {
-		url = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), scanParams.XrayVersion) + XscGraphAPI
+		url = xscUtils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), scanParams.XrayVersion) + XscGraphAPI
 	}
 	url += createScanGraphQueryParams(scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
@@ -144,7 +156,7 @@ func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVu
 	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
 	// Modify endpoint if XSC is enabled
 	if xscEnabled {
-		endPoint = utils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
+		endPoint = xscUtils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
 	}
 	endPoint += "/" + scanId
 
@@ -231,6 +243,7 @@ type Violation struct {
 	LicenseKey          string               `json:"license_key,omitempty"`
 	LicenseName         string               `json:"license_name,omitempty"`
 	IgnoreUrl           string               `json:"ignore_url,omitempty"`
+	Policies            []Policy             `json:"policies,omitempty"`
 	RiskReason          string               `json:"risk_reason,omitempty"`
 	IsEol               *bool                `json:"is_eol,omitempty"`
 	EolMessage          string               `json:"eol_message,omitempty"`
@@ -308,6 +321,14 @@ type JfrogResearchSeverityReason struct {
 	IsPositive  bool   `json:"is_positive,omitempty"`
 }
 
+type Policy struct {
+	Policy            string `json:"policy,omitempty"`
+	Rule              string `json:"rule,omitempty"`
+	IsBlocking        bool   `json:"is_blocking,omitempty"`
+	IgnoreRuleId      string `json:"ignore_rule_id,omitempty"`
+	SkipNotApplicable bool   `json:"is_skip_not_applicable,omitempty"`
+}
+
 type XscPostContextResponse struct {
 	MultiScanId string `json:"multi_scan_id,omitempty"`
 }
@@ -317,16 +338,16 @@ type XscVersionResponse struct {
 }
 
 type XscGitInfoContext struct {
-	GitRepoUrl    string   `json:"git_repo_url"`
-	GitRepoName   string   `json:"git_repo_name,omitempty"`
-	GitProject    string   `json:"git_project,omitempty"`
-	GitProvider   string   `json:"git_provider,omitempty"`
-	Technologies  []string `json:"technologies,omitempty"`
-	BranchName    string   `json:"branch_name"`
-	LastCommit    string   `json:"last_commit,omitempty"`
-	CommitHash    string   `json:"commit_hash"`
-	CommitMessage string   `json:"commit_message,omitempty"`
-	CommitAuthor  string   `json:"commit_author,omitempty"`
+	GitRepoHttpsCloneUrl string   `json:"git_repo_url"`
+	GitRepoName          string   `json:"git_repo_name,omitempty"`
+	GitProject           string   `json:"git_project,omitempty"`
+	GitProvider          string   `json:"git_provider,omitempty"`
+	Technologies         []string `json:"technologies,omitempty"`
+	BranchName           string   `json:"branch_name"`
+	LastCommitUrl        string   `json:"last_commit,omitempty"`
+	LastCommitHash       string   `json:"commit_hash"`
+	LastCommitMessage    string   `json:"commit_message,omitempty"`
+	LastCommitAuthor     string   `json:"commit_author,omitempty"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
