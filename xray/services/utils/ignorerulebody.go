@@ -26,6 +26,7 @@ type IgnoreFilters struct {
 	OperationalRisks []string                      `json:"operational_risk,omitempty"`
 	Exposures        []ExposuresFilterName         `json:"exposures,omitempty"`
 	ReleaseBundles   []IgnoreFilterNameVersion     `json:"release-bundles,omitempty"`
+	ReleaseBundlesV2 []IgnoreFilterNameVersion     `json:"release_bundles_v2,omitempty"`
 	Builds           []IgnoreFilterNameVersion     `json:"builds,omitempty"`
 	Components       []IgnoreFilterNameVersion     `json:"components,omitempty"`
 	Artifacts        []IgnoreFilterNameVersionPath `json:"artifacts,omitempty"`
