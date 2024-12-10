@@ -31,10 +31,18 @@ func NewConfigurationProfileService(client *jfroghttpclient.JfrogHttpClient) *Co
 }
 
 type ConfigProfile struct {
-	ProfileName   string        `json:"profile_name"`
-	FrogbotConfig FrogbotConfig `json:"frogbot_config,omitempty"`
-	Modules       []Module      `json:"modules"`
-	IsDefault     bool          `json:"is_default,omitempty"`
+	ProfileName   string                  `json:"profile_name"`
+	Repository    ConfigProfileRepository `json:"repository"`
+	FrogbotConfig FrogbotConfig           `json:"frogbot_config,omitempty"`
+	Modules       []Module                `json:"modules"`
+	IsDefault     bool                    `json:"is_default,omitempty"`
+}
+
+type ConfigProfileRepository struct {
+	Id       string
+	Name     string
+	Url      string
+	Provider string
 }
 
 type FrogbotConfig struct {
