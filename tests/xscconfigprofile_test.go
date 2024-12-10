@@ -11,13 +11,13 @@ import (
 	"testing"
 )
 
-func TestGetConfigurationProfile(t *testing.T) {
+func TestGetConfigurationProfileByName(t *testing.T) {
 	initXscTest(t, services.ConfigProfileMinXscVersion)
 
 	mockServer, configProfileService := createXscMockServerForConfigProfile(t)
 	defer mockServer.Close()
 
-	configProfile, err := configProfileService.GetConfigurationProfile("default-test-profile")
+	configProfile, err := configProfileService.GetConfigurationProfileByName("default-test-profile")
 	assert.NoError(t, err)
 
 	profileFileContent, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
