@@ -77,8 +77,14 @@ func (sm *XscServicesManager) GetAnalyticsGeneralEvent(msi string) (*services.Xs
 	return eventService.GetGeneralEvent(msi)
 }
 
-func (sm *XscServicesManager) GetConfigProfile(profileName string) (*services.ConfigProfile, error) {
+func (sm *XscServicesManager) GetConfigProfileByName(profileName string) (*services.ConfigProfile, error) {
 	configProfileService := services.NewConfigurationProfileService(sm.client)
 	configProfileService.XscDetails = sm.config.GetServiceDetails()
-	return configProfileService.GetConfigurationProfile(profileName)
+	return configProfileService.GetConfigurationProfileByName(profileName)
+}
+
+// TODO is it really required?
+func (sm *XscServicesManager) GetConfigProfileByUrl(profileUrl string) (*services.ConfigProfile, error) {
+	// Empty implementation required for alignment with interface
+	return nil, nil
 }
