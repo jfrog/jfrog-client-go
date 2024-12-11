@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ConfigProfileMinXscVersion          = "1.11.0" // TODO eran start here - we no longer check for xsc version. fix usages + tests so now we only verify this XRAY version
+	ConfigProfileMinXscVersion          = "1.11.0"
 	ConfigProfileByUrlMinXrayVersion    = "3.110.0"
 	xscConfigProfileByNameApi           = "profile"
 	xscConfigProfileByUrlApi            = "profile_repos"
