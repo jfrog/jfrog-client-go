@@ -67,7 +67,7 @@ func isValidUUID(str string) bool {
 
 func initXscEventTest(t *testing.T) (xscDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) {
 	var err error
-	initXscTest(t, services.AnalyticsMetricsMinXscVersion)
+	initXscTest(t, services.AnalyticsMetricsMinXscVersion, "")
 	xscDetails = GetXscDetails()
 	client, err = jfroghttpclient.JfrogClientBuilder().
 		SetClientCertPath(xscDetails.GetClientCertPath()).
