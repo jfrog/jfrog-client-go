@@ -28,14 +28,15 @@ func initXscTest(t *testing.T, minXscVersion string, minXrayVersion string) {
 // For features that are available before the migration we pass minXscVersion to check. If the utilized Xray version >= 3.107.13, the returned Xsc version will always suffice the check.
 // For features that were introduced only after the migration we pass only minXrayVersion to check and can leave minXscVersion blank.
 func validateXscVersion(t *testing.T, minXscVersion string, minXrayVersion string) {
+	// Validate active Xsc server
+	currentXscVersion, err := GetXscDetails().GetVersion()
+	if err != nil {
+		t.Skip(err)
+	}
+
 	if minXscVersion != "" {
 		// If minXscVersion is provided we assume we have a Xray version BEFORE Xsc migration to it (i.e. prior to 3.107.13)
-		// In this case we want to validate active Xsc server + minimal required Xsc version
-		currentXscVersion, err := GetXscDetails().GetVersion()
-		if err != nil {
-			t.Skip(err)
-		}
-		// Validate minimum XSC version.
+		// In this case we want to validate minimal required Xsc version
 		err = clientUtils.ValidateMinimumVersion(clientUtils.Xsc, currentXscVersion, minXscVersion)
 		if err != nil {
 			t.Skip(err)
