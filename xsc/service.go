@@ -15,6 +15,8 @@ type XscService interface {
 	UpdateAnalyticsGeneralEvent(event services.XscAnalyticsGeneralEventFinalize) error
 	// GetAnalyticsGeneralEvent returns general event that match the msi provided.
 	GetAnalyticsGeneralEvent(msi string) (*services.XscAnalyticsGeneralEvent, error)
-	// GetConfigProfile returns the configuration profile that match the profile name provided.
-	GetConfigProfile(profileName string) (*services.ConfigProfile, error)
+	// GetConfigProfileByName returns the configuration profile that match the profile name provided.
+	GetConfigProfileByName(profileName string) (*services.ConfigProfile, error)
+	// GetConfigProfileByUrl returns the configuration profile related to the provided repository url.
+	GetConfigProfileByUrl(profileUrl string) (*services.ConfigProfile, error)
 }
