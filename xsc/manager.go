@@ -83,8 +83,7 @@ func (sm *XscServicesManager) GetConfigProfileByName(profileName string) (*servi
 	return configProfileService.GetConfigurationProfileByName(profileName)
 }
 
-// TODO is it really required?
-func (sm *XscServicesManager) GetConfigProfileByUrl(profileUrl string) (*services.ConfigProfile, error) {
+func (sm *XscServicesManager) GetConfigProfileByUrl(_ string) (*services.ConfigProfile, error) {
 	// Empty implementation required for alignment with interface
 	return nil, nil
 }
