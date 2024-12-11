@@ -2,9 +2,7 @@ package tests
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/xsc/services"
 	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 	"github.com/stretchr/testify/assert"
@@ -41,13 +39,8 @@ func TestGetConfigurationProfileByName(t *testing.T) {
 func TestGetConfigurationProfileByUrl(t *testing.T) {
 	initXscTest(t, "", services.ConfigProfileByUrlMinXrayVersion)
 
-	// Verifying minimal xray version required for feature and test
 	xrayVersion, err := GetXrayDetails().GetVersion()
 	require.NoError(t, err)
-	err = utils.ValidateMinimumVersion(utils.Xray, xrayVersion, services.ConfigProfileByUrlMinXrayVersion)
-	if err != nil {
-		t.Skip(fmt.Sprintf("Skipping GetConfigurationProfileByName test since current Xray version is %s while minimal required version for the feature is %s", xrayVersion, services.ConfigProfileByUrlMinXrayVersion))
-	}
 
 	mockServer, configProfileService := createXscMockServerForConfigProfile(t, xrayVersion)
 	defer mockServer.Close()
