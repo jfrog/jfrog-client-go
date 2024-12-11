@@ -2,22 +2,32 @@ package tests
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/xsc/services"
+	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 )
 
-func TestGetConfigurationProfileByName(t *testing.T) {
-	initXscTest(t, services.ConfigProfileMinXscVersion)
+const configProfileWithoutRepo = "default-test-profile"
 
-	mockServer, configProfileService := createXscMockServerForConfigProfile(t)
+func TestGetConfigurationProfileByName(t *testing.T) {
+	initXscTest(t, services.ConfigProfileMinXscVersion, "")
+
+	xrayVersion, err := GetXrayDetails().GetVersion()
+	require.NoError(t, err)
+
+	mockServer, configProfileService := createXscMockServerForConfigProfile(t, xrayVersion)
 	defer mockServer.Close()
 
-	configProfile, err := configProfileService.GetConfigurationProfileByName("default-test-profile")
+	configProfile, err := configProfileService.GetConfigurationProfileByName(configProfileWithoutRepo)
 	assert.NoError(t, err)
 
 	profileFileContent, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
@@ -28,15 +38,55 @@ func TestGetConfigurationProfileByName(t *testing.T) {
 	assert.Equal(t, &configProfileForComparison, configProfile)
 }
 
-func createXscMockServerForConfigProfile(t *testing.T) (mockServer *httptest.Server, configProfileService *services.ConfigurationProfileService) {
+func TestGetConfigurationProfileByUrl(t *testing.T) {
+	initXscTest(t, "", services.ConfigProfileByUrlMinXrayVersion)
+
+	// Verifying minimal xray version required for feature and test
+	xrayVersion, err := GetXrayDetails().GetVersion()
+	require.NoError(t, err)
+	err = utils.ValidateMinimumVersion(utils.Xray, xrayVersion, services.ConfigProfileByUrlMinXrayVersion)
+	if err != nil {
+		t.Skip(fmt.Sprintf("Skipping GetConfigurationProfileByName test since current Xray version is %s while minimal required version for the feature is %s", xrayVersion, services.ConfigProfileByUrlMinXrayVersion))
+	}
+
+	mockServer, configProfileService := createXscMockServerForConfigProfile(t, xrayVersion)
+	defer mockServer.Close()
+
+	configProfile, err := configProfileService.GetConfigurationProfileByUrl(mockServer.URL)
+	assert.NoError(t, err)
+
+	profileFileContent, err := os.ReadFile("testdata/configprofile/configProfileWithRepoExample.json")
+	assert.NoError(t, err)
+	var configProfileForComparison services.ConfigProfile
+	err = json.Unmarshal(profileFileContent, &configProfileForComparison)
+	assert.NoError(t, err)
+	assert.Equal(t, &configProfileForComparison, configProfile)
+
+}
+
+func createXscMockServerForConfigProfile(t *testing.T, xrayVersion string) (mockServer *httptest.Server, configProfileService *services.ConfigurationProfileService) {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/xsc/api/v1/profile/default-test-profile" && r.Method == http.MethodGet {
+		apiUrlPart := "api/v1/"
+		var isXrayAfterXscMigration bool
+		if isXrayAfterXscMigration = xscutils.IsXscXrayInnerService(xrayVersion); isXrayAfterXscMigration {
+			apiUrlPart = ""
+		}
+
+		switch {
+		case strings.Contains(r.RequestURI, "/xsc/"+apiUrlPart+"profile/"+configProfileWithoutRepo):
 			w.WriteHeader(http.StatusOK)
 			content, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
 			assert.NoError(t, err)
 			_, err = w.Write(content)
 			assert.NoError(t, err)
-		} else {
+
+		case strings.Contains(r.RequestURI, "xray/api/v1/xsc/profile_repos") && isXrayAfterXscMigration:
+			w.WriteHeader(http.StatusOK)
+			content, err := os.ReadFile("testdata/configprofile/configProfileWithRepoExample.json")
+			assert.NoError(t, err)
+			_, err = w.Write(content)
+			assert.NoError(t, err)
+		default:
 			assert.Fail(t, "received an unexpected request")
 		}
 	}))
@@ -45,10 +95,15 @@ func createXscMockServerForConfigProfile(t *testing.T) (mockServer *httptest.Ser
 	xscDetails.SetUrl(mockServer.URL + "/xsc")
 	xscDetails.SetAccessToken("")
 
+	xrayDetails := GetXrayDetails()
+	xrayDetails.SetUrl(mockServer.URL + "/xray")
+	xrayDetails.SetAccessToken("")
+
 	client, err := jfroghttpclient.JfrogClientBuilder().Build()
 	assert.NoError(t, err)
 
 	configProfileService = services.NewConfigurationProfileService(client)
 	configProfileService.XscDetails = xscDetails
+	configProfileService.XrayDetails = xrayDetails
 	return
 }
