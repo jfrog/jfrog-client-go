@@ -154,7 +154,6 @@ func (cp *ConfigurationProfileService) sendConfigProfileByUrlRequest(repoUrl str
 	return
 }
 
-// TODO eran write test similar to byName func above
 func (cp *ConfigurationProfileService) GetConfigurationProfileByUrl(url string) (*ConfigProfile, error) {
 	url, res, body, err := cp.sendConfigProfileByUrlRequest(url)
 	if err != nil {
@@ -165,6 +164,6 @@ func (cp *ConfigurationProfileService) GetConfigurationProfileByUrl(url string) 
 	}
 
 	var profile ConfigProfile
-	err = errorutils.CheckError(json.Unmarshal(body, &profile))
+	err = errorutils.CheckError(json.Unmarshal(body, &profile)) // TODO eran check about ConfigProfile structure. should we expect the repository info INSIDE the returned config profile? if not delete the ConfigProfileRepository part from frogbot
 	return &profile, err
 }
