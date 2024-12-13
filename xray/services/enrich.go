@@ -91,8 +91,7 @@ func (es *EnrichService) GetImportGraphResults(scanId string) (*ScanResponse, er
 type XrayGraphImportParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
-	ScanType          ScanType
-	SBOMInput         []byte
-	XscGitInfoContext *XscGitInfoContext
-	XscVersion        string
+	ScanType   ScanType
+	SBOMInput  []byte
+	XscVersion string
 }

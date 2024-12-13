@@ -78,15 +78,11 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 			}
 		}
 	}
-
+	// Xsc params are used only when XSC is enabled and MultiScanId is provided
 	if scanParams.XscVersion != "" && scanParams.MultiScanId != "" {
 		params = append(params, multiScanIdParam+scanParams.MultiScanId)
-		gitInfoContext := scanParams.XscGitInfoContext
-		if gitInfoContext != nil {
-			if len(gitInfoContext.Technologies) > 0 {
-				// Append the tech type, each graph can contain only one tech type
-				params = append(params, scanTechQueryParam+gitInfoContext.Technologies[0])
-			}
+		if scanParams.Technology != "" {
+			params = append(params, scanTechQueryParam+scanParams.Technology)
 		}
 	}
 
@@ -94,9 +90,9 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
 	}
 
-	if isGitRepoUrlSupported(scanParams.XrayVersion) && scanParams.XscGitInfoContext != nil && scanParams.XscGitInfoContext.GitRepoHttpsCloneUrl != "" {
+	if isGitRepoUrlSupported(scanParams.XrayVersion) && scanParams.GitRepoHttpsCloneUrl != "" {
 		// Add git repo key to the query params to produce violations defined in the git repo policy
-		params = append(params, gitRepoKeyQueryParam+xscUtils.GetGitRepoUrlKey(scanParams.XscGitInfoContext.GitRepoHttpsCloneUrl))
+		params = append(params, gitRepoKeyQueryParam+xscUtils.GetGitRepoUrlKey(scanParams.GitRepoHttpsCloneUrl))
 	}
 
 	if len(params) == 0 {
@@ -195,7 +191,10 @@ func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVu
 type XrayGraphScanParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
-	RepoPath   string
+	RepoPath string
+	// This will provide a way to extract the watches that should be applied on this graph
+	GitRepoHttpsCloneUrl string
+	// This will provide a way to extract the watches that should be applied on this graph
 	ProjectKey string
 	Watches    []string
 	ScanType   ScanType
@@ -205,9 +204,9 @@ type XrayGraphScanParams struct {
 	BinaryGraph            *xrayUtils.BinaryGraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
-	XscGitInfoContext      *XscGitInfoContext
 	XscVersion             string
 	XrayVersion            string
+	Technology             string
 	MultiScanId            string
 }
 
@@ -324,27 +323,6 @@ type JfrogResearchSeverityReason struct {
 type Policy struct {
 	Policy string `json:"policy,omitempty"`
 	Rule   string `json:"rule,omitempty"`
-}
-
-type XscPostContextResponse struct {
-	MultiScanId string `json:"multi_scan_id,omitempty"`
-}
-
-type XscVersionResponse struct {
-	Version string `json:"xsc_version"`
-}
-
-type XscGitInfoContext struct {
-	GitRepoHttpsCloneUrl string   `json:"git_repo_url"`
-	GitRepoName          string   `json:"git_repo_name,omitempty"`
-	GitProject           string   `json:"git_project,omitempty"`
-	GitProvider          string   `json:"git_provider,omitempty"`
-	Technologies         []string `json:"technologies,omitempty"`
-	BranchName           string   `json:"branch_name"`
-	LastCommitUrl        string   `json:"last_commit,omitempty"`
-	LastCommitHash       string   `json:"commit_hash"`
-	LastCommitMessage    string   `json:"commit_message,omitempty"`
-	LastCommitAuthor     string   `json:"commit_author,omitempty"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {
