@@ -26,10 +26,17 @@ type IgnoreFilters struct {
 	DockerLayers     []string                      `json:"docker-layers,omitempty"`
 	OperationalRisks []string                      `json:"operational_risk,omitempty"`
 	Exposures        []ExposuresFilterName         `json:"exposures,omitempty"`
+	Sast             []SastFilterName              `json:"sast,omitempty"`
 	ReleaseBundles   []IgnoreFilterNameVersion     `json:"release-bundles,omitempty"`
 	Builds           []IgnoreFilterNameVersion     `json:"builds,omitempty"`
 	Components       []IgnoreFilterNameVersion     `json:"components,omitempty"`
 	Artifacts        []IgnoreFilterNameVersionPath `json:"artifacts,omitempty"`
+}
+
+type SastFilterName struct {
+	Fingerprint []string `json:"fingerprint,omitempty"`
+	Rule        []string `json:"rule,omitempty"`
+	FilePath    []string `json:"file_path,omitempty"`
 }
 
 type IgnoreFilterNameVersion struct {
