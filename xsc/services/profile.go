@@ -156,6 +156,6 @@ func (cp *ConfigurationProfileService) GetConfigurationProfileByUrl(url string) 
 	}
 
 	var profile ConfigProfile
-	err = errorutils.CheckError(json.Unmarshal(body, &profile)) // TODO eran check about ConfigProfile structure. should we expect the repository info INSIDE the returned config profile? if not delete the ConfigProfileRepository part from frogbot
+	err = errorutils.CheckError(json.Unmarshal(body, &profile))
 	return &profile, err
 }
