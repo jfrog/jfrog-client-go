@@ -56,14 +56,29 @@ type PolicyRule struct {
 
 type PolicyCriteria struct {
 	// Security
-	MinSeverity Severity         `json:"min_severity,omitempty"`
-	CvssRange   *PolicyCvssRange `json:"cvss_range,omitempty"`
+	MinSeverity Severity                `json:"min_severity,omitempty"`
+	CvssRange   *PolicyCvssRange        `json:"cvss_range,omitempty"`
+	Exposures   *PolicyExposureCriteria `json:"exposures,omitempty"`
+	Sast        *PolicySastCriteria     `json:"sast,omitempty"`
 
 	// License
 	AllowedLicenses        []string `json:"allowed_licenses,omitempty"`
 	BannedLicenses         []string `json:"banned_licenses,omitempty"`
 	AllowUnknown           *bool    `json:"allow_unknown,omitempty"`
 	MultiLicensePermissive *bool    `json:"multi_license_permissive,omitempty"`
+}
+
+type PolicyExposureCriteria struct {
+	MinSeverity   Severity `json:"min_severity,omitempty"`
+	Secrets       *bool    `json:"secrets,omitempty"`
+	Applications  *bool    `json:"applications,omitempty"`
+	Services      *bool    `json:"services,omitempty"`
+	IaC           *bool    `json:"iac,omitempty"`
+	MaliciousCode *bool    `json:"malicious_code,omitempty"`
+}
+
+type PolicySastCriteria struct {
+	MinSeverity Severity `json:"min_severity,omitempty"`
 }
 
 type PolicyCvssRange struct {
@@ -91,6 +106,23 @@ func CreateSeverityPolicyCriteria(minSeverity Severity) *PolicyCriteria {
 	return &PolicyCriteria{
 		MinSeverity: minSeverity,
 	}
+}
+
+func CreateExposuresPolicyCriteria(minSeverity Severity, secrets, applications, services, iac, maliciousCode bool) *PolicyExposureCriteria {
+	criteria := &PolicyExposureCriteria{MinSeverity: minSeverity}
+	if secrets {
+		criteria.Secrets = &secrets
+	}
+	if applications {
+		criteria.Applications = &applications
+	}
+	if services {
+		criteria.Services = &services
+	}
+	if iac {
+		criteria.IaC = &iac
+	}
+	return criteria
 }
 
 // Create security policy criteria with range.
