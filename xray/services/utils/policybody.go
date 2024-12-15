@@ -108,19 +108,19 @@ func CreateSeverityPolicyCriteria(minSeverity Severity) *PolicyCriteria {
 	}
 }
 
-func CreateExposuresPolicyCriteria(minSeverity Severity, secrets, applications, services, iac, maliciousCode bool) *PolicyExposureCriteria {
-	criteria := &PolicyExposureCriteria{MinSeverity: minSeverity}
+func CreateExposuresPolicyCriteria(minSeverity Severity, secrets, applications, services, iac, maliciousCode bool) *PolicyCriteria {
+	criteria := &PolicyCriteria{Exposures: &PolicyExposureCriteria{MinSeverity: minSeverity}}
 	if secrets {
-		criteria.Secrets = &secrets
+		criteria.Exposures.Secrets = &secrets
 	}
 	if applications {
-		criteria.Applications = &applications
+		criteria.Exposures.Applications = &applications
 	}
 	if services {
-		criteria.Services = &services
+		criteria.Exposures.Services = &services
 	}
 	if iac {
-		criteria.IaC = &iac
+		criteria.Exposures.IaC = &iac
 	}
 	return criteria
 }
