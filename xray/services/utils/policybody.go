@@ -125,6 +125,14 @@ func CreateExposuresPolicyCriteria(minSeverity Severity, secrets, applications, 
 	return criteria
 }
 
+func CreateSastPolicyCriteria(minSeverity Severity) *PolicyCriteria {
+	return &PolicyCriteria{
+		Sast: &PolicySastCriteria{
+			MinSeverity: minSeverity,
+		},
+	}
+}
+
 // Create security policy criteria with range.
 // from - CVSS range from 0.0 to 10.0
 // to - CVSS range from 0.0 to 10.0
