@@ -46,11 +46,12 @@ func validateXscVersion(t *testing.T, minXscVersion string, minXrayVersion strin
 	if minXrayVersion != "" {
 		// If minXrayVersion is provided we assume we have a Xray version AFTER  Xsc migration to it (3.107.13+)
 		// In this case we want to validate minimal required Xray version only
-		currentXrayVersion, err := GetXrayDetails().GetVersion()
+		var currentXrayVersion string
+		currentXrayVersion, err = GetXrayDetails().GetVersion()
 		if err != nil {
 			t.Skip(err)
 		}
-		err = clientUtils.ValidateMinimumVersion(clientUtils.Xsc, currentXrayVersion, minXscVersion)
+		err = clientUtils.ValidateMinimumVersion(clientUtils.Xsc, currentXrayVersion, minXrayVersion)
 		if err != nil {
 			t.Skip(err)
 		}
