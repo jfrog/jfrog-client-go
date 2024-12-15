@@ -48,7 +48,7 @@ func TestGetConfigurationProfileByUrl(t *testing.T) {
 	configProfile, err := configProfileService.GetConfigurationProfileByUrl(mockServer.URL)
 	assert.NoError(t, err)
 
-	profileFileContent, err := os.ReadFile("testdata/configprofile/configProfileWithRepoExample.json")
+	profileFileContent, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
 	assert.NoError(t, err)
 	var configProfileForComparison services.ConfigProfile
 	err = json.Unmarshal(profileFileContent, &configProfileForComparison)
@@ -66,16 +66,16 @@ func createXscMockServerForConfigProfile(t *testing.T, xrayVersion string) (mock
 		}
 
 		switch {
-		case strings.Contains(r.RequestURI, "/xsc/"+apiUrlPart+"profile/"+configProfileWithoutRepo):
+		case strings.Contains(r.RequestURI, "/xsc/"+apiUrlPart+"profile/"+configProfileWithoutRepo) && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			content, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
 			assert.NoError(t, err)
 			_, err = w.Write(content)
 			assert.NoError(t, err)
 
-		case strings.Contains(r.RequestURI, "xray/api/v1/xsc/profile_repos") && isXrayAfterXscMigration:
+		case strings.Contains(r.RequestURI, "xray/api/v1/xsc/profile_repos") && r.Method == http.MethodPost && isXrayAfterXscMigration:
 			w.WriteHeader(http.StatusOK)
-			content, err := os.ReadFile("testdata/configprofile/configProfileWithRepoExample.json")
+			content, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
 			assert.NoError(t, err)
 			_, err = w.Write(content)
 			assert.NoError(t, err)
