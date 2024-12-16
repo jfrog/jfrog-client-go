@@ -2,6 +2,13 @@ package utils
 
 import "time"
 
+const (
+	SecretExposureType ExposureType = "secret"
+	IacExposureType    ExposureType = "iac"
+)
+
+type ExposureType string
+
 type IgnoreRuleParams struct {
 	Notes         string        `json:"notes"`
 	ExpiresAt     time.Time     `json:"expires_at,omitempty"`
@@ -50,9 +57,9 @@ type IgnoreFilterNameVersionPath struct {
 }
 
 type ExposuresFilterName struct {
-	Categories []ExposuresCategories `json:"categories,omitempty"`
-	Scanners   []string              `json:"scanners,omitempty"`
-	FilePath   []string              `json:"file_path,omitempty"`
+	Categories []ExposureType `json:"categories,omitempty"`
+	Scanners   []string       `json:"scanners,omitempty"`
+	FilePath   []string       `json:"file_path,omitempty"`
 }
 
 type ExposuresCategories struct {
