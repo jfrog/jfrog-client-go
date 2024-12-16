@@ -84,6 +84,6 @@ func (sm *XscServicesManager) GetConfigProfileByName(profileName string) (*servi
 }
 
 func (sm *XscServicesManager) GetConfigProfileByUrl(_ string) (*services.ConfigProfile, error) {
-	// Empty implementation required for alignment with interface
+	// Empty implementation required for alignment with interface, implemented only at the new service inside the Xray service
 	return nil, nil
 }

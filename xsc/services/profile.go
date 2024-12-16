@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -13,11 +14,12 @@ import (
 )
 
 const (
-	ConfigProfileMinXscVersion          = "1.11.0"
-	ConfigProfileByUrlMinXrayVersion    = "3.110.0"
-	xscConfigProfileByNameApi           = "profile"
-	xscConfigProfileByUrlApi            = "profile_repos"
-	xscDeprecatedConfigProfileApiSuffix = "api/v1/" + xscConfigProfileByNameApi
+	ConfigProfileMinXscVersion                = "1.11.0"
+	ConfigProfileByUrlMinXrayVersion          = "3.110.0"
+	xscConfigProfileByNameApi                 = "profile"
+	xscConfigProfileByUrlApi                  = "profile_repos"
+	xscDeprecatedConfigProfileByNameApiSuffix = "api/v1/" + xscConfigProfileByNameApi
+	getProfileByUrlBody                       = "{\"repo_url\":\"%s\"}"
 )
 
 type ConfigurationProfileService struct {
@@ -111,7 +113,7 @@ func (cp *ConfigurationProfileService) sendConfigProfileByNameRequest(profileNam
 	}
 	// Backward compatibility
 	httpDetails := cp.XscDetails.CreateHttpClientDetails()
-	url = fmt.Sprintf("%s%s/%s", utils.AddTrailingSlashIfNeeded(cp.XscDetails.GetUrl()), xscDeprecatedConfigProfileApiSuffix, profileName)
+	url = fmt.Sprintf("%s%s/%s", utils.AddTrailingSlashIfNeeded(cp.XscDetails.GetUrl()), xscDeprecatedConfigProfileByNameApiSuffix, profileName)
 	resp, body, _, err = cp.client.SendGet(url, true, &httpDetails)
 	return
 }
@@ -131,17 +133,13 @@ func (cp *ConfigurationProfileService) GetConfigurationProfileByName(profileName
 }
 
 func (cp *ConfigurationProfileService) sendConfigProfileByUrlRequest(repoUrl string) (url string, resp *http.Response, body []byte, err error) {
-	if cp.XrayDetails != nil {
-		httpDetails := cp.XrayDetails.CreateHttpClientDetails()
-		url = fmt.Sprintf("%s%s%s", utils.AddTrailingSlashIfNeeded(cp.XrayDetails.GetUrl()), xscutils.XscInXraySuffix, xscConfigProfileByUrlApi)
-		requestContent := []byte(fmt.Sprintf("{\"repo_url\":\"%s\"}", repoUrl))
-		resp, body, err = cp.client.SendPost(url, requestContent, &httpDetails)
+	if cp.XrayDetails == nil {
+		err = errors.New("received empty Xray details")
 		return
 	}
-	// Backward compatibility
-	httpDetails := cp.XscDetails.CreateHttpClientDetails()
-	url = fmt.Sprintf("%s%s/%s", utils.AddTrailingSlashIfNeeded(cp.XscDetails.GetUrl()), xscDeprecatedConfigProfileApiSuffix, xscConfigProfileByUrlApi)
-	requestContent := []byte(fmt.Sprintf("{\"repo_url\":\"%s\"}", repoUrl))
+	httpDetails := cp.XrayDetails.CreateHttpClientDetails()
+	url = fmt.Sprintf("%s%s%s", utils.AddTrailingSlashIfNeeded(cp.XrayDetails.GetUrl()), xscutils.XscInXraySuffix, xscConfigProfileByUrlApi)
+	requestContent := []byte(fmt.Sprintf(getProfileByUrlBody, repoUrl))
 	resp, body, err = cp.client.SendPost(url, requestContent, &httpDetails)
 	return
 }
