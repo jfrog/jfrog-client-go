@@ -247,6 +247,7 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 // Xsc returns the Xsc service inside Xray
 func (sm *XrayServicesManager) Xsc() *xsc.XscInnerService {
 	xscService := xsc.NewXscService(sm.client)
-	xscService.XrayDetails = sm.config.GetServiceDetails()
+	temp := sm.config.GetServiceDetails()
+	xscService.XrayDetails = temp
 	return xscService
 }
