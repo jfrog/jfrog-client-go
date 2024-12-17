@@ -102,19 +102,19 @@ func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRule
 }
 
 func validateIgnoreFilters(ignoreFilters utils.IgnoreFilters) error {
-	filters := 0
+	filters := []string{}
 	if len(ignoreFilters.CVEs) > 0 {
-		filters++
+		filters = append(filters, "CVEs")
 	}
-	if len(ignoreFilters.Vulnerabilities) > 0 {
-		filters++
+	if len(ignoreFilters.Exposures) > 0 {
+		filters = append(filters, "Exposures")
 	}
-	if len(ignoreFilters.Licenses) > 0 {
-		filters++
+	if len(ignoreFilters.Sast) > 0 {
+		filters = append(filters, "Sast")
 	}
 	// if more than one filter is set, notify the user
-	if filters > 1 {
-		return errorutils.CheckErrorf("only one filter can be set at a time, found %d filters", filters)
+	if len(filters) > 1 {
+		return errorutils.CheckErrorf("more than one ignore filter is set, split them to multiple ignore rules: %v", filters)
 	}
 	return nil
 }
