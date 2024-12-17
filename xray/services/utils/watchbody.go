@@ -161,6 +161,11 @@ type watchFilterPropertyValue struct {
 	Value string `json:"value"`
 }
 
+type ResourcesWatchesBody struct {
+	GitRepositoryWatches []string `json:"git_repository_watches,omitempty"`
+	ProjectWatches       []string `json:"project_watches,omitempty"`
+}
+
 // CreateBody creates a payload to configure a Watch in Xray
 // This can configure repositories and builds
 // However, bundles are not supported.
