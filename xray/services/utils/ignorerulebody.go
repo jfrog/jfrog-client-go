@@ -3,7 +3,7 @@ package utils
 import "time"
 
 const (
-	SecretExposureType ExposureType = "secret"
+	SecretExposureType ExposureType = "secrets"
 	IacExposureType    ExposureType = "iac"
 )
 

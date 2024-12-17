@@ -144,6 +144,39 @@ func (xws *WatchService) Update(params utils.WatchParams) error {
 	return nil
 }
 
+// type ResourcesWatches struct {
+// 	GitRepositoryWatches []string `json:"git_repository_watches,omitempty"`
+// 	ProjectWatches 	     []string `json:"project_watches,omitempty"`
+// }
+
+// func (xws *WatchService) GetResourceWatches(gitRepo, project string) (watches *ResourcesWatches, err error) {
+// 	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
+// 	log.Info("Getting resource watches...")
+// 	resp, body, _, err := xws.client.SendGet(xws.getWatchURL(), true, &httpClientsDetails)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+// 		return nil, err
+// 	}
+
+// 	watches := []utils.WatchBody{}
+// 	err = json.Unmarshal(body, &watches)
+// 	if err != nil {
+// 		return nil, errors.New("failed unmarshalling watches")
+// 	}
+
+// 	for _, watch := range watches {
+// 		if watch.GeneralData.Name == gitRepo+"-"+project {
+// 			watchNames = append(watchNames, watch.GeneralData.Name)
+// 		}
+// 	}
+
+// 	log.Debug("Xray response:", resp.Status)
+// 	log.Info("Done getting resource watches.")
+// 	return watchNames, nil
+// }
+
 // Get retrieves the details about an Xray watch by its name
 // It will error if no watch can be found by that name.
 func (xws *WatchService) Get(watchName string) (watchResp *utils.WatchParams, err error) {

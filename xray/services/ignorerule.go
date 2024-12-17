@@ -67,6 +67,9 @@ func (xirs *IgnoreRuleService) Delete(ignoreRuleId string) error {
 // The function creates the ignore rule and returns its id which is received after post
 func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRuleId string, err error) {
 	ignoreRuleBody := utils.CreateIgnoreRuleBody(params)
+	if err = validateIgnoreFilters(ignoreRuleBody.IgnoreFilters); err != nil {
+		return "", err
+	}
 	content, err := json.Marshal(ignoreRuleBody)
 	if err != nil {
 		return "", errorutils.CheckError(err)
@@ -96,6 +99,24 @@ func (xirs *IgnoreRuleService) Create(params utils.IgnoreRuleParams) (ignoreRule
 	log.Debug("Ignore rule id is: ", ignoreRuleId)
 
 	return ignoreRuleId, nil
+}
+
+func validateIgnoreFilters(ignoreFilters utils.IgnoreFilters) error {
+	filters := 0
+	if len(ignoreFilters.CVEs) > 0 {
+		filters++
+	}
+	if len(ignoreFilters.Vulnerabilities) > 0 {
+		filters++
+	}
+	if len(ignoreFilters.Licenses) > 0 {
+		filters++
+	}
+	// if more than one filter is set, notify the user
+	if filters > 1 {
+		return errorutils.CheckErrorf("only one filter can be set at a time, found %d filters", filters)
+	}
+	return nil
 }
 
 func getIgnoreRuleIdFromBody(body []byte) (string, error) {
