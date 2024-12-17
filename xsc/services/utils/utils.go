@@ -32,3 +32,19 @@ func IsXscXrayInnerService(xrayVersion string) bool {
 	}
 	return true
 }
+
+func GetGitRepoUrlKey(gitRepoHttpUrl string) string {
+	if len(gitRepoHttpUrl) == 0 {
+		// No git context was provided
+		return ""
+	}
+	if !strings.HasSuffix(gitRepoHttpUrl, ".git") {
+		// Append .git to the URL if not included
+		gitRepoHttpUrl += ".git"
+	}
+	// Remove the Http/s protocol from the URL
+	if strings.HasPrefix(gitRepoHttpUrl, "http") {
+		return strings.TrimPrefix(strings.TrimPrefix(gitRepoHttpUrl, "https://"), "http://")
+	}
+	return gitRepoHttpUrl
+}
