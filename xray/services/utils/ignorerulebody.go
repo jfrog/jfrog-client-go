@@ -32,8 +32,8 @@ type IgnoreFilters struct {
 	Watches          []string                      `json:"watches,omitempty"`
 	DockerLayers     []string                      `json:"docker-layers,omitempty"`
 	OperationalRisks []string                      `json:"operational_risk,omitempty"`
-	Exposures        []ExposuresFilterName         `json:"exposures,omitempty"`
-	Sast             []SastFilterName              `json:"sast,omitempty"`
+	Exposures        *ExposuresFilterName          `json:"exposures,omitempty"`
+	Sast             *SastFilterName               `json:"sast,omitempty"`
 	ReleaseBundles   []IgnoreFilterNameVersion     `json:"release-bundles,omitempty"`
 	Builds           []IgnoreFilterNameVersion     `json:"builds,omitempty"`
 	Components       []IgnoreFilterNameVersion     `json:"components,omitempty"`

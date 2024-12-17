@@ -106,10 +106,10 @@ func validateIgnoreFilters(ignoreFilters utils.IgnoreFilters) error {
 	if len(ignoreFilters.CVEs) > 0 {
 		filters = append(filters, "CVEs")
 	}
-	if len(ignoreFilters.Exposures) > 0 {
+	if ignoreFilters.Exposures != nil {
 		filters = append(filters, "Exposures")
 	}
-	if len(ignoreFilters.Sast) > 0 {
+	if ignoreFilters.Sast != nil {
 		filters = append(filters, "Sast")
 	}
 	// if more than one filter is set, notify the user
