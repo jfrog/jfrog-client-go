@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	watchAPIUrl           = "watches"
+	watchResourceAPIUrl   = "watches/resource"
 	gitRepoResourceUrlKey = "git_repository"
 	projectResourceUrlKey = "project"
 )
@@ -70,7 +70,7 @@ func getResourcesString(gitRepo, project string) string {
 }
 
 func (xws *WatchService) getWatchURL(gitRepo, project string) string {
-	url := utils.AddTrailingSlashIfNeeded(xws.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + watchAPIUrl
+	url := utils.AddTrailingSlashIfNeeded(xws.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + watchResourceAPIUrl
 	params := []string{}
 	if gitRepo != "" {
 		params = append(params, fmt.Sprintf("%s=%s", gitRepoResourceUrlKey, gitRepo))
