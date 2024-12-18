@@ -19,7 +19,7 @@ import (
 
 const (
 	watchResourceAPIUrl   = "watches/resource"
-	gitRepoResourceUrlKey = "git_repository"
+	gitRepoResourceUrlKey = "git_repo"
 	projectResourceUrlKey = "project"
 )
 
