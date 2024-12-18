@@ -33,6 +33,7 @@ func IsXscXrayInnerService(xrayVersion string) bool {
 	return true
 }
 
+// The platform expects the git repo key to be in the format of the https/http clone Git URL without the protocol.
 func GetGitRepoUrlKey(gitRepoHttpUrl string) string {
 	if len(gitRepoHttpUrl) == 0 {
 		// No git context was provided

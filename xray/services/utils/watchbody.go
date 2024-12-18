@@ -199,15 +199,12 @@ func CreateBody(params WatchParams) (*WatchBody, error) {
 		return nil, err
 	}
 
-	err = configureGitRepositories(&payloadBody, params)
-	if err != nil {
-		return nil, err
-	}
+	configureGitRepositories(&payloadBody, params)
 
 	return &payloadBody, nil
 }
 
-func configureGitRepositories(payloadBody *WatchBody, params WatchParams) error {
+func configureGitRepositories(payloadBody *WatchBody, params WatchParams) {
 	for _, gitRepoResource := range params.GitRepositories.Resources {
 		gitRepo := watchProjectResourcesElement{
 			Type:     WatchGitRepository,
@@ -216,7 +213,6 @@ func configureGitRepositories(payloadBody *WatchBody, params WatchParams) error 
 		}
 		payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, gitRepo)
 	}
-	return nil
 }
 
 func configureRepositories(payloadBody *WatchBody, params WatchParams) error {
