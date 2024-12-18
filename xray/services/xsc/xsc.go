@@ -3,6 +3,7 @@ package xsc
 import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"github.com/jfrog/jfrog-client-go/xsc/services"
 )
 
@@ -57,4 +58,10 @@ func (xs *XscInnerService) GetConfigProfileByUrl(repoUrl string) (*services.Conf
 	configProfileService := services.NewConfigurationProfileService(xs.client)
 	configProfileService.XrayDetails = xs.XrayDetails
 	return configProfileService.GetConfigurationProfileByUrl(repoUrl)
+}
+
+func (xs *XscInnerService) GetResourceWatches(gitRepo, project string) (watches *utils.ResourcesWatchesBody, err error) {
+	watchService := services.NewWatchService(xs.client)
+	watchService.XrayDetails = xs.XrayDetails
+	return watchService.GetResourceWatches(gitRepo, project)
 }
