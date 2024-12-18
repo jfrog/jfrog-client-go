@@ -22,6 +22,8 @@ const (
 	WatchRepositoriesAll WatchRepositoriesType = "all"
 	// WatchRepositoriesByName is the option where repositories are selected by name to be watched
 	WatchRepositoriesByName WatchRepositoriesType = "byname"
+
+	WatchGitRepository = "gitRepository"
 )
 
 // WatchBuildType defines the type of filter for a builds on a watch
@@ -57,9 +59,10 @@ type WatchParams struct {
 	Description string
 	Active      bool
 
-	Repositories WatchRepositoriesParams
+	Repositories    WatchRepositoriesParams
+	GitRepositories WatchGitRepositoryParams
+	Builds          WatchBuildsParams
 
-	Builds   WatchBuildsParams
 	Policies []AssignedPolicy
 }
 
@@ -74,6 +77,10 @@ type WatchRepositoriesParams struct {
 // WatchRepositoryAll is used to define the parameters when a watch uses all repositories
 type WatchRepositoryAll struct {
 	Filters watchFilters
+}
+
+type WatchGitRepositoryParams struct {
+	Resources []string
 }
 
 // WatchRepository is used to define a specific repository in a watch
@@ -192,7 +199,24 @@ func CreateBody(params WatchParams) (*WatchBody, error) {
 		return nil, err
 	}
 
+	err = configureGitRepositories(&payloadBody, params)
+	if err != nil {
+		return nil, err
+	}
+
 	return &payloadBody, nil
+}
+
+func configureGitRepositories(payloadBody *WatchBody, params WatchParams) error {
+	for _, gitRepoResource := range params.GitRepositories.Resources {
+		gitRepo := watchProjectResourcesElement{
+			Type:     WatchGitRepository,
+			BinMgrID: "default",
+			Name:     gitRepoResource,
+		}
+		payloadBody.ProjectResources.Resources = append(payloadBody.ProjectResources.Resources, gitRepo)
+	}
+	return nil
 }
 
 func configureRepositories(payloadBody *WatchBody, params WatchParams) error {
