@@ -29,7 +29,7 @@ func (js *JfConnectService) LogMetric(metric []byte) error {
 	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
 
 	url := clientutils.AddTrailingSlashIfNeeded(details.GetUrl())
-	url = url + "jfconnect/api/v1/backoffice/metrics/log"
+	url += "jfconnect/api/v1/backoffice/metrics/log"
 	resp, body, err := js.client.SendPost(url, metric, &httpClientDetails)
 	if err != nil {
 		return err
