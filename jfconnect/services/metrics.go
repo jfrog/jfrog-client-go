@@ -10,6 +10,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
+const LogMetricApiEndpoint = "jfconnect/api/v1/backoffice/metrics/log"
+
 type JfConnectService struct {
 	client         *jfroghttpclient.JfrogHttpClient
 	serviceDetails *auth.ServiceDetails
@@ -19,18 +21,18 @@ func NewJfConnectService(serviceDetails auth.ServiceDetails, client *jfroghttpcl
 	return &JfConnectService{serviceDetails: &serviceDetails, client: client}
 }
 
-func (js *JfConnectService) GetJfConnectDetails() auth.ServiceDetails {
-	return *js.serviceDetails
+func (jcs *JfConnectService) GetJfConnectDetails() auth.ServiceDetails {
+	return *jcs.serviceDetails
 }
 
-func (js *JfConnectService) PostMetric(metric []byte) error {
-	details := js.GetJfConnectDetails()
+func (jcs *JfConnectService) PostMetric(metric []byte) error {
+	details := jcs.GetJfConnectDetails()
 	httpClientDetails := details.CreateHttpClientDetails()
 	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
 
 	url := clientutils.AddTrailingSlashIfNeeded(details.GetUrl())
-	url += "jfconnect/api/v1/backoffice/metrics/log"
-	resp, body, err := js.client.SendPost(url, metric, &httpClientDetails)
+	url += LogMetricApiEndpoint
+	resp, body, err := jcs.client.SendPost(url, metric, &httpClientDetails)
 	if err != nil {
 		return err
 	}
