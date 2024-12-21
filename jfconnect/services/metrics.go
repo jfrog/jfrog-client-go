@@ -28,7 +28,7 @@ func (jcs *JfConnectService) GetJfConnectDetails() auth.ServiceDetails {
 func (jcs *JfConnectService) PostMetric(metric []byte) error {
 	details := jcs.GetJfConnectDetails()
 	httpClientDetails := details.CreateHttpClientDetails()
-	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
+	httpClientDetails.SetContentTypeApplicationJson()
 
 	url := clientutils.AddTrailingSlashIfNeeded(details.GetUrl())
 	url += LogMetricApiEndpoint
