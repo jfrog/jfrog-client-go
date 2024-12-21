@@ -47,8 +47,14 @@ func (xs *XscInnerService) GetAnalyticsGeneralEvent(msi string) (*services.XscAn
 	return eventService.GetGeneralEvent(msi)
 }
 
-func (xs *XscInnerService) GetConfigProfile(profileName string) (*services.ConfigProfile, error) {
+func (xs *XscInnerService) GetConfigProfileByName(profileName string) (*services.ConfigProfile, error) {
 	configProfileService := services.NewConfigurationProfileService(xs.client)
 	configProfileService.XrayDetails = xs.XrayDetails
-	return configProfileService.GetConfigurationProfile(profileName)
+	return configProfileService.GetConfigurationProfileByName(profileName)
+}
+
+func (xs *XscInnerService) GetConfigProfileByUrl(repoUrl string) (*services.ConfigProfile, error) {
+	configProfileService := services.NewConfigurationProfileService(xs.client)
+	configProfileService.XrayDetails = xs.XrayDetails
+	return configProfileService.GetConfigurationProfileByUrl(repoUrl)
 }
