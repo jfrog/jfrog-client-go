@@ -7,7 +7,7 @@ import (
 )
 
 type Manager interface {
-	LogMetric([]byte) error
+	PostMetric([]byte) error
 }
 
 type jfConnectManager struct {
@@ -39,7 +39,7 @@ func (jm *jfConnectManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return jm.client
 }
 
-func (jm *jfConnectManager) LogMetric(metric []byte) error {
+func (jm *jfConnectManager) PostMetric(metric []byte) error {
 	jfConnectService := services.NewJfConnectService(jm.config.GetServiceDetails(), jm.client)
-	return jfConnectService.LogMetric(metric)
+	return jfConnectService.PostMetric(metric)
 }

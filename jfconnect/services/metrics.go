@@ -23,7 +23,7 @@ func (js *JfConnectService) GetJfConnectDetails() auth.ServiceDetails {
 	return *js.serviceDetails
 }
 
-func (js *JfConnectService) LogMetric(metric []byte) error {
+func (js *JfConnectService) PostMetric(metric []byte) error {
 	details := js.GetJfConnectDetails()
 	httpClientDetails := details.CreateHttpClientDetails()
 	rtUtils.SetContentType("application/json", &httpClientDetails.Headers)
