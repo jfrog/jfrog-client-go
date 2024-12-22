@@ -25,7 +25,7 @@ func (jcs *JfConnectService) GetJfConnectDetails() auth.ServiceDetails {
 	return *jcs.serviceDetails
 }
 
-func (jcs *JfConnectService) PostMetric(metric VisibilityMetric) error {
+func (jcs *JfConnectService) PostVisibilityMetric(metric VisibilityMetric) error {
 	metricJson, err := json.Marshal(metric)
 	if err != nil {
 		return errorutils.CheckError(err)
