@@ -64,6 +64,8 @@ type WatchParams struct {
 	Builds          WatchBuildsParams
 
 	Policies []AssignedPolicy
+
+	ProjectKey string
 }
 
 // WatchRepositoriesParams is a struct that stores the repository configuration for watch

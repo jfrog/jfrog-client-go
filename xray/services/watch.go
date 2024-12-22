@@ -54,6 +54,14 @@ func (xws *WatchService) getWatchURL() string {
 	return clientutils.AddTrailingSlashIfNeeded(xws.XrayDetails.GetUrl()) + watchAPIURL
 }
 
+func (xws *WatchService) getWatchUrlWithProjectKey(projectKey string) string {
+	baseUrl := xws.getWatchURL()
+	if projectKey == "" {
+		return baseUrl
+	}
+	return baseUrl + "?projectKey=" + projectKey
+}
+
 // Delete will delete an existing watch by name
 // It will error if no watch can be found by that name.
 func (xws *WatchService) Delete(watchName string) error {
@@ -86,7 +94,7 @@ func (xws *WatchService) Create(params utils.WatchParams) error {
 
 	httpClientsDetails := xws.XrayDetails.CreateHttpClientDetails()
 	httpClientsDetails.SetContentTypeApplicationJson()
-	var url = xws.getWatchURL()
+	var url = xws.getWatchUrlWithProjectKey(params.ProjectKey)
 
 	log.Info(fmt.Sprintf("Creating a new Watch named %s on JFrog Xray....", params.Name))
 	resp, body, err := xws.client.SendPost(url, content, &httpClientsDetails)
