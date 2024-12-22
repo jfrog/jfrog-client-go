@@ -18,11 +18,17 @@ type ReportUsageAttribute struct {
 	AttributeValue string
 }
 
+type ArtifactoryCallHome struct{}
+
+func NewArtifactoryCallHome() *ArtifactoryCallHome {
+	return &ArtifactoryCallHome{}
+}
+
 func (rua *ReportUsageAttribute) isEmpty() bool {
 	return rua.AttributeName == ""
 }
 
-func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryServicesManager) (url string, clientDetails httputils.HttpClientDetails, err error) {
+func (ach *ArtifactoryCallHome) validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryServicesManager) (url string, clientDetails httputils.HttpClientDetails, err error) {
 	config := serviceManager.GetConfig()
 	if config == nil {
 		err = errorutils.CheckErrorf("expected full config, but no configuration exists.")
@@ -50,7 +56,7 @@ func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryService
 	return
 }
 
-func sendReport(url string, serviceManager artifactory.ArtifactoryServicesManager, clientDetails httputils.HttpClientDetails, bodyContent []byte) error {
+func (ach *ArtifactoryCallHome) sendReport(url string, serviceManager artifactory.ArtifactoryServicesManager, clientDetails httputils.HttpClientDetails, bodyContent []byte) error {
 	clientDetails.SetContentTypeApplicationJson()
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
@@ -63,8 +69,8 @@ func sendReport(url string, serviceManager artifactory.ArtifactoryServicesManage
 	return nil
 }
 
-func ReportUsageToArtifactory(productId string, serviceManager artifactory.ArtifactoryServicesManager, features ...Feature) error {
-	url, clientDetails, err := validateAndGetUsageServerInfo(serviceManager)
+func (ach *ArtifactoryCallHome) SendUsageToArtifactory(productId string, serviceManager artifactory.ArtifactoryServicesManager, features ...Feature) error {
+	url, clientDetails, err := ach.validateAndGetUsageServerInfo(serviceManager)
 	if err != nil || url == "" {
 		return err
 	}
@@ -72,11 +78,11 @@ func ReportUsageToArtifactory(productId string, serviceManager artifactory.Artif
 	if err != nil {
 		return err
 	}
-	return sendReport(url, serviceManager, clientDetails, bodyContent)
+	return ach.sendReport(url, serviceManager, clientDetails, bodyContent)
 }
 
-func SendReportUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
-	url, clientDetails, err := validateAndGetUsageServerInfo(serviceManager)
+func (ach *ArtifactoryCallHome) SendUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
+	url, clientDetails, err := ach.validateAndGetUsageServerInfo(serviceManager)
 	if err != nil || url == "" {
 		return err
 	}
@@ -84,7 +90,7 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 	if err != nil {
 		return err
 	}
-	return sendReport(url, serviceManager, clientDetails, bodyContent)
+	return ach.sendReport(url, serviceManager, clientDetails, bodyContent)
 }
 
 func usageFeaturesToJson(productId string, features ...Feature) ([]byte, error) {
