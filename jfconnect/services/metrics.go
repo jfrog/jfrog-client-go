@@ -45,6 +45,7 @@ func (jcs *JfConnectService) PostVisibilityMetric(metric VisibilityMetric) error
 
 type Labels struct {
 	ProductID                            string `json:"product_id"`
+	ProductVersion                       string `json:"product_version"`
 	FeatureID                            string `json:"feature_id"`
 	OIDCUsed                             string `json:"oidc_used"`
 	JobID                                string `json:"job_id"`

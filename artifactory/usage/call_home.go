@@ -11,8 +11,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
-const minArtifactoryVersion = "6.9.0"
-
 type ReportUsageAttribute struct {
 	AttributeName  string
 	AttributeValue string
@@ -28,7 +26,7 @@ func (rua *ReportUsageAttribute) isEmpty() bool {
 	return rua.AttributeName == ""
 }
 
-func (ach *ArtifactoryCallHome) validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryServicesManager) (url string, clientDetails httputils.HttpClientDetails, err error) {
+func (ach *ArtifactoryCallHome) getUsageServerInfo(serviceManager artifactory.ArtifactoryServicesManager) (url string, clientDetails httputils.HttpClientDetails, err error) {
 	config := serviceManager.GetConfig()
 	if config == nil {
 		err = errorutils.CheckErrorf("expected full config, but no configuration exists.")
@@ -37,15 +35,6 @@ func (ach *ArtifactoryCallHome) validateAndGetUsageServerInfo(serviceManager art
 	rtDetails := config.GetServiceDetails()
 	if rtDetails == nil {
 		err = errorutils.CheckErrorf("Artifactory details not configured.")
-		return
-	}
-	// Check Artifactory version
-	artifactoryVersion, err := rtDetails.GetVersion()
-	if err != nil {
-		err = errors.New("Couldn't get Artifactory version. Error: " + err.Error())
-		return
-	}
-	if err = clientutils.ValidateMinimumVersion(clientutils.Artifactory, artifactoryVersion, minArtifactoryVersion); err != nil {
 		return
 	}
 	url, err = clientutils.BuildUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
@@ -69,8 +58,8 @@ func (ach *ArtifactoryCallHome) sendReport(url string, serviceManager artifactor
 	return nil
 }
 
-func (ach *ArtifactoryCallHome) SendUsageToArtifactory(productId string, serviceManager artifactory.ArtifactoryServicesManager, features ...Feature) error {
-	url, clientDetails, err := ach.validateAndGetUsageServerInfo(serviceManager)
+func (ach *ArtifactoryCallHome) SendToArtifactory(productId string, serviceManager artifactory.ArtifactoryServicesManager, features ...Feature) error {
+	url, clientDetails, err := ach.getUsageServerInfo(serviceManager)
 	if err != nil || url == "" {
 		return err
 	}
@@ -81,8 +70,8 @@ func (ach *ArtifactoryCallHome) SendUsageToArtifactory(productId string, service
 	return ach.sendReport(url, serviceManager, clientDetails, bodyContent)
 }
 
-func (ach *ArtifactoryCallHome) SendUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
-	url, clientDetails, err := ach.validateAndGetUsageServerInfo(serviceManager)
+func (ach *ArtifactoryCallHome) Send(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
+	url, clientDetails, err := ach.getUsageServerInfo(serviceManager)
 	if err != nil || url == "" {
 		return err
 	}
