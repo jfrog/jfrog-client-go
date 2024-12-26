@@ -48,9 +48,7 @@ const (
 	scanTechQueryParam = "tech="
 
 	gitRepoKeyQueryParam     = "git_repo="
-	MinXrayVersionGitRepoKey = "3.108.0" // Actual: "3.111.0"
-
-	XscVersionAPI = "system/version"
+	MinXrayVersionGitRepoKey = "3.111.0"
 )
 
 type ScanType string

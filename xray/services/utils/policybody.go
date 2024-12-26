@@ -108,7 +108,7 @@ func CreateSeverityPolicyCriteria(minSeverity Severity) *PolicyCriteria {
 	}
 }
 
-func CreateExposuresPolicyCriteria(minSeverity Severity, secrets, applications, services, iac, maliciousCode bool) *PolicyCriteria {
+func CreateExposuresPolicyCriteria(minSeverity Severity, secrets, applications, services, iac bool) *PolicyCriteria {
 	criteria := &PolicyCriteria{Exposures: &PolicyExposureCriteria{MinSeverity: minSeverity}}
 	if secrets {
 		criteria.Exposures.Secrets = &secrets
