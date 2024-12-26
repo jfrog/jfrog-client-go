@@ -232,6 +232,7 @@
       - [Export Release Bundle Archive](#export-release-bundle-archive)
       - [Import Release Bundle Archive](#import-release-bundle-archive)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
+      - [Check if Release Bundle exists](#check-rb-exists)
   - [Lifecycle APIs](#lifecycle-apis)
     - [Creating Lifecycle Service Manager](#creating-lifeCycle-service-manager)
       - [Creating Lifecycle Details](#creating-lifeCycle-details)
@@ -2949,6 +2950,14 @@ dryRun := true
 
 resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
 ```
+
+#### check-rb-exists
+
+```go   
+// projectKey is optional. If not provided, the default project will be used.
+exists, err := serviceManager.ReleaseBundleExists(rbName, rbVersion, projectKey)
+```
+
 ## Evidence APIs
 
 ### Creating Evidence Service Manager
