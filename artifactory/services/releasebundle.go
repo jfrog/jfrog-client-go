@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -10,12 +11,14 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
+	"strings"
 )
 
 const (
-	conflictErrorMessage               = "Bundle already exists"
-	ReleaseBundleImportRestApiEndpoint = "api/release/import/"
-	octetStream                        = "application/octet-stream"
+	conflictErrorMessage                    = "Bundle already exists"
+	ReleaseBundleImportRestApiEndpoint      = "api/release/import/"
+	octetStream                             = "application/octet-stream"
+	ReleaseBundleExistInRbV2RestApiEndpoint = "lifecycle/api/v2/release_bundle/existence"
 )
 
 type releaseService struct {
@@ -30,6 +33,10 @@ type ErrorResponseWithMessage struct {
 type ErrorDetail struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
+}
+
+type isReleaseBundleExistResponse struct {
+	Exists bool `json:"exists"`
 }
 
 func NewReleaseService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *releaseService {
@@ -75,4 +82,31 @@ func (rs *releaseService) ImportReleaseBundle(filePath string) (err error) {
 	}
 	log.Info("Release Bundle Imported Successfully")
 	return
+}
+
+func (rs *releaseService) IsReleaseBundleExistInRbV2(project, bundleNameAndVersion string) (bool, error) {
+	httpClientsDetails := rs.ArtDetails.CreateHttpClientDetails()
+	if project != "" {
+		project = fmt.Sprintf("project=%s&", project)
+	} else {
+		project = fmt.Sprintf("project=default")
+	}
+
+	rtUrl := strings.Replace(rs.ArtDetails.GetUrl(), "/artifactory", "", 1)
+	url := fmt.Sprintf("%s%s/%s/?%s", rtUrl, ReleaseBundleExistInRbV2RestApiEndpoint, bundleNameAndVersion, project)
+	resp, body, _, err := rs.client.SendGet(url, true, &httpClientsDetails)
+	if err != nil {
+		return false, err
+	}
+
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return false, err
+	}
+
+	response := &isReleaseBundleExistResponse{}
+	if err := json.Unmarshal(body, response); err != nil {
+		return false, err
+	}
+
+	return response.Exists, nil
 }

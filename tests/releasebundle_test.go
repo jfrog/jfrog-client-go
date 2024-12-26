@@ -31,6 +31,21 @@ func TestImportReleaseBundle(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestIsReleaseBundleExist(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/lifecycle/api/v2/release_bundle/existence/rbName/reVersion/?project=default" {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(
+				`{"exists":true}`))
+			assert.NoError(t, err)
+		}
+	})
+	defer mockServer.Close()
+	exist, err := rbService.IsRbv2("", "rbName/reVersion")
+	assert.NoError(t, err)
+	assert.True(t, exist)
+}
+
 func createMockServer(t *testing.T, testHandler http.HandlerFunc) (*httptest.Server, artifactory.ArtifactoryServicesManager) {
 	testServer := httptest.NewServer(testHandler)
 

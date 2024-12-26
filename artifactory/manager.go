@@ -156,6 +156,11 @@ func (sm *ArtifactoryServicesManagerImp) GetPackageLeadFile(leadFileParams servi
 	return packageService.GetPackageLeadFile(leadFileParams)
 }
 
+func (sm *ArtifactoryServicesManagerImp) IsRbv2(project, bundleNameAndVersion string) (bool, error) {
+	releaseService := services.NewReleaseService(sm.config.GetServiceDetails(), sm.client)
+	return releaseService.IsReleaseBundleExistInRbV2(project, bundleNameAndVersion)
+}
+
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
 	repositoriesService := services.NewRepositoriesService(sm.client)
 	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
