@@ -364,7 +364,7 @@ func createDummyPolicy(policyName string) error {
 		Type:        utils.Security,
 		Rules: []utils.PolicyRule{{
 			Name:     "sec_rule",
-			Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
+			Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium, false),
 			Actions: &utils.PolicyAction{
 				Webhooks: []string{},
 				BlockDownload: utils.PolicyBlockDownload{
