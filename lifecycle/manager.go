@@ -133,3 +133,8 @@ func (lcs *LifecycleServicesManager) ExportReleaseBundle(rbDetails lifecycle.Rel
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.ExportReleaseBundle(rbDetails, modifications, queryParams)
 }
+
+func (lcs *LifecycleServicesManager) IsReleaseBundleExist(projectKey, releaseBundleNameAndVersion string) (bool, error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.IsExists(projectKey, releaseBundleNameAndVersion)
+}

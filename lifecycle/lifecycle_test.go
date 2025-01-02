@@ -255,3 +255,33 @@ func TestGetReleaseBundleVersionPromotions(t *testing.T) {
 	assert.Equal(t, "2024-03-14T15:26:46.637Z", promotion.Created)
 	assert.Equal(t, "1710430006637", promotion.CreatedMillis.String())
 }
+
+func TestIsReleaseBundleExist(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetIsExistReleaseBundleApi("rbName/reVersion") {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(
+				`{"exists":true}`))
+			assert.NoError(t, err)
+		}
+	})
+	defer mockServer.Close()
+	exist, err := rbService.IsExists("", "rbName/reVersion")
+	assert.NoError(t, err)
+	assert.True(t, exist)
+}
+
+func TestIsReleaseBundleExistWithProject(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetIsExistReleaseBundleApi("rbName/reVersion?project=projectKey") {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(
+				`{"exists":false}`))
+			assert.NoError(t, err)
+		}
+	})
+	defer mockServer.Close()
+	exist, err := rbService.IsExists("projectKey", "rbName/reVersion")
+	assert.NoError(t, err)
+	assert.False(t, exist)
+}
