@@ -17,6 +17,7 @@ func TestXrayPolicy(t *testing.T) {
 	t.Run("create2Priorities", create2Priorities)
 	t.Run("createPolicyActions", createPolicyActions)
 	t.Run("createUpdatePolicy", createUpdatePolicy)
+	t.Run("createSkipNonApplicablePolicy", createSkipNonApplicable)
 }
 
 func deletePolicy(t *testing.T, policyName string) {
@@ -130,6 +131,18 @@ func createUpdatePolicy(t *testing.T) {
 	}
 
 	createAndCheckPolicy(t, policyName, false, utils.Security, policyRule)
+}
+
+func createSkipNonApplicable(t *testing.T) {
+	policyName := "skip-non-applicable" + getRunId()
+	defer deletePolicy(t, policyName)
+
+	policyRule := utils.PolicyRule{
+		Name:     "skip-non-applicable-rule" + getRunId(),
+		Criteria: *utils.CreateSeverityPolicyCriteria(utils.Low, true),
+		Priority: 1,
+	}
+	createAndCheckPolicy(t, policyName, true, utils.Security, policyRule)
 }
 
 func createPolicy(t *testing.T, policyName string, policyType utils.PolicyType, policyRules ...utils.PolicyRule) *utils.PolicyParams {
