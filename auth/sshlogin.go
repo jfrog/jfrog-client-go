@@ -70,6 +70,7 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 			sshAuth,
 		},
 		//#nosec G106 -- Used to get ssh headers only.
+		//jfrog:ignore
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
