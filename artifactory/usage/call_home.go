@@ -11,18 +11,22 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
-const minArtifactoryVersion = "6.9.0"
-
 type ReportUsageAttribute struct {
 	AttributeName  string
 	AttributeValue string
+}
+
+type ArtifactoryCallHome struct{}
+
+func NewArtifactoryCallHome() *ArtifactoryCallHome {
+	return &ArtifactoryCallHome{}
 }
 
 func (rua *ReportUsageAttribute) isEmpty() bool {
 	return rua.AttributeName == ""
 }
 
-func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryServicesManager) (url string, clientDetails httputils.HttpClientDetails, err error) {
+func (ach *ArtifactoryCallHome) getUsageServerInfo(serviceManager artifactory.ArtifactoryServicesManager) (url string, clientDetails httputils.HttpClientDetails, err error) {
 	config := serviceManager.GetConfig()
 	if config == nil {
 		err = errorutils.CheckErrorf("expected full config, but no configuration exists.")
@@ -33,15 +37,6 @@ func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryService
 		err = errorutils.CheckErrorf("Artifactory details not configured.")
 		return
 	}
-	// Check Artifactory version
-	artifactoryVersion, err := rtDetails.GetVersion()
-	if err != nil {
-		err = errors.New("Couldn't get Artifactory version. Error: " + err.Error())
-		return
-	}
-	if err = clientutils.ValidateMinimumVersion(clientutils.Artifactory, artifactoryVersion, minArtifactoryVersion); err != nil {
-		return
-	}
 	url, err = clientutils.BuildUrl(rtDetails.GetUrl(), "api/system/usage", make(map[string]string))
 	if err != nil {
 		return
@@ -50,7 +45,7 @@ func validateAndGetUsageServerInfo(serviceManager artifactory.ArtifactoryService
 	return
 }
 
-func sendReport(url string, serviceManager artifactory.ArtifactoryServicesManager, clientDetails httputils.HttpClientDetails, bodyContent []byte) error {
+func (ach *ArtifactoryCallHome) sendReport(url string, serviceManager artifactory.ArtifactoryServicesManager, clientDetails httputils.HttpClientDetails, bodyContent []byte) error {
 	clientDetails.SetContentTypeApplicationJson()
 	resp, body, err := serviceManager.Client().SendPost(url, bodyContent, &clientDetails)
 	if err != nil {
@@ -63,8 +58,8 @@ func sendReport(url string, serviceManager artifactory.ArtifactoryServicesManage
 	return nil
 }
 
-func ReportUsageToArtifactory(productId string, serviceManager artifactory.ArtifactoryServicesManager, features ...Feature) error {
-	url, clientDetails, err := validateAndGetUsageServerInfo(serviceManager)
+func (ach *ArtifactoryCallHome) SendToArtifactory(productId string, serviceManager artifactory.ArtifactoryServicesManager, features ...Feature) error {
+	url, clientDetails, err := ach.getUsageServerInfo(serviceManager)
 	if err != nil || url == "" {
 		return err
 	}
@@ -72,11 +67,11 @@ func ReportUsageToArtifactory(productId string, serviceManager artifactory.Artif
 	if err != nil {
 		return err
 	}
-	return sendReport(url, serviceManager, clientDetails, bodyContent)
+	return ach.sendReport(url, serviceManager, clientDetails, bodyContent)
 }
 
-func SendReportUsage(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
-	url, clientDetails, err := validateAndGetUsageServerInfo(serviceManager)
+func (ach *ArtifactoryCallHome) Send(productId, commandName string, serviceManager artifactory.ArtifactoryServicesManager, attributes ...ReportUsageAttribute) error {
+	url, clientDetails, err := ach.getUsageServerInfo(serviceManager)
 	if err != nil || url == "" {
 		return err
 	}
@@ -84,7 +79,7 @@ func SendReportUsage(productId, commandName string, serviceManager artifactory.A
 	if err != nil {
 		return err
 	}
-	return sendReport(url, serviceManager, clientDetails, bodyContent)
+	return ach.sendReport(url, serviceManager, clientDetails, bodyContent)
 }
 
 func usageFeaturesToJson(productId string, features ...Feature) ([]byte, error) {

@@ -56,14 +56,30 @@ type PolicyRule struct {
 
 type PolicyCriteria struct {
 	// Security
-	MinSeverity Severity         `json:"min_severity,omitempty"`
-	CvssRange   *PolicyCvssRange `json:"cvss_range,omitempty"`
+	MinSeverity           Severity                `json:"min_severity,omitempty"`
+	CvssRange             *PolicyCvssRange        `json:"cvss_range,omitempty"`
+	Exposures             *PolicyExposureCriteria `json:"exposures,omitempty"`
+	Sast                  *PolicySastCriteria     `json:"sast,omitempty"`
+	SkipNotApplicableCVEs bool                    `json:"applicable_cves_only,omitempty"`
 
 	// License
 	AllowedLicenses        []string `json:"allowed_licenses,omitempty"`
 	BannedLicenses         []string `json:"banned_licenses,omitempty"`
 	AllowUnknown           *bool    `json:"allow_unknown,omitempty"`
 	MultiLicensePermissive *bool    `json:"multi_license_permissive,omitempty"`
+}
+
+type PolicyExposureCriteria struct {
+	MinSeverity   Severity `json:"min_severity,omitempty"`
+	Secrets       *bool    `json:"secrets,omitempty"`
+	Applications  *bool    `json:"applications,omitempty"`
+	Services      *bool    `json:"services,omitempty"`
+	IaC           *bool    `json:"iac,omitempty"`
+	MaliciousCode *bool    `json:"malicious_code,omitempty"`
+}
+
+type PolicySastCriteria struct {
+	MinSeverity Severity `json:"min_severity,omitempty"`
 }
 
 type PolicyCvssRange struct {
@@ -87,9 +103,35 @@ type PolicyBlockDownload struct {
 }
 
 // Create security policy criteria with min severity
-func CreateSeverityPolicyCriteria(minSeverity Severity) *PolicyCriteria {
+func CreateSeverityPolicyCriteria(minSeverity Severity, skipNotApplicableCves bool) *PolicyCriteria {
 	return &PolicyCriteria{
-		MinSeverity: minSeverity,
+		MinSeverity:           minSeverity,
+		SkipNotApplicableCVEs: skipNotApplicableCves,
+	}
+}
+
+func CreateExposuresPolicyCriteria(minSeverity Severity, secrets, applications, services, iac bool) *PolicyCriteria {
+	criteria := &PolicyCriteria{Exposures: &PolicyExposureCriteria{MinSeverity: minSeverity}}
+	if secrets {
+		criteria.Exposures.Secrets = &secrets
+	}
+	if applications {
+		criteria.Exposures.Applications = &applications
+	}
+	if services {
+		criteria.Exposures.Services = &services
+	}
+	if iac {
+		criteria.Exposures.IaC = &iac
+	}
+	return criteria
+}
+
+func CreateSastPolicyCriteria(minSeverity Severity) *PolicyCriteria {
+	return &PolicyCriteria{
+		Sast: &PolicySastCriteria{
+			MinSeverity: minSeverity,
+		},
 	}
 }
 
