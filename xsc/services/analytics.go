@@ -9,7 +9,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/xray/services"
 	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 )
 
@@ -117,8 +116,21 @@ func (vs *AnalyticsEventService) GetGeneralEvent(msi string) (*XscAnalyticsGener
 // XscAnalyticsGeneralEvent extend the basic struct with Frogbot related info.
 type XscAnalyticsGeneralEvent struct {
 	XscAnalyticsBasicGeneralEvent
-	GitInfo       *services.XscGitInfoContext `json:"gitinfo,omitempty"`
-	IsGitInfoFlow bool                        `json:"is_gitinfo_flow,omitempty"`
+	GitInfo       *XscGitInfoContext `json:"gitinfo,omitempty"`
+	IsGitInfoFlow bool               `json:"is_gitinfo_flow,omitempty"`
+}
+
+type XscGitInfoContext struct {
+	GitRepoHttpsCloneUrl string   `json:"git_repo_url"`
+	GitRepoName          string   `json:"git_repo_name,omitempty"`
+	GitProject           string   `json:"git_project,omitempty"`
+	GitProvider          string   `json:"git_provider,omitempty"`
+	Technologies         []string `json:"technologies,omitempty"`
+	BranchName           string   `json:"branch_name"`
+	LastCommitUrl        string   `json:"last_commit,omitempty"`
+	LastCommitHash       string   `json:"commit_hash"`
+	LastCommitMessage    string   `json:"commit_message,omitempty"`
+	LastCommitAuthor     string   `json:"commit_author,omitempty"`
 }
 
 type XscAnalyticsGeneralEventFinalize struct {
