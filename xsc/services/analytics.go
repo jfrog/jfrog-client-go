@@ -135,9 +135,8 @@ type XscGitInfoContext struct {
 
 type XscAnalyticsGeneralEventFinalize struct {
 	XscAnalyticsBasicGeneralEvent
-	MultiScanId string   `json:"multi_scan_id,omitempty"`
-	GitRepoUrl  string   `json:"git_repository,omitempty"`
-	Watches     []string `json:"watches,omitempty"`
+	MultiScanId string `json:"multi_scan_id,omitempty"`
+	GitRepoUrl  string `json:"git_repository,omitempty"`
 }
 
 type XscAnalyticsBasicGeneralEvent struct {
