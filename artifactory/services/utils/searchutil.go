@@ -36,7 +36,8 @@ const (
 // Use this function when searching by build without pattern or aql.
 // Collect build artifacts and build dependencies separately, then merge the results into one reader.
 func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerContent *content.ContentReader, err error) {
-	buildName, buildNumber, err := getBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
+	log.Info("Searching items related to a build...")
+	buildName, buildNumber, err := GetBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -241,10 +242,9 @@ func FilterResultsByBuild(specFile *CommonParams, flags CommonConf, requiredArti
 // AND
 // 2. Properties weren't fetched during 'build' filtering
 // Otherwise, nil will be returned
-func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (*content.ContentReader, error) {
+func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps, reader *content.ContentReader) (r *content.ContentReader, err error) {
 	if !includePropertiesInAqlForSpec(specFile) && specFile.Build == "" && requiredArtifactProps != NONE {
 		var readerWithProps *content.ContentReader
-		var err error
 		switch requiredArtifactProps {
 		case ALL:
 			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "*", []string{"*"}, flags)
@@ -252,14 +252,15 @@ func fetchProps(specFile *CommonParams, flags CommonConf, requiredArtifactProps 
 			readerWithProps, err = searchProps(specFile.Aql.ItemsFind, "symlink.dest", []string{"*"}, flags)
 		}
 		if err != nil {
-			return nil, err
+			return
 		}
 		defer func() {
 			err = errors.Join(err, errorutils.CheckError(reader.Close()))
+			err = errors.Join(err, errorutils.CheckError(readerWithProps.Close()))
 		}()
-		return loadMissingProperties(reader, readerWithProps)
+		r, err = loadMissingProperties(reader, readerWithProps)
 	}
-	return nil, nil
+	return
 }
 
 func aqlSearch(aqlQuery string, flags CommonConf) (*content.ContentReader, error) {
@@ -340,6 +341,13 @@ type SearchBasedContentItem interface {
 	GetType() string
 }
 
+type ResultItemType string
+
+const (
+	File   ResultItemType = "file"
+	Folder ResultItemType = "folder"
+)
+
 type ResultItem struct {
 	Repo        string     `json:"repo,omitempty"`
 	Path        string     `json:"path,omitempty"`
@@ -368,7 +376,7 @@ type Stat struct {
 }
 
 func (item ResultItem) GetSortKey() string {
-	if item.Type == "folder" {
+	if item.Type == string(Folder) {
 		return appendFolderSuffix(item.GetItemRelativePath())
 	}
 	return item.GetItemRelativePath()
@@ -386,10 +394,8 @@ func (item ResultItem) GetItemRelativePath() string {
 	if item.Path == "." {
 		return path.Join(item.Repo, item.Name)
 	}
-
-	url := item.Repo
-	url = path.Join(url, item.Path, item.Name)
-	if item.Type == "folder" {
+	url := path.Join(item.Repo, item.Path, item.Name)
+	if item.Type == string(Folder) {
 		url = appendFolderSuffix(url)
 	}
 	return url
@@ -408,7 +414,8 @@ func (item *ResultItem) ToArtifact() buildinfo.Artifact {
 			Md5:    item.Actual_Md5,
 			Sha256: item.Sha256,
 		},
-		Path: path.Join(item.Path, item.Name),
+		OriginalDeploymentRepo: item.Repo,
+		Path:                   path.Join(item.Path, item.Name),
 	}
 }
 
@@ -450,7 +457,7 @@ func FilterBottomChainResults(readerRecord SearchBasedContentItem, reader *conte
 	for newRecord := (reflect.New(recordType)).Interface(); reader.NextRecord(newRecord) == nil; newRecord = (reflect.New(recordType)).Interface() {
 		resultItem, ok := newRecord.(SearchBasedContentItem)
 		if !ok {
-			return nil, errorutils.CheckErrorf("Reader record is not search-based.")
+			return nil, errorutils.CheckErrorf("reader record is not search-based.")
 		}
 
 		if resultItem.GetName() == "." {
@@ -491,19 +498,19 @@ func FilterTopChainResults(readerRecord SearchBasedContentItem, reader *content.
 	for newRecord := (reflect.New(recordType)).Interface(); reader.NextRecord(newRecord) == nil; newRecord = (reflect.New(recordType)).Interface() {
 		resultItem, ok := newRecord.(SearchBasedContentItem)
 		if !ok {
-			return nil, errorutils.CheckErrorf("Reader record is not search-based.")
+			return nil, errorutils.CheckErrorf("reader record is not search-based.")
 		}
 
 		if resultItem.GetName() == "." {
 			continue
 		}
 		rPath := resultItem.GetItemRelativePath()
-		if resultItem.GetType() == "folder" && !strings.HasSuffix(rPath, "/") {
+		if resultItem.GetType() == string(Folder) && !strings.HasSuffix(rPath, "/") {
 			rPath += "/"
 		}
 		if prevFolder == "" || !strings.HasPrefix(rPath, prevFolder) {
 			writer.Write(resultItem)
-			if resultItem.GetType() == "folder" {
+			if resultItem.GetType() == string(Folder) {
 				prevFolder = rPath
 			}
 		}

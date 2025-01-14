@@ -11,32 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.20.x
+      - name: Setup Go with cache
+        uses: jfrog/.github/actions/install-go-with-cache@main
 
-      - name: Static Code Analysis
-        uses: golangci/golangci-lint-action@v3
-        with:
-          args: |
-            --timeout 5m --out-${NO_FUTURE}format colored-line-number --enable errcheck,gosimple,govet,ineffassign,staticcheck,typecheck,unused,gocritic,asasalint,asciicheck,errchkjson,exportloopref,forcetypeassert,makezero,nilerr,unparam,unconvert,wastedassign,usestdlibvars 
-
-
+      - name: Run golangci lint
+        uses: jfrog/.github/actions/golangci-lint@main
   Go-Sec:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.20.x
+      - name: Setup Go with cache
+        uses: jfrog/.github/actions/install-go-with-cache@main
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: -exclude G204,G301,G302,G304,G306 -tests -exclude-dir \.*test\.* ./...
+      - name: Run Go-Sec scanner
+        uses: jfrog/.github/actions/gosec-scanner@main

@@ -240,6 +240,18 @@ func (is *IntegrationsService) GetIntegrationByName(name string) (*Integration, 
 }
 
 func (is *IntegrationsService) GetAllIntegrations() ([]Integration, error) {
+	rawIntegrations, err := is.GetAllRawIntegrations()
+	if err != nil {
+		return nil, err
+	}
+	integrations := &[]Integration{}
+	err = json.Unmarshal(rawIntegrations, integrations)
+	return *integrations, errorutils.CheckError(err)
+}
+
+// GetAllRawIntegrations returns the response returned from integrations api without unmarshalling
+// into Integration struct.
+func (is *IntegrationsService) GetAllRawIntegrations() ([]byte, error) {
 	log.Debug("Fetching all integrations...")
 	httpDetails := is.ServiceDetails.CreateHttpClientDetails()
 	url := is.ServiceDetails.GetUrl() + integrationsRestApi
@@ -250,9 +262,7 @@ func (is *IntegrationsService) GetAllIntegrations() ([]Integration, error) {
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, err
 	}
-	integrations := &[]Integration{}
-	err = json.Unmarshal(body, integrations)
-	return *integrations, errorutils.CheckError(err)
+	return body, errorutils.CheckError(err)
 }
 
 type IntegrationAlreadyExistsError struct {

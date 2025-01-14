@@ -32,7 +32,7 @@ func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch stri
 	if resourceErr != nil {
 		return []PipelineSyncStatus{}, fmt.Errorf("unable to fetch resourceID for '%s'. Second error: %s", repoName, resourceErr.Error())
 	}
-	queryParams := make(map[string]string, 0)
+	queryParams := make(map[string]string)
 	if *res.IsMultiBranch {
 		queryParams["pipelineSourceBranches"] = branch
 	}

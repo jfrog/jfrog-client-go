@@ -122,6 +122,21 @@ func assertSortBody(t *testing.T, actual, expected string) {
 func TestCreateAqlQueryForLatestCreated(t *testing.T) {
 	actual := CreateAqlQueryForLatestCreated("repo", "name")
 	expected := `items.find({` +
+		`"type": "` + string(File) + `",` +
+		`"repo": "repo",` +
+		`"path": {"$match": "name"}` +
+		`})` +
+		`.sort({"$desc":["created"]})` +
+		`.limit(1)`
+	if actual != expected {
+		t.Error("The function CreateAqlQueryForLatestCreated expected to return the string:\n'" + expected + "'.\nbut returned:\n'" + actual + "'.")
+	}
+}
+
+func TestCreateAqlQueryForLatestCreatedFolder(t *testing.T) {
+	actual := CreateAqlQueryForLatestCreatedFolder("repo", "name")
+	expected := `items.find({` +
+		`"type": "` + string(Folder) + `",` +
 		`"repo": "repo",` +
 		`"path": {"$match": "name"}` +
 		`})` +
@@ -217,6 +232,39 @@ func TestBuildKeyValQueryPart(t *testing.T) {
 			expected := `"$or":[` + sample.expected + "]"
 			actual := buildKeyValQueryPart(sample.key, sample.values)
 			assert.Equal(t, expected, actual)
+		})
+	}
+}
+
+var encodeForBuildInfoRepositoryProvider = []struct {
+	value            string
+	expectedEncoding string
+}{
+	// Shouldn't encode
+	{"", ""},
+	{"a", "a"},
+	{"a b", "a b"},
+	{"a.b", "a.b"},
+	{"a&b", "a&b"},
+
+	// Should encode
+	{"a/b", "a%2Fb"},
+	{"a\\b", "a%5Cb"},
+	{"a:b", "a%3Ab"},
+	{"a|b", "a%7Cb"},
+	{"a*b", "a%2Ab"},
+	{"a?b", "a%3Fb"},
+	{"a  /  b", "a %20%2F%20 b"},
+
+	// Should convert whitespace to space
+	{"a\tb", "a b"},
+	{"a\nb", "a b"},
+}
+
+func TestEncodeForBuildInfoRepository(t *testing.T) {
+	for _, testCase := range encodeForBuildInfoRepositoryProvider {
+		t.Run(testCase.value, func(t *testing.T) {
+			assert.Equal(t, testCase.expectedEncoding, encodeForBuildInfoRepository(testCase.value))
 		})
 	}
 }

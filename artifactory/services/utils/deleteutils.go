@@ -2,11 +2,9 @@ package utils
 
 import (
 	"errors"
-	"regexp"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 )
 
@@ -16,9 +14,9 @@ func WildcardToDirsPath(deletePattern, searchResult string) (string, error) {
 	}
 
 	regexpPattern := "^" + strings.ReplaceAll(deletePattern, "*", "([^/]*|.*)")
-	r, err := regexp.Compile(regexpPattern)
+	r, err := utils.GetRegExp(regexpPattern)
 	if err != nil {
-		return "", errorutils.CheckError(err)
+		return "", err
 	}
 
 	groups := r.FindStringSubmatch(searchResult)
@@ -97,14 +95,14 @@ func writeRemainCandidate(cw *content.ContentWriter, mergeResult *content.Conten
 	}
 }
 
-func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultWriter *content.ContentWriter, candidateType string) ([]*content.ContentReader, error) {
+func FilterCandidateToBeDeleted(deleteCandidates *content.ContentReader, resultWriter *content.ContentWriter, candidateType ResultItemType) ([]*content.ContentReader, error) {
 	paths := make(map[string]content.SortableContentItem)
 	pathsKeys := make([]string, 0, utils.MaxBufferSize)
 	toBeDeleted := []*content.ContentReader{}
 	for candidate := new(ResultItem); deleteCandidates.NextRecord(candidate) == nil; candidate = new(ResultItem) {
 		// Save all candidates, of the requested type, to a different temp file.
-		if candidate.Type == candidateType {
-			if candidateType == "folder" && candidate.Name == "." {
+		if candidate.Type == string(candidateType) {
+			if candidateType == Folder && candidate.Name == "." {
 				continue
 			}
 			pathsKeys = append(pathsKeys, candidate.GetItemRelativePath())

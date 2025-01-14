@@ -163,7 +163,7 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 	}
 	for dec.More() {
 		var ResultItem map[string]interface{}
-		err := dec.Decode(&ResultItem)
+		err = dec.Decode(&ResultItem)
 		if err != nil {
 			log.Error(err)
 			cr.errorsQueue.AddError(errorutils.CheckError(err))
@@ -209,7 +209,7 @@ func MergeReaders(arr []*ContentReader, arrayKey string) (contentReader *Content
 		for item := new(interface{}); cr.NextRecord(item) == nil; item = new(interface{}) {
 			cw.Write(*item)
 		}
-		if err := cr.GetError(); err != nil {
+		if err = cr.GetError(); err != nil {
 			return nil, err
 		}
 	}
@@ -397,14 +397,14 @@ func MergeSortedReaders(readerRecord SortableContentItem, sortedReaders []*Conte
 		for i := 0; i < len(sortedFilesClone); i++ {
 			if currentContentItem[i] == nil && sortedFilesClone[i] != nil {
 				temp := (reflect.New(valueType)).Interface()
-				if err := sortedFilesClone[i].NextRecord(temp); nil != err {
+				if err = sortedFilesClone[i].NextRecord(temp); nil != err {
 					sortedFilesClone[i] = nil
 					continue
 				}
 				// Expect to receive 'SortableContentItem'.
 				contentItem, ok := (temp).(SortableContentItem)
 				if !ok {
-					return nil, errorutils.CheckErrorf("Attempting to sort a content-reader with unsortable items.")
+					return nil, errorutils.CheckErrorf("attempting to sort a content-reader with unsortable items.")
 				}
 				currentContentItem[i] = &contentItem
 			}

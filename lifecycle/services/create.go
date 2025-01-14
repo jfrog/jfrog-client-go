@@ -4,16 +4,19 @@ const (
 	releaseBundleBaseApi = "api/v2/release_bundle"
 )
 
-type sourceType string
+type SourceType string
 
 const (
-	builds         sourceType = "builds"
-	releaseBundles sourceType = "release_bundles"
+	Aql            SourceType = "aql"
+	Artifacts      SourceType = "artifacts"
+	Builds         SourceType = "builds"
+	ReleaseBundles SourceType = "release_bundles"
 )
 
 type createOperation struct {
-	reqBody RbCreationBody
-	params  CreateOrPromoteReleaseBundleParams
+	reqBody        RbCreationBody
+	params         CommonOptionalQueryParams
+	signingKeyName string
 }
 
 func (c *createOperation) getOperationRestApi() string {
@@ -28,32 +31,46 @@ func (c *createOperation) getOperationSuccessfulMsg() string {
 	return "Release Bundle successfully created"
 }
 
-func (c *createOperation) getOperationParams() CreateOrPromoteReleaseBundleParams {
+func (c *createOperation) getOperationParams() CommonOptionalQueryParams {
 	return c.params
 }
 
-func (rbs *ReleaseBundlesService) CreateFromBuilds(rbDetails ReleaseBundleDetails, params CreateOrPromoteReleaseBundleParams, sourceBuilds CreateFromBuildsSource) error {
+func (c *createOperation) getSigningKeyName() string {
+	return c.signingKeyName
+}
+
+func (rbs *ReleaseBundlesService) CreateFromAql(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, aqlQuery string) error {
+	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Aql, CreateFromAqlSource{Aql: aqlQuery})
+}
+
+func (rbs *ReleaseBundlesService) CreateFromArtifacts(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceArtifacts CreateFromArtifacts) error {
+	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Artifacts, sourceArtifacts)
+}
+
+func (rbs *ReleaseBundlesService) CreateFromBuilds(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceBuilds CreateFromBuildsSource) error {
+	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Builds, sourceBuilds)
+}
+
+func (rbs *ReleaseBundlesService) CreateFromBundles(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceReleaseBundles CreateFromReleaseBundlesSource) error {
+	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, ReleaseBundles, sourceReleaseBundles)
+}
+
+func (rbs *ReleaseBundlesService) CreateReleaseBundle(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
+	signingKeyName string, rbSourceType SourceType, source interface{}) error {
 	operation := createOperation{
 		reqBody: RbCreationBody{
 			ReleaseBundleDetails: rbDetails,
-			SourceType:           builds,
-			Source:               sourceBuilds},
-		params: params,
+			SourceType:           rbSourceType,
+			Source:               source},
+		params:         params,
+		signingKeyName: signingKeyName,
 	}
-	_, err := rbs.doOperation(&operation)
+	_, err := rbs.doPostOperation(&operation)
 	return err
 }
 
-func (rbs *ReleaseBundlesService) CreateFromBundles(rbDetails ReleaseBundleDetails, params CreateOrPromoteReleaseBundleParams, sourceReleaseBundles CreateFromReleaseBundlesSource) error {
-	operation := createOperation{
-		reqBody: RbCreationBody{
-			ReleaseBundleDetails: rbDetails,
-			SourceType:           releaseBundles,
-			Source:               sourceReleaseBundles},
-		params: params,
-	}
-	_, err := rbs.doOperation(&operation)
-	return err
+type CreateFromAqlSource struct {
+	Aql string `json:"aql,omitempty"`
 }
 
 type SourceBuildDetails struct {
@@ -62,14 +79,24 @@ type SourceBuildDetails struct {
 	ProjectKey  string
 }
 
+type CreateFromArtifacts struct {
+	Artifacts []ArtifactSource `json:"artifacts,omitempty"`
+}
+
 type CreateFromBuildsSource struct {
 	Builds []BuildSource `json:"builds,omitempty"`
 }
 
+type ArtifactSource struct {
+	Path   string `json:"path,omitempty"`
+	Sha256 string `json:"sha256,omitempty"`
+}
+
 type BuildSource struct {
-	BuildName       string `json:"build_name,omitempty"`
-	BuildNumber     string `json:"build_number,omitempty"`
-	BuildRepository string `json:"build_repository,omitempty"`
+	BuildName           string `json:"build_name,omitempty"`
+	BuildNumber         string `json:"build_number,omitempty"`
+	BuildRepository     string `json:"build_repository,omitempty"`
+	IncludeDependencies bool   `json:"include_dependencies,omitempty"`
 }
 
 type CreateFromReleaseBundlesSource struct {
@@ -84,6 +111,6 @@ type ReleaseBundleSource struct {
 
 type RbCreationBody struct {
 	ReleaseBundleDetails
-	SourceType sourceType  `json:"source_type,omitempty"`
+	SourceType SourceType  `json:"source_type,omitempty"`
 	Source     interface{} `json:"source,omitempty"`
 }

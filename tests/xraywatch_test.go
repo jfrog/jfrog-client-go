@@ -133,12 +133,14 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	err = createAndIndexBuild(t, build1Name)
 	assert.NoError(t, err)
 	defer func() {
+		assert.NoError(t, deleteBuildIndex(build1Name))
 		assert.NoError(t, deleteBuild(build1Name))
 	}()
 	build2Name := fmt.Sprintf("%s-%s", "build2", getRunId())
 	err = createAndIndexBuild(t, build2Name)
 	assert.NoError(t, err)
 	defer func() {
+		assert.NoError(t, deleteBuildIndex(build2Name))
 		assert.NoError(t, deleteBuild(build2Name))
 	}()
 	paramsSelectedRepos := utils.NewWatchParams()
@@ -312,17 +314,17 @@ func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}
 
 	err := testsXrayWatchService.Update(paramsMissingWatch)
-	assert.EqualError(t, err, "server response: 404 Not Found\n{\n  \"error\": \"Failed to update Watch: Watch was not found\"\n}")
+	assert.EqualError(t, err, "server response: 404 Not Found")
 }
 
 func testXrayWatchDeleteMissingWatch(t *testing.T) {
 	err := testsXrayWatchService.Delete("client-go-tests-watch-builds-missing")
-	assert.EqualError(t, err, "server response: 404 Not Found\n{\n  \"error\": \"Failed to delete Watch: Watch was not found\"\n}")
+	assert.EqualError(t, err, "server response: 404 Not Found")
 }
 
 func testXrayWatchGetMissingWatch(t *testing.T) {
 	_, err := testsXrayWatchService.Get("client-go-tests-watch-builds-missing")
-	assert.EqualError(t, err, "server response: 404 Not Found\n{\n  \"error\": \"Watch was not found\"\n}")
+	assert.EqualError(t, err, "server response: 404 Not Found")
 }
 
 func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {
@@ -338,7 +340,7 @@ func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {
 func createRepoLocal(t *testing.T, repoKey string) {
 	glp := artifactoryServices.NewGenericLocalRepositoryParams()
 	glp.Key = repoKey
-	glp.XrayIndex = &trueValue
+	glp.XrayIndex = clientUtils.Pointer(true)
 
 	err := testsCreateLocalRepositoryService.Generic(glp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -349,7 +351,7 @@ func createRepoRemote(t *testing.T, repoKey string) {
 	nrp.Key = repoKey
 	nrp.RepoLayoutRef = "npm-default"
 	nrp.Url = "https://registry.npmjs.org"
-	nrp.XrayIndex = &trueValue
+	nrp.XrayIndex = clientUtils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.Npm(nrp)
 	assert.NoError(t, err, "Failed to create "+repoKey)
@@ -362,17 +364,17 @@ func createDummyPolicy(policyName string) error {
 		Type:        utils.Security,
 		Rules: []utils.PolicyRule{{
 			Name:     "sec_rule",
-			Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium),
+			Criteria: *utils.CreateSeverityPolicyCriteria(utils.Medium, false),
 			Actions: &utils.PolicyAction{
 				Webhooks: []string{},
 				BlockDownload: utils.PolicyBlockDownload{
-					Active:    &trueValue,
-					Unscanned: &falseValue,
+					Active:    clientUtils.Pointer(true),
+					Unscanned: clientUtils.Pointer(false),
 				},
-				BlockReleaseBundleDistribution: &trueValue,
-				FailBuild:                      &trueValue,
-				NotifyDeployer:                 &trueValue,
-				NotifyWatchRecipients:          &trueValue,
+				BlockReleaseBundleDistribution: clientUtils.Pointer(true),
+				FailBuild:                      clientUtils.Pointer(true),
+				NotifyDeployer:                 clientUtils.Pointer(true),
+				NotifyWatchRecipients:          clientUtils.Pointer(true),
 			},
 			Priority: 1,
 		}},

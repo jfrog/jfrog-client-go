@@ -54,10 +54,10 @@ func GetTransportWithLoadedCert(certificatesDirPath string, insecureTls bool, tr
 	if err != nil {
 		return nil, err
 	}
-	//#nosec G402 -- Skipping insecure tls verification was requested by the user.
 	transport.TLSClientConfig = &tls.Config{
 		RootCAs:            caCertPool,
 		ClientSessionCache: tls.NewLRUClientSessionCache(1),
+		//#nosec G402 -- Skipping insecure tls verification was requested by the user.
 		InsecureSkipVerify: insecureTls,
 	}
 

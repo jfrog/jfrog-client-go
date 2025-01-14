@@ -3,7 +3,35 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
+
+const (
+	SizeKib int64 = 1 << 10
+	SizeMiB int64 = 1 << 20
+	SizeGiB int64 = 1 << 30
+	SizeTiB int64 = 1 << 40
+)
+
+type FileInfo struct {
+	Uri          string `json:"uri,omitempty"`
+	DownloadUri  string `json:"downloadUri,omitempty"`
+	Repo         string `json:"repo,omitempty"`
+	Path         string `json:"path,omitempty"`
+	RemoteUrl    string `json:"remoteUrl,omitempty"`
+	Created      string `json:"created,omitempty"`
+	CreatedBy    string `json:"createdBy,omitempty"`
+	LastModified string `json:"lastModified,omitempty"`
+	ModifiedBy   string `json:"modifiedBy,omitempty"`
+	LastUpdated  string `json:"lastUpdated,omitempty"`
+	Size         string `json:"size,omitempty"`
+	MimeType     string `json:"mimeType,omitempty"`
+	Checksums    struct {
+		Sha1   string `json:"sha1,omitempty"`
+		Sha256 string `json:"sha256,omitempty"`
+		Md5    string `json:"md5,omitempty"`
+	} `json:"checksums,omitempty"`
+}
 
 type FolderInfo struct {
 	Uri          string               `json:"uri,omitempty"`
@@ -98,4 +126,25 @@ type FileStoreSummary struct {
 	TotalSpace       string `json:"totalSpace,omitempty"`
 	UsedSpace        string `json:"usedSpace,omitempty"`
 	FreeSpace        string `json:"freeSpace,omitempty"`
+}
+
+func ConvertIntToStorageSizeString(num int64) string {
+	if num > SizeTiB {
+		newNum := float64(num) / float64(SizeTiB)
+		stringNum := fmt.Sprintf("%.1f", newNum)
+		return stringNum + "TB"
+	}
+	if num > SizeGiB {
+		newNum := float64(num) / float64(SizeGiB)
+		stringNum := fmt.Sprintf("%.1f", newNum)
+		return stringNum + "GB"
+	}
+	if num > SizeMiB {
+		newNum := float64(num) / float64(SizeMiB)
+		stringNum := fmt.Sprintf("%.1f", newNum)
+		return stringNum + "MB"
+	}
+	newNum := float64(num) / float64(SizeKib)
+	stringNum := fmt.Sprintf("%.1f", newNum)
+	return stringNum + "KB"
 }

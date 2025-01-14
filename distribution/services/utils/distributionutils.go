@@ -1,10 +1,8 @@
 package utils
 
 import (
-	"github.com/jfrog/gofrog/stringutils"
-	"regexp"
-
 	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 )
 
 type ReleaseNotesSyntax string
@@ -14,8 +12,6 @@ const (
 	Asciidoc  ReleaseNotesSyntax = "asciidoc"
 	PlainText ReleaseNotesSyntax = "plain_text"
 )
-
-var fileSpecCaptureGroup = regexp.MustCompile(`({\d})`)
 
 type ReleaseBundleParams struct {
 	SpecFiles          []*rtUtils.CommonParams
@@ -38,16 +34,22 @@ func NewReleaseBundleParams(name, version string) ReleaseBundleParams {
 
 func CreateBundleBody(releaseBundleParams ReleaseBundleParams, dryRun bool) (*ReleaseBundleBody, error) {
 	var bundleQueries []BundleQuery
+	var pathMappings []rtUtils.PathMapping
+
 	// Create release bundle queries
 	for _, specFile := range releaseBundleParams.SpecFiles {
+		// Create path mapping
+		if specFile.GetSpecType() == rtUtils.AQL {
+			pathMappings = distribution.CreatePathMappings(specFile.PathMapping.Input, specFile.PathMapping.Output)
+		} else {
+			pathMappings = distribution.CreatePathMappingsFromPatternAndTarget(specFile.Pattern, specFile.Target)
+		}
+
 		// Create AQL
 		aql, err := createAql(specFile)
 		if err != nil {
 			return nil, err
 		}
-
-		// Create path mapping
-		pathMappings := createPathMappings(specFile)
 
 		// Create added properties
 		addedProps := createAddedProps(specFile)
@@ -87,25 +89,6 @@ func createAql(specFile *rtUtils.CommonParams) (string, error) {
 		specFile.Aql = rtUtils.Aql{ItemsFind: query}
 	}
 	return rtUtils.BuildQueryFromSpecFile(specFile, rtUtils.NONE), nil
-}
-
-// Creat the path mapping from the input spec
-func createPathMappings(specFile *rtUtils.CommonParams) []PathMapping {
-	if len(specFile.Target) == 0 {
-		return []PathMapping{}
-	}
-
-	// Convert the file spec pattern and target to match the path mapping input and output specifications, respectfully.
-	return []PathMapping{{
-		// The file spec pattern is wildcard based. Convert it to Regex:
-		Input: stringutils.WildcardPatternToRegExp(specFile.Pattern),
-		// The file spec target contain placeholders-style matching groups, like {1}.
-		// Convert it to REST API's matching groups style, like $1.
-		Output: fileSpecCaptureGroup.ReplaceAllStringFunc(specFile.Target, func(s string) string {
-			// Remove curly parenthesis and prepend $
-			return "$" + s[1:2]
-		}),
-	}}
 }
 
 // Create the AddedProps array from the input TargetProps string

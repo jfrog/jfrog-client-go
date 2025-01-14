@@ -2,14 +2,15 @@ package services
 
 import (
 	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"net/http"
 	"path"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
 const (
@@ -37,7 +38,7 @@ func NewLoginService(client *jfroghttpclient.JfrogHttpClient) *LoginService {
 
 func (ls *LoginService) SendLoginAuthenticationRequest(uuid string) error {
 	restAPI := path.Join(baseClientLoginApi, requestApi)
-	fullUrl, err := utils.BuildArtifactoryUrl(ls.ServiceDetails.GetUrl(), restAPI, make(map[string]string))
+	fullUrl, err := utils.BuildUrl(ls.ServiceDetails.GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return err
 	}
@@ -49,7 +50,7 @@ func (ls *LoginService) SendLoginAuthenticationRequest(uuid string) error {
 		return errorutils.CheckError(err)
 	}
 	httpClientsDetails := ls.ServiceDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := ls.client.SendPost(fullUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
@@ -89,7 +90,7 @@ func (ls *LoginService) GetLoginAuthenticationToken(uuid string) (token auth.Com
 
 func (ls *LoginService) getLoginAuthenticationToken(uuid string) (resp *http.Response, body []byte, err error) {
 	restAPI := path.Join(baseClientLoginApi, tokenApi, uuid)
-	fullUrl, err := utils.BuildArtifactoryUrl(ls.ServiceDetails.GetUrl(), restAPI, make(map[string]string))
+	fullUrl, err := utils.BuildUrl(ls.ServiceDetails.GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return
 	}

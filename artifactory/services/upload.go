@@ -4,8 +4,17 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
+	"github.com/jfrog/gofrog/crypto"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/jfrog/build-info-go/entities"
-	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -18,26 +27,32 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strconv"
-	"strings"
-	"sync"
+)
+
+const (
+	// 10 KiB
+	DefaultMinChecksumDeploy = utils.SizeKib * 10
+	// The default minimum file size for attempting multi-part upload
+	defaultUploadMinSplit = utils.SizeMiB * 200
+	// The default maximum number of parts that can be concurrently uploaded per file during a multipart upload
+	defaultUploadSplitCount = 5
+	// Minimal file size to show progress bar (to avoid polluting the terminal with a lot of progress lines)
+	minFileSizeForProgressInKb = 500 * utils.SizeKib
 )
 
 type UploadService struct {
-	client         *jfroghttpclient.JfrogHttpClient
-	Progress       ioutils.ProgressMgr
-	ArtDetails     auth.ServiceDetails
-	DryRun         bool
-	Threads        int
-	saveSummary    bool
-	resultsManager *resultsManager
+	client          *jfroghttpclient.JfrogHttpClient
+	Progress        ioutils.ProgressMgr
+	ArtDetails      auth.ServiceDetails
+	MultipartUpload *utils.MultipartUpload
+	DryRun          bool
+	saveSummary     bool
+	failFast        bool
+	Threads         int
+	resultsManager  *resultsManager
 }
+
+const JfrogCliUploadEmptyArchiveEnv = "JFROG_CLI_UPLOAD_EMPTY_ARCHIVE"
 
 func NewUploadService(client *jfroghttpclient.JfrogHttpClient) *UploadService {
 	return &UploadService{client: client}
@@ -63,6 +78,10 @@ func (us *UploadService) SetSaveSummary(saveSummary bool) {
 	us.saveSummary = saveSummary
 }
 
+func (us *UploadService) SetFailFast(failFast bool) {
+	us.failFast = failFast
+}
+
 func (us *UploadService) getOperationSummary(totalSucceeded, totalFailed int) *utils.OperationSummary {
 	if !us.saveSummary {
 		return &utils.OperationSummary{
@@ -76,11 +95,11 @@ func (us *UploadService) getOperationSummary(totalSucceeded, totalFailed int) *u
 func (us *UploadService) UploadFiles(uploadParams ...UploadParams) (summary *utils.OperationSummary, err error) {
 	// Uploading threads are using this struct to report upload results.
 	uploadSummary := utils.NewResult(us.Threads)
-	producerConsumer := parallel.NewRunner(us.Threads, 20000, false)
+	producerConsumer := parallel.NewRunner(us.Threads, 20000, us.failFast)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	if us.saveSummary {
 		us.resultsManager, err = newResultManager()
-		if err != nil {
+		if err != nil || us.resultsManager == nil {
 			return nil, err
 		}
 		defer func() {
@@ -176,19 +195,12 @@ func createProperties(artifact clientutils.Artifact, uploadParams UploadParams) 
 			}
 			// If Symlink target exists -> get SHA1 if isn't a directory
 		} else if !fileInfo.IsDir() {
-			file, err := os.Open(artifact.LocalPath)
+			var checksums map[crypto.Algorithm]string
+			checksums, err := crypto.GetFileChecksums(artifact.LocalPath, crypto.SHA1)
 			if err != nil {
 				return nil, errorutils.CheckError(err)
 			}
-			defer func() {
-				err = errors.Join(err, errorutils.CheckError(file.Close()))
-			}()
-			checksumInfo, err := biutils.CalcChecksums(file, biutils.SHA1)
-			if err != nil {
-				return nil, errorutils.CheckError(err)
-			}
-			sha1 := checksumInfo[biutils.SHA1]
-			artifactProps.AddProperty(utils.SymlinkSha1, sha1)
+			artifactProps.AddProperty(utils.SymlinkSha1, checksums[crypto.SHA1])
 		}
 		artifactProps.AddProperty(utils.ArtifactorySymlink, artifactSymlink)
 	}
@@ -225,6 +237,12 @@ func getSaveTaskInContentWriterFunc(writersMap map[string]*ArchiveUploadData, up
 }
 
 func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
+	// Target Specifies the target path in Artifactory in the following format: <repository name>/<repository path>, so it cannot start with a slash.
+	// Remove leading slash if exists
+	uploadParams.SetTarget(strings.TrimPrefix(uploadParams.GetTarget(), "/"))
+
+	// Target Specifies the target path in Artifactory in the following format: <repository name>/<repository path>, so it cannot start with a slash.
+	// If the received target path has no slashes then we assume that it's '<repository name>/' and we add the missing slash.
 	if !strings.Contains(uploadParams.GetTarget(), "/") {
 		uploadParams.SetTarget(uploadParams.GetTarget() + "/")
 	}
@@ -262,17 +280,18 @@ func CollectFilesForUpload(uploadParams UploadParams, progressMgr ioutils.Progre
 			buildProps += vcsProps
 		}
 		uploadData := UploadData{Artifact: artifact, TargetProps: props, BuildProps: buildProps}
-		incGeneralProgressTotal(progressMgr, uploadParams)
+		if progressMgr != nil {
+			progressMgr.IncGeneralProgressTotalBy(1)
+		}
 		dataHandlerFunc(uploadData)
-		return err
+		return nil
 	}
 	if uploadParams.Ant {
 		convertAntPatternToRegexp(&uploadParams)
 	} else {
 		convertPatternToRegexp(&uploadParams)
 	}
-	err = scanFilesByPattern(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
-	return err
+	return scanFilesByPattern(uploadParams, rootPath, progressMgr, vcsCache, dataHandlerFunc)
 }
 
 // convertAntPatternToRegexp converts a given Ant pattern to a regular expression.
@@ -301,20 +320,28 @@ func addEscapingParenthesesForUpload(pattern, target, targetPathInArchive string
 
 func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr ioutils.ProgressMgr, vcsCache *clientutils.VcsCache, dataHandlerFunc UploadDataHandlerFunc) error {
 	excludePathPattern := fspatterns.PrepareExcludePathPattern(uploadParams.Exclusions, uploadParams.GetPatternType(), uploadParams.IsRecursive())
-	patternRegex, err := regexp.Compile(uploadParams.GetPattern())
-	if errorutils.CheckError(err) != nil {
+	patternRegex, err := clientutils.GetRegExp(uploadParams.GetPattern())
+	if err != nil {
 		return err
 	}
-	paths, err := fspatterns.ListFiles(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), uploadParams.IsSymlink(), excludePathPattern)
+
+	paths, err := fspatterns.ListFilesFilterPatternAndSize(rootPath, uploadParams.IsRecursive(), uploadParams.IsIncludeDirs(), false, uploadParams.IsSymlink(), excludePathPattern, uploadParams.GetSizeLimit())
 	if err != nil {
 		return err
 	}
 	// Longest files path first
 	sort.Sort(sort.Reverse(sort.StringSlice(paths)))
-	var uploadedTargets []string
+
 	// 'uploadedDirs' is in use only when we need to upload folders with flat=true.
 	// 'uploadedDirs' will contain only local directories paths that have been uploaded to Artifactory.
-	var uploadedDirs []string
+	var uploadedTargets, uploadedDirs []string
+
+	if shouldUploadAnEmptyArchive(uploadParams.Archive, paths) {
+		log.Info("All files were filtered out by the exclusion pattern, but the archive flag is set together with JFROG_CLI_UPLOAD_EMPTY_ARCHIVE environment variable. " +
+			"Proceeding with an empty archive.")
+		paths = []string{""}
+	}
+
 	for _, path := range paths {
 		matches, isDir, err := fspatterns.SearchPatterns(path, uploadParams.IsSymlink(), uploadParams.IsIncludeDirs(), patternRegex)
 		if err != nil {
@@ -330,9 +357,10 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 					continue
 				}
 				uploadedDirs = append(uploadedDirs, path)
+			} else if progressMgr != nil {
+				// Increment the progress counter for each file (no increment for directories is needed)
+				progressMgr.IncGeneralProgressTotalBy(1)
 			}
-			// Update progress
-			incGeneralProgressTotal(progressMgr, uploadParams)
 			// Create upload task
 			err = createUploadTask(taskData, dataHandlerFunc, uploadParams.Regexp)
 			if err != nil {
@@ -342,6 +370,12 @@ func scanFilesByPattern(uploadParams UploadParams, rootPath string, progressMgr 
 		}
 	}
 	return nil
+}
+
+func shouldUploadAnEmptyArchive(archive string, paths []string) bool {
+	return len(paths) == 0 &&
+		archive != "" &&
+		strings.ToLower(os.Getenv(JfrogCliUploadEmptyArchiveEnv)) == "true"
 }
 
 // targetFiles - Paths in Artifactory of the files that were uploaded.
@@ -358,16 +392,6 @@ func skipDirUpload(targetFiles, sourceDirs []string, targetDir, sourceDir string
 		return true
 	}
 	return false
-}
-
-func incGeneralProgressTotal(progressMgr ioutils.ProgressMgr, uploadParams UploadParams) {
-	if progressMgr != nil {
-		if uploadParams.Archive != "" {
-			progressMgr.IncGeneralProgressTotalBy(2)
-		} else {
-			progressMgr.IncGeneralProgressTotalBy(1)
-		}
-	}
 }
 
 type uploadTaskData struct {
@@ -448,16 +472,16 @@ func getUploadTarget(rootPath, target string, isFlat, placeholdersUsed bool) str
 
 // Uploads the file in the specified local path to the specified target path.
 // Returns true if the file was successfully uploaded.
-func (us *UploadService) uploadFile(artifact UploadData, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
+func (us *UploadService) uploadFile(uploadData UploadData, uploadParams UploadParams, logMsgPrefix string) (*fileutils.FileDetails, bool, error) {
 	var checksumDeployed = false
 	var resp *http.Response
 	var details *fileutils.FileDetails
 	var body []byte
-	targetPathWithProps, err := buildUploadUrls(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, artifact.BuildProps, uploadParams.GetDebian(), artifact.TargetProps)
+	targetPathWithProps, err := buildUploadUrls(us.ArtDetails.GetUrl(), uploadData.Artifact.TargetPath, uploadData.BuildProps, uploadParams.GetDebian(), uploadData.TargetProps)
 	if err != nil {
 		return nil, false, err
 	}
-	fileInfo, err := os.Lstat(artifact.Artifact.LocalPath)
+	fileInfo, err := os.Lstat(uploadData.Artifact.LocalPath)
 	if errorutils.CheckError(err) != nil {
 		return nil, false, err
 	}
@@ -465,7 +489,7 @@ func (us *UploadService) uploadFile(artifact UploadData, uploadParams UploadPara
 	if uploadParams.IsSymlink() && fileutils.IsFileSymlink(fileInfo) {
 		resp, details, body, err = us.uploadSymlink(targetPathWithProps, logMsgPrefix, httpClientsDetails, uploadParams)
 	} else {
-		resp, details, body, checksumDeployed, err = us.doUpload(artifact.Artifact.LocalPath, targetPathWithProps, logMsgPrefix, httpClientsDetails, fileInfo, uploadParams)
+		resp, details, body, checksumDeployed, err = us.doUpload(uploadData.Artifact, targetPathWithProps, logMsgPrefix, httpClientsDetails, uploadParams)
 	}
 	if err != nil {
 		return nil, false, err
@@ -482,6 +506,21 @@ func (us *UploadService) shouldTryChecksumDeploy(fileSize int64, uploadParams Up
 	return uploadParams.ChecksumsCalcEnabled && fileSize >= uploadParams.MinChecksumDeploy && !uploadParams.IsExplodeArchive()
 }
 
+func (us *UploadService) shouldDoMultipartUpload(fileSize int64, uploadParams UploadParams) (bool, error) {
+	if uploadParams.SplitCount == 0 || fileSize < uploadParams.MinSplitSize {
+		return false, nil
+	}
+	if fileSize > utils.MaxMultipartUploadFileSize {
+		log.Debug(fmt.Sprintf("Max file size for multipart upload exceeded: %d>%d", fileSize, utils.MaxMultipartUploadFileSize))
+		return false, nil
+	}
+	if uploadParams.IsExplodeArchive() {
+		// Explode archives is not supported in multipart uploads
+		return false, nil
+	}
+	return us.MultipartUpload.IsSupported(us.ArtDetails)
+}
+
 // Reads a file from a Reader that is given from a function (getReaderFunc) and uploads it to the specified target path.
 // getReaderFunc is called only if checksum deploy was successful.
 // Returns true if the file was successfully uploaded.
@@ -489,13 +528,13 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 	var resp *http.Response
 	var body []byte
 	var checksumDeployed = false
-	var e error
+	var err error
 	httpClientsDetails := us.ArtDetails.CreateHttpClientDetails()
 	if !us.DryRun {
 		if us.shouldTryChecksumDeploy(details.Size, uploadParams) {
-			resp, body, e = us.tryChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
-			if e != nil {
-				return false, e
+			resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
+			if err != nil {
+				return false, err
 			}
 			checksumDeployed = isSuccessfulUploadStatusCode(resp.StatusCode)
 		}
@@ -529,9 +568,9 @@ func (us *UploadService) uploadFileFromReader(getReaderFunc func() (io.Reader, e
 				},
 			}
 
-			e = retryExecutor.Execute()
-			if e != nil {
-				return false, e
+			err = retryExecutor.Execute()
+			if err != nil {
+				return false, err
 			}
 		}
 	}
@@ -545,41 +584,60 @@ func (us *UploadService) uploadSymlink(targetPath, logMsgPrefix string, httpClie
 	if err != nil {
 		return
 	}
-	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, nil)
+	resp, body, err = utils.UploadFile("", targetPath, logMsgPrefix, &us.ArtDetails, details, httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, us.Progress)
 	return
 }
 
-func (us *UploadService) doUpload(localPath, targetUrlWithProps, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, fileInfo os.FileInfo, uploadParams UploadParams) (*http.Response, *fileutils.FileDetails, []byte, bool, error) {
-	var details *fileutils.FileDetails
-	var checksumDeployed bool
-	var resp *http.Response
-	var body []byte
-	var err error
+func (us *UploadService) doUpload(artifact clientutils.Artifact, targetUrlWithProps, logMsgPrefix string, httpClientsDetails httputils.HttpClientDetails, uploadParams UploadParams) (
+	resp *http.Response, details *fileutils.FileDetails, body []byte, checksumDeployed bool, err error) {
+	// Get local file details
+	details, err = fileutils.GetFileDetails(artifact.LocalPath, uploadParams.ChecksumsCalcEnabled)
+	if err != nil {
+		return
+	}
+
+	// Return if dry run
+	if us.DryRun {
+		return
+	}
+
+	// Try checksum deploy
+	if us.shouldTryChecksumDeploy(details.Size, uploadParams) {
+		resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
+		if err != nil {
+			return resp, details, body, checksumDeployed, err
+		}
+		if isSuccessfulUploadStatusCode(resp.StatusCode) {
+			checksumDeployed = true
+			if us.Progress != nil {
+				us.Progress.IncrementGeneralProgress()
+			}
+			return
+		}
+	}
+
+	// Try multipart upload
+	var shouldTryMultipart bool
+	if shouldTryMultipart, err = us.shouldDoMultipartUpload(details.Size, uploadParams); err != nil {
+		return
+	}
+	if shouldTryMultipart {
+		var checksumToken string
+		if checksumToken, err = us.MultipartUpload.UploadFileConcurrently(artifact.LocalPath, artifact.TargetPath,
+			details.Size, details.Checksum.Sha1, us.Progress, uploadParams.SplitCount, uploadParams.ChunkSize); err != nil {
+			return
+		}
+		// Once the file is uploaded to the storage, we finalize the multipart upload by performing a checksum deployment to save the file in Artifactory.
+		utils.AddChecksumTokenHeader(httpClientsDetails.Headers, checksumToken)
+		resp, body, err = us.doChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
+		return
+	}
+
+	// Do regular upload
 	addExplodeHeader(&httpClientsDetails, uploadParams.IsExplodeArchive())
-	if !us.DryRun {
-		if us.shouldTryChecksumDeploy(fileInfo.Size(), uploadParams) {
-			details, err = fileutils.GetFileDetails(localPath, uploadParams.ChecksumsCalcEnabled)
-			if err != nil {
-				return resp, details, body, checksumDeployed, err
-			}
-			resp, body, err = us.tryChecksumDeploy(details, targetUrlWithProps, httpClientsDetails, us.client)
-			if err != nil {
-				return resp, details, body, checksumDeployed, err
-			}
-			checksumDeployed = isSuccessfulUploadStatusCode(resp.StatusCode)
-		}
-		if !checksumDeployed {
-			resp, body, err = utils.UploadFile(localPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
-				httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, us.Progress)
-			if err != nil {
-				return resp, details, body, checksumDeployed, err
-			}
-		}
-	}
-	if details == nil {
-		details, err = fileutils.GetFileDetails(localPath, uploadParams.ChecksumsCalcEnabled)
-	}
-	return resp, details, body, checksumDeployed, err
+	resp, body, err = utils.UploadFile(artifact.LocalPath, targetUrlWithProps, logMsgPrefix, &us.ArtDetails, details,
+		httpClientsDetails, us.client, uploadParams.ChecksumsCalcEnabled, us.Progress)
+	return
 }
 
 func (us *UploadService) doUploadFromReader(fileReader io.Reader, targetUrlWithProps string, httpClientsDetails httputils.HttpClientDetails, uploadParams UploadParams, details *fileutils.FileDetails) (*http.Response, *fileutils.FileDetails, []byte, error) {
@@ -591,7 +649,8 @@ func (us *UploadService) doUploadFromReader(fileReader io.Reader, targetUrlWithP
 	if us.Progress != nil {
 		progressReader := us.Progress.NewProgressReader(details.Size, "Uploading", targetUrlWithProps)
 		reader = progressReader.ActionWithProgress(fileReader)
-		defer us.Progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer us.Progress.RemoveProgress(progressId)
 	} else {
 		reader = fileReader
 	}
@@ -612,24 +671,24 @@ func logUploadResponse(logMsgPrefix string, resp *http.Response, body []byte, ch
 		} else {
 			strChecksumDeployed = ""
 		}
-		log.Debug(logMsgPrefix, "Artifactory response:", resp.Status, strChecksumDeployed)
+		log.Debug(logMsgPrefix+"Artifactory response:", resp.Status, strChecksumDeployed)
 	}
 }
 
 func addExplodeHeader(httpClientsDetails *httputils.HttpClientDetails, isExplode bool) {
 	if isExplode {
-		utils.AddHeader("X-Explode-Archive", "true", &httpClientsDetails.Headers)
+		httpClientsDetails.AddHeader("X-Explode-Archive", "true")
 	}
 }
 
-func (us *UploadService) tryChecksumDeploy(details *fileutils.FileDetails, targetPath string, httpClientsDetails httputils.HttpClientDetails,
+func (us *UploadService) doChecksumDeploy(details *fileutils.FileDetails, targetPath string, httpClientsDetails httputils.HttpClientDetails,
 	client *jfroghttpclient.JfrogHttpClient) (resp *http.Response, body []byte, err error) {
-	requestClientDetails := httpClientsDetails.Clone()
-	utils.AddHeader("X-Checksum-Deploy", "true", &requestClientDetails.Headers)
-	utils.AddChecksumHeaders(requestClientDetails.Headers, details)
-	utils.AddAuthHeaders(requestClientDetails.Headers, us.ArtDetails)
+	clonedHttpClientsDetails := httpClientsDetails.Clone()
+	clonedHttpClientsDetails.AddHeader("X-Checksum-Deploy", "true")
+	utils.AddChecksumHeaders(clonedHttpClientsDetails.Headers, details)
+	utils.AddAuthHeaders(clonedHttpClientsDetails.Headers, us.ArtDetails)
 
-	resp, body, err = client.SendPut(targetPath, nil, requestClientDetails)
+	resp, body, err = client.SendPut(targetPath, nil, clonedHttpClientsDetails)
 	return
 }
 
@@ -655,14 +714,20 @@ type UploadParams struct {
 	Flat                 bool
 	AddVcsProps          bool
 	MinChecksumDeploy    int64
+	MinSplitSize         int64
+	SplitCount           int
+	ChunkSize            int64
 	ChecksumsCalcEnabled bool
 	Archive              string
 	// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
 	TargetPathInArchive string
+	// Size limit for files to be uploaded.
+	SizeLimit *fspatterns.SizeThreshold
 }
 
 func NewUploadParams() UploadParams {
-	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: 10240, ChecksumsCalcEnabled: true}
+	return UploadParams{CommonParams: &utils.CommonParams{}, MinChecksumDeploy: DefaultMinChecksumDeploy,
+		ChecksumsCalcEnabled: true, MinSplitSize: defaultUploadMinSplit, SplitCount: defaultUploadSplitCount, ChunkSize: utils.DefaultUploadChunkSize}
 }
 
 func DeepCopyUploadParams(params *UploadParams) UploadParams {
@@ -690,6 +755,10 @@ func (up *UploadParams) IsExplodeArchive() bool {
 
 func (up *UploadParams) GetDebian() string {
 	return up.Deb
+}
+
+func (up *UploadParams) GetSizeLimit() *fspatterns.SizeThreshold {
+	return up.SizeLimit
 }
 
 type UploadData struct {
@@ -742,7 +811,7 @@ func (us *UploadService) postUpload(uploadResult *utils.Result, threadId int, ar
 }
 
 func (us *UploadService) createFolderInArtifactory(artifact UploadData) error {
-	url, err := utils.BuildArtifactoryUrl(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, make(map[string]string))
+	url, err := clientutils.BuildUrl(us.ArtDetails.GetUrl(), artifact.Artifact.TargetPath, make(map[string]string))
 	url = clientutils.AddTrailingSlashIfNeeded(url)
 	if err != nil {
 		return err
@@ -779,19 +848,22 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 		}
 		// Make sure all go routines in readFilesAsZip calls were done.
 		var zipReadersWg sync.WaitGroup
-		checksumZipReader := us.readFilesAsZip(archiveDataReader, "Calculating size / checksums",
+		// We execute readFilesAsZip twice. The first execution is a dry-run.
+		// It calculates the size and checksums of the generated zip file, which is necessary before starting the upload task.
+		// The second execution is part of the zip upload process running in parallel to the archiving of them files to the zip.
+		checksumZipReader := us.readFilesAsZip(archiveDataReader, true,
 			archiveData.uploadParams.Flat, archiveData.uploadParams.Symlink, saveFilesPathsFunc, errorsQueue, &zipReadersWg)
 		details, err := fileutils.GetFileDetailsFromReader(checksumZipReader, archiveData.uploadParams.ChecksumsCalcEnabled)
 		if err != nil {
 			return
 		}
-		log.Info(logMsgPrefix+"Uploading artifact:", targetPath)
-
 		getReaderFunc := func() (io.Reader, error) {
 			archiveDataReader.Reset()
-			return us.readFilesAsZip(archiveDataReader, "Archiving", archiveData.uploadParams.Flat,
+			return us.readFilesAsZip(archiveDataReader, false, archiveData.uploadParams.Flat,
 				archiveData.uploadParams.Symlink, nil, errorsQueue, &zipReadersWg), nil
 		}
+
+		log.Info(logMsgPrefix+"Uploading artifact:", targetPath)
 		uploaded, err := us.uploadFileFromReader(getReaderFunc, targetUrlWithProps, archiveData.uploadParams, logMsgPrefix, details)
 
 		if uploaded {
@@ -807,12 +879,17 @@ func (us *UploadService) CreateUploadAsZipFunc(uploadResult *utils.Result, targe
 
 // Reads files and streams them as a ZIP to a Reader.
 // archiveDataReader is a ContentReader of UploadData items containing the details of the files to stream.
+// zipDryRun - If true, this function is run as part of the dry-run process, to
 // saveFilesPathsFunc (optional) is a func that is called for each file that is written into the ZIP, and gets the file's local path as a parameter.
-func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader, progressPrefix string, flat, symlink bool,
+func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader, zipDryRun, flat, symlink bool,
 	saveFilesPathsFunc func(sourcePath string) error, errorsQueue *clientutils.ErrorsQueue, zipReadersWg *sync.WaitGroup) io.Reader {
 	pr, pw := io.Pipe()
 	zipReadersWg.Add(1)
 
+	progressPrefix := "Archiving"
+	if zipDryRun {
+		progressPrefix = "Calculating size / checksums"
+	}
 	go func() {
 		defer zipReadersWg.Done()
 		var e error
@@ -828,9 +905,15 @@ func (us *UploadService) readFilesAsZip(archiveDataReader *content.ContentReader
 			}
 		}()
 		for uploadData := new(UploadData); archiveDataReader.NextRecord(uploadData) == nil; uploadData = new(UploadData) {
-			e = us.addFileToZip(&uploadData.Artifact, progressPrefix, flat, symlink, zipWriter)
-			if e != nil {
-				errorsQueue.AddError(e)
+			if uploadData.Artifact.LocalPath != "" {
+				e = us.addFileToZip(&uploadData.Artifact, progressPrefix, flat, symlink, zipWriter)
+				if e != nil {
+					errorsQueue.AddError(e)
+				}
+				if !zipDryRun && us.Progress != nil {
+					// Increment general progress by 1 for each file added to the zip if not in dry-run mode.
+					us.Progress.IncrementGeneralProgress()
+				}
 			}
 			if saveFilesPathsFunc != nil {
 				e = saveFilesPathsFunc(uploadData.Artifact.LocalPath)
@@ -871,6 +954,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		header.Name = artifact.TargetPathInArchive
 	}
 	header.Method = zip.Deflate
+	header.Modified = info.ModTime()
 
 	// If this is a directory, add it to the writer with a trailing slash.
 	if info.IsDir() {
@@ -893,12 +977,16 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 		return err
 	}
 	defer func() {
-		err = errors.Join(err, errorutils.CheckError(file.Close()))
+		if file != nil {
+			err = errors.Join(err, errorutils.CheckError(file.Close()))
+		}
 	}()
-	if us.Progress != nil {
+	// Show progress bar only for files larger than 500kb to avoid polluting the terminal with endless progress bars.
+	if us.Progress != nil && info.Size() > minFileSizeForProgressInKb {
 		progressReader := us.Progress.NewProgressReader(info.Size(), progressPrefix, localPath)
 		reader = progressReader.ActionWithProgress(file)
-		defer us.Progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer us.Progress.RemoveProgress(progressId)
 	} else {
 		reader = file
 	}
@@ -911,7 +999,7 @@ func (us *UploadService) addFileToZip(artifact *clientutils.Artifact, progressPr
 }
 
 func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string, targetProps *utils.Properties) (targetUrlWithProps string, err error) {
-	targetUrl, err := utils.BuildArtifactoryUrl(artifactoryUrl, targetPath, make(map[string]string))
+	targetUrl, err := clientutils.BuildUrl(artifactoryUrl, targetPath, make(map[string]string))
 	if err != nil {
 		return
 	}
@@ -919,12 +1007,14 @@ func buildUploadUrls(artifactoryUrl, targetPath, buildProps, debianConfig string
 	return
 }
 
-func addPropsToTargetPath(targetPath, buildProps, debConfig string, props *utils.Properties) (string, error) {
+func addPropsToTargetPath(targetPath, buildProps, debConfig string, targetProps *utils.Properties) (string, error) {
 	pathParts := []string{targetPath}
 
-	encodedTargetProps := props.ToEncodedString(false)
-	if len(encodedTargetProps) > 0 {
-		pathParts = append(pathParts, encodedTargetProps)
+	if targetProps != nil {
+		encodedTargetProps := targetProps.ToEncodedString(false)
+		if len(encodedTargetProps) > 0 {
+			pathParts = append(pathParts, encodedTargetProps)
+		}
 	}
 
 	debianProps, err := utils.ParseProperties(getDebianProps(debConfig))

@@ -3,10 +3,10 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
@@ -43,9 +43,9 @@ func (dr *DeleteReleaseBundleService) IsDryRun() bool {
 }
 
 func (dr *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParams DeleteDistributionParams) error {
-	var distributionRules []DistributionRulesBody
+	var distributionRules []distribution.DistributionRulesBody
 	for _, rule := range deleteDistributionParams.DistributionRules {
-		distributionRule := DistributionRulesBody{
+		distributionRule := distribution.DistributionRulesBody{
 			SiteName:     rule.GetSiteName(),
 			CityName:     rule.GetCityName(),
 			CountryCodes: rule.GetCountryCodes(),
@@ -61,7 +61,7 @@ func (dr *DeleteReleaseBundleService) DeleteDistribution(deleteDistributionParam
 	}
 
 	deleteDistribution := DeleteRemoteDistributionBody{
-		DistributionBody: DistributionBody{
+		ReleaseBundleDistributeV1Body: distribution.ReleaseBundleDistributeV1Body{
 			DryRun:            dr.DryRun,
 			DistributionRules: distributionRules,
 		},
@@ -85,7 +85,7 @@ func (dr *DeleteReleaseBundleService) execDeleteDistribute(name, version string,
 		return errorutils.CheckError(err)
 	}
 	url := dr.DistDetails.GetUrl() + "api/v1/distribution/" + name + "/" + version + "/delete"
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := dr.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return err
@@ -125,20 +125,20 @@ func (dr *DeleteReleaseBundleService) waitForDeletion(name, version string) erro
 			return nil
 		}
 		if resp.StatusCode != http.StatusOK {
-			return errorutils.CheckErrorf("Error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + ".")
+			return errorutils.CheckErrorf("error while waiting to deletion: status code " + fmt.Sprint(resp.StatusCode) + ".")
 		}
 		time.Sleep(time.Second * DefaultDistributeSyncSleepIntervalSeconds)
 	}
-	return errorutils.CheckErrorf("Timeout for sync deletion. ")
+	return errorutils.CheckErrorf("timeout for sync deletion. ")
 }
 
 type DeleteRemoteDistributionBody struct {
-	DistributionBody
+	distribution.ReleaseBundleDistributeV1Body
 	OnSuccess OnSuccess `json:"on_success"`
 }
 
 type DeleteDistributionParams struct {
-	DistributionParams
+	distribution.DistributionParams
 	DeleteFromDistribution bool
 	Sync                   bool
 	// Max time in minutes to wait for sync distribution to finish.
@@ -147,7 +147,7 @@ type DeleteDistributionParams struct {
 
 func NewDeleteReleaseBundleParams(name, version string) DeleteDistributionParams {
 	return DeleteDistributionParams{
-		DistributionParams: DistributionParams{
+		DistributionParams: distribution.DistributionParams{
 			Name:    name,
 			Version: version,
 		},

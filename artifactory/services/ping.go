@@ -3,9 +3,9 @@ package services
 import (
 	"net/http"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -32,7 +32,7 @@ func (ps *PingService) IsDryRun() bool {
 }
 
 func (ps *PingService) Ping() ([]byte, error) {
-	url, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), "api/system/ping", nil)
+	url, err := utils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), "api/system/ping", nil)
 	if err != nil {
 		return nil, err
 	}

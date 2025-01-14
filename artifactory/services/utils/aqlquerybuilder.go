@@ -2,13 +2,29 @@ package utils
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 	"strconv"
 	"strings"
+	"unicode"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
+
+const spaceEncoding = "%20"
+
+var specialAqlCharacters = map[rune]string{
+	'/':  "%2F",
+	'\\': "%5C",
+	'|':  "%7C",
+	'*':  "%2A",
+	'?':  "%3F",
+	'\'': "%22",
+	':':  "%3A",
+	';':  "%3B",
+	'%':  "%25",
+}
 
 // Returns an AQL body string to search file in Artifactory by pattern, according the specified arguments requirements.
 func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
@@ -18,7 +34,7 @@ func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 		return "", err
 	}
 	if params.Transitive && !singleRepo {
-		return "", errorutils.CheckErrorf("When searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash.")
+		return "", errorutils.CheckErrorf("when searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash.")
 	}
 	includeRoot := strings.Count(searchPattern, "/") < 2
 	triplesSize := len(repoPathFileTriples)
@@ -149,15 +165,62 @@ func CreateAqlQueryForPypi(repo, file string) string {
 	return fmt.Sprintf(itemsPart, repo, file, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256"}))
 }
 
+// noinspection GoUnusedExportedFunction
+func CreateAqlQueryForBuildInfoJson(project, buildName, buildNumber, timestamp string) string {
+	if project == "" {
+		project = "artifactory"
+	} else {
+		project = encodeForBuildInfoRepository(project)
+	}
+	itemsPart :=
+		`items.find({
+			"repo": "%s",
+			"path": {
+				"$match": "%s"
+			},
+			"name": {
+				"$match": "%s-%s.json"
+			}
+		})%s`
+	return fmt.Sprintf(itemsPart, project+"-build-info", encodeForBuildInfoRepository(buildName), encodeForBuildInfoRepository(buildNumber), timestamp, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "actual_md5"}))
+}
+
+func encodeForBuildInfoRepository(value string) string {
+	results := ""
+	for _, char := range value {
+		if unicode.IsSpace(char) {
+			char = ' '
+		}
+		if encoding, exist := specialAqlCharacters[char]; exist {
+			results += encoding
+		} else {
+			results += string(char)
+		}
+	}
+	slashEncoding := specialAqlCharacters['/']
+	results = strings.ReplaceAll(results, slashEncoding+" ", slashEncoding+spaceEncoding)
+	results = strings.ReplaceAll(results, " "+slashEncoding, spaceEncoding+slashEncoding)
+	return results
+}
+
 func CreateAqlQueryForLatestCreated(repo, path string) string {
+	return createAqlQueryForLatestCreated(File, repo, path)
+}
+
+func CreateAqlQueryForLatestCreatedFolder(repo, path string) string {
+	return createAqlQueryForLatestCreated(Folder, repo, path)
+}
+
+func createAqlQueryForLatestCreated(itemType ResultItemType, repo, path string) string {
 	itemsPart :=
 		`items.find({` +
+			`"type": "%s",` +
 			`"repo": "%s",` +
 			`"path": {"$match": "%s"}` +
 			`})` +
 			`.sort({%s})` +
 			`.limit(1)`
-	return fmt.Sprintf(itemsPart, repo, path, buildSortQueryPart([]string{"created"}, "desc"))
+	return fmt.Sprintf(itemsPart, itemType, repo, path, buildSortQueryPart([]string{"created"}, "desc"))
 }
 
 func prepareSearchPattern(pattern string, repositoryExists bool) string {

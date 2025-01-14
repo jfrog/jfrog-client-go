@@ -2,14 +2,15 @@ package jfroghttpclient
 
 import (
 	"context"
-	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"net/http"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 )
 
 func JfrogClientBuilder() *jfrogHttpClientBuilder {
 	builder := &jfrogHttpClientBuilder{}
-	builder.SetTimeout(httpclient.DefaultHttpTimeout)
+	builder.SetDialTimeout(httpclient.DefaultDialTimeout)
 	return builder
 }
 
@@ -22,7 +23,8 @@ type jfrogHttpClientBuilder struct {
 	preRequestInterceptors []PreRequestInterceptorFunc
 	clientCertPath         string
 	clientCertKeyPath      string
-	timeout                time.Duration
+	dialTimeout            time.Duration
+	overallRequestTimeout  time.Duration
 	httpClient             *http.Client
 }
 
@@ -66,8 +68,13 @@ func (builder *jfrogHttpClientBuilder) AppendPreRequestInterceptor(interceptor P
 	return builder
 }
 
-func (builder *jfrogHttpClientBuilder) SetTimeout(timeout time.Duration) *jfrogHttpClientBuilder {
-	builder.timeout = timeout
+func (builder *jfrogHttpClientBuilder) SetDialTimeout(dialTimeout time.Duration) *jfrogHttpClientBuilder {
+	builder.dialTimeout = dialTimeout
+	return builder
+}
+
+func (builder *jfrogHttpClientBuilder) SetOverallRequestTimeout(overallRequestTimeout time.Duration) *jfrogHttpClientBuilder {
+	builder.overallRequestTimeout = overallRequestTimeout
 	return builder
 }
 
@@ -84,7 +91,8 @@ func (builder *jfrogHttpClientBuilder) Build() (rtHttpClient *JfrogHttpClient, e
 		SetClientCertPath(builder.clientCertPath).
 		SetClientCertKeyPath(builder.clientCertKeyPath).
 		SetContext(builder.ctx).
-		SetTimeout(builder.timeout).
+		SetDialTimeout(builder.dialTimeout).
+		SetOverallRequestTimeout(builder.overallRequestTimeout).
 		SetRetries(builder.retries).
 		SetRetryWaitMilliSecs(builder.retryWaitTimMilliSecs).
 		SetHttpClient(builder.httpClient).

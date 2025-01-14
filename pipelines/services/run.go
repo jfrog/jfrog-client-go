@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -36,7 +35,7 @@ func (rs *RunService) GetRunStatus(branch, pipeName string, isMultiBranch bool) 
 	httpDetails := rs.getHttpDetails()
 
 	// Query params
-	queryParams := make(map[string]string, 0)
+	queryParams := make(map[string]string)
 	if isMultiBranch {
 		// Add this query param only when pipeline source is multi-branch
 		queryParams["pipelineSourceBranch"] = branch
@@ -93,7 +92,7 @@ func (rs *RunService) TriggerPipelineRun(branch, pipeline string, isMultiBranch 
 	}
 
 	// URL Construction
-	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
+	httpDetails.SetContentTypeApplicationJson()
 	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), triggerpipeline)
 	if err != nil {
 		return err
@@ -130,7 +129,7 @@ func (rs *RunService) CancelRun(runID int) error {
 	}
 
 	// URL Construction
-	utils.AddHeader("Content-Type", "application/json", &httpDetails.Headers)
+	httpDetails.SetContentTypeApplicationJson()
 	uri, err := constructPipelinesURL(queryParams, rs.ServiceDetails.GetUrl(), cancelRun)
 	if err != nil {
 		return err

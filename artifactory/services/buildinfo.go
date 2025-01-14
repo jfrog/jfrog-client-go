@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	buildinfo "github.com/jfrog/build-info-go/entities"
 	"net/http"
 
@@ -61,14 +62,14 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	if bis.IsDryRun() {
 		log.Info("[Dry run] Logging Build info preview...")
 		log.Output(clientutils.IndentJson(content))
-		return summary, err
+		return summary, nil
 	}
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
-	log.Info("Deploying build info...")
+	log.Info(fmt.Sprintf("Publishing build info for <%s>/<%s>...", build.Name, build.Number))
 	resp, body, err := bis.client.SendPut(bis.GetArtifactoryDetails().GetUrl()+"api/build"+utils.GetProjectQueryParam(projectKey), content, &httpClientsDetails)
 	if err != nil {
-		return summary, err
+		return summary, fmt.Errorf("error occurred while publishing build info: %s", err.Error())
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated, http.StatusNoContent); err != nil {
 		return summary, err

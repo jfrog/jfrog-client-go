@@ -135,6 +135,10 @@ func (lrs *LocalRepositoryService) Swift(params SwiftLocalRepositoryParams) erro
 	return lrs.performRequest(params, params.Key)
 }
 
+func (lrs *LocalRepositoryService) Terraform(params TerraformLocalRepositoryParams) error {
+	return lrs.performRequest(params, params.Key)
+}
+
 func (lrs *LocalRepositoryService) Vagrant(params VagrantLocalRepositoryParams) error {
 	return lrs.performRequest(params, params.Key)
 }
@@ -381,6 +385,14 @@ type SwiftLocalRepositoryParams struct {
 
 func NewSwiftLocalRepositoryParams() SwiftLocalRepositoryParams {
 	return SwiftLocalRepositoryParams{LocalRepositoryBaseParams: NewLocalRepositoryPackageParams("swift")}
+}
+
+type TerraformLocalRepositoryParams struct {
+	LocalRepositoryBaseParams
+}
+
+func NewTerraformLocalRepositoryParams() TerraformLocalRepositoryParams {
+	return TerraformLocalRepositoryParams{LocalRepositoryBaseParams: NewLocalRepositoryPackageParams("terraform")}
 }
 
 type VagrantLocalRepositoryParams struct {

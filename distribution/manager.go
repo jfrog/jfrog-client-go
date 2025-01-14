@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/distribution/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 )
 
 type DistributionServicesManager struct {
@@ -20,7 +21,8 @@ func New(config config.Config) (*DistributionServicesManager, error) {
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
 		SetContext(config.GetContext()).
-		SetTimeout(config.GetHttpTimeout()).
+		SetDialTimeout(config.GetDialTimeout()).
+		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
 		SetClientCertPath(details.GetClientCertPath()).
 		SetClientCertKeyPath(details.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
@@ -57,25 +59,27 @@ func (sm *DistributionServicesManager) SignReleaseBundle(params services.SignBun
 	return signBundleService.SignReleaseBundle(params)
 }
 
-func (sm *DistributionServicesManager) DistributeReleaseBundle(params services.DistributionParams, autoCreateRepo bool) error {
-	distributeBundleService := services.NewDistributeReleaseBundleService(sm.client)
+func (sm *DistributionServicesManager) DistributeReleaseBundle(params distribution.DistributionParams, autoCreateRepo bool) error {
+	distributeBundleService := services.NewDistributeReleaseBundleV1Service(sm.client)
 	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
 	distributeBundleService.DryRun = sm.config.IsDryRun()
 	distributeBundleService.AutoCreateRepo = autoCreateRepo
-	return distributeBundleService.Distribute(params)
+	distributeBundleService.DistributeParams = params
+	return distributeBundleService.Distribute()
 }
 
-func (sm *DistributionServicesManager) DistributeReleaseBundleSync(params services.DistributionParams, maxWaitMinutes int, autoCreateRepo bool) error {
-	distributeBundleService := services.NewDistributeReleaseBundleService(sm.client)
+func (sm *DistributionServicesManager) DistributeReleaseBundleSync(params distribution.DistributionParams, maxWaitMinutes int, autoCreateRepo bool) error {
+	distributeBundleService := services.NewDistributeReleaseBundleV1Service(sm.client)
 	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
 	distributeBundleService.DryRun = sm.config.IsDryRun()
 	distributeBundleService.MaxWaitMinutes = maxWaitMinutes
 	distributeBundleService.Sync = true
 	distributeBundleService.AutoCreateRepo = autoCreateRepo
-	return distributeBundleService.Distribute(params)
+	distributeBundleService.DistributeParams = params
+	return distributeBundleService.Distribute()
 }
 
-func (sm *DistributionServicesManager) GetDistributionStatus(params services.DistributionStatusParams) (*[]services.DistributionStatusResponse, error) {
+func (sm *DistributionServicesManager) GetDistributionStatus(params services.DistributionStatusParams) (*[]distribution.DistributionStatusResponse, error) {
 	distributeBundleService := services.NewDistributionStatusService(sm.client)
 	distributeBundleService.DistDetails = sm.config.GetServiceDetails()
 	return distributeBundleService.GetStatus(params)

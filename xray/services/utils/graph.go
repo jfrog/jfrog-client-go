@@ -1,6 +1,7 @@
 package utils
 
-type GraphNode struct {
+// Binary Scan Graph Node
+type BinaryGraphNode struct {
 	// Component Id in the JFrog standard.
 	// For instance, for maven: gav://<groupId>:<artifactId>:<version>
 	// For detailed format examples please see:
@@ -12,26 +13,32 @@ type GraphNode struct {
 	// For root file shall be the file name.
 	// For internal components shall be the internal path. (Relevant only for binary scan).
 	Path string `json:"path,omitempty"`
-	// Download url
-	DownloadUrl string `json:"-"`
 	// List of license names
 	Licenses []string `json:"licenses,omitempty"`
 	// Component properties
 	Properties map[string]string `json:"properties,omitempty"`
 	// List of subcomponents.
-	Nodes []*GraphNode `json:"nodes,omitempty"`
+	Nodes []*BinaryGraphNode `json:"nodes,omitempty"`
 	// Other component IDs field is populated by the Xray indexer to get a better accuracy in '.deb' files.
 	OtherComponentIds []OtherComponentIds `json:"other_component_ids,omitempty"`
-	// Node parent (for internal use)
-	Parent *GraphNode `json:"-"`
-	// Node Can appear in some cases without children. When adding node to flatten graph,
-	// we want to process node again if it was processed without children.
-	ChildrenExist bool `json:"-"`
 }
 
 type OtherComponentIds struct {
 	Id     string `json:"component_id,omitempty"`
 	Origin int    `json:"origin,omitempty"`
+}
+
+// Audit Graph Node
+type GraphNode struct {
+	// Node parent (for internal use)
+	Parent *GraphNode `json:"-"`
+	// The "classifier" attribute in a Maven pom.xml specifies an additional qualifier for a dependency
+	Classifier *string `json:"-"`
+	// Node file types (tar, jar, zip, pom)
+	Types *[]string `json:"-"`
+	Id    string    `json:"component_id,omitempty"`
+	// List of subcomponents.
+	Nodes []*GraphNode `json:"nodes,omitempty"`
 }
 
 func (currNode *GraphNode) NodeHasLoop() bool {

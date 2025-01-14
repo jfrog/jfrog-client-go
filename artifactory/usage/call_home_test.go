@@ -2,35 +2,9 @@ package usage
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
-
-func TestIsVersionCompatible(t *testing.T) {
-	tests := []struct {
-		artifactoryVersion string
-		expectedResult     bool
-	}{
-		{"6.5.0", false},
-		{"6.2.0", false},
-		{"5.9.0", false},
-		{"6.0.0", false},
-		{"6.6.0", false},
-		{"6.9.0", true},
-		{utils.Development, true},
-		{"6.10.2", true},
-		{"6.15.2", true},
-	}
-	for _, test := range tests {
-		t.Run(test.artifactoryVersion, func(t *testing.T) {
-			result := isVersionCompatible(test.artifactoryVersion)
-			if test.expectedResult != result {
-				t.Error(fmt.Errorf("expected %t, got %t", test.expectedResult, result))
-			}
-		})
-	}
-}
 
 func TestReportUsageJson(t *testing.T) {
 	type reportUsageTestCase struct {

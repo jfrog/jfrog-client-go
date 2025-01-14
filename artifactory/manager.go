@@ -33,19 +33,7 @@ func NewWithProgress(config config.Config, progress ioutils.ProgressMgr) (Artifa
 	if err != nil {
 		return nil, err
 	}
-	client, err := jfroghttpclient.JfrogClientBuilder().
-		SetCertificatesPath(config.GetCertificatesPath()).
-		SetInsecureTls(config.IsInsecureTls()).
-		SetContext(config.GetContext()).
-		SetTimeout(config.GetHttpTimeout()).
-		SetClientCertPath(artDetails.GetClientCertPath()).
-		SetClientCertKeyPath(artDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(artDetails.RunPreRequestFunctions).
-		SetContext(config.GetContext()).
-		SetRetries(config.GetHttpRetries()).
-		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
-		SetHttpClient(config.GetHttpClient()).
-		Build()
+	client, err := buildJFrogHttpClient(config, artDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +148,12 @@ func (sm *ArtifactoryServicesManagerImp) GetRepository(repoKey string, repoDetai
 	repositoriesService := services.NewRepositoriesService(sm.client)
 	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
 	return repositoriesService.Get(repoKey, repoDetails)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error) {
+	packageService := services.NewPackageService(sm.client)
+	packageService.ArtDetails = sm.config.GetServiceDetails()
+	return packageService.GetPackageLeadFile(leadFileParams)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
@@ -314,26 +308,34 @@ func (sm *ArtifactoryServicesManagerImp) GetItemProps(relativePath string) (*uti
 	return setPropsService.GetItemProperties(relativePath)
 }
 
-func (sm *ArtifactoryServicesManagerImp) initUploadService() *services.UploadService {
+type UploadServiceOptions struct {
+	// Fail the operation immediately if an error occurs.
+	FailFast bool
+}
+
+func (sm *ArtifactoryServicesManagerImp) initUploadService(uploadServiceOptions UploadServiceOptions) *services.UploadService {
 	uploadService := services.NewUploadService(sm.client)
 	uploadService.Threads = sm.config.GetThreads()
 	uploadService.ArtDetails = sm.config.GetServiceDetails()
 	uploadService.DryRun = sm.config.IsDryRun()
+	uploadService.SetFailFast(uploadServiceOptions.FailFast)
 	uploadService.Progress = sm.progress
+	httpClientDetails := uploadService.ArtDetails.CreateHttpClientDetails()
+	uploadService.MultipartUpload = utils.NewMultipartUpload(sm.client, &httpClientDetails, uploadService.ArtDetails.GetUrl())
 	return uploadService
 }
 
-func (sm *ArtifactoryServicesManagerImp) UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
-	uploadService := sm.initUploadService()
-	summary, e := uploadService.UploadFiles(params...)
+func (sm *ArtifactoryServicesManagerImp) UploadFiles(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (totalUploaded, totalFailed int, err error) {
+	uploadService := sm.initUploadService(uploadServiceOptions)
+	summary, err := uploadService.UploadFiles(params...)
 	if summary == nil {
-		return 0, 0, e
+		return 0, 0, err
 	}
-	return summary.TotalSucceeded, summary.TotalFailed, e
+	return summary.TotalSucceeded, summary.TotalFailed, err
 }
 
-func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
-	uploadService := sm.initUploadService()
+func (sm *ArtifactoryServicesManagerImp) UploadFilesWithSummary(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error) {
+	uploadService := sm.initUploadService(uploadServiceOptions)
 	uploadService.SetSaveSummary(true)
 	return uploadService.UploadFiles(params...)
 }
@@ -583,6 +585,11 @@ func (sm *ArtifactoryServicesManagerImp) FolderInfo(relativePath string) (*utils
 	return storageService.FolderInfo(relativePath)
 }
 
+func (sm *ArtifactoryServicesManagerImp) FileInfo(relativePath string) (*utils.FileInfo, error) {
+	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
+	return storageService.FileInfo(relativePath)
+}
+
 func (sm *ArtifactoryServicesManagerImp) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
 	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
 	return storageService.FileList(relativePath, optionalParams)
@@ -596,4 +603,26 @@ func (sm *ArtifactoryServicesManagerImp) GetStorageInfo() (*utils.StorageInfo, e
 func (sm *ArtifactoryServicesManagerImp) CalculateStorageInfo() error {
 	storageService := services.NewStorageService(sm.config.GetServiceDetails(), sm.client)
 	return storageService.StorageInfoRefresh()
+}
+
+func (sm *ArtifactoryServicesManagerImp) ImportReleaseBundle(filePath string) error {
+	releaseService := services.NewReleaseService(sm.config.GetServiceDetails(), sm.client)
+	return releaseService.ImportReleaseBundle(filePath)
+}
+
+func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+	return jfroghttpclient.JfrogClientBuilder().
+		SetCertificatesPath(config.GetCertificatesPath()).
+		SetInsecureTls(config.IsInsecureTls()).
+		SetContext(config.GetContext()).
+		SetDialTimeout(config.GetDialTimeout()).
+		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
+		SetClientCertPath(authDetails.GetClientCertPath()).
+		SetClientCertKeyPath(authDetails.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(authDetails.RunPreRequestFunctions).
+		SetContext(config.GetContext()).
+		SetRetries(config.GetHttpRetries()).
+		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
+		SetHttpClient(config.GetHttpClient()).
+		Build()
 }

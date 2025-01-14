@@ -5,6 +5,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/minio/sha256-simd"
+
 	//#nosec G505 -- sha1 is supported by Artifactory.
 	"crypto/sha1"
 	"encoding/hex"
@@ -36,7 +38,13 @@ type HttpClient struct {
 const (
 	apiKeyPrefix        = "AKCp8"
 	apiKeyMinimalLength = 73
+	uberTraceIdHeader   = "uber-trace-id"
 )
+
+// If set, the Uber Trace ID header will be attached to every request.
+// This allows users to easily identify which logs on the server side are related to requests sent from this client.
+// Should be set using SetUberTraceIdToken.
+var uberTraceIdToken string
 
 func IsApiKey(key string) bool {
 	return strings.HasPrefix(key, apiKeyPrefix) && len(key) >= apiKeyMinimalLength
@@ -44,6 +52,10 @@ func IsApiKey(key string) bool {
 
 func (jc *HttpClient) GetRetries() int {
 	return jc.retries
+}
+
+func (jc *HttpClient) GetClient() *http.Client {
+	return jc.client
 }
 
 func (jc *HttpClient) GetRetryWaitTime() int {
@@ -114,20 +126,24 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 		LogMsgPrefix:             logMsgPrefix,
 		ErrorMessage:             fmt.Sprintf("Failure occurred while sending %s request to %s", method, url),
 		ExecutionHandler: func() (bool, error) {
-			req, err := jc.createReq(method, url, content)
+			var req *http.Request
+			req, err = jc.createReq(method, url, content)
 			if err != nil {
 				return true, err
 			}
 			resp, respBody, redirectUrl, err = jc.doRequest(req, content, followRedirect, closeBody, httpClientsDetails)
 			if err != nil {
+				if strings.Contains(err.Error(), "unsupported protocol scheme") {
+					// Wrong URL, so no need to retry
+					return false, fmt.Errorf("%w\nThe recieved error indicats an invalid URL: %q, Please ensure the URL includes a valid scheme like 'http://' or 'https://'.", err, url)
+				}
 				return true, err
 			}
 			// Response must not be nil
 			if resp == nil {
 				return false, errorutils.CheckErrorf("%sReceived empty response from server", logMsgPrefix)
 			}
-			// If response-code < 500, should not retry
-			if resp.StatusCode < 500 {
+			if !jc.shouldRetry(resp, &httpClientsDetails) {
 				return false, nil
 			}
 			// Perform retry
@@ -138,6 +154,20 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 
 	err = retryExecutor.Execute()
 	return
+}
+
+func (jc *HttpClient) shouldRetry(resp *http.Response, httpClientsDetails *httputils.HttpClientDetails) bool {
+	// If response-code < 500 and it is not 429, should not retry
+	if resp.StatusCode < 500 && resp.StatusCode != http.StatusTooManyRequests {
+		return false
+	}
+	// If any of the preretry interceptors is false - return false
+	for _, shouldRetry := range httpClientsDetails.PreRetryInterceptors {
+		if !shouldRetry() {
+			return false
+		}
+	}
+	return true
 }
 
 func (jc *HttpClient) createReq(method, url string, content []byte) (req *http.Request, err error) {
@@ -153,17 +183,20 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	setAuthentication(req, httpClientsDetails)
 	addUserAgentHeader(req)
 	copyHeaders(httpClientsDetails, req)
+	addUberTraceIdHeaderIfSet(req)
+
+	client := jc.client
 
 	if !followRedirect || (followRedirect && req.Method == http.MethodPost) {
-		jc.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		// The jc.client is a shared resource between go routines, so to handle this override we clone it.
+		client = cloneHttpClient(jc.client)
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			redirectUrl = req.URL.String()
 			return errors.New("redirect")
 		}
 	}
 
-	resp, err = jc.client.Do(req)
-	jc.client.CheckRedirect = nil
-
+	resp, err = client.Do(req)
 	if err != nil && redirectUrl != "" {
 		if !followRedirect {
 			log.Debug("Blocking HTTP redirect to", redirectUrl)
@@ -178,9 +211,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 			return
 		}
 	}
-
-	err = errorutils.CheckError(err)
-	if err != nil {
+	if errorutils.CheckError(err) != nil {
 		return
 	}
 	if closeBody {
@@ -194,12 +225,36 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 	return
 }
 
+func cloneHttpClient(httpClient *http.Client) *http.Client {
+	return &http.Client{
+		Transport:     httpClient.Transport,
+		Timeout:       httpClient.Timeout,
+		Jar:           httpClient.Jar,
+		CheckRedirect: httpClient.CheckRedirect,
+	}
+}
+
 func copyHeaders(httpClientsDetails httputils.HttpClientDetails, req *http.Request) {
 	if httpClientsDetails.Headers != nil {
 		for name := range httpClientsDetails.Headers {
 			req.Header.Set(name, httpClientsDetails.Headers[name])
 		}
 	}
+}
+
+// Generate an Uber Trace ID token that will be attached to every request.
+// Format of the header: {trace-id}:{span-id}:{parent-span-id}:{flags}
+// We set the trace-id and span-id to the same value, and the rest to 0.
+func SetUberTraceIdToken(traceIdToken string) {
+	uberTraceIdToken = fmt.Sprintf("%s:%s:0:0", traceIdToken, traceIdToken)
+}
+
+// If a trace ID is set, this function will attach the Uber Trace ID header to every request.
+func addUberTraceIdHeaderIfSet(req *http.Request) {
+	if uberTraceIdToken == "" {
+		return
+	}
+	req.Header.Set(uberTraceIdHeader, uberTraceIdToken)
 }
 
 func setRequestHeaders(httpClientsDetails httputils.HttpClientDetails, size int64, req *http.Request) {
@@ -247,7 +302,9 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	if localPath != "" {
 		file, err = os.Open(localPath)
 		defer func() {
-			err = errors.Join(err, errorutils.CheckError(file.Close()))
+			if file != nil {
+				err = errors.Join(err, errorutils.CheckError(file.Close()))
+			}
 		}()
 		if errorutils.CheckError(err) != nil {
 			return nil, nil, err
@@ -264,17 +321,19 @@ func (jc *HttpClient) doUploadFile(localPath, url string, httpClientsDetails htt
 	if file != nil && progress != nil {
 		progressReader := progress.NewProgressReader(size, "Uploading", url)
 		reader = progressReader.ActionWithProgress(reqContent)
-		defer progress.RemoveProgress(progressReader.GetId())
+		progressId := progressReader.GetId()
+		defer progress.RemoveProgress(progressId)
 	} else {
 		reader = reqContent
 	}
+
 	resp, body, err = jc.UploadFileFromReader(reader, url, httpClientsDetails, size)
 	return
 }
 
 func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpClientsDetails httputils.HttpClientDetails,
 	size int64) (resp *http.Response, body []byte, err error) {
-	req, err := jc.newRequest("PUT", url, reader)
+	req, err := jc.newRequest(http.MethodPut, url, reader)
 	if err != nil {
 		return
 	}
@@ -290,14 +349,14 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	if errorutils.CheckError(err) != nil || resp == nil {
 		return
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusOK, http.StatusAccepted); err != nil {
-		return
-	}
 	defer func() {
 		if resp != nil && resp.Body != nil {
 			err = errors.Join(err, errorutils.CheckError(resp.Body.Close()))
 		}
 	}()
+	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated, http.StatusOK, http.StatusAccepted); err != nil {
+		return
+	}
 	body, err = io.ReadAll(resp.Body)
 	err = errorutils.CheckError(err)
 	return
@@ -416,26 +475,24 @@ func saveToFile(downloadFileDetails *DownloadFileDetails, resp *http.Response, p
 
 	var reader io.Reader
 	if progress != nil {
-		readerProgress := progress.NewProgressReader(resp.ContentLength, "Downloading", downloadFileDetails.RelativePath)
-		reader = readerProgress.ActionWithProgress(resp.Body)
-		defer progress.RemoveProgress(readerProgress.GetId())
+		progressReader := progress.NewProgressReader(resp.ContentLength, "", downloadFileDetails.RelativePath)
+		reader = progressReader.ActionWithProgress(resp.Body)
+		progressId := progressReader.GetId()
+		defer progress.RemoveProgress(progressId)
 	} else {
 		reader = resp.Body
 	}
 
-	if len(downloadFileDetails.ExpectedSha1) > 0 && !downloadFileDetails.SkipChecksum {
-		//#nosec G401 -- sha1 is supported by Artifactory.
-		actualSha1 := sha1.New()
-		writer := io.MultiWriter(actualSha1, out)
+	expectedSha, actualSha := handleExpectedSha(downloadFileDetails.ExpectedSha1, downloadFileDetails.ExpectedSha256)
+	if len(expectedSha) > 0 && !downloadFileDetails.SkipChecksum {
+		writer := io.MultiWriter(actualSha, out)
 
 		_, err = io.Copy(writer, reader)
 		if errorutils.CheckError(err) != nil {
 			return err
 		}
 
-		if hex.EncodeToString(actualSha1.Sum(nil)) != downloadFileDetails.ExpectedSha1 {
-			err = errors.New("Checksum mismatch for " + fileName + ", expected: " + downloadFileDetails.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
-		}
+		err = validateChecksum(expectedSha, actualSha, downloadFileDetails.LocalFileName)
 	} else {
 		_, err = io.Copy(out, reader)
 	}
@@ -463,7 +520,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 
 	var downloadProgressId int
 	if progress != nil {
-		downloadProgress := progress.NewProgressReader(flags.FileSize, "Downloading", flags.RelativePath)
+		downloadProgress := progress.NewProgressReader(flags.FileSize, "", flags.RelativePath)
 		downloadProgressId = downloadProgress.GetId()
 		// Aborting order matters. mergingProgress depends on the existence of downloadingProgress
 		defer progress.RemoveProgress(downloadProgressId)
@@ -493,7 +550,7 @@ func (jc *HttpClient) DownloadFileConcurrently(flags ConcurrentDownloadFlags, lo
 		}
 	}
 	if progress != nil {
-		progress.SetProgressState(downloadProgressId, "Merging")
+		progress.SetMergingState(downloadProgressId, true)
 	}
 	err = mergeChunks(chunksPaths, flags)
 	if errorutils.CheckError(err) != nil {
@@ -610,33 +667,58 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 		err = errors.Join(err, errorutils.CheckError(destFile.Close()))
 	}()
 	var writer io.Writer
-	var actualSha1 hash.Hash
-	if len(flags.ExpectedSha1) > 0 {
-		//#nosec G401 -- Sha1 is supported by Artifactory.
-		actualSha1 = sha1.New()
-		writer = io.MultiWriter(actualSha1, destFile)
+	expectedSha, actualSha := handleExpectedSha(flags.ExpectedSha1, flags.ExpectedSha256)
+	if len(expectedSha) > 0 {
+		writer = io.MultiWriter(actualSha, destFile)
 	} else {
 		writer = io.MultiWriter(destFile)
 	}
 	for i := 0; i < flags.SplitCount; i++ {
-		reader, err := os.Open(chunksPaths[i])
-		if err != nil {
-			return err
-		}
-		defer func() {
-			err = errors.Join(err, errorutils.CheckError(reader.Close()))
+		// Wrapping the loop body in an anonymous function to ensure deferred calls
+		// are executed at the end of each iteration, not at the end of the enclosing function.
+		err = func() (e error) {
+			reader, e := os.Open(chunksPaths[i])
+			if errorutils.CheckError(e) != nil {
+				return e
+			}
+			defer func() {
+				e = errors.Join(e, errorutils.CheckError(reader.Close()))
+			}()
+
+			_, e = io.Copy(writer, reader)
+			if errorutils.CheckError(e) != nil {
+				return e
+			}
+
+			return nil
 		}()
-		_, err = io.Copy(writer, reader)
 		if err != nil {
 			return err
 		}
 	}
-	if len(flags.ExpectedSha1) > 0 && !flags.SkipChecksum {
-		if hex.EncodeToString(actualSha1.Sum(nil)) != flags.ExpectedSha1 {
-			err = errors.New("Checksum mismatch for  " + flags.LocalFileName + ", expected: " + flags.ExpectedSha1 + ", actual: " + hex.EncodeToString(actualSha1.Sum(nil)))
-		}
+	if len(expectedSha) > 0 && !flags.SkipChecksum {
+		err = validateChecksum(expectedSha, actualSha, flags.LocalFileName)
 	}
 	return err
+}
+func validateChecksum(expectedSha string, actualSha hash.Hash, fileName string) (err error) {
+	actualShaString := hex.EncodeToString(actualSha.Sum(nil))
+	if actualShaString != expectedSha {
+		err = errorutils.CheckErrorf("checksum mismatch for  " + fileName + ", expected: " + expectedSha + ", actual: " + actualShaString)
+	}
+	return
+}
+
+func handleExpectedSha(expectedSha1, expectedSha256 string) (expectedSha string, actualSha hash.Hash) {
+	if len(expectedSha1) > 0 {
+		expectedSha = expectedSha1
+		//#nosec G401 -- Sha1 is supported by Artifactory.
+		actualSha = sha1.New()
+	} else if len(expectedSha256) > 0 {
+		expectedSha = expectedSha256
+		actualSha = sha256.New()
+	}
+	return
 }
 
 func (jc *HttpClient) downloadFileRange(flags ConcurrentDownloadFlags, start, end int64, currentSplit int, logMsgPrefix, chunkDownloadPath string,
@@ -744,7 +826,7 @@ func setAuthentication(req *http.Request, httpClientsDetails httputils.HttpClien
 	if httpClientsDetails.AccessToken != "" {
 		if IsApiKey(httpClientsDetails.AccessToken) {
 			log.Warn("The provided Access Token is an API key and will be used as a password in username/password authentication.\n" +
-				"To avoid this message in the future please use it a a password.")
+				"To avoid this message in the future please use it as a password.")
 			req.SetBasicAuth(httpClientsDetails.User, httpClientsDetails.AccessToken)
 		} else {
 			req.Header.Set("Authorization", "Bearer "+httpClientsDetails.AccessToken)
@@ -761,14 +843,15 @@ func addUserAgentHeader(req *http.Request) {
 }
 
 type DownloadFileDetails struct {
-	FileName      string `json:"FileName,omitempty"`
-	DownloadPath  string `json:"DownloadPath,omitempty"`
-	RelativePath  string `json:"RelativePath,omitempty"`
-	LocalPath     string `json:"LocalPath,omitempty"`
-	LocalFileName string `json:"LocalFileName,omitempty"`
-	ExpectedSha1  string `json:"ExpectedSha1,omitempty"`
-	Size          int64  `json:"Size,omitempty"`
-	SkipChecksum  bool   `json:"SkipChecksum,omitempty"`
+	FileName       string `json:"FileName,omitempty"`
+	DownloadPath   string `json:"DownloadPath,omitempty"`
+	RelativePath   string `json:"RelativePath,omitempty"`
+	LocalPath      string `json:"LocalPath,omitempty"`
+	LocalFileName  string `json:"LocalFileName,omitempty"`
+	ExpectedSha1   string `json:"ExpectedSha1,omitempty"`
+	ExpectedSha256 string `json:"-"`
+	Size           int64  `json:"Size,omitempty"`
+	SkipChecksum   bool   `json:"SkipChecksum,omitempty"`
 }
 
 type ConcurrentDownloadFlags struct {
@@ -778,6 +861,7 @@ type ConcurrentDownloadFlags struct {
 	LocalFileName           string
 	LocalPath               string
 	ExpectedSha1            string
+	ExpectedSha256          string
 	FileSize                int64
 	SplitCount              int
 	Explode                 bool

@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	distributionServiceUtils "github.com/jfrog/jfrog-client-go/distribution/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -59,7 +58,7 @@ func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase stri
 
 	url := cb.DistDetails.GetUrl() + "api/v1/release_bundle"
 	distributionServiceUtils.AddGpgPassphraseHeader(gpgPassphrase, &httpClientsDetails.Headers)
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := cb.client.SendPost(url, content, &httpClientsDetails)
 	if err != nil {
 		return summary, err

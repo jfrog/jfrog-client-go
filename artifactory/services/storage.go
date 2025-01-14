@@ -2,14 +2,16 @@ package services
 
 import (
 	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"path"
 	"strconv"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type StorageService struct {
@@ -31,16 +33,38 @@ func (s *StorageService) GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient {
 	return s.client
 }
 
+func (s *StorageService) FileInfo(relativePath string) (*utils.FileInfo, error) {
+	body, err := s.getPathInfo(relativePath)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &utils.FileInfo{}
+	err = json.Unmarshal(body, result)
+	return result, errorutils.CheckError(err)
+}
+
 func (s *StorageService) FolderInfo(relativePath string) (*utils.FolderInfo, error) {
+	body, err := s.getPathInfo(relativePath)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &utils.FolderInfo{}
+	err = json.Unmarshal(body, result)
+	return result, errorutils.CheckError(err)
+}
+
+func (s *StorageService) getPathInfo(relativePath string) ([]byte, error) {
 	client := s.GetJfrogHttpClient()
-	restAPI := path.Join(StorageRestApi, relativePath)
-	folderUrl, err := utils.BuildArtifactoryUrl(s.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+	restAPI := path.Join(StorageRestApi, path.Clean(relativePath))
+	fullUrl, err := clientutils.BuildUrl(s.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
 
 	httpClientsDetails := s.GetArtifactoryDetails().CreateHttpClientDetails()
-	resp, body, _, err := client.SendGet(folderUrl, true, &httpClientsDetails)
+	resp, body, _, err := client.SendGet(fullUrl, true, &httpClientsDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -48,15 +72,12 @@ func (s *StorageService) FolderInfo(relativePath string) (*utils.FolderInfo, err
 		return nil, err
 	}
 	log.Debug("Artifactory response:", resp.Status)
-
-	result := &utils.FolderInfo{}
-	err = json.Unmarshal(body, result)
-	return result, errorutils.CheckError(err)
+	return body, err
 }
 
 func (s *StorageService) FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error) {
 	client := s.GetJfrogHttpClient()
-	restAPI := path.Join(StorageRestApi, relativePath)
+	restAPI := path.Join(StorageRestApi, path.Clean(relativePath))
 
 	// Convert params to map:
 	params := make(map[string]string)
@@ -69,7 +90,7 @@ func (s *StorageService) FileList(relativePath string, optionalParams utils.File
 		params["depth"] = strconv.Itoa(optionalParams.Depth)
 	}
 
-	folderUrl, err := utils.BuildArtifactoryUrl(s.GetArtifactoryDetails().GetUrl(), restAPI, params)
+	folderUrl, err := clientutils.BuildUrl(s.GetArtifactoryDetails().GetUrl(), restAPI, params)
 	if err != nil {
 		return nil, err
 	}

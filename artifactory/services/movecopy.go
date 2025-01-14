@@ -2,11 +2,7 @@ package services
 
 import (
 	"errors"
-	"net/http"
-	"path"
-	"strconv"
-	"strings"
-
+	ioutils "github.com/jfrog/gofrog/io"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -16,6 +12,10 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
+	"path"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -178,7 +178,7 @@ func (mc *MoveCopyService) createMoveCopyFileHandlerFunc(result *utils.Result) f
 				return err
 			}
 			if strings.HasSuffix(destFile, "/") {
-				if resultItem.Type != "folder" {
+				if resultItem.Type != string(utils.Folder) {
 					destFile += resultItem.Name
 				} else {
 					_, err = mc.createPathForMoveAction(destFile, logMsgPrefix)
@@ -237,7 +237,7 @@ func (mc *MoveCopyService) moveOrCopyFile(sourcePath, destPath, logMsgPrefix str
 	} else {
 		log.Info(logMsgPrefix + message)
 	}
-	requestFullUrl, err := utils.BuildArtifactoryUrl(moveUrl, restApi, params)
+	requestFullUrl, err := clientutils.BuildUrl(moveUrl, restApi, params)
 	if err != nil {
 		return false, err
 	}
@@ -268,7 +268,7 @@ func (mc *MoveCopyService) createPathForMoveAction(destPath, logMsgPrefix string
 
 func (mc *MoveCopyService) createPathInArtifactory(destPath, logMsgPrefix string) (bool, error) {
 	rtUrl := mc.GetArtifactoryDetails().GetUrl()
-	requestFullUrl, err := utils.BuildArtifactoryUrl(rtUrl, destPath, map[string]string{})
+	requestFullUrl, err := clientutils.BuildUrl(rtUrl, destPath, map[string]string{})
 	if err != nil {
 		return false, err
 	}
@@ -293,12 +293,7 @@ func mergeReaders(arr []*ReaderSpecTuple, arrayKey string) (contentReader *conte
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		e := cw.Close()
-		if err == nil {
-			err = e
-		}
-	}()
+	defer ioutils.Close(cw, &err)
 	for _, tuple := range arr {
 		cr := tuple.Reader
 		for item := new(utils.ResultItem); cr.NextRecord(item) == nil; item = new(utils.ResultItem) {

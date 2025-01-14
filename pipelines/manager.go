@@ -22,6 +22,8 @@ func New(config config.Config) (*PipelinesServicesManager, error) {
 		SetClientCertKeyPath(details.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
+		SetDialTimeout(config.GetDialTimeout()).
+		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
 		SetRetries(config.GetHttpRetries()).
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
 		Build()
@@ -90,6 +92,12 @@ func (sm *PipelinesServicesManager) GetAllIntegrations() ([]services.Integration
 	integrationsService := services.NewIntegrationsService(sm.client)
 	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
 	return integrationsService.GetAllIntegrations()
+}
+
+func (sm *PipelinesServicesManager) GetAllRawIntegrations() ([]byte, error) {
+	integrationsService := services.NewIntegrationsService(sm.client)
+	integrationsService.ServiceDetails = sm.config.GetServiceDetails()
+	return integrationsService.GetAllRawIntegrations()
 }
 
 func (sm *PipelinesServicesManager) DeleteIntegration(integrationId int) error {

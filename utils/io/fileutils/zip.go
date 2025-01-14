@@ -15,12 +15,14 @@ func ZipFolderFiles(source, target string) (err error) {
 		return errorutils.CheckError(err)
 	}
 	defer func() {
-		err = errors.Join(errorutils.CheckError(zipFile.Close()))
+		if zipFile != nil {
+			err = errors.Join(err, errorutils.CheckError(zipFile.Close()))
+		}
 	}()
 
 	archive := zip.NewWriter(zipFile)
 	defer func() {
-		err = errors.Join(errorutils.CheckError(archive.Close()))
+		err = errors.Join(err, errorutils.CheckError(archive.Close()))
 	}()
 
 	return filepath.Walk(source, func(path string, info os.FileInfo, err error) (currentErr error) {
@@ -48,7 +50,9 @@ func ZipFolderFiles(source, target string) (err error) {
 			return errorutils.CheckError(currentErr)
 		}
 		defer func() {
-			currentErr = errors.Join(errorutils.CheckError(file.Close()))
+			if file != nil {
+				currentErr = errors.Join(currentErr, errorutils.CheckError(file.Close()))
+			}
 		}()
 		_, currentErr = io.Copy(writer, file)
 		return

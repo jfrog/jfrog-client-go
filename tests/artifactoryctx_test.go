@@ -2,7 +2,6 @@ package tests
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -40,8 +39,6 @@ func testCtxTimeout(t *testing.T) {
 	assert.NoError(t, err)
 	time.Sleep(time.Millisecond * 300)
 	_, err = sm.GetVersion()
-	assert.Error(t, err)
-	if !errors.Is(err, context.DeadlineExceeded) {
-		t.Fail()
-	}
+	// Expect timeout error
+	assert.ErrorContains(t, err, context.DeadlineExceeded.Error())
 }

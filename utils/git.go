@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	ioutils "github.com/jfrog/gofrog/io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -122,7 +124,9 @@ func (m *GitManager) readUrl() {
 		return
 	}
 	defer func() {
-		m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+		if file != nil {
+			m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+		}
 	}()
 
 	scanner := bufio.NewScanner(file)
@@ -140,8 +144,8 @@ func (m *GitManager) readUrl() {
 			IsNextLineUrl = true
 		}
 	}
-	if err != nil {
-		m.err = err
+	if err := scanner.Err(); err != nil {
+		m.err = errorutils.CheckError(err)
 		return
 	}
 	if !strings.HasSuffix(originUrl, ".git") {
@@ -150,12 +154,7 @@ func (m *GitManager) readUrl() {
 	m.url = originUrl
 
 	// Mask url if required
-	regExp, err := GetRegExp(CredentialsInUrlRegexp)
-	if err != nil {
-		m.err = err
-		return
-	}
-	matchedResult := regExp.FindString(originUrl)
+	matchedResult := regexp.MustCompile(CredentialsInUrlRegexp).FindString(originUrl)
 	if matchedResult == "" {
 		return
 	}
@@ -168,9 +167,7 @@ func (m *GitManager) getRevisionAndBranchPath() (revision, refUrl string, err er
 	if errorutils.CheckError(err) != nil {
 		return
 	}
-	defer func() {
-		err = errors.Join(err, file.Close())
-	}()
+	defer ioutils.Close(file, &err)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -228,7 +225,9 @@ func (m *GitManager) readRevisionFromRef(refPath string) {
 		return
 	}
 	defer func() {
-		m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+		if file != nil {
+			m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+		}
 	}()
 
 	scanner := bufio.NewScanner(file)
@@ -237,8 +236,8 @@ func (m *GitManager) readRevisionFromRef(refPath string) {
 		revision = strings.TrimSpace(text)
 		break
 	}
-	if err != nil {
-		m.err = err
+	if err := scanner.Err(); err != nil {
+		m.err = errorutils.CheckError(err)
 		return
 	}
 	m.revision = revision
@@ -258,7 +257,9 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 			return
 		}
 		defer func() {
-			m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+			if file != nil {
+				m.err = errors.Join(m.err, errorutils.CheckError(file.Close()))
+			}
 		}()
 
 		scanner := bufio.NewScanner(file)
@@ -275,8 +276,8 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 				return
 			}
 		}
-		if err != nil {
-			m.err = err
+		if err = scanner.Err(); err != nil {
+			m.err = errorutils.CheckError(err)
 			return
 		}
 	}

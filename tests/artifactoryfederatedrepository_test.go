@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/jfrog/gofrog/version"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -44,6 +45,7 @@ func TestArtifactoryFederatedRepository(t *testing.T) {
 	t.Run("federatedRpmTest", federatedRpmTest)
 	t.Run("federatedSbtTest", federatedSbtTest)
 	t.Run("federatedSwiftTest", federatedSwiftTest)
+	t.Run("federatedTerraformTest", federatedTerraformTest)
 	t.Run("federatedVagrantTest", federatedVagrantTest)
 	t.Run("federatedYumTest", federatedYumTest)
 	t.Run("federatedCreateWithParamTest", federatedCreateWithParamTest)
@@ -56,14 +58,14 @@ func setFederatedRepositoryBaseParams(params *services.FederatedRepositoryBasePa
 	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
 	memberUrl := testsCreateFederatedRepositoryService.ArtDetails.GetUrl() + params.Key
 	if !isUpdate {
-		params.ArchiveBrowsingEnabled = &trueValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(true)
 		params.Members = []services.FederatedRepositoryMember{
-			{Url: memberUrl, Enabled: &trueValue},
+			{Url: memberUrl, Enabled: utils.Pointer(true)},
 		}
 	} else {
-		params.ArchiveBrowsingEnabled = &falseValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(false)
 		params.Members = []services.FederatedRepositoryMember{
-			{Url: memberUrl, Enabled: &trueValue},
+			{Url: memberUrl, Enabled: utils.Pointer(true)},
 		}
 	}
 }
@@ -650,6 +652,27 @@ func federatedSwiftTest(t *testing.T) {
 	err = testsUpdateFederatedRepositoryService.Swift(sfp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, sfp)
+	}
+}
+
+func federatedTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	tfp := services.NewTerraformFederatedRepositoryParams()
+	tfp.Key = repoKey
+	setFederatedRepositoryBaseParams(&tfp.FederatedRepositoryBaseParams, false)
+
+	err := testsCreateFederatedRepositoryService.Terraform(tfp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, tfp)
+
+	setFederatedRepositoryBaseParams(&tfp.FederatedRepositoryBaseParams, true)
+
+	err = testsUpdateFederatedRepositoryService.Terraform(tfp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, tfp)
 	}
 }
 

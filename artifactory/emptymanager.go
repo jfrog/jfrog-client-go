@@ -56,8 +56,8 @@ type ArtifactoryServicesManager interface {
 	SetProps(params services.PropsParams) (int, error)
 	DeleteProps(params services.PropsParams) (int, error)
 	GetItemProps(relativePath string) (*utils.ItemProperties, error)
-	UploadFilesWithSummary(params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error)
-	UploadFiles(params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
+	UploadFiles(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (totalUploaded, totalFailed int, err error)
+	UploadFilesWithSummary(uploadServiceOptions UploadServiceOptions, params ...services.UploadParams) (operationSummary *utils.OperationSummary, err error)
 	Copy(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	Move(params ...services.MoveCopyParams) (successCount, failedCount int, err error)
 	PublishGoProject(params _go.GoParams) (*utils.OperationSummary, error)
@@ -101,9 +101,12 @@ type ArtifactoryServicesManager interface {
 	TriggerFederatedRepositoryFullSyncMirror(repoKey string, mirrorUrl string) error
 	Export(params services.ExportParams) error
 	FolderInfo(relativePath string) (*utils.FolderInfo, error)
+	FileInfo(relativePath string) (*utils.FileInfo, error)
 	FileList(relativePath string, optionalParams utils.FileListParams) (*utils.FileListResponse, error)
 	GetStorageInfo() (*utils.StorageInfo, error)
 	CalculateStorageInfo() error
+	ImportReleaseBundle(string) error
+	GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -260,11 +263,11 @@ func (esm *EmptyArtifactoryServicesManager) GetItemProps(string) (*utils.ItemPro
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UploadFiles(...services.UploadParams) (int, int, error) {
+func (esm *EmptyArtifactoryServicesManager) UploadFiles(_ UploadServiceOptions, _ ...services.UploadParams) (int, int, error) {
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) UploadFilesWithSummary(...services.UploadParams) (*utils.OperationSummary, error) {
+func (esm *EmptyArtifactoryServicesManager) UploadFilesWithSummary(_ UploadServiceOptions, _ ...services.UploadParams) (*utils.OperationSummary, error) {
 	panic("Failed: Method is not implemented")
 }
 
@@ -448,6 +451,10 @@ func (esm *EmptyArtifactoryServicesManager) FolderInfo(string) (*utils.FolderInf
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) FileInfo(string) (*utils.FileInfo, error) {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) FileList(string, utils.FileListParams) (*utils.FileListResponse, error) {
 	panic("Failed: Method is not implemented")
 }
@@ -457,6 +464,14 @@ func (esm *EmptyArtifactoryServicesManager) GetStorageInfo() (*utils.StorageInfo
 }
 
 func (esm *EmptyArtifactoryServicesManager) CalculateStorageInfo() error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) ImportReleaseBundle(string) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(services.LeadFileParams) ([]byte, error) {
 	panic("Failed: Method is not implemented")
 }
 

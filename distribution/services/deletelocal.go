@@ -3,7 +3,6 @@ package services
 import (
 	"net/http"
 
-	artifactoryUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -37,7 +36,7 @@ func (dlr *DeleteLocalReleaseBundleService) execDeleteLocalDistribution(name, ve
 	log.Info("Deleting release bundle:", name, version)
 	httpClientsDetails := dlr.DistDetails.CreateHttpClientDetails()
 	url := dlr.DistDetails.GetUrl() + "api/v1/release_bundle/" + name + "/" + version
-	artifactoryUtils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := dlr.client.SendDelete(url, nil, &httpClientsDetails)
 	if err != nil {
 		return err

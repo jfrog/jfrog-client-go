@@ -28,7 +28,8 @@ func TestMain(m *testing.M) {
 func setupIntegrationTests() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
-	if *TestArtifactory || *TestDistribution || *TestXray || *TestRepositories {
+
+	if *TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload {
 		createArtifactoryUploadManager()
 		createArtifactorySearchManager()
 		createArtifactoryDeleteManager()
@@ -44,6 +45,7 @@ func setupIntegrationTests() {
 		createArtifactoryUpdateFederatedRepositoryManager()
 		createArtifactoryDeleteRepositoryManager()
 		createArtifactoryGetRepositoryManager()
+		createArtifactoryGetPackageManager()
 		createArtifactoryReplicationCreateManager()
 		createArtifactoryReplicationUpdateManager()
 		createArtifactoryReplicationGetManager()
@@ -55,6 +57,7 @@ func setupIntegrationTests() {
 		createArtifactoryFederationManager()
 		createArtifactorySystemManager()
 		createArtifactoryStorageManager()
+		createArtifactoryAqlManager()
 	}
 
 	if *TestDistribution {
@@ -64,6 +67,7 @@ func setupIntegrationTests() {
 		createXrayWatchManager()
 		createXrayPolicyManager()
 		createXrayBinMgrManager()
+		createXrayIgnoreRuleManager()
 	}
 	if *TestPipelines {
 		createPipelinesIntegrationsManager()

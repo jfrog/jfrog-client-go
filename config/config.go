@@ -2,10 +2,11 @@ package config
 
 import (
 	"context"
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type Config interface {
@@ -16,7 +17,8 @@ type Config interface {
 	GetLogger() log.Log
 	IsInsecureTls() bool
 	GetContext() context.Context
-	GetHttpTimeout() time.Duration
+	GetDialTimeout() time.Duration
+	GetOverallRequestTimeout() time.Duration
 	GetHttpRetries() int
 	GetHttpRetryWaitMilliSecs() int
 	GetHttpClient() *http.Client
@@ -30,7 +32,8 @@ type servicesConfig struct {
 	logger                 log.Log
 	insecureTls            bool
 	ctx                    context.Context
-	httpTimeout            time.Duration
+	dialTimeout            time.Duration
+	overallRequestTimeout  time.Duration
 	httpRetries            int
 	httpRetryWaitMilliSecs int
 	httpClient             *http.Client
@@ -64,8 +67,12 @@ func (config *servicesConfig) GetContext() context.Context {
 	return config.ctx
 }
 
-func (config *servicesConfig) GetHttpTimeout() time.Duration {
-	return config.httpTimeout
+func (config *servicesConfig) GetDialTimeout() time.Duration {
+	return config.dialTimeout
+}
+
+func (config *servicesConfig) GetOverallRequestTimeout() time.Duration {
+	return config.overallRequestTimeout
 }
 
 func (config *servicesConfig) GetHttpRetries() int {

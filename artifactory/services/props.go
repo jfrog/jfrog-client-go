@@ -108,7 +108,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
 
 				restAPI := path.Join("api", "storage", relativePath)
-				setPropertiesURL, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+				setPropertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 				if err != nil {
 					return err
 				}
@@ -146,7 +146,6 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 
 func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
 	log.Info(logMsgPrefix+"Deleting properties on:", relativePath)
-	log.Debug(logMsgPrefix+"Sending delete properties request:", setPropertiesUrl)
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err = ps.client.SendDelete(setPropertiesUrl, nil, &httpClientsDetails)
 	return
@@ -154,7 +153,6 @@ func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropert
 
 func (ps *PropsService) sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
 	log.Info(logMsgPrefix+"Setting properties on:", relativePath)
-	log.Debug(logMsgPrefix+"Sending set properties request:", setPropertiesUrl)
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err = ps.client.SendPut(setPropertiesUrl, nil, &httpClientsDetails)
 	return
@@ -165,8 +163,8 @@ func NewPropsParams() PropsParams {
 }
 
 func (ps *PropsService) GetItemProperties(relativePath string) (*utils.ItemProperties, error) {
-	restAPI := path.Join("api", "storage", relativePath)
-	propertiesURL, err := utils.BuildArtifactoryUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+	restAPI := path.Join("api", "storage", path.Clean(relativePath))
+	propertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}

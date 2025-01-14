@@ -15,6 +15,7 @@ func TestXrayBinMgr(t *testing.T) {
 func addBuildsToIndexing(t *testing.T) {
 	buildName := fmt.Sprintf("%s-%s", "build1", getRunId())
 	defer func() {
+		assert.NoError(t, deleteBuildIndex(buildName))
 		assert.NoError(t, deleteBuild(buildName))
 	}()
 	// Create a build

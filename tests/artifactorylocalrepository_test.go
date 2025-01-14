@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -36,6 +37,7 @@ func TestArtifactoryLocalRepository(t *testing.T) {
 	t.Run("localRpmTest", localRpmTest)
 	t.Run("localSbtTest", localSbtTest)
 	t.Run("localSwiftTest", localSwiftTest)
+	t.Run("localTerraformTest", localTerraformTest)
 	t.Run("localVagrantTest", localVagrantTest)
 	t.Run("localYumTest", localYumTest)
 	t.Run("localCreateWithParamTest", localCreateWithParamTest)
@@ -48,9 +50,9 @@ func setLocalRepositoryBaseParams(params *services.LocalRepositoryBaseParams, is
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
 	if !isUpdate {
-		params.ArchiveBrowsingEnabled = &trueValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(true)
 	} else {
-		params.ArchiveBrowsingEnabled = &falseValue
+		params.ArchiveBrowsingEnabled = utils.Pointer(false)
 	}
 }
 
@@ -639,6 +641,27 @@ func localSwiftTest(t *testing.T) {
 	}
 }
 
+func localTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	tlp := services.NewTerraformLocalRepositoryParams()
+	tlp.Key = repoKey
+	setLocalRepositoryBaseParams(&tlp.LocalRepositoryBaseParams, false)
+
+	err := testsCreateLocalRepositoryService.Terraform(tlp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, tlp)
+
+	setLocalRepositoryBaseParams(&tlp.LocalRepositoryBaseParams, true)
+
+	err = testsUpdateLocalRepositoryService.Terraform(tlp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, tlp)
+	}
+}
+
 func localVagrantTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	vlp := services.NewVagrantLocalRepositoryParams()
@@ -667,8 +690,8 @@ func localYumTest(t *testing.T) {
 	setLocalRepositoryBaseParams(&ylp.LocalRepositoryBaseParams, false)
 	yumRootDepth := 6
 	ylp.YumRootDepth = &yumRootDepth
-	ylp.CalculateYumMetadata = &trueValue
-	ylp.EnableFileListsIndexing = &trueValue
+	ylp.CalculateYumMetadata = utils.Pointer(true)
+	ylp.EnableFileListsIndexing = utils.Pointer(true)
 	ylp.YumGroupFileNames = "filename"
 
 	err := testsCreateLocalRepositoryService.Yum(ylp)
@@ -682,8 +705,8 @@ func localYumTest(t *testing.T) {
 
 	setLocalRepositoryBaseParams(&ylp.LocalRepositoryBaseParams, true)
 	*ylp.YumRootDepth = 18
-	ylp.CalculateYumMetadata = &falseValue
-	ylp.EnableFileListsIndexing = &falseValue
+	ylp.CalculateYumMetadata = utils.Pointer(false)
+	ylp.EnableFileListsIndexing = utils.Pointer(false)
 	ylp.YumGroupFileNames = ""
 
 	err = testsUpdateLocalRepositoryService.Yum(ylp)

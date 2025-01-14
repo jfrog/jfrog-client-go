@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"regexp"
 	"strconv"
 
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -141,9 +140,8 @@ func parseUrl(url string) (protocol, host string, port int, err error) {
 	pattern1 := "^(.+)://(.+):([0-9].+)/$"
 	pattern2 := "^(.+)://(.+)$"
 
-	var r *regexp.Regexp
-	r, err = regexp.Compile(pattern1)
-	if errorutils.CheckError(err) != nil {
+	r, err := utils.GetRegExp(pattern1)
+	if err != nil {
 		return
 	}
 	groups := r.FindStringSubmatch(url)
@@ -157,8 +155,7 @@ func parseUrl(url string) (protocol, host string, port int, err error) {
 		return
 	}
 
-	r, err = regexp.Compile(pattern2)
-	err = errorutils.CheckError(err)
+	r, err = utils.GetRegExp(pattern2)
 	if err != nil {
 		return
 	}

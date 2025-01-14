@@ -1,5 +1,18 @@
 package xray
 
+import (
+	xscServices "github.com/jfrog/jfrog-client-go/xsc/services"
+)
+
+const ScanResponse = `
+{
+"scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122",
+	"vulnerabilities": [{
+		"summary": "test",
+		"severity": "high"
+	}]
+}
+`
 const FatalErrorXrayScanResponse = `
 {
  "errors": [{"status":-1}, {"status":500}]
@@ -1105,9 +1118,16 @@ const VulnerableXrayScanResponse = `{
 }
 `
 
-const VulnerabilityRequestResponse = `
+const VulnerabilityXrayReportRequestResponse = `
 {
   "report_id": 777,
+  "status": "pending"
+}
+`
+
+const LicensesXrayReportRequestResponse = `
+{
+  "report_id": 888,
   "status": "pending"
 }
 `
@@ -1128,7 +1148,23 @@ const VulnerabilityReportStatusResponse = `
 }
 `
 
-const VulnerabilityReportDeleteResponse = `
+const LicensesReportStatusResponse = `
+{
+  "id": 301,
+  "name": "test-generic",
+  "report_type": "license",
+  "status": "completed",
+  "total_artifacts": 4,
+  "num_of_processed_artifacts": 4,
+  "progress": 100,
+  "number_of_rows": 64,
+  "start_time": "2021-09-03T21:17:41Z",
+  "end_time": "2021-09-03T21:17:42Z",
+  "author": "test"
+}
+`
+
+const XrayReportDeleteResponse = `
 {
   "info": "report deleted successfully"
 }
@@ -1217,6 +1253,29 @@ const VulnerabilityReportDetailsResponse = `
         "http://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-37136"
       ]
     }
+  ]
+}
+`
+
+const LicensesReportDetailsResponse = `
+{
+  "total_rows": 1,
+  "rows" :[
+      {
+          "license": "MIT",
+          "license_name" : "The MIT License",
+          "component": "deb://debian:buster:glibc:2.28-10",
+          "artifact": "docker://redis:latest-07142020122937",
+          "path": "repo1/folder1/artifact",
+          "artifact_scan_time": "2020-07-14T09:32:00Z",
+          "unknown" : false,
+          "unrecognized" : false,
+          "custom" : false,
+          "references": [
+              "https://spdx.org/licenses/AFL-1.1.html",
+              "https://spdx.org/licenses/AFL-1.1"
+          ]
+      }
   ]
 }
 `
@@ -1368,3 +1427,46 @@ const BuildScanResultsResponse = `
   ]
 }
 `
+const xscVersionResponse = `{"xsc_version": "%s","xray_version":"3.107.8"}`
+
+const xrayVersionResponse = `{"xray_version":"%s","xray_revision":"5735964"}`
+
+const scanIdResponse = `{"scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122"}`
+
+const JasConfigResponse = `{"enable_token_validation_scanning": true}`
+
+const XscGitInfoResponse = `{"multi_scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122"}`
+
+const XscGitInfoBadResponse = `"failed create git info request: git_repo_url field must contain value"`
+
+var GitInfoContextWithMinimalRequiredFields = xscServices.XscGitInfoContext{
+	GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
+	BranchName:           "feature/XRAY-123-cool-feature",
+	LastCommitHash:       "acc5e24e69a-d3c1-4022-62eb-69e4a1e5",
+}
+
+var GitInfoContextWithMissingFields = xscServices.XscGitInfoContext{
+	GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
+	BranchName:           "feature/XRAY-123-cool-feature",
+}
+
+const TestMultiScanId = "3472b4e2-bddc-11ee-a9c9-acde48001122"
+const TestXscVersion = "1.0.0"
+
+var MapReportIdEndpoint = map[int]string{
+	777: VulnerabilitiesEndpoint,
+	888: LicensesEndpoint,
+}
+
+var MapResponse = map[string]map[string]string{
+	VulnerabilitiesEndpoint: {
+		"XrayReportRequest": VulnerabilityXrayReportRequestResponse,
+		"ReportStatus":      VulnerabilityReportStatusResponse,
+		"ReportDetails":     VulnerabilityReportDetailsResponse,
+	},
+	LicensesEndpoint: {
+		"XrayReportRequest": LicensesXrayReportRequestResponse,
+		"ReportStatus":      LicensesReportStatusResponse,
+		"ReportDetails":     LicensesReportDetailsResponse,
+	},
+}

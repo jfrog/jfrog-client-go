@@ -2,19 +2,21 @@ package tests
 
 import (
 	"errors"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	servicesutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/stretchr/testify/assert"
 	"path"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	servicesutils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestArtifactoryStorage(t *testing.T) {
 	initArtifactoryTest(t)
 	uploadDummyFile(t)
+	t.Run("folder info test", folderInfoTest)
 	t.Run("file info test", fileInfoTest)
 	t.Run("file list test", fileListTest)
 	t.Run("storage info test", storageInfoTest)
@@ -22,7 +24,7 @@ func TestArtifactoryStorage(t *testing.T) {
 	artifactoryCleanup(t)
 }
 
-func fileInfoTest(t *testing.T) {
+func folderInfoTest(t *testing.T) {
 	info, err := testsStorageService.FolderInfo(getRtTargetRepo() + "test/")
 	if !assert.NoError(t, err) {
 		return
@@ -37,6 +39,20 @@ func fileInfoTest(t *testing.T) {
 	assert.Len(t, info.Children, 1)
 	assert.Equal(t, "/a.in", info.Children[0].Uri)
 	assert.False(t, info.Children[0].Folder)
+}
+
+func fileInfoTest(t *testing.T) {
+	info, err := testsStorageService.FileInfo(getRtTargetRepo() + "test/a.in")
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, utils.AddTrailingSlashIfNeeded(*RtUrl)+path.Join(services.StorageRestApi, getRtTargetRepo()+"test/a.in"), info.Uri)
+	assert.Equal(t, strings.TrimSuffix(getRtTargetRepo(), "/"), info.Repo)
+	assert.Equal(t, "/test/a.in", info.Path)
+	assert.NotEmpty(t, info.Created)
+	assert.NotEmpty(t, info.CreatedBy)
+	assert.NotEmpty(t, info.LastModified)
+	assert.NotEmpty(t, info.LastUpdated)
 }
 
 func fileListTest(t *testing.T) {

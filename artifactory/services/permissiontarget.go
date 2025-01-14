@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -78,7 +76,7 @@ func (pts *PermissionTargetService) performRequest(params PermissionTargetParams
 		return errorutils.CheckError(err)
 	}
 	httpClientsDetails := pts.ArtDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	var url = pts.ArtDetails.GetUrl() + "api/v2/security/permissions/" + params.Name
 	var operationString string
 	var resp *http.Response

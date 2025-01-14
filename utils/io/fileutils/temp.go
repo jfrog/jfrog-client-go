@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 var (
@@ -29,7 +29,7 @@ func init() {
 // Set tempDirPath to the created directory path.
 func CreateTempDir() (string, error) {
 	if tempDirBase == "" {
-		return "", errorutils.CheckErrorf("Temp dir cannot be created in an empty base dir.")
+		return "", errorutils.CheckErrorf("temp dir cannot be created in an empty base dir.")
 	}
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	dirPath, err := os.MkdirTemp(tempDirBase, tempPrefix+"-"+timestamp+"-")
@@ -68,7 +68,7 @@ func RemoveTempDir(dirPath string) error {
 // Create a new temp file named "tempPrefix+timeStamp".
 func CreateTempFile() (*os.File, error) {
 	if tempDirBase == "" {
-		return nil, errorutils.CheckErrorf("Temp File cannot be created in an empty base dir.")
+		return nil, errorutils.CheckErrorf("temp File cannot be created in an empty base dir.")
 	}
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	fd, err := os.CreateTemp(tempDirBase, tempPrefix+"-"+timestamp+"-")
@@ -81,21 +81,22 @@ func CleanOldDirs() error {
 	// Get all files at temp dir
 	files, err := os.ReadDir(tempDirBase)
 	if err != nil {
-		log.Error(err)
 		return errorutils.CheckError(err)
 	}
 	now := time.Now()
 	// Search for files/dirs that match the template.
 	for _, file := range files {
-		if strings.HasPrefix(file.Name(), tempPrefix) {
-			timeStamp, err := extractTimestamp(file.Name())
+		fileName := file.Name()
+		if strings.HasPrefix(fileName, tempPrefix) {
+			var timestamp time.Time
+			timestamp, err = extractTimestamp(fileName)
 			if err != nil {
-				return err
+				return errorutils.CheckErrorf("could not extract timestamp from file %s: %q", fileName, err)
 			}
 			// Delete old file/dirs.
-			if now.Sub(timeStamp).Hours() > maxFileAge {
-				if err := os.RemoveAll(path.Join(tempDirBase, file.Name())); err != nil {
-					return errorutils.CheckError(err)
+			if now.Sub(timestamp).Hours() > maxFileAge {
+				if err = RemovePath(path.Join(tempDirBase, fileName)); err != nil {
+					return err
 				}
 			}
 		}
@@ -104,15 +105,29 @@ func CleanOldDirs() error {
 }
 
 func extractTimestamp(item string) (time.Time, error) {
-	// Get timestamp from file/dir.
+	// Get the index of the last dash
 	endTimestampIdx := strings.LastIndex(item, "-")
-	beginningTimestampIdx := strings.LastIndex(item[:endTimestampIdx], "-")
-	timestampStr := item[beginningTimestampIdx+1 : endTimestampIdx]
-	// Convert to int.
-	timeStampInt, err := strconv.ParseInt(timestampStr, 10, 64)
-	if err != nil {
-		return time.Time{}, errorutils.CheckError(err)
+	if endTimestampIdx == -1 {
+		return time.Time{}, fmt.Errorf("invalid format: no dash found")
 	}
-	// Convert to time type.
-	return time.Unix(timeStampInt, 0), nil
+
+	// Get the index of the dash before the last dash
+	beginningTimestampIdx := strings.LastIndex(item[:endTimestampIdx], "-")
+	if beginningTimestampIdx == -1 {
+		return time.Time{}, fmt.Errorf("invalid format: only one dash found")
+	}
+
+	// Extract the timestamp string
+	timestampStr := item[beginningTimestampIdx+1 : endTimestampIdx]
+	if len(timestampStr) == 0 {
+		return time.Time{}, fmt.Errorf("invalid format: empty timestamp")
+	}
+
+	// Convert to int
+	timestampInt, err := strconv.ParseInt(timestampStr, 10, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error parsing timestamp: %v", err)
+	}
+	// Convert to time type
+	return time.Unix(timestampInt, 0), nil
 }

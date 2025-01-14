@@ -9,7 +9,7 @@
 </div>
 
 | Branch |                                                                                                                                                                              Status                                                                                                                                                                              |
-|:------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| :----: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | master | [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml) |
 |  dev   |    [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml)    |
 
@@ -54,11 +54,11 @@
       - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
       - [Executing AQLs](#executing-aqls)
       - [Reading Files in Artifactory](#reading-files-in-artifactory)
-      - [Creating an Access Token](#creating-an-access-token)
-      - [Fetching Access Tokens](#fetching-access-tokens)
-      - [Fetching Access Tokens of a User](#fetching-access-tokens-of-a-user)
-      - [Refreshing an Access Token](#refreshing-an-access-token)
-      - [Revoking an Access Token](#revoking-an-access-token)
+      - [Creating an Artifactory Access Token](#creating-an-artifactory-access-token)
+      - [Fetching Artifactory Access Tokens](#fetching-artifactory-access-tokens)
+      - [Fetching Artifactory Access Tokens of a User](#fetching-artifactory-access-tokens-of-a-user)
+      - [Refreshing an Artifactory Access Token](#refreshing-an-artifactory-access-token)
+      - [Revoking an Artifactory Access Token](#revoking-an-artifactory-access-token)
       - [Create API Key](#create-api-key)
       - [Regenerate API Key](#regenerate-api-key)
       - [Get API Key](#get-api-key)
@@ -96,8 +96,10 @@
       - [Deleting a Group](#deleting-a-group)
       - [Generating Full System Export](#generating-full-system-export)
       - [Getting Info of a Folder in Artifactory](#getting-info-of-a-folder-in-artifactory)
+      - [Getting Info of a File in Artifactory](#getting-info-of-a-file-in-artifactory)
       - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
       - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
+      - [Getting package artifact Lead File](#getting-package-artifact-lead-file)
       - [Triggering Storage Info Recalculation in Artifactory](#triggering-storage-info-recalculation-in-artifactory)
   - [Access APIs](#access-apis)
     - [Creating Access Service Manager](#creating-access-service-manager)
@@ -111,13 +113,15 @@
       - [Getting a Project](#getting-a-project)
       - [Getting all Projects](#getting-all-projects)
       - [Assigning Repository to Project](#assigning-repository-to-project)
-      - [Unassigning Repository from Project](#unassigning-repository-from-project)
+      - [Un-assigning Repository from Project](#un-assigning-repository-from-project)
       - [Get all groups assigned to a project](#get-all-groups-assigned-to-a-project)
       - [Get a specific group assigned to a project](#get-a-specific-group-assigned-to-a-project)
       - [Add or update a group assigned to a project](#add-or-update-a-group-assigned-to-a-project)
       - [Remove a group from a project](#remove-a-group-from-a-project)
       - [Send Web Login Authentication Request](#send-web-login-authentication-request)
       - [Get Web Login Authentication Token](#get-web-login-authentication-token)
+      - [Creating an Access Token](#creating-an-access-token)
+      - [Refreshing an Access Token](#refreshing-an-access-token)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -150,15 +154,40 @@
       - [Get an Xray Policy](#get-an-xray-policy)
       - [Update an Xray Policy](#update-an-xray-policy)
       - [Delete an Xray Policy](#delete-an-xray-policy)
+      - [Create an Xray Ignore Rule](#create-an-xray-ignore-rule)
+      - [Get an Xray Ignore Rule](#get-an-xray-ignore-rule)
+      - [Delete an Xray Ignore Rule](#delete-an-xray-ignore-rule)
       - [Add Builds to Indexing Configuration](#add-builds-to-indexing-configuration)
       - [Request Graph Scan](#request-graph-scan)
       - [Retrieve the Graph Scan Results](#retrieve-the-graph-scan-results)
+      - [Request Graph Enrich](#request-graph-enrich)
+      - [Retrieve the Graph Enrich Results](#retrieve-the-graph-enrich-results)
+      - [Get Token Validation Status](#get-token-validation-status)
       - [Generate Vulnerabilities Report](#generate-vulnerabilities-report)
       - [Get Vulnerabilities Report Details](#get-vulnerabilities-report-details)
       - [Get Vulnerabilities Report Content](#get-vulnerabilities-report-content)
       - [Delete Vulnerabilities Report](#delete-vulnerabilities-report)
+      - [Generate Licences Report](#generate-licences-report)
+      - [Get Licences Report Details](#get-licences-report-details)
+      - [Get Licences Report Content](#get-licences-report-content)
+      - [Delete Licences Report](#delete-licences-report)
+      - [Generate Violations Report](#generate-violations-report)
+      - [Get Violations Report Details](#get-violations-report-details)
+      - [Get Violations Report Content](#get-violations-report-content)
+      - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
       - [Get Entitlement info](#get-entitlement-info)
+    - [XSC APIs](#xsc-apis)
+      - [Creating XSC Service Manager](#creating-xray-service-manager)
+      - [Creating XSC Details](#creating-xsc-details)
+      - [Creating XSC Service Config](#creating-xsc-service-config)
+      - [Creating New XSC Service Manager](#creating-new-xsc-service-manager)
+      - [Using XSC Services](#using-xsc-services)
+      - [Fetching XSC's Version](#fetching-xscs-version)
+      - [Report XSC analytics metrics](#report-xsc-analytics-metrics)
+        - [Add Analytics General Event](#add-analytics-general-event)
+        - [Update Analytics General Event](#update-analytics-general-event)
+        - [Get Analytics General Event](#get-analytics-general-event)
   - [Pipelines APIs](#pipelines-apis)
     - [Creating Pipelines Service Manager](#creating-pipelines-service-manager)
       - [Creating Pipelines Details](#creating-pipelines-details)
@@ -175,6 +204,7 @@
       - [Get Integration by Id](#get-integration-by-id)
       - [Get Integration by Name](#get-integration-by-name)
       - [Get All Integrations](#get-all-integrations)
+      - [Get All Raw Integrations](#get-all-raw-integrations)
       - [Delete Integration](#delete-integration)
       - [Add Pipeline Source](#add-pipeline-source)
       - [Get Recent Pipeline Run Status](#get-recent-pipeline-run-status)
@@ -188,12 +218,42 @@
       - [Creating Lifecycle Service Config](#creating-lifeCycle-service-config)
       - [Creating New Lifecycle Service Manager](#creating-new-lifeCycle-service-manager)
     - [Using Lifecycle Services](#using-lifeCycle-services)
+      - [Creating a Release Bundle From AQL](#creating-a-release-bundle-from-aql)
+      - [Creating a Release Bundle From Artifacts](#creating-a-release-bundle-from-artifacts)
       - [Creating a Release Bundle From Published Builds](#creating-a-release-bundle-from-published-builds)
       - [Creating a Release Bundle From Release Bundles](#creating-a-release-bundle-from-release-bundles)
       - [Promoting a Release Bundle](#promoting-a-release-bundle)
       - [Get Release Bundle Creation Status](#get-release-bundle-creation-status)
       - [Get Release Bundle Promotion Status](#get-release-bundle-promotion-status)
-      - [Delete Release Bundle](#delete-release-bundle)
+      - [Get Release Bundle Promotions](#get-release-bundle-promotions)
+      - [Distribute Release Bundle](#distribute-release-bundle)
+      - [Delete Release Bundle Version](#delete-release-bundle-version)
+      - [Delete Release Bundle Version Promotion](#delete-release-bundle-version-promotion)
+      - [Export Release Bundle Archive](#export-release-bundle-archive)
+      - [Import Release Bundle Archive](#import-release-bundle-archive)
+      - [Remote Delete Release Bundle](#remote-delete-release-bundle)
+      - [Check if Release Bundle exists](#check-rb-exists)
+  - [Lifecycle APIs](#lifecycle-apis)
+    - [Creating Lifecycle Service Manager](#creating-lifeCycle-service-manager)
+      - [Creating Lifecycle Details](#creating-lifeCycle-details)
+      - [Creating Lifecycle Service Config](#creating-lifeCycle-service-config)
+      - [Creating New Lifecycle Service Manager](#creating-new-lifeCycle-service-manager)
+    - [Using Lifecycle Services](#using-lifeCycle-services)
+      - [Creating a Release Bundle From AQL](#creating-a-release-bundle-from-aql)
+  - [Evidence APIs](#evidence-apis)
+    - [Creating Evidence Service Manager](#creating-evidence-service-manager)
+      - [Creating Evidence Details](#creating-evidence-details)
+      - [Creating Evidence Service Config](#creating-evidence-service-config)
+      - [Creating New Evidence Service Manager](#creating-new-evidence-service-manager)
+    - [Using Evidence Services](#using-evidence-services)
+      - [Upload Evidence](#upload-evidence)
+  - [Metadata APIs](#metadata-apis)
+    - [Creating Metadata Service Manager](#creating-metadata-service-manager)
+      - [Creating Metadata Details](#creating-metadata-details)
+      - [Creating Metadata Service Config](#creating-metadata-service-config)
+      - [Creating New Metadata Service Manager](#creating-new-metadata-service-manager)
+    - [Using Metadata Services](#using-metadata-services)
+      - [Graphql query](#graphql-query)
 
 ## General
 
@@ -238,22 +298,25 @@ content of this repository is deleted.
 
 #### Test Types
 
-| Type                 | Description        | Prerequisites                 |
-|----------------------|--------------------|-------------------------------|
-| `-test.artifactory`  | Artifactory tests  | Artifactory Pro               |
-| `-test.distribution` | Distribution tests | Artifactory with Distribution |
-| `-test.xray`         | Xray tests         | Artifactory with Xray         |
-| `-test.pipelines`    | Pipelines tests    | JFrog Pipelines               |
-| `-test.access`       | Access tests       | Artifactory Pro               |
-| `-test.repositories` | Access tests       | Artifactory Pro               |
+| Type                 | Description            | Prerequisites                   |
+| -------------------- | ---------------------- | ------------------------------- |
+| `-test.artifactory`  | Artifactory tests      | Artifactory Pro                 |
+| `-test.distribution` | Distribution tests     | Artifactory with Distribution   |
+| `-test.xray`         | Xray tests             | Artifactory with Xray           |
+| `-test.xsc`          | Xsc tests              | Xray with Xsc                   |
+| `-test.pipelines`    | Pipelines tests        | JFrog Pipelines                 |
+| `-test.access`       | Access tests           | Artifactory Pro                 |
+| `-test.repositories` | Repositories tests     | Artifactory Pro                 |
+| `-test.mpu`          | Multipart upload tests | Artifactory Pro with S3 storage |
 
 #### Connection Details
 
 | Flag                | Description                                                                                            |
-|---------------------|--------------------------------------------------------------------------------------------------------|
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
+| `-xsc.url`          | [Optional] JFrog Xsc URL.                                                                              |
 | `-pipe.url`         | [Optional] JFrog Pipelines URL.                                                                        |
 | `-access.url`       | [Optional] JFrog Access URL.                                                                           |
 | `-rt.user`          | [Default: admin] Artifactory username.                                                                 |
@@ -345,8 +408,10 @@ serviceConfig, err := config.NewConfigBuilder().
     SetDryRun(false).
     // Add [Context](https://golang.org/pkg/context/)
     SetContext(ctx).
-    // Optionally overwrite the default HTTP timeout, which is set to 30 seconds.
-    SetHttpTimeout(180 * time.Second).
+    // Optionally overwrite the default dial timeout, which is set to 30 seconds.
+    SetDialTimeout(180 * time.Second).
+    // Optionally set the total HTTP request timeout.
+    SetOverallRequestTimeout(10 * time.Minute).
     // Optionally overwrite the default HTTP retries, which is set to 3.
     SetHttpRetries(8).
     Build()
@@ -382,6 +447,14 @@ params.Symlink = false
 params.Exclusions = "(.*)a.zip"
 // Retries default value: 3
 params.Retries = 5
+// The maximum number of parts that can be concurrently uploaded per file during a multi-part upload. Set to 0 to disable multi-part upload.
+// SplitCount default value: 5
+params.SplitCount = 10
+// The minimum file size in MiB required to attempt a multi-part upload.
+// MinSplitSize default value: 200
+params.MinSplitSize = 100
+// The upload chunk size in MiB that can be concurrently uploaded during a multi-part upload.
+params.ChunkSize = 5
 // The min file size in bytes for "checksum deploy".
 // "Checksum deploy" is the action of calculating the file checksum locally, before
 // the upload, and skipping the actual file transfer if the file already
@@ -395,8 +468,17 @@ params.ChecksumsCalcEnabled = false
 targetProps := utils.NewProperties()
 targetProps.AddProperty("key1", "val1")
 params.TargetProps = targetProps
+// When using the 'archive' option for upload, we can control the target path inside the uploaded archive using placeholders. This operation determines the TargetPathInArchive value.
+TargetPathInArchive := "archive/path/"
+// Size limit for files to be uploaded.
+SizeLimit= &fspatterns.SizeThreshold{SizeInBytes: 10000, Condition: fspatterns.LessThan}
 
-totalUploaded, totalFailed, err := rtManager.UploadFiles(params)
+uploadServiceOptions := &UploadServiceOptions{
+    // Set to true to fail the upload operation if any of the files fail to upload
+    FailFast: false,
+}
+
+totalUploaded, totalFailed, err := rtManager.UploadFiles(uploadServiceOptions, params)
 ```
 
 #### Downloading Files from Artifactory
@@ -424,7 +506,9 @@ params.Retries = 5
 params.SplitCount = 2
 // MinSplitSize default value: 5120
 params.MinSplitSize = 7168
-
+// Optional fields to avoid AQL request
+Sha256 = "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+Size = 1000
 totalDownloaded, totalFailed, err := rtManager.DownloadFiles(params)
 ```
 
@@ -471,8 +555,12 @@ calling `Close()` on the OperationSummary struct.
 params := services.NewUploadParams()
 params.Pattern = "repo/*/*.zip"
 params.Target = "repo/path/"
+uploadServiceOptions := &UploadServiceOptions{
+    // Set to true to fail the upload operation if any of the files fail to upload
+	FailFast: false,
+}
 
-summary, err := rtManager.UploadFilesWithSummary(params)
+summary, err := rtManager.UploadFilesWithSummary(uploadServiceOptions, params)
 defer summary.Close()
 reader, totalDownloaded, totalExpected, err := rtManager.DownloadFilesWithResultReader(params)
 
@@ -715,7 +803,7 @@ rtManager.Aql(aql string)
 rtManager.ReadRemoteFile(FilePath string)
 ```
 
-#### Creating an Access Token
+#### Creating an Artifactory Access Token
 
 ```go
 params := services.NewCreateTokenParams()
@@ -729,19 +817,19 @@ params.Audience = "jfrt@<serviceID1> jfrt@<serviceID2>"
 results, err := rtManager.CreateToken(params)
 ```
 
-#### Fetching Access Tokens
+#### Fetching Artifactory Access Tokens
 
 ```go
 results, err := rtManager.GetTokens()
 ```
 
-#### Fetching Access Tokens of a User
+#### Fetching Artifactory Access Tokens of a User
 
 ```g
 results, err := rtManager.GetUserTokens(username)
 ```
 
-#### Refreshing an Access Token
+#### Refreshing an Artifactory Access Token
 
 ```go
 params := services.NewRefreshTokenParams()
@@ -752,7 +840,7 @@ params.Token.ExpiresIn = 3600
 results, err := rtManager.RefreshToken(params)
 ```
 
-#### Revoking an Access Token
+#### Revoking an Artifactory Access Token
 
 ```go
 params := services.NewRevokeTokenParams()
@@ -788,7 +876,7 @@ apiKey, err := rtManager.GetAPIKey()
 You can create and update a local repository for the following package types:
 
 Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle,
-Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Swift, Vagrant, and Yum.
+Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vagrant, and Yum.
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>LocalRepositoryParams()`.
@@ -831,7 +919,7 @@ err = servicesManager.UpdateLocalRepository().Generic(params)
 You can create and update a remote repository for the following package types:
 
 Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle,
-Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Swift, Vcs, and Yum.
+Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vcs, and Yum.
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>RemoteRepositoryParams()`.
@@ -875,7 +963,7 @@ err := servicesManager.CreateRemoteRepository(params)
 You can create and update a virtual repository for the following package types:
 
 Alpine, Bower, Cran, Chef, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm,
-Nuget, P2, Puppet, Pypi, Rpm, Sbt, Swift and Yum.
+Nuget, P2, Puppet, Pypi, Rpm, Sbt, Swift, Terraform and Yum.
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>VirtualRepositoryParams()`.
@@ -917,7 +1005,7 @@ err = servicesManager.UpdateVirtualRepository().Go(params)
 You can create and update a federated repository for the following package types:
 
 Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle,
-Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Swift Vagrant and Yum
+Helm, Ivy, Maven, Npm, Nuget, Opkg, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vagrant and Yum
 
 Each package type has its own parameters struct, can be created using the method
 `New<packageType>FederatedRepositoryParams()`.
@@ -1005,6 +1093,7 @@ You can get all repositories from Artifactory filtered according to theirs type 
 params := services.NewRepositoriesFilterParams()
 params.RepoType = "remote"
 params.PackageType = "maven"
+params.ProjectKey = "project-key"
 err := servicesManager.GetAllRepositoriesFiltered(params)
 ```
 
@@ -1328,6 +1417,12 @@ err := serviceManager.Export(params)
 serviceManager.FolderInfo("repo/path/")
 ```
 
+#### Getting Info of a File in Artifactory
+
+```go
+serviceManager.FileInfo("repo/path/file")
+```
+
 #### Getting a listing of files and folders within a folder in Artifactory
 
 ```go
@@ -1344,6 +1439,12 @@ serviceManager.FileList("repo/path/", optionalParams)
 
 ```go
 storageInfo, err := serviceManager.GetStorageInfo()
+```
+
+#### Getting Package Artifact Lead File
+
+```go
+leadArtifact, err := serviceManager.GetPackageLeadFile()
 ```
 
 #### Triggering Storage Info Recalculation in Artifactory
@@ -1457,7 +1558,7 @@ err = accessManager.GetAllProjects()
 err = accessManager.AssignRepoToProject("repoName", "tstprj", true)
 ```
 
-#### Unassigning Repository from Project
+#### Un-assigning Repository from Project
 
 ```go
 err = accessManager.AssignRepoToProject("repoName")
@@ -1503,6 +1604,32 @@ err = accessManager.SendLoginAuthenticationRequest(uuid)
 ```go
 uuid := "09b34617-b48a-455d-8b05-25a6989fb76a"
 err = accessManager.GetLoginAuthenticationToken(uuid)
+```
+
+#### Creating an Access Token
+
+```go
+params := CreateTokenParams{}
+params.Scope = "applied-permissions/user"
+params.Username = "my-user"
+params.ExpiresIn = 12345 // nil = system default, 0 = no expiry.
+params.Refreshable = true
+params.Audience = "jfrt@<serviceID1>"
+reference := true
+params.IncludeReferenceToken = &reference
+params.ProjectKey = "my-project"
+params.Description = "my-token"
+
+results, err := accessManager.CreateToken(params)
+```
+
+#### Refreshing an Access Token
+
+```go
+params := accessServices.CreateTokenParams{}
+params.RefreshToken = "<refresh token>"
+
+results, err := accessManager.RefreshToken(params)
 ```
 
 ## Distribution APIs
@@ -1614,9 +1741,9 @@ summary, err := distManager.SignReleaseBundle(params)
 #### Async Distributing a Release Bundle v1
 
 ```go
-params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
-distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
-params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+params := distribution.NewDistributeReleaseBundleParams("bundle-name", "1")
+distributionRules := distribution.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*distribution.DistributionCommonParams{distributionRules}
 // Auto-creating repository if it does not exist
 autoCreateRepo := true
 err := distManager.DistributeReleaseBundle(params, autoCreateRepo)
@@ -1625,9 +1752,9 @@ err := distManager.DistributeReleaseBundle(params, autoCreateRepo)
 #### Sync Distributing a Release Bundle v1
 
 ```go
-params := services.NewDistributeReleaseBundleParams("bundle-name", "1")
-distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
-params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+params := distribution.NewDistributeReleaseBundleParams("bundle-name", "1")
+distributionRules := distribution.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*distribution.DistributionCommonParams{distributionRules}
 // Auto-creating repository if it does not exist
 autoCreateRepo := true
 // Wait up to 120 minutes for the release bundle v1 distribution
@@ -1654,8 +1781,8 @@ status, err := distributeBundleService.GetStatus(params)
 ```go
 params := services.NewDeleteReleaseBundleParams("bundle-name", "1")
 params.DeleteFromDistribution = true
-distributionRules := utils.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
-params.DistributionRules = []*utils.DistributionCommonParams{distributionRules}
+distributionRules := distribution.DistributionCommonParams{SiteName: "Swamp-1", "CityName": "Tel-Aviv", "CountryCodes": []string{"123"}}}
+params.DistributionRules = []*distribution.DistributionCommonParams{distributionRules}
 // Set to true to enable sync deletion (the command execution will end when the deletion process ends).
 param.Sync = true
 // Max minutes to wait for sync deletion.
@@ -1888,6 +2015,91 @@ err := xrayManager.UpdatePolicy(*policy)
 err := xrayManager.DeletePolicy("example-policy")
 ```
 
+#### Create an Xray Ignore Rule
+
+```go
+params := utils.NewIgnoreRuleParams()
+params.Notes := "random-notes-for-ignore-rules"
+params.ExpiredAt := time.Date(year int, month Month, day, hour, min, sec, nsec int, loc *Location)
+params.IgnoreFilters := IgnoreFilters{
+  Vulnerabilities: []string{"XRAY-12345", "XRAY-67891"},
+  Licenses: []string{"MIT", "BSD"},
+  CVEs: []string{"CVE-2021-1234", "CVE-2022-5678"},
+  Policies: []string{"policy-name-1", "policy-name-2"},
+  Watches: []string{"watch-name-1", "watch-name-2"},
+  DockerLayers: []string{"0503825856099e6adb39c8297af09547f69684b7016b7f3680ed801aa310baaa"},
+  OperationalRisks: []string{"any"},
+  Exposures: []ExposuresFilterName{
+    {
+      FilePath: []string{"/path/to/file1", "/path/to/file2"},
+      Scanners: []string{"EXP-12345"},
+      Catagories: []ExposuresCatagories{
+        {
+          Secrets: true,
+          Services: true,
+          Applications: true,
+          Iac: true,
+        },
+      },
+    },
+  },
+  ReleaseBundles: []IgnoreFilterNameVersion{
+    {
+      Name: "RB-name",
+      Version: "0.0.0",
+    },
+    {
+      Name: "RB-name-2",
+      Version: "1.2.3",
+    },
+  },
+  Builds: []IgnoreFilterNameVersion{
+    {
+      Name: "build-name",
+      Version: "0.0.0",
+    },
+    {
+      Name: "build-name-2",
+      Version: "1.2.3",
+    },
+  },
+  Components: []IgnoreFilterNameVersion{
+    {
+      Name: "component-name",
+      Version: "0.0.0",
+    },
+    {
+      Name: "component-name-2",
+      Version: "1.2.3",
+    },
+  },
+  Arti: []IgnoreFilterNameVersion{
+    {
+      Name: "artifact-name",
+      Version: "0.0.0",
+    },
+    {
+      Name: "artifact-name-2",
+      Version: "1.2.3",
+    },
+  },
+}
+
+ignoreRuleIgnoreId, err := xrayManager.CreateIgnoreRule(params)
+```
+
+#### Get an Xray Ignore Rule
+
+```go
+ignoreRule, err := xrayManager.GetIgnoreRule("ignore-rule-id")
+```
+
+#### Delete an Xray Ignore Rule
+
+```go
+err := xrayManager.DeleteIgnoreRule("ignore-rule-id")
+```
+
 #### Add Builds to Indexing Configuration
 
 ```go
@@ -1913,14 +2125,93 @@ scanId, err := xrayManager.ScanGraph(graphScanParams)
 scanResults, err := xrayManager.GetScanGraphResults(scanId)
 ```
 
+#### Request Graph Enrich
+
+```go
+graphImportParams := &XrayGraphImportParams{}
+// Dependency tree. Each node must have a component identifier, see https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-ComponentIdentifiers.
+graphScanParams.SBOMInput = "{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.4",
+  "serialNumber": "urn:uuid:3c94db59-0dbf-41cd-49e8-c4518ac2ef3c",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2024-05-22T14:52:40Z",
+    "tools": [
+      {
+      "vendor": "JFrog Inc.",
+      "name": "Xray",
+      "version": "3.95.7"
+      }
+    ],
+    "component": {
+      "type": "container",
+      "name": "jfrog/artifactory-pro:sha256",
+      "version": "2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251"
+	}
+  },
+  "components": [
+    {
+    "bom-ref": "pkg:Oci/jfrog%2Fartifactory-pro:sha256@2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251",
+    "type": "application",
+    "name": "jfrog/artifactory-pro:sha256",
+    "version": "2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251",
+    "hashes": [
+      {
+      "alg": "SHA-256",
+      "content": "2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251"
+      }
+    ],
+    "licenses": [],
+    "purl": "pkg:Oci/jfrog%2Fartifactory-pro:sha256@2e774ffb112bcaef62804d97e6db3dc67b9169b440838b12ba12584cba2c5251"
+    }
+  ],
+  "dependencies": []
+  }
+
+"
+scanId, err := xrayManager.ImportGraph(graphImportParams)
+```
+
+#### Retrieve the Graph Enrich Results
+
+```go
+// scanId should be received from xrayManager.ImportGraph(graphImportParams) request.
+enrichResults, err := xrayManager.GetImportGraphResults(scanId)
+```
+
+#### Get Token Validation Status
+```go
+isEnabled, err := xrayManager.IsTokenValidationEnabled()
+```
+
 #### Generate Vulnerabilities Report
 
 ```go
-reportRequest := services.ReportRequestParams{
+vulnerabilitiesReportRequest := services.VulnerabilitiesReportRequestParams{
   Name: "example-report",
-  Filters: services.Filter{
-    HasRemediation: &trueValue,
-    Severity:       []string{ "High" },
+  Filters: services.VulnerabilitiesFilter{
+    VulnerableComponent: "*vulnerable:component*",
+    ImpactedArtifact: "some://impacted*artifact",
+    HasRemediation: &falseValue,
+    Cve: "CVE-1234-1234",
+    IssueId: "XRAY-1234",
+    Severity: []string{
+        "High",
+        "Medium"
+      },
+    CvssScore: services.CvssScore {
+        MinScore: float64(6.3),
+        MaxScore: float64(9)
+    },
+    Published: services.DateTimeRange {
+        Start: "2020-06-29T12:22:16Z",
+        End: "2020-06-29T12:22:16Z"
+    },
+    ScanDate: services.DateTimeRange {
+        Start: "2020-06-29T12:22:16Z",
+        End: "2020-06-29T12:22:16Z"
+    }
   },
   Resources: services.Resource{
     IncludePathPatterns: []string{ "/example-sub-dir/**" },
@@ -1933,7 +2224,7 @@ reportRequest := services.ReportRequestParams{
 }
 
 // The reportRequestResponse will contain the report ID to use in subsequent requests
-reportRequestResponse, err := xrayManager.GenerateVulnerabilitiesReport(reportRequest)
+reportRequestResponse, err := xrayManager.GenerateVulnerabilitiesReport(vulnerabilitiesReportRequest)
 ```
 
 #### Get Vulnerabilities Report Details
@@ -1964,6 +2255,176 @@ reportContent, err := xrayManager.ReportContent(reportContentRequest)
 err := xrayManager.DeleteReport(reportId)
 ```
 
+#### Generate Licences Report
+
+```go
+licensesReportRequest := services.LicensesReportRequestParams{
+  Name: "example-report",
+  Filters: services.LicensesFilter{
+    Component: "*gav:component*",
+    Artifact: "some://impacted*artifact",
+    Unknown: &falseValue,
+    Unrecognized: &trueValue,
+    LicenseNames: []string{
+        "Apache",
+        "MIT",
+        "AFL"
+    },
+    LicensePatterns: []string{
+        "*Apache*",
+        "The Apache*",
+        "AFL*"
+    },
+    ScanDate: services.DateTimeRange {
+        Start: "2020-06-29T12:22:16Z",
+        End: "2020-06-29T12:22:16Z"
+    }
+  },
+  Resources: services.Resource{
+    IncludePathPatterns: []string{ "/example-sub-dir/**" },
+    Repositories: []services.Repository{
+      {
+        Name: "example-repository",
+      },
+    },
+  },
+}
+
+// The reportRequestResponse will contain the report ID to use in subsequent requests
+reportRequestResponse, err := xrayManager.GenerateLicencesReport(licensesReportRequest)
+```
+
+#### Get Licences Report Details
+
+```go
+// The reportId argument value is returned as part of the xrayManager.GenerateLicencesReport API response.
+reportDetails, err := xrayManager.ReportDetails(reportId)
+```
+
+#### Get Licences Report Content
+
+```go
+// The ReportId value is returned as part of the xrayManager.GenerateLicencesReport API response.
+reportContentRequest := services.ReportContentRequestParams{
+  ReportId:  "example-report-id",
+  Direction: "asc",
+  PageNum:   0,
+  NumRows:   0,
+  OrderBy:   "severity",
+}
+reportContent, err := xrayManager.ReportContent(reportContentRequest)
+```
+
+#### Delete Licences Report
+
+```go
+// The reportId argument value is returned as part of the xrayManager.GenerateLicencesReport API response.
+err := xrayManager.DeleteReport(reportId)
+```
+
+#### Generate Violations Report
+
+```go
+violationsReportRequest := services.ViolationsReportRequestParams{
+  Name: "example-report",
+  Filters: 		Type: "security|license|operational_risk",
+    WatchNames: []string{
+      "NameOfWatch1",
+      "NameOfWatch2"
+    },
+    WatchPatterns: []string{
+      "WildcardWatch*"
+    },
+    Component: "*vulnerable:component*",
+    Artifact: "some://impacted*artifact",
+    PolicyNames: []string{
+      "NameOfPolicy"
+    },
+    Severities: []string{
+      "High",
+      "Medium"
+    },
+    Updated: services.DateTimeRange {
+      Start: "2020-01-02T15:00:00Z",
+      End: "2020-12-15T00:00:00Z"
+    },
+    SecurityFilters: services.VulnerabilitiesFilter{
+      Cve: "CVE-2020-10693",
+      IssueId: "XRAY-87343",
+      Severity: []string{
+          "High",
+          "Medium"
+        },
+      CvssScore: services.CvssScore {
+          MinScore: float64(6.3),
+          MaxScore: float64(9)
+      },
+      Published: services.DateTimeRange {
+          Start: "2020-06-29T12:22:16Z",
+          End: "2020-06-29T12:22:16Z"
+      },
+      ScanDate: services.DateTimeRange {
+          Start: "2020-06-29T12:22:16Z",
+          End: "2020-06-29T12:22:16Z"
+      },
+      SummaryContains: "kernel",
+      HasRemediation: &falseValue,
+    },
+    LicenseFilters: services.LicensesFilter {
+      Unknown: &falseValue,
+      Unrecognized: &trueValue,
+		LicenseNames: []string{
+	    "Apache",
+	    "MIT",
+	    "AFL"
+		},
+    LicensePatterns: []string{
+      "*Apache*",
+      "AFL*"
+    },
+  }
+  Resources: services.Resource{
+    IncludePathPatterns: []string{ "/example-sub-dir/**" },
+    Repositories: []services.Repository{
+      {
+        Name: "example-repository",
+      },
+    },
+  },
+}
+
+// The reportRequestResponse will contain the report ID to use in subsequent requests
+reportRequestResponse, err := xrayManager.GenerateViolationsReport(violationsReportRequest)
+```
+
+#### Get Violations Report Details
+
+```go
+// The reportId argument value is returned as part of the xrayManager.GenerateViolationsReport API response.
+reportDetails, err := xrayManager.ReportDetails(reportId)
+```
+
+#### Get Violations Report Content
+
+```go
+// The ReportId value is returned as part of the xrayManager.GenerateViolationsReport API response.
+reportContentRequest := services.ReportContentRequestParams{
+  ReportId:  "example-report-id",
+  Direction: "asc",
+  PageNum:   0,
+  NumRows:   0,
+  OrderBy:   "severity",
+}
+reportContent, err := xrayManager.ReportContent(reportContentRequest)
+```
+
+#### Delete Violations Report
+
+```go
+// The reportId argument value is returned as part of the xrayManager.GenerateViolationsReport API response.
+err := xrayManager.DeleteReport(reportId)
+```
+
 #### Get Artifact Summary
 
 ```go
@@ -1979,6 +2440,90 @@ artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
 ```go
     // The featureId is the requested feature ID to check, for instance: "contextual_analysis"
     isEntitled, err := xrayManager.IsEntitled(featureId)
+```
+
+
+## XSC APIs
+
+### Creating XSC Service Manager
+
+#### Creating XSC Details
+
+```go
+xscDetails := auth.NewXscDetails()
+xscDetails.SetUrl("http://localhost:8081/xsc")
+xscDetails.SetSshKeyPath("path/to/.ssh/")
+xscDetails.SetApiKey("apikey")
+xscDetails.SetUser("user")
+xscDetails.SetPassword("password")
+xscDetails.SetAccessToken("accesstoken")
+// if client certificates are required
+xscDetails.SetClientCertPath("path/to/.cer")
+xscDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating XSC Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(xscDetails).
+    SetCertificatesPath(certPath).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(8).
+    Build()
+```
+
+#### Creating New XSC Service Manager
+
+```go
+xscManager, err := xsc.New(serviceConfig)
+```
+
+### Using XSC Services
+
+#### Fetching XSC's Version
+
+```go
+version, err := xscManager.GetVersion()
+```
+
+#### Report XSC Analytics Metrics
+##### Add Analytics General Event
+Sent XSC a new event which contains analytics data, and get multi-scan id back from XSC.
+```go
+event := services.XscAnalyticsGeneralEvent{
+	XscAnalyticsBasicGeneralEvent: services.XscAnalyticsBasicGeneralEvent{
+            EventType:              services.CliEventType,
+            Product:                services.CliProduct,
+            ProductVersion:         "2.53.1",
+            IsDefaultConfig:        false,
+            JfrogUser:              "gail",
+            OsPlatform:             "mac",
+            OsArchitecture:         "arm64",
+            AnalyzerManagerVersion: "1.1.1",
+            EventStatus:            services.Started,
+}}
+msi, err := xscManager.AddAnalyticsGeneralEvent(event)
+```
+##### Update Analytics General Event
+Sent XSC a finalized analytics metrics event with information matching an existing event's msi.
+```go
+finalizeEvent := services.XscAnalyticsGeneralEventFinalize{
+    MultiScanId: msi,
+    XscAnalyticsBasicGeneralEvent: services.XscAnalyticsBasicGeneralEvent{
+        EventStatus:          services.Completed,
+        TotalFindings:        10,
+        TotalIgnoredFindings: 5,
+        TotalScanDuration:    "15s",
+    },
+}
+err := xscManager.UpdateAnalyticsGeneralEvent(finalizeEvent)
+```
+
+##### Get Analytics General Event
+Get a general event from XSC matching the provided msi.
+```go
+event, err := xscManager.GetAnalyticsGeneralEvent(msi)
 ```
 
 ## Pipelines APIs
@@ -2076,6 +2621,12 @@ integration, err := pipelinesManager.GetIntegrationByName("integrationName")
 integrations, err := pipelinesManager.GetAllIntegrations()
 ```
 
+#### Get All Raw Integrations
+
+```go
+integrations, err := pipelinesManager.GetAllRawIntegrations()
+```
+
 #### Delete Integration
 
 ```go
@@ -2163,17 +2714,52 @@ lifecycleManager, err := lifecycle.New(serviceConfig)
 
 ### Using Lifecycle Services
 
+#### Creating a Release Bundle From AQL
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+aqlQuery := `items.find({"repo": "my-repo","path": ".","name": "a2.in"})`
+serviceManager.CreateReleaseBundleFromAql(rbDetails, queryParams, signingKeyName, aqlQuery)
+```
+
+#### Creating a Release Bundle From Artifacts
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+artifacts := CreateFromArtifacts{Artifacts: []ArtifactSource{
+	{
+        Path:   "repo/path/file",
+        Sha256: "3e3deb6628658a48cf0d280a2210211f9d977ec2e10a4619b95d5fb85cb10450",
+	},
+}}
+
+serviceManager.CreateReleaseBundleFromArtifacts(rbDetails, queryParams, signingKeyName, artifacts)
+```
+
 #### Creating a Release Bundle From Published Builds
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-params := CreateOrPromoteReleaseBundleParams{}
-// The GPG/RSA key-pair name given in Artifactory.
-params.SigningKeyName = "key-pair"
-// Optional:
-params.ProjectKey = "project"
-params.Async = true
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
 
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
 
 source := CreateFromBuildsSource{Builds: []BuildSource{
     {
@@ -2183,19 +2769,19 @@ source := CreateFromBuildsSource{Builds: []BuildSource{
         BuildRepository: "artifactory-build-info",
     },
 }}
-serviceManager.CreateReleaseBundleFromBuilds(rbDetails, params, source)
+serviceManager.CreateReleaseBundleFromBuilds(rbDetails, queryParams, signingKeyName, source)
 ```
 
 #### Creating a Release Bundle From Release Bundles
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-params := CreateOrPromoteReleaseBundleParams{}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
 // The GPG/RSA key-pair name given in Artifactory.
-params.SigningKeyName = "key-pair"
-// Optional:
-params.ProjectKey = "project"
-params.Async = true
+signingKeyName = "key-pair"
 
 source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
     {
@@ -2204,23 +2790,25 @@ source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
        ProjectKey:           "default",
     },
 }}
-serviceManager.CreateReleaseBundleFromBundles(rbDetails, params, source)
+serviceManager.CreateReleaseBundleFromBundles(rbDetails, params, signingKeyName, source)
 ```
 
 #### Promoting a Release Bundle
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-params := CreateOrPromoteReleaseBundleParams{}
-// The GPG/RSA key-pair name given in Artifactory.
-params.SigningKeyName = "key-pair"
-// Optional:
-params.ProjectKey = "project"
-params.Async = true
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
 
-environment := "target-env"
-overwrite:=true
-resp, err := serviceManager.PromoteReleaseBundle(rbDetails, params, environment, overwrite)
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+promotionParams := RbPromotionParams{}
+promotionParams.Environment := "target-env"
+promotionParams.IncludedRepositoryKeys := []string{"generic-local"}
+
+resp, err := serviceManager.PromoteReleaseBundle(rbDetails, queryParams, signingKeyName, promotionParams)
 ```
 
 #### Get Release Bundle Creation Status
@@ -2244,16 +2832,219 @@ projectKey := "default"
 resp, err := serviceManager.GetReleaseBundlePromotionStatus(rbDetails, projectKey, createdMillis, sync)
 ```
 
-#### Delete Release Bundle
+#### Get Release Bundle Promotions
 
 ```go
 rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
-params := CreateOrPromoteReleaseBundleParams{}
-// The GPG/RSA key-pair name given in Artifactory.
-params.SigningKeyName = "key-pair"
-// Optional:
-params.ProjectKey = "project"
-params.Async = true
 
-resp, err := serviceManager.DeleteReleaseBundle(rbDetails, params)
+optionalQueryParams := lifecycle.GetPromotionsOptionalQueryParams{
+    Include:    "MSG",
+    Offset:     1,
+    Limit:      10,
+    FilterBy:   "DEV",
+    OrderBy:    "created",
+    OrderAsc:   true,
+    ProjectKey: "default",
+}
+
+resp, err := serviceManager.GetReleaseBundleVersionPromotions(rbDetails, optionalQueryParams)
+```
+
+#### Get Release Bundle Specification
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+resp, err := serviceManager.GetReleaseBundleSpecification(rbDetails)
+```
+
+#### Distribute Release Bundle
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+pathMappings := []services.PathMapping{
+    {
+        Pattern: "(*)/(*)",
+        Target:  "{1}/target/{2}",
+    },
+}
+
+rules := &distribution.DistributionCommonParams{
+    SiteName:     "*",
+    CityName:     "*",
+    CountryCodes: []string{"*"},
+}
+dsParams := DistributeReleaseBundleParams{
+    Sync:           true,
+    AutoCreateRepo: true,
+    MaxWaitMinutes: 60,
+    PathMappings:   pathMappings,
+    DistributionRules: []*dmUtils.DistributionCommonParams{
+        rules,
+    },
+}
+
+resp, err := serviceManager.DistributeReleaseBundle(rbDetails, dsParams)
+```
+
+#### Export Release Bundle Archive
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+// Specifies the path mapping for the artifacts
+// in the form of input and output regular expressions.
+// These expressions define where the artifacts are located
+// and where they should be exported.
+modifictions:= []utils.PathMapping{{
+            Input:  "(.*)/(.*)",
+            Output: "$1/mapping/$2",
+}}
+// Export & Download
+res,err:= serviceManager.ExportReleaseBundle(rbDetails, modifications, queryParams)
+```
+
+#### Import Release Bundle Archive
+
+```go
+// Imports an exported release bundle archive
+res,err:= serviceManager.releaseService.ImportReleaseBundle(filePath)
+```
+
+#### Delete Release Bundle Version
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+resp, err := serviceManager.DeleteReleaseBundleVersion(rbDetails, queryParams)
+```
+
+#### Delete Release Bundle Version Promotion
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+created := "1708612052952"
+resp, err := serviceManager.DeleteReleaseBundleVersionPromotion(rbDetails, queryParams, created)
+```
+
+#### Remote Delete Release Bundle
+
+```go
+rules := &distribution.DistributionCommonParams{
+    SiteName:     "*",
+    CityName:     "*",
+    CountryCodes: []string{"*"},
+}
+params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
+params.DistributionRules = append(params.DistributionRules, rules)
+
+dryRun := true
+
+resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
+```
+
+#### check-rb-exists
+
+```go   
+// projectKey is optional. If not provided, the default project will be used.
+exists, err := serviceManager.ReleaseBundleExists(rbName, rbVersion, projectKey)
+```
+
+## Evidence APIs
+
+### Creating Evidence Service Manager
+
+#### Creating Evidence Details
+
+```go
+evdDetails := auth.NewEvidenceDetails()
+evdDetails.SetUrl("http://localhost:8081/evidence")
+evdDetails.SetAccessToken("access-token")
+// if client certificates are required
+evdDetails.SetClientCertPath("path/to/.cer")
+evdDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Evidence Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(evdDetails).
+    SetCertificatesPath(evdDetails.GetClientCertPath()).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(3).
+    Build()
+```
+
+#### Creating New Evidence Service Manager
+
+```go
+evidenceManager, err := evidence.New(serviceConfig)
+```
+
+### Using Evidence Services
+
+#### Upload Evidence
+
+```go
+envelopeBytes := []byte("envelope")
+
+evidenceDetails := evidenceService.EvidenceDetails{
+  SubjectUri:  "subjectUri",
+  DSSEFileRaw: &envelopeBytes,
+}
+body, err = evideceManager.UploadEvidence(evidenceDetails)
+```
+## Metadata APIs
+
+### Creating Metadata Service Manager
+
+#### Creating Metadata Details
+
+```go
+mdDetails := auth.NewMetadataDetails()
+mdDetails.SetUrl("http://localhost:8081/metadata")
+mdDetails.SetAccessToken("access-token")
+// if client certificates are required
+mdDetails.SetClientCertPath("path/to/.cer")
+mdDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Metadata Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(mdDetails).
+    SetCertificatesPath(mdDetails.GetClientCertPath()).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(3).
+    Build()
+```
+
+#### Creating New Metadata Service Manager
+
+```go
+metadataManager, err := metadata.NewManager(serviceConfig)
+```
+
+### Using Metadata Services
+
+#### Graphql query
+
+```go
+queryBytes := []byte(`{"query":"someGraphqlQuery"}`)
+
+queryDetails := metadataService.QueryDetails{
+  Body:  queryBytes,
+}
+
+body, err = metadataManager.GraphqlQuery(queryDetails)
 ```

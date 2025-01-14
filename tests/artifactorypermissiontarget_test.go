@@ -3,6 +3,7 @@ package tests
 import (
 	"crypto/rand"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -164,15 +165,15 @@ func createRandomUser(t *testing.T) string {
 		Name:                     name,
 		Email:                    name + "@jfrog.com",
 		Password:                 "Password1*",
-		Admin:                    &falseValue,
+		Admin:                    utils.Pointer(false),
 		Realm:                    "internal",
-		ShouldInvite:             &falseValue,
-		ProfileUpdatable:         &trueValue,
-		DisableUIAccess:          &falseValue,
-		InternalPasswordDisabled: &falseValue,
-		WatchManager:             &falseValue,
-		ReportsManager:           &falseValue,
-		PolicyManager:            &falseValue,
+		ShouldInvite:             utils.Pointer(false),
+		ProfileUpdatable:         utils.Pointer(true),
+		DisableUIAccess:          utils.Pointer(false),
+		InternalPasswordDisabled: utils.Pointer(false),
+		WatchManager:             utils.Pointer(false),
+		ReportsManager:           utils.Pointer(false),
+		PolicyManager:            utils.Pointer(false),
 	}
 
 	err := testUserService.CreateUser(services.UserParams{
@@ -203,8 +204,8 @@ func createRandomGroup(t *testing.T) string {
 	groupDetails := services.Group{
 		Name:            name,
 		Description:     "hello",
-		AutoJoin:        &falseValue,
-		AdminPrivileges: &falseValue,
+		AutoJoin:        utils.Pointer(false),
+		AdminPrivileges: utils.Pointer(false),
 		Realm:           "internal",
 		RealmAttributes: "",
 	}

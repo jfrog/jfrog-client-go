@@ -2,15 +2,15 @@ package services
 
 import (
 	"encoding/json"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
-	"golang.org/x/exp/maps"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	clientUtils "github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
+	xscUtils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -40,6 +40,15 @@ const (
 	Binary     ScanType = "binary"
 
 	xrayScanStatusFailed = "failed"
+
+	XscGraphAPI = "sca/scan/graph"
+
+	multiScanIdParam = "multi_scan_id="
+
+	scanTechQueryParam = "tech="
+
+	gitRepoKeyQueryParam     = "git_repo="
+	MinXrayVersionGitRepoKey = "3.111.0"
 )
 
 type ScanType string
@@ -68,9 +77,21 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 			}
 		}
 	}
+	// Xsc params are used only when XSC is enabled and MultiScanId is provided
+	if scanParams.XscVersion != "" && scanParams.MultiScanId != "" {
+		params = append(params, multiScanIdParam+scanParams.MultiScanId)
+		if scanParams.Technology != "" {
+			params = append(params, scanTechQueryParam+scanParams.Technology)
+		}
+	}
 
 	if scanParams.ScanType != "" {
 		params = append(params, scanTypeQueryParam+string(scanParams.ScanType))
+	}
+
+	if isGitRepoUrlSupported(scanParams.XrayVersion) && scanParams.GitRepoHttpsCloneUrl != "" {
+		// Add git repo key to the query params to produce violations defined in the git repo policy
+		params = append(params, gitRepoKeyQueryParam+xscUtils.GetGitRepoUrlKey(scanParams.GitRepoHttpsCloneUrl))
 	}
 
 	if len(params) == 0 {
@@ -79,14 +100,29 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 	return "?" + strings.Join(params, "&")
 }
 
+func isGitRepoUrlSupported(xrayVersion string) bool {
+	return clientUtils.ValidateMinimumVersion(clientUtils.Xray, xrayVersion, MinXrayVersionGitRepoKey) == nil
+}
+
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
-	requestBody, err := json.Marshal(scanParams.Graph)
+	httpClientsDetails.SetContentTypeApplicationJson()
+	var err error
+	var requestBody []byte
+	if scanParams.DependenciesGraph != nil {
+		requestBody, err = json.Marshal(scanParams.DependenciesGraph)
+	} else {
+		requestBody, err = json.Marshal(scanParams.BinaryGraph)
+	}
 	if err != nil {
 		return "", errorutils.CheckError(err)
 	}
 	url := ss.XrayDetails.GetUrl() + scanGraphAPI
+
+	// When XSC is enabled and MultiScanId is provided, modify the URL to use XSC scan graph (analytics enabled)
+	if scanParams.XrayVersion != "" && scanParams.XscVersion != "" && scanParams.MultiScanId != "" {
+		url = xscUtils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), scanParams.XrayVersion) + XscGraphAPI
+	}
 	url += createScanGraphQueryParams(scanParams)
 	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
@@ -107,12 +143,18 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	return scanResponse.ScanId, err
 }
 
-func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities, includeLicenses bool) (*ScanResponse, error) {
+func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*ScanResponse, error) {
 	httpClientsDetails := ss.XrayDetails.CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 
 	// The scan request may take some time to complete. We expect to receive a 202 response, until the completion.
-	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI + "/" + scanId
+	endPoint := ss.XrayDetails.GetUrl() + scanGraphAPI
+	// Modify endpoint if XSC is enabled
+	if xscEnabled {
+		endPoint = xscUtils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), xrayVersion) + XscGraphAPI
+	}
+	endPoint += "/" + scanId
+
 	if includeVulnerabilities {
 		endPoint += includeVulnerabilitiesParam
 		if includeLicenses {
@@ -122,24 +164,11 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 		endPoint += includeLicensesParam
 	}
 	log.Info("Waiting for scan to complete on JFrog Xray...")
-	pollingAction := func() (shouldStop bool, responseBody []byte, err error) {
-		resp, body, _, err := ss.client.SendGet(endPoint, true, &httpClientsDetails)
-		if err != nil {
-			return true, nil, err
-		}
-		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted); err != nil {
-			return true, nil, err
-		}
-		// Got the full valid response.
-		if resp.StatusCode == http.StatusOK {
-			return true, body, nil
-		}
-		return false, nil, nil
-	}
+
 	pollingExecutor := &httputils.PollingExecutor{
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
-		PollingAction:   pollingAction,
+		PollingAction:   xrayUtils.PollingAction(ss.client, endPoint, httpClientsDetails),
 		MsgPrefix:       "Get Dependencies Scan results... ",
 	}
 
@@ -161,52 +190,23 @@ func (ss *ScanService) GetScanGraphResults(scanId string, includeVulnerabilities
 type XrayGraphScanParams struct {
 	// A path in Artifactory that this Artifact is intended to be deployed to.
 	// This will provide a way to extract the watches that should be applied on this graph
-	RepoPath               string
-	ProjectKey             string
-	Watches                []string
-	ScanType               ScanType
-	Graph                  *xrayUtils.GraphNode
+	RepoPath string
+	// This will provide a way to extract the watches that should be applied on this graph
+	GitRepoHttpsCloneUrl string
+	// This will provide a way to extract the watches that should be applied on this graph
+	ProjectKey string
+	Watches    []string
+	ScanType   ScanType
+	// Dependencies Tree
+	DependenciesGraph *xrayUtils.GraphNode
+	// Binary tree received from indexer-app
+	BinaryGraph            *xrayUtils.BinaryGraphNode
 	IncludeVulnerabilities bool
 	IncludeLicenses        bool
-}
-
-// FlattenGraph creates a map of dependencies from the given graph, and returns a flat graph of dependencies with one level.
-func FlattenGraph(graph []*xrayUtils.GraphNode) ([]*xrayUtils.GraphNode, error) {
-	allDependencies := map[string]*xrayUtils.GraphNode{}
-	for _, node := range graph {
-		populateUniqueDependencies(node, allDependencies)
-	}
-	if log.GetLogger().GetLogLevel() == log.DEBUG {
-		// Print dependencies list only on DEBUG mode.
-		jsonList, err := json.Marshal(maps.Keys(allDependencies))
-		if err != nil {
-			return nil, errorutils.CheckError(err)
-		}
-		log.Debug("Flat dependencies list:\n" + clientutils.IndentJsonArray(jsonList))
-	}
-	return []*xrayUtils.GraphNode{{Id: "root", Nodes: maps.Values(allDependencies)}}, nil
-}
-
-func populateUniqueDependencies(node *xrayUtils.GraphNode, allDependencies map[string]*xrayUtils.GraphNode) {
-	if value, exist := allDependencies[node.Id]; exist &&
-		(len(node.Nodes) == 0 || value.ChildrenExist) {
-		return
-	}
-	allDependencies[node.Id] = &xrayUtils.GraphNode{Id: node.Id}
-	if len(node.Nodes) > 0 {
-		// In some cases node can appear twice, with or without children, this because of the depth limit when creating the graph.
-		// If the node was covered with its children, we mark that, so we won't cover it again.
-		// If its without children, we want to cover it again when it comes with its children.
-		allDependencies[node.Id].ChildrenExist = true
-	}
-	for _, dependency := range node.Nodes {
-		populateUniqueDependencies(dependency, allDependencies)
-	}
-}
-
-type OtherComponentIds struct {
-	Id     string `json:"component_id,omitempty"`
-	Origin int    `json:"origin,omitempty"`
+	XscVersion             string
+	XrayVersion            string
+	Technology             string
+	MultiScanId            string
 }
 
 type RequestScanResponse struct {
@@ -241,6 +241,7 @@ type Violation struct {
 	LicenseKey          string               `json:"license_key,omitempty"`
 	LicenseName         string               `json:"license_name,omitempty"`
 	IgnoreUrl           string               `json:"ignore_url,omitempty"`
+	Policies            []Policy             `json:"policies,omitempty"`
 	RiskReason          string               `json:"risk_reason,omitempty"`
 	IsEol               *bool                `json:"is_eol,omitempty"`
 	EolMessage          string               `json:"eol_message,omitempty"`
@@ -284,11 +285,24 @@ type ImpactPathNode struct {
 }
 
 type Cve struct {
-	Id           string `json:"cve,omitempty"`
-	CvssV2Score  string `json:"cvss_v2_score,omitempty"`
-	CvssV2Vector string `json:"cvss_v2_vector,omitempty"`
-	CvssV3Score  string `json:"cvss_v3_score,omitempty"`
-	CvssV3Vector string `json:"cvss_v3_vector,omitempty"`
+	Id           string         `json:"cve,omitempty"`
+	CvssV2Score  string         `json:"cvss_v2_score,omitempty"`
+	CvssV2Vector string         `json:"cvss_v2_vector,omitempty"`
+	CvssV3Score  string         `json:"cvss_v3_score,omitempty"`
+	CvssV3Vector string         `json:"cvss_v3_vector,omitempty"`
+	Cwe          []string       `json:"cwe,omitempty"`
+	CweDetails   map[string]Cwe `json:"cwe_details,omitempty"`
+}
+
+type Cwe struct {
+	Name        string        `json:"name,omitempty"`
+	Description string        `json:"description,omitempty"`
+	Categories  []CweCategory `json:"categories,omitempty"`
+}
+
+type CweCategory struct {
+	Category string `json:"category,omitempty"`
+	Rank     string `json:"rank,omitempty"`
 }
 
 type ExtendedInformation struct {
@@ -303,6 +317,14 @@ type JfrogResearchSeverityReason struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	IsPositive  bool   `json:"is_positive,omitempty"`
+}
+
+type Policy struct {
+	Policy            string `json:"policy,omitempty"`
+	Rule              string `json:"rule,omitempty"`
+	IsBlocking        bool   `json:"is_blocking,omitempty"`
+	IgnoreRuleId      string `json:"ignore_rule_id,omitempty"`
+	SkipNotApplicable bool   `json:"is_skip_not_applicable,omitempty"`
 }
 
 func (gp *XrayGraphScanParams) GetProjectKey() string {

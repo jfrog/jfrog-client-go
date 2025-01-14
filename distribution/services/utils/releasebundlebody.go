@@ -1,5 +1,9 @@
 package utils
 
+import (
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+)
+
 // REST body for create and update a release bundle
 type ReleaseBundleBody struct {
 	DryRun            bool          `json:"dry_run"`
@@ -20,15 +24,10 @@ type BundleSpec struct {
 }
 
 type BundleQuery struct {
-	QueryName    string        `json:"query_name,omitempty"`
-	Aql          string        `json:"aql"`
-	PathMappings []PathMapping `json:"mappings,omitempty"`
-	AddedProps   []AddedProps  `json:"added_props,omitempty"`
-}
-
-type PathMapping struct {
-	Input  string `json:"input"`
-	Output string `json:"output"`
+	QueryName    string              `json:"query_name,omitempty"`
+	Aql          string              `json:"aql,omitempty"`
+	PathMappings []utils.PathMapping `json:"mappings,omitempty"`
+	AddedProps   []AddedProps        `json:"added_props,omitempty"`
 }
 
 type AddedProps struct {

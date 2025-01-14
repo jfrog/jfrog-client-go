@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jfrog/jfrog-client-go/utils"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,6 +42,7 @@ func TestArtifactoryRemoteRepository(t *testing.T) {
 	t.Run("remoteRpmTest", remoteRpmTest)
 	t.Run("remoteSbtTest", remoteSbtTest)
 	t.Run("remoteSwiftTest", remoteSwiftTest)
+	t.Run("remoteTerraformTest", remoteTerraformTest)
 	t.Run("remoteVcsTest", remoteVcsTest)
 	t.Run("remoteYumTest", remoteYumTest)
 	t.Run("remoteGenericSmartRemoteTest", remoteGenericSmartRemoteTest)
@@ -53,40 +56,42 @@ func setRemoteRepositoryBaseParams(params *services.RemoteRepositoryBaseParams, 
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	setAdditionalRepositoryBaseParams(&params.AdditionalRepositoryBaseParams, isUpdate)
 	if !isUpdate {
-		params.HardFail = &trueValue
-		params.Offline = &trueValue
-		params.StoreArtifactsLocally = &trueValue
-		params.SocketTimeoutMillis = 500
-		params.RetrievalCachePeriodSecs = 1000
-		params.MetadataRetrievalTimeoutSecs = 500
-		params.MissedRetrievalCachePeriodSecs = 3000
-		params.UnusedArtifactsCleanupPeriodHours = 24
-		params.AssumedOfflinePeriodSecs = 300
-		params.ShareConfiguration = &trueValue
-		params.SynchronizeProperties = &trueValue
-		params.BlockMismatchingMimeTypes = &trueValue
+		// Original repo params assigned on creation
+		params.HardFail = utils.Pointer(true)
+		params.Offline = utils.Pointer(true)
+		params.StoreArtifactsLocally = utils.Pointer(true)
+		params.SocketTimeoutMillis = utils.Pointer(500)
+		params.RetrievalCachePeriodSecs = utils.Pointer(1000)
+		params.MetadataRetrievalTimeoutSecs = utils.Pointer(500)
+		params.MissedRetrievalCachePeriodSecs = utils.Pointer(3000)
+		params.UnusedArtifactsCleanupPeriodHours = utils.Pointer(24)
+		params.AssumedOfflinePeriodSecs = utils.Pointer(300)
+		params.ShareConfiguration = utils.Pointer(true)
+		params.SynchronizeProperties = utils.Pointer(true)
+		params.BlockMismatchingMimeTypes = utils.Pointer(true)
 		params.MismatchingMimeTypesOverrideList = "text/html,text/csv"
-		params.AllowAnyHostAuth = &trueValue
-		params.EnableCookieManagement = &trueValue
-		params.BypassHeadRequests = &trueValue
+		params.AllowAnyHostAuth = utils.Pointer(true)
+		params.EnableCookieManagement = utils.Pointer(true)
+		params.BypassHeadRequests = utils.Pointer(true)
 		params.ClientTlsCertificate = ""
 	} else {
-		params.HardFail = &falseValue
-		params.Offline = &falseValue
-		params.StoreArtifactsLocally = &falseValue
-		params.SocketTimeoutMillis = 1000
-		params.RetrievalCachePeriodSecs = 2000
-		params.MetadataRetrievalTimeoutSecs = 1000
-		params.MissedRetrievalCachePeriodSecs = 5000
-		params.UnusedArtifactsCleanupPeriodHours = 36
-		params.AssumedOfflinePeriodSecs = 600
-		params.ShareConfiguration = &falseValue
-		params.SynchronizeProperties = &falseValue
-		params.BlockMismatchingMimeTypes = &falseValue
+		// Repo params assigned on update
+		params.HardFail = utils.Pointer(false)
+		params.Offline = utils.Pointer(false)
+		params.StoreArtifactsLocally = utils.Pointer(false)
+		params.SocketTimeoutMillis = utils.Pointer(1000)
+		params.RetrievalCachePeriodSecs = utils.Pointer(2000)
+		params.MetadataRetrievalTimeoutSecs = utils.Pointer(1000)
+		params.MissedRetrievalCachePeriodSecs = utils.Pointer(0)
+		params.UnusedArtifactsCleanupPeriodHours = utils.Pointer(36)
+		params.AssumedOfflinePeriodSecs = utils.Pointer(600)
+		params.ShareConfiguration = utils.Pointer(false)
+		params.SynchronizeProperties = utils.Pointer(false)
+		params.BlockMismatchingMimeTypes = utils.Pointer(false)
 		params.MismatchingMimeTypesOverrideList = ""
-		params.AllowAnyHostAuth = &falseValue
-		params.EnableCookieManagement = &falseValue
-		params.BypassHeadRequests = &falseValue
+		params.AllowAnyHostAuth = utils.Pointer(false)
+		params.EnableCookieManagement = utils.Pointer(false)
+		params.BypassHeadRequests = utils.Pointer(false)
 		params.ClientTlsCertificate = ""
 	}
 }
@@ -105,23 +110,23 @@ func setVcsRemoteRepositoryParams(params *services.VcsGitRemoteRepositoryParams,
 
 func setJavaPackageManagersRemoteRepositoryParams(params *services.JavaPackageManagersRemoteRepositoryParams, isUpdate bool) {
 	if !isUpdate {
-		params.MaxUniqueSnapshots = 18
-		params.HandleReleases = &trueValue
-		params.HandleSnapshots = &trueValue
-		params.SuppressPomConsistencyChecks = &trueValue
+		params.MaxUniqueSnapshots = utils.Pointer(18)
+		params.HandleReleases = utils.Pointer(true)
+		params.HandleSnapshots = utils.Pointer(true)
+		params.SuppressPomConsistencyChecks = utils.Pointer(true)
 		params.RemoteRepoChecksumPolicyType = "ignore-and-generate"
-		params.FetchJarsEagerly = &trueValue
-		params.FetchSourcesEagerly = &trueValue
-		params.RejectInvalidJars = &trueValue
+		params.FetchJarsEagerly = utils.Pointer(true)
+		params.FetchSourcesEagerly = utils.Pointer(true)
+		params.RejectInvalidJars = utils.Pointer(true)
 	} else {
-		params.MaxUniqueSnapshots = 36
-		params.HandleReleases = &falseValue
-		params.HandleSnapshots = &falseValue
-		params.SuppressPomConsistencyChecks = &falseValue
+		params.MaxUniqueSnapshots = utils.Pointer(36)
+		params.HandleReleases = utils.Pointer(false)
+		params.HandleSnapshots = utils.Pointer(false)
+		params.SuppressPomConsistencyChecks = utils.Pointer(false)
 		params.RemoteRepoChecksumPolicyType = "generate-if-absent"
-		params.FetchJarsEagerly = &falseValue
-		params.FetchSourcesEagerly = &falseValue
-		params.RejectInvalidJars = &falseValue
+		params.FetchJarsEagerly = utils.Pointer(false)
+		params.FetchSourcesEagerly = utils.Pointer(false)
+		params.RejectInvalidJars = utils.Pointer(false)
 	}
 }
 
@@ -129,7 +134,7 @@ func remoteAlpineTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	arp := services.NewAlpineRemoteRepositoryParams()
 	arp.Key = repoKey
-	arp.Url = "http://dl-cdn.alpinelinux.org/alpine"
+	arp.Url = "https://dl-cdn.alpinelinux.org/alpine"
 	setRemoteRepositoryBaseParams(&arp.RemoteRepositoryBaseParams, false)
 
 	err := testsCreateRemoteRepositoryService.Alpine(arp)
@@ -179,7 +184,7 @@ func remoteCargoTest(t *testing.T) {
 	crp.Url = "https://github.com/rust-lang/crates.io-index"
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, false)
 	crp.GitRegistryUrl = "https://github.com/rust-lang/crates.io-index"
-	crp.CargoAnonymousAccess = &trueValue
+	crp.CargoAnonymousAccess = utils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.Cargo(crp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -189,7 +194,7 @@ func remoteCargoTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, crp)
 
 	setRemoteRepositoryBaseParams(&crp.RemoteRepositoryBaseParams, true)
-	crp.CargoAnonymousAccess = &falseValue
+	crp.CargoAnonymousAccess = utils.Pointer(false)
 
 	err = testsUpdateRemoteRepositoryService.Cargo(crp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
@@ -339,9 +344,9 @@ func remoteDebianTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	drp := services.NewDebianRemoteRepositoryParams()
 	drp.Key = repoKey
-	drp.Url = "http://archive.ubuntu.com/ubuntu/"
+	drp.Url = "https://archive.ubuntu.com/ubuntu/"
 	setRemoteRepositoryBaseParams(&drp.RemoteRepositoryBaseParams, false)
-	drp.ListRemoteFolderItems = &trueValue
+	drp.ListRemoteFolderItems = utils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.Debian(drp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -351,7 +356,7 @@ func remoteDebianTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, drp)
 
 	setRemoteRepositoryBaseParams(&drp.RemoteRepositoryBaseParams, true)
-	drp.ListRemoteFolderItems = &falseValue
+	drp.ListRemoteFolderItems = utils.Pointer(false)
 
 	err = testsUpdateRemoteRepositoryService.Debian(drp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
@@ -365,10 +370,10 @@ func remoteDockerTest(t *testing.T) {
 	drp.Key = repoKey
 	drp.Url = "https://registry-1.docker.io/"
 	setRemoteRepositoryBaseParams(&drp.RemoteRepositoryBaseParams, false)
-	drp.ExternalDependenciesEnabled = &trueValue
+	drp.ExternalDependenciesEnabled = utils.Pointer(true)
 	drp.ExternalDependenciesPatterns = []string{"image/**"}
-	drp.EnableTokenAuthentication = &trueValue
-	drp.BlockPushingSchema1 = &trueValue
+	drp.EnableTokenAuthentication = utils.Pointer(true)
+	drp.BlockPushingSchema1 = utils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.Docker(drp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -378,12 +383,12 @@ func remoteDockerTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, drp)
 
 	setRemoteRepositoryBaseParams(&drp.RemoteRepositoryBaseParams, true)
-	drp.ExternalDependenciesEnabled = &falseValue
+	drp.ExternalDependenciesEnabled = utils.Pointer(false)
 	drp.ExternalDependenciesPatterns = nil
-	drp.EnableTokenAuthentication = &falseValue
-	drp.BlockPushingSchema1 = &falseValue
+	drp.EnableTokenAuthentication = utils.Pointer(false)
+	drp.BlockPushingSchema1 = utils.Pointer(false)
 	// Docker prerequisite - artifacts must be stored locally in cache
-	drp.StoreArtifactsLocally = &trueValue
+	drp.StoreArtifactsLocally = utils.Pointer(true)
 	err = testsUpdateRemoteRepositoryService.Docker(drp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, drp)
@@ -396,7 +401,7 @@ func remoteGemsTest(t *testing.T) {
 	grp.Key = repoKey
 	grp.Url = "https://rubygems.org/"
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
-	grp.ListRemoteFolderItems = &trueValue
+	grp.ListRemoteFolderItems = utils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.Gems(grp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -406,7 +411,7 @@ func remoteGemsTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
-	grp.ListRemoteFolderItems = &falseValue
+	grp.ListRemoteFolderItems = utils.Pointer(false)
 
 	err = testsUpdateRemoteRepositoryService.Gems(grp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
@@ -420,7 +425,7 @@ func remoteGenericTest(t *testing.T) {
 	grp.Key = repoKey
 	grp.Url = MavenCentralUrl
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, false)
-	grp.ListRemoteFolderItems = &trueValue
+	grp.ListRemoteFolderItems = utils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.Generic(grp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -430,7 +435,7 @@ func remoteGenericTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, grp)
 
 	setRemoteRepositoryBaseParams(&grp.RemoteRepositoryBaseParams, true)
-	grp.ListRemoteFolderItems = &falseValue
+	grp.ListRemoteFolderItems = utils.Pointer(false)
 
 	err = testsUpdateRemoteRepositoryService.Generic(grp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
@@ -615,7 +620,7 @@ func remoteNugetTest(t *testing.T) {
 	nrp.FeedContextPath = "api/v1"
 	nrp.DownloadContextPath = "api/v1/package"
 	nrp.V3FeedUrl = "https://api.nuget.org/v3/index.json"
-	nrp.ForceNugetAuthentication = &trueValue
+	nrp.ForceNugetAuthentication = utils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.Nuget(nrp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -628,7 +633,7 @@ func remoteNugetTest(t *testing.T) {
 	nrp.FeedContextPath = ""
 	nrp.DownloadContextPath = ""
 	nrp.V3FeedUrl = ""
-	nrp.ForceNugetAuthentication = &trueValue
+	nrp.ForceNugetAuthentication = utils.Pointer(true)
 
 	err = testsUpdateRemoteRepositoryService.Nuget(nrp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
@@ -664,7 +669,7 @@ func remoteP2Test(t *testing.T) {
 	prp.Key = repoKey
 	prp.Url = "https://repo.anaconda.com/pkgs/free"
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, false)
-	prp.ListRemoteFolderItems = &trueValue
+	prp.ListRemoteFolderItems = utils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.P2(prp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -674,7 +679,7 @@ func remoteP2Test(t *testing.T) {
 	validateRepoConfig(t, repoKey, prp)
 
 	setRemoteRepositoryBaseParams(&prp.RemoteRepositoryBaseParams, true)
-	prp.ListRemoteFolderItems = &falseValue
+	prp.ListRemoteFolderItems = utils.Pointer(false)
 
 	err = testsUpdateRemoteRepositoryService.P2(prp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
@@ -732,9 +737,9 @@ func remoteRpmTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	rrp := services.NewRpmRemoteRepositoryParams()
 	rrp.Key = repoKey
-	rrp.Url = "http://mirror.centos.org/centos/"
+	rrp.Url = "https://mirror.centos.org/centos/"
 	setRemoteRepositoryBaseParams(&rrp.RemoteRepositoryBaseParams, false)
-	rrp.ListRemoteFolderItems = &trueValue
+	rrp.ListRemoteFolderItems = utils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.Rpm(rrp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -744,7 +749,7 @@ func remoteRpmTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, rrp)
 
 	setRemoteRepositoryBaseParams(&rrp.RemoteRepositoryBaseParams, true)
-	rrp.ListRemoteFolderItems = &falseValue
+	rrp.ListRemoteFolderItems = utils.Pointer(false)
 
 	err = testsUpdateRemoteRepositoryService.Rpm(rrp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
@@ -798,6 +803,31 @@ func remoteSwiftTest(t *testing.T) {
 	}
 }
 
+func remoteTerraformTest(t *testing.T) {
+	repoKey := GenerateRepoKeyForRepoServiceTest()
+	trp := services.NewTerraformRemoteRepositoryParams()
+	trp.Key = repoKey
+	trp.Url = "https://github.com"
+	setRemoteRepositoryBaseParams(&trp.RemoteRepositoryBaseParams, false)
+
+	err := testsCreateRemoteRepositoryService.Terraform(trp)
+	if !assert.NoError(t, err, "Failed to create "+repoKey) {
+		return
+	}
+	defer deleteRepo(t, repoKey)
+	validateRepoConfig(t, repoKey, trp)
+
+	setRemoteRepositoryBaseParams(&trp.RemoteRepositoryBaseParams, true)
+	// Due to a bug on Artifactory side that prevents the update of "bypassHeadRequests" field to false on terraform we leave it unchanged.
+	trp.BypassHeadRequests = utils.Pointer(true)
+	// In terraform - Artifacts must be stored locally
+	trp.StoreArtifactsLocally = utils.Pointer(true)
+	err = testsUpdateRemoteRepositoryService.Terraform(trp)
+	if assert.NoError(t, err, "Failed to update "+repoKey) {
+		validateRepoConfig(t, repoKey, trp)
+	}
+}
+
 func remoteVcsTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	vrp := services.NewVcsRemoteRepositoryParams()
@@ -828,9 +858,9 @@ func remoteYumTest(t *testing.T) {
 	repoKey := GenerateRepoKeyForRepoServiceTest()
 	yrp := services.NewYumRemoteRepositoryParams()
 	yrp.Key = repoKey
-	yrp.Url = "http://mirror.centos.org/centos/"
+	yrp.Url = "https://mirror.centos.org/centos/"
 	setRemoteRepositoryBaseParams(&yrp.RemoteRepositoryBaseParams, false)
-	yrp.ListRemoteFolderItems = &trueValue
+	yrp.ListRemoteFolderItems = utils.Pointer(true)
 
 	err := testsCreateRemoteRepositoryService.Yum(yrp)
 	if !assert.NoError(t, err, "Failed to create "+repoKey) {
@@ -842,7 +872,7 @@ func remoteYumTest(t *testing.T) {
 	validateRepoConfig(t, repoKey, yrp)
 
 	setRemoteRepositoryBaseParams(&yrp.RemoteRepositoryBaseParams, true)
-	yrp.ListRemoteFolderItems = &falseValue
+	yrp.ListRemoteFolderItems = utils.Pointer(false)
 
 	err = testsUpdateRemoteRepositoryService.Yum(yrp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
@@ -864,7 +894,7 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 	validateRepoConfig(t, repoKeyLocal, glp)
 
 	UserParams := getTestUserParams(false, "")
-	UserParams.UserDetails.Admin = &trueValue
+	UserParams.UserDetails.Admin = utils.Pointer(true)
 	err = testUserService.CreateUser(UserParams)
 	defer deleteUserAndAssert(t, UserParams.UserDetails.Name)
 	assert.NoError(t, err)
@@ -880,18 +910,18 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 	grp.Proxy = ""
 	grp.LocalAddress = ""
 	grp.ContentSynchronisation = &services.ContentSynchronisation{
-		Enabled: &trueValue,
+		Enabled: utils.Pointer(true),
 		Statistics: &services.ContentSynchronisationStatistics{
-			Enabled: &trueValue,
+			Enabled: utils.Pointer(true),
 		},
 		Properties: &services.ContentSynchronisationProperties{
-			Enabled: &trueValue,
+			Enabled: utils.Pointer(true),
 		},
 		Source: &services.ContentSynchronisationSource{
-			OriginAbsenceDetection: &trueValue,
+			OriginAbsenceDetection: utils.Pointer(true),
 		},
 	}
-	grp.ListRemoteFolderItems = &trueValue
+	grp.ListRemoteFolderItems = utils.Pointer(true)
 
 	err = testsCreateRemoteRepositoryService.Generic(grp)
 	if !assert.NoError(t, err, "Failed to create "+repoKeyRemote) {
@@ -907,18 +937,18 @@ func remoteGenericSmartRemoteTest(t *testing.T) {
 	grp.Proxy = ""
 	grp.LocalAddress = ""
 	grp.ContentSynchronisation = &services.ContentSynchronisation{
-		Enabled: &falseValue,
+		Enabled: utils.Pointer(false),
 		Statistics: &services.ContentSynchronisationStatistics{
-			Enabled: &falseValue,
+			Enabled: utils.Pointer(false),
 		},
 		Properties: &services.ContentSynchronisationProperties{
-			Enabled: &falseValue,
+			Enabled: utils.Pointer(false),
 		},
 		Source: &services.ContentSynchronisationSource{
-			OriginAbsenceDetection: &falseValue,
+			OriginAbsenceDetection: utils.Pointer(false),
 		},
 	}
-	grp.ListRemoteFolderItems = &falseValue
+	grp.ListRemoteFolderItems = utils.Pointer(false)
 
 	err = testsUpdateRemoteRepositoryService.Generic(grp)
 	if assert.NoError(t, err, "Failed to update "+repoKeyRemote) {

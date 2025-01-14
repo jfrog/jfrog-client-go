@@ -10,8 +10,10 @@ import (
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
+	urlutil "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -98,15 +100,18 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 		return func(threadId int) error {
 			result.TotalCount[threadId]++
 			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ds.DryRun)
-			deletePath, e := utils.BuildArtifactoryUrl(ds.GetArtifactoryDetails().GetUrl(), resultItem.GetItemRelativePath(), make(map[string]string))
+			deletePath, e := urlutil.BuildUrl(ds.GetArtifactoryDetails().GetUrl(), resultItem.GetItemRelativePath(), make(map[string]string))
 			if e != nil {
 				return e
 			}
 			log.Info(logMsgPrefix+"Deleting", resultItem.GetItemRelativePath())
 			if ds.DryRun {
+				// Mock success count on dry run
+				result.SuccessCount[threadId]++
 				return nil
 			}
 			httpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
+			httpClientsDetails.AddPreRetryInterceptor(ds.createPreRetryInterceptor(deletePath, logMsgPrefix+"Checking existence of "+resultItem.GetItemRelativePath()))
 			resp, body, err := ds.client.SendDelete(deletePath, nil, &httpClientsDetails)
 			if err != nil {
 				log.Error(err)
@@ -119,6 +124,14 @@ func (ds *DeleteService) createFileHandlerFunc(result *utils.Result) fileDeleteH
 			result.SuccessCount[threadId]++
 			return nil
 		}
+	}
+}
+
+func (ds *DeleteService) createPreRetryInterceptor(deletePath, retryLog string) httputils.PreRetryInterceptor {
+	return func() (shouldRetry bool) {
+		retryHttpClientsDetails := ds.GetArtifactoryDetails().CreateHttpClientDetails()
+		_, _, nonExistErr := ds.client.GetHttpClient().SendHead(deletePath, retryHttpClientsDetails, retryLog)
+		return nonExistErr == nil
 	}
 }
 
@@ -197,7 +210,7 @@ func removeNotToBeDeletedDirs(specFile *utils.CommonParams, ds *DeleteService, d
 	if err != nil {
 		return nil, err
 	}
-	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter, "folder")
+	bufferFiles, err := utils.FilterCandidateToBeDeleted(deleteCandidates, resultWriter, utils.Folder)
 	if len(bufferFiles) > 0 {
 		defer func() {
 			for _, file := range bufferFiles {
@@ -243,7 +256,7 @@ func getSortedArtifactsToNotDelete(specFile *utils.CommonParams, ds *DeleteServi
 	// 1. Go sorts strings differently from Artifactory's database, when the strings include special chars, such as dashes.
 	// 2. Artifactory sorts by database columns, so directories will be sorted differently than files,
 	//    because the path and name cols have different values.
-	sortedResults, err := utils.FilterCandidateToBeDeleted(tempResults, resultWriter, "file")
+	sortedResults, err := utils.FilterCandidateToBeDeleted(tempResults, resultWriter, utils.File)
 	if err != nil {
 		return nil, err
 	}

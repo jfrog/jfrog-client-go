@@ -89,7 +89,10 @@ func (ps *ProjectService) GetAll() ([]Project, error) {
 	}
 	var projects []Project
 	err = json.Unmarshal(body, &projects)
-	return projects, errorutils.CheckError(err)
+	if err != nil {
+		return nil, errorutils.CheckErrorf("failed extracting projects list from payload: " + err.Error())
+	}
+	return projects, nil
 }
 
 func (ps *ProjectService) Create(params ProjectParams) error {

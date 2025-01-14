@@ -3,30 +3,26 @@ package fspatterns
 import (
 	"bytes"
 	"fmt"
+	"github.com/jfrog/gofrog/crypto"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"regexp"
 	"strings"
 
-	biutils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 // Return all the existing paths of the provided root path
-func ListFiles(rootPath string, isRecursive, includeDirs, isSymlink bool, excludePathPattern string) ([]string, error) {
-	var paths []string
-	var err error
-	if isRecursive {
-		paths, err = fileutils.ListFilesRecursiveWalkIntoDirSymlink(rootPath, !isSymlink)
-	} else {
-		paths, err = fileutils.ListFiles(rootPath, includeDirs)
-	}
-	if err != nil {
-		return paths, err
-	}
-	return filterFiles(paths, excludePathPattern)
+func ListFiles(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, preserveSymlink bool, excludePathPattern string) ([]string, error) {
+	return ListFilesFilterPatternAndSize(rootPath, isRecursive, includeDirs, excludeWithRelativePath, preserveSymlink, excludePathPattern, nil)
+}
+
+// Return all the existing paths of the provided root path
+func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, excludeWithRelativePath, preserveSymlink bool, excludePathPattern string, sizeThreshold *SizeThreshold) ([]string, error) {
+	filterFunc := filterFilesFunc(rootPath, includeDirs, excludeWithRelativePath, preserveSymlink, excludePathPattern, sizeThreshold)
+	return fileutils.ListFilesWithFilterFunc(rootPath, isRecursive, !preserveSymlink, filterFunc)
 }
 
 // Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
@@ -49,23 +45,41 @@ func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternTyp
 	return excludePathPattern
 }
 
-func filterFiles(files []string, excludePathPattern string) (filteredFiles []string, err error) {
-	var excludedPath bool
-	for i := 0; i < len(files); i++ {
-		if files[i] == "." {
-			continue
+// Returns a function that filters files according to the provided parameters
+func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, preserveSymlink bool, excludePathPattern string, sizeThreshold *SizeThreshold) func(filePath string) (included bool, err error) {
+	return func(path string) (included bool, err error) {
+		if path == "." {
+			return false, nil
 		}
-		excludedPath, err = isPathExcluded(files[i], excludePathPattern)
+		if !includeDirs {
+			isDir, err := fileutils.IsDirExists(path, preserveSymlink)
+			if err != nil || isDir {
+				return false, err
+			}
+		}
+		var isExcludedByPattern bool
+		isExcludedByPattern, err = isPathExcluded(path, excludePathPattern, rootPath, excludeWithRelativePath)
 		if err != nil {
-			return
+			return false, err
 		}
-		if !excludedPath {
-			filteredFiles = append(filteredFiles, files[i])
-		} else {
-			log.Debug(fmt.Sprintf("The path '%s' is excluded", files[i]))
+		if isExcludedByPattern {
+			log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+			return false, nil
 		}
+
+		if sizeThreshold != nil {
+			fileInfo, err := fileutils.GetFileInfo(path, preserveSymlink)
+			if err != nil {
+				return false, errorutils.CheckError(err)
+			}
+			// Check if the file size is within the limits
+			if !fileInfo.IsDir() && !sizeThreshold.IsSizeWithinThreshold(fileInfo.Size()) {
+				log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+				return false, nil
+			}
+		}
+		return true, nil
 	}
-	return
 }
 
 // Return the actual sub-paths that match the regex provided.
@@ -112,15 +126,22 @@ func GetSingleFileToUpload(rootPath, targetPath string, flat bool) (utils.Artifa
 	return utils.Artifact{LocalPath: rootPath, TargetPath: uploadPath, SymlinkTargetPath: symlinkPath}, nil
 }
 
-func isPathExcluded(path string, excludePathPattern string) (excludedPath bool, err error) {
+func isPathExcluded(path, excludePathPattern, rootPath string, excludeWithRelativePath bool) (excludedPath bool, err error) {
 	if len(excludePathPattern) > 0 {
+		if excludeWithRelativePath {
+			path = strings.TrimPrefix(path, rootPath)
+		}
 		excludedPath, err = regexp.MatchString(excludePathPattern, path)
+		err = errorutils.CheckError(err)
 	}
 	return
 }
 
 // If filePath is path to a symlink we should return the link content e.g where the link points
 func GetFileSymlinkPath(filePath string) (string, error) {
+	if filePath == "" {
+		return "", nil
+	}
 	fileInfo, e := os.Lstat(filePath)
 	if errorutils.CheckError(e) != nil {
 		return "", e
@@ -163,7 +184,7 @@ func GetRootPath(pattern, target, archiveTarget string, patternType utils.Patter
 	placeholderParentheses := getPlaceholderParentheses(pattern, target, archiveTarget)
 	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
-		return "", errorutils.CheckErrorf("Path does not exist: " + rootPath)
+		return "", errorutils.CheckErrorf("path does not exist: " + rootPath)
 	}
 
 	return rootPath, nil
@@ -171,15 +192,15 @@ func GetRootPath(pattern, target, archiveTarget string, patternType utils.Patter
 
 // When handling symlink we want to simulate the creation of empty file
 func CreateSymlinkFileDetails() (*fileutils.FileDetails, error) {
-	checksumInfo, err := biutils.CalcChecksums(bytes.NewBuffer([]byte(fileutils.SymlinkFileContent)))
+	checksums, err := crypto.CalcChecksums(bytes.NewBuffer([]byte(fileutils.SymlinkFileContent)))
 	if err != nil {
 		return nil, errorutils.CheckError(err)
 	}
 
 	details := new(fileutils.FileDetails)
-	details.Checksum.Md5 = checksumInfo[biutils.MD5]
-	details.Checksum.Sha1 = checksumInfo[biutils.SHA1]
-	details.Checksum.Sha256 = checksumInfo[biutils.SHA256]
+	details.Checksum.Md5 = checksums[crypto.MD5]
+	details.Checksum.Sha1 = checksums[crypto.SHA1]
+	details.Checksum.Sha256 = checksums[crypto.SHA256]
 	details.Size = int64(0)
 	return details, nil
 }
