@@ -4,10 +4,11 @@ import (
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/jfconnect/services"
+	"github.com/jfrog/jfrog-client-go/jfconnect/services/metrics"
 )
 
 type Manager interface {
-	PostVisibilityMetric(services.VisibilityMetric) error
+	PostVisibilityMetric(metrics.VisibilityMetric) error
 }
 
 type jfConnectManager struct {
@@ -39,7 +40,7 @@ func (jm *jfConnectManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return jm.client
 }
 
-func (jm *jfConnectManager) PostVisibilityMetric(metric services.VisibilityMetric) error {
+func (jm *jfConnectManager) PostVisibilityMetric(metric metrics.VisibilityMetric) error {
 	jfConnectService := services.NewJfConnectService(jm.config.GetServiceDetails(), jm.client)
 	return jfConnectService.PostVisibilityMetric(metric)
 }
