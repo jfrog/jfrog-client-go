@@ -1,5 +1,7 @@
 package jfrogcli
 
+import "github.com/jfrog/jfrog-client-go/jfconnect/services/metrics"
+
 type CommandsCountLabels struct {
 	ProductID                            string `json:"product_id"`
 	ProductVersion                       string `json:"product_version"`
@@ -12,15 +14,16 @@ type CommandsCountLabels struct {
 }
 
 type CommandsCountMetric struct {
-	Value  int                 `json:"value"`
-	Name   string              `json:"metrics_name"`
-	Labels CommandsCountLabels `json:"labels"`
+	metrics.Metric `json:",inline"`
+	Labels         CommandsCountLabels `json:"labels"`
 }
 
 func NewCommandsCountMetric() CommandsCountMetric {
 	return CommandsCountMetric{
-		Value: 1,
-		Name:  "jfcli_commands_count",
+		Metric: metrics.Metric{
+			Value: 1,
+			Name:  "jfcli_commands_count",
+		},
 	}
 }
 
