@@ -1,6 +1,7 @@
-package metrics
+package services
 
 type VisibilityMetric interface {
+	Value() int
 	MetricsName() string
 }
 

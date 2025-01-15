@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/jfconnect/services/metrics"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/http"
@@ -25,7 +24,7 @@ func (jcs *JfConnectService) GetJfConnectDetails() auth.ServiceDetails {
 	return *jcs.serviceDetails
 }
 
-func (jcs *JfConnectService) PostVisibilityMetric(metric metrics.VisibilityMetric) error {
+func (jcs *JfConnectService) PostVisibilityMetric(metric VisibilityMetric) error {
 	metricJson, err := json.Marshal(metric)
 	if err != nil {
 		return errorutils.CheckError(err)
