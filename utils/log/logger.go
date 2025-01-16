@@ -31,6 +31,10 @@ var stdErrIsTerminal *bool
 // but through the 'colorsSupported' function.
 var colorsSupported *bool
 
+// Determines whether to not remove emojis from the output. This variable should not be accessed directly,
+// but through the 'IsEmojiAllow' function.
+var allowEmojis bool
+
 // defaultLogger is the default logger instance in case the user does not set one
 var defaultLogger = NewLogger(INFO, nil)
 
@@ -189,11 +193,13 @@ func (logger jfrogLogger) Output(a ...interface{}) {
 }
 
 func (logger *jfrogLogger) Println(log *log.Logger, isTerminal bool, values ...interface{}) {
-	// Remove emojis from all strings if it's not a terminal or if the terminal is not supporting colors
+	// If not requested, remove emojis from all strings if it's not a terminal or if the terminal is not supporting colors
 	if !(IsColorsSupported() && isTerminal) {
 		for i, value := range values {
 			if str, ok := value.(string); ok {
-				if gomoji.ContainsEmoji(str) {
+				if allowEmojis {
+					values[i] = str
+				} else if gomoji.ContainsEmoji(str) {
 					values[i] = gomoji.RemoveEmojis(str)
 				}
 			}
@@ -246,6 +252,18 @@ func SetIsTerminalFlagsWithCallback(isTerminal bool) func() {
 	return func() {
 		stdOutIsTerminal = stdoutIsTerminalPrev
 		stdErrIsTerminal = stdErrIsTerminalPrev
+	}
+}
+
+func IsEmojiAllow() bool {
+	return allowEmojis
+}
+
+func SetAllowEmojiFlagWithCallback(allow bool) func() {
+	prevAllowEmojis := allowEmojis
+	allowEmojis = allow
+	return func() {
+		allowEmojis = prevAllowEmojis
 	}
 }
 

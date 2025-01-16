@@ -99,6 +99,7 @@
       - [Getting Info of a File in Artifactory](#getting-info-of-a-file-in-artifactory)
       - [Getting a listing of files and folders within a folder in Artifactory](#getting-a-listing-of-files-and-folders-within-a-folder-in-artifactory)
       - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
+      - [Getting package artifact Lead File](#getting-package-artifact-lead-file)
       - [Triggering Storage Info Recalculation in Artifactory](#triggering-storage-info-recalculation-in-artifactory)
   - [Access APIs](#access-apis)
     - [Creating Access Service Manager](#creating-access-service-manager)
@@ -231,6 +232,7 @@
       - [Export Release Bundle Archive](#export-release-bundle-archive)
       - [Import Release Bundle Archive](#import-release-bundle-archive)
       - [Remote Delete Release Bundle](#remote-delete-release-bundle)
+      - [Check if Release Bundle exists](#check-rb-exists)
   - [Lifecycle APIs](#lifecycle-apis)
     - [Creating Lifecycle Service Manager](#creating-lifeCycle-service-manager)
       - [Creating Lifecycle Details](#creating-lifeCycle-details)
@@ -1437,6 +1439,12 @@ serviceManager.FileList("repo/path/", optionalParams)
 
 ```go
 storageInfo, err := serviceManager.GetStorageInfo()
+```
+
+#### Getting Package Artifact Lead File
+
+```go
+leadArtifact, err := serviceManager.GetPackageLeadFile()
 ```
 
 #### Triggering Storage Info Recalculation in Artifactory
@@ -2942,6 +2950,14 @@ dryRun := true
 
 resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
 ```
+
+#### check-rb-exists
+
+```go   
+// projectKey is optional. If not provided, the default project will be used.
+exists, err := serviceManager.ReleaseBundleExists(rbName, rbVersion, projectKey)
+```
+
 ## Evidence APIs
 
 ### Creating Evidence Service Manager

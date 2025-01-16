@@ -89,6 +89,7 @@ var (
 	testsUpdateFederatedRepositoryService *services.FederatedRepositoryService
 	testsDeleteRepositoryService          *services.DeleteRepositoryService
 	testsRepositoriesService              *services.RepositoriesService
+	testsPackageService                   *services.PackageService
 	testsCreateReplicationService         *services.CreateReplicationService
 	testsUpdateReplicationService         *services.UpdateReplicationService
 	testsReplicationGetService            *services.GetReplicationService
@@ -159,7 +160,7 @@ func init() {
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	XscUrl = flag.String("xsc.url", "", "Xsc url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	AccessUrl = flag.String("access.url", "http://localhost:8081/access", "Access url")
+	AccessUrl = flag.String("access.url", "http://127.0.0.1:8082/access", "Access url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
 	AccessToken = flag.String("access.token", testUtils.GetLocalArtifactoryTokenIfNeeded(*RtUrl), "Access token")
@@ -363,6 +364,14 @@ func createArtifactoryGetRepositoryManager() {
 	failOnHttpClientCreation(err)
 	testsRepositoriesService = services.NewRepositoriesService(client)
 	testsRepositoriesService.ArtDetails = artDetails
+}
+
+func createArtifactoryGetPackageManager() {
+	artDetails := GetRtDetails()
+	client, err := createJfrogHttpClient(&artDetails)
+	failOnHttpClientCreation(err)
+	testsPackageService = services.NewPackageService(client)
+	testsPackageService.ArtDetails = artDetails
 }
 
 func createArtifactoryReplicationCreateManager() {

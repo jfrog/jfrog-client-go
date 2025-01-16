@@ -7,6 +7,7 @@ import (
 )
 
 // XscServicesManager defines the http client and general configuration
+// Deprecated from Xray version 3.107.13, XSC is transitioning to Xray as inner service.
 type XscServicesManager struct {
 	client *jfroghttpclient.JfrogHttpClient
 	config config.Config
@@ -77,8 +78,13 @@ func (sm *XscServicesManager) GetAnalyticsGeneralEvent(msi string) (*services.Xs
 	return eventService.GetGeneralEvent(msi)
 }
 
-func (sm *XscServicesManager) GetConfigProfile(profileName string) (*services.ConfigProfile, error) {
+func (sm *XscServicesManager) GetConfigProfileByName(profileName string) (*services.ConfigProfile, error) {
 	configProfileService := services.NewConfigurationProfileService(sm.client)
 	configProfileService.XscDetails = sm.config.GetServiceDetails()
-	return configProfileService.GetConfigurationProfile(profileName)
+	return configProfileService.GetConfigurationProfileByName(profileName)
+}
+
+func (sm *XscServicesManager) GetConfigProfileByUrl(_ string) (*services.ConfigProfile, error) {
+	// Empty implementation required for alignment with interface, implemented only at the new service inside the Xray service
+	return nil, nil
 }
