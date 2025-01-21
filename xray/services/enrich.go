@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -40,7 +41,7 @@ func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams, rootPat
 		httpClientsDetails.SetContentTypeApplicationJson()
 		url = es.XrayDetails.GetUrl() + importGraph
 	}
-
+	url += fmt.Sprintf("?file_name=%s", rootPath)
 	requestBody := importParams.SBOMInput
 	resp, body, err := es.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
