@@ -40,7 +40,13 @@ func (ap *ApplicationServicesManager) Config() config.Config {
 	return ap.config
 }
 
-func (ap *ApplicationServicesManager) AddCommitInfo(commitInfo services.CreateApplicationCommitInfo) error {
+func (ap *ApplicationServicesManager) AddCommitInfo(commitInfo services.CreateApplicationCommitInfo, applicationKey string) error {
 	commitInfoService := services.NewCommitInfoService(ap.client, ap.config.GetServiceDetails())
-	return commitInfoService.AddCommitInfo(commitInfo)
+	return commitInfoService.AddCommitInfo(applicationKey, commitInfo)
+}
+
+func (ap *ApplicationServicesManager) GetVersion() (string, error) {
+	versionService := services.NewVersionService(ap.client)
+	versionService.ApplicationDetails = ap.config.GetServiceDetails()
+	return versionService.GetVersion()
 }

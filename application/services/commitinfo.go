@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	commitInfoEndpoint = "application/api/v1/commits"
+	commitInfoEndpoint = "application/api/v1/commits/"
 )
 
 type CommitInfoService struct {
@@ -24,19 +24,19 @@ func NewCommitInfoService(client *jfroghttpclient.JfrogHttpClient, serviceDetail
 	return &CommitInfoService{client: client, serviceDetails: serviceDetails}
 }
 
-func (c *CommitInfoService) sendPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
-	commitInfoUrl := c.serviceDetails.GetUrl() + commitInfoEndpoint
+func (c *CommitInfoService) sendPostRequest(requestContent []byte, applicationKey string) (resp *http.Response, body []byte, err error) {
+	commitInfoUrl := c.serviceDetails.GetUrl() + commitInfoEndpoint + applicationKey
 	clientDetails := c.serviceDetails.CreateHttpClientDetails()
 	resp, body, err = c.client.SendPost(commitInfoUrl, requestContent, &clientDetails)
 	return
 }
 
-func (c *CommitInfoService) AddCommitInfo(commitInfo CreateApplicationCommitInfo) error {
+func (c *CommitInfoService) AddCommitInfo(applicationKey string, commitInfo CreateApplicationCommitInfo) error {
 	requestContent, err := json.Marshal(commitInfo)
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	resp, body, err := c.sendPostRequest(requestContent)
+	resp, body, err := c.sendPostRequest(requestContent, applicationKey)
 	if err != nil {
 		return err
 	}
