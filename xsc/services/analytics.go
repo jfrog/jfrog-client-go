@@ -93,7 +93,7 @@ func (vs *AnalyticsEventService) UpdateGeneralEvent(event XscAnalyticsGeneralEve
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	return nil
