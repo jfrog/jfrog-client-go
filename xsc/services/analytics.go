@@ -93,7 +93,7 @@ func (vs *AnalyticsEventService) UpdateGeneralEvent(event XscAnalyticsGeneralEve
 	if err != nil {
 		return err
 	}
-	if err = errorutils.CheckResponseStatus(resp, http.StatusOK); err != nil {
+	if err = errorutils.CheckResponseStatus(resp, http.StatusOK, http.StatusCreated); err != nil {
 		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
 	}
 	return nil
@@ -136,6 +136,7 @@ type XscGitInfoContext struct {
 type XscAnalyticsGeneralEventFinalize struct {
 	XscAnalyticsBasicGeneralEvent
 	MultiScanId string `json:"multi_scan_id,omitempty"`
+	GitRepoUrl  string `json:"git_repository,omitempty"`
 }
 
 type XscAnalyticsBasicGeneralEvent struct {
