@@ -27,7 +27,7 @@ func NewEnrichService(client *jfroghttpclient.JfrogHttpClient) *EnrichService {
 	return &EnrichService{client: client}
 }
 
-func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string, error) {
+func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams, rootPath string) (string, error) {
 	httpClientsDetails := es.XrayDetails.CreateHttpClientDetails()
 	var v interface{}
 	// There's an option to run on XML or JSON file so we need to call the correct API accordingly.
@@ -89,8 +89,6 @@ func (es *EnrichService) GetImportGraphResults(scanId string) (*ScanResponse, er
 }
 
 type XrayGraphImportParams struct {
-	// A path in Artifactory that this Artifact is intended to be deployed to.
-	// This will provide a way to extract the watches that should be applied on this graph
 	ScanType   ScanType
 	SBOMInput  []byte
 	XscVersion string
