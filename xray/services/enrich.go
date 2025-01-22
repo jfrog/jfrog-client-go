@@ -28,7 +28,7 @@ func NewEnrichService(client *jfroghttpclient.JfrogHttpClient) *EnrichService {
 	return &EnrichService{client: client}
 }
 
-func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams, rootPath string) (string, error) {
+func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams, fileName string) (string, error) {
 	httpClientsDetails := es.XrayDetails.CreateHttpClientDetails()
 	var v interface{}
 	// There's an option to run on XML or JSON file so we need to call the correct API accordingly.
@@ -41,7 +41,7 @@ func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams, rootPat
 		httpClientsDetails.SetContentTypeApplicationJson()
 		url = es.XrayDetails.GetUrl() + importGraph
 	}
-	url += fmt.Sprintf("?file_name=%s", rootPath)
+	url += fmt.Sprintf("?file_name=%s", fileName)
 	requestBody := importParams.SBOMInput
 	resp, body, err := es.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
