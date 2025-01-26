@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	evaluateEndpoint = "unifiedpolicy/api/v1/mock_evaluate"
+	evaluateEndpoint = "unifiedpolicy/api/v1/evaluate"
 )
 
 type EvaluateService struct {
