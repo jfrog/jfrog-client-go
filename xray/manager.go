@@ -165,10 +165,10 @@ func (sm *XrayServicesManager) GetScanGraphResults(scanID, xrayVersion string, i
 	return scanService.GetScanGraphResults(scanID, xrayVersion, includeVulnerabilities, includeLicenses, xscEnabled)
 }
 
-func (sm *XrayServicesManager) ImportGraph(params services.XrayGraphImportParams) (scanId string, err error) {
+func (sm *XrayServicesManager) ImportGraph(params services.XrayGraphImportParams, fileName string) (scanId string, err error) {
 	enrichService := services.NewEnrichService(sm.client)
 	enrichService.XrayDetails = sm.config.GetServiceDetails()
-	return enrichService.ImportGraph(params)
+	return enrichService.ImportGraph(params, fileName)
 }
 
 // GetScanGraphResults returns an Xray scan output of the requested graph scan.
