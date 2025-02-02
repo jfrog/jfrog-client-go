@@ -47,6 +47,7 @@
       - [Getting Properties from Files in Artifactory](#getting-properties-from-files-in-artifactory)
       - [Publishing Build Info to Artifactory](#publishing-build-info-to-artifactory)
       - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
+      - [Fetching Build Runs from Artifactory](#fetching-build-runs-from-artifactory)
       - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
       - [Promoting a Docker Image in Artifactory](#promoting-a-docker-image-in-artifactory)
       - [Triggering Build Scanning with JFrog Xray](#triggering-build-scanning-with-jfrog-xray)
@@ -713,6 +714,17 @@ buildInfoParams.BuildNumber = "LATEST"
 buildInfoParams.ProjectKey = "my-project-key"
 
 rtManager.GetBuildInfo(buildInfoParams)
+```
+
+#### Fetching Build Runs from Artifactory
+
+```go
+buildInfoParams := services.NewBuildInfoParams{}
+buildInfoParams.BuildName = "buildName"
+// Optional Artifactory project key
+buildInfoParams.ProjectKey = "my-project-key"
+
+rtManager.GetBuildRuns(buildInfoParams)
 ```
 
 #### Promoting Published Builds in Artifactory
