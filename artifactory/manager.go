@@ -374,6 +374,11 @@ func (sm *ArtifactoryServicesManagerImp) GetBuildInfo(params services.BuildInfoP
 	return buildInfoService.GetBuildInfo(params)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetBuildRuns(params services.BuildInfoParams) (*buildinfo.BuildRuns, bool, error) {
+	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
+	return buildInfoService.GetBuildRuns(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreateAPIKey() (string, error) {
 	securityService := services.NewSecurityService(sm.client)
 	securityService.ArtDetails = sm.config.GetServiceDetails()
