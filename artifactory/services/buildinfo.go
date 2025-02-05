@@ -53,6 +53,13 @@ func (bis *BuildInfoService) GetBuildInfo(params BuildInfoParams) (pbi *buildinf
 	return utils.GetBuildInfo(params.BuildName, params.BuildNumber, params.ProjectKey, bis)
 }
 
+// Returns the build runs for the requested build info name.
+// If build info was not found (404), returns found=false (with error nil).
+// For any other response that isn't 200, an error is returned.
+func (bis *BuildInfoService) GetBuildRuns(params BuildInfoParams) (runs *buildinfo.BuildRuns, found bool, err error) {
+	return utils.GetBuildRuns(params.BuildName, params.ProjectKey, bis)
+}
+
 func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error) {
 	summary := clientutils.NewSha256Summary()
 	content, err := json.Marshal(build)

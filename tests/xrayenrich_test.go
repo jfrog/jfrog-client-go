@@ -31,7 +31,7 @@ func TestIsImportSucceeded(t *testing.T) {
 	testsEnrichService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
 
 	params := xrayServices.XrayGraphImportParams{SBOMInput: []byte("")}
-	result, err := testsEnrichService.ImportGraph(params)
+	result, err := testsEnrichService.ImportGraph(params, "test")
 	assert.NoError(t, err)
 	assert.Equal(t, result, xray.TestMultiScanId)
 }

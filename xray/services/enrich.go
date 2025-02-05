@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -27,7 +28,7 @@ func NewEnrichService(client *jfroghttpclient.JfrogHttpClient) *EnrichService {
 	return &EnrichService{client: client}
 }
 
-func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string, error) {
+func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams, fileName string) (string, error) {
 	httpClientsDetails := es.XrayDetails.CreateHttpClientDetails()
 	var v interface{}
 	// There's an option to run on XML or JSON file so we need to call the correct API accordingly.
@@ -40,7 +41,7 @@ func (es *EnrichService) ImportGraph(importParams XrayGraphImportParams) (string
 		httpClientsDetails.SetContentTypeApplicationJson()
 		url = es.XrayDetails.GetUrl() + importGraph
 	}
-
+	url += fmt.Sprintf("?file_name=%s", fileName)
 	requestBody := importParams.SBOMInput
 	resp, body, err := es.client.SendPost(url, requestBody, &httpClientsDetails)
 	if err != nil {
@@ -89,8 +90,6 @@ func (es *EnrichService) GetImportGraphResults(scanId string) (*ScanResponse, er
 }
 
 type XrayGraphImportParams struct {
-	// A path in Artifactory that this Artifact is intended to be deployed to.
-	// This will provide a way to extract the watches that should be applied on this graph
 	ScanType   ScanType
 	SBOMInput  []byte
 	XscVersion string
