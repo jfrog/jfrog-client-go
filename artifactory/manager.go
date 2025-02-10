@@ -204,10 +204,10 @@ func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.Build
 	return buildInfoService.PublishBuildInfo(build, projectKey)
 }
 
-func (sm *ArtifactoryServicesManagerImp) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error) {
+func (sm *ArtifactoryServicesManagerImp) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
 	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
 	buildInfoService.DryRun = sm.config.IsDryRun()
-	return buildInfoService.PublishBuildInfo(build, projectKey)
+	return buildInfoService.DeleteBuildInfo(build, projectKey)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DistributeBuild(params services.BuildDistributionParams) error {

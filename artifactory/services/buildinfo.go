@@ -88,7 +88,7 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	return summary, nil
 }
 
-func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string) (error) {
+func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
 	resp, body, err := bis.client.SendDelete(bis.GetArtifactoryDetails().GetUrl()+"api/build/delete", nil, &httpClientsDetails)

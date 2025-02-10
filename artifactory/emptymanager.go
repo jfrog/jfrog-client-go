@@ -41,6 +41,7 @@ type ArtifactoryServicesManager interface {
 	DeletePermissionTarget(permissionTargetName string) error
 	GetPermissionTarget(permissionTargetName string) (*services.PermissionTargetParams, error)
 	PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error)
+	DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string) error
 	DistributeBuild(params services.BuildDistributionParams) error
 	PromoteBuild(params services.PromotionParams) error
 	DiscardBuilds(params services.DiscardBuildsParams) error
