@@ -206,7 +206,6 @@ func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.Build
 
 func (sm *ArtifactoryServicesManagerImp) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
 	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
-	buildInfoService.DryRun = sm.config.IsDryRun()
 	return buildInfoService.DeleteBuildInfo(build, projectKey)
 }
 

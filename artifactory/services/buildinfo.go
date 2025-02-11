@@ -20,6 +20,14 @@ type BuildInfoService struct {
 	DryRun     bool
 }
 
+type DeleteBuildInfoBody struct {
+	BuildName       string `json:"buildName,omitempty"`
+	Project         string `json:"project,omitempty"`
+	BuildNumber     string `json:"buildNumber,omitempty"`
+	DeleteArtifacts bool   `json:"deleteArtifacts,omitempty"`
+	DeleteAll       bool   `json:"deleteAll,omitempty"`
+}
+
 func NewBuildInfoService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *BuildInfoService {
 	return &BuildInfoService{artDetails: &artDetails, client: client}
 }
@@ -89,9 +97,14 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 }
 
 func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
+	params := CreateDeleteBuildInfoBody(build, projectKey)
+	content, err := json.Marshal(params)
+	if err != nil {
+		return nil
+	}
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
-	resp, body, err := bis.client.SendDelete(bis.GetArtifactoryDetails().GetUrl()+"api/build/delete", nil, &httpClientsDetails)
+	resp, body, err := bis.client.SendDelete(bis.GetArtifactoryDetails().GetUrl()+"api/build/delete", content, &httpClientsDetails)
 	if err != nil {
 		log.Error("Error occurred while deleting build info", err)
 		return err
@@ -101,4 +114,14 @@ func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, project
 	}
 	log.Debug("Artifactory response", resp.Status)
 	return nil
+}
+
+func CreateDeleteBuildInfoBody(build *buildinfo.BuildInfo, projectKey string) DeleteBuildInfoBody {
+	return DeleteBuildInfoBody{
+		BuildName:       build.Name,
+		BuildNumber:     build.Number,
+		Project:         projectKey,
+		DeleteArtifacts: false,
+		DeleteAll:       false,
+	}
 }

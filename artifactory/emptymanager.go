@@ -481,6 +481,10 @@ func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(services.LeadFile
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) DeleteBuildInfo(*buildinfo.BuildInfo, string) error {
+	panic("Failed: Method is not implemented")
+}
+
 // Compile time check of interface implementation.
 // Since EmptyArtifactoryServicesManager can be used by tests external to this project, we want this project's tests to fail,
 // if EmptyArtifactoryServicesManager stops implementing the ArtifactoryServicesManager interface.
