@@ -103,8 +103,8 @@ func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, project
 		return nil
 	}
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
-	utils.SetContentType("application/vnd.org.jfrog.artifactory+json", &httpClientsDetails.Headers)
-	resp, body, err := bis.client.SendDelete(bis.GetArtifactoryDetails().GetUrl()+"api/build/delete", content, &httpClientsDetails)
+	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	resp, body, err := bis.client.SendPost(bis.GetArtifactoryDetails().GetUrl()+"api/build/delete", content, &httpClientsDetails)
 	if err != nil {
 		log.Error("Error occurred while deleting build info", err)
 		return err
@@ -123,6 +123,6 @@ func CreateDeleteBuildInfoBody(build *buildinfo.BuildInfo, projectKey string) De
 		BuildNumber:     buildNumbers,
 		Project:         projectKey,
 		DeleteArtifacts: false,
-		DeleteAll:       false,
+		DeleteAll:       true,
 	}
 }
