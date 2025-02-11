@@ -21,11 +21,11 @@ type BuildInfoService struct {
 }
 
 type DeleteBuildInfoBody struct {
-	BuildName       string `json:"buildName,omitempty"`
-	Project         string `json:"project,omitempty"`
-	BuildNumber     string `json:"buildNumber,omitempty"`
-	DeleteArtifacts bool   `json:"deleteArtifacts,omitempty"`
-	DeleteAll       bool   `json:"deleteAll,omitempty"`
+	BuildName       string   `json:"buildName,omitempty"`
+	Project         string   `json:"project,omitempty"`
+	BuildNumber     []string `json:"buildNumbers,omitempty"`
+	DeleteArtifacts bool     `json:"deleteArtifacts,omitempty"`
+	DeleteAll       bool     `json:"deleteAll,omitempty"`
 }
 
 func NewBuildInfoService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *BuildInfoService {
@@ -117,9 +117,10 @@ func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, project
 }
 
 func CreateDeleteBuildInfoBody(build *buildinfo.BuildInfo, projectKey string) DeleteBuildInfoBody {
+	buildNumbers := []string{build.Number}
 	return DeleteBuildInfoBody{
 		BuildName:       build.Name,
-		BuildNumber:     build.Number,
+		BuildNumber:     buildNumbers,
 		Project:         projectKey,
 		DeleteArtifacts: false,
 		DeleteAll:       false,
