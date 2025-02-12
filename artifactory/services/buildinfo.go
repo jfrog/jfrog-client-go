@@ -123,6 +123,6 @@ func CreateDeleteBuildInfoBody(build *buildinfo.BuildInfo, projectKey string) De
 		BuildNumber:     buildNumbers,
 		Project:         projectKey,
 		DeleteArtifacts: false,
-		DeleteAll:       true,
+		DeleteAll:       false,
 	}
 }
