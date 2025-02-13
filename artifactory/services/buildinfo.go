@@ -100,7 +100,7 @@ func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, project
 	params := CreateDeleteBuildInfoBody(build, projectKey, buildNumberFrequency)
 	content, err := json.Marshal(params)
 	if err != nil {
-		return nil
+		return err
 	}
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
 	utils.SetContentType("application/json", &httpClientsDetails.Headers)
