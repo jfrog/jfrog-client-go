@@ -41,7 +41,7 @@ func TestDeleteBuildRuns(t *testing.T) {
 	assert.NotEmpty(t, runs.BuildsNumbers)
 
 	// Delete the build
-	buildInfo := &buildinfo.BuildInfo{Name: buildName, Number: runs.BuildsNumbers[0].Uri}
+	buildInfo := &buildinfo.BuildInfo{Name: buildName, Number: buildNumber}
 	err = testBuildInfoService.DeleteBuildInfo(buildInfo, "", 1)
 	assert.NoError(t, err)
 
