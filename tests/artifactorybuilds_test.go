@@ -49,5 +49,5 @@ func TestDeleteBuildRuns(t *testing.T) {
 	runs, found, err = testBuildInfoService.GetBuildRuns(services.BuildInfoParams{BuildName: buildName})
 	assert.NoError(t, err)
 	assert.False(t, found)
-	assert.Empty(t, runs.BuildsNumbers)
+	assert.Nil(t, runs)
 }
