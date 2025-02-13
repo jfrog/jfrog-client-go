@@ -96,8 +96,8 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	return summary, nil
 }
 
-func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string) error {
-	params := CreateDeleteBuildInfoBody(build, projectKey)
+func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, buildNumberFrequency int) error {
+	params := CreateDeleteBuildInfoBody(build, projectKey, buildNumberFrequency)
 	content, err := json.Marshal(params)
 	if err != nil {
 		return nil
@@ -116,8 +116,11 @@ func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, project
 	return nil
 }
 
-func CreateDeleteBuildInfoBody(build *buildinfo.BuildInfo, projectKey string) DeleteBuildInfoBody {
-	buildNumbers := []string{build.Number}
+func CreateDeleteBuildInfoBody(build *buildinfo.BuildInfo, projectKey string, buildNumberFrequency int) DeleteBuildInfoBody {
+	buildNumbers := make([]string, 0, buildNumberFrequency)
+	for i := 0; i < buildNumberFrequency; i++ {
+		buildNumbers = append(buildNumbers, build.Number)
+	}
 	return DeleteBuildInfoBody{
 		BuildName:       build.Name,
 		BuildNumber:     buildNumbers,

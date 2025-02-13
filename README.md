@@ -712,7 +712,7 @@ buildInfo := &buildinfo.BuildInfo{}
 // Optional Artifactory project key
 projectKey := "my-project-key"
 ...
-rtManager.DeleteBuildInfo(buildInfo, projectKey)
+rtManager.DeleteBuildInfo(buildInfo, projectKey, buildNumberFrequency)
 ```
 
 #### Fetching Build Info from Artifactory

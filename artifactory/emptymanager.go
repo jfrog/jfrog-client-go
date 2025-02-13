@@ -41,7 +41,7 @@ type ArtifactoryServicesManager interface {
 	DeletePermissionTarget(permissionTargetName string) error
 	GetPermissionTarget(permissionTargetName string) (*services.PermissionTargetParams, error)
 	PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error)
-	DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string) error
+	DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, buildNumberFrequency int) error
 	DistributeBuild(params services.BuildDistributionParams) error
 	PromoteBuild(params services.PromotionParams) error
 	DiscardBuilds(params services.DiscardBuildsParams) error
@@ -481,7 +481,7 @@ func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(services.LeadFile
 	panic("Failed: Method is not implemented")
 }
 
-func (esm *EmptyArtifactoryServicesManager) DeleteBuildInfo(*buildinfo.BuildInfo, string) error {
+func (esm *EmptyArtifactoryServicesManager) DeleteBuildInfo(*buildinfo.BuildInfo, string, int) error {
 	panic("Failed: Method is not implemented")
 }
 

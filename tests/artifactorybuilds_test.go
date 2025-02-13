@@ -42,7 +42,7 @@ func TestDeleteBuildRuns(t *testing.T) {
 
 	// Delete the build
 	buildInfo := &buildinfo.BuildInfo{Name: buildName, Number: runs.BuildsNumbers[0].Uri}
-	err = testBuildInfoService.DeleteBuildInfo(buildInfo, "")
+	err = testBuildInfoService.DeleteBuildInfo(buildInfo, "", 1)
 	assert.NoError(t, err)
 
 	// Verify the number of builds is 0
