@@ -70,6 +70,11 @@ func (lcs *LifecycleServicesManager) GetReleaseBundleSpecification(rbDetails lif
 	return rbService.GetReleaseBundleSpecification(rbDetails)
 }
 
+func (lcs *LifecycleServicesManager) GetReleaseBundleGraph(rbDetails lifecycle.ReleaseBundleDetails) (lifecycle.GraphResponse, error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.GetReleaseBundleGraph(rbDetails)
+}
+
 func (lcs *LifecycleServicesManager) PromoteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, promotionParams lifecycle.RbPromotionParams) (lifecycle.RbPromotionResp, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.Promote(rbDetails, queryParams, signingKeyName, promotionParams)

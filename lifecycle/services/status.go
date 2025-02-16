@@ -18,6 +18,7 @@ const (
 	recordsApi               = "records"
 	statusesApi              = "statuses"
 	trackersApi              = "trackers"
+	internalApi              = "internal/graph"
 	defaultMaxWait           = 60 * time.Minute
 	DefaultSyncSleepInterval = 10 * time.Second
 )
@@ -47,6 +48,10 @@ func GetReleaseBundleCreationStatusRestApi(rbDetails ReleaseBundleDetails) strin
 
 func GetReleaseBundleSpecificationRestApi(rbDetails ReleaseBundleDetails) string {
 	return path.Join(releaseBundleBaseApi, recordsApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+}
+
+func GetReleaseBundleGraphRestApi(rbDetails ReleaseBundleDetails) string {
+	return path.Join(releaseBundleBaseApi, internalApi, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 
 func (rbs *ReleaseBundlesService) GetReleaseBundlePromotionStatus(rbDetails ReleaseBundleDetails, projectKey, createdMillis string, sync bool) (ReleaseBundleStatusResponse, error) {
@@ -94,6 +99,24 @@ func (rbs *ReleaseBundlesService) GetReleaseBundleSpecification(rbDetails Releas
 		return
 	}
 	err = errorutils.CheckError(json.Unmarshal(body, &specResp))
+	return
+}
+
+func (rbs *ReleaseBundlesService) GetReleaseBundleGraph(rbDetails ReleaseBundleDetails) (graphResp GraphResponse, err error) {
+	restApi := GetReleaseBundleGraphRestApi(rbDetails)
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
+	if err != nil {
+		return
+	}
+	httpClientsDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
+	resp, body, _, err := rbs.client.SendGet(requestFullUrl, true, &httpClientsDetails)
+	if err != nil {
+		return
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return
+	}
+	err = errorutils.CheckError(json.Unmarshal(body, &graphResp))
 	return
 }
 
@@ -225,4 +248,33 @@ type Message struct {
 	Source  string `json:"source,omitempty"`
 	Text    string `json:"text,omitempty"`
 	Created string `json:"created,omitempty"`
+}
+
+type GraphResponse struct {
+	Root Root `json:"root,omitempty"`
+}
+
+// Root corresponds to the "root" key.
+// All fields are pointers to allow for null values.
+type Root struct {
+	Type          string `json:"type,omitempty"`
+	Name          string `json:"name,omitempty"`
+	Version       string `json:"version,omitempty"`
+	Repository    string `json:"repository,omitempty"`
+	CreatedMillis int64  `json:"created_millis,omitempty"`
+	Nodes         []Node `json:"nodes,omitempty"`
+	Evidence      []any  `json:"evidence,omitempty"`
+}
+
+// Node represents items in the "nodes" array (recursively).
+// Again, all fields are pointers to allow them to be nil.
+type Node struct {
+	Type          string `json:"type,omitempty"`
+	Name          string `json:"name,omitempty"`
+	Version       string `json:"version,omitempty"`
+	Repository    string `json:"repository,omitempty"`
+	CreatedMillis int64  `json:"created_millis,omitempty"`
+	Nodes         []Node `json:"nodes,omitempty"`
+	Evidence      []any  `json:"evidence,omitempty"`
+	PackageID     string `json:"package_id,omitempty"`
 }

@@ -155,6 +155,55 @@ func TestGetReleaseBundleSpecArtifactsOnly(t *testing.T) {
 	assert.Equal(t, []string{"Catalina-Build"}, specResp.Artifacts[0].Properties[0].Values)
 }
 
+func TestGetReleaseBundleGraph(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetReleaseBundleGraphRestApi(testRb) {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(`{
+    "root": {
+        "type": "releasebundles",
+        "name": "jira-rbv2-b97",
+        "version": "3",
+        "repository": "release-bundles-v2",
+        "created_millis": 1739719950557,
+        "nodes": [
+            {
+                "type": "buildinfo",
+                "name": "jira-evidence-example",
+                "version": "97",
+                "repository": "artifactory-build-info",
+                "created_millis": 1739281301105,
+                "nodes": [
+                    {
+                        "type": "docker",
+                        "name": "my-very-cool-image",
+                        "version": "97",
+                        "repository": "test-docker-local",
+                        "nodes": [],
+                        "evidence": [],
+                        "package_id": "docker://my-very-cool-image"
+                    }
+                ],
+                "evidence": []
+            }
+        ],
+        "evidence": []
+    }
+}`))
+			assert.NoError(t, err)
+		}
+	})
+	defer mockServer.Close()
+
+	specResp, err := rbService.GetReleaseBundleGraph(testRb)
+	assert.NoError(t, err)
+	assert.Equal(t, "jira-rbv2-b97", specResp.Root.Name)
+	assert.Equal(t, "3", specResp.Root.Version)
+	assert.Equal(t, "release-bundles-v2", specResp.Root.Repository)
+	assert.Equal(t, int64(1739719950557), specResp.Root.CreatedMillis)
+	assert.NotNil(t, specResp.Root.Nodes)
+}
+
 func createMockServer(t *testing.T, testHandler http.HandlerFunc) (*httptest.Server, *lifecycle.ReleaseBundlesService) {
 	testServer := httptest.NewServer(testHandler)
 
