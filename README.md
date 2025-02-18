@@ -711,8 +711,10 @@ rtManager.PublishBuildInfo(buildInfo, projectKey)
 buildInfo := &buildinfo.BuildInfo{}
 // Optional Artifactory project key
 projectKey := "my-project-key"
+// Determines a number of build occurrences with same build number in build info to be deleted 
+numberOfBuildOccurrencesToBeDeleted := 2
 ...
-rtManager.DeleteBuildInfo(buildInfo, projectKey, buildNumberFrequency)
+rtManager.DeleteBuildInfo(buildInfo, projectKey, numberOfBuildOccurrencesToBeDeleted)
 ```
 
 #### Fetching Build Info from Artifactory

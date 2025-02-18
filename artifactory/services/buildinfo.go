@@ -96,29 +96,33 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 	return summary, nil
 }
 
-func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, buildNumberFrequency int) error {
-	params := CreateDeleteBuildInfoBody(build, projectKey, buildNumberFrequency)
+func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, numberOfBuildOccurrencesToBeDeleted int) error {
+	params := createDeleteBuildInfoBody(build, projectKey, numberOfBuildOccurrencesToBeDeleted)
 	content, err := json.Marshal(params)
 	if err != nil {
-		return err
+		return errorutils.CheckError(err)
+	}
+	if bis.IsDryRun() {
+		log.Info("[Dry run] Deleting build info preview...")
+		log.Output(clientutils.IndentJson(content))
+		return nil
 	}
 	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
-	utils.SetContentType("application/json", &httpClientsDetails.Headers)
+	httpClientsDetails.SetContentTypeApplicationJson()
 	resp, body, err := bis.client.SendPost(bis.GetArtifactoryDetails().GetUrl()+"api/build/delete", content, &httpClientsDetails)
 	if err != nil {
-		log.Error("Error occurred while deleting build info", err)
-		return err
+		return fmt.Errorf("error occurred while deleting build info: %w", err)
 	}
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated, http.StatusNoContent); err != nil {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNoContent); err != nil {
 		return err
 	}
 	log.Debug("Artifactory response", resp.Status)
 	return nil
 }
 
-func CreateDeleteBuildInfoBody(build *buildinfo.BuildInfo, projectKey string, buildNumberFrequency int) DeleteBuildInfoBody {
-	buildNumbers := make([]string, 0, buildNumberFrequency)
-	for i := 0; i < buildNumberFrequency; i++ {
+func createDeleteBuildInfoBody(build *buildinfo.BuildInfo, projectKey string, numberOfBuildOccurrencesToBeDeleted int) DeleteBuildInfoBody {
+	buildNumbers := make([]string, 0, numberOfBuildOccurrencesToBeDeleted)
+	for i := 0; i < numberOfBuildOccurrencesToBeDeleted; i++ {
 		buildNumbers = append(buildNumbers, build.Number)
 	}
 	return DeleteBuildInfoBody{

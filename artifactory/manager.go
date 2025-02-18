@@ -204,9 +204,10 @@ func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.Build
 	return buildInfoService.PublishBuildInfo(build, projectKey)
 }
 
-func (sm *ArtifactoryServicesManagerImp) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, buildNumberFrequency int) error {
+func (sm *ArtifactoryServicesManagerImp) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, numberOfBuildOccurrencesToBeDeleted int) error {
 	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
-	return buildInfoService.DeleteBuildInfo(build, projectKey, buildNumberFrequency)
+	buildInfoService.DryRun = sm.config.IsDryRun()
+	return buildInfoService.DeleteBuildInfo(build, projectKey, numberOfBuildOccurrencesToBeDeleted)
 }
 
 func (sm *ArtifactoryServicesManagerImp) DistributeBuild(params services.BuildDistributionParams) error {
