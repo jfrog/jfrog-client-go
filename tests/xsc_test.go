@@ -8,7 +8,7 @@ import (
 
 func TestXscVersion(t *testing.T) { // TODO eran this is skipped
 	initXscTest(t, "", "")
-	version, err := GetXscDetailsBackwardsCompatible(t).GetVersion()
+	version, err := GetXscDetails().GetVersion()
 	if err != nil {
 		t.Error(err)
 	}
