@@ -46,6 +46,7 @@
       - [Deleting Properties from Files in Artifactory](#deleting-properties-from-files-in-artifactory)
       - [Getting Properties from Files in Artifactory](#getting-properties-from-files-in-artifactory)
       - [Publishing Build Info to Artifactory](#publishing-build-info-to-artifactory)
+      - [Delete Build Info from Artifactory](#Deleting-build-info-from-artifactory)
       - [Fetching Build Info from Artifactory](#fetching-build-info-from-artifactory)
       - [Fetching Build Runs from Artifactory](#fetching-build-runs-from-artifactory)
       - [Promoting Published Builds in Artifactory](#promoting-published-builds-in-artifactory)
@@ -702,6 +703,18 @@ buildInfo := &buildinfo.BuildInfo{}
 projectKey := "my-project-key"
 ...
 rtManager.PublishBuildInfo(buildInfo, projectKey)
+```
+
+#### Deleting Build Info from Artifactory
+
+```go
+buildInfo := &buildinfo.BuildInfo{}
+// Optional Artifactory project key
+projectKey := "my-project-key"
+// Determines a number of build occurrences with same build number in build info to be deleted 
+numberOfBuildOccurrencesToBeDeleted := 2
+...
+rtManager.DeleteBuildInfo(buildInfo, projectKey, numberOfBuildOccurrencesToBeDeleted)
 ```
 
 #### Fetching Build Info from Artifactory
