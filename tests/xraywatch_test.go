@@ -313,6 +313,7 @@ func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch.Builds.Type = utils.WatchBuildAll
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}
 
+	// Some comment
 	err := testsXrayWatchService.Update(paramsMissingWatch)
 	assert.EqualError(t, err, "server response: 404 Not Found")
 }
