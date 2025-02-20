@@ -20,6 +20,14 @@ type BuildInfoService struct {
 	DryRun     bool
 }
 
+type DeleteBuildInfoBody struct {
+	BuildName       string   `json:"buildName,omitempty"`
+	Project         string   `json:"project,omitempty"`
+	BuildNumber     []string `json:"buildNumbers,omitempty"`
+	DeleteArtifacts bool     `json:"deleteArtifacts,omitempty"`
+	DeleteAll       bool     `json:"deleteAll,omitempty"`
+}
+
 func NewBuildInfoService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *BuildInfoService {
 	return &BuildInfoService{artDetails: &artDetails, client: client}
 }
@@ -86,4 +94,42 @@ func (bis *BuildInfoService) PublishBuildInfo(build *buildinfo.BuildInfo, projec
 
 	log.Debug("Artifactory response:", resp.Status)
 	return summary, nil
+}
+
+func (bis *BuildInfoService) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, numberOfBuildOccurrencesToBeDeleted int) error {
+	params := createDeleteBuildInfoBody(build, projectKey, numberOfBuildOccurrencesToBeDeleted)
+	content, err := json.Marshal(params)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	if bis.IsDryRun() {
+		log.Info("[Dry run] Deleting build info preview...")
+		log.Output(clientutils.IndentJson(content))
+		return nil
+	}
+	httpClientsDetails := bis.GetArtifactoryDetails().CreateHttpClientDetails()
+	httpClientsDetails.SetContentTypeApplicationJson()
+	resp, body, err := bis.client.SendPost(bis.GetArtifactoryDetails().GetUrl()+"api/build/delete", content, &httpClientsDetails)
+	if err != nil {
+		return fmt.Errorf("error occurred while deleting build info: %w", err)
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNoContent); err != nil {
+		return err
+	}
+	log.Debug("Artifactory response", resp.Status)
+	return nil
+}
+
+func createDeleteBuildInfoBody(build *buildinfo.BuildInfo, projectKey string, numberOfBuildOccurrencesToBeDeleted int) DeleteBuildInfoBody {
+	buildNumbers := make([]string, 0, numberOfBuildOccurrencesToBeDeleted)
+	for i := 0; i < numberOfBuildOccurrencesToBeDeleted; i++ {
+		buildNumbers = append(buildNumbers, build.Number)
+	}
+	return DeleteBuildInfoBody{
+		BuildName:       build.Name,
+		BuildNumber:     buildNumbers,
+		Project:         projectKey,
+		DeleteArtifacts: false,
+		DeleteAll:       false,
+	}
 }
