@@ -16,7 +16,7 @@ import (
 
 const configProfileWithoutRepo = "default-test-profile"
 
-func TestGetConfigurationProfileByName(t *testing.T) { // TODO eran this is skipped - V
+func TestGetConfigurationProfileByName(t *testing.T) {
 	initXscTest(t, services.ConfigProfileMinXscVersion, xscutils.MinXrayVersionXscTransitionToXray)
 
 	xrayVersion, err := GetXrayDetails().GetVersion()
@@ -36,7 +36,7 @@ func TestGetConfigurationProfileByName(t *testing.T) { // TODO eran this is skip
 	assert.Equal(t, &configProfileForComparison, configProfile)
 }
 
-func TestGetConfigurationProfileByUrl(t *testing.T) { // TODO eran this is skipped - V
+func TestGetConfigurationProfileByUrl(t *testing.T) {
 	initXscTest(t, "", services.ConfigProfileByUrlMinXrayVersion)
 
 	xrayVersion, err := GetXrayDetails().GetVersion()

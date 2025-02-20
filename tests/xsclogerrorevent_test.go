@@ -13,7 +13,7 @@ import (
 
 const errorMessageContentForTest = "THIS IS NOT A REAL ERROR! This Error is posted as part of TestXscSendLogErrorEvent test"
 
-func TestXscSendLogErrorEvent(t *testing.T) { // TODO eran this is skipped
+func TestXscSendLogErrorEvent(t *testing.T) {
 	initXscTest(t, services.LogErrorMinXscVersion, utils.MinXrayVersionXscTransitionToXray)
 	mockServer, logErrorService := createXscMockServerForLogEvent(t)
 	defer mockServer.Close()
