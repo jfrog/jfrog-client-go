@@ -17,7 +17,7 @@ import (
 const configProfileWithoutRepo = "default-test-profile"
 
 func TestGetConfigurationProfileByName(t *testing.T) {
-	initXscTest(t, services.ConfigProfileMinXscVersion, "")
+	initXscTest(t, services.ConfigProfileMinXscVersion, xscutils.MinXrayVersionXscTransitionToXray)
 
 	xrayVersion, err := GetXrayDetails().GetVersion()
 	require.NoError(t, err)
@@ -57,6 +57,7 @@ func TestGetConfigurationProfileByUrl(t *testing.T) {
 
 }
 
+// TODO backwards compatability can be removed once old Xsc service is removed from all servers
 func createXscMockServerForConfigProfile(t *testing.T, xrayVersion string) (mockServer *httptest.Server, configProfileService *services.ConfigurationProfileService) {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiUrlPart := "api/v1/"
