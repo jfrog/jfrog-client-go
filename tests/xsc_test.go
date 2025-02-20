@@ -10,7 +10,7 @@ func initXscTest(t *testing.T, minXscVersion string, minXrayVersion string) {
 	if !*TestXsc {
 		t.Skip("Skipping xsc test. To run xsc test add the '-test.xsc=true' option.")
 	}
-	validateXscAndXrayVersion(t, minXscVersion, minXrayVersion)
+	validateXrayVersion(t, minXscVersion, minXrayVersion)
 }
 
 // This func validates minimal Xsc version.
@@ -19,7 +19,7 @@ func initXscTest(t *testing.T, minXscVersion string, minXrayVersion string) {
 // (If the utilized Xray version >= 3.107.13, the returned Xsc version will always suffice and will not be checked).
 // For features that were introduced only after the migration we pass only minXrayVersion to check and can leave minXscVersion blank.
 // In general minXscVersion should be provided only for features that were introduced before Xsc migration to Xray
-func validateXscAndXrayVersion(t *testing.T, minXscVersion string, minXrayVersion string) {
+func validateXrayVersion(t *testing.T, minXscVersion string, minXrayVersion string) {
 	// We first validate our Xray version so we will not address the old Xsc endpoints if Xray version >= 3.107.13. This will lead to a failure and skip the test
 	currentXrayVersion, err := GetXrayDetails().GetVersion()
 	if err != nil {
@@ -31,8 +31,8 @@ func validateXscAndXrayVersion(t *testing.T, minXscVersion string, minXrayVersio
 		afterMigration = false
 	}
 
-	if afterMigration && minXrayVersion != "" {
-		if err = clientUtils.ValidateMinimumVersion(clientUtils.Xsc, currentXrayVersion, minXrayVersion); err != nil {
+	if minXrayVersion != "" {
+		if err = clientUtils.ValidateMinimumVersion(clientUtils.Xray, currentXrayVersion, minXrayVersion); err != nil {
 			t.Skip(err)
 		}
 	}
