@@ -120,6 +120,19 @@ type XscAnalyticsGeneralEvent struct {
 	IsGitInfoFlow bool               `json:"is_gitinfo_flow,omitempty"`
 }
 
+type XscGitInfoContextDeprecated struct {
+	GitRepoUrl    string   `json:"git_repo_url"`
+	GitRepoName   string   `json:"git_repo_name,omitempty"`
+	GitProject    string   `json:"git_project,omitempty"`
+	GitProvider   string   `json:"git_provider,omitempty"`
+	Technologies  []string `json:"technologies,omitempty"`
+	BranchName    string   `json:"branch_name"`
+	LastCommit    string   `json:"last_commit,omitempty"`
+	CommitHash    string   `json:"commit_hash"`
+	CommitMessage string   `json:"commit_message,omitempty"`
+	CommitAuthor  string   `json:"commit_author,omitempty"`
+}
+
 type XscGitInfoContext struct {
 	Source       CommitContext       `json:"source,omitempty"`
 	PullRequest  *PullRequestContext `json:"pull_request,omitempty"`
