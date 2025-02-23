@@ -121,16 +121,26 @@ type XscAnalyticsGeneralEvent struct {
 }
 
 type XscGitInfoContext struct {
-	GitRepoHttpsCloneUrl string   `json:"git_repo_url"`
-	GitRepoName          string   `json:"git_repo_name,omitempty"`
-	GitProject           string   `json:"git_project,omitempty"`
-	GitProvider          string   `json:"git_provider,omitempty"`
-	Technologies         []string `json:"technologies,omitempty"`
-	BranchName           string   `json:"branch_name"`
-	LastCommitUrl        string   `json:"last_commit,omitempty"`
-	LastCommitHash       string   `json:"commit_hash"`
-	LastCommitMessage    string   `json:"commit_message,omitempty"`
-	LastCommitAuthor     string   `json:"commit_author,omitempty"`
+	Source       CommitContext       `json:"source,omitempty"`
+	PullRequest  *PullRequestContext `json:"pull_request,omitempty"`
+	GitProvider  string              `json:"git_provider,omitempty"`
+	Technologies []string            `json:"technologies,omitempty"`
+}
+
+type CommitContext struct {
+	GitRepoHttpsCloneUrl string `json:"git_repo_url"`
+	GitRepoName          string `json:"git_repo_name,omitempty"`
+	GitProject           string `json:"git_project,omitempty"`
+	BranchName           string `json:"branch_name"`
+	LastCommitHash       string `json:"commit_hash"`
+	LastCommitMessage    string `json:"commit_message,omitempty"`
+	LastCommitAuthor     string `json:"commit_author,omitempty"`
+}
+
+type PullRequestContext struct {
+	PullRequestId    int    `json:"pull_request_id,omitempty"`
+	PullRequestTitle string `json:"pull_request_title,omitempty"`
+	TargetBranchName string `json:"target_branch_name,omitempty"`
 }
 
 type XscAnalyticsGeneralEventFinalize struct {
