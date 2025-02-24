@@ -81,6 +81,10 @@ func TestXscAddAndUpdateGeneralEvent(t *testing.T) {
 func createXscMockServerForGeneralEvent(t *testing.T) (mockServer *httptest.Server, analyticsService *services.AnalyticsEventService) {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
+		case strings.Contains(r.RequestURI, "/xray/api/v1/system/version") && r.Method == http.MethodGet:
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(utils.MinXrayVersionXscTransitionToXray))
+			assert.NoError(t, err)
 		case strings.Contains(r.RequestURI, "/xray/api/v1/xsc/event") && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			_, err := w.Write([]byte(TestMultiScanIdResponse))
