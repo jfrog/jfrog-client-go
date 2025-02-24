@@ -47,43 +47,61 @@ var finalEvent = services.XscAnalyticsGeneralEvent{XscAnalyticsBasicGeneralEvent
 
 func TestXscAddAndUpdateGeneralEvent(t *testing.T) {
 	initXscTest(t, services.LogErrorMinXscVersion, utils.MinXrayVersionXscTransitionToXray)
-	mockServer, analyticsService := createXscMockServerForGeneralEvent(t)
-	defer mockServer.Close()
 
-	msi, err := analyticsService.AddGeneralEvent(initialEvent)
-	assert.NoError(t, err)
-
-	// Validate that the event sent and saved properly in XSC.
-	resp, err := analyticsService.GetGeneralEvent(msi)
-	require.NoError(t, err)
-	assert.Equal(t, initialEvent, *resp)
-
-	finalizeEvent := services.XscAnalyticsGeneralEventFinalize{
-		MultiScanId: msi,
-		XscAnalyticsBasicGeneralEvent: services.XscAnalyticsBasicGeneralEvent{
-			EventStatus:          services.Completed,
-			TotalFindings:        10,
-			TotalIgnoredFindings: 5,
-			TotalScanDuration:    "15s",
+	testCases := []struct {
+		name        string
+		xrayVersion string
+	}{
+		{
+			name:        "Xray version with deprecated AddGeneralEvent",
+			xrayVersion: "3.115.0",
+		},
+		{
+			name:        "Xray version with new AddGeneralEvent",
+			xrayVersion: "3.116.0",
 		},
 	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockServer, analyticsService := createXscMockServerForGeneralEvent(t, tc.xrayVersion)
+			defer mockServer.Close()
 
-	err = analyticsService.UpdateGeneralEvent(finalizeEvent)
-	assert.NoError(t, err)
+			msi, err := analyticsService.AddGeneralEvent(initialEvent)
+			assert.NoError(t, err)
 
-	// Validate that the event's update sent and saved properly in XSC.
-	// We add suffix to the msi to enable the mock server to differentiate between the initial response to the final response
-	resp, err = analyticsService.GetGeneralEvent(msi + "-final")
-	assert.NoError(t, err)
-	assert.Equal(t, finalEvent, *resp)
+			// Validate that the event sent and saved properly in XSC.
+			resp, err := analyticsService.GetGeneralEvent(msi)
+			require.NoError(t, err)
+			assert.Equal(t, initialEvent, *resp)
+
+			finalizeEvent := services.XscAnalyticsGeneralEventFinalize{
+				MultiScanId: msi,
+				XscAnalyticsBasicGeneralEvent: services.XscAnalyticsBasicGeneralEvent{
+					EventStatus:          services.Completed,
+					TotalFindings:        10,
+					TotalIgnoredFindings: 5,
+					TotalScanDuration:    "15s",
+				},
+			}
+
+			err = analyticsService.UpdateGeneralEvent(finalizeEvent)
+			assert.NoError(t, err)
+
+			// Validate that the event's update sent and saved properly in XSC.
+			// We add suffix to the msi to enable the mock server to differentiate between the initial response to the final response
+			resp, err = analyticsService.GetGeneralEvent(msi + "-final")
+			assert.NoError(t, err)
+			assert.Equal(t, finalEvent, *resp)
+		})
+	}
 }
 
-func createXscMockServerForGeneralEvent(t *testing.T) (mockServer *httptest.Server, analyticsService *services.AnalyticsEventService) {
+func createXscMockServerForGeneralEvent(t *testing.T, xrayVersion string) (mockServer *httptest.Server, analyticsService *services.AnalyticsEventService) {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.Contains(r.RequestURI, "/xray/api/v1/system/version") && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
-			_, err := w.Write([]byte(utils.MinXrayVersionXscTransitionToXray))
+			_, err := w.Write([]byte("{\"xray_version\": \"" + xrayVersion + "\"}"))
 			assert.NoError(t, err)
 		case strings.Contains(r.RequestURI, "/xray/api/v1/xsc/event") && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
