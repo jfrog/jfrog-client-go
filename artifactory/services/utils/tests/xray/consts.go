@@ -1443,7 +1443,7 @@ var GitInfoContextWithMinimalRequiredFields = xscServices.XscGitInfoContext{
 	Source: xscServices.CommitContext{
 		GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
 		BranchName:           "feature/XRAY-123-cool-feature",
-		LastCommitHash:       "acc5e24e69a-d3c1-4022-62eb-69e4a1e5",
+		CommitHash:           "acc5e24e69a-d3c1-4022-62eb-69e4a1e5",
 	},
 }
 
