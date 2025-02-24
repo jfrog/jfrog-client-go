@@ -2,7 +2,6 @@ package tests
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xsc/services"
 	"github.com/jfrog/jfrog-client-go/xsc/services/utils"
@@ -67,7 +66,7 @@ func TestXscAddAndUpdateGeneralEvent(t *testing.T) {
 			mockServer, analyticsService := createXscMockServerForGeneralEvent(t, tc.xrayVersion)
 			defer mockServer.Close()
 
-			msi, err := analyticsService.AddGeneralEvent(initialEvent)
+			msi, err := analyticsService.AddGeneralEvent(initialEvent, tc.xrayVersion)
 			assert.NoError(t, err)
 
 			// Validate that the event sent and saved properly in XSC.
@@ -100,10 +99,6 @@ func TestXscAddAndUpdateGeneralEvent(t *testing.T) {
 func createXscMockServerForGeneralEvent(t *testing.T, xrayVersion string) (mockServer *httptest.Server, analyticsService *services.AnalyticsEventService) {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case strings.Contains(r.RequestURI, "/xray/api/v1/system/version") && r.Method == http.MethodGet:
-			w.WriteHeader(http.StatusOK)
-			_, err := w.Write([]byte(fmt.Sprintf(`{"xray_version": "%s", "xray_revision": "xxx"}`, xrayVersion)))
-			assert.NoError(t, err)
 		case strings.Contains(r.RequestURI, "/xray/api/v1/xsc/event") && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			_, err := w.Write([]byte(TestMultiScanIdResponse))
