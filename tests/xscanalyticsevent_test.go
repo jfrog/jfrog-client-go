@@ -63,7 +63,7 @@ func TestXscAddAndUpdateGeneralEvent(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockServer, analyticsService := createXscMockServerForGeneralEvent(t, tc.xrayVersion)
+			mockServer, analyticsService := createXscMockServerForGeneralEvent(t)
 			defer mockServer.Close()
 
 			msi, err := analyticsService.AddGeneralEvent(initialEvent, tc.xrayVersion)
@@ -96,7 +96,7 @@ func TestXscAddAndUpdateGeneralEvent(t *testing.T) {
 	}
 }
 
-func createXscMockServerForGeneralEvent(t *testing.T, xrayVersion string) (mockServer *httptest.Server, analyticsService *services.AnalyticsEventService) {
+func createXscMockServerForGeneralEvent(t *testing.T) (mockServer *httptest.Server, analyticsService *services.AnalyticsEventService) {
 	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.Contains(r.RequestURI, "/xray/api/v1/xsc/event") && r.Method == http.MethodPost:
