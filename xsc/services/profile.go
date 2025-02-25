@@ -32,7 +32,6 @@ func NewConfigurationProfileService(client *jfroghttpclient.JfrogHttpClient) *Co
 	return &ConfigurationProfileService{client: client}
 }
 
-// TODO eran about xray 3.116.x
 type ConfigProfile struct {
 	ProfileName    string        `json:"profile_name"`
 	GeneralConfig  GeneralConfig `json:"general_config,omitempty"`
