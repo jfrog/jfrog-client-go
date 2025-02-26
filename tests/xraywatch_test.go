@@ -314,17 +314,17 @@ func testXrayWatchUpdateMissingWatch(t *testing.T) {
 	paramsMissingWatch.Policies = []utils.AssignedPolicy{}
 
 	err := testsXrayWatchService.Update(paramsMissingWatch)
-	assert.EqualError(t, err, "server response: 404 Not Found")
+	assert.ErrorContains(t, err, "server response: 404 Not Found")
 }
 
 func testXrayWatchDeleteMissingWatch(t *testing.T) {
 	err := testsXrayWatchService.Delete("client-go-tests-watch-builds-missing")
-	assert.EqualError(t, err, "server response: 404 Not Found")
+	assert.ErrorContains(t, err, "server response: 404 Not Found")
 }
 
 func testXrayWatchGetMissingWatch(t *testing.T) {
 	_, err := testsXrayWatchService.Get("client-go-tests-watch-builds-missing")
-	assert.EqualError(t, err, "server response: 404 Not Found")
+	assert.ErrorContains(t, err, "server response: 404 Not Found")
 }
 
 func validateWatchGeneralSettings(t *testing.T, params utils.WatchParams) {

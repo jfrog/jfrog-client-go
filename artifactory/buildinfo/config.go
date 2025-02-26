@@ -10,6 +10,7 @@ type Configuration struct {
 	DryRun     bool
 	EnvInclude string
 	EnvExclude string
+	Overwrite  bool
 }
 
 func (config *Configuration) GetArtifactoryDetails() auth.ServiceDetails {
@@ -22,4 +23,8 @@ func (config *Configuration) SetArtifactoryDetails(artDetails auth.ServiceDetail
 
 func (config *Configuration) IsDryRun() bool {
 	return config.DryRun
+}
+
+func (cinfif *Configuration) DoOverwrite() bool {
+	return cinfif.Overwrite
 }
