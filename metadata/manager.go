@@ -8,6 +8,7 @@ import (
 
 type Manager interface {
 	GraphqlQuery(query []byte) ([]byte, error)
+	Client() *jfroghttpclient.JfrogHttpClient
 }
 
 type metadataManager struct {
@@ -30,6 +31,7 @@ func NewManager(config config.Config) (Manager, error) {
 		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
 		SetRetries(config.GetHttpRetries()).
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
+		SetHttpClient(config.GetHttpClient()).
 		Build()
 
 	return manager, err
