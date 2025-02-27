@@ -562,9 +562,38 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 		return nil, false, err
 	}
 
-	// Get build-info json from Artifactory.
-	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
 	restApi := path.Join("api/build/", name, number)
+	body, found, err := sendGetBuildInfo(restApi, projectKey, flags)
+	if err != nil || !found {
+		return nil, found, err
+	}
+
+	// Build BuildInfo struct from json.
+	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
+	if err = json.Unmarshal(body, publishedBuildInfo); err != nil {
+		return nil, true, err
+	}
+
+	return publishedBuildInfo, true, nil
+}
+
+func GetBuildRuns(buildName, projectKey string, flags CommonConf) (runs *buildinfo.BuildRuns, found bool, err error) {
+	restApi := path.Join("api/build/", buildName)
+	body, found, err := sendGetBuildInfo(restApi, projectKey, flags)
+	if err != nil || !found {
+		return nil, found, err
+	}
+
+	buildRuns := &buildinfo.BuildRuns{}
+	if err = json.Unmarshal(body, buildRuns); err != nil {
+		return nil, true, err
+	}
+
+	return buildRuns, true, nil
+}
+
+func sendGetBuildInfo(restApi, projectKey string, flags CommonConf) (body []byte, found bool, err error) {
+	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
 
 	queryParams := make(map[string]string)
 	if projectKey != "" {
@@ -578,6 +607,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 
 	httpClient := flags.GetJfrogHttpClient()
 	log.Debug("Getting build-info from:", requestFullUrl)
+
 	resp, body, _, err := httpClient.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
 		return nil, false, err
@@ -589,14 +619,7 @@ func GetBuildInfo(buildName, buildNumber, projectKey string, flags CommonConf) (
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, false, err
 	}
-
-	// Build BuildInfo struct from json.
-	publishedBuildInfo := &buildinfo.PublishedBuildInfo{}
-	if err = json.Unmarshal(body, publishedBuildInfo); err != nil {
-		return nil, true, err
-	}
-
-	return publishedBuildInfo, true, nil
+	return body, true, nil
 }
 
 // Recursively, aggregate all transitive builds of the input buildName and buildNumber.

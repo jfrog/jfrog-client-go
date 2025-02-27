@@ -15,6 +15,7 @@ import (
 )
 
 const async = "async"
+const operation = "operation"
 
 type ReleaseBundlesService struct {
 	client    *jfroghttpclient.JfrogHttpClient
@@ -70,8 +71,7 @@ func (rbs *ReleaseBundlesService) doGetOperation(operation ReleaseBundleOperatio
 }
 
 func prepareRequest(operation ReleaseBundleOperation, rbs *ReleaseBundlesService) (requestFullUrl string, httpClientDetails httputils.HttpClientDetails, err error) {
-	queryParams := distribution.GetProjectQueryParam(operation.getOperationParams().ProjectKey)
-	queryParams[async] = strconv.FormatBool(operation.getOperationParams().Async)
+	queryParams := buildQueryParams(operation.getOperationParams())
 	requestFullUrl, err = utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
 	if err != nil {
 		return
@@ -80,6 +80,15 @@ func prepareRequest(operation ReleaseBundleOperation, rbs *ReleaseBundlesService
 	rtUtils.AddSigningKeyNameHeader(operation.getSigningKeyName(), &httpClientDetails.Headers)
 	httpClientDetails.SetContentTypeApplicationJson()
 	return
+}
+
+func buildQueryParams(commonOptionalQueryParams CommonOptionalQueryParams) map[string]string {
+	params := distribution.GetProjectQueryParam(commonOptionalQueryParams.ProjectKey)
+	params[async] = strconv.FormatBool(commonOptionalQueryParams.Async)
+	if commonOptionalQueryParams.PromotionType != "" {
+		params[operation] = commonOptionalQueryParams.PromotionType
+	}
+	return params
 }
 
 func handleResponse(operation ReleaseBundleOperation, resp *http.Response, body []byte) (response []byte, err error) {
@@ -100,6 +109,7 @@ type ReleaseBundleDetails struct {
 }
 
 type CommonOptionalQueryParams struct {
-	ProjectKey string
-	Async      bool
+	ProjectKey    string
+	Async         bool
+	PromotionType string
 }

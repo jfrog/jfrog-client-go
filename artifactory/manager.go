@@ -204,6 +204,12 @@ func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.Build
 	return buildInfoService.PublishBuildInfo(build, projectKey)
 }
 
+func (sm *ArtifactoryServicesManagerImp) DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, numberOfBuildOccurrencesToBeDeleted int) error {
+	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
+	buildInfoService.DryRun = sm.config.IsDryRun()
+	return buildInfoService.DeleteBuildInfo(build, projectKey, numberOfBuildOccurrencesToBeDeleted)
+}
+
 func (sm *ArtifactoryServicesManagerImp) DistributeBuild(params services.BuildDistributionParams) error {
 	distributionService := services.NewDistributionService(sm.client)
 	distributionService.DryRun = sm.config.IsDryRun()
@@ -372,6 +378,11 @@ func (sm *ArtifactoryServicesManagerImp) GetConfig() config.Config {
 func (sm *ArtifactoryServicesManagerImp) GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error) {
 	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
 	return buildInfoService.GetBuildInfo(params)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetBuildRuns(params services.BuildInfoParams) (*buildinfo.BuildRuns, bool, error) {
+	buildInfoService := services.NewBuildInfoService(sm.config.GetServiceDetails(), sm.client)
+	return buildInfoService.GetBuildRuns(params)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateAPIKey() (string, error) {

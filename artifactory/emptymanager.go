@@ -41,6 +41,7 @@ type ArtifactoryServicesManager interface {
 	DeletePermissionTarget(permissionTargetName string) error
 	GetPermissionTarget(permissionTargetName string) (*services.PermissionTargetParams, error)
 	PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error)
+	DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, buildNumberFrequency int) error
 	DistributeBuild(params services.BuildDistributionParams) error
 	PromoteBuild(params services.PromotionParams) error
 	DiscardBuilds(params services.DiscardBuildsParams) error
@@ -64,6 +65,7 @@ type ArtifactoryServicesManager interface {
 	Ping() ([]byte, error)
 	GetConfig() config.Config
 	GetBuildInfo(params services.BuildInfoParams) (*buildinfo.PublishedBuildInfo, bool, error)
+	GetBuildRuns(params services.BuildInfoParams) (*buildinfo.BuildRuns, bool, error)
 	CreateAPIKey() (string, error)
 	RegenerateAPIKey() (string, error)
 	GetAPIKey() (string, error)
@@ -295,6 +297,10 @@ func (esm *EmptyArtifactoryServicesManager) GetBuildInfo(services.BuildInfoParam
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) GetBuildRuns(services.BuildInfoParams) (*buildinfo.BuildRuns, bool, error) {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) CreateAPIKey() (string, error) {
 	panic("Failed: Method is not implemented")
 }
@@ -472,6 +478,10 @@ func (esm *EmptyArtifactoryServicesManager) ImportReleaseBundle(string) error {
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(services.LeadFileParams) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DeleteBuildInfo(*buildinfo.BuildInfo, string, int) error {
 	panic("Failed: Method is not implemented")
 }
 

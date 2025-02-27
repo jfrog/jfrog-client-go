@@ -590,6 +590,7 @@ func GetXrayDetails() auth.ServiceDetails {
 	return xrayDetails
 }
 
+// TODO this can be deleted after old Xsc service is deprecated from all services
 func GetXscDetails() auth.ServiceDetails {
 	xscDetails := xscAuth.NewXscDetails()
 	xscDetails.SetUrl(clientutils.AddTrailingSlashIfNeeded(*XscUrl))
