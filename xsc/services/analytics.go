@@ -70,14 +70,11 @@ func (vs *AnalyticsEventService) AddGeneralEvent(event XscAnalyticsGeneralEvent,
 	var requestContent []byte
 	if err := utils.ValidateMinimumVersion(utils.Xray, xrayVersion, servicesutils.MinXrayVersionNewGitInfoContext); err != nil {
 		// use deprecated event struct
-		deprecatedEvent := convertToDeprecatedEventStruct(event)
-		requestContent, err = json.Marshal(deprecatedEvent)
-		if err != nil {
+		if requestContent, err = json.Marshal(convertToDeprecatedEventStruct(event)); err != nil {
 			return "", errorutils.CheckError(err)
 		}
 	} else {
-		requestContent, err = json.Marshal(event)
-		if err != nil {
+		if requestContent, err = json.Marshal(event); err != nil {
 			return "", errorutils.CheckError(err)
 		}
 	}
@@ -172,7 +169,8 @@ type XscAnalyticsGeneralEvent struct {
 }
 
 type XscGitInfoContext struct {
-	Source       CommitContext       `json:"source,omitempty"`
+	Source       CommitContext       `json:"source"`
+	Target       CommitContext       `json:"target,omitempty"`
 	PullRequest  *PullRequestContext `json:"pull_request,omitempty"`
 	GitProvider  string              `json:"git_provider,omitempty"`
 	Technologies []string            `json:"technologies,omitempty"`
@@ -191,7 +189,6 @@ type CommitContext struct {
 type PullRequestContext struct {
 	PullRequestId    int    `json:"pull_request_id,omitempty"`
 	PullRequestTitle string `json:"pull_request_title,omitempty"`
-	TargetBranchName string `json:"target_branch_name,omitempty"`
 }
 
 type XscAnalyticsGeneralEventFinalize struct {
