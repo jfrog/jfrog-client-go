@@ -170,7 +170,7 @@ type XscAnalyticsGeneralEvent struct {
 
 type XscGitInfoContext struct {
 	Source       CommitContext       `json:"source"`
-	Target       CommitContext       `json:"target,omitempty"`
+	Target       *CommitContext      `json:"target,omitempty"`
 	PullRequest  *PullRequestContext `json:"pull_request,omitempty"`
 	GitProvider  string              `json:"git_provider,omitempty"`
 	Technologies []string            `json:"technologies,omitempty"`
