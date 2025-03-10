@@ -14,10 +14,9 @@ import (
 )
 
 const (
-	// TODO eran update all CC min versions in frogbot and security
 	ConfigProfileMinXscVersion                = "1.11.0"
 	ConfigProfileByUrlMinXrayVersion          = "3.110.0"
-	ConfigProfileNewSchemaMinXrayVersion      = "3.116.0"
+	ConfigProfileNewSchemaMinXrayVersion      = "3.117.0"
 	xscConfigProfileByNameApi                 = "profile"
 	xscConfigProfileByUrlApi                  = "profile_repos"
 	xscDeprecatedConfigProfileByNameApiSuffix = "api/v1/" + xscConfigProfileByNameApi
