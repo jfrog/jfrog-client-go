@@ -28,7 +28,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.51.0"
+	Version     = "1.51.1"
 )
 
 const xrayDevVersion = "3.x-dev"
