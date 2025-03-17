@@ -14,6 +14,7 @@ const (
 	apiV1Suffix                       = "api/v1"
 	XscInXraySuffix                   = apiV1Suffix + xscSuffix
 	MinXrayVersionXscTransitionToXray = "3.107.13"
+	MinXrayVersionNewGitInfoContext   = "3.117.0"
 )
 
 // From Xray version 3.107.13, XSC is transitioning to Xray as inner service. This function will return compatible URL.

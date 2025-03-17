@@ -24,10 +24,10 @@ func (xs *XscInnerService) GetVersion() (string, error) {
 	return versionService.GetVersion()
 }
 
-func (xs *XscInnerService) AddAnalyticsGeneralEvent(event services.XscAnalyticsGeneralEvent) (string, error) {
+func (xs *XscInnerService) AddAnalyticsGeneralEvent(event services.XscAnalyticsGeneralEvent, xrayVersion string) (string, error) {
 	eventService := services.NewAnalyticsEventService(xs.client)
 	eventService.XrayDetails = xs.XrayDetails
-	return eventService.AddGeneralEvent(event)
+	return eventService.AddGeneralEvent(event, xrayVersion)
 }
 
 func (xs *XscInnerService) SendXscLogErrorRequest(errorLog *services.ExternalErrorLog) error {

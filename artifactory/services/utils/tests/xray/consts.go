@@ -1440,14 +1440,18 @@ const XscGitInfoResponse = `{"multi_scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001
 const XscGitInfoBadResponse = `"failed create git info request: git_repo_url field must contain value"`
 
 var GitInfoContextWithMinimalRequiredFields = xscServices.XscGitInfoContext{
-	GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
-	BranchName:           "feature/XRAY-123-cool-feature",
-	LastCommitHash:       "acc5e24e69a-d3c1-4022-62eb-69e4a1e5",
+	Source: xscServices.CommitContext{
+		GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
+		BranchName:           "feature/XRAY-123-cool-feature",
+		CommitHash:           "acc5e24e69a-d3c1-4022-62eb-69e4a1e5",
+	},
 }
 
 var GitInfoContextWithMissingFields = xscServices.XscGitInfoContext{
-	GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
-	BranchName:           "feature/XRAY-123-cool-feature",
+	Source: xscServices.CommitContext{
+		GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",
+		BranchName:           "feature/XRAY-123-cool-feature",
+	},
 }
 
 const TestMultiScanId = "3472b4e2-bddc-11ee-a9c9-acde48001122"
