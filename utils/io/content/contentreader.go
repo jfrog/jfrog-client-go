@@ -2,8 +2,10 @@ package content
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
+	"github.com/jfrog/gofrog/http/retryexecutor"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -13,6 +15,9 @@ import (
 	"sort"
 	"sync"
 )
+
+var downloadAttempts = 0
+var maxForcedAttempts = 4
 
 // Open and read JSON files, find the array key inside it and load its value into the memory in small chunks.
 // Currently, 'ContentReader' only support extracting a single value for a given key (arrayKey), other keys are ignored.
@@ -93,13 +98,30 @@ func (cr *ContentReader) Reset() {
 	cr.once = new(sync.Once)
 }
 
-// Cleanup the reader data.
+// Cleanup the reader data with retry
 func (cr *ContentReader) Close() error {
 	for _, filePath := range cr.filesPaths {
 		if filePath == "" {
 			continue
 		}
-		if err := errorutils.CheckError(os.Remove(filePath)); err != nil {
+		// Check if file exists before attempting to remove
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			log.Debug("File does not exist: %s", filePath)
+			continue
+		}
+		log.Debug("Attempting to remove file: %s", filePath)
+		executor := retryexecutor.RetryExecutor{
+			Context:                  context.Background(),
+			MaxRetries:               5,
+			RetriesIntervalMilliSecs: 100,
+			ErrorMessage:             "Retrying file removal",
+			LogMsgPrefix:             "File Removal",
+			ExecutionHandler: func() (bool, error) {
+				return false, errorutils.CheckError(os.Remove(filePath))
+			},
+		}
+		err := executor.Execute()
+		if err != nil {
 			return errors.New("Failed to close reader: " + err.Error())
 		}
 	}
