@@ -75,6 +75,7 @@ type ScanConfig struct {
 	IacScannerConfig             IacScannerConfig          `json:"iac_scanner_config,omitempty"`
 	ApplicationsScannerConfig    ApplicationsScannerConfig `json:"applications_scanner_config,omitempty"`
 	ServicesScannerConfig        ServicesScannerConfig     `json:"services_scanner_config,omitempty"`
+	MaliciousScannerConfig       MaliciousScannerConfig    `json:"malicious_scanner_config,omitempty"`
 }
 
 type SastScannerConfig struct {
@@ -82,6 +83,11 @@ type SastScannerConfig struct {
 	Language        string   `json:"language,omitempty"`
 	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
 	ExcludeRules    []string `json:"exclude_rules,omitempty"`
+}
+
+type MaliciousScannerConfig struct {
+	EnableMaliciousScan bool     `json:"enable_malicious_scan,omitempty"`
+	ExcludePatterns     []string `json:"exclude_patterns,omitempty"`
 }
 
 type SecretsScannerConfig struct {
