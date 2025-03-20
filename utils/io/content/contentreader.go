@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -12,7 +13,11 @@ import (
 	"reflect"
 	"sort"
 	"sync"
+	"time"
 )
+
+var downloadAttempts = 0
+var maxForcedAttempts = 4
 
 // Open and read JSON files, find the array key inside it and load its value into the memory in small chunks.
 // Currently, 'ContentReader' only support extracting a single value for a given key (arrayKey), other keys are ignored.
@@ -93,13 +98,43 @@ func (cr *ContentReader) Reset() {
 	cr.once = new(sync.Once)
 }
 
-// Cleanup the reader data.
+// Retry function with forced error simulation
+func retryOperation(operation func() error, attempts int, simulateError bool) error {
+	var lastErr error
+	for i := 0; i < attempts; i++ {
+		// Simulate an error condition for the first few attempts if `simulateError` is true and attempts are less than maxForcedAttempts
+		if simulateError && downloadAttempts < maxForcedAttempts {
+			lastErr = fmt.Errorf("forced error simulation at attempt %d", downloadAttempts+1)
+			downloadAttempts++
+		} else {
+			lastErr = operation()
+		}
+
+		if lastErr == nil {
+			log.Info("Operation succeeded at attempt %d", i+1)
+			return nil
+		}
+		log.Warn("Retry attempt %d failed: %v", i+1, lastErr)
+		time.Sleep(time.Millisecond * 100) // Adding a small delay between retries
+	}
+	log.Warn("All retry attempts failed. Returning the last error: %v", lastErr)
+	return lastErr
+}
+
+// Cleanup the reader data with retry
 func (cr *ContentReader) Close() error {
+	simulateError := false // Set to true in testing, and false in production
+
 	for _, filePath := range cr.filesPaths {
 		if filePath == "" {
 			continue
 		}
-		if err := errorutils.CheckError(os.Remove(filePath)); err != nil {
+		log.Info("Attempting to remove file: %s", filePath)
+		err := retryOperation(func() error {
+			return errorutils.CheckError(os.Remove(filePath))
+		}, 5, simulateError)
+
+		if err != nil {
 			return errors.New("Failed to close reader: " + err.Error())
 		}
 	}
