@@ -54,7 +54,7 @@ func (xws *WatchService) GetResourceWatches(gitRepo, project string) (watches *a
 	if err != nil {
 		return nil, errors.New("failed un-marshalling resources watches body")
 	}
-	log.Info(fmt.Sprintf("Found %d active watches", len(watches.GitRepositoryWatches)+len(watches.ProjectWatches)))
+	log.Info(fmt.Sprintf("Found %d active watches in the following resources - %s", len(watches.GitRepositoryWatches)+len(watches.ProjectWatches), getResourcesString(gitRepo, project)))
 	return
 }
 
