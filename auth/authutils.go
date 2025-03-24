@@ -17,6 +17,12 @@ type CreateTokenResponseData struct {
 	TokenId        string `json:"token_id,omitempty"`
 }
 
+type OidcTokenResponseData struct {
+	CommonTokenParams
+	IssuedTokenType string `json:"issued_token_type,omitempty"`
+	Username        string `json:"username,omitempty"`
+}
+
 type CommonTokenParams struct {
 	Scope        string `json:"scope,omitempty"`
 	AccessToken  string `json:"access_token,omitempty"`

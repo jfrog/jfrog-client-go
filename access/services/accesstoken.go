@@ -8,7 +8,6 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 )
 
@@ -99,12 +98,8 @@ func (ps *TokenService) handleUnauthenticated(params CreateTokenParams, httpDeta
 	return errorutils.CheckErrorf("cannot create access token without credentials")
 }
 
-func (ps *TokenService) ExchangeOidcToken(params CreateOidcTokenParams) (auth.CreateTokenResponseData, error) {
-	var tokenInfo auth.CreateTokenResponseData
-	// TODO remove this
-	log.Debug("this is full params:")
-	log.Debug(params)
-
+func (ps *TokenService) ExchangeOidcToken(params CreateOidcTokenParams) (auth.OidcTokenResponseData, error) {
+	var tokenInfo auth.OidcTokenResponseData
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	httpDetails.SetContentTypeApplicationJson()
 	requestContent, err := json.Marshal(params)
@@ -116,9 +111,6 @@ func (ps *TokenService) ExchangeOidcToken(params CreateOidcTokenParams) (auth.Cr
 	if err != nil {
 		return tokenInfo, err
 	}
-	// TODO remove logs
-	log.Debug("this is full response:")
-	log.Debug(string(body))
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return tokenInfo, err
 	}
