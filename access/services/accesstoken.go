@@ -101,6 +101,10 @@ func (ps *TokenService) handleUnauthenticated(params CreateTokenParams, httpDeta
 
 func (ps *TokenService) ExchangeOidcToken(params CreateOidcTokenParams) (auth.CreateTokenResponseData, error) {
 	var tokenInfo auth.CreateTokenResponseData
+	// TODO remove this
+	log.Debug("this is full params:")
+	log.Debug(params)
+
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	httpDetails.SetContentTypeApplicationJson()
 	requestContent, err := json.Marshal(params)
