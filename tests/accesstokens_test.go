@@ -15,6 +15,20 @@ func TestAccessTokens(t *testing.T) {
 	t.Run("createAccessToken", testCreateRefreshableToken)
 	t.Run("createAccessTokenWithReference", testAccessTokenWithReference)
 	t.Run("refreshToken", testRefreshTokenTest)
+	t.Run("oidcTokenExchange", testExchangeOidcToken)
+}
+
+func testExchangeOidcToken(t *testing.T) {
+	initAccessTest(t)
+	// Setup
+	params := services.CreateOidcTokenParams{
+		GrantType: "authorization_code",
+	}
+	// Execute
+	response, err := testsAccessTokensService.ExchangeOidcToken(params)
+	// Verify
+	assert.NoError(t, err)
+	assert.NotNil(t, response)
 }
 
 func testCreateRefreshableToken(t *testing.T) {
