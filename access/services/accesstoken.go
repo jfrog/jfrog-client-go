@@ -12,8 +12,10 @@ import (
 )
 
 // #nosec G101 -- False positive - no hardcoded credentials.
-const tokensApi = "api/v1/tokens"
-const oidcTokensApi = "api/v1/oidc/token"
+const (
+	tokensApi     = "api/v1/tokens"
+	oidcTokensApi = "api/v1/oidc/token"
+)
 
 type TokenService struct {
 	client         *jfroghttpclient.JfrogHttpClient
@@ -112,7 +114,7 @@ func (ps *TokenService) ExchangeOidcToken(params CreateOidcTokenParams) (auth.Oi
 		return tokenInfo, err
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return tokenInfo, err
+		return tokenInfo, fmt.Errorf("failed to exchange OIDC token: %w", err)
 	}
 	err = json.Unmarshal(body, &tokenInfo)
 	return tokenInfo, errorutils.CheckError(err)
