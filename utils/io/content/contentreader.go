@@ -16,9 +16,6 @@ import (
 	"sync"
 )
 
-var downloadAttempts = 0
-var maxForcedAttempts = 4
-
 // Open and read JSON files, find the array key inside it and load its value into the memory in small chunks.
 // Currently, 'ContentReader' only support extracting a single value for a given key (arrayKey), other keys are ignored.
 // The value must be of type array.
