@@ -30,7 +30,6 @@ const (
 	token         = "token"
 	partUrl       = "http://dummy-url-part"
 	sha1          = "sha1"
-	nodeId        = "nodeId"
 	checksumToken = "checksumToken"
 )
 
