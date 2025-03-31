@@ -20,14 +20,15 @@ import (
 )
 
 const (
-	localPath     = "localPath"
-	repoKey       = "repoKey"
-	repoPath      = "repoPath"
-	partSize      = SizeGiB
-	partSizeMB    = 1024
-	partNumber    = 2
-	splitCount    = 3
-	token         = "token"
+	localPath  = "localPath"
+	repoKey    = "repoKey"
+	repoPath   = "repoPath"
+	partSize   = SizeGiB
+	partSizeMB = 1024
+	partNumber = 2
+	splitCount = 3
+	token      = "token"
+	// jfrog-ignore - test url
 	partUrl       = "http://dummy-url-part"
 	sha1          = "sha1"
 	checksumToken = "checksumToken"
