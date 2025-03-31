@@ -13,7 +13,9 @@ import (
 
 // #nosec G101 -- False positive - no hardcoded credentials.
 const (
-	tokensApi     = "api/v1/tokens"
+	// jfrog-ignore - not a real token
+	tokensApi = "api/v1/tokens"
+	// jfrog-ignore - not a real token
 	oidcTokensApi = "api/v1/oidc/token"
 )
 
