@@ -8,6 +8,7 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 )
 
@@ -33,16 +34,18 @@ type CreateTokenParams struct {
 }
 
 type CreateOidcTokenParams struct {
-	GrantType        string `json:"grant_type,omitempty"`
-	SubjectTokenType string `json:"subject_token_type,omitempty"`
-	OidcTokenID      string `json:"subject_token,omitempty"`
-	ProviderName     string `json:"provider_name,omitempty"`
-	ProjectKey       string `json:"project_key,omitempty"`
-	JobId            string `json:"job_id,omitempty"`
-	RunId            string `json:"run_id,omitempty"`
-	Repo             string `json:"repo,omitempty"`
-	ApplicationKey   string `json:"application_key,omitempty"`
-	Audience         string `json:"audience,omitempty"`
+	GrantType             string `json:"grant_type,omitempty"`
+	SubjectTokenType      string `json:"subject_token_type,omitempty"`
+	OidcTokenID           string `json:"subject_token,omitempty"`
+	ProviderName          string `json:"provider_name,omitempty"`
+	ProjectKey            string `json:"project_key,omitempty"`
+	JobId                 string `json:"job_id,omitempty"`
+	RunId                 string `json:"run_id,omitempty"`
+	Repo                  string `json:"repo,omitempty"`
+	ApplicationKey        string `json:"application_key,omitempty"`
+	Audience              string `json:"audience,omitempty"`
+	IdentityMappingName   string `json:"identity_mapping_name,omitempty"`
+	IncludeReferenceToken *bool  `json:"include_reference_token,omitempty"`
 }
 
 func NewCreateTokenParams(params CreateTokenParams) CreateTokenParams {
@@ -106,7 +109,9 @@ func (ps *TokenService) ExchangeOidcToken(params CreateOidcTokenParams) (auth.Oi
 	var tokenInfo auth.OidcTokenResponseData
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	httpDetails.SetContentTypeApplicationJson()
+	log.Info(params)
 	requestContent, err := json.Marshal(params)
+	log.Info(string(requestContent))
 	if errorutils.CheckError(err) != nil {
 		return tokenInfo, err
 	}

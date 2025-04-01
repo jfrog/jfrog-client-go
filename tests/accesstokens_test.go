@@ -82,16 +82,18 @@ func testExchangeOidcToken(t *testing.T) {
 
 	// Define OIDC token parameters
 	params := services.CreateOidcTokenParams{
-		GrantType:        "authorization_code",
-		SubjectTokenType: "Generic",
-		OidcTokenID:      "mockOidcTokenID",
-		ProviderName:     "mockProviderName",
-		ProjectKey:       "mockProjectKey",
-		JobId:            "mockJobId",
-		RunId:            "mockRunId",
-		Repo:             "mockRepo",
-		ApplicationKey:   "mockApplicationKey",
-		Audience:         "mockAudience",
+		GrantType:             "authorization_code",
+		SubjectTokenType:      "Generic",
+		OidcTokenID:           "mockOidcTokenID",
+		ProviderName:          "mockProviderName",
+		ProjectKey:            "mockProjectKey",
+		JobId:                 "mockJobId",
+		RunId:                 "mockRunId",
+		Repo:                  "mockRepo",
+		ApplicationKey:        "mockApplicationKey",
+		Audience:              "mockAudience",
+		IdentityMappingName:   "mockIdentityMappingName",
+		IncludeReferenceToken: utils.Pointer(false),
 	}
 
 	// Execute ExchangeOidcToken
