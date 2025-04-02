@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/jfrog/gofrog/http/retryexecutor"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -95,31 +96,34 @@ func (cr *ContentReader) Reset() {
 	cr.once = new(sync.Once)
 }
 
+func removeFileWithRetry(filePath string) error {
+	// Check if file exists before attempting to remove
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		log.Debug("File does not exist: %s", filePath)
+		return nil
+	}
+	log.Debug("Attempting to remove file: %s", filePath)
+	executor := retryexecutor.RetryExecutor{
+		Context:                  context.Background(),
+		MaxRetries:               5,
+		RetriesIntervalMilliSecs: 100,
+		ErrorMessage:             "Failed to remove file",
+		LogMsgPrefix:             "Attempting removal",
+		ExecutionHandler: func() (bool, error) {
+			return false, errorutils.CheckError(os.Remove(filePath))
+		},
+	}
+	return executor.Execute()
+}
+
 // Cleanup the reader data with retry
 func (cr *ContentReader) Close() error {
 	for _, filePath := range cr.filesPaths {
 		if filePath == "" {
 			continue
 		}
-		// Check if file exists before attempting to remove
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			log.Debug("File does not exist: %s", filePath)
-			continue
-		}
-		log.Debug("Attempting to remove file: %s", filePath)
-		executor := retryexecutor.RetryExecutor{
-			Context:                  context.Background(),
-			MaxRetries:               5,
-			RetriesIntervalMilliSecs: 100,
-			ErrorMessage:             "Retrying file removal",
-			LogMsgPrefix:             "File Removal",
-			ExecutionHandler: func() (bool, error) {
-				return false, errorutils.CheckError(os.Remove(filePath))
-			},
-		}
-		err := executor.Execute()
-		if err != nil {
-			return errors.New("Failed to close reader: " + err.Error())
+		if err := removeFileWithRetry(filePath); err != nil {
+			return fmt.Errorf("failed to close reader: %w", err)
 		}
 	}
 	cr.filesPaths = nil
