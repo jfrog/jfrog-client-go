@@ -124,7 +124,7 @@
       - [Get Web Login Authentication Token](#get-web-login-authentication-token)
       - [Creating an Access Token](#creating-an-access-token)
       - [Refreshing an Access Token](#refreshing-an-access-token)
-      - [Exchanging an OIDC Access Token](#exchaning-an-oidc-access-token)
+      - [Exchanging an OIDC Access Token](#exchanging-an-oidc-access-token)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
