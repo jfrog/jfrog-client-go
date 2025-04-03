@@ -8,7 +8,6 @@ import (
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 )
 
@@ -109,9 +108,7 @@ func (ps *TokenService) ExchangeOidcToken(params CreateOidcTokenParams) (auth.Oi
 	var tokenInfo auth.OidcTokenResponseData
 	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
 	httpDetails.SetContentTypeApplicationJson()
-	log.Info(params)
 	requestContent, err := json.Marshal(params)
-	log.Info(string(requestContent))
 	if errorutils.CheckError(err) != nil {
 		return tokenInfo, err
 	}
