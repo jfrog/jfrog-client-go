@@ -124,6 +124,7 @@
       - [Get Web Login Authentication Token](#get-web-login-authentication-token)
       - [Creating an Access Token](#creating-an-access-token)
       - [Refreshing an Access Token](#refreshing-an-access-token)
+      - [Exchanging an OIDC Access Token](#exchaning-an-oidc-access-token)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -1655,6 +1656,25 @@ params := accessServices.CreateTokenParams{}
 params.RefreshToken = "<refresh token>"
 
 results, err := accessManager.RefreshToken(params)
+```
+
+### exchanging-an-oidc-access-token
+
+```go
+params := services.CreateOidcTokenParams{
+  GrantType:        "urn:ietf:params:oauth:grant-type:token-exchange", // The type of grant being requested
+  SubjectTokenType: "urn:ietf:params:oauth:token-type:id_token",       // The type of token being exchanged
+  OidcTokenID:      "<oidc token id aka subject_token>",               // The ID of the OIDC token to be exchanged
+  ProjectKey:       "<JFrog project key>",                             // Optional: Key to link the token to a specific project
+  ApplicationKey:   "<application key>",                               // Optional: Key to link the token to a specific application
+  RunId:            "<ci run id>",                                     // Optional: ID to link the token to a specific run
+  JobId:            "<ci job id>",                                     // Optional: ID to link the token to a specific job
+  Repo:             "<source code repository>",                        // Optional: Repository associated with the token
+  Audience:         "<audience>",                                      // The intended audience of the token
+  ProviderName:     "<provider name>",                                 // The name of the OIDC provider
+}
+
+response, err = servicesManager.ExchangeOidcToken(params)
 ```
 
 ## Distribution APIs
