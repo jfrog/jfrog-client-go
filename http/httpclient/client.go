@@ -712,7 +712,7 @@ func validateChecksum(expectedSha string, actualSha hash.Hash, fileName string) 
 func handleExpectedSha(expectedSha1, expectedSha256 string) (expectedSha string, actualSha hash.Hash) {
 	if len(expectedSha1) > 0 {
 		expectedSha = expectedSha1
-		//#nosec G401 -- Sha1 is supported by Artifactory.
+		//#nosec G401 jfrog-ignore -- Sha1 is supported by Artifactory.
 		actualSha = sha1.New()
 	} else if len(expectedSha256) > 0 {
 		expectedSha = expectedSha256

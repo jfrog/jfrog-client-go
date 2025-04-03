@@ -1,13 +1,13 @@
 module github.com/jfrog/jfrog-client-go
 
-go 1.22.9
+go 1.23.7
 
 require (
-	github.com/ProtonMail/go-crypto v1.1.5
+	github.com/ProtonMail/go-crypto v1.1.6
 	github.com/buger/jsonparser v1.1.1
-	github.com/forPelevin/gomoji v1.2.0
-	github.com/go-git/go-git/v5 v5.13.2
-	github.com/golang-jwt/jwt/v4 v4.5.1
+	github.com/forPelevin/gomoji v1.3.0
+	github.com/go-git/go-git/v5 v5.14.0
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/gookit/color v1.5.4
 	github.com/jfrog/archiver/v3 v3.6.1
 	github.com/jfrog/build-info-go v1.10.10
@@ -15,9 +15,9 @@ require (
 	github.com/minio/sha256-simd v1.0.1
 	github.com/stretchr/testify v1.10.0
 	github.com/xanzy/ssh-agent v0.3.3
-	golang.org/x/crypto v0.32.0
-	golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c
-	golang.org/x/term v0.29.0
+	golang.org/x/crypto v0.36.0
+	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
+	golang.org/x/term v0.30.0
 )
 
 require (
@@ -49,9 +49,9 @@ require (
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
