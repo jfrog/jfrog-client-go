@@ -137,3 +137,9 @@ func (sm *AccessServicesManager) GetLoginAuthenticationToken(uuid string) (auth.
 	loginService.ServiceDetails = sm.config.GetServiceDetails()
 	return loginService.GetLoginAuthenticationToken(uuid)
 }
+
+func (sm *AccessServicesManager) ExchangeOidcToken(params services.CreateOidcTokenParams) (auth.OidcTokenResponseData, error) {
+	tokenService := services.NewTokenService(sm.client)
+	tokenService.ServiceDetails = sm.config.GetServiceDetails()
+	return tokenService.ExchangeOidcToken(params)
+}
