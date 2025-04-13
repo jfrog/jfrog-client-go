@@ -559,3 +559,15 @@ func appendFolderSuffix(folderPath string) string {
 	}
 	return folderPath
 }
+
+func ConvertArtifactsSearchDetailsToBuildInfoArtifacts(artifactsDetailsReader *content.ContentReader) ([]buildinfo.Artifact, error) {
+	var buildArtifacts []buildinfo.Artifact
+	for artifactSearchDetails := new(ResultItem); artifactsDetailsReader.NextRecord(artifactSearchDetails) == nil; artifactSearchDetails = new(ResultItem) {
+		artifact := artifactSearchDetails.ToArtifact()
+		if i := strings.LastIndex(artifact.Name, "."); i != -1 {
+			artifact.Type = artifact.Name[i+1:]
+		}
+		buildArtifacts = append(buildArtifacts, artifact)
+	}
+	return buildArtifacts, artifactsDetailsReader.GetError()
+}
