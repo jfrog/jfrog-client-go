@@ -12,7 +12,12 @@ import (
 )
 
 // #nosec G101 -- False positive - no hardcoded credentials.
-const tokensApi = "api/v1/tokens"
+const (
+	// jfrog-ignore - not a real token
+	tokensApi = "api/v1/tokens"
+	// jfrog-ignore - not a real token
+	oidcTokensApi = "api/v1/oidc/token"
+)
 
 type TokenService struct {
 	client         *jfroghttpclient.JfrogHttpClient
@@ -25,6 +30,21 @@ type CreateTokenParams struct {
 	Username              string `json:"username,omitempty"`
 	ProjectKey            string `json:"project_key,omitempty"`
 	Description           string `json:"description,omitempty"`
+}
+
+type CreateOidcTokenParams struct {
+	GrantType             string `json:"grant_type,omitempty"`
+	SubjectTokenType      string `json:"subject_token_type,omitempty"`
+	OidcTokenID           string `json:"subject_token,omitempty"`
+	ProviderName          string `json:"provider_name,omitempty"`
+	ProjectKey            string `json:"project_key,omitempty"`
+	JobId                 string `json:"job_id,omitempty"`
+	RunId                 string `json:"run_id,omitempty"`
+	Repo                  string `json:"repo,omitempty"`
+	ApplicationKey        string `json:"application_key,omitempty"`
+	Audience              string `json:"audience,omitempty"`
+	IdentityMappingName   string `json:"identity_mapping_name,omitempty"`
+	IncludeReferenceToken *bool  `json:"include_reference_token,omitempty"`
 }
 
 func NewCreateTokenParams(params CreateTokenParams) CreateTokenParams {
@@ -82,6 +102,26 @@ func (ps *TokenService) handleUnauthenticated(params CreateTokenParams, httpDeta
 		return nil
 	}
 	return errorutils.CheckErrorf("cannot create access token without credentials")
+}
+
+func (ps *TokenService) ExchangeOidcToken(params CreateOidcTokenParams) (auth.OidcTokenResponseData, error) {
+	var tokenInfo auth.OidcTokenResponseData
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	httpDetails.SetContentTypeApplicationJson()
+	requestContent, err := json.Marshal(params)
+	if errorutils.CheckError(err) != nil {
+		return tokenInfo, err
+	}
+	url := fmt.Sprintf("%s%s", ps.ServiceDetails.GetUrl(), oidcTokensApi)
+	resp, body, err := ps.client.SendPost(url, requestContent, &httpDetails)
+	if err != nil {
+		return tokenInfo, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return tokenInfo, fmt.Errorf("failed to exchange OIDC token: %w", err)
+	}
+	err = json.Unmarshal(body, &tokenInfo)
+	return tokenInfo, errorutils.CheckError(err)
 }
 
 func prepareForRefresh(p CreateTokenParams) (*CreateTokenParams, error) {

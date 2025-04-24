@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -16,21 +17,20 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/utils/tests"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/rand"
 )
 
 const (
-	localPath     = "localPath"
-	repoKey       = "repoKey"
-	repoPath      = "repoPath"
-	partSize      = SizeGiB
-	partSizeMB    = 1024
-	partNumber    = 2
-	splitCount    = 3
-	token         = "token"
+	localPath  = "localPath"
+	repoKey    = "repoKey"
+	repoPath   = "repoPath"
+	partSize   = SizeGiB
+	partSizeMB = 1024
+	partNumber = 2
+	splitCount = 3
+	token      = "token"
+	// jfrog-ignore - test url
 	partUrl       = "http://dummy-url-part"
 	sha1          = "sha1"
-	nodeId        = "nodeId"
 	checksumToken = "checksumToken"
 )
 

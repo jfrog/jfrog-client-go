@@ -135,7 +135,7 @@ func (jc *HttpClient) Send(method, url string, content []byte, followRedirect, c
 			if err != nil {
 				if strings.Contains(err.Error(), "unsupported protocol scheme") {
 					// Wrong URL, so no need to retry
-					return false, fmt.Errorf("%w\nThe recieved error indicats an invalid URL: %q, Please ensure the URL includes a valid scheme like 'http://' or 'https://'.", err, url)
+					return false, fmt.Errorf("%w\nThe received error indicates an invalid URL: %q, Please ensure the URL includes a valid scheme like 'http://' or 'https://'.", err, url)
 				}
 				return true, err
 			}
@@ -712,7 +712,7 @@ func validateChecksum(expectedSha string, actualSha hash.Hash, fileName string) 
 func handleExpectedSha(expectedSha1, expectedSha256 string) (expectedSha string, actualSha hash.Hash) {
 	if len(expectedSha1) > 0 {
 		expectedSha = expectedSha1
-		//#nosec G401 -- Sha1 is supported by Artifactory.
+		//#nosec G401 jfrog-ignore -- Sha1 is supported by Artifactory.
 		actualSha = sha1.New()
 	} else if len(expectedSha256) > 0 {
 		expectedSha = expectedSha256

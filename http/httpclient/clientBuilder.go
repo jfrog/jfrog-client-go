@@ -105,7 +105,7 @@ func (builder *httpClientBuilder) Build() (*HttpClient, error) {
 	if builder.certificatesDirPath == "" {
 		transport = builder.createDefaultHttpTransport()
 		//#nosec G402 -- Insecure TLS allowed here.
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: builder.insecureTls}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: builder.insecureTls, MinVersion: tls.VersionTLS12}
 	} else {
 		transport, err = cert.GetTransportWithLoadedCert(builder.certificatesDirPath, builder.insecureTls, builder.createDefaultHttpTransport())
 		if err != nil {
