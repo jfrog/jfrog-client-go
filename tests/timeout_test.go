@@ -1,13 +1,15 @@
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/evidence"
-	"github.com/jfrog/jfrog-client-go/evidence/services"
-	"github.com/jfrog/jfrog-client-go/metadata"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/evidence"
+	"github.com/jfrog/jfrog-client-go/evidence/services"
+	"github.com/jfrog/jfrog-client-go/metadata"
+	"github.com/jfrog/jfrog-client-go/onemodel"
 
 	"github.com/jfrog/jfrog-client-go/access"
 	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
@@ -25,6 +27,7 @@ import (
 	lifecycleAuth "github.com/jfrog/jfrog-client-go/lifecycle/auth"
 	lifecycleServices "github.com/jfrog/jfrog-client-go/lifecycle/services"
 	metadataAuth "github.com/jfrog/jfrog-client-go/metadata/auth"
+	onemodelAuth "github.com/jfrog/jfrog-client-go/onemodel/auth"
 	pipelinesAuth "github.com/jfrog/jfrog-client-go/pipelines/auth"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/utils/tests"
@@ -51,6 +54,7 @@ func TestTimeout(t *testing.T) {
 	t.Run("testXrayTimeout", testXrayTimeout)
 	t.Run("testEvidenceTimeout", testEvidenceTimeout)
 	t.Run("testMetadataTimeout", testMetadataTimeout)
+	t.Run("testOnemodelTimeout", testOnemodelTimeout)
 }
 
 func testAccessTimeout(t *testing.T) {
@@ -148,6 +152,23 @@ func testMetadataTimeout(t *testing.T) {
 	details := metadataAuth.NewMetadataDetails()
 	details.SetUrl(url)
 	servicesManager, err := metadata.NewManager(createServiceConfigWithTimeout(t, details))
+	assert.NoError(t, err)
+
+	query := []byte("query body")
+	// Expect timeout
+	_, err = servicesManager.GraphqlQuery(query)
+	assert.ErrorContains(t, err, "context deadline exceeded")
+}
+
+func testOnemodelTimeout(t *testing.T) {
+	// Create mock server
+	url, cleanup := createSleepyRequestServer()
+	defer cleanup()
+
+	// Create services manager configuring to work with the mock server
+	details := onemodelAuth.NewOnemodelDetails()
+	details.SetUrl(url)
+	servicesManager, err := onemodel.NewManager(createServiceConfigWithTimeout(t, details))
 	assert.NoError(t, err)
 
 	query := []byte("query body")
