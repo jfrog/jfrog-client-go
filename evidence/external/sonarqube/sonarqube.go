@@ -1,18 +1,16 @@
 package sonarqube
 
 import (
-	"bufio"
-	"errors"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
-	"strings"
 	"time"
 )
 
 type SonarQube struct {
-	componentName string
+	Proxy string
 	ServiceConfig
 }
 
@@ -20,28 +18,15 @@ type ServiceConfig struct {
 	url                  string
 	taskAPIPath          string
 	projectStatusAPIPath string
-	auth                 Authentication
 }
 
-type Authentication struct {
-	AccessToken string
-}
-
-func NewSonarQubeEvidence() *SonarQube {
-	sonarQubeURL := os.Getenv("JF_SONARQUBE_URL")
-	componentName := os.Getenv("JF_SONARQUBE_COMPONENT_NAME")
-
+func NewSonarQubeEvidence(sonarQubeURL, proxy string) *SonarQube {
 	return &SonarQube{
-		componentName: componentName,
+		Proxy: proxy,
 		ServiceConfig: ServiceConfig{
-			url: sonarQubeURL,
-			//apiPath: "/api/measures/component", // Example API path
-			//apiPath: "/api/project_analyses/search", // Example API path
-			taskAPIPath:          "/api/ce/task", // Example API path
+			url:                  sonarQubeURL,
+			taskAPIPath:          "/api/ce/task",
 			projectStatusAPIPath: "/api/qualitygates/project_status",
-			auth: Authentication{
-				AccessToken: "",
-			},
 		},
 	}
 }
@@ -52,62 +37,42 @@ func (sqe *SonarQube) createQueryParam(params map[string]string, key, value stri
 		return params
 	}
 	return map[string]string{
-		//"metricKeys": "coverage,bugs,vulnerabilities",
-		//"component":  sqe.componentName,
-		//"project":     sqe.componentName,
-		//"buildString": "mvn-sonar-2",
 		key: value,
 	}
 }
 
-func getCeTaskUrlFromFile(filePath string) (string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		panic("Failed to open file: " + err.Error())
+func createHttpClient(proxy string) *http.Client {
+	transport := &http.Transport{
+		MaxIdleConns:      10,
+		IdleConnTimeout:   30 * time.Second,
+		DisableKeepAlives: false,
 	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "ceTaskUrl=") {
-			taskIDs := strings.Split(line, "?id=")
-			if len(taskIDs) < 2 {
-				log.Error("Invalid ceTaskUrl format in file")
-				return "", errors.New("invalid ceTaskUrl format in file")
-			}
-			return strings.Split(line, "?id=")[1], nil
+	if proxy == "" {
+		return &http.Client{
+			Timeout:   30 * time.Second,
+			Transport: transport,
+		}
+	} else {
+		proxyURL, err := url.Parse(proxy)
+		if err != nil {
+			log.Error("Failed to parse proxy URL: " + err.Error())
+			return nil
+		}
+		transport.Proxy = http.ProxyURL(proxyURL)
+		return &http.Client{
+			Timeout:   30 * time.Second,
+			Transport: transport,
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		panic("Error reading file: " + err.Error())
-	}
-
-	log.Error("ceTaskUrl not found in file")
-	return "", errors.New("ceTaskUrl not found in file")
-}
-
-func createHttpClient() *http.Client {
-	// Create a new HTTP client with custom settings
-	client := &http.Client{
-		Timeout: 30 * time.Second, // Set a timeout for requests
-		Transport: &http.Transport{
-			MaxIdleConns:      10,               // Maximum idle connections
-			IdleConnTimeout:   30 * time.Second, // Idle connection timeout
-			DisableKeepAlives: false,            // Enable keep-alive
-		},
-	}
-	return client
 }
 
 func (sqe *SonarQube) GetSonarQubeProjectStatus(analysisID string) ([]byte, error) {
 	log.Debug("Getting sonarqube project status for analysis: " + analysisID)
 	queryParams := sqe.createQueryParam(nil, "analysisId", analysisID)
-	url := sqe.ServiceConfig.url + sqe.ServiceConfig.projectStatusAPIPath
-	log.Debug("SonarQube URL: " + url)
+	sonarServerURL := sqe.ServiceConfig.url + sqe.ServiceConfig.projectStatusAPIPath
+	log.Debug("SonarQube URL: " + sonarServerURL)
 	// Create a new HTTP request
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", sonarServerURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -117,11 +82,16 @@ func (sqe *SonarQube) GetSonarQubeProjectStatus(analysisID string) ([]byte, erro
 		q.Add(key, value)
 	}
 	req.URL.RawQuery = q.Encode()
-	resp, bytes, err := sqe.sendRequestUsingSonarQubeToken(req)
+	resp, bytes, err := sqe.sendRequestUsingSonarQubeToken(req, sqe.Proxy)
 	if err != nil {
 		return bytes, err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Error("Failed to close response body: " + err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -129,17 +99,12 @@ func (sqe *SonarQube) GetSonarQubeProjectStatus(analysisID string) ([]byte, erro
 	return body, nil
 }
 
-func (sqe *SonarQube) CollectSonarQubePredicate() ([]byte, error) {
-	taskID, err := getCeTaskUrlFromFile("target/sonar/report-task.txt")
-	if err != nil {
-		log.Error("Failed to get ceTaskUrl: " + err.Error())
-		return nil, err
-	}
+func (sqe *SonarQube) CollectSonarQubePredicate(taskID string) ([]byte, error) {
 	queryParams := sqe.createQueryParam(nil, "id", taskID)
-	url := sqe.ServiceConfig.url + sqe.ServiceConfig.taskAPIPath
+	sonarServerURL := sqe.ServiceConfig.url + sqe.ServiceConfig.taskAPIPath
 
 	// Create a new HTTP request
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", sonarServerURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -150,25 +115,31 @@ func (sqe *SonarQube) CollectSonarQubePredicate() ([]byte, error) {
 	}
 	req.URL.RawQuery = q.Encode()
 
-	resp, bytes, err := sqe.sendRequestUsingSonarQubeToken(req)
+	resp, bytes, err := sqe.sendRequestUsingSonarQubeToken(req, sqe.Proxy)
 	if err != nil {
 		return bytes, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Error("Failed to close response body: " + err.Error())
+		}
+	}(resp.Body)
 
 	body, err := io.ReadAll(resp.Body)
+	log.Debug("SonarQube response: " + string(body))
 	if err != nil {
 		return nil, err
 	}
 	return body, nil
 }
 
-func (sqe *SonarQube) sendRequestUsingSonarQubeToken(req *http.Request) (*http.Response, []byte, error) {
+func (sqe *SonarQube) sendRequestUsingSonarQubeToken(req *http.Request, proxy string) (*http.Response, []byte, error) {
 	// Add Authorization header
-	sonarQubeToken := os.Getenv("JF_SONARQUBE_TOKEN")
+	sonarQubeToken := os.Getenv("JF_SONARQUBE_ACCESS_TOKEN")
 	req.Header.Set("Authorization", "Bearer "+sonarQubeToken)
-	httpClient := createHttpClient()
+	httpClient := createHttpClient(proxy)
 
 	// Send the request using the standard HTTP client
 	resp, err := httpClient.Do(req)

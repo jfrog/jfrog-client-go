@@ -41,12 +41,12 @@ func (esm *EvidenceServicesManager) UploadEvidence(evidenceDetails services.Evid
 	return evidenceService.UploadEvidence(evidenceDetails)
 }
 
-func (esm *EvidenceServicesManager) CreateSonarQubeEvidence() ([]byte, error) {
-	sonarqubeReport := sonarqube.NewSonarQubeEvidence()
-	return sonarqubeReport.CollectSonarQubePredicate()
+func (esm *EvidenceServicesManager) CreateSonarQubeEvidence(taskID, sonarQubeURL, proxy string) ([]byte, error) {
+	sonarqubeReport := sonarqube.NewSonarQubeEvidence(sonarQubeURL, proxy)
+	return sonarqubeReport.CollectSonarQubePredicate(taskID)
 }
 
-func (esm *EvidenceServicesManager) GetSonarQubeProjectStatus(analysisID string) ([]byte, error) {
-	sonarqubeReport := sonarqube.NewSonarQubeEvidence()
+func (esm *EvidenceServicesManager) GetSonarQubeProjectStatus(analysisID, sonarQubeURL, proxy string) ([]byte, error) {
+	sonarqubeReport := sonarqube.NewSonarQubeEvidence(sonarQubeURL, proxy)
 	return sonarqubeReport.GetSonarQubeProjectStatus(analysisID)
 }
