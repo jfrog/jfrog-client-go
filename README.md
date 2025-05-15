@@ -257,6 +257,13 @@
       - [Creating New Metadata Service Manager](#creating-new-metadata-service-manager)
     - [Using Metadata Services](#using-metadata-services)
       - [Graphql query](#graphql-query)
+    - [Onemodel APIs](#onemodel-apis)
+      - [Creating Onemodel Service Manager](#creating-onemodel-service-manager)
+        - [Creating Onemodel Details](#creating-onemodel-details)
+        - [Creating Onemodel Service Config](#creating-onemodel-service-config)
+        - [Creating New Onemodel Service Manager](#creating-new-onemodel-service-manager)
+    - [Using Onemodel Services](#using-onemodel-services)
+      - [Graphql query](#graphql-query)
 
 ## General
 
@@ -3129,4 +3136,49 @@ queryDetails := metadataService.QueryDetails{
 }
 
 body, err = metadataManager.GraphqlQuery(queryDetails)
+```
+## Onemodel APIs
+
+### Creating Onemodel Service Manager
+
+#### Creating Onemodel Details
+
+```go
+omDetails := auth.NewOnemodelDetails()
+omDetails.SetUrl("http://localhost:8081/onemodel")
+omDetails.SetAccessToken("access-token")
+// if client certificates are required
+omDetails.SetClientCertPath("path/to/.cer")
+omDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Onemodel Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(omDetails).
+    SetCertificatesPath(omDetails.GetClientCertPath()).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(3).
+    Build()
+```
+
+#### Creating New Onemodel Service Manager
+
+```go
+onemodelManager, err := onemodel.NewManager(serviceConfig)
+```
+
+### Using Onemodel Services
+
+#### Graphql query
+
+```go
+queryBytes := []byte(`{"query":"someGraphqlQuery"}`)
+
+queryDetails := onemodelService.QueryDetails{
+  Body:  queryBytes,
+}
+
+body, err = onemodelManager.GraphqlQuery(queryDetails)
 ```
