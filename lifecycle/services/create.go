@@ -55,6 +55,24 @@ func (rbs *ReleaseBundlesService) CreateFromBundles(rbDetails ReleaseBundleDetai
 	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, ReleaseBundles, sourceReleaseBundles)
 }
 
+func (rbs *ReleaseBundlesService) CreateFromMultipleSources(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sources []RbSource) error {
+	return rbs.CreateReleaseBundleFromMultipleSources(rbDetails, params, signingKeyName, sources)
+}
+
+func (rbs *ReleaseBundlesService) CreateReleaseBundleFromMultipleSources(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
+	signingKeyName string, sources []RbSource) error {
+	operation := createOperation{
+		reqBody: RbCreationBody{
+			ReleaseBundleDetails: rbDetails,
+			Sources:              sources,
+		},
+		params:         params,
+		signingKeyName: signingKeyName,
+	}
+	_, err := rbs.doPostOperation(&operation)
+	return err
+}
+
 func (rbs *ReleaseBundlesService) CreateReleaseBundle(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
 	signingKeyName string, rbSourceType SourceType, source interface{}) error {
 	operation := createOperation{
@@ -109,8 +127,14 @@ type ReleaseBundleSource struct {
 	ProjectKey           string `json:"project_key,omitempty"`
 }
 
+type RbSource struct {
+	SourceType     string                `json:"source_type"`
+	Builds         []BuildSource         `json:"builds,omitempty"`
+	ReleaseBundles []ReleaseBundleSource `json:"release_bundles,omitempty"`
+}
 type RbCreationBody struct {
 	ReleaseBundleDetails
 	SourceType SourceType  `json:"source_type,omitempty"`
 	Source     interface{} `json:"source,omitempty"`
+	Sources    []RbSource  `json:"sources"`
 }
