@@ -1,6 +1,7 @@
 package sonarqube
 
 import (
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 	"net/http"
@@ -119,6 +120,9 @@ func (sqe *SonarQube) CollectSonarQubePredicate(taskID string) ([]byte, error) {
 	if err != nil {
 		return bytes, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errorutils.CheckErrorf("Failed to get SonarQube task report. Status code: %d", resp.StatusCode)
+	}
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -138,6 +142,9 @@ func (sqe *SonarQube) CollectSonarQubePredicate(taskID string) ([]byte, error) {
 func (sqe *SonarQube) sendRequestUsingSonarQubeToken(req *http.Request, proxy string) (*http.Response, []byte, error) {
 	// Add Authorization header
 	sonarQubeToken := os.Getenv("JF_SONARQUBE_ACCESS_TOKEN")
+	if sonarQubeToken == "" {
+		return nil, nil, errorutils.CheckErrorf("SonarQube access token not found in environment variable JF_SONARQUBE_ACCESS_TOKEN")
+	}
 	req.Header.Set("Authorization", "Bearer "+sonarQubeToken)
 	httpClient := createHttpClient(proxy)
 
