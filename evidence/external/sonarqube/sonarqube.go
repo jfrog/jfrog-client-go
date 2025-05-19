@@ -67,11 +67,10 @@ func createHttpClient(proxy string) *http.Client {
 	}
 }
 
-func (sqe *SonarQube) GetSonarQubeProjectStatus(analysisID string) ([]byte, error) {
-	log.Debug("Getting sonarqube project status for analysis: " + analysisID)
+func (sqe *SonarQube) GetSonarAnalysis(analysisID string) ([]byte, error) {
+	log.Debug("Fetching sonar analysis for given analysisID: " + analysisID)
 	queryParams := sqe.createQueryParam(nil, "analysisId", analysisID)
 	sonarServerURL := sqe.ServiceConfig.url + sqe.ServiceConfig.projectStatusAPIPath
-	log.Debug("SonarQube URL: " + sonarServerURL)
 	// Create a new HTTP request
 	req, err := http.NewRequest("GET", sonarServerURL, nil)
 	if err != nil {
