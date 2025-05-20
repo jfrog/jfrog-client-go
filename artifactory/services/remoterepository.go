@@ -408,10 +408,11 @@ func NewNpmRemoteRepositoryParams() NpmRemoteRepositoryParams {
 
 type NugetRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	FeedContextPath          string `json:"feedContextPath,omitempty"`
+	FeedContextPath          string `json:"feedContextPath"` // do not set omitempty to be able to empty the value according https://jfrog.com/help/r/artifactory-step-by-step-guide-to-configure-nuget-smart-remote-repository/step-4
 	DownloadContextPath      string `json:"downloadContextPath,omitempty"`
 	V3FeedUrl                string `json:"v3FeedUrl,omitempty"`
 	ForceNugetAuthentication *bool  `json:"forceNugetAuthentication,omitempty"`
+	SymbolServerUrl          string `json:"symbolServerUrl,omitempty"`
 }
 
 func NewNugetRemoteRepositoryParams() NugetRemoteRepositoryParams {
@@ -484,6 +485,8 @@ type TerraformRemoteRepositoryParams struct {
 	VcsGitRemoteRepositoryParams
 	TerraformRegistryUrl  string `json:"terraformRegistryUrl,omitempty"`
 	TerraformProvidersUrl string `json:"terraformProvidersUrl,omitempty"`
+	ProvidersUrl          string `json:"providersUrl,omitempty"`
+	TerraformType         string `json:"terraformType,omitempty"`
 }
 
 func NewTerraformRemoteRepositoryParams() TerraformRemoteRepositoryParams {
