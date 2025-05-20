@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const sonarAccessTokenKey = "JF_SONARQUBE_ACCESS_TOKEN"
+
 type SonarQube struct {
 	Proxy string
 	ServiceConfig
@@ -47,23 +49,21 @@ func createHttpClient(proxy string) *http.Client {
 		MaxIdleConns:      10,
 		IdleConnTimeout:   30 * time.Second,
 		DisableKeepAlives: false,
+		Proxy:             http.ProxyFromEnvironment,
 	}
-	if proxy == "" {
-		return &http.Client{
-			Timeout:   30 * time.Second,
-			Transport: transport,
-		}
-	} else {
+	if proxy != "" {
 		proxyURL, err := url.Parse(proxy)
 		if err != nil {
+
+			// Fallback to environment proxy or no proxy
 			log.Error("Failed to parse proxy URL: " + err.Error())
-			return nil
+		} else {
+			transport.Proxy = http.ProxyURL(proxyURL)
 		}
-		transport.Proxy = http.ProxyURL(proxyURL)
-		return &http.Client{
-			Timeout:   30 * time.Second,
-			Transport: transport,
-		}
+	}
+	return &http.Client{
+		Timeout:   30 * time.Second,
+		Transport: transport,
 	}
 }
 
@@ -71,11 +71,13 @@ func (sqe *SonarQube) GetSonarAnalysis(analysisID string) ([]byte, error) {
 	log.Debug("Fetching sonar analysis for given analysisID: " + analysisID)
 	queryParams := sqe.createQueryParam(nil, "analysisId", analysisID)
 	sonarServerURL := sqe.ServiceConfig.url + sqe.ServiceConfig.projectStatusAPIPath
+
 	// Create a new HTTP request
 	req, err := http.NewRequest("GET", sonarServerURL, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	// Add query parameters to the request
 	q := req.URL.Query()
 	for key, value := range queryParams {
@@ -102,36 +104,28 @@ func (sqe *SonarQube) GetSonarAnalysis(analysisID string) ([]byte, error) {
 func (sqe *SonarQube) CollectSonarQubePredicate(taskID string) ([]byte, error) {
 	queryParams := sqe.createQueryParam(nil, "id", taskID)
 	sonarServerURL := sqe.ServiceConfig.url + sqe.ServiceConfig.taskAPIPath
-
-	// Create a new HTTP request
-	req, err := http.NewRequest("GET", sonarServerURL, nil)
+	req, err := http.NewRequest(http.MethodGet, sonarServerURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	// Add query parameters to the request
 	q := req.URL.Query()
 	for key, value := range queryParams {
 		q.Add(key, value)
 	}
 	req.URL.RawQuery = q.Encode()
-
 	resp, bytes, err := sqe.sendRequestUsingSonarQubeToken(req, sqe.Proxy)
 	if err != nil {
 		return bytes, err
 	}
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			log.Error("Failed to close response body: " + cerr.Error())
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		return nil, errorutils.CheckErrorf("Failed to get SonarQube task report. Status code: %d", resp.StatusCode)
 	}
-
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Error("Failed to close response body: " + err.Error())
-		}
-	}(resp.Body)
-
 	body, err := io.ReadAll(resp.Body)
-	log.Debug("SonarQube response: " + string(body))
 	if err != nil {
 		return nil, err
 	}
@@ -140,9 +134,9 @@ func (sqe *SonarQube) CollectSonarQubePredicate(taskID string) ([]byte, error) {
 
 func (sqe *SonarQube) sendRequestUsingSonarQubeToken(req *http.Request, proxy string) (*http.Response, []byte, error) {
 	// Add Authorization header
-	sonarQubeToken := os.Getenv("JF_SONARQUBE_ACCESS_TOKEN")
+	sonarQubeToken := os.Getenv(sonarAccessTokenKey)
 	if sonarQubeToken == "" {
-		return nil, nil, errorutils.CheckErrorf("SonarQube access token not found in environment variable JF_SONARQUBE_ACCESS_TOKEN")
+		return nil, nil, errorutils.CheckErrorf("Sonar access token not found in environment variable " + sonarAccessTokenKey)
 	}
 	req.Header.Set("Authorization", "Bearer "+sonarQubeToken)
 	httpClient := createHttpClient(proxy)

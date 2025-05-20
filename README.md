@@ -3048,6 +3048,29 @@ evidenceDetails := evidenceService.EvidenceDetails{
 }
 body, err = evideceManager.UploadEvidence(evidenceDetails)
 ```
+
+#### Fetch Sonar Task Report
+
+```go
+// Fetches the status of a SonarQube task by its task ID.
+taskID := "your-task-id"
+// sonarQubeURL is the URL of the SonarQube server.
+sonarQubeURL := "http://localhost:9000"
+// proxy is optional and can be used to specify a proxy server.
+proxy := ""
+body, err := evidenceManager.FetchSonarTaskStatus(taskID, sonarQubeURL, proxy)
+```
+#### Fetch Sonar Task Report with Proxy
+
+```go
+// Retrieves the analysis report from SonarQube by analysis ID.
+analysisID := "your-analysis-id"
+// sonarQubeURL is the URL of the SonarQube server.
+sonarQubeURL := "http://localhost:9000"
+// proxy is optional and can be used to specify a proxy server.
+proxy := ""
+body, err := evidenceManager.GetSonarAnalysisReport(analysisID, sonarQubeURL, proxy)
+```
 ## Metadata APIs
 
 ### Creating Metadata Service Manager

@@ -46,7 +46,7 @@ func (esm *EvidenceServicesManager) FetchSonarTaskStatus(taskID, sonarQubeURL, p
 	return sonarTaskStatus.CollectSonarQubePredicate(taskID)
 }
 
-func (esm *EvidenceServicesManager) FetchSonarComponentAnalysis(analysisID, sonarQubeURL, proxy string) ([]byte, error) {
+func (esm *EvidenceServicesManager) GetSonarAnalysisReport(analysisID, sonarQubeURL, proxy string) ([]byte, error) {
 	sonarAnalysisReport := sonarqube.NewSonarQubeEvidence(sonarQubeURL, proxy)
 	return sonarAnalysisReport.GetSonarAnalysis(analysisID)
 }
