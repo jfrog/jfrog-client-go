@@ -194,6 +194,7 @@ func (sm *XrayServicesManager) GetImportGraphResults(scanID string) (*services.S
 func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
 	buildScanService := services.NewBuildScanService(sm.client)
 	buildScanService.XrayDetails = sm.config.GetServiceDetails()
+	buildScanService.ScopeProjectKey = sm.scopeProjectKey
 	return buildScanService.ScanBuild(params, includeVulnerabilities)
 }
 
