@@ -3060,7 +3060,7 @@ sonarQubeURL := "http://localhost:9000"
 proxy := ""
 body, err := evidenceManager.FetchSonarTaskStatus(taskID, sonarQubeURL, proxy)
 ```
-#### Fetch Sonar Task Report with Proxy
+#### Fetch Sonar Analysis Report
 
 ```go
 // Retrieves the analysis report from SonarQube by analysis ID.
