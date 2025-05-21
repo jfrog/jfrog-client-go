@@ -161,6 +161,7 @@ func (sm *XrayServicesManager) IsTokenValidationEnabled() (isEnabled bool, err e
 func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (scanId string, err error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
+	scanService.ScopeProjectKey = sm.scopeProjectKey
 	return scanService.ScanGraph(params)
 }
 
@@ -169,6 +170,7 @@ func (sm *XrayServicesManager) ScanGraph(params services.XrayGraphScanParams) (s
 func (sm *XrayServicesManager) GetScanGraphResults(scanID, xrayVersion string, includeVulnerabilities, includeLicenses, xscEnabled bool) (*services.ScanResponse, error) {
 	scanService := services.NewScanService(sm.client)
 	scanService.XrayDetails = sm.config.GetServiceDetails()
+	scanService.ScopeProjectKey = sm.scopeProjectKey
 	return scanService.GetScanGraphResults(scanID, xrayVersion, includeVulnerabilities, includeLicenses, xscEnabled)
 }
 
