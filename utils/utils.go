@@ -631,7 +631,7 @@ const (
 // To access some of the API calls in Xray, we need to add the project key as a query parameter (used for validations if the token is project-scoped).
 func AppendScopedProjectKeyParam(url, projectKey string) string {
 	// make sure the project key is not empty and not already in the URL
-	if projectKey != "" && urlContainsProjectKeyParam(url) {
+	if projectKey == "" || urlContainsProjectKeyParam(url) {
 		return url
 	}
 	if strings.Contains(url, "?") {
