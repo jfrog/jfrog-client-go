@@ -248,6 +248,7 @@ func (sm *XrayServicesManager) ArtifactSummary(params services.ArtifactSummaryPa
 func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	entitlementsService := services.NewEntitlementsService(sm.client)
 	entitlementsService.XrayDetails = sm.config.GetServiceDetails()
+	entitlementsService.ScopeProjectKey = sm.scopeProjectKey
 	return entitlementsService.IsEntitled(featureId)
 }
 
