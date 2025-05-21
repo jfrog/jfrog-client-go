@@ -1918,6 +1918,11 @@ serviceConfig, err := config.NewConfigBuilder().
 xrayManager, err := xray.New(serviceConfig)
 ```
 
+If the provided token is scoped for a `project` you need to set its value in the manager for authentications in relevant API's
+```go
+xrayManager, err := xray.New(serviceConfig).SetProjectKey("project")
+```
+
 ### Using Xray Services
 
 #### Fetching Xray's Version

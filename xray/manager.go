@@ -12,6 +12,8 @@ import (
 type XrayServicesManager struct {
 	client *jfroghttpclient.JfrogHttpClient
 	config config.Config
+	// Global reference to the provided project key, used for API endpoints that require it for authentication
+	scopeProjectKey string
 }
 
 // New creates a service manager to interact with Xray
@@ -32,6 +34,11 @@ func New(config config.Config) (*XrayServicesManager, error) {
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
 		Build()
 	return manager, err
+}
+
+func (sm *XrayServicesManager) SetProjectKey(projectKey string) *XrayServicesManager {
+	sm.scopeProjectKey = projectKey
+	return sm
 }
 
 // Client will return the http client
