@@ -24,9 +24,9 @@ const (
 )
 
 type ConfigurationProfileService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XscDetails  auth.ServiceDetails
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XscDetails      auth.ServiceDetails
+	XrayDetails     auth.ServiceDetails
 	ScopeProjectKey string
 }
 

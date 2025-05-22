@@ -10,8 +10,8 @@ import (
 // XscService is the Xray Source Control service in the Xray service, available from v3.107.13.
 // This service replaces the Xray Source Control service, which was available as a standalone service.
 type XscInnerService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XrayDetails     auth.ServiceDetails
 	ScopeProjectKey string
 }
 
@@ -35,6 +35,7 @@ func (xs *XscInnerService) AddAnalyticsGeneralEvent(event services.XscAnalyticsG
 func (xs *XscInnerService) SendXscLogErrorRequest(errorLog *services.ExternalErrorLog) error {
 	logErrorService := services.NewLogErrorEventService(xs.client)
 	logErrorService.XrayDetails = xs.XrayDetails
+	logErrorService.ScopeProjectKey = xs.ScopeProjectKey
 	return logErrorService.SendLogErrorEvent(errorLog)
 }
 
