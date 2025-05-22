@@ -24,9 +24,10 @@ const (
 )
 
 type ConfigurationProfileService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XscDetails  auth.ServiceDetails
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XscDetails      auth.ServiceDetails
+	XrayDetails     auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 func NewConfigurationProfileService(client *jfroghttpclient.JfrogHttpClient) *ConfigurationProfileService {
@@ -145,7 +146,7 @@ func (cp *ConfigurationProfileService) sendConfigProfileByNameRequest(profileNam
 	if cp.XrayDetails != nil {
 		httpDetails := cp.XrayDetails.CreateHttpClientDetails()
 		url = fmt.Sprintf("%s%s%s/%s", utils.AddTrailingSlashIfNeeded(cp.XrayDetails.GetUrl()), xscutils.XscInXraySuffix, xscConfigProfileByNameApi, profileName)
-		resp, body, _, err = cp.client.SendGet(url, true, &httpDetails)
+		resp, body, _, err = cp.client.SendGet(utils.AppendScopedProjectKeyParam(url, cp.ScopeProjectKey), true, &httpDetails)
 		return
 	}
 	// Backward compatibility
@@ -177,7 +178,7 @@ func (cp *ConfigurationProfileService) sendConfigProfileByUrlRequest(repoUrl str
 	httpDetails := cp.XrayDetails.CreateHttpClientDetails()
 	url = fmt.Sprintf("%s%s%s", utils.AddTrailingSlashIfNeeded(cp.XrayDetails.GetUrl()), xscutils.XscInXraySuffix, xscConfigProfileByUrlApi)
 	requestContent := []byte(fmt.Sprintf(getProfileByUrlBody, repoUrl))
-	resp, body, err = cp.client.SendPost(url, requestContent, &httpDetails)
+	resp, body, err = cp.client.SendPost(utils.AppendScopedProjectKeyParam(url, cp.ScopeProjectKey), requestContent, &httpDetails)
 	return
 }
 

@@ -8,12 +8,14 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type EntitlementsService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XrayDetails     auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 // NewEntitlementsService creates a new service to retrieve the entitlement data from Xray
@@ -26,10 +28,14 @@ func (es *EntitlementsService) GetXrayDetails() auth.ServiceDetails {
 	return es.XrayDetails
 }
 
+func (es *EntitlementsService) getUrlForEntitlementApi(featureId string) string {
+	return clientutils.AppendScopedProjectKeyParam(es.XrayDetails.GetUrl()+"api/v1/entitlements/feature/"+featureId, es.ScopeProjectKey)
+}
+
 // IsEntitled returns true if the user is entitled for the requested feature ID
 func (es *EntitlementsService) IsEntitled(featureId string) (entitled bool, err error) {
 	httpDetails := es.XrayDetails.CreateHttpClientDetails()
-	resp, body, _, err := es.client.SendGet(es.XrayDetails.GetUrl()+"api/v1/entitlements/feature/"+featureId, true, &httpDetails)
+	resp, body, _, err := es.client.SendGet(es.getUrlForEntitlementApi(featureId), true, &httpDetails)
 	if err != nil {
 		err = errors.New("failed while attempting to get JFrog Xray entitlements response: " + err.Error())
 		return
@@ -40,7 +46,7 @@ func (es *EntitlementsService) IsEntitled(featureId string) (entitled bool, err 
 	}
 	var userEntitlements entitlements
 	if err = json.Unmarshal(body, &userEntitlements); err != nil {
-		err = errorutils.CheckErrorf("couldn't parse JFrog Xray server entitlements response: " + err.Error())
+		err = errorutils.CheckErrorf("couldn't parse JFrog Xray server entitlements response: %s", err.Error())
 		return
 	}
 	entitled = userEntitlements.Entitled
