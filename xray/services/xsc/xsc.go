@@ -28,6 +28,7 @@ func (xs *XscInnerService) GetVersion() (string, error) {
 func (xs *XscInnerService) AddAnalyticsGeneralEvent(event services.XscAnalyticsGeneralEvent, xrayVersion string) (string, error) {
 	eventService := services.NewAnalyticsEventService(xs.client)
 	eventService.XrayDetails = xs.XrayDetails
+	eventService.ScopeProjectKey = xs.ScopeProjectKey
 	return eventService.AddGeneralEvent(event, xrayVersion)
 }
 
@@ -40,12 +41,14 @@ func (xs *XscInnerService) SendXscLogErrorRequest(errorLog *services.ExternalErr
 func (xs *XscInnerService) UpdateAnalyticsGeneralEvent(event services.XscAnalyticsGeneralEventFinalize) error {
 	eventService := services.NewAnalyticsEventService(xs.client)
 	eventService.XrayDetails = xs.XrayDetails
+	eventService.ScopeProjectKey = xs.ScopeProjectKey
 	return eventService.UpdateGeneralEvent(event)
 }
 
 func (xs *XscInnerService) GetAnalyticsGeneralEvent(msi string) (*services.XscAnalyticsGeneralEvent, error) {
 	eventService := services.NewAnalyticsEventService(xs.client)
 	eventService.XrayDetails = xs.XrayDetails
+	eventService.ScopeProjectKey = xs.ScopeProjectKey
 	return eventService.GetGeneralEvent(msi)
 }
 
