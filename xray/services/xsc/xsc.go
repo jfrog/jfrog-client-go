@@ -55,12 +55,14 @@ func (xs *XscInnerService) GetAnalyticsGeneralEvent(msi string) (*services.XscAn
 func (xs *XscInnerService) GetConfigProfileByName(profileName string) (*services.ConfigProfile, error) {
 	configProfileService := services.NewConfigurationProfileService(xs.client)
 	configProfileService.XrayDetails = xs.XrayDetails
+	configProfileService.ScopeProjectKey = xs.ScopeProjectKey
 	return configProfileService.GetConfigurationProfileByName(profileName)
 }
 
 func (xs *XscInnerService) GetConfigProfileByUrl(repoUrl string) (*services.ConfigProfile, error) {
 	configProfileService := services.NewConfigurationProfileService(xs.client)
 	configProfileService.XrayDetails = xs.XrayDetails
+	configProfileService.ScopeProjectKey = xs.ScopeProjectKey
 	return configProfileService.GetConfigurationProfileByUrl(repoUrl)
 }
 
