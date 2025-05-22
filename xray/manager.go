@@ -259,5 +259,6 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 func (sm *XrayServicesManager) Xsc() *xsc.XscInnerService {
 	xscService := xsc.NewXscService(sm.client)
 	xscService.XrayDetails = sm.config.GetServiceDetails()
+	xscService.ScopeProjectKey = sm.scopeProjectKey
 	return xscService
 }

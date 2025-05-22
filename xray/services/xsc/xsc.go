@@ -12,6 +12,7 @@ import (
 type XscInnerService struct {
 	client      *jfroghttpclient.JfrogHttpClient
 	XrayDetails auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 func NewXscService(client *jfroghttpclient.JfrogHttpClient) *XscInnerService {
