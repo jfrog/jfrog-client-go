@@ -28,7 +28,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.53.0"
+	Version     = "1.53.1"
 )
 
 const xrayDevVersion = "3.x-dev"
@@ -621,4 +621,30 @@ func SetEnvWithResetCallback(key, value string) (func() error, error) {
 	return func() error {
 		return errorutils.CheckError(os.Unsetenv(key))
 	}, nil
+}
+
+const (
+	// If the access token used for the client is project-scoped, the API call needs to contain the project key as query param to pass to the Server.
+	ProjectKeyQueryParam = "projectKey="
+)
+
+// To access some of the API calls in Xray, we need to add the project key as a query parameter (used for validations if the token is project-scoped).
+func AppendScopedProjectKeyParam(url, projectKey string) string {
+	// make sure the project key is not empty and not already in the URL
+	if projectKey == "" || urlContainsProjectKeyParam(url) {
+		return url
+	}
+	if strings.Contains(url, "?") {
+		// the URL already contains query parameters, append the project key with an '&'
+		url += "&" + ProjectKeyQueryParam + projectKey
+	} else {
+		// the URL does not contain any query parameters, add the project key with a '?'
+		url += "?" + ProjectKeyQueryParam + projectKey
+	}
+	return url
+}
+
+func urlContainsProjectKeyParam(url string) bool {
+	// check if the URL already contains the project key query parameter
+	return len(url) > 0 && strings.Contains(url, ProjectKeyQueryParam)
 }
