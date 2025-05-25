@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/jfrog/gofrog/version"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"strings"
 )
 
 const (
@@ -25,8 +27,9 @@ const (
 )
 
 type BuildScanService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XrayDetails     auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 // NewBuildScanService creates a new service to scan build dependencies.
@@ -61,7 +64,7 @@ func (bs *BuildScanService) triggerScan(paramsBytes []byte) error {
 	httpClientsDetails.SetContentTypeApplicationJson()
 	url := bs.XrayDetails.GetUrl() + BuildScanAPI
 
-	resp, body, err := bs.client.SendPost(url, paramsBytes, &httpClientsDetails)
+	resp, body, err := bs.client.SendPost(utils.AppendScopedProjectKeyParam(url, bs.ScopeProjectKey), paramsBytes, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
@@ -149,7 +152,7 @@ func (bs *BuildScanService) getResultsGetRequestFunc(params XrayBuildParams, htt
 		endPoint += "?" + strings.Join(queryParams, "&")
 	}
 	return func() (*http.Response, []byte, error) {
-		resp, body, _, err := bs.client.SendGet(endPoint, true, httpClientsDetails)
+		resp, body, _, err := bs.client.SendGet(utils.AppendScopedProjectKeyParam(endPoint, bs.ScopeProjectKey), true, httpClientsDetails)
 		return resp, body, err
 	}
 }
@@ -163,7 +166,7 @@ func (bs *BuildScanService) getResultsPostRequestFunc(params XrayBuildParams, pa
 		endPoint += "?" + strings.Join(queryParams, "&")
 	}
 	return func() (*http.Response, []byte, error) {
-		resp, body, err := bs.client.SendPost(endPoint, paramsBytes, httpClientsDetails)
+		resp, body, err := bs.client.SendPost(utils.AppendScopedProjectKeyParam(endPoint, bs.ScopeProjectKey), paramsBytes, httpClientsDetails)
 		return resp, body, err
 	}
 }

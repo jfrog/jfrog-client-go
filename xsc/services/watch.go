@@ -25,8 +25,9 @@ const (
 
 // WatchService defines the http client and Xray details
 type WatchService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XrayDetails     auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 // NewWatchService creates a new Xray Watch Service
@@ -78,5 +79,5 @@ func (xws *WatchService) getWatchURL(gitRepo, project string) string {
 	if project != "" {
 		params = append(params, fmt.Sprintf("%s=%s", projectResourceUrlKey, project))
 	}
-	return url + "?" + strings.Join(params, "&")
+	return utils.AppendScopedProjectKeyParam(url+"?"+strings.Join(params, "&"), xws.ScopeProjectKey)
 }
