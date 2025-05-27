@@ -138,3 +138,8 @@ func (lcs *LifecycleServicesManager) IsReleaseBundleExist(rbName, rbVersion, pro
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.ReleaseBundleExists(rbName, rbVersion, projectKey)
 }
+
+func (lcs *LifecycleServicesManager) AnnotateReleaseBundle(params lifecycle.AnnotateOperationParams) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.AnnotateReleaseBundle(params)
+}

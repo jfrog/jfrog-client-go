@@ -1918,6 +1918,11 @@ serviceConfig, err := config.NewConfigBuilder().
 xrayManager, err := xray.New(serviceConfig)
 ```
 
+If the provided token is scoped for a `project` you need to set its value in the manager for authentications in relevant API's
+```go
+xrayManager, err := xray.New(serviceConfig).SetProjectKey("project")
+```
+
 ### Using Xray Services
 
 #### Fetching Xray's Version
@@ -3003,6 +3008,43 @@ resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
 exists, err := serviceManager.ReleaseBundleExists(rbName, rbVersion, projectKey)
 ```
 
+#### Annotate Release Bundle
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+
+cmd := NewReleaseBundleAnnotateCommand()
+serverDetails := &config.ServerDetails{
+    ArtifactoryUrl: "https://artifactory.example.com",
+}
+cmd.SetServerDetails(serverDetails)
+annotateParams := lifecycle.AnnotateOperationParams{
+	RbTag: lifecycle.RbAnnotationTag{
+	    Tag: "bundle-tag",
+		Exist: true,
+    },
+	RbProps: lifecycle.RbAnnotationProps{
+	    Properties:props.ToMap(),
+		Exists: false,
+    },
+    RbDelProps: services.RbDelProps{
+        Keys:  "key1,key2",
+        Exist: false,
+    },
+    RbDetails:   rbDetails,
+    QueryParams: queryParams,
+    PropertyParams: lifecycle.CommonPropParams{
+        Path: "manifest-path",
+		Recursive: false,
+    },
+	ArtifactoryUrl: services.ArtCommonParams{
+        Url: cmd.ServerDetails().ArtifactoryUrl,
+    },
+}
+
+resp, err := serviceManager.AnnotateReleaseBundle(params)
+```
 ## Evidence APIs
 
 ### Creating Evidence Service Manager
