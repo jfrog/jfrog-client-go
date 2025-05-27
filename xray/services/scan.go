@@ -7,6 +7,7 @@ import (
 	"time"
 
 	clientUtils "github.com/jfrog/jfrog-client-go/utils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	xscUtils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
@@ -54,8 +55,9 @@ const (
 type ScanType string
 
 type ScanService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XrayDetails     auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 // NewScanService creates a new service to scan binaries and audit code projects' dependencies.
@@ -124,7 +126,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 		url = xscUtils.XrayUrlToXscUrl(ss.XrayDetails.GetUrl(), scanParams.XrayVersion) + XscGraphAPI
 	}
 	url += createScanGraphQueryParams(scanParams)
-	resp, body, err := ss.client.SendPost(url, requestBody, &httpClientsDetails)
+	resp, body, err := ss.client.SendPost(clientutils.AppendScopedProjectKeyParam(url, ss.ScopeProjectKey), requestBody, &httpClientsDetails)
 	if err != nil {
 		return "", err
 	}
@@ -168,7 +170,7 @@ func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVu
 	pollingExecutor := &httputils.PollingExecutor{
 		Timeout:         defaultMaxWaitMinutes,
 		PollingInterval: defaultSyncSleepInterval,
-		PollingAction:   xrayUtils.PollingAction(ss.client, endPoint, httpClientsDetails),
+		PollingAction:   xrayUtils.PollingAction(ss.client, clientutils.AppendScopedProjectKeyParam(endPoint, ss.ScopeProjectKey), httpClientsDetails),
 		MsgPrefix:       "Get Dependencies Scan results... ",
 	}
 

@@ -3,13 +3,15 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	servicesutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
 	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
-	"net/http"
 )
 
 const (
@@ -19,48 +21,57 @@ const (
 )
 
 type AnalyticsEventService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XscDetails  auth.ServiceDetails
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XscDetails      auth.ServiceDetails
+	XrayDetails     auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 func NewAnalyticsEventService(client *jfroghttpclient.JfrogHttpClient) *AnalyticsEventService {
 	return &AnalyticsEventService{client: client}
 }
 
-func (vs *AnalyticsEventService) sendPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
+func (vs *AnalyticsEventService) getAnalyticsEndPoint() string {
 	if vs.XrayDetails != nil {
-		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()
-		resp, body, err = vs.client.SendPost(utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl())+xscutils.XscInXraySuffix+xscEventApi, requestContent, &httpClientDetails)
-		return
+		return utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + xscEventApi
 	}
 	// Backward compatibility
-	httpClientDetails := vs.XscDetails.CreateHttpClientDetails()
-	resp, body, err = vs.client.SendPost(utils.AddTrailingSlashIfNeeded(vs.XscDetails.GetUrl())+xscDeprecatedEventApiSuffix, requestContent, &httpClientDetails)
+	return utils.AddTrailingSlashIfNeeded(vs.XscDetails.GetUrl()) + xscDeprecatedEventApiSuffix
+}
+
+func (vs *AnalyticsEventService) sendPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
+	var httpClientDetails httputils.HttpClientDetails
+	if vs.XrayDetails != nil {
+		httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
+	} else {
+		// Backward compatibility
+		httpClientDetails = vs.XscDetails.CreateHttpClientDetails()
+	}
+	resp, body, err = vs.client.SendPost(utils.AppendScopedProjectKeyParam(vs.getAnalyticsEndPoint(), vs.ScopeProjectKey), requestContent, &httpClientDetails)
 	return
 }
 
 func (vs *AnalyticsEventService) sendPutRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
+	var httpClientDetails httputils.HttpClientDetails
 	if vs.XrayDetails != nil {
-		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()
-		resp, body, err = vs.client.SendPut(utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl())+xscutils.XscInXraySuffix+xscEventApi, requestContent, &httpClientDetails)
-		return
+		httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
+	} else {
+		// Backward compatibility
+		httpClientDetails = vs.XscDetails.CreateHttpClientDetails()
 	}
-	// Backward compatibility
-	httpClientDetails := vs.XscDetails.CreateHttpClientDetails()
-	resp, body, err = vs.client.SendPut(utils.AddTrailingSlashIfNeeded(vs.XscDetails.GetUrl())+xscDeprecatedEventApiSuffix, requestContent, &httpClientDetails)
+	resp, body, err = vs.client.SendPut(utils.AppendScopedProjectKeyParam(vs.getAnalyticsEndPoint(), vs.ScopeProjectKey), requestContent, &httpClientDetails)
 	return
 }
 
 func (vs *AnalyticsEventService) sendGetRequest(msi string) (resp *http.Response, body []byte, err error) {
+	var httpClientDetails httputils.HttpClientDetails
 	if vs.XrayDetails != nil {
-		httpClientDetails := vs.XrayDetails.CreateHttpClientDetails()
-		resp, body, _, err = vs.client.SendGet(fmt.Sprintf("%s%s%s/%s", vs.XrayDetails.GetUrl(), xscutils.XscInXraySuffix, xscEventApi, msi), true, &httpClientDetails)
-		return
+		httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
+	} else {
+		// Backward compatibility
+		httpClientDetails = vs.XscDetails.CreateHttpClientDetails()
 	}
-	// Backward compatibility
-	httpClientDetails := vs.XscDetails.CreateHttpClientDetails()
-	resp, body, _, err = vs.client.SendGet(fmt.Sprintf("%s%s/%s", vs.XscDetails.GetUrl(), xscDeprecatedEventApiSuffix, msi), true, &httpClientDetails)
+	resp, body, _, err = vs.client.SendGet(utils.AppendScopedProjectKeyParam(fmt.Sprintf("%s/%s", vs.getAnalyticsEndPoint(), msi), vs.ScopeProjectKey), true, &httpClientDetails)
 	return
 
 }
