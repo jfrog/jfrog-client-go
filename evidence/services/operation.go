@@ -1,11 +1,12 @@
 package services
 
 import (
+	"net/http"
+	"net/url"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
-	"net/url"
 )
 
 type EvidenceService struct {
@@ -47,4 +48,5 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 type EvidenceDetails struct {
 	SubjectUri  string `json:"subject_uri"`
 	DSSEFileRaw []byte `json:"dsse_file_raw"`
+	ProviderId  string `json:"provider_id"`
 }

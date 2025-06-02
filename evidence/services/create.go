@@ -3,7 +3,8 @@ package services
 import "path"
 
 const (
-	evidenceCreateAPI = "api/v1/subject"
+	evidenceCreateAPI    = "api/v1/subject"
+	providerIdQueryParam = "?providerId="
 )
 
 type createEvidenceOperation struct {
@@ -11,7 +12,12 @@ type createEvidenceOperation struct {
 }
 
 func (ce *createEvidenceOperation) getOperationRestApi() string {
-	return path.Join(evidenceCreateAPI, ce.evidenceBody.SubjectUri)
+	apiUrl := path.Join(evidenceCreateAPI, ce.evidenceBody.SubjectUri)
+	if ce.evidenceBody.ProviderId != "" {
+		apiUrl = path.Join(apiUrl, providerIdQueryParam, ce.evidenceBody.ProviderId)
+	}
+
+	return apiUrl
 }
 
 func (ce *createEvidenceOperation) getRequestBody() []byte {
