@@ -1,4 +1,4 @@
-module github.com/dortam888/jfrog-client-go
+module github.com/jfrog/jfrog-client-go
 
 go 1.23.7
 
@@ -12,7 +12,6 @@ require (
 	github.com/jfrog/archiver/v3 v3.6.1
 	github.com/jfrog/build-info-go v1.10.12
 	github.com/jfrog/gofrog v1.7.6
-	github.com/jfrog/jfrog-client-go v1.53.1
 	github.com/minio/sha256-simd v1.0.1
 	github.com/stretchr/testify v1.10.0
 	github.com/xanzy/ssh-agent v0.3.3
