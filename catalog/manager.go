@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/catalog/services"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
@@ -10,6 +11,8 @@ import (
 type CatalogServicesManager struct {
 	client *jfroghttpclient.JfrogHttpClient
 	config config.Config
+	// Global reference to the provided project key, used for API endpoints that require it for authentication
+	scopeProjectKey string
 }
 
 // New creates a service manager to interact with Catalog
@@ -36,3 +39,9 @@ func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails)
 		Build()
 }
 
+// GetVersion will return the Catalog version
+func (cm *CatalogServicesManager) GetVersion() (string, error) {
+	versionService := services.NewVersionService(cm.client)
+	versionService.CatalogDetails = cm.config.GetServiceDetails()
+	return versionService.GetVersion()
+}

@@ -11,35 +11,34 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-// VersionService returns the https client and Xray details
+const (
+	catalogVersionApi          = "api/v1/system/version"
+)
+
+// VersionService returns the https client and Catalog details
 type VersionService struct {
 	client      *jfroghttpclient.JfrogHttpClient
-	XrayDetails auth.ServiceDetails
+	CatalogDetails auth.ServiceDetails
 }
 
-// NewVersionService creates a new service to retrieve the version of Xray
+// NewVersionService creates a new service to retrieve the version of Catalog
 func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService {
 	return &VersionService{client: client}
 }
 
-// GetXrayDetails returns the Xray details
-func (vs *VersionService) GetXrayDetails() auth.ServiceDetails {
-	return vs.XrayDetails
-}
-
 // GetVersion returns the version of Xray
 func (vs *VersionService) GetVersion() (string, error) {
-	httpDetails := vs.XrayDetails.CreateHttpClientDetails()
-	resp, body, _, err := vs.client.SendGet(vs.XrayDetails.GetUrl()+"api/v1/system/version", true, &httpDetails)
+	httpDetails := vs.CatalogDetails.CreateHttpClientDetails()
+	resp, body, _, err := vs.client.SendGet(vs.CatalogDetails.GetUrl() + catalogVersionApi, true, &httpDetails)
 	if err != nil {
-		return "", errors.New("failed while attempting to get JFrog Xray version: " + err.Error())
+		return "", errors.New("failed while attempting to get JFrog Catalog version: " + err.Error())
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", errors.New("got unexpected server response while attempting to get JFrog Xray version:\n" + err.Error())
+		return "", errors.New("got unexpected server response while attempting to get JFrog Catalog version:\n" + err.Error())
 	}
 	var version xrayVersion
 	if err = json.Unmarshal(body, &version); err != nil {
-		return "", errorutils.CheckErrorf("couldn't parse JFrog Xray server version response: %s", err.Error())
+		return "", errorutils.CheckErrorf("couldn't parse JFrog Catalog server version response: %s", err.Error())
 	}
 	return strings.TrimSpace(version.Version), nil
 }
