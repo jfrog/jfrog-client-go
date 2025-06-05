@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/catalog/services"
 	"github.com/jfrog/jfrog-client-go/config"
@@ -39,9 +40,22 @@ func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails)
 		Build()
 }
 
+func (cm *CatalogServicesManager) SetProjectKey(projectKey string) *CatalogServicesManager {
+	cm.scopeProjectKey = projectKey
+	return cm
+}
+
 // GetVersion will return the Catalog version
 func (cm *CatalogServicesManager) GetVersion() (string, error) {
 	versionService := services.NewVersionService(cm.client)
 	versionService.CatalogDetails = cm.config.GetServiceDetails()
 	return versionService.GetVersion()
+}
+
+// Enrich will enrich the CycloneDX BOM with additional security information
+func (cm *CatalogServicesManager) Enrich(bom *cyclonedx.BOM) (*cyclonedx.BOM, error) {
+	enrichService := services.NewEnrichService(cm.client)
+	enrichService.CatalogDetails = cm.config.GetServiceDetails()
+	enrichService.ScopeProjectKey = cm.scopeProjectKey
+	return enrichService.Enrich(bom)
 }

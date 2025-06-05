@@ -12,12 +12,11 @@ import (
 )
 
 const (
-	catalogVersionApi          = "api/v1/system/version"
+	catalogVersionApi = "api/v1/system/version"
 )
 
-// VersionService returns the https client and Catalog details
 type VersionService struct {
-	client      *jfroghttpclient.JfrogHttpClient
+	client         *jfroghttpclient.JfrogHttpClient
 	CatalogDetails auth.ServiceDetails
 }
 
@@ -29,7 +28,7 @@ func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService 
 // GetVersion returns the version of Xray
 func (vs *VersionService) GetVersion() (string, error) {
 	httpDetails := vs.CatalogDetails.CreateHttpClientDetails()
-	resp, body, _, err := vs.client.SendGet(vs.CatalogDetails.GetUrl() + catalogVersionApi, true, &httpDetails)
+	resp, body, _, err := vs.client.SendGet(vs.CatalogDetails.GetUrl()+catalogVersionApi, true, &httpDetails)
 	if err != nil {
 		return "", errors.New("failed while attempting to get JFrog Catalog version: " + err.Error())
 	}
