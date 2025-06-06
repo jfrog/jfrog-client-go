@@ -61,7 +61,7 @@ func (rbs *ReleaseBundlesService) CreateFromPackages(rbDetails ReleaseBundleDeta
 }
 
 func (rbs *ReleaseBundlesService) CreateReleaseBundleFromMultipleSources(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
-	signingKeyName string, sources []RbSource) error {
+	signingKeyName string, sources []RbSource) (response []byte, err error) {
 	operation := createOperation{
 		reqBody: RbCreationBody{
 			ReleaseBundleDetails: rbDetails,
@@ -70,8 +70,8 @@ func (rbs *ReleaseBundlesService) CreateReleaseBundleFromMultipleSources(rbDetai
 		params:         params,
 		signingKeyName: signingKeyName,
 	}
-	_, err := rbs.doPostOperation(&operation)
-	return err
+	response, err = rbs.doPostOperation(&operation)
+	return response, err
 }
 
 func (rbs *ReleaseBundlesService) CreateReleaseBundle(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,

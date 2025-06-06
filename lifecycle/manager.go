@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	lifecycle "github.com/jfrog/jfrog-client-go/lifecycle/services"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type LifecycleServicesManager struct {
@@ -74,7 +75,8 @@ func (lcs *LifecycleServicesManager) CreateReleaseBundleFromPackages(rbDetails l
 func (lcs *LifecycleServicesManager) CreateReleaseBundlesFromMultipleSources(rbDetails lifecycle.ReleaseBundleDetails,
 	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sources []lifecycle.RbSource) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.CreateReleaseBundleFromMultipleSources(rbDetails, queryParams, signingKeyName, sources)
+	_, err := rbService.CreateReleaseBundleFromMultipleSources(rbDetails, queryParams, signingKeyName, sources)
+	return errorutils.CheckError(err)
 }
 
 func (lcs *LifecycleServicesManager) GetReleaseBundleSpecification(rbDetails lifecycle.ReleaseBundleDetails) (lifecycle.ReleaseBundleSpecResponse, error) {
