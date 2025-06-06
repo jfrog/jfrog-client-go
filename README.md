@@ -2843,6 +2843,92 @@ source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
 serviceManager.CreateReleaseBundleFromBundles(rbDetails, params, signingKeyName, source)
 ```
 
+#### Creating a Release Bundle From Packages
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+source := CreateFromPackagesSource{Packages: []PackageSource{
+    {
+        PackageName:    "name",
+        PackageVersion: "version",
+        PackageType:    "type",
+        RepositoryKey:  "repokey",
+    },
+}}
+serviceManager.CreateReleaseBundleFromPackages(rbDetails, params, signingKeyName, source)
+```
+
+#### Creating a Release Bundle From Multiple Sources 
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+sources :=  [] RbSource{
+	            {
+					SourceType: "builds",
+                    Builds: []BuildSource{
+                        {
+                            BuildName:       "name",
+                            BuildNumber:     "number",
+                            // Optional:
+                            BuildRepository: "artifactory-build-info",
+                        },
+                    }
+                },
+               {
+               SourceType: "release_bundles",
+			   ReleaseBundles: []ReleaseBundleSource{
+                    {
+                        ReleaseBundleName:    "name",
+                        ReleaseBundleVersion: "version",
+                        ProjectKey:           "default",
+                    },
+			   }
+               },
+               {
+               SourceType: "artifacts",
+               Artifacts: []ArtifactSource{
+				   {
+                         Path:   "repo/path/file",
+                        Sha256: "3e3deb6628658a48cf0d280a2210211f9d977ec2e10a4619b95d5fb85cb10450",
+				   },
+               }	
+               },
+               {
+               SourceType: "packages",
+               Packages: []PackageSource{
+                    {
+						PackageName: "name",
+                        PackageVersion: "version",
+                        PackageType: "type",
+                        RepositoryKey: "repokey"
+                    },
+               }
+               },
+			   {
+               SourceType: "aql",
+               Aql: {
+                    `items.find({"repo": "my-repo","path": ".","name": "a2.in"})`
+                }
+               },
+        }
+	
+serviceManager.CreateReleaseBundlesFromMultipleSources(rbDetails, params, signingKeyName, sources)
+```
+
 #### Promoting a Release Bundle
 
 ```go
