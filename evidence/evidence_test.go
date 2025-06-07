@@ -2,13 +2,14 @@ package evidence
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	evidence "github.com/jfrog/jfrog-client-go/evidence/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 var dsseRaw = []byte("someData")
@@ -16,6 +17,7 @@ var dsseRaw = []byte("someData")
 var evidenceData = evidence.EvidenceDetails{
 	SubjectUri:  "someUri",
 	DSSEFileRaw: dsseRaw,
+	ProviderId:  "someProviderId",
 }
 
 func TestEvidenceServicesManager_UploadEvidence(t *testing.T) {

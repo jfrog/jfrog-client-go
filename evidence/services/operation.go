@@ -1,11 +1,13 @@
 package services
 
 import (
+	"net/http"
+	"net/url"
+
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"net/http"
-	"net/url"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type EvidenceService struct {
@@ -36,6 +38,7 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 	httpClientDetails := es.GetEvidenceDetails().CreateHttpClientDetails()
 	httpClientDetails.SetContentTypeApplicationJson()
 
+	log.Debug("Creating evidence. Sending request to: ", requestFullUrl.String())
 	resp, body, err := es.client.SendPost(requestFullUrl.String(), operation.getRequestBody(), &httpClientDetails)
 	if err != nil {
 		return []byte{}, err
@@ -47,4 +50,5 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 type EvidenceDetails struct {
 	SubjectUri  string `json:"subject_uri"`
 	DSSEFileRaw []byte `json:"dsse_file_raw"`
+	ProviderId  string `json:"provider_id"`
 }
