@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const sonarAccessTokenKey = "JF_SONARQUBE_ACCESS_TOKEN"
+const SonarAccessTokenKey = "JF_SONARQUBE_ACCESS_TOKEN"
 
 type SonarQube struct {
 	Proxy string
@@ -134,9 +134,9 @@ func (sqe *SonarQube) CollectSonarQubePredicate(taskID string) ([]byte, error) {
 
 func (sqe *SonarQube) sendRequestUsingSonarQubeToken(req *http.Request, proxy string) (*http.Response, []byte, error) {
 	// Add Authorization header
-	sonarQubeToken := os.Getenv(sonarAccessTokenKey)
+	sonarQubeToken := os.Getenv(SonarAccessTokenKey)
 	if sonarQubeToken == "" {
-		return nil, nil, errorutils.CheckErrorf("Sonar access token not found in environment variable " + sonarAccessTokenKey)
+		return nil, nil, errorutils.CheckErrorf("Sonar access token not found in environment variable " + SonarAccessTokenKey)
 	}
 	req.Header.Set("Authorization", "Bearer "+sonarQubeToken)
 	httpClient := createHttpClient(proxy)
