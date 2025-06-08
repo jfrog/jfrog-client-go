@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	catalogEnrichApi = "api/v1/beta/cyclonedx/enrich"
+	catalogEnrichApi              = "api/v1/beta/cyclonedx/enrich"
+	catalogMinVersionForEnrichApi = "1.0.0"
 )
 
 type EnrichService struct {
@@ -48,6 +49,7 @@ func (es *EnrichService) Enrich(bom *cyclonedx.BOM) (enriched *cyclonedx.BOM, er
 	// Decode the enriched BOM back to a CycloneDX BOM object
 	reader := bytes.NewReader(enrichedBom)
 	decoder := cyclonedx.NewBOMDecoder(reader, cyclonedx.BOMFileFormatJSON)
+	enriched = &cyclonedx.BOM{}
 	if err = decoder.Decode(enriched); err != nil {
 		return nil, errorutils.CheckErrorf("failed to decode enriched CycloneDX BOM: %s", err.Error())
 	}
