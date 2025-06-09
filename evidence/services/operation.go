@@ -6,6 +6,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -26,11 +27,15 @@ func (es *EvidenceService) GetEvidenceDetails() auth.ServiceDetails {
 type EvidenceOperation interface {
 	getOperationRestApi() string
 	getRequestBody() []byte
+	getProviderId() string
 }
 
 func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, error) {
 	u := url.URL{Path: operation.getOperationRestApi()}
-	requestFullUrl, err := url.Parse(es.GetEvidenceDetails().GetUrl() + u.String())
+	queryParams := make(map[string]string)
+	queryParams["providerId"] = operation.getProviderId()
+
+	requestFullUrl, err := clientutils.BuildUrl(es.GetEvidenceDetails().GetUrl(), u.String(), queryParams)
 	if err != nil {
 		return []byte{}, errorutils.CheckError(err)
 	}
@@ -38,8 +43,8 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 	httpClientDetails := es.GetEvidenceDetails().CreateHttpClientDetails()
 	httpClientDetails.SetContentTypeApplicationJson()
 
-	log.Debug("Creating evidence. Sending request to: ", requestFullUrl.String())
-	resp, body, err := es.client.SendPost(requestFullUrl.String(), operation.getRequestBody(), &httpClientDetails)
+	log.Debug("Creating Evidence:")
+	resp, body, err := es.client.SendPost(requestFullUrl, operation.getRequestBody(), &httpClientDetails)
 	if err != nil {
 		return []byte{}, err
 	}

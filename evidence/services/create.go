@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	evidenceCreateAPI    = "api/v1/subject"
-	providerIdQueryParam = "?providerId="
+	evidenceCreateAPI = "api/v1/subject"
 )
 
 type createEvidenceOperation struct {
@@ -18,16 +17,15 @@ type createEvidenceOperation struct {
 }
 
 func (ce *createEvidenceOperation) getOperationRestApi() string {
-	apiUrl := path.Join(evidenceCreateAPI, ce.evidenceBody.SubjectUri)
-	if ce.evidenceBody.ProviderId != "" {
-		apiUrl = path.Join(apiUrl, providerIdQueryParam, ce.evidenceBody.ProviderId)
-	}
-
-	return apiUrl
+	return path.Join(evidenceCreateAPI, ce.evidenceBody.SubjectUri)
 }
 
 func (ce *createEvidenceOperation) getRequestBody() []byte {
 	return ce.evidenceBody.DSSEFileRaw
+}
+
+func (ce *createEvidenceOperation) getProviderId() string {
+	return ce.evidenceBody.ProviderId
 }
 
 func (es *EvidenceService) UploadEvidence(evidenceDetails EvidenceDetails) ([]byte, error) {
@@ -57,7 +55,7 @@ func (es *EvidenceService) isEvidenceSupportsProviderId() bool {
 	httpClientDetails := es.GetEvidenceDetails().CreateHttpClientDetails()
 	httpClientDetails.SetContentTypeApplicationJson()
 
-	log.Debug("Check evidence version. Sending request to: ", requestFullUrl.String())
+	log.Debug("Checking evidence version: ")
 	resp, _, _, err := es.client.SendGet(requestFullUrl.String(), true, &httpClientDetails)
 	if err != nil {
 		return false
