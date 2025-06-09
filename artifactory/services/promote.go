@@ -3,7 +3,9 @@ package services
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"path"
+	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -35,7 +37,8 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	log.Info(message)
 
 	promoteUrl := ps.ArtDetails.GetUrl()
-	restApi := path.Join("api/build/promote/", promotionParams.GetBuildName(), promotionParams.GetBuildNumber())
+	restApi := path.Join("api/build/promote/")
+	buildParameters := path.Join(url.QueryEscape(promotionParams.GetBuildName()), url.QueryEscape(promotionParams.GetBuildNumber()))
 
 	queryParams := make(map[string]string)
 	if promotionParams.ProjectKey != "" {
@@ -43,9 +46,14 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	}
 
 	requestFullUrl, err := clientutils.BuildUrl(promoteUrl, restApi, queryParams)
-	if err != nil {
-		return err
+	urlArray := strings.Split(requestFullUrl, "?")
+	requiredUrl := urlArray[0]
+	if len(urlArray) > 1 {
+		requiredUrl = urlArray[0] + "/" + buildParameters + "?" + urlArray[1]
+	} else {
+		requiredUrl = urlArray[0] + "/" + buildParameters
 	}
+
 	props, err := utils.ParseProperties(promotionParams.GetProperties())
 	if err != nil {
 		return err
@@ -69,7 +77,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	httpClientsDetails := ps.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.build.PromotionRequest+json", &httpClientsDetails.Headers)
 
-	resp, body, err := ps.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
+	resp, body, err := ps.client.SendPost(requiredUrl, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
