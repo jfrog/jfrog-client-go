@@ -46,12 +46,16 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	}
 
 	requestFullUrl, err := clientutils.BuildUrl(promoteUrl, restApi, queryParams)
+	if err != nil {
+		return err
+	}
+
 	urlArray := strings.Split(requestFullUrl, "?")
 	requiredUrl := urlArray[0]
 	if len(urlArray) > 1 {
-		requiredUrl = urlArray[0] + "/" + buildParameters + "?" + urlArray[1]
+		requiredUrl = requiredUrl + "/" + buildParameters + "?" + urlArray[1]
 	} else {
-		requiredUrl = urlArray[0] + "/" + buildParameters
+		requiredUrl = requiredUrl + "/" + buildParameters
 	}
 
 	props, err := utils.ParseProperties(promotionParams.GetProperties())
