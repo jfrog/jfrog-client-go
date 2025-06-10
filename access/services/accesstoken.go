@@ -43,6 +43,7 @@ type CreateOidcTokenParams struct {
 	Repo                  string `json:"repo,omitempty"`
 	ApplicationKey        string `json:"application_key,omitempty"`
 	Audience              string `json:"audience,omitempty"`
+	ProviderType          string `json:"provider_type,omitempty"`
 	IdentityMappingName   string `json:"identity_mapping_name,omitempty"`
 	IncludeReferenceToken *bool  `json:"include_reference_token,omitempty"`
 }
