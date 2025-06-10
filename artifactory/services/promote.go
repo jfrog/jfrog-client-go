@@ -48,7 +48,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 
 	requiredUrl, err := BuildUrlWithEscapingSlash(promoteUrl, restApi, buildName, buildNumber, queryParams)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	props, err := utils.ParseProperties(promotionParams.GetProperties())
