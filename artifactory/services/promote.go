@@ -44,7 +44,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	buildName := promotionParams.GetBuildName()
 	buildNumber := promotionParams.GetBuildNumber()
 
-	requiredUrl, err := utils.BuildUrlWithEscapingSlash(promoteUrl, restApi, buildName, buildNumber, queryParams)
+	requestURLWithEscapedSlash, err := utils.BuildUrlWithEscapingSlash(promoteUrl, restApi, buildName, buildNumber, queryParams)
 	if err != nil {
 		return err
 	}
@@ -72,11 +72,11 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	httpClientsDetails := ps.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.build.PromotionRequest+json", &httpClientsDetails.Headers)
 
-	resp, body, err := ps.client.SendPost(requiredUrl, requestContent, &httpClientsDetails)
+	resp, body, err := ps.client.SendPost(requestURLWithEscapedSlash, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-
+	
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
