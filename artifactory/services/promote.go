@@ -10,7 +10,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -38,24 +37,18 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 
 	promoteUrl := ps.ArtDetails.GetUrl()
 	restApi := path.Join("api/build/promote/")
-	buildParameters := path.Join(url.QueryEscape(promotionParams.GetBuildName()), url.QueryEscape(promotionParams.GetBuildNumber()))
 
 	queryParams := make(map[string]string)
 	if promotionParams.ProjectKey != "" {
 		queryParams["project"] = promotionParams.ProjectKey
 	}
 
-	requestFullUrl, err := clientutils.BuildUrl(promoteUrl, restApi, queryParams)
-	if err != nil {
-		return err
-	}
+	buildName := promotionParams.GetBuildName()
+	buildNumber := promotionParams.GetBuildNumber()
 
-	urlArray := strings.Split(requestFullUrl, "?")
-	requiredUrl := urlArray[0]
-	if len(urlArray) > 1 {
-		requiredUrl = requiredUrl + "/" + buildParameters + "?" + urlArray[1]
-	} else {
-		requiredUrl = requiredUrl + "/" + buildParameters
+	requiredUrl, err := BuildUrlWithEscapingSlash(promoteUrl, restApi, buildName, buildNumber, queryParams)
+	if err != nil {
+		return nil
 	}
 
 	props, err := utils.ParseProperties(promotionParams.GetProperties())
@@ -95,6 +88,34 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	}
 	log.Info("Promoted build", promotionParams.GetBuildName()+"/"+promotionParams.GetBuildNumber(), "to:", promotionParams.GetTargetRepo(), "repository.")
 	return nil
+}
+
+func BuildUrlWithEscapingSlash(baseUrl, restApi, buildName, buildNumber string, queryParams map[string]string) (string, error) {
+	u := url.URL{Path: restApi}
+	parsedUrl, err := url.Parse(baseUrl + u.String())
+	if err = errorutils.CheckError(err); err != nil {
+		return "", err
+	}
+	q := parsedUrl.Query()
+	for k, v := range queryParams {
+		q.Set(k, v)
+	}
+	parsedUrl.RawQuery = q.Encode()
+
+	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
+	encodedUrl := strings.ReplaceAll(parsedUrl.String(), ";", url.QueryEscape(";"))
+
+	buildParameters := path.Join(url.QueryEscape(buildName), url.QueryEscape(buildNumber))
+
+	urlArray := strings.Split(encodedUrl, "?")
+	requiredUrl := urlArray[0]
+	if len(urlArray) > 1 {
+		requiredUrl = requiredUrl + "/" + buildParameters + "?" + urlArray[1]
+	} else {
+		requiredUrl = requiredUrl + "/" + buildParameters
+	}
+
+	return requiredUrl, nil
 }
 
 type BuildPromotionBody struct {
