@@ -3,9 +3,7 @@ package services
 import (
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"path"
-	"strings"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -46,7 +44,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	buildName := promotionParams.GetBuildName()
 	buildNumber := promotionParams.GetBuildNumber()
 
-	requiredUrl, err := BuildUrlWithEscapingSlash(promoteUrl, restApi, buildName, buildNumber, queryParams)
+	requiredUrl, err := utils.BuildUrlWithEscapingSlash(promoteUrl, restApi, buildName, buildNumber, queryParams)
 	if err != nil {
 		return err
 	}
@@ -88,34 +86,6 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	}
 	log.Info("Promoted build", promotionParams.GetBuildName()+"/"+promotionParams.GetBuildNumber(), "to:", promotionParams.GetTargetRepo(), "repository.")
 	return nil
-}
-
-func BuildUrlWithEscapingSlash(baseUrl, restApi, buildName, buildNumber string, queryParams map[string]string) (string, error) {
-	u := url.URL{Path: restApi}
-	parsedUrl, err := url.Parse(baseUrl + u.String())
-	if err = errorutils.CheckError(err); err != nil {
-		return "", err
-	}
-	q := parsedUrl.Query()
-	for k, v := range queryParams {
-		q.Set(k, v)
-	}
-	parsedUrl.RawQuery = q.Encode()
-
-	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
-	encodedUrl := strings.ReplaceAll(parsedUrl.String(), ";", url.QueryEscape(";"))
-
-	buildParameters := path.Join(url.QueryEscape(buildName), url.QueryEscape(buildNumber))
-
-	urlArray := strings.Split(encodedUrl, "?")
-	requiredUrl := urlArray[0]
-	if len(urlArray) > 1 {
-		requiredUrl = requiredUrl + "/" + buildParameters + "?" + urlArray[1]
-	} else {
-		requiredUrl = requiredUrl + "/" + buildParameters
-	}
-
-	return requiredUrl, nil
 }
 
 type BuildPromotionBody struct {
