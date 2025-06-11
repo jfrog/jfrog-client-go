@@ -33,7 +33,9 @@ type EvidenceOperation interface {
 func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, error) {
 	u := url.URL{Path: operation.getOperationRestApi()}
 	queryParams := make(map[string]string)
-	queryParams["providerId"] = operation.getProviderId()
+	if operation.getProviderId() != "" {
+		queryParams["providerId"] = operation.getProviderId()
+	}
 
 	requestFullUrl, err := clientutils.BuildUrl(es.GetEvidenceDetails().GetUrl(), u.String(), queryParams)
 	if err != nil {

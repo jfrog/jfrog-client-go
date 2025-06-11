@@ -1,8 +1,6 @@
 package services
 
 import (
-	"net/http"
-	"net/url"
 	"path"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -34,34 +32,13 @@ func (es *EvidenceService) UploadEvidence(evidenceDetails EvidenceDetails) ([]by
 			EvidenceDetails: evidenceDetails,
 		},
 	}
-	if !es.isEvidenceSupportsProviderId() {
+	if !es.IsEvidenceSupportsProviderId() {
 		// If the evidence version does not support providerId, we will not set it in the request
 		log.Warn("Evidence version does not support providerId. The providerId will not be set in the request.")
 		operation.evidenceBody.ProviderId = ""
 	}
 	body, err := es.doOperation(&operation)
 	return body, err
-}
-
-func (es *EvidenceService) isEvidenceSupportsProviderId() bool {
-	// providerId is supported from evidence version XXX
-	// get evidence version API was added afterwards so we will check that the API returns 200 OK
-	// and not 404 Not Found
-	requestFullUrl, err := url.Parse(es.GetEvidenceDetails().GetUrl() + "api/v1/system/version")
-	if err != nil {
-		return false
-	}
-
-	httpClientDetails := es.GetEvidenceDetails().CreateHttpClientDetails()
-	httpClientDetails.SetContentTypeApplicationJson()
-
-	log.Debug("Checking evidence version: ")
-	resp, _, _, err := es.client.SendGet(requestFullUrl.String(), true, &httpClientDetails)
-	if err != nil {
-		return false
-	}
-
-	return resp.StatusCode == http.StatusOK
 }
 
 type EvidenceCreationBody struct {
