@@ -45,10 +45,16 @@ func createMockServer(t *testing.T, testHandler http.HandlerFunc) (*httptest.Ser
 func createDefaultHandlerFunc(t *testing.T) (http.HandlerFunc, *int) {
 	requestNum := 0
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/api/v1/subject" {
+		switch r.RequestURI {
+		case "/api/v1/subject":
 			w.WriteHeader(http.StatusOK)
 			requestNum++
 			writeMockStatusResponse(t, w, dsseRaw)
+		case "/api/v1/system/version":
+			// Mocking version endpoint to return a 200 OK
+			w.WriteHeader(http.StatusOK)
+		default:
+			w.WriteHeader(http.StatusNotFound)
 		}
 	}, &requestNum
 }
@@ -58,4 +64,16 @@ func writeMockStatusResponse(t *testing.T, w http.ResponseWriter, payload []byte
 	assert.NoError(t, err)
 	_, err = w.Write(content)
 	assert.NoError(t, err)
+}
+
+func TestIsEvidenceSupportsProviderId(t *testing.T) {
+	handlerFunc, _ := createDefaultHandlerFunc(t)
+	mockServer, evdService := createMockServer(t, handlerFunc)
+	defer mockServer.Close()
+
+	// Call the function to test
+	result := evidence.IsEvidenceSupportsProviderId(evdService.GetEvidenceDetails(), evdService.GetEvidenceDetails().GetClient())
+
+	// Assert the result
+	assert.True(t, result)
 }
