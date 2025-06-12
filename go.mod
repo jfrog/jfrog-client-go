@@ -10,7 +10,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/gookit/color v1.5.4
 	github.com/jfrog/archiver/v3 v3.6.1
-	github.com/jfrog/build-info-go v1.10.12
+	github.com/jfrog/build-info-go v1.10.14
 	github.com/jfrog/gofrog v1.7.6
 	github.com/minio/sha256-simd v1.0.1
 	github.com/stretchr/testify v1.10.0
@@ -25,7 +25,7 @@ require (
 	github.com/CycloneDX/cyclonedx-go v0.9.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
-	github.com/cloudflare/circl v1.6.0 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
