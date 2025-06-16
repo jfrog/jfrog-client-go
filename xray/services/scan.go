@@ -240,6 +240,7 @@ type Violation struct {
 	Cves                []Cve                `json:"cves,omitempty"`
 	References          []string             `json:"references,omitempty"`
 	FailBuild           bool                 `json:"fail_build,omitempty"`
+	FailPr              bool                 `json:"fail_pull_request,omitempty"`
 	LicenseKey          string               `json:"license_key,omitempty"`
 	LicenseName         string               `json:"license_name,omitempty"`
 	IgnoreUrl           string               `json:"ignore_url,omitempty"`
