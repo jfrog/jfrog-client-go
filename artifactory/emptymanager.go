@@ -109,6 +109,8 @@ type ArtifactoryServicesManager interface {
 	CalculateStorageInfo() error
 	ImportReleaseBundle(string) error
 	GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error)
+	GetKeyPairs() (*[]services.KeypairResponseItem, error)
+	GetTrustedKeys() (*services.TrustedKeysResponse, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -482,6 +484,14 @@ func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(services.LeadFile
 }
 
 func (esm *EmptyArtifactoryServicesManager) DeleteBuildInfo(*buildinfo.BuildInfo, string, int) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetKeyPairs() (*[]services.KeypairResponseItem, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetTrustedKeys() (*services.TrustedKeysResponse, error) {
 	panic("Failed: Method is not implemented")
 }
 
