@@ -72,11 +72,10 @@ func (lcs *LifecycleServicesManager) CreateReleaseBundleFromPackages(rbDetails l
 	return rbService.CreateFromPackages(rbDetails, queryParams, signingKeyName, packageSource)
 }
 
-func (lcs *LifecycleServicesManager) CreateReleaseBundlesFromMultipleSources(rbDetails lifecycle.ReleaseBundleDetails,
-	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sources []lifecycle.RbSource) error {
+func (lcs *LifecycleServicesManager) CreateReleaseBundlesFromMultipleSources(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sources []lifecycle.RbSource) (response []byte, err error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	_, err := rbService.CreateReleaseBundleFromMultipleSources(rbDetails, queryParams, signingKeyName, sources)
-	return errorutils.CheckError(err)
+	resp, err := rbService.CreateReleaseBundleFromMultipleSources(rbDetails, queryParams, signingKeyName, sources)
+	return resp, errorutils.CheckError(err)
 }
 
 func (lcs *LifecycleServicesManager) GetReleaseBundleSpecification(rbDetails lifecycle.ReleaseBundleDetails) (lifecycle.ReleaseBundleSpecResponse, error) {
