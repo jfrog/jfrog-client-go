@@ -195,6 +195,39 @@ func (ss *SecurityService) RevokeToken(params RevokeTokenParams) (string, error)
 	return string(body), nil
 }
 
+func (ss *SecurityService) GetKeyPairs() (*[]KeypairResponseItem, error) {
+	artifactoryUrl := ss.ArtDetails.GetUrl()
+	httpClientsDetails := ss.getArtifactoryDetails().CreateHttpClientDetails()
+	trustedURL := artifactoryUrl + "api/security/keypair"
+	resp, body, _, err := ss.client.SendGet(trustedURL, false, &httpClientsDetails)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch trusted keys: %v", err)
+	}
+	var respItems []KeypairResponseItem
+	err = json.Unmarshal(body, &respItems)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse trusted keys: %v", err)
+	}
+	return &respItems, nil
+}
+
+func (ss *SecurityService) GetTrustedKeys() (*TrustedKeysResponse, error) {
+	artifactoryUrl := ss.ArtDetails.GetUrl()
+	httpClientsDetails := ss.getArtifactoryDetails().CreateHttpClientDetails()
+	trustedURL := artifactoryUrl + "api/security/keys/trusted"
+	resp, body, _, err := ss.client.SendGet(trustedURL, false, &httpClientsDetails)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch trusted keys: %v", err)
+	}
+
+	var trusted TrustedKeysResponse
+	err = json.Unmarshal(body, &trusted)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse trusted keys: %v", err)
+	}
+	return &trusted, nil
+}
+
 func buildCreateTokenUrlValues(params CreateTokenParams) url.Values {
 	// Gathers required data while avoiding default/ignored values
 	data := url.Values{}
@@ -273,6 +306,27 @@ type ArtifactoryRefreshTokenParams struct {
 type RevokeTokenParams struct {
 	Token   string
 	TokenId string
+}
+
+type TrustedKeysResponse struct {
+	Keys []struct {
+		PublicKey   string `json:"key"`
+		KeyId       string `json:"kid"`
+		Fingerprint string `json:"fingerprint"`
+		Alias       string `json:"alias"`
+		Type        string `json:"type"`
+		IssuedOn    string `json:"issued_on"`
+		IssuedBy    string `json:"issued_by"`
+		ValidUntil  string `json:"valid_until"`
+	} `json:"keys"`
+}
+
+type KeypairResponseItem struct {
+	PublicKey   string `json:"publicKey"`
+	PairName    string `json:"pairName"`
+	PairType    string `json:"pairType"`
+	Alias       string `json:"alias"`
+	Unavailable bool   `json:"unavailable"`
 }
 
 func NewCreateTokenParams() CreateTokenParams {
