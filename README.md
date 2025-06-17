@@ -103,6 +103,8 @@
       - [Getting Storage Summary Info of Artifactory](#getting-storage-summary-info-of-artifactory)
       - [Getting package artifact Lead File](#getting-package-artifact-lead-file)
       - [Triggering Storage Info Recalculation in Artifactory](#triggering-storage-info-recalculation-in-artifactory)
+      - [Getting trusted public keys](#getting-trusted-public-keys)
+      - [Getting key pairs](#getting-key-pairs)
   - [Access APIs](#access-apis)
     - [Creating Access Service Manager](#creating-access-service-manager)
       - [Creating Access Details](#creating-access-details)
@@ -1485,6 +1487,19 @@ leadArtifact, err := serviceManager.GetPackageLeadFile()
 ```go
 err := serviceManager.CalculateStorageInfo()
 ```
+#### Getting Trusted Public Keys
+
+```go 
+trustedKeysResponse, err := serviceManager.GetTrustedKeys()
+```
+
+#### Getting Info about Key Pairs
+
+```go 
+keypairResponseItems, err := serviceManager.GetKeyPairs()
+
+```
+
 
 ## Access APIs
 

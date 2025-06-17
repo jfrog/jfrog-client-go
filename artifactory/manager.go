@@ -621,6 +621,19 @@ func (sm *ArtifactoryServicesManagerImp) ImportReleaseBundle(filePath string) er
 	return releaseService.ImportReleaseBundle(filePath)
 }
 
+func (sm *ArtifactoryServicesManagerImp) GetKeyPairs() (*[]services.KeypairResponseItem, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetServiceDetails()
+	return securityService.GetKeyPairs()
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetTrustedKeys() (*services.TrustedKeysResponse, error) {
+	securityService := services.NewSecurityService(sm.client)
+	securityService.ArtDetails = sm.config.GetServiceDetails()
+	keys, err := securityService.GetTrustedKeys()
+	return keys, err
+}
+
 func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
 	return jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
