@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -35,17 +34,21 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	log.Info(message)
 
 	promoteUrl := ps.ArtDetails.GetUrl()
-	restApi := path.Join("api/build/promote/", promotionParams.GetBuildName(), promotionParams.GetBuildNumber())
+	restApi := path.Join("api/build/promote/")
 
 	queryParams := make(map[string]string)
 	if promotionParams.ProjectKey != "" {
 		queryParams["project"] = promotionParams.ProjectKey
 	}
 
-	requestFullUrl, err := clientutils.BuildUrl(promoteUrl, restApi, queryParams)
+	buildName := promotionParams.GetBuildName()
+	buildNumber := promotionParams.GetBuildNumber()
+
+	requestURLWithEscapedSlash, err := utils.BuildUrlWithEscapingSlash(promoteUrl, restApi, buildName, buildNumber, queryParams)
 	if err != nil {
 		return err
 	}
+
 	props, err := utils.ParseProperties(promotionParams.GetProperties())
 	if err != nil {
 		return err
@@ -69,11 +72,11 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	httpClientsDetails := ps.ArtDetails.CreateHttpClientDetails()
 	utils.SetContentType("application/vnd.org.jfrog.artifactory.build.PromotionRequest+json", &httpClientsDetails.Headers)
 
-	resp, body, err := ps.client.SendPost(requestFullUrl, requestContent, &httpClientsDetails)
+	resp, body, err := ps.client.SendPost(requestURLWithEscapedSlash, requestContent, &httpClientsDetails)
 	if err != nil {
 		return err
 	}
-
+	
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}

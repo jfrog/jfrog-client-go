@@ -257,6 +257,13 @@
       - [Creating New Metadata Service Manager](#creating-new-metadata-service-manager)
     - [Using Metadata Services](#using-metadata-services)
       - [Graphql query](#graphql-query)
+    - [Onemodel APIs](#onemodel-apis)
+      - [Creating Onemodel Service Manager](#creating-onemodel-service-manager)
+        - [Creating Onemodel Details](#creating-onemodel-details)
+        - [Creating Onemodel Service Config](#creating-onemodel-service-config)
+        - [Creating New Onemodel Service Manager](#creating-new-onemodel-service-manager)
+    - [Using Onemodel Services](#using-onemodel-services)
+      - [Graphql query](#graphql-query)
 
 ## General
 
@@ -1918,6 +1925,11 @@ serviceConfig, err := config.NewConfigBuilder().
 xrayManager, err := xray.New(serviceConfig)
 ```
 
+If the provided token is scoped for a `project` you need to set its value in the manager for authentications in relevant API's
+```go
+xrayManager, err := xray.New(serviceConfig).SetProjectKey("project")
+```
+
 ### Using Xray Services
 
 #### Fetching Xray's Version
@@ -3003,6 +3015,43 @@ resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
 exists, err := serviceManager.ReleaseBundleExists(rbName, rbVersion, projectKey)
 ```
 
+#### Annotate Release Bundle
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+
+cmd := NewReleaseBundleAnnotateCommand()
+serverDetails := &config.ServerDetails{
+    ArtifactoryUrl: "https://artifactory.example.com",
+}
+cmd.SetServerDetails(serverDetails)
+annotateParams := lifecycle.AnnotateOperationParams{
+	RbTag: lifecycle.RbAnnotationTag{
+	    Tag: "bundle-tag",
+		Exist: true,
+    },
+	RbProps: lifecycle.RbAnnotationProps{
+	    Properties:props.ToMap(),
+		Exists: false,
+    },
+    RbDelProps: services.RbDelProps{
+        Keys:  "key1,key2",
+        Exist: false,
+    },
+    RbDetails:   rbDetails,
+    QueryParams: queryParams,
+    PropertyParams: lifecycle.CommonPropParams{
+        Path: "manifest-path",
+		Recursive: false,
+    },
+	ArtifactoryUrl: services.ArtCommonParams{
+        Url: cmd.ServerDetails().ArtifactoryUrl,
+    },
+}
+
+resp, err := serviceManager.AnnotateReleaseBundle(params)
+```
 ## Evidence APIs
 
 ### Creating Evidence Service Manager
@@ -3115,4 +3164,49 @@ queryDetails := metadataService.QueryDetails{
 }
 
 body, err = metadataManager.GraphqlQuery(queryDetails)
+```
+## Onemodel APIs
+
+### Creating Onemodel Service Manager
+
+#### Creating Onemodel Details
+
+```go
+omDetails := auth.NewOnemodelDetails()
+omDetails.SetUrl("http://localhost:8081/onemodel")
+omDetails.SetAccessToken("access-token")
+// if client certificates are required
+omDetails.SetClientCertPath("path/to/.cer")
+omDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Onemodel Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(omDetails).
+    SetCertificatesPath(omDetails.GetClientCertPath()).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(3).
+    Build()
+```
+
+#### Creating New Onemodel Service Manager
+
+```go
+onemodelManager, err := onemodel.NewManager(serviceConfig)
+```
+
+### Using Onemodel Services
+
+#### Graphql query
+
+```go
+queryBytes := []byte(`{"query":"someGraphqlQuery"}`)
+
+queryDetails := onemodelService.QueryDetails{
+  Body:  queryBytes,
+}
+
+body, err = onemodelManager.GraphqlQuery(queryDetails)
 ```
