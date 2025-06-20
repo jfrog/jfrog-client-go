@@ -3180,6 +3180,7 @@ envelopeBytes := []byte("envelope")
 evidenceDetails := evidenceService.EvidenceDetails{
   SubjectUri:  "subjectUri",
   DSSEFileRaw: &envelopeBytes,
+  ProviderId:  "someProviderId",
 }
 body, err = evideceManager.UploadEvidence(evidenceDetails)
 ```
