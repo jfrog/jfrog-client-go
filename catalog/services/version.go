@@ -1,10 +1,8 @@
 package services
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -12,7 +10,7 @@ import (
 )
 
 const (
-	catalogVersionApi = "api/v1/system/version"
+	catalogPingApi = "api/v1/system/ping"
 )
 
 type VersionService struct {
@@ -25,24 +23,17 @@ func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService 
 	return &VersionService{client: client}
 }
 
-// GetVersion returns the version of Xray
+// Catalog currently does not have a version endpoint, so we use the ping endpoint to check if the service is up and running.
+// https://jfrog-int.atlassian.net/browse/CTLG-829
 func (vs *VersionService) GetVersion() (string, error) {
 	httpDetails := vs.CatalogDetails.CreateHttpClientDetails()
-	resp, body, _, err := vs.client.SendGet(vs.CatalogDetails.GetUrl()+catalogVersionApi, true, &httpDetails)
+	resp, body, _, err := vs.client.SendGet(vs.CatalogDetails.GetUrl()+catalogPingApi, true, &httpDetails)
 	if err != nil {
-		return "", errors.New("failed while attempting to get JFrog Catalog version: " + err.Error())
+		return "", errors.New("failed while attempting to ping JFrog Catalog: " + err.Error())
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", errors.New("got unexpected server response while attempting to get JFrog Catalog version:\n" + err.Error())
+		return "", errors.New("got unexpected server response while attempting to ping JFrog Catalog:\n" + err.Error())
 	}
-	var version xrayVersion
-	if err = json.Unmarshal(body, &version); err != nil {
-		return "", errorutils.CheckErrorf("couldn't parse JFrog Catalog server version response: %s", err.Error())
-	}
-	return strings.TrimSpace(version.Version), nil
-}
-
-type xrayVersion struct {
-	Version  string `json:"xray_version,omitempty"`
-	Revision string `json:"xray_revision,omitempty"`
+	// Since Catalog does not have a version endpoint, we return a hardcoded version.
+	return "1.0.0", nil
 }
