@@ -33,30 +33,30 @@ type CreateTokenParams struct {
 }
 
 type VcsCommit struct {
-    VcsUrl   string `json:"vcsUrl,omitempty"`
-    Branch   string `json:"branch,omitempty"`
-    Revision string `json:"revision,omitempty"`
+	VcsUrl   string `json:"vcs_url,omitempty"`
+	Branch   string `json:"branch,omitempty"`
+	Revision string `json:"revision,omitempty"`
 }
 
 type Context struct {
-    VcsCommit *VcsCommit `json:"vcsCommit,omitempty"`
+	VcsCommit *VcsCommit `json:"vcs_commit,omitempty"`
 }
 
 type CreateOidcTokenParams struct {
-    GrantType             string   `json:"grant_type,omitempty"`
-    SubjectTokenType      string   `json:"subject_token_type,omitempty"`
-    OidcTokenID           string   `json:"subject_token,omitempty"`
-    ProviderName          string   `json:"provider_name,omitempty"`
-    ProjectKey            string   `json:"project_key,omitempty"`
-    JobId                 string   `json:"job_id,omitempty"`
-    RunId                 string   `json:"run_id,omitempty"`
-    Repo                  string   `json:"repo,omitempty"`
-    ApplicationKey        string   `json:"application_key,omitempty"`
-    Audience              string   `json:"audience,omitempty"`
-    ProviderType          string   `json:"provider_type,omitempty"`
-    IdentityMappingName   string   `json:"identity_mapping_name,omitempty"`
-    IncludeReferenceToken *bool    `json:"include_reference_token,omitempty"`
-    Context               *Context `json:"context,omitempty"`
+	GrantType             string   `json:"grant_type,omitempty"`
+	SubjectTokenType      string   `json:"subject_token_type,omitempty"`
+	OidcTokenID           string   `json:"subject_token,omitempty"`
+	ProviderName          string   `json:"provider_name,omitempty"`
+	ProjectKey            string   `json:"project_key,omitempty"`
+	JobId                 string   `json:"job_id,omitempty"`
+	RunId                 string   `json:"run_id,omitempty"`
+	Repo                  string   `json:"repo,omitempty"`
+	ApplicationKey        string   `json:"application_key,omitempty"`
+	Audience              string   `json:"audience,omitempty"`
+	ProviderType          string   `json:"provider_type,omitempty"`
+	IdentityMappingName   string   `json:"identity_mapping_name,omitempty"`
+	IncludeReferenceToken *bool    `json:"include_reference_token,omitempty"`
+	Context               *Context `json:"context,omitempty"`
 }
 
 func NewCreateTokenParams(params CreateTokenParams) CreateTokenParams {
