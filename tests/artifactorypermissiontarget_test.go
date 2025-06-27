@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jfrog/jfrog-client-go/utils"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
 )
 
