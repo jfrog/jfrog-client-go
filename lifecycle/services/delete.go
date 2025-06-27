@@ -98,12 +98,12 @@ func (rbs *ReleaseBundlesService) waitForRemoteDeletion(rbDetails ReleaseBundleD
 		}
 		deletionStatus := resp[len(resp)-1].Status
 		switch deletionStatus {
-		case InProgress:
+		case InProgress, Started, Pending, Deleting, Processing:
 			return false, nil, nil
 		case Completed:
 			return true, nil, nil
-		case Failed:
-			return true, nil, errorutils.CheckErrorf("remote deletion failed!")
+		case Failed, Rejected:
+			return true, nil, errorutils.CheckErrorf("remote deletion ended with status: %s", deletionStatus)
 		default:
 			return true, nil, errorutils.CheckErrorf("unexpected status for remote deletion: %s", deletionStatus)
 		}
