@@ -98,7 +98,7 @@ func (rbs *ReleaseBundlesService) waitForRemoteDeletion(rbDetails ReleaseBundleD
 		}
 		deletionStatus := resp[len(resp)-1].Status
 		switch deletionStatus {
-		case InProgress, Started, Pending, Deleting, Processing:
+		case InProgress, Started, Pending, Deleting, Processing, Created:
 			return false, nil, nil
 		case Completed:
 			return true, nil, nil
