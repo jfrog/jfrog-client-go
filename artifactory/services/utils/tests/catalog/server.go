@@ -21,7 +21,7 @@ func StartCatalogMockServerWithParams(t *testing.T, params MockServerParams) int
 	handlers := tests.HttpServerHandlers{}
 
 	handlers["/"] = http.NotFound
-	// Version handlers
+	// Version handlers (version is not available in Catalog, so we use ping endpoint)
 	handlers["/catalog/api/v1/system/ping"] = catalogGetVersionHandlerFunc(t, params)
 	// Enrich handlers
 	handlers["/catalog/api/v1/beta/cyclonedx/enrich"] = catalogEnrichHandler(t, params)
@@ -36,9 +36,6 @@ func StartCatalogMockServerWithParams(t *testing.T, params MockServerParams) int
 
 func catalogGetVersionHandlerFunc(t *testing.T, params MockServerParams) func(w http.ResponseWriter, r *http.Request) {
 	version := "1.0.0"
-	if !params.Alive {
-		version = ""
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !params.Alive {
 			http.Error(w, "Catalog service is not available", http.StatusServiceUnavailable)
