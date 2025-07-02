@@ -142,7 +142,6 @@ type PermissionTargetSection struct {
 	ExcludePatterns []string `json:"exclude-patterns,omitempty"`
 	Repositories    []string `json:"repositories"`
 	Actions         *Actions `json:"actions,omitempty"`
-	Uri             string   `json:"uri"`
 }
 
 type Actions struct {
