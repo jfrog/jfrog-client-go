@@ -96,16 +96,15 @@ func (rbs *ReleaseBundlesService) waitForRemoteDeletion(rbDetails ReleaseBundleD
 		if err != nil {
 			return true, nil, err
 		}
-		deletionStatus := resp[len(resp)-1].Status
-		switch deletionStatus {
-		case InProgress, Started, Pending, Deleting, Processing, Created:
-			return false, nil, nil
-		case Completed:
+		deletionStatusMap := rbs.getStatusMapFromDistributionsResponse(resp)
+		if deletionStatusMap[Completed] {
 			return true, nil, nil
-		case Failed, Rejected:
-			return true, nil, errorutils.CheckErrorf("remote deletion ended with status: %s", deletionStatus)
-		default:
-			return true, nil, errorutils.CheckErrorf("unexpected status for remote deletion: %s", deletionStatus)
+		} else if deletionStatusMap[InProgress] {
+			return false, nil, nil
+		} else if deletionStatusMap[Failed] {
+			return false, nil, errorutils.CheckErrorf("remote deletion ended with status: %s", Failed)
+		} else {
+			return true, nil, errorutils.CheckErrorf("unexpected statuses for remote deletion: %s", rbs.getStatusSlice(deletionStatusMap))
 		}
 	}
 	pollingExecutor := &httputils.PollingExecutor{
