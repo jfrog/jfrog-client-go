@@ -102,7 +102,7 @@ func (rbs *ReleaseBundlesService) waitForRemoteDeletion(rbDetails ReleaseBundleD
 		} else if deletionStatusMap[InProgress] {
 			return false, nil, nil
 		} else if deletionStatusMap[Failed] {
-			return false, nil, errorutils.CheckErrorf("remote deletion ended with status: %s", Failed)
+			return true, nil, errorutils.CheckErrorf("remote deletion failed!")
 		} else {
 			return true, nil, errorutils.CheckErrorf("unexpected statuses for remote deletion: %s", rbs.getStatusSlice(deletionStatusMap))
 		}
