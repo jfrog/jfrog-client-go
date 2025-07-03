@@ -35,7 +35,6 @@ const (
 	Rejected   RbStatus = "REJECTED"
 	Deleting   RbStatus = "DELETING"
 	Started    RbStatus = "STARTED"
-	Created    RbStatus = "CREATED"
 )
 
 func (rbs *ReleaseBundlesService) GetReleaseBundleCreationStatus(rbDetails ReleaseBundleDetails, projectKey string, sync bool) (ReleaseBundleStatusResponse, error) {
