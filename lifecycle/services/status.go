@@ -87,14 +87,6 @@ func (rbs *ReleaseBundlesService) getStatusSlice(statusMap map[RbStatus]bool) []
 	return statusSlice
 }
 
-func (rbs *ReleaseBundlesService) getStatusMapFromDistributionsResponse(distributionsResp GetDistributionsResponse) (statusMap map[RbStatus]bool) {
-	statusMap = make(map[RbStatus]bool)
-	for _, res := range distributionsResp {
-		statusMap[res.Status] = true
-	}
-	return statusMap
-}
-
 func (rbs *ReleaseBundlesService) GetReleaseBundleSpecification(rbDetails ReleaseBundleDetails) (specResp ReleaseBundleSpecResponse, err error) {
 	restApi := GetReleaseBundleSpecificationRestApi(rbDetails)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)

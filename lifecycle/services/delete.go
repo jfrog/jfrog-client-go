@@ -3,6 +3,8 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/gofrog/version"
+	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -15,7 +17,8 @@ import (
 )
 
 const (
-	remoteDeleteEndpoint = "remote_delete"
+	remoteDeleteEndpoint                           = "remote_delete"
+	minimumVersionForSupportingNewReleaseBundleApi = "7.63.2"
 )
 
 func (rbs *ReleaseBundlesService) DeleteReleaseBundleVersion(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams) error {
@@ -46,7 +49,7 @@ func (rbs *ReleaseBundlesService) deleteReleaseBundle(params CommonOptionalQuery
 	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent)
 }
 
-func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams) error {
+func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams, artifactoryServiceManager artifactory.ArtifactoryServicesManager) error {
 	dryRunStr := ""
 	if params.DryRun {
 		dryRunStr = "[Dry run] "
@@ -59,7 +62,14 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 		return errorutils.CheckError(err)
 	}
 
-	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails)
+	artifactoryVersion, err := artifactoryServiceManager.GetVersion()
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	log.Debug("Artifactory Version: " + artifactoryVersion)
+	newReleaseBundleApiSupported := version.NewVersion(artifactoryVersion).AtLeast(minimumVersionForSupportingNewReleaseBundleApi)
+
+	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails, newReleaseBundleApiSupported)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
 	if err != nil {
 		return err
@@ -67,12 +77,22 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 
 	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
 	httpClientDetails.SetContentTypeApplicationJson()
+	if newReleaseBundleApiSupported {
+		resp, body, err := rbs.client.SendDelete(requestFullUrl, content, &httpClientDetails)
+		if err != nil {
+			return err
+		}
+		log.Debug("Artifactory response:", resp.Status)
+		return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
+	}
+
 	resp, body, err := rbs.client.SendPost(requestFullUrl, content, &httpClientDetails)
 	if err != nil {
 		return err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
+
 	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
 	if err != nil || params.Async || params.DryRun {
 		return err
@@ -81,7 +101,10 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	return rbs.waitForRemoteDeletion(rbDetails, params)
 }
 
-func GetRemoteDeleteReleaseBundleApi(rbDetails ReleaseBundleDetails) string {
+func GetRemoteDeleteReleaseBundleApi(rbDetails ReleaseBundleDetails, newReleaseBundleApiSupported bool) string {
+	if newReleaseBundleApiSupported {
+		return path.Join(releaseBundleNewApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+	}
 	return path.Join(distributionBaseApi, remoteDeleteEndpoint, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 
@@ -96,15 +119,16 @@ func (rbs *ReleaseBundlesService) waitForRemoteDeletion(rbDetails ReleaseBundleD
 		if err != nil {
 			return true, nil, err
 		}
-		deletionStatusMap := rbs.getStatusMapFromDistributionsResponse(resp)
-		if deletionStatusMap[Completed] {
-			return true, nil, nil
-		} else if deletionStatusMap[InProgress] {
+		deletionStatus := resp[len(resp)-1].Status
+		switch deletionStatus {
+		case InProgress:
 			return false, nil, nil
-		} else if deletionStatusMap[Failed] {
+		case Completed:
+			return true, nil, nil
+		case Failed:
 			return true, nil, errorutils.CheckErrorf("remote deletion failed!")
-		} else {
-			return true, nil, errorutils.CheckErrorf("unexpected statuses for remote deletion: %s", rbs.getStatusSlice(deletionStatusMap))
+		default:
+			return true, nil, errorutils.CheckErrorf("unexpected status for remote deletion: %s", deletionStatus)
 		}
 	}
 	pollingExecutor := &httputils.PollingExecutor{

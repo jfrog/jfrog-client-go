@@ -1,6 +1,7 @@
 package lifecycle
 
 import (
+	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -137,9 +138,9 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	return distributeBundleService.Distribute()
 }
 
-func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, params lifecycle.ReleaseBundleRemoteDeleteParams) error {
+func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, params lifecycle.ReleaseBundleRemoteDeleteParams, artifactoryServiceManager artifactory.ArtifactoryServicesManager) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.RemoteDeleteReleaseBundle(rbDetails, params)
+	return rbService.RemoteDeleteReleaseBundle(rbDetails, params, artifactoryServiceManager)
 }
 
 func (lcs *LifecycleServicesManager) ExportReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, modifications lifecycle.Modifications, queryParams lifecycle.CommonOptionalQueryParams) (exportResponse lifecycle.ReleaseBundleExportedStatusResponse, err error) {
