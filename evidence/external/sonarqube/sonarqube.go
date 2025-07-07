@@ -68,17 +68,15 @@ func createHttpClient(proxy string) *http.Client {
 }
 
 func (sqe *SonarQube) GetSonarAnalysis(analysisID string) ([]byte, error) {
-	log.Debug("Fetching sonar analysis for given analysisID: " + analysisID)
+	log.Debug("Fetching quality gate analysis for analysisID" + analysisID)
 	queryParams := sqe.createQueryParam(nil, "analysisId", analysisID)
 	sonarServerURL := sqe.ServiceConfig.url + sqe.ServiceConfig.projectStatusAPIPath
 
-	// Create a new HTTP request
 	req, err := http.NewRequest("GET", sonarServerURL, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Add query parameters to the request
 	q := req.URL.Query()
 	for key, value := range queryParams {
 		q.Add(key, value)
@@ -91,7 +89,7 @@ func (sqe *SonarQube) GetSonarAnalysis(analysisID string) ([]byte, error) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			log.Error("Failed to close response body: " + err.Error())
+			log.Error("Failed to close response body" + err.Error())
 		}
 	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
@@ -119,7 +117,7 @@ func (sqe *SonarQube) CollectSonarQubePredicate(taskID string) ([]byte, error) {
 	}
 	defer func() {
 		if cerr := resp.Body.Close(); cerr != nil {
-			log.Error("Failed to close response body: " + cerr.Error())
+			log.Error("Failed to close response body" + cerr.Error())
 		}
 	}()
 	if resp.StatusCode != http.StatusOK {
@@ -133,15 +131,12 @@ func (sqe *SonarQube) CollectSonarQubePredicate(taskID string) ([]byte, error) {
 }
 
 func (sqe *SonarQube) sendRequestUsingSonarQubeToken(req *http.Request, proxy string) (*http.Response, []byte, error) {
-	// Add Authorization header
 	sonarQubeToken := os.Getenv(SonarAccessTokenKey)
 	if sonarQubeToken == "" {
 		return nil, nil, errorutils.CheckErrorf("Sonar access token not found in environment variable " + SonarAccessTokenKey)
 	}
 	req.Header.Set("Authorization", "Bearer "+sonarQubeToken)
 	httpClient := createHttpClient(proxy)
-
-	// Send the request using the standard HTTP client
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, nil, err
