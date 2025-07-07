@@ -65,8 +65,5 @@ func (es *EnrichService) enrich(bomJson []byte) ([]byte, error) {
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return nil, errors.New("got unexpected Catalog server response while attempting to enrich CycloneDX JSON BOM:\n" + err.Error())
 	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
-	}
 	return body, nil
 }

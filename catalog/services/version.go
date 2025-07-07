@@ -35,5 +35,5 @@ func (vs *VersionService) GetVersion() (string, error) {
 		return "", errors.New("got unexpected server response while attempting to ping JFrog Catalog:\n" + err.Error())
 	}
 	// Since Catalog does not have a version endpoint, we return a hardcoded version.
-	return "1.0.0", nil
+	return catalogMinVersionForEnrichApi, nil
 }
