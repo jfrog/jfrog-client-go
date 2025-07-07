@@ -17,6 +17,8 @@ import (
 )
 
 type ArtifactoryServicesManager interface {
+	CreateRepositoriesInBatch() *services.BatchRepositoryService
+	UpdateRepositoriesInBatch() *services.BatchRepositoryService
 	CreateLocalRepository() *services.LocalRepositoryService
 	CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error
 	CreateRemoteRepository() *services.RemoteRepositoryService
@@ -115,6 +117,14 @@ type ArtifactoryServicesManager interface {
 // interface's methods, but still implement this interface.
 // This comes in very handy for tests.
 type EmptyArtifactoryServicesManager struct {
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateRepositoriesInBatch() *services.BatchRepositoryService {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) UpdateRepositoriesInBatch() *services.BatchRepositoryService {
+	panic("Failed: Method is not implemented")
 }
 
 func (esm *EmptyArtifactoryServicesManager) CreateLocalRepository() *services.LocalRepositoryService {
