@@ -3,8 +3,6 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/gofrog/version"
-	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -17,8 +15,7 @@ import (
 )
 
 const (
-	remoteDeleteEndpoint                           = "remote_delete"
-	minimumVersionForSupportingNewReleaseBundleApi = "7.63.2"
+	remoteDeleteEndpoint = "remote_delete"
 )
 
 func (rbs *ReleaseBundlesService) DeleteReleaseBundleVersion(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams) error {
@@ -49,7 +46,7 @@ func (rbs *ReleaseBundlesService) deleteReleaseBundle(params CommonOptionalQuery
 	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent)
 }
 
-func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams, artifactoryServiceManager artifactory.ArtifactoryServicesManager) error {
+func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams, newReleaseBundleApiSupported bool) error {
 	dryRunStr := ""
 	if params.DryRun {
 		dryRunStr = "[Dry run] "
@@ -61,13 +58,6 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-
-	artifactoryVersion, err := artifactoryServiceManager.GetVersion()
-	if err != nil {
-		return errorutils.CheckError(err)
-	}
-	log.Debug("Artifactory Version: " + artifactoryVersion)
-	newReleaseBundleApiSupported := version.NewVersion(artifactoryVersion).AtLeast(minimumVersionForSupportingNewReleaseBundleApi)
 
 	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails, newReleaseBundleApiSupported)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
