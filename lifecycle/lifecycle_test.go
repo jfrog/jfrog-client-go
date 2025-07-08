@@ -3,6 +3,8 @@ package lifecycle
 import (
 	"encoding/json"
 	"fmt"
+	coreUtils "github.com/jfrog/jfrog-cli-core/v2/artifactory/utils"
+	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -211,15 +213,54 @@ func TestRemoteDeleteReleaseBundle(t *testing.T) {
 			}
 			requestNum++
 			writeMockStatusResponse(t, w, lifecycle.GetDistributionsResponse{{Status: rbStatus}})
-		case "/" + lifecycle.GetRemoteDeleteReleaseBundleApi(testRb):
+		case "/" + lifecycle.GetRemoteDeleteReleaseBundleApi(testRb, false):
 			w.WriteHeader(http.StatusAccepted)
 		}
 	}
+	serverDetails := &config.ServerDetails{
+		Url: "/",
+	}
+	artifactoryServiceManager, err := coreUtils.CreateServiceManager(serverDetails, -1, 0, false)
+	assert.NoError(t, err)
 
 	mockServer, rbService := createMockServer(t, handlerFunc)
 	defer mockServer.Close()
 
-	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}))
+	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}, artifactoryServiceManager))
+}
+
+func TestRemoteDeleteReleaseBundleNewApi(t *testing.T) {
+	lifecycle.SyncSleepInterval = 1 * time.Second
+	defer func() { lifecycle.SyncSleepInterval = lifecycle.DefaultSyncSleepInterval }()
+
+	requestNum := 0
+	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
+		switch r.RequestURI {
+		case "/" + lifecycle.GetReleaseBundleDistributionsApi(testRb):
+			w.WriteHeader(http.StatusOK)
+			var rbStatus lifecycle.RbStatus
+			switch requestNum {
+			case 0:
+				rbStatus = lifecycle.InProgress
+			case 1:
+				rbStatus = lifecycle.InProgress
+			case 2:
+				rbStatus = lifecycle.Completed
+			}
+			requestNum++
+			writeMockStatusResponse(t, w, lifecycle.GetDistributionsResponse{{Status: rbStatus}})
+		case "/" + lifecycle.GetRemoteDeleteReleaseBundleApi(testRb, true):
+			w.WriteHeader(http.StatusAccepted)
+		}
+	}
+	serverDetails := &config.ServerDetails{}
+	artifactoryServiceManager, err := coreUtils.CreateServiceManager(serverDetails, -1, 0, false)
+	assert.NoError(t, err)
+
+	mockServer, rbService := createMockServer(t, handlerFunc)
+	defer mockServer.Close()
+
+	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}, artifactoryServiceManager))
 }
 
 func TestGetReleaseBundleVersionPromotions(t *testing.T) {
