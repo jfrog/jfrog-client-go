@@ -31,6 +31,10 @@ func (rrs *RemoteRepositoryService) Alpine(params AlpineRemoteRepositoryParams) 
 	return rrs.performRequest(params, params.Key)
 }
 
+func (rrs *RemoteRepositoryService) Ansible(params AnsibleRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
 func (rrs *RemoteRepositoryService) Bower(params BowerRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
@@ -230,6 +234,14 @@ type AlpineRemoteRepositoryParams struct {
 
 func NewAlpineRemoteRepositoryParams() AlpineRemoteRepositoryParams {
 	return AlpineRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("alpine")}
+}
+
+type AnsibleRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewAnsibleRemoteRepositoryParams() AnsibleRemoteRepositoryParams {
+	return AnsibleRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("ansible")}
 }
 
 type BowerRemoteRepositoryParams struct {
