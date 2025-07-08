@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	lifecycle "github.com/jfrog/jfrog-client-go/lifecycle/services"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type LifecycleServicesManager struct {
@@ -63,6 +64,18 @@ func (lcs *LifecycleServicesManager) CreateReleaseBundleFromBundles(rbDetails li
 	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sourceReleaseBundles lifecycle.CreateFromReleaseBundlesSource) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.CreateFromBundles(rbDetails, queryParams, signingKeyName, sourceReleaseBundles)
+}
+
+func (lcs *LifecycleServicesManager) CreateReleaseBundleFromPackages(rbDetails lifecycle.ReleaseBundleDetails,
+	queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, packageSource lifecycle.CreateFromPackagesSource) error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.CreateFromPackages(rbDetails, queryParams, signingKeyName, packageSource)
+}
+
+func (lcs *LifecycleServicesManager) CreateReleaseBundlesFromMultipleSources(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, sources []lifecycle.RbSource) (response []byte, err error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	resp, err := rbService.CreateReleaseBundleFromMultipleSources(rbDetails, queryParams, signingKeyName, sources)
+	return resp, errorutils.CheckError(err)
 }
 
 func (lcs *LifecycleServicesManager) GetReleaseBundleSpecification(rbDetails lifecycle.ReleaseBundleDetails) (lifecycle.ReleaseBundleSpecResponse, error) {

@@ -39,7 +39,7 @@ func (vs *VersionService) GetVersion() (string, error) {
 	}
 	var version xrayVersion
 	if err = json.Unmarshal(body, &version); err != nil {
-		return "", errorutils.CheckErrorf("couldn't parse JFrog Xray server version response: " + err.Error())
+		return "", errorutils.CheckErrorf("couldn't parse JFrog Xray server version response: %s", err.Error())
 	}
 	return strings.TrimSpace(version.Version), nil
 }
