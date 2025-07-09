@@ -3081,17 +3081,23 @@ resp, err := serviceManager.DeleteReleaseBundleVersionPromotion(rbDetails, query
 #### Remote Delete Release Bundle
 
 ```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
 rules := &distribution.DistributionCommonParams{
-    SiteName:     "*",
-    CityName:     "*",
-    CountryCodes: []string{"*"},
+SiteName:     "*",
+CityName:     "*",
+CountryCodes: []string{"*"},
 }
 params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
 params.DistributionRules = append(params.DistributionRules, rules)
 
-dryRun := true
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
 
-resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
+isNewReleaseBundleApiSupported=true 
+//From 7.63.2, isNewReleaseBundleApiSupported is true, below that version it should be false.
+resp, err := serviceManager.RemoteDeleteReleaseBundle(rbDetails, params, isNewReleaseBundleApiSupported)
 ```
 
 #### check-rb-exists
