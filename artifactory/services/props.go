@@ -87,12 +87,12 @@ func (sp *PropsParams) GetProps() string {
 	return sp.Props
 }
 
-func (ps *PropsService) performRequestForRepoOnly(propsParams PropsParams, isDelete bool) (int, error) {
+func (ps *PropsService) getEncodedParam(propsParams PropsParams, isDelete bool) (string, error) {
 	var encodedParam string
 	if !isDelete {
 		props, err := utils.ParseProperties(propsParams.GetProps())
 		if err != nil {
-			return 0, err
+			return "", err
 		}
 		encodedParam = props.ToEncodedString(true)
 	} else {
@@ -103,6 +103,10 @@ func (ps *PropsService) performRequestForRepoOnly(propsParams PropsParams, isDel
 		// Remove trailing comma
 		encodedParam = strings.TrimSuffix(encodedParam, ",")
 	}
+	return encodedParam, nil
+}
+
+func (ps *PropsService) addOrDeletePropertiesForRepo(propsParams PropsParams, isDelete bool, encodedParam string) (int, error) {
 	var action func(string, string, string) (*http.Response, []byte, error)
 	if isDelete {
 		action = ps.sendDeleteRequest
@@ -113,49 +117,56 @@ func (ps *PropsService) performRequestForRepoOnly(propsParams PropsParams, isDel
 	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), false)
 	errorsQueue := clientutils.NewErrorsQueue(1)
 	reader := propsParams.GetReader()
-	go func() {
-		resultItem := new(utils.ResultItem)
-		if reader.NextRecord(resultItem) == nil {
-			repoName := resultItem.Repo
-			setPropsTask := func(threadId int) error {
-				var err error
-				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
+	resultItem := new(utils.ResultItem)
+	if reader.NextRecord(resultItem) == nil {
+		repoName := resultItem.Repo
+		setPropsTask := func(threadId int) error {
+			var err error
+			logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
 
-				restAPI := path.Join("api", "storage", repoName)
-				setPropertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
-				if err != nil {
-					return err
-				}
-				// Because we do set/delete props on search results that took into account the
-				// recursive flag, we do not want the action itself to be recursive.
-				setPropertiesURL += "?properties=" + encodedParam + "&recursive=0"
-				resp, body, err := action(logMsgPrefix, repoName, setPropertiesURL)
-
-				if err != nil {
-					return err
-				}
-				if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent); err != nil {
-					return err
-				}
-				successCounters[threadId]++
-				return nil
+			restAPI := path.Join("api", "storage", repoName)
+			setPropertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+			if err != nil {
+				return err
 			}
+			// Because we do set/delete props on search results that took into account the
+			// recursive flag, we do not want the action itself to be recursive.
+			setPropertiesURL += "?properties=" + encodedParam + "&recursive=0"
+			resp, body, err := action(logMsgPrefix, repoName, setPropertiesURL)
 
-			_, _ = producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
+			if err != nil {
+				return err
+			}
+			if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent); err != nil {
+				return err
+			}
+			successCounters[threadId]++
+			return nil
 		}
-		defer producerConsumer.Done()
-		if err := reader.GetError(); err != nil {
-			errorsQueue.AddError(err)
-		}
-		reader.Reset()
-	}()
 
+		_, _ = producerConsumer.AddTaskWithError(setPropsTask, errorsQueue.AddError)
+	}
+
+	defer producerConsumer.Done()
+	if err := reader.GetError(); err != nil {
+		errorsQueue.AddError(err)
+	}
+	reader.Reset()
 	producerConsumer.Run()
 	totalSuccess := 0
 	for _, v := range successCounters {
 		totalSuccess += v
 	}
 	return totalSuccess, errorsQueue.GetError()
+}
+
+func (ps *PropsService) performRequestForRepoOnly(propsParams PropsParams, isDelete bool) (int, error) {
+	encodedParam, err := ps.getEncodedParam(propsParams, isDelete)
+	if err != nil {
+		return 0, err
+	}
+
+	return ps.addOrDeletePropertiesForRepo(propsParams, isDelete, encodedParam)
 }
 
 func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (int, error) {
