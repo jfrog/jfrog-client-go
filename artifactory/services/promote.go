@@ -76,7 +76,7 @@ func (ps *PromoteService) BuildPromote(promotionParams PromotionParams) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
 		return err
 	}
