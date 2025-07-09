@@ -3095,9 +3095,9 @@ queryParams := CommonOptionalQueryParams{}
 queryParams.ProjectKey = "project"
 queryParams.Async = true
 
-newReleaseBundleApiSupported=true 
-//From 7.63.2, newReleaseBundleApiSupported is true, below that version it should be false.
-resp, err := serviceManager.RemoteDeleteReleaseBundle(rbDetails, params, newReleaseBundleApiSupported)
+isNewReleaseBundleApiSupported=true 
+//From 7.63.2, isNewReleaseBundleApiSupported is true, below that version it should be false.
+resp, err := serviceManager.RemoteDeleteReleaseBundle(rbDetails, params, isNewReleaseBundleApiSupported)
 ```
 
 #### check-rb-exists

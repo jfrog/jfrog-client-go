@@ -137,9 +137,9 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	return distributeBundleService.Distribute()
 }
 
-func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, params lifecycle.ReleaseBundleRemoteDeleteParams, newReleaseBundleApiSupported bool) error {
+func (lcs *LifecycleServicesManager) RemoteDeleteReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, params lifecycle.ReleaseBundleRemoteDeleteParams, isNewReleaseBundleApiSupported bool) error {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.RemoteDeleteReleaseBundle(rbDetails, params, newReleaseBundleApiSupported)
+	return rbService.RemoteDeleteReleaseBundle(rbDetails, params, isNewReleaseBundleApiSupported)
 }
 
 func (lcs *LifecycleServicesManager) ExportReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, modifications lifecycle.Modifications, queryParams lifecycle.CommonOptionalQueryParams) (exportResponse lifecycle.ReleaseBundleExportedStatusResponse, err error) {
