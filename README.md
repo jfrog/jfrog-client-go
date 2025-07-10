@@ -64,6 +64,7 @@
       - [Create API Key](#create-api-key)
       - [Regenerate API Key](#regenerate-api-key)
       - [Get API Key](#get-api-key)
+      - [Creating and Updating Multiple Repositories](#creating-and-updating-multiple-repositories)
       - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
       - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
       - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
@@ -1080,6 +1081,141 @@ Updating federated Generic repository:
 ```go
 err = servicesManager.UpdateFederatedRepository().Generic(params)
 ```
+
+#### Creating and Updating Multiple Repositories
+
+NOTE: 
+- Creating of multiple repositories is supported from artifactory 7.84.3 and later versions.
+- Updating of multiple repositories is supported from Artifactory 7.104.2 and later versions.
+
+You can create and update multiple repositories in a single batch operation using JSON configuration. This feature allows you to efficiently create or update  multiple repositories of different types (local, remote, virtual, federated) and package types in one request.
+
+The batch operation accepts a JSON array containing repository configurations and can handle mixed repository types within the same request.
+
+**Creating Multiple Repositories:**
+
+```go
+// JSON configuration for multiple repositories
+repositoriesConfig := `[
+  {
+    "key": "maven-local-repo",
+    "rclass": "local",
+    "packageType": "maven",
+    "description": "Local Maven repository",
+    "repoLayoutRef": "maven-2-default"
+  },
+  {
+    "key": "npm-remote-repo", 
+    "rclass": "remote",
+    "packageType": "npm",
+    "description": "Remote NPM repository",
+    "url": "https://registry.npmjs.org/",
+    "repoLayoutRef": "npm-default"
+  },
+  {
+    "key": "docker-virtual-repo",
+    "rclass": "virtual", 
+    "packageType": "docker",
+    "description": "Virtual Docker repository",
+    "repositories": ["docker-local", "docker-remote"],
+    "repoLayoutRef": "simple-default"
+  }
+]`
+```
+
+**Updating Multiple Repositories:**
+
+```go
+// JSON configuration for updating multiple repositories
+updateConfig := `[
+  {
+    "key": "maven-local-repo",
+    "description": "Updated Maven local repository description",
+    "notes": "Updated internal notes"
+  },
+  {
+    "key": "npm-remote-repo",
+    "description": "Updated NPM remote repository", 
+    "retrievalCachePeriodSecs": 7200
+  }
+]`
+```
+
+**Supported Repository Classes:**
+- `local` - Local repositories for storing artifacts
+- `remote` - Remote repositories for proxying external repositories
+- `virtual` - Virtual repositories for aggregating multiple repositories
+- `federated` - Federated repositories for cross-instance synchronization
+
+**Supported Package Types:**
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vcs, Vagrant, and Yum.
+
+**Error Handling:**
+The batch operation will return an error if any repository in the batch fails to create or update. Check the error message for specific details about which repositories failed and why.
+
+**Config with different repository and package types:**
+
+```go
+// configuration with different repository and package types
+config := `[
+  {
+    "key": "maven-local-prod",
+    "rclass": "local",
+    "packageType": "maven",
+    "description": "Production Maven artifacts",
+    "repoLayoutRef": "maven-2-default",
+    "archiveBrowsingEnabled": true,
+    "xrayIndex": true,
+    "includesPattern": "**/*",
+    "excludesPattern": "com/example/test/**"
+  },
+  {
+    "key": "npm-remote-proxy",
+    "rclass": "remote",
+    "packageType": "npm",
+    "description": "NPM remote proxy",
+    "url": "https://registry.npmjs.org/",
+    "repoLayoutRef": "npm-default",
+    "retrievalCachePeriodSecs": 3600,
+    "assumedOfflinePeriodSecs": 300,
+    "missedRetrievalCachePeriodSecs": 1800
+  },
+  {
+    "key": "docker-virtual-all",
+    "rclass": "virtual",
+    "packageType": "docker",
+    "description": "All Docker repositories",
+    "repositories": ["docker-local-prod", "docker-remote-proxy"],
+    "repoLayoutRef": "simple-default",
+    "defaultDeploymentRepo": "docker-local-prod",
+    "artifactoryRequestsCanRetrieveRemoteArtifacts": true
+  },
+  {
+    "key": "maven-federated-shared",
+    "rclass": "federated",
+    "packageType": "maven",
+    "description": "Federated Maven repository",
+    "repoLayoutRef": "maven-2-default",
+    "members": [
+      {
+        "url": "http://artifactory2.company.com/artifactory/maven-federated-shared",
+        "enabled": true
+      },
+      {
+        "url": "http://artifactory3.company.com/artifactory/maven-federated-shared", 
+        "enabled": true
+      }
+    ]
+  }
+]`
+```
+
+**API Details:**
+- **Endpoint**: `POST/PUT /artifactory/api/v2/repositories/batch`
+- **HTTP Method**: `PUT` for create operations, `POST` for update operations
+- **Content-Type**: `application/json`
+- **Authentication**: Requires admin privileges or appropriate repository permissions
+- **Response**: Returns HTTP 201 for successful creation, HTTP 200 for successful updates
 
 #### Removing a Repository
 
