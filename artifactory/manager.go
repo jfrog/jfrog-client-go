@@ -54,16 +54,10 @@ func NewWithClient(config config.Config, client *jfroghttpclient.JfrogHttpClient
 	return manager, nil
 }
 
-func (sm *ArtifactoryServicesManagerImp) CreateRepositoriesInBatch() *services.BatchRepositoryService {
-	repositoryService := services.NewBatchRepositoryService(sm.client, false)
+func (sm *ArtifactoryServicesManagerImp) CreateUpdateRepositoriesInBatch(body []byte, isUpdate bool) error {
+	repositoryService := services.NewBatchRepositoryService(sm.client, isUpdate)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoryService
-}
-
-func (sm *ArtifactoryServicesManagerImp) UpdateRepositoriesInBatch() *services.BatchRepositoryService {
-	repositoryService := services.NewBatchRepositoryService(sm.client, true)
-	repositoryService.ArtDetails = sm.config.GetServiceDetails()
-	return repositoryService
+	return repositoryService.PerformBatchRequest(body)
 }
 
 func (sm *ArtifactoryServicesManagerImp) CreateLocalRepository() *services.LocalRepositoryService {

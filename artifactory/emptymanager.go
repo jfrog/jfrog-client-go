@@ -17,8 +17,7 @@ import (
 )
 
 type ArtifactoryServicesManager interface {
-	CreateRepositoriesInBatch() *services.BatchRepositoryService
-	UpdateRepositoriesInBatch() *services.BatchRepositoryService
+	CreateUpdateRepositoriesInBatch(body []byte, isUpdate bool) error
 	CreateLocalRepository() *services.LocalRepositoryService
 	CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error
 	CreateRemoteRepository() *services.RemoteRepositoryService
@@ -119,11 +118,7 @@ type ArtifactoryServicesManager interface {
 type EmptyArtifactoryServicesManager struct {
 }
 
-func (esm *EmptyArtifactoryServicesManager) CreateRepositoriesInBatch() *services.BatchRepositoryService {
-	panic("Failed: Method is not implemented")
-}
-
-func (esm *EmptyArtifactoryServicesManager) UpdateRepositoriesInBatch() *services.BatchRepositoryService {
+func (esm *EmptyArtifactoryServicesManager) CreateUpdateRepositoriesInBatch(_ []byte, _ bool) error {
 	panic("Failed: Method is not implemented")
 }
 

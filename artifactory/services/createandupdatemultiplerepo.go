@@ -5,8 +5,9 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
+
+const batchApi = "api/v2/repositories/batch"
 
 type BatchRepositoryService struct {
 	RepositoryService
@@ -21,24 +22,19 @@ func NewBatchRepositoryService(client *jfroghttpclient.JfrogHttpClient, isUpdate
 	}
 }
 
-func (brs *BatchRepositoryService) PerformBatchRequest(content []byte) error {
-	var err error
-
+func (brs *BatchRepositoryService) PerformBatchRequest(content []byte) (err error) {
 	httpClientsDetails := brs.ArtDetails.CreateHttpClientDetails()
 	httpClientsDetails.SetContentTypeApplicationJson()
 
-	url := brs.ArtDetails.GetUrl() + "api/v2/repositories/batch"
-	var operationString string
-	var resp *http.Response
-	var body []byte
+	url := brs.ArtDetails.GetUrl() + batchApi
+	var (
+		resp *http.Response
+		body []byte
+	)
 
 	if brs.isUpdate {
-		log.Info("Updating multiple repositories...")
-		operationString = "updating"
 		resp, body, err = brs.client.SendPost(url, content, &httpClientsDetails)
 	} else {
-		log.Info("Creating multiple repositories...")
-		operationString = "creating"
 		resp, body, err = brs.client.SendPut(url, content, &httpClientsDetails)
 	}
 
@@ -55,6 +51,5 @@ func (brs *BatchRepositoryService) PerformBatchRequest(content []byte) error {
 		}
 	}
 
-	log.Info("Done", operationString, "multiple repositories.")
 	return nil
 }
