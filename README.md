@@ -1085,17 +1085,15 @@ err = servicesManager.UpdateFederatedRepository().Generic(params)
 #### Creating and Updating Multiple Repositories
 
 NOTE: 
-- Creating of multiple repositories is supported from artifactory 7.84.3 and later versions.
+- Creating of multiple repositories is supported from Artifactory 7.84.3 and later versions.
 - Updating of multiple repositories is supported from Artifactory 7.104.2 and later versions.
 
-You can create and update multiple repositories in a single batch operation using JSON configuration. This feature allows you to efficiently create or update  multiple repositories of different types (local, remote, virtual, federated) and package types in one request.
+You can create and update multiple repositories in a single batch operation using the `CreateUpdateRepositoriesInBatch` method. This method accepts a JSON byte array containing repository configurations and can handle mixed repository and package types within the same request.
 
-The batch operation accepts a JSON array containing repository configurations and can handle mixed repository types within the same request.
-
-**Creating Multiple Repositories:**
+****Creating Multiple Repositories:****
 
 ```go
-// JSON configuration for multiple repositories
+// Define repository configurations as JSON array
 repositoriesConfig := `[
   {
     "key": "maven-local-repo",
@@ -1111,22 +1109,20 @@ repositoriesConfig := `[
     "description": "Remote NPM repository",
     "url": "https://registry.npmjs.org/",
     "repoLayoutRef": "npm-default"
-  },
-  {
-    "key": "docker-virtual-repo",
-    "rclass": "virtual", 
-    "packageType": "docker",
-    "description": "Virtual Docker repository",
-    "repositories": ["docker-local", "docker-remote"],
-    "repoLayoutRef": "simple-default"
   }
 ]`
+
+// Create multiple repositories (isUpdate = false)
+err = rtManager.CreateUpdateRepositoriesInBatch([]byte(repositoriesConfig), false)
+if err != nil {
+    return err
+}
 ```
 
 **Updating Multiple Repositories:**
 
 ```go
-// JSON configuration for updating multiple repositories
+// Define update configurations as JSON
 updateConfig := `[
   {
     "key": "maven-local-repo",
@@ -1139,21 +1135,15 @@ updateConfig := `[
     "retrievalCachePeriodSecs": 7200
   }
 ]`
+
+// Update multiple repositories (isUpdate = true)
+err = rtManager.CreateUpdateRepositoriesInBatch([]byte(updateConfig), true)
+if err != nil {
+    return err
+}
 ```
 
-**Supported Repository Classes:**
-- `local` - Local repositories for storing artifacts
-- `remote` - Remote repositories for proxying external repositories
-- `virtual` - Virtual repositories for aggregating multiple repositories
-- `federated` - Federated repositories for cross-instance synchronization
-
-**Supported Package Types:**
-Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vcs, Vagrant, and Yum.
-
-**Error Handling:**
-The batch operation will return an error if any repository in the batch fails to create or update. Check the error message for specific details about which repositories failed and why.
-
-**Config with different repository and package types:**
+**Configurations with mixed repository and package types:**
 
 ```go
 // configuration with different repository and package types
@@ -1208,10 +1198,29 @@ config := `[
     ]
   }
 ]`
+
+// Create all repositories in a single batch operation
+err = rtManager.CreateUpdateRepositoriesInBatch([]byte(config), false)
+if err != nil {
+    return err
+}
 ```
 
-**API Details:**
-- **Endpoint**: `POST/PUT /artifactory/api/v2/repositories/batch`
+**Supported Repository Classes:**
+- `local` - Local repositories for storing artifacts
+- `remote` - Remote repositories for proxying external repositories
+- `virtual` - Virtual repositories for aggregating multiple repositories
+- `federated` - Federated repositories for cross-instance synchronization
+
+**Supported Package Types:**
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vcs, Vagrant, and Yum.
+
+**Method Parameters:**
+- `body []byte` - JSON byte array containing repository configurations
+- `isUpdate bool` - Set to `false` for creating repositories, `true` for updating existing repositories
+
+**HTTP Details:**
+- **Endpoint**: `/artifactory/api/v2/repositories/batch`
 - **HTTP Method**: `PUT` for create operations, `POST` for update operations
 - **Content-Type**: `application/json`
 - **Authentication**: Requires admin privileges or appropriate repository permissions

@@ -41,15 +41,14 @@ func (brs *BatchRepositoryService) PerformBatchRequest(content []byte) (err erro
 	if err != nil {
 		return err
 	}
+	expectedStatusCode := http.StatusCreated
 	if brs.isUpdate {
-		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-			return err
-		}
-	} else {
-		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusCreated); err != nil {
-			return err
-		}
+		expectedStatusCode = http.StatusOK
 	}
 
-	return nil
+	err = errorutils.CheckResponseStatusWithBody(resp, body, expectedStatusCode)
+	if err != nil {
+		return err
+	}
+	return
 }
