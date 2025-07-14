@@ -11,6 +11,7 @@ const (
 	Artifacts      SourceType = "artifacts"
 	Builds         SourceType = "builds"
 	ReleaseBundles SourceType = "release_bundles"
+	Packages       SourceType = "packages"
 )
 
 type createOperation struct {
@@ -55,6 +56,24 @@ func (rbs *ReleaseBundlesService) CreateFromBundles(rbDetails ReleaseBundleDetai
 	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, ReleaseBundles, sourceReleaseBundles)
 }
 
+func (rbs *ReleaseBundlesService) CreateFromPackages(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourcePackages CreateFromPackagesSource) error {
+	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Packages, sourcePackages)
+}
+
+func (rbs *ReleaseBundlesService) CreateReleaseBundleFromMultipleSources(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
+	signingKeyName string, sources []RbSource) (response []byte, err error) {
+	operation := createOperation{
+		reqBody: RbCreationBody{
+			ReleaseBundleDetails: rbDetails,
+			Sources:              sources,
+		},
+		params:         params,
+		signingKeyName: signingKeyName,
+	}
+	response, err = rbs.doPostOperation(&operation)
+	return response, err
+}
+
 func (rbs *ReleaseBundlesService) CreateReleaseBundle(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
 	signingKeyName string, rbSourceType SourceType, source interface{}) error {
 	operation := createOperation{
@@ -87,6 +106,10 @@ type CreateFromBuildsSource struct {
 	Builds []BuildSource `json:"builds,omitempty"`
 }
 
+type CreateFromPackagesSource struct {
+	Packages []PackageSource `json:"packages,omitempty"`
+}
+
 type ArtifactSource struct {
 	Path   string `json:"path,omitempty"`
 	Sha256 string `json:"sha256,omitempty"`
@@ -99,6 +122,13 @@ type BuildSource struct {
 	IncludeDependencies bool   `json:"include_dependencies,omitempty"`
 }
 
+type PackageSource struct {
+	PackageName    string `json:"package_name,omitempty"`
+	PackageVersion string `json:"package_version,omitempty"`
+	PackageType    string `json:"package_type,omitempty"`
+	RepositoryKey  string `json:"repository_key,omitempty"`
+}
+
 type CreateFromReleaseBundlesSource struct {
 	ReleaseBundles []ReleaseBundleSource `json:"release_bundles,omitempty"`
 }
@@ -106,11 +136,20 @@ type CreateFromReleaseBundlesSource struct {
 type ReleaseBundleSource struct {
 	ReleaseBundleName    string `json:"release_bundle_name,omitempty"`
 	ReleaseBundleVersion string `json:"release_bundle_version,omitempty"`
-	ProjectKey           string `json:"project_key,omitempty"`
+	ProjectKey           string `json:"project,omitempty"`
 }
 
+type RbSource struct {
+	SourceType     SourceType            `json:"source_type"`
+	Builds         []BuildSource         `json:"builds,omitempty"`
+	ReleaseBundles []ReleaseBundleSource `json:"release_bundles,omitempty"`
+	Artifacts      []ArtifactSource      `json:"artifacts,omitempty"`
+	Packages       []PackageSource       `json:"packages,omitempty"`
+	Aql            string                `json:"aql,omitempty"`
+}
 type RbCreationBody struct {
 	ReleaseBundleDetails
 	SourceType SourceType  `json:"source_type,omitempty"`
 	Source     interface{} `json:"source,omitempty"`
+	Sources    []RbSource  `json:"sources,omitempty"`
 }

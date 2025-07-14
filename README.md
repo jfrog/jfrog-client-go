@@ -257,6 +257,13 @@
       - [Creating New Metadata Service Manager](#creating-new-metadata-service-manager)
     - [Using Metadata Services](#using-metadata-services)
       - [Graphql query](#graphql-query)
+    - [Onemodel APIs](#onemodel-apis)
+      - [Creating Onemodel Service Manager](#creating-onemodel-service-manager)
+        - [Creating Onemodel Details](#creating-onemodel-details)
+        - [Creating Onemodel Service Config](#creating-onemodel-service-config)
+        - [Creating New Onemodel Service Manager](#creating-new-onemodel-service-manager)
+    - [Using Onemodel Services](#using-onemodel-services)
+      - [Graphql query](#graphql-query)
 
 ## General
 
@@ -2843,6 +2850,92 @@ source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
 serviceManager.CreateReleaseBundleFromBundles(rbDetails, params, signingKeyName, source)
 ```
 
+#### Creating a Release Bundle From Packages
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+source := CreateFromPackagesSource{Packages: []PackageSource{
+    {
+        PackageName:    "name",
+        PackageVersion: "version",
+        PackageType:    "type",
+        RepositoryKey:  "repokey",
+    },
+}}
+serviceManager.CreateReleaseBundleFromPackages(rbDetails, params, signingKeyName, source)
+```
+
+#### Creating a Release Bundle From Multiple Sources 
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+sources :=  [] RbSource{
+	            {
+					SourceType: "builds",
+                    Builds: []BuildSource{
+                        {
+                            BuildName:       "name",
+                            BuildNumber:     "number",
+                            // Optional:
+                            BuildRepository: "artifactory-build-info",
+                        },
+                    }
+                },
+               {
+               SourceType: "release_bundles",
+			   ReleaseBundles: []ReleaseBundleSource{
+                    {
+                        ReleaseBundleName:    "name",
+                        ReleaseBundleVersion: "version",
+                        ProjectKey:           "default",
+                    },
+			   }
+               },
+               {
+               SourceType: "artifacts",
+               Artifacts: []ArtifactSource{
+				   {
+                         Path:   "repo/path/file",
+                        Sha256: "3e3deb6628658a48cf0d280a2210211f9d977ec2e10a4619b95d5fb85cb10450",
+				   },
+               }	
+               },
+               {
+               SourceType: "packages",
+               Packages: []PackageSource{
+                    {
+						PackageName: "name",
+                        PackageVersion: "version",
+                        PackageType: "type",
+                        RepositoryKey: "repokey"
+                    },
+               }
+               },
+			   {
+               SourceType: "aql",
+               Aql: {
+                    `items.find({"repo": "my-repo","path": ".","name": "a2.in"})`
+                }
+               },
+        }
+	
+serviceManager.CreateReleaseBundlesFromMultipleSources(rbDetails, params, signingKeyName, sources)
+```
+
 #### Promoting a Release Bundle
 
 ```go
@@ -3087,6 +3180,7 @@ envelopeBytes := []byte("envelope")
 evidenceDetails := evidenceService.EvidenceDetails{
   SubjectUri:  "subjectUri",
   DSSEFileRaw: &envelopeBytes,
+  ProviderId:  "someProviderId",
 }
 body, err = evideceManager.UploadEvidence(evidenceDetails)
 ```
@@ -3134,4 +3228,49 @@ queryDetails := metadataService.QueryDetails{
 }
 
 body, err = metadataManager.GraphqlQuery(queryDetails)
+```
+## Onemodel APIs
+
+### Creating Onemodel Service Manager
+
+#### Creating Onemodel Details
+
+```go
+omDetails := auth.NewOnemodelDetails()
+omDetails.SetUrl("http://localhost:8081/onemodel")
+omDetails.SetAccessToken("access-token")
+// if client certificates are required
+omDetails.SetClientCertPath("path/to/.cer")
+omDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Onemodel Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(omDetails).
+    SetCertificatesPath(omDetails.GetClientCertPath()).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    SetHttpRetries(3).
+    Build()
+```
+
+#### Creating New Onemodel Service Manager
+
+```go
+onemodelManager, err := onemodel.NewManager(serviceConfig)
+```
+
+### Using Onemodel Services
+
+#### Graphql query
+
+```go
+queryBytes := []byte(`{"query":"someGraphqlQuery"}`)
+
+queryDetails := onemodelService.QueryDetails{
+  Body:  queryBytes,
+}
+
+body, err = onemodelManager.GraphqlQuery(queryDetails)
 ```
