@@ -126,8 +126,8 @@ func (ps *PropsService) addOrDeletePropertiesForRepo(propsParams PropsParams, is
 		repoName := resultItem.Repo
 		logMsgPrefix := clientutils.GetLogMsgPrefix(0, ps.IsDryRun())
 
-		restAPI := path.Join("api", "storage", repoName)
-		setPropertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+		storageAPI := path.Join("api", "storage", repoName)
+		setPropertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), storageAPI, make(map[string]string))
 		if err != nil {
 			return 0, err
 		}
@@ -178,8 +178,8 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				var err error
 				logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, ps.IsDryRun())
 
-				restAPI := path.Join("api", "storage", relativePath)
-				setPropertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), restAPI, make(map[string]string))
+				storageAPI := path.Join("api", "storage", relativePath)
+				setPropertiesURL, err := clientutils.BuildUrl(ps.GetArtifactoryDetails().GetUrl(), storageAPI, make(map[string]string))
 				if err != nil {
 					return err
 				}
