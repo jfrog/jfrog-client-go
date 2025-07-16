@@ -81,6 +81,7 @@
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
+      - [Fetching All Permission Targets](#fetching-all-permission-targets)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Running Artifactory Nodes in a Cluster](#fetching-running-artifactory-nodes-in-a-cluster)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
@@ -1422,6 +1423,12 @@ permissionTargetParams, err = servicesManager.GetPermissionTarget("java-develope
 
 If the requested permission target does not exist, a nil value is returned for the _permissionTargetParams_ param, with
 a nil error value
+
+#### Fetching all Permission Targets
+
+```go
+permissions, err = servicesManager.GetAllPermissionTargets()
+```
 
 #### Fetching Artifactory's Version
 
