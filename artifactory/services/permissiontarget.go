@@ -62,6 +62,24 @@ func (pts *PermissionTargetService) Get(permissionTargetName string) (*Permissio
 	return permissionTarget, nil
 }
 
+func (pts *PermissionTargetService) GetAll() (*[]PermissionTargetParams, error) {
+	httpClientsDetails := pts.ArtDetails.CreateHttpClientDetails()
+	log.Info("Getting all permission target ...")
+	resp, body, _, err := pts.client.SendGet(pts.ArtDetails.GetUrl()+"api/v2/security/permissions", true, &httpClientsDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+
+	permissionTargets := &[]PermissionTargetParams{}
+	if err := json.Unmarshal(body, &permissionTargets); err != nil {
+		return nil, err
+	}
+	return permissionTargets, nil
+}
+
 func (pts *PermissionTargetService) Create(params PermissionTargetParams) error {
 	return pts.performRequest(params, false)
 }
@@ -116,6 +134,7 @@ type PermissionTargetParams struct {
 	Repo          *PermissionTargetSection `json:"repo,omitempty"`
 	Build         *PermissionTargetSection `json:"build,omitempty"`
 	ReleaseBundle *PermissionTargetSection `json:"releaseBundle,omitempty"`
+	Uri           *PermissionTargetSection `json:"uri"`
 }
 
 type PermissionTargetSection struct {
