@@ -46,7 +46,8 @@ func (rbs *ReleaseBundlesService) deleteReleaseBundle(params CommonOptionalQuery
 	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent)
 }
 
-func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams) error {
+
+func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams, isNewReleaseBundleApiSupported bool) error {
 	dryRunStr := ""
 	if params.DryRun {
 		dryRunStr = "[Dry run] "
@@ -59,7 +60,8 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 		return errorutils.CheckError(err)
 	}
 
-	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails)
+
+	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails, isNewReleaseBundleApiSupported)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
 	if err != nil {
 		return err
@@ -67,12 +69,22 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 
 	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
 	httpClientDetails.SetContentTypeApplicationJson()
+	if isNewReleaseBundleApiSupported {
+		resp, body, err := rbs.client.SendDelete(requestFullUrl, content, &httpClientDetails)
+		if err != nil {
+			return err
+		}
+		log.Debug("Artifactory response:", resp.Status)
+		return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
+	}
+
 	resp, body, err := rbs.client.SendPost(requestFullUrl, content, &httpClientDetails)
 	if err != nil {
 		return err
 	}
 
 	log.Debug("Artifactory response:", resp.Status)
+
 	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
 	if err != nil || params.Async || params.DryRun {
 		return err
@@ -81,7 +93,10 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	return rbs.waitForRemoteDeletion(rbDetails, params)
 }
 
-func GetRemoteDeleteReleaseBundleApi(rbDetails ReleaseBundleDetails) string {
+func GetRemoteDeleteReleaseBundleApi(rbDetails ReleaseBundleDetails, isNewReleaseBundleApiSupported bool) string {
+	if isNewReleaseBundleApiSupported {
+		return path.Join(releaseBundleNewApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+	}
 	return path.Join(distributionBaseApi, remoteDeleteEndpoint, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 

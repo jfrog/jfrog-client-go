@@ -64,6 +64,7 @@
       - [Create API Key](#create-api-key)
       - [Regenerate API Key](#regenerate-api-key)
       - [Get API Key](#get-api-key)
+      - [Creating and Updating Multiple Repositories](#creating-and-updating-multiple-repositories)
       - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
       - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
       - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
@@ -80,6 +81,7 @@
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
+      - [Fetching All Permission Targets](#fetching-all-permission-targets)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Running Artifactory Nodes in a Cluster](#fetching-running-artifactory-nodes-in-a-cluster)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
@@ -1081,6 +1083,150 @@ Updating federated Generic repository:
 err = servicesManager.UpdateFederatedRepository().Generic(params)
 ```
 
+#### Creating and Updating Multiple Repositories
+
+NOTE: 
+- Creating of multiple repositories is supported from Artifactory 7.84.3 and later versions.
+- Updating of multiple repositories is supported from Artifactory 7.104.2 and later versions.
+
+You can create and update multiple repositories in a single batch operation using the `CreateUpdateRepositoriesInBatch` method. This method accepts a JSON byte array containing repository configurations and can handle mixed repository and package types within the same request.
+
+****Creating Multiple Repositories:****
+
+```go
+// Define repository configurations as JSON array
+repositoriesConfig := `[
+  {
+    "key": "maven-local-repo",
+    "rclass": "local",
+    "packageType": "maven",
+    "description": "Local Maven repository",
+    "repoLayoutRef": "maven-2-default"
+  },
+  {
+    "key": "npm-remote-repo", 
+    "rclass": "remote",
+    "packageType": "npm",
+    "description": "Remote NPM repository",
+    "url": "https://registry.npmjs.org/",
+    "repoLayoutRef": "npm-default"
+  }
+]`
+
+// Create multiple repositories (isUpdate = false)
+err = rtManager.CreateUpdateRepositoriesInBatch([]byte(repositoriesConfig), false)
+if err != nil {
+    return err
+}
+```
+
+**Updating Multiple Repositories:**
+
+```go
+// Define update configurations as JSON
+updateConfig := `[
+  {
+    "key": "maven-local-repo",
+    "description": "Updated Maven local repository description",
+    "notes": "Updated internal notes"
+  },
+  {
+    "key": "npm-remote-repo",
+    "description": "Updated NPM remote repository", 
+    "retrievalCachePeriodSecs": 7200
+  }
+]`
+
+// Update multiple repositories (isUpdate = true)
+err = rtManager.CreateUpdateRepositoriesInBatch([]byte(updateConfig), true)
+if err != nil {
+    return err
+}
+```
+
+**Configurations with mixed repository and package types:**
+
+```go
+// configuration with different repository and package types
+config := `[
+  {
+    "key": "maven-local-prod",
+    "rclass": "local",
+    "packageType": "maven",
+    "description": "Production Maven artifacts",
+    "repoLayoutRef": "maven-2-default",
+    "archiveBrowsingEnabled": true,
+    "xrayIndex": true,
+    "includesPattern": "**/*",
+    "excludesPattern": "com/example/test/**"
+  },
+  {
+    "key": "npm-remote-proxy",
+    "rclass": "remote",
+    "packageType": "npm",
+    "description": "NPM remote proxy",
+    "url": "https://registry.npmjs.org/",
+    "repoLayoutRef": "npm-default",
+    "retrievalCachePeriodSecs": 3600,
+    "assumedOfflinePeriodSecs": 300,
+    "missedRetrievalCachePeriodSecs": 1800
+  },
+  {
+    "key": "docker-virtual-all",
+    "rclass": "virtual",
+    "packageType": "docker",
+    "description": "All Docker repositories",
+    "repositories": ["docker-local-prod", "docker-remote-proxy"],
+    "repoLayoutRef": "simple-default",
+    "defaultDeploymentRepo": "docker-local-prod",
+    "artifactoryRequestsCanRetrieveRemoteArtifacts": true
+  },
+  {
+    "key": "maven-federated-shared",
+    "rclass": "federated",
+    "packageType": "maven",
+    "description": "Federated Maven repository",
+    "repoLayoutRef": "maven-2-default",
+    "members": [
+      {
+        "url": "http://artifactory2.company.com/artifactory/maven-federated-shared",
+        "enabled": true
+      },
+      {
+        "url": "http://artifactory3.company.com/artifactory/maven-federated-shared", 
+        "enabled": true
+      }
+    ]
+  }
+]`
+
+// Create all repositories in a single batch operation
+err = rtManager.CreateUpdateRepositoriesInBatch([]byte(config), false)
+if err != nil {
+    return err
+}
+```
+
+**Supported Repository Classes:**
+- `local` - Local repositories for storing artifacts
+- `remote` - Remote repositories for proxying external repositories
+- `virtual` - Virtual repositories for aggregating multiple repositories
+- `federated` - Federated repositories for cross-instance synchronization
+
+**Supported Package Types:**
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vcs, Vagrant, and Yum.
+
+**Method Parameters:**
+- `body []byte` - JSON byte array containing repository configurations
+- `isUpdate bool` - Set to `false` for creating repositories, `true` for updating existing repositories
+
+**HTTP Details:**
+- **Endpoint**: `/artifactory/api/v2/repositories/batch`
+- **HTTP Method**: `PUT` for create operations, `POST` for update operations
+- **Content-Type**: `application/json`
+- **Authentication**: Requires admin privileges or appropriate repository permissions
+- **Response**: Returns HTTP 201 for successful creation, HTTP 200 for successful updates
+
 #### Removing a Repository
 
 You can remove a repository from Artifactory using its key:
@@ -1277,6 +1423,12 @@ permissionTargetParams, err = servicesManager.GetPermissionTarget("java-develope
 
 If the requested permission target does not exist, a nil value is returned for the _permissionTargetParams_ param, with
 a nil error value
+
+#### Fetching all Permission Targets
+
+```go
+permissions, err = servicesManager.GetAllPermissionTargets()
+```
 
 #### Fetching Artifactory's Version
 
@@ -3081,17 +3233,23 @@ resp, err := serviceManager.DeleteReleaseBundleVersionPromotion(rbDetails, query
 #### Remote Delete Release Bundle
 
 ```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
 rules := &distribution.DistributionCommonParams{
-    SiteName:     "*",
-    CityName:     "*",
-    CountryCodes: []string{"*"},
+SiteName:     "*",
+CityName:     "*",
+CountryCodes: []string{"*"},
 }
 params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
 params.DistributionRules = append(params.DistributionRules, rules)
 
-dryRun := true
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
 
-resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
+isNewReleaseBundleApiSupported=true 
+//From 7.63.2, isNewReleaseBundleApiSupported is true, below that version it should be false.
+resp, err := serviceManager.RemoteDeleteReleaseBundle(rbDetails, params, isNewReleaseBundleApiSupported)
 ```
 
 #### check-rb-exists
