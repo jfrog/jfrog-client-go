@@ -704,7 +704,7 @@ func mergeChunks(chunksPaths []string, flags ConcurrentDownloadFlags) (err error
 func validateChecksum(expectedSha string, actualSha hash.Hash, fileName string) (err error) {
 	actualShaString := hex.EncodeToString(actualSha.Sum(nil))
 	if actualShaString != expectedSha {
-		err = errorutils.CheckErrorf("checksum mismatch for  " + fileName + ", expected: " + expectedSha + ", actual: " + actualShaString)
+		err = errorutils.CheckErrorf("checksum mismatch for %s, expected: %s, actual: %s", fileName, expectedSha, actualShaString)
 	}
 	return
 }
