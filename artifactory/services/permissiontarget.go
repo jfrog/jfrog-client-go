@@ -134,7 +134,7 @@ type PermissionTargetParams struct {
 	Repo          *PermissionTargetSection `json:"repo,omitempty"`
 	Build         *PermissionTargetSection `json:"build,omitempty"`
 	ReleaseBundle *PermissionTargetSection `json:"releaseBundle,omitempty"`
-	Uri           *PermissionTargetSection `json:"uri"`
+	Uri           string                   `json:"uri,omitempty"`
 }
 
 type PermissionTargetSection struct {
