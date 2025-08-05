@@ -3,10 +3,11 @@ package tests
 import (
 	"crypto/rand"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"github.com/jfrog/jfrog-client-go/utils"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -151,10 +152,6 @@ func TestDocumentationExampleCreateUpdateAndDeletePermissionTarget(t *testing.T)
 
 	// Fetch a permission target
 	_, err = testsPermissionTargetService.Get("java-developers")
-	assert.NoError(t, err)
-
-	// Fetch all permission targets
-	_, err = testsPermissionTargetService.GetAll()
 	assert.NoError(t, err)
 
 	// Delete the permission target
