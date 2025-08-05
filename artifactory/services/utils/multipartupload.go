@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jfrog/gofrog/crypto"
-	"github.com/jfrog/gofrog/safeconvert"
 	"io"
 	"net/http"
 	"net/url"
@@ -15,6 +13,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/jfrog/gofrog/crypto"
+	"github.com/jfrog/gofrog/safeconvert"
 
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -387,7 +388,7 @@ func (mu *MultipartUpload) status(logMsgPrefix string, multipartUploadClientWith
 	resp, body, err := mu.client.GetHttpClient().SendPost(url, []byte{}, *multipartUploadClientWithNodeId, logMsgPrefix)
 	// If the Artifactory node returns a "Service unavailable" error (status 503), attempt to retry the upload completion process on a different node.
 	if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
-		unavailableNodeErr := fmt.Sprintf(logMsgPrefix + "Artifactory is unavailable.")
+		unavailableNodeErr := fmt.Sprintf("%sArtifactory is unavailable.", logMsgPrefix)
 		return statusResponse{Status: retryableError, Error: unavailableNodeErr}, nil
 	}
 	if err != nil {
