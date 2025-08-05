@@ -101,7 +101,7 @@ func checkForXrayResponseError(content []byte, ignoreFatalError bool) error {
 		// fatal error should be interpreted as no errors so no more retries will accrue
 		return nil
 	}
-	return errorutils.CheckErrorf("Server response: " + string(content))
+	return errorutils.CheckErrorf("Server response: %s", string(content))
 }
 
 func (ps *XrayScanService) execScanRequest(url string, content []byte) (*http.Response, error) {

@@ -150,7 +150,7 @@ func parseUrl(url string) (protocol, host string, port int, err error) {
 		host = groups[2]
 		port, err = strconv.Atoi(groups[3])
 		if err != nil {
-			err = errorutils.CheckErrorf("URL: " + url + " is invalid. Expecting ssh://<host>:<port> or http(s)://...")
+			err = errorutils.CheckErrorf("URL: %s is invalid. Expecting ssh://<host>:<port> or http(s)://...", url)
 		}
 		return
 	}
