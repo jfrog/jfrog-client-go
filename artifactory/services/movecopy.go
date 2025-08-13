@@ -2,6 +2,11 @@ package services
 
 import (
 	"errors"
+	"net/http"
+	"path"
+	"strconv"
+	"strings"
+
 	ioutils "github.com/jfrog/gofrog/io"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -12,10 +17,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"path"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -90,7 +91,7 @@ func (mc *MoveCopyService) MoveCopyServiceMoveFilesWrapper(moveSpecs ...MoveCopy
 
 	log.Debug(moveMsgs[mc.moveType].MovedMsg, strconv.Itoa(successCount), "artifacts.")
 	if failedCount > 0 {
-		err = errorutils.CheckErrorf("Failed " + moveMsgs[mc.moveType].MovingMsg + " " + strconv.Itoa(failedCount) + " artifacts.")
+		err = errorutils.CheckErrorf("Failed %s %s artifacts.", moveMsgs[mc.moveType].MovingMsg, strconv.Itoa(failedCount))
 	}
 
 	return

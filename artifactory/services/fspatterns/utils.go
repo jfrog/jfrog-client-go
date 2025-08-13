@@ -3,11 +3,12 @@ package fspatterns
 import (
 	"bytes"
 	"fmt"
-	"github.com/jfrog/gofrog/crypto"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/jfrog/gofrog/crypto"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -184,7 +185,7 @@ func GetRootPath(pattern, target, archiveTarget string, patternType utils.Patter
 	placeholderParentheses := getPlaceholderParentheses(pattern, target, archiveTarget)
 	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
-		return "", errorutils.CheckErrorf("path does not exist: " + rootPath)
+		return "", errorutils.CheckErrorf("path does not exist: %s", rootPath)
 	}
 
 	return rootPath, nil

@@ -17,6 +17,7 @@ import (
 )
 
 type ArtifactoryServicesManager interface {
+	CreateUpdateRepositoriesInBatch(body []byte, isUpdate bool) error
 	CreateLocalRepository() *services.LocalRepositoryService
 	CreateLocalRepositoryWithParams(params services.LocalRepositoryBaseParams) error
 	CreateRemoteRepository() *services.RemoteRepositoryService
@@ -40,6 +41,7 @@ type ArtifactoryServicesManager interface {
 	UpdatePermissionTarget(params services.PermissionTargetParams) error
 	DeletePermissionTarget(permissionTargetName string) error
 	GetPermissionTarget(permissionTargetName string) (*services.PermissionTargetParams, error)
+	GetAllPermissionTargets() (*[]services.PermissionTargetParams, error)
 	PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error)
 	DeleteBuildInfo(build *buildinfo.BuildInfo, projectKey string, buildNumberFrequency int) error
 	DistributeBuild(params services.BuildDistributionParams) error
@@ -115,6 +117,10 @@ type ArtifactoryServicesManager interface {
 // interface's methods, but still implement this interface.
 // This comes in very handy for tests.
 type EmptyArtifactoryServicesManager struct {
+}
+
+func (esm *EmptyArtifactoryServicesManager) CreateUpdateRepositoriesInBatch(_ []byte, _ bool) error {
+	panic("Failed: Method is not implemented")
 }
 
 func (esm *EmptyArtifactoryServicesManager) CreateLocalRepository() *services.LocalRepositoryService {
@@ -198,6 +204,10 @@ func (esm *EmptyArtifactoryServicesManager) DeletePermissionTarget(string) error
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetPermissionTarget(string) (*services.PermissionTargetParams, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetAllPermissionTargets() (*[]services.PermissionTargetParams, error) {
 	panic("Failed: Method is not implemented")
 }
 

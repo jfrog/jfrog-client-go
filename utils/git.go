@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	ioutils "github.com/jfrog/gofrog/io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	ioutils "github.com/jfrog/gofrog/io"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -91,7 +92,7 @@ func (m *GitManager) handleSubmoduleIfNeeded() {
 		return
 	}
 	if !exists {
-		m.err = errorutils.CheckErrorf("path found in .git file '" + m.path + "' does not exist: '" + resolvedGitPath + "'")
+		m.err = errorutils.CheckErrorf("path found in .git file '%s' does not exist: '%s'", m.path, resolvedGitPath)
 		return
 	}
 	m.path = resolvedGitPath
@@ -271,7 +272,7 @@ func (m *GitManager) readRevisionFromPackedRef(ref string) {
 				if len(split) == 2 {
 					m.revision = split[0]
 				} else {
-					m.err = errors.Join(err, errorutils.CheckErrorf("failed fetching revision for ref :"+ref+" - Unexpected line structure in packed-refs file"))
+					m.err = errors.Join(err, errorutils.CheckErrorf("failed fetching revision for ref: %s - Unexpected line structure in packed-refs file", ref))
 				}
 				return
 			}
