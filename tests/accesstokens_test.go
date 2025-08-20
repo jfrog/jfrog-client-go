@@ -51,13 +51,6 @@ func testExchangeOidcToken(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "mockOidcTokenID", req.OidcTokenID)
 
-		// Verify context is properly included
-		assert.NotNil(t, req.Context)
-		assert.NotNil(t, req.Context.VcsCommit)
-		assert.Equal(t, "https://github.com/example/repo.git", req.Context.VcsCommit.VcsUrl)
-		assert.Equal(t, "main", req.Context.VcsCommit.Branch)
-		assert.Equal(t, "abc123def456", req.Context.VcsCommit.Revision)
-
 		// Simulate response
 		resp := auth.OidcTokenResponseData{
 			CommonTokenParams: auth.CommonTokenParams{
@@ -102,13 +95,8 @@ func testExchangeOidcToken(t *testing.T) {
 		Audience:              "mockAudience",
 		IdentityMappingName:   "mockIdentityMappingName",
 		IncludeReferenceToken: utils.Pointer(false),
-		Context: &services.Context{
-			VcsCommit: &services.VcsCommit{
-				VcsUrl:   "https://github.com/example/repo.git",
-				Branch:   "main",
-				Revision: "abc123def456",
-			},
-		},
+		Branch:                "main",
+		Revision:              "abc123def456",
 	}
 
 	// Execute ExchangeOidcToken
