@@ -262,3 +262,10 @@ func (sm *XrayServicesManager) Xsc() *xsc.XscInnerService {
 	xscService.ScopeProjectKey = sm.scopeProjectKey
 	return xscService
 }
+
+func (sm *XrayServicesManager) GetViolations(params xrayUtils.ViolationsRequest) (*services.ViolationsResponse, error) {
+	violationsService := services.NewViolationsService(sm.client)
+	violationsService.XrayDetails = sm.config.GetServiceDetails()
+	violationsService.ScopeProjectKey = sm.scopeProjectKey
+	return violationsService.GetViolations(params)
+}
