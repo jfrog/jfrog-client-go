@@ -181,6 +181,7 @@
       - [Get Violations Report Content](#get-violations-report-content)
       - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
+      - [Get Artifact Scan Status](#get-artifact-scan-status)
       - [Get Entitlement info](#get-entitlement-info)
     - [XSC APIs](#xsc-apis)
       - [Creating XSC Service Manager](#creating-xray-service-manager)
@@ -2642,6 +2643,23 @@ artifactSummaryRequest := services.ArtifactSummaryParams{
   Paths:     []string{"default/example-repository/example-folder/example-artifact"},
 }
 artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
+```
+
+#### Get Artifact Scan Status
+```go
+// Get the scan status of an artifact in a specific repository
+repo := "example-repository"
+path := "path/to/artifact"
+artifactStatus, err := xrayManager.GetArtifactStatus(repo, path)
+
+// The response contains overall status and detailed status for different scan types
+if err == nil {
+    fmt.Printf("Overall scan status: %s\n", artifactStatus.Overall.Status)
+    fmt.Printf("SCA scan status: %s\n", artifactStatus.Details.Sca.Status)
+    fmt.Printf("Contextual Analysis status: %s\n", artifactStatus.Details.ContextualAnalysis.Status)
+    fmt.Printf("Exposures scan status: %s\n", artifactStatus.Details.Exposures.Status)
+    fmt.Printf("Violations status: %s\n", artifactStatus.Details.Violations.Status)
+}
 ```
 
 #### Get Entitlement Info
