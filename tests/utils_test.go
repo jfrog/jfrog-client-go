@@ -709,7 +709,7 @@ func artifactoryCleanup(t *testing.T) {
 }
 
 func createRepo() error {
-	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload) {
+	if !(*TestArtifactory || *TestDistribution || *TestRepositories || *TestMultipartUpload) {
 		return nil
 	}
 	var err error
@@ -726,7 +726,7 @@ func createRepo() error {
 }
 
 func teardownIntegrationTests() {
-	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload) {
+	if !(*TestArtifactory || *TestDistribution || *TestRepositories || *TestMultipartUpload) {
 		return
 	}
 	repo := getRtTargetRepoKey()

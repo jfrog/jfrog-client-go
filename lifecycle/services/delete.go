@@ -46,7 +46,6 @@ func (rbs *ReleaseBundlesService) deleteReleaseBundle(params CommonOptionalQuery
 	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent)
 }
 
-
 func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams, isNewReleaseBundleApiSupported bool) error {
 	dryRunStr := ""
 	if params.DryRun {
@@ -59,7 +58,6 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-
 
 	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails, isNewReleaseBundleApiSupported)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)

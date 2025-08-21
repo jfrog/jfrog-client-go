@@ -100,7 +100,7 @@ jobs:
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
 
-      - name: catalog tests
+      - name: ${{ matrix.suite }} tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Repositories-Tests:
