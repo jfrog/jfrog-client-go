@@ -61,13 +61,13 @@ jobs:
       - name: artifactory tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
-  JFrog-Client-Go-Ds-Xr-MPU-Tests:
+  JFrog-Client-Go-Ds-MPU-Tests:
     needs: Pretest
     name: ${{ matrix.suite }} ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        suite: [ distribution, xray, xsc, mpu ]
+        suite: [ distribution, xsc, mpu ]
         os: [ ubuntu, windows, macos ]
     runs-on: ${{ matrix.os }}-latest
     steps:
@@ -82,13 +82,13 @@ jobs:
       - name: ${{ matrix.suite }} tests
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --ds.url=${{ secrets.PLATFORM_URL }}/distribution --xr.url=${{ secrets.PLATFORM_URL }}/xray --xsc.url=${{ secrets.PLATFORM_URL }}/xsc --access.url=${{ secrets.PLATFORM_URL }}/access --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
-  JFrog-Client-Go-Catalog-Tests:
+  JFrog-Client-Go-Xray-Catalog-Tests:
     name: ${{ matrix.suite }} ${{ matrix.os }}
     needs: Pretest
     strategy:
       fail-fast: false
       matrix:
-        suite: [ catalog ]
+        suite: [ xray, catalog ]
         os: [ ubuntu, windows, macos ]
     runs-on: ${{ matrix.os }}-latest
     steps:
