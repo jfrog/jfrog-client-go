@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -16,8 +17,9 @@ const (
 
 // JasConfigService returns the https client and Xray details
 type JasConfigService struct {
-	client      *jfroghttpclient.JfrogHttpClient
-	XrayDetails auth.ServiceDetails
+	client          *jfroghttpclient.JfrogHttpClient
+	XrayDetails     auth.ServiceDetails
+	ScopeProjectKey string
 }
 
 // NewJasConfigService creates a new service to retrieve the version of Xray
@@ -33,7 +35,7 @@ func (jcs *JasConfigService) GetXrayDetails() auth.ServiceDetails {
 // GetJasConfigTokenValidation returns token validation status in xray
 func (jcs *JasConfigService) GetJasConfigTokenValidation() (bool, error) {
 	httpDetails := jcs.XrayDetails.CreateHttpClientDetails()
-	resp, body, _, err := jcs.client.SendGet(jcs.XrayDetails.GetUrl()+jasConfigApiURL, true, &httpDetails)
+	resp, body, _, err := jcs.client.SendGet(jcs.getUrlForJasConfigApi(), true, &httpDetails)
 	if err != nil {
 		return false, errors.New("failed while attempting to get JFrog Xray Jas Configuration: " + err.Error())
 	}
@@ -45,6 +47,10 @@ func (jcs *JasConfigService) GetJasConfigTokenValidation() (bool, error) {
 		return false, errorutils.CheckErrorf("couldn't parse JFrog Xray server Jas Configuration response: %s", err.Error())
 	}
 	return *jasConfig.TokenValidationToggle, nil
+}
+
+func (jcs *JasConfigService) getUrlForJasConfigApi() string {
+	return clientutils.AppendScopedProjectKeyParam(jcs.XrayDetails.GetUrl()+jasConfigApiURL, jcs.ScopeProjectKey)
 }
 
 type JasConfig struct {
