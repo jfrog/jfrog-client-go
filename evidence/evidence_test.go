@@ -10,6 +10,7 @@ import (
 
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	evidence "github.com/jfrog/jfrog-client-go/evidence/services"
+	"github.com/jfrog/jfrog-client-go/evidence/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/stretchr/testify/assert"
 )
@@ -178,11 +179,213 @@ func createDefaultHandlerFuncVersion(t *testing.T) (http.HandlerFunc, *int) {
 func createErrorHandlerFuncVersion(t *testing.T) (http.HandlerFunc, *int) {
 	requestNum := 0
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/api/v1/version" {
+		if r.URL.Path == "/api/v1/system/version" {
 			w.WriteHeader(http.StatusNotFound)
 			requestNum++
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)
 	}, &requestNum
+}
+
+func TestIsEvidenceVersionSupportsFeature(t *testing.T) {
+	tests := []struct {
+		name                string
+		supportedVersion    string
+		handlerFunc         func(*testing.T) (http.HandlerFunc, *int)
+		expectedResult      bool
+		expectedError       bool
+	}{
+		{
+			name:             "Version is higher than supported",
+			supportedVersion: "1.0.0",
+			handlerFunc:      createVersionHandlerFunc("2.0.0"),
+			expectedResult:   true,
+			expectedError:    false,
+		},
+		{
+			name:             "Version is equal to supported",
+			supportedVersion: "1.0.0",
+			handlerFunc:      createVersionHandlerFunc("1.0.0"),
+			expectedResult:   true,
+			expectedError:    false,
+		},
+		{
+			name:             "Version is lower than supported",
+			supportedVersion: "2.0.0",
+			handlerFunc:      createVersionHandlerFunc("1.0.0"),
+			expectedResult:   false,
+			expectedError:    false,
+		},
+		{
+			name:             "Server returns 404",
+			supportedVersion: "1.0.0",
+			handlerFunc:      createErrorHandlerFuncVersion,
+			expectedResult:   false,
+			expectedError:    true,
+		},
+		{
+			name:             "Empty supported version",
+			supportedVersion: "",
+			handlerFunc:      createVersionHandlerFunc("1.0.0"),
+			expectedResult:   false,
+			expectedError:    true,
+		},
+		{
+			name:             "Invalid version format",
+			supportedVersion: "invalid",
+			handlerFunc:      createVersionHandlerFunc("1.0.0"),
+			expectedResult:   false,
+			expectedError:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			handlerFunc, _ := tt.handlerFunc(t)
+			mockServer, evdService := createMockServer(t, handlerFunc)
+			defer mockServer.Close()
+
+			result, err := evdService.IsEvidenceVersionSupportsFeature(tt.supportedVersion)
+
+			if tt.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tt.expectedResult, result)
+		})
+	}
+}
+
+func createVersionHandlerFunc(version string) func(*testing.T) (http.HandlerFunc, *int) {
+	return func(t *testing.T) (http.HandlerFunc, *int) {
+		requestNum := 0
+		return func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/api/v1/system/version" {
+				w.WriteHeader(http.StatusOK)
+				requestNum++
+				versionPayload, err := json.Marshal(map[string]string{"version": version})
+				assert.NoError(t, err)
+				writeMockStatusResponse(t, w, versionPayload)
+			} else {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}, &requestNum
+	}
+}
+
+func TestCompareVersions(t *testing.T) {
+	tests := []struct {
+		name           string
+		version        string
+		minVersion     string
+		expectedResult bool
+		expectedError  bool
+	}{
+		{
+			name:           "Equal versions",
+			version:        "1.0.0",
+			minVersion:     "1.0.0",
+			expectedResult: true,
+			expectedError:  false,
+		},
+		{
+			name:           "Higher major version",
+			version:        "2.0.0",
+			minVersion:     "1.0.0",
+			expectedResult: true,
+			expectedError:  false,
+		},
+		{
+			name:           "Higher minor version",
+			version:        "1.2.0",
+			minVersion:     "1.1.0",
+			expectedResult: true,
+			expectedError:  false,
+		},
+		{
+			name:           "Higher patch version",
+			version:        "1.0.2",
+			minVersion:     "1.0.1",
+			expectedResult: true,
+			expectedError:  false,
+		},
+		{
+			name:           "Lower major version",
+			version:        "1.0.0",
+			minVersion:     "2.0.0",
+			expectedResult: false,
+			expectedError:  false,
+		},
+		{
+			name:           "Lower minor version",
+			version:        "1.1.0",
+			minVersion:     "1.2.0",
+			expectedResult: false,
+			expectedError:  false,
+		},
+		{
+			name:           "Lower patch version",
+			version:        "1.0.1",
+			minVersion:     "1.0.2",
+			expectedResult: false,
+			expectedError:  false,
+		},
+		{
+			name:           "Invalid version format - too few parts",
+			version:        "1.0",
+			minVersion:     "1.0.0",
+			expectedResult: false,
+			expectedError:  true,
+		},
+		{
+			name:           "Invalid version format - too many parts",
+			version:        "1.0.0.1",
+			minVersion:     "1.0.0",
+			expectedResult: false,
+			expectedError:  true,
+		},
+		{
+			name:           "Invalid version format - non-numeric",
+			version:        "1.a.0",
+			minVersion:     "1.0.0",
+			expectedResult: false,
+			expectedError:  true,
+		},
+		{
+			name:           "Empty version",
+			version:        "",
+			minVersion:     "1.0.0",
+			expectedResult: false,
+			expectedError:  true,
+		},
+		{
+			name:           "Empty minimum version",
+			version:        "1.0.0",
+			minVersion:     "",
+			expectedResult: false,
+			expectedError:  true,
+		},
+		{
+			name:           "Whitespace handling",
+			version:        " 1.0.0 ",
+			minVersion:     " 1.0.0 ",
+			expectedResult: true,
+			expectedError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := services.CompareVersions(tt.version, tt.minVersion)
+
+			if tt.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tt.expectedResult, result)
+		})
+	}
 }
