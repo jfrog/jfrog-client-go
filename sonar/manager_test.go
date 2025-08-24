@@ -40,7 +40,8 @@ func TestSonarManager_Client(t *testing.T) {
 	manager, err := NewManager(cfg)
 	assert.NoError(t, err)
 
-	sm := manager.(*sonarManager)
+	sm, ok := manager.(*sonarManager)
+	assert.True(t, ok)
 	client := sm.Client()
 	assert.NotNil(t, client)
 }
