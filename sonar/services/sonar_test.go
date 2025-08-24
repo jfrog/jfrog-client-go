@@ -101,7 +101,10 @@ func TestSonarService_BuildAuthHeader(t *testing.T) {
 			}
 
 			if tt.envToken != "" {
-				os.Setenv("SONAR_TOKEN", tt.envToken)
+				err := os.Setenv("SONAR_TOKEN", tt.envToken)
+				if err != nil {
+					assert.FailNow(t, "Failed to set env variable SONAR_TOKEN")
+				}
 				defer os.Unsetenv("SONAR_TOKEN")
 			} else {
 				os.Unsetenv("SONAR_TOKEN")
@@ -127,7 +130,10 @@ func TestSonarService_GetEnterpriseResponse(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
 	}))
 	defer server.Close()
 
@@ -226,7 +232,10 @@ func TestSonarService_GetQualityGatesResponse(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
 	}))
 	defer server.Close()
 
@@ -297,7 +306,10 @@ func TestSonarService_GetTaskResponse(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
 	}))
 	defer server.Close()
 
