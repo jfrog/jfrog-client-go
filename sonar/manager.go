@@ -11,7 +11,7 @@ import (
 type Manager interface {
 	GetQualityGateAnalysis(analysisID string) (*services.QualityGatesAnalysis, error)
 	GetTaskDetails(ceTaskID string) (*services.TaskDetails, error)
-	GetSonarIntotoStatementRaw(ceTaskID string) ([]byte, error)
+	GetSonarIntotoStatement(ceTaskID string) ([]byte, error)
 }
 
 type sonarManager struct {
@@ -47,9 +47,9 @@ func (sm *sonarManager) Client() *jfroghttpclient.JfrogHttpClient {
 	return sm.client
 }
 
-func (sm *sonarManager) GetSonarIntotoStatementRaw(ceTaskID string) ([]byte, error) {
+func (sm *sonarManager) GetSonarIntotoStatement(ceTaskID string) ([]byte, error) {
 	sonarService := services.NewSonarService(sm.config.GetServiceDetails(), sm.client)
-	return sonarService.GetSonarIntotoStatementRaw(ceTaskID)
+	return sonarService.GetSonarIntotoStatement(ceTaskID)
 }
 
 func (sm *sonarManager) GetQualityGateAnalysis(analysisID string) (*services.QualityGatesAnalysis, error) {

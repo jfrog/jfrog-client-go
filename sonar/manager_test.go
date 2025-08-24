@@ -60,5 +60,5 @@ func TestSonarManager_InterfaceMethods(t *testing.T) {
 	// Call interface methods; network outcome is not asserted
 	_, _ = manager.GetQualityGateAnalysis("test-analysis-id")
 	_, _ = manager.GetTaskDetails("test-task-id")
-	_, _ = manager.GetSonarIntotoStatementRaw("test-task-id")
+	_, _ = manager.GetSonarIntotoStatement("test-task-id")
 }

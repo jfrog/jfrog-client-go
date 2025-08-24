@@ -63,7 +63,7 @@ type TaskDetails struct {
 type Service interface {
 	GetQualityGateAnalysis(analysisID string) (*QualityGatesAnalysis, error)
 	GetTaskDetails(ceTaskID string) (*TaskDetails, error)
-	GetSonarIntotoStatementRaw(ceTaskID string) ([]byte, error)
+	GetSonarIntotoStatement(ceTaskID string) ([]byte, error)
 }
 
 type sonarService struct {
@@ -122,8 +122,8 @@ func (s *sonarService) httpGetJSON(urlStr string) ([]byte, int, error) {
 
 // GetSonarIntotoStatementRaw returns the raw JSON bytes of the in-toto statement.
 // We return []byte instead of a typed object to avoid extra marshal/unmarshal cycles and
-// to allow callers to augment the statement (e.g., add subject/stage) and sign it as-is.
-func (s *sonarService) GetSonarIntotoStatementRaw(ceTaskID string) ([]byte, error) {
+// to allow callers to sign it as-is.
+func (s *sonarService) GetSonarIntotoStatement(ceTaskID string) ([]byte, error) {
 	if ceTaskID == "" {
 		return nil, errorutils.CheckError(fmt.Errorf("missing ce task id for enterprise endpoint"))
 	}

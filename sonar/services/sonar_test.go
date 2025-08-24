@@ -146,7 +146,7 @@ func TestSonarService_GetEnterpriseResponse(t *testing.T) {
 
 	service := NewSonarService(serviceDetails, client)
 
-	body, err := service.GetSonarIntotoStatementRaw("test-task-id")
+	body, err := service.GetSonarIntotoStatement("test-task-id")
 	assert.NoError(t, err)
 	assert.NotNil(t, body)
 
@@ -167,7 +167,7 @@ func TestSonarService_GetEnterpriseResponse_EmptyTaskID(t *testing.T) {
 
 	service := NewSonarService(serviceDetails, client)
 
-	body, err := service.GetSonarIntotoStatementRaw("")
+	body, err := service.GetSonarIntotoStatement("")
 	assert.Error(t, err)
 	assert.Nil(t, body)
 	assert.Contains(t, err.Error(), "missing ce task id")
