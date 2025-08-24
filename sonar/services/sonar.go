@@ -120,7 +120,7 @@ func (s *sonarService) httpGetJSON(urlStr string) ([]byte, int, error) {
 	return body, resp.StatusCode, nil
 }
 
-// GetSonarIntotoStatementRaw returns the raw JSON bytes of the in-toto statement.
+// GetSonarIntotoStatement returns the raw JSON bytes of the in-toto statement.
 // We return []byte instead of a typed object to avoid extra marshal/unmarshal cycles and
 // to allow callers to sign it as-is.
 func (s *sonarService) GetSonarIntotoStatement(ceTaskID string) ([]byte, error) {
