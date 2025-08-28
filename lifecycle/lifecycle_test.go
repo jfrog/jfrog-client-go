@@ -219,23 +219,7 @@ func TestRemoteDeleteReleaseBundle(t *testing.T) {
 	mockServer, rbService := createMockServer(t, handlerFunc)
 	defer mockServer.Close()
 
-	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}, false))
-}
-
-func TestRemoteDeleteReleaseBundleNewApi(t *testing.T) {
-	lifecycle.SyncSleepInterval = 1 * time.Second
-	defer func() { lifecycle.SyncSleepInterval = lifecycle.DefaultSyncSleepInterval }()
-
-	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/"+lifecycle.GetRemoteDeleteReleaseBundleApi(testRb, true) {
-			w.WriteHeader(http.StatusOK)
-		}
-	}
-
-	mockServer, rbService := createMockServer(t, handlerFunc)
-	defer mockServer.Close()
-
-	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}, true))
+	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}))
 }
 
 func TestGetReleaseBundleVersionPromotions(t *testing.T) {
