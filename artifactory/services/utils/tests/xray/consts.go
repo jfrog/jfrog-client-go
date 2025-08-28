@@ -1439,6 +1439,81 @@ const XscGitInfoResponse = `{"multi_scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001
 
 const XscGitInfoBadResponse = `"failed create git info request: git_repo_url field must contain value"`
 
+const ArtifactStatusResponse = `{
+  "overall": {
+    "status": "DONE",
+    "time": "2023-12-01T10:00:00Z"
+  },
+  "details": {
+    "sca": {
+      "status": "DONE",
+      "time": "2023-12-01T10:00:00Z"
+    },
+    "contextual_analysis": {
+      "status": "DONE",
+      "time": "2023-12-01T10:00:00Z"
+    },
+    "exposures": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T10:00:00Z"
+    },
+    "violations": {
+      "status": "FAILED",
+      "time": "2023-12-01T10:00:00Z"
+    }
+  }
+}`
+
+const ArtifactStatusPendingResponse = `{
+  "overall": {
+    "status": "PENDING",
+    "time": "2023-12-01T09:30:00Z"
+  },
+  "details": {
+    "sca": {
+      "status": "PENDING",
+      "time": "2023-12-01T09:30:00Z"
+    },
+    "contextual_analysis": {
+      "status": "NOT_SCANNED",
+      "time": "2023-12-01T09:30:00Z"
+    },
+    "exposures": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T09:30:00Z"
+    },
+    "violations": {
+      "status": "NOT_SCANNED",
+      "time": "2023-12-01T09:30:00Z"
+    }
+  }
+}`
+
+const ArtifactStatusNotSupportedResponse = `{
+  "overall": {
+    "status": "NOT_SUPPORTED",
+    "time": "2023-12-01T11:00:00Z"
+  },
+  "details": {
+    "sca": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T11:00:00Z"
+    },
+    "contextual_analysis": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T11:00:00Z"
+    },
+    "exposures": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T11:00:00Z"
+    },
+    "violations": {
+      "status": "NOT_SUPPORTED",
+      "time": "2023-12-01T11:00:00Z"
+    }
+  }
+}`
+
 var GitInfoContextWithMinimalRequiredFields = xscServices.XscGitInfoContext{
 	Source: xscServices.CommitContext{
 		GitRepoHttpsCloneUrl: "https://git.jfrog.info/projects/XSC/repos/xsc-service",

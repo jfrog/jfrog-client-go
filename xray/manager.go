@@ -262,3 +262,10 @@ func (sm *XrayServicesManager) Xsc() *xsc.XscInnerService {
 	xscService.ScopeProjectKey = sm.scopeProjectKey
 	return xscService
 }
+
+func (sm *XrayServicesManager) GetArtifactStatus(repo, path string) (*services.ArtifactStatusResponse, error) {
+	artifactService := services.NewArtifactService(sm.client)
+	artifactService.XrayDetails = sm.config.GetServiceDetails()
+	artifactService.ScopeProjectKey = sm.scopeProjectKey
+	return artifactService.GetStatus(repo, path)
+}

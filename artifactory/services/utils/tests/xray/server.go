@@ -231,6 +231,41 @@ func getJasConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func artifactStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		path, err := jsonparser.GetString(body, "path")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Return different responses based on the path to test different scenarios
+		var response string
+		switch path {
+		case "path/to/pending-artifact":
+			response = ArtifactStatusPendingResponse
+		case "path/to/unsupported-artifact":
+			response = ArtifactStatusNotSupportedResponse
+		default:
+			response = ArtifactStatusResponse
+		}
+
+		_, err = fmt.Fprint(w, response)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	http.Error(w, "Invalid artifact status request", http.StatusBadRequest)
+}
+
 func enrichGetResults(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
@@ -261,6 +296,7 @@ func StartXrayMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers["/xray/api/v1/system/version"] = xrayGetVersionHandlerFunc(t, params.XrayVersion)
 	handlers["/api/xray/scanBuild"] = scanBuildHandler
 	handlers["/api/v2/summary/artifact"] = artifactSummaryHandler
+	handlers["/xray/api/v1/artifact/status"] = artifactStatusHandler
 	handlers["/api/v1/entitlements/feature/"] = entitlementsHandler
 	handlers["/xray/api/v1/scan/import_xml"] = enrichGetScanId(t)
 	handlers[fmt.Sprintf("/xray/api/v1/scan/graph/%s", params.MSI)] = enrichGetResults(t)
