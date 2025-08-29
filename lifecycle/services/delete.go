@@ -46,8 +46,7 @@ func (rbs *ReleaseBundlesService) deleteReleaseBundle(params CommonOptionalQuery
 	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusNoContent)
 }
 
-
-func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams, isNewReleaseBundleApiSupported bool) error {
+func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams) error {
 	dryRunStr := ""
 	if params.DryRun {
 		dryRunStr = "[Dry run] "
@@ -59,9 +58,9 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
+	hasDistributionRules := len(params.DistributionRules) > 0 && params.DistributionRules[0].GetSiteName() != "*"
 
-
-	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails, isNewReleaseBundleApiSupported)
+	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails, hasDistributionRules)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
 	if err != nil {
 		return err
@@ -69,13 +68,13 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 
 	httpClientDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
 	httpClientDetails.SetContentTypeApplicationJson()
-	if isNewReleaseBundleApiSupported {
+	if !hasDistributionRules {
 		resp, body, err := rbs.client.SendDelete(requestFullUrl, content, &httpClientDetails)
 		if err != nil {
 			return err
 		}
 		log.Debug("Artifactory response:", resp.Status)
-		return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
+		return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
 	}
 
 	resp, body, err := rbs.client.SendPost(requestFullUrl, content, &httpClientDetails)
@@ -85,7 +84,7 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 
 	log.Debug("Artifactory response:", resp.Status)
 
-	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
+	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 	if err != nil || params.Async || params.DryRun {
 		return err
 	}
@@ -93,11 +92,11 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	return rbs.waitForRemoteDeletion(rbDetails, params)
 }
 
-func GetRemoteDeleteReleaseBundleApi(rbDetails ReleaseBundleDetails, isNewReleaseBundleApiSupported bool) string {
-	if isNewReleaseBundleApiSupported {
-		return path.Join(releaseBundleNewApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+func GetRemoteDeleteReleaseBundleApi(rbDetails ReleaseBundleDetails, hasDistributionRules bool) string {
+	if hasDistributionRules {
+		return path.Join(distributionBaseApi, remoteDeleteEndpoint, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 	}
-	return path.Join(distributionBaseApi, remoteDeleteEndpoint, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
+	return path.Join(releaseBundleNewApi, records, rbDetails.ReleaseBundleName, rbDetails.ReleaseBundleVersion)
 }
 
 func (rbs *ReleaseBundlesService) waitForRemoteDeletion(rbDetails ReleaseBundleDetails, params ReleaseBundleRemoteDeleteParams) error {
@@ -115,7 +114,7 @@ func (rbs *ReleaseBundlesService) waitForRemoteDeletion(rbDetails ReleaseBundleD
 		switch deletionStatus {
 		case InProgress:
 			return false, nil, nil
-		case Completed:
+		case Completed, Created:
 			return true, nil, nil
 		case Failed:
 			return true, nil, errorutils.CheckErrorf("remote deletion failed!")
