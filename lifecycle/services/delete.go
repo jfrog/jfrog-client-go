@@ -74,7 +74,7 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 			return err
 		}
 		log.Debug("Artifactory response:", resp.Status)
-		return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
+		return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
 	}
 
 	resp, body, err := rbs.client.SendPost(requestFullUrl, content, &httpClientDetails)
@@ -84,7 +84,7 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 
 	log.Debug("Artifactory response:", resp.Status)
 
-	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusAccepted)
+	err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
 	if err != nil || params.Async || params.DryRun {
 		return err
 	}
