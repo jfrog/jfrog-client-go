@@ -238,7 +238,8 @@ type Build struct {
 
 func GetLatestBuildNumberFromArtifactory(buildName, projectKey string, flags CommonConf) (buildNumber string, err error) {
 	buildRepo := GetBuildInfoRepositoryByProject(projectKey)
-	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, buildName)
+	encodedBuildName := encodeForBuildInfoRepository(buildName)
+	aqlBody := CreateAqlQueryForLatestCreated(buildRepo, encodedBuildName)
 	reader, err := aqlSearch(aqlBody, flags)
 	if err != nil {
 		return "", err

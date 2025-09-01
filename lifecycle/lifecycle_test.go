@@ -199,7 +199,7 @@ func TestRemoteDeleteReleaseBundle(t *testing.T) {
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 		switch r.RequestURI {
 		case "/" + lifecycle.GetReleaseBundleDistributionsApi(testRb):
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusAccepted)
 			var rbStatus lifecycle.RbStatus
 			switch requestNum {
 			case 0:
@@ -212,22 +212,6 @@ func TestRemoteDeleteReleaseBundle(t *testing.T) {
 			requestNum++
 			writeMockStatusResponse(t, w, lifecycle.GetDistributionsResponse{{Status: rbStatus}})
 		case "/" + lifecycle.GetRemoteDeleteReleaseBundleApi(testRb, false):
-			w.WriteHeader(http.StatusAccepted)
-		}
-	}
-
-	mockServer, rbService := createMockServer(t, handlerFunc)
-	defer mockServer.Close()
-
-	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}, false))
-}
-
-func TestRemoteDeleteReleaseBundleNewApi(t *testing.T) {
-	lifecycle.SyncSleepInterval = 1 * time.Second
-	defer func() { lifecycle.SyncSleepInterval = lifecycle.DefaultSyncSleepInterval }()
-
-	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/"+lifecycle.GetRemoteDeleteReleaseBundleApi(testRb, true) {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
@@ -235,7 +219,7 @@ func TestRemoteDeleteReleaseBundleNewApi(t *testing.T) {
 	mockServer, rbService := createMockServer(t, handlerFunc)
 	defer mockServer.Close()
 
-	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}, true))
+	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(testRb, lifecycle.ReleaseBundleRemoteDeleteParams{MaxWaitMinutes: 2}))
 }
 
 func TestGetReleaseBundleVersionPromotions(t *testing.T) {
