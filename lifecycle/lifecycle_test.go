@@ -199,7 +199,7 @@ func TestRemoteDeleteReleaseBundle(t *testing.T) {
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 		switch r.RequestURI {
 		case "/" + lifecycle.GetReleaseBundleDistributionsApi(testRb):
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusAccepted)
 			var rbStatus lifecycle.RbStatus
 			switch requestNum {
 			case 0:
@@ -212,7 +212,7 @@ func TestRemoteDeleteReleaseBundle(t *testing.T) {
 			requestNum++
 			writeMockStatusResponse(t, w, lifecycle.GetDistributionsResponse{{Status: rbStatus}})
 		case "/" + lifecycle.GetRemoteDeleteReleaseBundleApi(testRb, false):
-			w.WriteHeader(http.StatusAccepted)
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 
