@@ -153,6 +153,7 @@ func (sm *XrayServicesManager) AddBuildsToIndexing(buildNames []string) error {
 func (sm *XrayServicesManager) IsTokenValidationEnabled() (isEnabled bool, err error) {
 	jasConfigService := services.NewJasConfigService(sm.client)
 	jasConfigService.XrayDetails = sm.config.GetServiceDetails()
+	jasConfigService.ScopeProjectKey = sm.scopeProjectKey
 	return jasConfigService.GetJasConfigTokenValidation()
 }
 
