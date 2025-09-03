@@ -28,7 +28,7 @@ import (
 const (
 	Development = "development"
 	Agent       = "jfrog-client-go"
-	Version     = "1.54.6"
+	Version     = "1.54.7"
 )
 
 const xrayDevVersion = "3.x-dev"
@@ -585,7 +585,7 @@ func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetai
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	return errorutils.CheckError(os.WriteFile(filePath, files, 0700))
+	return errorutils.CheckError(os.WriteFile(filePath, files, 0o700))
 }
 
 // Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.
