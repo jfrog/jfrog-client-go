@@ -269,3 +269,10 @@ func (sm *XrayServicesManager) GetArtifactStatus(repo, path string) (*services.A
 	artifactService.ScopeProjectKey = sm.scopeProjectKey
 	return artifactService.GetStatus(repo, path)
 }
+
+func (sm *XrayServicesManager) GetViolations(params xrayUtils.ViolationsRequest) (*services.ViolationsResponse, error) {
+	violationsService := services.NewViolationsService(sm.client)
+	violationsService.XrayDetails = sm.config.GetServiceDetails()
+	violationsService.ScopeProjectKey = sm.scopeProjectKey
+	return violationsService.GetViolations(params)
+}
