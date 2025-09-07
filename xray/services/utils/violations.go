@@ -16,12 +16,12 @@ type ViolationsRequest struct {
 }
 
 type PaginationOptions struct {
-	// Valid values:  created, summary, severity, type, watcher_name, issue_id (Default: created)
-	OrderBy string `json:"order_by,omitempty"`
 	// Default if not provided: 25
 	Limit int `json:"limit,omitempty"`
 	// Default if not provided: 1
 	Offset int `json:"offset,omitempty"`
+	// Valid values:  created, summary, severity, type, watcher_name, issue_id (Default: created)
+	OrderBy string `json:"order_by,omitempty"`
 	// Valid values: asc, desc (Default: For ordering by Severity: desc; for all other fields: asc)
 	Direction string `json:"direction,omitempty"`
 }

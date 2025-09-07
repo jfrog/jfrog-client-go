@@ -16,11 +16,10 @@ const (
 )
 
 const (
-	Applicable    ApplicabilityStatus = "applicable"
-	NotApplicable ApplicabilityStatus = "not_applicable"
-	NotCovered    ApplicabilityStatus = "not_covered"
-	Undetermined  ApplicabilityStatus = "undetermined"
-
+	Applicable      ApplicabilityStatus = "applicable"
+	NotApplicable   ApplicabilityStatus = "not_applicable"
+	NotCovered      ApplicabilityStatus = "not_covered"
+	Undetermined    ApplicabilityStatus = "undetermined"
 	NotScanned      ApplicabilityStatus = "not_scanned"
 	NotSupported    ApplicabilityStatus = "technology_unsupported"
 	RescanRequired  ApplicabilityStatus = "rescan_required"
@@ -173,10 +172,10 @@ type CveApplicabilityDetails struct {
 }
 
 type BaseJasDetails struct {
+	Id           string         `json:"id"`
 	Status       string         `json:"status"`
 	Severity     utils.Severity `json:"jfrog_severity,omitempty"`
 	Reason       string         `json:"description,omitempty"`
-	Id           string         `json:"id"`
 	Abbreviation string         `json:"abbreviation"`
 	CWE          *JasCwe        `json:"cwe,omitempty"`
 	Findings     JasFindings    `json:"findings,omitempty"`
