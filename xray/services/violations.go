@@ -67,7 +67,7 @@ func (vs *ViolationsService) GetViolations(params utils.ViolationsRequest) (resp
 }
 
 type ViolationsResponse struct {
-	Total      int             `json:"total,omitempty"`
+	Total      int             `json:"total_violations,omitempty"`
 	Violations []XrayViolation `json:"violations,omitempty"`
 }
 
