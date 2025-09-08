@@ -78,18 +78,18 @@ type XrayViolation struct {
 	Severity utils.Severity      `json:"severity"`
 	Created  string              `json:"created"`
 	// Additional violation details (depending on IncludeDetails flag, the violation type and configuration)
-	Id                   string              `json:"violation_id,omitempty"`
-	Description          string              `json:"description,omitempty"`
-	Summary              string              `json:"summary,omitempty"`
-	Provider             string              `json:"provider,omitempty"`
-	InfectedComponentIds []string            `json:"infected_components"`
-	InfectedVersions     []string            `json:"infected_versions,omitempty"`
-	InfectedFilePaths    []string            `json:"infected_file_path,omitempty"`
-	PhysicalPaths        []string            `json:"component_physical_paths,omitempty"`
-	Url                  string              `json:"violation_details_url,omitempty"`
-	ImpactArtifacts      []string            `json:"impact_artifacts,omitempty"`
-	GitRepository        string              `json:"impacted_git_repository,omitempty"`
-	Policies             []ViolationPolicies `json:"matched_policies,omitempty"`
+	Id                   string            `json:"violation_id,omitempty"`
+	Description          string            `json:"description,omitempty"`
+	Summary              string            `json:"summary,omitempty"`
+	Provider             string            `json:"provider,omitempty"`
+	InfectedComponentIds []string          `json:"infected_components"`
+	InfectedVersions     []string          `json:"infected_versions,omitempty"`
+	InfectedFilePaths    []string          `json:"infected_file_path,omitempty"`
+	PhysicalPaths        []string          `json:"component_physical_paths,omitempty"`
+	Url                  string            `json:"violation_details_url,omitempty"`
+	ImpactArtifacts      []string          `json:"impact_artifacts,omitempty"`
+	GitRepository        string            `json:"impacted_git_repository,omitempty"`
+	Policies             []ViolationPolicy `json:"matched_policies,omitempty"`
 	// Optional Ignore information if exists
 	IgnoreInfo *IgnoreRuleInfo `json:"ignore_rule_info,omitempty"`
 	// Security Violations details (based on scan type)
@@ -103,11 +103,15 @@ type XrayViolation struct {
 	SastDetails              *BaseJasDetails           `json:"sast_details,omitempty"`
 }
 
-type ViolationPolicies struct {
-	Policy     string `json:"policy"`
+type ViolationPolicy struct {
+	PolicyName string `json:"policy"`
 	Rule       string `json:"rule"`
-	IsBlocking bool   `json:"is_blocking"`
 
+	FailBuild         bool `json:"fail_build,omitempty"`
+	FailPullRequest   bool `json:"fail_pull_request,omitempty"`
+	SkipNotApplicable bool `json:"skip_not_applicable,omitempty"`
+
+	IsBlocking   bool `json:"is_blocking"`
 	IsIgnored    bool `json:"is_ignored,omitempty"`
 	BlockingMask int  `json:"blocking_mask,omitempty"`
 }
