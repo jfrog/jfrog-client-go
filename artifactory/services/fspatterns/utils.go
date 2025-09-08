@@ -64,7 +64,7 @@ func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, pres
 			return false, err
 		}
 		if isExcludedByPattern {
-			log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+			log.Verbose(fmt.Sprintf("The path '%s' is excluded", path))
 			return false, nil
 		}
 
