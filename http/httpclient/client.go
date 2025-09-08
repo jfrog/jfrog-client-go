@@ -179,7 +179,6 @@ func (jc *HttpClient) createReq(method, url string, content []byte) (req *http.R
 
 func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirect bool, closeBody bool, httpClientsDetails httputils.HttpClientDetails) (resp *http.Response, respBody []byte, redirectUrl string, err error) {
 	log.Debug(fmt.Sprintf("Sending HTTP %s request to: %s", req.Method, req.URL))
-	req.Close = true
 	setAuthentication(req, httpClientsDetails)
 	addUserAgentHeader(req)
 	copyHeaders(httpClientsDetails, req)
@@ -338,7 +337,6 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 		return
 	}
 	req.ContentLength = size
-	req.Close = true
 
 	setRequestHeaders(httpClientsDetails, size, req)
 	setAuthentication(req, httpClientsDetails)
