@@ -255,6 +255,13 @@ func (sm *XrayServicesManager) IsEntitled(featureId string) (bool, error) {
 	return entitlementsService.IsEntitled(featureId)
 }
 
+func (sm *XrayServicesManager) DownloadIndexer(localDirPath, localFileName string) (string, error) {
+	indexerService := services.NewIndexerService(sm.client)
+	indexerService.XrayDetails = sm.config.GetServiceDetails()
+	indexerService.ScopeProjectKey = sm.scopeProjectKey
+	return indexerService.Download(localDirPath, localFileName)
+}
+
 // Xsc returns the Xsc service inside Xray
 func (sm *XrayServicesManager) Xsc() *xsc.XscInnerService {
 	xscService := xsc.NewXscService(sm.client)
