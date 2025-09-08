@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -30,7 +32,7 @@ func initCatalogEnrichTest(t *testing.T, params catalog.MockServerParams) (catal
 		SetClientCertKeyPath(catalogDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(catalogDetails.RunPreRequestFunctions).
 		Build()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	return
 }
 

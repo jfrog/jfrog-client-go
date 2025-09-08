@@ -1,11 +1,11 @@
 name: "Static Analysis"
 on:
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '**'
+  workflow_dispatch:
   pull_request:
+    types: [opened, synchronize]
+    branches:
+      - "master"
+
 jobs:
   Static-Check:
     runs-on: ubuntu-latest
@@ -29,3 +29,19 @@ jobs:
 
       - name: Run Go-Sec scanner
         uses: jfrog/.github/actions/gosec-scanner@main
+
+  No-Replace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Check for uncommented replace instructions
+        run: |
+          if grep -E '^[[:space:]]*replace[[:space:]]' go.mod; then
+            echo "❌ Found uncommented replace directives in go.mod"
+            echo "All replace directives should be commented out"
+            exit 1
+          else
+            echo "✅ No uncommented replace directives found in go.mod"
+          fi

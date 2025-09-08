@@ -1,12 +1,20 @@
+//go:build itest
+
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils"
+	"fmt"
 	"reflect"
 	"testing"
+	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/jfrog/jfrog-client-go/access/services"
+	rtservices "github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccessProject(t *testing.T) {
@@ -20,18 +28,15 @@ func TestAccessProjectGroups(t *testing.T) {
 }
 
 func testAccessProjectAddGetDeleteGroups(t *testing.T) {
-	projectParams := getTestProjectParams("tstprj", "testProject")
-	assert.NoError(t, testsAccessProjectService.Create(projectParams))
+	projectKey := createRandomProject(t).ProjectDetails.ProjectKey
 
 	testGroup := getTestProjectGroupParams("a-test-group")
-	defer deleteProjectAndGroupAndAssert(t, projectParams.ProjectDetails.ProjectKey, testGroup.Name)
 
-	toBeAddedGroup := getTestGroupParams(true)
-	toBeAddedGroup.GroupDetails.Name = testGroup.Name
-	assert.NoError(t, testGroupService.CreateGroup(toBeAddedGroup))
-	assert.NoError(t, testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup))
+	createGroup(t, testGroup.Name, true, false)
 
-	allGroups, err := testsAccessProjectService.GetGroups(projectParams.ProjectDetails.ProjectKey)
+	require.NoError(t, testsAccessProjectService.UpdateGroup(projectKey, testGroup.Name, testGroup))
+
+	allGroups, err := testsAccessProjectService.GetGroups(projectKey)
 	if assert.NoError(t, err) &&
 		assert.NotNil(t, allGroups, "Expected 1 group in the project but got 0") {
 		assert.Equal(t, len(*allGroups), 1, "Expected 1 group in the project but got %d", len(*allGroups))
@@ -39,47 +44,35 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 	}
 
 	testGroup.Roles = append(testGroup.Roles, "Viewer")
-	assert.NoError(t, testsAccessProjectService.UpdateGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name, testGroup))
+	assert.NoError(t, testsAccessProjectService.UpdateGroup(projectKey, testGroup.Name, testGroup))
 
-	singleGroup, err := testsAccessProjectService.GetGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name)
+	singleGroup, err := testsAccessProjectService.GetGroup(projectKey, testGroup.Name)
 	if assert.NoError(t, err) &&
 		assert.NotNil(t, singleGroup, "Expected group %s but got nil", testGroup.Name) {
 		assert.Equal(t, testGroup, *singleGroup, "Expected group %v but got %v", testGroup, *singleGroup)
 	}
 
-	assert.NoError(t, testsAccessProjectService.DeleteExistingGroup(projectParams.ProjectDetails.ProjectKey, testGroup.Name))
+	assert.NoError(t, testsAccessProjectService.DeleteExistingGroup(projectKey, testGroup.Name))
 
-	noGroups, err := testsAccessProjectService.GetGroups(projectParams.ProjectDetails.ProjectKey)
-	assert.NoError(t, err)
+	noGroups, err := testsAccessProjectService.GetGroups(projectKey)
+	require.NoError(t, err)
 	assert.Empty(t, noGroups)
 }
 
 func testAccessProjectCreateUpdateDelete(t *testing.T) {
-	projectParams := getTestProjectParams("tstprj", "testProject")
-	assert.NoError(t, testsAccessProjectService.Create(projectParams))
-	defer deleteProjectAndAssert(t, projectParams.ProjectDetails.ProjectKey)
+	projectParams := createRandomProject(t)
+	originalDetails := projectParams.ProjectDetails
 	projectParams.ProjectDetails.Description += "123"
 	projectParams.ProjectDetails.StorageQuotaBytes += 123
 	projectParams.ProjectDetails.SoftLimit = utils.Pointer(true)
 	projectParams.ProjectDetails.AdminPrivileges.ManageMembers = utils.Pointer(false)
 	projectParams.ProjectDetails.AdminPrivileges.ManageResources = utils.Pointer(true)
 	projectParams.ProjectDetails.AdminPrivileges.IndexResources = utils.Pointer(false)
-	assert.NoError(t, testsAccessProjectService.Update(projectParams))
+	require.NoError(t, testsAccessProjectService.Update(projectParams))
 	updatedProject, err := testsAccessProjectService.Get(projectParams.ProjectDetails.ProjectKey)
-	if assert.NoError(t, err) &&
-		assert.NotNil(t, updatedProject, "Expected project %s but got nil", projectParams.ProjectDetails.ProjectKey) &&
-		!reflect.DeepEqual(projectParams.ProjectDetails, *updatedProject) {
-		t.Error("Unexpected project details built. Expected: `", projectParams.ProjectDetails, "` Got `", *updatedProject, "`")
-	}
-}
-
-func deleteProjectAndGroupAndAssert(t *testing.T, projectKey string, groupName string) {
-	deleteProjectAndAssert(t, projectKey)
-	deleteGroupAndAssert(t, groupName)
-}
-
-func deleteProjectAndAssert(t *testing.T, projectKey string) {
-	assert.NoError(t, testsAccessProjectService.Delete(projectKey))
+	require.NoError(t, err)
+	require.NotNilf(t, updatedProject, "Expected project %s but got nil", projectParams.ProjectDetails.ProjectKey)
+	assert.Falsef(t, reflect.DeepEqual(originalDetails, *updatedProject), "Expected project %v not to be %v", projectParams.ProjectDetails, *updatedProject)
 }
 
 func getTestProjectParams(projectKey string, projectName string) services.ProjectParams {
@@ -103,6 +96,39 @@ func getTestProjectParams(projectKey string, projectName string) services.Projec
 	}
 }
 
+func createGroup(t *testing.T, groupName string, includeUsers bool, adminPrivileges bool) rtservices.GroupParams {
+	groupParams := getTestGroupParams(includeUsers)
+	if groupName != "" {
+		groupParams.GroupDetails.Name = groupName
+	}
+	groupParams.GroupDetails.AdminPrivileges = utils.Pointer(adminPrivileges)
+	require.NoError(t, testGroupService.CreateGroup(groupParams))
+	t.Cleanup(func() {
+		err := testGroupService.DeleteGroup(groupParams.GroupDetails.Name)
+		if err != nil {
+			log.Warn(fmt.Sprintf("Failed to delete group %s: %+v", groupName, err))
+		}
+	})
+	return groupParams
+}
+
+func createRandomProject(t *testing.T) services.ProjectParams {
+	projectKey := fmt.Sprintf("tstprj%d%s", time.Now().Unix(), randomString(t, 6))
+	return createProject(t, projectKey, projectKey)
+}
+
+func createProject(t *testing.T, projectKey string, projectName string) services.ProjectParams {
+	projectParams := getTestProjectParams(projectKey, projectName)
+	require.NoError(t, testsAccessProjectService.Create(projectParams))
+	t.Cleanup(func() {
+		err := testsAccessProjectService.Delete(projectKey)
+		if err != nil {
+			log.Warn(fmt.Sprintf("Failed to delete project %s: %+v", projectKey, err))
+		}
+	})
+	return projectParams
+}
+
 func getTestProjectGroupParams(groupName string) services.ProjectGroup {
 	return services.ProjectGroup{
 		Name:  groupName,
@@ -112,22 +138,17 @@ func getTestProjectGroupParams(groupName string) services.ProjectGroup {
 
 func TestGetAllProjects(t *testing.T) {
 	initAccessTest(t)
+
 	preProjects, err := testsAccessProjectService.GetAll()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	oldNumOfPrjs := len(preProjects)
-	params1 := getTestProjectParams("tstprj", "projectForTest")
-	params2 := getTestProjectParams("tstprj1", "projectTesting")
-	params3 := getTestProjectParams("tstprj2", "testProject")
-	params4 := getTestProjectParams("tstprj3", "It'sForTest")
-	assert.NoError(t, testsAccessProjectService.Create(params1))
-	assert.NoError(t, testsAccessProjectService.Create(params2))
-	assert.NoError(t, testsAccessProjectService.Create(params3))
-	assert.NoError(t, testsAccessProjectService.Create(params4))
+
+	createRandomProject(t)
+	createRandomProject(t)
+	createRandomProject(t)
+	createRandomProject(t)
+
 	projects, err := testsAccessProjectService.GetAll()
-	assert.NoError(t, err, "Failed to Unmarshal")
+	require.NoError(t, err, "Failed to Unmarshal")
 	assert.Equal(t, oldNumOfPrjs+4, len(projects))
-	deleteProjectAndAssert(t, params1.ProjectDetails.ProjectKey)
-	deleteProjectAndAssert(t, params2.ProjectDetails.ProjectKey)
-	deleteProjectAndAssert(t, params3.ProjectDetails.ProjectKey)
-	deleteProjectAndAssert(t, params4.ProjectDetails.ProjectKey)
 }

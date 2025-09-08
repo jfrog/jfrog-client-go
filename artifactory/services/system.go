@@ -8,6 +8,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -98,7 +99,7 @@ func (ss *SystemService) ActivateKeyEncryption() error {
 func (ss *SystemService) DeactivateKeyEncryption() (wasEncrypted bool, err error) {
 	log.Info("Deactivating key encryption in Artifactory...")
 	httpDetails := (*ss.artDetails).CreateHttpClientDetails()
-	resp, body, err := ss.client.SendPost((*ss.artDetails).GetUrl()+apiSystem+"decrypt", nil, &httpDetails)
+	resp, body, err := ss.client.SendPost(utils.AddTrailingSlashIfNeeded((*ss.artDetails).GetUrl())+apiSystem+"decrypt", nil, &httpDetails)
 	if err != nil {
 		return false, err
 	}
@@ -117,7 +118,7 @@ func (ss *SystemService) DeactivateKeyEncryption() (wasEncrypted bool, err error
 
 func (ss *SystemService) sendGet(endpoint string) ([]byte, error) {
 	httpDetails := (*ss.artDetails).CreateHttpClientDetails()
-	resp, body, _, err := ss.client.SendGet((*ss.artDetails).GetUrl()+apiSystem+endpoint, true, &httpDetails)
+	resp, body, _, err := ss.client.SendGet(utils.AddTrailingSlashIfNeeded((*ss.artDetails).GetUrl())+apiSystem+endpoint, true, &httpDetails)
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while attempting to get JFrog Artifactory %s: %s", endpoint, err.Error())
 	}
@@ -130,7 +131,7 @@ func (ss *SystemService) sendGet(endpoint string) ([]byte, error) {
 
 func (ss *SystemService) sendEmptyPost(endpoint string) error {
 	httpDetails := (*ss.artDetails).CreateHttpClientDetails()
-	resp, body, err := ss.client.SendPost((*ss.artDetails).GetUrl()+apiSystem+endpoint, nil, &httpDetails)
+	resp, body, err := ss.client.SendPost(utils.AddTrailingSlashIfNeeded((*ss.artDetails).GetUrl())+apiSystem+endpoint, nil, &httpDetails)
 	if err != nil {
 		return err
 	}
