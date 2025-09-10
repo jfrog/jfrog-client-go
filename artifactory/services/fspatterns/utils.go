@@ -75,7 +75,7 @@ func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, pres
 			}
 			// Check if the file size is within the limits
 			if !fileInfo.IsDir() && !sizeThreshold.IsSizeWithinThreshold(fileInfo.Size()) {
-				log.Verbose(fmt.Sprintf("The path '%s' is excluded", path))
+				log.Verbose(fmt.Sprintf("The path '%s' is excluded (size limit)", path))
 				return false, nil
 			}
 		}
