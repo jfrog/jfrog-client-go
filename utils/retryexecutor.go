@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -81,18 +82,33 @@ func (runner *RetryExecutor) getTimeoutErrorMsg() string {
 }
 
 func (runner *RetryExecutor) LogRetry(attemptNumber int, err error) {
-	message := fmt.Sprintf("%s(Attempt %v)", runner.LogMsgPrefix, attemptNumber+1)
-	if runner.ErrorMessage != "" {
-		message = fmt.Sprintf("%s - %s", message, runner.ErrorMessage)
-	}
-	if err != nil {
-		message = fmt.Sprintf("%s: %s", message, err.Error())
+	var message string
+	if attemptNumber == 0 {
+		message = fmt.Sprintf("%s[Initial attempt]", runner.LogMsgPrefix)
+	} else {
+		message = fmt.Sprintf("%s[Retry %d/%d]", runner.LogMsgPrefix, attemptNumber, runner.MaxRetries)
 	}
 
-	if err != nil || runner.ErrorMessage != "" {
-		log.Warn(message)
+	if runner.ErrorMessage != "" {
+		message = fmt.Sprintf("%s %s", message, runner.ErrorMessage)
+	}
+
+	if err != nil {
+		message = fmt.Sprintf("%s - Error: %s", message, err.Error())
+	}
+
+	if err != nil {
+		if attemptNumber == runner.MaxRetries {
+			log.Error(fmt.Sprintf("%s - Final attempt failed", message))
+		} else {
+			log.Warn(message)
+		}
 	} else {
-		log.Debug(message)
+		if attemptNumber == 0 {
+			log.Debug(fmt.Sprintf("%s - Succeeded on first try", message))
+		} else {
+			log.Info(fmt.Sprintf("%s - Succeeded after %d retries", message, attemptNumber))
+		}
 	}
 }
 
