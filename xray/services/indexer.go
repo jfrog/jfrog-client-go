@@ -49,7 +49,7 @@ func (is *IndexerService) Download(localDirPath, localBinaryName string) (string
 	}
 	// Add execution permissions to the indexer binary
 	downloadedFilePath := filepath.Join(localDirPath, localBinaryName)
-	if err = os.Chmod(downloadedFilePath, 0777); err != nil {
+	if err = os.Chmod(downloadedFilePath, 0755); err != nil {
 		return "", errorutils.CheckError(err)
 	}
 	return downloadedFilePath, errorutils.CheckError(err)
