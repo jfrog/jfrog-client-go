@@ -32,11 +32,7 @@ func (is *IndexerService) Download(localDirPath, localBinaryName string) (string
 	httpClientDetails := is.XrayDetails.CreateHttpClientDetails()
 	url := is.getUrlForDownloadApi()
 	// Download the indexer from Xray to the provided directory
-	downloadFileDetails := &httpclient.DownloadFileDetails{
-		DownloadPath:  url,
-		LocalPath:     localDirPath,
-		LocalFileName: localBinaryName,
-	}
+	downloadFileDetails := &httpclient.DownloadFileDetails{DownloadPath: url, LocalPath: localDirPath, LocalFileName: localBinaryName}
 	resp, err := is.client.DownloadFile(downloadFileDetails, "", &httpClientDetails, false, false)
 	if err != nil {
 		return "", fmt.Errorf("failed while attempting to download %q: %w", url, err)

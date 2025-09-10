@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -277,6 +278,20 @@ func enrichGetResults(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+func indexerDownloadHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			// Simulate downloading a binary file by sending a simple text response
+			w.Header().Set("Content-Disposition", "attachment; filename=\"indexer\"")
+			w.Header().Set("Content-Type", "application/octet-stream")
+			_, err := fmt.Fprint(w, "This is a mock indexer binary content.")
+			assert.NoError(t, err)
+			return
+		}
+		http.Error(w, "Invalid indexer download request", http.StatusBadRequest)
+	}
+}
+
 type MockServerParams struct {
 	MSI         string
 	XrayVersion string
@@ -301,6 +316,7 @@ func StartXrayMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers["/xray/api/v1/scan/import_xml"] = enrichGetScanId(t)
 	handlers[fmt.Sprintf("/xray/api/v1/scan/graph/%s", params.MSI)] = enrichGetResults(t)
 	handlers["/xray/api/v1/configuration/jas"] = getJasConfig(t)
+	handlers[fmt.Sprintf("/xray/api/v1/indexer-resources/download/%s/%s", runtime.GOOS, runtime.GOARCH)] = indexerDownloadHandler(t)
 	handlers[fmt.Sprintf("/%s/", services.BuildScanAPI)] = buildScanHandler
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	// Xsc handlers
