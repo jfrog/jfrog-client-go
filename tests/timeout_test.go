@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -42,6 +44,8 @@ const (
 )
 
 func TestTimeout(t *testing.T) {
+	initUnitTests(t)
+
 	previousLog := tests.RedirectLogOutputToNil()
 	defer func() {
 		log.SetLogger(previousLog)

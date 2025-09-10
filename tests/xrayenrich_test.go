@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -6,6 +8,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 )
@@ -20,7 +23,7 @@ func initXrayEnrichTest(t *testing.T) (xrayServerPort int, xrayDetails auth.Serv
 		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
 		Build()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	return
 }
 

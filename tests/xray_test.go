@@ -1,10 +1,13 @@
+//go:build itest
+
 package tests
 
 import (
-	"github.com/jfrog/jfrog-client-go/auth"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -106,6 +109,7 @@ func initXrayTest(t *testing.T) {
 	if !*TestXray {
 		t.Skip("Skipping xray test. To run xray test add the '-test.xray=true' option.")
 	}
+	createRepo(t)
 }
 
 type testXrayDetails struct {

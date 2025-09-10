@@ -1,13 +1,11 @@
 name: JFrog Client Go Tests
 on:
-  push:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
     branches:
-      - '**'
-    tags-ignore:
-      - '**'
-  # Triggers the workflow on labeled PRs only.
-  pull_request_target:
-    types: [ labeled ]
+      - "master"
+
 # Ensures that only the latest commit is running for each PR at a time.
 # Ignores this rule for push events.
 concurrency:
@@ -15,7 +13,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   Pretest:
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test') || github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Unlabel 'safe to test'
@@ -35,14 +32,30 @@ jobs:
       - name: Lint
         run: go vet -v ./...
 
+  JFrog-Client-Go-Unit-Tests:
+    name: Unit Tests
+    needs: Pretest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Go with cache
+        uses: jfrog/.github/actions/install-go-with-cache@main
+
+      - name: Unit tests
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.unit
+
   JFrog-Client-Go-Artifactory-Access-Tests:
     name: ${{ matrix.suite }} ${{ matrix.os }}
     needs: Pretest
     strategy:
       fail-fast: false
       matrix:
-        suite: [ artifactory, access ]
-        os: [ ubuntu, windows, macos ]
+        suite: [artifactory, access]
+        os: [ubuntu, windows, macos]
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Checkout code
@@ -59,7 +72,7 @@ jobs:
           RTLIC: ${{ secrets.RTLIC }}
 
       - name: artifactory tests
-        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.${{ matrix.suite }} --rt.url=http://localhost:8081/artifactory --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Ds-Xr-MPU-Tests:
     needs: Pretest
@@ -67,8 +80,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [ distribution, xray, xsc, mpu ]
-        os: [ ubuntu, windows, macos ]
+        suite: [distribution, xray, xsc, mpu]
+        os: [ubuntu, windows, macos]
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Checkout code
@@ -80,7 +93,7 @@ jobs:
         uses: jfrog/.github/actions/install-go-with-cache@main
 
       - name: ${{ matrix.suite }} tests
-        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --rt.url=${{ secrets.PLATFORM_URL }}/artifactory --ds.url=${{ secrets.PLATFORM_URL }}/distribution --xr.url=${{ secrets.PLATFORM_URL }}/xray --xsc.url=${{ secrets.PLATFORM_URL }}/xsc --access.url=${{ secrets.PLATFORM_URL }}/access --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.${{ matrix.suite }} --platform.url=${{ secrets.PLATFORM_URL }} --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Catalog-Tests:
     name: ${{ matrix.suite }} ${{ matrix.os }}
@@ -88,8 +101,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [ catalog ]
-        os: [ ubuntu, windows, macos ]
+        suite: [catalog]
+        os: [ubuntu, windows, macos]
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Checkout code
@@ -101,7 +114,7 @@ jobs:
         uses: jfrog/.github/actions/install-go-with-cache@main
 
       - name: catalog tests
-        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Repositories-Tests:
     needs: Pretest
@@ -122,4 +135,4 @@ jobs:
           RTLIC: ${{ secrets.RTLIC }}
 
       - name: Repositories tests
-        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --test.repositories
+        run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.repositories --rt.url=http://localhost:8081/artifactory
