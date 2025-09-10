@@ -56,7 +56,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// attiasas:add_verbose_log_level
-replace github.com/jfrog/build-info-go => github.com/attiasas/build-info-go v0.0.0-20250908103108-2a651898674a
+replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.8.9-0.20250910075402-a0c1a53e465a
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.7.6-0.20240909061051-2d36ae4bd05a
