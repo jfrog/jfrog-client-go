@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -13,6 +15,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const testExpiredInSeconds = 1
@@ -122,7 +125,8 @@ func testExchangeOidcToken(t *testing.T) {
 func testCreateRefreshableToken(t *testing.T) {
 	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NotNil(t, token)
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
 	assert.NotEqual(t, tokenParams.AccessToken, token.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, "", token.RefreshToken, "Refresh token is empty")
@@ -134,7 +138,8 @@ func testAccessTokenWithReference(t *testing.T) {
 	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
 	tokenParams.IncludeReferenceToken = utils.Pointer(true)
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NotNil(t, token)
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
 	assert.NotEqual(t, tokenParams.AccessToken, token.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, "", token.RefreshToken, "Refresh token is empty")
@@ -146,11 +151,13 @@ func testRefreshTokenTest(t *testing.T) {
 	// Create token
 	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NotNil(t, token)
 	// Refresh token
 	refreshTokenParams := createRefreshAccessTokenParams(token)
 	newToken, err := testsAccessTokensService.RefreshAccessToken(refreshTokenParams)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NotNil(t, newToken)
 	// Validate
 	assert.NotEqual(t, token.AccessToken, newToken.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, token.RefreshToken, newToken.RefreshToken, "New refresh token is identical to original one")
