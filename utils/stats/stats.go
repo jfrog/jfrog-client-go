@@ -2,7 +2,6 @@ package clientStats
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
@@ -51,8 +50,8 @@ func NewFailedRequestError(statusCode int, statusText string, product string) *A
 	}
 }
 
-func GetArtifactoryStats(client *httpclient.HttpClient, serverDetails *config.ServerDetails, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
-	requestFullUrl, err := utils.BuildUrl(serverDetails.GetUrl(), artifactoryStatsAPI, nil)
+func GetArtifactoryStats(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
+	requestFullUrl, err := utils.BuildUrl(serverUrl, artifactoryStatsAPI, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +64,8 @@ func GetArtifactoryStats(client *httpclient.HttpClient, serverDetails *config.Se
 	return body, err
 }
 
-func GetRepositoriesStats(client *httpclient.HttpClient, serverDetails *config.ServerDetails, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
-	requestFullUrl, err := utils.BuildUrl(serverDetails.GetUrl(), repositoriesAPI, nil)
+func GetRepositoriesStats(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
+	requestFullUrl, err := utils.BuildUrl(serverUrl, repositoriesAPI, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -79,8 +78,8 @@ func GetRepositoriesStats(client *httpclient.HttpClient, serverDetails *config.S
 	return body, err
 }
 
-func GetXrayPolicies(client *httpclient.HttpClient, serverDetails *config.ServerDetails, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
-	requestFullUrl, err := utils.BuildUrl(serverDetails.GetUrl(), xrayPolicyAPI, nil)
+func GetXrayPolicies(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
+	requestFullUrl, err := utils.BuildUrl(serverUrl, xrayPolicyAPI, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +92,8 @@ func GetXrayPolicies(client *httpclient.HttpClient, serverDetails *config.Server
 	return body, err
 }
 
-func GetXrayWatches(client *httpclient.HttpClient, serverDetails *config.ServerDetails, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
-	requestFullUrl, err := utils.BuildUrl(serverDetails.GetUrl(), xrayWatchesAPI, nil)
+func GetXrayWatches(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
+	requestFullUrl, err := utils.BuildUrl(serverUrl, xrayWatchesAPI, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -110,8 +109,8 @@ func GetXrayWatches(client *httpclient.HttpClient, serverDetails *config.ServerD
 	return body, err
 }
 
-func GetProjectsStats(client *httpclient.HttpClient, serverDetails *config.ServerDetails, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
-	requestFullUrl, err := utils.BuildUrl(serverDetails.GetUrl(), projectsAPI, nil)
+func GetProjectsStats(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
+	requestFullUrl, err := utils.BuildUrl(serverUrl, projectsAPI, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +123,8 @@ func GetProjectsStats(client *httpclient.HttpClient, serverDetails *config.Serve
 	return body, err
 }
 
-func GetJPDsStats(client *httpclient.HttpClient, serverDetails *config.ServerDetails, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
-	requestFullUrl, err := utils.BuildUrl(serverDetails.GetUrl(), JPDsAPI, nil)
+func GetJPDsStats(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
+	requestFullUrl, err := utils.BuildUrl(serverUrl, JPDsAPI, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +137,8 @@ func GetJPDsStats(client *httpclient.HttpClient, serverDetails *config.ServerDet
 	return body, err
 }
 
-func GetReleaseBundlesStats(client *httpclient.HttpClient, serverDetails *config.ServerDetails, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
-	requestFullUrl, err := utils.BuildUrl(serverDetails.GetUrl(), releaseBundlesAPI, nil)
+func GetReleaseBundlesStats(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
+	requestFullUrl, err := utils.BuildUrl(serverUrl, releaseBundlesAPI, nil)
 	if err != nil {
 		return nil, err
 	}
