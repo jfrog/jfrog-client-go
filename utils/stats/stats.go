@@ -11,8 +11,6 @@ import (
 
 const (
 	artifactoryStatsAPI = "artifactory/api/storageinfo"
-	xrayPolicyAPI       = "xray/api/v2/policies"
-	xrayWatchesAPI      = "xray/api/v2/watches"
 	projectsAPI         = "access/api/v1/projects"
 	JPDsAPI             = "mc/api/v1/jpds"
 	releaseBundlesAPI   = "lifecycle/api/v2/release_bundle/names"
@@ -25,6 +23,15 @@ type APIError struct {
 	StatusCode int
 	StatusText string
 	Suggestion string
+}
+
+type GenericError struct {
+	Product string
+	Err     error
+}
+
+func (g GenericError) Error() string {
+	return fmt.Sprintf("failed to get stats for '%s': %s. %s", g.Product, g.Err)
 }
 
 func (e *APIError) Error() string {
@@ -51,12 +58,22 @@ func NewFailedRequestError(statusCode int, statusText string, product string) *A
 	}
 }
 
+func NewGenericError(product string, err error) *GenericError {
+	return &GenericError{
+		Product: product,
+		Err:     err,
+	}
+}
+
 func GetArtifactoryStats(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
 	requestFullUrl, err := utils.BuildUrl(serverUrl, artifactoryStatsAPI, nil)
 	if err != nil {
 		return nil, err
 	}
 	resp, body, _, err := client.SendGet(requestFullUrl, true, httpClientDetails, "")
+	if err != nil {
+		return nil, NewGenericError("ARTIFACTORY", err)
+	}
 	log.Debug("Artifactory API response:", resp.Status)
 	if resp.StatusCode != http.StatusOK {
 		err := NewFailedRequestError(resp.StatusCode, resp.Status, "ARTIFACTORY")
@@ -71,40 +88,12 @@ func GetRepositoriesStats(client *httpclient.HttpClient, serverUrl string, httpC
 		return nil, err
 	}
 	resp, body, _, err := client.SendGet(requestFullUrl, true, httpClientDetails, "")
+	if err != nil {
+		return nil, NewGenericError("REPOSITORY", err)
+	}
 	log.Debug("Repositories API response:", resp.Status)
 	if resp.StatusCode != http.StatusOK {
 		err := NewFailedRequestError(resp.StatusCode, resp.Status, "REPOSITORY")
-		return nil, err
-	}
-	return body, err
-}
-
-func GetXrayPolicies(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
-	requestFullUrl, err := utils.BuildUrl(serverUrl, xrayPolicyAPI, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, body, _, err := client.SendGet(requestFullUrl, true, httpClientDetails, "")
-	log.Debug("Xray Policy API response:", resp.Status)
-	if resp.StatusCode != http.StatusOK {
-		err := NewFailedRequestError(resp.StatusCode, resp.Status, "POLICIES")
-		return nil, err
-	}
-	return body, err
-}
-
-func GetXrayWatches(client *httpclient.HttpClient, serverUrl string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
-	requestFullUrl, err := utils.BuildUrl(serverUrl, xrayWatchesAPI, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, body, _, err := client.SendGet(requestFullUrl, true, httpClientDetails, "")
-	if err != nil {
-		return nil, err
-	}
-	log.Debug("Xray Watch API response:", resp.Status)
-	if resp.StatusCode != http.StatusOK {
-		err := NewFailedRequestError(resp.StatusCode, resp.Status, "WATCHES")
 		return nil, err
 	}
 	return body, err
@@ -116,6 +105,9 @@ func GetProjectsStats(client *httpclient.HttpClient, serverUrl string, httpClien
 		return nil, err
 	}
 	resp, body, _, err := client.SendGet(requestFullUrl, true, httpClientDetails, "")
+	if err != nil {
+		return nil, NewGenericError("PROJECTS", err)
+	}
 	log.Debug("Projects API response:", resp.Status)
 	if resp.StatusCode != http.StatusOK {
 		err := NewFailedRequestError(resp.StatusCode, resp.Status, "PROJECTS")
@@ -130,6 +122,9 @@ func GetJPDsStats(client *httpclient.HttpClient, serverUrl string, httpClientDet
 		return nil, err
 	}
 	resp, body, _, err := client.SendGet(requestFullUrl, true, httpClientDetails, "")
+	if err != nil {
+		return nil, NewGenericError("JPD", err)
+	}
 	log.Debug("JPDs API response:", resp.Status)
 	if resp.StatusCode != http.StatusOK {
 		err := NewFailedRequestError(resp.StatusCode, resp.Status, "JPD")
@@ -144,6 +139,9 @@ func GetReleaseBundlesStats(client *httpclient.HttpClient, serverUrl string, htt
 		return nil, err
 	}
 	resp, body, _, err := client.SendGet(requestFullUrl, true, httpClientDetails, "")
+	if err != nil {
+		return nil, NewGenericError("RELEASE-BUNDLES", err)
+	}
 	log.Debug("Release Bundle API response:", resp.Status)
 	if resp.StatusCode != http.StatusOK {
 		err := NewFailedRequestError(resp.StatusCode, resp.Status, "RELEASE-BUNDLES")
