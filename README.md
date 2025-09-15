@@ -732,7 +732,7 @@ rtManager.DeleteBuildInfo(buildInfo, projectKey, numberOfBuildOccurrencesToBeDel
 #### Fetching Build Info from Artifactory
 
 ```go
-buildInfoParams := services.NewBuildInfoParams{}
+buildInfoParams := services.NewBuildInfoParams()
 buildInfoParams.BuildName = "buildName"
 buildInfoParams.BuildNumber = "LATEST"
 // Optional Artifactory project key
@@ -744,7 +744,7 @@ rtManager.GetBuildInfo(buildInfoParams)
 #### Fetching Build Runs from Artifactory
 
 ```go
-buildInfoParams := services.NewBuildInfoParams{}
+buildInfoParams := services.NewBuildInfoParams()
 buildInfoParams.BuildName = "buildName"
 // Optional Artifactory project key
 buildInfoParams.ProjectKey = "my-project-key"
