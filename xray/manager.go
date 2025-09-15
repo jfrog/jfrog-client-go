@@ -269,3 +269,10 @@ func (sm *XrayServicesManager) GetArtifactStatus(repo, path string) (*services.A
 	artifactService.ScopeProjectKey = sm.scopeProjectKey
 	return artifactService.GetStatus(repo, path)
 }
+
+func (sm *XrayServicesManager) DownloadIndexer(localDirPath, localFileName string) (string, error) {
+	indexerService := services.NewIndexerService(sm.client)
+	indexerService.XrayDetails = sm.config.GetServiceDetails()
+	indexerService.ScopeProjectKey = sm.scopeProjectKey
+	return indexerService.Download(localDirPath, localFileName)
+}
