@@ -38,7 +38,7 @@ func TestXrayDownloadIndexer(t *testing.T) {
 	// Download the indexer binary
 	downloadedFilePath, err := indexerService.Download(outputDir, "test-indexer")
 	require.NoError(t, err)
-	require.Equal(t, outputDir+"/test-indexer", downloadedFilePath)
+	require.Equal(t, filepath.Join(outputDir, "test-indexer"), downloadedFilePath)
 	// Verify the indexer binary was downloaded successfully
 	exists, err := fileutils.IsFileExists(downloadedFilePath, false)
 	require.NoError(t, err)
