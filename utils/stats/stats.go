@@ -1,7 +1,6 @@
 package clientStats
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -19,7 +18,6 @@ const (
 	releaseBundlesAPI   = "lifecycle/api/v2/release_bundle/names"
 	repositoriesAPI     = "artifactory/api/repositories"
 	tokensAPI           = "access/api/v1/tokens"
-	adminTokenValue     = "applied-permissions/admin"
 )
 
 type APIError struct {
@@ -27,12 +25,6 @@ type APIError struct {
 	StatusCode int
 	StatusText string
 	Suggestion string
-}
-
-type TokenInfo struct {
-	TokenID string `json:"token_id"`
-	Subject string `json:"subject"`
-	Scope   string `json:"scope"`
 }
 
 func (e *APIError) Error() string {
@@ -160,27 +152,18 @@ func GetReleaseBundlesStats(client *httpclient.HttpClient, serverUrl string, htt
 	return body, err
 }
 
-func IsAdminToken(client *httpclient.HttpClient, baseUrl string, tokenId string, httpClientDetails httputils.HttpClientDetails) (bool, error) {
+func GetTokenDetails(client *httpclient.HttpClient, baseUrl string, tokenId string, httpClientDetails httputils.HttpClientDetails) ([]byte, error) {
 	requestFullUrl, err := utils.BuildUrl(baseUrl, tokensAPI+"/"+tokenId, nil)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	resp, body, _, err := client.SendGet(requestFullUrl, true, httpClientDetails, "")
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
 		err := NewFailedRequestError(resp.StatusCode, resp.Status, "TOKEN")
-		return false, err
+		return nil, err
 	}
-	var tokenInfo TokenInfo
-	err = json.Unmarshal(body, &tokenInfo)
-	if err != nil {
-		log.Error("Error parsing JSON:", err)
-		return false, err
-	}
-	if tokenInfo.Scope == adminTokenValue {
-		return true, nil
-	}
-	return false, err
+	return body, err
 }
