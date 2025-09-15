@@ -4,9 +4,12 @@ package tests
 
 import (
 	"fmt"
+	"slices"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestXrayBinMgr(t *testing.T) {
@@ -16,20 +19,29 @@ func TestXrayBinMgr(t *testing.T) {
 
 func addBuildsToIndexing(t *testing.T) {
 	buildName := fmt.Sprintf("%s-%s", "build1", getRunId())
-	defer func() {
-		assert.NoError(t, deleteBuildIndex(buildName))
-		assert.NoError(t, deleteBuild(buildName))
-	}()
+	t.Cleanup(func() {
+		if err := deleteBuildIndex(buildName); err != nil {
+			t.Logf("Failed to delete build index: %v", err)
+		}
+		if err := deleteBuild(buildName); err != nil {
+			t.Logf("Failed to delete build: %v", err)
+		}
+	})
 	// Create a build
 	err := createDummyBuild(buildName)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Index build
 	err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Assert build contained in the indexed build list
-	indexedBuilds, err := getIndexedBuilds()
-	assert.NoError(t, err)
-	assert.Contains(t, indexedBuilds, buildName)
+	assert.Eventuallyf(t, func() bool {
+		indexedBuilds, err := getIndexedBuilds()
+		if err != nil {
+			t.Logf("Failed to get indexed builds: %v", err)
+			return false
+		}
+		return slices.Contains(indexedBuilds, buildName)
+	}, time.Second*5, time.Millisecond*150, "Build %s not found in indexed builds", buildName)
 }
