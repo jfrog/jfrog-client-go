@@ -64,7 +64,7 @@ func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, pres
 			return false, err
 		}
 		if isExcludedByPattern {
-			log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+			log.Verbose(fmt.Sprintf("The path '%s' is excluded", path))
 			return false, nil
 		}
 
@@ -75,7 +75,7 @@ func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, pres
 			}
 			// Check if the file size is within the limits
 			if !fileInfo.IsDir() && !sizeThreshold.IsSizeWithinThreshold(fileInfo.Size()) {
-				log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+				log.Verbose(fmt.Sprintf("The path '%s' is excluded", path))
 				return false, nil
 			}
 		}
@@ -147,7 +147,7 @@ func GetFileSymlinkPath(filePath string) (string, error) {
 	if errorutils.CheckError(e) != nil {
 		return "", e
 	}
-	var symlinkPath = ""
+	symlinkPath := ""
 	if fileutils.IsFileSymlink(fileInfo) {
 		symlinkPath, e = os.Readlink(filePath)
 		if errorutils.CheckError(e) != nil {

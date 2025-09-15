@@ -2,19 +2,22 @@ package log
 
 import (
 	"fmt"
-	"github.com/forPelevin/gomoji"
-	"github.com/gookit/color"
-	"golang.org/x/term"
 	"io"
 	"log"
 	"os"
 	"runtime"
+
+	"github.com/forPelevin/gomoji"
+	"github.com/gookit/color"
+	"golang.org/x/term"
 )
 
 var Logger Log
 
-type LevelType int
-type LogFormat string
+type (
+	LevelType int
+	LogFormat string
+)
 
 // Used for coloring sections of the log message. For example log.Format.Path("...")
 var Format LogFormat
@@ -38,14 +41,17 @@ var allowEmojis bool
 // defaultLogger is the default logger instance in case the user does not set one
 var defaultLogger = NewLogger(INFO, nil)
 
-var logWriter io.Writer
-var outputWriter io.Writer
+var (
+	logWriter    io.Writer
+	outputWriter io.Writer
+)
 
 const (
 	ERROR LevelType = iota
 	WARN
 	INFO
 	DEBUG
+	VERBOSE
 )
 
 // Creates a new logger with a given LogLevel.
@@ -66,12 +72,13 @@ func NewLogger(logLevel LevelType, logToWriter io.Writer) *JfrogLogger {
 }
 
 type JfrogLogger struct {
-	LogLevel  LevelType
-	OutputLog *log.Logger
-	DebugLog  *log.Logger
-	InfoLog   *log.Logger
-	WarnLog   *log.Logger
-	ErrorLog  *log.Logger
+	LogLevel   LevelType
+	OutputLog  *log.Logger
+	VerboseLog *log.Logger
+	DebugLog   *log.Logger
+	InfoLog    *log.Logger
+	WarnLog    *log.Logger
+	ErrorLog   *log.Logger
 }
 
 func SetLogger(newLogger Log) {
@@ -112,6 +119,7 @@ func (logger *JfrogLogger) SetLogsWriter(writer io.Writer, logFlags int) {
 	// reset errIsTerminal flag
 	stdErrIsTerminal = nil
 	logger.DebugLog = log.New(logWriter, getLogPrefix(DEBUG), logFlags)
+	logger.VerboseLog = log.New(logWriter, getLogPrefix(VERBOSE), logFlags)
 	logger.InfoLog = log.New(logWriter, getLogPrefix(INFO), logFlags)
 	logger.WarnLog = log.New(logWriter, getLogPrefix(WARN), logFlags)
 	logger.ErrorLog = log.New(logWriter, getLogPrefix(ERROR), logFlags)
@@ -122,10 +130,11 @@ var prefixStyles = map[LevelType]struct {
 	color    color.Color
 	emoji    string
 }{
-	DEBUG: {logLevel: "Debug", color: color.Cyan},
-	INFO:  {logLevel: "Info", emoji: "🔵", color: color.Blue},
-	WARN:  {logLevel: "Warn", emoji: "🟠", color: color.Yellow},
-	ERROR: {logLevel: "Error", emoji: "🚨", color: color.Red},
+	DEBUG:   {logLevel: "Debug", color: color.Cyan},
+	VERBOSE: {logLevel: "Verbose", color: color.Gray},
+	INFO:    {logLevel: "Info", emoji: "🔵", color: color.Blue},
+	WARN:    {logLevel: "Warn", emoji: "🟠", color: color.Yellow},
+	ERROR:   {logLevel: "Error", emoji: "🚨", color: color.Red},
 }
 
 func getLogPrefix(logType LevelType) string {
@@ -138,6 +147,10 @@ func getLogPrefix(logType LevelType) string {
 		return fmt.Sprintf("[%s] ", prefix)
 	}
 	return ""
+}
+
+func Verbose(a ...interface{}) {
+	GetLogger().Verbose(a...)
 }
 
 func Debug(a ...interface{}) {
@@ -162,6 +175,12 @@ func Output(a ...interface{}) {
 
 func (logger JfrogLogger) GetLogLevel() LevelType {
 	return logger.LogLevel
+}
+
+func (logger JfrogLogger) Verbose(a ...interface{}) {
+	if logger.GetLogLevel() >= VERBOSE {
+		logger.Println(logger.VerboseLog, IsStdErrTerminal(), a...)
+	}
 }
 
 func (logger JfrogLogger) Debug(a ...interface{}) {
@@ -209,6 +228,7 @@ func (logger *JfrogLogger) Println(log *log.Logger, isTerminal bool, values ...i
 }
 
 type Log interface {
+	Verbose(a ...interface{})
 	Debug(a ...interface{})
 	Info(a ...interface{})
 	Warn(a ...interface{})
