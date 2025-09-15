@@ -3514,3 +3514,31 @@ fmt.Printf("Application Key: %s\n", application.ApplicationKey)
 fmt.Printf("Project Name: %s\n", application.ProjectName)
 fmt.Printf("Project Key: %s\n", application.ProjectKey)
 ```
+
+### Get Application Version Promotions
+
+```go
+applicationKey := "your-application-key"
+applicationVersion := "1.0.0"
+
+// Optional query parameters
+queryParams := map[string]string{
+    "order_by":   "created",
+    "order_asc":  "false",
+    "limit":      "100",
+    "offset":     "0",
+    "filter_by":  "status=COMPLETED",
+}
+
+promotions, err := apptrustManager.GetApplicationVersionPromotions(applicationKey, applicationVersion, queryParams)
+if err != nil {
+    return err
+}
+
+// Access promotion details
+fmt.Printf("Total promotions: %d\n", promotions.Total)
+for _, promotion := range promotions.Promotions {
+    fmt.Printf("Status: %s, Source: %s, Target: %s, Created: %s\n", 
+        promotion.Status, promotion.SourceStage, promotion.TargetStage, promotion.Created)
+}
+```

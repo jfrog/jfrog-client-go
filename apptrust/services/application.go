@@ -57,6 +57,34 @@ func (as *ApplicationService) GetApplicationDetails(applicationKey string) (*App
 	return &applicationResponse.Application, nil
 }
 
+func (as *ApplicationService) GetApplicationVersionPromotions(applicationKey, applicationVersion string, queryParams map[string]string) (*ApplicationPromotionsResponse, error) {
+	restApi := path.Join(applicationDetailsAPI, applicationKey, "versions", applicationVersion, "promotions")
+	requestFullUrl, err := clientutils.BuildUrl(as.GetApptrustDetails().GetUrl(), restApi, queryParams)
+	if err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+
+	httpClientDetails := as.GetApptrustDetails().CreateHttpClientDetails()
+	httpClientDetails.SetContentTypeApplicationJson()
+
+	log.Debug("Getting Application Version Promotions for:", applicationKey, applicationVersion)
+	resp, body, _, err := as.client.SendGet(requestFullUrl, true, &httpClientDetails)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+
+	var promotionsResponse ApplicationPromotionsResponse
+	if err = json.Unmarshal(body, &promotionsResponse); err != nil {
+		return nil, errorutils.CheckError(err)
+	}
+
+	return &promotionsResponse, nil
+}
+
 type ApplicationResponse struct {
 	Application Application `json:"application"`
 }
@@ -66,4 +94,36 @@ type Application struct {
 	ApplicationKey  string `json:"application_key"`
 	ProjectName     string `json:"project_name"`
 	ProjectKey      string `json:"project_key"`
+}
+
+type ApplicationPromotionsResponse struct {
+	Promotions []ApplicationPromotion `json:"promotions"`
+	Total      int                    `json:"total"`
+	Limit      int                    `json:"limit"`
+	Offset     int                    `json:"offset"`
+}
+
+type ApplicationPromotion struct {
+	ApplicationKey     string                     `json:"application_key"`
+	ApplicationVersion string                     `json:"application_version"`
+	ProjectKey         string                     `json:"project_key"`
+	Status             string                     `json:"status"`
+	SourceStage        string                     `json:"source_stage"`
+	TargetStage        string                     `json:"target_stage"`
+	CreatedBy          string                     `json:"created_by"`
+	Created            string                     `json:"created"`
+	CreatedMillis      int64                      `json:"created_millis"`
+	Evaluations        *PromotionEvaluations      `json:"evaluations,omitempty"`
+}
+
+type PromotionEvaluations struct {
+	ExitGate  *GateEvaluation `json:"exit_gate,omitempty"`
+	EntryGate *GateEvaluation `json:"entry_gate,omitempty"`
+}
+
+type GateEvaluation struct {
+	EvalId      string `json:"eval_id"`
+	Stage       string `json:"stage"`
+	Decision    string `json:"decision"`
+	Explanation string `json:"explanation,omitempty"`
 }

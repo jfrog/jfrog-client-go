@@ -39,3 +39,8 @@ func (asm *ApptrustServicesManager) GetApplicationDetails(applicationKey string)
 	appService := services.NewApplicationService(asm.config.GetServiceDetails(), asm.client)
 	return appService.GetApplicationDetails(applicationKey)
 }
+
+func (asm *ApptrustServicesManager) GetApplicationVersionPromotions(applicationKey, applicationVersion string, queryParams map[string]string) (*services.ApplicationPromotionsResponse, error) {
+	appService := services.NewApplicationService(asm.config.GetServiceDetails(), asm.client)
+	return appService.GetApplicationVersionPromotions(applicationKey, applicationVersion, queryParams)
+}
