@@ -31,7 +31,7 @@ type GenericError struct {
 }
 
 func (g GenericError) Error() string {
-	return fmt.Sprintf("failed to get stats for '%s': %s. %s", g.Product, g.Err)
+	return fmt.Sprintf("failed to get stats for '%s': %s", g.Product, g.Err)
 }
 
 func (e *APIError) Error() string {
