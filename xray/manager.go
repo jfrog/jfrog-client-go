@@ -276,3 +276,10 @@ func (sm *XrayServicesManager) GetViolations(params xrayUtils.ViolationsRequest)
 	violationsService.ScopeProjectKey = sm.scopeProjectKey
 	return violationsService.GetViolations(params)
 }
+
+func (sm *XrayServicesManager) DownloadIndexer(localDirPath, localFileName string) (string, error) {
+	indexerService := services.NewIndexerService(sm.client)
+	indexerService.XrayDetails = sm.config.GetServiceDetails()
+	indexerService.ScopeProjectKey = sm.scopeProjectKey
+	return indexerService.Download(localDirPath, localFileName)
+}
