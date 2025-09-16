@@ -3,9 +3,8 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	clientStats "github.com/jfrog/jfrog-client-go/artifactory/stats"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
+	"strings"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -56,6 +55,18 @@ func NewProjectService(client *jfroghttpclient.JfrogHttpClient) *ProjectService 
 	return &ProjectService{client: client}
 }
 
+func (p Project) String() string {
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("Name: %s\n", p.DisplayName))
+	builder.WriteString(fmt.Sprintf("Key: %s\n", p.ProjectKey))
+	if p.Description != "" {
+		builder.WriteString(fmt.Sprintf("Description: %s\n", p.Description))
+	} else {
+		builder.WriteString("Description: NA\n")
+	}
+	return builder.String()
+}
+
 func (ps *ProjectService) getProjectsBaseUrl() string {
 	return fmt.Sprintf("%s%s", ps.ServiceDetails.GetUrl(), projectsApi)
 }
@@ -95,21 +106,6 @@ func (ps *ProjectService) GetAll() ([]Project, error) {
 		return nil, errorutils.CheckErrorf("failed extracting projects list from payload: %s", err.Error())
 	}
 	return projects, nil
-}
-
-func (ps *ProjectService) GetProjectsStats() ([]byte, error) {
-	url := ps.getProjectsBaseUrl()
-	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
-	resp, body, _, err := ps.client.SendGet(url, true, &httpDetails)
-	if err != nil {
-		return nil, clientStats.NewGenericError("PROJECTS", err.Error())
-	}
-	log.Debug("Release Bundle API response:", resp.Status)
-	if resp.StatusCode != http.StatusOK {
-		err := clientStats.NewFailedRequestError(resp.StatusCode, resp.Status, "PROJECTS")
-		return nil, err
-	}
-	return body, err
 }
 
 func (ps *ProjectService) Create(params ProjectParams) error {
