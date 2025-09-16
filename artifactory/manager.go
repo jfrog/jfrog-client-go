@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	statsservice "github.com/jfrog/jfrog-client-go/artifactory/stats"
 	"io"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -631,6 +632,26 @@ func (sm *ArtifactoryServicesManagerImp) CalculateStorageInfo() error {
 func (sm *ArtifactoryServicesManagerImp) ImportReleaseBundle(filePath string) error {
 	releaseService := services.NewReleaseService(sm.config.GetServiceDetails(), sm.client)
 	return releaseService.ImportReleaseBundle(filePath)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetRepositoriesStats(serverUrl string) ([]byte, error) {
+	statsService := statsservice.NewStatsService(sm.config.GetServiceDetails(), sm.client)
+	return statsService.GetRepositoriesStats(serverUrl)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetJPDsStats(serverUrl string) ([]byte, error) {
+	statsService := statsservice.NewStatsService(sm.config.GetServiceDetails(), sm.client)
+	return statsService.GetJPDsStats(serverUrl)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetReleaseBundlesStats(serverUrl string) ([]byte, error) {
+	statsService := statsservice.NewStatsService(sm.config.GetServiceDetails(), sm.client)
+	return statsService.GetReleaseBundlesStats(serverUrl)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetTokenDetails(serverUrl string, tokenId string) ([]byte, error) {
+	statsService := statsservice.NewStatsService(sm.config.GetServiceDetails(), sm.client)
+	return statsService.GetTokenDetails(serverUrl, tokenId)
 }
 
 func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {

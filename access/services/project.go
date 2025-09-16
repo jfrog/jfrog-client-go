@@ -3,6 +3,8 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	clientStats "github.com/jfrog/jfrog-client-go/artifactory/stats"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -93,6 +95,21 @@ func (ps *ProjectService) GetAll() ([]Project, error) {
 		return nil, errorutils.CheckErrorf("failed extracting projects list from payload: %s", err.Error())
 	}
 	return projects, nil
+}
+
+func (ps *ProjectService) GetProjectsStats() ([]byte, error) {
+	url := ps.getProjectsBaseUrl()
+	httpDetails := ps.ServiceDetails.CreateHttpClientDetails()
+	resp, body, _, err := ps.client.SendGet(url, true, &httpDetails)
+	if err != nil {
+		return nil, clientStats.NewGenericError("PROJECTS", err.Error())
+	}
+	log.Debug("Release Bundle API response:", resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		err := clientStats.NewFailedRequestError(resp.StatusCode, resp.Status, "PROJECTS")
+		return nil, err
+	}
+	return body, err
 }
 
 func (ps *ProjectService) Create(params ProjectParams) error {

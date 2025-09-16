@@ -60,6 +60,12 @@ func (sm *AccessServicesManager) GetAllProjects() ([]services.Project, error) {
 	return projectService.GetAll()
 }
 
+func (sm *AccessServicesManager) GetProjectsStats() ([]byte, error) {
+	projectService := services.NewProjectService(sm.client)
+	projectService.ServiceDetails = sm.config.GetServiceDetails()
+	return projectService.GetProjectsStats()
+}
+
 func (sm *AccessServicesManager) UpdateProject(params services.ProjectParams) error {
 	projectService := services.NewProjectService(sm.client)
 	projectService.ServiceDetails = sm.config.GetServiceDetails()
