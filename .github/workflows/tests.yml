@@ -13,7 +13,12 @@ concurrency:
   cancel-in-progress: true
 jobs:
   Pretest:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Unlabel 'safe to test'
         uses: actions-ecosystem/action-remove-labels@v1
@@ -24,7 +29,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
@@ -35,7 +40,12 @@ jobs:
   JFrog-Client-Go-Unit-Tests:
     name: Unit Tests
     needs: Pretest
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,19 +59,31 @@ jobs:
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.unit
 
   JFrog-Client-Go-Artifactory-Access-Tests:
-    name: ${{ matrix.suite }} ${{ matrix.os }}
+    name: ${{ matrix.suite }} ${{ matrix.os.name }}
     needs: Pretest
     strategy:
       fail-fast: false
       matrix:
         suite: [artifactory, access]
-        os: [ubuntu, windows, macos]
-    runs-on: ${{ matrix.os }}-latest
+        os:
+          - name: ubuntu
+            version: 24.04
+          - name: windows
+            version: 2022
+          - name: macos
+            version: 14
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
+      - name: Skip macOS - JGC-413
+        if: matrix.os.name == 'macos'
+        run: |
+          echo "::warning::JGC-413 - Skip until artifactory bootstrap in osx is fixed"
+          exit 0
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
@@ -76,18 +98,30 @@ jobs:
 
   JFrog-Client-Go-Ds-Xr-MPU-Tests:
     needs: Pretest
-    name: ${{ matrix.suite }} ${{ matrix.os }}
+    name: ${{ matrix.suite }} ${{ matrix.os.name }}
     strategy:
       fail-fast: false
       matrix:
         suite: [distribution, xray, xsc, mpu]
-        os: [ubuntu, windows, macos]
-    runs-on: ${{ matrix.os }}-latest
+        os:
+          - name: ubuntu
+            version: 24.04
+          - name: windows
+            version: 2022
+          - name: macos
+            version: 14
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
+      - name: Skip macOS - JGC-413
+        if: matrix.os.name == 'macos'
+        run: |
+          echo "::warning::JGC-413 - Skip until artifactory bootstrap in osx is fixed"
+          exit 0
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
@@ -96,19 +130,31 @@ jobs:
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.${{ matrix.suite }} --platform.url=${{ secrets.PLATFORM_URL }} --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Catalog-Tests:
-    name: ${{ matrix.suite }} ${{ matrix.os }}
+    name: ${{ matrix.suite }} ${{ matrix.os.name }}
     needs: Pretest
     strategy:
       fail-fast: false
       matrix:
         suite: [catalog]
-        os: [ubuntu, windows, macos]
-    runs-on: ${{ matrix.os }}-latest
+        os:
+          - name: ubuntu
+            version: 24.04
+          - name: windows
+            version: 2022
+          - name: macos
+            version: 14
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
+      - name: Skip macOS - JGC-413
+        if: matrix.os.name == 'macos'
+        run: |
+          echo "::warning::JGC-413 - Skip until artifactory bootstrap in osx is fixed"
+          exit 0
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
@@ -118,13 +164,18 @@ jobs:
 
   JFrog-Client-Go-Repositories-Tests:
     needs: Pretest
-    name: repositories ubuntu-latest
-    runs-on: ubuntu-latest
+    name: repositories ${{ matrix.os.name }}-${{ matrix.os.version }}
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main

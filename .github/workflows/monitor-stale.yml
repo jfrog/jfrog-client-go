@@ -10,11 +10,16 @@ on:
     - cron: "0 0 * * *" # Runs once a day at midnight
 jobs:
   monitor-issues-and-pull-requests:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     permissions:
       issues: write
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         with:
           # Ignore issues with these labels
           exempt-issue-labels: "feature request,question"

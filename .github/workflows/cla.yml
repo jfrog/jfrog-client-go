@@ -9,7 +9,12 @@ on: # issue_comment triggers this action on each comment on issues and pull requ
 
 jobs:
   CLAssistant:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Run CLA Check
         uses: jfrog/.github/actions/cla@main
