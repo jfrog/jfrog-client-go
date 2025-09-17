@@ -11,11 +11,14 @@ permissions:
 jobs:
   scan-repository:
     name: Scan Repository (${{ matrix.branch }} branch)
-    runs-on: ubuntu-latest
     strategy:
       matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
         # The repository scanning will be triggered periodically on the following branches.
-        branch: [ "dev" ]
+        branch: ["dev"]
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
