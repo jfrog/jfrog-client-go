@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -9,6 +11,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -23,10 +26,13 @@ func initArtifactoryMultipartUploadTest(t *testing.T) {
 	}
 
 	supported, err := testsUploadService.MultipartUpload.IsSupported(testsUploadService.ArtDetails)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
 	if !supported {
 		t.Skip("Skipping multipart upload test. Multipart upload test is not supported in the provided Artifactory server.")
 	}
+
+	createRepo(t)
 }
 
 func TestArtifactoryMultipartUpload(t *testing.T) {

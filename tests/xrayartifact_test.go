@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -5,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -20,12 +23,10 @@ func TestArtifactStatus(t *testing.T) {
 		SetClientCertKeyPath(xrayDetails.GetClientCertKeyPath()).
 		AppendPreRequestInterceptor(xrayDetails.RunPreRequestFunctions).
 		Build()
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 	testsArtifactService := services.NewArtifactService(client)
 	testsArtifactService.XrayDetails = xrayDetails
-	testsArtifactService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/")
+	testsArtifactService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
 
 	tests := []struct {
 		name           string
@@ -60,8 +61,14 @@ func TestArtifactStatus(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			response, err := testsArtifactService.GetStatus(test.repo, test.path)
-			assert.NoError(t, err)
-			assert.NotNil(t, response)
+			require.NoError(t, err)
+			require.NotNil(t, response)
+			require.NotNil(t, response.Overall)
+			require.NotNil(t, response.Details)
+			require.NotNil(t, response.Details.Sca)
+			require.NotNil(t, response.Details.ContextualAnalysis)
+			require.NotNil(t, response.Details.Exposures)
+			require.NotNil(t, response.Details.Violations)
 
 			// Verify the overall status and timestamp
 			assert.Equal(t, test.expectedStatus, response.Overall.Status)
@@ -78,7 +85,13 @@ func TestArtifactStatus(t *testing.T) {
 	// Test specific scenario details for the completed scan
 	t.Run("completed-scan-details", func(t *testing.T) {
 		response, err := testsArtifactService.GetStatus("test-repo", "path/to/artifact")
-		assert.NoError(t, err)
+		require.NoError(t, err)
+		require.NotNil(t, response)
+		require.NotNil(t, response.Details)
+		require.NotNil(t, response.Details.Sca)
+		require.NotNil(t, response.Details.ContextualAnalysis)
+		require.NotNil(t, response.Details.Exposures)
+		require.NotNil(t, response.Details.Violations)
 
 		// Verify specific statuses for the completed scan
 		assert.Equal(t, services.ArtifactStatusDone, response.Details.Sca.Status)
@@ -90,7 +103,13 @@ func TestArtifactStatus(t *testing.T) {
 	// Test specific scenario details for the pending scan
 	t.Run("pending-scan-details", func(t *testing.T) {
 		response, err := testsArtifactService.GetStatus("test-repo", "path/to/pending-artifact")
-		assert.NoError(t, err)
+		require.NoError(t, err)
+		require.NotNil(t, response)
+		require.NotNil(t, response.Details)
+		require.NotNil(t, response.Details.Sca)
+		require.NotNil(t, response.Details.ContextualAnalysis)
+		require.NotNil(t, response.Details.Exposures)
+		require.NotNil(t, response.Details.Violations)
 
 		// Verify specific statuses for the pending scan
 		assert.Equal(t, services.ArtifactStatusPending, response.Details.Sca.Status)

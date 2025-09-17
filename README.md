@@ -11,7 +11,6 @@
 | Branch |                                                                                                                                                                              Status                                                                                                                                                                              |
 | :----: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | master | [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml) |
-|  dev   |    [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml)    |
 
 ## Table of Contents
 
@@ -284,7 +283,7 @@ We welcome pull requests from the community.
 ### Guidelines
 
 - If the existing tests do not already cover your changes, please add tests.
-- Pull requests should be created on the **dev** branch.
+- Pull requests should be created on the **master** branch.
 - Please use gofmt for formatting the code before submitting the pull request.
 
 ## Tests
@@ -295,13 +294,13 @@ Types_ section below for more information.
 Use the following command with the below options to run the tests.
 
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 [test-types] [flags]
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -tags itest [test-types] [flags]
 ```
 
 If you'd like to run a specific test, add the test function name using the `-run` flag. For example:
 
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifactoryVersionWithCustomHttpClient -test.artifactory -rt.url=http://127.0.0.1:8081/artifactory -rt.user=admin -rt.password=password
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -tags itest -run TestGetArtifactoryVersionWithCustomHttpClient -test.artifactory -rt.url=http://127.0.0.1:8081/artifactory -rt.user=admin -rt.password=password
 ```
 
 **Note:** The tests create an Artifactory repository named _jfrog-client-tests-repo1_. Once the tests are completed, the
@@ -321,12 +320,14 @@ content of this repository is deleted.
 | `-test.access`       | Access tests           | Artifactory Pro                 |
 | `-test.repositories` | Repositories tests     | Artifactory Pro                 |
 | `-test.mpu`          | Multipart upload tests | Artifactory Pro with S3 storage |
+| `-test.unit`         | Unit tests | None |
 
 #### Connection Details
 
 | Flag                | Description                                                                                            |
 | ------------------- | ------------------------------------------------------------------------------------------------------ |
-| `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
+| `-platform.url`           | [Default: http://localhost:8082] Platform URL.                                          |
+| `-rt.url`           | [Optional] Artifactory URL.                                          |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
 | `-xsc.url`          | [Optional] JFrog Xsc URL.                                                                              |
