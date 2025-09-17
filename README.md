@@ -266,6 +266,12 @@
         - [Creating New Onemodel Service Manager](#creating-new-onemodel-service-manager)
     - [Using Onemodel Services](#using-onemodel-services)
       - [Graphql query](#graphql-query)
+  - [Apptrust APIs](#apptrust-apis)
+    - [Creating Apptrust Service Manager](#creating-apptrust-service-manager)
+      - [Creating Apptrust Details](#creating-apptrust-details)
+      - [Creating Apptrust Service Config](#creating-apptrust-service-config)
+      - [Creating New Apptrust Service Manager](#creating-new-apptrust-service-manager)
+    - [Get Application Details](#get-application-details)
 
 ## General
 
@@ -3450,4 +3456,89 @@ queryDetails := onemodelService.QueryDetails{
 }
 
 body, err = onemodelManager.GraphqlQuery(queryDetails)
+```
+
+## Apptrust APIs
+
+### Creating Apptrust Service Manager
+
+#### Creating Apptrust Details
+
+```go
+apptrustDetails := auth.NewApptrustDetails()
+apptrustDetails.SetUrl("http://localhost:8081/apptrust")
+apptrustDetails.SetAccessToken("access-token")
+// if client certificates are required
+apptrustDetails.SetClientCertPath("path/to/.cer")
+apptrustDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Apptrust Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(apptrustDetails).
+    SetCertificatesPath(apptrustDetails.GetClientCertPath()).
+    SetInsecureTls(apptrustDetails.IsInsecureTls()).
+    // Add [Context](https://golang.org/pkg/context/)
+    // SetContext(ctx).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    // SetHttpRetries(8).
+    Build()
+if err != nil {
+    return err
+}
+```
+
+#### Creating New Apptrust Service Manager
+
+```go
+apptrustManager, err := apptrust.New(serviceConfig)
+if err != nil {
+    return err
+}
+```
+
+### Get Application Details
+
+```go
+applicationKey := "your-application-key"
+application, err := apptrustManager.GetApplicationDetails(applicationKey)
+if err != nil {
+    return err
+}
+
+// Access application details
+fmt.Printf("Application Name: %s\n", application.ApplicationName)
+fmt.Printf("Application Key: %s\n", application.ApplicationKey)
+fmt.Printf("Project Name: %s\n", application.ProjectName)
+fmt.Printf("Project Key: %s\n", application.ProjectKey)
+```
+
+### Get Application Version Promotions
+
+```go
+applicationKey := "your-application-key"
+applicationVersion := "1.0.0"
+
+// Optional query parameters
+queryParams := map[string]string{
+    "order_by":   "created",
+    "order_asc":  "false",
+    "limit":      "100",
+    "offset":     "0",
+    "filter_by":  "status=COMPLETED",
+}
+
+promotions, err := apptrustManager.GetApplicationVersionPromotions(applicationKey, applicationVersion, queryParams)
+if err != nil {
+    return err
+}
+
+// Access promotion details
+fmt.Printf("Total promotions: %d\n", promotions.Total)
+for _, promotion := range promotions.Promotions {
+    fmt.Printf("Status: %s, Source: %s, Target: %s, Created: %s\n", 
+        promotion.Status, promotion.SourceStage, promotion.TargetStage, promotion.Created)
+}
 ```
