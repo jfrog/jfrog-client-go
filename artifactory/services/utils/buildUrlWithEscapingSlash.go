@@ -23,6 +23,7 @@ func BuildUrlWithEscapingSlash(baseUrl, restApi, buildName, buildNumber string, 
 	// Semicolons are reserved as separators in some Artifactory APIs, so they'd better be encoded when used for other purposes
 	encodedUrl := strings.ReplaceAll(parsedUrl.String(), ";", url.QueryEscape(";"))
 
+	// Using PathEscape for url encoding
 	escapedBuildPath := path.Join(url.PathEscape(buildName), url.PathEscape(buildNumber))
 	urlParts := strings.Split(encodedUrl, "?")
 	resultUrl := urlParts[0] + "/" + escapedBuildPath
