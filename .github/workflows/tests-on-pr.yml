@@ -1,0 +1,26 @@
+name: JFrog Client Go Tests (PR)
+on:
+  workflow_dispatch:
+  pull_request_target:
+    types: [opened, synchronize]
+    branches:
+      - "master"
+
+# Ensures that only the latest commit is running for each PR at a time.
+# Ignores this rule for push events.
+concurrency:
+  group: ${{ github.event.pull_request.number || github.sha }}-trigger
+  cancel-in-progress: true
+jobs:
+  trigger-tests:
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
+    steps:
+      - name: Tests
+        uses: ./.github/workflows/tests.yml@main
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}

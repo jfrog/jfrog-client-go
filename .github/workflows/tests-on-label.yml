@@ -1,0 +1,31 @@
+name: JFrog Client Go Tests (On Label)
+on:
+  pull_request_target:
+    types: [labeled]
+    branches:
+      - "master"
+
+# Ensures that only the latest commit is running for each PR at a time.
+# Ignores this rule for push events.
+concurrency:
+  group: ${{ github.event.pull_request.number || github.sha }}-trigger
+  cancel-in-progress: true
+jobs:
+  trigger-tests:
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
+    steps:
+      - name: Unlabel 'safe to test'
+        uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          labels: "safe to test"
+
+      - name: Tests
+        uses: ./.github/workflows/tests.yml@main
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
