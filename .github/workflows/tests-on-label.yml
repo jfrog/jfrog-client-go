@@ -1,4 +1,4 @@
-name: JFrog Client Go Tests (On Label)
+name: JFrog Client Go Tests
 on:
   pull_request_target:
     types: [labeled]
