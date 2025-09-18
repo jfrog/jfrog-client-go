@@ -2,7 +2,7 @@ name: JFrog Client Go Tests
 on:
   workflow_dispatch:
   pull_request_target:
-    types: [opened, synchronize, labeled]
+    types: [labeled]
     branches:
       - "master"
 
@@ -13,13 +13,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   Pretest:
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request_target' && (
-        github.event.action == 'opened' ||
-        github.event.action == 'synchronize' ||
-        (github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'safe to test'))
-      ))
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'safe to test')
     runs-on: ubuntu-latest
     steps:
       - name: Unlabel 'safe to test'
@@ -42,13 +36,7 @@ jobs:
   JFrog-Client-Go-Unit-Tests:
     name: Unit Tests
     needs: Pretest
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request_target' && (
-        github.event.action == 'opened' ||
-        github.event.action == 'synchronize' ||
-        (github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'safe to test'))
-      ))
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'safe to test')
     strategy:
       matrix:
         os:
@@ -70,13 +58,7 @@ jobs:
   JFrog-Client-Go-Artifactory-Access-Tests:
     name: ${{ matrix.suite }} ${{ matrix.os.name }}
     needs: Pretest
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request_target' && (
-        github.event.action == 'opened' ||
-        github.event.action == 'synchronize' ||
-        (github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'safe to test'))
-      ))
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'safe to test')
     strategy:
       fail-fast: false
       matrix:
@@ -119,13 +101,7 @@ jobs:
   JFrog-Client-Go-Ds-Xr-MPU-Tests:
     needs: Pretest
     name: ${{ matrix.suite }} ${{ matrix.os.name }}
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request_target' && (
-        github.event.action == 'opened' ||
-        github.event.action == 'synchronize' ||
-        (github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'safe to test'))
-      ))
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'safe to test')
     strategy:
       fail-fast: false
       matrix:
@@ -162,13 +138,7 @@ jobs:
   JFrog-Client-Go-Catalog-Tests:
     name: ${{ matrix.suite }} ${{ matrix.os.name }}
     needs: Pretest
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request_target' && (
-        github.event.action == 'opened' ||
-        github.event.action == 'synchronize' ||
-        (github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'safe to test'))
-      ))
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'safe to test')
     strategy:
       fail-fast: false
       matrix:
@@ -205,13 +175,7 @@ jobs:
   JFrog-Client-Go-Repositories-Tests:
     needs: Pretest
     name: repositories ${{ matrix.os.name }}-${{ matrix.os.version }}
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request_target' && (
-        github.event.action == 'opened' ||
-        github.event.action == 'synchronize' ||
-        (github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'safe to test'))
-      ))
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'safe to test')
     strategy:
       matrix:
         os:
