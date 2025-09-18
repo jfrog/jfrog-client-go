@@ -2,7 +2,7 @@ name: JFrog Client Go Tests
 on:
   workflow_dispatch:
   pull_request_target:
-    types: [opened, synchronize]
+    types: [opened, synchronize, labeled]
     branches:
       - "master"
 
@@ -13,6 +13,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   Pretest:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request_target' && (github.event.action != 'labeled' || contains(github.event.pull_request.labels.*.name, 'safe to test')))
     strategy:
       matrix:
         os:
@@ -22,12 +23,12 @@ jobs:
     steps:
       - name: Unlabel 'safe to test'
         uses: actions-ecosystem/action-remove-labels@v1
-        if: ${{github.event_name != 'push' }}
+        if: ${{ github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe to test') }}
         with:
           labels: "safe to test"
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
@@ -48,7 +49,7 @@ jobs:
     runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
@@ -81,19 +82,23 @@ jobs:
           exit 0
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        if: matrix.os.name != 'macos'
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
+        if: matrix.os.name != 'macos'
         uses: jfrog/.github/actions/install-go-with-cache@main
 
       - name: Install local Artifactory
+        if: matrix.os.name != 'macos'
         uses: jfrog/.github/actions/install-local-artifactory@main
         with:
           RTLIC: ${{ secrets.RTLIC }}
 
       - name: artifactory tests
+        if: matrix.os.name != 'macos'
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.${{ matrix.suite }} --rt.url=http://localhost:8081/artifactory --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Ds-Xr-MPU-Tests:
@@ -119,14 +124,17 @@ jobs:
           exit 0
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        if: matrix.os.name != 'macos'
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
+        if: matrix.os.name != 'macos'
         uses: jfrog/.github/actions/install-go-with-cache@main
 
       - name: ${{ matrix.suite }} tests
+        if: matrix.os.name != 'macos'
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.${{ matrix.suite }} --platform.url=${{ secrets.PLATFORM_URL }} --rt.user=${{ secrets.PLATFORM_USER }} --rt.password=${{ secrets.PLATFORM_PASSWORD }} --access.token=${{ secrets.PLATFORM_ADMIN_TOKEN }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Catalog-Tests:
@@ -152,14 +160,17 @@ jobs:
           exit 0
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        if: matrix.os.name != 'macos'
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
+        if: matrix.os.name != 'macos'
         uses: jfrog/.github/actions/install-go-with-cache@main
 
       - name: catalog tests
+        if: matrix.os.name != 'macos'
         run: go test -v github.com/jfrog/jfrog-client-go/tests --timeout 0 --tags itest --test.${{ matrix.suite }} --ci.runId=${{ runner.os }}-${{ matrix.suite }}
 
   JFrog-Client-Go-Repositories-Tests:
@@ -173,7 +184,7 @@ jobs:
     runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
