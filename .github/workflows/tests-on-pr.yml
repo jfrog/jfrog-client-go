@@ -1,4 +1,4 @@
-name: JFrog Client Go Tests (PR)
+name: JFrog Client Go Tests
 on:
   workflow_dispatch:
   pull_request_target:
