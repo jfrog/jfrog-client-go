@@ -1,16 +1,16 @@
 name: JFrog Client Go Tests
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       ref:
         description: "Git ref to checkout"
-        required: false
+        required: true
         type: string
 
 # Ensures that only the latest commit is running for each PR at a time.
 # Ignores this rule for push events.
 concurrency:
-  group: ${{ github.event.pull_request.number || github.sha }}
+  group: ${{ inputs.ref }}-tests
   cancel-in-progress: true
 jobs:
   Pretest:
@@ -21,12 +21,6 @@ jobs:
             version: 24.04
     runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
-      - name: Unlabel 'safe to test'
-        if: contains(github.event.pull_request.labels.*.name, 'safe to test')
-        uses: actions-ecosystem/action-remove-labels@v1
-        with:
-          labels: "safe to test"
-
       - name: Checkout code
         uses: actions/checkout@v5
         with:
