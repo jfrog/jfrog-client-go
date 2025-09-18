@@ -13,14 +13,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   trigger-tests:
-    strategy:
-      matrix:
-        os:
-          - name: ubuntu
-            version: 24.04
-    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
-    steps:
-      - name: Tests
-        uses: ./.github/workflows/tests.yml
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+    name: Tests
+    uses: ./.github/workflows/tests.yml
+    secrets: inherit
+    with:
+      ref: ${{ github.event.pull_request.head.sha || github.ref }}

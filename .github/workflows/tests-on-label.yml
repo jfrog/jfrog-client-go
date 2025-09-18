@@ -13,6 +13,8 @@ concurrency:
 jobs:
   trigger-tests:
     if: contains(github.event.pull_request.labels.*.name, 'safe to test')
+    name: Tests
     uses: ./.github/workflows/tests.yml
+    secrets: inherit
     with:
       ref: ${{ github.event.pull_request.head.sha }}
