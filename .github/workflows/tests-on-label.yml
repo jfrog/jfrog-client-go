@@ -25,7 +25,12 @@ jobs:
         with:
           labels: "safe to test"
 
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+
       - name: Tests
-        uses: ./.github/workflows/tests.yml@main
+        uses: ./.github/workflows/tests.yml
         with:
           ref: ${{ github.event.pull_request.head.sha }}
