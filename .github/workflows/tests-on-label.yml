@@ -20,6 +20,11 @@ jobs:
         with:
           labels: "safe to test"
 
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Trigger tests workflow
         run: |
           gh workflow run tests.yml \
