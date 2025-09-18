@@ -1,4 +1,4 @@
-name: JFrog Client Go Tests
+name: JFrog Client Go Tests (PR)
 on:
   workflow_dispatch:
   pull_request_target:
@@ -13,8 +13,12 @@ concurrency:
   cancel-in-progress: true
 jobs:
   trigger-tests:
-    name: Tests
-    uses: ./.github/workflows/tests.yml
-    secrets: inherit
-    with:
-      ref: ${{ github.event.pull_request.head.sha || github.ref }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger tests workflow
+        run: |
+          gh workflow run tests.yml \
+            --ref ${{ github.event.pull_request.head.sha || github.ref }} \
+            -f ref=${{ github.event.pull_request.head.sha || github.ref }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
