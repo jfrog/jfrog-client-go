@@ -20,7 +20,7 @@ type JPDsStatsService struct {
 
 type GenericError struct {
 	Product string
-	Err     string
+	Err     error
 }
 
 func NewJPDsStatsService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *JPDsStatsService {
@@ -38,7 +38,7 @@ func (s *JPDsStatsService) GetServerUrl() string {
 	return s.ServerUrl
 }
 
-func NewGenericError(product string, err string) *GenericError {
+func NewGenericError(product string, err error) *GenericError {
 	return &GenericError{
 		Product: product,
 		Err:     err,
@@ -48,7 +48,7 @@ func NewGenericError(product string, err string) *GenericError {
 func (ss *JPDsStatsService) GetAllJPDs(serverUrl string) ([]byte, error) {
 	requestFullUrl, err := utils.BuildUrl(serverUrl, JPDsAPI, nil)
 	if err != nil {
-		return nil, err
+		return nil, NewGenericError("JPD", err.Error())
 	}
 	httpClientsDetails := ss.ArtDetails.CreateHttpClientDetails()
 	resp, body, _, err := ss.client.SendGet(requestFullUrl, true, &httpClientsDetails)
