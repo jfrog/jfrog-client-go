@@ -1,6 +1,6 @@
 name: Trigger Tests on PR
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize]
     branches:
       - "master"
@@ -27,4 +27,4 @@ jobs:
         run: |
           gh pr edit ${{ github.event.pull_request.number }} --add-label "safe to test"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CLI_ACTION_TOKEN }}
