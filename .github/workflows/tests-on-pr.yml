@@ -16,10 +16,16 @@ jobs:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'safe to test') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for label to be processed
-        run: sleep 5
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Add 'safe to test' label
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          labels: "safe to test"
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "safe to test"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for label event to propagate
+        run: sleep 3
