@@ -48,12 +48,14 @@ func NewGenericError(product string, err error) *GenericError {
 func (ss *JPDsStatsService) GetAllJPDs(serverUrl string) ([]byte, error) {
 	requestFullUrl, err := utils.BuildUrl(serverUrl, JPDsAPI, nil)
 	if err != nil {
-		return nil, NewGenericError("JPD", err.Error())
+		wrappedError := fmt.Errorf("failed to call JPD API: %w", err)
+		return nil, NewGenericError("JPDs", wrappedError)
 	}
 	httpClientsDetails := ss.ArtDetails.CreateHttpClientDetails()
 	resp, body, _, err := ss.client.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
-		return nil, NewGenericError("JPD", err.Error())
+		wrappedError := fmt.Errorf("failed to call JPD API: %w", err)
+		return nil, NewGenericError("JPDs", wrappedError)
 	}
 	log.Debug("JPDs API response:", resp.Status)
 	return body, err
