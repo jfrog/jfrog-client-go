@@ -104,16 +104,16 @@ type ApplicationPromotionsResponse struct {
 }
 
 type ApplicationPromotion struct {
-	ApplicationKey     string                     `json:"application_key"`
-	ApplicationVersion string                     `json:"application_version"`
-	ProjectKey         string                     `json:"project_key"`
-	Status             string                     `json:"status"`
-	SourceStage        string                     `json:"source_stage"`
-	TargetStage        string                     `json:"target_stage"`
-	CreatedBy          string                     `json:"created_by"`
-	Created            string                     `json:"created"`
-	CreatedMillis      int64                      `json:"created_millis"`
-	Evaluations        *PromotionEvaluations      `json:"evaluations,omitempty"`
+	ApplicationKey     string                `json:"application_key"`
+	ApplicationVersion string                `json:"application_version"`
+	ProjectKey         string                `json:"project_key"`
+	Status             PromotionStatus       `json:"status"`
+	SourceStage        string                `json:"source_stage"`
+	TargetStage        string                `json:"target_stage"`
+	CreatedBy          string                `json:"created_by"`
+	Created            string                `json:"created"`
+	CreatedMillis      int64                 `json:"created_millis"`
+	Evaluations        *PromotionEvaluations `json:"evaluations,omitempty"`
 }
 
 type PromotionEvaluations struct {
@@ -127,3 +127,12 @@ type GateEvaluation struct {
 	Decision    string `json:"decision"`
 	Explanation string `json:"explanation,omitempty"`
 }
+
+type PromotionStatus string
+
+const (
+	PromotionStatusCompleted PromotionStatus = "COMPLETED"
+	PromotionStatusFailed    PromotionStatus = "FAILED"
+	PromotionStatusStarted   PromotionStatus = "STARTED"
+	PromotionStatusDeleting  PromotionStatus = "DELETING"
+)
