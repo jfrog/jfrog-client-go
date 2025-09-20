@@ -6,19 +6,12 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 )
 
-// ApptrustServiceManagerInterface defines the interface for ApptrustServicesManager to enable mocking in tests
-type ApptrustServiceManagerInterface interface {
-	Client() *jfroghttpclient.JfrogHttpClient
-	GetApplicationDetails(applicationKey string) (*services.Application, error)
-	GetApplicationVersionPromotions(applicationKey, applicationVersion string, queryParams map[string]string) (*services.ApplicationPromotionsResponse, error)
-}
-
 type ApptrustServicesManager struct {
 	client *jfroghttpclient.JfrogHttpClient
 	config config.Config
 }
 
-func New(config config.Config) (ApptrustServiceManagerInterface, error) {
+func New(config config.Config) (*ApptrustServicesManager, error) {
 	details := config.GetServiceDetails()
 	var err error
 	manager := &ApptrustServicesManager{config: config}
