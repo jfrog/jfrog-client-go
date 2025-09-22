@@ -13,6 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'jfrog/jfrog-client-go'
     steps:
+      - name: Add 'ignore for release' label
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "ignore for release"
+        env:
+          GH_TOKEN: ${{ secrets.CLI_ACTION_TOKEN }}
+
       - name: Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@v2.4.0
