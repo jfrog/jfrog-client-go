@@ -23,6 +23,7 @@ import (
 
 	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
 	accessServices "github.com/jfrog/jfrog-client-go/access/services"
+	accessServicesV2 "github.com/jfrog/jfrog-client-go/access/services/v2"
 	pipelinesAuth "github.com/jfrog/jfrog-client-go/pipelines/auth"
 	pipelinesServices "github.com/jfrog/jfrog-client-go/pipelines/services"
 
@@ -132,6 +133,8 @@ var (
 	testsAccessProjectService *accessServices.ProjectService
 	testsAccessInviteService  *accessServices.InviteService
 	testsAccessTokensService  *accessServices.TokenService
+	testAccessUserService     *accessServicesV2.UserService
+	testAccessGroupService    *accessServicesV2.GroupService
 
 	timestamp    = time.Now().Unix()
 	timestampStr = strconv.FormatInt(timestamp, 10)
