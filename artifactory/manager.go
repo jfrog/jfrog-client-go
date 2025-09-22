@@ -633,17 +633,16 @@ func (sm *ArtifactoryServicesManagerImp) ImportReleaseBundle(filePath string) er
 	return releaseService.ImportReleaseBundle(filePath)
 }
 
-func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
+func buildJFrogHttpClient(config config.Config, details auth.ServiceDetails) (*jfroghttpclient.JfrogHttpClient, error) {
 	return jfroghttpclient.JfrogClientBuilder().
 		SetCertificatesPath(config.GetCertificatesPath()).
 		SetInsecureTls(config.IsInsecureTls()).
+		SetClientCertPath(details.GetClientCertPath()).
+		SetClientCertKeyPath(details.GetClientCertKeyPath()).
+		AppendPreRequestInterceptor(details.RunPreRequestFunctions).
 		SetContext(config.GetContext()).
 		SetDialTimeout(config.GetDialTimeout()).
 		SetOverallRequestTimeout(config.GetOverallRequestTimeout()).
-		SetClientCertPath(authDetails.GetClientCertPath()).
-		SetClientCertKeyPath(authDetails.GetClientCertKeyPath()).
-		AppendPreRequestInterceptor(authDetails.RunPreRequestFunctions).
-		SetContext(config.GetContext()).
 		SetRetries(config.GetHttpRetries()).
 		SetRetryWaitMilliSecs(config.GetHttpRetryWaitMilliSecs()).
 		SetHttpClient(config.GetHttpClient()).
