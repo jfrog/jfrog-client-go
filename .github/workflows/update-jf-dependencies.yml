@@ -19,7 +19,7 @@ jobs:
       - name: Checkout main branch
         uses: actions/checkout@v5
         with:
-          ref: main
+          ref: master
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create and checkout new branch
@@ -70,7 +70,7 @@ jobs:
 
           **Branch**: \`${{ steps.branch.outputs.branch_name }}\`
           **Timestamp**: \`${{ steps.timestamp.outputs.timestamp }}\`" \
-            --base main \
+            --base master \
             --head "${{ steps.branch.outputs.branch_name }}"
         env:
           GH_TOKEN: ${{ secrets.CLI_ACTION_TOKEN }}
