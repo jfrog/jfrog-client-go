@@ -288,12 +288,13 @@ func (dds *DirectDownloadService) handleWildcardDownload(repo, pattern string, p
 			if !dds.isExcluded(filepath.Join(dir, fileName), params.GetExclusions()) {
 				filePath := filepath.Join(dir, fileName)
 				success, err := dds.downloadSingleFile(repo, filePath, params)
-				if err != nil {
+				switch {
+				case err != nil:
 					log.Error("Failed to download", filePath, ":", err)
 					failCount++
-				} else if success {
+				case success:
 					downloadCount++
-				} else {
+				default:
 					failCount++
 				}
 			}
