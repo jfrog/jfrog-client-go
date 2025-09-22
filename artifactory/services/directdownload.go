@@ -10,7 +10,9 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
+	"github.com/jfrog/jfrog-client-go/http/httpclient"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	clientio "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
@@ -76,6 +78,13 @@ func (dds *DirectDownloadService) DirectDownloadFilesWithSummary(downloadParams 
 func (dds *DirectDownloadService) performDirectDownload(downloadParams ...DirectDownloadParams) (summary *utils.OperationSummary, err error) {
 	summary = &utils.OperationSummary{}
 
+	if dds.saveSummary {
+		dds.filesTransfersWriter, err = content.NewContentWriter(content.DefaultKey, true, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	for _, params := range downloadParams {
 		repo, artifactPath, err := dds.parsePattern(params.GetPattern())
 		if err != nil {
@@ -108,6 +117,18 @@ func (dds *DirectDownloadService) performDirectDownload(downloadParams ...Direct
 		}
 	}
 
+	if dds.saveSummary && dds.filesTransfersWriter != nil {
+		if err = dds.filesTransfersWriter.Close(); err != nil {
+			return nil, err
+		}
+		filePath := dds.filesTransfersWriter.GetFilePath()
+		log.Debug("Creating content reader from file:", filePath)
+
+		summary.TransferDetailsReader = content.NewContentReader(filePath, content.DefaultKey)
+	} else {
+		log.Debug("Not creating content reader - saveSummary:", dds.saveSummary, "filesTransfersWriter:", dds.filesTransfersWriter != nil)
+	}
+
 	return summary, nil
 }
 
@@ -134,7 +155,11 @@ func (dds *DirectDownloadService) isExcluded(path string, exclusions []string) b
 }
 
 func (dds *DirectDownloadService) downloadSingleFile(repo, artifactPath string, params *DirectDownloadParams) (bool, error) {
-	downloadUrl := fmt.Sprintf("%s%s/%s", (*dds.artDetails).GetUrl(), repo, artifactPath)
+	downloadPath := fmt.Sprintf("%s/%s", repo, artifactPath)
+	downloadUrl, err := clientutils.BuildUrl((*dds.artDetails).GetUrl(), downloadPath, make(map[string]string))
+	if err != nil {
+		return false, err
+	}
 
 	targetPath := params.GetTarget()
 	if targetPath == "" {
@@ -159,29 +184,21 @@ func (dds *DirectDownloadService) downloadSingleFile(repo, artifactPath string, 
 	}
 
 	httpClientsDetails := (*dds.artDetails).CreateHttpClientDetails()
-	resp, body, _, err := dds.client.SendGet(downloadUrl, true, &httpClientsDetails)
+
+	downloadFileDetails := &httpclient.DownloadFileDetails{
+		DownloadPath:  downloadUrl,
+		LocalPath:     filepath.Dir(localPath),
+		LocalFileName: filepath.Base(localPath),
+		SkipChecksum:  params.IsSkipChecksum(),
+	}
+
+	resp, err := dds.client.DownloadFile(downloadFileDetails, "", &httpClientsDetails, false, false)
 	if err != nil {
 		return false, err
 	}
-	defer func() {
-		if resp != nil && resp.Body != nil {
-			resp.Body.Close()
-		}
-	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return false, errorutils.CheckErrorf("Failed to download %s: HTTP %d", downloadUrl, resp.StatusCode)
-	}
-
-	out, err := os.Create(localPath)
-	if err != nil {
-		return false, errorutils.CheckError(err)
-	}
-	defer out.Close()
-
-	_, err = out.Write(body)
-	if err != nil {
-		return false, errorutils.CheckError(err)
 	}
 
 	if !params.IsSkipChecksum() {
@@ -191,16 +208,39 @@ func (dds *DirectDownloadService) downloadSingleFile(repo, artifactPath string, 
 	}
 
 	log.Info("Downloaded:", downloadUrl, "to", localPath)
+
+	if dds.saveSummary && dds.filesTransfersWriter != nil {
+		rtUrl := strings.TrimSuffix((*dds.artDetails).GetUrl(), "/")
+
+		sourcePath := downloadUrl
+		if strings.HasPrefix(sourcePath, rtUrl) {
+			sourcePath = strings.TrimPrefix(sourcePath, rtUrl)
+			if !strings.HasPrefix(sourcePath, "/") {
+				sourcePath = "/" + sourcePath
+			}
+		}
+
+		fileTransferDetails := clientutils.FileTransferDetails{
+			SourcePath: sourcePath,
+			TargetPath: localPath,
+			RtUrl:      rtUrl,
+		}
+		log.Debug("Writing file transfer details - Source:", sourcePath, "Target:", localPath, "RtUrl:", rtUrl)
+		dds.filesTransfersWriter.Write(fileTransferDetails)
+	}
+
 	return true, nil
 }
 
 func (dds *DirectDownloadService) handleWildcardDownload(repo, pattern string, params *DirectDownloadParams) (int, int, error) {
-	artifactoryUrl := strings.TrimSuffix((*dds.artDetails).GetUrl(), "/")
-
 	dir := filepath.Dir(pattern)
 	filePattern := filepath.Base(pattern)
 
-	listUrl := fmt.Sprintf("%s/api/storage/%s/%s", artifactoryUrl, repo, dir)
+	storagePath := fmt.Sprintf("api/storage/%s/%s", repo, dir)
+	listUrl, err := clientutils.BuildUrl((*dds.artDetails).GetUrl(), storagePath, make(map[string]string))
+	if err != nil {
+		return 0, 0, err
+	}
 
 	httpClientsDetails := (*dds.artDetails).CreateHttpClientDetails()
 	resp, body, _, err := dds.client.SendGet(listUrl, true, &httpClientsDetails)
@@ -263,9 +303,15 @@ func (dds *DirectDownloadService) handleWildcardDownload(repo, pattern string, p
 
 func (dds *DirectDownloadService) validateChecksum(downloadUrl, localPath string) error {
 	artUrl := (*dds.artDetails).GetUrl()
-	repoPath := strings.TrimPrefix(downloadUrl, artUrl)
 
-	storageUrl := fmt.Sprintf("%sapi/storage/%s", artUrl, repoPath)
+	repoPath := strings.TrimPrefix(downloadUrl, artUrl)
+	repoPath = strings.TrimPrefix(repoPath, "/")
+
+	storagePath := fmt.Sprintf("api/storage/%s", repoPath)
+	storageUrl, err := clientutils.BuildUrl(artUrl, storagePath, make(map[string]string))
+	if err != nil {
+		return err
+	}
 
 	httpClientsDetails := (*dds.artDetails).CreateHttpClientDetails()
 	resp, body, _, err := dds.client.SendGet(storageUrl, true, &httpClientsDetails)
