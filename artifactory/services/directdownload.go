@@ -21,14 +21,13 @@ import (
 )
 
 type DirectDownloadService struct {
-	client                 *jfroghttpclient.JfrogHttpClient
-	Progress               clientio.ProgressMgr
-	artDetails             *auth.ServiceDetails
-	DryRun                 bool
-	Threads                int
-	saveSummary            bool
-	filesTransfersWriter   *content.ContentWriter
-	artifactsDetailsWriter *content.ContentWriter
+	client               *jfroghttpclient.JfrogHttpClient
+	Progress             clientio.ProgressMgr
+	artDetails           *auth.ServiceDetails
+	DryRun               bool
+	Threads              int
+	saveSummary          bool
+	filesTransfersWriter *content.ContentWriter
 }
 
 func NewDirectDownloadService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *DirectDownloadService {
@@ -106,12 +105,13 @@ func (dds *DirectDownloadService) performDirectDownload(downloadParams ...Direct
 			}
 		} else {
 			success, err := dds.downloadSingleFile(repo, artifactPath, &params)
-			if err != nil {
+			switch {
+			case err != nil:
 				log.Error(err)
 				summary.TotalFailed++
-			} else if success {
+			case success:
 				summary.TotalSucceeded++
-			} else {
+			default:
 				summary.TotalFailed++
 			}
 		}
@@ -249,7 +249,9 @@ func (dds *DirectDownloadService) handleWildcardDownload(repo, pattern string, p
 	}
 	defer func() {
 		if resp != nil && resp.Body != nil {
-			resp.Body.Close()
+			if err := resp.Body.Close(); err != nil {
+				log.Warn("Failed to close response body:", err)
+			}
 		}
 	}()
 
@@ -320,7 +322,9 @@ func (dds *DirectDownloadService) validateChecksum(downloadUrl, localPath string
 	}
 	defer func() {
 		if resp != nil && resp.Body != nil {
-			resp.Body.Close()
+			if err := resp.Body.Close(); err != nil {
+				log.Warn("Failed to close response body:", err)
+			}
 		}
 	}()
 
