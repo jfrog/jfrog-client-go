@@ -4,19 +4,19 @@ go 1.24.6
 
 require (
 	github.com/CycloneDX/cyclonedx-go v0.9.2
-	github.com/ProtonMail/go-crypto v1.1.6
+	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/buger/jsonparser v1.1.1
-	github.com/forPelevin/gomoji v1.3.0
-	github.com/go-git/go-git/v5 v5.14.0
+	github.com/forPelevin/gomoji v1.3.1
+	github.com/go-git/go-git/v5 v5.16.2
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/gookit/color v1.6.0
 	github.com/jfrog/archiver/v3 v3.6.1
 	github.com/jfrog/build-info-go v1.11.0
 	github.com/jfrog/gofrog v1.7.6
 	github.com/minio/sha256-simd v1.0.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/xanzy/ssh-agent v0.3.3
-	golang.org/x/crypto v0.36.0
+	golang.org/x/crypto v0.37.0
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621
 	golang.org/x/term v0.35.0
 )
@@ -49,7 +49,7 @@ require (
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
