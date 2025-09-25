@@ -285,7 +285,7 @@ func (sm *XrayServicesManager) CveRemediation(bom *cyclonedx.BOM, cves ...string
 	return remediationService.CveRemediation(bom, cves...)
 }
 
-func (sm *XrayServicesManager) ArtifactRemediation(bom *cyclonedx.BOM) (*services.RemediationResponse, error) {
+func (sm *XrayServicesManager) DirectComponentsRemediation(bom *cyclonedx.BOM) (*services.RemediationResponse, error) {
 	remediationService := services.NewRemediationService(sm.client)
 	remediationService.XrayDetails = sm.config.GetServiceDetails()
 	remediationService.ScopeProjectKey = sm.scopeProjectKey
