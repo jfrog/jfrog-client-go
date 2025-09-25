@@ -292,6 +292,30 @@ func indexerDownloadHandler(t *testing.T) func(w http.ResponseWriter, r *http.Re
 	}
 }
 
+func cveRemediationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		_, err := fmt.Fprint(w, CveRemediationResponse)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	http.Error(w, "Invalid CVE remediation request", http.StatusBadRequest)
+}
+
+func artifactRemediationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		_, err := fmt.Fprint(w, ArtifactRemediationResponse)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	http.Error(w, "Invalid artifact remediation request", http.StatusBadRequest)
+}
+
 type MockServerParams struct {
 	MSI         string
 	XrayVersion string
@@ -319,6 +343,8 @@ func StartXrayMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers[fmt.Sprintf("/%s/", services.BuildScanAPI)] = buildScanHandler
 	handlers[fmt.Sprintf("/xray/api/v1/indexer-resources/download/%s/%s", runtime.GOOS, runtime.GOARCH)] = indexerDownloadHandler(t)
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
+	handlers["/xray/api/v1/cveRemediationCDX"] = cveRemediationHandler
+	handlers["/xray/api/v1/artifactRemediationCDX"] = artifactRemediationHandler
 	// Xsc handlers
 	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)
 	handlers["/xray/api/v1/xsc/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)

@@ -4,6 +4,24 @@ import (
 	xscServices "github.com/jfrog/jfrog-client-go/xsc/services"
 )
 
+const CveRemediationResponse = `
+{
+  "remediation": {
+    "status": "success",
+    "message": "CVE remediation completed successfully"
+  }
+}
+`
+
+const ArtifactRemediationResponse = `
+{
+  "remediation": {
+    "status": "success",
+    "message": "Artifact remediation completed successfully"
+  }
+}
+`
+
 const ScanResponse = `
 {
 "scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122",
