@@ -40,12 +40,14 @@ type CreateOidcTokenParams struct {
 	ProjectKey            string `json:"project_key,omitempty"`
 	JobId                 string `json:"job_id,omitempty"`
 	RunId                 string `json:"run_id,omitempty"`
-	Repo                  string `json:"repo,omitempty"`
-	ApplicationKey        string `json:"application_key,omitempty"`
 	Audience              string `json:"audience,omitempty"`
 	ProviderType          string `json:"provider_type,omitempty"`
 	IdentityMappingName   string `json:"identity_mapping_name,omitempty"`
 	IncludeReferenceToken *bool  `json:"include_reference_token,omitempty"`
+	Repo                  string `json:"repo,omitempty"`
+	Revision              string `json:"revision,omitempty"`
+	Branch                string `json:"branch,omitempty"`
+	ApplicationKey        string `json:"application_key,omitempty"`
 }
 
 func NewCreateTokenParams(params CreateTokenParams) CreateTokenParams {
