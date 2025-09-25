@@ -1,9 +1,7 @@
 package services
 
 import (
-	"bytes"
 	"errors"
-	"io"
 	"net/http"
 
 	"github.com/CycloneDX/cyclonedx-go"
@@ -35,25 +33,17 @@ func (es *EnrichService) getUrlForEnrichApi() string {
 // Enrich will enrich the CycloneDX BOM with additional security information
 func (es *EnrichService) Enrich(bom *cyclonedx.BOM) (enriched *cyclonedx.BOM, err error) {
 	// Encode the BOM to JSON format
-	var buf bytes.Buffer
-	var writer io.Writer = &buf
-	encoder := cyclonedx.NewBOMEncoder(writer, cyclonedx.BOMFileFormatJSON)
-	if err = encoder.Encode(bom); err != nil {
-		return nil, errorutils.CheckErrorf("failed to encode CycloneDX BOM: %s", err.Error())
+	encodedBom, err := utils.EncodeBomToJson(bom)
+	if err != nil {
+		return nil, err
 	}
 	// Enrich the BOM using the Catalog service
-	enrichedBom, err := es.enrich(buf.Bytes())
+	enrichedBom, err := es.enrich(encodedBom)
 	if err != nil {
 		return nil, errorutils.CheckErrorf("failed to enrich CycloneDX BOM: %s", err.Error())
 	}
 	// Decode the enriched BOM back to a CycloneDX BOM object
-	reader := bytes.NewReader(enrichedBom)
-	decoder := cyclonedx.NewBOMDecoder(reader, cyclonedx.BOMFileFormatJSON)
-	enriched = &cyclonedx.BOM{}
-	if err = decoder.Decode(enriched); err != nil {
-		return nil, errorutils.CheckErrorf("failed to decode enriched CycloneDX BOM: %s", err.Error())
-	}
-	return enriched, nil
+	return utils.DecodeBomFromJson(enrichedBom)
 }
 
 func (es *EnrichService) enrich(bomJson []byte) ([]byte, error) {
