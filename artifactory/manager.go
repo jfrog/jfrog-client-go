@@ -298,15 +298,15 @@ func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithSummary(params ...serv
 	return downloadService.DownloadFiles(params...)
 }
 
-func (sm *ArtifactoryServicesManagerImp) DirectDownloadFiles(params ...services.DirectDownloadParams) (totalDownloaded, totalFailed int, err error) {
+func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithoutAQL(params ...services.DirectDownloadParams) (totalDownloaded, totalFailed int, err error) {
 	directDownloadService := sm.initDirectDownloadService()
-	return directDownloadService.DirectDownloadFiles(params...)
+	return directDownloadService.DownloadFilesWithoutAQL(params...)
 }
 
-func (sm *ArtifactoryServicesManagerImp) DirectDownloadFilesWithSummary(params ...services.DirectDownloadParams) (operationSummary *utils.OperationSummary, err error) {
+func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithoutAQLWithSummary(params ...services.DirectDownloadParams) (operationSummary *utils.OperationSummary, err error) {
 	directDownloadService := sm.initDirectDownloadService()
 	directDownloadService.SetSaveSummary(true)
-	return directDownloadService.DirectDownloadFilesWithSummary(params...)
+	return directDownloadService.DownloadFilesWithoutAQLWithSummary(params...)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error) {

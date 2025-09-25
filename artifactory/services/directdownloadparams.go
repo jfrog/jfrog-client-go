@@ -95,8 +95,10 @@ func (ddp *DirectDownloadParams) SetQuiet(quiet bool) {
 func NewDirectDownloadParams() *DirectDownloadParams {
 	return &DirectDownloadParams{
 		CommonParams:       &utils.CommonParams{},
+		MinSplitSizeMB:     5120,
+		SplitCount:         3,
 		Retries:            3,
-		RetryWaitMilliSecs: 1000,
+		RetryWaitMilliSecs: 0,
 		Recursive:          true,
 	}
 }

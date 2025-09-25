@@ -62,7 +62,8 @@ func (dds *DirectDownloadService) SetSaveSummary(saveSummary bool) {
 	dds.saveSummary = saveSummary
 }
 
-func (dds *DirectDownloadService) DirectDownloadFiles(downloadParams ...DirectDownloadParams) (totalDownloaded, totalFailed int, err error) {
+// DownloadFilesWithoutAQL downloads files directly from Artifactory without using AQL queries.
+func (dds *DirectDownloadService) DownloadFilesWithoutAQL(downloadParams ...DirectDownloadParams) (totalDownloaded, totalFailed int, err error) {
 	summary, err := dds.performDirectDownload(downloadParams...)
 	if err != nil {
 		return 0, 0, err
@@ -70,7 +71,9 @@ func (dds *DirectDownloadService) DirectDownloadFiles(downloadParams ...DirectDo
 	return summary.TotalSucceeded, summary.TotalFailed, nil
 }
 
-func (dds *DirectDownloadService) DirectDownloadFilesWithSummary(downloadParams ...DirectDownloadParams) (operationSummary *utils.OperationSummary, err error) {
+// DownloadFilesWithoutAQLWithSummary downloads files directly from Artifactory without using AQL queries
+// and gives detailed information about each file transfer.
+func (dds *DirectDownloadService) DownloadFilesWithoutAQLWithSummary(downloadParams ...DirectDownloadParams) (operationSummary *utils.OperationSummary, err error) {
 	return dds.performDirectDownload(downloadParams...)
 }
 
@@ -97,6 +100,8 @@ func (dds *DirectDownloadService) performDirectDownload(downloadParams ...Direct
 		}
 
 		if dds.containsWildcards(artifactPath) {
+			// Handle patterns like "*.zip" or "test?.jar" by listing the directory
+			// and downloading matching files one by one
 			count, failed, err := dds.handleWildcardDownload(repo, artifactPath, &params)
 			summary.TotalSucceeded += count
 			summary.TotalFailed += failed
@@ -104,6 +109,7 @@ func (dds *DirectDownloadService) performDirectDownload(downloadParams ...Direct
 				log.Error(err)
 			}
 		} else {
+			// directly download the file in case wildcards are not present
 			success, err := dds.downloadSingleFile(repo, artifactPath, &params)
 			switch {
 			case err != nil:
@@ -201,9 +207,17 @@ func (dds *DirectDownloadService) downloadSingleFile(repo, artifactPath string, 
 		return false, errorutils.CheckErrorf("Failed to download %s: HTTP %d", downloadUrl, resp.StatusCode)
 	}
 
+	var sha256 string
 	if !params.IsSkipChecksum() {
-		if err := dds.validateChecksum(downloadUrl, localPath); err != nil {
-			log.Warn("Checksum validation failed for", localPath, ":", err)
+		// Fetch file info from artifactory to verify the download was successful
+		fileInfo, err := dds.getFileInfo(downloadUrl)
+		if err == nil && fileInfo != nil {
+			sha256 = fileInfo.Checksums.Sha256
+			if err := dds.validateChecksumWithInfo(fileInfo, localPath); err != nil {
+				log.Warn("Checksum validation failed for", localPath, ":", err)
+			}
+		} else if err != nil {
+			log.Warn("Failed to get file info for checksum validation:", err)
 		}
 	}
 
@@ -224,14 +238,16 @@ func (dds *DirectDownloadService) downloadSingleFile(repo, artifactPath string, 
 			SourcePath: sourcePath,
 			TargetPath: localPath,
 			RtUrl:      rtUrl,
+			Sha256:     sha256,
 		}
-		log.Debug("Writing file transfer details - Source:", sourcePath, "Target:", localPath, "RtUrl:", rtUrl)
+		log.Debug("Writing file transfer details - Source:", sourcePath, "Target:", localPath, "RtUrl:", rtUrl, "SHA256:", sha256)
 		dds.filesTransfersWriter.Write(fileTransferDetails)
 	}
 
 	return true, nil
 }
 
+// handleWildcardDownload deals with patterns like "*.zip" or "logs/2024*.txt" while downloading the artifacts.
 func (dds *DirectDownloadService) handleWildcardDownload(repo, pattern string, params *DirectDownloadParams) (int, int, error) {
 	dir := filepath.Dir(pattern)
 	filePattern := filepath.Base(pattern)
@@ -256,7 +272,7 @@ func (dds *DirectDownloadService) handleWildcardDownload(repo, pattern string, p
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, 0, errorutils.CheckErrorf("Failed to list directory %s: HTTP %d", listUrl, resp.StatusCode)
+		return 0, 0, errorutils.CheckErrorf("Failed to list directory %s: Status %d", listUrl, resp.StatusCode)
 	}
 
 	var storageInfo struct {
@@ -285,8 +301,10 @@ func (dds *DirectDownloadService) handleWildcardDownload(repo, pattern string, p
 		}
 
 		if matched {
+			// Check if the matched file is not excluded
 			if !dds.isExcluded(filepath.Join(dir, fileName), params.GetExclusions()) {
 				filePath := filepath.Join(dir, fileName)
+				// Download the matched file using the direct API
 				success, err := dds.downloadSingleFile(repo, filePath, params)
 				switch {
 				case err != nil:
@@ -304,7 +322,8 @@ func (dds *DirectDownloadService) handleWildcardDownload(repo, pattern string, p
 	return downloadCount, failCount, nil
 }
 
-func (dds *DirectDownloadService) validateChecksum(downloadUrl, localPath string) error {
+// getFileInfo fetches the details about a file, including its checksums
+func (dds *DirectDownloadService) getFileInfo(downloadUrl string) (*utils.FileInfo, error) {
 	artUrl := (*dds.artDetails).GetUrl()
 
 	repoPath := strings.TrimPrefix(downloadUrl, artUrl)
@@ -313,13 +332,13 @@ func (dds *DirectDownloadService) validateChecksum(downloadUrl, localPath string
 	storagePath := fmt.Sprintf("api/storage/%s", repoPath)
 	storageUrl, err := clientutils.BuildUrl(artUrl, storagePath, make(map[string]string))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	httpClientsDetails := (*dds.artDetails).CreateHttpClientDetails()
 	resp, body, _, err := dds.client.SendGet(storageUrl, true, &httpClientsDetails)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		if resp != nil && resp.Body != nil {
@@ -330,14 +349,19 @@ func (dds *DirectDownloadService) validateChecksum(downloadUrl, localPath string
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return errorutils.CheckErrorf("Failed to get checksum info: HTTP %d", resp.StatusCode)
+		return nil, errorutils.CheckErrorf("Failed to get file info: HTTP %d", resp.StatusCode)
 	}
 
 	var fileInfo utils.FileInfo
 	if err := json.Unmarshal(body, &fileInfo); err != nil {
-		return errorutils.CheckError(err)
+		return nil, errorutils.CheckError(err)
 	}
 
+	return &fileInfo, nil
+}
+
+// validateChecksumWithInfo validates the downloaded file's checksums
+func (dds *DirectDownloadService) validateChecksumWithInfo(fileInfo *utils.FileInfo, localPath string) error {
 	localFileDetails, err := fileutils.GetFileDetails(localPath, true)
 	if err != nil {
 		return err
