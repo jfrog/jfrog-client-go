@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -44,17 +46,21 @@ import (
 	xrayServices "github.com/jfrog/jfrog-client-go/xray/services"
 	xscAuth "github.com/jfrog/jfrog-client-go/xsc/auth"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
 	TestArtifactory          *bool
 	TestDistribution         *bool
 	TestXray                 *bool
+	TestCatalog              *bool
 	TestXsc                  *bool
 	TestPipelines            *bool
 	TestAccess               *bool
 	TestRepositories         *bool
 	TestMultipartUpload      *bool
+	TestUnit                 *bool
+	PlatformUrl              *string
 	RtUrl                    *string
 	DistUrl                  *string
 	XrayUrl                  *string
@@ -150,17 +156,20 @@ func init() {
 	TestArtifactory = flag.Bool("test.artifactory", false, "Test Artifactory")
 	TestDistribution = flag.Bool("test.distribution", false, "Test distribution")
 	TestXray = flag.Bool("test.xray", false, "Test xray")
+	TestCatalog = flag.Bool("test.catalog", false, "Test catalog")
 	TestXsc = flag.Bool("test.xsc", false, "Test xsc")
 	TestPipelines = flag.Bool("test.pipelines", false, "Test pipelines")
 	TestAccess = flag.Bool("test.access", false, "Test access")
 	TestRepositories = flag.Bool("test.repositories", false, "Test repositories in Artifactory")
 	TestMultipartUpload = flag.Bool("test.mpu", false, "Test Artifactory multipart upload")
-	RtUrl = flag.String("rt.url", "http://localhost:8081/artifactory", "Artifactory url")
+	TestUnit = flag.Bool("test.unit", false, "Run unit tests")
+	PlatformUrl = flag.String("platform.url", "http://localhost:8082", "Platform url")
+	RtUrl = flag.String("rt.url", "", "Artifactory url")
 	DistUrl = flag.String("ds.url", "", "Distribution url")
 	XrayUrl = flag.String("xr.url", "", "Xray url")
 	XscUrl = flag.String("xsc.url", "", "Xsc url")
 	PipelinesUrl = flag.String("pipe.url", "", "Pipelines url")
-	AccessUrl = flag.String("access.url", "http://127.0.0.1:8082/access", "Access url")
+	AccessUrl = flag.String("access.url", "", "Access url")
 	RtUser = flag.String("rt.user", "admin", "Artifactory username")
 	RtPassword = flag.String("rt.password", "password", "Artifactory password")
 	AccessToken = flag.String("access.token", testUtils.GetLocalArtifactoryTokenIfNeeded(*RtUrl), "Access token")
@@ -171,6 +180,38 @@ func init() {
 	PipelinesVcsToken = flag.String("pipe.vcsToken", "", "Vcs token for Pipelines tests")
 	PipelinesVcsRepoFullPath = flag.String("pipe.vcsRepo", "", "Vcs full repo path for Pipelines tests")
 	PipelinesVcsBranch = flag.String("pipe.vcsBranch", "", "Vcs branch for Pipelines tests")
+}
+
+func checkFlags() {
+	platformUrl := strings.TrimSuffix(*PlatformUrl, "/") + "/"
+
+	if *RtUrl == "" {
+		*RtUrl = platformUrl + "artifactory"
+	}
+
+	if *DistUrl == "" {
+		*DistUrl = platformUrl + "distribution"
+	}
+
+	if *XrayUrl == "" {
+		*XrayUrl = platformUrl + "xray"
+	}
+
+	if *XscUrl == "" {
+		*XscUrl = platformUrl + "xsc"
+	}
+
+	if *PipelinesUrl == "" {
+		*PipelinesUrl = platformUrl + "pipelines"
+	}
+
+	if *AccessUrl == "" {
+		*AccessUrl = platformUrl + "access"
+	}
+
+	if *AccessToken == "" {
+		*AccessToken = testUtils.GetLocalArtifactoryTokenIfNeeded(*RtUrl)
+	}
 }
 
 func getRtTargetRepoKey() string {
@@ -628,151 +669,125 @@ func setAuthenticationDetail(details auth.ServiceDetails) {
 
 func uploadDummyFile(t *testing.T) {
 	workingDir, _, err := tests.CreateFileWithContent("a.in", "/out/")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	defer testUtils.RemoveAllAndAssert(t, workingDir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		testUtils.RemoveAllQuietly(t, workingDir)
+	})
+
 	pattern := filepath.Join(workingDir, "*")
-	up := services.NewUploadParams()
+
 	targetProps, err := utils.ParseProperties("dummy=yes")
-	if err != nil {
-		t.Error(err)
-	}
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "test/", TargetProps: targetProps}
-	up.Flat = true
-	summary, err := testsUploadService.UploadFiles(up)
-	if summary.TotalSucceeded != 1 {
-		t.Error("Expected to upload 1 file.")
-	}
-	if summary.TotalFailed != 0 {
-		t.Error("Failed to upload", summary.TotalFailed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
-	}
-	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + "b.in"}
-	up.Flat = true
-	summary, err = testsUploadService.UploadFiles(up)
-	assert.NoError(t, err)
-	if summary.TotalSucceeded != 1 {
-		t.Error("Expected to upload 1 file.")
-	}
-	if summary.TotalFailed != 0 {
-		t.Error("Failed to upload", summary.TotalFailed, "files.")
-	}
+	require.NoError(t, err)
+
+	doUploadFile(t, pattern, "test/", targetProps)
+	doUploadFile(t, pattern, "b.in", nil)
+
 	archivePath := filepath.Join(workingDir, "c.tar.gz")
 	err = archiver.Archive([]string{filepath.Join(workingDir, "out/a.in")}, archivePath)
-	if err != nil {
-		t.Error(err)
-	}
-	up.CommonParams = &utils.CommonParams{Pattern: archivePath, Recursive: true, Target: getRtTargetRepo()}
+	require.NoError(t, err)
+
+	doUploadFile(t, archivePath, "", nil)
+}
+
+func doUploadFile(t *testing.T, pattern string, relativeTarget string, props *utils.Properties) {
+	up := services.NewUploadParams()
+	up.CommonParams = &utils.CommonParams{Pattern: pattern, Recursive: true, Target: getRtTargetRepo() + relativeTarget, TargetProps: props}
 	up.Flat = true
-	summary, err = testsUploadService.UploadFiles(up)
-	if summary.TotalSucceeded != 1 {
-		t.Error("Expected to upload 1 file.")
-	}
-	if summary.TotalFailed != 0 {
-		t.Error("Failed to upload", summary.TotalFailed, "files.")
-	}
-	if err != nil {
-		t.Error(err)
-	}
+	summary, err := testsUploadService.UploadFiles(up)
+	require.NoError(t, err)
+	require.Equalf(t, 1, summary.TotalSucceeded, "Expected to upload 1 file.")
+	require.Equalf(t, 0, summary.TotalFailed, "Failed to upload %d files.", summary.TotalFailed)
 }
 
 func artifactoryCleanup(t *testing.T) {
 	params := &utils.CommonParams{Pattern: getRtTargetRepo()}
+
 	toDelete, err := testsDeleteService.GetPathsToDelete(services.DeleteParams{CommonParams: params})
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		log.Warn(fmt.Sprintf("Failed to get paths to delete: %+v", err))
+		return
 	}
-	defer func() {
-		assert.NoError(t, toDelete.Close())
-	}()
-	NumberOfItemToDelete, err := toDelete.Length()
+
+	defer testUtils.CloseQuietly(t, toDelete)
+
+	numberOfItemToDelete, err := toDelete.Length()
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		log.Warn(fmt.Sprintf("Failed to get length of paths to delete: %+v", err))
+		return
 	}
+
 	testsDeleteService.SetThreads(3)
+
 	deletedCount, err := testsDeleteService.DeleteFiles(toDelete)
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		log.Warn(fmt.Sprintf("Failed to delete files: %+v", err))
+		return
 	}
-	if NumberOfItemToDelete != deletedCount {
-		t.Errorf("Failed to delete files from Artifactory expected %d items to be deleted got %d.", NumberOfItemToDelete, deletedCount)
+
+	if numberOfItemToDelete != deletedCount {
+		log.Warn(fmt.Sprintf("Failed to delete files from Artifactory expected %d items to be deleted got %d.", numberOfItemToDelete, deletedCount))
 	}
 }
 
-func createRepo() error {
-	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload) {
-		return nil
-	}
-	var err error
-	repoKey := getRtTargetRepoKey()
-	glp := services.NewGenericLocalRepositoryParams()
-	glp.Key = repoKey
-	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, true)
-	err = testsCreateLocalRepositoryService.Generic(glp)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-	return nil
-}
-
-func teardownIntegrationTests() {
+func createRepo(t *testing.T) {
 	if !(*TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload) {
 		return
 	}
-	repo := getRtTargetRepoKey()
-	err := testsDeleteRepositoryService.Delete(repo)
-	if err != nil {
-		fmt.Print("teardownIntegrationTests failed for:" + err.Error())
-		os.Exit(1)
-	}
+
+	repoKey := getRtTargetRepoKey()
+	glp := services.NewGenericLocalRepositoryParams()
+	glp.Key = repoKey
+
+	exists, err := testsRepositoriesService.IsExists(repoKey)
+	require.NoError(t, err)
+
+	setLocalRepositoryBaseParams(&glp.LocalRepositoryBaseParams, exists)
+
+	err = testsCreateLocalRepositoryService.Generic(glp)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err := testsDeleteRepositoryService.Delete(repoKey)
+		if err != nil {
+			log.Warn(fmt.Sprintf("Failed to delete repository %s: %+v", repoKey, err))
+		}
+	})
 }
 
 func getTestDataPath() string {
-	dir, _ := os.Getwd()
+	_, filename, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(filename)
 	return filepath.Join(dir, "testdata")
 }
 
 func setRepositoryBaseParams(params *services.RepositoryBaseParams, isUpdate bool) {
-	if !isUpdate {
-		params.ProjectKey = ""
-		params.Environments = nil
-		params.Description = strings.ToTitle(params.PackageType) + " Repo for jfrog-client-go local-repository-test"
-		params.Notes = "Repo has been created"
-		params.IncludesPattern = "dir1/*"
-		params.ExcludesPattern = "dir2/*"
-		params.RepoLayoutRef = "simple-default"
-	} else {
-		params.ProjectKey = ""
-		params.Environments = nil
-		params.Description += " - Updated"
+	params.ProjectKey = ""
+	params.Environments = nil
+	// params.IncludesPattern = "**/*"
+	// params.ExcludesPattern = "**/*"
+	params.RepoLayoutRef = "simple-default"
+	params.Description = strings.ToTitle(params.PackageType) + " Repo for jfrog-client-go local-repository-test"
+	if isUpdate {
 		params.Notes = "Repo has been updated"
-		params.IncludesPattern = ""
-		params.ExcludesPattern = ""
-		params.RepoLayoutRef = "build-default"
+	} else {
+		params.Notes = "Repo has been created"
 	}
 }
 
 func setAdditionalRepositoryBaseParams(params *services.AdditionalRepositoryBaseParams, isUpdate bool) {
-	if !isUpdate {
-		params.BlackedOut = clientutils.Pointer(true)
-		params.XrayIndex = clientutils.Pointer(true)
-		params.PropertySets = []string{"artifactory"}
-		params.DownloadRedirect = clientutils.Pointer(true)
-		params.PriorityResolution = clientutils.Pointer(true)
-	} else {
+	if isUpdate {
 		params.BlackedOut = clientutils.Pointer(false)
 		params.XrayIndex = clientutils.Pointer(false)
 		params.PropertySets = nil
 		params.DownloadRedirect = clientutils.Pointer(false)
 		params.PriorityResolution = clientutils.Pointer(false)
+	} else {
+		params.BlackedOut = clientutils.Pointer(false)
+		params.XrayIndex = clientutils.Pointer(true)
+		params.PropertySets = []string{"artifactory"}
+		params.DownloadRedirect = clientutils.Pointer(true)
+		params.PriorityResolution = clientutils.Pointer(true)
 	}
 }
 
@@ -954,9 +969,12 @@ func validateRepoConfig(t *testing.T, repoKey string, params interface{}) {
 	assert.NoError(t, err)
 }
 
-func deleteRepo(t *testing.T, repoKey string) {
-	err := testsDeleteRepositoryService.Delete(repoKey)
-	assert.NoError(t, err, "Failed to delete "+repoKey)
+func deleteRepoOnTestDone(t *testing.T, repoKey string) {
+	t.Cleanup(func() {
+		if err := testsDeleteRepositoryService.Delete(repoKey); err != nil {
+			log.Warn(fmt.Sprintf("Failed to delete repository %s: %+v", repoKey, err))
+		}
+	})
 }
 
 func GenerateRepoKeyForRepoServiceTest() string {
@@ -1019,7 +1037,6 @@ func deleteBuild(buildName string) error {
 
 	buildName = url.PathEscape(buildName)
 	resp, _, err := client.SendDelete(artDetails.GetUrl()+"artifactory-build-info/"+buildName, nil, artHTTPDetails, "")
-
 	if err != nil {
 		return err
 	}

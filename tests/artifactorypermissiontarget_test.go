@@ -1,13 +1,14 @@
+//go:build itest
+
 package tests
 
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-
+	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -108,16 +109,13 @@ func TestDocumentationExampleCreateUpdateAndDeletePermissionTarget(t *testing.T)
 	defer deleteUserAndAssert(t, user2)
 
 	localRepo1 := createRandomRepo(t)
-	defer deleteRepo(t, localRepo1)
+	deleteRepoOnTestDone(t, localRepo1)
 
 	localRepo2 := createRandomRepo(t)
-	defer deleteRepo(t, localRepo2)
+	deleteRepoOnTestDone(t, localRepo2)
 
 	group1 := createRandomGroup(t)
-	defer deleteGroupAndAssert(t, group1)
-
 	group2 := createRandomGroup(t)
-	defer deleteGroupAndAssert(t, group2)
 
 	// Example code from Documentation
 	params := services.NewPermissionTargetParams()
@@ -152,6 +150,10 @@ func TestDocumentationExampleCreateUpdateAndDeletePermissionTarget(t *testing.T)
 
 	// Fetch a permission target
 	_, err = testsPermissionTargetService.Get("java-developers")
+	assert.NoError(t, err)
+
+	// Fetch all permission targets
+	_, err = testsPermissionTargetService.GetAll()
 	assert.NoError(t, err)
 
 	// Delete the permission target
@@ -200,24 +202,7 @@ func createRandomRepo(t *testing.T) string {
 
 func createRandomGroup(t *testing.T) string {
 	name := fmt.Sprintf("test-%s-%s", timestampStr, randomString(t, 16))
-
-	groupDetails := services.Group{
-		Name:            name,
-		Description:     "hello",
-		AutoJoin:        utils.Pointer(false),
-		AdminPrivileges: utils.Pointer(false),
-		Realm:           "internal",
-		RealmAttributes: "",
-	}
-
-	groupParams := services.GroupParams{
-		GroupDetails: groupDetails,
-		IncludeUsers: false,
-	}
-
-	err := testGroupService.CreateGroup(groupParams)
-	assert.NoError(t, err)
-
+	createGroup(t, name, false, false)
 	return name
 }
 

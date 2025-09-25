@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -231,6 +232,41 @@ func getJasConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func artifactStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		path, err := jsonparser.GetString(body, "path")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Return different responses based on the path to test different scenarios
+		var response string
+		switch path {
+		case "path/to/pending-artifact":
+			response = ArtifactStatusPendingResponse
+		case "path/to/unsupported-artifact":
+			response = ArtifactStatusNotSupportedResponse
+		default:
+			response = ArtifactStatusResponse
+		}
+
+		_, err = fmt.Fprint(w, response)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	http.Error(w, "Invalid artifact status request", http.StatusBadRequest)
+}
+
 func enrichGetResults(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
@@ -239,6 +275,20 @@ func enrichGetResults(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		http.Error(w, "Invalid enrich get results request", http.StatusBadRequest)
+	}
+}
+
+func indexerDownloadHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			// Simulate downloading a binary file by sending a simple text response
+			w.Header().Set("Content-Disposition", "attachment; filename=\"indexer\"")
+			w.Header().Set("Content-Type", "application/octet-stream")
+			_, err := fmt.Fprint(w, "This is a mock indexer binary content.")
+			assert.NoError(t, err)
+			return
+		}
+		http.Error(w, "Invalid indexer download request", http.StatusBadRequest)
 	}
 }
 
@@ -261,11 +311,13 @@ func StartXrayMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers["/xray/api/v1/system/version"] = xrayGetVersionHandlerFunc(t, params.XrayVersion)
 	handlers["/api/xray/scanBuild"] = scanBuildHandler
 	handlers["/api/v2/summary/artifact"] = artifactSummaryHandler
+	handlers["/xray/api/v1/artifact/status"] = artifactStatusHandler
 	handlers["/api/v1/entitlements/feature/"] = entitlementsHandler
 	handlers["/xray/api/v1/scan/import_xml"] = enrichGetScanId(t)
 	handlers[fmt.Sprintf("/xray/api/v1/scan/graph/%s", params.MSI)] = enrichGetResults(t)
 	handlers["/xray/api/v1/configuration/jas"] = getJasConfig(t)
 	handlers[fmt.Sprintf("/%s/", services.BuildScanAPI)] = buildScanHandler
+	handlers[fmt.Sprintf("/xray/api/v1/indexer-resources/download/%s/%s", runtime.GOOS, runtime.GOARCH)] = indexerDownloadHandler(t)
 	handlers[fmt.Sprintf("/%s/", services.ReportsAPI)] = reportHandler
 	// Xsc handlers
 	handlers["/xsc/api/v1/system/version"] = xscGetVersionHandlerFunc(t, params.XscVersion)

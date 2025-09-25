@@ -3,11 +3,12 @@ package fspatterns
 import (
 	"bytes"
 	"fmt"
-	"github.com/jfrog/gofrog/crypto"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/jfrog/gofrog/crypto"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -63,7 +64,7 @@ func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, pres
 			return false, err
 		}
 		if isExcludedByPattern {
-			log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+			log.Verbose(fmt.Sprintf("The path '%s' is excluded", path))
 			return false, nil
 		}
 
@@ -74,7 +75,7 @@ func filterFilesFunc(rootPath string, includeDirs, excludeWithRelativePath, pres
 			}
 			// Check if the file size is within the limits
 			if !fileInfo.IsDir() && !sizeThreshold.IsSizeWithinThreshold(fileInfo.Size()) {
-				log.Debug(fmt.Sprintf("The path '%s' is excluded", path))
+				log.Verbose(fmt.Sprintf("The path '%s' is excluded", path))
 				return false, nil
 			}
 		}
@@ -184,7 +185,7 @@ func GetRootPath(pattern, target, archiveTarget string, patternType utils.Patter
 	placeholderParentheses := getPlaceholderParentheses(pattern, target, archiveTarget)
 	rootPath := utils.GetRootPath(pattern, patternType, placeholderParentheses)
 	if !fileutils.IsPathExists(rootPath, preserveSymLink) {
-		return "", errorutils.CheckErrorf("path does not exist: " + rootPath)
+		return "", errorutils.CheckErrorf("path does not exist: %s", rootPath)
 	}
 
 	return rootPath, nil

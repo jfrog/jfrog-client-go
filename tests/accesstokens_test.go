@@ -1,17 +1,21 @@
+//go:build itest
+
 package tests
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	accessAuth "github.com/jfrog/jfrog-client-go/access/auth"
 	"github.com/jfrog/jfrog-client-go/access/services"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"testing"
+	"github.com/stretchr/testify/require"
 )
 
 const testExpiredInSeconds = 1
@@ -49,6 +53,13 @@ func testExchangeOidcToken(t *testing.T) {
 		err = json.Unmarshal(body, &req)
 		assert.NoError(t, err)
 		assert.Equal(t, "mockOidcTokenID", req.OidcTokenID)
+
+		// Verify context is properly included
+		assert.NotNil(t, req.Context)
+		assert.NotNil(t, req.Context.VcsCommit)
+		assert.Equal(t, "https://github.com/example/repo.git", req.Context.VcsCommit.VcsUrl)
+		assert.Equal(t, "main", req.Context.VcsCommit.Branch)
+		assert.Equal(t, "abc123def456", req.Context.VcsCommit.Revision)
 
 		// Simulate response
 		resp := auth.OidcTokenResponseData{
@@ -94,6 +105,13 @@ func testExchangeOidcToken(t *testing.T) {
 		Audience:              "mockAudience",
 		IdentityMappingName:   "mockIdentityMappingName",
 		IncludeReferenceToken: utils.Pointer(false),
+		Context: &services.Context{
+			VcsCommit: &services.VcsCommit{
+				VcsUrl:   "https://github.com/example/repo.git",
+				Branch:   "main",
+				Revision: "abc123def456",
+			},
+		},
 	}
 
 	// Execute ExchangeOidcToken
@@ -107,7 +125,8 @@ func testExchangeOidcToken(t *testing.T) {
 func testCreateRefreshableToken(t *testing.T) {
 	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NotNil(t, token)
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
 	assert.NotEqual(t, tokenParams.AccessToken, token.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, "", token.RefreshToken, "Refresh token is empty")
@@ -119,7 +138,8 @@ func testAccessTokenWithReference(t *testing.T) {
 	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
 	tokenParams.IncludeReferenceToken = utils.Pointer(true)
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NotNil(t, token)
 	assert.NotEqual(t, "", token.AccessToken, "Access token is empty")
 	assert.NotEqual(t, tokenParams.AccessToken, token.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, "", token.RefreshToken, "Refresh token is empty")
@@ -131,11 +151,13 @@ func testRefreshTokenTest(t *testing.T) {
 	// Create token
 	tokenParams := createRefreshableAccessTokenParams(testExpiredInSeconds)
 	token, err := testsAccessTokensService.CreateAccessToken(tokenParams)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NotNil(t, token)
 	// Refresh token
 	refreshTokenParams := createRefreshAccessTokenParams(token)
 	newToken, err := testsAccessTokensService.RefreshAccessToken(refreshTokenParams)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NotNil(t, newToken)
 	// Validate
 	assert.NotEqual(t, token.AccessToken, newToken.AccessToken, "New access token is identical to original one")
 	assert.NotEqual(t, token.RefreshToken, newToken.RefreshToken, "New refresh token is identical to original one")

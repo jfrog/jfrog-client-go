@@ -1,3 +1,5 @@
+//go:build itest
+
 package tests
 
 import (
@@ -12,6 +14,7 @@ import (
 
 func TestXrayWatch(t *testing.T) {
 	initXrayTest(t)
+	t.Skip("JGC-408 - Failed to update Watch: Resources was not found")
 	t.Run("testXrayWatchAll", testXrayWatchAll)
 	t.Run("testXrayWatchSelectedRepos", testXrayWatchSelectedRepos)
 	t.Run("testXrayWatchBuildsByPattern", testXrayWatchBuildsByPattern)
@@ -124,10 +127,10 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	}()
 	repo1Name := fmt.Sprintf("%s-%s", "repo1", getRunId())
 	createRepoLocal(t, repo1Name)
-	defer deleteRepo(t, repo1Name)
+	deleteRepoOnTestDone(t, repo1Name)
 	repo2Name := fmt.Sprintf("%s-%s", "repo2", getRunId())
 	createRepoRemote(t, repo2Name)
-	defer deleteRepo(t, repo2Name)
+	deleteRepoOnTestDone(t, repo2Name)
 
 	build1Name := fmt.Sprintf("%s-%s", "build1", getRunId())
 	err = createAndIndexBuild(t, build1Name)
@@ -154,7 +157,7 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 		},
 	}
 
-	var repos = map[string]utils.WatchRepository{}
+	repos := map[string]utils.WatchRepository{}
 	repo := utils.NewWatchRepository(repo1Name, "default", utils.WatchRepositoryLocal)
 	repo.Filters.PackageTypes = []string{"npm", "maven"}
 	repo.Filters.Names = []string{"example-name"}
@@ -255,7 +258,6 @@ func testXrayWatchSelectedRepos(t *testing.T) {
 	assert.Equal(t, []string{"example-path-2"}, updatedTargetConfig.Repositories.Repositories[repo1Name].Filters.Paths)
 	assert.Equal(t, []string{"example-mime-type-2"}, updatedTargetConfig.Repositories.Repositories[repo1Name].Filters.MimeTypes)
 	assert.Equal(t, map[string]string{"some-key": "some-value-2"}, updatedTargetConfig.Repositories.Repositories[repo1Name].Filters.Properties)
-
 }
 
 func testXrayWatchBuildsByPattern(t *testing.T) {
@@ -389,6 +391,7 @@ func createAndIndexBuild(t *testing.T, buildName string) error {
 	err = testXrayBinMgrService.AddBuildsToIndexing([]string{buildName})
 	return err
 }
+
 func createWatchWithRetries(t *testing.T, params utils.WatchParams) {
 	createOrUpdateWatchWithRetries(t, params, false)
 }

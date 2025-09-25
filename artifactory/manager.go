@@ -54,6 +54,12 @@ func NewWithClient(config config.Config, client *jfroghttpclient.JfrogHttpClient
 	return manager, nil
 }
 
+func (sm *ArtifactoryServicesManagerImp) CreateUpdateRepositoriesInBatch(body []byte, isUpdate bool) error {
+	repositoryService := services.NewBatchRepositoryService(sm.client, isUpdate)
+	repositoryService.ArtDetails = sm.config.GetServiceDetails()
+	return repositoryService.PerformBatchRequest(body)
+}
+
 func (sm *ArtifactoryServicesManagerImp) CreateLocalRepository() *services.LocalRepositoryService {
 	repositoryService := services.NewLocalRepositoryService(sm.client, false)
 	repositoryService.ArtDetails = sm.config.GetServiceDetails()
@@ -196,6 +202,12 @@ func (sm *ArtifactoryServicesManagerImp) GetPermissionTarget(permissionTargetNam
 	permissionTargetService := services.NewPermissionTargetService(sm.client)
 	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
 	return permissionTargetService.Get(permissionTargetName)
+}
+
+func (sm *ArtifactoryServicesManagerImp) GetAllPermissionTargets() (*[]services.PermissionTargetParams, error) {
+	permissionTargetService := services.NewPermissionTargetService(sm.client)
+	permissionTargetService.ArtDetails = sm.config.GetServiceDetails()
+	return permissionTargetService.GetAll()
 }
 
 func (sm *ArtifactoryServicesManagerImp) PublishBuildInfo(build *buildinfo.BuildInfo, projectKey string) (*clientutils.Sha256Summary, error) {

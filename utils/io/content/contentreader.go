@@ -6,15 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jfrog/gofrog/http/retryexecutor"
-	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"io"
 	"os"
 	"reflect"
 	"sort"
 	"sync"
+
+	"github.com/jfrog/gofrog/http/retryexecutor"
+	"github.com/jfrog/jfrog-client-go/utils"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 // Open and read JSON files, find the array key inside it and load its value into the memory in small chunks.
@@ -177,7 +178,7 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 	err = findDecoderTargetPosition(dec, cr.arrayKey, true)
 	if err != nil {
 		if err == io.EOF {
-			cr.errorsQueue.AddError(errorutils.CheckErrorf(cr.arrayKey + " not found"))
+			cr.errorsQueue.AddError(errorutils.CheckErrorf("%s not found", cr.arrayKey))
 			return
 		}
 		cr.errorsQueue.AddError(err)

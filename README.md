@@ -11,7 +11,6 @@
 | Branch |                                                                                                                                                                              Status                                                                                                                                                                              |
 | :----: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | master | [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=master)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml) |
-|  dev   |    [![Build status](https://github.com/jfrog/jfrog-client-go/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions) [![Static Analysis](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml/badge.svg?branch=dev)](https://github.com/jfrog/jfrog-client-go/actions/workflows/analysis.yml)    |
 
 ## Table of Contents
 
@@ -64,6 +63,7 @@
       - [Create API Key](#create-api-key)
       - [Regenerate API Key](#regenerate-api-key)
       - [Get API Key](#get-api-key)
+      - [Creating and Updating Multiple Repositories](#creating-and-updating-multiple-repositories)
       - [Creating and Updating Local Repository](#creating-and-updating-local-repository)
       - [Creating and Updating Remote Repository](#creating-and-updating-remote-repository)
       - [Creating and Updating Virtual Repository](#creating-and-updating-virtual-repository)
@@ -80,6 +80,7 @@
       - [Creating and Updating Permission Targets](#creating-and-updating-permission-targets)
       - [Removing a Permission Target](#removing-a-permission-target)
       - [Fetching a Permission Target](#fetching-a-permission-target)
+      - [Fetching All Permission Targets](#fetching-all-permission-targets)
       - [Fetching Artifactory's Version](#fetching-artifactorys-version)
       - [Fetching Running Artifactory Nodes in a Cluster](#fetching-running-artifactory-nodes-in-a-cluster)
       - [Fetching Artifactory's Service ID](#fetching-artifactorys-service-id)
@@ -179,6 +180,7 @@
       - [Get Violations Report Content](#get-violations-report-content)
       - [Delete Violations Report](#delete-violations-report)
       - [Get Artifact Summary](#get-artifact-summary)
+      - [Get Artifact Scan Status](#get-artifact-scan-status)
       - [Get Entitlement info](#get-entitlement-info)
     - [XSC APIs](#xsc-apis)
       - [Creating XSC Service Manager](#creating-xray-service-manager)
@@ -264,6 +266,12 @@
         - [Creating New Onemodel Service Manager](#creating-new-onemodel-service-manager)
     - [Using Onemodel Services](#using-onemodel-services)
       - [Graphql query](#graphql-query)
+  - [Apptrust APIs](#apptrust-apis)
+    - [Creating Apptrust Service Manager](#creating-apptrust-service-manager)
+      - [Creating Apptrust Details](#creating-apptrust-details)
+      - [Creating Apptrust Service Config](#creating-apptrust-service-config)
+      - [Creating New Apptrust Service Manager](#creating-new-apptrust-service-manager)
+    - [Get Application Details](#get-application-details)
 
 ## General
 
@@ -281,7 +289,7 @@ We welcome pull requests from the community.
 ### Guidelines
 
 - If the existing tests do not already cover your changes, please add tests.
-- Pull requests should be created on the **dev** branch.
+- Pull requests should be created on the **master** branch.
 - Please use gofmt for formatting the code before submitting the pull request.
 
 ## Tests
@@ -292,13 +300,13 @@ Types_ section below for more information.
 Use the following command with the below options to run the tests.
 
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 [test-types] [flags]
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -tags itest [test-types] [flags]
 ```
 
 If you'd like to run a specific test, add the test function name using the `-run` flag. For example:
 
 ```sh
-go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -run TestGetArtifactoryVersionWithCustomHttpClient -test.artifactory -rt.url=http://127.0.0.1:8081/artifactory -rt.user=admin -rt.password=password
+go test -v github.com/jfrog/jfrog-client-go/tests -timeout 0 -tags itest -run TestGetArtifactoryVersionWithCustomHttpClient -test.artifactory -rt.url=http://127.0.0.1:8081/artifactory -rt.user=admin -rt.password=password
 ```
 
 **Note:** The tests create an Artifactory repository named _jfrog-client-tests-repo1_. Once the tests are completed, the
@@ -318,12 +326,14 @@ content of this repository is deleted.
 | `-test.access`       | Access tests           | Artifactory Pro                 |
 | `-test.repositories` | Repositories tests     | Artifactory Pro                 |
 | `-test.mpu`          | Multipart upload tests | Artifactory Pro with S3 storage |
+| `-test.unit`         | Unit tests | None |
 
 #### Connection Details
 
 | Flag                | Description                                                                                            |
 | ------------------- | ------------------------------------------------------------------------------------------------------ |
-| `-rt.url`           | [Default: http://localhost:8081/artifactory] Artifactory URL.                                          |
+| `-platform.url`           | [Default: http://localhost:8082] Platform URL.                                          |
+| `-rt.url`           | [Optional] Artifactory URL.                                          |
 | `-ds.url`           | [Optional] JFrog Distribution URL.                                                                     |
 | `-xr.url`           | [Optional] JFrog Xray URL.                                                                             |
 | `-xsc.url`          | [Optional] JFrog Xsc URL.                                                                              |
@@ -1081,6 +1091,150 @@ Updating federated Generic repository:
 err = servicesManager.UpdateFederatedRepository().Generic(params)
 ```
 
+#### Creating and Updating Multiple Repositories
+
+NOTE: 
+- Creating of multiple repositories is supported from Artifactory 7.84.3 and later versions.
+- Updating of multiple repositories is supported from Artifactory 7.104.2 and later versions.
+
+You can create and update multiple repositories in a single batch operation using the `CreateUpdateRepositoriesInBatch` method. This method accepts a JSON byte array containing repository configurations and can handle mixed repository and package types within the same request.
+
+****Creating Multiple Repositories:****
+
+```go
+// Define repository configurations as JSON array
+repositoriesConfig := `[
+  {
+    "key": "maven-local-repo",
+    "rclass": "local",
+    "packageType": "maven",
+    "description": "Local Maven repository",
+    "repoLayoutRef": "maven-2-default"
+  },
+  {
+    "key": "npm-remote-repo", 
+    "rclass": "remote",
+    "packageType": "npm",
+    "description": "Remote NPM repository",
+    "url": "https://registry.npmjs.org/",
+    "repoLayoutRef": "npm-default"
+  }
+]`
+
+// Create multiple repositories (isUpdate = false)
+err = rtManager.CreateUpdateRepositoriesInBatch([]byte(repositoriesConfig), false)
+if err != nil {
+    return err
+}
+```
+
+**Updating Multiple Repositories:**
+
+```go
+// Define update configurations as JSON
+updateConfig := `[
+  {
+    "key": "maven-local-repo",
+    "description": "Updated Maven local repository description",
+    "notes": "Updated internal notes"
+  },
+  {
+    "key": "npm-remote-repo",
+    "description": "Updated NPM remote repository", 
+    "retrievalCachePeriodSecs": 7200
+  }
+]`
+
+// Update multiple repositories (isUpdate = true)
+err = rtManager.CreateUpdateRepositoriesInBatch([]byte(updateConfig), true)
+if err != nil {
+    return err
+}
+```
+
+**Configurations with mixed repository and package types:**
+
+```go
+// configuration with different repository and package types
+config := `[
+  {
+    "key": "maven-local-prod",
+    "rclass": "local",
+    "packageType": "maven",
+    "description": "Production Maven artifacts",
+    "repoLayoutRef": "maven-2-default",
+    "archiveBrowsingEnabled": true,
+    "xrayIndex": true,
+    "includesPattern": "**/*",
+    "excludesPattern": "com/example/test/**"
+  },
+  {
+    "key": "npm-remote-proxy",
+    "rclass": "remote",
+    "packageType": "npm",
+    "description": "NPM remote proxy",
+    "url": "https://registry.npmjs.org/",
+    "repoLayoutRef": "npm-default",
+    "retrievalCachePeriodSecs": 3600,
+    "assumedOfflinePeriodSecs": 300,
+    "missedRetrievalCachePeriodSecs": 1800
+  },
+  {
+    "key": "docker-virtual-all",
+    "rclass": "virtual",
+    "packageType": "docker",
+    "description": "All Docker repositories",
+    "repositories": ["docker-local-prod", "docker-remote-proxy"],
+    "repoLayoutRef": "simple-default",
+    "defaultDeploymentRepo": "docker-local-prod",
+    "artifactoryRequestsCanRetrieveRemoteArtifacts": true
+  },
+  {
+    "key": "maven-federated-shared",
+    "rclass": "federated",
+    "packageType": "maven",
+    "description": "Federated Maven repository",
+    "repoLayoutRef": "maven-2-default",
+    "members": [
+      {
+        "url": "http://artifactory2.company.com/artifactory/maven-federated-shared",
+        "enabled": true
+      },
+      {
+        "url": "http://artifactory3.company.com/artifactory/maven-federated-shared", 
+        "enabled": true
+      }
+    ]
+  }
+]`
+
+// Create all repositories in a single batch operation
+err = rtManager.CreateUpdateRepositoriesInBatch([]byte(config), false)
+if err != nil {
+    return err
+}
+```
+
+**Supported Repository Classes:**
+- `local` - Local repositories for storing artifacts
+- `remote` - Remote repositories for proxying external repositories
+- `virtual` - Virtual repositories for aggregating multiple repositories
+- `federated` - Federated repositories for cross-instance synchronization
+
+**Supported Package Types:**
+Alpine, Bower, Cran, Cargo, Chef, Cocoapods, Composer, Conan, Conda, Debian, Docker, Gems, Generic, Gitlfs, Go, Gradle, Helm, Ivy, Maven, Npm, Nuget, Opkg, P2, Puppet, Pypi, Rpm, Sbt, Swift, Terraform, Vcs, Vagrant, and Yum.
+
+**Method Parameters:**
+- `body []byte` - JSON byte array containing repository configurations
+- `isUpdate bool` - Set to `false` for creating repositories, `true` for updating existing repositories
+
+**HTTP Details:**
+- **Endpoint**: `/artifactory/api/v2/repositories/batch`
+- **HTTP Method**: `PUT` for create operations, `POST` for update operations
+- **Content-Type**: `application/json`
+- **Authentication**: Requires admin privileges or appropriate repository permissions
+- **Response**: Returns HTTP 201 for successful creation, HTTP 200 for successful updates
+
 #### Removing a Repository
 
 You can remove a repository from Artifactory using its key:
@@ -1277,6 +1431,12 @@ permissionTargetParams, err = servicesManager.GetPermissionTarget("java-develope
 
 If the requested permission target does not exist, a nil value is returned for the _permissionTargetParams_ param, with
 a nil error value
+
+#### Fetching all Permission Targets
+
+```go
+permissions, err = servicesManager.GetAllPermissionTargets()
+```
 
 #### Fetching Artifactory's Version
 
@@ -2492,6 +2652,23 @@ artifactSummaryRequest := services.ArtifactSummaryParams{
 artifactSummary, err := xrayManager.ArtifactSummary(artifactSummaryRequest)
 ```
 
+#### Get Artifact Scan Status
+```go
+// Get the scan status of an artifact in a specific repository
+repo := "example-repository"
+path := "path/to/artifact"
+artifactStatus, err := xrayManager.GetArtifactStatus(repo, path)
+
+// The response contains overall status and detailed status for different scan types
+if err == nil {
+    fmt.Printf("Overall scan status: %s\n", artifactStatus.Overall.Status)
+    fmt.Printf("SCA scan status: %s\n", artifactStatus.Details.Sca.Status)
+    fmt.Printf("Contextual Analysis status: %s\n", artifactStatus.Details.ContextualAnalysis.Status)
+    fmt.Printf("Exposures scan status: %s\n", artifactStatus.Details.Exposures.Status)
+    fmt.Printf("Violations status: %s\n", artifactStatus.Details.Violations.Status)
+}
+```
+
 #### Get Entitlement Info
 
 ```go
@@ -2850,6 +3027,92 @@ source := CreateFromReleaseBundlesSource{ReleaseBundles: []ReleaseBundleSource{
 serviceManager.CreateReleaseBundleFromBundles(rbDetails, params, signingKeyName, source)
 ```
 
+#### Creating a Release Bundle From Packages
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+source := CreateFromPackagesSource{Packages: []PackageSource{
+    {
+        PackageName:    "name",
+        PackageVersion: "version",
+        PackageType:    "type",
+        RepositoryKey:  "repokey",
+    },
+}}
+serviceManager.CreateReleaseBundleFromPackages(rbDetails, params, signingKeyName, source)
+```
+
+#### Creating a Release Bundle From Multiple Sources 
+
+```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
+
+// The GPG/RSA key-pair name given in Artifactory.
+signingKeyName = "key-pair"
+
+sources :=  [] RbSource{
+	            {
+					SourceType: "builds",
+                    Builds: []BuildSource{
+                        {
+                            BuildName:       "name",
+                            BuildNumber:     "number",
+                            // Optional:
+                            BuildRepository: "artifactory-build-info",
+                        },
+                    }
+                },
+               {
+               SourceType: "release_bundles",
+			   ReleaseBundles: []ReleaseBundleSource{
+                    {
+                        ReleaseBundleName:    "name",
+                        ReleaseBundleVersion: "version",
+                        ProjectKey:           "default",
+                    },
+			   }
+               },
+               {
+               SourceType: "artifacts",
+               Artifacts: []ArtifactSource{
+				   {
+                         Path:   "repo/path/file",
+                        Sha256: "3e3deb6628658a48cf0d280a2210211f9d977ec2e10a4619b95d5fb85cb10450",
+				   },
+               }	
+               },
+               {
+               SourceType: "packages",
+               Packages: []PackageSource{
+                    {
+						PackageName: "name",
+                        PackageVersion: "version",
+                        PackageType: "type",
+                        RepositoryKey: "repokey"
+                    },
+               }
+               },
+			   {
+               SourceType: "aql",
+               Aql: {
+                    `items.find({"repo": "my-repo","path": ".","name": "a2.in"})`
+                }
+               },
+        }
+	
+serviceManager.CreateReleaseBundlesFromMultipleSources(rbDetails, params, signingKeyName, sources)
+```
+
 #### Promoting a Release Bundle
 
 ```go
@@ -2995,17 +3258,23 @@ resp, err := serviceManager.DeleteReleaseBundleVersionPromotion(rbDetails, query
 #### Remote Delete Release Bundle
 
 ```go
+rbDetails := ReleaseBundleDetails{"rbName", "rbVersion"}
+
 rules := &distribution.DistributionCommonParams{
-    SiteName:     "*",
-    CityName:     "*",
-    CountryCodes: []string{"*"},
+SiteName:     "*",
+CityName:     "*",
+CountryCodes: []string{"*"},
 }
 params := distribution.NewDistributeReleaseBundleParams("rbName", "rbVersion")
 params.DistributionRules = append(params.DistributionRules, rules)
 
-dryRun := true
+queryParams := CommonOptionalQueryParams{}
+queryParams.ProjectKey = "project"
+queryParams.Async = true
 
-resp, err := serviceManager.RemoteDeleteReleaseBundle(params, dryRun)
+isNewReleaseBundleApiSupported=true 
+//From 7.63.2, isNewReleaseBundleApiSupported is true, below that version it should be false.
+resp, err := serviceManager.RemoteDeleteReleaseBundle(rbDetails, params, isNewReleaseBundleApiSupported)
 ```
 
 #### check-rb-exists
@@ -3094,6 +3363,7 @@ envelopeBytes := []byte("envelope")
 evidenceDetails := evidenceService.EvidenceDetails{
   SubjectUri:  "subjectUri",
   DSSEFileRaw: &envelopeBytes,
+  ProviderId:  "someProviderId",
 }
 body, err = evideceManager.UploadEvidence(evidenceDetails)
 ```
@@ -3186,4 +3456,89 @@ queryDetails := onemodelService.QueryDetails{
 }
 
 body, err = onemodelManager.GraphqlQuery(queryDetails)
+```
+
+## Apptrust APIs
+
+### Creating Apptrust Service Manager
+
+#### Creating Apptrust Details
+
+```go
+apptrustDetails := auth.NewApptrustDetails()
+apptrustDetails.SetUrl("http://localhost:8081/apptrust")
+apptrustDetails.SetAccessToken("access-token")
+// if client certificates are required
+apptrustDetails.SetClientCertPath("path/to/.cer")
+apptrustDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Apptrust Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(apptrustDetails).
+    SetCertificatesPath(apptrustDetails.GetClientCertPath()).
+    SetInsecureTls(apptrustDetails.IsInsecureTls()).
+    // Add [Context](https://golang.org/pkg/context/)
+    // SetContext(ctx).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    // SetHttpRetries(8).
+    Build()
+if err != nil {
+    return err
+}
+```
+
+#### Creating New Apptrust Service Manager
+
+```go
+apptrustManager, err := apptrust.New(serviceConfig)
+if err != nil {
+    return err
+}
+```
+
+### Get Application Details
+
+```go
+applicationKey := "your-application-key"
+application, err := apptrustManager.GetApplicationDetails(applicationKey)
+if err != nil {
+    return err
+}
+
+// Access application details
+fmt.Printf("Application Name: %s\n", application.ApplicationName)
+fmt.Printf("Application Key: %s\n", application.ApplicationKey)
+fmt.Printf("Project Name: %s\n", application.ProjectName)
+fmt.Printf("Project Key: %s\n", application.ProjectKey)
+```
+
+### Get Application Version Promotions
+
+```go
+applicationKey := "your-application-key"
+applicationVersion := "1.0.0"
+
+// Optional query parameters
+queryParams := map[string]string{
+    "order_by":   "created",
+    "order_asc":  "false",
+    "limit":      "100",
+    "offset":     "0",
+    "filter_by":  "status=COMPLETED",
+}
+
+promotions, err := apptrustManager.GetApplicationVersionPromotions(applicationKey, applicationVersion, queryParams)
+if err != nil {
+    return err
+}
+
+// Access promotion details
+fmt.Printf("Total promotions: %d\n", promotions.Total)
+for _, promotion := range promotions.Promotions {
+    fmt.Printf("Status: %s, Source: %s, Target: %s, Created: %s\n", 
+        promotion.Status, promotion.SourceStage, promotion.TargetStage, promotion.Created)
+}
 ```

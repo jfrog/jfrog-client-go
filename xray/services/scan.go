@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -134,7 +135,7 @@ func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error)
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
 		scanErrorJson := ScanErrorJson{}
 		if e := json.Unmarshal(body, &scanErrorJson); e == nil {
-			return "", errorutils.CheckErrorf(scanErrorJson.Error)
+			return "", errors.New(scanErrorJson.Error)
 		}
 		return "", err
 	}
@@ -180,7 +181,7 @@ func (ss *ScanService) GetScanGraphResults(scanId, xrayVersion string, includeVu
 	}
 	scanResponse := ScanResponse{}
 	if err = json.Unmarshal(body, &scanResponse); err != nil {
-		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: " + err.Error())
+		return nil, errorutils.CheckErrorf("couldn't parse JFrog Xray server response: %s", err.Error())
 	}
 	if scanResponse.ScannedStatus == xrayScanStatusFailed {
 		// Failed due to an internal Xray error
@@ -240,6 +241,7 @@ type Violation struct {
 	Cves                []Cve                `json:"cves,omitempty"`
 	References          []string             `json:"references,omitempty"`
 	FailBuild           bool                 `json:"fail_build,omitempty"`
+	FailPr              bool                 `json:"fail_pull_request,omitempty"`
 	LicenseKey          string               `json:"license_key,omitempty"`
 	LicenseName         string               `json:"license_name,omitempty"`
 	IgnoreUrl           string               `json:"ignore_url,omitempty"`

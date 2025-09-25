@@ -1,33 +1,39 @@
+//go:build itest
+
 package tests
 
 import (
 	"flag"
+	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/utils/tests"
 )
 
 const (
-	JfrogTestsHome      = ".jfrogTest"
 	JfrogHomeEnv        = "JFROG_CLI_HOME"
 	CliIntegrationTests = "github.com/jfrog/jfrog-client-go/tests"
 )
 
 func TestMain(m *testing.M) {
 	setupIntegrationTests()
-	result := m.Run()
-	teardownIntegrationTests()
-	os.Exit(result)
+	os.Exit(m.Run())
 }
 
 func setupIntegrationTests() {
 	flag.Parse()
 	log.SetLogger(log.NewLogger(log.DEBUG, nil))
+
+	checkFlags()
+
+	if *TestUnit {
+		return
+	}
 
 	if *TestArtifactory || *TestDistribution || *TestXray || *TestRepositories || *TestMultipartUpload {
 		createArtifactoryUploadManager()
@@ -82,37 +88,34 @@ func setupIntegrationTests() {
 		createAccessInviteManager()
 		createAccessTokensManager()
 	}
-	if err := createRepo(); err != nil {
-		log.Error(err.Error())
-		os.Exit(1)
-	}
 }
 
 func TestUnitTests(t *testing.T) {
-	homePath, err := filepath.Abs(JfrogTestsHome)
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
+	initUnitTests(t)
 
-	setJfrogHome(homePath)
+	homePath := t.TempDir()
+
+	setJfrogHome(t, homePath)
+
 	packages := tests.GetTestPackages("./../...")
 	packages = tests.ExcludeTestsPackage(packages, CliIntegrationTests)
-	err = tests.RunTests(packages, false)
+	err := tests.RunTests(packages, false)
 	assert.NoError(t, err)
-	cleanUnitTestsJfrogHome(t, homePath)
 }
 
-func setJfrogHome(homePath string) {
-	if err := os.Setenv(JfrogHomeEnv, homePath); err != nil {
-		log.Error(err)
-		os.Exit(1)
+func initUnitTests(t *testing.T) {
+	if !*TestUnit {
+		t.Skip("Skipping unit tests. To run unit tests add the '-test.unit=true' option.")
 	}
 }
 
-func cleanUnitTestsJfrogHome(t *testing.T, homePath string) {
-	tests.RemoveAllAndAssert(t, homePath)
-	if err := os.Unsetenv(JfrogHomeEnv); err != nil {
-		os.Exit(1)
-	}
+func setJfrogHome(t *testing.T, homePath string) {
+	err := os.Setenv(JfrogHomeEnv, homePath)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = os.Unsetenv(JfrogHomeEnv)
+		if err != nil {
+			log.Warn(fmt.Sprintf("Failed to unset env %s: %s", JfrogHomeEnv, err.Error()))
+		}
+	})
 }
