@@ -3,13 +3,11 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"strings"
-
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"net/http"
 )
 
 const projectsApi = "api/v1/projects"
@@ -53,18 +51,6 @@ type ProjectGroups struct {
 
 func NewProjectService(client *jfroghttpclient.JfrogHttpClient) *ProjectService {
 	return &ProjectService{client: client}
-}
-
-func (p Project) String() string {
-	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("Name: %s\n", p.DisplayName))
-	builder.WriteString(fmt.Sprintf("Key: %s\n", p.ProjectKey))
-	if p.Description != "" {
-		builder.WriteString(fmt.Sprintf("Description: %s\n", p.Description))
-	} else {
-		builder.WriteString("Description: NA\n")
-	}
-	return builder.String()
 }
 
 func (ps *ProjectService) getProjectsBaseUrl() string {
