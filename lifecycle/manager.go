@@ -156,3 +156,8 @@ func (lcs *LifecycleServicesManager) AnnotateReleaseBundle(params lifecycle.Anno
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.AnnotateReleaseBundle(params)
 }
+
+func (lcs *LifecycleServicesManager) GetReleaseBundlesStats(serverUrl string) ([]byte, error) {
+	rbService := lifecycle.NewReleaseBundlesStatsService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.GetReleaseBundlesStats(serverUrl)
+}

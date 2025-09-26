@@ -3,12 +3,11 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"net/http"
 )
 
 const projectsApi = "api/v1/projects"
