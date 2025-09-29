@@ -21,12 +21,12 @@ func NewProjectParams() ProjectParams {
 }
 
 type Project struct {
-	DisplayName       string           `json:"display_name,omitempty"`
+	DisplayName       string           `json:"display_name,omitempty" log:"Name"`
 	Description       string           `json:"description,omitempty"`
 	AdminPrivileges   *AdminPrivileges `json:"admin_privileges,omitempty"`
 	SoftLimit         *bool            `json:"soft_limit,omitempty"`
 	StorageQuotaBytes float64          `json:"storage_quota_bytes,omitempty"`
-	ProjectKey        string           `json:"project_key,omitempty"`
+	ProjectKey        string           `json:"project_key,omitempty" log:"ProjectKey"`
 }
 
 type AdminPrivileges struct {

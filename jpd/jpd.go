@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
 )
 
 const (
@@ -19,8 +20,8 @@ type JPDsStatsService struct {
 }
 
 type GenericError struct {
-	Product string
-	Err     error
+	Product string `log:"-"`
+	Err     error  `log:"Error"`
 }
 
 func NewJPDsStatsService(artDetails auth.ServiceDetails, client *jfroghttpclient.JfrogHttpClient) *JPDsStatsService {
@@ -48,13 +49,17 @@ func NewGenericError(product string, err error) *GenericError {
 func (ss *JPDsStatsService) GetAllJPDs(serverUrl string) ([]byte, error) {
 	requestFullUrl, err := utils.BuildUrl(serverUrl, JPDsAPI, nil)
 	if err != nil {
-		wrappedError := fmt.Errorf("failed to call JPD API: %w", err)
+		wrappedError := fmt.Errorf("failed to build JPD API: %w", err)
 		return nil, NewGenericError("JPDs", wrappedError)
 	}
 	httpClientsDetails := ss.ArtDetails.CreateHttpClientDetails()
 	resp, body, _, err := ss.client.SendGet(requestFullUrl, true, &httpClientsDetails)
 	if err != nil {
 		wrappedError := fmt.Errorf("failed to call JPD API: %w", err)
+		return nil, NewGenericError("JPDs", wrappedError)
+	}
+	if resp.StatusCode != http.StatusOK {
+		wrappedError := fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 		return nil, NewGenericError("JPDs", wrappedError)
 	}
 	log.Debug("JPDs API response:", resp.Status)
