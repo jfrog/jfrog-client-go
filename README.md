@@ -53,6 +53,7 @@
       - [Triggering Build Scanning with JFrog Xray](#triggering-build-scanning-with-jfrog-xray)
       - [Discarding Old Builds](#discarding-old-builds)
       - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
+      - [Managing Trusted Keys in Artifactory](#managing-trusted-keys-in-artifactory)
       - [Executing AQLs](#executing-aqls)
       - [Reading Files in Artifactory](#reading-files-in-artifactory)
       - [Creating an Artifactory Access Token](#creating-an-artifactory-access-token)
@@ -833,6 +834,40 @@ reader,err := rtManager.GetUnreferencedGitLfsFiles(params)
 defer reader.Close()
 rtManager.DeleteFiles(reader)
 ```
+
+#### Managing Trusted Keys in Artifactory
+
+The `TrustedKeysService` provides functionality for managing trusted keys in JFrog Artifactory. This service allows you to upload public keys that can be used for evidence verification.
+
+```go
+// Create a new TrustedKeysService
+trustedKeysService := services.NewTrustedKeysService(rtManager.GetJfrogHttpClient())
+
+// Set service details
+trustedKeysService.SetServiceDetails(rtManager.GetServiceDetails())
+
+// Upload a trusted key
+params := services.TrustedKeyParams{
+    Alias:     "my-key-alias",
+    PublicKey: "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----",
+}
+
+response, err := trustedKeysService.UploadTrustedKey(params)
+if err != nil {
+    // Handle error with enhanced error messages
+    log.Error("Failed to upload trusted key:", err)
+    return
+}
+
+log.Info("Trusted key uploaded successfully:", response.Alias)
+```
+
+**Error Handling:**
+The `UploadTrustedKey` method provides enhanced error messages for common scenarios:
+- **403 Forbidden** - Insufficient permissions to upload trusted keys
+- **404 Not Found** - Trusted keys API endpoint not available
+- **401 Unauthorized** - Invalid or expired authentication token
+- **400 Bad Request** - Duplicate alias or other validation errors
 
 #### Executing AQLs
 
