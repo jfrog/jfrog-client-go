@@ -195,15 +195,9 @@ func TestUploadTrustedKeyErrorHandling(t *testing.T) {
 			errorMsg += ": Unauthorized - invalid or expired authentication token"
 		}
 		
-		// Add response details to error message in priority order
-		var additionalInfo string
-		switch {
-		case tt.responseBody != "":
-			additionalInfo = tt.responseBody
-		}
-		
-		if additionalInfo != "" {
-			errorMsg += ": " + additionalInfo
+		// Add response body if present
+		if tt.responseBody != "" {
+			errorMsg += ": " + tt.responseBody
 		}
 			
 			assert.Equal(t, tt.expectedError, errorMsg)
