@@ -112,8 +112,6 @@ type ArtifactoryServicesManager interface {
 	ImportReleaseBundle(string) error
 	GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error)
 	UploadTrustedKey(params services.TrustedKeyParams) (*services.TrustedKeyResponse, error)
-	GetTrustedKeys() ([]services.TrustedKeyInfo, error)
-	CheckAliasExists(alias string) (bool, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -495,14 +493,6 @@ func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(services.LeadFile
 }
 
 func (esm *EmptyArtifactoryServicesManager) UploadTrustedKey(services.TrustedKeyParams) (*services.TrustedKeyResponse, error) {
-	panic("Failed: Method is not implemented")
-}
-
-func (esm *EmptyArtifactoryServicesManager) GetTrustedKeys() ([]services.TrustedKeyInfo, error) {
-	panic("Failed: Method is not implemented")
-}
-
-func (esm *EmptyArtifactoryServicesManager) CheckAliasExists(alias string) (bool, error) {
 	panic("Failed: Method is not implemented")
 }
 

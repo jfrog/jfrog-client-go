@@ -71,15 +71,6 @@ func (tks *TrustedKeysService) UploadTrustedKey(params TrustedKeyParams) (*Trust
 		return nil, errorutils.CheckErrorf("public key cannot be empty")
 	}
 
-	// Check if alias already exists
-	exists, err := tks.CheckAliasExists(params.Alias)
-	if err != nil {
-		return nil, errorutils.CheckErrorf("failed to check if alias exists: %v", err)
-	}
-	if exists {
-		return nil, errorutils.CheckErrorf("trusted keys API upload failed: alias '%s' already exists", params.Alias)
-	}
-
 	// Build the API URL
 	requestUrl, err := tks.buildTrustedKeysUrl()
 	if err != nil {
@@ -140,61 +131,4 @@ func (tks *TrustedKeysService) buildTrustedKeysUrl() (string, error) {
 	// Build URL without query parameters
 	requestUrl := utils.AddTrailingSlashIfNeeded(baseUrl) + "api/security/keys/trusted"
 	return requestUrl, nil
-}
-
-// GetTrustedKeys retrieves all trusted keys from the JFrog platform
-func (tks *TrustedKeysService) GetTrustedKeys() ([]TrustedKeyInfo, error) {
-	// Build the API URL
-	requestUrl, err := tks.buildTrustedKeysUrl()
-	if err != nil {
-		return nil, err
-	}
-
-	// Prepare HTTP client details
-	httpClientsDetails := tks.serviceDetails.CreateHttpClientDetails()
-
-	log.Debug("Getting trusted keys from JFrog platform...")
-
-	// Send GET request
-	resp, body, _, err := tks.client.SendGet(requestUrl, true, &httpClientsDetails)
-	if err != nil {
-		return nil, errorutils.CheckError(err)
-	}
-
-	// Check response status
-	if resp.StatusCode != http.StatusOK {
-		errorMsg := fmt.Sprintf("trusted keys API returned status %d", resp.StatusCode)
-		if len(body) > 0 {
-			errorMsg += ": " + string(body)
-		}
-		return nil, errorutils.CheckErrorf("%s", errorMsg)
-	}
-
-	// Parse response
-	var response TrustedKeysResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, errorutils.CheckError(fmt.Errorf("failed to parse trusted keys response: %w", err))
-	}
-
-	return response.Keys, nil
-}
-
-// CheckAliasExists checks if a trusted key with the given alias already exists
-func (tks *TrustedKeysService) CheckAliasExists(alias string) (bool, error) {
-	if alias == "" {
-		return false, errorutils.CheckErrorf("alias cannot be empty")
-	}
-
-	keys, err := tks.GetTrustedKeys()
-	if err != nil {
-		return false, err
-	}
-
-	for _, key := range keys {
-		if key.Alias == alias {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }

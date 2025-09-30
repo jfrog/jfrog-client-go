@@ -168,18 +168,6 @@ func (sm *ArtifactoryServicesManagerImp) UploadTrustedKey(params services.Truste
 	return trustedKeysService.UploadTrustedKey(params)
 }
 
-func (sm *ArtifactoryServicesManagerImp) GetTrustedKeys() ([]services.TrustedKeyInfo, error) {
-	trustedKeysService := services.NewTrustedKeysService(sm.client)
-	trustedKeysService.SetServiceDetails(sm.config.GetServiceDetails())
-	return trustedKeysService.GetTrustedKeys()
-}
-
-func (sm *ArtifactoryServicesManagerImp) CheckAliasExists(alias string) (bool, error) {
-	trustedKeysService := services.NewTrustedKeysService(sm.client)
-	trustedKeysService.SetServiceDetails(sm.config.GetServiceDetails())
-	return trustedKeysService.CheckAliasExists(alias)
-}
-
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
 	repositoriesService := services.NewRepositoriesService(sm.client)
 	repositoriesService.ArtDetails = sm.config.GetServiceDetails()
