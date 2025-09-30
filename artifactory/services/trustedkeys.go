@@ -107,6 +107,17 @@ func (tks *TrustedKeysService) UploadTrustedKey(params TrustedKeyParams) (*Trust
 	// Check response status
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		errorMsg := fmt.Sprintf("trusted keys API returned status %d", resp.StatusCode)
+		
+		// Add specific error messages for common status codes
+		switch resp.StatusCode {
+		case http.StatusForbidden:
+			errorMsg += ": Forbidden - insufficient permissions to upload trusted keys"
+		case http.StatusNotFound:
+			errorMsg += ": 404 page not found - trusted keys API endpoint not available"
+		case http.StatusUnauthorized:
+			errorMsg += ": Unauthorized - invalid or expired authentication token"
+		}
+		
 		if response.Error != "" {
 			errorMsg += ": " + response.Error
 		} else if response.Message != "" {
