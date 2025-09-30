@@ -182,23 +182,29 @@ func TestUploadTrustedKeyErrorHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Simulate the error message construction logic from UploadTrustedKey
-			errorMsg := fmt.Sprintf("trusted keys API returned status %d", tt.statusCode)
-			
-			// Add specific error messages for common status codes
-			switch tt.statusCode {
-			case http.StatusForbidden:
-				errorMsg += ": Forbidden - insufficient permissions to upload trusted keys"
-			case http.StatusNotFound:
-				errorMsg += ": 404 page not found - trusted keys API endpoint not available"
-			case http.StatusUnauthorized:
-				errorMsg += ": Unauthorized - invalid or expired authentication token"
-			}
-			
-			// Add response body if present
-			if tt.responseBody != "" {
-				errorMsg += ": " + tt.responseBody
-			}
+		// Simulate the error message construction logic from UploadTrustedKey
+		errorMsg := fmt.Sprintf("trusted keys API returned status %d", tt.statusCode)
+		
+		// Add specific error messages for common status codes
+		switch tt.statusCode {
+		case http.StatusForbidden:
+			errorMsg += ": Forbidden - insufficient permissions to upload trusted keys"
+		case http.StatusNotFound:
+			errorMsg += ": 404 page not found - trusted keys API endpoint not available"
+		case http.StatusUnauthorized:
+			errorMsg += ": Unauthorized - invalid or expired authentication token"
+		}
+		
+		// Add response details to error message in priority order
+		var additionalInfo string
+		switch {
+		case tt.responseBody != "":
+			additionalInfo = tt.responseBody
+		}
+		
+		if additionalInfo != "" {
+			errorMsg += ": " + additionalInfo
+		}
 			
 			assert.Equal(t, tt.expectedError, errorMsg)
 		})

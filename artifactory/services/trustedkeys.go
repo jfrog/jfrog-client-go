@@ -118,12 +118,19 @@ func (tks *TrustedKeysService) UploadTrustedKey(params TrustedKeyParams) (*Trust
 			errorMsg += ": Unauthorized - invalid or expired authentication token"
 		}
 		
-		if response.Error != "" {
-			errorMsg += ": " + response.Error
-		} else if response.Message != "" {
-			errorMsg += ": " + response.Message
-		} else if len(body) > 0 {
-			errorMsg += ": " + string(body)
+		// Add response details to error message in priority order
+		var additionalInfo string
+		switch {
+		case response.Error != "":
+			additionalInfo = response.Error
+		case response.Message != "":
+			additionalInfo = response.Message
+		case len(body) > 0:
+			additionalInfo = string(body)
+		}
+		
+		if additionalInfo != "" {
+			errorMsg += ": " + additionalInfo
 		}
 		return &response, errorutils.CheckErrorf("%s", errorMsg)
 	}
