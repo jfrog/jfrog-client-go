@@ -3,7 +3,7 @@ module github.com/jfrog/jfrog-client-go
 go 1.24.6
 
 require (
-	github.com/CycloneDX/cyclonedx-go v0.9.2
+	github.com/CycloneDX/cyclonedx-go v0.9.3
 	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/forPelevin/gomoji v1.3.1
