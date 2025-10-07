@@ -107,7 +107,7 @@ func (tks *TrustedKeysService) UploadTrustedKey(params TrustedKeyParams) (*Trust
 	// Check response status
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		errorMsg := fmt.Sprintf("trusted keys API returned status %d", resp.StatusCode)
-		
+
 		// Add specific error messages for common status codes
 		switch resp.StatusCode {
 		case http.StatusForbidden:
@@ -117,7 +117,7 @@ func (tks *TrustedKeysService) UploadTrustedKey(params TrustedKeyParams) (*Trust
 		case http.StatusUnauthorized:
 			errorMsg += ": Unauthorized - invalid or expired authentication token"
 		}
-		
+
 		// Add response details to error message in priority order
 		var additionalInfo string
 		switch {
@@ -128,7 +128,7 @@ func (tks *TrustedKeysService) UploadTrustedKey(params TrustedKeyParams) (*Trust
 		case len(body) > 0:
 			additionalInfo = string(body)
 		}
-		
+
 		if additionalInfo != "" {
 			errorMsg += ": " + additionalInfo
 		}
