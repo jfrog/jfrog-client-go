@@ -500,6 +500,22 @@ func (esm *EmptyArtifactoryServicesManager) DeleteBuildInfo(*buildinfo.BuildInfo
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) GetRepositoriesStats(string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetJPDsStats(string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetReleaseBundlesStats(string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetTokenDetails(string, string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
 // Compile time check of interface implementation.
 // Since EmptyArtifactoryServicesManager can be used by tests external to this project, we want this project's tests to fail,
 // if EmptyArtifactoryServicesManager stops implementing the ArtifactoryServicesManager interface.
