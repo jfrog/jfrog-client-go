@@ -66,27 +66,27 @@ func TestNewTrustedKeysService(t *testing.T) {
 func TestTrustedKeysService_NoDuplicateAliasValidation(t *testing.T) {
 	// This test verifies that the client no longer validates duplicate aliases
 	// The server should handle this validation instead
-	
+
 	service := NewTrustedKeysService(nil)
 	assert.NotNil(t, service)
-	
+
 	// Verify that CheckAliasExists method no longer exists
 	// This is a compile-time check - if this code compiles, it means the method was successfully removed
-	
+
 	// The service should not have a CheckAliasExists method anymore
 	// This test would fail to compile if the method still existed and was being called
 	// Since we removed the method, this test passing means client-side duplicate validation is gone
-	
+
 	// Create valid test parameters
 	params := TrustedKeyParams{
 		Alias:     "test-duplicate-alias",
 		PublicKey: "-----BEGIN PUBLIC KEY-----\ntest-key-content\n-----END PUBLIC KEY-----",
 	}
-	
+
 	// Verify parameters are valid (only basic validation should remain)
 	assert.NotEmpty(t, params.Alias, "Alias should not be empty")
 	assert.NotEmpty(t, params.PublicKey, "Public key should not be empty")
-	
+
 	// The UploadTrustedKey method should not call any alias existence check
 	// It should proceed directly to the server request
 	// Server-side validation will handle duplicates appropriately
@@ -95,29 +95,29 @@ func TestTrustedKeysService_NoDuplicateAliasValidation(t *testing.T) {
 func TestTrustedKeysService_ServerSideDuplicateValidation(t *testing.T) {
 	// This test demonstrates that duplicate alias validation is now handled server-side
 	// The client sends the request directly to the server without pre-validation
-	
+
 	service := NewTrustedKeysService(nil)
 	assert.NotNil(t, service)
-	
+
 	// Test demonstrates that the service no longer has client-side duplicate validation
 	// The following would previously have failed due to client-side checks
 	// Now it should only fail when sent to the server
-	
+
 	params := TrustedKeyParams{
-		Alias:     "duplicate-alias", 
+		Alias:     "duplicate-alias",
 		PublicKey: "-----BEGIN PUBLIC KEY-----\ntest-key-content\n-----END PUBLIC KEY-----",
 	}
-	
+
 	// Verify basic parameter validation still works
 	assert.NotEmpty(t, params.Alias, "Alias should not be empty")
 	assert.NotEmpty(t, params.PublicKey, "Public key should not be empty")
-	
+
 	// The fact that this test compiles and runs proves that:
 	// 1. CheckAliasExists method was successfully removed (compilation would fail if it existed)
 	// 2. UploadTrustedKey no longer calls CheckAliasExists (no client-side duplicate validation)
 	// 3. Only basic parameter validation remains (empty alias/key checks)
 	// 4. Server-side validation will handle duplicate aliases appropriately
-	
+
 	// Note: We can't test the actual server interaction without a real server,
 	// but the absence of client-side validation is proven by successful compilation
 }
@@ -125,10 +125,10 @@ func TestTrustedKeysService_ServerSideDuplicateValidation(t *testing.T) {
 // TestUploadTrustedKeyErrorHandling tests the error message construction for different HTTP status codes
 func TestUploadTrustedKeyErrorHandling(t *testing.T) {
 	tests := []struct {
-		name           string
-		statusCode     int
-		responseBody   string
-		expectedError  string
+		name          string
+		statusCode    int
+		responseBody  string
+		expectedError string
 	}{
 		{
 			name:          "403 Forbidden",
@@ -182,24 +182,24 @@ func TestUploadTrustedKeyErrorHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-		// Simulate the error message construction logic from UploadTrustedKey
-		errorMsg := fmt.Sprintf("trusted keys API returned status %d", tt.statusCode)
-		
-		// Add specific error messages for common status codes
-		switch tt.statusCode {
-		case http.StatusForbidden:
-			errorMsg += ": Forbidden - insufficient permissions to upload trusted keys"
-		case http.StatusNotFound:
-			errorMsg += ": 404 page not found - trusted keys API endpoint not available"
-		case http.StatusUnauthorized:
-			errorMsg += ": Unauthorized - invalid or expired authentication token"
-		}
-		
-		// Add response body if present
-		if tt.responseBody != "" {
-			errorMsg += ": " + tt.responseBody
-		}
-			
+			// Simulate the error message construction logic from UploadTrustedKey
+			errorMsg := fmt.Sprintf("trusted keys API returned status %d", tt.statusCode)
+
+			// Add specific error messages for common status codes
+			switch tt.statusCode {
+			case http.StatusForbidden:
+				errorMsg += ": Forbidden - insufficient permissions to upload trusted keys"
+			case http.StatusNotFound:
+				errorMsg += ": 404 page not found - trusted keys API endpoint not available"
+			case http.StatusUnauthorized:
+				errorMsg += ": Unauthorized - invalid or expired authentication token"
+			}
+
+			// Add response body if present
+			if tt.responseBody != "" {
+				errorMsg += ": " + tt.responseBody
+			}
+
 			assert.Equal(t, tt.expectedError, errorMsg)
 		})
 	}
@@ -208,38 +208,38 @@ func TestUploadTrustedKeyErrorHandling(t *testing.T) {
 // TestTrustedKeyResponse_Parsing tests the response parsing logic
 func TestTrustedKeyResponse_Parsing(t *testing.T) {
 	tests := []struct {
-		name           string
-		responseBody   string
-		expectedAlias  string
-		expectedError  string
+		name            string
+		responseBody    string
+		expectedAlias   string
+		expectedError   string
 		expectedMessage string
 	}{
 		{
-			name:           "successful response",
-			responseBody:   `{"alias": "test-key", "message": "Key uploaded successfully"}`,
-			expectedAlias:  "test-key",
-			expectedError:  "",
+			name:            "successful response",
+			responseBody:    `{"alias": "test-key", "message": "Key uploaded successfully"}`,
+			expectedAlias:   "test-key",
+			expectedError:   "",
 			expectedMessage: "Key uploaded successfully",
 		},
 		{
-			name:           "error response",
-			responseBody:   `{"alias": "test-key", "error": "alias already exists"}`,
-			expectedAlias:  "test-key",
-			expectedError:  "alias already exists",
+			name:            "error response",
+			responseBody:    `{"alias": "test-key", "error": "alias already exists"}`,
+			expectedAlias:   "test-key",
+			expectedError:   "alias already exists",
 			expectedMessage: "",
 		},
 		{
-			name:           "empty response",
-			responseBody:   "",
-			expectedAlias:  "",
-			expectedError:  "",
+			name:            "empty response",
+			responseBody:    "",
+			expectedAlias:   "",
+			expectedError:   "",
 			expectedMessage: "",
 		},
 		{
-			name:           "invalid JSON response",
-			responseBody:   "invalid json",
-			expectedAlias:  "",
-			expectedError:  "",
+			name:            "invalid JSON response",
+			responseBody:    "invalid json",
+			expectedAlias:   "",
+			expectedError:   "",
 			expectedMessage: "invalid json",
 		},
 	}
@@ -261,7 +261,7 @@ func TestTrustedKeyResponse_Parsing(t *testing.T) {
 					response.Message = tt.expectedMessage
 				}
 			}
-			
+
 			assert.Equal(t, tt.expectedAlias, response.Alias)
 			assert.Equal(t, tt.expectedError, response.Error)
 			assert.Equal(t, tt.expectedMessage, response.Message)
@@ -311,17 +311,16 @@ func TestBuildTrustedKeysUrl(t *testing.T) {
 				assert.True(t, tt.wantErr, "Expected error for empty URL")
 				return
 			}
-			
+
 			// Simulate AddTrailingSlashIfNeeded logic
 			baseUrl := tt.baseUrl
 			if baseUrl[len(baseUrl)-1:] != "/" {
 				baseUrl += "/"
 			}
-			
+
 			requestUrl := baseUrl + "api/security/keys/trusted"
 			assert.Equal(t, tt.expectedUrl, requestUrl)
 			assert.False(t, tt.wantErr, "Expected no error for valid URL")
 		})
 	}
 }
-
