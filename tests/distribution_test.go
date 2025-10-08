@@ -74,7 +74,6 @@ func initDistributionTest(t *testing.T) {
 	if !*TestDistribution {
 		t.Skip("Skipping distribution test. To run distribution test add the '-test.distribution=true' option.")
 	}
-	t.Skip("JGC-407 - Multiple Trusted Keys is only available on Enterprise Plus licensed Artifactory instances")
 	createRepo(t)
 }
 
