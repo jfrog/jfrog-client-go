@@ -18,7 +18,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3
 	golang.org/x/crypto v0.42.0
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621
-	golang.org/x/term v0.35.0
+	golang.org/x/term v0.36.0
 )
 
 require (
@@ -51,7 +51,7 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
