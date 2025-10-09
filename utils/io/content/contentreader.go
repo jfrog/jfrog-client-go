@@ -107,11 +107,15 @@ func removeFileWithRetry(filePath string) error {
 	executor := retryexecutor.RetryExecutor{
 		Context:                  context.Background(),
 		MaxRetries:               5,
-		RetriesIntervalMilliSecs: 100,
+		RetriesIntervalMilliSecs: 200,
 		ErrorMessage:             "Failed to remove file",
 		LogMsgPrefix:             "Attempting removal",
 		ExecutionHandler: func() (bool, error) {
-			return false, errorutils.CheckError(os.Remove(filePath))
+			err := os.Remove(filePath)
+			if err != nil {
+				return true, errorutils.CheckError(err)
+			}
+			return false, nil
 		},
 	}
 	return executor.Execute()
