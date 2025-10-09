@@ -161,3 +161,33 @@ func (lcs *LifecycleServicesManager) GetReleaseBundlesStats(serverUrl string) ([
 	rbService := lifecycle.NewReleaseBundlesStatsService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.GetReleaseBundlesStats(serverUrl)
 }
+
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchNames() error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.RbSearchNames()
+}
+
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchVersions() error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.RbSearchVersions()
+}
+
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchArtifacts() error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.RbSearchArtifacts()
+}
+
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchEnvironment() error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.RbSearchEnvironments()
+}
+
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchStatus() error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.RbSearchStatus()
+}
+
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchSignature() error {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	return rbService.RbSearchSignature()
+}
