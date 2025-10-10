@@ -38,9 +38,9 @@ func buildGetSearchQueryParams(optionalQueryParams GetSearchOptionalQueryParams)
 	return params
 }
 
-func (rbs *ReleaseBundlesService) ReleaseBundlesSearchGroups(OptionalQueryParams GetSearchOptionalQueryParams) (response ReleaseBundlesGroupResponse, err error) {
+func (rbs *ReleaseBundlesService) ReleaseBundlesSearchGroups(optionalQueryParams GetSearchOptionalQueryParams) (response ReleaseBundlesGroupResponse, err error) {
 	restApi := GetGetReleaseBundleSearchGroupApi()
-	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetSearchQueryParams(OptionalQueryParams))
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetSearchQueryParams(optionalQueryParams))
 	if err != nil {
 		return
 	}
@@ -57,9 +57,9 @@ func (rbs *ReleaseBundlesService) ReleaseBundlesSearchGroups(OptionalQueryParams
 	return
 }
 
-func (rbs *ReleaseBundlesService) ReleaseBundlesSearchVersions(releaseBundleName string, OptionalQueryParams GetSearchOptionalQueryParams) (response ReleaseBundleVersionsResponse, err error) {
+func (rbs *ReleaseBundlesService) ReleaseBundlesSearchVersions(releaseBundleName string, optionalQueryParams GetSearchOptionalQueryParams) (response ReleaseBundleVersionsResponse, err error) {
 	restApi := GetGetReleaseBundleSearchVersionsApi(releaseBundleName)
-	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetSearchQueryParams(OptionalQueryParams))
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetSearchQueryParams(optionalQueryParams))
 	if err != nil {
 		return
 	}
