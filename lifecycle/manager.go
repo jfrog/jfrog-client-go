@@ -162,32 +162,12 @@ func (lcs *LifecycleServicesManager) GetReleaseBundlesStats(serverUrl string) ([
 	return rbService.GetReleaseBundlesStats(serverUrl)
 }
 
-func (lcs *LifecycleServicesManager) ReleaseBundlesSearchNames() error {
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchGroup(params lifecycle.GetSearchOptionalQueryParams) (lifecycle.ReleaseBundlesGroupResponse, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.RbSearchNames()
+	return rbService.ReleaseBundlesSearchGroups(params)
 }
 
-func (lcs *LifecycleServicesManager) ReleaseBundlesSearchVersions() error {
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchVersions(releaseBundleName string, params lifecycle.GetSearchOptionalQueryParams) (lifecycle.ReleaseBundleVersionsResponse, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.RbSearchVersions()
-}
-
-func (lcs *LifecycleServicesManager) ReleaseBundlesSearchArtifacts() error {
-	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.RbSearchArtifacts()
-}
-
-func (lcs *LifecycleServicesManager) ReleaseBundlesSearchEnvironment() error {
-	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.RbSearchEnvironments()
-}
-
-func (lcs *LifecycleServicesManager) ReleaseBundlesSearchStatus() error {
-	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.RbSearchStatus()
-}
-
-func (lcs *LifecycleServicesManager) ReleaseBundlesSearchSignature() error {
-	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.RbSearchSignature()
+	return rbService.ReleaseBundlesSearchVersions(releaseBundleName, params)
 }
