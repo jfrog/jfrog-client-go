@@ -162,12 +162,12 @@ func (lcs *LifecycleServicesManager) GetReleaseBundlesStats(serverUrl string) ([
 	return rbService.GetReleaseBundlesStats(serverUrl)
 }
 
-func (lcs *LifecycleServicesManager) ReleaseBundlesSearchGroup(params lifecycle.GetSearchOptionalQueryParams) (lifecycle.ReleaseBundlesGroupResponse, error) {
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchGroup() (interface{}, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.ReleaseBundlesSearchGroups(params)
+	return rbService.ReleaseBundlesSearchGroups()
 }
 
-func (lcs *LifecycleServicesManager) ReleaseBundlesSearchVersions(releaseBundleName string, params lifecycle.GetSearchOptionalQueryParams) (lifecycle.ReleaseBundleVersionsResponse, error) {
+func (lcs *LifecycleServicesManager) ReleaseBundlesSearchVersions(releaseBundleName string) (interface{}, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
-	return rbService.ReleaseBundlesSearchVersions(releaseBundleName, params)
+	return rbService.ReleaseBundlesSearchVersions(releaseBundleName)
 }
