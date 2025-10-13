@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand"
 	"net/url"
 	"os"
 	"path"
@@ -12,6 +14,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/io"
 
@@ -647,4 +650,15 @@ func AppendScopedProjectKeyParam(url, projectKey string) string {
 func urlContainsProjectKeyParam(url string) bool {
 	// check if the URL already contains the project key query parameter
 	return len(url) > 0 && strings.Contains(url, ProjectKeyQueryParam)
+}
+
+func CalculateBackoff(attempt int, initialDelay, maxDelay time.Duration) time.Duration {
+	rand.Seed(time.Now().UnixNano())
+	expDelay := float64(initialDelay) * math.Pow(2, float64(attempt))
+	jitterFactor := 0.5 + rand.Float64()
+	currentDelay := time.Duration(expDelay * jitterFactor)
+	if currentDelay > maxDelay {
+		currentDelay = maxDelay
+	}
+	return currentDelay
 }
