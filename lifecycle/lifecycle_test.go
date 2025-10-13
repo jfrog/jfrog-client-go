@@ -293,6 +293,82 @@ func TestIsReleaseBundleExistWithProject(t *testing.T) {
 	assert.False(t, exist)
 }
 
+func TestReleaseBundlesSearchGroups(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetGetReleaseBundleSearchGroupApi() {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(`{
+             "release_bundles": [
+                {
+                   "repository_key": "release-bundles-v2",
+                   "project_key": "default",
+                   "project_name": "Default",
+                   "service_id": "jfrt@...",
+                   "created": "2025-10-09T11:38:36.002Z",
+                   "release_bundle_name": "rb-sample",
+                   "release_bundle_version_latest": "1.0",
+                   "release_bundle_versions_count": 1
+                }
+             ],
+             "total": 1,
+             "limit": 5,
+             "offset": 0
+          }`))
+			assert.NoError(t, err)
+		}
+	})
+	defer mockServer.Close()
+	optionalQueryParams := lifecycle.GetSearchOptionalQueryParams{
+		Limit:    5,
+		Offset:   0,
+		Includes: "",
+		OrderBy:  "",
+		OrderAsc: true,
+	}
+	response, _ := rbService.ReleaseBundlesSearchGroups(optionalQueryParams)
+	assert.NotNil(t, response)
+	assert.Empty(t, response.ReleaseBundleSearchGroup)
+	assert.Equal(t, 0, response.Total)
+}
+
+func TestReleaseBundlesSearchVersions(t *testing.T) {
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/"+lifecycle.GetGetReleaseBundleSearchVersionsApi("sample-release-bundle") {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte(`{
+             "release_bundles_versions_response": [
+					{
+						"repository_key": "release-bundles-v2",
+						"status": "COMPLETED",
+						"service_id": "jfrt@...",
+						"created": "2025-10-09T11:38:36.002Z",
+						"release_bundle_name": "rb-sample",
+						"release_bundle_version": "1.0",
+						"created": "2025-10-09T11:38:36.002Z",
+						"release_status": "COMPLETED",
+					}
+				],
+             "total": 1,
+             "limit": 5,
+             "offset": 0
+          }`))
+			assert.NoError(t, err)
+		}
+	})
+	defer mockServer.Close()
+	optionalQueryParams := lifecycle.GetSearchOptionalQueryParams{
+		Limit:    5,
+		Offset:   0,
+		Includes: "",
+		OrderBy:  "",
+		OrderAsc: true,
+	}
+	response, _ := rbService.ReleaseBundlesSearchVersions("sample-release-bundle", optionalQueryParams)
+	assert.NotNil(t, response)
+	assert.Empty(t, response)
+	assert.Equal(t, 0, response.Total)
+}
+
 func TestReleaseBundleAnnotate(t *testing.T) {
 	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.RequestURI == "/"+lifecycle.GetReleaseBundleSetTagApi(testRb) {

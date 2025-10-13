@@ -104,19 +104,19 @@ type ReleaseBundlesGroupResponse struct {
 }
 
 type ReleaseBundleVersion struct {
-	Status               string    `json:"status"` // e.g., "COMPLETED"
+	Status               string    `json:"status"`
 	RepositoryKey        string    `json:"repository_key"`
 	ReleaseBundleName    string    `json:"release_bundle_name"`
-	ReleaseBundleVersion string    `json:"release_bundle_version"` // The specific version string, e.g., "1.0"
+	ReleaseBundleVersion string    `json:"release_bundle_version"`
 	ServiceID            string    `json:"service_id"`
 	CreatedBy            string    `json:"created_by"`
 	Created              time.Time `json:"created"`
-	ReleaseStatus        string    `json:"release_status"` // e.g., "PRE_RELEASE"
+	ReleaseStatus        string    `json:"release_status"`
 }
 
 // ReleaseBundleVersionsResponse represents the entire JSON response structure for versions
 type ReleaseBundleVersionsResponse struct {
-	ReleaseBundles []ReleaseBundleVersion `json:"release_bundles"` // Slice of ReleaseBundleVersion structs
+	ReleaseBundles []ReleaseBundleVersion `json:"release_bundles"`
 	Total          int                    `json:"total"`
 	Limit          int                    `json:"limit"`
 	Offset         int                    `json:"offset"`
