@@ -39,7 +39,7 @@ func buildGetSearchQueryParams(optionalQueryParams GetSearchOptionalQueryParams)
 }
 
 func (rbs *ReleaseBundlesService) ReleaseBundlesSearchGroups(optionalQueryParams GetSearchOptionalQueryParams) (response ReleaseBundlesGroupResponse, err error) {
-	restApi := GetGetReleaseBundleSearchGroupApi()
+	restApi := GetReleaseBundleSearchGroupApi()
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetSearchQueryParams(optionalQueryParams))
 	if err != nil {
 		return
@@ -58,7 +58,7 @@ func (rbs *ReleaseBundlesService) ReleaseBundlesSearchGroups(optionalQueryParams
 }
 
 func (rbs *ReleaseBundlesService) ReleaseBundlesSearchVersions(releaseBundleName string, optionalQueryParams GetSearchOptionalQueryParams) (response ReleaseBundleVersionsResponse, err error) {
-	restApi := GetGetReleaseBundleSearchVersionsApi(releaseBundleName)
+	restApi := GetReleaseBundleSearchVersionsApi(releaseBundleName)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetSearchQueryParams(optionalQueryParams))
 	if err != nil {
 		return
@@ -76,11 +76,11 @@ func (rbs *ReleaseBundlesService) ReleaseBundlesSearchVersions(releaseBundleName
 	return
 }
 
-func GetGetReleaseBundleSearchGroupApi() string {
+func GetReleaseBundleSearchGroupApi() string {
 	return path.Join(releaseBundleNewApi, groupApi)
 }
 
-func GetGetReleaseBundleSearchVersionsApi(releaseBundleName string) string {
+func GetReleaseBundleSearchVersionsApi(releaseBundleName string) string {
 	return path.Join(releaseBundleNewApi, records, releaseBundleName)
 }
 

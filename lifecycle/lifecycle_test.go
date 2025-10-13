@@ -295,7 +295,7 @@ func TestIsReleaseBundleExistWithProject(t *testing.T) {
 
 func TestReleaseBundlesSearchGroups(t *testing.T) {
 	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/"+lifecycle.GetGetReleaseBundleSearchGroupApi() {
+		if r.RequestURI == "/"+lifecycle.GetReleaseBundleSearchGroupApi() {
 			w.WriteHeader(http.StatusOK)
 			_, err := w.Write([]byte(`{
              "release_bundles": [
@@ -333,7 +333,7 @@ func TestReleaseBundlesSearchGroups(t *testing.T) {
 
 func TestReleaseBundlesSearchVersions(t *testing.T) {
 	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/"+lifecycle.GetGetReleaseBundleSearchVersionsApi("sample-release-bundle") {
+		if r.RequestURI == "/"+lifecycle.GetReleaseBundleSearchVersionsApi("sample-release-bundle") {
 			w.WriteHeader(http.StatusOK)
 			_, err := w.Write([]byte(`{
              "release_bundles_versions_response": [
