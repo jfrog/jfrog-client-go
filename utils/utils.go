@@ -54,7 +54,8 @@ var (
 	MaxBufferSize          = 50000
 	userAgent              = getDefaultUserAgent()
 	curlyParenthesesRegexp = regexp.MustCompile(`\{(\d+?)}`)
-	backoffRand            = rand.New(rand.NewSource(time.Now().UnixNano()))
+	// #nosec G404
+	backoffRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 func getVersion() string {
