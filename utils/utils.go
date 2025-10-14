@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"net/url"
 	"os"
 	"path"
@@ -652,15 +653,13 @@ func urlContainsProjectKeyParam(url string) bool {
 }
 
 func CalculateBackoff(attempt int, initialDelay, maxDelay time.Duration) time.Duration {
+	randomGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))
 	expDelay := float64(initialDelay) * math.Pow(2, float64(attempt))
-	jitter := 1.0 + float64(attempt%10)*0.05
-	if attempt%2 == 0 {
-		jitter = 1.0 - float64(attempt%10)*0.02
-	}
-	jitterFactor := math.Max(0.8, math.Min(1.2, jitter))
-	currentDelay := time.Duration(expDelay * jitterFactor)
-	if currentDelay > maxDelay {
-		currentDelay = maxDelay
+	cappedDelay := math.Min(expDelay, float64(maxDelay))
+	jitterFactor := 1.0 + (randomGenerator.Float64()*0.4 - 0.2)
+	currentDelay := time.Duration(cappedDelay * jitterFactor)
+	if currentDelay < 0 {
+		currentDelay = 0
 	}
 	return currentDelay
 }

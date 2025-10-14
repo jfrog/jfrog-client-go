@@ -1,13 +1,8 @@
 package services
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
 	"path"
 	"strconv"
 	"time"
@@ -48,83 +43,28 @@ func buildGetSearchQueryParams(optionalQueryParams GetSearchOptionalQueryParams)
 	return params
 }
 
-func (rbs *ReleaseBundlesService) ReleaseBundlesSearchGroups(optionalQueryParams GetSearchOptionalQueryParams) (response ReleaseBundlesGroupResponse, err error) {
+func (rbs *ReleaseBundlesService) ReleaseBundlesSearchGroups(optionalQueryParams GetSearchOptionalQueryParams) (ReleaseBundlesGroupResponse, error) {
 	restApi := GetReleaseBundleSearchGroupApi()
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetSearchQueryParams(optionalQueryParams))
 	if err != nil {
-		return
+		return ReleaseBundlesGroupResponse{}, err
 	}
 	httpClientsDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
-
-	for i := 0; i < maxAttempts; i++ {
-		resp, body, _, sendErr := rbs.client.SendGet(requestFullUrl, true, &httpClientsDetails)
-		if sendErr != nil {
-			log.Debug(fmt.Sprintf("Attempt %d/%d: Network error during SendGet to %s: %v", i+1, maxAttempts, requestFullUrl, sendErr))
-			if i < maxAttempts-1 {
-				time.Sleep(utils.CalculateBackoff(i, initialBackoff, maxBackoff))
-				continue
-			}
-			return response, sendErr
-		}
-		log.Debug("Artifactory response status:", resp.Status)
-		switch resp.StatusCode {
-		case http.StatusOK:
-			err = errorutils.CheckError(json.Unmarshal(body, &response))
-			return response, err
-		case http.StatusUnauthorized:
-			return response, ErrAuth
-		case http.StatusForbidden:
-			return response, ErrPermission
-		case http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
-			if i < maxAttempts-1 {
-				log.Debug(fmt.Sprintf("Attempt %d/%d: Server error (%d) from %s. Retrying...", i+1, maxAttempts, resp.StatusCode, requestFullUrl))
-				time.Sleep(utils.CalculateBackoff(i, initialBackoff, maxBackoff))
-				continue
-			}
-		}
-		err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
-		return response, err
-	}
-	return response, fmt.Errorf("failed to get response from %s after %d attempts", requestFullUrl, maxAttempts)
+	var response ReleaseBundlesGroupResponse
+	err = rbs.doHttpRequestWithRetry(requestFullUrl, &httpClientsDetails, &response)
+	return response, err
 }
 
-func (rbs *ReleaseBundlesService) ReleaseBundlesSearchVersions(releaseBundleName string, optionalQueryParams GetSearchOptionalQueryParams) (response ReleaseBundleVersionsResponse, err error) {
-	restApi := GetReleaseBundleSearchVersionsApi(releaseBundleName) // This is the main difference in API path
+func (rbs *ReleaseBundlesService) ReleaseBundlesSearchVersions(releaseBundleName string, optionalQueryParams GetSearchOptionalQueryParams) (ReleaseBundleVersionsResponse, error) {
+	restApi := GetReleaseBundleSearchVersionsApi(releaseBundleName)
 	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, buildGetSearchQueryParams(optionalQueryParams))
 	if err != nil {
-		return
+		return ReleaseBundleVersionsResponse{}, err
 	}
 	httpClientsDetails := rbs.GetLifecycleDetails().CreateHttpClientDetails()
-	for i := 0; i < maxAttempts; i++ {
-		resp, body, _, sendErr := rbs.client.SendGet(requestFullUrl, true, &httpClientsDetails)
-		if sendErr != nil {
-			log.Debug(fmt.Sprintf("Attempt %d/%d: Network error during SendGet to %s: %v", i+1, maxAttempts, requestFullUrl, sendErr))
-			if i < maxAttempts-1 {
-				time.Sleep(utils.CalculateBackoff(i, initialBackoff, maxBackoff))
-				continue
-			}
-			return response, sendErr
-		}
-		log.Debug("Artifactory response status:", resp.Status)
-		switch resp.StatusCode {
-		case http.StatusOK:
-			err = errorutils.CheckError(json.Unmarshal(body, &response))
-			return response, err
-		case http.StatusUnauthorized:
-			return response, ErrAuth
-		case http.StatusForbidden:
-			return response, ErrPermission
-		case http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
-			if i < maxAttempts-1 {
-				log.Debug(fmt.Sprintf("Attempt %d/%d: Server error (%d) from %s. Retrying...", i+1, maxAttempts, resp.StatusCode, requestFullUrl))
-				time.Sleep(utils.CalculateBackoff(i, initialBackoff, maxBackoff))
-				continue
-			}
-		}
-		err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
-		return response, err
-	}
-	return response, fmt.Errorf("failed to get response from %s after %d attempts", requestFullUrl, maxAttempts)
+	var response ReleaseBundleVersionsResponse
+	err = rbs.doHttpRequestWithRetry(requestFullUrl, &httpClientsDetails, &response)
+	return response, err
 }
 
 func GetReleaseBundleSearchGroupApi() string {
