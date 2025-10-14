@@ -54,6 +54,7 @@ var (
 	MaxBufferSize          = 50000
 	userAgent              = getDefaultUserAgent()
 	curlyParenthesesRegexp = regexp.MustCompile(`\{(\d+?)}`)
+	backoffRand            = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 func getVersion() string {
@@ -653,10 +654,18 @@ func urlContainsProjectKeyParam(url string) bool {
 }
 
 func CalculateBackoff(attempt int, initialDelay, maxDelay time.Duration) time.Duration {
-	randomGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))
+	if initialDelay < 0 {
+		initialDelay = 0
+	}
+	if maxDelay < 0 {
+		maxDelay = 0
+	}
+	if initialDelay > maxDelay {
+		initialDelay = maxDelay
+	}
 	expDelay := float64(initialDelay) * math.Pow(2, float64(attempt))
 	cappedDelay := math.Min(expDelay, float64(maxDelay))
-	jitterFactor := 1.0 + (randomGenerator.Float64()*0.4 - 0.2)
+	jitterFactor := 1.0 + (backoffRand.Float64()*0.4 - 0.2)
 	currentDelay := time.Duration(cappedDelay * jitterFactor)
 	if currentDelay < 0 {
 		currentDelay = 0
