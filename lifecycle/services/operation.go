@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	rtUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -12,6 +13,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const async = "async"
@@ -101,6 +103,43 @@ func handleResponse(operation ReleaseBundleOperation, resp *http.Response, body 
 	}
 
 	return body, errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusAccepted)
+}
+
+func (rbs *ReleaseBundlesService) doHttpRequestWithRetry(
+	requestFullUrl string,
+	httpClientsDetails *httputils.HttpClientDetails,
+	responsePtr interface{}) error {
+
+	for i := 0; i < maxAttempts; i++ {
+		resp, body, _, sendErr := rbs.client.SendGet(requestFullUrl, true, httpClientsDetails)
+		if sendErr != nil {
+			log.Debug(fmt.Sprintf("Attempt %d/%d: Network error during SendGet to %s: %v", i+1, maxAttempts, requestFullUrl, sendErr))
+			if i < maxAttempts-1 {
+				time.Sleep(utils.CalculateBackoff(i, initialBackoff, maxBackoff))
+				continue
+			}
+			return sendErr
+		}
+		log.Debug("Artifactory response status:", resp.Status)
+		switch resp.StatusCode {
+		case http.StatusOK:
+			return errorutils.CheckError(json.Unmarshal(body, responsePtr))
+		case http.StatusUnauthorized:
+			return ErrAuth
+		case http.StatusForbidden:
+			return ErrPermission
+		case http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+			if i < maxAttempts-1 {
+				log.Debug(fmt.Sprintf("Attempt %d/%d: Server error (%d) from %s. Retrying...", i+1, maxAttempts, resp.StatusCode, requestFullUrl))
+				time.Sleep(utils.CalculateBackoff(i, initialBackoff, maxBackoff))
+				continue
+			}
+			fallthrough
+		default:
+			return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
+		}
+	}
+	return fmt.Errorf("failed to get response from %s after %d attempts", requestFullUrl, maxAttempts)
 }
 
 type ReleaseBundleDetails struct {
