@@ -278,16 +278,9 @@ func (sm *XrayServicesManager) DownloadIndexer(localDirPath, localFileName strin
 	return indexerService.Download(localDirPath, localFileName)
 }
 
-func (sm *XrayServicesManager) CveRemediation(bom *cyclonedx.BOM, cves ...string) (*services.RemediationResponse, error) {
+func (sm *XrayServicesManager) RemediationByCve(bom *cyclonedx.BOM) (xrayUtils.CveRemediationResponse, error) {
 	remediationService := services.NewRemediationService(sm.client)
 	remediationService.XrayDetails = sm.config.GetServiceDetails()
 	remediationService.ScopeProjectKey = sm.scopeProjectKey
-	return remediationService.CveRemediation(bom, cves...)
-}
-
-func (sm *XrayServicesManager) DirectComponentsRemediation(bom *cyclonedx.BOM) (*services.RemediationResponse, error) {
-	remediationService := services.NewRemediationService(sm.client)
-	remediationService.XrayDetails = sm.config.GetServiceDetails()
-	remediationService.ScopeProjectKey = sm.scopeProjectKey
-	return remediationService.ArtifactRemediation(bom)
+	return remediationService.RemediationByCve(bom)
 }
