@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
@@ -22,6 +23,12 @@ type RetryExecutor struct {
 	// Number of milliseconds to sleep between retries.
 	RetriesIntervalMilliSecs int
 
+	// Use exponential backoff (double delay each retry)
+	UseExponentialBackoff bool
+
+	// Maximum backoff interval in milliseconds (0 = no limit)
+	MaxBackoffMilliSecs int
+
 	// Message to display when retrying.
 	ErrorMessage string
 
@@ -35,6 +42,8 @@ type RetryExecutor struct {
 func (runner *RetryExecutor) Execute() error {
 	var err error
 	var shouldRetry bool
+	currentInterval := runner.RetriesIntervalMilliSecs
+
 	for i := 0; i <= runner.MaxRetries; i++ {
 		// Run ExecutionHandler
 		shouldRetry, err = runner.ExecutionHandler()
@@ -47,12 +56,17 @@ func (runner *RetryExecutor) Execute() error {
 			return cancelledErr
 		}
 
-		// Print retry log message
 		runner.LogRetry(i, err)
 
-		// Going to sleep for RetryInterval milliseconds
-		if runner.RetriesIntervalMilliSecs > 0 && i < runner.MaxRetries {
-			time.Sleep(time.Millisecond * time.Duration(runner.RetriesIntervalMilliSecs))
+		if currentInterval > 0 && i < runner.MaxRetries {
+			time.Sleep(time.Millisecond * time.Duration(currentInterval))
+
+			if runner.UseExponentialBackoff {
+				currentInterval *= 2
+				if runner.MaxBackoffMilliSecs > 0 && currentInterval > runner.MaxBackoffMilliSecs {
+					currentInterval = runner.MaxBackoffMilliSecs
+				}
+			}
 		}
 	}
 	// If the error is not nil, return it and log the timeout message. Otherwise, generate new error.

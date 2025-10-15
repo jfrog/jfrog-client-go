@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -48,6 +50,42 @@ func GetTempDirBase() string {
 	return tempDirBase
 }
 
+func removeWithRetry(path string, removeFunc func(string) error) error {
+	maxRetries := 10
+	delay := 100 * time.Millisecond
+	maxDelay := 1000 * time.Millisecond
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		err := removeFunc(path)
+		if err == nil {
+			return nil
+		}
+
+		// Retry on Windows file locking errors (antivirus, process lock)
+		shouldRetry := false
+		if runtime.GOOS == "windows" {
+			if pathErr, ok := err.(*os.PathError); ok {
+				if errno, ok := pathErr.Err.(syscall.Errno); ok {
+					// ERROR_SHARING_VIOLATION=32, ERROR_LOCK_VIOLATION=33, ERROR_ACCESS_DENIED=5
+					shouldRetry = errno == 32 || errno == 33 || errno == 5
+				}
+			}
+		}
+
+		if !shouldRetry || attempt == maxRetries {
+			return err
+		}
+
+		time.Sleep(delay)
+		delay *= 2
+		if delay > maxDelay {
+			delay = maxDelay
+		}
+	}
+
+	return fmt.Errorf("failed to remove after %d attempts", maxRetries)
+}
+
 func RemoveTempDir(dirPath string) error {
 	exists, err := IsDirExists(dirPath, false)
 	if err != nil {
@@ -56,13 +94,15 @@ func RemoveTempDir(dirPath string) error {
 	if !exists {
 		return nil
 	}
-	if err = os.RemoveAll(dirPath); err == nil {
-		return nil
+
+	err = removeWithRetry(dirPath, os.RemoveAll)
+	if err != nil {
+		// On Windows, if locked by another process, remove contents only
+		// CleanOldDirs() will remove the directory itself later
+		return RemoveDirContents(dirPath)
 	}
-	// Sometimes removing the directory fails (in Windows) because it's locked by another process.
-	// That's a known issue, but its cause is unknown (golang.org/issue/30789).
-	// In this case, we'll only remove the contents of the directory, and let CleanOldDirs() remove the directory itself at a later time.
-	return RemoveDirContents(dirPath)
+
+	return nil
 }
 
 // Create a new temp file named "tempPrefix+timeStamp".

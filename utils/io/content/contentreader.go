@@ -9,10 +9,11 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"runtime"
 	"sort"
 	"sync"
+	"syscall"
 
-	"github.com/jfrog/gofrog/http/retryexecutor"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -98,22 +99,36 @@ func (cr *ContentReader) Reset() {
 }
 
 func removeFileWithRetry(filePath string) error {
-	// Check if file exists before attempting to remove
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		log.Debug("File does not exist: %s", filePath)
-		return nil
-	}
-	log.Debug("Attempting to remove file: %s", filePath)
-	executor := retryexecutor.RetryExecutor{
+	executor := utils.RetryExecutor{
 		Context:                  context.Background(),
-		MaxRetries:               5,
+		MaxRetries:               10,
 		RetriesIntervalMilliSecs: 100,
-		ErrorMessage:             "Failed to remove file",
-		LogMsgPrefix:             "Attempting removal",
+		UseExponentialBackoff:    true,
+		MaxBackoffMilliSecs:      1000,
+		ErrorMessage:             "Failed to remove temporary file",
+		LogMsgPrefix:             "Temp file removal",
 		ExecutionHandler: func() (bool, error) {
-			return false, errorutils.CheckError(os.Remove(filePath))
+			err := os.Remove(filePath)
+			if err == nil {
+				return false, nil
+			}
+
+			// Retry on Windows file locking errors (antivirus, process lock)
+			if runtime.GOOS == "windows" {
+				if pathErr, ok := err.(*os.PathError); ok {
+					if errno, ok := pathErr.Err.(syscall.Errno); ok {
+						// ERROR_SHARING_VIOLATION=32, ERROR_LOCK_VIOLATION=33, ERROR_ACCESS_DENIED=5
+						if errno == 32 || errno == 33 || errno == 5 {
+							return true, err
+						}
+					}
+				}
+			}
+
+			return false, errorutils.CheckError(err)
 		},
 	}
+
 	return executor.Execute()
 }
 
