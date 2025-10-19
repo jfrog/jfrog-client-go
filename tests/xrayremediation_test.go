@@ -3,11 +3,13 @@
 package tests
 
 import (
+	"strconv"
 	"testing"
 	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/stretchr/testify/require"
 
 	"github.com/jfrog/jfrog-client-go/xray/services"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 )
 
@@ -31,8 +33,10 @@ func createTestBOM() *cyclonedx.BOM {
 		Vulnerabilities: &[]cyclonedx.Vulnerability{
 			{
 				ID: "CVE-2023-1234",
-				Severity: cyclonedx.SeverityHigh,
-				Affects: &[]cyclonedx.Affect{
+				Ratings: &[]cyclonedx.VulnerabilityRating{
+					Severity: cyclonedx.SeverityCritical,
+				},
+				Affects: &[]cyclonedx.Affects{
 					{
 						Ref: "npm://test-component-1@1.0.0",
 					},
@@ -40,8 +44,10 @@ func createTestBOM() *cyclonedx.BOM {
 			},
 			{
 				ID: "CVE-2023-5678",
-				Severity: cyclonedx.SeverityCritical,
-				Affects: &[]cyclonedx.Affect{
+				Ratings: &[]cyclonedx.VulnerabilityRating{
+					Severity: cyclonedx.SeverityHigh,
+				},
+				Affects: &[]cyclonedx.Affects{
 					{
 						Ref: "npm://test-component-2@2.0.0",
 					},
@@ -71,12 +77,12 @@ func TestCveRemediation(t *testing.T) {
 
 	cves := []string{"CVE-2023-1234", "CVE-2023-5678"}
 
-	response, err := remediationService.RemediationByCve(createTestBOM())
+	cvesToRemediationOptions, err := remediationService.RemediationByCve(createTestBOM())
 	require.NoError(t, err)
-	require.NotNil(t, response)
+	require.NotNil(t, cvesToRemediationOptions)
 
-	require.Len(t, response.Remediations, 2)
-	for cve, remediationOptions := range response {
+	require.Len(t, cvesToRemediationOptions, 2)
+	for cve, remediationOptions := range cvesToRemediationOptions {
 		require.Contains(t, cves, cve)		
 		for _, remediation := range remediationOptions {
 			require.NotEmpty(t, remediation.Steps)
