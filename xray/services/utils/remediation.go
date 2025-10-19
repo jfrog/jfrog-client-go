@@ -49,9 +49,9 @@ type Option struct {
 }
 
 type OptionStep struct {
-	PkgVersion PackageVersionKey `json:"packageVersion"`
-	StepType   StepType          `json:"stepType"`
-	UpgradeTo  PackageVersionKey `json:"upgradeTo"`
+	PkgVersion PackageVersionKey `json:"PkgVersion"`
+	StepType   StepType          `json:"StepType"`
+	UpgradeTo  PackageVersionKey `json:"UpgradeTo"`
 	Badges     []string          `json:"badges,omitempty"`
 	Party      string            `json:"party,omitempty"`
 }
