@@ -49,11 +49,11 @@ type Option struct {
 }
 
 type OptionStep struct {
-	PkgVersion PackageVersionKey
-	UpgradeTo  PackageVersionKey
-	StepType   StepType
-	Badges     []string `json:"badges,omitempty"`
-	Party      string   `json:"party,omitempty"`
+	PkgVersion PackageVersionKey `json:"packageVersion"`
+	StepType   StepType          `json:"stepType"`
+	UpgradeTo  PackageVersionKey `json:"upgradeTo"`
+	Badges     []string          `json:"badges,omitempty"`
+	Party      string            `json:"party,omitempty"`
 }
 
 type CodeSnippet struct {

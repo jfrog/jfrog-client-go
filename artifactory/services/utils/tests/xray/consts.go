@@ -6,21 +6,51 @@ import (
 
 const CveRemediationResponse = `
 {
-  "remediation": {
-    "status": "success",
-    "message": "CVE remediation completed successfully"
-  }
-}
-`
-
-const ArtifactRemediationResponse = `
-{
-  "remediation": {
-    "status": "success",
-    "message": "Artifact remediation completed successfully"
-  }
-}
-`
+  "CVE-2023-1234": [
+    {
+      "type": "InLock",
+      "steps": [
+        {
+          "pkgVersion": {
+            "type": "npm",
+            "name": "test-component-1",
+            "version": "1.0.0",
+            "ecosystem": "generic"
+          },
+          "stepType": "FixVersion",
+          "upgradeTo": {
+            "type": "npm",
+            "name": "test-component-1",
+            "version": "1.0.1",
+            "ecosystem": "generic"
+          }
+        }
+      ]
+    }
+  ],
+  "CVE-2023-5678": [
+    {
+      "type": "InLock",
+      "steps": [
+        {
+          "pkgVersion": {
+            "type": "npm",
+            "name": "test-component-2",
+            "version": "2.0.0",
+            "ecosystem": "generic"
+          },
+          "stepType": "FixVersion",
+          "upgradeTo": {
+            "type": "npm",
+            "name": "test-component-2",
+            "version": "2.0.2",
+            "ecosystem": "generic"
+          }
+        }
+      ]
+    }
+  ]
+}`
 
 const ScanResponse = `
 {
