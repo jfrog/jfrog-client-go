@@ -33,11 +33,6 @@ func createTestBOM() *cyclonedx.BOM {
 		Vulnerabilities: &[]cyclonedx.Vulnerability{
 			{
 				ID: "CVE-2023-1234",
-				Ratings: &[]cyclonedx.VulnerabilityRating{[
-					{
-						Severity: cyclonedx.SeverityCritical,
-					},
-				]},
 				Affects: &[]cyclonedx.Affects{
 					{
 						Ref: "npm://test-component-1@1.0.0",
@@ -46,11 +41,6 @@ func createTestBOM() *cyclonedx.BOM {
 			},
 			{
 				ID: "CVE-2023-5678",
-				Ratings: &[]cyclonedx.VulnerabilityRating{[
-					{
-						Severity: cyclonedx.SeverityHigh,
-					},
-				]},
 				Affects: &[]cyclonedx.Affects{
 					{
 						Ref: "npm://test-component-2@2.0.0",
