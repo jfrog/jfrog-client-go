@@ -49,6 +49,7 @@ func (rs *RemediationService) RemediationByCve(bom *cyclonedx.BOM) (xrayUtils.Cv
 
 func (rs *RemediationService) getRemediationResponse(url string, requestBody []byte) ([]byte, error) {
 	httpDetails := rs.XrayDetails.CreateHttpClientDetails()
+	httpDetails.SetContentTypeApplicationJson()
 	resp, body, err := rs.client.SendPost(url, requestBody, &httpDetails)
 	if err != nil {
 		return nil, fmt.Errorf("failed while attempting to get remediation from Xray: %w", err)
