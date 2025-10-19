@@ -66,7 +66,7 @@ func TestCveRemediation(t *testing.T) {
 	}
 	remediationService := services.NewRemediationService(client)
 	remediationService.XrayDetails = xrayDetails
-	remediationService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) +  + "/xray/")
+	remediationService.XrayDetails.SetUrl("http://localhost:" + strconv.Itoa(xrayServerPort) + "/xray/")
 
 	cves := []string{"CVE-2023-1234", "CVE-2023-5678"}
 
