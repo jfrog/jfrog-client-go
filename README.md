@@ -53,6 +53,7 @@
       - [Triggering Build Scanning with JFrog Xray](#triggering-build-scanning-with-jfrog-xray)
       - [Discarding Old Builds](#discarding-old-builds)
       - [Cleaning Unreferenced Git LFS Files from Artifactory](#cleaning-unreferenced-git-lfs-files-from-artifactory)
+      - [Managing Trusted Keys in Artifactory](#managing-trusted-keys-in-artifactory)
       - [Executing AQLs](#executing-aqls)
       - [Reading Files in Artifactory](#reading-files-in-artifactory)
       - [Creating an Artifactory Access Token](#creating-an-artifactory-access-token)
@@ -266,6 +267,12 @@
         - [Creating New Onemodel Service Manager](#creating-new-onemodel-service-manager)
     - [Using Onemodel Services](#using-onemodel-services)
       - [Graphql query](#graphql-query)
+  - [Apptrust APIs](#apptrust-apis)
+    - [Creating Apptrust Service Manager](#creating-apptrust-service-manager)
+      - [Creating Apptrust Details](#creating-apptrust-details)
+      - [Creating Apptrust Service Config](#creating-apptrust-service-config)
+      - [Creating New Apptrust Service Manager](#creating-new-apptrust-service-manager)
+    - [Get Application Details](#get-application-details)
 
 ## General
 
@@ -827,6 +834,40 @@ reader,err := rtManager.GetUnreferencedGitLfsFiles(params)
 defer reader.Close()
 rtManager.DeleteFiles(reader)
 ```
+
+#### Managing Trusted Keys in Artifactory
+
+The `TrustedKeysService` provides functionality for managing trusted keys in JFrog Artifactory. This service allows you to upload public keys that can be used for evidence verification.
+
+```go
+// Create a new TrustedKeysService
+trustedKeysService := services.NewTrustedKeysService(rtManager.GetJfrogHttpClient())
+
+// Set service details
+trustedKeysService.SetServiceDetails(rtManager.GetServiceDetails())
+
+// Upload a trusted key
+params := services.TrustedKeyParams{
+    Alias:     "my-key-alias",
+    PublicKey: "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----",
+}
+
+response, err := trustedKeysService.UploadTrustedKey(params)
+if err != nil {
+    // Handle error with enhanced error messages
+    log.Error("Failed to upload trusted key:", err)
+    return
+}
+
+log.Info("Trusted key uploaded successfully:", response.Alias)
+```
+
+**Error Handling:**
+The `UploadTrustedKey` method provides enhanced error messages for common scenarios:
+- **403 Forbidden** - Insufficient permissions to upload trusted keys
+- **404 Not Found** - Trusted keys API endpoint not available
+- **401 Unauthorized** - Invalid or expired authentication token
+- **400 Bad Request** - Duplicate alias or other validation errors
 
 #### Executing AQLs
 
@@ -3450,4 +3491,89 @@ queryDetails := onemodelService.QueryDetails{
 }
 
 body, err = onemodelManager.GraphqlQuery(queryDetails)
+```
+
+## Apptrust APIs
+
+### Creating Apptrust Service Manager
+
+#### Creating Apptrust Details
+
+```go
+apptrustDetails := auth.NewApptrustDetails()
+apptrustDetails.SetUrl("http://localhost:8081/apptrust")
+apptrustDetails.SetAccessToken("access-token")
+// if client certificates are required
+apptrustDetails.SetClientCertPath("path/to/.cer")
+apptrustDetails.SetClientCertKeyPath("path/to/.key")
+```
+
+#### Creating Apptrust Service Config
+
+```go
+serviceConfig, err := config.NewConfigBuilder().
+    SetServiceDetails(apptrustDetails).
+    SetCertificatesPath(apptrustDetails.GetClientCertPath()).
+    SetInsecureTls(apptrustDetails.IsInsecureTls()).
+    // Add [Context](https://golang.org/pkg/context/)
+    // SetContext(ctx).
+    // Optionally overwrite the default HTTP retries, which is set to 3.
+    // SetHttpRetries(8).
+    Build()
+if err != nil {
+    return err
+}
+```
+
+#### Creating New Apptrust Service Manager
+
+```go
+apptrustManager, err := apptrust.New(serviceConfig)
+if err != nil {
+    return err
+}
+```
+
+### Get Application Details
+
+```go
+applicationKey := "your-application-key"
+application, err := apptrustManager.GetApplicationDetails(applicationKey)
+if err != nil {
+    return err
+}
+
+// Access application details
+fmt.Printf("Application Name: %s\n", application.ApplicationName)
+fmt.Printf("Application Key: %s\n", application.ApplicationKey)
+fmt.Printf("Project Name: %s\n", application.ProjectName)
+fmt.Printf("Project Key: %s\n", application.ProjectKey)
+```
+
+### Get Application Version Promotions
+
+```go
+applicationKey := "your-application-key"
+applicationVersion := "1.0.0"
+
+// Optional query parameters
+queryParams := map[string]string{
+    "order_by":   "created",
+    "order_asc":  "false",
+    "limit":      "100",
+    "offset":     "0",
+    "filter_by":  "status=COMPLETED",
+}
+
+promotions, err := apptrustManager.GetApplicationVersionPromotions(applicationKey, applicationVersion, queryParams)
+if err != nil {
+    return err
+}
+
+// Access promotion details
+fmt.Printf("Total promotions: %d\n", promotions.Total)
+for _, promotion := range promotions.Promotions {
+    fmt.Printf("Status: %s, Source: %s, Target: %s, Created: %s\n", 
+        promotion.Status, promotion.SourceStage, promotion.TargetStage, promotion.Created)
+}
 ```

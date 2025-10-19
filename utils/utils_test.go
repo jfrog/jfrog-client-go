@@ -2,10 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/stretchr/testify/assert"
@@ -330,6 +332,102 @@ func TestSetEnvWithResetCallback(t *testing.T) {
 			assert.Equal(t, tt.args.value, os.Getenv(tt.args.key))
 			assert.NoError(t, resetCallback())
 			tt.finish()
+		})
+	}
+}
+
+func calculateExpectedBounds(attempt int, initialDelay, maxDelay time.Duration) (minExpected, maxExpected time.Duration) {
+	expDelayFloat := float64(initialDelay) * math.Pow(2, float64(attempt))
+	cappedDelayFloat := math.Min(expDelayFloat, float64(maxDelay))
+	minJitterFactor := 0.8
+	maxJitterFactor := 1.2
+	minExpected = time.Duration(cappedDelayFloat * minJitterFactor)
+	maxExpected = time.Duration(cappedDelayFloat * maxJitterFactor)
+	if minExpected < 0 {
+		minExpected = 0
+	}
+	return
+}
+
+func TestCalculateBackoff(t *testing.T) {
+	testCases := []struct {
+		name         string
+		attempt      int
+		initialDelay time.Duration
+		maxDelay     time.Duration
+	}{
+		{
+			name:         "Attempt 0 - No cap",
+			attempt:      0,
+			initialDelay: 10 * time.Millisecond,
+			maxDelay:     1 * time.Second,
+		},
+		{
+			name:         "Attempt 1 - No cap",
+			attempt:      1,
+			initialDelay: 10 * time.Millisecond,
+			maxDelay:     1 * time.Second,
+		},
+		{
+			name:         "Attempt 2 - No cap",
+			attempt:      2,
+			initialDelay: 10 * time.Millisecond,
+			maxDelay:     1 * time.Second,
+		},
+		{
+			name:         "Attempt 5 - No cap",
+			attempt:      5,
+			initialDelay: 10 * time.Millisecond,
+			maxDelay:     1 * time.Second,
+		},
+		{
+			name:         "Attempt 0 - With cap (initial delay is capped)",
+			attempt:      0,
+			initialDelay: 50 * time.Millisecond,
+			maxDelay:     30 * time.Millisecond,
+		},
+		{
+			name:         "Attempt 3 - With cap (exponential delay capped)",
+			attempt:      3,
+			initialDelay: 100 * time.Millisecond,
+			maxDelay:     500 * time.Millisecond,
+		},
+		{
+			name:         "Attempt 10 - Max delay reached",
+			attempt:      10,
+			initialDelay: 1 * time.Millisecond,
+			maxDelay:     200 * time.Millisecond,
+		},
+		{
+			name:         "Zero initial delay",
+			attempt:      2,
+			initialDelay: 0 * time.Millisecond,
+			maxDelay:     1 * time.Second,
+		},
+		{
+			name:         "Negative attempt (should still work due to float64 conversion)",
+			attempt:      -1,
+			initialDelay: 10 * time.Millisecond,
+			maxDelay:     1 * time.Second,
+		},
+	}
+	const numIterations = 1000
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			minExpected, maxExpected := calculateExpectedBounds(tc.attempt, tc.initialDelay, tc.maxDelay)
+
+			for i := 0; i < numIterations; i++ {
+				actualDelay := CalculateBackoff(tc.attempt, tc.initialDelay, tc.maxDelay)
+				assert.Truef(t, actualDelay >= minExpected,
+					"Iteration %d: Actual delay %v is less than minimum expected %v (Test: %s)",
+					i, actualDelay, minExpected, tc.name)
+				assert.Truef(t, actualDelay < maxExpected || (actualDelay == maxExpected && maxExpected == 0),
+					"Iteration %d: Actual delay %v is greater than or equal to maximum expected %v (Test: %s)",
+					i, actualDelay, maxExpected, tc.name)
+				assert.Truef(t, actualDelay >= 0,
+					"Iteration %d: Actual delay %v is negative (Test: %s)",
+					i, actualDelay, tc.name)
+			}
 		})
 	}
 }

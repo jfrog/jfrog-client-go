@@ -14,7 +14,6 @@ import (
 
 func TestXrayWatch(t *testing.T) {
 	initXrayTest(t)
-	t.Skip("JGC-408 - Failed to update Watch: Resources was not found")
 	t.Run("testXrayWatchAll", testXrayWatchAll)
 	t.Run("testXrayWatchSelectedRepos", testXrayWatchSelectedRepos)
 	t.Run("testXrayWatchBuildsByPattern", testXrayWatchBuildsByPattern)
@@ -119,6 +118,7 @@ func testXrayWatchAll(t *testing.T) {
 }
 
 func testXrayWatchSelectedRepos(t *testing.T) {
+	t.Skip("JGC-408 - Failed to update Watch: Resources was not found")
 	policy1Name := fmt.Sprintf("%s-%s", "policy1-pattern", getRunId())
 	err := createDummyPolicy(policy1Name)
 	assert.NoError(t, err)

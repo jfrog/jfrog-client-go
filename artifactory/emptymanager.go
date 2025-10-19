@@ -111,6 +111,7 @@ type ArtifactoryServicesManager interface {
 	CalculateStorageInfo() error
 	ImportReleaseBundle(string) error
 	GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error)
+	UploadTrustedKey(params services.TrustedKeyParams) (*services.TrustedKeyResponse, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -491,7 +492,27 @@ func (esm *EmptyArtifactoryServicesManager) GetPackageLeadFile(services.LeadFile
 	panic("Failed: Method is not implemented")
 }
 
+func (esm *EmptyArtifactoryServicesManager) UploadTrustedKey(services.TrustedKeyParams) (*services.TrustedKeyResponse, error) {
+	panic("Failed: Method is not implemented")
+}
+
 func (esm *EmptyArtifactoryServicesManager) DeleteBuildInfo(*buildinfo.BuildInfo, string, int) error {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetRepositoriesStats(string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetJPDsStats(string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetReleaseBundlesStats(string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetTokenDetails(string, string) ([]byte, error) {
 	panic("Failed: Method is not implemented")
 }
 
