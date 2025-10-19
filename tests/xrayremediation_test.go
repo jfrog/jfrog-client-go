@@ -14,41 +14,40 @@ import (
 )
 
 func createTestBOM() *cyclonedx.BOM {
-	return &cyclonedx.BOM{
-		Components: &[]cyclonedx.Component{
-			{
-				BOMRef:  "npm://test-component-1@1.0.0",
-				Type:    cyclonedx.ComponentTypeLibrary,
-				Name:    "test-component-1",
-				Version: "1.0.0",
-				
-			},
-			{
-				BOMRef:  "npm://test-component-2@2.0.0",
-				Type:    cyclonedx.ComponentTypeLibrary,
-				Name:    "test-component-2",
-				Version: "2.0.0",
-			},
+	bom := cyclonedx.NewBOM()
+	bom.Components: &[]cyclonedx.Component{
+		{
+			BOMRef:  "npm://test-component-1@1.0.0",
+			Type:    cyclonedx.ComponentTypeLibrary,
+			Name:    "test-component-1",
+			Version: "1.0.0",			
 		},
-		Vulnerabilities: &[]cyclonedx.Vulnerability{
-			{
-				ID: "CVE-2023-1234",
-				Affects: &[]cyclonedx.Affects{
-					{
-						Ref: "npm://test-component-1@1.0.0",
-					},
+		{
+			BOMRef:  "npm://test-component-2@2.0.0",
+			Type:    cyclonedx.ComponentTypeLibrary,
+			Name:    "test-component-2",
+			Version: "2.0.0",
+		},
+	}
+	bom.Vulnerabilities: &[]cyclonedx.Vulnerability{
+		{
+			ID: "CVE-2023-1234",
+			Affects: &[]cyclonedx.Affects{
+				{
+					Ref: "npm://test-component-1@1.0.0",
 				},
 			},
-			{
-				ID: "CVE-2023-5678",
-				Affects: &[]cyclonedx.Affects{
-					{
-						Ref: "npm://test-component-2@2.0.0",
-					},
+		},
+		{
+			ID: "CVE-2023-5678",
+			Affects: &[]cyclonedx.Affects{
+				{
+					Ref: "npm://test-component-2@2.0.0",
 				},
 			},
 		},
 	}
+	return bom
 }
 
 
