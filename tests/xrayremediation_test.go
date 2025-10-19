@@ -15,7 +15,7 @@ import (
 
 func createTestBOM() *cyclonedx.BOM {
 	bom := cyclonedx.NewBOM()
-	bom.Components: &[]cyclonedx.Component{
+	bom.Components = &[]cyclonedx.Component{
 		{
 			BOMRef:  "npm://test-component-1@1.0.0",
 			Type:    cyclonedx.ComponentTypeLibrary,
@@ -29,7 +29,7 @@ func createTestBOM() *cyclonedx.BOM {
 			Version: "2.0.0",
 		},
 	}
-	bom.Vulnerabilities: &[]cyclonedx.Vulnerability{
+	bom.Vulnerabilities = &[]cyclonedx.Vulnerability{
 		{
 			ID: "CVE-2023-1234",
 			Affects: &[]cyclonedx.Affects{
