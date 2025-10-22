@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -367,6 +368,135 @@ func TestReleaseBundleAnnotationCases(t *testing.T) {
 			testAnnotate(t, test.projectKey, test.tag, test.properties, test.delProperties, test.expectError)
 		})
 	}
+}
+
+func TestReleaseBundlesSearchGroups(t *testing.T) {
+	mockJSONResponse := `{
+        "release_bundles": [
+            {
+                "repository_key": "release-bundles-v2",
+                "project_key": "default",
+                "project_name": "Default",
+                "service_id": "jfrt@mock",
+                "created": "2025-10-09T11:38:36.002Z",
+                "release_bundle_name": "rb-sample-group-1",
+                "release_bundle_version_latest": "1.0",
+                "release_bundle_versions_count": 1
+            },
+            {
+                "repository_key": "release-bundles-v2",
+                "project_key": "project-b",
+                "project_name": "Project B",
+                "service_id": "jfrt@mock",
+                "created": "2025-10-10T12:00:00.000Z",
+                "release_bundle_name": "rb-sample-group-2",
+                "release_bundle_version_latest": "2.0",
+                "release_bundle_versions_count": 5
+            }
+        ],
+        "total": 2,
+        "limit": 5,
+        "offset": 0
+    }`
+
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		parsedURL, err := url.Parse(r.RequestURI)
+		assert.NoError(t, err)
+		assert.Equal(t, "/"+lifecycle.GetReleaseBundleSearchGroupApi(), parsedURL.Path, "URI path mismatch")
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write([]byte(mockJSONResponse))
+		assert.NoError(t, err)
+	})
+	defer mockServer.Close()
+
+	optionalQueryParams := lifecycle.GetSearchOptionalQueryParams{
+		Limit:    5,
+		Offset:   0,
+		Includes: "",
+		OrderBy:  "",
+		OrderAsc: true,
+	}
+
+	response, err := rbService.ReleaseBundlesSearchGroups(optionalQueryParams)
+	assert.NoError(t, err)
+	assert.NotNil(t, response)
+
+	assert.Len(t, response.ReleaseBundleSearchGroup, 2, "Expected two release bundle groups in response")
+	assert.Equal(t, 2, response.Total, "Expected total to be 2")
+	assert.Equal(t, 5, response.Limit, "Expected limit to be 5")
+	assert.Equal(t, 0, response.Offset, "Expected offset to be 0")
+
+	item1 := response.ReleaseBundleSearchGroup[0]
+	assert.Equal(t, "rb-sample-group-1", item1.ReleaseBundleName)
+	assert.Equal(t, "release-bundles-v2", item1.RepositoryKey)
+	assert.Equal(t, "default", item1.ProjectKey)
+	assert.Equal(t, "Default", item1.ProjectName)
+	assert.Equal(t, "jfrt@mock", item1.ServiceID)
+	parsedTime1, _ := time.Parse(time.RFC3339Nano, "2025-10-09T11:38:36.002Z")
+	assert.True(t, item1.Created.Equal(parsedTime1), "Created time for item 1 mismatch")
+	assert.Equal(t, "1.0", item1.ReleaseBundleVersionLatest)
+	assert.Equal(t, 1, item1.ReleaseBundleVersionsCount)
+
+	item2 := response.ReleaseBundleSearchGroup[1]
+	assert.Equal(t, "rb-sample-group-2", item2.ReleaseBundleName)
+	assert.Equal(t, "project-b", item2.ProjectKey)
+	assert.Equal(t, "Project B", item2.ProjectName)
+	assert.Equal(t, "jfrt@mock", item2.ServiceID)
+	parsedTime2, _ := time.Parse(time.RFC3339Nano, "2025-10-10T12:00:00.000Z")
+	assert.True(t, item2.Created.Equal(parsedTime2), "Created time for item 2 mismatch")
+	assert.Equal(t, "2.0", item2.ReleaseBundleVersionLatest)
+	assert.Equal(t, 5, item2.ReleaseBundleVersionsCount)
+}
+
+func TestReleaseBundlesSearchVersions(t *testing.T) {
+	releaseBundleName := "sample-release-bundle"
+	mockJSONResponse := `{
+        "release_bundles": [
+            {
+                "repository_key": "release-bundles-v2",
+                "status": "COMPLETED",
+                "service_id": "jfrt@...",
+                "created": "2025-10-09T11:38:36.002Z",
+                "release_bundle_name": "rb-sample-version",
+                "release_bundle_version": "1.0",
+                "release_status": "COMPLETED"
+            }
+        ],
+        "total": 1,
+        "limit": 5,
+        "offset": 0
+    }`
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		parsedURL, err := url.Parse(r.RequestURI)
+		assert.NoError(t, err)
+		expectedPath := "/" + lifecycle.GetReleaseBundleSearchVersionsApi(releaseBundleName)
+		assert.Equal(t, expectedPath, parsedURL.Path, "URI path mismatch for versions API")
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write([]byte(mockJSONResponse))
+		assert.NoError(t, err)
+	})
+	defer mockServer.Close()
+	optionalQueryParams := lifecycle.GetSearchOptionalQueryParams{
+		Limit:    5,
+		Offset:   0,
+		Includes: "",
+		OrderBy:  "",
+		OrderAsc: true,
+	}
+	response, err := rbService.ReleaseBundlesSearchVersions(releaseBundleName, optionalQueryParams)
+	assert.NoError(t, err)
+	assert.NotNil(t, response)
+	assert.Len(t, response.ReleaseBundles, 1, "Expected one release bundle version in response")
+	assert.Equal(t, 1, response.Total, "Expected total to be 1")
+	assert.Equal(t, 5, response.Limit, "Expected limit to be 5")
+	assert.Equal(t, 0, response.Offset, "Expected offset to be 0")
+	item := response.ReleaseBundles[0]
+	assert.Equal(t, "rb-sample-version", item.ReleaseBundleName)
+	assert.Equal(t, "1.0", item.ReleaseBundleVersion)
+	assert.Equal(t, "COMPLETED", item.Status)
+	assert.Equal(t, "COMPLETED", item.ReleaseStatus)
 }
 
 func buildAnnotationOperationParams(rbDetails lifecycle.ReleaseBundleDetails, projectKey, bundleTag, properties, delProperties,

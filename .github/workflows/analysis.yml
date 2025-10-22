@@ -8,10 +8,17 @@ on:
 
 jobs:
   Static-Check:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
@@ -19,10 +26,17 @@ jobs:
       - name: Run golangci lint
         uses: jfrog/.github/actions/golangci-lint@main
   Go-Sec:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
@@ -31,17 +45,24 @@ jobs:
         uses: jfrog/.github/actions/gosec-scanner@main
 
   No-Replace:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - name: ubuntu
+            version: 24.04
+    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
-      - name: Check for uncommented replace instructions
+      - name: Check for uncommented replace instructions on JFrog dependencies
         run: |
-          if grep -E '^[[:space:]]*replace[[:space:]]' go.mod; then
-            echo "❌ Found uncommented replace directives in go.mod"
-            echo "All replace directives should be commented out"
+          if grep -E '^[[:space:]]*replace[[:space:]]+github\.com/jfrog' go.mod; then
+            echo "❌ Found uncommented replace directives for JFrog dependencies in go.mod"
+            echo "All replace directives for JFrog dependencies should be commented out"
             exit 1
           else
-            echo "✅ No uncommented replace directives found in go.mod"
+            echo "✅ No uncommented replace directives for JFrog dependencies found in go.mod"
           fi

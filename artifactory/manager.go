@@ -162,6 +162,12 @@ func (sm *ArtifactoryServicesManagerImp) GetPackageLeadFile(leadFileParams servi
 	return packageService.GetPackageLeadFile(leadFileParams)
 }
 
+func (sm *ArtifactoryServicesManagerImp) UploadTrustedKey(params services.TrustedKeyParams) (*services.TrustedKeyResponse, error) {
+	trustedKeysService := services.NewTrustedKeysService(sm.client)
+	trustedKeysService.SetServiceDetails(sm.config.GetServiceDetails())
+	return trustedKeysService.UploadTrustedKey(params)
+}
+
 func (sm *ArtifactoryServicesManagerImp) GetAllRepositories() (*[]services.RepositoryDetails, error) {
 	repositoriesService := services.NewRepositoriesService(sm.client)
 	repositoriesService.ArtDetails = sm.config.GetServiceDetails()

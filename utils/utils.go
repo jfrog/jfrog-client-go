@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand"
 	"net/url"
 	"os"
 	"path"
@@ -12,6 +14,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jfrog/jfrog-client-go/utils/io"
 
@@ -51,6 +54,8 @@ var (
 	MaxBufferSize          = 50000
 	userAgent              = getDefaultUserAgent()
 	curlyParenthesesRegexp = regexp.MustCompile(`\{(\d+?)}`)
+	// #nosec G404
+	backoffRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 func getVersion() string {
@@ -647,4 +652,24 @@ func AppendScopedProjectKeyParam(url, projectKey string) string {
 func urlContainsProjectKeyParam(url string) bool {
 	// check if the URL already contains the project key query parameter
 	return len(url) > 0 && strings.Contains(url, ProjectKeyQueryParam)
+}
+
+func CalculateBackoff(attempt int, initialDelay, maxDelay time.Duration) time.Duration {
+	if initialDelay < 0 {
+		initialDelay = 0
+	}
+	if maxDelay < 0 {
+		maxDelay = 0
+	}
+	if initialDelay > maxDelay {
+		initialDelay = maxDelay
+	}
+	expDelay := float64(initialDelay) * math.Pow(2, float64(attempt))
+	cappedDelay := math.Min(expDelay, float64(maxDelay))
+	jitterFactor := 1.0 + (backoffRand.Float64()*0.4 - 0.2)
+	currentDelay := time.Duration(cappedDelay * jitterFactor)
+	if currentDelay < 0 {
+		currentDelay = 0
+	}
+	return currentDelay
 }
