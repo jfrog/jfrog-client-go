@@ -6,99 +6,58 @@ import (
 
 type DirectDownloadParams struct {
 	*utils.CommonParams
-	Pattern            string
-	Target             string
-	Flat               bool
-	Recursive          bool
-	Exclusions         []string
-	SkipChecksum       bool
-	MinSplitSizeMB     int64
-	SplitCount         int
-	Retries            int
-	RetryWaitMilliSecs int
-	SyncDeletesPath    string
-	Quiet              bool
-}
+	Flat                    bool
+	Explode                 bool
+	Symlink                 bool
+	ValidateSymlink         bool
+	BypassArchiveInspection bool
+	// Min split size in Kilobytes
+	MinSplitSize int64
+	SplitCount   int
+	SkipChecksum bool
 
-func (ddp *DirectDownloadParams) GetPattern() string {
-	return ddp.Pattern
-}
-
-func (ddp *DirectDownloadParams) SetPattern(pattern string) {
-	ddp.Pattern = pattern
-}
-
-func (ddp *DirectDownloadParams) GetTarget() string {
-	return ddp.Target
-}
-
-func (ddp *DirectDownloadParams) SetTarget(target string) {
-	ddp.Target = target
+	// Optional fields (Sha256,Size) to avoid AQL request:
+	Sha256 string
+	// Size in bytes
+	Size *int64
 }
 
 func (ddp *DirectDownloadParams) IsFlat() bool {
 	return ddp.Flat
 }
 
-func (ddp *DirectDownloadParams) SetFlat(flat bool) {
-	ddp.Flat = flat
+func (ddp *DirectDownloadParams) IsBypassArchiveInspection() bool {
+	return ddp.BypassArchiveInspection
 }
 
-func (ddp *DirectDownloadParams) IsRecursive() bool {
-	return ddp.Recursive
+func (ddp *DirectDownloadParams) IsSymlink() bool {
+	return ddp.Symlink
 }
 
-func (ddp *DirectDownloadParams) SetRecursive(recursive bool) {
-	ddp.Recursive = recursive
+func (ddp *DirectDownloadParams) ValidateSymlinks() bool {
+	return ddp.ValidateSymlink
 }
 
-func (ddp *DirectDownloadParams) GetExclusions() []string {
-	return ddp.Exclusions
+func (ddp *DirectDownloadParams) IsExplode() bool {
+	return ddp.Explode
 }
 
-func (ddp *DirectDownloadParams) SetExclusions(exclusions []string) {
-	ddp.Exclusions = exclusions
+func (ddp *DirectDownloadParams) GetFile() *utils.CommonParams {
+	return ddp.CommonParams
 }
 
 func (ddp *DirectDownloadParams) IsSkipChecksum() bool {
 	return ddp.SkipChecksum
 }
 
-func (ddp *DirectDownloadParams) SetSkipChecksum(skipChecksum bool) {
-	ddp.SkipChecksum = skipChecksum
+func (ddp *DirectDownloadParams) IsExcludeArtifacts() bool {
+	return ddp.ExcludeArtifacts
 }
 
-func (ddp *DirectDownloadParams) GetSyncDeletesPath() string {
-	return ddp.SyncDeletesPath
+func (ddp *DirectDownloadParams) IsIncludeDeps() bool {
+	return ddp.IncludeDeps
 }
 
-func (ddp *DirectDownloadParams) SetSyncDeletesPath(syncDeletesPath string) {
-	ddp.SyncDeletesPath = syncDeletesPath
-}
-
-func (ddp *DirectDownloadParams) GetRetries() int {
-	return ddp.Retries
-}
-
-func (ddp *DirectDownloadParams) SetRetries(retries int) {
-	ddp.Retries = retries
-}
-
-func (ddp *DirectDownloadParams) IsQuiet() bool {
-	return ddp.Quiet
-}
-
-func (ddp *DirectDownloadParams) SetQuiet(quiet bool) {
-	ddp.Quiet = quiet
-}
-
-func NewDirectDownloadParams() *DirectDownloadParams {
-	return &DirectDownloadParams{
-		CommonParams:       &utils.CommonParams{},
-		MinSplitSizeMB:     5120,
-		SplitCount:         3,
-		Retries:            3,
-		RetryWaitMilliSecs: 0,
-		Recursive:          true,
-	}
+func NewDirectDownloadParams() DirectDownloadParams {
+	return DirectDownloadParams{CommonParams: &utils.CommonParams{}, MinSplitSize: 5120, SplitCount: 3}
 }
