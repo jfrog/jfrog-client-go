@@ -433,8 +433,7 @@ func (dds *DirectDownloadService) collectFilesRecursively(repo, basePath, filePa
 
 		items, err := dds.listDirectoryItems(repo, currentDir)
 		if err != nil {
-			log.Error("Failed to list directory:", currentDir, err)
-			continue
+			return errorutils.CheckError(err)
 		}
 
 		for _, item := range items {
