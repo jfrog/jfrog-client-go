@@ -477,3 +477,12 @@ func NewWatchRepository(name string, binMgrID string, repoType WatchRepositoryTy
 		RepoType: repoType,
 	}
 }
+
+func NewWatchRepositoryByName(name string) WatchRepository {
+	return WatchRepository{
+		Name:     name,
+		Filters: watchFilters{
+			Names: []string{name},
+		},
+	}
+}
