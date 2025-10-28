@@ -22,7 +22,7 @@ import (
 	clientio "github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/io/content"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	httputils "github.com/jfrog/jfrog-client-go/utils/io/httputils"
+	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
@@ -153,6 +153,9 @@ func (dds *DirectDownloadService) prepareTasks(producer parallel.Runner, expecte
 					errorsQueue.AddError(err)
 					continue
 				}
+				if dds.Progress != nil {
+					dds.Progress.IncGeneralProgressTotalBy(int64(totalTasks))
+				}
 				totalTasks += dds.produceTasks(tasks, producer, errorsQueue)
 				continue
 			}
@@ -163,6 +166,10 @@ func (dds *DirectDownloadService) prepareTasks(producer parallel.Runner, expecte
 				log.Error(err)
 				errorsQueue.AddError(err)
 				continue
+			}
+			// Set progress bar total
+			if dds.Progress != nil {
+				dds.Progress.IncGeneralProgressTotalBy(int64(len(tasks)))
 			}
 			totalTasks += dds.produceTasks(tasks, producer, errorsQueue)
 		}
@@ -200,6 +207,7 @@ func (dds *DirectDownloadService) createBuildDownloadTasks(params DirectDownload
 
 	artifacts, err := dds.getArtifactsFromBuild(&params)
 	if err != nil {
+		errorsQueue.AddError(err)
 		return nil, err
 	}
 
@@ -215,12 +223,18 @@ func (dds *DirectDownloadService) createBuildDownloadTasks(params DirectDownload
 			path = parts[1]
 		} else {
 			// If no repo in path, use the pattern's repo
-			patternRepo, _, _ := dds.parsePattern(params.GetPattern())
+			patternRepo, _, err := dds.parsePattern(params.GetPattern())
+			if err != nil {
+				errorsQueue.AddError(err)
+				log.Warn("Failed to parse pattern for artifact:", artifactPath, "Error:", err)
+				continue
+			}
 			repo = patternRepo
 			path = artifactPath
 		}
 
 		if repo == "" || path == "" {
+			errorsQueue.AddError(err)
 			log.Warn("Skipping invalid artifact path:", artifactPath)
 			continue
 		}
@@ -243,6 +257,7 @@ func (dds *DirectDownloadService) createBuildDownloadTasks(params DirectDownload
 func (dds *DirectDownloadService) createPatternDownloadTasks(params DirectDownloadParams, successCounters []int, errorsQueue *clientutils.ErrorsQueue) ([]parallel.TaskFunc, error) {
 	repo, artifactPath, err := dds.parsePattern(params.GetPattern())
 	if err != nil {
+		errorsQueue.AddError(err)
 		return nil, err
 	}
 
@@ -251,35 +266,35 @@ func (dds *DirectDownloadService) createPatternDownloadTasks(params DirectDownlo
 	// Check if pattern ends with "/" or if we should treat it as a directory
 	isDirectoryPattern := strings.HasSuffix(artifactPath, "/") || strings.HasSuffix(params.GetPattern(), "/")
 
-	if isDirectoryPattern {
+	switch {
+	case isDirectoryPattern:
 		// Handle directory download
-		// Remove trailing slash for directory operations
 		dirPath := strings.TrimSuffix(artifactPath, "/")
-
-		// List files in the directory
 		filesToDownload, err := dds.getFilesFromDirectory(repo, dirPath, &params)
 		if err != nil {
+			errorsQueue.AddError(err)
 			return nil, err
 		}
-
 		for _, filePath := range filesToDownload {
 			if !dds.isExcluded(filePath, params.GetExclusions()) {
 				task := dds.createSingleDownloadTask(repo, filePath, &params, successCounters)
 				tasks = append(tasks, task)
 			}
 		}
-	} else if dds.containsWildcards(artifactPath) {
+
+	case dds.containsWildcards(artifactPath):
 		// Handle wildcard patterns
 		filesToDownload, err := dds.getFilesMatchingPattern(repo, artifactPath, &params)
 		if err != nil {
+			errorsQueue.AddError(err)
 			return nil, err
 		}
-
 		for _, filePath := range filesToDownload {
 			task := dds.createSingleDownloadTask(repo, filePath, &params, successCounters)
 			tasks = append(tasks, task)
 		}
-	} else {
+
+	default:
 		// Single file download
 		if !dds.isExcluded(artifactPath, params.GetExclusions()) {
 			task := dds.createSingleDownloadTask(repo, artifactPath, &params, successCounters)
@@ -293,7 +308,26 @@ func (dds *DirectDownloadService) createPatternDownloadTasks(params DirectDownlo
 // createSingleDownloadTask creates a task function for downloading a single file
 func (dds *DirectDownloadService) createSingleDownloadTask(repo, artifactPath string, params *DirectDownloadParams, successCounters []int) parallel.TaskFunc {
 	return func(threadId int) error {
+		logMsgPrefix := clientutils.GetLogMsgPrefix(threadId, dds.DryRun)
+		// Build the full artifact path for logging
+		fullArtifactPath := fmt.Sprintf("%s/%s", repo, artifactPath)
+		// Calculate local path for logging
+		targetPath := params.GetTarget()
+		if targetPath == "" {
+			targetPath = "./"
+		}
+		var localPath string
+		if params.IsFlat() {
+			localPath = filepath.Join(targetPath, filepath.Base(artifactPath))
+		} else {
+			localPath = filepath.Join(targetPath, artifactPath)
+		}
+		log.Info(fmt.Sprintf("%sDownloading %q to %q", logMsgPrefix, fullArtifactPath, localPath))
 		success, err := dds.downloadSingleFile(repo, artifactPath, params)
+		// Increment progress bar after a download attempt
+		if dds.Progress != nil {
+			dds.Progress.IncrementGeneralProgress()
+		}
 		if err != nil {
 			return err
 		}
@@ -310,7 +344,7 @@ func (dds *DirectDownloadService) getFilesFromDirectory(repo, dirPath string, pa
 
 	if params.IsRecursive() {
 		// For recursive downloads, collect all files in subdirectories
-		err := dds.collectAllFilesRecursively(repo, dirPath, params, &filesToDownload)
+		err := dds.collectAllFilesRecursively(repo, dirPath, &filesToDownload)
 		return filesToDownload, err
 	}
 
@@ -329,7 +363,7 @@ func (dds *DirectDownloadService) getFilesFromDirectory(repo, dirPath string, pa
 }
 
 // collectAllFilesRecursively collects all files in a directory and its subdirectories
-func (dds *DirectDownloadService) collectAllFilesRecursively(repo, basePath string, params *DirectDownloadParams, result *[]string) error {
+func (dds *DirectDownloadService) collectAllFilesRecursively(repo, basePath string, result *[]string) error {
 	// Stack for iterative directory traversal
 	dirsToProcess := []string{basePath}
 
@@ -512,6 +546,9 @@ func (dds *DirectDownloadService) downloadSingleFile(repo, artifactPath string, 
 	}
 
 	if dds.DryRun {
+		if dds.Progress != nil {
+			dds.Progress.IncrementGeneralProgress()
+		}
 		log.Info("[Dry run] Would download:", downloadUrl, "to", localPath)
 		return true, nil
 	}
@@ -522,7 +559,6 @@ func (dds *DirectDownloadService) downloadSingleFile(repo, artifactPath string, 
 		return false, errorutils.CheckError(err)
 	}
 
-	// Perform the download
 	resp, err := dds.performFileDownload(downloadUrl, localPath, params)
 	if err != nil {
 		return false, err
@@ -532,17 +568,13 @@ func (dds *DirectDownloadService) downloadSingleFile(repo, artifactPath string, 
 		return false, errorutils.CheckErrorf("Failed to download %s: HTTP %d", downloadUrl, resp.StatusCode)
 	}
 
-	// Handle post-download operations
 	if err := dds.handlePostDownload(localPath, params, resp); err != nil {
 		return false, err
 	}
 
-	// Save summary if needed
 	if dds.saveSummary {
 		dds.saveDownloadSummary(downloadUrl, localPath, repo, artifactPath, resp)
 	}
-
-	log.Info("Downloaded:", downloadUrl, "to", localPath)
 	return true, nil
 }
 
@@ -591,11 +623,6 @@ func (dds *DirectDownloadService) shouldUseConcurrentDownload(downloadUrl string
 
 // downloadFileConcurrently downloads a file using concurrent chunks
 func (dds *DirectDownloadService) downloadFileConcurrently(downloadUrl, localPath string, fileSize int64, params *DirectDownloadParams, httpClientsDetails *httputils.HttpClientDetails) (*http.Response, error) {
-	log.Info(fmt.Sprintf("Downloading %s (%s) using %d parallel chunks",
-		filepath.Base(localPath),
-		formatFileSize(fileSize),
-		params.SplitCount))
-
 	concurrentDownloadFlags := httpclient.ConcurrentDownloadFlags{
 		DownloadPath:  downloadUrl,
 		FileName:      filepath.Base(localPath),
@@ -618,7 +645,6 @@ func (dds *DirectDownloadService) downloadFileRegularly(downloadUrl, localPath s
 		SkipChecksum:  params.IsSkipChecksum(),
 	}
 
-	// The 4th parameter is isExplode, 5th is bypassArchiveInspection
 	return dds.client.DownloadFile(downloadFileDetails, "", httpClientsDetails, params.IsExplode(), params.IsBypassArchiveInspection())
 }
 
@@ -676,7 +702,10 @@ func (dds *DirectDownloadService) validateChecksumFromHeaders(localPath string, 
 // handleSymlink handles symlink creation if the downloaded file is a symlink placeholder
 func (dds *DirectDownloadService) handleSymlink(localPath string, params *DirectDownloadParams) error {
 	content, err := os.ReadFile(localPath)
-	if err != nil || len(content) == 0 {
+	if err != nil {
+		return err
+	}
+	if len(content) == 0 {
 		return nil
 	}
 
@@ -875,19 +904,6 @@ func (dds *DirectDownloadService) validateChecksum(fileInfo *utils.FileInfo, loc
 
 	log.Debug("Checksum validation passed for:", localPath)
 	return nil
-}
-
-func formatFileSize(size int64) string {
-	const unit = 1024
-	if size < unit {
-		return fmt.Sprintf("%d B", size)
-	}
-	div, exp := int64(unit), 0
-	for n := size / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
 }
 
 // getBuildInfo fetches build information using the Build API
