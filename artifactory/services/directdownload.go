@@ -689,6 +689,12 @@ func (dds *DirectDownloadService) handleSymlink(localPath string, params *Direct
 	target := strings.TrimSpace(strings.TrimPrefix(contentStr, "symlink:"))
 	log.Debug("Detected symlink placeholder. Target:", target)
 
+	cleanTarget := filepath.Clean(target)
+	// Prevent path traversal attacks
+	if strings.Contains(cleanTarget, "..") {
+		return errorutils.CheckErrorf("Security: Symlink target contains path traversal: %s", target)
+	}
+
 	// Validate symlink if requested
 	if params.ValidateSymlinks() && !fileutils.IsPathExists(target, false) {
 		return errorutils.CheckErrorf("Symlink validation failed, target doesn't exist: %s", target)
