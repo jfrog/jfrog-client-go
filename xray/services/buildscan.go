@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/jfrog/gofrog/version"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -17,13 +19,25 @@ import (
 )
 
 const (
-	BuildScanAPI                          = "api/v2/ci/build"
-	xrayScanBuildNotSelectedForIndexing   = "is not selected for indexing"
-	XrayScanBuildNoFailBuildPolicy        = "No Xray “Fail build in case of a violation” policy rule has been defined on this build"
+	BuildScanAPI                        = "api/v2/ci/build"
+	xrayScanBuildNotSelectedForIndexing = "is not selected for indexing"
+
+	XrayScanBuildNoFailBuildPolicy = "No Xray “Fail build in case of a violation” policy rule has been defined on this build"
+	XrayScanBuildNotFoundFormat    = "Build %s number %d wasn't found in Artifactory"
+
 	projectKeyQueryParam                  = "projectKey="
 	includeVulnerabilitiesQueryParam      = "include_vulnerabilities="
 	buildScanResultsPostApiMinXrayVersion = "3.77.0"
 	buildScanResultsPostApi               = "scanResult"
+
+	retryInterval = 5 * time.Second
+)
+
+var (
+	retryAbleErrors = []*regexp.Regexp{
+		// Xray is still indexing the build (asynchronous indexing, can take time until it is available).
+		regexp.MustCompile("Build %s number %d wasn't found in Artifactory"),
+	}
 )
 
 type BuildScanService struct {
@@ -42,8 +56,7 @@ func (bs *BuildScanService) ScanBuild(params XrayBuildParams, includeVulnerabili
 	if errorutils.CheckError(err) != nil {
 		return
 	}
-	err = bs.triggerScan(paramsBytes)
-	if err != nil {
+	if err = bs.triggerScanWithRetries(paramsBytes, params.Retries); err != nil {
 		// If the includeVulnerabilities flag is true and error is "No Xray Fail build...." continue to getBuildScanResults to get vulnerabilities
 		if includeVulnerabilities && strings.Contains(err.Error(), XrayScanBuildNoFailBuildPolicy) {
 			noFailBuildPolicy = true
@@ -57,6 +70,49 @@ func (bs *BuildScanService) ScanBuild(params XrayBuildParams, includeVulnerabili
 	}
 	scanResponse, err = bs.getBuildScanResults(getResultsReqFunc, params)
 	return
+}
+
+func (bs *BuildScanService) triggerScanWithRetries(paramsBytes []byte, maxRetries int) error {
+	if maxRetries <= 0 {
+		maxRetries = 1
+	}
+	pollingExecutor := &httputils.PollingExecutor{
+		Timeout:         time.Duration(maxRetries) * retryInterval,
+		PollingInterval: retryInterval,
+		PollingAction: func() (shouldStop bool, responseBody []byte, err error) {
+			if e := bs.triggerScan(paramsBytes); e != nil {
+				if isRetryAbleBuildScanError(e) {
+					// Retry error, continue polling.
+					log.Debug(fmt.Sprintf("Build scan request failed: %s. Retrying...", e.Error()))
+					return
+				} else {
+					// Non-retryable error, stop polling and return the error.
+					err = e
+				}
+			}
+			// If we reached here, the request is done.
+			shouldStop = true
+			return
+		},
+		MsgPrefix: "Trigger Build Scan...",
+	}
+	_, err := pollingExecutor.Execute()
+	return err
+}
+
+func isRetryAbleBuildScanError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := err.Error()
+	// Check for known retryable errors (contains or same as template regex).
+	for _, retryableErr := range retryAbleErrors {
+		matched, matchErr := regexp.MatchString(retryableErr.String(), errMsg)
+		if matchErr == nil && matched {
+			return true
+		}
+	}
+	return false
 }
 
 func (bs *BuildScanService) triggerScan(paramsBytes []byte) error {
@@ -176,6 +232,7 @@ type XrayBuildParams struct {
 	BuildNumber string `json:"build_number,omitempty"`
 	Project     string `json:"project,omitempty"`
 	Rescan      bool   `json:"rescan,omitempty"`
+	Retries     int    `json:"-"`
 }
 
 type RequestBuildScanResponse struct {
