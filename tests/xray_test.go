@@ -89,15 +89,16 @@ func TestScanBuild(t *testing.T) {
 		buildName   string
 		buildNumber string
 		xrayVersion string
+		triggerRetries int
 	}{
-		{name: "get-api", buildName: "test-get", buildNumber: "3", xrayVersion: "3.75.12"},
-		{name: "post-api", buildName: "test-post", buildNumber: "3", xrayVersion: "3.77.0"},
+		{name: "get-api", buildName: "test-get", buildNumber: "3", xrayVersion: "3.75.12", triggerRetries: 1},
+		{name: "post-api", buildName: "test-post", buildNumber: "3", xrayVersion: "3.77.0", triggerRetries: 2},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			xrayDetails.version = test.xrayVersion
 			testsBuildScanService.XrayDetails = xrayDetails
-			scanResponse, noFailBuildPolicy, err := testsBuildScanService.ScanBuild(services.XrayBuildParams{BuildName: test.buildName, BuildNumber: test.buildNumber}, true)
+			scanResponse, noFailBuildPolicy, err := testsBuildScanService.ScanBuild(services.XrayBuildParams{BuildName: test.buildName, BuildNumber: test.buildNumber}, true, test.triggerRetries)
 			assert.NoError(t, err)
 			assert.True(t, noFailBuildPolicy)
 			assert.NotNil(t, scanResponse)
