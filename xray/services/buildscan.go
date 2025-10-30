@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/jfrog/gofrog/version"
@@ -17,13 +18,21 @@ import (
 )
 
 const (
-	BuildScanAPI                          = "api/v2/ci/build"
-	xrayScanBuildNotSelectedForIndexing   = "is not selected for indexing"
-	XrayScanBuildNoFailBuildPolicy        = "No Xray “Fail build in case of a violation” policy rule has been defined on this build"
+	BuildScanAPI                        = "api/v2/ci/build"
+	xrayScanBuildNotSelectedForIndexing = "is not selected for indexing"
+
+	XrayScanBuildNoFailBuildPolicy = "No Xray “Fail build in case of a violation” policy rule has been defined on this build"
+	XrayScanBuildNotFoundFormat    = "Build %s number %d wasn't found in Artifactory"
+
 	projectKeyQueryParam                  = "projectKey="
 	includeVulnerabilitiesQueryParam      = "include_vulnerabilities="
 	buildScanResultsPostApiMinXrayVersion = "3.77.0"
 	buildScanResultsPostApi               = "scanResult"
+)
+
+var (
+	// Artifactory is still indexing the build (asynchronous indexing, can take time until it is available for Xray).
+	buildNotFoundRegex = regexp.MustCompile(`Build (.+) number (.+) wasn't found in Artifactory`)
 )
 
 type BuildScanService struct {
@@ -37,13 +46,8 @@ func NewBuildScanService(client *jfroghttpclient.JfrogHttpClient) *BuildScanServ
 	return &BuildScanService{client: client}
 }
 
-func (bs *BuildScanService) ScanBuild(params XrayBuildParams, includeVulnerabilities bool) (scanResponse *BuildScanResponse, noFailBuildPolicy bool, err error) {
-	paramsBytes, err := json.Marshal(params)
-	if errorutils.CheckError(err) != nil {
-		return
-	}
-	err = bs.triggerScan(paramsBytes)
-	if err != nil {
+func (bs *BuildScanService) ScanBuild(params XrayBuildParams, includeVulnerabilities bool, triggerRetries int) (scanResponse *BuildScanResponse, noFailBuildPolicy bool, err error) {
+	if err = bs.triggerScan(params, triggerRetries); err != nil {
 		// If the includeVulnerabilities flag is true and error is "No Xray Fail build...." continue to getBuildScanResults to get vulnerabilities
 		if includeVulnerabilities && strings.Contains(err.Error(), XrayScanBuildNoFailBuildPolicy) {
 			noFailBuildPolicy = true
@@ -51,7 +55,7 @@ func (bs *BuildScanService) ScanBuild(params XrayBuildParams, includeVulnerabili
 			return
 		}
 	}
-	getResultsReqFunc, err := bs.prepareGetResultsRequest(params, paramsBytes, includeVulnerabilities)
+	getResultsReqFunc, err := bs.prepareGetResultsRequest(params, includeVulnerabilities)
 	if err != nil {
 		return
 	}
@@ -59,35 +63,72 @@ func (bs *BuildScanService) ScanBuild(params XrayBuildParams, includeVulnerabili
 	return
 }
 
-func (bs *BuildScanService) triggerScan(paramsBytes []byte) error {
+func isArtifactoryBuildNotFoundError(resp *http.Response, body []byte) error {
+	if resp.StatusCode != http.StatusNotFound {
+		return nil
+	}
+	buildScanResponse := RequestBuildScanResponse{}
+	if err := json.Unmarshal(body, &buildScanResponse); err != nil {
+		// Unable to parse response body = actual 404 error.
+		log.Debug("Failed to parse Xray build scan response:", err)
+		return nil
+	}
+	if buildNotFoundRegex.MatchString(buildScanResponse.Info) {
+		return errors.New(buildScanResponse.Info)
+	}
+	return nil
+}
+
+func (bs *BuildScanService) triggerScan(params XrayBuildParams, retries int) error {
+	paramsBytes, err := json.Marshal(params)
+	if errorutils.CheckError(err) != nil {
+		return err
+	}
 	httpClientsDetails := bs.XrayDetails.CreateHttpClientDetails()
 	httpClientsDetails.SetContentTypeApplicationJson()
 	url := bs.XrayDetails.GetUrl() + BuildScanAPI
 
-	resp, body, err := bs.client.SendPost(utils.AppendScopedProjectKeyParam(url, bs.ScopeProjectKey), paramsBytes, &httpClientsDetails)
-	if err != nil {
-		return err
+	if retries <= 0 {
+		retries = 1
 	}
-
-	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
-		return err
+	retryExecutor := utils.RetryExecutor{
+		MaxRetries:               retries,
+		RetriesIntervalMilliSecs: int(defaultSyncSleepInterval.Milliseconds()),
+		LogMsgPrefix:             "trigger build scan ",
+		ExecutionHandler: func() (shouldRetry bool, err error) {
+			resp, body, err := bs.client.SendPost(utils.AppendScopedProjectKeyParam(url, bs.ScopeProjectKey), paramsBytes, &httpClientsDetails)
+			if err != nil {
+				return false, err
+			}
+			if err = isArtifactoryBuildNotFoundError(resp, body); err != nil {
+				return true, err
+			}
+			if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusCreated); err != nil {
+				return false, err
+			}
+			buildScanResponse := RequestBuildScanResponse{}
+			if err = json.Unmarshal(body, &buildScanResponse); err != nil {
+				return false, errorutils.CheckError(err)
+			}
+			buildScanInfo := buildScanResponse.Info
+			if strings.Contains(buildScanInfo, xrayScanBuildNotSelectedForIndexing) ||
+				strings.Contains(buildScanInfo, XrayScanBuildNoFailBuildPolicy) {
+				return false, errors.New(buildScanResponse.Info)
+			}
+			log.Info(buildScanInfo)
+			return false, nil
+		},
 	}
-	buildScanResponse := RequestBuildScanResponse{}
-	if err = json.Unmarshal(body, &buildScanResponse); err != nil {
-		return errorutils.CheckError(err)
-	}
-	buildScanInfo := buildScanResponse.Info
-	if strings.Contains(buildScanInfo, xrayScanBuildNotSelectedForIndexing) ||
-		strings.Contains(buildScanInfo, XrayScanBuildNoFailBuildPolicy) {
-		return errors.New(buildScanResponse.Info)
-	}
-	log.Info(buildScanInfo)
-	return nil
+	return retryExecutor.Execute()
 }
 
 // prepareGetResultsRequest creates a function that requests for the scan results from Xray.
 // Starting from Xray version 3.77.0, there's a new POST API that supports special characters in the build-name and build-number fields.
-func (bs *BuildScanService) prepareGetResultsRequest(params XrayBuildParams, paramsBytes []byte, includeVulnerabilities bool) (getResultsReqFunc func() (*http.Response, []byte, error), err error) {
+func (bs *BuildScanService) prepareGetResultsRequest(params XrayBuildParams, includeVulnerabilities bool) (getResultsReqFunc func() (*http.Response, []byte, error), err error) {
+	paramsBytes, err := json.Marshal(params)
+	if errorutils.CheckError(err) != nil {
+		return
+	}
 	xrayVer, err := bs.XrayDetails.GetVersion()
 	if err != nil {
 		return
