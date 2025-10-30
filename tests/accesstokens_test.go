@@ -161,14 +161,6 @@ func testRefreshTokenTest(t *testing.T) {
 	assert.Empty(t, token.ReferenceToken)
 }
 
-func createRefreshableAccessTokenParams(expiredIn uint) services.CreateTokenParams {
-	tokenParams := services.CreateTokenParams{}
-	tokenParams.ExpiresIn = &expiredIn
-	tokenParams.Refreshable = utils.Pointer(true)
-	tokenParams.Audience = "*@*"
-	return tokenParams
-}
-
 func testGetTokens(t *testing.T) {
 	initAccessTest(t)
 
