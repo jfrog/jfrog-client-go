@@ -241,10 +241,12 @@ func testGetTokens(t *testing.T) {
 	assert.NotNil(t, tokens)
 	assert.Len(t, tokens, 2)
 	assert.Equal(t, "test-token-1", tokens[0].TokenId)
-	assert.Equal(t, "admin", tokens[0].Username)
+	assert.Equal(t, "jfrt@test/users/admin", tokens[0].Subject)
+	assert.Equal(t, "jfrt@test", tokens[0].Issuer)
 	assert.True(t, tokens[0].Refreshable)
 	assert.Equal(t, "test-token-2", tokens[1].TokenId)
-	assert.Equal(t, "user1", tokens[1].Username)
+	assert.Equal(t, "jfrt@test/users/user1", tokens[1].Subject)
+	assert.Equal(t, "jfrt@test", tokens[1].Issuer)
 	assert.False(t, tokens[1].Refreshable)
 
 	// Test GetTokens with parameters
@@ -310,7 +312,8 @@ func testGetTokenByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, token)
 	assert.Equal(t, "test-token-1", token.TokenId)
-	assert.Equal(t, "admin", token.Username)
+	assert.Equal(t, "jfrt@test/users/admin", token.Subject)
+	assert.Equal(t, "jfrt@test", token.Issuer)
 	assert.True(t, token.Refreshable)
 	assert.Equal(t, "Test token 1", token.Description)
 
