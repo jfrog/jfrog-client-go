@@ -70,6 +70,7 @@ func isArtifactoryBuildNotFoundError(resp *http.Response, body []byte) error {
 	buildScanResponse := RequestBuildScanResponse{}
 	if err := json.Unmarshal(body, &buildScanResponse); err != nil {
 		// Unable to parse response body = actual 404 error.
+		log.Debug("Failed to parse Xray build scan response:", err)
 		return nil
 	}
 	if buildNotFoundRegex.MatchString(buildScanResponse.Info) {
