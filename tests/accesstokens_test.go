@@ -186,33 +186,31 @@ func testGetTokens(t *testing.T) {
 			assert.Equal(t, "true", query.Get("descending_order"))
 		}
 
-		// Mock response
-		tokens := []services.TokenInfo{
-			{
-				TokenId:     "test-token-1",
-				Subject:     "jfrt@test/users/admin",
-				Username:    "admin",
-				Description: "Test token 1",
-				IssuedAt:    1640995200,
-				ExpiresAt:   1641081600,
-				Refreshable: true,
-				Scope:       "applied-permissions/admin",
-				ProjectKey:  "",
-			},
-			{
-				TokenId:     "test-token-2",
-				Subject:     "jfrt@test/users/user1",
-				Username:    "user1",
-				Description: "Test token 2",
-				IssuedAt:    1640995200,
-				ExpiresAt:   1641081600,
-				Refreshable: false,
-				Scope:       "applied-permissions/user",
-				ProjectKey:  "test-project",
+		// Mock response - wrapped in TokenInfos structure
+		response := services.TokenInfos{
+			Tokens: []services.TokenInfo{
+				{
+					TokenId:     "test-token-1",
+					Subject:     "jfrt@test/users/admin",
+					Username:    "admin",
+					Description: "Test token 1",
+					IssuedAt:    1640995200,
+					Refreshable: true,
+					Scope:       "applied-permissions/admin",
+				},
+				{
+					TokenId:     "test-token-2",
+					Subject:     "jfrt@test/users/user1",
+					Username:    "user1",
+					Description: "Test token 2",
+					IssuedAt:    1640995200,
+					Refreshable: false,
+					Scope:       "applied-permissions/user",
+				},
 			},
 		}
 
-		responseBody, err := json.Marshal(tokens)
+		responseBody, err := json.Marshal(response)
 		assert.NoError(t, err)
 
 		w.WriteHeader(http.StatusOK)
@@ -279,10 +277,8 @@ func testGetTokenByID(t *testing.T) {
 			Username:    "admin",
 			Description: "Test token 1",
 			IssuedAt:    1640995200,
-			ExpiresAt:   1641081600,
 			Refreshable: true,
 			Scope:       "applied-permissions/admin",
-			ProjectKey:  "",
 		}
 
 		responseBody, err := json.Marshal(token)
