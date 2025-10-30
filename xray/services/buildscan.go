@@ -36,7 +36,7 @@ const (
 var (
 	retryAbleErrors = []*regexp.Regexp{
 		// Xray is still indexing the build (asynchronous indexing, can take time until it is available).
-		regexp.MustCompile(".*Build .+ number %d wasn't found in Artifactory"),
+		regexp.MustCompile(`.*Build .+ number \d+ wasn't found in Artifactory`),
 	}
 )
 
