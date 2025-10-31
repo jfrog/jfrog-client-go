@@ -186,3 +186,86 @@ func createErrorHandlerFuncVersion(t *testing.T) (http.HandlerFunc, *int) {
 		w.WriteHeader(http.StatusNotFound)
 	}, &requestNum
 }
+
+type DeleteEvidenceMockHandlerConfig struct {
+	StatusCode              int
+	CapturedSubjectRepoPath *string
+	CapturedEvidenceName    *string
+}
+
+func createDeleteEvidenceMockHandler(t *testing.T, config *DeleteEvidenceMockHandlerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/v1/evidence/"):
+			trimmed := strings.TrimPrefix(r.URL.Path, "/api/v1/evidence/")
+			lastSlash := strings.LastIndex(trimmed, "/")
+			if lastSlash < 0 {
+				t.Errorf("Unexpected delete path format: %s", r.URL.Path)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			subjectRepoPathEscaped := trimmed[:lastSlash]
+			evidenceNameEscaped := trimmed[lastSlash+1:]
+
+			subjectRepoPath, err := url.PathUnescape(subjectRepoPathEscaped)
+			assert.NoError(t, err)
+			evidenceName, err := url.PathUnescape(evidenceNameEscaped)
+			assert.NoError(t, err)
+
+			if config.CapturedSubjectRepoPath != nil {
+				*config.CapturedSubjectRepoPath = subjectRepoPath
+			}
+			if config.CapturedEvidenceName != nil {
+				*config.CapturedEvidenceName = evidenceName
+			}
+
+			if config.StatusCode != 0 {
+				w.WriteHeader(config.StatusCode)
+			} else {
+				w.WriteHeader(http.StatusNoContent)
+			}
+		default:
+			t.Errorf("Unexpected request URI: %s", r.RequestURI)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}
+}
+
+func TestDeleteEvidence_Success(t *testing.T) {
+	subjectRepoPath := "repo/path with space/a/b"
+	evidenceName := "evidence name.json"
+
+	var capturedSubject string
+	var capturedName string
+
+	handler := createDeleteEvidenceMockHandler(t, &DeleteEvidenceMockHandlerConfig{
+		StatusCode:              http.StatusNoContent,
+		CapturedSubjectRepoPath: &capturedSubject,
+		CapturedEvidenceName:    &capturedName,
+	})
+	mockServer, evdService := createMockServer(t, handler)
+	defer mockServer.Close()
+
+	err := evdService.DeleteEvidence(subjectRepoPath, evidenceName)
+	assert.NoError(t, err)
+	assert.Equal(t, subjectRepoPath, capturedSubject)
+	assert.Equal(t, evidenceName, capturedName)
+}
+
+func TestDeleteEvidence_NotFound(t *testing.T) {
+	handler := createDeleteEvidenceMockHandler(t, &DeleteEvidenceMockHandlerConfig{StatusCode: http.StatusNotFound})
+	mockServer, evdService := createMockServer(t, handler)
+	defer mockServer.Close()
+
+	err := evdService.DeleteEvidence("repo/a", "missing.json")
+	assert.Error(t, err)
+}
+
+func TestDeleteEvidence_ServerError(t *testing.T) {
+	handler := createDeleteEvidenceMockHandler(t, &DeleteEvidenceMockHandlerConfig{StatusCode: http.StatusInternalServerError})
+	mockServer, evdService := createMockServer(t, handler)
+	defer mockServer.Close()
+
+	err := evdService.DeleteEvidence("repo/a", "boom.json")
+	assert.Error(t, err)
+}
