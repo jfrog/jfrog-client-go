@@ -13,7 +13,6 @@ type PackageVersionKey struct {
 type Ecosystem string
 
 const (
-	// Related ecosystems to packages
 	GenericEcosystem Ecosystem = "generic"
 	DebianEcosystem  Ecosystem = "debian"
 	UbuntuEcosystem  Ecosystem = "ubuntu"
