@@ -191,11 +191,11 @@ func (sm *XrayServicesManager) GetImportGraphResults(scanID string) (*services.S
 // BuildScan scans a published build-info with Xray.
 // 'scanResponse' - Xray scan output of the requested build scan.
 // 'noFailBuildPolicy' - Indicates that the Xray API returned a "No Xray Fail build...." error
-func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
+func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool, triggerRetries int) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
 	buildScanService := services.NewBuildScanService(sm.client)
 	buildScanService.XrayDetails = sm.config.GetServiceDetails()
 	buildScanService.ScopeProjectKey = sm.scopeProjectKey
-	return buildScanService.ScanBuild(params, includeVulnerabilities)
+	return buildScanService.ScanBuild(params, includeVulnerabilities, triggerRetries)
 }
 
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
