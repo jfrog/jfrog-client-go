@@ -674,7 +674,7 @@ func virtualTerraformTest(t *testing.T) {
 	setVirtualRepositoryBaseParams(&tvp.VirtualRepositoryBaseParams, true)
 	setCacheVirtualRepositoryParams(&tvp.CommonCacheVirtualRepositoryParams, true)
 
-	err = testsUpdateVirtualRepositoryService.Terraform(avp)
+	err = testsUpdateVirtualRepositoryService.Terraform(tvp)
 	if assert.NoError(t, err, "Failed to update "+repoKey) {
 		validateRepoConfig(t, repoKey, tvp)
 	}
