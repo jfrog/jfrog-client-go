@@ -4,6 +4,54 @@ import (
 	xscServices "github.com/jfrog/jfrog-client-go/xsc/services"
 )
 
+const CveRemediationResponse = `
+{
+  "CVE-2023-1234": [
+    {
+      "type": "InLock",
+      "steps": [
+        {
+          "pkgVersion": {
+            "type": "npm",
+            "name": "test-component-1",
+            "version": "1.0.0",
+            "ecosystem": "generic"
+          },
+          "stepType": "FixVersion",
+          "upgradeTo": {
+            "type": "npm",
+            "name": "test-component-1",
+            "version": "1.0.1",
+            "ecosystem": "generic"
+          }
+        }
+      ]
+    }
+  ],
+  "CVE-2023-5678": [
+    {
+      "type": "InLock",
+      "steps": [
+        {
+          "pkgVersion": {
+            "type": "npm",
+            "name": "test-component-2",
+            "version": "2.0.0",
+            "ecosystem": "generic"
+          },
+          "stepType": "FixVersion",
+          "upgradeTo": {
+            "type": "npm",
+            "name": "test-component-2",
+            "version": "2.0.2",
+            "ecosystem": "generic"
+          }
+        }
+      ]
+    }
+  ]
+}`
+
 const ScanResponse = `
 {
 "scan_id": "3472b4e2-bddc-11ee-a9c9-acde48001122",
