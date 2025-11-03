@@ -1,6 +1,7 @@
 package xray
 
 import (
+	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
@@ -275,4 +276,11 @@ func (sm *XrayServicesManager) DownloadIndexer(localDirPath, localFileName strin
 	indexerService.XrayDetails = sm.config.GetServiceDetails()
 	indexerService.ScopeProjectKey = sm.scopeProjectKey
 	return indexerService.Download(localDirPath, localFileName)
+}
+
+func (sm *XrayServicesManager) RemediationByCve(bom *cyclonedx.BOM) (xrayUtils.CveRemediationResponse, error) {
+	remediationService := services.NewRemediationService(sm.client)
+	remediationService.XrayDetails = sm.config.GetServiceDetails()
+	remediationService.ScopeProjectKey = sm.scopeProjectKey
+	return remediationService.RemediationByCve(bom)
 }
