@@ -294,13 +294,14 @@ func buildNePathPart(includeRoot bool) string {
 }
 
 func buildInnerQueryPart(triple RepoPathFile) string {
-	innerQueryPattern := `{"$and":` +
-		`[{` +
-		`"repo":%s,` +
-		`"path":%s,` +
-		`"name":%s` +
-		`}]}`
-	return fmt.Sprintf(innerQueryPattern, getAqlValue(triple.repo), getAqlValue(triple.path), getAqlValue(triple.file))
+	conditions := []string{}
+	if triple.repo != "" && triple.repo != "*" && triple.repo != "**" {
+		conditions = append(conditions, fmt.Sprintf(`"repo":%s`, getAqlValue(triple.repo)))
+	}
+	conditions = append(conditions, fmt.Sprintf(`"path":%s`, getAqlValue(triple.path)))
+	conditions = append(conditions, fmt.Sprintf(`"name":%s`, getAqlValue(triple.file)))
+	innerConditions := strings.Join(conditions, ",")
+	return fmt.Sprintf(`{"$and":[{%s}]}`, innerConditions)
 }
 
 func buildInnerArchiveQueryPart(triple RepoPathFile, archivePath, archiveName string) string {
