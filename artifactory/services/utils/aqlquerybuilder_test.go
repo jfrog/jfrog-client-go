@@ -30,6 +30,8 @@ var buildAqlSearchQueryDataProvider = []struct {
 		`{"path":{"$ne":"."},"$or":[{"$and":[{"repo":"repo-local2","path":{"$match":"a*b*c/dd"},"name":{"$match":"*"}}]}]}`},
 	{"*/a*b*c/dd/", false,
 		`{"path":{"$ne":"."},"$or":[{"$and":[{"path":{"$match":"*a*b*c/dd"},"name":{"$match":"*"}}]}]}`},
+	{"**/a-.*.tar.gz", false,
+		`{"$or":[{"$and":[{"path":{"$match":"**"},"name":{"$match":"a-.*.tar.gz"}}]},{"$and":[{"path":".","name":{"$match":"*a-.*.tar.gz"}}]}]}`},
 }
 
 func TestBuildAqlSearchQuery(t *testing.T) {
