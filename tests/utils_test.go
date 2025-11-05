@@ -794,8 +794,10 @@ func setAdditionalRepositoryBaseParams(params *services.AdditionalRepositoryBase
 func setCargoRepositoryParams(params *services.CargoRepositoryParams, isUpdate bool) {
 	if !isUpdate {
 		params.CargoAnonymousAccess = clientutils.Pointer(true)
+		params.CargoInternalIndex = clientutils.Pointer(true)
 	} else {
 		params.CargoAnonymousAccess = clientutils.Pointer(false)
+		params.CargoInternalIndex = clientutils.Pointer(false)
 	}
 }
 
@@ -872,6 +874,14 @@ func setRpmRepositoryParams(params *services.RpmRepositoryParams, isUpdate bool)
 		params.CalculateYumMetadata = clientutils.Pointer(false)
 		params.EnableFileListsIndexing = clientutils.Pointer(false)
 		params.YumGroupFileNames = ""
+	}
+}
+
+func setTerraformRepositoryParams(params *services.TerraformRepositoryParams, isUpdate bool) {
+	if !isUpdate {
+		params.TerraformType = "provider"
+	} else {
+		params.TerraformType = "module"
 	}
 }
 
