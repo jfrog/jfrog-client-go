@@ -1,6 +1,7 @@
 package xray
 
 import (
+	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/xray/services"
@@ -191,11 +192,11 @@ func (sm *XrayServicesManager) GetImportGraphResults(scanID string) (*services.S
 // BuildScan scans a published build-info with Xray.
 // 'scanResponse' - Xray scan output of the requested build scan.
 // 'noFailBuildPolicy' - Indicates that the Xray API returned a "No Xray Fail build...." error
-func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
+func (sm *XrayServicesManager) BuildScan(params services.XrayBuildParams, includeVulnerabilities bool, triggerRetries int) (scanResponse *services.BuildScanResponse, noFailBuildPolicy bool, err error) {
 	buildScanService := services.NewBuildScanService(sm.client)
 	buildScanService.XrayDetails = sm.config.GetServiceDetails()
 	buildScanService.ScopeProjectKey = sm.scopeProjectKey
-	return buildScanService.ScanBuild(params, includeVulnerabilities)
+	return buildScanService.ScanBuild(params, includeVulnerabilities, triggerRetries)
 }
 
 // GenerateVulnerabilitiesReport returns a Xray report response of the requested report
@@ -275,4 +276,11 @@ func (sm *XrayServicesManager) DownloadIndexer(localDirPath, localFileName strin
 	indexerService.XrayDetails = sm.config.GetServiceDetails()
 	indexerService.ScopeProjectKey = sm.scopeProjectKey
 	return indexerService.Download(localDirPath, localFileName)
+}
+
+func (sm *XrayServicesManager) RemediationByCve(bom *cyclonedx.BOM) (xrayUtils.CveRemediationResponse, error) {
+	remediationService := services.NewRemediationService(sm.client)
+	remediationService.XrayDetails = sm.config.GetServiceDetails()
+	remediationService.ScopeProjectKey = sm.scopeProjectKey
+	return remediationService.RemediationByCve(bom)
 }
