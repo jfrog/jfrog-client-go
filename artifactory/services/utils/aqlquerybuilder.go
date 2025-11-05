@@ -297,7 +297,7 @@ func buildInnerQueryPart(triple RepoPathFile) string {
 	conditions := make([]string, 0, 3)
 	// Below Condition will handle to not include the unnecessary n.repo = ? or n.repo = ? or n.repo = ? or
 	// n.repo = ? or n.repo = ? or n.repo = ? or n.repo if repo is similar to "*" or "**", in the AQL query
-	if triple.repo != "*" && triple.repo != "**" {
+	if triple.repo != "" && triple.repo != "*" && triple.repo != "**" {
 		conditions = append(conditions, fmt.Sprintf(`"repo":%s`, getAqlValue(triple.repo)))
 	}
 	conditions = append(conditions, fmt.Sprintf(`"path":%s`, getAqlValue(triple.path)))
