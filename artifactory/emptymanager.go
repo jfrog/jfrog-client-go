@@ -53,6 +53,8 @@ type ArtifactoryServicesManager interface {
 	ReadRemoteFile(readPath string) (io.ReadCloser, error)
 	DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error)
 	DownloadFilesWithSummary(params ...services.DownloadParams) (operationSummary *utils.OperationSummary, err error)
+	DirectDownloadFiles(params ...services.DirectDownloadParams) (totalDownloaded, totalFailed int, err error)
+	DirectDownloadFilesWithSummary(params ...services.DirectDownloadParams) (operationSummary *utils.OperationSummary, err error)
 	GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error)
 	SearchFiles(params services.SearchParams) (*content.ContentReader, error)
 	Aql(aql string) (io.ReadCloser, error)
@@ -249,6 +251,14 @@ func (esm *EmptyArtifactoryServicesManager) DownloadFiles(...services.DownloadPa
 }
 
 func (esm *EmptyArtifactoryServicesManager) DownloadFilesWithSummary(...services.DownloadParams) (*utils.OperationSummary, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DirectDownloadFiles(...services.DirectDownloadParams) (int, int, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) DirectDownloadFilesWithSummary(...services.DirectDownloadParams) (*utils.OperationSummary, error) {
 	panic("Failed: Method is not implemented")
 }
 
