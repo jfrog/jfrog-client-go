@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -355,7 +356,7 @@ func (dds *DirectDownloadService) getFilesFromDirectory(repo, dirPath string, pa
 	}
 
 	for _, file := range files {
-		filePath := filepath.Join(dirPath, file.Name)
+		filePath := path.Join(dirPath, file.Name)
 		filesToDownload = append(filesToDownload, filePath)
 	}
 
@@ -377,7 +378,7 @@ func (dds *DirectDownloadService) collectAllFilesRecursively(repo, basePath stri
 		}
 
 		for _, item := range items {
-			itemPath := filepath.Join(currentDir, item.Name)
+			itemPath := path.Join(currentDir, item.Name)
 			if item.Folder {
 				// Add subdirectory to process
 				dirsToProcess = append(dirsToProcess, itemPath)
@@ -412,7 +413,7 @@ func (dds *DirectDownloadService) getFilesMatchingPattern(repo, pattern string, 
 
 	for _, file := range files {
 		if matched, _ := filepath.Match(filePattern, file.Name); matched {
-			filePath := filepath.Join(dir, file.Name)
+			filePath := path.Join(dir, file.Name)
 			if !dds.isExcluded(filePath, params.GetExclusions()) {
 				filesToDownload = append(filesToDownload, filePath)
 			}
@@ -439,11 +440,11 @@ func (dds *DirectDownloadService) collectFilesRecursively(repo, basePath, filePa
 		for _, item := range items {
 			if item.Folder {
 				// Add subdirectory to process
-				dirsToProcess = append(dirsToProcess, filepath.Join(currentDir, item.Name))
+				dirsToProcess = append(dirsToProcess, path.Join(currentDir, item.Name))
 			} else {
 				// Check if file matches pattern
 				if matched, _ := filepath.Match(filePattern, item.Name); matched {
-					filePath := filepath.Join(currentDir, item.Name)
+					filePath := path.Join(currentDir, item.Name)
 					if !dds.isExcluded(filePath, params.GetExclusions()) {
 						*result = append(*result, filePath)
 					}
