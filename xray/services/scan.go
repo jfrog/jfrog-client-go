@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
@@ -104,7 +103,7 @@ func createScanGraphQueryParams(scanParams XrayGraphScanParams) string {
 }
 
 func isGitRepoUrlSupported(xrayVersion string) bool {
-	return clientUtils.ValidateMinimumVersion(clientUtils.Xray, xrayVersion, MinXrayVersionGitRepoKey) == nil
+	return clientutils.ValidateMinimumVersion(clientutils.Xray, xrayVersion, MinXrayVersionGitRepoKey) == nil
 }
 
 func (ss *ScanService) ScanGraph(scanParams XrayGraphScanParams) (string, error) {

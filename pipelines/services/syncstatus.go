@@ -18,7 +18,7 @@ type SyncStatusService struct {
 }
 
 func (ss *SyncStatusService) getHttpDetails() httputils.HttpClientDetails {
-	return ss.ServiceDetails.CreateHttpClientDetails()
+	return ss.CreateHttpClientDetails()
 }
 
 func NewSyncStatusService(client *jfroghttpclient.JfrogHttpClient) *SyncStatusService {
@@ -37,7 +37,7 @@ func (ss *SyncStatusService) GetSyncPipelineResourceStatus(repoName, branch stri
 		queryParams["pipelineSourceBranches"] = branch
 	}
 	queryParams["pipelineSourceIds"] = strconv.Itoa(res.ID)
-	uriVal, errURL := constructPipelinesURL(queryParams, ss.ServiceDetails.GetUrl(), pipelineSyncStatus)
+	uriVal, errURL := constructPipelinesURL(queryParams, ss.GetUrl(), pipelineSyncStatus)
 	if errURL != nil {
 		return []PipelineSyncStatus{}, errURL
 	}

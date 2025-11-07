@@ -17,7 +17,7 @@ type SyncService struct {
 }
 
 func (ss *SyncService) GetHttpDetails() httputils.HttpClientDetails {
-	return ss.ServiceDetails.CreateHttpClientDetails()
+	return ss.CreateHttpClientDetails()
 }
 
 func NewSyncService(client *jfroghttpclient.JfrogHttpClient) *SyncService {
@@ -46,7 +46,7 @@ func (ss *SyncService) SyncPipelineSource(branch string, repoName string) error 
 		"branch": branch,
 	}
 	apiPath := path.Join(pipelineResources, strconv.Itoa(res.ID))
-	uriVal, err := constructPipelinesURL(queryParams, ss.ServiceDetails.GetUrl(), apiPath)
+	uriVal, err := constructPipelinesURL(queryParams, ss.GetUrl(), apiPath)
 	if err != nil {
 		return err
 	}
