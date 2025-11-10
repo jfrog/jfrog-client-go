@@ -104,16 +104,14 @@ type XrayViolation struct {
 }
 
 type ViolationPolicy struct {
-	PolicyName string `json:"policy"`
-	Rule       string `json:"rule"`
-
-	FailBuild         bool `json:"is_build_failed,omitempty"`
-	FailPullRequest   bool `json:"fail_pull_request,omitempty"`
-	SkipNotApplicable bool `json:"is_skip_not_applicable,omitempty"`
-
-	IsBlocking   bool `json:"is_blocking"`
-	IsIgnored    bool `json:"is_ignored,omitempty"`
-	BlockingMask int  `json:"blocking_mask,omitempty"`
+	PolicyName        string `json:"policy"`
+	Rule              string `json:"rule"`
+	FailBuild         bool   `json:"is_build_failed,omitempty"`
+	FailPullRequest   bool   `json:"fail_pull_request,omitempty"`
+	SkipNotApplicable bool   `json:"is_skip_not_applicable,omitempty"`
+	IsBlocking        bool   `json:"is_blocking"`
+	IsIgnored         bool   `json:"is_ignored,omitempty"`
+	BlockingMask      int    `json:"blocking_mask,omitempty"`
 }
 
 type IgnoreRuleInfo struct {
