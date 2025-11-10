@@ -89,7 +89,7 @@ func TestApplicationService_GetApplicationDetails_Forbidden(t *testing.T) {
 func TestApplicationService_GetApplicationDetails_InvalidJSON(t *testing.T) {
 	requestNum := 0
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		expectedURI := "/apptrust/api/v1/applications/" + mockApplicationKey
+		expectedURI := "/api/v1/applications/" + mockApplicationKey
 		if r.RequestURI == expectedURI {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
@@ -153,8 +153,8 @@ func createMockApplicationServer(t *testing.T, testHandler http.HandlerFunc) (*h
 func createApplicationHandlerFunc(t *testing.T, statusCode int, response ApplicationResponse) (http.HandlerFunc, *int) {
 	requestNum := 0
 	return func(w http.ResponseWriter, r *http.Request) {
-		expectedURI := "/apptrust/api/v1/applications/" + mockApplicationKey
-		if r.RequestURI == expectedURI || r.RequestURI == "/apptrust/api/v1/applications/non-existent-key" || r.RequestURI == "/apptrust/api/v1/applications/invalid-key" {
+		expectedURI := "/api/v1/applications/" + mockApplicationKey
+		if r.RequestURI == expectedURI || r.RequestURI == "/api/v1/applications/non-existent-key" || r.RequestURI == "/api/v1/applications/invalid-key" {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
