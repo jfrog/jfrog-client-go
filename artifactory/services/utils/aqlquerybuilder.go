@@ -294,13 +294,16 @@ func buildNePathPart(includeRoot bool) string {
 }
 
 func buildInnerQueryPart(triple RepoPathFile) string {
-	innerQueryPattern := `{"$and":` +
-		`[{` +
-		`"repo":%s,` +
-		`"path":%s,` +
-		`"name":%s` +
-		`}]}`
-	return fmt.Sprintf(innerQueryPattern, getAqlValue(triple.repo), getAqlValue(triple.path), getAqlValue(triple.file))
+	conditions := make([]string, 0, 3)
+	// Below Condition will handle to not include the unnecessary n.repo = ? or n.repo = ? or n.repo = ? or
+	// n.repo = ? or n.repo = ? or n.repo = ? or n.repo if repo is similar to "*" or "**", in the AQL query
+	if triple.repo != "" && triple.repo != "*" && triple.repo != "**" {
+		conditions = append(conditions, fmt.Sprintf(`"repo":%s`, getAqlValue(triple.repo)))
+	}
+	conditions = append(conditions, fmt.Sprintf(`"path":%s`, getAqlValue(triple.path)))
+	conditions = append(conditions, fmt.Sprintf(`"name":%s`, getAqlValue(triple.file)))
+	innerConditions := strings.Join(conditions, ",")
+	return fmt.Sprintf(`{"$and":[{%s}]}`, innerConditions)
 }
 
 func buildInnerArchiveQueryPart(triple RepoPathFile, archivePath, archiveName string) string {
@@ -397,7 +400,7 @@ func getQueryReturnFieldsWithInclude(includedQuery []string) []string {
 // This due to an Artifactory limitation related to using these flags with props in an AQL statement.
 // Meaning - the result won't contain properties.
 func includePropertiesInAqlForSpec(specFile *CommonParams) bool {
-	return !(len(specFile.SortBy) > 0 || specFile.Limit > 0)
+	return len(specFile.SortBy) == 0 && specFile.Limit <= 0
 }
 
 func appendMissingFields(fields []string, defaultFields []string) []string {

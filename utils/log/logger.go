@@ -207,8 +207,8 @@ func (logger JfrogLogger) Output(a ...interface{}) {
 }
 
 func (logger *JfrogLogger) Println(log *log.Logger, isTerminal bool, values ...interface{}) {
-	// If not requested, remove emojis from all strings if it's not a terminal or if the terminal is not supporting colors
-	if !(IsColorsSupported() && isTerminal) {
+	// If not requested, remove emojis from all strings when writing to a non-terminal destination.
+	if !isTerminal {
 		for i, value := range values {
 			if str, ok := value.(string); ok {
 				if allowEmojis {

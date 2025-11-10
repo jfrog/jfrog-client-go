@@ -281,6 +281,14 @@ func (sm *ArtifactoryServicesManagerImp) initDownloadService() *services.Downloa
 	return downloadService
 }
 
+func (sm *ArtifactoryServicesManagerImp) initDirectDownloadService() *services.DirectDownloadService {
+	directDownloadService := services.NewDirectDownloadService(sm.config.GetServiceDetails(), sm.client)
+	directDownloadService.DryRun = sm.config.IsDryRun()
+	directDownloadService.Threads = sm.config.GetThreads()
+	directDownloadService.Progress = sm.progress
+	return directDownloadService
+}
+
 func (sm *ArtifactoryServicesManagerImp) DownloadFiles(params ...services.DownloadParams) (totalDownloaded, totalFailed int, err error) {
 	downloadService := sm.initDownloadService()
 	summary, e := downloadService.DownloadFiles(params...)
@@ -294,6 +302,17 @@ func (sm *ArtifactoryServicesManagerImp) DownloadFilesWithSummary(params ...serv
 	downloadService := sm.initDownloadService()
 	downloadService.SetSaveSummary(true)
 	return downloadService.DownloadFiles(params...)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DirectDownloadFiles(params ...services.DirectDownloadParams) (totalDownloaded, totalFailed int, err error) {
+	directDownloadService := sm.initDirectDownloadService()
+	return directDownloadService.DirectDownloadFiles(params...)
+}
+
+func (sm *ArtifactoryServicesManagerImp) DirectDownloadFilesWithSummary(params ...services.DirectDownloadParams) (operationSummary *utils.OperationSummary, err error) {
+	directDownloadService := sm.initDirectDownloadService()
+	directDownloadService.SetSaveSummary(true)
+	return directDownloadService.DirectDownloadFilesWithSummary(params...)
 }
 
 func (sm *ArtifactoryServicesManagerImp) GetUnreferencedGitLfsFiles(params services.GitLfsCleanParams) (*content.ContentReader, error) {

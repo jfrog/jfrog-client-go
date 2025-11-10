@@ -128,7 +128,7 @@ func (lcs *LifecycleServicesManager) DistributeReleaseBundle(rbDetails lifecycle
 	distributeBundleService.MaxWaitMinutes = distributeParams.MaxWaitMinutes
 	distributeBundleService.ProjectKey = distributeParams.ProjectKey
 
-	mappings := &distributeBundleService.Modifications.PathMappings
+	mappings := &distributeBundleService.PathMappings
 	*mappings = []utils.PathMapping{}
 	for _, pathMapping := range distributeParams.PathMappings {
 		*mappings = append(*mappings,

@@ -22,8 +22,8 @@ func NewSystemService(client *jfroghttpclient.JfrogHttpClient) *SystemService {
 
 func (ss *SystemService) GetSystemInfo() (*PipelinesSystemInfo, error) {
 	log.Debug("Getting Pipelines System Info...")
-	httpDetails := ss.ServiceDetails.CreateHttpClientDetails()
-	resp, body, _, err := ss.client.SendGet(ss.ServiceDetails.GetUrl()+"api/v1/system/info", true, &httpDetails)
+	httpDetails := ss.CreateHttpClientDetails()
+	resp, body, _, err := ss.client.SendGet(ss.GetUrl()+"api/v1/system/info", true, &httpDetails)
 	if err != nil {
 		return nil, errors.New("failed while attempting to get JFrog Pipelines version: " + err.Error())
 	}

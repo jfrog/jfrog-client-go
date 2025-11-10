@@ -170,9 +170,10 @@ func GetBuildNameAndNumberFromArtifactory(buildName, buildNumber, projectKey str
 
 func getBuildNameAndNumberFromProps(properties []Property) (buildName string, buildNumber string) {
 	for _, property := range properties {
-		if property.Key == "build.name" {
+		switch property.Key {
+		case "build.name":
 			buildName = property.Value
-		} else if property.Key == "build.number" {
+		case "build.number":
 			buildNumber = property.Value
 		}
 		if len(buildName) > 0 && len(buildNumber) > 0 {
@@ -325,12 +326,12 @@ func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.Conte
 	if err != nil {
 		return nil, err
 	}
-	defer readerWithProps.Close()
+	defer func() { _ = readerWithProps.Close() }()
 	tempReader, err := loadMissingProperties(reader, readerWithProps)
 	if err != nil {
 		return nil, err
 	}
-	defer tempReader.Close()
+	defer func() { _ = tempReader.Close() }()
 
 	wg.Wait()
 	// Merge artifacts and dependencies Sha1 maps.
@@ -361,7 +362,7 @@ func loadMissingProperties(reader *content.ContentReader, readerWithProps *conte
 	if err != nil {
 		return nil, err
 	}
-	defer resultFile.Close()
+	defer func() { _ = resultFile.Close() }()
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		buffer[resultItem.GetItemRelativePath()] = resultItem
 		// Since maps are an unordered collection, we use slice to save the order of the items
@@ -468,7 +469,7 @@ func filterBuildAqlSearchResults(reader *content.ContentReader, buildArtifactsSh
 	if err != nil {
 		return nil, err
 	}
-	defer resultCw.Close()
+	defer func() { _ = resultCw.Close() }()
 	// Step 1 - Fill the priority files with search results.
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if _, ok := buildArtifactsSha[resultItem.Actual_Sha1]; !ok {

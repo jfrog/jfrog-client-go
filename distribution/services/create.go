@@ -64,7 +64,7 @@ func (cb *CreateReleaseBundleService) execCreateReleaseBundle(gpgPassphrase stri
 	if err != nil {
 		return summary, err
 	}
-	if !(resp.StatusCode == http.StatusCreated || (resp.StatusCode == http.StatusOK && releaseBundle.DryRun)) {
+	if resp.StatusCode != http.StatusCreated && (resp.StatusCode != http.StatusOK || !releaseBundle.DryRun) {
 		return summary, errorutils.CheckErrorf("Distribution response: %s\n%s", resp.Status, utils.IndentJson(body))
 	}
 	if summary != nil {
