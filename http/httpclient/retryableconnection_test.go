@@ -229,7 +229,7 @@ func simpleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sendIdleAndSleep(fw, 4, 1)
-	fmt.Fprint(fw, SuccessResponse)
+	_, _ = fmt.Fprint(fw, SuccessResponse)
 }
 
 // Retry handler will send \r\n 4 times with 4 sec in between.
@@ -240,7 +240,7 @@ func exceedRetriesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sendIdleAndSleep(fw, 4, 4)
-	fmt.Fprint(fw, SuccessResponse)
+	_, _ = fmt.Fprint(fw, SuccessResponse)
 }
 
 // Response handler with context according to the request body.
@@ -280,7 +280,7 @@ func windowHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	case 6:
-		fmt.Fprint(fw, SuccessResponse)
+		_, _ = fmt.Fprint(fw, SuccessResponse)
 		return
 	}
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -288,7 +288,7 @@ func windowHandler(w http.ResponseWriter, r *http.Request) {
 
 func sendIdleAndSleep(fw *flushWriter, iterations, sec int) {
 	for i := 0; i < iterations; i++ {
-		fmt.Fprint(fw, "\r\n")
+		_, _ = fmt.Fprint(fw, "\r\n")
 		time.Sleep(time.Second * time.Duration(sec))
 	}
 }

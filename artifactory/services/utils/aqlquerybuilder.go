@@ -400,7 +400,7 @@ func getQueryReturnFieldsWithInclude(includedQuery []string) []string {
 // This due to an Artifactory limitation related to using these flags with props in an AQL statement.
 // Meaning - the result won't contain properties.
 func includePropertiesInAqlForSpec(specFile *CommonParams) bool {
-	return !(len(specFile.SortBy) > 0 || specFile.Limit > 0)
+	return len(specFile.SortBy) == 0 && specFile.Limit <= 0
 }
 
 func appendMissingFields(fields []string, defaultFields []string) []string {

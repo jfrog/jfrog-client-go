@@ -91,7 +91,8 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case http.MethodPost:
-		if numSegments == 1 {
+		switch numSegments {
+		case 1:
 			if addlSegments[0] == VulnerabilitiesEndpoint || addlSegments[0] == LicensesEndpoint {
 				_, err := fmt.Fprint(w, MapResponse[addlSegments[0]]["XrayReportRequest"])
 				if err != nil {
@@ -100,7 +101,7 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				return
 			}
-		} else if numSegments == 2 {
+		case 2:
 			_, err := strconv.Atoi(addlSegments[1])
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

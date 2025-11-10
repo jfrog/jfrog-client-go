@@ -78,12 +78,12 @@ func getSshHeaders(sshAuth ssh.AuthMethod, host string, port int) (map[string]st
 	if errorutils.CheckError(err) != nil {
 		return nil, "", err
 	}
-	defer connection.Close()
+	defer func() { _ = connection.Close() }()
 	session, err := connection.NewSession()
 	if errorutils.CheckError(err) != nil {
 		return nil, "", err
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	stdout, err := session.StdoutPipe()
 	if errorutils.CheckError(err) != nil {
