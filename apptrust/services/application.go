@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	applicationDetailsAPI = "apptrust/api/v1/applications"
+	applicationDetailsAPI = "api/v1/applications"
 )
 
 type ApplicationService struct {
