@@ -127,6 +127,9 @@
       - [Creating an Access Token](#creating-an-access-token)
       - [Refreshing an Access Token](#refreshing-an-access-token)
       - [Exchanging an OIDC Access Token](#exchanging-an-oidc-access-token)
+      - [Getting Access Tokens](#getting-access-tokens)
+      - [Getting an Access Token by ID](#getting-an-access-token-by-id)
+      - [Revoking an Access Token by ID](#revoking-an-access-token-by-id)
   - [Distribution APIs](#distribution-apis)
     - [Creating Distribution Service Manager](#creating-distribution-service-manager)
       - [Creating Distribution Details](#creating-distribution-details)
@@ -1877,6 +1880,38 @@ params := services.CreateOidcTokenParams{
 }
 
 response, err = servicesManager.ExchangeOidcToken(params)
+```
+
+#### Getting Access Tokens
+
+```go
+params := services.GetTokensParams{
+    // Optional filters
+    Description:     "my-token-description",      // Filter by token description
+    Username:        "admin",                     // Filter by username
+    Refreshable:     utils.Pointer(true),         // Filter by refreshable status
+    TokenId:         "token-id",                  // Filter by specific token ID
+    OrderBy:         "issued_at",                 // Order by field (issued_at, expires_at, etc.)
+    DescendingOrder: utils.Pointer(false),        // Sort order (true for descending)
+    LastUsed:        utils.Pointer(int64(1672531200)), // Filter by last used date (epoch seconds)
+}
+
+tokens, err := accessManager.GetTokens(params)
+```
+
+#### Getting an Access Token by ID
+
+```go 
+token, err := accessManager.GetTokenByID("my-token-id")
+
+# currently used token
+token, err := accessManager.GetTokenByID("me")
+```
+
+#### Revoking an Access Token by ID
+
+```go
+err := accessManager.RevokeTokenByID("my-token-id")
 ```
 
 ## Distribution APIs
