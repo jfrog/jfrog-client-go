@@ -101,6 +101,7 @@ type XrayViolation struct {
 	ApplicabilityDetails     []CveApplicabilityDetails `json:"applicability_details,omitempty"`
 	ExposureDetails          *ExposureDetails          `json:"details,omitempty"`
 	SastDetails              *BaseJasDetails           `json:"sast_details,omitempty"`
+	LineNumber               int                       `json:"line_number"`
 }
 
 type ViolationPolicy struct {
