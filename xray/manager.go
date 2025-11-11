@@ -271,6 +271,13 @@ func (sm *XrayServicesManager) GetArtifactStatus(repo, path string) (*services.A
 	return artifactService.GetStatus(repo, path)
 }
 
+func (sm *XrayServicesManager) GetViolations(params xrayUtils.ViolationsRequest) (*services.ViolationsResponse, error) {
+	violationsService := services.NewViolationsService(sm.client)
+	violationsService.XrayDetails = sm.config.GetServiceDetails()
+	violationsService.ScopeProjectKey = sm.scopeProjectKey
+	return violationsService.GetViolations(params)
+}
+
 func (sm *XrayServicesManager) DownloadIndexer(localDirPath, localFileName string) (string, error) {
 	indexerService := services.NewIndexerService(sm.client)
 	indexerService.XrayDetails = sm.config.GetServiceDetails()

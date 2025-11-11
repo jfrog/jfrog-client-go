@@ -103,7 +103,7 @@ func removeFileWithRetry(filePath string) error {
 		log.Debug("File does not exist: %s", filePath)
 		return nil
 	}
-	log.Debug("Attempting to remove file: %s", filePath)
+	log.Debug(fmt.Sprintf("Attempting to remove file: %s", filePath))
 	executor := retryexecutor.RetryExecutor{
 		Context:                  context.Background(),
 		MaxRetries:               5,
