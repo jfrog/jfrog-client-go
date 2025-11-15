@@ -56,6 +56,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+
 // replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v0.0.0-20241201000000-COMMIT_HASH
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.7.6-0.20240909061051-2d36ae4bd05a
