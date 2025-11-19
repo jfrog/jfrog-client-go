@@ -186,3 +186,110 @@ func createErrorHandlerFuncVersion(t *testing.T) (http.HandlerFunc, *int) {
 		w.WriteHeader(http.StatusNotFound)
 	}, &requestNum
 }
+
+func TestUploadEvidence_URLEncodingFix(t *testing.T) {
+	// test for double URL encoding bug
+	// This test verifies that build names with spaces are encoded only once, not twice
+	testCases := []struct {
+		name              string
+		subjectUri        string
+		expectedPathInURL string
+		description       string
+	}{
+		{
+			name:              "Build name with spaces (original bug case)",
+			subjectUri:        "ssfpoc-build-info/SSF Demo Electron/2-1762810453125.json",
+			expectedPathInURL: "/evidence/api/v1/subject/ssfpoc-build-info/SSF%20Demo%20Electron/2-1762810453125.json",
+			description:       "Spaces should be encoded as %20, not double-encoded as %2520",
+		},
+		{
+			name:              "Build name with multiple spaces",
+			subjectUri:        "test-build-info/My Build Name With Spaces/123.json",
+			expectedPathInURL: "/evidence/api/v1/subject/test-build-info/My%20Build%20Name%20With%20Spaces/123.json",
+			description:       "Multiple spaces should be properly encoded",
+		},
+		{
+			name:              "Build name with special characters",
+			subjectUri:        "proj-build-info/Build & Test + Deploy/456.json",
+			expectedPathInURL: "/evidence/api/v1/subject/proj-build-info/Build%20&%20Test%20+%20Deploy/456.json",
+			description:       "Special characters should be properly encoded",
+		},
+		{
+			name:              "Simple build name without special chars",
+			subjectUri:        "simple-build-info/SimpleBuildName/789.json",
+			expectedPathInURL: "/evidence/api/v1/subject/simple-build-info/SimpleBuildName/789.json",
+			description:       "Simple names should remain unchanged",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var capturedRequestPath string
+			var capturedRawURL string
+
+			// Create a mock handler that captures the actual request path
+			mockHandler := func(w http.ResponseWriter, r *http.Request) {
+				switch {
+				case r.URL.Path == "/evidence/api/v1/system/version":
+					w.WriteHeader(http.StatusOK)
+
+				case strings.HasPrefix(r.URL.Path, "/evidence/api/v1/subject/"):
+					// Capture both the decoded path and the raw URL for verification
+					capturedRequestPath = r.URL.Path
+					capturedRawURL = r.URL.String()
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(`{"success": true}`))
+					assert.NoError(t, err)
+
+				default:
+					t.Errorf("Unexpected request path: %s", r.URL.Path)
+					w.WriteHeader(http.StatusNotFound)
+				}
+			}
+
+			// Create mock server with evidence URL prefix
+			mockServer := httptest.NewServer(http.HandlerFunc(mockHandler))
+			defer mockServer.Close()
+
+			// Create evidence service with the correct evidence URL
+			serviceDetails := artifactoryAuth.NewArtifactoryDetails()
+			serviceDetails.SetUrl(mockServer.URL + "/evidence/")
+			client, err := jfroghttpclient.JfrogClientBuilder().Build()
+			assert.NoError(t, err)
+			evdService := evidence.NewEvidenceService(serviceDetails, client)
+
+			// Create evidence details with the test subject URI
+			evidenceDetails := evidence.EvidenceDetails{
+				SubjectUri:  tc.subjectUri,
+				DSSEFileRaw: dsseRaw,
+				ProviderId:  "test-provider",
+			}
+
+			// Execute the upload
+			_, err = evdService.UploadEvidence(evidenceDetails)
+			assert.NoError(t, err, "Upload should succeed for: %s", tc.description)
+
+			// The main test: verify that the URL contains properly encoded paths
+			// We check the raw URL string to see the actual encoding
+			assert.Contains(t, capturedRawURL, tc.expectedPathInURL,
+				"URL should contain properly encoded path for: %s. Expected path in: %s, Got URL: %s",
+				tc.description, tc.expectedPathInURL, capturedRawURL)
+
+			// Specific regression test for the original double encoding bug
+			if strings.Contains(tc.subjectUri, "SSF Demo Electron") {
+				// Verify that spaces are encoded as %20 and NOT as %2520 (double encoded)
+				assert.Contains(t, capturedRawURL, "SSF%20Demo%20Electron",
+					"URL should contain single-encoded spaces (%%20)")
+				assert.NotContains(t, capturedRawURL, "SSF%2520Demo%2520Electron",
+					"URL should NOT contain double-encoded spaces (%%2520)")
+
+				t.Logf("✓ Regression test passed: %s", tc.description)
+			}
+
+			t.Logf("Test case: %s", tc.description)
+			t.Logf("Subject URI: %s", tc.subjectUri)
+			t.Logf("Captured decoded path: %s", capturedRequestPath)
+			t.Logf("Captured raw URL: %s", capturedRawURL)
+		})
+	}
+}
