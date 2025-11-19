@@ -301,7 +301,7 @@ func createFilters(filters watchFilters, repo WatchRepositoriesParams) []watchFi
 		result = append(result, filter)
 	}
 
-	if repo.ExcludePatterns != nil || repo.IncludePatterns != nil {
+	if len(repo.ExcludePatterns) != 0 || len(repo.IncludePatterns) != 0 {
 		filter := watchFilter{
 			Type: "path-ant-patterns",
 			Value: WatchPathFilters{
@@ -475,5 +475,15 @@ func NewWatchRepository(name string, binMgrID string, repoType WatchRepositoryTy
 		Name:     name,
 		BinMgrID: binMgrID,
 		RepoType: repoType,
+	}
+}
+
+func NewWatchRepositoryByName(name string) WatchRepository {
+	return WatchRepository{
+		Name:     name,
+		BinMgrID: "default",
+		Filters: watchFilters{
+			Names: []string{name},
+		},
 	}
 }
