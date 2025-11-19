@@ -199,25 +199,25 @@ func TestUploadEvidence_URLEncodingFix(t *testing.T) {
 		{
 			name:              "Build name with spaces (original bug case)",
 			subjectUri:        "ssfpoc-build-info/SSF Demo Electron/2-1762810453125.json",
-			expectedPathInURL: "/api/v1/subject/ssfpoc-build-info/SSF%20Demo%20Electron/2-1762810453125.json",
+			expectedPathInURL: "/evidence/api/v1/subject/ssfpoc-build-info/SSF%20Demo%20Electron/2-1762810453125.json",
 			description:       "Spaces should be encoded as %20, not double-encoded as %2520",
 		},
 		{
 			name:              "Build name with multiple spaces",
 			subjectUri:        "test-build-info/My Build Name With Spaces/123.json",
-			expectedPathInURL: "/api/v1/subject/test-build-info/My%20Build%20Name%20With%20Spaces/123.json",
+			expectedPathInURL: "/evidence/api/v1/subject/test-build-info/My%20Build%20Name%20With%20Spaces/123.json",
 			description:       "Multiple spaces should be properly encoded",
 		},
 		{
 			name:              "Build name with special characters",
 			subjectUri:        "proj-build-info/Build & Test + Deploy/456.json",
-			expectedPathInURL: "/api/v1/subject/proj-build-info/Build%20&%20Test%20+%20Deploy/456.json",
+			expectedPathInURL: "/evidence/api/v1/subject/proj-build-info/Build%20&%20Test%20+%20Deploy/456.json",
 			description:       "Special characters should be properly encoded",
 		},
 		{
 			name:              "Simple build name without special chars",
 			subjectUri:        "simple-build-info/SimpleBuildName/789.json",
-			expectedPathInURL: "/api/v1/subject/simple-build-info/SimpleBuildName/789.json",
+			expectedPathInURL: "/evidence/api/v1/subject/simple-build-info/SimpleBuildName/789.json",
 			description:       "Simple names should remain unchanged",
 		},
 	}
@@ -230,10 +230,10 @@ func TestUploadEvidence_URLEncodingFix(t *testing.T) {
 			// Create a mock handler that captures the actual request path
 			mockHandler := func(w http.ResponseWriter, r *http.Request) {
 				switch {
-				case r.URL.Path == "/api/v1/system/version":
+				case r.URL.Path == "/evidence/api/v1/system/version":
 					w.WriteHeader(http.StatusOK)
 
-				case strings.HasPrefix(r.URL.Path, "/api/v1/subject/"):
+				case strings.HasPrefix(r.URL.Path, "/evidence/api/v1/subject/"):
 					// Capture both the decoded path and the raw URL for verification
 					capturedRequestPath = r.URL.Path
 					capturedRawURL = r.URL.String()
@@ -247,8 +247,16 @@ func TestUploadEvidence_URLEncodingFix(t *testing.T) {
 				}
 			}
 
-			mockServer, evdService := createMockServer(t, mockHandler)
+			// Create mock server with evidence URL prefix
+			mockServer := httptest.NewServer(http.HandlerFunc(mockHandler))
 			defer mockServer.Close()
+
+			// Create evidence service with the correct evidence URL
+			serviceDetails := artifactoryAuth.NewArtifactoryDetails()
+			serviceDetails.SetUrl(mockServer.URL + "/evidence/")
+			client, err := jfroghttpclient.JfrogClientBuilder().Build()
+			assert.NoError(t, err)
+			evdService := evidence.NewEvidenceService(serviceDetails, client)
 
 			// Create evidence details with the test subject URI
 			evidenceDetails := evidence.EvidenceDetails{
@@ -258,7 +266,7 @@ func TestUploadEvidence_URLEncodingFix(t *testing.T) {
 			}
 
 			// Execute the upload
-			_, err := evdService.UploadEvidence(evidenceDetails)
+			_, err = evdService.UploadEvidence(evidenceDetails)
 			assert.NoError(t, err, "Upload should succeed for: %s", tc.description)
 
 			// The main test: verify that the URL contains properly encoded paths
