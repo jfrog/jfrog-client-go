@@ -2,7 +2,6 @@ package services
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -31,13 +30,12 @@ type EvidenceOperation interface {
 }
 
 func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, error) {
-	u := url.URL{Path: operation.getOperationRestApi()}
 	queryParams := make(map[string]string)
 	if operation.getProviderId() != "" {
 		queryParams["providerId"] = operation.getProviderId()
 	}
 
-	requestFullUrl, err := clientutils.BuildUrl(es.GetEvidenceDetails().GetUrl(), u.String(), queryParams)
+	requestFullUrl, err := clientutils.BuildUrl(es.GetEvidenceDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
 	if err != nil {
 		return []byte{}, errorutils.CheckError(err)
 	}
