@@ -74,9 +74,10 @@ func (ps *PropsService) DeleteProps(propsParams PropsParams) (int, error) {
 }
 
 type PropsParams struct {
-	Reader   *content.ContentReader
-	Props    string
-	RepoOnly bool
+	Reader       *content.ContentReader
+	Props        string
+	RepoOnly     bool
+	UseDebugLogs bool
 }
 
 func (sp *PropsParams) GetReader() *content.ContentReader {
@@ -106,7 +107,7 @@ func (ps *PropsService) getEncodedParam(propsParams PropsParams, isDelete bool) 
 	return encodedParam, nil
 }
 
-func (ps *PropsService) actionTypeBasedOnIsDeleteFlag(isDelete bool, action *func(string, string, string) (*http.Response, []byte, error)) {
+func (ps *PropsService) actionTypeBasedOnIsDeleteFlag(isDelete bool, action *func(string, string, string, bool) (*http.Response, []byte, error)) {
 	if isDelete {
 		*action = ps.sendDeleteRequest
 	} else {
@@ -116,7 +117,7 @@ func (ps *PropsService) actionTypeBasedOnIsDeleteFlag(isDelete bool, action *fun
 
 func (ps *PropsService) addOrDeletePropertiesForRepo(propsParams PropsParams, isDelete bool, encodedParam string) (int, error) {
 	// Determine which action to perform (PUT or DELETE).
-	var action func(string, string, string) (*http.Response, []byte, error)
+	var action func(string, string, string, bool) (*http.Response, []byte, error)
 	ps.actionTypeBasedOnIsDeleteFlag(isDelete, &action)
 
 	reader := propsParams.GetReader()
@@ -133,7 +134,7 @@ func (ps *PropsService) addOrDeletePropertiesForRepo(propsParams PropsParams, is
 		}
 		setPropertiesURL += "?properties=" + encodedParam + "&recursive=0"
 
-		resp, body, err := action(logMsgPrefix, repoName, setPropertiesURL)
+		resp, body, err := action(logMsgPrefix, repoName, setPropertiesURL, propsParams.UseDebugLogs)
 		if err != nil {
 			return 0, err
 		}
@@ -165,7 +166,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	if err != nil {
 		return 0, err
 	}
-	var action func(string, string, string) (*http.Response, []byte, error)
+	var action func(string, string, string, bool) (*http.Response, []byte, error)
 	ps.actionTypeBasedOnIsDeleteFlag(isDelete, &action)
 	successCounters := make([]int, ps.GetThreads())
 	producerConsumer := parallel.NewBounedRunner(ps.GetThreads(), false)
@@ -186,7 +187,7 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 				// Because we do set/delete props on search results that took into account the
 				// recursive flag, we do not want the action itself to be recursive.
 				setPropertiesURL += "?properties=" + encodedParam + "&recursive=0"
-				resp, body, err := action(logMsgPrefix, relativePath, setPropertiesURL)
+				resp, body, err := action(logMsgPrefix, relativePath, setPropertiesURL, propsParams.UseDebugLogs)
 
 				if err != nil {
 					return err
@@ -215,15 +216,23 @@ func (ps *PropsService) performRequest(propsParams PropsParams, isDelete bool) (
 	return totalSuccess, errorsQueue.GetError()
 }
 
-func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
-	log.Info(logMsgPrefix+"Deleting properties on:", relativePath)
+func (ps *PropsService) sendDeleteRequest(logMsgPrefix, relativePath, setPropertiesUrl string, useDebugLogs bool) (resp *http.Response, body []byte, err error) {
+	if useDebugLogs {
+		log.Debug(logMsgPrefix+"Deleting properties on:", relativePath)
+	} else {
+		log.Info(logMsgPrefix+"Deleting properties on:", relativePath)
+	}
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err = ps.client.SendDelete(setPropertiesUrl, nil, &httpClientsDetails)
 	return
 }
 
-func (ps *PropsService) sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl string) (resp *http.Response, body []byte, err error) {
-	log.Info(logMsgPrefix+"Setting properties on:", relativePath)
+func (ps *PropsService) sendPutRequest(logMsgPrefix, relativePath, setPropertiesUrl string, useDebugLogs bool) (resp *http.Response, body []byte, err error) {
+	if useDebugLogs {
+		log.Debug(logMsgPrefix+"Setting properties on:", relativePath)
+	} else {
+		log.Info(logMsgPrefix+"Setting properties on:", relativePath)
+	}
 	httpClientsDetails := ps.GetArtifactoryDetails().CreateHttpClientDetails()
 	resp, body, err = ps.client.SendPut(setPropertiesUrl, nil, &httpClientsDetails)
 	return
