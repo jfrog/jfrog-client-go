@@ -13,17 +13,17 @@ import (
 
 const mockApplicationKey = "test-app-key"
 
-var mockApplicationResponse = ApplicationResponse{
-	Application: Application{
-		ApplicationName: "Test Application",
-		ApplicationKey:  "test-app-key",
-		ProjectName:     "Test Project",
-		ProjectKey:      "test-proj",
-	},
+var mockApplication = Application{
+	ApplicationName: "Test Application",
+	ApplicationKey:  "test-app-key",
+	ProjectName:     "Test Project",
+	ProjectKey:      "test-proj",
+	Criticality:     "high",
+	MaturityLevel:   "production",
 }
 
 func TestApplicationService_GetApplicationDetails_Success(t *testing.T) {
-	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusOK, mockApplicationResponse)
+	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusOK, mockApplication)
 
 	mockServer, applicationService := createMockApplicationServer(t, handlerFunc)
 	defer mockServer.Close()
@@ -35,11 +35,13 @@ func TestApplicationService_GetApplicationDetails_Success(t *testing.T) {
 	assert.Equal(t, "test-app-key", application.ApplicationKey)
 	assert.Equal(t, "Test Project", application.ProjectName)
 	assert.Equal(t, "test-proj", application.ProjectKey)
+	assert.Equal(t, "high", application.Criticality)
+	assert.Equal(t, "production", application.MaturityLevel)
 	assert.Equal(t, 1, *requestNum)
 }
 
 func TestApplicationService_GetApplicationDetails_NotFound(t *testing.T) {
-	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusNotFound, ApplicationResponse{})
+	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusNotFound, Application{})
 
 	mockServer, applicationService := createMockApplicationServer(t, handlerFunc)
 	defer mockServer.Close()
@@ -51,7 +53,7 @@ func TestApplicationService_GetApplicationDetails_NotFound(t *testing.T) {
 }
 
 func TestApplicationService_GetApplicationDetails_BadRequest(t *testing.T) {
-	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusBadRequest, ApplicationResponse{})
+	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusBadRequest, Application{})
 
 	mockServer, applicationService := createMockApplicationServer(t, handlerFunc)
 	defer mockServer.Close()
@@ -63,7 +65,7 @@ func TestApplicationService_GetApplicationDetails_BadRequest(t *testing.T) {
 }
 
 func TestApplicationService_GetApplicationDetails_Unauthorized(t *testing.T) {
-	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusUnauthorized, ApplicationResponse{})
+	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusUnauthorized, Application{})
 
 	mockServer, applicationService := createMockApplicationServer(t, handlerFunc)
 	defer mockServer.Close()
@@ -75,7 +77,7 @@ func TestApplicationService_GetApplicationDetails_Unauthorized(t *testing.T) {
 }
 
 func TestApplicationService_GetApplicationDetails_Forbidden(t *testing.T) {
-	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusForbidden, ApplicationResponse{})
+	handlerFunc, requestNum := createApplicationHandlerFunc(t, http.StatusForbidden, Application{})
 
 	mockServer, applicationService := createMockApplicationServer(t, handlerFunc)
 	defer mockServer.Close()
@@ -150,7 +152,7 @@ func createMockApplicationServer(t *testing.T, testHandler http.HandlerFunc) (*h
 	return testServer, NewApplicationService(apptrustDetails, client)
 }
 
-func createApplicationHandlerFunc(t *testing.T, statusCode int, response ApplicationResponse) (http.HandlerFunc, *int) {
+func createApplicationHandlerFunc(t *testing.T, statusCode int, response Application) (http.HandlerFunc, *int) {
 	requestNum := 0
 	return func(w http.ResponseWriter, r *http.Request) {
 		expectedURI := "/api/v1/applications/" + mockApplicationKey
@@ -168,7 +170,7 @@ func createApplicationHandlerFunc(t *testing.T, statusCode int, response Applica
 	}, &requestNum
 }
 
-func writeMockApplicationResponse(t *testing.T, w http.ResponseWriter, response ApplicationResponse) {
+func writeMockApplicationResponse(t *testing.T, w http.ResponseWriter, response Application) {
 	content, err := json.Marshal(response)
 	assert.NoError(t, err)
 	_, err = w.Write(content)

@@ -3548,6 +3548,8 @@ fmt.Printf("Application Name: %s\n", application.ApplicationName)
 fmt.Printf("Application Key: %s\n", application.ApplicationKey)
 fmt.Printf("Project Name: %s\n", application.ProjectName)
 fmt.Printf("Project Key: %s\n", application.ProjectKey)
+fmt.Printf("Criticality: %s\n", application.Criticality)
+fmt.Printf("Maturity Level: %s\n", application.MaturityLevel)
 ```
 
 ### Get Application Version Promotions
