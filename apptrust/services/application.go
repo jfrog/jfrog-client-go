@@ -49,12 +49,12 @@ func (as *ApplicationService) GetApplicationDetails(applicationKey string) (*App
 		return nil, err
 	}
 
-	var applicationResponse ApplicationResponse
-	if err = json.Unmarshal(body, &applicationResponse); err != nil {
+	var application Application
+	if err = json.Unmarshal(body, &application); err != nil {
 		return nil, errorutils.CheckError(err)
 	}
 
-	return &applicationResponse.Application, nil
+	return &application, nil
 }
 
 func (as *ApplicationService) GetApplicationVersionPromotions(applicationKey, applicationVersion string, queryParams map[string]string) (*ApplicationPromotionsResponse, error) {
@@ -85,15 +85,13 @@ func (as *ApplicationService) GetApplicationVersionPromotions(applicationKey, ap
 	return &promotionsResponse, nil
 }
 
-type ApplicationResponse struct {
-	Application Application `json:"application"`
-}
-
 type Application struct {
 	ApplicationName string `json:"application_name"`
 	ApplicationKey  string `json:"application_key"`
 	ProjectName     string `json:"project_name"`
 	ProjectKey      string `json:"project_key"`
+	Criticality     string `json:"criticality"`
+	MaturityLevel   string `json:"maturity_level"`
 }
 
 type ApplicationPromotionsResponse struct {
