@@ -87,3 +87,10 @@ func (sm *XscServicesManager) GetConfigProfileByUrl(_ string) (*services.ConfigP
 	// Empty implementation required for alignment with interface, implemented only at the new service inside the Xray service
 	return nil, nil
 }
+
+// SendGitIntegrationEvent sends a git integration event to the JFrog platform
+func (sm *XscServicesManager) SendGitIntegrationEvent(event services.GitIntegrationEvent, xrayVersion string) error {
+	eventService := services.NewAnalyticsEventService(sm.client)
+	eventService.XscDetails = sm.config.GetServiceDetails()
+	return eventService.SendGitIntegrationEvent(event, xrayVersion)
+}
