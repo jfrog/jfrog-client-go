@@ -56,12 +56,7 @@ func (vs *AnalyticsEventService) sendAddGeneralEventPostRequest(requestContent [
 }
 
 func (vs *AnalyticsEventService) sendGitIntegrationPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
-	var httpClientDetails httputils.HttpClientDetails
-	if vs.XrayDetails != nil {
-		httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
-	} else {
-
-	}
+	var httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
 	resp, body, err = vs.client.SendPost(utils.AppendScopedProjectKeyParam(vs.getGitEventEndPoint(), vs.ScopeProjectKey), requestContent, &httpClientDetails)
 	return
 }
