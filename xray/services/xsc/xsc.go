@@ -32,6 +32,13 @@ func (xs *XscInnerService) AddAnalyticsGeneralEvent(event services.XscAnalyticsG
 	return eventService.AddGeneralEvent(event, xrayVersion)
 }
 
+func (xs *XscInnerService) SendGitIntegrationEvent(event services.GitIntegrationEvent, xrayVersion string) error {
+	eventService := services.NewAnalyticsEventService(xs.client)
+	eventService.XrayDetails = xs.XrayDetails
+	eventService.ScopeProjectKey = xs.ScopeProjectKey
+	return eventService.SendGitIntegrationEvent(event, xrayVersion)
+}
+
 func (xs *XscInnerService) SendXscLogErrorRequest(errorLog *services.ExternalErrorLog) error {
 	logErrorService := services.NewLogErrorEventService(xs.client)
 	logErrorService.XrayDetails = xs.XrayDetails
