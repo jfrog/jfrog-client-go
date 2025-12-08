@@ -114,7 +114,7 @@ func (vs *AnalyticsEventService) AddGeneralEvent(event XscAnalyticsGeneralEvent,
 // SendGitIntegrationEvent sends a POST request to the /git_integration_event endpoint
 func (vs *AnalyticsEventService) SendGitIntegrationEvent(event GitIntegrationEvent, xrayVersion string) error {
 	if err := utils.ValidateMinimumVersion(utils.Xray, xrayVersion, xscutils.MinXrayVersionGitIntegrationEvent); err != nil {
-		return fmt.Errorf("git integration event requires minimum Xray version %s: %w", xscutils.MinXrayVersionGitIntegrationEvent, err)
+		return fmt.Errorf("git integration event version error %s: %w", xscutils.MinXrayVersionGitIntegrationEvent, err)
 	}
 	requestBody, err := json.Marshal(event)
 	if err != nil {
