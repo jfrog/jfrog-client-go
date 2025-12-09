@@ -16,6 +16,7 @@ import (
 const (
 	AnalyticsMetricsMinXscVersion = "1.7.1"
 	xscEventApi                   = "event"
+	gitIntegrationEventApi        = "git_integration_event"
 	xscDeprecatedEventApiSuffix   = "api/v1/" + xscEventApi
 )
 
@@ -38,7 +39,11 @@ func (vs *AnalyticsEventService) getAnalyticsEndPoint() string {
 	return utils.AddTrailingSlashIfNeeded(vs.XscDetails.GetUrl()) + xscDeprecatedEventApiSuffix
 }
 
-func (vs *AnalyticsEventService) sendPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
+func (vs *AnalyticsEventService) getGitEventEndPoint() string {
+	return utils.AddTrailingSlashIfNeeded(vs.XrayDetails.GetUrl()) + xscutils.XscInXraySuffix + gitIntegrationEventApi
+}
+
+func (vs *AnalyticsEventService) sendAddGeneralEventPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
 	var httpClientDetails httputils.HttpClientDetails
 	if vs.XrayDetails != nil {
 		httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
@@ -47,6 +52,12 @@ func (vs *AnalyticsEventService) sendPostRequest(requestContent []byte) (resp *h
 		httpClientDetails = vs.XscDetails.CreateHttpClientDetails()
 	}
 	resp, body, err = vs.client.SendPost(utils.AppendScopedProjectKeyParam(vs.getAnalyticsEndPoint(), vs.ScopeProjectKey), requestContent, &httpClientDetails)
+	return
+}
+
+func (vs *AnalyticsEventService) sendGitIntegrationPostRequest(requestContent []byte) (resp *http.Response, body []byte, err error) {
+	var httpClientDetails = vs.XrayDetails.CreateHttpClientDetails()
+	resp, body, err = vs.client.SendPost(utils.AppendScopedProjectKeyParam(vs.getGitEventEndPoint(), vs.ScopeProjectKey), requestContent, &httpClientDetails)
 	return
 }
 
@@ -88,7 +99,7 @@ func (vs *AnalyticsEventService) AddGeneralEvent(event XscAnalyticsGeneralEvent,
 			return "", errorutils.CheckError(err)
 		}
 	}
-	resp, body, err := vs.sendPostRequest(requestContent)
+	resp, body, err := vs.sendAddGeneralEventPostRequest(requestContent)
 	if err != nil {
 		return "", err
 	}
@@ -98,6 +109,25 @@ func (vs *AnalyticsEventService) AddGeneralEvent(event XscAnalyticsGeneralEvent,
 	var response XscAnalyticsGeneralEventResponse
 	err = json.Unmarshal(body, &response)
 	return response.MultiScanId, errorutils.CheckError(err)
+}
+
+// SendGitIntegrationEvent sends a POST request to the /git_integration_event endpoint
+func (vs *AnalyticsEventService) SendGitIntegrationEvent(event GitIntegrationEvent, xrayVersion string) error {
+	if err := utils.ValidateMinimumVersion(utils.Xray, xrayVersion, xscutils.MinXrayVersionGitIntegrationEvent); err != nil {
+		return fmt.Errorf("git integration event version error %s: %w", xscutils.MinXrayVersionGitIntegrationEvent, err)
+	}
+	requestBody, err := json.Marshal(event)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	resp, body, err := vs.sendGitIntegrationPostRequest(requestBody)
+	if err != nil {
+		return errorutils.CheckError(err)
+	}
+	if err = errorutils.CheckResponseStatus(resp, http.StatusCreated); err != nil {
+		return errorutils.CheckError(errorutils.GenerateResponseError(resp.Status, utils.IndentJson(body)))
+	}
+	return nil
 }
 
 // UpdateGeneralEvent update finalized analytics metrics info of an existing event.
@@ -199,6 +229,16 @@ type CommitContext struct {
 type PullRequestContext struct {
 	PullRequestId    int    `json:"pull_request_id,omitempty"`
 	PullRequestTitle string `json:"pull_request_title,omitempty"`
+}
+
+type GitIntegrationEvent struct {
+	EventType     string `json:"event_type"`
+	GitProvider   string `json:"git_provider"`
+	GitOwner      string `json:"git_owner"`
+	GitRepository string `json:"git_repository"`
+	GitBranch     string `json:"git_branch"`
+	EventStatus   string `json:"event_status"`
+	FailureReason string `json:"failure_reason,omitempty"`
 }
 
 type XscAnalyticsGeneralEventFinalize struct {
