@@ -4,15 +4,17 @@ package tests
 
 import (
 	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/xsc/services"
-	"github.com/jfrog/jfrog-client-go/xsc/services/utils"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/xsc/services"
+	"github.com/jfrog/jfrog-client-go/xsc/services/utils"
 )
 
 const TestMultiScanId = "3472b4e2-bddc-11ee-a9c9-acde48001122"
@@ -123,6 +125,94 @@ func createXscMockServerForGeneralEvent(t *testing.T) (mockServer *httptest.Serv
 			assert.NoError(t, err)
 		default:
 			assert.Fail(t, "received an unexpected request")
+		}
+	}))
+
+	xrayDetails := GetXrayDetails()
+	xrayDetails.SetUrl(mockServer.URL + "/xray")
+	xrayDetails.SetAccessToken("")
+
+	client, err := jfroghttpclient.JfrogClientBuilder().Build()
+	assert.NoError(t, err)
+
+	analyticsService = services.NewAnalyticsEventService(client)
+	analyticsService.XrayDetails = xrayDetails
+	return
+}
+
+func TestXscSendGitIntegrationEvent(t *testing.T) {
+	initXscTest(t, services.LogErrorMinXscVersion, utils.MinXrayVersionGitIntegrationEvent)
+
+	testCases := []struct {
+		name        string
+		xrayVersion string
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "Xray version below minimum",
+			xrayVersion: "3.134.0",
+			expectError: true,
+			errorMsg:    "git integration event requires minimum Xray version",
+		},
+		{
+			name:        "Xray version at minimum",
+			xrayVersion: "3.135.0",
+			expectError: false,
+		},
+		{
+			name:        "Xray version above minimum",
+			xrayVersion: "3.136.0",
+			expectError: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockServer, analyticsService := createXscMockServerForGitIntegrationEvent(t)
+			defer mockServer.Close()
+
+			event := services.GitIntegrationEvent{
+				EventType:     "Source Code SBOM Results Upload",
+				GitProvider:   "github",
+				GitOwner:      "jfrog",
+				GitRepository: "jfrog-cli-security",
+				GitBranch:     "main",
+				EventStatus:   "completed",
+			}
+
+			err := analyticsService.SendGitIntegrationEvent(event, tc.xrayVersion)
+
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func createXscMockServerForGitIntegrationEvent(t *testing.T) (mockServer *httptest.Server, analyticsService *services.AnalyticsEventService) {
+	mockServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.Contains(r.RequestURI, "/xray/api/v1/xsc/git_integration_event") && r.Method == http.MethodPost:
+			// Validate request body
+			var receivedEvent services.GitIntegrationEvent
+			err := json.NewDecoder(r.Body).Decode(&receivedEvent)
+			assert.NoError(t, err)
+
+			// Validate required fields
+			assert.NotEmpty(t, receivedEvent.EventType)
+			assert.NotEmpty(t, receivedEvent.GitProvider)
+			assert.NotEmpty(t, receivedEvent.GitOwner)
+			assert.NotEmpty(t, receivedEvent.GitRepository)
+			assert.NotEmpty(t, receivedEvent.GitBranch)
+			assert.NotEmpty(t, receivedEvent.EventStatus)
+
+			w.WriteHeader(http.StatusCreated)
+		default:
+			assert.Fail(t, "received an unexpected request: "+r.Method+" "+r.RequestURI)
 		}
 	}))
 
