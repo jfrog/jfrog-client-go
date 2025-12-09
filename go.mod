@@ -11,7 +11,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/gookit/color v1.6.0
 	github.com/jfrog/archiver/v3 v3.6.1
-	github.com/jfrog/build-info-go v1.12.4
+	github.com/jfrog/build-info-go v1.12.5-0.20251209031413-f5f0e93dc8db
 	github.com/jfrog/gofrog v1.7.6
 	github.com/minio/sha256-simd v1.0.1
 	github.com/stretchr/testify v1.11.1
@@ -56,6 +56,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v0.0.0-20241201000000-COMMIT_HASH
+//replace github.com/jfrog/build-info-go => github.com/jfrog/build-info-go v1.12.5-0.20251209031413-f5f0e93dc8db
 
 // replace github.com/jfrog/gofrog => github.com/jfrog/gofrog v1.7.6-0.20240909061051-2d36ae4bd05a
