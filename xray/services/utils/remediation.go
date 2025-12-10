@@ -40,11 +40,19 @@ const (
 	DirectDependency OptionType = "DirectDependency"
 )
 
+const (
+	QuickestFixStrategy FixStrategy = iota
+	LeastVulnerableStrategy
+	BestVersionStrategy
+)
+
+type FixStrategy int
+
 type Option struct {
-	Type        OptionType    `json:"type"`
-	Description string        `json:"description"`
-	Steps       []OptionStep  `json:"steps"`
-	Snippet     []CodeSnippet `json:"snippet"`
+	Type        OptionType                    `json:"type"`
+	Description string                        `json:"description"`
+	Steps       map[FixStrategy][]OptionStep  `json:"steps"`
+	Snippet     map[FixStrategy][]CodeSnippet `json:"snippet"`
 }
 
 type OptionStep struct {
