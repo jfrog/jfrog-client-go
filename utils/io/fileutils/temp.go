@@ -84,6 +84,8 @@ func CleanOldDirs() error {
 		return errorutils.CheckError(err)
 	}
 	now := time.Now()
+	var failedDeletions []string
+
 	// Search for files/dirs that match the template.
 	for _, file := range files {
 		fileName := file.Name()
@@ -91,15 +93,28 @@ func CleanOldDirs() error {
 			var timestamp time.Time
 			timestamp, err = extractTimestamp(fileName)
 			if err != nil {
-				return errorutils.CheckErrorf("could not extract timestamp from file %s: %q", fileName, err)
+				// Collect timestamp extraction errors and continue
+				failedDeletions = append(failedDeletions,
+					fmt.Sprintf("%s (could not extract timestamp: %v)", fileName, err))
+				continue
 			}
 			// Delete old file/dirs.
 			if now.Sub(timestamp).Hours() > maxFileAge {
-				if err = RemovePath(path.Join(tempDirBase, fileName)); err != nil {
-					return err
+				filePath := path.Join(tempDirBase, fileName)
+				if err = RemovePath(filePath); err != nil {
+					// Collect deletion errors and continue processing
+					failedDeletions = append(failedDeletions,
+						fmt.Sprintf("%s (%v)", filePath, err))
+					continue
 				}
 			}
 		}
+	}
+
+	// At the end, return aggregated error message for all failures
+	if len(failedDeletions) > 0 {
+		return fmt.Errorf("failed to cleanup %d file(s): %s",
+			len(failedDeletions), strings.Join(failedDeletions, "; "))
 	}
 	return nil
 }
