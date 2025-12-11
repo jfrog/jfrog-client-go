@@ -9,45 +9,49 @@ const CveRemediationResponse = `
   "CVE-2023-1234": [
     {
       "type": "InLock",
-      "steps": [
-        {
-          "pkgVersion": {
-            "type": "npm",
-            "name": "test-component-1",
-            "version": "1.0.0",
-            "ecosystem": "generic"
-          },
-          "stepType": "FixVersion",
-          "upgradeTo": {
-            "type": "npm",
-            "name": "test-component-1",
-            "version": "1.0.1",
-            "ecosystem": "generic"
+      "steps": {
+        "0": [
+          {
+            "pkgVersion": {
+              "type": "npm",
+              "name": "test-component-1",
+              "version": "1.0.0",
+              "ecosystem": "generic"
+            },
+            "stepType": "FixVersion",
+            "upgradeTo": {
+              "type": "npm",
+              "name": "test-component-1",
+              "version": "1.0.1",
+              "ecosystem": "generic"
+            }
           }
-        }
-      ]
+        ]
+      }
     }
   ],
   "CVE-2023-5678": [
     {
       "type": "InLock",
-      "steps": [
-        {
-          "pkgVersion": {
-            "type": "npm",
-            "name": "test-component-2",
-            "version": "2.0.0",
-            "ecosystem": "generic"
-          },
-          "stepType": "FixVersion",
-          "upgradeTo": {
-            "type": "npm",
-            "name": "test-component-2",
-            "version": "2.0.2",
-            "ecosystem": "generic"
+      "steps": {
+        "0": [
+          {
+            "pkgVersion": {
+              "type": "npm",
+              "name": "test-component-2",
+              "version": "2.0.0",
+              "ecosystem": "generic"
+            },
+            "stepType": "FixVersion",
+            "upgradeTo": {
+              "type": "npm",
+              "name": "test-component-2",
+              "version": "2.0.2",
+              "ecosystem": "generic"
+            }
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }`
