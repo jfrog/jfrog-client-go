@@ -2,14 +2,6 @@ package utils
 
 type CveRemediationResponse map[string][]Option
 
-type PackageVersionKey struct {
-	Type      string    `json:"type"`
-	Name      string    `json:"name"`
-	Namespace string    `json:"namespace"`
-	Version   string    `json:"version"`
-	Ecosystem Ecosystem `json:"ecosystem"`
-}
-
 type Ecosystem string
 
 const (
@@ -40,19 +32,48 @@ const (
 	DirectDependency OptionType = "DirectDependency"
 )
 
+type FixStrategy int
+
+const (
+	QuickestFixStrategy FixStrategy = iota
+	LeastVulnerableStrategy
+	BestVersionStrategy
+)
+
+type BadgeType int
+
+const (
+	NeutralBadge BadgeType = iota
+	GoodBadge
+	BadBadge
+)
+
+type PackageVersionKey struct {
+	Type      string    `json:"type"`
+	Name      string    `json:"name"`
+	Namespace string    `json:"namespace"`
+	Version   string    `json:"version"`
+	Ecosystem Ecosystem `json:"ecosystem"`
+}
+
 type Option struct {
-	Type        OptionType    `json:"type"`
-	Description string        `json:"description"`
-	Steps       []OptionStep  `json:"steps"`
-	Snippet     []CodeSnippet `json:"snippet"`
+	Type        OptionType                    `json:"type"`
+	Description string                        `json:"description"`
+	Steps       map[FixStrategy][]OptionStep  `json:"steps"`
+	Snippet     map[FixStrategy][]CodeSnippet `json:"snippet"`
 }
 
 type OptionStep struct {
 	PkgVersion PackageVersionKey `json:"PkgVersion"`
 	StepType   StepType          `json:"StepType"`
 	UpgradeTo  PackageVersionKey `json:"UpgradeTo"`
-	Badges     []string          `json:"badges,omitempty"`
+	Badges     []Badge           `json:"badges,omitempty"`
 	Party      string            `json:"party,omitempty"`
+}
+
+type Badge struct {
+	Value string    `json:"value"`
+	Type  BadgeType `json:"type,omitempty"`
 }
 
 type CodeSnippet struct {
