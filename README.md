@@ -1891,7 +1891,7 @@ params := services.GetTokensParams{
     Username:        "admin",                     // Filter by username
     Refreshable:     utils.Pointer(true),         // Filter by refreshable status
     TokenId:         "token-id",                  // Filter by specific token ID
-    OrderBy:         "issued_at",                 // Order by field (issued_at, expires_at, etc.)
+    OrderBy:         "token_id",                  // Order by field (created|token_id|owner|subject|expiry)
     DescendingOrder: utils.Pointer(false),        // Sort order (true for descending)
     LastUsed:        utils.Pointer(int64(1672531200)), // Filter by last used date (epoch seconds)
 }
