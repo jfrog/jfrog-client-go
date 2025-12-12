@@ -137,6 +137,7 @@ type ReleaseBundleSource struct {
 	ReleaseBundleName    string `json:"release_bundle_name,omitempty"`
 	ReleaseBundleVersion string `json:"release_bundle_version,omitempty"`
 	ProjectKey           string `json:"project,omitempty"`
+	RepositoryKey        string `json:"repository_key,omitempty"`
 }
 
 type RbSource struct {
