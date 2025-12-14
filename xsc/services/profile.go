@@ -55,8 +55,6 @@ type FrogbotConfig struct {
 	ShowSecretsAsPrComment              bool   `json:"show_secrets_as_pr_comment,omitempty"`
 	CreateAutoFixPr                     bool   `json:"create_auto_fix_pr,omitempty"`
 	IncludeVulnerabilitiesAndViolations bool   `json:"include_vulnerabilities_and_violations,omitempty"`
-	MinSeverityToDisplay                string `json:"min_severity_to_display,omitempty"`
-	DisplayFixableOnly                  bool   `json:"display_fixable_only,omitempty"`
 }
 
 type Module struct {
