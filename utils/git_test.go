@@ -1,14 +1,15 @@
 package utils
 
 import (
-	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
+	"github.com/stretchr/testify/assert"
 )
 
 type gitExecutor struct {
@@ -91,4 +92,97 @@ func getDotGitPath(t *testing.T) string {
 	assert.NoError(t, err)
 	assert.True(t, dotGitExists, "Can't find .git")
 	return dotGitPath
+}
+
+// TestReadConfigEmptyGitDir tests that ReadConfig handles an empty .git directory gracefully
+// instead of crashing with "no such file or directory" error when .git/HEAD is missing.
+// This simulates a corrupt or uninitialized git repository scenario common in CI environments.
+func TestReadConfigEmptyGitDir(t *testing.T) {
+	// Create a temp directory with an empty .git folder (no HEAD file)
+	tempDir, err := os.MkdirTemp("", "test-empty-git")
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tempDir))
+	}()
+
+	// Create empty .git directory (simulating corrupt/uninitialized repo)
+	emptyGitDir := filepath.Join(tempDir, ".git")
+	err = os.Mkdir(emptyGitDir, 0755)
+	assert.NoError(t, err)
+
+	// This should NOT crash - it should handle the missing HEAD file gracefully
+	gitManager := NewGitManager(tempDir)
+	err = gitManager.ReadConfig()
+
+	// The function should not return an error for missing HEAD/config files
+	// Instead, it should gracefully handle this case and return empty values
+	assert.NoError(t, err, "ReadConfig should handle empty .git directory gracefully")
+
+	// Values should be empty but not cause a crash
+	assert.Empty(t, gitManager.GetRevision())
+	assert.Empty(t, gitManager.GetUrl())
+	assert.Empty(t, gitManager.GetBranch())
+}
+
+// TestReadConfigMissingHeadFile tests that ReadConfig handles missing HEAD file gracefully
+func TestReadConfigMissingHeadFile(t *testing.T) {
+	// Create a temp directory with .git folder containing only config file
+	tempDir, err := os.MkdirTemp("", "test-missing-head")
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tempDir))
+	}()
+
+	// Create .git directory with config but no HEAD
+	gitDir := filepath.Join(tempDir, ".git")
+	err = os.Mkdir(gitDir, 0755)
+	assert.NoError(t, err)
+
+	// Create a minimal config file
+	configContent := `[remote "origin"]
+	url = https://github.com/test/repo.git
+`
+	err = os.WriteFile(filepath.Join(gitDir, "config"), []byte(configContent), 0644)
+	assert.NoError(t, err)
+
+	gitManager := NewGitManager(tempDir)
+	err = gitManager.ReadConfig()
+
+	// Should not error - gracefully handle missing HEAD
+	assert.NoError(t, err)
+	// URL should be read from config
+	assert.Equal(t, "https://github.com/test/repo.git", gitManager.GetUrl())
+	// Revision and branch should be empty (no HEAD file)
+	assert.Empty(t, gitManager.GetRevision())
+	assert.Empty(t, gitManager.GetBranch())
+}
+
+// TestReadConfigMissingConfigFile tests that ReadConfig handles missing config file gracefully
+func TestReadConfigMissingConfigFile(t *testing.T) {
+	// Create a temp directory with .git folder containing only HEAD file
+	tempDir, err := os.MkdirTemp("", "test-missing-config")
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tempDir))
+	}()
+
+	// Create .git directory with HEAD but no config
+	gitDir := filepath.Join(tempDir, ".git")
+	err = os.Mkdir(gitDir, 0755)
+	assert.NoError(t, err)
+
+	// Create HEAD file pointing to a branch
+	headContent := "ref: refs/heads/main\n"
+	err = os.WriteFile(filepath.Join(gitDir, "HEAD"), []byte(headContent), 0644)
+	assert.NoError(t, err)
+
+	gitManager := NewGitManager(tempDir)
+	err = gitManager.ReadConfig()
+
+	// Should not error - gracefully handle missing config
+	assert.NoError(t, err)
+	// URL should be empty (no config file)
+	assert.Empty(t, gitManager.GetUrl())
+	// Branch should be read from HEAD
+	assert.Equal(t, "main", gitManager.GetBranch())
 }

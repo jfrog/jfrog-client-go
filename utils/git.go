@@ -119,6 +119,19 @@ func (m *GitManager) readUrl() {
 		return
 	}
 	dotGitPath := filepath.Join(m.path, "config")
+
+	// Check if config file exists before trying to open it.
+	// This handles cases where .git directory exists but is empty/uninitialized.
+	exists, err := fileutils.IsFileExists(dotGitPath, false)
+	if err != nil {
+		m.err = err
+		return
+	}
+	if !exists {
+		log.Debug("Git config file not found at: " + dotGitPath + ". Skipping URL collection.")
+		return
+	}
+
 	file, err := os.Open(dotGitPath)
 	if err != nil {
 		m.err = err
@@ -164,6 +177,18 @@ func (m *GitManager) readUrl() {
 
 func (m *GitManager) getRevisionAndBranchPath() (revision, refUrl string, err error) {
 	dotGitPath := filepath.Join(m.path, "HEAD")
+
+	// Check if HEAD file exists before trying to open it.
+	// This handles cases where .git directory exists but is empty/uninitialized.
+	exists, err := fileutils.IsFileExists(dotGitPath, false)
+	if err != nil {
+		return "", "", err
+	}
+	if !exists {
+		log.Warn("Git HEAD file not found at: " + dotGitPath + ". The repository may be uninitialized or corrupt. Skipping VCS info collection.")
+		return "", "", nil
+	}
+
 	file, err := os.Open(dotGitPath)
 	if errorutils.CheckError(err) != nil {
 		return
