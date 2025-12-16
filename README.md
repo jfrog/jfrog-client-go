@@ -1893,7 +1893,6 @@ params := services.GetTokensParams{
     TokenId:         "token-id",                  // Filter by specific token ID
     OrderBy:         "token_id",                  // Order by field (created|token_id|owner|subject|expiry)
     DescendingOrder: utils.Pointer(false),        // Sort order (true for descending)
-    LastUsed:        utils.Pointer(int64(1672531200)), // Filter by last used date (epoch seconds)
 }
 
 tokens, err := accessManager.GetTokens(params)

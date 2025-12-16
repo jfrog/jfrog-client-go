@@ -60,7 +60,6 @@ type GetTokensParams struct {
 	TokenId         string `url:"token_id,omitempty"`
 	OrderBy         string `url:"order_by,omitempty"`
 	DescendingOrder *bool  `url:"descending_order,omitempty"`
-	LastUsed        *int64 `url:"last_used,omitempty"`
 }
 
 type TokenInfos struct {
@@ -179,9 +178,6 @@ func (ps *TokenService) GetTokens(params GetTokensParams) ([]TokenInfo, error) {
 	}
 	if params.DescendingOrder != nil {
 		queryParams.Add("descending_order", strconv.FormatBool(*params.DescendingOrder))
-	}
-	if params.LastUsed != nil {
-		queryParams.Add("last_used", strconv.FormatInt(*params.LastUsed, 10))
 	}
 
 	if queryString := queryParams.Encode(); queryString != "" {
