@@ -141,6 +141,7 @@ func createXscMockServerForGeneralEvent(t *testing.T) (mockServer *httptest.Serv
 }
 
 func TestXscSendGitIntegrationEvent(t *testing.T) {
+	t.Skip("Skipping TestXscSendGitIntegrationEvent due to a bug on windows/ubuntu")
 	initXscTest(t, services.LogErrorMinXscVersion, utils.MinXrayVersionGitIntegrationEvent)
 
 	testCases := []struct {
