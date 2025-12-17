@@ -13,9 +13,7 @@
     "commit_message_template": "Upgrade {IMPACTED_PACKAGE} to {FIX_VERSION}",
     "show_secrets_as_pr_comment": false,
     "create_auto_fix_pr": true,
-    "include_vulnerabilities_and_violations": false,
-    "min_severity_to_display": "Medium",
-    "display_fixable_only": true
+    "include_vulnerabilities_and_violations": false
   },
   "modules": [
     {
