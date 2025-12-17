@@ -141,7 +141,6 @@ func createXscMockServerForGeneralEvent(t *testing.T) (mockServer *httptest.Serv
 }
 
 func TestXscSendGitIntegrationEvent(t *testing.T) {
-	t.Skip("Skipping TestXscSendGitIntegrationEvent due to a bug on windows/ubuntu")
 	initXscTest(t, services.LogErrorMinXscVersion, utils.MinXrayVersionGitIntegrationEvent)
 
 	testCases := []struct {
@@ -154,7 +153,7 @@ func TestXscSendGitIntegrationEvent(t *testing.T) {
 			name:        "Xray version below minimum",
 			xrayVersion: "3.134.0",
 			expectError: true,
-			errorMsg:    "git integration event requires minimum Xray version",
+			errorMsg:    "git integration event version error",
 		},
 		{
 			name:        "Xray version at minimum",
