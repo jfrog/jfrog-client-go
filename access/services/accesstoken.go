@@ -230,7 +230,7 @@ func (ps *TokenService) RevokeTokenByID(tokenId string) error {
 	if err != nil {
 		return err
 	}
-	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK)
+	return errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK, http.StatusNoContent)
 }
 
 func prepareForRefresh(p CreateTokenParams) (*CreateTokenParams, error) {
