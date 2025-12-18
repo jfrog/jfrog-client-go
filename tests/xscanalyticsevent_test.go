@@ -153,7 +153,7 @@ func TestXscSendGitIntegrationEvent(t *testing.T) {
 			name:        "Xray version below minimum",
 			xrayVersion: "3.134.0",
 			expectError: true,
-			errorMsg:    "git integration event requires minimum Xray version",
+			errorMsg:    "git integration event version error",
 		},
 		{
 			name:        "Xray version at minimum",

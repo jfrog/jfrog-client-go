@@ -3,17 +3,17 @@
 package tests
 
 import (
-	"encoding/json"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/xsc/services"
-	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
+	"github.com/jfrog/jfrog-client-go/xsc/services"
+	xscutils "github.com/jfrog/jfrog-client-go/xsc/services/utils"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const configProfileWithoutRepo = "default-test-profile"
@@ -29,13 +29,7 @@ func TestGetConfigurationProfileByName(t *testing.T) {
 
 	configProfile, err := configProfileService.GetConfigurationProfileByName(configProfileWithoutRepo)
 	assert.NoError(t, err)
-
-	profileFileContent, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
-	assert.NoError(t, err)
-	var configProfileForComparison services.ConfigProfile
-	err = json.Unmarshal(profileFileContent, &configProfileForComparison)
-	assert.NoError(t, err)
-	assert.Equal(t, &configProfileForComparison, configProfile)
+	assert.Equal(t, getComparisonConfigProfile(), configProfile)
 }
 
 func TestGetConfigurationProfileByUrl(t *testing.T) {
@@ -49,14 +43,60 @@ func TestGetConfigurationProfileByUrl(t *testing.T) {
 
 	configProfile, err := configProfileService.GetConfigurationProfileByUrl(mockServer.URL)
 	assert.NoError(t, err)
+	assert.Equal(t, getComparisonConfigProfile(), configProfile)
 
-	profileFileContent, err := os.ReadFile("testdata/configprofile/configProfileExample.json")
-	assert.NoError(t, err)
-	var configProfileForComparison services.ConfigProfile
-	err = json.Unmarshal(profileFileContent, &configProfileForComparison)
-	assert.NoError(t, err)
-	assert.Equal(t, &configProfileForComparison, configProfile)
+}
 
+func getComparisonConfigProfile() *services.ConfigProfile {
+	return &services.ConfigProfile{
+		ProfileName: "default-profile",
+		GeneralConfig: services.GeneralConfig{
+			ScannersDownloadPath:    "https://repo.example.com/releases",
+			GeneralExcludePatterns:  []string{"*.log*", "*.tmp*"},
+			FailUponAnyScannerError: true,
+		},
+		FrogbotConfig: services.FrogbotConfig{
+			AggregateFixes:                      true,
+			HideSuccessBannerForNoIssues:        false,
+			BranchNameTemplate:                  "frogbot-${IMPACTED_PACKAGE}-${BRANCH_NAME_HASH}",
+			PrTitleTemplate:                     "[🐸 Frogbot] Upgrade {IMPACTED_PACKAGE} to {FIX_VERSION}",
+			CommitMessageTemplate:               "Upgrade {IMPACTED_PACKAGE} to {FIX_VERSION}",
+			ShowSecretsAsPrComment:              false,
+			CreateAutoFixPr:                     true,
+			IncludeVulnerabilitiesAndViolations: false,
+		},
+		Modules: []services.Module{
+			{
+				ModuleName:   "default-module",
+				PathFromRoot: ".",
+				ScanConfig: services.ScanConfig{
+					ScaScannerConfig: services.ScaScannerConfig{
+						EnableScaScan:   true,
+						ExcludePatterns: []string{"**/build/**"},
+					},
+					ContextualAnalysisScannerConfig: services.CaScannerConfig{
+						EnableCaScan:    true,
+						ExcludePatterns: []string{"**/docs/**"},
+					},
+					SastScannerConfig: services.SastScannerConfig{
+						EnableSastScan:  true,
+						ExcludePatterns: []string{"**/_test.go/**"},
+						ExcludeRules:    []string{"xss-injection"},
+					},
+					SecretsScannerConfig: services.SecretsScannerConfig{
+						EnableSecretsScan:   true,
+						ValidateSecrets:     true,
+						ExcludePatterns:     []string{"**/_test.go/**"},
+						EnableCustomSecrets: true,
+					},
+					IacScannerConfig: services.IacScannerConfig{
+						EnableIacScan:   true,
+						ExcludePatterns: []string{"*.tfstate"},
+					},
+				},
+			},
+		},
+	}
 }
 
 // TODO backwards compatability can be removed once old Xsc service is removed from all servers

@@ -35,86 +35,48 @@ func NewConfigurationProfileService(client *jfroghttpclient.JfrogHttpClient) *Co
 }
 
 type ConfigProfile struct {
-	ProfileName    string        `json:"profile_name"`
-	GeneralConfig  GeneralConfig `json:"general_config,omitempty"`
-	FrogbotConfig  FrogbotConfig `json:"frogbot_config,omitempty"`
-	Modules        []Module      `json:"modules"`
-	IsDefault      bool          `json:"is_default,omitempty"`
-	IsBasicProfile bool
+	ProfileName   string        `json:"profile_name"`
+	GeneralConfig GeneralConfig `json:"general_config,omitempty"`
+	FrogbotConfig FrogbotConfig `json:"frogbot_config,omitempty"`
+	Modules       []Module      `json:"modules"`
 }
 
 type GeneralConfig struct {
-	ReleasesRepo           string   `json:"releases_repo,omitempty"`
-	AnalyzerManagerVersion string   `json:"analyzer_manager_version,omitempty"`
-	ReportAnalytics        bool     `json:"report_analytics,omitempty"`
-	ExcludePatterns        []string `json:"exclude_patterns,omitempty"`
-	ResultsOutputDir       string   `json:"results_output_dir,omitempty"`
-	AllowPartialResults    bool     `json:"allow_partial_results,omitempty"`
+	ScannersDownloadPath    string   `json:"scanners_download_path,omitempty"`
+	GeneralExcludePatterns  []string `json:"general_exclude_patterns,omitempty"`
+	FailUponAnyScannerError bool     `json:"fail_upon_any_scanner_error,omitempty"`
 }
 
 type FrogbotConfig struct {
-	EmailAuthor                         string `json:"email_author,omitempty"`
 	AggregateFixes                      bool   `json:"aggregate_fixes,omitempty"`
-	AvoidPreviousPrCommentsDeletion     bool   `json:"avoid_previous_pr_comments_deletion,omitempty"`
-	AvoidExtraMessages                  bool   `json:"avoid_extra_messages,omitempty"`
-	AddSuccessComment                   bool   `json:"add_success_comment,omitempty"`
+	HideSuccessBannerForNoIssues        bool   `json:"hide_success_banner_for_no_issues,omitempty"`
 	BranchNameTemplate                  string `json:"branch_name_template,omitempty"`
 	PrTitleTemplate                     string `json:"pr_title_template,omitempty"`
-	PrCommentTitle                      string `json:"pr_comment_title,omitempty"`
 	CommitMessageTemplate               string `json:"commit_message_template,omitempty"`
 	ShowSecretsAsPrComment              bool   `json:"show_secrets_as_pr_comment,omitempty"`
-	SkipAutoFix                         bool   `json:"skip_auto_fix,omitempty"`
-	IncludeAllRepositoryVulnerabilities bool   `json:"include_all_repository_vulnerabilities,omitempty"`
+	CreateAutoFixPr                     bool   `json:"create_auto_fix_pr,omitempty"`
+	IncludeVulnerabilitiesAndViolations bool   `json:"include_vulnerabilities_and_violations,omitempty"`
 }
 
 type Module struct {
-	ModuleId        int32      `json:"module_id,omitempty"`
-	ModuleName      string     `json:"module_name"`
-	PathFromRoot    string     `json:"path_from_root"`
-	ExcludePatterns []string   `json:"exclude_patterns,omitempty"`
-	ScanConfig      ScanConfig `json:"scan_config"`
-	DepsRepo        string     `json:"deps_repo,omitempty"`
+	ModuleId     int32      `json:"module_id,omitempty"`
+	ModuleName   string     `json:"module_name"`
+	PathFromRoot string     `json:"path_from_root"`
+	ScanConfig   ScanConfig `json:"scan_config"`
 }
 
 type ScanConfig struct {
-	ScaScannerConfig                ScaScannerConfig     `json:"sca_scanner_config,omitempty"`
-	ContextualAnalysisScannerConfig CaScannerConfig      `json:"contextual_analysis_scanner_config,omitempty"`
-	SastScannerConfig               SastScannerConfig    `json:"sast_scanner_config,omitempty"`
-	SecretsScannerConfig            SecretsScannerConfig `json:"secrets_scanner_config,omitempty"`
-	IacScannerConfig                IacScannerConfig     `json:"iac_scanner_config,omitempty"`
+	ScaScannerConfig                ScaScannerConfig       `json:"sca_scanner_config,omitempty"`
+	ContextualAnalysisScannerConfig CaScannerConfig        `json:"contextual_analysis_scanner_config,omitempty"`
+	SastScannerConfig               SastScannerConfig      `json:"sast_scanner_config,omitempty"`
+	SecretsScannerConfig            SecretsScannerConfig   `json:"secrets_scanner_config,omitempty"`
+	IacScannerConfig                IacScannerConfig       `json:"iac_scanner_config,omitempty"`
+	MaliciousScannerConfig          MaliciousScannerConfig `json:"malicious_scanner_config,omitempty"`
 }
 
 type ScaScannerConfig struct {
-	EnableScaScan           bool                    `json:"enable_sca_scan,omitempty"`
-	Technology              string                  `json:"technology,omitempty"`
-	PackageManagersSettings PackageManagersSettings `json:"package_managers_settings,omitempty"`
-	SkipAutoInstall         bool                    `json:"skip_auto_install,omitempty"`
-	ExcludePatterns         []string                `json:"exclude_patterns,omitempty"`
-}
-
-type PackageManagersSettings struct {
-	GradleSettings GradleSettings `json:"gradle_settings,omitempty"`
-	MavenSettings  MavenSettings  `json:"maven_settings,omitempty"`
-	NpmSettings    NpmSettings    `json:"npm_settings,omitempty"`
-	PythonSettings PythonSettings `json:"python_settings,omitempty"`
-}
-
-type GradleSettings struct {
-	ExcludeTestDeps bool `json:"exclude_test_deps,omitempty"`
-	UseWrapper      bool `json:"use_wrapper,omitempty"`
-}
-
-type MavenSettings struct {
-	UseWrapper bool `json:"use_wrapper,omitempty"`
-}
-
-type NpmSettings struct {
-	DepType          string `json:"dep_type,omitempty"`
-	PnpmMaxTreeDepth int32  `json:"pnpm_max_tree_depth,omitempty"`
-}
-
-type PythonSettings struct {
-	RequirementsFile string `json:"requirements_file,omitempty"`
+	EnableScaScan   bool     `json:"enable_sca_scan,omitempty"`
+	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
 }
 
 type CaScannerConfig struct {
@@ -124,21 +86,24 @@ type CaScannerConfig struct {
 
 type SastScannerConfig struct {
 	EnableSastScan  bool     `json:"enable_sast_scan,omitempty"`
-	Language        string   `json:"language,omitempty"`
-	IncludePatterns []string `json:"Include_patterns,omitempty"`
 	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
 	ExcludeRules    []string `json:"exclude_rules,omitempty"`
 }
 
+type MaliciousScannerConfig struct {
+	EnableMaliciousScan bool     `json:"enable_malicious_scan,omitempty"`
+	ExcludePatterns     []string `json:"exclude_patterns,omitempty"`
+}
+
 type SecretsScannerConfig struct {
-	EnableSecretsScan bool     `json:"enable_secrets_scan,omitempty"`
-	IncludePatterns   []string `json:"Include_patterns,omitempty"`
-	ExcludePatterns   []string `json:"exclude_patterns,omitempty"`
+	EnableSecretsScan   bool     `json:"enable_secrets_scan,omitempty"`
+	ValidateSecrets     bool     `json:"validate_secrets,omitempty"`
+	ExcludePatterns     []string `json:"exclude_patterns,omitempty"`
+	EnableCustomSecrets bool     `json:"enable_custom_secrets,omitempty"`
 }
 
 type IacScannerConfig struct {
 	EnableIacScan   bool     `json:"enable_iac_scan,omitempty"`
-	IncludePatterns []string `json:"Include_patterns,omitempty"`
 	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
 }
 
