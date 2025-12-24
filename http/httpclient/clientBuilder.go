@@ -124,7 +124,9 @@ func (builder *httpClientBuilder) createDefaultHttpTransport() *http.Transport {
 			KeepAlive: 20 * time.Second,
 			DualStack: true,
 		}).DialContext,
+		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          100,
+		MaxIdleConnsPerHost:   6, // Increased from default (2) to common default (6) of main web browsers to improve performance when making multiple requests to the same host.
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
