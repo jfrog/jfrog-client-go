@@ -10,7 +10,7 @@ require (
 	github.com/go-git/go-git/v5 v5.16.3
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/gookit/color v1.6.0
-	github.com/jfrog/archiver/v3 v3.6.1
+	github.com/jfrog/archiver/v3 v3.6.2
 	github.com/jfrog/build-info-go v1.13.0
 	github.com/jfrog/gofrog v1.7.6
 	github.com/minio/sha256-simd v1.0.1
@@ -39,7 +39,7 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
-	github.com/nwaples/rardecode v1.1.3 // indirect
+	github.com/nwaples/rardecode/v2 v2.2.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
