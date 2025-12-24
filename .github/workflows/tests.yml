@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   Pretest:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'safe to test')
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'safe to test') || (github.event_name == 'push' && github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     steps:
       - name: Unlabel 'safe to test'
