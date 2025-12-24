@@ -66,12 +66,11 @@ type Module struct {
 }
 
 type ScanConfig struct {
-	ScaScannerConfig                ScaScannerConfig       `json:"sca_scanner_config,omitempty"`
-	ContextualAnalysisScannerConfig CaScannerConfig        `json:"contextual_analysis_scanner_config,omitempty"`
-	SastScannerConfig               SastScannerConfig      `json:"sast_scanner_config,omitempty"`
-	SecretsScannerConfig            SecretsScannerConfig   `json:"secrets_scanner_config,omitempty"`
-	IacScannerConfig                IacScannerConfig       `json:"iac_scanner_config,omitempty"`
-	MaliciousScannerConfig          MaliciousScannerConfig `json:"malicious_scanner_config,omitempty"`
+	ScaScannerConfig                ScaScannerConfig     `json:"sca_scanner_config,omitempty"`
+	ContextualAnalysisScannerConfig CaScannerConfig      `json:"contextual_analysis_scanner_config,omitempty"`
+	SastScannerConfig               SastScannerConfig    `json:"sast_scanner_config,omitempty"`
+	SecretsScannerConfig            SecretsScannerConfig `json:"secrets_scanner_config,omitempty"`
+	IacScannerConfig                IacScannerConfig     `json:"iac_scanner_config,omitempty"`
 }
 
 type ScaScannerConfig struct {
@@ -88,11 +87,6 @@ type SastScannerConfig struct {
 	EnableSastScan  bool     `json:"enable_sast_scan,omitempty"`
 	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
 	ExcludeRules    []string `json:"exclude_rules,omitempty"`
-}
-
-type MaliciousScannerConfig struct {
-	EnableMaliciousScan bool     `json:"enable_malicious_scan,omitempty"`
-	ExcludePatterns     []string `json:"exclude_patterns,omitempty"`
 }
 
 type SecretsScannerConfig struct {
