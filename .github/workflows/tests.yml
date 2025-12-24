@@ -1,6 +1,9 @@
 name: JFrog Client Go Tests
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "master"
   pull_request_target:
     types: [labeled]
 
