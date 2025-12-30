@@ -40,6 +40,9 @@ func buildGetSearchQueryParams(optionalQueryParams GetSearchOptionalQueryParams)
 	if optionalQueryParams.OrderAsc {
 		params["order_asc"] = strconv.FormatBool(optionalQueryParams.OrderAsc)
 	}
+	if optionalQueryParams.Project != "" {
+		params["project"] = optionalQueryParams.Project
+	}
 	return params
 }
 
@@ -120,4 +123,5 @@ type GetSearchOptionalQueryParams struct {
 	OrderBy  string
 	OrderAsc bool
 	Includes string
+	Project  string
 }
