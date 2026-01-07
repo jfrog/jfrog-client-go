@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"runtime"
 	"sort"
 	"sync"
 
@@ -97,34 +98,53 @@ func (cr *ContentReader) Reset() {
 	cr.once = new(sync.Once)
 }
 
-func removeFileWithRetry(filePath string) error {
+func removeFile(filePath string) error {
 	// Check if file exists before attempting to remove
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		log.Debug("File does not exist: %s", filePath)
 		return nil
 	}
 	log.Debug(fmt.Sprintf("Attempting to remove file: %s", filePath))
+	err := os.Remove(filePath)
+	if err == nil || runtime.GOOS != "windows" {
+		// Success, or non-Windows: return immediately
+		return errorutils.CheckError(err)
+	}
+	// On Windows, retry to handle antivirus/file locks
 	executor := retryexecutor.RetryExecutor{
 		Context:                  context.Background(),
-		MaxRetries:               5,
-		RetriesIntervalMilliSecs: 100,
-		ErrorMessage:             "Failed to remove file",
-		LogMsgPrefix:             "Attempting removal",
+		MaxRetries:               10,
+		RetriesIntervalMilliSecs: 500,
+		ErrorMessage:             "Failed to remove temp file",
+		LogMsgPrefix:             "Removing temp file",
 		ExecutionHandler: func() (bool, error) {
-			return false, errorutils.CheckError(os.Remove(filePath))
+			err := os.Remove(filePath)
+			if err != nil {
+				// Retry on error
+				return true, errorutils.CheckError(err)
+			}
+			// Success
+			return false, nil
 		},
 	}
 	return executor.Execute()
 }
 
-// Cleanup the reader data with retry
+// Cleanup the reader data.
+// On Windows, retries file removal to handle antivirus/indexing locks.
+// If removal still fails on Windows after retries, logs a warning instead of failing.
 func (cr *ContentReader) Close() error {
 	for _, filePath := range cr.filesPaths {
 		if filePath == "" {
 			continue
 		}
-		if err := removeFileWithRetry(filePath); err != nil {
-			return fmt.Errorf("failed to close reader: %w", err)
+		if err := removeFile(filePath); err != nil {
+			if runtime.GOOS != "windows" {
+				// Non-Windows: preserve existing behavior (return error)
+				return fmt.Errorf("failed to close reader: %w", err)
+			}
+			// Windows: log warning but don't fail (temp file cleanup is non-critical)
+			log.Warn(fmt.Sprintf("Failed to remove temp file (will be cleaned up later): %s. Error: %s", filePath, err.Error()))
 		}
 	}
 	cr.filesPaths = nil
