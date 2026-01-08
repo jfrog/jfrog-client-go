@@ -60,11 +60,13 @@ type Row struct {
 	Cves                     []ReportCve `json:"cves,omitempty"`
 	Cvsv2MaxScore            float64     `json:"cvss2_max_score,omitempty"`
 	Cvsv3MaxScore            float64     `json:"cvss3_max_score,omitempty"`
+	Cwe                      []string    `json:"cwe,omitempty"`
 	Summary                  string      `json:"summary,omitempty"`
 	Severity                 string      `json:"severity,omitempty"`
 	SeveritySource           string      `json:"severity_source,omitempty"`
-	VulnerableComponent      string      `json:"vulnerable_component,omitempty"`
-	ImpactedArtifact         string      `json:"impacted_artifact,omitempty"`
+	JFrogSeverity            string      `json:"jfrog_severity,omitempty"`
+	VulnerableComponents     []string    `json:"vulnerable_components,omitempty"`
+	ImpactedArtifacts        []string    `json:"impacted_artifacts,omitempty"`
 	ImpactPath               []string    `json:"impact_path,omitempty"`
 	FixedVersions            []string    `json:"fixed_versions,omitempty"`
 	Published                string      `json:"published,omitempty"`
@@ -74,6 +76,11 @@ type Row struct {
 	Description              string      `json:"description,omitempty"`
 	ExternalAdvisorySource   string      `json:"external_advisory_source,omitempty"`
 	ExternalAdvisorySeverity string      `json:"external_advisory_severity,omitempty"`
+	PhysicalPath             string      `json:"physical_path,omitempty"`
+	ProjectKeys              []string    `json:"project_keys,omitempty"`
+	Applicability            *bool       `json:"applicability,omitempty"`
+	ApplicabilityResult      string      `json:"applicability_result,omitempty"`
+	Paths                    []string    `json:"paths,omitempty"`
 	// Licenses Report field
 	License          string `json:"license,omitempty"`
 	LicenseName      string `json:"license_name,omitempty"`
