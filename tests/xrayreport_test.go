@@ -5,13 +5,14 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"strconv"
+	"testing"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils/tests/xray"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"github.com/stretchr/testify/assert"
-	"strconv"
-	"testing"
 )
 
 var testXrayReportService *services.ReportService

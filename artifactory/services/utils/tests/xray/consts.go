@@ -1240,11 +1240,13 @@ const VulnerabilityReportDetailsResponse = `
       ],
       "cvss2_max_score": 7.1,
       "cvss3_max_score": 7.5,
+      "cwe": ["CWE-400", "CWE-770"],
       "summary": "Netty Bzip2Decoder Class Missing Decompressed Data Allocation Limitation Memory Exhaustion Remote DoS",
       "severity": "High",
       "severity_source": "CVSS V3 from RBS",
-      "vulnerable_component": "gav://io.netty:netty-codec:4.1.66.Final",
-      "impacted_artifact": "docker://elasticsearch/7.15.0-test2:latest",
+      "jfrog_severity": "High",
+      "vulnerable_components": ["gav://io.netty:netty-codec:4.1.66.Final"],
+      "impacted_artifacts": ["docker://elasticsearch/7.15.0-test2:latest"],
       "impact_path": [
         "docker://elasticsearch/7.15.0-test2:latest",
         "generic://sha256:a53372ba228046f81171efd357179b7b02a95acccee17925e3d0295829cb42ea/sha256__a53372ba228046f81171efd357179b7b02a95acccee17925e3d0295829cb42ea.tar.gz",
@@ -1252,6 +1254,11 @@ const VulnerabilityReportDetailsResponse = `
         "gav://io.netty:netty-codec:4.1.66.Final"
       ],
       "path": "forks-release-local/elasticsearch/7.15.0-test2/latest/",
+      "paths": ["forks-release-local/elasticsearch/7.15.0-test2/latest/"],
+      "physical_path": "/app/lib/netty-codec-4.1.66.Final.jar",
+      "project_keys": ["test-project"],
+      "applicability": true,
+      "applicability_result": "Applicable",
       "fixed_versions": [
         "4.1.68.Final"
       ],
@@ -1280,17 +1287,24 @@ const VulnerabilityReportDetailsResponse = `
       ],
       "cvss2_max_score": 7.1,
       "cvss3_max_score": 7.5,
+      "cwe": ["CWE-400", "CWE-770"],
       "summary": "Netty Bzip2Decoder Class Missing Decompressed Data Allocation Limitation Memory Exhaustion Remote DoS",
       "severity": "High",
       "severity_source": "CVSS V3 from RBS",
-      "vulnerable_component": "gav://io.netty:netty-codec:4.1.66.Final",
-      "impacted_artifact": "docker://elasticsearch/7.15.0-test2:latest",
+      "jfrog_severity": "High",
+      "vulnerable_components": ["gav://io.netty:netty-codec:4.1.66.Final"],
+      "impacted_artifacts": ["docker://elasticsearch/7.15.0-test2:latest"],
       "impact_path": [
         "docker://elasticsearch/7.15.0-test2:latest",
         "generic://sha256:a53372ba228046f81171efd357179b7b02a95acccee17925e3d0295829cb42ea/sha256__a53372ba228046f81171efd357179b7b02a95acccee17925e3d0295829cb42ea.tar.gz",
         "gav://io.netty:netty-codec:4.1.66.Final"
       ],
       "path": "forks-release-local/elasticsearch/7.15.0-test2/latest/",
+      "paths": ["forks-release-local/elasticsearch/7.15.0-test2/latest/"],
+      "physical_path": "/app/lib/netty-codec-4.1.66.Final.jar",
+      "project_keys": ["test-project"],
+      "applicability": false,
+      "applicability_result": "Not Applicable",
       "fixed_versions": [
         "4.1.68.Final"
       ],
