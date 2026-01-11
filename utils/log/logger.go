@@ -1,15 +1,44 @@
 package log
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/forPelevin/gomoji"
-	"github.com/gookit/color"
-	"golang.org/x/term"
 	"io"
 	"log"
 	"os"
 	"runtime"
+	"strconv"
+	"sync"
+
+	"github.com/forPelevin/gomoji"
+	"github.com/gookit/color"
+	"golang.org/x/term"
 )
+
+// goroutineLoggers stores per-goroutine loggers for parallel scan isolation
+var goroutineLoggers sync.Map
+
+// getGoroutineID extracts the current goroutine's ID from the runtime stack.
+// This is a standard Go technique used by many libraries.
+func getGoroutineID() int64 {
+	var buf [64]byte
+	n := runtime.Stack(buf[:], false)
+	// Stack trace starts with "goroutine XXX ["
+	idField := bytes.Fields(buf[:n])[1]
+	id, _ := strconv.ParseInt(string(idField), 10, 64)
+	return id
+}
+
+// SetLoggerForGoroutine sets a logger for the current goroutine only.
+// Other goroutines will continue using the global logger.
+func SetLoggerForGoroutine(logger Log) {
+	goroutineLoggers.Store(getGoroutineID(), logger)
+}
+
+// ClearLoggerForGoroutine removes the logger for the current goroutine.
+func ClearLoggerForGoroutine() {
+	goroutineLoggers.Delete(getGoroutineID())
+}
 
 var Logger Log
 
@@ -81,6 +110,11 @@ func SetLogger(newLogger Log) {
 }
 
 func GetLogger() Log {
+	// Check goroutine-local logger first (for parallel scan isolation)
+	if logger, ok := goroutineLoggers.Load(getGoroutineID()); ok {
+		return logger.(Log)
+	}
+	// Fall back to global logger
 	if Logger != nil {
 		return Logger
 	}
