@@ -112,7 +112,9 @@ func SetLogger(newLogger Log) {
 func GetLogger() Log {
 	// Check goroutine-local logger first (for parallel scan isolation)
 	if logger, ok := goroutineLoggers.Load(getGoroutineID()); ok {
-		return logger.(Log)
+		if typedLogger, valid := logger.(Log); valid {
+			return typedLogger
+		}
 	}
 	// Fall back to global logger
 	if Logger != nil {
