@@ -127,7 +127,7 @@ func (b *BufferedLogger) String() string {
 
 	var sb strings.Builder
 	for _, entry := range b.entries {
-		levelStr := ""
+		var levelStr string
 		switch entry.level {
 		case VERBOSE:
 			levelStr = "VERBOSE"
