@@ -6,27 +6,23 @@ import (
 	"sync"
 )
 
-// logEntry represents a single captured log message with its level.
 type logEntry struct {
 	level LevelType
 	msg   string
 }
 
-// BufferedLogger implements the Log interface and captures all logs as structured entries.
-// This enables isolated log capture for parallel operations - each operation can have
-// its own BufferedLogger. Use ReplayTo() to output the captured logs through another logger.
+// BufferedLogger captures logs for isolated parallel operations.
 type BufferedLogger struct {
 	entries  []logEntry
 	logLevel LevelType
 	mu       sync.Mutex
 }
 
-// NewBufferedLogger creates a new logger that captures log entries.
-// Use ReplayTo() to replay the captured logs through another logger (preserving colors).
+// NewBufferedLogger creates a logger that captures entries for later replay.
 func NewBufferedLogger(level LevelType) *BufferedLogger {
 	return &BufferedLogger{
 		logLevel: level,
-		entries:  make([]logEntry, 0, 100), // Pre-allocate for typical usage
+		entries:  make([]logEntry, 0, 100),
 	}
 }
 
@@ -77,12 +73,10 @@ func (b *BufferedLogger) Error(a ...interface{}) {
 func (b *BufferedLogger) Output(a ...interface{}) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	// Output is always captured regardless of level
 	b.entries = append(b.entries, logEntry{level: -1, msg: fmt.Sprint(a...)})
 }
 
-// ReplayTo replays all captured log entries through the target logger.
-// This preserves colors, formatting, and timestamps from the target logger.
+// ReplayTo outputs captured logs through the target logger (preserving colors).
 func (b *BufferedLogger) ReplayTo(target Log) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -99,28 +93,23 @@ func (b *BufferedLogger) ReplayTo(target Log) {
 		case ERROR:
 			target.Error(entry.msg)
 		default:
-			// Output (level -1) or unknown
 			target.Output(entry.msg)
 		}
 	}
 }
 
-// Clear removes all captured log entries.
 func (b *BufferedLogger) Clear() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.entries = b.entries[:0]
 }
 
-// Len returns the number of captured log entries.
 func (b *BufferedLogger) Len() int {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return len(b.entries)
 }
 
-// String returns all captured log entries as a formatted string.
-// For colored output, use ReplayTo() instead.
 func (b *BufferedLogger) String() string {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -140,7 +129,6 @@ func (b *BufferedLogger) String() string {
 		case ERROR:
 			levelStr = "ERROR"
 		default:
-			// Output entries (level -1)
 			sb.WriteString(entry.msg)
 			sb.WriteString("\n")
 			continue
