@@ -18,6 +18,7 @@ import (
 // goroutineLoggers stores per-goroutine loggers for parallel scan isolation
 var goroutineLoggers sync.Map
 
+// getGoroutineID extracts the current goroutine's ID from the runtime stack.
 func getGoroutineID() int64 {
 	var buf [64]byte
 	n := runtime.Stack(buf[:], false)
