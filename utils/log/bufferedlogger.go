@@ -22,7 +22,6 @@ type BufferedLogger struct {
 func NewBufferedLogger(level LevelType) *BufferedLogger {
 	return &BufferedLogger{
 		logLevel: level,
-		entries:  make([]logEntry, 0, 100),
 	}
 }
 
