@@ -151,10 +151,10 @@ func TestBufferedLogger_ThreadSafe(t *testing.T) {
 	// Spawn multiple goroutines writing concurrently
 	for i := 0; i < 100; i++ {
 		wg.Add(1)
-		go func(id int) {
+		go func() {
 			defer wg.Done()
 			logger.Info("message from goroutine")
-		}(i)
+		}()
 	}
 
 	wg.Wait()
