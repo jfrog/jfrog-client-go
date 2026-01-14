@@ -70,9 +70,7 @@ func (b *BufferedLogger) Error(a ...interface{}) {
 }
 
 func (b *BufferedLogger) Output(a ...interface{}) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	b.entries = append(b.entries, logEntry{level: -1, msg: fmt.Sprint(a...)})
+	b.append(-1, a...)
 }
 
 // ReplayTo outputs captured logs through the target logger (preserving colors).

@@ -15,7 +15,7 @@ import (
 	"golang.org/x/term"
 )
 
-// goroutineLoggers stores per-goroutine loggers for parallel scan isolation
+// goroutineLoggers stores per-goroutine loggers for parallel isolated tasks
 var goroutineLoggers sync.Map
 
 // getGoroutineID extracts the current goroutine's ID from the runtime stack.
