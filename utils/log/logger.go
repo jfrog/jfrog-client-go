@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/forPelevin/gomoji"
 	"github.com/gookit/color"
@@ -17,6 +18,11 @@ import (
 
 // goroutineLoggers stores per-goroutine loggers for parallel isolated tasks
 var goroutineLoggers sync.Map
+
+// goroutineLoggerCount tracks how many goroutine-local loggers are set.
+// Used as a fast-path check to avoid expensive getGoroutineID() calls
+// when no goroutine loggers exist (the common case).
+var goroutineLoggerCount int64
 
 // getGoroutineID extracts the current goroutine's ID from the runtime stack.
 func getGoroutineID() int64 {
@@ -32,11 +38,13 @@ func getGoroutineID() int64 {
 // Other goroutines will continue using the global logger.
 func SetLoggerForGoroutine(logger Log) {
 	goroutineLoggers.Store(getGoroutineID(), logger)
+	atomic.AddInt64(&goroutineLoggerCount, 1)
 }
 
 // ClearLoggerForGoroutine removes the logger for the current goroutine.
 func ClearLoggerForGoroutine() {
 	goroutineLoggers.Delete(getGoroutineID())
+	atomic.AddInt64(&goroutineLoggerCount, -1)
 }
 
 var Logger Log
@@ -109,10 +117,12 @@ func SetLogger(newLogger Log) {
 }
 
 func GetLogger() Log {
-	// Check goroutine-local logger first
-	if logger, ok := goroutineLoggers.Load(getGoroutineID()); ok {
-		if typedLogger, valid := logger.(Log); valid {
-			return typedLogger
+	// Fast path: if no goroutine-local loggers exist, skip expensive getGoroutineID()
+	if atomic.LoadInt64(&goroutineLoggerCount) > 0 {
+		if logger, ok := goroutineLoggers.Load(getGoroutineID()); ok {
+			if typedLogger, valid := logger.(Log); valid {
+				return typedLogger
+			}
 		}
 	}
 
