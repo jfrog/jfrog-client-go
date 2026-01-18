@@ -21,7 +21,7 @@ var goroutineLoggers sync.Map
 
 // goroutineLoggerCount tracks how many goroutine-local loggers are set.
 // Used as a fast-path check to avoid expensive getGoroutineID() calls
-// when no goroutine loggers exist (the common case).
+// when no goroutine loggers exist
 var goroutineLoggerCount int64
 
 // getGoroutineID extracts the current goroutine's ID from the runtime stack.
