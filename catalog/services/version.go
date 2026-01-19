@@ -14,7 +14,7 @@ const (
 	catalogPingApi    = "api/v1/system/ping"
 	catalogVersionApi = "api/v1/system/version"
 
-	catalogMinVersionForEnrichApi = "1.0.0"
+	catalogMinVersionForEnrichApi = "<None>" // Placeholder until Catalog has a version endpoint
 )
 
 type VersionService struct {
