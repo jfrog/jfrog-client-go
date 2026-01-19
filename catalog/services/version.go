@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -10,7 +11,10 @@ import (
 )
 
 const (
-	catalogPingApi = "api/v1/system/ping"
+	catalogPingApi    = "api/v1/system/ping"
+	catalogVersionApi = "api/v1/system/version"
+
+	catalogMinVersionForEnrichApi = "1.0.0"
 )
 
 type VersionService struct {
@@ -26,14 +30,44 @@ func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService 
 // Catalog currently does not have a version endpoint, so we use the ping endpoint to check if the service is up and running.
 // https://jfrog-int.atlassian.net/browse/CTLG-829
 func (vs *VersionService) GetVersion() (string, error) {
+	versionResponse, err := vs.getVersion()
+	if err == nil {
+		return versionResponse.Version, nil
+	}
+	// Since Catalog did not have a version endpoint, at the past, try ping endpoint is used to verify connectivity.
+	return catalogMinVersionForEnrichApi, vs.Ping()
+}
+
+func (vs *VersionService) getVersion() (VersionResponse, error) {
+	var versionResponse VersionResponse
+	httpDetails := vs.CatalogDetails.CreateHttpClientDetails()
+	resp, body, _, err := vs.client.SendGet(vs.CatalogDetails.GetUrl()+catalogVersionApi, true, &httpDetails)
+	if err != nil {
+		return versionResponse, errors.New("failed while attempting to get JFrog Catalog version: " + err.Error())
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return versionResponse, errors.New("got unexpected server response while attempting to get JFrog Catalog version:\n" + err.Error())
+	}
+	if err = errorutils.CheckError(json.Unmarshal(body, &versionResponse)); err != nil {
+		return versionResponse, errors.New("failed to parse version response from JFrog Catalog: " + err.Error())
+	}
+	return versionResponse, nil
+}
+
+func (vs *VersionService) Ping() error {
 	httpDetails := vs.CatalogDetails.CreateHttpClientDetails()
 	resp, body, _, err := vs.client.SendGet(vs.CatalogDetails.GetUrl()+catalogPingApi, true, &httpDetails)
 	if err != nil {
-		return "", errors.New("failed while attempting to ping JFrog Catalog: " + err.Error())
+		return errors.New("failed while attempting to ping JFrog Catalog: " + err.Error())
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
-		return "", errors.New("got unexpected server response while attempting to ping JFrog Catalog:\n" + err.Error())
+		return errors.New("got unexpected server response while attempting to ping JFrog Catalog:\n" + err.Error())
 	}
-	// Since Catalog does not have a version endpoint, we return a hardcoded version.
-	return catalogMinVersionForEnrichApi, nil
+	return nil
+}
+
+type VersionResponse struct {
+	Version   string `json:"version"`
+	Revision  string `json:"revision"`
+	BuildDate string `json:"build_date"`
 }

@@ -12,8 +12,7 @@ import (
 )
 
 const (
-	catalogEnrichApi              = "api/v1/beta/cyclonedx/enrich"
-	catalogMinVersionForEnrichApi = "1.0.0"
+	catalogEnrichApi = "api/v1/beta/cyclonedx/enrich"
 )
 
 type EnrichService struct {
