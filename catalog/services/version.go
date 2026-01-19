@@ -14,7 +14,7 @@ const (
 	catalogPingApi    = "api/v1/system/ping"
 	catalogVersionApi = "api/v1/system/version"
 
-	catalogMinVersionForEnrichApi = "<None>" // Placeholder until Catalog has a version endpoint
+	CatalogMinVersionForEnrichApi = "<None>" // Placeholder until Catalog has a version endpoint
 )
 
 type VersionService struct {
@@ -35,7 +35,7 @@ func (vs *VersionService) GetVersion() (string, error) {
 		return versionResponse.Version, nil
 	}
 	// Since Catalog did not have a version endpoint, at the past, try ping endpoint is used to verify connectivity.
-	return catalogMinVersionForEnrichApi, vs.Ping()
+	return CatalogMinVersionForEnrichApi, vs.Ping()
 }
 
 func (vs *VersionService) getVersion() (VersionResponse, error) {
