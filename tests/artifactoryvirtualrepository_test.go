@@ -12,7 +12,6 @@ import (
 )
 
 func TestArtifactoryVirtualRepository(t *testing.T) {
-	t.Skip("JGC-427 - Skipping virtual repository tests until the issue is resolved")
 	initRepositoryTest(t)
 	t.Run("virtualAlpineTest", virtualAlpineTest)
 	t.Run("virtualBowerTest", virtualBowerTest)
