@@ -13,8 +13,6 @@ import (
 const (
 	catalogPingApi    = "api/v1/system/ping"
 	catalogVersionApi = "api/v1/system/version"
-
-	CatalogMinVersionForEnrichApi = "<None>" // Placeholder until Catalog has a version endpoint
 )
 
 type VersionService struct {
@@ -27,15 +25,12 @@ func NewVersionService(client *jfroghttpclient.JfrogHttpClient) *VersionService 
 	return &VersionService{client: client}
 }
 
-// Catalog currently does not have a version endpoint, so we use the ping endpoint to check if the service is up and running.
-// https://jfrog-int.atlassian.net/browse/CTLG-829
 func (vs *VersionService) GetVersion() (string, error) {
 	versionResponse, err := vs.getVersion()
 	if err == nil {
 		return versionResponse.Version, nil
 	}
-	// Since Catalog did not have a version endpoint, at the past, try ping endpoint is used to verify connectivity.
-	return CatalogMinVersionForEnrichApi, vs.Ping()
+	return "", err
 }
 
 func (vs *VersionService) getVersion() (VersionResponse, error) {

@@ -62,7 +62,7 @@ func TestGetVersionSucceeded(t *testing.T) {
 				assert.NotEmpty(t, version)
 			} else {
 				assert.Error(t, err)
-				assert.Equal(t, services.CatalogMinVersionForEnrichApi, version)
+				assert.Empty(t, version)
 			}
 		})
 	}
