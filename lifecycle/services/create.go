@@ -40,32 +40,70 @@ func (c *createOperation) getSigningKeyName() string {
 	return c.signingKeyName
 }
 
+// CreateFromAql creates a release bundle from AQL query (backward compatible, draft defaults to false)
 func (rbs *ReleaseBundlesService) CreateFromAql(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, aqlQuery string) error {
-	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Aql, CreateFromAqlSource{Aql: aqlQuery})
+	return rbs.CreateFromAqlDraft(rbDetails, params, signingKeyName, aqlQuery, false)
 }
 
+// CreateFromAqlDraft creates a release bundle from AQL query with draft option
+func (rbs *ReleaseBundlesService) CreateFromAqlDraft(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, aqlQuery string, draft bool) error {
+	return rbs.CreateReleaseBundleDraft(rbDetails, params, signingKeyName, Aql, CreateFromAqlSource{Aql: aqlQuery}, draft)
+}
+
+// CreateFromArtifacts creates a release bundle from artifacts (backward compatible, draft defaults to false)
 func (rbs *ReleaseBundlesService) CreateFromArtifacts(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceArtifacts CreateFromArtifacts) error {
-	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Artifacts, sourceArtifacts)
+	return rbs.CreateFromArtifactsDraft(rbDetails, params, signingKeyName, sourceArtifacts, false)
 }
 
+// CreateFromArtifactsDraft creates a release bundle from artifacts with draft option
+func (rbs *ReleaseBundlesService) CreateFromArtifactsDraft(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceArtifacts CreateFromArtifacts, draft bool) error {
+	return rbs.CreateReleaseBundleDraft(rbDetails, params, signingKeyName, Artifacts, sourceArtifacts, draft)
+}
+
+// CreateFromBuilds creates a release bundle from builds (backward compatible, draft defaults to false)
 func (rbs *ReleaseBundlesService) CreateFromBuilds(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceBuilds CreateFromBuildsSource) error {
-	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Builds, sourceBuilds)
+	return rbs.CreateFromBuildsDraft(rbDetails, params, signingKeyName, sourceBuilds, false)
 }
 
+// CreateFromBuildsDraft creates a release bundle from builds with draft option
+func (rbs *ReleaseBundlesService) CreateFromBuildsDraft(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceBuilds CreateFromBuildsSource, draft bool) error {
+	return rbs.CreateReleaseBundleDraft(rbDetails, params, signingKeyName, Builds, sourceBuilds, draft)
+}
+
+// CreateFromBundles creates a release bundle from other release bundles (backward compatible, draft defaults to false)
 func (rbs *ReleaseBundlesService) CreateFromBundles(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceReleaseBundles CreateFromReleaseBundlesSource) error {
-	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, ReleaseBundles, sourceReleaseBundles)
+	return rbs.CreateFromBundlesDraft(rbDetails, params, signingKeyName, sourceReleaseBundles, false)
 }
 
+// CreateFromBundlesDraft creates a release bundle from other release bundles with draft option
+func (rbs *ReleaseBundlesService) CreateFromBundlesDraft(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourceReleaseBundles CreateFromReleaseBundlesSource, draft bool) error {
+	return rbs.CreateReleaseBundleDraft(rbDetails, params, signingKeyName, ReleaseBundles, sourceReleaseBundles, draft)
+}
+
+// CreateFromPackages creates a release bundle from packages (backward compatible, draft defaults to false)
 func (rbs *ReleaseBundlesService) CreateFromPackages(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourcePackages CreateFromPackagesSource) error {
-	return rbs.CreateReleaseBundle(rbDetails, params, signingKeyName, Packages, sourcePackages)
+	return rbs.CreateFromPackagesDraft(rbDetails, params, signingKeyName, sourcePackages, false)
 }
 
+// CreateFromPackagesDraft creates a release bundle from packages with draft option
+func (rbs *ReleaseBundlesService) CreateFromPackagesDraft(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams, signingKeyName string, sourcePackages CreateFromPackagesSource, draft bool) error {
+	return rbs.CreateReleaseBundleDraft(rbDetails, params, signingKeyName, Packages, sourcePackages, draft)
+}
+
+// CreateReleaseBundleFromMultipleSources creates a release bundle from multiple sources (backward compatible, draft defaults to false)
 func (rbs *ReleaseBundlesService) CreateReleaseBundleFromMultipleSources(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
 	signingKeyName string, sources []RbSource) (response []byte, err error) {
+	return rbs.CreateReleaseBundleFromMultipleSourcesDraft(rbDetails, params, signingKeyName, sources, false)
+}
+
+// CreateReleaseBundleFromMultipleSourcesDraft creates a release bundle from multiple sources with draft option
+func (rbs *ReleaseBundlesService) CreateReleaseBundleFromMultipleSourcesDraft(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
+	signingKeyName string, sources []RbSource, draft bool) (response []byte, err error) {
 	operation := createOperation{
 		reqBody: RbCreationBody{
 			ReleaseBundleDetails: rbDetails,
 			Sources:              sources,
+			Draft:                draft,
 		},
 		params:         params,
 		signingKeyName: signingKeyName,
@@ -74,13 +112,22 @@ func (rbs *ReleaseBundlesService) CreateReleaseBundleFromMultipleSources(rbDetai
 	return response, err
 }
 
+// CreateReleaseBundle creates a release bundle (backward compatible, draft defaults to false)
 func (rbs *ReleaseBundlesService) CreateReleaseBundle(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
 	signingKeyName string, rbSourceType SourceType, source interface{}) error {
+	return rbs.CreateReleaseBundleDraft(rbDetails, params, signingKeyName, rbSourceType, source, false)
+}
+
+// CreateReleaseBundleDraft creates a release bundle with draft option
+func (rbs *ReleaseBundlesService) CreateReleaseBundleDraft(rbDetails ReleaseBundleDetails, params CommonOptionalQueryParams,
+	signingKeyName string, rbSourceType SourceType, source interface{}, draft bool) error {
 	operation := createOperation{
 		reqBody: RbCreationBody{
 			ReleaseBundleDetails: rbDetails,
 			SourceType:           rbSourceType,
-			Source:               source},
+			Source:               source,
+			Draft:                draft,
+		},
 		params:         params,
 		signingKeyName: signingKeyName,
 	}
@@ -153,4 +200,5 @@ type RbCreationBody struct {
 	SourceType SourceType  `json:"source_type,omitempty"`
 	Source     interface{} `json:"source,omitempty"`
 	Sources    []RbSource  `json:"sources,omitempty"`
+	Draft      bool        `json:"draft,omitempty"`
 }
