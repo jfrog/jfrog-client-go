@@ -280,7 +280,10 @@ func (ds *DownloadService) produceTasks(reader *content.ContentReader, downloadP
 		if err != nil {
 			return "", err
 		}
-		localPath, localFileName := fileutils.GetLocalPathAndFile(resultItem.Name, resultItem.Path, target, flat, placeholdersUsed)
+		localPath, localFileName, err := fileutils.GetLocalPathAndFile(resultItem.Name, resultItem.Path, target, flat, placeholdersUsed)
+		if err != nil {
+			return "", err
+		}
 		return filepath.Join(localPath, localFileName), nil
 	}
 	// The sort process omits results with local path that is identical to previous results.
@@ -563,7 +566,10 @@ func (ds *DownloadService) createFileHandlerFunc(downloadParams DownloadParams, 
 			if err != nil {
 				return err
 			}
-			localPath, localFileName := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat, placeholdersUsed)
+			localPath, localFileName, err := fileutils.GetLocalPathAndFile(downloadData.Dependency.Name, downloadData.Dependency.Path, target, downloadData.Flat, placeholdersUsed)
+			if err != nil {
+				return err
+			}
 			localFullPath := filepath.Join(localPath, localFileName)
 			if downloadData.Dependency.Type == string(utils.Folder) {
 				return createDir(localFullPath, logMsgPrefix)
