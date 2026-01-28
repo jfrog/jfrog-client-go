@@ -45,6 +45,12 @@ func (cm *CatalogServicesManager) SetProjectKey(projectKey string) *CatalogServi
 	return cm
 }
 
+func (cm *CatalogServicesManager) Ping() error {
+	versionService := services.NewVersionService(cm.client)
+	versionService.CatalogDetails = cm.config.GetServiceDetails()
+	return versionService.Ping()
+}
+
 // GetVersion will return the Catalog version
 func (cm *CatalogServicesManager) GetVersion() (string, error) {
 	versionService := services.NewVersionService(cm.client)
