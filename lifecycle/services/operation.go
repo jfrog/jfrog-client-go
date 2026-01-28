@@ -72,6 +72,33 @@ func (rbs *ReleaseBundlesService) doGetOperation(operation ReleaseBundleOperatio
 	return handleResponse(operation, resp, body)
 }
 
+func (rbs *ReleaseBundlesService) doPatchOperation(operation ReleaseBundleOperation) (response []byte, err error) {
+	requestFullUrl, httpClientDetails, err := prepareRequest(operation, rbs)
+	if err != nil {
+		return
+	}
+
+	content, err := json.Marshal(operation.getRequestBody())
+	if err != nil {
+		err = errorutils.CheckError(err)
+		return
+	}
+
+	resp, body, err := rbs.client.SendPatch(requestFullUrl, content, &httpClientDetails)
+	if err != nil {
+		return
+	}
+	return handlePatchResponse(operation, resp, body)
+}
+
+func handlePatchResponse(operation ReleaseBundleOperation, resp *http.Response, body []byte) (response []byte, err error) {
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return
+	}
+	log.Info(operation.getOperationSuccessfulMsg())
+	return body, nil
+}
+
 func prepareRequest(operation ReleaseBundleOperation, rbs *ReleaseBundlesService) (requestFullUrl string, httpClientDetails httputils.HttpClientDetails, err error) {
 	queryParams := buildQueryParams(operation.getOperationParams())
 	requestFullUrl, err = utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), operation.getOperationRestApi(), queryParams)
