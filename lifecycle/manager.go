@@ -119,6 +119,13 @@ func (lcs *LifecycleServicesManager) CreateReleaseBundlesFromMultipleSourcesDraf
 	return resp, errorutils.CheckError(err)
 }
 
+// UpdateReleaseBundleFromMultipleSources updates an existing draft release bundle by adding sources
+func (lcs *LifecycleServicesManager) UpdateReleaseBundleFromMultipleSources(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string, addSources []lifecycle.RbSource) (response []byte, err error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	resp, err := rbService.UpdateReleaseBundleFromMultipleSources(rbDetails, queryParams, signingKeyName, addSources)
+	return resp, errorutils.CheckError(err)
+}
+
 func (lcs *LifecycleServicesManager) GetReleaseBundleSpecification(rbDetails lifecycle.ReleaseBundleDetails) (lifecycle.ReleaseBundleSpecResponse, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.GetReleaseBundleSpecification(rbDetails)
