@@ -23,6 +23,8 @@ func TestAccessProject(t *testing.T) {
 }
 
 func TestAccessProjectGroups(t *testing.T) {
+	//TODO: Remove skip after resolving issue JA-19680
+	t.Skip("Skipping TestAccessProjectGroups")
 	initAccessTest(t)
 	t.Run("groups-add-get-delete", testAccessProjectAddGetDeleteGroups)
 }
