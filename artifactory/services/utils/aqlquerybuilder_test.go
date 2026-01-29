@@ -270,3 +270,54 @@ func TestEncodeForBuildInfoRepository(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildAqlSearchQueryWithExclusions(t *testing.T) {
+	params := CommonParams{
+		Pattern:    "repo-local/*",
+		Recursive:  true,
+		Exclusions: []string{"*.json"},
+	}
+	aqlResult, err := CreateAqlBodyForSpecWithPattern(&params)
+	assert.NoError(t, err)
+	assert.Contains(t, aqlResult, `"$nmatch"`)
+	assert.Contains(t, aqlResult, `*.json`)
+}
+
+func TestCreateAqlBodyForBuildArtifactsWithExclusions(t *testing.T) {
+	builds := []Build{{"myBuild", "123"}}
+
+	aqlBodyNoExclusions := createAqlBodyForBuildArtifacts(builds)
+	assert.NotContains(t, aqlBodyNoExclusions, `"$nmatch"`)
+	assert.Contains(t, aqlBodyNoExclusions, `artifact.module.build.name`)
+	assert.Contains(t, aqlBodyNoExclusions, `myBuild`)
+
+	params := &CommonParams{
+		Exclusions: []string{"*.json"},
+		Recursive:  true,
+	}
+	aqlBodyWithExclusions := createAqlBodyForBuildArtifactsWithExclusions(builds, params)
+
+	assert.Contains(t, aqlBodyWithExclusions, `"$nmatch"`, "FIX VERIFIED: createAqlBodyForBuildArtifactsWithExclusions includes exclusions")
+	assert.Contains(t, aqlBodyWithExclusions, `*.json`)
+	assert.Contains(t, aqlBodyWithExclusions, `artifact.module.build.name`)
+	assert.Contains(t, aqlBodyWithExclusions, `artifact.module.build.number`)
+	assert.Contains(t, aqlBodyWithExclusions, `myBuild`)
+	assert.Contains(t, aqlBodyWithExclusions, `123`)
+}
+
+func TestCreateAqlBodyForBuildDependenciesWithExclusions(t *testing.T) {
+	builds := []Build{{"myBuild", "123"}}
+
+	// Test with exclusions
+	params := &CommonParams{
+		Exclusions: []string{"*.xml", "test-*"},
+		Recursive:  true,
+	}
+	aqlBody := createAqlBodyForBuildDependenciesWithExclusions(builds, params)
+
+	assert.Contains(t, aqlBody, `"$nmatch"`)
+	assert.Contains(t, aqlBody, `*.xml`)
+	assert.Contains(t, aqlBody, `test-*`)
+	assert.Contains(t, aqlBody, `dependency.module.build.name`)
+	assert.Contains(t, aqlBody, `dependency.module.build.number`)
+}
