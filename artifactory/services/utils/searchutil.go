@@ -96,13 +96,13 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 }
 
 func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependencies(builds)}
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependenciesWithExclusions(builds, &specFile)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
 }
 
 func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifacts(builds)}
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifactsWithExclusions(builds, &specFile)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
 }

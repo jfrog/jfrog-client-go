@@ -109,21 +109,53 @@ func handleArchiveSearch(triple RepoPathFile, archivePathFilePairs []RepoPathFil
 }
 
 func createAqlBodyForBuildArtifacts(builds []Build) string {
+	return createAqlBodyForBuildArtifactsWithExclusions(builds, nil)
+}
+
+// createAqlBodyForBuildArtifactsWithExclusions creates an AQL body for build artifacts with optional exclusions.
+func createAqlBodyForBuildArtifactsWithExclusions(builds []Build, params *CommonParams) string {
 	buildArtifactsItem := `{"$and":[{"artifact.module.build.name":"%s","artifact.module.build.number":"%s"}]}`
 	var items []string
 	for _, build := range builds {
 		items = append(items, fmt.Sprintf(buildArtifactsItem, build.BuildName, build.BuildNumber))
 	}
-	return `{"$or":[` + strings.Join(items, ",") + "]}"
+
+	// Build the exclusion query if params with exclusions are provided
+	excludeQuery := ""
+	if params != nil && len(params.GetExclusions()) > 0 {
+		var err error
+		excludeQuery, err = buildExcludeQueryPart(params, true, params.Recursive)
+		if err != nil {
+			excludeQuery = ""
+		}
+	}
+
+	return `{` + excludeQuery + `"$or":[` + strings.Join(items, ",") + "]}"
 }
 
 func createAqlBodyForBuildDependencies(builds []Build) string {
+	return createAqlBodyForBuildDependenciesWithExclusions(builds, nil)
+}
+
+// createAqlBodyForBuildDependenciesWithExclusions creates an AQL body for build dependencies with optional exclusions.
+func createAqlBodyForBuildDependenciesWithExclusions(builds []Build, params *CommonParams) string {
 	buildDependenciesItem := `{"$and":[{"dependency.module.build.name":"%s","dependency.module.build.number":"%s"}]}`
 	var items []string
 	for _, build := range builds {
 		items = append(items, fmt.Sprintf(buildDependenciesItem, build.BuildName, build.BuildNumber))
 	}
-	return `{"$or":[` + strings.Join(items, ",") + "]}"
+
+	// Build the exclusion query if params with exclusions are provided
+	excludeQuery := ""
+	if params != nil && len(params.GetExclusions()) > 0 {
+		var err error
+		excludeQuery, err = buildExcludeQueryPart(params, true, params.Recursive)
+		if err != nil {
+			excludeQuery = ""
+		}
+	}
+
+	return `{` + excludeQuery + `"$or":[` + strings.Join(items, ",") + "]}"
 }
 
 func createAqlQueryForBuild(includeQueryPart string, artifactsQuery bool, builds []Build) string {
