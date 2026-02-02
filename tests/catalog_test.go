@@ -51,7 +51,7 @@ func TestGetVersionSucceeded(t *testing.T) {
 	}
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
-			catalogServerPort, catalogDetails, client := initCatalogEnrichTest(t, catalog.MockServerParams{Alive: tc.success})
+			catalogServerPort, catalogDetails, client := initCatalogEnrichTest(t, catalog.MockServerParams{Alive: tc.success, Version: "1.2.3"})
 			testsVersionService := services.NewVersionService(client)
 			testsVersionService.CatalogDetails = catalogDetails
 			testsVersionService.CatalogDetails.SetUrl("http://localhost:" + strconv.Itoa(catalogServerPort) + "/catalog/")
