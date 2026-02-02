@@ -131,6 +131,7 @@ func (rbs *ReleaseBundlesService) waitForRbOperationCompletion(restApi, projectK
 		if err != nil {
 			return true, nil, err
 		}
+		log.Debug(fmt.Sprintf("Release Bundle %s status: '%s'", operation, rbStatusResponse.Status))
 		switch rbStatusResponse.Status {
 		case Pending, Processing, Started:
 			return false, nil, nil
