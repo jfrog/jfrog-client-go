@@ -19,8 +19,8 @@ const (
 	recordsApi               = "records"
 	statusesApi              = "statuses"
 	trackersApi              = "trackers"
-	defaultMaxWait           = 1 * time.Minute
-	DefaultSyncSleepInterval = 5 * time.Second
+	defaultMaxWait           = 60 * time.Minute
+	DefaultSyncSleepInterval = 10 * time.Second
 )
 
 var SyncSleepInterval = DefaultSyncSleepInterval
