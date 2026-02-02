@@ -12,7 +12,6 @@ import (
 )
 
 func TestArtifactoryVirtualRepository(t *testing.T) {
-	t.Skip("JGC-427 - Skipping virtual repository tests until the issue is resolved")
 	initRepositoryTest(t)
 	t.Run("virtualAlpineTest", virtualAlpineTest)
 	t.Run("virtualBowerTest", virtualBowerTest)
@@ -50,9 +49,10 @@ func TestArtifactoryVirtualRepository(t *testing.T) {
 func setVirtualRepositoryBaseParams(params *services.VirtualRepositoryBaseParams, isUpdate bool) {
 	setRepositoryBaseParams(&params.RepositoryBaseParams, isUpdate)
 	if !isUpdate {
-		params.Repositories = []string{getRtTargetRepoKey()}
+		// Leave Repositories empty to avoid package type mismatch with Generic repo
+		params.Repositories = nil
 		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = utils.Pointer(true)
-		params.DefaultDeploymentRepo = getRtTargetRepoKey()
+		params.DefaultDeploymentRepo = ""
 	} else {
 		params.Repositories = nil
 		params.ArtifactoryRequestsCanRetrieveRemoteArtifacts = utils.Pointer(false)
