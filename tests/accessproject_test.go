@@ -51,6 +51,12 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 		return testGroup.Roles[i] < testGroup.Roles[j]
 	})
 	singleGroup, err := testsAccessProjectService.GetGroup(projectKey, testGroup.Name)
+	// Sort roles for comparison
+	if singleGroup != nil {
+		sort.Slice(singleGroup.Roles, func(i, j int) bool {
+			return singleGroup.Roles[i] < singleGroup.Roles[j]
+		})
+	}
 	if assert.NoError(t, err) &&
 		assert.NotNil(t, singleGroup, "Expected group %s but got nil", testGroup.Name) {
 		assert.Equal(t, testGroup, *singleGroup, "Expected group %v but got %v", testGroup, *singleGroup)
