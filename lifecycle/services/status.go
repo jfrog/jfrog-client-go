@@ -19,8 +19,8 @@ const (
 	recordsApi               = "records"
 	statusesApi              = "statuses"
 	trackersApi              = "trackers"
-	defaultMaxWait           = 60 * time.Minute
-	DefaultSyncSleepInterval = 10 * time.Second
+	defaultMaxWait           = 1 * time.Minute
+	DefaultSyncSleepInterval = 5 * time.Second
 )
 
 var SyncSleepInterval = DefaultSyncSleepInterval
@@ -131,6 +131,7 @@ func (rbs *ReleaseBundlesService) waitForRbOperationCompletion(restApi, projectK
 		if err != nil {
 			return true, nil, err
 		}
+		log.Debug(fmt.Sprintf("Release Bundle %s status: '%s'", operation, rbStatusResponse.Status))
 		switch rbStatusResponse.Status {
 		case Pending, Processing, Started:
 			return false, nil, nil
