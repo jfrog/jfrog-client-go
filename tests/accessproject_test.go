@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 	"time"
+	"sort"
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -47,8 +48,17 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 
 	testGroup.Roles = append(testGroup.Roles, "Viewer")
 	assert.NoError(t, testsAccessProjectService.UpdateGroup(projectKey, testGroup.Name, testGroup))
-
+	// Sort roles for comparison
+	sort.Slice(testGroup.Roles, func(i, j int) bool {
+		return testGroup.Roles[i] < testGroup.Roles[j]
+	})
 	singleGroup, err := testsAccessProjectService.GetGroup(projectKey, testGroup.Name)
+	// Sort roles for comparison
+	if singleGroup != nil {
+		sort.Slice(singleGroup.Roles, func(i, j int) bool {
+			return singleGroup.Roles[i] < singleGroup.Roles[j]
+		})
+	}
 	if assert.NoError(t, err) &&
 		assert.NotNil(t, singleGroup, "Expected group %s but got nil", testGroup.Name) {
 		assert.Equal(t, testGroup, *singleGroup, "Expected group %v but got %v", testGroup, *singleGroup)

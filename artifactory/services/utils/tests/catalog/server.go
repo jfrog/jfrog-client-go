@@ -15,14 +15,16 @@ import (
 type MockServerParams struct {
 	EnrichedVuln []cyclonedx.Vulnerability
 	Alive        bool
+	Version      string
 }
 
 func StartCatalogMockServerWithParams(t *testing.T, params MockServerParams) int {
 	handlers := tests.HttpServerHandlers{}
 
 	handlers["/"] = http.NotFound
-	// Version handlers (version is not available in Catalog, so we use ping endpoint)
-	handlers["/catalog/api/v1/system/ping"] = catalogGetVersionHandlerFunc(t, params)
+	// System handlers
+	handlers["/catalog/api/v1/system/ping"] = catalogPingHandlerFunc(t, params)
+	handlers["/catalog/api/v1/system/version"] = catalogGetVersionHandlerFunc(t, params)
 	// Enrich handlers
 	handlers["/catalog/api/v1/beta/cyclonedx/enrich"] = catalogEnrichHandler(t, params)
 
@@ -35,14 +37,28 @@ func StartCatalogMockServerWithParams(t *testing.T, params MockServerParams) int
 }
 
 func catalogGetVersionHandlerFunc(t *testing.T, params MockServerParams) func(w http.ResponseWriter, r *http.Request) {
-	version := "1.0.0"
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !params.Alive {
 			http.Error(w, "Catalog service is not available", http.StatusServiceUnavailable)
 			return
 		}
 		if r.Method == http.MethodGet {
-			_, err := fmt.Fprint(w, version)
+			_, err := fmt.Fprintf(w, `{"version":"%s","revision":"abc123","build_date":"2024-01-01T00:00:00Z"}`, params.Version)
+			assert.NoError(t, err)
+			return
+		}
+		http.Error(w, "Invalid catalog request", http.StatusBadRequest)
+	}
+}
+
+func catalogPingHandlerFunc(t *testing.T, params MockServerParams) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !params.Alive {
+			http.Error(w, "Catalog service is not available", http.StatusServiceUnavailable)
+			return
+		}
+		if r.Method == http.MethodGet {
+			_, err := fmt.Fprint(w, "OK")
 			assert.NoError(t, err)
 			return
 		}
