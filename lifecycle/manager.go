@@ -126,6 +126,13 @@ func (lcs *LifecycleServicesManager) UpdateReleaseBundleFromMultipleSources(rbDe
 	return resp, errorutils.CheckError(err)
 }
 
+// FinalizeReleaseBundle finalizes a draft release bundle
+func (lcs *LifecycleServicesManager) FinalizeReleaseBundle(rbDetails lifecycle.ReleaseBundleDetails, queryParams lifecycle.CommonOptionalQueryParams, signingKeyName string) ([]byte, error) {
+	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
+	resp, err := rbService.FinalizeReleaseBundle(rbDetails, queryParams, signingKeyName)
+	return resp, errorutils.CheckError(err)
+}
+
 func (lcs *LifecycleServicesManager) GetReleaseBundleSpecification(rbDetails lifecycle.ReleaseBundleDetails) (lifecycle.ReleaseBundleSpecResponse, error) {
 	rbService := lifecycle.NewReleaseBundlesService(lcs.config.GetServiceDetails(), lcs.client)
 	return rbService.GetReleaseBundleSpecification(rbDetails)
