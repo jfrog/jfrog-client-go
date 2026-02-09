@@ -389,6 +389,7 @@ func NewSwiftLocalRepositoryParams() SwiftLocalRepositoryParams {
 
 type TerraformLocalRepositoryParams struct {
 	LocalRepositoryBaseParams
+	TerraformRepositoryParams
 }
 
 func NewTerraformLocalRepositoryParams() TerraformLocalRepositoryParams {
