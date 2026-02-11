@@ -264,6 +264,7 @@ type XscAnalyticsBasicGeneralEvent struct {
 	TotalScanDuration      string      `json:"total_scan_duration,omitempty"`
 	FrogbotScanType        string      `json:"frogbot_scan_type,omitempty"`
 	FrogbotCiProvider      string      `json:"frogbot_ci_provider,omitempty"`
+	ProjectPath            string      `json:"project_path,omitempty"`
 }
 
 type XscAnalyticsGeneralEventResponse struct {
