@@ -653,6 +653,58 @@ func getAggregatedBuilds(buildName, buildNumber, projectKey string, flags Common
 	return aggregatedBuilds, nil
 }
 
+// BuildArtifactItem represents a single artifact returned by the build artifacts API.
+type BuildArtifactItem struct {
+	Repo string `json:"repo"`
+	Path string `json:"path"`
+	Name string `json:"name"`
+}
+
+// GetBuildArtifacts retrieves build artifacts using the dedicated build artifacts API.
+// This API uses a more effective SQL query and avoids the heavy database JOINs.
+// API endpoint: GET /artifactory/api/builds/buildArtifacts/{build-name}/{build-number}/{build-repository}
+// See: RTDEV-64748
+func GetBuildArtifacts(buildName, buildNumber, projectKey string, flags CommonConf) ([]BuildArtifactItem, error) {
+	buildRepo := GetBuildInfoRepositoryByProject(projectKey)
+	// Note: The API path uses "builds" (plural) not "build"
+	restApi := path.Join("api/builds/buildArtifacts", buildName, buildNumber, buildRepo)
+	
+	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
+	queryParams := make(map[string]string)
+	if projectKey != "" {
+		queryParams["project"] = projectKey
+	}
+	
+	requestFullUrl, err := utils.BuildUrl(flags.GetArtifactoryDetails().GetUrl(), restApi, queryParams)
+	if err != nil {
+		return nil, err
+	}
+	
+	httpClient := flags.GetJfrogHttpClient()
+	log.Debug("Getting build artifacts from:", requestFullUrl)
+	
+	resp, body, _, err := httpClient.SendGet(requestFullUrl, true, &httpClientsDetails)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		log.Debug("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body))
+		// API not available, return error to trigger fallback
+		return nil, errorutils.CheckErrorf("build artifacts API not available (404)")
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+	
+	log.Debug("Artifactory response:", resp.Status)
+	var artifacts []BuildArtifactItem
+	if err = json.Unmarshal(body, &artifacts); err != nil {
+		return nil, err
+	}
+	
+	return artifacts, nil
+}
+
 type CommonConf interface {
 	GetArtifactoryDetails() auth.ServiceDetails
 	GetJfrogHttpClient() *jfroghttpclient.JfrogHttpClient

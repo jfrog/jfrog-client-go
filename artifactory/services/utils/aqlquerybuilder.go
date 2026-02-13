@@ -113,8 +113,10 @@ func createAqlBodyForBuildArtifacts(builds []Build) string {
 }
 
 // createAqlBodyForBuildArtifactsWithExclusions creates an AQL body for build artifacts with optional exclusions.
+// Uses property-based queries to avoid expensive JOINs (RTDEV-64748)
 func createAqlBodyForBuildArtifactsWithExclusions(builds []Build, params *CommonParams) string {
-	buildArtifactsItem := `{"$and":[{"artifact.module.build.name":"%s","artifact.module.build.number":"%s"}]}`
+	// Use property-based approach to avoid expensive JOIN on artifact.module.build
+	buildArtifactsItem := `{"$and":[{"@build.name":"%s","@build.number":"%s"}]}`
 	var items []string
 	for _, build := range builds {
 		items = append(items, fmt.Sprintf(buildArtifactsItem, build.BuildName, build.BuildNumber))
@@ -138,8 +140,10 @@ func createAqlBodyForBuildDependencies(builds []Build) string {
 }
 
 // createAqlBodyForBuildDependenciesWithExclusions creates an AQL body for build dependencies with optional exclusions.
+// Uses property-based queries to avoid expensive JOINs (RTDEV-64748)
 func createAqlBodyForBuildDependenciesWithExclusions(builds []Build, params *CommonParams) string {
-	buildDependenciesItem := `{"$and":[{"dependency.module.build.name":"%s","dependency.module.build.number":"%s"}]}`
+	// Use property-based approach to avoid expensive JOIN on dependency.module.build
+	buildDependenciesItem := `{"$and":[{"@build.name":"%s","@build.number":"%s"}]}`
 	var items []string
 	for _, build := range builds {
 		items = append(items, fmt.Sprintf(buildDependenciesItem, build.BuildName, build.BuildNumber))
@@ -157,6 +161,7 @@ func createAqlBodyForBuildDependenciesWithExclusions(builds []Build, params *Com
 
 	return `{` + excludeQuery + `"$or":[` + strings.Join(items, ",") + "]}"
 }
+
 
 func createAqlQueryForBuild(includeQueryPart string, artifactsQuery bool, builds []Build) string {
 	var queryBody string

@@ -91,6 +91,81 @@ func TestGetQueryReturnFields(t *testing.T) {
 	assertEqualFieldsList(t, getQueryReturnFields(&artifactoryParams, ALL), append(minimalFields, "Vava", "Bubu"))
 }
 
+// TestCreateAqlBodyForBuildArtifactsWithProperties tests the property-based AQL query generation
+// The WithExclusions functions now use property-based queries by default (RTDEV-64748)
+func TestCreateAqlBodyForBuildArtifactsWithProperties(t *testing.T) {
+	tests := []struct {
+		name     string
+		builds   []Build
+		expected string
+	}{
+		{
+			name: "Single build (no exclusions)",
+			builds: []Build{
+				{BuildName: "my-build", BuildNumber: "123"},
+			},
+			expected: `{"$or":[{"$and":[{"@build.name":"my-build","@build.number":"123"}]}]}`,
+		},
+		{
+			name: "Multiple builds (no exclusions)",
+			builds: []Build{
+				{BuildName: "build-1", BuildNumber: "1"},
+				{BuildName: "build-2", BuildNumber: "2"},
+			},
+			expected: `{"$or":[{"$and":[{"@build.name":"build-1","@build.number":"1"}]},{"$and":[{"@build.name":"build-2","@build.number":"2"}]}]}`,
+		},
+		{
+			name: "Build with special characters",
+			builds: []Build{
+				{BuildName: "docker-build", BuildNumber: "20220607-2"},
+			},
+			expected: `{"$or":[{"$and":[{"@build.name":"docker-build","@build.number":"20220607-2"}]}]}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Use WithExclusions with nil params (no exclusions) - now uses property-based queries
+			result := createAqlBodyForBuildArtifactsWithExclusions(tt.builds, nil)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+// TestCreateAqlBodyForBuildDependenciesWithExclusions tests the property-based AQL query for dependencies
+func TestCreateAqlBodyForBuildDependenciesWithProperties(t *testing.T) {
+	tests := []struct {
+		name     string
+		builds   []Build
+		expected string
+	}{
+		{
+			name: "Single build dependency (no exclusions)",
+			builds: []Build{
+				{BuildName: "my-build", BuildNumber: "456"},
+			},
+			expected: `{"$or":[{"$and":[{"@build.name":"my-build","@build.number":"456"}]}]}`,
+		},
+		{
+			name: "Multiple builds dependencies",
+			builds: []Build{
+				{BuildName: "build-A", BuildNumber: "10"},
+				{BuildName: "build-B", BuildNumber: "20"},
+				{BuildName: "build-C", BuildNumber: "30"},
+			},
+			expected: `{"$or":[{"$and":[{"@build.name":"build-A","@build.number":"10"}]},{"$and":[{"@build.name":"build-B","@build.number":"20"}]},{"$and":[{"@build.name":"build-C","@build.number":"30"}]}]}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Use WithExclusions with nil params (no exclusions) - now uses property-based queries
+			result := createAqlBodyForBuildDependenciesWithExclusions(tt.builds, nil)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func assertEqualFieldsList(t *testing.T, actual, expected []string) {
 	if len(actual) != len(expected) {
 		t.Error("The function getQueryReturnFields() expected to return the array:\n" + strings.Join(expected, ",") + ".\nbut returned:\n" + strings.Join(actual, ",") + ".")
@@ -193,19 +268,20 @@ func TestPrepareSourceSearchPattern(t *testing.T) {
 	assert.Equal(t, "/testdata/b/(/(.in", newPattern)
 }
 
+// Updated to use property-based queries (@build.name) instead of JOINs (artifact.module.build.name) - RTDEV-64748
 var aqlQueryForBuildDataProvider = []struct {
 	artifactsQuery bool
 	builds         []Build
 	expected       string
 }{
 	{true, []Build{{"buildName", "buildNumber"}},
-		`{"$and":[{"artifact.module.build.name":"buildName","artifact.module.build.number":"buildNumber"}]}`},
+		`{"$and":[{"@build.name":"buildName","@build.number":"buildNumber"}]}`},
 	{true, []Build{{"buildName1", "buildNumber1"}, {"buildName2", "buildNumber2"}},
-		`{"$and":[{"artifact.module.build.name":"buildName1","artifact.module.build.number":"buildNumber1"}]},{"$and":[{"artifact.module.build.name":"buildName2","artifact.module.build.number":"buildNumber2"}]}`},
+		`{"$and":[{"@build.name":"buildName1","@build.number":"buildNumber1"}]},{"$and":[{"@build.name":"buildName2","@build.number":"buildNumber2"}]}`},
 	{false, []Build{{"buildName", "buildNumber"}},
-		`{"$and":[{"dependency.module.build.name":"buildName","dependency.module.build.number":"buildNumber"}]}`},
+		`{"$and":[{"@build.name":"buildName","@build.number":"buildNumber"}]}`},
 	{false, []Build{{"buildName1", "buildNumber1"}, {"buildName2", "buildNumber2"}},
-		`{"$and":[{"dependency.module.build.name":"buildName1","dependency.module.build.number":"buildNumber1"}]},{"$and":[{"dependency.module.build.name":"buildName2","dependency.module.build.number":"buildNumber2"}]}`},
+		`{"$and":[{"@build.name":"buildName1","@build.number":"buildNumber1"}]},{"$and":[{"@build.name":"buildName2","@build.number":"buildNumber2"}]}`},
 }
 
 func TestCreateAqlQueryForBuild(t *testing.T) {
@@ -288,7 +364,8 @@ func TestCreateAqlBodyForBuildArtifactsWithExclusions(t *testing.T) {
 
 	aqlBodyNoExclusions := createAqlBodyForBuildArtifacts(builds)
 	assert.NotContains(t, aqlBodyNoExclusions, `"$nmatch"`)
-	assert.Contains(t, aqlBodyNoExclusions, `artifact.module.build.name`)
+	// Uses property-based query now (RTDEV-64748 fix)
+	assert.Contains(t, aqlBodyNoExclusions, `@build.name`)
 	assert.Contains(t, aqlBodyNoExclusions, `myBuild`)
 
 	params := &CommonParams{
@@ -299,8 +376,9 @@ func TestCreateAqlBodyForBuildArtifactsWithExclusions(t *testing.T) {
 
 	assert.Contains(t, aqlBodyWithExclusions, `"$nmatch"`, "FIX VERIFIED: createAqlBodyForBuildArtifactsWithExclusions includes exclusions")
 	assert.Contains(t, aqlBodyWithExclusions, `*.json`)
-	assert.Contains(t, aqlBodyWithExclusions, `artifact.module.build.name`)
-	assert.Contains(t, aqlBodyWithExclusions, `artifact.module.build.number`)
+	// Uses property-based query now (RTDEV-64748 fix)
+	assert.Contains(t, aqlBodyWithExclusions, `@build.name`)
+	assert.Contains(t, aqlBodyWithExclusions, `@build.number`)
 	assert.Contains(t, aqlBodyWithExclusions, `myBuild`)
 	assert.Contains(t, aqlBodyWithExclusions, `123`)
 }
@@ -318,6 +396,7 @@ func TestCreateAqlBodyForBuildDependenciesWithExclusions(t *testing.T) {
 	assert.Contains(t, aqlBody, `"$nmatch"`)
 	assert.Contains(t, aqlBody, `*.xml`)
 	assert.Contains(t, aqlBody, `test-*`)
-	assert.Contains(t, aqlBody, `dependency.module.build.name`)
-	assert.Contains(t, aqlBody, `dependency.module.build.number`)
+	// Uses property-based query now (RTDEV-64748 fix)
+	assert.Contains(t, aqlBody, `@build.name`)
+	assert.Contains(t, aqlBody, `@build.number`)
 }
