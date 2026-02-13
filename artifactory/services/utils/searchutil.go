@@ -96,24 +96,18 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 }
 
 func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	// Dependencies are not supported by the build artifacts API, use property-based AQL instead.
-	// This avoids the expensive JOIN-based query that causes timeouts.
-	// The WithExclusions function now uses property-based queries (@build.name/@build.number)
-	// See: RTDEV-64748
+	// Dependencies use property-based AQL to avoid expensive JOIN queries
 	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependenciesWithExclusions(builds, &specFile)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
 }
 
 func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	// Try using the dedicated build artifacts API first (fastest, avoids expensive JOINs)
-	// API: GET /artifactory/api/builds/buildArtifacts/{build-name}/{build-number}/{build-repository}
-	// Falls back to property-based AQL with exclusions if API is not available.
+	// Try using the dedicated build artifacts API first (avoids expensive JOINs)
+	// Falls back to property-based AQL if API is not available
 	reader, err := getBuildArtifactsUsingApi(builds, specFile.Project, flags)
 	if err != nil {
 		log.Info("Build artifacts API not available, falling back to property-based AQL query:", err.Error())
-		// Fall back to property-based AQL with exclusions (avoids expensive JOIN)
-		// The WithExclusions function now uses property-based queries (@build.name/@build.number)
 		specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifactsWithExclusions(builds, &specFile)}
 		executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 		return aqlSearch(executionQuery, flags)
@@ -122,7 +116,6 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 }
 
 // getBuildArtifactsUsingApi retrieves build artifacts using the dedicated build artifacts API.
-// This API returns the full artifact information, avoiding the expensive database JOIN.
 func getBuildArtifactsUsingApi(builds []Build, projectKey string, flags CommonConf) (*content.ContentReader, error) {
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
@@ -132,28 +125,28 @@ func getBuildArtifactsUsingApi(builds []Build, projectKey string, flags CommonCo
 		err = errors.Join(err, errorutils.CheckError(writer.Close()))
 	}()
 
-	// Collect artifacts from API for all builds
 	for _, build := range builds {
 		artifacts, err := GetBuildArtifacts(build.BuildName, build.BuildNumber, projectKey, flags)
 		if err != nil {
-			// If API fails, return error to trigger fallback to AQL
 			return nil, err
 		}
 
-		// Convert API response to ResultItems
+		// Convert API response to ResultItems with build properties for filter validation
 		for _, artifact := range artifacts {
-			// The API gives us the artifact location - we can download directly with this info
-			// The download service will fetch metadata (size, checksums) as needed via storage API
 			resultItem := ResultItem{
 				Repo: artifact.Repo,
 				Path: artifact.Path,
 				Name: artifact.Name,
 				Type: string(File),
+				Properties: []Property{
+					{Key: "build.name", Value: build.BuildName},
+					{Key: "build.number", Value: build.BuildNumber},
+				},
 			}
 			writer.Write(resultItem)
 		}
 	}
-
+	
 	return content.NewContentReader(writer.GetFilePath(), content.DefaultKey), nil
 }
 
@@ -182,13 +175,11 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 		return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
 	}
 
-	// Artifacts' properties weren't fetched in previous aql, fetch now and add to results.
-	// Use property-based query to avoid expensive JOIN (RTDEV-64748)
+	// Artifacts' properties weren't fetched in previous query, fetch now and add to results
 	var buildNames []string
 	for _, build := range builds {
 		buildNames = append(buildNames, build.BuildName)
 	}
-	// Use the WithExclusions version (no exclusions in this context, but same property-based approach)
 	readerWithProps, err := searchProps(createAqlBodyForBuildArtifactsWithExclusions(builds, nil), "build.name", buildNames, flags)
 	if err != nil {
 		return nil, err

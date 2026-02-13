@@ -198,4 +198,3 @@ func TestValidateTransitiveSearchAllowed(t *testing.T) {
 		})
 	}
 }
-

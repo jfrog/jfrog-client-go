@@ -92,7 +92,6 @@ func TestGetQueryReturnFields(t *testing.T) {
 }
 
 // TestCreateAqlBodyForBuildArtifactsWithProperties tests the property-based AQL query generation
-// The WithExclusions functions now use property-based queries by default (RTDEV-64748)
 func TestCreateAqlBodyForBuildArtifactsWithProperties(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -125,7 +124,6 @@ func TestCreateAqlBodyForBuildArtifactsWithProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Use WithExclusions with nil params (no exclusions) - now uses property-based queries
 			result := createAqlBodyForBuildArtifactsWithExclusions(tt.builds, nil)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -159,7 +157,6 @@ func TestCreateAqlBodyForBuildDependenciesWithProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Use WithExclusions with nil params (no exclusions) - now uses property-based queries
 			result := createAqlBodyForBuildDependenciesWithExclusions(tt.builds, nil)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -268,7 +265,7 @@ func TestPrepareSourceSearchPattern(t *testing.T) {
 	assert.Equal(t, "/testdata/b/(/(.in", newPattern)
 }
 
-// Updated to use property-based queries (@build.name) instead of JOINs (artifact.module.build.name) - RTDEV-64748
+// Updated to use property-based queries to avoid expensive JOINs
 var aqlQueryForBuildDataProvider = []struct {
 	artifactsQuery bool
 	builds         []Build
@@ -364,8 +361,7 @@ func TestCreateAqlBodyForBuildArtifactsWithExclusions(t *testing.T) {
 
 	aqlBodyNoExclusions := createAqlBodyForBuildArtifacts(builds)
 	assert.NotContains(t, aqlBodyNoExclusions, `"$nmatch"`)
-	// Uses property-based query now (RTDEV-64748 fix)
-	assert.Contains(t, aqlBodyNoExclusions, `@build.name`)
+			assert.Contains(t, aqlBodyNoExclusions, `@build.name`)
 	assert.Contains(t, aqlBodyNoExclusions, `myBuild`)
 
 	params := &CommonParams{
@@ -374,9 +370,8 @@ func TestCreateAqlBodyForBuildArtifactsWithExclusions(t *testing.T) {
 	}
 	aqlBodyWithExclusions := createAqlBodyForBuildArtifactsWithExclusions(builds, params)
 
-	assert.Contains(t, aqlBodyWithExclusions, `"$nmatch"`, "FIX VERIFIED: createAqlBodyForBuildArtifactsWithExclusions includes exclusions")
+	assert.Contains(t, aqlBodyWithExclusions, `"$nmatch"`)
 	assert.Contains(t, aqlBodyWithExclusions, `*.json`)
-	// Uses property-based query now (RTDEV-64748 fix)
 	assert.Contains(t, aqlBodyWithExclusions, `@build.name`)
 	assert.Contains(t, aqlBodyWithExclusions, `@build.number`)
 	assert.Contains(t, aqlBodyWithExclusions, `myBuild`)
@@ -396,7 +391,6 @@ func TestCreateAqlBodyForBuildDependenciesWithExclusions(t *testing.T) {
 	assert.Contains(t, aqlBody, `"$nmatch"`)
 	assert.Contains(t, aqlBody, `*.xml`)
 	assert.Contains(t, aqlBody, `test-*`)
-	// Uses property-based query now (RTDEV-64748 fix)
 	assert.Contains(t, aqlBody, `@build.name`)
 	assert.Contains(t, aqlBody, `@build.number`)
 }

@@ -661,12 +661,9 @@ type BuildArtifactItem struct {
 }
 
 // GetBuildArtifacts retrieves build artifacts using the dedicated build artifacts API.
-// This API uses a more effective SQL query and avoids the heavy database JOINs.
-// API endpoint: GET /artifactory/api/builds/buildArtifacts/{build-name}/{build-number}/{build-repository}
-// See: RTDEV-64748
+// This API uses optimized SQL queries and avoids expensive database JOINs.
 func GetBuildArtifacts(buildName, buildNumber, projectKey string, flags CommonConf) ([]BuildArtifactItem, error) {
 	buildRepo := GetBuildInfoRepositoryByProject(projectKey)
-	// Note: The API path uses "builds" (plural) not "build"
 	restApi := path.Join("api/builds/buildArtifacts", buildName, buildNumber, buildRepo)
 	
 	httpClientsDetails := flags.GetArtifactoryDetails().CreateHttpClientDetails()
@@ -689,7 +686,6 @@ func GetBuildArtifacts(buildName, buildNumber, projectKey string, flags CommonCo
 	}
 	if resp.StatusCode == http.StatusNotFound {
 		log.Debug("Artifactory response: " + resp.Status + "\n" + utils.IndentJson(body))
-		// API not available, return error to trigger fallback
 		return nil, errorutils.CheckErrorf("build artifacts API not available (404)")
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
@@ -697,6 +693,7 @@ func GetBuildArtifacts(buildName, buildNumber, projectKey string, flags CommonCo
 	}
 	
 	log.Debug("Artifactory response:", resp.Status)
+	
 	var artifacts []BuildArtifactItem
 	if err = json.Unmarshal(body, &artifacts); err != nil {
 		return nil, err
