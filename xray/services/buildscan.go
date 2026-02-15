@@ -174,6 +174,12 @@ func (bs *BuildScanService) getBuildScanResults(reqFunc func() (*http.Response, 
 	if err != nil {
 		return nil, err
 	}
+	if len(body) == 0 {
+		return nil, errorutils.CheckErrorf(
+			"Received empty response from Xray server (HTTP 200). " +
+				"This may indicate a server-side timeout during authentication. Please retry.",
+		)
+	}
 	buildScanResponse := BuildScanResponse{}
 	if err = json.Unmarshal(body, &buildScanResponse); err != nil {
 		return nil, errorutils.CheckError(err)
