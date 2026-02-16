@@ -96,7 +96,8 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 }
 
 func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	// Dependencies use property-based AQL to avoid expensive JOIN queries
+	// Dependencies must use JOIN-based query because dependencies added via 'bad' command
+	// don't have @build.name properties (unlike artifacts uploaded with --build-name)
 	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependenciesWithExclusions(builds, &specFile)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)

@@ -139,9 +139,9 @@ func createAqlBodyForBuildDependencies(builds []Build) string {
 }
 
 // createAqlBodyForBuildDependenciesWithExclusions creates an AQL body for build dependencies with optional exclusions.
-// Uses property-based queries to avoid expensive database JOINs.
+// Note: Uses JOIN-based query because dependencies added via 'bad' command lack @build.name properties.
 func createAqlBodyForBuildDependenciesWithExclusions(builds []Build, params *CommonParams) string {
-	buildDependenciesItem := `{"$and":[{"@build.name":"%s","@build.number":"%s"}]}`
+	buildDependenciesItem := `{"$and":[{"dependency.module.build.name":"%s","dependency.module.build.number":"%s"}]}`
 	var items []string
 	for _, build := range builds {
 		items = append(items, fmt.Sprintf(buildDependenciesItem, build.BuildName, build.BuildNumber))

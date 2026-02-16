@@ -130,8 +130,8 @@ func TestCreateAqlBodyForBuildArtifactsWithProperties(t *testing.T) {
 	}
 }
 
-// TestCreateAqlBodyForBuildDependenciesWithExclusions tests the property-based AQL query for dependencies
-func TestCreateAqlBodyForBuildDependenciesWithProperties(t *testing.T) {
+// TestCreateAqlBodyForBuildDependenciesWithExclusions tests the JOIN-based AQL query for dependencies
+func TestCreateAqlBodyForBuildDependenciesWithExclusions(t *testing.T) {
 	tests := []struct {
 		name     string
 		builds   []Build
@@ -142,7 +142,7 @@ func TestCreateAqlBodyForBuildDependenciesWithProperties(t *testing.T) {
 			builds: []Build{
 				{BuildName: "my-build", BuildNumber: "456"},
 			},
-			expected: `{"$or":[{"$and":[{"@build.name":"my-build","@build.number":"456"}]}]}`,
+			expected: `{"$or":[{"$and":[{"dependency.module.build.name":"my-build","dependency.module.build.number":"456"}]}]}`,
 		},
 		{
 			name: "Multiple builds dependencies",
@@ -151,7 +151,7 @@ func TestCreateAqlBodyForBuildDependenciesWithProperties(t *testing.T) {
 				{BuildName: "build-B", BuildNumber: "20"},
 				{BuildName: "build-C", BuildNumber: "30"},
 			},
-			expected: `{"$or":[{"$and":[{"@build.name":"build-A","@build.number":"10"}]},{"$and":[{"@build.name":"build-B","@build.number":"20"}]},{"$and":[{"@build.name":"build-C","@build.number":"30"}]}]}`,
+			expected: `{"$or":[{"$and":[{"dependency.module.build.name":"build-A","dependency.module.build.number":"10"}]},{"$and":[{"dependency.module.build.name":"build-B","dependency.module.build.number":"20"}]},{"$and":[{"dependency.module.build.name":"build-C","dependency.module.build.number":"30"}]}]}`,
 		},
 	}
 
@@ -265,7 +265,7 @@ func TestPrepareSourceSearchPattern(t *testing.T) {
 	assert.Equal(t, "/testdata/b/(/(.in", newPattern)
 }
 
-// Updated to use property-based queries to avoid expensive JOINs
+// Artifacts use property-based queries, dependencies use JOIN-based queries
 var aqlQueryForBuildDataProvider = []struct {
 	artifactsQuery bool
 	builds         []Build
@@ -276,9 +276,9 @@ var aqlQueryForBuildDataProvider = []struct {
 	{true, []Build{{"buildName1", "buildNumber1"}, {"buildName2", "buildNumber2"}},
 		`{"$and":[{"@build.name":"buildName1","@build.number":"buildNumber1"}]},{"$and":[{"@build.name":"buildName2","@build.number":"buildNumber2"}]}`},
 	{false, []Build{{"buildName", "buildNumber"}},
-		`{"$and":[{"@build.name":"buildName","@build.number":"buildNumber"}]}`},
+		`{"$and":[{"dependency.module.build.name":"buildName","dependency.module.build.number":"buildNumber"}]}`},
 	{false, []Build{{"buildName1", "buildNumber1"}, {"buildName2", "buildNumber2"}},
-		`{"$and":[{"@build.name":"buildName1","@build.number":"buildNumber1"}]},{"$and":[{"@build.name":"buildName2","@build.number":"buildNumber2"}]}`},
+		`{"$and":[{"dependency.module.build.name":"buildName1","dependency.module.build.number":"buildNumber1"}]},{"$and":[{"dependency.module.build.name":"buildName2","dependency.module.build.number":"buildNumber2"}]}`},
 }
 
 func TestCreateAqlQueryForBuild(t *testing.T) {
@@ -391,6 +391,6 @@ func TestCreateAqlBodyForBuildDependenciesWithExclusions(t *testing.T) {
 	assert.Contains(t, aqlBody, `"$nmatch"`)
 	assert.Contains(t, aqlBody, `*.xml`)
 	assert.Contains(t, aqlBody, `test-*`)
-	assert.Contains(t, aqlBody, `@build.name`)
-	assert.Contains(t, aqlBody, `@build.number`)
+	assert.Contains(t, aqlBody, `dependency.module.build.name`)
+	assert.Contains(t, aqlBody, `dependency.module.build.number`)
 }
