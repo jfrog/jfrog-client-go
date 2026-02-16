@@ -102,9 +102,50 @@ func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf,
 }
 
 func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifactsWithExclusions(builds, &specFile)}
-	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
-	return aqlSearch(executionQuery, flags)
+	// Try using the dedicated build artifacts API first
+	reader, err := getBuildArtifactsUsingApi(builds, specFile.Project, flags)
+	if err != nil {
+		log.Info("Build artifacts API not available, falling back to AQL query:", err.Error())
+		specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifactsWithExclusions(builds, &specFile)}
+		executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
+		return aqlSearch(executionQuery, flags)
+	}
+	return reader, nil
+}
+
+// getBuildArtifactsUsingApi retrieves build artifacts using the dedicated build artifacts API.
+// The API returns repo/path/name. Missing fields (SHA1, MD5, size, properties) are fetched
+// later by the filterBuildArtifactsAndDependencies mechanism via loadMissingProperties.
+func getBuildArtifactsUsingApi(builds []Build, projectKey string, flags CommonConf) (*content.ContentReader, error) {
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(writer.Close()))
+	}()
+
+	for _, build := range builds {
+		artifacts, err := GetBuildArtifacts(build.BuildName, build.BuildNumber, projectKey, flags)
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert API response to ResultItems
+		// Note: API only returns repo/path/name. The filterBuildArtifactsAndDependencies
+		// function will fetch missing fields (SHA1, properties) via loadMissingProperties
+		for _, artifact := range artifacts {
+			resultItem := ResultItem{
+				Repo: artifact.Repo,
+				Path: artifact.Path,
+				Name: artifact.Name,
+				Type: string(File),
+			}
+			writer.Write(resultItem)
+		}
+	}
+
+	return content.NewContentReader(writer.GetFilePath(), content.DefaultKey), nil
 }
 
 // Search with builds may return duplicated items, as the search is performed by checksums.
@@ -116,8 +157,23 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 //
 // This will prevent unnecessary search upon all Artifactory:
 func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *CommonParams, flags CommonConf, builds []Build) (reader *content.ContentReader, err error) {
-	if includePropertiesInAqlForSpec(specFile) {
-		// Don't fetch artifacts' properties from Artifactory.
+	// Check if properties/SHA1 are present in the results (not just if spec says they should be)
+	// This is important for API responses which may return minimal data
+	hasMetadata := true
+	if includePropertiesInAqlForSpec(specFile) && artifactsReader != nil {
+		// Peek at first item to check if SHA1 is actually present
+		item := new(ResultItem)
+		if artifactsReader.NextRecord(item) == nil {
+			if item.Actual_Sha1 == "" {
+				// SHA1 is missing (e.g., from minimal API response)
+				hasMetadata = false
+			}
+		}
+		artifactsReader.Reset() // Reset reader for reuse
+	}
+	
+	if includePropertiesInAqlForSpec(specFile) && hasMetadata {
+		// Properties/SHA1 are already present, use them directly
 		mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader)
 		if err != nil {
 			return nil, err
