@@ -31,6 +31,7 @@ var initialEvent = services.XscAnalyticsGeneralEvent{XscAnalyticsBasicGeneralEve
 	OsArchitecture:         "arm64",
 	MachineId:              "id",
 	AnalyzerManagerVersion: "1.1.1",
+	ProjectPath:            "/path/to/project",
 }}
 
 var finalEvent = services.XscAnalyticsGeneralEvent{XscAnalyticsBasicGeneralEvent: services.XscAnalyticsBasicGeneralEvent{
@@ -47,6 +48,7 @@ var finalEvent = services.XscAnalyticsGeneralEvent{XscAnalyticsBasicGeneralEvent
 	TotalFindings:          10,
 	TotalIgnoredFindings:   5,
 	TotalScanDuration:      "15s",
+	ProjectPath:            "/path/to/project",
 }}
 
 func TestXscAddAndUpdateGeneralEvent(t *testing.T) {
