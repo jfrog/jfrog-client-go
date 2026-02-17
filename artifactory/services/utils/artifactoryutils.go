@@ -400,6 +400,9 @@ func updateProps(readerWithProps *content.ContentReader, resultWriter *content.C
 	for resultItem := new(ResultItem); readerWithProps.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if value, ok := buffer[resultItem.GetItemRelativePath()]; ok {
 			value.Properties = resultItem.Properties
+			value.Actual_Sha1 = resultItem.Actual_Sha1
+			value.Actual_Md5 = resultItem.Actual_Md5
+			value.Size = resultItem.Size
 		}
 	}
 	if err := readerWithProps.GetError(); err != nil {

@@ -96,17 +96,17 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 }
 
 func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependenciesWithExclusions(builds, &specFile)}
+	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildDependencies(builds)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
 }
 
 func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	// Try using the dedicated build artifacts API first
+	// Try the dedicated build artifacts API first (avoids expensive AQL JOINs).
 	reader, err := getBuildArtifactsUsingApi(builds, specFile.Project, flags)
 	if err != nil {
-		log.Info("Build artifacts API not available, falling back to AQL query:", err.Error())
-		specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifactsWithExclusions(builds, &specFile)}
+		log.Debug("Build artifacts API not available, falling back to AQL:", err.Error())
+		specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifacts(builds)}
 		executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 		return aqlSearch(executionQuery, flags)
 	}
@@ -114,8 +114,8 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 }
 
 // getBuildArtifactsUsingApi retrieves build artifacts using the dedicated build artifacts API.
-// The API returns repo/path/name. Missing fields (SHA1, MD5, size, properties) are fetched
-// later by the filterBuildArtifactsAndDependencies mechanism via loadMissingProperties.
+// Returns minimal data (repo/path/name only). Missing metadata (SHA1, MD5, size, properties)
+// is fetched later by filterBuildArtifactsAndDependencies via loadMissingProperties.
 func getBuildArtifactsUsingApi(builds []Build, projectKey string, flags CommonConf) (*content.ContentReader, error) {
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
@@ -130,18 +130,13 @@ func getBuildArtifactsUsingApi(builds []Build, projectKey string, flags CommonCo
 		if err != nil {
 			return nil, err
 		}
-
-		// Convert API response to ResultItems
-		// Note: API only returns repo/path/name. The filterBuildArtifactsAndDependencies
-		// function will fetch missing fields (SHA1, properties) via loadMissingProperties
 		for _, artifact := range artifacts {
-			resultItem := ResultItem{
+			writer.Write(ResultItem{
 				Repo: artifact.Repo,
 				Path: artifact.Path,
 				Name: artifact.Name,
 				Type: string(File),
-			}
-			writer.Write(resultItem)
+			})
 		}
 	}
 
