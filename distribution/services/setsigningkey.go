@@ -55,12 +55,12 @@ func (ssk *SetSigningKeyService) execSetSigningKey(setSigningKeyBody *SetSigning
 
 type SetSigningKeyBody struct {
 	PublicKey  string `json:"public_key,omitempty"`
-	PrivateKey string `json:"private_key,omitempty"`
+	PrivateKey string `json:"private_key,omitempty"` // #nosec G117 -- API struct for signing key config
 }
 
 type SetSigningKeyParams struct {
 	PublicKey  string
-	PrivateKey string
+	PrivateKey string // #nosec G117 -- API struct for signing key config
 }
 
 func NewSetSigningKeyParams(publicKey, privateKey string) SetSigningKeyParams {
