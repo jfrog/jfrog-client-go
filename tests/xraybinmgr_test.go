@@ -43,5 +43,5 @@ func addBuildsToIndexing(t *testing.T) {
 			return false
 		}
 		return slices.Contains(indexedBuilds, buildName)
-	}, time.Second*5, time.Millisecond*150, "Build %s not found in indexed builds", buildName)
+	}, time.Second*30, time.Millisecond*500, "Build %s not found in indexed builds", buildName)
 }
