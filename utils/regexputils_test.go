@@ -70,9 +70,9 @@ func TestReturnErrorOnNotFound(t *testing.T) {
 		regex gofrogio.CmdOutputPattern
 		error bool
 	}{
-		{"Without Error", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "go: github.com/jfrog/jfrog-client-go@v0.2.1: This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, false},
-		{"With Error No Response Message", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "go: github.com/jfrog/jfrog-client-go@v0.2.1: This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo: 404"}, true},
-		{"With Error With response message", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "go: github.com/jfrog/jfrog-client-go@v0.2.1: This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo: 404 Not Found"}, true},
+		{"Without Error", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "go: github.com/jfrog/jfrog-client-go@v0.2.1: This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, false}, // #nosec G101 -- test data: fake URL for regex matching
+		{"With Error No Response Message", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "go: github.com/jfrog/jfrog-client-go@v0.2.1: This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo: 404"}, true},       // #nosec G101 -- test data: fake URL for regex matching
+		{"With Error With response message", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "go: github.com/jfrog/jfrog-client-go@v0.2.1: This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo: 404 Not Found"}, true}, // #nosec G101 -- test data: fake URL for regex matching
 		{"On Different Message", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "go: finding github.com/elazarl/go-bindata-assetfs v0.0.0-20151224045452-57eb5e1fc594"}, false},
 	}
 	for _, test := range tests {

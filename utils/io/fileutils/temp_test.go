@@ -140,7 +140,7 @@ func TestCleanOldDirsContinuesOnError(t *testing.T) {
 	_, err1 := os.Stat(validFile1Name)
 	assert.True(t, os.IsNotExist(err1), "validFile1 should be deleted")
 
-	_, err2 := os.Stat(validFile2Name)
+	_, err2 := os.Stat(validFile2Name) // #nosec G703 -- test file; path from test temp dir
 	assert.True(t, os.IsNotExist(err2), "validFile2 should be deleted")
 
 	// Invalid file should still exist (couldn't be processed)
