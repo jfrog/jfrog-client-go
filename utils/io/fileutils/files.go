@@ -78,9 +78,9 @@ func IsDirExists(path string, preserveSymLink bool) (bool, error) {
 // If path points at a symlink and `preserveSymLink == true`, return the file info of the symlink instead
 func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err error) {
 	if preserveSymLink {
-		fileInfo, err = os.Lstat(path)
+		fileInfo, err = os.Lstat(path) // #nosec G703 -- CLI/library runs in user environment
 	} else {
-		fileInfo, err = os.Stat(path)
+		fileInfo, err = os.Stat(path) // #nosec G703 -- CLI/library runs in user environment
 	}
 	// We should not do CheckError here, because the error is checked by the calling functions.
 	return

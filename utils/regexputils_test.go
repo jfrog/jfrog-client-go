@@ -24,9 +24,9 @@ func TestRemoveCredentialsFromLine(t *testing.T) {
 		expectedLine string
 		matched      bool
 	}{
-		{"http", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line http://127.0.0.1:8081/artifactory/path/to/repo", true},
-		{"https", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},
-		{"git", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line git://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line git://127.0.0.1:8081/artifactory/path/to/repo", true},
+		{"http", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line http://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line http://127.0.0.1:8081/artifactory/path/to/repo", true},   // #nosec G101 -- test data: fake URL for regex matching
+		{"https", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},  // #nosec G101 -- test data: fake URL for regex matching
+		{"git", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line git://user:password@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line git://127.0.0.1:8081/artifactory/path/to/repo", true},    // #nosec G101 -- test data: fake URL for regex matching
 		{"Special characters 1", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://u-s!<e>_r:!p-a&%%s%sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},
 		{"Special characters 2", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line https://!user:[p]a(s)sword@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line https://127.0.0.1:8081/artifactory/path/to/repo", true},
 		{"http with token", gofrogio.CmdOutputPattern{RegExp: regExpProtocol, Line: "This is an example line http://123456@127.0.0.1:8081/artifactory/path/to/repo"}, "This is an example line http://127.0.0.1:8081/artifactory/path/to/repo", true},
