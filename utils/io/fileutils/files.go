@@ -636,7 +636,7 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	err = os.Chmod(destPath, inputFileInfo.Mode())
+	err = os.Chmod(destPath, inputFileInfo.Mode()) // #nosec G703 -- CLI/library runs in user environment
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
@@ -666,7 +666,7 @@ func RemoveDirContents(dirPath string) (err error) {
 		return errorutils.CheckError(err)
 	}
 	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(dirPath, name))
+		err = os.RemoveAll(filepath.Join(dirPath, name)) // #nosec G703 -- CLI/library runs in user environment
 		if err != nil {
 			return errorutils.CheckError(err)
 		}
