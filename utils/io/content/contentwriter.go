@@ -72,7 +72,7 @@ func (rw *ContentWriter) GetFilePath() string {
 }
 
 func (rw *ContentWriter) RemoveOutputFilePath() error {
-	return errorutils.CheckError(os.Remove(rw.outputFile.Name()))
+	return errorutils.CheckError(os.Remove(rw.outputFile.Name())) // #nosec G703 -- CLI/library runs in user environment
 }
 
 // Write a single item to the JSON array.

@@ -266,8 +266,8 @@ type CreateTokenParams struct {
 
 type ArtifactoryRefreshTokenParams struct {
 	Token        CreateTokenParams
-	RefreshToken string
-	AccessToken  string
+	RefreshToken string // #nosec G117 -- API response struct for token creation
+	AccessToken  string // #nosec G117 -- API response struct for token creation
 }
 
 type RevokeTokenParams struct {

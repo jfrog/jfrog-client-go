@@ -78,9 +78,9 @@ func IsDirExists(path string, preserveSymLink bool) (bool, error) {
 // If path points at a symlink and `preserveSymLink == true`, return the file info of the symlink instead
 func GetFileInfo(path string, preserveSymLink bool) (fileInfo os.FileInfo, err error) {
 	if preserveSymLink {
-		fileInfo, err = os.Lstat(path)
+		fileInfo, err = os.Lstat(path) // #nosec G703 -- CLI/library runs in user environment
 	} else {
-		fileInfo, err = os.Stat(path)
+		fileInfo, err = os.Stat(path) // #nosec G703 -- CLI/library runs in user environment
 	}
 	// We should not do CheckError here, because the error is checked by the calling functions.
 	return
@@ -636,7 +636,7 @@ func MoveFile(sourcePath, destPath string) (err error) {
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	err = os.Chmod(destPath, inputFileInfo.Mode())
+	err = os.Chmod(destPath, inputFileInfo.Mode()) // #nosec G703 -- CLI/library runs in user environment
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
@@ -666,7 +666,7 @@ func RemoveDirContents(dirPath string) (err error) {
 		return errorutils.CheckError(err)
 	}
 	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(dirPath, name))
+		err = os.RemoveAll(filepath.Join(dirPath, name)) // #nosec G703 -- CLI/library runs in user environment
 		if err != nil {
 			return errorutils.CheckError(err)
 		}

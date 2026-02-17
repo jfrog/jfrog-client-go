@@ -30,7 +30,7 @@ func TestIsPathExistsAndIsPathAccessible(t *testing.T) {
 		if symlinkCreated {
 			assert.NoError(t, os.Remove(symlinkPath))
 		}
-		assert.NoError(t, os.Remove(tempFile.Name()))
+		assert.NoError(t, os.Remove(tempFile.Name())) // #nosec G703 -- test file; path from temp
 	}()
 
 	// Test for an existing file

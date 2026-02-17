@@ -38,7 +38,7 @@ func TestCleanOldDirs(t *testing.T) {
 	// Check if the file got deleted.
 	_, err1 := os.Stat(tempDir)
 	assert.True(t, os.IsNotExist(err1))
-	_, err2 := os.Stat(tempFile.Name())
+	_, err2 := os.Stat(tempFile.Name()) // #nosec G703 -- test file; path from temp file
 	assert.True(t, os.IsNotExist(err2))
 }
 
@@ -75,7 +75,7 @@ func TestExtractTimestamp(t *testing.T) {
 }
 
 func AssertFileExists(t *testing.T, name string) {
-	_, err := os.Stat(name)
+	_, err := os.Stat(name) // #nosec G703 -- test helper; path from test
 	assert.NoError(t, err)
 }
 
@@ -137,10 +137,10 @@ func TestCleanOldDirsContinuesOnError(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid-no-timestamp")
 
 	// Verify valid files were deleted despite error with invalid file
-	_, err1 := os.Stat(validFile1Name)
+	_, err1 := os.Stat(validFile1Name) // #nosec G703 -- test file; path from test temp dir
 	assert.True(t, os.IsNotExist(err1), "validFile1 should be deleted")
 
-	_, err2 := os.Stat(validFile2Name)
+	_, err2 := os.Stat(validFile2Name) // #nosec G703 -- test file; path from test temp dir
 	assert.True(t, os.IsNotExist(err2), "validFile2 should be deleted")
 
 	// Invalid file should still exist (couldn't be processed)

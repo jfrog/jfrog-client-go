@@ -25,7 +25,7 @@ func NewUserParams() UserParams {
 type User struct {
 	Name                     string    `json:"name,omitempty" csv:"username,omitempty"`
 	Email                    string    `json:"email,omitempty" csv:"email,omitempty"`
-	Password                 string    `json:"password,omitempty" csv:"password,omitempty"`
+	Password                 string    `json:"password,omitempty" csv:"password,omitempty"` // #nosec G117 -- API struct for user create/update
 	Admin                    *bool     `json:"admin,omitempty" csv:"admin,omitempty"`
 	ProfileUpdatable         *bool     `json:"profileUpdatable,omitempty" csv:"profileUpdatable,omitempty"`
 	DisableUIAccess          *bool     `json:"disableUIAccess,omitempty" csv:"disableUIAccess,omitempty"`

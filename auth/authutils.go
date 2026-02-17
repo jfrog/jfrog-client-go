@@ -25,12 +25,12 @@ type OidcTokenResponseData struct {
 }
 
 type CommonTokenParams struct {
-	Scope        string `json:"scope,omitempty"`
-	AccessToken  string `json:"access_token,omitempty"`
-	ExpiresIn    *uint  `json:"expires_in,omitempty"`
-	TokenType    string `json:"token_type,omitempty"`
+	Scope       string `json:"scope,omitempty"`
+	AccessToken string `json:"access_token,omitempty"` // #nosec G117 -- API struct for OAuth token response
+	ExpiresIn   *uint  `json:"expires_in,omitempty"`
+	TokenType   string `json:"token_type,omitempty"`
 	Refreshable  *bool  `json:"refreshable,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"` // #nosec G117 -- API struct for OAuth token response
 	GrantType    string `json:"grant_type,omitempty"`
 	Audience     string `json:"audience,omitempty"`
 }
