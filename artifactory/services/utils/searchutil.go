@@ -102,6 +102,26 @@ func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf,
 }
 
 func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
+	// When sort or limit is specified, the API doesn't support these — use AQL directly.
+	if !includePropertiesInAqlForSpec(&specFile) {
+		log.Debug("Sort/limit specified, using AQL for build artifacts search")
+		return getBuildArtifactsUsingAql(specFile, flags, builds)
+	}
+
+	// Try the dedicated build artifacts API first (avoids expensive AQL JOINs).
+	log.Debug("Attempting to fetch build artifacts using dedicated API...")
+	reader, err := GetBuildArtifacts(builds, specFile.Project, flags)
+	if err != nil {
+		// API failed — fall back to AQL.
+		log.Warn("Build artifacts API failed, falling back to AQL:", err.Error())
+		return getBuildArtifactsUsingAql(specFile, flags, builds)
+	}
+
+	log.Debug("Successfully fetched build artifacts using dedicated API")
+	return reader, nil
+}
+
+func getBuildArtifactsUsingAql(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
 	specFile.Aql = Aql{ItemsFind: createAqlBodyForBuildArtifactsWithExclusions(builds, &specFile)}
 	executionQuery := BuildQueryFromSpecFile(&specFile, ALL)
 	return aqlSearch(executionQuery, flags)
@@ -116,8 +136,19 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 //
 // This will prevent unnecessary search upon all Artifactory:
 func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *content.ContentReader, specFile *CommonParams, flags CommonConf, builds []Build) (reader *content.ContentReader, err error) {
-	if includePropertiesInAqlForSpec(specFile) {
-		// Don't fetch artifacts' properties from Artifactory.
+	// Check if artifacts have full metadata by peeking at the first item.
+	// API-sourced results only contain repo/path/name with no checksums.
+	hasMetadata := includePropertiesInAqlForSpec(specFile)
+	if hasMetadata && artifactsReader != nil {
+		item := new(ResultItem)
+		if artifactsReader.NextRecord(item) == nil && item.Actual_Sha1 == "" {
+			hasMetadata = false
+		}
+		artifactsReader.Reset()
+	}
+
+	if hasMetadata {
+		// Results already contain full metadata — no extra fetch needed.
 		mergedReader, err := mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader)
 		if err != nil {
 			return nil, err
@@ -132,7 +163,7 @@ func filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader *co
 		return filterBuildAqlSearchResults(mergedReader, buildArtifactsSha1, builds)
 	}
 
-	// Artifacts' properties weren't fetched in previous aql, fetch now and add to results.
+	// Results are missing metadata (API-sourced or sort/limit AQL). Fetch via property-based AQL.
 	var buildNames []string
 	for _, build := range builds {
 		buildNames = append(buildNames, build.BuildName)
