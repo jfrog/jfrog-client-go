@@ -80,3 +80,9 @@ func (xs *XscInnerService) GetResourceWatches(gitRepo, project string) (watches 
 	watchService.ScopeProjectKey = xs.ScopeProjectKey
 	return watchService.GetResourceWatches(gitRepo, project)
 }
+
+func (xs *XscInnerService) GetGitScanUIRoute(request services.GetGitScanUIRouteRequest) (string, error) {
+	gitScanService := services.NewGitScanService(xs.client)
+	gitScanService.XrayDetails = xs.XrayDetails
+	return gitScanService.GetGitScanUIRoute(request)
+}
