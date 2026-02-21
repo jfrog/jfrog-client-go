@@ -31,6 +31,7 @@ const (
 	buildRepositoriesSuffix      = "-build-info"
 	defaultBuildRepositoriesName = "artifactory"
 	defaultProjectKey            = "default"
+	buildArtifactsApiPath        = "api/builds/buildArtifacts"
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -406,6 +407,9 @@ func updateProps(readerWithProps *content.ContentReader, resultWriter *content.C
 			if value.Actual_Md5 == "" {
 				value.Actual_Md5 = resultItem.Actual_Md5
 			}
+			if value.Sha256 == "" {
+				value.Sha256 = resultItem.Sha256
+			}
 			if value.Size == 0 {
 				value.Size = resultItem.Size
 			}
@@ -680,10 +684,6 @@ func GetBuildArtifacts(builds []Build, projectKey string, flags CommonConf) (*co
 	artDetails := flags.GetArtifactoryDetails()
 	client := flags.GetJfrogHttpClient()
 	httpClientsDetails := artDetails.CreateHttpClientDetails()
-	if httpClientsDetails.Headers == nil {
-		httpClientsDetails.Headers = make(map[string]string)
-	}
-	httpClientsDetails.Headers["Content-Type"] = "application/json"
 
 	buildRepo := GetBuildInfoRepositoryByProject(projectKey)
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
@@ -693,11 +693,14 @@ func GetBuildArtifacts(builds []Build, projectKey string, flags CommonConf) (*co
 	defer func() { _ = writer.Close() }()
 
 	for _, build := range builds {
-		apiUrl := artDetails.GetUrl() + "api/builds/buildArtifacts"
-		requestBody := fmt.Sprintf(`{"buildName":"%s","buildNumber":"%s","buildRepo":"%s"}`, build.BuildName, build.BuildNumber, buildRepo)
+		apiPath := path.Join(buildArtifactsApiPath, build.BuildName, build.BuildNumber, buildRepo)
+		apiUrl, err := utils.BuildUrl(artDetails.GetUrl(), apiPath, nil)
+		if err != nil {
+			return nil, err
+		}
 		log.Debug(fmt.Sprintf("Fetching build artifacts via API for build: %s/%s", build.BuildName, build.BuildNumber))
 
-		resp, body, err := client.SendPost(apiUrl, []byte(requestBody), &httpClientsDetails)
+		resp, body, _, err := client.SendGet(apiUrl, true, &httpClientsDetails)
 		if err != nil {
 			return nil, err
 		}

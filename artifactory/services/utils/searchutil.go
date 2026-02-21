@@ -102,7 +102,7 @@ func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf,
 }
 
 func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
-	// When sort or limit is specified, the API doesn't support these — use AQL directly.
+	// When sort or limit is specified, fall back to AQL since the API doesn't support these flags.
 	if !includePropertiesInAqlForSpec(&specFile) {
 		log.Debug("Sort/limit specified, using AQL for build artifacts search")
 		return getBuildArtifactsUsingAql(specFile, flags, builds)
