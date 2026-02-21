@@ -506,7 +506,7 @@ func createPropsQuery(aqlBody, propKey string, propValues []string) string {
 		`items.find({` +
 			`"$and":[%s,{%s}]` +
 			`})%s`
-	return fmt.Sprintf(propsQuery, aqlBody, propKeyValQueryPart, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_sha1", "property"}))
+	return fmt.Sprintf(propsQuery, aqlBody, propKeyValQueryPart, buildIncludeQueryPart([]string{"name", "repo", "path", "actual_md5", "actual_sha1", "sha256", "size", "property"}))
 }
 
 func buildIncludeQueryPart(fieldsToInclude []string) string {

@@ -31,6 +31,7 @@ const (
 	buildRepositoriesSuffix      = "-build-info"
 	defaultBuildRepositoriesName = "artifactory"
 	defaultProjectKey            = "default"
+	buildArtifactsApiPath        = "api/builds/buildArtifacts"
 )
 
 func UploadFile(localPath, url, logMsgPrefix string, artifactoryDetails *auth.ServiceDetails, details *fileutils.FileDetails,
@@ -396,10 +397,22 @@ func updateProps(readerWithProps *content.ContentReader, resultWriter *content.C
 	if len(buffer) == 0 {
 		return nil
 	}
-	// Load buffer items with their properties.
+	// Load buffer items with their properties and any missing metadata fields.
 	for resultItem := new(ResultItem); readerWithProps.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if value, ok := buffer[resultItem.GetItemRelativePath()]; ok {
 			value.Properties = resultItem.Properties
+			if value.Actual_Sha1 == "" {
+				value.Actual_Sha1 = resultItem.Actual_Sha1
+			}
+			if value.Actual_Md5 == "" {
+				value.Actual_Md5 = resultItem.Actual_Md5
+			}
+			if value.Sha256 == "" {
+				value.Sha256 = resultItem.Sha256
+			}
+			if value.Size == 0 {
+				value.Size = resultItem.Size
+			}
 		}
 	}
 	if err := readerWithProps.GetError(); err != nil {
@@ -651,6 +664,80 @@ func getAggregatedBuilds(buildName, buildNumber, projectKey string, flags Common
 		}
 	}
 	return aggregatedBuilds, nil
+}
+
+type buildArtifactsRequest struct {
+	BuildName   string `json:"buildName"`
+	BuildNumber string `json:"buildNumber"`
+	BuildRepo   string `json:"buildRepo"`
+}
+
+// BuildArtifactItem represents a single artifact returned by the build artifacts API.
+type BuildArtifactItem struct {
+	Repo string `json:"repo"`
+	Path string `json:"path"`
+	Name string `json:"name"`
+}
+
+// GetBuildArtifacts calls the dedicated build artifacts API to fetch the list of artifacts
+// for the given builds. This API uses indexed lookups and avoids expensive AQL JOINs.
+// It returns a ContentReader with ResultItem entries containing only repo/path/name (no checksums or properties).
+func GetBuildArtifacts(builds []Build, projectKey string, flags CommonConf) (*content.ContentReader, error) {
+	if len(builds) == 0 {
+		return content.NewEmptyContentReader(content.DefaultKey), nil
+	}
+
+	artDetails := flags.GetArtifactoryDetails()
+	client := flags.GetJfrogHttpClient()
+	httpClientsDetails := artDetails.CreateHttpClientDetails()
+	httpClientsDetails.SetContentTypeApplicationJson()
+
+	buildRepo := GetBuildInfoRepositoryByProject(projectKey)
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = writer.Close() }()
+
+	for _, build := range builds {
+		apiUrl, err := utils.BuildUrl(artDetails.GetUrl(), buildArtifactsApiPath, nil)
+		if err != nil {
+			return nil, err
+		}
+		requestBody, err := json.Marshal(buildArtifactsRequest{
+			BuildName:   build.BuildName,
+			BuildNumber: build.BuildNumber,
+			BuildRepo:   buildRepo,
+		})
+		if err != nil {
+			return nil, errorutils.CheckErrorf("failed to marshal build artifacts request: %w", err)
+		}
+		log.Debug(fmt.Sprintf("Fetching build artifacts via API for build: %s/%s", build.BuildName, build.BuildNumber))
+
+		resp, body, err := client.SendPost(apiUrl, requestBody, &httpClientsDetails)
+		if err != nil {
+			return nil, err
+		}
+		if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+			return nil, err
+		}
+
+		var items []BuildArtifactItem
+		if err = json.Unmarshal(body, &items); err != nil {
+			return nil, errorutils.CheckErrorf("failed to parse build artifacts API response: %w", err)
+		}
+
+		for _, item := range items {
+			writer.Write(ResultItem{
+				Repo: item.Repo,
+				Path: item.Path,
+				Name: item.Name,
+				Type: "file",
+			})
+		}
+	}
+
+	return content.NewContentReader(writer.GetFilePath(), content.DefaultKey), nil
 }
 
 type CommonConf interface {
