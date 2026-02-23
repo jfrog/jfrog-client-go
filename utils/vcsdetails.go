@@ -79,7 +79,7 @@ func (vc *VcsCache) GetVcsDetails(path string) (revision, refUrl, branch string,
 		for _, v := range subPaths {
 			vc.vcsDir.Store(v, vcsDetailsResult)
 		}
-		vc.incCacheSize(int32(size))
+		vc.incCacheSize(int32(size)) // #nosec G115 -- cache size conversion; safe in practice
 	}
 	return
 }

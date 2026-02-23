@@ -175,7 +175,7 @@ type RemoteRepositoryBaseParams struct {
 	AdditionalRepositoryBaseParams
 	Url                               string                  `json:"url"`
 	Username                          string                  `json:"username,omitempty"`
-	Password                          string                  `json:"password,omitempty"`
+	Password                          string                  `json:"password,omitempty"` // #nosec G117 -- API struct for remote repo config
 	Proxy                             string                  `json:"proxy,omitempty"`
 	HardFail                          *bool                   `json:"hardFail,omitempty"`
 	Offline                           *bool                   `json:"offline,omitempty"`

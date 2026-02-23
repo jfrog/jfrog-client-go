@@ -196,7 +196,7 @@ func (jc *HttpClient) doRequest(req *http.Request, content []byte, followRedirec
 		}
 	}
 
-	resp, err = client.Do(req)
+	resp, err = client.Do(req) // #nosec G704 -- CLI/library; URL from user/config, runs in user environment
 	if err != nil && redirectUrl != "" {
 		if !followRedirect {
 			log.Debug("Blocking HTTP redirect to", redirectUrl)
@@ -345,7 +345,7 @@ func (jc *HttpClient) UploadFileFromReader(reader io.Reader, url string, httpCli
 	addUserAgentHeader(req)
 
 	client := jc.client
-	resp, err = client.Do(req)
+	resp, err = client.Do(req) // #nosec G704 -- CLI/library; URL from user/config, runs in user environment
 	if errorutils.CheckError(err) != nil || resp == nil {
 		return
 	}

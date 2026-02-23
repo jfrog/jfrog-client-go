@@ -590,7 +590,7 @@ func SaveFileTransferDetailsInFile(filePath string, details *[]FileTransferDetai
 	if err != nil {
 		return errorutils.CheckError(err)
 	}
-	return errorutils.CheckError(os.WriteFile(filePath, files, 0o700))
+	return errorutils.CheckError(os.WriteFile(filePath, files, 0o700)) // #nosec G703 -- CLI/library runs in user environment
 }
 
 // Extract sha256 of the uploaded file (calculated by artifactory) from the response's body.

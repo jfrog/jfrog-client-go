@@ -9,9 +9,9 @@ import (
 
 type HttpClientDetails struct {
 	User                  string
-	Password              string
-	ApiKey                string
-	AccessToken           string
+	Password              string   // #nosec G117 -- HTTP client auth config struct
+	ApiKey                string   // #nosec G117 -- HTTP client auth config struct
+	AccessToken           string   // #nosec G117 -- HTTP client auth config struct
 	Headers               map[string]string
 	Transport             *http.Transport
 	DialTimeout           time.Duration

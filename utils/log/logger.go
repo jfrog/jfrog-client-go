@@ -237,7 +237,7 @@ func IsStdErrTerminal() bool {
 	if stdErrIsTerminal == nil {
 		isTerminal := false
 		if v, ok := (logWriter).(*os.File); ok {
-			isTerminal = term.IsTerminal(int(v.Fd()))
+			isTerminal = term.IsTerminal(int(v.Fd())) // #nosec G115 -- file descriptor from os.File; safe in practice
 		}
 		stdErrIsTerminal = &isTerminal
 	}
@@ -249,7 +249,7 @@ func IsStdOutTerminal() bool {
 	if stdOutIsTerminal == nil {
 		isTerminal := false
 		if v, ok := (outputWriter).(*os.File); ok {
-			isTerminal = term.IsTerminal(int(v.Fd()))
+			isTerminal = term.IsTerminal(int(v.Fd())) // #nosec G115 -- file descriptor from os.File; safe in practice
 		}
 		stdOutIsTerminal = &isTerminal
 	}

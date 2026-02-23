@@ -2,7 +2,7 @@ package utils
 
 type replicationBody struct {
 	Username               string `json:"username"`
-	Password               string `json:"password"`
+	Password               string `json:"password"` // #nosec G117 -- API struct for replication config
 	URL                    string `json:"url"`
 	CronExp                string `json:"cronExp"`
 	RepoKey                string `json:"repoKey"`
@@ -29,7 +29,7 @@ type UpdateReplicationBody struct {
 
 type ReplicationParams struct {
 	Username string
-	Password string
+	Password string // #nosec G117 -- API struct for replication config
 	Url      string
 	CronExp  string
 	// Source replication repository.

@@ -95,12 +95,12 @@ func TestCloseReader(t *testing.T) {
 	reader := NewContentReader(filePathToBeDeleted, DefaultKey)
 
 	// Check file exists
-	_, err = os.Stat(filePathToBeDeleted)
+	_, err = os.Stat(filePathToBeDeleted) // #nosec G703 -- test file; path from test temp
 	assert.NoError(t, err)
 
 	// Check if the file got deleted
 	closeAndAssert(t, reader)
-	_, err = os.Stat(filePathToBeDeleted)
+	_, err = os.Stat(filePathToBeDeleted) // #nosec G703 -- test file; path from test temp
 	assert.True(t, os.IsNotExist(err))
 }
 
