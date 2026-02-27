@@ -681,24 +681,28 @@ func GetBuildArtifacts(builds []Build, projectKey string, flags CommonConf) (*co
 		return content.NewEmptyContentReader(content.DefaultKey), nil
 	}
 
-	artDetails := flags.GetArtifactoryDetails()
+	artifactoryDetails := flags.GetArtifactoryDetails()
 	client := flags.GetJfrogHttpClient()
-	httpClientsDetails := artDetails.CreateHttpClientDetails()
+	httpClientsDetails := artifactoryDetails.CreateHttpClientDetails()
 
 	buildRepo := GetBuildInfoRepositoryByProject(projectKey)
-	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
+	resultWriter, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = writer.Close() }()
+	defer func() {
+		if closeErr := resultWriter.Close(); closeErr != nil {
+			log.Error("Failed to close writer:", closeErr)
+		}
+	}()
 
 	for _, build := range builds {
 		apiPath := path.Join(buildArtifactsApiPath, build.BuildName, build.BuildNumber, buildRepo)
-		apiUrl, err := utils.BuildUrl(artDetails.GetUrl(), apiPath, nil)
+		apiUrl, err := utils.BuildUrl(artifactoryDetails.GetUrl(), apiPath, nil)
 		if err != nil {
 			return nil, err
 		}
-		log.Debug(fmt.Sprintf("Fetching build artifacts via API for build: %s/%s", build.BuildName, build.BuildNumber))
+		log.Debug("Fetching build artifacts via API for build:", build.BuildName+"/"+build.BuildNumber)
 
 		resp, body, _, err := client.SendGet(apiUrl, true, &httpClientsDetails)
 		if err != nil {
@@ -714,7 +718,7 @@ func GetBuildArtifacts(builds []Build, projectKey string, flags CommonConf) (*co
 		}
 
 		for _, item := range items {
-			writer.Write(ResultItem{
+			resultWriter.Write(ResultItem{
 				Repo: item.Repo,
 				Path: item.Path,
 				Name: item.Name,
@@ -723,7 +727,7 @@ func GetBuildArtifacts(builds []Build, projectKey string, flags CommonConf) (*co
 		}
 	}
 
-	return content.NewContentReader(writer.GetFilePath(), content.DefaultKey), nil
+	return content.NewContentReader(resultWriter.GetFilePath(), content.DefaultKey), nil
 }
 
 type CommonConf interface {
