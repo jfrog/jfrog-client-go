@@ -401,16 +401,11 @@ func updateProps(readerWithProps *content.ContentReader, resultWriter *content.C
 	for resultItem := new(ResultItem); readerWithProps.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
 		if value, ok := buffer[resultItem.GetItemRelativePath()]; ok {
 			value.Properties = resultItem.Properties
-			if value.Actual_Sha1 == "" {
-				value.Actual_Sha1 = resultItem.Actual_Sha1
-			}
-			if value.Actual_Md5 == "" {
-				value.Actual_Md5 = resultItem.Actual_Md5
-			}
-			if value.Sha256 == "" {
-				value.Sha256 = resultItem.Sha256
-			}
+			// If size is 0, it means metadata is missing (e.g., from API). Update all metadata fields.
 			if value.Size == 0 {
+				value.Actual_Sha1 = resultItem.Actual_Sha1
+				value.Actual_Md5 = resultItem.Actual_Md5
+				value.Sha256 = resultItem.Sha256
 				value.Size = resultItem.Size
 			}
 		}
