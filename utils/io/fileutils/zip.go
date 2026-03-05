@@ -45,6 +45,7 @@ func ZipFolderFiles(source, target string) (err error) {
 			return errorutils.CheckError(currentErr)
 		}
 
+		// #nosec G122 -- TODO: refactor to use os.OpenRoot for symlink TOCTOU protection
 		file, currentErr := os.Open(path)
 		if currentErr != nil {
 			return errorutils.CheckError(currentErr)

@@ -34,6 +34,7 @@ func (ssk *SetSigningKeyService) SetSigningKey(signBundleParams SetSigningKeyPar
 
 func (ssk *SetSigningKeyService) execSetSigningKey(setSigningKeyBody *SetSigningKeyBody) error {
 	httpClientsDetails := ssk.DistDetails.CreateHttpClientDetails()
+	// #nosec G117 -- Intentional marshaling of signing key data required by the Distribution API
 	content, err := json.Marshal(setSigningKeyBody)
 	if err != nil {
 		return errorutils.CheckError(err)
