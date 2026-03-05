@@ -114,6 +114,9 @@ type ArtifactoryServicesManager interface {
 	ImportReleaseBundle(string) error
 	GetPackageLeadFile(leadFileParams services.LeadFileParams) ([]byte, error)
 	UploadTrustedKey(params services.TrustedKeyParams) (*services.TrustedKeyResponse, error)
+	ListSkillVersions(repoKey, slug string) ([]services.SkillVersion, error)
+	SearchSkills(repoKey, query string, limit int) ([]services.SkillSearchResult, error)
+	SkillVersionExists(repoKey, slug, version string) (bool, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -523,6 +526,18 @@ func (esm *EmptyArtifactoryServicesManager) GetReleaseBundlesStats(string) ([]by
 }
 
 func (esm *EmptyArtifactoryServicesManager) GetTokenDetails(string, string) ([]byte, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) ListSkillVersions(string, string) ([]services.SkillVersion, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) SearchSkills(string, string, int) ([]services.SkillSearchResult, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) SkillVersionExists(string, string, string) (bool, error) {
 	panic("Failed: Method is not implemented")
 }
 
