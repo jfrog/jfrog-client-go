@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -43,7 +42,7 @@ func (ss *SkillsService) ListVersions(repoKey, slug string) ([]SkillVersion, err
 
 func (ss *SkillsService) SearchSkills(repoKey, query string, limit int) ([]SkillSearchResult, error) {
 	log.Debug(fmt.Sprintf("Searching skills in repo '%s' with query '%s'...", repoKey, query))
-	body, err := ss.sendGet(repoKey, fmt.Sprintf("search?q=%s&limit=%d", url.QueryEscape(query), limit))
+	body, err := ss.sendGet(repoKey, fmt.Sprintf("search?q=%s&limit=%d", query, limit))
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +72,7 @@ func (ss *SkillsService) VersionExists(repoKey, slug, version string) (bool, err
 func (ss *SkillsService) SearchByProperty(query string) ([]SkillPropertySearchResult, error) {
 	log.Debug(fmt.Sprintf("Searching skills by property skill.name='%s'...", query))
 	baseURL := utils.AddTrailingSlashIfNeeded(ss.ArtDetails.GetUrl())
-	searchURL := fmt.Sprintf("%sapi/search/prop?skill.name=%s", baseURL, url.QueryEscape(query))
+	searchURL := fmt.Sprintf("%sapi/search/prop?skill.name=%s", baseURL, query)
 	log.Debug("Property search request:", searchURL)
 
 	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
@@ -93,9 +92,11 @@ func (ss *SkillsService) SearchByProperty(query string) ([]SkillPropertySearchRe
 	var results []SkillPropertySearchResult
 	for _, item := range wrapper.Results {
 		r, ok := parsePropSearchURI(item.URI)
-		if ok {
-			results = append(results, r)
+		if !ok {
+			log.Warn(fmt.Sprintf("Skipping property search result with unparseable URI: %s", item.URI))
+			continue
 		}
+		results = append(results, r)
 	}
 	return results, nil
 }
