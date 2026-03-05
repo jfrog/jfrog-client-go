@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
@@ -41,7 +43,7 @@ func (ss *SkillsService) ListVersions(repoKey, slug string) ([]SkillVersion, err
 
 func (ss *SkillsService) SearchSkills(repoKey, query string, limit int) ([]SkillSearchResult, error) {
 	log.Debug(fmt.Sprintf("Searching skills in repo '%s' with query '%s'...", repoKey, query))
-	body, err := ss.sendGet(repoKey, fmt.Sprintf("search?q=%s&limit=%d", query, limit))
+	body, err := ss.sendGet(repoKey, fmt.Sprintf("search?q=%s&limit=%d", url.QueryEscape(query), limit))
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +52,7 @@ func (ss *SkillsService) SearchSkills(repoKey, query string, limit int) ([]Skill
 	if err = json.Unmarshal(body, &wrapper); err != nil {
 		return nil, errorutils.CheckErrorf("failed to parse skill search response: %s", err.Error())
 	}
-	return wrapper.Skills, nil
+	return wrapper.Results, nil
 }
 
 func (ss *SkillsService) VersionExists(repoKey, slug, version string) (bool, error) {
@@ -64,6 +66,59 @@ func (ss *SkillsService) VersionExists(repoKey, slug, version string) (bool, err
 		}
 	}
 	return false, nil
+}
+
+// SearchByProperty uses the Artifactory property search API to find skills
+// by their skill.name property across all repositories.
+func (ss *SkillsService) SearchByProperty(query string) ([]SkillPropertySearchResult, error) {
+	log.Debug(fmt.Sprintf("Searching skills by property skill.name='%s'...", query))
+	baseURL := utils.AddTrailingSlashIfNeeded(ss.ArtDetails.GetUrl())
+	searchURL := fmt.Sprintf("%sapi/search/prop?skill.name=%s", baseURL, url.QueryEscape(query))
+	log.Debug("Property search request:", searchURL)
+
+	httpDetails := ss.ArtDetails.CreateHttpClientDetails()
+	resp, body, _, err := ss.client.SendGet(searchURL, true, &httpDetails)
+	if err != nil {
+		return nil, err
+	}
+	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
+		return nil, err
+	}
+
+	var wrapper propSearchResponse
+	if err = json.Unmarshal(body, &wrapper); err != nil {
+		return nil, errorutils.CheckErrorf("failed to parse property search response: %s", err.Error())
+	}
+
+	var results []SkillPropertySearchResult
+	for _, item := range wrapper.Results {
+		r, ok := parsePropSearchURI(item.URI)
+		if ok {
+			results = append(results, r)
+		}
+	}
+	return results, nil
+}
+
+// parsePropSearchURI extracts repo, slug, and version from a URI like:
+// https://host/artifactory/api/storage/{repo}/{slug}/{version}/{slug}-{version}.zip
+func parsePropSearchURI(uri string) (SkillPropertySearchResult, bool) {
+	idx := strings.Index(uri, "/api/storage/")
+	if idx == -1 {
+		return SkillPropertySearchResult{}, false
+	}
+	// path after /api/storage/ => {repo}/{slug}/{version}/{file}
+	path := uri[idx+len("/api/storage/"):]
+	parts := strings.SplitN(path, "/", 4)
+	if len(parts) < 3 {
+		return SkillPropertySearchResult{}, false
+	}
+	return SkillPropertySearchResult{
+		Repo:    parts[0],
+		Name:    parts[1],
+		Version: parts[2],
+		URI:     uri,
+	}, true
 }
 
 func (ss *SkillsService) sendGet(repoKey, endpoint string) ([]byte, error) {
@@ -90,9 +145,16 @@ type SkillVersion struct {
 }
 
 type SkillSearchResult struct {
-	Slug        string `json:"slug"`
-	DisplayName string `json:"displayName,omitempty"`
-	Summary     string `json:"summary,omitempty"`
+	Name        string `json:"name"`
+	Version     string `json:"version,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+type SkillPropertySearchResult struct {
+	Repo    string `json:"repo"`
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	URI     string `json:"uri"`
 }
 
 type skillVersionsResponse struct {
@@ -100,5 +162,16 @@ type skillVersionsResponse struct {
 }
 
 type skillSearchResponse struct {
-	Skills []SkillSearchResult `json:"skills"`
+	Results []SkillSearchResult `json:"results"`
+	Total   int                 `json:"total,omitempty"`
+	Offset  int                 `json:"offset,omitempty"`
+	Limit   int                 `json:"limit,omitempty"`
+}
+
+type propSearchResponse struct {
+	Results []propSearchResultItem `json:"results"`
+}
+
+type propSearchResultItem struct {
+	URI string `json:"uri"`
 }
