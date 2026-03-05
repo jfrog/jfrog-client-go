@@ -24,6 +24,8 @@ jobs:
 
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
+        with:
+          go-version-file: go.mod
 
       - uses: jfrog/frogbot@v2
         env:
