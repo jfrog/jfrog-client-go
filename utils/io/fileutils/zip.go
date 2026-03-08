@@ -3,12 +3,10 @@ package fileutils
 import (
 	"archive/zip"
 	"errors"
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
-
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 func ZipFolderFiles(source, target string) (err error) {
@@ -27,34 +25,27 @@ func ZipFolderFiles(source, target string) (err error) {
 		err = errors.Join(err, errorutils.CheckError(archive.Close()))
 	}()
 
-	// Use root-scoped fs to prevent symlink TOCTOU (G122)
-	fsys := os.DirFS(source)
-	return fs.WalkDir(fsys, ".", func(entryPath string, entry fs.DirEntry, walkErr error) (currentErr error) {
-		if currentErr = errors.Join(currentErr, walkErr); currentErr != nil {
-			return currentErr
-		}
-		if entry.IsDir() {
-			return nil
+	return filepath.Walk(source, func(path string, info os.FileInfo, err error) (currentErr error) {
+		if info.IsDir() {
+			return
 		}
 
-		info, currentErr := entry.Info()
-		if currentErr != nil {
-			return errorutils.CheckError(currentErr)
+		if currentErr = errors.Join(currentErr, err); currentErr != nil {
+			return
 		}
 
 		header, currentErr := zip.FileInfoHeader(info)
 		if currentErr != nil {
 			return errorutils.CheckError(currentErr)
 		}
-		header.Name = filepath.ToSlash(entryPath)
-		header.Method = zip.Deflate
 
+		header.Method = zip.Deflate
 		writer, currentErr := archive.CreateHeader(header)
 		if currentErr != nil {
 			return errorutils.CheckError(currentErr)
 		}
 
-		file, currentErr := fsys.Open(entryPath)
+		file, currentErr := os.Open(path)
 		if currentErr != nil {
 			return errorutils.CheckError(currentErr)
 		}
@@ -64,6 +55,6 @@ func ZipFolderFiles(source, target string) (err error) {
 			}
 		}()
 		_, currentErr = io.Copy(writer, file)
-		return currentErr
+		return
 	})
 }
