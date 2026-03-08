@@ -34,6 +34,7 @@ func (ssk *SetSigningKeyService) SetSigningKey(signBundleParams SetSigningKeyPar
 
 func (ssk *SetSigningKeyService) execSetSigningKey(setSigningKeyBody *SetSigningKeyBody) error {
 	httpClientsDetails := ssk.DistDetails.CreateHttpClientDetails()
+	// #nosec G117 -- request body is intentionally sent to Distribution API for signing key config
 	content, err := json.Marshal(setSigningKeyBody)
 	if err != nil {
 		return errorutils.CheckError(err)

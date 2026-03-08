@@ -131,6 +131,7 @@ func (us *UserService) UpdateUser(params UserParams) error {
 
 func (us *UserService) createOrUpdateUserRequest(user User) (url string, requestContent []byte, httpDetails httputils.HttpClientDetails, err error) {
 	httpDetails = us.ArtDetails.CreateHttpClientDetails()
+	// #nosec G117 -- request body is intentionally sent to Artifactory API for user create/update
 	requestContent, err = json.Marshal(user)
 	if errorutils.CheckError(err) != nil {
 		return
