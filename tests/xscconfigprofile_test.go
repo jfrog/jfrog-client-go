@@ -71,8 +71,9 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 				PathFromRoot: ".",
 				ScanConfig: services.ScanConfig{
 					ScaScannerConfig: services.ScaScannerConfig{
-						EnableScaScan:   true,
-						ExcludePatterns: []string{"**/build/**"},
+						EnableScaScan:          true,
+						EnableSnippetDetection: false,
+						ExcludePatterns:        []string{"**/build/**"},
 					},
 					ContextualAnalysisScannerConfig: services.CaScannerConfig{
 						EnableCaScan:    true,

@@ -22,6 +22,7 @@
       "scan_config": {
         "sca_scanner_config": {
           "enable_sca_scan": true,
+          "enable_snippet_detection": false,
           "exclude_patterns": ["**/build/**"]
         },
         "contextual_analysis_scanner_config": {
