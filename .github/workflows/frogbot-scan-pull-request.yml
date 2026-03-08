@@ -18,8 +18,14 @@ jobs:
             version: 24.04
     runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Setup Go with cache
         uses: jfrog/.github/actions/install-go-with-cache@main
+        with:
+          go-version-file: go.mod
 
       - uses: jfrog/frogbot@v2
         env:
