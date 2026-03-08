@@ -75,8 +75,8 @@ type ScanConfig struct {
 
 type ScaScannerConfig struct {
 	EnableScaScan          bool     `json:"enable_sca_scan,omitempty"`
+	EnableSnippetDetection bool     `json:"enable_snippet_detection,omitempty"`
 	ExcludePatterns        []string `json:"exclude_patterns,omitempty"`
-	EnableSnippetDetection bool
 }
 
 type CaScannerConfig struct {
