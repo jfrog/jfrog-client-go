@@ -674,3 +674,27 @@ func buildJFrogHttpClient(config config.Config, authDetails auth.ServiceDetails)
 		SetHttpClient(config.GetHttpClient()).
 		Build()
 }
+
+func (sm *ArtifactoryServicesManagerImp) ListSkillVersions(repoKey, slug string) ([]services.SkillVersion, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.ListVersions(repoKey, slug)
+}
+
+func (sm *ArtifactoryServicesManagerImp) SearchSkills(repoKey, query string, limit int) ([]services.SkillSearchResult, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.SearchSkills(repoKey, query, limit)
+}
+
+func (sm *ArtifactoryServicesManagerImp) SkillVersionExists(repoKey, slug, version string) (bool, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.VersionExists(repoKey, slug, version)
+}
+
+func (sm *ArtifactoryServicesManagerImp) SearchSkillsByProperty(query string) ([]services.SkillPropertySearchResult, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.SearchByProperty(query)
+}
