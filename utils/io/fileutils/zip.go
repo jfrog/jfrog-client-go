@@ -3,10 +3,11 @@ package fileutils
 import (
 	"archive/zip"
 	"errors"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 func ZipFolderFiles(source, target string) (err error) {
