@@ -192,6 +192,31 @@ func createDefaultHandlerFunc(t *testing.T, status lifecycle.RbStatus) (http.Han
 	}, &requestNum
 }
 
+// TestRemoteDeleteReleaseBundleWithProject
+func TestRemoteDeleteReleaseBundleWithProject(t *testing.T) {
+	rbDetails := lifecycle.ReleaseBundleDetails{
+		ReleaseBundleName:    "cloud-dist-ci-test",
+		ReleaseBundleVersion: "0.1.0",
+	}
+
+	var capturedProject string
+	mockServer, rbService := createMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/"+lifecycle.GetRemoteDeleteReleaseBundleApi(rbDetails, false) {
+			capturedProject = r.URL.Query().Get("project")
+			w.WriteHeader(http.StatusOK)
+		}
+	})
+	defer mockServer.Close()
+
+	params := lifecycle.ReleaseBundleRemoteDeleteParams{
+		CommonOptionalQueryParams: lifecycle.CommonOptionalQueryParams{
+			ProjectKey: "ngcidemo",
+		},
+	}
+	assert.NoError(t, rbService.RemoteDeleteReleaseBundle(rbDetails, params))
+	assert.Equal(t, "ngcidemo", capturedProject)
+}
+
 func TestRemoteDeleteReleaseBundle(t *testing.T) {
 	lifecycle.SyncSleepInterval = 1 * time.Second
 	defer func() { lifecycle.SyncSleepInterval = lifecycle.DefaultSyncSleepInterval }()

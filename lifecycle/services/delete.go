@@ -61,7 +61,8 @@ func (rbs *ReleaseBundlesService) RemoteDeleteReleaseBundle(rbDetails ReleaseBun
 	hasDistributionRules := len(params.DistributionRules) > 0 && params.DistributionRules[0].GetSiteName() != "*"
 
 	restApi := GetRemoteDeleteReleaseBundleApi(rbDetails, hasDistributionRules)
-	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, nil)
+	queryParams := distribution.GetProjectQueryParam(params.ProjectKey)
+	requestFullUrl, err := utils.BuildUrl(rbs.GetLifecycleDetails().GetUrl(), restApi, queryParams)
 	if err != nil {
 		return err
 	}
