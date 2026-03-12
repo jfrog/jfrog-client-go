@@ -108,7 +108,9 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 			continue
 		}
 		if patternType == RegExp {
-			if strings.Contains(section, "(") {
+			// Break on any regex metacharacter, not just '(' (capture groups), so that
+			// regexes without capture groups still produce a valid filesystem root path.
+			if strings.ContainsAny(section, `.*+?[{(|\`) {
 				break
 			}
 		} else {
