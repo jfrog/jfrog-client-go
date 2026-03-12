@@ -24,8 +24,6 @@ func TestAccessProject(t *testing.T) {
 }
 
 func TestAccessProjectGroups(t *testing.T) {
-	//TODO: Remove skip after resolving issue JA-19680
-	t.Skip("Skipping TestAccessProjectGroups")
 	initAccessTest(t)
 	t.Run("groups-add-get-delete", testAccessProjectAddGetDeleteGroups)
 }
@@ -43,7 +41,17 @@ func testAccessProjectAddGetDeleteGroups(t *testing.T) {
 	if assert.NoError(t, err) &&
 		assert.NotNil(t, allGroups, "Expected 1 group in the project but got 0") {
 		assert.Equal(t, len(*allGroups), 1, "Expected 1 group in the project but got %d", len(*allGroups))
-		assert.Contains(t, *allGroups, testGroup)
+		// Compare with order-insensitive roles (API may return roles in any order)
+		var found *services.ProjectGroup
+		for i := range *allGroups {
+			if (*allGroups)[i].Name == testGroup.Name {
+				found = &(*allGroups)[i]
+				break
+			}
+		}
+		require.NotNil(t, found, "Expected group %s in project groups", testGroup.Name)
+		assert.Equal(t, testGroup.Name, found.Name)
+		assert.ElementsMatch(t, testGroup.Roles, found.Roles, "Roles should match regardless of order")
 	}
 
 	testGroup.Roles = append(testGroup.Roles, "Viewer")
