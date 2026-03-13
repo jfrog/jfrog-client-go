@@ -31,6 +31,10 @@ func (rrs *RemoteRepositoryService) Alpine(params AlpineRemoteRepositoryParams) 
 	return rrs.performRequest(params, params.Key)
 }
 
+func (rrs *RemoteRepositoryService) Ansible(params AnsibleRemoteRepositoryParams) error {
+	return rrs.performRequest(params, params.Key)
+}
+
 func (rrs *RemoteRepositoryService) Bower(params BowerRemoteRepositoryParams) error {
 	return rrs.performRequest(params, params.Key)
 }
@@ -232,6 +236,14 @@ func NewAlpineRemoteRepositoryParams() AlpineRemoteRepositoryParams {
 	return AlpineRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("alpine")}
 }
 
+type AnsibleRemoteRepositoryParams struct {
+	RemoteRepositoryBaseParams
+}
+
+func NewAnsibleRemoteRepositoryParams() AnsibleRemoteRepositoryParams {
+	return AnsibleRemoteRepositoryParams{RemoteRepositoryBaseParams: NewRemoteRepositoryPackageParams("ansible")}
+}
+
 type BowerRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
 	VcsGitRemoteRepositoryParams
@@ -371,7 +383,7 @@ func NewGradleRemoteRepositoryParams() GradleRemoteRepositoryParams {
 
 type HelmRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	ChartsBaseUrl                string   `json:"chartsBaseUrl,omitempty"`
+	ChartsBaseUrl                string   `json:"chartsBaseUrl"` // do not set omitempty to be able to empty the value when updating
 	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled,omitempty"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
 }
@@ -408,10 +420,11 @@ func NewNpmRemoteRepositoryParams() NpmRemoteRepositoryParams {
 
 type NugetRemoteRepositoryParams struct {
 	RemoteRepositoryBaseParams
-	FeedContextPath          string `json:"feedContextPath,omitempty"`
+	FeedContextPath          string `json:"feedContextPath"` // do not set omitempty to be able to empty the value according https://jfrog.com/help/r/artifactory-step-by-step-guide-to-configure-nuget-smart-remote-repository/step-4
 	DownloadContextPath      string `json:"downloadContextPath,omitempty"`
 	V3FeedUrl                string `json:"v3FeedUrl,omitempty"`
 	ForceNugetAuthentication *bool  `json:"forceNugetAuthentication,omitempty"`
+	SymbolServerUrl          string `json:"symbolServerUrl,omitempty"`
 }
 
 func NewNugetRemoteRepositoryParams() NugetRemoteRepositoryParams {
@@ -484,6 +497,8 @@ type TerraformRemoteRepositoryParams struct {
 	VcsGitRemoteRepositoryParams
 	TerraformRegistryUrl  string `json:"terraformRegistryUrl,omitempty"`
 	TerraformProvidersUrl string `json:"terraformProvidersUrl,omitempty"`
+	ProvidersUrl          string `json:"providersUrl,omitempty"`
+	TerraformType         string `json:"terraformType,omitempty"`
 }
 
 func NewTerraformRemoteRepositoryParams() TerraformRemoteRepositoryParams {
