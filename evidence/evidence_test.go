@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	artifactoryAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
+	clientConfig "github.com/jfrog/jfrog-client-go/config"
 	evidence "github.com/jfrog/jfrog-client-go/evidence/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/stretchr/testify/assert"
@@ -292,4 +293,30 @@ func TestUploadEvidence_URLEncodingFix(t *testing.T) {
 			t.Logf("Captured raw URL: %s", capturedRawURL)
 		})
 	}
+}
+
+func TestEvidenceServicesManager_GetVersion(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/system/version" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte("7.646.1"))
+		assert.NoError(t, err)
+	}))
+	defer testServer.Close()
+
+	evidenceDetails := artifactoryAuth.NewArtifactoryDetails()
+	evidenceDetails.SetUrl(testServer.URL + "/")
+
+	cfg, err := clientConfig.NewConfigBuilder().SetServiceDetails(evidenceDetails).Build()
+	assert.NoError(t, err)
+
+	evidenceManager, err := New(cfg)
+	assert.NoError(t, err)
+
+	version, err := evidenceManager.GetVersion()
+	assert.NoError(t, err)
+	assert.Equal(t, "7.646.1", version)
 }
