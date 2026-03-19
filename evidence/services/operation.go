@@ -53,7 +53,14 @@ func (es *EvidenceService) doOperation(operation EvidenceOperation) ([]byte, err
 }
 
 type EvidenceDetails struct {
-	SubjectUri  string `json:"subject_uri"`
-	DSSEFileRaw []byte `json:"dsse_file_raw"`
-	ProviderId  string `json:"provider_id"`
+	SubjectUri  string              `json:"subject_uri"`
+	DSSEFileRaw []byte              `json:"dsse_file_raw"`
+	ProviderId  string              `json:"provider_id"`
+	Attachments []AttachmentDetails `json:"attachments,omitempty"`
+}
+
+type AttachmentDetails struct {
+	Repository string `json:"repository"`
+	Path       string `json:"path"`
+	Sha256     string `json:"sha256"`
 }

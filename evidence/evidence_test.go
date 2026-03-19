@@ -1,7 +1,7 @@
 package evidence
 
 import (
-	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,6 +12,7 @@ import (
 	evidence "github.com/jfrog/jfrog-client-go/evidence/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var dsseRaw = []byte("someData")
@@ -134,59 +135,6 @@ func TestUploadEvidence_ProviderIdLogic(t *testing.T) {
 		})
 	}
 }
-func TestIsEvidenceSupportsProviderId(t *testing.T) {
-	tests := []struct {
-		name           string
-		handlerFunc    func(*testing.T) (http.HandlerFunc, *int)
-		expectedResult bool
-	}{
-		{
-			name:           "Version supports providerId",
-			handlerFunc:    createDefaultHandlerFuncVersion,
-			expectedResult: true,
-		},
-		{
-			name:           "Version does not support providerId",
-			handlerFunc:    createErrorHandlerFuncVersion,
-			expectedResult: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			handlerFunc, _ := tt.handlerFunc(t)
-			mockServer, evdService := createMockServer(t, handlerFunc)
-			defer mockServer.Close()
-			result := evdService.IsEvidenceSupportsProviderId()
-			assert.Equal(t, tt.expectedResult, result)
-		})
-	}
-}
-
-func createDefaultHandlerFuncVersion(t *testing.T) (http.HandlerFunc, *int) {
-	requestNum := 0
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/api/v1/version" {
-			w.WriteHeader(http.StatusOK)
-			requestNum++
-			versionPayload, err := json.Marshal(map[string]string{"version": "1.0.0"})
-			assert.NoError(t, err)
-			writeMockStatusResponse(t, w, versionPayload)
-		}
-	}, &requestNum
-}
-
-func createErrorHandlerFuncVersion(t *testing.T) (http.HandlerFunc, *int) {
-	requestNum := 0
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/api/v1/version" {
-			w.WriteHeader(http.StatusNotFound)
-			requestNum++
-			return
-		}
-		w.WriteHeader(http.StatusNotFound)
-	}, &requestNum
-}
-
 func TestUploadEvidence_URLEncodingFix(t *testing.T) {
 	// test for double URL encoding bug
 	// This test verifies that build names with spaces are encoded only once, not twice
@@ -292,4 +240,115 @@ func TestUploadEvidence_URLEncodingFix(t *testing.T) {
 			t.Logf("Captured raw URL: %s", capturedRawURL)
 		})
 	}
+}
+
+func TestUploadEvidence_WithAttachments(t *testing.T) {
+	var capturedBody []byte
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/api/v1/system/version":
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte("7.646.1"))
+			assert.NoError(t, err)
+		case strings.HasPrefix(r.URL.Path, "/api/v1/subject/") || r.URL.Path == "/api/v1/subject":
+			body, err := io.ReadAll(r.Body)
+			assert.NoError(t, err)
+			capturedBody = body
+			w.WriteHeader(http.StatusCreated)
+			_, err = w.Write([]byte(`{"success": true}`))
+			assert.NoError(t, err)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer testServer.Close()
+
+	serviceDetails := artifactoryAuth.NewArtifactoryDetails()
+	serviceDetails.SetUrl(testServer.URL + "/")
+	client, err := jfroghttpclient.JfrogClientBuilder().Build()
+	require.NoError(t, err)
+	evdService := evidence.NewEvidenceService(serviceDetails, client)
+
+	details := evidence.EvidenceDetails{
+		SubjectUri:  "repo/path/file.txt",
+		DSSEFileRaw: []byte(`{"payload":"abc","payloadType":"application/vnd.in-toto+json","signatures":[],"attachments":[{"repository":"example-repo-local","path":"tmp/a.txt","sha256":"abc123"}]}`),
+		Attachments: []evidence.AttachmentDetails{{
+			Repository: "example-repo-local",
+			Path:       "tmp/a.txt",
+			Sha256:     "abc123",
+		}},
+	}
+	_, err = evdService.UploadEvidence(details)
+	require.NoError(t, err)
+	assert.JSONEq(t,
+		`{"payload":"abc","payloadType":"application/vnd.in-toto+json","signatures":[],"attachments":[{"repository":"example-repo-local","path":"tmp/a.txt","sha256":"abc123"}]}`,
+		string(capturedBody))
+}
+
+func TestUploadEvidence_WithAttachments_FailsOnUnsupportedVersion(t *testing.T) {
+	subjectEndpointCalled := false
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/api/v1/system/version":
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte("7.645.0"))
+			assert.NoError(t, err)
+		case strings.HasPrefix(r.URL.Path, "/api/v1/subject/") || r.URL.Path == "/api/v1/subject":
+			subjectEndpointCalled = true
+			w.WriteHeader(http.StatusCreated)
+			_, err := w.Write([]byte(`{"success": true}`))
+			assert.NoError(t, err)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer testServer.Close()
+
+	serviceDetails := artifactoryAuth.NewArtifactoryDetails()
+	serviceDetails.SetUrl(testServer.URL + "/")
+	client, err := jfroghttpclient.JfrogClientBuilder().Build()
+	require.NoError(t, err)
+	evdService := evidence.NewEvidenceService(serviceDetails, client)
+
+	_, err = evdService.UploadEvidence(evidence.EvidenceDetails{
+		SubjectUri:  "repo/path/file.txt",
+		DSSEFileRaw: []byte(`{"payload":"abc"}`),
+		Attachments: []evidence.AttachmentDetails{{Repository: "r", Path: "p", Sha256: "s"}},
+	})
+	require.EqualError(t, err, "You are using JFrog Evidence version 7.645.0, while this operation requires version 7.646.1 or higher.")
+	assert.False(t, subjectEndpointCalled)
+}
+
+func TestUploadEvidence_WithAttachments_FailsOnVersionApiError(t *testing.T) {
+	subjectEndpointCalled := false
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/api/v1/system/version":
+			w.WriteHeader(http.StatusInternalServerError)
+			_, err := w.Write([]byte(`boom`))
+			assert.NoError(t, err)
+		case strings.HasPrefix(r.URL.Path, "/api/v1/subject/") || r.URL.Path == "/api/v1/subject":
+			subjectEndpointCalled = true
+			w.WriteHeader(http.StatusCreated)
+			_, err := w.Write([]byte(`{"success": true}`))
+			assert.NoError(t, err)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer testServer.Close()
+
+	serviceDetails := artifactoryAuth.NewArtifactoryDetails()
+	serviceDetails.SetUrl(testServer.URL + "/")
+	client, err := jfroghttpclient.JfrogClientBuilder().Build()
+	require.NoError(t, err)
+	evdService := evidence.NewEvidenceService(serviceDetails, client)
+
+	_, err = evdService.UploadEvidence(evidence.EvidenceDetails{
+		SubjectUri:  "repo/path/file.txt",
+		DSSEFileRaw: []byte(`{"payload":"abc"}`),
+		Attachments: []evidence.AttachmentDetails{{Repository: "r", Path: "p", Sha256: "s"}},
+	})
+	require.Error(t, err)
+	assert.False(t, subjectEndpointCalled)
 }
