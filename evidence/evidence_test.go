@@ -12,6 +12,7 @@ import (
 	evidence "github.com/jfrog/jfrog-client-go/evidence/services"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var dsseRaw = []byte("someData")
@@ -265,7 +266,7 @@ func TestUploadEvidence_WithAttachments(t *testing.T) {
 	serviceDetails := artifactoryAuth.NewArtifactoryDetails()
 	serviceDetails.SetUrl(testServer.URL + "/")
 	client, err := jfroghttpclient.JfrogClientBuilder().Build()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	evdService := evidence.NewEvidenceService(serviceDetails, client)
 
 	details := evidence.EvidenceDetails{
@@ -278,11 +279,10 @@ func TestUploadEvidence_WithAttachments(t *testing.T) {
 		}},
 	}
 	_, err = evdService.UploadEvidence(details)
-	assert.NoError(t, err)
-	assert.Contains(t, string(capturedBody), `"attachments"`)
-	assert.Contains(t, string(capturedBody), `"repository":"example-repo-local"`)
-	assert.Contains(t, string(capturedBody), `"path":"tmp/a.txt"`)
-	assert.Contains(t, string(capturedBody), `"sha256":"abc123"`)
+	require.NoError(t, err)
+	assert.JSONEq(t,
+		`{"payload":"abc","payloadType":"application/vnd.in-toto+json","signatures":[],"attachments":[{"repository":"example-repo-local","path":"tmp/a.txt","sha256":"abc123"}]}`,
+		string(capturedBody))
 }
 
 func TestUploadEvidence_WithAttachments_FailsOnUnsupportedVersion(t *testing.T) {
@@ -307,7 +307,7 @@ func TestUploadEvidence_WithAttachments_FailsOnUnsupportedVersion(t *testing.T) 
 	serviceDetails := artifactoryAuth.NewArtifactoryDetails()
 	serviceDetails.SetUrl(testServer.URL + "/")
 	client, err := jfroghttpclient.JfrogClientBuilder().Build()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	evdService := evidence.NewEvidenceService(serviceDetails, client)
 
 	_, err = evdService.UploadEvidence(evidence.EvidenceDetails{
@@ -315,8 +315,7 @@ func TestUploadEvidence_WithAttachments_FailsOnUnsupportedVersion(t *testing.T) 
 		DSSEFileRaw: []byte(`{"payload":"abc"}`),
 		Attachments: []evidence.AttachmentDetails{{Repository: "r", Path: "p", Sha256: "s"}},
 	})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "7.646.1")
+	require.EqualError(t, err, "You are using JFrog Evidence version 7.645.0, while this operation requires version 7.646.1 or higher.")
 	assert.False(t, subjectEndpointCalled)
 }
 
@@ -342,7 +341,7 @@ func TestUploadEvidence_WithAttachments_FailsOnVersionApiError(t *testing.T) {
 	serviceDetails := artifactoryAuth.NewArtifactoryDetails()
 	serviceDetails.SetUrl(testServer.URL + "/")
 	client, err := jfroghttpclient.JfrogClientBuilder().Build()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	evdService := evidence.NewEvidenceService(serviceDetails, client)
 
 	_, err = evdService.UploadEvidence(evidence.EvidenceDetails{
@@ -350,6 +349,6 @@ func TestUploadEvidence_WithAttachments_FailsOnVersionApiError(t *testing.T) {
 		DSSEFileRaw: []byte(`{"payload":"abc"}`),
 		Attachments: []evidence.AttachmentDetails{{Repository: "r", Path: "p", Sha256: "s"}},
 	})
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.False(t, subjectEndpointCalled)
 }
