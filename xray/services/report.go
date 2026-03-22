@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// ReportsAPI refer to: https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-REPORTS
+	// ReportsAPI refer to: https://docs.jfrog.com/security/reference/get-reports-list
 	ReportsAPI      = "api/v1/reports"
 	Vulnerabilities = "vulnerabilities"
 	Licenses        = "licenses"
@@ -104,7 +104,7 @@ type ReportCve struct {
 type VulnerabilitiesReportRequestParams struct {
 	Name      string                 `json:"name,omitempty"`
 	Filters   *VulnerabilitiesFilter `json:"filters,omitempty"`
-	Resources Resource               `json:"resources,omitempty"`
+	Resources *Resource              `json:"resources,omitempty"`
 }
 
 // LicensesReportRequestParams defines a report request

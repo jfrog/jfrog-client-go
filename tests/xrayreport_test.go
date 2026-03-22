@@ -41,7 +41,7 @@ var vulnerabilitiesReportRequestParams = services.VulnerabilitiesReportRequestPa
 		HasRemediation: utils.Pointer(true),
 		Severity:       []string{"high"},
 	},
-	Resources: services.Resource{
+	Resources: &services.Resource{
 		Repositories: []services.Repository{
 			{
 				Name: "dummy-repo",
@@ -54,7 +54,7 @@ var licensesReportRequestParams = services.LicensesReportRequestParams{
 	Filters: &services.LicensesFilter{
 		LicensePatterns: []string{"*"},
 	},
-	Resources: services.Resource{
+	Resources: &services.Resource{
 		Repositories: []services.Repository{
 			{
 				Name: "dummy-repo",
