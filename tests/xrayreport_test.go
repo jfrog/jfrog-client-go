@@ -37,7 +37,7 @@ func TestXrayReport(t *testing.T) {
 
 var vulnerabilitiesReportRequestParams = services.VulnerabilitiesReportRequestParams{
 	Name: "test-report",
-	Filters: services.VulnerabilitiesFilter{
+	Filters: &services.VulnerabilitiesFilter{
 		HasRemediation: utils.Pointer(true),
 		Severity:       []string{"high"},
 	},
@@ -51,7 +51,7 @@ var vulnerabilitiesReportRequestParams = services.VulnerabilitiesReportRequestPa
 }
 var licensesReportRequestParams = services.LicensesReportRequestParams{
 	Name: "test-report",
-	Filters: services.LicensesFilter{
+	Filters: &services.LicensesFilter{
 		LicensePatterns: []string{"*"},
 	},
 	Resources: services.Resource{
