@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type EntitlementsService struct {
@@ -38,6 +39,11 @@ func (es *EntitlementsService) IsEntitled(featureId string) (entitled bool, err 
 	resp, body, _, err := es.client.SendGet(es.getUrlForEntitlementApi(featureId), true, &httpDetails)
 	if err != nil {
 		err = errors.New("failed while attempting to get JFrog Xray entitlements response: " + err.Error())
+		return
+	}
+	if resp.StatusCode == http.StatusForbidden {
+		// A 403 response means the user is not entitled for the feature, not an error.
+		log.Debug(fmt.Sprintf("Server returned 403 for entitlement check on feature '%s', treating as not entitled.", featureId))
 		return
 	}
 	if err = errorutils.CheckResponseStatusWithBody(resp, body, http.StatusOK); err != nil {
