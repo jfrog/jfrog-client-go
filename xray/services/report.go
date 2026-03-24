@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// ReportsAPI refer to: https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-REPORTS
+	// ReportsAPI refer to: https://docs.jfrog.com/security/reference/get-reports-list
 	ReportsAPI      = "api/v1/reports"
 	Vulnerabilities = "vulnerabilities"
 	Licenses        = "licenses"
@@ -102,36 +102,36 @@ type ReportCve struct {
 
 // VulnerabilitiesReportRequestParams defines a report request
 type VulnerabilitiesReportRequestParams struct {
-	Name      string                `json:"name,omitempty"`
-	Filters   VulnerabilitiesFilter `json:"filters,omitempty"`
-	Resources Resource              `json:"resources,omitempty"`
+	Name      string                 `json:"name,omitempty"`
+	Filters   *VulnerabilitiesFilter `json:"filters,omitempty"`
+	Resources *Resource              `json:"resources,omitempty"`
 }
 
 // LicensesReportRequestParams defines a report request
 type LicensesReportRequestParams struct {
-	Name      string         `json:"name,omitempty"`
-	Filters   LicensesFilter `json:"filters,omitempty"`
-	Resources Resource       `json:"resources,omitempty"`
+	Name      string          `json:"name,omitempty"`
+	Filters   *LicensesFilter `json:"filters,omitempty"`
+	Resources *Resource       `json:"resources,omitempty"`
 }
 
 // ViolationsReportRequestParams defines a report request
 type ViolationsReportRequestParams struct {
-	Name      string           `json:"name,omitempty"`
-	Filters   ViolationsFilter `json:"filters,omitempty"`
-	Resources Resource         `json:"resources,omitempty"`
+	Name      string            `json:"name,omitempty"`
+	Filters   *ViolationsFilter `json:"filters,omitempty"`
+	Resources *Resource         `json:"resources,omitempty"`
 }
 
 type VulnerabilitiesFilter struct {
-	VulnerableComponent string        `json:"vulnerable_component,omitempty"`
-	ImpactedArtifact    string        `json:"impacted_artifact,omitempty"`
-	SummaryContains     string        `json:"summary_contains,omitempty"`
-	HasRemediation      *bool         `json:"has_remediation,omitempty"`
-	Cve                 string        `json:"cve,omitempty"`
-	IssueId             string        `json:"issue_id,omitempty"`
-	Severity            []string      `json:"severities,omitempty"`
-	CvssScore           CvssScore     `json:"cvss_score,omitempty"`
-	Published           DateTimeRange `json:"published,omitempty"`
-	ScanDate            DateTimeRange `json:"scan_date,omitempty"`
+	VulnerableComponent string         `json:"vulnerable_component,omitempty"`
+	ImpactedArtifact    string         `json:"impacted_artifact,omitempty"`
+	SummaryContains     string         `json:"summary_contains,omitempty"`
+	HasRemediation      *bool          `json:"has_remediation,omitempty"`
+	Cve                 string         `json:"cve,omitempty"`
+	IssueId             string         `json:"issue_id,omitempty"`
+	Severity            []string       `json:"severities,omitempty"`
+	CvssScore           *CvssScore     `json:"cvss_score,omitempty"`
+	Published           *DateTimeRange `json:"published,omitempty"`
+	ScanDate            *DateTimeRange `json:"scan_date,omitempty"`
 }
 
 type DateTimeRange struct {
@@ -140,26 +140,26 @@ type DateTimeRange struct {
 }
 
 type LicensesFilter struct {
-	Component       string        `json:"component,omitempty"`
-	Artifact        string        `json:"artifact,omitempty"`
-	Unknown         *bool         `json:"unknown,omitempty"`
-	Unrecognized    *bool         `json:"unrecognized,omitempty"`
-	LicenseNames    []string      `json:"license_names,omitempty"`
-	LicensePatterns []string      `json:"license_patterns,omitempty"`
-	ScanDate        DateTimeRange `json:"scan_date,omitempty"`
+	Component       string         `json:"component,omitempty"`
+	Artifact        string         `json:"artifact,omitempty"`
+	Unknown         *bool          `json:"unknown,omitempty"`
+	Unrecognized    *bool          `json:"unrecognized,omitempty"`
+	LicenseNames    []string       `json:"license_names,omitempty"`
+	LicensePatterns []string       `json:"license_patterns,omitempty"`
+	ScanDate        *DateTimeRange `json:"scan_date,omitempty"`
 }
 
 type ViolationsFilter struct {
-	Type            string                `json:"type,omitempty"`
-	WatchNames      []string              `json:"watch_names,omitempty"`
-	WatchPatterns   []string              `json:"watch_patterns,omitempty"`
-	Component       string                `json:"component,omitempty"`
-	Artifact        string                `json:"artifact,omitempty"`
-	PolicyNames     []string              `json:"policy_names,omitempty"`
-	Severities      []string              `json:"severities,omitempty"`
-	Updated         DateTimeRange         `json:"updated,omitempty"`
-	SecurityFilters VulnerabilitiesFilter `json:"security_filters,omitempty"`
-	LicenseFilters  LicensesFilter        `json:"license_filters,omitempty"`
+	Type            string                 `json:"type,omitempty"`
+	WatchNames      []string               `json:"watch_names,omitempty"`
+	WatchPatterns   []string               `json:"watch_patterns,omitempty"`
+	Component       string                 `json:"component,omitempty"`
+	Artifact        string                 `json:"artifact,omitempty"`
+	PolicyNames     []string               `json:"policy_names,omitempty"`
+	Severities      []string               `json:"severities,omitempty"`
+	Updated         *DateTimeRange         `json:"updated,omitempty"`
+	SecurityFilters *VulnerabilitiesFilter `json:"security_filters,omitempty"`
+	LicenseFilters  *LicensesFilter        `json:"license_filters,omitempty"`
 }
 
 type CvssScore struct {

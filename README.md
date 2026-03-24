@@ -2442,7 +2442,7 @@ isEnabled, err := xrayManager.IsTokenValidationEnabled()
 ```go
 vulnerabilitiesReportRequest := services.VulnerabilitiesReportRequestParams{
   Name: "example-report",
-  Filters: services.VulnerabilitiesFilter{
+  Filters: &services.VulnerabilitiesFilter{
     VulnerableComponent: "*vulnerable:component*",
     ImpactedArtifact: "some://impacted*artifact",
     HasRemediation: &falseValue,
@@ -2456,16 +2456,16 @@ vulnerabilitiesReportRequest := services.VulnerabilitiesReportRequestParams{
         MinScore: float64(6.3),
         MaxScore: float64(9)
     },
-    Published: services.DateTimeRange {
+    Published: &services.DateTimeRange {
         Start: "2020-06-29T12:22:16Z",
         End: "2020-06-29T12:22:16Z"
     },
-    ScanDate: services.DateTimeRange {
+    ScanDate: &services.DateTimeRange {
         Start: "2020-06-29T12:22:16Z",
         End: "2020-06-29T12:22:16Z"
     }
   },
-  Resources: services.Resource{
+  Resources: &services.Resource{
     IncludePathPatterns: []string{ "/example-sub-dir/**" },
     Repositories: []services.Repository{
       {
@@ -2512,7 +2512,7 @@ err := xrayManager.DeleteReport(reportId)
 ```go
 licensesReportRequest := services.LicensesReportRequestParams{
   Name: "example-report",
-  Filters: services.LicensesFilter{
+  Filters: &services.LicensesFilter{
     Component: "*gav:component*",
     Artifact: "some://impacted*artifact",
     Unknown: &falseValue,
@@ -2527,12 +2527,12 @@ licensesReportRequest := services.LicensesReportRequestParams{
         "The Apache*",
         "AFL*"
     },
-    ScanDate: services.DateTimeRange {
+    ScanDate: &services.DateTimeRange {
         Start: "2020-06-29T12:22:16Z",
         End: "2020-06-29T12:22:16Z"
     }
   },
-  Resources: services.Resource{
+  Resources: &services.Resource{
     IncludePathPatterns: []string{ "/example-sub-dir/**" },
     Repositories: []services.Repository{
       {
@@ -2579,7 +2579,8 @@ err := xrayManager.DeleteReport(reportId)
 ```go
 violationsReportRequest := services.ViolationsReportRequestParams{
   Name: "example-report",
-  Filters: 		Type: "security|license|operational_risk",
+  Filters: &services.ViolationsFilter{
+   	Type: "security|license|operational_risk",
     WatchNames: []string{
       "NameOfWatch1",
       "NameOfWatch2"
@@ -2611,11 +2612,11 @@ violationsReportRequest := services.ViolationsReportRequestParams{
           MinScore: float64(6.3),
           MaxScore: float64(9)
       },
-      Published: services.DateTimeRange {
+      Published: &services.DateTimeRange {
           Start: "2020-06-29T12:22:16Z",
           End: "2020-06-29T12:22:16Z"
       },
-      ScanDate: services.DateTimeRange {
+      ScanDate: &services.DateTimeRange {
           Start: "2020-06-29T12:22:16Z",
           End: "2020-06-29T12:22:16Z"
       },
@@ -2635,7 +2636,7 @@ violationsReportRequest := services.ViolationsReportRequestParams{
       "AFL*"
     },
   }
-  Resources: services.Resource{
+  Resources: &services.Resource{
     IncludePathPatterns: []string{ "/example-sub-dir/**" },
     Repositories: []services.Repository{
       {
