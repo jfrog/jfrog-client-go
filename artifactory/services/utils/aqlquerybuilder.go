@@ -53,8 +53,9 @@ func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	buildFilter := buildBuildNameQueryPart(params)
 
-	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+releaseBundle)
+	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+releaseBundle+buildFilter)
 
 	// Get archive search parameters
 	archivePathFilePairs := createArchiveSearchParams(params)
@@ -375,6 +376,19 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (
 		excludeQuery += fmt.Sprintf(`"$or":[{%s"path":{"$nmatch":"%s"},"name":{"$nmatch":"%s"}}],`, excludeRepoStr, excludePath, excludeTriple.file)
 	}
 	return excludeQuery, nil
+}
+
+func buildBuildNameQueryPart(params *CommonParams) string {
+	if params.Build == "" || params.ExcludeArtifacts || params.IncludeDeps {
+		return ""
+	}
+	buildName, _, err := ParseNameAndVersion(params.Build, true)
+	if err != nil || buildName == "" {
+		return ""
+	}
+	// Unescape escaped slashes that are part of the spec identifier encoding.
+	buildName = strings.ReplaceAll(buildName, "\\/", "/")
+	return fmt.Sprintf(`"artifact.module.build.name":"%s",`, buildName)
 }
 
 func buildReleaseBundleQuery(params *CommonParams) (string, error) {
