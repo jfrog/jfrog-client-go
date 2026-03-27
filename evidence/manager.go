@@ -39,3 +39,8 @@ func (esm *EvidenceServicesManager) UploadEvidence(evidenceDetails services.Evid
 	evidenceService := services.NewEvidenceService(esm.config.GetServiceDetails(), esm.client)
 	return evidenceService.UploadEvidence(evidenceDetails)
 }
+
+func (esm *EvidenceServicesManager) DeleteEvidence(subjectRepoPath, evidenceName string) error {
+	evidenceService := services.NewEvidenceService(esm.config.GetServiceDetails(), esm.client)
+	return evidenceService.DeleteEvidence(subjectRepoPath, evidenceName)
+}
