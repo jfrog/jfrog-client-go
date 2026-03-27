@@ -698,3 +698,9 @@ func (sm *ArtifactoryServicesManagerImp) SearchSkillsByProperty(query string) ([
 	skillsService.ArtDetails = sm.config.GetServiceDetails()
 	return skillsService.SearchByProperty(query)
 }
+
+func (sm *ArtifactoryServicesManagerImp) GetSkillXrayStatus(repoKey, artifactPath string) (*services.SkillXrayStatusResponse, error) {
+	skillsService := services.NewSkillsService(sm.client)
+	skillsService.ArtDetails = sm.config.GetServiceDetails()
+	return skillsService.GetXrayStatus(repoKey, artifactPath)
+}
