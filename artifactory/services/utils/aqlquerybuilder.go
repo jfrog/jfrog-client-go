@@ -10,6 +10,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const spaceEncoding = "%20"
@@ -382,13 +383,21 @@ func buildBuildNameQueryPart(params *CommonParams) string {
 	if params.Build == "" || params.ExcludeArtifacts || params.IncludeDeps {
 		return ""
 	}
-	buildName, _, err := ParseNameAndVersion(params.Build, true)
-	if err != nil || buildName == "" {
+	buildName, buildNumber, err := ParseNameAndVersion(params.Build, true)
+	if err != nil {
+		log.Debug("Failed to parse build name:", err.Error())
+		return ""
+	}
+	if buildName == "" {
 		return ""
 	}
 	// Unescape escaped slashes that are part of the spec identifier encoding.
 	buildName = strings.ReplaceAll(buildName, "\\/", "/")
-	return fmt.Sprintf(`"artifact.module.build.name":"%s",`, buildName)
+	query := fmt.Sprintf(`"artifact.module.build.name":"%s",`, buildName)
+	if buildNumber != "" && buildNumber != LatestBuildNumberKey {
+		query += fmt.Sprintf(`"artifact.module.build.number":"%s",`, buildNumber)
+	}
+	return query
 }
 
 func buildReleaseBundleQuery(params *CommonParams) (string, error) {

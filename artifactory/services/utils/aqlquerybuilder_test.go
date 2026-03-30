@@ -291,7 +291,7 @@ func TestBuildAqlSearchQueryWithBuildFilter(t *testing.T) {
 			},
 		},
 		{
-			name: "pattern with build name and number includes build filter",
+			name: "pattern with build name and number includes both in filter",
 			params: CommonParams{
 				Pattern:   "repo-local/*",
 				Recursive: true,
@@ -299,9 +299,24 @@ func TestBuildAqlSearchQueryWithBuildFilter(t *testing.T) {
 			},
 			expectContains: []string{
 				`"artifact.module.build.name":"my-build"`,
+				`"artifact.module.build.number":"42"`,
 			},
 			expectNotContain: []string{
 				`"artifact.module.build.name":"my-build/42"`,
+			},
+		},
+		{
+			name: "pattern with build name and LATEST does not include build number",
+			params: CommonParams{
+				Pattern:   "repo-local/*",
+				Recursive: true,
+				Build:     "my-build",
+			},
+			expectContains: []string{
+				`"artifact.module.build.name":"my-build"`,
+			},
+			expectNotContain: []string{
+				`artifact.module.build.number`,
 			},
 		},
 		{
@@ -382,14 +397,14 @@ func TestBuildBuildNameQueryPart(t *testing.T) {
 			expected: `"artifact.module.build.name":"my-build",`,
 		},
 		{
-			name:     "build name with number",
+			name:     "build name with explicit number",
 			params:   CommonParams{Build: "my-build/42"},
-			expected: `"artifact.module.build.name":"my-build",`,
+			expected: `"artifact.module.build.name":"my-build","artifact.module.build.number":"42",`,
 		},
 		{
-			name:     "build name with escaped slashes",
+			name:     "build name with escaped slashes and number",
 			params:   CommonParams{Build: "org\\/project\\/build/7"},
-			expected: `"artifact.module.build.name":"org/project/build",`,
+			expected: `"artifact.module.build.name":"org/project/build","artifact.module.build.number":"7",`,
 		},
 		{
 			name:     "ExcludeArtifacts true returns empty",
