@@ -8,7 +8,7 @@ require (
 	github.com/buger/jsonparser v1.1.1
 	github.com/forPelevin/gomoji v1.4.1
 	github.com/go-git/go-git/v5 v5.16.3
-	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gookit/color v1.6.0
 	github.com/jfrog/archiver/v3 v3.6.1
 	github.com/jfrog/build-info-go v1.13.0
