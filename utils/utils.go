@@ -85,6 +85,25 @@ func ValidateMinimumVersion(product MinVersionProduct, currentVersion, minimumVe
 	return nil
 }
 
+// hasRegexPattern checks if a path section contains actual regex patterns.
+// It distinguishes between literal dots in filenames (e.g., "my.folder", "file.txt")
+// and regex metacharacters/patterns (e.g., ".*", ".+", "[0-9]", "(group)").
+// Returns true if the section appears to contain regex syntax.
+func hasRegexPattern(section string) bool {
+	// Check for regex quantifiers and patterns
+	if strings.ContainsAny(section, `*+?[{(|`) {
+		return true
+	}
+
+	// Check for escaped characters (backslash indicates regex mode)
+	// e.g., "file\.txt", "\d+", "\w*"
+	if strings.Contains(section, `\`) {
+		return true
+	}
+
+	return false
+}
+
 // Get the local root path, from which to start collecting artifacts to be used for:
 // 1. Uploaded to Artifactory,
 // 2. Adding to the local build-info, to be later published to Artifactory.
@@ -108,9 +127,10 @@ func GetRootPath(path string, patternType PatternType, parentheses ParenthesesSl
 			continue
 		}
 		if patternType == RegExp {
-			// Break on any regex metacharacter, not just '(' (capture groups), so that
-			// regexes without capture groups still produce a valid filesystem root path.
-			if strings.ContainsAny(section, `.*+?[{(|\`) {
+			// Break when we encounter actual regex patterns, not just any dot.
+			// A literal dot in a directory/file name (e.g., "my.folder", "file.txt") is valid.
+			// We only break on regex constructs like ".*", ".+", "[...]", "(..)", etc.
+			if hasRegexPattern(section) {
 				break
 			}
 		} else {
