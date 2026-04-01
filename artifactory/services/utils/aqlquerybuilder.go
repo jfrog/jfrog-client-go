@@ -54,7 +54,7 @@ func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	buildFilter := buildBuildNameQueryPart(params)
+	buildFilter := buildBuildNameNumberQueryPart(params)
 
 	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+releaseBundle+buildFilter)
 
@@ -379,7 +379,7 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (
 	return excludeQuery, nil
 }
 
-func buildBuildNameQueryPart(params *CommonParams) string {
+func buildBuildNameNumberQueryPart(params *CommonParams) string {
 	if params.Build == "" || params.ExcludeArtifacts || params.IncludeDeps {
 		return ""
 	}

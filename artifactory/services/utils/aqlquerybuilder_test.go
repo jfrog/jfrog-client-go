@@ -425,7 +425,7 @@ func TestBuildBuildNameQueryPart(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := buildBuildNameQueryPart(&tt.params)
+			result := buildBuildNameNumberQueryPart(&tt.params)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
