@@ -118,6 +118,7 @@ type ArtifactoryServicesManager interface {
 	SearchSkills(repoKey, query string, limit int) ([]services.SkillSearchResult, error)
 	SkillVersionExists(repoKey, slug, version string) (bool, error)
 	SearchSkillsByProperty(query string) ([]services.SkillPropertySearchResult, error)
+	GetSkillXrayStatus(repoKey, artifactPath string) (*services.SkillXrayStatusResponse, error)
 }
 
 // By using this struct, you have the option of overriding only some of the ArtifactoryServicesManager
@@ -543,6 +544,10 @@ func (esm *EmptyArtifactoryServicesManager) SkillVersionExists(string, string, s
 }
 
 func (esm *EmptyArtifactoryServicesManager) SearchSkillsByProperty(string) ([]services.SkillPropertySearchResult, error) {
+	panic("Failed: Method is not implemented")
+}
+
+func (esm *EmptyArtifactoryServicesManager) GetSkillXrayStatus(string, string) (*services.SkillXrayStatusResponse, error) {
 	panic("Failed: Method is not implemented")
 }
 
