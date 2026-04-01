@@ -282,6 +282,11 @@ func TestGetRootPath(t *testing.T) {
 		{"regexp nested dirs no metachar", "a/b/c", RegExp, "a/b/c"},
 		{"regexp starts with metachar", ".*\\.txt", RegExp, "."},
 		{"regexp multi-level prefix", "a/b/c/.*", RegExp, "a/b/c"},
+		// Literal dots in directory/file names should NOT trigger regex detection
+		{"regexp literal dot in dirname", "/tmp/jfrog.cli.temp.-1775042212-1894730057/(.*)", RegExp, "/tmp/jfrog.cli.temp.-1775042212-1894730057"},
+		{"regexp literal dots in filename", "my.folder/file.txt/(.*)", RegExp, "my.folder/file.txt"},
+		{"regexp multiple literal dots", "archive.tar.gz.backup/.*", RegExp, "archive.tar.gz.backup"},
+		{"regexp dots with numbers", "dir.1.2.3/test.file/(.*)", RegExp, "dir.1.2.3/test.file"},
 		// RegExp with capture groups: existing behaviour preserved
 		{"regexp with capture group", "dir/(.*)/file", RegExp, "dir"},
 		{"regexp capture at root", "(.*)/file", RegExp, "."},
