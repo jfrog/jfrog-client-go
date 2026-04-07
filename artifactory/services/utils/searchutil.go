@@ -210,6 +210,27 @@ func mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader *c
 
 // Perform search by pattern.
 func SearchBySpecWithPattern(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
+	// Pre-resolve aggregated builds so the AQL query can be narrowed by build scope.
+	// This moves the getAggregatedBuilds call from FilterResultsByBuild to here, so the
+	// AQL itself returns far fewer results for large repositories.
+	if specFile.Build != "" {
+		buildName, buildNumber, err := GetBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
+		if err != nil {
+			return nil, err
+		}
+		if buildName == "" {
+			return content.NewEmptyContentReader(content.DefaultKey), nil
+		}
+		aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
+		if err != nil {
+			return nil, err
+		}
+		if len(aggregatedBuilds) == 0 {
+			return content.NewEmptyContentReader(content.DefaultKey), nil
+		}
+		specFile.ResolvedBuilds = aggregatedBuilds
+	}
+
 	// Create AQL according to spec fields.
 	query, err := CreateAqlBodyForSpecWithPattern(specFile)
 	if err != nil {

@@ -271,166 +271,6 @@ func TestEncodeForBuildInfoRepository(t *testing.T) {
 	}
 }
 
-func TestBuildAqlSearchQueryWithBuildFilter(t *testing.T) {
-	tests := []struct {
-		name             string
-		params           CommonParams
-		expectContains   []string
-		expectNotContain []string
-	}{
-		{
-			name: "pattern with build name includes build filter in AQL",
-			params: CommonParams{
-				Pattern:   "repo-local/*",
-				Recursive: true,
-				Build:     "my-build",
-			},
-			expectContains: []string{
-				`"artifact.module.build.name":"my-build"`,
-				`"repo":"repo-local"`,
-			},
-		},
-		{
-			name: "pattern with build name and number includes both in filter",
-			params: CommonParams{
-				Pattern:   "repo-local/*",
-				Recursive: true,
-				Build:     "my-build/42",
-			},
-			expectContains: []string{
-				`"artifact.module.build.name":"my-build"`,
-				`"artifact.module.build.number":"42"`,
-			},
-			expectNotContain: []string{
-				`"artifact.module.build.name":"my-build/42"`,
-			},
-		},
-		{
-			name: "pattern with build name and LATEST does not include build number",
-			params: CommonParams{
-				Pattern:   "repo-local/*",
-				Recursive: true,
-				Build:     "my-build",
-			},
-			expectContains: []string{
-				`"artifact.module.build.name":"my-build"`,
-			},
-			expectNotContain: []string{
-				`artifact.module.build.number`,
-			},
-		},
-		{
-			name: "pattern with build name containing escaped slashes",
-			params: CommonParams{
-				Pattern:   "repo-local/*",
-				Recursive: true,
-				Build:     "my\\/build\\/name/15",
-			},
-			expectContains: []string{
-				`"artifact.module.build.name":"my/build/name"`,
-			},
-		},
-		{
-			name: "pattern without build does not include build filter",
-			params: CommonParams{
-				Pattern:   "repo-local/*",
-				Recursive: true,
-			},
-			expectNotContain: []string{
-				`artifact.module.build.name`,
-			},
-		},
-		{
-			name: "pattern with build and ExcludeArtifacts skips build filter",
-			params: CommonParams{
-				Pattern:          "repo-local/*",
-				Recursive:        true,
-				Build:            "my-build",
-				ExcludeArtifacts: true,
-			},
-			expectNotContain: []string{
-				`artifact.module.build.name`,
-			},
-		},
-		{
-			name: "pattern with build and IncludeDeps skips build filter",
-			params: CommonParams{
-				Pattern:     "repo-local/*",
-				Recursive:   true,
-				Build:       "my-build",
-				IncludeDeps: true,
-			},
-			expectNotContain: []string{
-				`artifact.module.build.name`,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			aqlResult, err := CreateAqlBodyForSpecWithPattern(&tt.params)
-			assert.NoError(t, err)
-			for _, s := range tt.expectContains {
-				assert.Contains(t, aqlResult, s)
-			}
-			for _, s := range tt.expectNotContain {
-				assert.NotContains(t, aqlResult, s)
-			}
-		})
-	}
-}
-
-func TestBuildBuildNameQueryPart(t *testing.T) {
-	tests := []struct {
-		name     string
-		params   CommonParams
-		expected string
-	}{
-		{
-			name:     "empty build returns empty",
-			params:   CommonParams{},
-			expected: "",
-		},
-		{
-			name:     "build name only",
-			params:   CommonParams{Build: "my-build"},
-			expected: `"artifact.module.build.name":"my-build",`,
-		},
-		{
-			name:     "build name with explicit number",
-			params:   CommonParams{Build: "my-build/42"},
-			expected: `"artifact.module.build.name":"my-build","artifact.module.build.number":"42",`,
-		},
-		{
-			name:     "build name with escaped slashes and number",
-			params:   CommonParams{Build: "org\\/project\\/build/7"},
-			expected: `"artifact.module.build.name":"org/project/build","artifact.module.build.number":"7",`,
-		},
-		{
-			name:     "ExcludeArtifacts true returns empty",
-			params:   CommonParams{Build: "my-build", ExcludeArtifacts: true},
-			expected: "",
-		},
-		{
-			name:     "IncludeDeps true returns empty",
-			params:   CommonParams{Build: "my-build", IncludeDeps: true},
-			expected: "",
-		},
-		{
-			name:     "both ExcludeArtifacts and IncludeDeps returns empty",
-			params:   CommonParams{Build: "my-build", ExcludeArtifacts: true, IncludeDeps: true},
-			expected: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := buildBuildNameNumberQueryPart(&tt.params)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestBuildAqlSearchQueryWithExclusions(t *testing.T) {
 	params := CommonParams{
 		Pattern:    "repo-local/*",
@@ -480,4 +320,143 @@ func TestCreateAqlBodyForBuildDependenciesWithExclusions(t *testing.T) {
 	assert.Contains(t, aqlBody, `test-*`)
 	assert.Contains(t, aqlBody, `dependency.module.build.name`)
 	assert.Contains(t, aqlBody, `dependency.module.build.number`)
+}
+
+func TestBuildBuildFilterQueryPart(t *testing.T) {
+	tests := []struct {
+		name     string
+		params   CommonParams
+		expected string
+	}{
+		{
+			name:     "no resolved builds returns empty",
+			params:   CommonParams{},
+			expected: "",
+		},
+		{
+			name: "single build includes artifact filter",
+			params: CommonParams{
+				ResolvedBuilds: []Build{{BuildName: "my-build", BuildNumber: "42"}},
+			},
+			expected: `"$or":[{"$and":[{"artifact.module.build.name":"my-build","artifact.module.build.number":"42"}]}],`,
+		},
+		{
+			name: "multiple builds (appended) generates $or for all",
+			params: CommonParams{
+				ResolvedBuilds: []Build{
+					{BuildName: "parent-build", BuildNumber: "2"},
+					{BuildName: "child-build", BuildNumber: "1"},
+				},
+			},
+			expected: `"$or":[{"$and":[{"artifact.module.build.name":"parent-build","artifact.module.build.number":"2"}]},{"$and":[{"artifact.module.build.name":"child-build","artifact.module.build.number":"1"}]}],`,
+		},
+		{
+			name: "ExcludeArtifacts true with IncludeDeps false returns empty",
+			params: CommonParams{
+				ResolvedBuilds:   []Build{{BuildName: "my-build", BuildNumber: "1"}},
+				ExcludeArtifacts: true,
+			},
+			expected: "",
+		},
+		{
+			name: "IncludeDeps true adds dependency filter",
+			params: CommonParams{
+				ResolvedBuilds: []Build{{BuildName: "my-build", BuildNumber: "1"}},
+				IncludeDeps:    true,
+			},
+			expected: `"$or":[{"$and":[{"artifact.module.build.name":"my-build","artifact.module.build.number":"1"}]},{"$and":[{"dependency.module.build.name":"my-build","dependency.module.build.number":"1"}]}],`,
+		},
+		{
+			name: "ExcludeArtifacts true with IncludeDeps true returns dependency filter only",
+			params: CommonParams{
+				ResolvedBuilds:   []Build{{BuildName: "my-build", BuildNumber: "1"}},
+				ExcludeArtifacts: true,
+				IncludeDeps:      true,
+			},
+			expected: `"$or":[{"$and":[{"dependency.module.build.name":"my-build","dependency.module.build.number":"1"}]}],`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := buildBuildFilterQueryPart(&tt.params)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestCreateAqlBodyWithResolvedBuilds(t *testing.T) {
+	tests := []struct {
+		name             string
+		params           CommonParams
+		expectContains   []string
+		expectNotContain []string
+	}{
+		{
+			name: "pattern with resolved builds includes build filter in AQL",
+			params: CommonParams{
+				Pattern:        "repo-local/*",
+				Recursive:      true,
+				ResolvedBuilds: []Build{{BuildName: "my-build", BuildNumber: "5"}},
+			},
+			expectContains: []string{
+				`"artifact.module.build.name":"my-build"`,
+				`"artifact.module.build.number":"5"`,
+				`"repo":"repo-local"`,
+			},
+		},
+		{
+			name: "pattern with appended builds includes all build names",
+			params: CommonParams{
+				Pattern:   "repo-local/*",
+				Recursive: true,
+				ResolvedBuilds: []Build{
+					{BuildName: "parent-build", BuildNumber: "2"},
+					{BuildName: "child-build", BuildNumber: "1"},
+				},
+			},
+			expectContains: []string{
+				`"artifact.module.build.name":"parent-build"`,
+				`"artifact.module.build.number":"2"`,
+				`"artifact.module.build.name":"child-build"`,
+				`"artifact.module.build.number":"1"`,
+			},
+		},
+		{
+			name: "pattern without resolved builds does not include build filter",
+			params: CommonParams{
+				Pattern:   "repo-local/*",
+				Recursive: true,
+			},
+			expectNotContain: []string{
+				`artifact.module.build.name`,
+			},
+		},
+		{
+			name: "pattern with ExcludeArtifacts and IncludeDeps false skips build filter",
+			params: CommonParams{
+				Pattern:          "repo-local/*",
+				Recursive:        true,
+				ResolvedBuilds:   []Build{{BuildName: "my-build", BuildNumber: "1"}},
+				ExcludeArtifacts: true,
+			},
+			expectNotContain: []string{
+				`artifact.module.build.name`,
+				`dependency.module.build.name`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			aqlResult, err := CreateAqlBodyForSpecWithPattern(&tt.params)
+			assert.NoError(t, err)
+			for _, s := range tt.expectContains {
+				assert.Contains(t, aqlResult, s)
+			}
+			for _, s := range tt.expectNotContain {
+				assert.NotContains(t, aqlResult, s)
+			}
+		})
+	}
 }

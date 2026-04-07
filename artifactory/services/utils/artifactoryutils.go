@@ -273,19 +273,25 @@ func filterAqlSearchResultsByBuild(specFile *CommonParams, reader *content.Conte
 	buildDependenciesSha1 := make(map[string]int)
 	var wg sync.WaitGroup
 	wg.Add(2)
-	// If 'build-number' is missing in spec file, we fetch the latest from artifactory.
-	buildName, buildNumber, err := GetBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
-	if err != nil {
-		return nil, err
-	}
-	if buildName == "" {
-		// If build was not found, return an empty reader to filter out all artifacts
-		return content.NewEmptyContentReader(content.DefaultKey), nil
-	}
 
-	aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
-	if err != nil {
-		return nil, err
+	var aggregatedBuilds []Build
+	var err error
+	if len(specFile.ResolvedBuilds) > 0 {
+		aggregatedBuilds = specFile.ResolvedBuilds
+	} else {
+		// If 'build-number' is missing in spec file, we fetch the latest from artifactory.
+		var buildName, buildNumber string
+		buildName, buildNumber, err = GetBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
+		if err != nil {
+			return nil, err
+		}
+		if buildName == "" {
+			return content.NewEmptyContentReader(content.DefaultKey), nil
+		}
+		aggregatedBuilds, err = getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
+		if err != nil {
+			return nil, err
+		}
 	}
 	go func() {
 		// Get Sha1 for artifacts.

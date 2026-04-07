@@ -48,6 +48,7 @@ type CommonParams struct {
 	ArchiveEntries   string
 	Transitive       bool
 	Include          []string
+	ResolvedBuilds   []Build
 }
 
 func (params CommonParams) GetArchiveEntries() string {

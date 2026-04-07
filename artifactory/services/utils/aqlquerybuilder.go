@@ -10,7 +10,6 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 const spaceEncoding = "%20"
@@ -54,8 +53,7 @@ func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	buildFilter := buildBuildNameNumberQueryPart(params)
-
+	buildFilter := buildBuildFilterQueryPart(params)
 	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+releaseBundle+buildFilter)
 
 	// Get archive search parameters
@@ -379,27 +377,6 @@ func buildExcludeQueryPart(params *CommonParams, useLocalPath, recursive bool) (
 	return excludeQuery, nil
 }
 
-func buildBuildNameNumberQueryPart(params *CommonParams) string {
-	if params.Build == "" || params.ExcludeArtifacts || params.IncludeDeps {
-		return ""
-	}
-	buildName, buildNumber, err := ParseNameAndVersion(params.Build, true)
-	if err != nil {
-		log.Debug("Failed to parse build name:", err.Error())
-		return ""
-	}
-	if buildName == "" {
-		return ""
-	}
-	// Unescape escaped slashes that are part of the spec identifier encoding.
-	buildName = strings.ReplaceAll(buildName, "\\/", "/")
-	query := fmt.Sprintf(`"artifact.module.build.name":"%s",`, buildName)
-	if buildNumber != "" && buildNumber != LatestBuildNumberKey {
-		query += fmt.Sprintf(`"artifact.module.build.number":"%s",`, buildNumber)
-	}
-	return query
-}
-
 func buildReleaseBundleQuery(params *CommonParams) (string, error) {
 	bundleName, bundleVersion, err := ParseNameAndVersion(params.Bundle, false)
 	if bundleName == "" || err != nil {
@@ -411,6 +388,31 @@ func buildReleaseBundleQuery(params *CommonParams) (string, error) {
 		`"release_artifact.release.version":%s` +
 		`}],`
 	return fmt.Sprintf(itemsPart, getAqlValue(bundleName), getAqlValue(bundleVersion)), nil
+}
+
+// buildBuildFilterQueryPart generates an AQL $or clause that restricts results to artifacts (and
+// optionally dependencies) belonging to the pre-resolved aggregated builds. This narrows the
+// initial AQL scan so that large repositories don't return an overwhelming number of results
+// that must be filtered in memory later.
+func buildBuildFilterQueryPart(params *CommonParams) string {
+	if len(params.ResolvedBuilds) == 0 {
+		return ""
+	}
+	var items []string
+	if !params.ExcludeArtifacts {
+		for _, build := range params.ResolvedBuilds {
+			items = append(items, fmt.Sprintf(`{"$and":[{"artifact.module.build.name":"%s","artifact.module.build.number":"%s"}]}`, build.BuildName, build.BuildNumber))
+		}
+	}
+	if params.IncludeDeps {
+		for _, build := range params.ResolvedBuilds {
+			items = append(items, fmt.Sprintf(`{"$and":[{"dependency.module.build.name":"%s","dependency.module.build.number":"%s"}]}`, build.BuildName, build.BuildNumber))
+		}
+	}
+	if len(items) == 0 {
+		return ""
+	}
+	return `"$or":[` + strings.Join(items, ",") + `],`
 }
 
 // Creates a list of basic required return fields. The list will include the sortBy field if needed.
