@@ -197,6 +197,12 @@ func getBuildArtifactsForBuildSearch(specFile CommonParams, flags CommonConf, bu
 		return getBuildArtifactsUsingAql(specFile, flags, builds)
 	}
 
+	// When a specific pattern is provided alongside the build, use AQL directly
+	if specFile.Pattern != "" && specFile.Pattern != "*" {
+		log.Debug("Pattern specified with build, using AQL for build artifacts search")
+		return getBuildArtifactsUsingAql(specFile, flags, builds)
+	}
+
 	// Try the dedicated build artifacts API first (avoids expensive AQL JOINs).
 	log.Debug("Attempting to fetch build artifacts using dedicated API...")
 	reader, err := GetBuildArtifacts(builds, specFile.Project, flags)
