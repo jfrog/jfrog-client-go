@@ -48,7 +48,6 @@ type CommonParams struct {
 	ArchiveEntries   string
 	Transitive       bool
 	Include          []string
-	ResolvedBuilds   []Build
 }
 
 func (params CommonParams) GetArchiveEntries() string {
@@ -157,8 +156,20 @@ func (aql *Aql) UnmarshalJSON(value []byte) error {
 }
 
 func (params CommonParams) GetSpecType() (specType SpecType) {
+	hasNonTrivialPattern := params.Pattern != "" && params.Pattern != "*"
 	switch {
-	case params.Build != "" && params.Aql.ItemsFind == "" && (params.Pattern == "*" || params.Pattern == ""):
+	case params.Build != "" && params.Aql.ItemsFind == "" && !(hasNonTrivialPattern && params.IncludeDeps):
+		// When a build is specified, use the BUILD path. The BUILD path uses the
+		// dedicated build-artifacts API (fast, no AQL JOINs) and handles aggregated
+		// builds. If a pattern is also specified, results are post-filtered by the
+		// pattern in SearchBySpecWithBuild.
+		//
+		// Exception: when both a non-trivial pattern AND IncludeDeps are set, we fall
+		// through to WILDCARD because build dependencies added locally (via
+		// build-add-dependencies from the filesystem) are not indexed under
+		// dependency.module.build.* in AQL. The WILDCARD path handles this correctly
+		// by searching all items matching the pattern and then post-filtering by build
+		// dependency checksums.
 		specType = BUILD
 	case params.Aql.ItemsFind != "":
 		specType = AQL

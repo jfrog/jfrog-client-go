@@ -322,141 +322,159 @@ func TestCreateAqlBodyForBuildDependenciesWithExclusions(t *testing.T) {
 	assert.Contains(t, aqlBody, `dependency.module.build.number`)
 }
 
-func TestBuildBuildFilterQueryPart(t *testing.T) {
+func TestGetSpecType_BuildWithPattern(t *testing.T) {
 	tests := []struct {
 		name     string
 		params   CommonParams
-		expected string
+		expected SpecType
 	}{
 		{
-			name:     "no resolved builds returns empty",
+			name:     "build only routes to BUILD",
+			params:   CommonParams{Build: "my-build/1"},
+			expected: BUILD,
+		},
+		{
+			name:     "build with empty pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: ""},
+			expected: BUILD,
+		},
+		{
+			name:     "build with wildcard-all pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "*"},
+			expected: BUILD,
+		},
+		{
+			name:     "build with specific pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "docker-local-ash/*"},
+			expected: BUILD,
+		},
+		{
+			name:     "build with repo path pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "repo-local/path/to/*.jar"},
+			expected: BUILD,
+		},
+		{
+			name:     "pattern only routes to WILDCARD",
+			params:   CommonParams{Pattern: "repo-local/*"},
+			expected: WILDCARD,
+		},
+		{
+			name:     "aql routes to AQL",
+			params:   CommonParams{Aql: Aql{ItemsFind: `{"repo":"test"}`}},
+			expected: AQL,
+		},
+		{
+			name:     "aql with build routes to AQL (AQL takes precedence)",
+			params:   CommonParams{Aql: Aql{ItemsFind: `{"repo":"test"}`}, Build: "my-build/1"},
+			expected: AQL,
+		},
+		{
+			name:     "build with IncludeDeps and pattern routes to WILDCARD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "repo-local/*", IncludeDeps: true},
+			expected: WILDCARD,
+		},
+		{
+			name:     "build with IncludeDeps and no pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", IncludeDeps: true},
+			expected: BUILD,
+		},
+		{
+			name:     "build with IncludeDeps and wildcard pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "*", IncludeDeps: true},
+			expected: BUILD,
+		},
+		{
+			name:     "build with ExcludeArtifacts but no IncludeDeps routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", ExcludeArtifacts: true},
+			expected: BUILD,
+		},
+		{
+			name:     "empty params routes to WILDCARD",
 			params:   CommonParams{},
-			expected: "",
-		},
-		{
-			name: "single build includes artifact filter",
-			params: CommonParams{
-				ResolvedBuilds: []Build{{BuildName: "my-build", BuildNumber: "42"}},
-			},
-			expected: `"$or":[{"$and":[{"artifact.module.build.name":"my-build","artifact.module.build.number":"42"}]}],`,
-		},
-		{
-			name: "multiple builds (appended) generates $or for all",
-			params: CommonParams{
-				ResolvedBuilds: []Build{
-					{BuildName: "parent-build", BuildNumber: "2"},
-					{BuildName: "child-build", BuildNumber: "1"},
-				},
-			},
-			expected: `"$or":[{"$and":[{"artifact.module.build.name":"parent-build","artifact.module.build.number":"2"}]},{"$and":[{"artifact.module.build.name":"child-build","artifact.module.build.number":"1"}]}],`,
-		},
-		{
-			name: "ExcludeArtifacts true with IncludeDeps false returns empty",
-			params: CommonParams{
-				ResolvedBuilds:   []Build{{BuildName: "my-build", BuildNumber: "1"}},
-				ExcludeArtifacts: true,
-			},
-			expected: "",
-		},
-		{
-			name: "IncludeDeps true adds dependency filter",
-			params: CommonParams{
-				ResolvedBuilds: []Build{{BuildName: "my-build", BuildNumber: "1"}},
-				IncludeDeps:    true,
-			},
-			expected: `"$or":[{"$and":[{"artifact.module.build.name":"my-build","artifact.module.build.number":"1"}]},{"$and":[{"dependency.module.build.name":"my-build","dependency.module.build.number":"1"}]}],`,
-		},
-		{
-			name: "ExcludeArtifacts true with IncludeDeps true returns dependency filter only",
-			params: CommonParams{
-				ResolvedBuilds:   []Build{{BuildName: "my-build", BuildNumber: "1"}},
-				ExcludeArtifacts: true,
-				IncludeDeps:      true,
-			},
-			expected: `"$or":[{"$and":[{"dependency.module.build.name":"my-build","dependency.module.build.number":"1"}]}],`,
+			expected: WILDCARD,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := buildBuildFilterQueryPart(&tt.params)
+			result := tt.params.GetSpecType()
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
-func TestCreateAqlBodyWithResolvedBuilds(t *testing.T) {
+func TestAqlMatch(t *testing.T) {
 	tests := []struct {
-		name             string
-		params           CommonParams
-		expectContains   []string
-		expectNotContain []string
+		name    string
+		value   string
+		pattern string
+		match   bool
+	}{
+		{"exact match", "repo-local", "repo-local", true},
+		{"exact mismatch", "repo-local", "other-repo", false},
+		{"wildcard all", "anything", "*", true},
+		{"wildcard suffix", "file.jar", "*.jar", true},
+		{"wildcard suffix mismatch", "file.txt", "*.jar", false},
+		{"wildcard prefix", "test-file", "test-*", true},
+		{"wildcard prefix mismatch", "prod-file", "test-*", false},
+		{"wildcard middle", "test-123-file", "test-*-file", true},
+		{"wildcard middle mismatch", "test-123-other", "test-*-file", false},
+		{"multiple wildcards", "a/b/c/d", "a/*/c/*", true},
+		{"dot path", ".", "*", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := aqlMatch(tt.value, tt.pattern)
+			assert.Equal(t, tt.match, result)
+		})
+	}
+}
+
+func TestMatchResultItemToTriples(t *testing.T) {
+	tests := []struct {
+		name    string
+		item    ResultItem
+		triples []RepoPathFile
+		match   bool
 	}{
 		{
-			name: "pattern with resolved builds includes build filter in AQL",
-			params: CommonParams{
-				Pattern:        "repo-local/*",
-				Recursive:      true,
-				ResolvedBuilds: []Build{{BuildName: "my-build", BuildNumber: "5"}},
+			name: "item matches single triple",
+			item: ResultItem{Repo: "docker-local-ash", Path: "path/to", Name: "file.jar"},
+			triples: []RepoPathFile{
+				{repo: "docker-local-ash", path: "*", file: "*"},
 			},
-			expectContains: []string{
-				`"artifact.module.build.name":"my-build"`,
-				`"artifact.module.build.number":"5"`,
-				`"repo":"repo-local"`,
-			},
+			match: true,
 		},
 		{
-			name: "pattern with appended builds includes all build names",
-			params: CommonParams{
-				Pattern:   "repo-local/*",
-				Recursive: true,
-				ResolvedBuilds: []Build{
-					{BuildName: "parent-build", BuildNumber: "2"},
-					{BuildName: "child-build", BuildNumber: "1"},
-				},
+			name: "item does not match repo",
+			item: ResultItem{Repo: "other-repo", Path: "path/to", Name: "file.jar"},
+			triples: []RepoPathFile{
+				{repo: "docker-local-ash", path: "*", file: "*"},
 			},
-			expectContains: []string{
-				`"artifact.module.build.name":"parent-build"`,
-				`"artifact.module.build.number":"2"`,
-				`"artifact.module.build.name":"child-build"`,
-				`"artifact.module.build.number":"1"`,
-			},
+			match: false,
 		},
 		{
-			name: "pattern without resolved builds does not include build filter",
-			params: CommonParams{
-				Pattern:   "repo-local/*",
-				Recursive: true,
+			name: "item matches one of multiple triples",
+			item: ResultItem{Repo: "repo-b", Path: "some/path", Name: "test.txt"},
+			triples: []RepoPathFile{
+				{repo: "repo-a", path: "*", file: "*"},
+				{repo: "repo-b", path: "*", file: "*.txt"},
 			},
-			expectNotContain: []string{
-				`artifact.module.build.name`,
-			},
+			match: true,
 		},
 		{
-			name: "pattern with ExcludeArtifacts and IncludeDeps false skips build filter",
-			params: CommonParams{
-				Pattern:          "repo-local/*",
-				Recursive:        true,
-				ResolvedBuilds:   []Build{{BuildName: "my-build", BuildNumber: "1"}},
-				ExcludeArtifacts: true,
-			},
-			expectNotContain: []string{
-				`artifact.module.build.name`,
-				`dependency.module.build.name`,
-			},
+			name:    "empty triples matches nothing",
+			item:    ResultItem{Repo: "repo-a", Path: ".", Name: "file.jar"},
+			triples: []RepoPathFile{},
+			match:   false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			aqlResult, err := CreateAqlBodyForSpecWithPattern(&tt.params)
-			assert.NoError(t, err)
-			for _, s := range tt.expectContains {
-				assert.Contains(t, aqlResult, s)
-			}
-			for _, s := range tt.expectNotContain {
-				assert.NotContains(t, aqlResult, s)
-			}
+			result := matchResultItemToTriples(&tt.item, tt.triples)
+			assert.Equal(t, tt.match, result)
 		})
 	}
 }

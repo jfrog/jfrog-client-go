@@ -35,6 +35,7 @@ const (
 
 // Use this function when searching by build without pattern or aql.
 // Collect build artifacts and build dependencies separately, then merge the results into one reader.
+// If a pattern is also specified, results are post-filtered to match the pattern.
 func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerContent *content.ContentReader, err error) {
 	log.Info("Searching items related to a build...")
 	buildName, buildNumber, err := GetBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
@@ -92,7 +93,95 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 		return nil, depErr
 	}
 	readerContent, err = filterBuildArtifactsAndDependencies(artifactsReader, dependenciesReader, specFile, flags, aggregatedBuilds)
+	if err != nil {
+		return
+	}
+
+	// If a pattern was specified alongside the build, filter results to only include
+	// items whose repo/path/name match the pattern. This supports the use case where
+	// users specify both "build" and "pattern" in a file spec to narrow down build
+	// artifacts to a specific repository or path.
+	if specFile.Pattern != "" && specFile.Pattern != "*" {
+		readerContent, err = filterBuildResultsByPattern(readerContent, specFile)
+	}
 	return
+}
+
+// filterBuildResultsByPattern filters build search results to only include items
+// matching the given file spec pattern. The pattern is in Artifactory format
+// (e.g., "repo-local/path/*") and is matched against each item's "repo/path/name".
+func filterBuildResultsByPattern(reader *content.ContentReader, specFile *CommonParams) (filteredReader *content.ContentReader, err error) {
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(reader.Close()))
+	}()
+	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, errorutils.CheckError(writer.Close()))
+	}()
+
+	pattern := prepareSourceSearchPattern(specFile.Pattern, specFile.Target)
+	repoPathFileTriples, _, err := createRepoPathFileTriples(pattern, specFile.Recursive)
+	if err != nil {
+		return nil, err
+	}
+
+	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
+		if matchResultItemToTriples(resultItem, repoPathFileTriples) {
+			writer.Write(*resultItem)
+		}
+	}
+	if err = reader.GetError(); err != nil {
+		return nil, err
+	}
+	filteredReader = content.NewContentReader(writer.GetFilePath(), writer.GetArrayKey())
+	return
+}
+
+// matchResultItemToTriples checks whether a result item matches any of the repo/path/file triples
+// derived from a pattern. Each triple contains AQL-style match expressions for repo, path, and name.
+func matchResultItemToTriples(item *ResultItem, triples []RepoPathFile) bool {
+	for _, triple := range triples {
+		if aqlMatch(item.Repo, triple.repo) &&
+			aqlMatch(item.Path, triple.path) &&
+			aqlMatch(item.Name, triple.file) {
+			return true
+		}
+	}
+	return false
+}
+
+// aqlMatch performs a simple wildcard match using the same semantics as AQL's $match operator.
+// The pattern supports "*" (matches any sequence of characters).
+func aqlMatch(value, pattern string) bool {
+	// Split on '*' and check each segment exists in order in value
+	parts := strings.Split(pattern, "*")
+	if len(parts) == 1 {
+		// No wildcards — exact match
+		return value == pattern
+	}
+	pos := 0
+	for i, part := range parts {
+		if part == "" {
+			continue
+		}
+		idx := strings.Index(value[pos:], part)
+		if idx < 0 {
+			return false
+		}
+		// First segment must be a prefix
+		if i == 0 && idx != 0 {
+			return false
+		}
+		pos += idx + len(part)
+	}
+	// Last segment must be a suffix
+	if lastPart := parts[len(parts)-1]; lastPart != "" {
+		return strings.HasSuffix(value, lastPart)
+	}
+	return true
 }
 
 func getBuildDependenciesForBuildSearch(specFile CommonParams, flags CommonConf, builds []Build) (*content.ContentReader, error) {
@@ -210,27 +299,6 @@ func mergeArtifactsAndDependenciesReaders(artifactsReader, dependenciesReader *c
 
 // Perform search by pattern.
 func SearchBySpecWithPattern(specFile *CommonParams, flags CommonConf, requiredArtifactProps RequiredArtifactProps) (*content.ContentReader, error) {
-	// Pre-resolve aggregated builds so the AQL query can be narrowed by build scope.
-	// This moves the getAggregatedBuilds call from FilterResultsByBuild to here, so the
-	// AQL itself returns far fewer results for large repositories.
-	if specFile.Build != "" {
-		buildName, buildNumber, err := GetBuildNameAndNumberFromBuildIdentifier(specFile.Build, specFile.Project, flags)
-		if err != nil {
-			return nil, err
-		}
-		if buildName == "" {
-			return content.NewEmptyContentReader(content.DefaultKey), nil
-		}
-		aggregatedBuilds, err := getAggregatedBuilds(buildName, buildNumber, specFile.Project, flags)
-		if err != nil {
-			return nil, err
-		}
-		if len(aggregatedBuilds) == 0 {
-			return content.NewEmptyContentReader(content.DefaultKey), nil
-		}
-		specFile.ResolvedBuilds = aggregatedBuilds
-	}
-
 	// Create AQL according to spec fields.
 	query, err := CreateAqlBodyForSpecWithPattern(specFile)
 	if err != nil {

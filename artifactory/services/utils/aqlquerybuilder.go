@@ -53,8 +53,8 @@ func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	buildFilter := buildBuildFilterQueryPart(params)
-	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+releaseBundle+buildFilter)
+
+	json := fmt.Sprintf(`{%s"$or":[`, propsQueryPart+itemTypeQuery+nePath+excludeQuery+releaseBundle)
 
 	// Get archive search parameters
 	archivePathFilePairs := createArchiveSearchParams(params)
@@ -388,31 +388,6 @@ func buildReleaseBundleQuery(params *CommonParams) (string, error) {
 		`"release_artifact.release.version":%s` +
 		`}],`
 	return fmt.Sprintf(itemsPart, getAqlValue(bundleName), getAqlValue(bundleVersion)), nil
-}
-
-// buildBuildFilterQueryPart generates an AQL $or clause that restricts results to artifacts (and
-// optionally dependencies) belonging to the pre-resolved aggregated builds. This narrows the
-// initial AQL scan so that large repositories don't return an overwhelming number of results
-// that must be filtered in memory later.
-func buildBuildFilterQueryPart(params *CommonParams) string {
-	if len(params.ResolvedBuilds) == 0 {
-		return ""
-	}
-	var items []string
-	if !params.ExcludeArtifacts {
-		for _, build := range params.ResolvedBuilds {
-			items = append(items, fmt.Sprintf(`{"$and":[{"artifact.module.build.name":"%s","artifact.module.build.number":"%s"}]}`, build.BuildName, build.BuildNumber))
-		}
-	}
-	if params.IncludeDeps {
-		for _, build := range params.ResolvedBuilds {
-			items = append(items, fmt.Sprintf(`{"$and":[{"dependency.module.build.name":"%s","dependency.module.build.number":"%s"}]}`, build.BuildName, build.BuildNumber))
-		}
-	}
-	if len(items) == 0 {
-		return ""
-	}
-	return `"$or":[` + strings.Join(items, ",") + `],`
 }
 
 // Creates a list of basic required return fields. The list will include the sortBy field if needed.
