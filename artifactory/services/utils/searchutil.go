@@ -102,7 +102,14 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 	// users specify both "build" and "pattern" in a file spec to narrow down build
 	// artifacts to a specific repository or path.
 	if specFile.Pattern != "" && specFile.Pattern != "*" {
-		readerContent, err = filterBuildResultsByPattern(readerContent, specFile)
+		var filteredContent *content.ContentReader
+		filteredContent, err = filterBuildResultsByPattern(readerContent, specFile)
+		if err != nil {
+			return
+		}
+		// Close the unfiltered reader before replacing it with the filtered one.
+		err = errors.Join(err, errorutils.CheckError(readerContent.Close()))
+		readerContent = filteredContent
 	}
 	return
 }
@@ -133,9 +140,6 @@ func buildPatternMatchers(triples []RepoPathFile) []patternMatcher {
 // matching the given file spec pattern. The pattern is in Artifactory format
 // (e.g., "repo-local/path/*") and is matched against each item's "repo/path/name".
 func filterBuildResultsByPattern(reader *content.ContentReader, specFile *CommonParams) (filteredReader *content.ContentReader, err error) {
-	defer func() {
-		err = errors.Join(err, errorutils.CheckError(reader.Close()))
-	}()
 	writer, err := content.NewContentWriter(content.DefaultKey, true, false)
 	if err != nil {
 		return nil, err
