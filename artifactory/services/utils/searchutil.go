@@ -107,6 +107,28 @@ func SearchBySpecWithBuild(specFile *CommonParams, flags CommonConf) (readerCont
 	return
 }
 
+// patternMatcher holds pre-split wildcard segments for a repo/path/file triple,
+// so that matching against result items avoids repeated strings.Split calls.
+type patternMatcher struct {
+	repoParts []string
+	pathParts []string
+	fileParts []string
+}
+
+// buildPatternMatchers pre-splits the wildcard patterns in each triple into segments,
+// so that matching against N result items does not re-split patterns on every call.
+func buildPatternMatchers(triples []RepoPathFile) []patternMatcher {
+	matchers := make([]patternMatcher, len(triples))
+	for i, t := range triples {
+		matchers[i] = patternMatcher{
+			repoParts: strings.Split(t.repo, "*"),
+			pathParts: strings.Split(t.path, "*"),
+			fileParts: strings.Split(t.file, "*"),
+		}
+	}
+	return matchers
+}
+
 // filterBuildResultsByPattern filters build search results to only include items
 // matching the given file spec pattern. The pattern is in Artifactory format
 // (e.g., "repo-local/path/*") and is matched against each item's "repo/path/name".
@@ -128,8 +150,11 @@ func filterBuildResultsByPattern(reader *content.ContentReader, specFile *Common
 		return nil, err
 	}
 
+	// Build pattern matchers once so we don't re-split patterns for every result item.
+	matchers := buildPatternMatchers(repoPathFileTriples)
+
 	for resultItem := new(ResultItem); reader.NextRecord(resultItem) == nil; resultItem = new(ResultItem) {
-		if matchResultItemToTriples(resultItem, repoPathFileTriples) {
+		if matchResultItemToPatterns(resultItem, matchers) {
 			writer.Write(*resultItem)
 		}
 	}
@@ -140,27 +165,36 @@ func filterBuildResultsByPattern(reader *content.ContentReader, specFile *Common
 	return
 }
 
-// matchResultItemToTriples checks whether a result item matches any of the repo/path/file triples
-// derived from a pattern. Each triple contains AQL-style match expressions for repo, path, and name.
-func matchResultItemToTriples(item *ResultItem, triples []RepoPathFile) bool {
-	for _, triple := range triples {
-		if aqlMatch(item.Repo, triple.repo) &&
-			aqlMatch(item.Path, triple.path) &&
-			aqlMatch(item.Name, triple.file) {
+// matchResultItemToPatterns checks whether a result item matches any of the
+// pre-built repo/path/file pattern matchers.
+func matchResultItemToPatterns(item *ResultItem, matchers []patternMatcher) bool {
+	for _, m := range matchers {
+		if wildcardMatch(item.Repo, m.repoParts) &&
+			wildcardMatch(item.Path, m.pathParts) &&
+			wildcardMatch(item.Name, m.fileParts) {
 			return true
 		}
 	}
 	return false
 }
 
+// matchResultItemToTriples checks whether a result item matches any of the repo/path/file triples
+// derived from a pattern. Each triple contains AQL-style match expressions for repo, path, and name.
+func matchResultItemToTriples(item *ResultItem, triples []RepoPathFile) bool {
+	return matchResultItemToPatterns(item, buildPatternMatchers(triples))
+}
+
 // aqlMatch performs a simple wildcard match using the same semantics as AQL's $match operator.
 // The pattern supports "*" (matches any sequence of characters).
 func aqlMatch(value, pattern string) bool {
-	// Split on '*' and check each segment exists in order in value
-	parts := strings.Split(pattern, "*")
+	return wildcardMatch(value, strings.Split(pattern, "*"))
+}
+
+// wildcardMatch matches a value against pre-split pattern segments (split on "*").
+// A single-element slice means no wildcards — exact match is required.
+func wildcardMatch(value string, parts []string) bool {
 	if len(parts) == 1 {
-		// No wildcards — exact match
-		return value == pattern
+		return value == parts[0]
 	}
 	pos := 0
 	for i, part := range parts {
@@ -171,13 +205,11 @@ func aqlMatch(value, pattern string) bool {
 		if idx < 0 {
 			return false
 		}
-		// First segment must be a prefix
 		if i == 0 && idx != 0 {
 			return false
 		}
 		pos += idx + len(part)
 	}
-	// Last segment must be a suffix
 	if lastPart := parts[len(parts)-1]; lastPart != "" {
 		return strings.HasSuffix(value, lastPart)
 	}

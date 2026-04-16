@@ -389,6 +389,21 @@ func TestGetSpecType_BuildWithPattern(t *testing.T) {
 			expected: BUILD,
 		},
 		{
+			name:     "build with pattern and props routes to WILDCARD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "repo-local/*", Props: "key=value"},
+			expected: WILDCARD,
+		},
+		{
+			name:     "build with pattern and excludeProps routes to WILDCARD",
+			params:   CommonParams{Build: "my-build/1", Pattern: "repo-local/*", ExcludeProps: "key=value"},
+			expected: WILDCARD,
+		},
+		{
+			name:     "build with props but no pattern routes to BUILD",
+			params:   CommonParams{Build: "my-build/1", Props: "key=value"},
+			expected: BUILD,
+		},
+		{
 			name:     "empty params routes to WILDCARD",
 			params:   CommonParams{},
 			expected: WILDCARD,

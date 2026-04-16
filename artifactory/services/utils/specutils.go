@@ -157,19 +157,17 @@ func (aql *Aql) UnmarshalJSON(value []byte) error {
 
 func (params CommonParams) GetSpecType() (specType SpecType) {
 	hasNonTrivialPattern := params.Pattern != "" && params.Pattern != "*"
+	// When a non-trivial pattern is combined with features that the BUILD path's AQL
+	// does not support, fall through to WILDCARD which handles them correctly:
+	//   - IncludeDeps: local deps (added from filesystem) need SHA1-based post-filtering.
+	//   - Props/ExcludeProps: the BUILD path's AQL does not include property filters.
+	patternRequiresWildcard := hasNonTrivialPattern && (params.IncludeDeps || params.Props != "" || params.ExcludeProps != "")
 	switch {
-	case params.Build != "" && params.Aql.ItemsFind == "" && !(hasNonTrivialPattern && params.IncludeDeps):
+	case params.Build != "" && params.Aql.ItemsFind == "" && !patternRequiresWildcard:
 		// When a build is specified, use the BUILD path. The BUILD path uses the
 		// dedicated build-artifacts API (fast, no AQL JOINs) and handles aggregated
 		// builds. If a pattern is also specified, results are post-filtered by the
 		// pattern in SearchBySpecWithBuild.
-		//
-		// Exception: when both a non-trivial pattern AND IncludeDeps are set, we fall
-		// through to WILDCARD because build dependencies added locally (via
-		// build-add-dependencies from the filesystem) are not indexed under
-		// dependency.module.build.* in AQL. The WILDCARD path handles this correctly
-		// by searching all items matching the pattern and then post-filtering by build
-		// dependency checksums.
 		specType = BUILD
 	case params.Aql.ItemsFind != "":
 		specType = AQL
