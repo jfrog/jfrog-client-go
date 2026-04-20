@@ -209,11 +209,17 @@ type XscAnalyticsGeneralEvent struct {
 }
 
 type XscGitInfoContext struct {
-	Source       CommitContext       `json:"source"`
+	GitDiffContext
+	Source       CommitContext `json:"source"`
+	GitProvider  string        `json:"git_provider,omitempty"`
+	Technologies []string      `json:"technologies,omitempty"`
+}
+
+// Optional fields for git diff context
+type GitDiffContext struct {
 	Target       *CommitContext      `json:"target,omitempty"`
 	PullRequest  *PullRequestContext `json:"pull_request,omitempty"`
-	GitProvider  string              `json:"git_provider,omitempty"`
-	Technologies []string            `json:"technologies,omitempty"`
+	ChangedFiles []string            `json:"changed_files,omitempty"`
 }
 
 type CommitContext struct {
