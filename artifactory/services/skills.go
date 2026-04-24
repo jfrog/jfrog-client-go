@@ -76,19 +76,6 @@ func (ss *SkillsService) ListSkills(repoKey string, limit int, cursor, sortBy st
 	return wrapper.Items, wrapper.NextCursor, nil
 }
 
-func (ss *SkillsService) GetSkillDetail(repoKey, slug string) (*SkillDetail, error) {
-	log.Debug(fmt.Sprintf("Getting skill detail for '%s' in repo '%s'...", slug, repoKey))
-	body, err := ss.sendGet(repoKey, fmt.Sprintf("skills/%s", slug))
-	if err != nil {
-		return nil, err
-	}
-	var detail SkillDetail
-	if err = json.Unmarshal(body, &detail); err != nil {
-		return nil, errorutils.CheckErrorf("failed to parse skill detail response: %s", err.Error())
-	}
-	return &detail, nil
-}
-
 func (ss *SkillsService) SearchSkills(repoKey, query string, limit int) ([]SkillSearchResult, error) {
 	log.Debug(fmt.Sprintf("Searching skills in repo '%s' with query '%s'...", repoKey, query))
 	body, err := ss.sendGet(repoKey, fmt.Sprintf("search?q=%s&limit=%d", url.QueryEscape(query), limit))
@@ -228,15 +215,6 @@ type SkillPropertySearchResult struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
 	URI     string `json:"uri"`
-}
-
-type SkillDetail struct {
-	Slug          string `json:"slug"`
-	DisplayName   string `json:"displayName,omitempty"`
-	Summary       string `json:"summary,omitempty"`
-	LatestVersion string `json:"latestVersion,omitempty"`
-	Versions      int    `json:"versions,omitempty"`
-	Updated       string `json:"updated,omitempty"`
 }
 
 type SkillListItem struct {
