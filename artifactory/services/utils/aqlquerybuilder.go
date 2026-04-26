@@ -14,6 +14,10 @@ import (
 
 const spaceEncoding = "%20"
 
+// errTransitiveMultiRepoMsg is shared by both pattern-based and build-with-pattern AQL
+// builders so the validation and its error text stay in lockstep.
+const errTransitiveMultiRepoMsg = "when searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash"
+
 var specialAqlCharacters = map[rune]string{
 	'/':  "%2F",
 	'\\': "%5C",
@@ -34,7 +38,7 @@ func CreateAqlBodyForSpecWithPattern(params *CommonParams) (string, error) {
 		return "", err
 	}
 	if params.Transitive && !singleRepo {
-		return "", errorutils.CheckErrorf("when searching or downloading with the transitive setting, the pattern must include a single repository only, meaning wildcards are allowed only after the first slash.")
+		return "", errorutils.CheckErrorf(errTransitiveMultiRepoMsg)
 	}
 	includeRoot := strings.Count(searchPattern, "/") < 2
 	triplesSize := len(repoPathFileTriples)
@@ -108,54 +112,98 @@ func handleArchiveSearch(triple RepoPathFile, archivePathFilePairs []RepoPathFil
 	return query
 }
 
+// createAqlBodyForBuildArtifacts builds the AQL body for build artifacts with no pattern or
+// exclusions. Safe wrapper: the underlying function only errors on user-supplied input, which
+// is nil here.
 func createAqlBodyForBuildArtifacts(builds []Build) string {
-	return createAqlBodyForBuildArtifactsWithExclusions(builds, nil)
+	body, _ := createAqlBodyForBuildArtifactsWithExclusions(builds, nil)
+	return body
 }
 
-// createAqlBodyForBuildArtifactsWithExclusions creates an AQL body for build artifacts with optional exclusions.
-func createAqlBodyForBuildArtifactsWithExclusions(builds []Build, params *CommonParams) string {
-	buildArtifactsItem := `{"$and":[{"artifact.module.build.name":"%s","artifact.module.build.number":"%s"}]}`
-	var items []string
-	for _, build := range builds {
-		items = append(items, fmt.Sprintf(buildArtifactsItem, build.BuildName, build.BuildNumber))
+// createAqlBodyForBuildArtifactsWithExclusions builds the AQL body for build artifacts.
+// When a non-trivial pattern is supplied, its repo/path/name triples are included in the AQL
+// so Artifactory performs the match server-side; this preserves virtual-repo resolution that
+// a client-side string compare on the result's Repo cannot do.
+func createAqlBodyForBuildArtifactsWithExclusions(builds []Build, params *CommonParams) (string, error) {
+	items := buildClauseItems(builds, "artifact")
+	buildOr := fmt.Sprintf(`"$or":[%s]`, strings.Join(items, ","))
+
+	excludeQuery, err := maybeBuildExcludeQuery(params)
+	if err != nil {
+		return "", err
 	}
 
-	// Build the exclusion query if params with exclusions are provided
-	excludeQuery := ""
-	if params != nil && len(params.GetExclusions()) > 0 {
-		var err error
-		excludeQuery, err = buildExcludeQueryPart(params, true, params.Recursive)
-		if err != nil {
-			excludeQuery = ""
-		}
+	patternOr, err := buildPatternFilterForBuildArtifacts(params)
+	if err != nil {
+		return "", err
 	}
-
-	return `{` + excludeQuery + `"$or":[` + strings.Join(items, ",") + "]}"
+	if patternOr != "" {
+		return fmt.Sprintf(`{%s"$and":[{%s},{%s}]}`, excludeQuery, buildOr, patternOr), nil
+	}
+	return fmt.Sprintf(`{%s%s}`, excludeQuery, buildOr), nil
 }
 
+// buildPatternFilterForBuildArtifacts returns an AQL "$or" clause matching the pattern's
+// repo/path/name triples, or an empty string when no non-trivial pattern is supplied. Callers
+// compose it with the build-name/build-number filter under "$and".
+func buildPatternFilterForBuildArtifacts(params *CommonParams) (string, error) {
+	if params == nil || params.Pattern == "" || params.Pattern == "*" {
+		return "", nil
+	}
+	searchPattern := prepareSourceSearchPattern(params.Pattern, params.Target)
+	triples, singleRepo, err := createRepoPathFileTriples(searchPattern, params.Recursive)
+	if err != nil {
+		return "", err
+	}
+	if params.Transitive && !singleRepo {
+		return "", errorutils.CheckErrorf(errTransitiveMultiRepoMsg)
+	}
+	if len(triples) == 0 {
+		return "", nil
+	}
+	return fmt.Sprintf(`"$or":[%s]`, handleRepoPathFileTriples(triples, nil, len(triples))), nil
+}
+
+// createAqlBodyForBuildDependencies builds the AQL body for build dependencies with no
+// exclusions. Safe wrapper: the underlying function only errors on user-supplied exclusions,
+// which are nil here.
 func createAqlBodyForBuildDependencies(builds []Build) string {
-	return createAqlBodyForBuildDependenciesWithExclusions(builds, nil)
+	body, _ := createAqlBodyForBuildDependenciesWithExclusions(builds, nil)
+	return body
 }
 
-// createAqlBodyForBuildDependenciesWithExclusions creates an AQL body for build dependencies with optional exclusions.
-func createAqlBodyForBuildDependenciesWithExclusions(builds []Build, params *CommonParams) string {
-	buildDependenciesItem := `{"$and":[{"dependency.module.build.name":"%s","dependency.module.build.number":"%s"}]}`
-	var items []string
-	for _, build := range builds {
-		items = append(items, fmt.Sprintf(buildDependenciesItem, build.BuildName, build.BuildNumber))
+// createAqlBodyForBuildDependenciesWithExclusions builds the AQL body for build dependencies.
+// Matches the error-propagation behavior of its artifact-side sibling so malformed exclusions
+// surface consistently on both paths.
+func createAqlBodyForBuildDependenciesWithExclusions(builds []Build, params *CommonParams) (string, error) {
+	items := buildClauseItems(builds, "dependency")
+	excludeQuery, err := maybeBuildExcludeQuery(params)
+	if err != nil {
+		return "", err
 	}
+	return fmt.Sprintf(`{%s"$or":[%s]}`, excludeQuery, strings.Join(items, ",")), nil
+}
 
-	// Build the exclusion query if params with exclusions are provided
-	excludeQuery := ""
-	if params != nil && len(params.GetExclusions()) > 0 {
-		var err error
-		excludeQuery, err = buildExcludeQueryPart(params, true, params.Recursive)
-		if err != nil {
-			excludeQuery = ""
-		}
+// buildClauseItems returns the per-build AQL clauses used inside the outer "$or". kind is
+// either "artifact" or "dependency" and selects the AQL domain prefix.
+func buildClauseItems(builds []Build, kind string) []string {
+	items := make([]string, 0, len(builds))
+	for _, b := range builds {
+		items = append(items, fmt.Sprintf(
+			`{"$and":[{"%s.module.build.name":"%s","%s.module.build.number":"%s"}]}`,
+			kind, b.BuildName, kind, b.BuildNumber,
+		))
 	}
+	return items
+}
 
-	return `{` + excludeQuery + `"$or":[` + strings.Join(items, ",") + "]}"
+// maybeBuildExcludeQuery returns the exclusion AQL fragment for params (with trailing comma,
+// as consumed by callers) or an empty string when there are no exclusions. params may be nil.
+func maybeBuildExcludeQuery(params *CommonParams) (string, error) {
+	if params == nil || len(params.GetExclusions()) == 0 {
+		return "", nil
+	}
+	return buildExcludeQueryPart(params, true, params.Recursive)
 }
 
 func createAqlQueryForBuild(includeQueryPart string, artifactsQuery bool, builds []Build) string {
