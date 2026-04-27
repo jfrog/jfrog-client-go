@@ -219,7 +219,7 @@ type XscGitInfoContext struct {
 type GitDiffContext struct {
 	Target       *CommitContext      `json:"target,omitempty"`
 	PullRequest  *PullRequestContext `json:"pull_request,omitempty"`
-	ChangedFiles []string
+	ChangedFiles []string            `json:"-"`
 }
 
 type CommitContext struct {
