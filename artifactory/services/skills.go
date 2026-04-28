@@ -21,6 +21,9 @@ const (
 	SkillXrayStatusScanInProgress   = "SCAN_IN_PROGRESS"
 	SkillXrayStatusBlocked          = "BLOCKED"
 	SkillXrayStatusApproved         = "APPROVED"
+
+	SkillSortByUpdated   = "updated"
+	SkillSortByDownloads = "downloads"
 )
 
 // SkillXrayStatusResponse is the response from the Skills Xray gate status endpoint.
@@ -55,6 +58,25 @@ func (ss *SkillsService) ListVersions(repoKey, slug string) ([]SkillVersion, err
 		return nil, errorutils.CheckErrorf("failed to parse skill versions response: %s", err.Error())
 	}
 	return wrapper.Items, nil
+}
+
+func (ss *SkillsService) ListSkills(repoKey string, limit int, cursor, sortBy string) ([]SkillListItem, string, error) {
+	log.Debug(fmt.Sprintf("Listing skills in repo '%s'...", repoKey))
+	sort := SkillSortByUpdated
+	if sortBy == SkillSortByDownloads {
+		sort = sortBy
+	}
+	endpoint := fmt.Sprintf("skills?limit=%d&cursor=%s&sort=%s", limit, url.QueryEscape(cursor), sort)
+	body, err := ss.sendGet(repoKey, endpoint)
+	if err != nil {
+		return nil, "", err
+	}
+
+	var wrapper skillListResponse
+	if err = json.Unmarshal(body, &wrapper); err != nil {
+		return nil, "", errorutils.CheckErrorf("failed to parse skill list response: %s", err.Error())
+	}
+	return wrapper.Items, wrapper.NextCursor, nil
 }
 
 func (ss *SkillsService) SearchSkills(repoKey, query string, limit int) ([]SkillSearchResult, error) {
@@ -196,6 +218,21 @@ type SkillPropertySearchResult struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
 	URI     string `json:"uri"`
+}
+
+type SkillListItem struct {
+	Slug          string        `json:"slug"`
+	DisplayName   string        `json:"displayName,omitempty"`
+	Summary       string        `json:"summary,omitempty"`
+	LatestVersion *SkillVersion `json:"latestVersion,omitempty"`
+	Versions      int           `json:"versions,omitempty"`
+	Updated       string        `json:"updated,omitempty"`
+}
+
+type skillListResponse struct {
+	Items      []SkillListItem `json:"items"`
+	NextCursor string          `json:"nextCursor,omitempty"`
+	Total      int             `json:"total,omitempty"`
 }
 
 type skillVersionsResponse struct {
