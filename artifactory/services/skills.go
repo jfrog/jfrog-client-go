@@ -21,6 +21,9 @@ const (
 	SkillXrayStatusScanInProgress   = "SCAN_IN_PROGRESS"
 	SkillXrayStatusBlocked          = "BLOCKED"
 	SkillXrayStatusApproved         = "APPROVED"
+
+	SkillSortByUpdated   = "updated"
+	SkillSortByDownloads = "downloads"
 )
 
 // SkillXrayStatusResponse is the response from the Skills Xray gate status endpoint.
@@ -59,9 +62,9 @@ func (ss *SkillsService) ListVersions(repoKey, slug string) ([]SkillVersion, err
 
 func (ss *SkillsService) ListSkills(repoKey string, limit int, cursor, sortBy string) ([]SkillListItem, string, error) {
 	log.Debug(fmt.Sprintf("Listing skills in repo '%s'...", repoKey))
-	sort := "updated"
-	if sortBy == "downloads" {
-		sort = "downloads"
+	sort := SkillSortByUpdated
+	if sortBy == SkillSortByDownloads {
+		sort = sortBy
 	}
 	endpoint := fmt.Sprintf("skills?limit=%d&cursor=%s&sort=%s", limit, url.QueryEscape(cursor), sort)
 	body, err := ss.sendGet(repoKey, endpoint)
