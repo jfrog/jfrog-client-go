@@ -3,7 +3,7 @@ package utils
 import (
 	"fmt"
 	"github.com/ProtonMail/go-crypto/openpgp"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -118,6 +118,7 @@ func (r *RbGpgValidator) verifyJwtToken(bundleTokenStr string) (*ReleaseBundleMo
 }
 
 type ReleaseBundleModel struct {
+	jwt.RegisteredClaims
 	Id           string              `json:"id"`
 	Name         string              `json:"name"`
 	Version      string              `json:"version"`
@@ -129,7 +130,7 @@ type ReleaseBundleModel struct {
 	Type         string              `json:"type"`
 }
 
-func (rbm *ReleaseBundleModel) Valid() error {
+func (rbm *ReleaseBundleModel) Validate() error {
 	return nil
 }
 
