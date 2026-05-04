@@ -85,9 +85,10 @@ type CaScannerConfig struct {
 }
 
 type SastScannerConfig struct {
-	EnableSastScan  bool     `json:"enable_sast_scan,omitempty"`
-	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
-	ExcludeRules    []string `json:"exclude_rules,omitempty"`
+	EnableSastScan     bool     `json:"enable_sast_scan,omitempty"`
+	EnableFastDiffMode bool     `json:"enable_differential_scanning,omitempty"`
+	ExcludePatterns    []string `json:"exclude_patterns,omitempty"`
+	ExcludeRules       []string `json:"exclude_rules,omitempty"`
 }
 
 type SecretsScannerConfig struct {
