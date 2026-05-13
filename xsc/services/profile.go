@@ -59,10 +59,12 @@ type FrogbotConfig struct {
 }
 
 type Module struct {
-	ModuleId     int32      `json:"module_id,omitempty"`
-	ModuleName   string     `json:"module_name"`
-	PathFromRoot string     `json:"path_from_root"`
-	ScanConfig   ScanConfig `json:"scan_config"`
+	ModuleId        int32      `json:"module_id,omitempty"`
+	ModuleName      string     `json:"module_name"`
+	PathFromRoot    string     `json:"path_from_root"`
+	ExcludePatterns []string   `json:"exclude_patterns,omitempty"`
+	IncludePatterns []string   `json:"include_patterns,omitempty"`
+	ScanConfig      ScanConfig `json:"scan_config"`
 }
 
 type ScanConfig struct {
