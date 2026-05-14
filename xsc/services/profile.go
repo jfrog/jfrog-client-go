@@ -42,9 +42,8 @@ type ConfigProfile struct {
 }
 
 type GeneralConfig struct {
-	ScannersDownloadPath    string   `json:"scanners_download_path,omitempty"`
-	GeneralExcludePatterns  []string `json:"general_exclude_patterns,omitempty"`
-	FailUponAnyScannerError bool     `json:"fail_upon_any_scanner_error,omitempty"`
+	ScannersDownloadPath    string `json:"scanners_download_path,omitempty"`
+	FailUponAnyScannerError bool   `json:"fail_upon_any_scanner_error,omitempty"`
 }
 
 type FrogbotConfig struct {
