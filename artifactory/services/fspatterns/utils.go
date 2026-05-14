@@ -28,22 +28,25 @@ func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, ex
 
 // Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
 func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternType, isRecursive bool) string {
-	excludePathPattern := ""
+	return PreparePathPattern(patternType, isRecursive, exclusions...)
+}
 
-	for _, singleExclusion := range exclusions {
-		if len(singleExclusion) > 0 {
-			singleExclusion = utils.ReplaceTildeWithUserHome(singleExclusion)
-			singleExclusion = utils.ConvertLocalPatternToRegexp(singleExclusion, patternType)
-			if isRecursive && strings.HasSuffix(singleExclusion, fileutils.GetFileSeparator()) {
-				singleExclusion += "*"
+func PreparePathPattern(patternType utils.PatternType, isRecursive bool, patterns ...string) string {
+	pathPattern := ""
+	for _, pattern := range patterns {
+		if len(pattern) > 0 {
+			pattern = utils.ReplaceTildeWithUserHome(pattern)
+			pattern = utils.ConvertLocalPatternToRegexp(pattern, patternType)
+			if isRecursive && strings.HasSuffix(pattern, fileutils.GetFileSeparator()) {
+				pattern += "*"
 			}
-			excludePathPattern += fmt.Sprintf(`(%s)|`, singleExclusion)
+			pathPattern += fmt.Sprintf(`(%s)|`, pattern)
 		}
 	}
-	if len(excludePathPattern) > 0 {
-		excludePathPattern = excludePathPattern[:len(excludePathPattern)-1]
+	if len(pathPattern) > 0 {
+		pathPattern = pathPattern[:len(pathPattern)-1]
 	}
-	return excludePathPattern
+	return pathPattern
 }
 
 // Returns a function that filters files according to the provided parameters
