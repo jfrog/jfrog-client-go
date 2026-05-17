@@ -52,7 +52,6 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 		ProfileName: "default-profile",
 		GeneralConfig: services.GeneralConfig{
 			ScannersDownloadPath:    "https://repo.example.com/releases",
-			GeneralExcludePatterns:  []string{"*.log*", "*.tmp*"},
 			FailUponAnyScannerError: true,
 		},
 		FrogbotConfig: services.FrogbotConfig{
@@ -69,6 +68,7 @@ func getComparisonConfigProfile() *services.ConfigProfile {
 			{
 				ModuleName:   "default-module",
 				PathFromRoot: ".",
+				ExcludePatterns: []string{"*.log*", "*.tmp*"},
 				ScanConfig: services.ScanConfig{
 					ScaScannerConfig: services.ScaScannerConfig{
 						EnableScaScan:          true,
