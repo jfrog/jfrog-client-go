@@ -38,6 +38,7 @@ type ConfigProfile struct {
 	ProfileName   string        `json:"profile_name"`
 	GeneralConfig GeneralConfig `json:"general_config,omitempty"`
 	FrogbotConfig FrogbotConfig `json:"frogbot_config,omitempty"`
+	ProjectKey    string        `json:"project_key,omitempty"`
 	Modules       []Module      `json:"modules"`
 }
 
