@@ -2,7 +2,6 @@
   "profile_name": "default-profile",
   "general_config": {
     "scanners_download_path": "https://repo.example.com/releases",
-    "general_exclude_patterns": ["*.log*", "*.tmp*"],
     "fail_upon_any_scanner_error": true
   },
   "frogbot_config": {
@@ -19,6 +18,8 @@
     {
       "module_name": "default-module",
       "path_from_root": ".",
+      "exclude_patterns": ["*.log*", "*.tmp*"],
+      "include_patterns": ["*.go"],
       "scan_config": {
         "sca_scanner_config": {
           "enable_sca_scan": true,
