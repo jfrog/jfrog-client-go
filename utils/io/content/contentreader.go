@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"sort"
 	"sync"
+	"sync/atomic"
 
 	"github.com/jfrog/gofrog/http/retryexecutor"
 	"github.com/jfrog/jfrog-client-go/utils"
@@ -33,6 +34,11 @@ type ContentReader struct {
 	dataChannel chan map[string]interface{}
 	errorsQueue *utils.ErrorsQueue
 	once        *sync.Once
+	// producerStarted indicates whether the goroutine spawned inside
+	// NextRecord (via once.Do) was ever started. Reset() uses this to
+	// know whether it must drain dataChannel and wait for the goroutine
+	// to exit before swapping in a fresh channel.
+	producerStarted atomic.Bool
 	// Number of elements in the array (cache)
 	length int
 	empty  bool
@@ -72,6 +78,7 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 		return errorutils.CheckErrorf("Empty")
 	}
 	cr.once.Do(func() {
+		cr.producerStarted.Store(true)
 		go func() {
 			defer close(cr.dataChannel)
 			cr.length = 0
@@ -93,9 +100,23 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 }
 
 // Prepare the reader to read the file all over again (not thread-safe).
+//
+// If a producer goroutine was previously started by NextRecord and has not
+// yet finished, Reset drains dataChannel until the producer closes it. This
+// is required because the producer dereferences cr.dataChannel on every send
+// (contentreader.go readSingleFile loop), so if Reset swapped the channel out
+// while the producer was still alive, the producer would switch to the new
+// channel mid-flight and eventually close it — racing a fresh producer
+// goroutine spawned by the next NextRecord call and causing
+// "send on closed channel" / "close of closed channel" panics.
 func (cr *ContentReader) Reset() {
+	if cr.producerStarted.Load() {
+		for range cr.dataChannel {
+		}
+	}
 	cr.dataChannel = make(chan map[string]interface{}, utils.MaxBufferSize)
 	cr.once = new(sync.Once)
+	cr.producerStarted.Store(false)
 }
 
 func removeFile(filePath string) error {
