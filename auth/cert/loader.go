@@ -45,7 +45,11 @@ func LoadCertificate(clientCertPath, clientCertKeyPath string) (certificate tls.
 
 func GetTransportWithLoadedCert(certificatesDirPath string, insecureTls bool, transport *http.Transport) (*http.Transport, error) {
 	// Remove once SystemCertPool supports windows
-	caCertPool, err := loadSystemRoots()
+    caCertPool, err := x509.SystemCertPool()
+     if caCertPool == nil {
+     caCertPool = x509.NewCertPool()
+     }
+
 	err = errorutils.CheckError(err)
 	if err != nil {
 		return nil, err
