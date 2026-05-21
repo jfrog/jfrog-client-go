@@ -191,7 +191,7 @@ func closeAndAssert(t *testing.T, reader *ContentReader) {
 func TestContentReaderResetRace(t *testing.T) {
 	tmp, err := os.CreateTemp("", "aql-race-*.json")
 	assert.NoError(t, err)
-	defer os.Remove(tmp.Name())
+	defer func() { _ = os.Remove(tmp.Name()) }()
 	payload := map[string]interface{}{
 		"results": []map[string]string{
 			{"repo": "r1"}, {"repo": "r2"}, {"repo": "r3"},
