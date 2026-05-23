@@ -35,6 +35,7 @@ type IgnoreFilters struct {
 	Exposures        *ExposuresFilterName          `json:"exposures,omitempty"`
 	Sast             *SastFilterName               `json:"sast,omitempty"`
 	ReleaseBundles   []IgnoreFilterNameVersion     `json:"release-bundles,omitempty"`
+	ReleaseBundlesV2 []IgnoreFilterNameVersion     `json:"release_bundles_v2,omitempty"`
 	Builds           []IgnoreFilterNameVersion     `json:"builds,omitempty"`
 	Components       []IgnoreFilterNameVersion     `json:"components,omitempty"`
 	Artifacts        []IgnoreFilterNameVersionPath `json:"artifacts,omitempty"`
