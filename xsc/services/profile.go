@@ -73,8 +73,9 @@ type ScanConfig struct {
 	SastScannerConfig            SastScannerConfig         `json:"sast_scanner_config,omitempty"`
 	SecretsScannerConfig         SecretsScannerConfig      `json:"secrets_scanner_config,omitempty"`
 	IacScannerConfig             IacScannerConfig          `json:"iac_scanner_config,omitempty"`
-	ApplicationsScannerConfig    ApplicationsScannerConfig `json:"applications_scanner_config,omitempty"`
-	ServicesScannerConfig        ServicesScannerConfig     `json:"services_scanner_config,omitempty"`
+	ApplicationsScannerConfig       ApplicationsScannerConfig       `json:"applications_scanner_config,omitempty"`
+	ServicesScannerConfig           ServicesScannerConfig           `json:"services_scanner_config,omitempty"`
+	MisconfigurationScannerConfig MisconfigurationScannerConfig `json:"misconfiguration_scanner_config,omitempty"`
 }
 
 type SastScannerConfig struct {
@@ -102,6 +103,11 @@ type ApplicationsScannerConfig struct {
 type ServicesScannerConfig struct {
 	EnableServicesScan bool     `json:"enable_services_scan,omitempty"`
 	ExcludePatterns    []string `json:"exclude_patterns,omitempty"`
+}
+
+type MisconfigurationScannerConfig struct {
+	EnableMisconfigurationScan bool     `json:"enable_misconfiguration_scan,omitempty"`
+	ExcludePatterns            []string `json:"exclude_patterns,omitempty"`
 }
 
 func (cp *ConfigurationProfileService) sendConfigProfileByNameRequest(profileName string) (url string, resp *http.Response, body []byte, err error) {
