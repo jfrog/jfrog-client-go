@@ -1,10 +1,12 @@
 package content
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
@@ -181,6 +183,42 @@ func (rti ReaderTestItem) GetSortKey() string {
 
 func closeAndAssert(t *testing.T, reader *ContentReader) {
 	assert.NoError(t, reader.Close(), "Couldn't close reader")
+}
+
+// Regression test for "panic: send on closed channel" caused by Reset() racing
+// with an in-flight producer goroutine. Without the fix (local channel snapshot
+// in NextRecord + WaitGroup in Reset), this test panics under -race.
+func TestContentReaderResetRace(t *testing.T) {
+	tmp, err := os.CreateTemp("", "aql-race-*.json")
+	assert.NoError(t, err)
+	defer func() { _ = os.Remove(tmp.Name()) }()
+	payload := map[string]interface{}{
+		"results": []map[string]string{
+			{"repo": "r1"}, {"repo": "r2"}, {"repo": "r3"},
+			{"repo": "r4"}, {"repo": "r5"}, {"repo": "r6"},
+		},
+	}
+	assert.NoError(t, json.NewEncoder(tmp).Encode(payload))
+	assert.NoError(t, tmp.Close())
+
+	cr := NewContentReader(tmp.Name(), "results")
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 2000; i++ {
+			var rec map[string]interface{}
+			_ = cr.NextRecord(&rec)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 2000; i++ {
+			cr.Reset()
+		}
+	}()
+	wg.Wait()
 }
 
 func getErrorAndAssert(t *testing.T, reader *ContentReader) {

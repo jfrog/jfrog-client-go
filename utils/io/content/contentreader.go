@@ -33,6 +33,16 @@ type ContentReader struct {
 	dataChannel chan map[string]interface{}
 	errorsQueue *utils.ErrorsQueue
 	once        *sync.Once
+	// mu guards reads/writes of dataChannel, once, and done across
+	// NextRecord/Reset, so a receiver and the producer goroutine always
+	// agree on which channel is in play, even if Reset is racing with
+	// NextRecord.
+	mu sync.Mutex
+	// done is closed by the current producer goroutine when it exits.
+	// Reset blocks on it to ensure the old producer finishes before the
+	// channel/once fields are swapped. A new done is created per cycle to
+	// avoid sync.WaitGroup reuse-during-Wait panics.
+	done chan struct{}
 	// Number of elements in the array (cache)
 	length int
 	empty  bool
@@ -71,14 +81,25 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 	if cr.empty {
 		return errorutils.CheckErrorf("Empty")
 	}
+	// Pair the once.Do (which spawns the producer and captures the active
+	// channel) with a snapshot of dataChannel under cr.mu, so the receiver
+	// on this call reads from the same channel the producer writes to even
+	// if Reset() races to swap dataChannel.
+	cr.mu.Lock()
 	cr.once.Do(func() {
+		ch := cr.dataChannel
+		done := make(chan struct{})
+		cr.done = done
 		go func() {
-			defer close(cr.dataChannel)
+			defer close(done)
+			defer close(ch)
 			cr.length = 0
-			cr.run()
+			cr.run(ch)
 		}()
 	})
-	record, ok := <-cr.dataChannel
+	ch := cr.dataChannel
+	cr.mu.Unlock()
+	record, ok := <-ch
 	if !ok {
 		return io.EOF
 	}
@@ -92,10 +113,23 @@ func (cr *ContentReader) NextRecord(recordOutput interface{}) error {
 	return err
 }
 
-// Prepare the reader to read the file all over again (not thread-safe).
+// Prepare the reader to read the file all over again.
+// Waits for any in-flight producer goroutine started by a previous NextRecord
+// cycle to finish (via the per-cycle done channel), then swaps the channel/once
+// under cr.mu so concurrent NextRecord receivers do not observe a half-swapped
+// state.
 func (cr *ContentReader) Reset() {
+	cr.mu.Lock()
+	done := cr.done
+	cr.mu.Unlock()
+	if done != nil {
+		<-done
+	}
+	cr.mu.Lock()
 	cr.dataChannel = make(chan map[string]interface{}, utils.MaxBufferSize)
 	cr.once = new(sync.Once)
+	cr.done = nil
+	cr.mu.Unlock()
 }
 
 func removeFile(filePath string) error {
@@ -173,13 +207,15 @@ func (cr *ContentReader) Length() (int, error) {
 
 // Open and read the files one by one. Push each array element into the channel.
 // The channel may block the thread, therefore should run async.
-func (cr *ContentReader) run() {
+// ch is captured at goroutine spawn time so concurrent Reset() does not affect
+// where this producer writes.
+func (cr *ContentReader) run(ch chan<- map[string]interface{}) {
 	for _, filePath := range cr.filesPaths {
-		cr.readSingleFile(filePath)
+		cr.readSingleFile(filePath, ch)
 	}
 }
 
-func (cr *ContentReader) readSingleFile(filePath string) {
+func (cr *ContentReader) readSingleFile(filePath string, ch chan<- map[string]interface{}) {
 	fd, err := os.Open(filePath)
 	if err != nil {
 		log.Error(err.Error())
@@ -213,7 +249,7 @@ func (cr *ContentReader) readSingleFile(filePath string) {
 			cr.errorsQueue.AddError(errorutils.CheckError(err))
 			return
 		}
-		cr.dataChannel <- ResultItem
+		ch <- ResultItem
 	}
 }
 
