@@ -50,6 +50,7 @@ func TestGetConfigurationProfileByUrl(t *testing.T) {
 func getComparisonConfigProfile() *services.ConfigProfile {
 	return &services.ConfigProfile{
 		ProfileName: "default-profile",
+		ProjectKey:  "default-project",
 		GeneralConfig: services.GeneralConfig{
 			ScannersDownloadPath:    "https://repo.example.com/releases",
 			FailUponAnyScannerError: true,

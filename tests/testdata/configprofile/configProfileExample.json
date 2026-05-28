@@ -1,5 +1,6 @@
 {
   "profile_name": "default-profile",
+  "project_key": "default-project",
   "general_config": {
     "scanners_download_path": "https://repo.example.com/releases",
     "fail_upon_any_scanner_error": true
