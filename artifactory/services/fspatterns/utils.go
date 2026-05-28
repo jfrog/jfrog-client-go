@@ -26,11 +26,12 @@ func ListFilesFilterPatternAndSize(rootPath string, isRecursive, includeDirs, ex
 	return fileutils.ListFilesWithFilterFunc(rootPath, isRecursive, !preserveSymlink, filterFunc)
 }
 
-// Transform to regexp and prepare Exclude patterns to be used, exclusion patterns must be absolute paths.
+// Prepare the exclude path pattern for the given exclusions, pattern type, and is recursive.
 func PrepareExcludePathPattern(exclusions []string, patternType utils.PatternType, isRecursive bool) string {
 	return PreparePathPattern(patternType, isRecursive, exclusions...)
 }
 
+// Prepare the path pattern for the given pattern type, is recursive, and patterns.
 func PreparePathPattern(patternType utils.PatternType, isRecursive bool, patterns ...string) string {
 	pathPattern := ""
 	for _, pattern := range patterns {
