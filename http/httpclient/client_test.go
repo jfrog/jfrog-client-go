@@ -42,3 +42,16 @@ func TestShouldRetry(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaultTransportEnablesConnectionReuse(t *testing.T) {
+	client, err := ClientBuilder().Build()
+	assert.NoError(t, err)
+
+	transport, ok := client.GetClient().Transport.(*http.Transport)
+	if !ok {
+		t.Skip("transport is not *http.Transport (e.g. custom certs); skipping connection reuse config check")
+	}
+
+	assert.True(t, transport.ForceAttemptHTTP2, "ForceAttemptHTTP2 should be true for HTTP/2 support")
+	assert.Equal(t, 6, transport.MaxIdleConnsPerHost, "MaxIdleConnsPerHost should be 6 for connection reuse to the same host")
+}
