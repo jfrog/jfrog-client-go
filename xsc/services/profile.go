@@ -38,13 +38,13 @@ type ConfigProfile struct {
 	ProfileName   string        `json:"profile_name"`
 	GeneralConfig GeneralConfig `json:"general_config,omitempty"`
 	FrogbotConfig FrogbotConfig `json:"frogbot_config,omitempty"`
+	ProjectKey    string        `json:"project_key,omitempty"`
 	Modules       []Module      `json:"modules"`
 }
 
 type GeneralConfig struct {
-	ScannersDownloadPath    string   `json:"scanners_download_path,omitempty"`
-	GeneralExcludePatterns  []string `json:"general_exclude_patterns,omitempty"`
-	FailUponAnyScannerError bool     `json:"fail_upon_any_scanner_error,omitempty"`
+	ScannersDownloadPath    string `json:"scanners_download_path,omitempty"`
+	FailUponAnyScannerError bool   `json:"fail_upon_any_scanner_error,omitempty"`
 }
 
 type FrogbotConfig struct {
@@ -59,10 +59,12 @@ type FrogbotConfig struct {
 }
 
 type Module struct {
-	ModuleId     int32      `json:"module_id,omitempty"`
-	ModuleName   string     `json:"module_name"`
-	PathFromRoot string     `json:"path_from_root"`
-	ScanConfig   ScanConfig `json:"scan_config"`
+	ModuleId        int32      `json:"module_id,omitempty"`
+	ModuleName      string     `json:"module_name"`
+	PathFromRoot    string     `json:"path_from_root"`
+	ExcludePatterns []string   `json:"exclude_patterns,omitempty"`
+	IncludePatterns []string   `json:"include_patterns,omitempty"`
+	ScanConfig      ScanConfig `json:"scan_config"`
 }
 
 type ScanConfig struct {
