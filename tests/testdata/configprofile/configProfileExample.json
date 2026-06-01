@@ -36,10 +36,7 @@
           "enable_applications_scan": true
         },
         "services_scanner_config": {
-          "enable_services_scan": true
-        },
-        "misconfiguration_scanner_config": {
-          "enable_misconfiguration_scan": false
+          "enable_services_scan": false
         }
       },
       "protected_branches": ["main", "master"],
